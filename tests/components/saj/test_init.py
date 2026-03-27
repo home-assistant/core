@@ -66,7 +66,7 @@ async def test_setup_entry_auth_failed(
     hass: HomeAssistant,
     mock_config_entry_wifi: MockConfigEntry,
 ) -> None:
-    """Test async_setup_entry retries when authentication fails at setup."""
+    """Test async_setup_entry fails WiFi auth at setup without endless retries."""
     with patch("pysaj.SAJ") as saj_cls:
         saj_instance = MagicMock()
         saj_instance.read = AsyncMock(
@@ -76,6 +76,23 @@ async def test_setup_entry_auth_failed(
 
         with patch("pysaj.Sensors"):
             entry = await setup_integration(hass, mock_config_entry_wifi)
+            assert entry.state is ConfigEntryState.SETUP_ERROR
+
+
+async def test_setup_entry_ethernet_unauthorized_retries(
+    hass: HomeAssistant,
+    mock_config_entry_ethernet: MockConfigEntry,
+) -> None:
+    """Ethernet UnauthorizedException is treated as not ready (e.g. wrong type)."""
+    with patch("pysaj.SAJ") as saj_cls:
+        saj_instance = MagicMock()
+        saj_instance.read = AsyncMock(
+            side_effect=pysaj.UnauthorizedException("unexpected")
+        )
+        saj_cls.return_value = saj_instance
+
+        with patch("pysaj.Sensors"):
+            entry = await setup_integration(hass, mock_config_entry_ethernet)
             assert entry.state is ConfigEntryState.SETUP_RETRY
 
 

@@ -7,13 +7,7 @@ import pytest
 
 from homeassistant.components.saj.const import CONNECTION_TYPES, DOMAIN
 from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
-from homeassistant.const import (
-    CONF_HOST,
-    CONF_NAME,
-    CONF_PASSWORD,
-    CONF_TYPE,
-    CONF_USERNAME,
-)
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_TYPE, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -44,8 +38,8 @@ async def test_form_ethernet(
     assert result_data is not None
     assert result_data[CONF_HOST] == MOCK_USER_INPUT_ETHERNET[CONF_HOST]
     assert result_data[CONF_TYPE] == MOCK_USER_INPUT_ETHERNET[CONF_TYPE]
-    assert result_data.get(CONF_USERNAME, "") == ""
-    assert result_data.get(CONF_PASSWORD, "") == ""
+    assert not result_data.get(CONF_USERNAME)
+    assert not result_data.get(CONF_PASSWORD)
     result_entry = result.get("result")
     assert result_entry is not None
     assert result_entry.unique_id == MOCK_SERIAL_NUMBER
@@ -77,8 +71,8 @@ async def test_form_wifi_open_network(
     assert result_data is not None
     assert result_data[CONF_HOST] == MOCK_USER_INPUT_WIFI[CONF_HOST]
     assert result_data[CONF_TYPE] == MOCK_USER_INPUT_WIFI[CONF_TYPE]
-    assert result_data[CONF_USERNAME] == ""
-    assert result_data[CONF_PASSWORD] == ""
+    assert not result_data.get(CONF_USERNAME)
+    assert not result_data.get(CONF_PASSWORD)
     result_entry = result.get("result")
     assert result_entry is not None
     assert result_entry.unique_id == MOCK_SERIAL_NUMBER
@@ -125,7 +119,6 @@ async def test_form_wifi_requires_credentials(
             result = await hass.config_entries.flow.async_configure(
                 result["flow_id"],
                 {
-                    CONF_NAME: "Roof Inverter",
                     CONF_USERNAME: MOCK_USER_INPUT_WIFI[CONF_USERNAME],
                     CONF_PASSWORD: MOCK_USER_INPUT_WIFI[CONF_PASSWORD],
                 },
@@ -134,7 +127,7 @@ async def test_form_wifi_requires_credentials(
     await hass.async_block_till_done()
 
     assert result.get("type") is FlowResultType.CREATE_ENTRY
-    assert result.get("title") == "Roof Inverter"
+    assert result.get("title") == "SAJ Solar Inverter"
     result_data = result.get("data")
     assert result_data is not None
     assert result_data == MOCK_USER_INPUT_WIFI

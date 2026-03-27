@@ -118,51 +118,6 @@ async def test_sensor_update_failure(
             assert state.state == STATE_UNKNOWN
 
 
-async def test_diagnostic_sensors(
-    hass: HomeAssistant,
-    mock_config_entry_ethernet: MockConfigEntry,
-) -> None:
-    """Test diagnostic sensors are created."""
-    with patch("pysaj.SAJ") as saj_cls:
-        saj_instance = MagicMock()
-        saj_instance.serialnumber = "TEST123"
-        saj_instance.read = AsyncMock(return_value=True)
-        saj_cls.return_value = saj_instance
-
-        with patch("pysaj.Sensors") as sensors_cls:
-            sensors_cls.return_value = []
-
-            await setup_integration(hass, mock_config_entry_ethernet)
-
-            registry = er.async_get(hass)
-            entry_id = mock_config_entry_ethernet.entry_id
-            ip_entity_id = registry.async_get_entity_id(
-                "sensor", DOMAIN, f"{entry_id}_ip_address"
-            )
-            assert ip_entity_id is not None
-            ip_sensor = hass.states.get(ip_entity_id)
-            assert ip_sensor is not None
-            assert ip_sensor.state == mock_config_entry_ethernet.data["host"]
-
-            connection_entity_id = registry.async_get_entity_id(
-                "sensor", DOMAIN, f"{entry_id}_connection_type"
-            )
-            assert connection_entity_id is not None
-            connection_type_sensor = hass.states.get(connection_entity_id)
-            assert connection_type_sensor is not None
-            assert (
-                connection_type_sensor.state == mock_config_entry_ethernet.data["type"]
-            )
-
-            serial_entity_id = registry.async_get_entity_id(
-                "sensor", DOMAIN, f"{entry_id}_serial_number"
-            )
-            assert serial_entity_id is not None
-            serial_sensor = hass.states.get(serial_entity_id)
-            assert serial_sensor is not None
-            assert serial_sensor.state == mock_config_entry_ethernet.unique_id
-
-
 async def test_yaml_import_creates_deprecated_issue(
     hass: HomeAssistant,
     issue_registry: ir.IssueRegistry,

@@ -14,35 +14,20 @@
     "step": {
       "device_credentials": {
         "data": {
-          "name": "[%key:common::config_flow::data::name%]",
           "password": "[%key:common::config_flow::data::password%]",
           "username": "[%key:common::config_flow::data::username%]"
         },
-        "description": "The inverter required WiFi login. Adjust the name if you like and enter or correct username and password.",
+        "description": "The inverter required WiFi login. Enter or correct username and password.",
         "title": "Device Credentials"
       },
       "user": {
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
-          "name": "[%key:common::config_flow::data::name%]",
           "password": "[%key:common::config_flow::data::password%]",
           "type": "Connection type",
           "username": "[%key:common::config_flow::data::username%]"
         },
         "description": "Configure your SAJ solar inverter. Enter the IP address or hostname. If you use WiFi, username and password are optional here (open networks); if login is required you can enter them now or on the next step after we detect the inverter."
-      }
-    }
-  },
-  "entity": {
-    "sensor": {
-      "connection_type": {
-        "name": "Connection type"
-      },
-      "ip_address": {
-        "name": "IP address"
-      },
-      "serial_number": {
-        "name": "Serial number"
       }
     }
   },

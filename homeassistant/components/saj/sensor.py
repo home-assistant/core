@@ -13,14 +13,13 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorStateClass,
 )
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
+from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import (
     CONF_HOST,
     CONF_NAME,
     CONF_PASSWORD,
     CONF_TYPE,
     CONF_USERNAME,
-    EntityCategory,
     UnitOfEnergy,
     UnitOfMass,
     UnitOfPower,
@@ -38,11 +37,6 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, StateTyp
 
 from . import SAJConfigEntry, SAJRuntimeData
 from .const import CONNECTION_TYPES, DOMAIN, INTEGRATION_TITLE
-
-# Stable translation_key / unique_id suffixes (see strings.json entity.sensor.*).
-DIAG_KEY_IP = "ip_address"
-DIAG_KEY_CONNECTION_TYPE = "connection_type"
-DIAG_KEY_SERIAL_NUMBER = "serial_number"
 
 SAJ_UNIT_MAPPINGS = {
     "": None,
@@ -71,7 +65,6 @@ async def async_setup_entry(
 ) -> None:
     """Set up the SAJ sensors from a config entry."""
     runtime = entry.runtime_data
-    saj = runtime.saj
     sensor_def = runtime.sensor_def
 
     hass_sensors = [
@@ -80,18 +73,7 @@ async def async_setup_entry(
         if sensor.enabled
     ]
 
-    diagnostic_sensors = [
-        SAJDiagnosticSensor(entry, DIAG_KEY_IP, entry.data[CONF_HOST]),
-        SAJDiagnosticSensor(entry, DIAG_KEY_CONNECTION_TYPE, entry.data[CONF_TYPE]),
-        SAJDiagnosticSensor(
-            entry,
-            DIAG_KEY_SERIAL_NUMBER,
-            entry.unique_id or saj.serialnumber or "Unknown",
-        ),
-    ]
-
-    entities: list[SensorEntity] = [*hass_sensors, *diagnostic_sensors]
-    async_add_entities(entities)
+    async_add_entities(hass_sensors)
 
 
 async def async_setup_platform(
@@ -236,30 +218,3 @@ class SAJsensor(SensorEntity):
 
         if update:
             self.async_write_ha_state()
-
-
-class SAJDiagnosticSensor(SensorEntity):
-    """Representation of a SAJ diagnostic sensor."""
-
-    _attr_entity_category = EntityCategory.DIAGNOSTIC
-    _attr_has_entity_name = True
-
-    def __init__(
-        self,
-        entry: ConfigEntry,
-        translation_key: str,
-        value: str | None,
-    ) -> None:
-        """Initialize the SAJ diagnostic sensor."""
-        self._attr_unique_id = f"{entry.entry_id}_{translation_key}"
-        self._attr_translation_key = translation_key
-        self._attr_native_value = value
-
-    @property
-    def native_value(self) -> str | None:
-        """Return the state of the sensor."""
-        return (
-            str(self._attr_native_value)
-            if self._attr_native_value is not None
-            else None
-        )

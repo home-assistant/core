@@ -20,7 +20,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import CALLBACK_TYPE, Event, HomeAssistant, callback
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.start import async_at_start
 
@@ -216,7 +216,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: SAJConfigEntry) -> bool:
     try:
         saj, sensor_def = await _async_connect()
     except pysaj.UnauthorizedException as err:
-        raise ConfigEntryNotReady("Authentication failed") from err
+        if wifi:
+            raise ConfigEntryAuthFailed("Authentication failed") from err
+        raise ConfigEntryNotReady(
+            "Wrong connection type or device rejected connection"
+        ) from err
     except pysaj.UnexpectedResponseException as err:
         raise ConfigEntryNotReady(f"Connection error: {err}") from err
     except TimeoutError as err:
