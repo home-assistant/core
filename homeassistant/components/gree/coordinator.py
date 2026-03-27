@@ -38,7 +38,7 @@ type GreeConfigEntry = ConfigEntry[GreeRuntimeData]
 class GreeRuntimeData:
     """RUntime data for Gree Climate integration."""
 
-    discovery_service: DiscoveryService
+    discovery_service: DiscoveryService | None
     coordinators: list[DeviceDataUpdateCoordinator]
 
 

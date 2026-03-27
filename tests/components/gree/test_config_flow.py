@@ -179,3 +179,63 @@ async def test_manual_step_already_configured(
         )
         assert result["type"] is FlowResultType.ABORT
         assert result["reason"] == "already_configured"
+
+
+@patch("homeassistant.components.gree.config_flow.DISCOVERY_TIMEOUT", 0)
+async def test_scan_single_instance_allowed(
+    hass: HomeAssistant, mock_setup_entry: AsyncMock
+) -> None:
+    """Test scan step aborts when a discovery entry already exists."""
+    existing_entry = MockConfigEntry(domain=DOMAIN, data={})
+    existing_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"next_step_id": "scan"}
+    )
+    assert result["type"] is FlowResultType.FORM
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "single_instance_allowed"
+
+
+async def test_manual_step_single_instance_allowed(
+    hass: HomeAssistant, mock_setup_entry: AsyncMock
+) -> None:
+    """Test manual step aborts when a discovery entry already exists."""
+    existing_entry = MockConfigEntry(domain=DOMAIN, data={})
+    existing_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"next_step_id": "manual"}
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "single_instance_allowed"
+
+
+async def test_manual_step_invalid_ip(
+    hass: HomeAssistant, mock_setup_entry: AsyncMock
+) -> None:
+    """Test manual step shows form error for invalid IP address."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"next_step_id": "manual"}
+    )
+    assert result["type"] is FlowResultType.FORM
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_IP_ADDRESS: "not-an-ip"}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert CONF_IP_ADDRESS in result["errors"] or "base" in result["errors"]

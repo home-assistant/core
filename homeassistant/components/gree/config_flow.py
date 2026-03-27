@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import ipaddress
 import logging
 from typing import Any
 
@@ -18,9 +19,19 @@ from .const import DEFAULT_PORT, DISCOVERY_TIMEOUT, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
+
+def _validate_ip_address(value: str) -> str:
+    """Validate that value is a valid IP address."""
+    try:
+        ipaddress.ip_address(value)
+    except ValueError as err:
+        raise vol.Invalid("Not a valid IP address") from err
+    return value
+
+
 MANUAL_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_IP_ADDRESS): str,
+        vol.Required(CONF_IP_ADDRESS): vol.All(str, _validate_ip_address),
     }
 )
 
@@ -46,7 +57,12 @@ class GreeConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is None:
             return self.async_show_form(step_id="scan")
 
-        self._async_abort_entries_match({})
+        # Abort if a discovery-mode entry (without a static IP) already exists
+        if any(
+            CONF_IP_ADDRESS not in entry.data
+            for entry in self._async_current_entries()
+        ):
+            return self.async_abort(reason="single_instance_allowed")
 
         gree_discovery = Discovery(DISCOVERY_TIMEOUT)
         bcast_addr = list(await async_get_ipv4_broadcast_addresses(self.hass))
@@ -62,6 +78,12 @@ class GreeConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle manual IP entry step."""
+        # Abort if a discovery-mode entry exists; manual entries would create
+        # duplicate entities for devices already managed by discovery.
+        for entry in self._async_current_entries():
+            if CONF_IP_ADDRESS not in entry.data:
+                return self.async_abort(reason="single_instance_allowed")
+
         errors: dict[str, str] = {}
 
         if user_input is not None:

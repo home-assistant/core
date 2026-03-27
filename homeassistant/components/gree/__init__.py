@@ -29,11 +29,6 @@ PLATFORMS = [Platform.CLIMATE, Platform.SWITCH]
 
 async def async_setup_entry(hass: HomeAssistant, entry: GreeConfigEntry) -> bool:
     """Set up Gree Climate from a config entry."""
-    gree_discovery = DiscoveryService(hass, entry)
-    entry.runtime_data = GreeRuntimeData(
-        discovery_service=gree_discovery, coordinators=[]
-    )
-
     if CONF_IP_ADDRESS in entry.data:
         # Static IP mode: bind directly, no scanning
         ip_address = entry.data[CONF_IP_ADDRESS]
@@ -46,10 +41,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: GreeConfigEntry) -> bool
                 f"Unable to connect to Gree device at {ip_address}"
             ) from err
         coordinator = DeviceDataUpdateCoordinator(hass, entry, device)
-        entry.runtime_data.coordinators.append(coordinator)
+        entry.runtime_data = GreeRuntimeData(
+            discovery_service=None, coordinators=[coordinator]
+        )
         await coordinator.async_refresh()
     else:
         # Discovery mode: scan network for devices
+        gree_discovery = DiscoveryService(hass, entry)
+        entry.runtime_data = GreeRuntimeData(
+            discovery_service=gree_discovery, coordinators=[]
+        )
+
         async def _async_scan_update(_=None):
             bcast_addr = list(await async_get_ipv4_broadcast_addresses(hass))
             await gree_discovery.discovery.scan(0, bcast_ifaces=bcast_addr)
