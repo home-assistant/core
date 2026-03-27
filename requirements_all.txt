@@ -963,7 +963,7 @@ feedparser==6.0.12
 file-read-backwards==2.0.0
 
 # homeassistant.components.fing
-fing_agent_api==1.0.3
+fing_agent_api==1.1.0
 
 # homeassistant.components.fints
 fints==3.1.0

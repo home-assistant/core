@@ -8,8 +8,7 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import FingConfigEntry
-from .coordinator import FingDataUpdateCoordinator
+from .coordinator import FingConfigEntry, FingDataUpdateCoordinator
 from .utils import get_icon_from_type
 
 
@@ -87,14 +86,14 @@ class FingTrackedDevice(CoordinatorEntity[FingDataUpdateCoordinator], ScannerEnt
         return self._device.ip[0] if self._device.ip else None
 
     @property
-    def entity_registry_enabled_default(self) -> bool:
-        """Enable entity by default."""
-        return True
-
-    @property
     def unique_id(self) -> str | None:
         """Return the unique ID of the entity."""
         return self._attr_unique_id
+
+    @property
+    def entity_registry_enabled_default(self) -> bool:
+        """Enable entity by default."""
+        return True
 
     def check_for_updates(self, new_device: Device) -> bool:
         """Return true if the device has updates."""
@@ -106,7 +105,6 @@ class FingTrackedDevice(CoordinatorEntity[FingDataUpdateCoordinator], ScannerEnt
             or self._device.active != new_device.active
             or self._device.type != new_device.type
             or self._attr_name != new_device.name
-            or self._attr_icon != get_icon_from_type(new_device.type)
         )
 
     @callback

@@ -3,7 +3,7 @@
 import httpx
 import pytest
 
-from homeassistant.components.fing.const import DOMAIN
+from homeassistant.components.fing.const import DOMAIN, UPNP_AVAILABLE
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_API_KEY, CONF_IP_ADDRESS, CONF_PORT
 from homeassistant.core import HomeAssistant
@@ -134,7 +134,7 @@ async def test_duplicate_entries(
     mock_config_entry: MockConfigEntry,
     mocked_fing_agent: AsyncMock,
 ) -> None:
-    """Test detecting duplicate entries."""
+    """Test detecting duplicate entries by IP address."""
     mock_config_entry.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
@@ -152,3 +152,65 @@ async def test_duplicate_entries(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
+
+
+async def test_duplicate_entries_unique_id(
+    hass: HomeAssistant,
+    mocked_fing_agent: AsyncMock,
+) -> None:
+    """Test detecting duplicate entries by unique_id (agent_id)."""
+    existing_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_IP_ADDRESS: "192.168.1.2",
+            CONF_PORT: "49090",
+            CONF_API_KEY: "other_key",
+            UPNP_AVAILABLE: True,
+        },
+        unique_id="0000000000XX",
+    )
+    existing_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_IP_ADDRESS: "192.168.1.1",
+            CONF_PORT: "49090",
+            CONF_API_KEY: "test_key",
+        },
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+
+async def test_verify_connection_success_desktop_agent(
+    hass: HomeAssistant,
+    mocked_fing_agent: AsyncMock,
+) -> None:
+    """Test successful connection for desktop agent (no UPnP/agent_info)."""
+    mocked_fing_agent.get_agent_info.side_effect = httpx.ConnectError("not available")
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_IP_ADDRESS: "192.168.1.1",
+            CONF_PORT: "49090",
+            CONF_API_KEY: "test_key",
+        },
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"][UPNP_AVAILABLE] is False
+    assert result["title"] == "Fing Agent 192.168.1.1"
+
+    entry = result["result"]
+    assert entry.unique_id == "192.168.1.1:49090"
