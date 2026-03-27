@@ -578,13 +578,13 @@ class CalendarEntity(Entity):
         return STATE_OFF
 
     @callback
-    def async_write_ha_state(self) -> None:
+    def _async_write_ha_state(self) -> None:
         """Write the state to the state machine.
 
         This sets up listeners to handle state transitions for start or end of
         the current or upcoming event.
         """
-        super().async_write_ha_state()
+        super()._async_write_ha_state()
         if self._alarm_unsubs is None:
             self._alarm_unsubs = []
         _LOGGER.debug(
