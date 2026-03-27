@@ -1,4 +1,15 @@
 {
+  "conditions": {
+    "is_active": {
+      "condition": "mdi:timer"
+    },
+    "is_idle": {
+      "condition": "mdi:timer-off"
+    },
+    "is_paused": {
+      "condition": "mdi:timer-pause"
+    }
+  },
   "services": {
     "cancel": {
       "service": "mdi:cancel"
