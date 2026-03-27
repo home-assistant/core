@@ -76,6 +76,19 @@
       }
     }
   },
+  "issues": {
+    "missing_scopes": {
+      "title": "Additional authorization required for {character}",
+      "fix_flow": {
+        "step": {
+          "confirm": {
+            "title": "Reauthorize {character}",
+            "description": "The Eve Online integration requires additional API scopes that were not granted during the initial authorization. Some sensors may be unavailable until you reauthorize.\n\nMissing scopes: {scopes}\n\nSelect **Submit** to start reauthentication."
+          }
+        }
+      }
+    }
+  },
   "exceptions": {
     "authentication_failed": {
       "message": "Authentication failed. Please reauthenticate."
