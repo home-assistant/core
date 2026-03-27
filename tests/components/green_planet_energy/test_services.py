@@ -13,7 +13,7 @@ from homeassistant.components.green_planet_energy.services import (
     SERVICE_GET_PRICES,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
@@ -140,8 +140,9 @@ async def test_get_prices_no_config_entry(
 ) -> None:
     """Service raises when no config entry is set up."""
     await async_setup_component(hass, DOMAIN, {})
-    with pytest.raises(HomeAssistantError, match="No matching integration"):
+    with pytest.raises(ServiceValidationError) as exc_info:
         await _call_get_prices(hass, 1)
+    assert exc_info.value.translation_key == "no_config_entry"
 
 
 async def test_get_prices_entry_not_loaded(
@@ -151,10 +152,10 @@ async def test_get_prices_entry_not_loaded(
 ) -> None:
     """Service raises when the config entry exists but is not loaded."""
     await async_setup_component(hass, DOMAIN, {})
-    # Add the config entry but do NOT call async_setup_entry — state stays NEVER_LOADED.
     mock_config_entry.add_to_hass(hass)
-    with pytest.raises(HomeAssistantError, match="not currently loaded"):
+    with pytest.raises(ServiceValidationError) as exc_info:
         await _call_get_prices(hass, 1)
+    assert exc_info.value.translation_key == "config_entry_not_loaded"
 
 
 async def test_get_prices_quarter_hour(
