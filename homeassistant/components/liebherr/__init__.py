@@ -26,6 +26,7 @@ from .coordinator import LiebherrConfigEntry, LiebherrCoordinator, LiebherrData
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS: list[Platform] = [
+    Platform.COVER,
     Platform.LIGHT,
     Platform.NUMBER,
     Platform.SELECT,

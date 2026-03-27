@@ -33,6 +33,20 @@
     }
   },
   "entity": {
+    "cover": {
+      "auto_door": {
+        "name": "AutoDoor"
+      },
+      "auto_door_bottom_zone": {
+        "name": "Bottom zone AutoDoor"
+      },
+      "auto_door_middle_zone": {
+        "name": "Middle zone AutoDoor"
+      },
+      "auto_door_top_zone": {
+        "name": "Top zone AutoDoor"
+      }
+    },
     "light": {
       "presentation_light": {
         "name": "Presentation light"

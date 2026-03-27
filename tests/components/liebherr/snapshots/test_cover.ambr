@@ -1,0 +1,54 @@
+# serializer version: 1
+# name: test_covers[cover.test_fridge_top_zone_autodoor-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'cover',
+    'entity_category': None,
+    'entity_id': 'cover.test_fridge_top_zone_autodoor',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Top zone AutoDoor',
+    'options': dict({
+    }),
+    'original_device_class': <CoverDeviceClass.DOOR: 'door'>,
+    'original_icon': None,
+    'original_name': 'Top zone AutoDoor',
+    'platform': 'liebherr',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <CoverEntityFeature: 3>,
+    'translation_key': 'auto_door_top_zone',
+    'unique_id': 'test_device_id_auto_door_1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_covers[cover.test_fridge_top_zone_autodoor-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'door',
+      'friendly_name': 'Test Fridge Top zone AutoDoor',
+      'is_closed': True,
+      'supported_features': <CoverEntityFeature: 3>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'cover.test_fridge_top_zone_autodoor',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'closed',
+  })
+# ---
