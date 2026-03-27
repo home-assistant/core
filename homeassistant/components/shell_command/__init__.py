@@ -176,18 +176,22 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     async def reload_service_handler(service_call: ServiceCall) -> None:
         """Reload shell_command from YAML configuration."""
-        for svc in list(hass.services.async_services_for_domain(DOMAIN)):
-            if svc != SERVICE_RELOAD:
-                hass.services.async_remove(DOMAIN, svc)
-        cache.clear()
-
         try:
             raw_config = await conf_util.async_hass_config_yaml(hass)
         except HomeAssistantError as err:
             _LOGGER.error("Error loading configuration.yaml: %s", err)
             return
 
-        new_conf = CONFIG_SCHEMA(raw_config).get(DOMAIN, {})
+        try:
+            new_conf = CONFIG_SCHEMA(raw_config).get(DOMAIN, {})
+        except vol.Invalid as err:
+            _LOGGER.error("Invalid shell_command configuration: %s", err)
+            return
+
+        for svc in list(hass.services.async_services_for_domain(DOMAIN)):
+            if svc != SERVICE_RELOAD:
+                hass.services.async_remove(DOMAIN, svc)
+        cache.clear()
         for name, command in new_conf.items():
             hass.services.async_register(
                 DOMAIN,
