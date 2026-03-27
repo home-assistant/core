@@ -421,7 +421,7 @@ class EntityConditionBase(Condition):
 class EntityStateConditionBase(EntityConditionBase):
     """State condition."""
 
-    _states: set[str]
+    _states: set[str | bool]
 
     def is_valid_state(self, entity_state: State) -> bool:
         """Check if the state matches the expected state(s)."""
@@ -439,7 +439,7 @@ def _normalize_domain_specs(
 
 def make_entity_state_condition(
     domain_specs: Mapping[str, DomainSpec] | str,
-    states: str | set[str],
+    states: str | bool | set[str | bool],
 ) -> type[EntityStateConditionBase]:
     """Create a condition for entity state changes to specific state(s).
 
@@ -448,8 +448,8 @@ def make_entity_state_condition(
     """
     specs = _normalize_domain_specs(domain_specs)
 
-    if isinstance(states, str):
-        states_set = {states}
+    if isinstance(states, (str, bool)):
+        states_set: set[str | bool] = {states}
     else:
         states_set = states
 
