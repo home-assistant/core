@@ -5,7 +5,7 @@ from datetime import timedelta
 import os
 from pathlib import PurePath
 from typing import Any
-from unittest.mock import ANY, AsyncMock, Mock, patch
+from unittest.mock import ANY, AsyncMock, Mock, call, patch
 from uuid import uuid4
 
 from aiohasupervisor import SupervisorError
@@ -489,12 +489,23 @@ async def test_service_calls(
     await hass.services.async_call(
         "hassio", f"{app_or_addon}_stdin", {app_or_addon: "test", "input": "test"}
     )
+    await hass.services.async_call(
+        "hassio",
+        f"{app_or_addon}_stdin",
+        {app_or_addon: "test", "input": {"hello": "world"}},
+    )
     await hass.async_block_till_done()
 
     supervisor_client.addons.start_addon.assert_called_once_with("test")
     supervisor_client.addons.stop_addon.assert_called_once_with("test")
     supervisor_client.addons.restart_addon.assert_called_once_with("test")
-    supervisor_client.addons.write_addon_stdin.assert_called_once_with("test", b"test")
+    assert (
+        call("test", b'"test"') in supervisor_client.addons.write_addon_stdin.mock_calls
+    )
+    assert (
+        call("test", b'{"hello": "world"}')
+        in supervisor_client.addons.write_addon_stdin.mock_calls
+    )
 
     await hass.services.async_call("hassio", "host_shutdown", {})
     await hass.services.async_call("hassio", "host_reboot", {})

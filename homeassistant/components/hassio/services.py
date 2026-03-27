@@ -208,8 +208,12 @@ def async_register_app_services(
         app_slug = service.data[ATTR_APP]
         data: dict | str = service.data[ATTR_INPUT]
 
-        if isinstance(data, dict):
-            data = json.dumps(data)
+        # For backwards compatibility the payload here must be valid json
+        # This is sensible when a dictionary is provided, it must be serialized
+        # If user provides a string though, we wrap it in quotes before encoding
+        # This is purely for legacy reasons, Supervisor has no json requirement
+        # Supervisor just hands the raw request as binary to the container
+        data = json.dumps(data)
         payload = data.encode(encoding="utf-8")
 
         try:
@@ -255,8 +259,8 @@ def async_register_app_services(
         addon_slug = service.data[ATTR_ADDON]
         data: dict | str = service.data[ATTR_INPUT]
 
-        if isinstance(data, dict):
-            data = json.dumps(data)
+        # See explanation for why we make strings into json in async_app_stdin_service_handler
+        data = json.dumps(data)
         payload = data.encode(encoding="utf-8")
 
         try:
