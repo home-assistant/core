@@ -57,10 +57,8 @@ class GreeConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is None:
             return self.async_show_form(step_id="scan")
 
-        # Abort if a discovery-mode entry (without a static IP) already exists
-        if any(
-            CONF_IP_ADDRESS not in entry.data for entry in self._async_current_entries()
-        ):
+        # Abort if any config entry already exists (manual or discovery)
+        if self._async_current_entries():
             return self.async_abort(reason="single_instance_allowed")
 
         gree_discovery = Discovery(DISCOVERY_TIMEOUT)

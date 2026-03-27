@@ -44,7 +44,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: GreeConfigEntry) -> bool
         entry.runtime_data = GreeRuntimeData(
             discovery_service=None, coordinators=[coordinator]
         )
-        await coordinator.async_refresh()
+        await coordinator.async_config_entry_first_refresh()
     else:
         # Discovery mode: scan network for devices
         gree_discovery = DiscoveryService(hass, entry)
