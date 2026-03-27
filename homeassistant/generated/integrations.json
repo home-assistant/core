@@ -2629,6 +2629,12 @@
       "config_flow": true,
       "iot_class": "cloud_push"
     },
+    "grandstream_home": {
+      "name": "Grandstream Home",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "local_push"
+    },
     "graphite": {
       "name": "Graphite",
       "integration_type": "hub",

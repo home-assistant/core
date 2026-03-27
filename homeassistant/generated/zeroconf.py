@@ -459,6 +459,12 @@ ZEROCONF = {
             "domain": "devialet",
         },
     ],
+    "_device-info._tcp.local.": [
+        {
+            "domain": "grandstream_home",
+            "name": "*",
+        },
+    ],
     "_dkapi._tcp.local.": [
         {
             "domain": "daikin",
@@ -668,6 +674,16 @@ ZEROCONF = {
             "properties": {
                 "vendor": "tailwind",
             },
+        },
+    ],
+    "_https._tcp.local.": [
+        {
+            "domain": "grandstream_home",
+            "name": "gds*",
+        },
+        {
+            "domain": "grandstream_home",
+            "name": "gsc*",
         },
     ],
     "_hue._tcp.local.": [

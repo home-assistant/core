@@ -1,0 +1,149 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "Device is already configured",
+      "already_in_progress": "Configuration flow is already in progress",
+      "missing_data": "Missing required data",
+      "not_grandstream_device": "Not a Grandstream device",
+      "reauth_entry_not_found": "Reauthentication entry not found",
+      "reauth_successful": "Reauthentication successful",
+      "reconfigure_successful": "Reconfiguration successful"
+    },
+    "error": {
+      "cannot_connect": "Connection failed",
+      "ha_control_disabled": "Failed to add. Please enable Home Assistant control in the device web interface",
+      "invalid_auth": "Authentication failed",
+      "invalid_host": "Invalid host address",
+      "invalid_port": "Invalid port number",
+      "reauth_successful": "Reauthentication successful",
+      "unknown": "Unknown Error"
+    },
+    "flow_title": "{name}",
+    "step": {
+      "auth": {
+        "data": {
+          "password": "Admin Password",
+          "port": "Port",
+          "username": "Username",
+          "verify_ssl": "Verify SSL Certificate"
+        },
+        "data_description": {
+          "password": "Device Administrator Password",
+          "port": "Port number for device communication",
+          "username": "Device Login Username",
+          "verify_ssl": "Enable SSL certificate verification (recommended for devices with valid certificates)"
+        },
+        "description": "Please enter authentication information for {host}\nDevice Model: {device_model}\nDefault Username: {username}",
+        "title": "Device Authentication"
+      },
+      "reauth_confirm": {
+        "data": {
+          "password": "Admin Password",
+          "username": "Username"
+        },
+        "data_description": {
+          "password": "Device administrator password",
+          "username": "Device login username"
+        },
+        "description": "Please enter new credentials for {host}\nDevice Model: {device_model}",
+        "title": "Reauthenticate Device"
+      },
+      "reconfigure": {
+        "data": {
+          "host": "IP Address",
+          "password": "Admin Password",
+          "port": "Port",
+          "username": "Username",
+          "verify_ssl": "Verify SSL Certificate"
+        },
+        "data_description": {
+          "host": "IP address or hostname of the device",
+          "password": "Device administrator password",
+          "port": "Port number for device communication",
+          "username": "Device login username",
+          "verify_ssl": "Enable SSL certificate verification (recommended for devices with valid certificates)"
+        },
+        "description": "Update configuration for {name}\nDevice Model: {device_model}",
+        "title": "Reconfigure Device"
+      },
+      "user": {
+        "data": {
+          "device_type": "Device Type",
+          "host": "IP Address",
+          "name": "Device Name"
+        },
+        "data_description": {
+          "device_type": "Select device type: GDS/GSC (Access Control Device) or GNS (Network Storage)",
+          "host": "IP address or hostname of the device",
+          "name": "Friendly name for the device"
+        },
+        "description": "Please enter your device information",
+        "title": "Add Grandstream Device"
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "cpu_temperature": {
+        "name": "CPU Temperature"
+      },
+      "cpu_usage": {
+        "name": "CPU Usage"
+      },
+      "device_status": {
+        "name": "Device Status",
+        "state": {
+          "account_locked": "Account Locked",
+          "auth_failed": "Authentication Failed",
+          "ha_control_disabled": "HA Control Disabled",
+          "offline": "Offline"
+        }
+      },
+      "disk_size": {
+        "name": "Disk {index} Size"
+      },
+      "disk_status": {
+        "name": "Disk {index} Status"
+      },
+      "disk_temperature": {
+        "name": "Disk {index} Temperature"
+      },
+      "fan_mode": {
+        "name": "Fan Mode"
+      },
+      "fan_status": {
+        "name": "Fan {index} Status"
+      },
+      "memory_usage_percent": {
+        "name": "Memory Usage"
+      },
+      "memory_used_gb": {
+        "name": "Memory Used"
+      },
+      "network_download_speed": {
+        "name": "Network Download Speed"
+      },
+      "network_upload_speed": {
+        "name": "Network Upload Speed"
+      },
+      "pool_size": {
+        "name": "Storage Pool {index} Size"
+      },
+      "pool_status": {
+        "name": "Storage Pool {index} Status"
+      },
+      "pool_usage": {
+        "name": "Storage Pool {index} Usage"
+      },
+      "sip_registration_status": {
+        "name": "Account {account_id}"
+      },
+      "system_temperature": {
+        "name": "System Temperature"
+      },
+      "system_uptime": {
+        "name": "System Uptime"
+      }
+    }
+  }
+}
