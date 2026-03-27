@@ -3,10 +3,16 @@
 from __future__ import annotations
 
 from enum import StrEnum
+from functools import partial
 from typing import TYPE_CHECKING, Final
 
 from .generated.entity_platforms import EntityPlatforms
-from .helpers.deprecation import DeprecatedConstant
+from .helpers.deprecation import (
+    DeprecatedConstant,
+    all_with_deprecated_constants,
+    check_if_deprecated_constant,
+    dir_with_deprecated_constants,
+)
 from .util.event_type import EventType
 from .util.hass_dict import HassKey
 from .util.signal_type import SignalType
@@ -844,30 +850,38 @@ class UnitOfDataRate(StrEnum):
     GIBIBYTES_PER_SECOND = "GiB/s"
 
 
-# Map legacy concentration constants to UnitOfConcentration StrEnum
-CONCENTRATION_GRAMS_PER_CUBIC_METER: Final = DeprecatedConstant(
+# Map legacy concentration and ratio constants to StrEnum units
+_DEPRECATED_CONCENTRATION_GRAMS_PER_CUBIC_METER: Final = DeprecatedConstant(
     "g/m³", "UnitOfConcentration.GRAMS_PER_CUBIC_METER", "2027.3"
 )
-CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER: Final = DeprecatedConstant(
+_DEPRECATED_CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER: Final = DeprecatedConstant(
     "mg/m³", "UnitOfConcentration.MILLIGRAMS_PER_CUBIC_METER", "2027.3"
 )
-CONCENTRATION_MICROGRAMS_PER_CUBIC_METER: Final = DeprecatedConstant(
+_DEPRECATED_CONCENTRATION_MICROGRAMS_PER_CUBIC_METER: Final = DeprecatedConstant(
     "μg/m³", "UnitOfConcentration.MICROGRAMS_PER_CUBIC_METER", "2027.3"
 )
-CONCENTRATION_MICROGRAMS_PER_CUBIC_FOOT: Final = DeprecatedConstant(
+_DEPRECATED_CONCENTRATION_MICROGRAMS_PER_CUBIC_FOOT: Final = DeprecatedConstant(
     "μg/ft³", "UnitOfConcentration.MICROGRAMS_PER_CUBIC_FOOT", "2027.3"
 )
-CONCENTRATION_PARTS_PER_CUBIC_METER: Final = DeprecatedConstant(
+_DEPRECATED_CONCENTRATION_PARTS_PER_CUBIC_METER: Final = DeprecatedConstant(
     "p/m³", "UnitOfConcentration.PARTS_PER_CUBIC_METER", "2027.3"
 )
-CONCENTRATION_PARTS_PER_MILLION: Final = DeprecatedConstant(
+_DEPRECATED_CONCENTRATION_PARTS_PER_MILLION: Final = DeprecatedConstant(
     "ppm", "UnitOfRatio.PARTS_PER_MILLION", "2027.3"
 )
-CONCENTRATION_PARTS_PER_BILLION: Final = DeprecatedConstant(
+_DEPRECATED_CONCENTRATION_PARTS_PER_BILLION: Final = DeprecatedConstant(
     "ppb", "UnitOfRatio.PARTS_PER_BILLION", "2027.3"
 )
-PERCENTAGE: Final = DeprecatedConstant("%", "UnitOfRatio.PERCENTAGE", "2027.3")
+_DEPRECATED_PERCENTAGE: Final = DeprecatedConstant(
+    "%", "UnitOfRatio.PERCENTAGE", "2027.3"
+)
 
+# These can be removed if no deprecated constant are in this module anymore
+__getattr__ = partial(check_if_deprecated_constant, module_globals=globals())
+__dir__ = partial(
+    dir_with_deprecated_constants, module_globals_keys=[*globals().keys()]
+)
+__all__ = all_with_deprecated_constants(globals())
 
 # States
 COMPRESSED_STATE_STATE: Final = "s"
