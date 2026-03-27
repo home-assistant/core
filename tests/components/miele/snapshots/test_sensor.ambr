@@ -6453,6 +6453,7 @@
     'area_id': None,
     'capabilities': dict({
       'options': list([
+        'cooling_down',
         'energy_save',
         'heating_up',
         'not_running',
@@ -6499,6 +6500,7 @@
       'device_class': 'enum',
       'friendly_name': 'Oven Program phase',
       'options': list([
+        'cooling_down',
         'energy_save',
         'heating_up',
         'not_running',
@@ -10255,6 +10257,7 @@
     'area_id': None,
     'capabilities': dict({
       'options': list([
+        'cooling_down',
         'energy_save',
         'heating_up',
         'not_running',
@@ -10301,6 +10304,7 @@
       'device_class': 'enum',
       'friendly_name': 'Oven Program phase',
       'options': list([
+        'cooling_down',
         'energy_save',
         'heating_up',
         'not_running',
