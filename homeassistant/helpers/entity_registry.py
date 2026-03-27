@@ -850,8 +850,11 @@ class EntityRegistryStore(storage.Store[dict[str, list[dict[str, Any]]]]):
 
             if old_minor_version == 21:
                 # Version 1.21 has been reverted.
-                # We try to preserve entity names assigned by users since the initial
-                # migration to that version.
+                # It migrated entity names to the new format stored in `name_v2`
+                # field, automatically stripping any device name prefix present.
+                # The old name was stored in `name` field for backwards compatibility.
+                # For users who already migrated to v1.21, we restore old names
+                # but try to preserve any user renames made since that migration.
                 device_registry = dr.async_get(self.hass)
 
                 for entity in data["entities"]:
@@ -1603,6 +1606,11 @@ class EntityRegistry(BaseRegistry):
                 if entity.has_entity_name:
                     continue
 
+                # When a user renames a device, update entity names to reflect
+                # the new device name.
+                # An empty name_unprefixed means the entity name equals
+                # the device name (e.g. a main sensor); a non-empty one
+                # is appended as a suffix.
                 name: str | None | UndefinedType = UNDEFINED
                 if (
                     by_user
