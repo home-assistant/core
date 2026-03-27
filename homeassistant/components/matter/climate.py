@@ -29,6 +29,7 @@ from homeassistant.components.climate import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, Platform, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .entity import MatterEntity, MatterEntityDescription
@@ -272,6 +273,8 @@ class MatterClimate(MatterEntity, ClimateEntity):
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set new preset mode."""
+        if preset_mode not in self._preset_handle_by_name:
+            raise HomeAssistantError(f"Unknown preset mode: {preset_mode}")
         preset_handle = self._preset_handle_by_name[preset_mode]
 
         command = clusters.Thermostat.Commands.SetActivePresetRequest(
