@@ -9,11 +9,17 @@
       "oauth_failed": "[%key:common::config_flow::abort::oauth2_failed%]",
       "oauth_timeout": "[%key:common::config_flow::abort::oauth2_timeout%]",
       "oauth_unauthorized": "[%key:common::config_flow::abort::oauth2_unauthorized%]",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+      "reauth_account_mismatch": "The authenticated character does not match the character that needs re-authentication.",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
     },
     "step": {
       "pick_implementation": {
         "title": "[%key:common::config_flow::title::oauth2_pick_implementation%]"
+      },
+      "reauth_confirm": {
+        "description": "The authentication for **{account}** has expired. Please reauthenticate.",
+        "title": "[%key:common::config_flow::title::reauth%]"
       }
     }
   },
@@ -75,6 +81,17 @@
       "wallet_balance": {
         "name": "Wallet balance"
       }
+    }
+  },
+  "exceptions": {
+    "authentication_failed": {
+      "message": "Authentication failed. Please reauthenticate."
+    },
+    "oauth2_implementation_unavailable": {
+      "message": "[%key:common::exceptions::oauth2_implementation_unavailable::message%]"
+    },
+    "update_failed": {
+      "message": "Error communicating with Eve Online API: {error}"
     }
   }
 }

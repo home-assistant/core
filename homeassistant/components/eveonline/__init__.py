@@ -15,6 +15,7 @@ from homeassistant.helpers.config_entry_oauth2_flow import (
 )
 
 from .api import AsyncConfigEntryAuth
+from .const import DOMAIN
 from .coordinator import EveOnlineConfigEntry, EveOnlineCoordinator
 
 PLATFORMS: list[Platform] = [Platform.BINARY_SENSOR, Platform.SENSOR]
@@ -26,7 +27,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: EveOnlineConfigEntry) ->
         implementation = await async_get_config_entry_implementation(hass, entry)
     except ImplementationUnavailableError as err:
         raise ConfigEntryNotReady(
-            "OAuth2 implementation temporarily unavailable, will retry"
+            translation_domain=DOMAIN,
+            translation_key="oauth2_implementation_unavailable",
         ) from err
 
     session = OAuth2Session(hass, entry, implementation)
