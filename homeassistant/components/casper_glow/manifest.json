@@ -14,6 +14,6 @@
   "integration_type": "device",
   "iot_class": "local_polling",
   "loggers": ["pycasperglow"],
-  "quality_scale": "bronze",
+  "quality_scale": "silver",
   "requirements": ["pycasperglow==1.1.0"]
 }

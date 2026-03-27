@@ -80,7 +80,7 @@ EVENT_ENTITY_REGISTRY_UPDATED: EventType[EventEntityRegistryUpdatedData] = Event
 _LOGGER = logging.getLogger(__name__)
 
 STORAGE_VERSION_MAJOR = 1
-STORAGE_VERSION_MINOR = 21
+STORAGE_VERSION_MINOR = 22
 STORAGE_KEY = "core.entity_registry"
 
 CLEANUP_INTERVAL = 3600 * 24
@@ -240,7 +240,11 @@ class RegistryEntry:
 
     # For backwards compatibility, should be removed in the future
     compat_aliases: list[str] = attr.ib(factory=list, eq=False)
-    compat_name: str | None = attr.ib(default=None, eq=False)
+
+    # original_name_unprefixed is used to store the result of stripping
+    # the device name prefix from the original_name, if possible.
+    # Used only for integrations that do not set has_entity_name to True.
+    original_name_unprefixed: str | None = attr.ib(default=None, eq=False)
 
     _cache: dict[str, Any] = attr.ib(factory=dict, eq=False, init=False)
 
@@ -279,7 +283,15 @@ class RegistryEntry:
             display_dict["hb"] = True
         if self.has_entity_name:
             display_dict["hn"] = True
-        name = self.name if self.name is not None else self.original_name
+        name = (
+            self.name
+            if self.name is not None
+            else (
+                self.original_name_unprefixed
+                if self.original_name_unprefixed is not None
+                else self.original_name
+            )
+        )
         if name is not None:
             display_dict["en"] = name
         if self.domain == "sensor" and (sensor_options := self.options.get("sensor")):
@@ -315,6 +327,11 @@ class RegistryEntry:
         # Convert sets and tuples to lists
         # so the JSON serializer does not have to do
         # it every time
+        original_name = (
+            self.original_name_unprefixed
+            if self.original_name_unprefixed is not None
+            else self.original_name
+        )
         return {
             "area_id": self.area_id,
             "categories": self.categories,
@@ -333,7 +350,7 @@ class RegistryEntry:
             "modified_at": self.modified_at.timestamp(),
             "name": self.name,
             "options": self.options,
-            "original_name": self.original_name,
+            "original_name": original_name,
             "platform": self.platform,
             "translation_key": self.translation_key,
             "unique_id": self.unique_id,
@@ -395,8 +412,7 @@ class RegistryEntry:
                     "has_entity_name": self.has_entity_name,
                     "labels": list(self.labels),
                     "modified_at": self.modified_at,
-                    "name": self.compat_name,
-                    "name_v2": self.name,
+                    "name": self.name,
                     "object_id_base": self.object_id_base,
                     "options": self.options,
                     "original_device_class": self.original_device_class,
@@ -451,31 +467,40 @@ def _async_get_full_entity_name(
     has_entity_name: bool,
     name: str | None,
     original_name: str | None,
+    original_name_unprefixed: str | None | UndefinedType = UNDEFINED,
     overridden_name: str | None = None,
+    use_legacy_naming: bool = False,
 ) -> str:
     """Get full name for an entity.
 
     This includes the device name if appropriate.
     Used for both full entity name and entity ID.
     """
-    use_device = False
-    if name is not None:
-        use_device = True
-    elif overridden_name is not None:
+    if name is None and overridden_name is not None:
         name = overridden_name
-    else:
-        name = original_name
-        if has_entity_name:
-            use_device = True
 
-    device = (
-        dr.async_get(hass).async_get(device_id)
-        if use_device and device_id is not None
-        else None
-    )
+    elif not use_legacy_naming or name is None:
+        device_name: str | None = None
+        if (
+            device_id is not None
+            and (device := dr.async_get(hass).async_get(device_id)) is not None
+        ):
+            device_name = device.name_by_user or device.name
 
-    if device is not None:
-        device_name = device.name_by_user or device.name
+        if name is None:
+            if original_name_unprefixed is UNDEFINED:
+                original_name_unprefixed = (
+                    _async_strip_prefix_from_entity_name(original_name, device_name)
+                    if not has_entity_name
+                    else None
+                )
+
+            name = (
+                original_name_unprefixed
+                if original_name_unprefixed is not None
+                else original_name
+            )
+
         if not name:
             name = device_name
         elif device_name:
@@ -494,9 +519,11 @@ def async_get_full_entity_name(
     original_name: str | None | UndefinedType = UNDEFINED,
 ) -> str:
     """Get full entity name for an entry."""
-    original_name = (
-        original_name if original_name is not UNDEFINED else entry.original_name
-    )
+    original_name_unprefixed: str | None | UndefinedType = UNDEFINED
+    if original_name is UNDEFINED or original_name == entry.original_name:
+        original_name = entry.original_name
+        original_name_unprefixed = entry.original_name_unprefixed
+
     return _async_get_full_entity_name(
         hass,
         device_id=entry.device_id,
@@ -504,6 +531,8 @@ def async_get_full_entity_name(
         has_entity_name=entry.has_entity_name,
         name=entry.name,
         original_name=original_name,
+        original_name_unprefixed=original_name_unprefixed,
+        use_legacy_naming=True,
     )
 
 
@@ -583,6 +612,24 @@ def _async_strip_prefix_from_entity_name(
     return new_name[0].upper() + new_name[1:]
 
 
+@callback
+def _unprefix_original_name(
+    hass: HomeAssistant,
+    original_name: str | None,
+    has_entity_name: bool,
+    device_id: str | None,
+) -> str | None:
+    """Calculate original_name_unprefixed."""
+    if has_entity_name or device_id is None:
+        return None
+
+    if (device := dr.async_get(hass).async_get(device_id)) is None:
+        return None
+
+    device_name = device.name_by_user or device.name
+    return _async_strip_prefix_from_entity_name(original_name, device_name)
+
+
 @attr.s(frozen=True, slots=True)
 class DeletedRegistryEntry:
     """Deleted Entity Registry Entry."""
@@ -613,7 +660,6 @@ class DeletedRegistryEntry:
 
     # For backwards compatibility, should be removed in the future
     compat_aliases: list[str] = attr.ib(factory=list, eq=False)
-    compat_name: str | None = attr.ib(default=None, eq=False)
 
     _cache: dict[str, Any] = attr.ib(factory=dict, eq=False, init=False)
 
@@ -649,8 +695,7 @@ class DeletedRegistryEntry:
                     "id": self.id,
                     "labels": list(self.labels),
                     "modified_at": self.modified_at,
-                    "name": self.compat_name,
-                    "name_v2": self.name,
+                    "name": self.name,
                     "options": self.options if self.options is not UNDEFINED else {},
                     "options_undefined": self.options is UNDEFINED,
                     "orphaned_timestamp": self.orphaned_timestamp,
@@ -803,46 +848,37 @@ class EntityRegistryStore(storage.Store[dict[str, list[dict[str, Any]]]]):
                 for entity in data["entities"]:
                     entity["object_id_base"] = entity["original_name"]
 
-            if old_minor_version < 21:
-                # Version 1.21 migrates the full name to include device name,
-                # even if entity name is overwritten by user.
-                # It also adds support for COMPUTED_NAME in aliases and starts preserving their order.
-                # To avoid a major version bump, we keep the old name and aliases as-is
-                # and use new name_v2 and aliases_v2 fields instead.
+            if old_minor_version == 21:
+                # Version 1.21 has been reverted.
+                # It migrated entity names to the new format stored in `name_v2`
+                # field, automatically stripping any device name prefix present.
+                # The old name was stored in `name` field for backwards compatibility.
+                # For users who already migrated to v1.21, we restore old names
+                # but try to preserve any user renames made since that migration.
                 device_registry = dr.async_get(self.hass)
 
                 for entity in data["entities"]:
-                    alias_to_add: str | None = None
+                    old_name = entity["name"]
+                    name = entity.pop("name_v2")
                     if (
-                        (name := entity["name"])
+                        (name != old_name)
                         and (device_id := entity["device_id"]) is not None
                         and (device := device_registry.async_get(device_id)) is not None
                         and (device_name := device.name_by_user or device.name)
                     ):
-                        # Strip the device name prefix from the entity name if present,
-                        # and add the full generated name as an alias.
-                        # If the name doesn't have the device name prefix and the
-                        # entity is exposed to a voice assistant, add the previous
-                        # name as an alias instead to preserve backwards compatibility.
-                        if (
-                            new_name := _async_strip_prefix_from_entity_name(
-                                name, device_name
-                            )
-                        ) is not None:
-                            name = new_name
-                        elif any(
-                            entity.get("options", {}).get(key, {}).get("should_expose")
-                            for key in ("conversation", "cloud.google_assistant")
-                        ):
-                            alias_to_add = name
+                        name = f"{device_name} {name}"
 
-                    entity["name_v2"] = name
-                    entity["aliases_v2"] = [alias_to_add, *entity["aliases"]]
+                    entity["name"] = name
+
+            if old_minor_version < 22:
+                # Version 1.22 adds support for COMPUTED_NAME in aliases and starts preserving
+                # their order.
+                # To avoid a major version bump, we keep the old aliases as-is and use aliases_v2
+                # field instead.
+                for entity in data["entities"]:
+                    entity["aliases_v2"] = [None, *entity["aliases"]]
 
                 for entity in data["deleted_entities"]:
-                    # We don't know what the device name was, so the only thing we can do
-                    # is to clear the overwritten name to not mislead users.
-                    entity["name_v2"] = None
                     entity["aliases_v2"] = [None, *entity["aliases"]]
 
         if old_major_version > 1:
@@ -1316,7 +1352,6 @@ class EntityRegistry(BaseRegistry):
             area_id = deleted_entity.area_id
             categories = deleted_entity.categories
             compat_aliases = deleted_entity.compat_aliases
-            compat_name = deleted_entity.compat_name
             created_at = deleted_entity.created_at
             device_class = deleted_entity.device_class
             if deleted_entity.disabled_by is not UNDEFINED:
@@ -1348,7 +1383,6 @@ class EntityRegistry(BaseRegistry):
             area_id = None
             categories = {}
             compat_aliases = []
-            compat_name = None
             device_class = None
             icon = None
             labels = set()
@@ -1377,6 +1411,11 @@ class EntityRegistry(BaseRegistry):
                 unique_id=unique_id,
             )
 
+        original_name = none_if_undefined(original_name)
+        original_name_unprefixed = _unprefix_original_name(
+            self.hass, original_name, has_entity_name_bool, device_id
+        )
+
         if (
             disabled_by is None
             and config_entry
@@ -1391,7 +1430,6 @@ class EntityRegistry(BaseRegistry):
             categories=categories,
             capabilities=none_if_undefined(capabilities),
             compat_aliases=compat_aliases,
-            compat_name=compat_name,
             config_entry_id=none_if_undefined(config_entry_id),
             config_subentry_id=none_if_undefined(config_subentry_id),
             created_at=created_at,
@@ -1410,7 +1448,8 @@ class EntityRegistry(BaseRegistry):
             options=options,
             original_device_class=none_if_undefined(original_device_class),
             original_icon=none_if_undefined(original_icon),
-            original_name=none_if_undefined(original_name),
+            original_name=original_name,
+            original_name_unprefixed=original_name_unprefixed,
             platform=platform,
             suggested_object_id=suggested_object_id,
             supported_features=none_if_undefined(supported_features) or 0,
@@ -1453,7 +1492,6 @@ class EntityRegistry(BaseRegistry):
             area_id=entity.area_id,
             categories=entity.categories,
             compat_aliases=entity.compat_aliases,
-            compat_name=entity.compat_name,
             config_entry_id=config_entry_id,
             config_subentry_id=entity.config_subentry_id,
             created_at=entity.created_at,
@@ -1523,9 +1561,11 @@ class EntityRegistry(BaseRegistry):
         if not device:
             return
 
+        changes = event.data["changes"]
+
         # Remove entities which belong to config entries no longer associated with the
         # device
-        if old_config_entries := event.data["changes"].get("config_entries"):
+        if old_config_entries := changes.get("config_entries"):
             entities = async_entries_for_device(
                 self, event.data["device_id"], include_disabled_entities=True
             )
@@ -1539,9 +1579,7 @@ class EntityRegistry(BaseRegistry):
 
         # Remove entities which belong to config subentries no longer associated with the
         # device
-        if old_config_entries_subentries := event.data["changes"].get(
-            "config_entries_subentries"
-        ):
+        if old_config_entries_subentries := changes.get("config_entries_subentries"):
             entities = async_entries_for_device(
                 self, event.data["device_id"], include_disabled_entities=True
             )
@@ -1557,6 +1595,42 @@ class EntityRegistry(BaseRegistry):
                     not in device.config_entries_subentries[config_entry_id]
                 ):
                     self.async_remove(entity.entity_id)
+
+        # Update name if device name changed
+        if (by_user := "name_by_user" in changes) or "name" in changes:
+            entities = async_entries_for_device(
+                self, event.data["device_id"], include_disabled_entities=True
+            )
+            device_name = device.name_by_user or device.name
+            for entity in entities:
+                if entity.has_entity_name:
+                    continue
+
+                # When a user renames a device, update entity names to reflect
+                # the new device name.
+                # An empty name_unprefixed means the entity name equals
+                # the device name (e.g. a main sensor); a non-empty one
+                # is appended as a suffix.
+                name: str | None | UndefinedType = UNDEFINED
+                if (
+                    by_user
+                    and entity.name is None
+                    and (name_unprefixed := entity.original_name_unprefixed) is not None
+                ):
+                    if not name_unprefixed:
+                        name = device_name
+                    elif device_name:
+                        name = f"{device_name} {name_unprefixed}"
+
+                original_name_unprefixed = _async_strip_prefix_from_entity_name(
+                    entity.original_name, device_name
+                )
+
+                self._async_update_entity(
+                    entity.entity_id,
+                    name=name,
+                    original_name_unprefixed=original_name_unprefixed,
+                )
 
         # Re-enable disabled entities if the device is no longer disabled
         if not device.disabled:
@@ -1608,6 +1682,7 @@ class EntityRegistry(BaseRegistry):
         original_device_class: str | None | UndefinedType = UNDEFINED,
         original_icon: str | None | UndefinedType = UNDEFINED,
         original_name: str | None | UndefinedType = UNDEFINED,
+        original_name_unprefixed: str | None | UndefinedType = UNDEFINED,
         platform: str | None | UndefinedType = UNDEFINED,
         suggested_object_id: str | None | UndefinedType = UNDEFINED,
         supported_features: int | UndefinedType = UNDEFINED,
@@ -1641,6 +1716,7 @@ class EntityRegistry(BaseRegistry):
             ("original_device_class", original_device_class),
             ("original_icon", original_icon),
             ("original_name", original_name),
+            ("original_name_unprefixed", original_name_unprefixed),
             ("platform", platform),
             ("suggested_object_id", suggested_object_id),
             ("supported_features", supported_features),
@@ -1715,9 +1791,31 @@ class EntityRegistry(BaseRegistry):
 
         self.hass.verify_event_loop_thread("entity_registry.async_update_entity")
 
+        if original_name_unprefixed is UNDEFINED and (
+            original_name is not UNDEFINED
+            or device_id is not UNDEFINED
+            or has_entity_name is not UNDEFINED
+        ):
+            device_id = device_id if device_id is not UNDEFINED else old.device_id
+            has_entity_name = (
+                has_entity_name
+                if has_entity_name is not UNDEFINED
+                else old.has_entity_name
+            )
+            original_name = (
+                original_name if original_name is not UNDEFINED else old.original_name
+            )
+
+            original_name_unprefixed = _unprefix_original_name(
+                self.hass, original_name, has_entity_name, device_id
+            )
+            new_values["original_name_unprefixed"] = original_name_unprefixed
+
         new = self.entities[entity_id] = attr.evolve(old, **new_values)
 
         self.async_schedule_save()
+
+        old_values.pop("original_name_unprefixed", None)
 
         data: _EventEntityRegistryUpdatedData_Update = {
             "action": "update",
@@ -1844,6 +1942,10 @@ class EntityRegistry(BaseRegistry):
 
     async def _async_load(self) -> None:
         """Load the entity registry."""
+        # Device registry must be loaded before entity registry because
+        # migration and entity processing reference device names.
+        await dr.async_get(self.hass).async_wait_loaded()
+
         _async_setup_cleanup(self.hass, self)
         _async_setup_entity_restore(self.hass, self)
 
@@ -1878,13 +1980,19 @@ class EntityRegistry(BaseRegistry):
                     )
                     continue
 
+                original_name_unprefixed = _unprefix_original_name(
+                    self.hass,
+                    entity["original_name"],
+                    entity["has_entity_name"],
+                    entity["device_id"],
+                )
+
                 entities[entity["entity_id"]] = RegistryEntry(
                     aliases=_deserialize_aliases(entity["aliases_v2"]),
                     area_id=entity["area_id"],
                     categories=entity["categories"],
                     capabilities=entity["capabilities"],
                     compat_aliases=entity["aliases"],
-                    compat_name=entity["name"],
                     config_entry_id=entity["config_entry_id"],
                     config_subentry_id=entity["config_subentry_id"],
                     created_at=datetime.fromisoformat(entity["created_at"]),
@@ -1905,12 +2013,13 @@ class EntityRegistry(BaseRegistry):
                     has_entity_name=entity["has_entity_name"],
                     labels=set(entity["labels"]),
                     modified_at=datetime.fromisoformat(entity["modified_at"]),
-                    name=entity["name_v2"],
+                    name=entity["name"],
                     object_id_base=entity.get("object_id_base"),
                     options=entity["options"],
                     original_device_class=entity["original_device_class"],
                     original_icon=entity["original_icon"],
                     original_name=entity["original_name"],
+                    original_name_unprefixed=original_name_unprefixed,
                     platform=entity["platform"],
                     suggested_object_id=entity["suggested_object_id"],
                     supported_features=entity["supported_features"],
@@ -1955,7 +2064,6 @@ class EntityRegistry(BaseRegistry):
                     area_id=entity["area_id"],
                     categories=entity["categories"],
                     compat_aliases=entity["aliases"],
-                    compat_name=entity["name"],
                     config_entry_id=entity["config_entry_id"],
                     config_subentry_id=entity["config_subentry_id"],
                     created_at=datetime.fromisoformat(entity["created_at"]),
@@ -1975,7 +2083,7 @@ class EntityRegistry(BaseRegistry):
                     id=entity["id"],
                     labels=set(entity["labels"]),
                     modified_at=datetime.fromisoformat(entity["modified_at"]),
-                    name=entity["name_v2"],
+                    name=entity["name"],
                     options=entity["options"]
                     if not entity["options_undefined"]
                     else UNDEFINED,

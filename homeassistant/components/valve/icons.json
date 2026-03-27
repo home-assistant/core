@@ -1,4 +1,12 @@
 {
+  "conditions": {
+    "is_closed": {
+      "condition": "mdi:valve-closed"
+    },
+    "is_open": {
+      "condition": "mdi:valve-open"
+    }
+  },
   "entity_component": {
     "_": {
       "default": "mdi:valve-open",

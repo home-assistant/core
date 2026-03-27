@@ -2,10 +2,8 @@
 
 from copy import deepcopy
 from datetime import timedelta
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, Mock, patch
 
-from aiohttp import RequestInfo
-from aiohttp.client_exceptions import ClientResponseError
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -21,7 +19,7 @@ from tesla_fleet_api.exceptions import (
     VehicleOffline,
 )
 
-from homeassistant.components.tesla_fleet.const import AUTHORIZE_URL
+from homeassistant.components.tesla_fleet.const import DOMAIN
 from homeassistant.components.tesla_fleet.coordinator import (
     ENERGY_HISTORY_INTERVAL,
     ENERGY_INTERVAL,
@@ -29,11 +27,17 @@ from homeassistant.components.tesla_fleet.coordinator import (
     VEHICLE_INTERVAL,
     VEHICLE_INTERVAL_SECONDS,
     VEHICLE_WAIT,
+    _invalidate_access_token,
 )
 from homeassistant.components.tesla_fleet.models import TeslaFleetData
 from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import CONF_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.exceptions import (
+    OAuth2TokenRequestReauthError,
+    OAuth2TokenRequestTransientError,
+)
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.config_entry_oauth2_flow import (
     ImplementationUnavailableError,
@@ -45,12 +49,14 @@ from .const import LIVE_STATUS, VEHICLE_ASLEEP, VEHICLE_DATA_ALT
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
-ERRORS = [
+SETUP_ERRORS = [
     (InvalidToken, ConfigEntryState.SETUP_ERROR),
     (OAuthExpired, ConfigEntryState.SETUP_ERROR),
     (LoginRequired, ConfigEntryState.SETUP_ERROR),
     (TeslaFleetError, ConfigEntryState.SETUP_RETRY),
 ]
+
+RUNTIME_ERRORS = [InvalidToken, OAuthExpired, LoginRequired, TeslaFleetError]
 
 
 async def test_load_unload(
@@ -69,12 +75,12 @@ async def test_load_unload(
     assert not hasattr(normal_config_entry, "runtime_data")
 
 
-@pytest.mark.parametrize(("side_effect", "state"), ERRORS)
+@pytest.mark.parametrize(("side_effect", "state"), SETUP_ERRORS)
 async def test_init_error(
     hass: HomeAssistant,
     normal_config_entry: MockConfigEntry,
     mock_products: AsyncMock,
-    side_effect: TeslaFleetError,
+    side_effect: type[TeslaFleetError],
     state: ConfigEntryState,
 ) -> None:
     """Test init with errors."""
@@ -94,8 +100,9 @@ async def test_oauth_refresh_expired(
     # Patch the token refresh to raise an error
     with patch(
         "homeassistant.components.tesla_fleet.OAuth2Session.async_ensure_token_valid",
-        side_effect=ClientResponseError(
-            RequestInfo(AUTHORIZE_URL, "POST", {}, AUTHORIZE_URL), None, status=401
+        side_effect=OAuth2TokenRequestReauthError(
+            domain=DOMAIN,
+            request_info=Mock(),
         ),
     ) as mock_async_ensure_token_valid:
         # Trigger an unmocked function call
@@ -116,8 +123,9 @@ async def test_oauth_refresh_error(
     # Patch the token refresh to raise an error
     with patch(
         "homeassistant.components.tesla_fleet.OAuth2Session.async_ensure_token_valid",
-        side_effect=ClientResponseError(
-            RequestInfo(AUTHORIZE_URL, "POST", {}, AUTHORIZE_URL), None, status=400
+        side_effect=OAuth2TokenRequestTransientError(
+            domain=DOMAIN,
+            request_info=Mock(),
         ),
     ) as mock_async_ensure_token_valid:
         # Trigger an unmocked function call
@@ -126,6 +134,56 @@ async def test_oauth_refresh_error(
 
         mock_async_ensure_token_valid.assert_called_once()
     assert normal_config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+async def test_invalidate_access_token_updates_when_not_expired(
+    hass: HomeAssistant,
+    normal_config_entry: MockConfigEntry,
+) -> None:
+    """Test invalidating token updates entry when token is not expired."""
+    normal_config_entry.add_to_hass(hass)
+    expected_data = {
+        **dict(normal_config_entry.data),
+        CONF_TOKEN: {
+            **normal_config_entry.data[CONF_TOKEN],
+            "expires_at": 0,
+        },
+    }
+
+    _invalidate_access_token(hass, normal_config_entry)
+
+    assert dict(normal_config_entry.data) == expected_data
+
+
+async def test_invalidate_access_token_noop_when_already_expired(
+    hass: HomeAssistant,
+    normal_config_entry: MockConfigEntry,
+) -> None:
+    """Test invalidating token does not update an already expired token."""
+    normal_config_entry.add_to_hass(hass)
+    normal_config_entry.data[CONF_TOKEN]["expires_at"] = 0
+    before_data = dict(normal_config_entry.data)
+
+    _invalidate_access_token(hass, normal_config_entry)
+
+    assert dict(normal_config_entry.data) == before_data
+
+
+async def test_invalidate_access_token_noop_when_token_missing(
+    hass: HomeAssistant,
+) -> None:
+    """Test invalidating token does not update when token data is missing."""
+
+    missing_token_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={"auth_implementation": DOMAIN},
+    )
+    missing_token_entry.add_to_hass(hass)
+    before_data = dict(missing_token_entry.data)
+
+    _invalidate_access_token(hass, missing_token_entry)
+
+    assert dict(missing_token_entry.data) == before_data
 
 
 # Test devices
@@ -183,12 +241,12 @@ async def test_vehicle_refresh_offline(
     mock_vehicle_data.assert_not_called()
 
 
-@pytest.mark.parametrize(("side_effect"), ERRORS)
+@pytest.mark.parametrize("side_effect", RUNTIME_ERRORS)
 async def test_vehicle_refresh_error(
     hass: HomeAssistant,
     normal_config_entry: MockConfigEntry,
     mock_vehicle_data: AsyncMock,
-    side_effect: TeslaFleetError,
+    side_effect: type[TeslaFleetError],
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test coordinator refresh makes entity unavailable."""
@@ -202,6 +260,41 @@ async def test_vehicle_refresh_error(
 
     assert (state := hass.states.get("sensor.test_battery_level"))
     assert state.state == "unavailable"
+
+
+async def test_vehicle_refresh_token_expired_recovery(
+    hass: HomeAssistant,
+    normal_config_entry: MockConfigEntry,
+    mock_vehicle_data: AsyncMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test coordinator recovers from expired vehicle access token."""
+    await setup_platform(hass, normal_config_entry)
+    assert normal_config_entry.state is ConfigEntryState.LOADED
+    assert (state := hass.states.get("sensor.test_battery_level"))
+    assert state.state != "unavailable"
+
+    mock_vehicle_data.reset_mock()
+    mock_vehicle_data.side_effect = OAuthExpired
+
+    freezer.tick(VEHICLE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert normal_config_entry.state is ConfigEntryState.LOADED
+    assert (state := hass.states.get("sensor.test_battery_level"))
+    assert state.state == "unavailable"
+    assert normal_config_entry.data["token"]["expires_at"] == 0
+    assert mock_vehicle_data.call_count == 1
+
+    mock_vehicle_data.side_effect = None
+    freezer.tick(VEHICLE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert (state := hass.states.get("sensor.test_battery_level"))
+    assert state.state != "unavailable"
+    assert mock_vehicle_data.call_count == 2
 
 
 async def test_vehicle_refresh_ratelimited(
@@ -338,18 +431,25 @@ async def test_vehicle_sleep(
 
 
 # Test Energy Live Coordinator
-@pytest.mark.parametrize(("side_effect", "state"), ERRORS)
+@pytest.mark.parametrize("side_effect", RUNTIME_ERRORS)
 async def test_energy_live_refresh_error(
     hass: HomeAssistant,
     normal_config_entry: MockConfigEntry,
     mock_live_status: AsyncMock,
-    side_effect: TeslaFleetError,
-    state: ConfigEntryState,
+    side_effect: type[TeslaFleetError],
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test coordinator refresh with an error."""
-    mock_live_status.side_effect = side_effect
     await setup_platform(hass, normal_config_entry)
-    assert normal_config_entry.state is state
+    assert normal_config_entry.state is ConfigEntryState.LOADED
+
+    mock_live_status.side_effect = side_effect
+    freezer.tick(ENERGY_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert (state := hass.states.get("sensor.energy_site_grid_power"))
+    assert state.state == "unavailable"
 
 
 async def test_energy_live_refresh_bad_response(
@@ -389,27 +489,69 @@ async def test_energy_live_refresh_bad_wall_connectors(
 
 
 # Test Energy Site Coordinator
-@pytest.mark.parametrize(("side_effect", "state"), ERRORS)
+@pytest.mark.parametrize("side_effect", RUNTIME_ERRORS)
 async def test_energy_site_refresh_error(
     hass: HomeAssistant,
     normal_config_entry: MockConfigEntry,
     mock_site_info: AsyncMock,
-    side_effect: TeslaFleetError,
-    state: ConfigEntryState,
+    side_effect: type[TeslaFleetError],
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test coordinator refresh with an error."""
-    mock_site_info.side_effect = side_effect
     await setup_platform(hass, normal_config_entry)
-    assert normal_config_entry.state is state
+    assert normal_config_entry.state is ConfigEntryState.LOADED
+
+    mock_site_info.side_effect = side_effect
+    freezer.tick(ENERGY_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert (state := hass.states.get("number.energy_site_backup_reserve"))
+    assert state.state == "unavailable"
+
+
+async def test_energy_refresh_token_expired_recovery(
+    hass: HomeAssistant,
+    normal_config_entry: MockConfigEntry,
+    mock_live_status: AsyncMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test energy coordinator recovers from expired access token."""
+    await setup_platform(hass, normal_config_entry)
+    assert normal_config_entry.state is ConfigEntryState.LOADED
+    assert (state := hass.states.get("sensor.energy_site_grid_power"))
+    assert state.state != "unavailable"
+
+    mock_live_status.reset_mock()
+    mock_live_status.side_effect = OAuthExpired
+
+    freezer.tick(ENERGY_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert normal_config_entry.state is ConfigEntryState.LOADED
+    assert (state := hass.states.get("sensor.energy_site_grid_power"))
+    assert state.state == "unavailable"
+    assert normal_config_entry.data["token"]["expires_at"] == 0
+    assert mock_live_status.call_count == 1
+
+    mock_live_status.side_effect = None
+    freezer.tick(ENERGY_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert (state := hass.states.get("sensor.energy_site_grid_power"))
+    assert state.state != "unavailable"
+    assert mock_live_status.call_count == 2
 
 
 # Test Energy History Coordinator
-@pytest.mark.parametrize(("side_effect"), [side_effect for side_effect, _ in ERRORS])
+@pytest.mark.parametrize("side_effect", RUNTIME_ERRORS)
 async def test_energy_history_refresh_error(
     hass: HomeAssistant,
     normal_config_entry: MockConfigEntry,
     mock_energy_history: AsyncMock,
-    side_effect: TeslaFleetError,
+    side_effect: type[TeslaFleetError],
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test coordinator refresh with an error."""
