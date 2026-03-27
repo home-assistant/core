@@ -302,6 +302,7 @@ async def async_check_config(config_dir):
     hass = core.HomeAssistant(config_dir)
     loader.async_setup(hass)
     hass.config_entries = ConfigEntries(hass, {})
+    dr.async_setup(hass)
     await ar.async_load(hass)
     await dr.async_load(hass)
     await er.async_load(hass)

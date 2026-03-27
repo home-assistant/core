@@ -468,6 +468,7 @@ async def async_load_base_functionality(hass: core.HomeAssistant) -> bool:
     translation.async_setup(hass)
 
     recovery = hass.config.recovery_mode
+    device_registry.async_setup(hass)
     try:
         await asyncio.gather(
             create_eager_task(get_internal_store_manager(hass).async_initialize()),
