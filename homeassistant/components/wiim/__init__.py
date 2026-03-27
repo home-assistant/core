@@ -2,9 +2,6 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
-from urllib.parse import urlparse
-
 from wiim.controller import WiimController
 from wiim.discovery import async_create_wiim_device
 from wiim.exceptions import WiimDeviceException, WiimRequestException
@@ -13,10 +10,10 @@ from homeassistant.const import CONF_HOST, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import Event, HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.network import NoURLAvailableError, get_url
 
 from .const import DATA_WIIM, DOMAIN, LOGGER, PLATFORMS, UPNP_PORT, WiimConfigEntry
 from .models import WiimData
+from .util import InvalidHomeAssistantURLError, get_homeassistant_local_host
 
 DEFAULT_AVAILABILITY_POLLING_INTERVAL = 60
 
@@ -54,13 +51,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: WiimConfigEntry) -> bool
     upnp_location = f"http://{host}:{UPNP_PORT}/description.xml"
 
     try:
-        base_url = get_url(hass, prefer_external=False)
-    except NoURLAvailableError as err:
+        local_host = get_homeassistant_local_host(hass)
+    except InvalidHomeAssistantURLError as err:
         raise ConfigEntryNotReady("Failed to determine Home Assistant URL") from err
-
-    local_host = urlparse(base_url).hostname
-    if TYPE_CHECKING:
-        assert local_host is not None
 
     try:
         wiim_device = await async_create_wiim_device(
