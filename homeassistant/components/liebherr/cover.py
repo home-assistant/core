@@ -12,6 +12,7 @@ from homeassistant.components.cover import (
     CoverEntityFeature,
 )
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -139,22 +140,32 @@ class LiebherrAutoDoor(LiebherrEntity, CoverEntity):
         """Open the door."""
         self._optimistic_state = True
         self.async_write_ha_state()
-        await self._async_send_command(
-            self.coordinator.client.trigger_auto_door(
-                device_id=self.coordinator.device_id,
-                zone_id=self._zone_id,
-                value=True,
+        try:
+            await self._async_send_command(
+                self.coordinator.client.trigger_auto_door(
+                    device_id=self.coordinator.device_id,
+                    zone_id=self._zone_id,
+                    value=True,
+                )
             )
-        )
+        except HomeAssistantError:
+            self._optimistic_state = None
+            self.async_write_ha_state()
+            raise
 
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close the door."""
         self._optimistic_state = False
         self.async_write_ha_state()
-        await self._async_send_command(
-            self.coordinator.client.trigger_auto_door(
-                device_id=self.coordinator.device_id,
-                zone_id=self._zone_id,
-                value=False,
+        try:
+            await self._async_send_command(
+                self.coordinator.client.trigger_auto_door(
+                    device_id=self.coordinator.device_id,
+                    zone_id=self._zone_id,
+                    value=False,
+                )
             )
-        )
+        except HomeAssistantError:
+            self._optimistic_state = None
+            self.async_write_ha_state()
+            raise

@@ -200,12 +200,18 @@ async def test_cover_state_settles_after_poll(
     assert state.state == STATE_CLOSED
 
 
+@pytest.mark.parametrize(
+    "service",
+    [SERVICE_OPEN_COVER, SERVICE_CLOSE_COVER],
+    ids=["open", "close"],
+)
 @pytest.mark.usefixtures("init_integration")
 async def test_cover_failure(
     hass: HomeAssistant,
     mock_liebherr_client: MagicMock,
+    service: str,
 ) -> None:
-    """Test cover fails gracefully on connection error."""
+    """Test cover fails gracefully on connection error and resets optimistic state."""
     mock_liebherr_client.trigger_auto_door.side_effect = LiebherrConnectionError(
         "Connection failed"
     )
@@ -216,10 +222,15 @@ async def test_cover_failure(
     ):
         await hass.services.async_call(
             COVER_DOMAIN,
-            SERVICE_OPEN_COVER,
+            service,
             {ATTR_ENTITY_ID: ENTITY_ID},
             blocking=True,
         )
+
+    # Optimistic state should be cleared after failure
+    state = hass.states.get(ENTITY_ID)
+    assert state is not None
+    assert state.state == STATE_CLOSED
 
 
 @pytest.mark.usefixtures("init_integration")
