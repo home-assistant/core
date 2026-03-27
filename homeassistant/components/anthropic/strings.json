@@ -149,6 +149,18 @@
       }
     }
   },
+  "entity": {
+    "ai_task": {
+      "ai_task_data": {
+        "name": "AI Task"
+      }
+    },
+    "conversation": {
+      "conversation": {
+        "name": "Conversation"
+      }
+    }
+  },
   "issues": {
     "model_deprecated": {
       "fix_flow": {
