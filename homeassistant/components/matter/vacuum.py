@@ -4,12 +4,14 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from enum import IntEnum
+import logging
 from typing import TYPE_CHECKING, Any
 
 from chip.clusters import Objects as clusters
 from matter_server.client.models import device_types
 
 from homeassistant.components.vacuum import (
+    Segment,
     StateVacuumEntity,
     StateVacuumEntityDescription,
     VacuumActivity,
@@ -24,6 +26,8 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from .entity import MatterEntity, MatterEntityDescription
 from .helpers import get_matter
 from .models import MatterDiscoverySchema
+
+_LOGGER = logging.getLogger(__name__)
 
 
 class OperationalState(IntEnum):
@@ -70,6 +74,7 @@ class MatterVacuum(MatterEntity, StateVacuumEntity):
     """Representation of a Matter Vacuum cleaner entity."""
 
     _last_accepted_commands: list[int] | None = None
+    _last_service_area_feature_map: int | None = None
     _supported_run_modes: (
         dict[int, clusters.RvcRunMode.Structs.ModeOptionStruct] | None
     ) = None
@@ -136,6 +141,16 @@ class MatterVacuum(MatterEntity, StateVacuumEntity):
                 "No supported run mode found to start the vacuum cleaner."
             )
 
+        # Reset selected areas to an unconstrained selection to ensure start
+        # performs a full clean and does not reuse a previous area-targeted
+        # selection.
+        if VacuumEntityFeature.CLEAN_AREA in self.supported_features:
+            # Matter ServiceArea: an empty NewAreas list means unconstrained
+            # operation (full clean).
+            await self.send_device_command(
+                clusters.ServiceArea.Commands.SelectAreas(newAreas=[])
+            )
+
         await self.send_device_command(
             clusters.RvcRunMode.Commands.ChangeToMode(newMode=mode.mode)
         )
@@ -143,6 +158,68 @@ class MatterVacuum(MatterEntity, StateVacuumEntity):
     async def async_pause(self) -> None:
         """Pause the cleaning task."""
         await self.send_device_command(clusters.RvcOperationalState.Commands.Pause())
+
+    @property
+    def _current_segments(self) -> dict[str, Segment]:
+        """Return the current cleanable segments reported by the device."""
+        supported_areas: list[clusters.ServiceArea.Structs.AreaStruct] = (
+            self.get_matter_attribute_value(
+                clusters.ServiceArea.Attributes.SupportedAreas
+            )
+        )
+
+        segments: dict[str, Segment] = {}
+        for area in supported_areas:
+            area_name = None
+            location_info = area.areaInfo.locationInfo
+            if location_info not in (None, clusters.NullValue):
+                area_name = location_info.locationName
+
+            if area_name:
+                segment_id = str(area.areaID)
+                segments[segment_id] = Segment(id=segment_id, name=area_name)
+
+        return segments
+
+    async def async_get_segments(self) -> list[Segment]:
+        """Get the segments that can be cleaned.
+
+        Returns a list of segments containing their ids and names.
+        """
+        return list(self._current_segments.values())
+
+    async def async_clean_segments(self, segment_ids: list[str], **kwargs: Any) -> None:
+        """Clean the specified segments.
+
+        Args:
+            segment_ids: List of segment IDs to clean.
+            **kwargs: Additional arguments (unused).
+
+        """
+        area_ids = [int(segment_id) for segment_id in segment_ids]
+
+        mode = self._get_run_mode_by_tag(ModeTag.CLEANING)
+        if mode is None:
+            raise HomeAssistantError(
+                "No supported run mode found to start the vacuum cleaner."
+            )
+
+        response = await self.send_device_command(
+            clusters.ServiceArea.Commands.SelectAreas(newAreas=area_ids)
+        )
+
+        if (
+            response
+            and response["status"]
+            != clusters.ServiceArea.Enums.SelectAreasStatus.kSuccess
+        ):
+            raise HomeAssistantError(
+                f"Failed to select areas: {response['statusText'] or response['status']}"
+            )
+
+        await self.send_device_command(
+            clusters.RvcRunMode.Commands.ChangeToMode(newMode=mode.mode)
+        )
 
     @callback
     def _update_from_device(self) -> None:
@@ -176,16 +253,43 @@ class MatterVacuum(MatterEntity, StateVacuumEntity):
                 state = VacuumActivity.CLEANING
         self._attr_activity = state
 
+        if (
+            VacuumEntityFeature.CLEAN_AREA in self.supported_features
+            and self.registry_entry is not None
+            and (last_seen_segments := self.last_seen_segments) is not None
+            # Ignore empty segments; some devices transiently
+            # report an empty list before sending the real one.
+            and (current_segments := self._current_segments)
+        ):
+            last_seen_by_id = {s.id: s for s in last_seen_segments}
+            if current_segments != last_seen_by_id:
+                _LOGGER.debug(
+                    "Vacuum segments changed: last_seen=%s, current=%s",
+                    last_seen_by_id,
+                    current_segments,
+                )
+                self.async_create_segments_issue()
+
     @callback
     def _calculate_features(self) -> None:
         """Calculate features for HA Vacuum platform."""
         accepted_operational_commands: list[int] = self.get_matter_attribute_value(
             clusters.RvcOperationalState.Attributes.AcceptedCommandList
         )
-        # in principle the feature set should not change, except for the accepted commands
-        if self._last_accepted_commands == accepted_operational_commands:
+        service_area_feature_map: int | None = self.get_matter_attribute_value(
+            clusters.ServiceArea.Attributes.FeatureMap
+        )
+
+        # In principle the feature set should not change, except for accepted
+        # commands and service area feature map.
+        if (
+            self._last_accepted_commands == accepted_operational_commands
+            and self._last_service_area_feature_map == service_area_feature_map
+        ):
             return
+
         self._last_accepted_commands = accepted_operational_commands
+        self._last_service_area_feature_map = service_area_feature_map
         supported_features: VacuumEntityFeature = VacuumEntityFeature(0)
         supported_features |= VacuumEntityFeature.START
         supported_features |= VacuumEntityFeature.STATE
@@ -212,6 +316,12 @@ class MatterVacuum(MatterEntity, StateVacuumEntity):
             in accepted_operational_commands
         ):
             supported_features |= VacuumEntityFeature.RETURN_HOME
+        # Check if Map feature is enabled for clean area support
+        if (
+            service_area_feature_map is not None
+            and service_area_feature_map & clusters.ServiceArea.Bitmaps.Feature.kMaps
+        ):
+            supported_features |= VacuumEntityFeature.CLEAN_AREA
 
         self._attr_supported_features = supported_features
 
@@ -227,6 +337,10 @@ DISCOVERY_SCHEMAS = [
         required_attributes=(
             clusters.RvcRunMode.Attributes.CurrentMode,
             clusters.RvcOperationalState.Attributes.OperationalState,
+        ),
+        optional_attributes=(
+            clusters.ServiceArea.Attributes.FeatureMap,
+            clusters.ServiceArea.Attributes.SupportedAreas,
         ),
         device_type=(device_types.RoboticVacuumCleaner,),
         allow_none_value=True,

@@ -11,7 +11,7 @@ from lunatone_rest_api_client.models import (
     InfoData,
     LineStatus,
 )
-from lunatone_rest_api_client.models.common import ColorRGBData, ColorWAFData, Status
+from lunatone_rest_api_client.models.common import Status
 from lunatone_rest_api_client.models.devices import DeviceStatus
 
 from homeassistant.core import HomeAssistant
@@ -77,13 +77,7 @@ def build_device_data_list() -> list[DeviceData]:
             name="Device 1",
             available=True,
             status=DeviceStatus(),
-            features=FeaturesStatus(
-                switchable=Status[bool](status=False),
-                dimmable=Status[float](status=0.0),
-                colorKelvin=Status[int](status=1000),
-                colorRGB=Status[ColorRGBData](status=ColorRGBData(r=0, g=0, b=0)),
-                colorWAF=Status[ColorWAFData](status=ColorWAFData(w=0, a=0, f=0)),
-            ),
+            features=FeaturesStatus(switchable=Status[bool](status=False)),
             address=0,
             line=0,
         ),
@@ -95,9 +89,6 @@ def build_device_data_list() -> list[DeviceData]:
             features=FeaturesStatus(
                 switchable=Status[bool](status=False),
                 dimmable=Status[float](status=0.0),
-                colorKelvin=Status[int](status=1000),
-                colorRGB=Status[ColorRGBData](status=ColorRGBData(r=0, g=0, b=0)),
-                colorWAF=Status[ColorWAFData](status=ColorWAFData(w=0, a=0, f=0)),
             ),
             address=1,
             line=0,

@@ -3626,6 +3626,37 @@
     'via_device_id': None,
   })
 # ---
+# name: test_device_registry[frmfrbds0jixxyaljbngd]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'tuya',
+        'frmfrbds0jixxyaljbngd',
+      ),
+    }),
+    'labels': set({
+    }),
+    'manufacturer': 'Tuya',
+    'model': 'WiFi smart online 8 in 1 tester',
+    'model_id': 'layxxij0sdbrfmrf',
+    'name': 'WiFi smart online 8 in 1 tester',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': None,
+    'sw_version': None,
+    'via_device_id': None,
+  })
+# ---
 # name: test_device_registry[ftvxinxevpy21tbelc]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
@@ -5982,6 +6013,37 @@
     'via_device_id': None,
   })
 # ---
+# name: test_device_registry[o4hpbl5uarjfbzheps]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'tuya',
+        'o4hpbl5uarjfbzheps',
+      ),
+    }),
+    'labels': set({
+    }),
+    'manufacturer': 'Tuya',
+    'model': '',
+    'model_id': 'ehzbfjrau5lbph4o',
+    'name': 'Dolní vchod - západ',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': None,
+    'sw_version': None,
+    'via_device_id': None,
+  })
+# ---
 # name: test_device_registry[o5kqedcacfng0plpnocfw]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
@@ -7091,6 +7153,37 @@
     'model': 'Smart White Noise Machine',
     'model_id': '45idzfufidgee7ir',
     'name': 'Smart White Noise Machine',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': None,
+    'sw_version': None,
+    'via_device_id': None,
+  })
+# ---
+# name: test_device_registry[rirsc4vhpbv2whkp2gw]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'tuya',
+        'rirsc4vhpbv2whkp2gw',
+      ),
+    }),
+    'labels': set({
+    }),
+    'manufacturer': 'Tuya',
+    'model': 'C30',
+    'model_id': 'pkhw2vbphv4csrir',
+    'name': 'C30',
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,

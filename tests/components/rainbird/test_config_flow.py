@@ -19,6 +19,7 @@ from .conftest import (
     CONFIG_ENTRY_DATA,
     HOST,
     MAC_ADDRESS_UNIQUE_ID,
+    MODEL_AND_VERSION_RESPONSE,
     PASSWORD,
     SERIAL_NUMBER,
     SERIAL_RESPONSE,
@@ -36,7 +37,11 @@ from tests.test_util.aiohttp import AiohttpClientMocker, AiohttpClientMockRespon
 @pytest.fixture(name="responses")
 def mock_responses() -> list[AiohttpClientMockResponse]:
     """Set up fake serial number response when testing the connection."""
-    return [mock_response(SERIAL_RESPONSE), mock_json_response(WIFI_PARAMS_RESPONSE)]
+    return [
+        mock_response(MODEL_AND_VERSION_RESPONSE),
+        mock_response(SERIAL_RESPONSE),
+        mock_json_response(WIFI_PARAMS_RESPONSE),
+    ]
 
 
 @pytest.fixture(autouse=True)
@@ -77,6 +82,7 @@ async def complete_flow(hass: HomeAssistant, password: str = PASSWORD) -> FlowRe
     [
         (
             [
+                mock_response(MODEL_AND_VERSION_RESPONSE),
                 mock_response(SERIAL_RESPONSE),
                 mock_json_response(WIFI_PARAMS_RESPONSE),
             ],
@@ -85,6 +91,7 @@ async def complete_flow(hass: HomeAssistant, password: str = PASSWORD) -> FlowRe
         ),
         (
             [
+                mock_response(MODEL_AND_VERSION_RESPONSE),
                 mock_response(ZERO_SERIAL_RESPONSE),
                 mock_json_response(WIFI_PARAMS_RESPONSE),
             ],
@@ -123,7 +130,11 @@ async def test_controller_flow(
         (
             "other-serial-number",
             {**CONFIG_ENTRY_DATA, "host": "other-host"},
-            [mock_response(SERIAL_RESPONSE), mock_json_response(WIFI_PARAMS_RESPONSE)],
+            [
+                mock_response(MODEL_AND_VERSION_RESPONSE),
+                mock_response(SERIAL_RESPONSE),
+                mock_json_response(WIFI_PARAMS_RESPONSE),
+            ],
             CONFIG_ENTRY_DATA,
         ),
         (
@@ -133,6 +144,7 @@ async def test_controller_flow(
                 "host": "other-host",
             },
             [
+                mock_response(MODEL_AND_VERSION_RESPONSE),
                 mock_response(SERIAL_RESPONSE),
                 mock_json_response(WIFI_PARAMS_RESPONSE),
             ],
@@ -142,6 +154,7 @@ async def test_controller_flow(
             None,
             {**CONFIG_ENTRY_DATA, "serial_number": 0, "host": "other-host"},
             [
+                mock_response(MODEL_AND_VERSION_RESPONSE),
                 mock_response(ZERO_SERIAL_RESPONSE),
                 mock_json_response(WIFI_PARAMS_RESPONSE),
             ],
@@ -185,6 +198,7 @@ async def test_multiple_config_entries(
             MAC_ADDRESS_UNIQUE_ID,
             CONFIG_ENTRY_DATA,
             [
+                mock_response(MODEL_AND_VERSION_RESPONSE),
                 mock_response(SERIAL_RESPONSE),
                 mock_json_response(WIFI_PARAMS_RESPONSE),
             ],
@@ -194,7 +208,11 @@ async def test_multiple_config_entries(
         (
             SERIAL_NUMBER,
             CONFIG_ENTRY_DATA,
-            [mock_response(SERIAL_RESPONSE), mock_json_response(WIFI_PARAMS_RESPONSE)],
+            [
+                mock_response(MODEL_AND_VERSION_RESPONSE),
+                mock_response(SERIAL_RESPONSE),
+                mock_json_response(WIFI_PARAMS_RESPONSE),
+            ],
             CONFIG_ENTRY_DATA,
         ),
         # Old unique id with no serial, but same host
@@ -202,6 +220,7 @@ async def test_multiple_config_entries(
             None,
             {**CONFIG_ENTRY_DATA, "serial_number": 0},
             [
+                mock_response(MODEL_AND_VERSION_RESPONSE),
                 mock_response(ZERO_SERIAL_RESPONSE),
                 mock_json_response(WIFI_PARAMS_RESPONSE),
             ],
@@ -214,7 +233,11 @@ async def test_multiple_config_entries(
                 **CONFIG_ENTRY_DATA,
                 "host": f"other-{HOST}",
             },
-            [mock_response(SERIAL_RESPONSE), mock_json_response(WIFI_PARAMS_RESPONSE)],
+            [
+                mock_response(MODEL_AND_VERSION_RESPONSE),
+                mock_response(SERIAL_RESPONSE),
+                mock_json_response(WIFI_PARAMS_RESPONSE),
+            ],
             CONFIG_ENTRY_DATA,  # Updated the host
         ),
     ],
@@ -281,8 +304,8 @@ async def test_controller_invalid_auth(
         [
             # Incorrect password response
             AiohttpClientMockResponse("POST", URL, status=HTTPStatus.FORBIDDEN),
-            AiohttpClientMockResponse("POST", URL, status=HTTPStatus.FORBIDDEN),
             # Second attempt with the correct password
+            mock_response(MODEL_AND_VERSION_RESPONSE),
             mock_response(SERIAL_RESPONSE),
             mock_json_response(WIFI_PARAMS_RESPONSE),
         ]
@@ -346,8 +369,8 @@ async def test_controller_timeout(
             [
                 # First attempt simulate the wrong password
                 AiohttpClientMockResponse("POST", URL, status=HTTPStatus.FORBIDDEN),
-                AiohttpClientMockResponse("POST", URL, status=HTTPStatus.FORBIDDEN),
                 # Second attempt simulate the correct password
+                mock_response(MODEL_AND_VERSION_RESPONSE),
                 mock_response(SERIAL_RESPONSE),
                 mock_json_response(WIFI_PARAMS_RESPONSE),
             ],

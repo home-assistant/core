@@ -1,6 +1,7 @@
 # serializer version: 1
 # name: test_generate_structured_data
   dict({
+    'container': None,
     'max_tokens': 3000,
     'messages': list([
       dict({
@@ -8,12 +9,7 @@
         'role': 'user',
       }),
       dict({
-        'content': list([
-          dict({
-            'text': '{"characters": ["Mario", "Luigi"]}',
-            'type': 'text',
-          }),
-        ]),
+        'content': '{"characters": ["Mario", "Luigi"]}',
         'role': 'assistant',
       }),
     ]),
@@ -59,6 +55,7 @@
 # ---
 # name: test_generate_structured_data_legacy
   dict({
+    'container': None,
     'max_tokens': 3000,
     'messages': list([
       dict({
@@ -66,12 +63,7 @@
         'role': 'user',
       }),
       dict({
-        'content': list([
-          dict({
-            'text': '{"characters": ["Mario", "Luigi"]}',
-            'type': 'text',
-          }),
-        ]),
+        'content': '{"characters": ["Mario", "Luigi"]}',
         'role': 'assistant',
       }),
     ]),
@@ -121,6 +113,7 @@
 # ---
 # name: test_generate_structured_data_legacy_extended_thinking
   dict({
+    'container': None,
     'max_tokens': 3000,
     'messages': list([
       dict({
@@ -129,6 +122,86 @@
       }),
       dict({
         'content': list([
+          dict({
+            'signature': 'ErUBCkYIARgCIkCYXaVNJShe3A86Hp7XUzh9YsCYBbJTbQsrklTAPtJ2sP/NoB6tSzpK/nTL6CjSo2R6n0KNBIg5MH6asM2R/kmaEgyB/X1FtZq5OQAC7jUaDEPWCdcwGQ4RaBy5wiIwmRxExIlDhoY6tILoVPnOExkC/0igZxHEwxK8RU/fmw0b+o+TwAarzUitwzbo21E5Kh3pa3I6yqVROf1t2F8rFocNUeCegsWV/ytwYV+ayA==',
+            'thinking': "Let's use the tool to respond",
+            'type': 'thinking',
+          }),
+          dict({
+            'text': '{"characters": ["Mario", "Luigi"]}',
+            'type': 'text',
+          }),
+        ]),
+        'role': 'assistant',
+      }),
+    ]),
+    'model': 'claude-sonnet-4-0',
+    'stream': True,
+    'system': list([
+      dict({
+        'cache_control': dict({
+          'type': 'ephemeral',
+        }),
+        'text': '''
+          You are a Home Assistant expert and help users with their tasks.
+          Current time is 04:00:00. Today's date is 2026-01-01.
+        ''',
+        'type': 'text',
+      }),
+      dict({
+        'text': "Claude MUST use the 'test_task' tool to provide the final answer instead of plain text.",
+        'type': 'text',
+      }),
+    ]),
+    'thinking': dict({
+      'budget_tokens': 1500,
+      'type': 'enabled',
+    }),
+    'tool_choice': dict({
+      'type': 'auto',
+    }),
+    'tools': list([
+      dict({
+        'description': 'Use this tool to reply to the user',
+        'input_schema': dict({
+          'properties': dict({
+            'characters': dict({
+              'items': dict({
+                'type': 'string',
+              }),
+              'type': 'array',
+            }),
+          }),
+          'required': list([
+            'characters',
+          ]),
+          'type': 'object',
+        }),
+        'name': 'test_task',
+      }),
+    ]),
+  })
+# ---
+# name: test_generate_structured_data_legacy_extra_text_block
+  dict({
+    'container': None,
+    'max_tokens': 3000,
+    'messages': list([
+      dict({
+        'content': 'Generate test data',
+        'role': 'user',
+      }),
+      dict({
+        'content': list([
+          dict({
+            'signature': 'ErUBCkYIARgCIkCYXaVNJShe3A86Hp7XUzh9YsCYBbJTbQsrklTAPtJ2sP/NoB6tSzpK/nTL6CjSo2R6n0KNBIg5MH6asM2R/kmaEgyB/X1FtZq5OQAC7jUaDEPWCdcwGQ4RaBy5wiIwmRxExIlDhoY6tILoVPnOExkC/0igZxHEwxK8RU/fmw0b+o+TwAarzUitwzbo21E5Kh3pa3I6yqVROf1t2F8rFocNUeCegsWV/ytwYV+ayA==',
+            'thinking': "Let's use the tool to respond",
+            'type': 'thinking',
+          }),
+          dict({
+            'text': 'Sure!',
+            'type': 'text',
+          }),
           dict({
             'text': '{"characters": ["Mario", "Luigi"]}',
             'type': 'text',
@@ -186,6 +259,7 @@
 # ---
 # name: test_generate_structured_data_legacy_tools
   dict({
+    'container': None,
     'max_tokens': 3000,
     'messages': list([
       dict({
@@ -193,12 +267,7 @@
         'role': 'user',
       }),
       dict({
-        'content': list([
-          dict({
-            'text': '{"characters": ["Mario", "Luigi"]}',
-            'type': 'text',
-          }),
-        ]),
+        'content': '{"characters": ["Mario", "Luigi"]}',
         'role': 'assistant',
       }),
     ]),

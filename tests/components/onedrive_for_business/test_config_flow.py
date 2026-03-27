@@ -4,7 +4,7 @@ from http import HTTPStatus
 from unittest.mock import AsyncMock, MagicMock
 
 from onedrive_personal_sdk.exceptions import OneDriveException
-from onedrive_personal_sdk.models.items import Drive
+from onedrive_personal_sdk.models.items import Drive, IdentitySet
 import pytest
 
 from homeassistant import config_entries
@@ -104,7 +104,7 @@ async def test_full_flow(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
     assert len(mock_setup_entry.mock_calls) == 1
-    assert result["title"] == "John Doe's OneDrive"
+    assert result["title"] == "John Doe's OneDrive (john@doe.com)"
     assert result["result"].unique_id == "mock_drive_id"
     assert result["data"][CONF_TOKEN][CONF_ACCESS_TOKEN] == "mock-access-token"
     assert result["data"][CONF_TOKEN]["refresh_token"] == "mock-refresh-token"
@@ -119,11 +119,11 @@ async def test_full_flow_with_owner_not_found(
     aioclient_mock: AiohttpClientMocker,
     mock_setup_entry: AsyncMock,
     mock_onedrive_client: MagicMock,
-    mock_approot: MagicMock,
+    mock_drive: Drive,
 ) -> None:
     """Ensure we get a default title if the drive's owner can't be read."""
 
-    mock_approot.created_by.user = None
+    mock_drive.owner = IdentitySet(user=None)
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -194,7 +194,7 @@ async def test_error_during_folder_creation(
         result["flow_id"], {CONF_FOLDER_PATH: "myFolder"}
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "John Doe's OneDrive"
+    assert result["title"] == "John Doe's OneDrive (john@doe.com)"
     assert result["result"].unique_id == "mock_drive_id"
     assert result["data"][CONF_TOKEN][CONF_ACCESS_TOKEN] == "mock-access-token"
     assert result["data"][CONF_TOKEN]["refresh_token"] == "mock-refresh-token"
@@ -220,7 +220,7 @@ async def test_flow_errors(
 ) -> None:
     """Test errors during flow."""
 
-    mock_onedrive_client.get_approot.side_effect = exception
+    mock_onedrive_client.get_drive.side_effect = exception
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
