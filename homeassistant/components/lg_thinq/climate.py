@@ -158,8 +158,8 @@ class ThinQClimateEntity(ThinQEntity, ClimateEntity):
 
         # Update fan, hvac and preset mode.
         if self.supported_features & ClimateEntityFeature.FAN_MODE:
-            self._attr_fan_mode = STR_TO_HA_FAN.get(
-                self.data.fan_mode, self.data.fan_mode
+            self._attr_fan_mode = str(
+                STR_TO_HA_FAN.get(self.data.fan_mode, self.data.fan_mode)
             )
         if self.supported_features & ClimateEntityFeature.SWING_MODE:
             self._attr_swing_mode = STR_TO_SWING.get(self.data.swing_mode)
