@@ -677,7 +677,7 @@ async def test_non_unique_segments(
                 ({"clean_segments_command_topic": "test-topic"},),
             ),
             "Options `clean_segments_command_topic` and "
-            "`segments` or `segments_topic` must be defined together",
+            "either `segments` or `segments_topic` must be defined together",
         ),
         (
             help_custom_config(
@@ -686,7 +686,7 @@ async def test_non_unique_segments(
                 ({"segments_topic": "test-topic"},),
             ),
             "Options `clean_segments_command_topic` and "
-            "`segments` or `segments_topic` must be defined together",
+            "either `segments` or `segments_topic` must be defined together",
         ),
         (
             help_custom_config(
@@ -695,7 +695,16 @@ async def test_non_unique_segments(
                 ({"segments": ["Livingroom"]},),
             ),
             "Options `clean_segments_command_topic` and "
-            "`segments` or `segments_topic` must be defined together",
+            "either `segments` or `segments_topic` must be defined together",
+        ),
+        (
+            help_custom_config(
+                vacuum.DOMAIN,
+                DEFAULT_CONFIG,
+                ({"segments": ["Livingroom"], "segments_topic": "topic"},),
+            ),
+            "Options `clean_segments_command_topic` and "
+            "either `segments` or `segments_topic` must be defined together",
         ),
         (
             help_custom_config(

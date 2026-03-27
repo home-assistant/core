@@ -148,10 +148,12 @@ def validate_clean_area_config(config: ConfigType) -> ConfigType:
     has_segments_topic = CONF_SEGMENTS_TOPIC in config
     has_command_topic = CONF_CLEAN_SEGMENTS_COMMAND_TOPIC in config
 
-    if has_command_topic != (has_segments or has_segments_topic):
+    if has_command_topic != (has_segments or has_segments_topic) or (
+        has_segments and has_segments_topic
+    ):
         raise vol.Invalid(
             f"Options `{CONF_CLEAN_SEGMENTS_COMMAND_TOPIC}` and "
-            f"`{CONF_SEGMENTS}` or `{CONF_SEGMENTS_TOPIC}` must be defined together"
+            f"either `{CONF_SEGMENTS}` or `{CONF_SEGMENTS_TOPIC}` must be defined together"
         )
 
     segments: list[str]
@@ -241,7 +243,7 @@ class MqttStateVacuum(MqttEntity, StateVacuumEntity):
     _attributes_extra_blocked = MQTT_VACUUM_ATTRIBUTES_BLOCKED
 
     _segments: list[Segment]
-    _segments_received_from_topic: bool = False
+    _segments_loaded: bool = False
     _command_topic: str | None
     _set_fan_speed_topic: str | None
     _send_command_topic: str | None
@@ -286,7 +288,7 @@ class MqttStateVacuum(MqttEntity, StateVacuumEntity):
             self._attr_supported_features |= VacuumEntityFeature.CLEAN_AREA
 
             if CONF_SEGMENTS_TOPIC in config:
-                if not self._segments_received_from_topic:
+                if not self._segments_loaded:
                     self._segments = []
             elif CONF_SEGMENTS in config:
                 segments: list[str] = config[CONF_SEGMENTS]
@@ -296,7 +298,7 @@ class MqttStateVacuum(MqttEntity, StateVacuumEntity):
                         segment.partition(".") for segment in segments
                     ]
                 ]
-                self._segments_received_from_topic = True
+                self._segments_loaded = True
             self._clean_segments_command_topic = config[
                 CONF_CLEAN_SEGMENTS_COMMAND_TOPIC
             ]
@@ -327,7 +329,7 @@ class MqttStateVacuum(MqttEntity, StateVacuumEntity):
         """Check vacuum segments with registry entry."""
         if (
             self._attr_supported_features & VacuumEntityFeature.CLEAN_AREA
-            and self._segments_received_from_topic
+            and self._segments_loaded
             and (last_seen := self.last_seen_segments) is not None
             and {s.id: s for s in last_seen} != {s.id: s for s in self._segments}
         ):
@@ -362,7 +364,7 @@ class MqttStateVacuum(MqttEntity, StateVacuumEntity):
             Segment(id=segment_id, name=str(name or segment_id))
             for segment_id, name in payload.items()
         ]
-        self._segments_received_from_topic = True
+        self._segments_loaded = True
         self._process_entity_update()
         self.async_write_ha_state()
 
