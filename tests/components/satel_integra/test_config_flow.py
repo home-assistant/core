@@ -363,6 +363,31 @@ async def test_reconfigure_flow_success(
     assert mock_setup_entry.call_count == 1
 
 
+async def test_reconfigure_flow_config_unchanged(
+    hass: HomeAssistant,
+    mock_satel: AsyncMock,
+    mock_setup_entry: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test reconfigure aborts when the config is unchanged."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], dict(mock_config_entry.data)
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert mock_config_entry.data == MOCK_CONFIG_DATA
+    assert mock_satel.connect.call_count == 0
+    assert mock_setup_entry.call_count == 0
+
+
 async def test_reconfigure_connection_failed(
     hass: HomeAssistant,
     mock_satel: AsyncMock,
