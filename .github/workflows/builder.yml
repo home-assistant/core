@@ -183,7 +183,7 @@ jobs:
           echo "${GITHUB_SHA};${GITHUB_REF};${GITHUB_EVENT_NAME};${GITHUB_ACTOR}" > rootfs/OFFICIAL_IMAGE
 
       - name: Build base image (deps stage only)
-        uses: edenhaus/builder/actions/build-image@b3ea9d4b1d98f979d671aa8442ad8373e38aea11
+        uses: edenhaus/builder/actions/build-image@edenhaus-target-support
         with:
           arch: ${{ matrix.arch }}
           build-args: |
@@ -205,7 +205,7 @@ jobs:
           python3 -m script.translations download --process-id "$TRANSLATION_PROCESS_ID"
 
       - name: Build base image (fully)
-        uses: home-assistant/builder/actions/build-image@62a1597b84b3461abad9816d9cd92862a2b542c3 # 2026.03.2
+        uses: edenhaus/builder/actions/build-image@edenhaus-target-support
         with:
           arch: ${{ matrix.arch }}
           build-args: |
