@@ -122,6 +122,7 @@ _EXPERIMENTAL_CONDITION_PLATFORMS = {
     "alarm_control_panel",
     "assist_satellite",
     "battery",
+    "calendar",
     "climate",
     "cover",
     "device_tracker",

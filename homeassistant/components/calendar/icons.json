@@ -1,4 +1,9 @@
 {
+  "conditions": {
+    "is_event_active": {
+      "condition": "mdi:calendar-check"
+    }
+  },
   "entity_component": {
     "_": {
       "default": "mdi:calendar",
