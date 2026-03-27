@@ -79,6 +79,11 @@
         "name": "Zigbee restart"
       }
     },
+    "light": {
+      "ambilight": {
+        "name": "Ambilight"
+      }
+    },
     "sensor": {
       "core_temperature": {
         "name": "Core chip temp"
