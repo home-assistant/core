@@ -59,14 +59,6 @@ class AsyncConfigEntryAuth:
             raise
         except ClientError as ex:
             if setup_in_progress:
-                if (
-                    isinstance(ex, ClientResponseError)
-                    and 400 <= ex.status < 500
-                    and ex.status != HTTPStatus.TOO_MANY_REQUESTS
-                ):
-                    raise ConfigEntryAuthFailed(
-                        "OAuth session is not valid, reauth required"
-                    ) from ex
                 raise ConfigEntryNotReady from ex
             status = getattr(ex, "status", None)
             if isinstance(ex, RefreshError) or (
