@@ -13,7 +13,7 @@ from homeassistant.components.green_planet_energy.services import (
     SERVICE_GET_PRICES,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
