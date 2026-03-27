@@ -2,6 +2,7 @@
 
 import http
 import time
+from unittest.mock import patch
 
 from aiohttp import ClientError
 from google_photos_library_api.exceptions import GooglePhotosApiError
@@ -10,6 +11,7 @@ import pytest
 from homeassistant.components.google_photos.const import OAUTH2_TOKEN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import config_entry_oauth2_flow
 
 from tests.common import MockConfigEntry
 from tests.test_util.aiohttp import AiohttpClientMocker
@@ -117,4 +119,20 @@ async def test_coordinator_init_failure(
     config_entry: MockConfigEntry,
 ) -> None:
     """Test init failure to load albums."""
+    assert config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+async def test_setup_entry_implementation_unavailable(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+) -> None:
+    """Test setup entry when implementation is unavailable."""
+    with patch(
+        "homeassistant.helpers.config_entry_oauth2_flow.async_get_config_entry_implementation",
+        side_effect=config_entry_oauth2_flow.ImplementationUnavailableError,
+    ):
+        config_entry.add_to_hass(hass)
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
     assert config_entry.state is ConfigEntryState.SETUP_RETRY

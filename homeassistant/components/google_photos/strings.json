@@ -68,6 +68,9 @@
     "no_access_to_path": {
       "message": "Cannot read {filename}, no access to path; `allowlist_external_dirs` may need to be adjusted in `configuration.yaml`"
     },
+    "oauth2_implementation_unavailable": {
+      "message": "[%key:common::exceptions::oauth2_implementation_unavailable::message%]"
+    },
     "upload_error": {
       "message": "Failed to upload content: {message}"
     }
