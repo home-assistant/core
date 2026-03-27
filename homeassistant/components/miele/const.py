@@ -452,6 +452,7 @@ class WashingMachineProgramId(MieleEnum, missing_to_none=True):
     proofing = 27, 10057
     sportswear = 29, 10052
     automatic_plus = 31
+    table_linen = 33
     outerwear = 37
     pillows = 39
     cool_air = 45  # washer-dryer
