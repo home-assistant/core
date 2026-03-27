@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Callable, Iterable
 from enum import StrEnum
-from functools import lru_cache
+from functools import lru_cache, partial
 from itertools import chain
 from math import floor, log10
 from typing import Any, Final, NotRequired, Required, TypedDict
@@ -193,7 +193,7 @@ class BaseUnitConverter:
         if from_unit == to_unit:
             return lambda val: val
         convert_ops = cls._get_from_to_ops(from_unit, to_unit)
-        return lambda val: BaseUnitConverter._convert_fn(val, convert_ops)
+        return partial(BaseUnitConverter._convert_fn, ops=convert_ops)
 
     @classmethod
     @lru_cache
@@ -204,7 +204,7 @@ class BaseUnitConverter:
         if from_unit == to_unit:
             return lambda val: val
         convert_ops = cls._get_from_to_ops(from_unit, to_unit)
-        return lambda val: BaseUnitConverter._convert_allow_none_fn(val, convert_ops)
+        return partial(BaseUnitConverter._convert_allow_none_fn, ops=convert_ops)
 
     @classmethod
     @lru_cache
@@ -277,7 +277,6 @@ class BaseUnitConverter:
         return ops if not for_ratio else filter(_is_ratio_op, ops)
 
     @classmethod
-    @lru_cache
     def _get_inverse_op(
         cls, from_unit: str | None, to_unit: str | None, for_ratio: bool
     ) -> Iterable[UnitConvertOpInfo]:
@@ -297,18 +296,18 @@ class BaseUnitConverter:
         return (op_map[op_name], factor)
 
     @staticmethod
-    def _convert_fn(val: float, convert_ops: list[UnitConvertOp]) -> float:
+    def _convert_fn(val: float, ops: list[UnitConvertOp]) -> float:
         """Execute a list of conversion operations one by one."""
-        for op, factor in convert_ops:
+        for op, factor in ops:
             val = op(val, factor)
         return val
 
     @staticmethod
     def _convert_allow_none_fn(
-        val: float | None, convert_ops: list[UnitConvertOp]
+        val: float | None, ops: list[UnitConvertOp]
     ) -> float | None:
         """Execute a list of conversion operations one by one."""
-        for op, factor in convert_ops:
+        for op, factor in ops:
             if val is None:
                 break
             try:
