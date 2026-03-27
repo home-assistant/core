@@ -6,6 +6,7 @@ from enum import StrEnum
 from typing import TYPE_CHECKING, Final
 
 from .generated.entity_platforms import EntityPlatforms
+from .helpers.deprecation import DeprecatedConstant
 from .util.event_type import EventType
 from .util.hass_dict import HassKey
 from .util.signal_type import SignalType
@@ -841,23 +842,27 @@ class UnitOfDataRate(StrEnum):
 
 
 # Map legacy concentration constants to UnitOfConcentration StrEnum
-CONCENTRATION_GRAMS_PER_CUBIC_METER: Final = str(
-    UnitOfConcentration.GRAMS_PER_CUBIC_METER
+CONCENTRATION_GRAMS_PER_CUBIC_METER: Final = DeprecatedConstant(
+    "g/m³", "UnitOfConcentration.GRAMS_PER_CUBIC_METER", "2027.3"
 )
-CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER: Final = str(
-    UnitOfConcentration.MILLIGRAMS_PER_CUBIC_METER
+CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER: Final = DeprecatedConstant(
+    "mg/m³", "UnitOfConcentration.MILLIGRAMS_PER_CUBIC_METER", "2027.3"
 )
-CONCENTRATION_MICROGRAMS_PER_CUBIC_METER: Final = str(
-    UnitOfConcentration.MICROGRAMS_PER_CUBIC_METER
+CONCENTRATION_MICROGRAMS_PER_CUBIC_METER: Final = DeprecatedConstant(
+    "μg/m³", "UnitOfConcentration.MICROGRAMS_PER_CUBIC_METER", "2027.3"
 )
-CONCENTRATION_MICROGRAMS_PER_CUBIC_FOOT: Final = str(
-    UnitOfConcentration.MICROGRAMS_PER_CUBIC_FOOT
+CONCENTRATION_MICROGRAMS_PER_CUBIC_FOOT: Final = DeprecatedConstant(
+    "μg/ft³", "UnitOfConcentration.MICROGRAMS_PER_CUBIC_FOOT", "2027.3"
 )
-CONCENTRATION_PARTS_PER_CUBIC_METER: Final = str(
-    UnitOfConcentration.PARTS_PER_CUBIC_METER
+CONCENTRATION_PARTS_PER_CUBIC_METER: Final = DeprecatedConstant(
+    "p/m³", "UnitOfConcentration.PARTS_PER_CUBIC_METER", "2027.3"
 )
-CONCENTRATION_PARTS_PER_MILLION: Final = str(UnitOfConcentration.PARTS_PER_MILLION)
-CONCENTRATION_PARTS_PER_BILLION: Final = str(UnitOfConcentration.PARTS_PER_BILLION)
+CONCENTRATION_PARTS_PER_MILLION: Final = DeprecatedConstant(
+    "ppm", "UnitOfConcentration.PARTS_PER_MILLION", "2027.3"
+)
+CONCENTRATION_PARTS_PER_BILLION: Final = DeprecatedConstant(
+    "ppb", "UnitOfConcentration.PARTS_PER_BILLION", "2027.3"
+)
 
 
 # States
