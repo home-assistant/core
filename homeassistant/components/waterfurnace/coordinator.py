@@ -219,7 +219,7 @@ class WaterFurnaceEnergyCoordinator(DataUpdateCoordinator[None]):
             start_dt = dt_util.utc_from_timestamp(last_ts)
             _LOGGER.debug("Last stat: ts=%s, sum=%s", start_dt.isoformat(), last_sum)
 
-        local_tz = await dt_util.async_get_time_zone(self.hass.config.time_zone)
+        local_tz = dt_util.DEFAULT_TIME_ZONE
         start_date = start_dt.astimezone(local_tz).strftime("%Y-%m-%d")
         end_date = (now.astimezone(local_tz) + timedelta(days=1)).strftime("%Y-%m-%d")
 
