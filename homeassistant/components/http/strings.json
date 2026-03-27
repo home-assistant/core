@@ -9,10 +9,15 @@
       "title": "SSL is configured without an external URL or internal URL"
     }
   },
-  "services": {
-    "unban": {
-      "description": "Removes previously banned IP addresses from the list of banned IP addresses.",
-      "name": "Unban banned IP addresses"
+    "services": {
+      "unban": {
+        "description": "Remove a previously banned IP address from the list of banned IP addresses.",
+        "fields": {
+          "ip_address": {
+              "name": "IP address",
+              "description": "IP address to remove from the list of banned IP addresses."
+          }
+        }
     }
   }
 }
