@@ -14,6 +14,9 @@ from homeassistant.helpers.json import json_dumps
 from homeassistant.util.unit_conversion import ALL_UNIT_CONVERTERS
 
 Path("homeassistant/generated/unit-factors.json").write_text(
-    json_dumps(reduce(ior, [conv.as_dict() for conv in ALL_UNIT_CONVERTERS], {})),
+    json_dumps(
+        reduce(ior, [conv.as_dict() for conv in ALL_UNIT_CONVERTERS], {}),
+        sort_keys=True,
+    ),
     encoding="utf8",
 )

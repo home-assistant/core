@@ -123,7 +123,7 @@ class UnitConvertOpType(StrEnum):
 type UnitConvertOpInfo = tuple[UnitConvertOpType, float]
 
 
-# Dictionary equivalent type for unit converter when serialisng to JSON for frontend
+# Dictionary equivalent type for unit converter when serializing to JSON for frontend
 class _UnitClassConversion(TypedDict):
     needs_class: NotRequired[bool]
     base: Required[str]
@@ -228,12 +228,18 @@ class BaseUnitConverter:
         """Represent unit converter as a dictionary."""
         data: _UnitClassConversion = {
             "base": cls.BASE_UNIT if cls.BASE_UNIT is not None else "",
-            "inverse": [val if val is not None else "" for val in cls._UNIT_INVERSES],
             "units": {
-                unit if unit is not None else "": factor
-                for unit, factor in cls._UNIT_CONVERSION.items()
+                (unit if unit is not None else ""): factor
+                for unit, factor in sorted(
+                    cls._UNIT_CONVERSION.items(),
+                    key=lambda item: "" if item[0] is None else item[0],
+                )
             },
         }
+        if cls._UNIT_INVERSES:
+            data["inverse"] = sorted(
+                (val if val is not None else "" for val in cls._UNIT_INVERSES)
+            )
         if not cls.IS_PRIMARY:
             data["needs_class"] = True
         return {cls.UNIT_CLASS: data}
