@@ -59,8 +59,7 @@ class GreeConfigFlow(ConfigFlow, domain=DOMAIN):
 
         # Abort if a discovery-mode entry (without a static IP) already exists
         if any(
-            CONF_IP_ADDRESS not in entry.data
-            for entry in self._async_current_entries()
+            CONF_IP_ADDRESS not in entry.data for entry in self._async_current_entries()
         ):
             return self.async_abort(reason="single_instance_allowed")
 
