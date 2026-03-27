@@ -238,7 +238,7 @@ class BaseUnitConverter:
         }
         if cls._UNIT_INVERSES:
             data["inverse"] = sorted(
-                (val if val is not None else "" for val in cls._UNIT_INVERSES)
+                val if val is not None else "" for val in cls._UNIT_INVERSES
             )
         if not cls.IS_PRIMARY:
             data["needs_class"] = True
