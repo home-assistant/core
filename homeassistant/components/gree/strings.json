@@ -10,11 +10,11 @@
     "step": {
       "user": {
         "menu_options": {
-          "discovery": "Scan the network for devices",
-          "manual": "Enter IP address manually"
+          "manual": "Enter IP address manually",
+          "scan": "Scan the network for devices"
         }
       },
-      "discovery": {
+      "scan": {
         "description": "[%key:common::config_flow::description::confirm_setup%]"
       },
       "manual": {

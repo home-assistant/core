@@ -35,15 +35,15 @@ class GreeConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle the initial step."""
         return self.async_show_menu(
             step_id="user",
-            menu_options=["discovery", "manual"],
+            menu_options=["scan", "manual"],
         )
 
-    async def async_step_discovery(
+    async def async_step_scan(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Handle discovery step."""
+        """Handle network scan step."""
         if user_input is None:
-            return self.async_show_form(step_id="discovery")
+            return self.async_show_form(step_id="scan")
 
         gree_discovery = Discovery(DISCOVERY_TIMEOUT)
         bcast_addr = list(await async_get_ipv4_broadcast_addresses(self.hass))

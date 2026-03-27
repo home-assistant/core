@@ -18,20 +18,20 @@ pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 
 
 async def test_user_step_shows_menu(hass: HomeAssistant) -> None:
-    """Test that the user step shows a menu with discovery and manual options."""
+    """Test that the user step shows a menu with scan and manual options."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
     assert result["type"] is FlowResultType.MENU
-    assert result["menu_options"] == ["discovery", "manual"]
+    assert result["menu_options"] == ["scan", "manual"]
 
 
 @patch("homeassistant.components.gree.config_flow.DISCOVERY_TIMEOUT", 0)
-async def test_discovery_finds_devices(
+async def test_scan_finds_devices(
     hass: HomeAssistant, mock_setup_entry: AsyncMock
 ) -> None:
-    """Test discovery step creates entry when devices are found."""
+    """Test scan step creates entry when devices are found."""
     with patch(
         "homeassistant.components.gree.config_flow.Discovery",
         return_value=FakeDiscovery(),
@@ -42,13 +42,11 @@ async def test_discovery_finds_devices(
         assert result["type"] is FlowResultType.MENU
 
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {"next_step_id": "discovery"}
+            result["flow_id"], {"next_step_id": "scan"}
         )
         assert result["type"] is FlowResultType.FORM
 
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {}
-        )
+        result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
         assert result["type"] is FlowResultType.CREATE_ENTRY
         assert result["data"] == {}
 
@@ -57,10 +55,10 @@ async def test_discovery_finds_devices(
 
 
 @patch("homeassistant.components.gree.config_flow.DISCOVERY_TIMEOUT", 0)
-async def test_discovery_no_devices(
+async def test_scan_no_devices(
     hass: HomeAssistant, mock_setup_entry: AsyncMock
 ) -> None:
-    """Test discovery step aborts when no devices are found."""
+    """Test scan step aborts when no devices are found."""
     with patch(
         "homeassistant.components.gree.config_flow.Discovery",
         return_value=FakeDiscovery(),
@@ -73,13 +71,11 @@ async def test_discovery_no_devices(
         assert result["type"] is FlowResultType.MENU
 
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {"next_step_id": "discovery"}
+            result["flow_id"], {"next_step_id": "scan"}
         )
         assert result["type"] is FlowResultType.FORM
 
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {}
-        )
+        result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
         assert result["type"] is FlowResultType.ABORT
         assert result["reason"] == "no_devices_found"
 
