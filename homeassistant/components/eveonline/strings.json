@@ -2,6 +2,7 @@
   "config": {
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
+      "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
       "authorize_url_timeout": "[%key:common::config_flow::abort::oauth2_authorize_url_timeout%]",
       "missing_configuration": "[%key:common::config_flow::abort::oauth2_missing_configuration%]",
       "no_url_available": "[%key:common::config_flow::abort::oauth2_no_url_available%]",
@@ -12,7 +13,8 @@
       "reauth_account_mismatch": "The authenticated character does not match the character that needs re-authentication.",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
       "reconfigure_account_mismatch": "The authenticated character does not match the character being reconfigured.",
-      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
+      "user_rejected_authorize": "[%key:common::config_flow::abort::oauth2_user_rejected_authorize%]"
     },
     "step": {
       "pick_implementation": {
@@ -76,19 +78,6 @@
       }
     }
   },
-  "issues": {
-    "missing_scopes": {
-      "title": "Additional authorization required for {character}",
-      "fix_flow": {
-        "step": {
-          "confirm": {
-            "title": "Reauthorize {character}",
-            "description": "The Eve Online integration requires additional API scopes that were not granted during the initial authorization. Some sensors may be unavailable until you reauthorize.\n\nMissing scopes: {scopes}\n\nSelect **Submit** to start reauthentication."
-          }
-        }
-      }
-    }
-  },
   "exceptions": {
     "authentication_failed": {
       "message": "Authentication failed. Please reauthenticate."
@@ -98,6 +87,19 @@
     },
     "update_failed": {
       "message": "Error communicating with Eve Online API: {error}"
+    }
+  },
+  "issues": {
+    "missing_scopes": {
+      "fix_flow": {
+        "step": {
+          "confirm": {
+            "description": "The Eve Online integration requires additional API scopes that were not granted during the initial authorization. Some sensors may be unavailable until you reauthorize.\n\nMissing scopes: {scopes}\n\nSelect **Submit** to start reauthentication.",
+            "title": "Reauthorize {character}"
+          }
+        }
+      },
+      "title": "Additional authorization required for {character}"
     }
   }
 }

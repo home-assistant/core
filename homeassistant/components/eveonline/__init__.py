@@ -96,7 +96,7 @@ def _get_token_scopes(token_data: dict[str, Any]) -> set[str]:
         if isinstance(scp, str):
             return {scp}
         return set(scp)
-    except (ValueError, binascii.Error):
+    except ValueError, binascii.Error:
         return set()
 
 
@@ -128,7 +128,10 @@ def _check_scopes(hass: HomeAssistant, entry: EveOnlineConfigEntry) -> None:
                 "character": entry.title,
                 "scopes": ", ".join(sorted(missing_scopes)),
             },
-            data={"entry_id": entry.entry_id},
+            data={
+                "entry_id": entry.entry_id,
+                "scopes": ", ".join(sorted(missing_scopes)),
+            },
         )
     else:
         from homeassistant.helpers.issue_registry import (  # noqa: PLC0415

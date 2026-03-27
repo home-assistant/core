@@ -13,6 +13,7 @@ class MissingScopesRepairFlow(RepairsFlow):
     """Handler for missing OAuth scopes repair."""
 
     _entry_id: str
+    _scopes: str
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
@@ -32,6 +33,8 @@ class MissingScopesRepairFlow(RepairsFlow):
         placeholders: dict[str, str] = {}
         if entry := self.hass.config_entries.async_get_entry(self._entry_id):
             placeholders["character"] = entry.title
+        if self._scopes:
+            placeholders["scopes"] = self._scopes
 
         return self.async_show_form(
             step_id="confirm",
@@ -50,4 +53,5 @@ async def async_create_fix_flow(
 
     flow = MissingScopesRepairFlow()
     flow._entry_id = data["entry_id"]  # noqa: SLF001
+    flow._scopes = str(data.get("scopes", ""))  # noqa: SLF001
     return flow
