@@ -220,7 +220,7 @@ class ItemChangeTriggerBase(ItemTriggerBase):
             )
             payload = {
                 ATTR_ENTITY_ID: entity_id,
-                "item_ids": sorted(new_item_ids),
+                "item_ids": sorted(different_item_ids),
             }
             run_action(payload, description=f"todo item {self._description} trigger")
 
@@ -248,7 +248,7 @@ class ItemAddedTrigger(ItemChangeTriggerBase):
     def _get_items_diff(
         self, old_item_ids: set[str], current_item_ids: set[str]
     ) -> set[str]:
-        """Return the set of item ids that match the trigger condition in new_items but not in old_items."""
+        """Return the set of item ids that match added items."""
         return current_item_ids - old_item_ids
 
 
@@ -268,7 +268,7 @@ class ItemRemovedTrigger(ItemChangeTriggerBase):
     def _get_items_diff(
         self, old_item_ids: set[str], current_item_ids: set[str]
     ) -> set[str]:
-        """Return the set of item ids that match the trigger condition in new_items but not in old_items."""
+        """Return the set of item ids that match removed items."""
         return old_item_ids - current_item_ids
 
 
@@ -288,7 +288,7 @@ class ItemCompletedTrigger(ItemChangeTriggerBase):
     def _get_items_diff(
         self, old_item_ids: set[str], current_item_ids: set[str]
     ) -> set[str]:
-        """Return the set of item ids that match the trigger condition in new_items but not in old_items."""
+        """Return the set of item ids that match completed items."""
         return current_item_ids - old_item_ids
 
 
