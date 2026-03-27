@@ -1,6 +1,5 @@
 """Test the pjlink media player platform."""
 
-from collections.abc import Generator
 from datetime import timedelta
 import socket
 from unittest.mock import MagicMock, create_autospec, patch
@@ -56,7 +55,7 @@ def projector_from_address():
 
 
 @pytest.fixture(name="mocked_projector")
-def mocked_projector(projector_from_address: MagicMock) -> Generator[MagicMock]:
+def mocked_projector(projector_from_address: MagicMock) -> MagicMock:
     """Create pjlink Projector instance mock."""
 
     instance = projector_from_address.return_value

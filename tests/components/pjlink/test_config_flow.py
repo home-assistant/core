@@ -2,7 +2,7 @@
 
 from collections.abc import Generator
 from typing import Any
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
@@ -32,7 +32,7 @@ _DEFAULT_DATA_W_ENCODING = {
 
 
 @pytest.fixture(autouse=True)
-def mock_projector() -> Generator[AsyncMock]:
+def mock_projector() -> Generator[MagicMock]:
     """Mock the PJLink Projector in the config flow."""
     with patch(
         "homeassistant.components.pjlink.config_flow.Projector",
@@ -74,7 +74,7 @@ async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
 async def test_form_invalid_inputs(
     hass: HomeAssistant,
     mock_setup_entry: AsyncMock,
-    mock_projector: AsyncMock,
+    mock_projector: MagicMock,
     side_effect: type[Exception],
     error_str: str,
 ) -> None:
@@ -152,7 +152,7 @@ async def test_import_aborts_if_already_configured(
 async def test_import_invalid_inputs(
     hass: HomeAssistant,
     mock_setup_entry: AsyncMock,
-    mock_projector: AsyncMock,
+    mock_projector: MagicMock,
     side_effect: type[Exception],
     error_str: str,
 ) -> None:
