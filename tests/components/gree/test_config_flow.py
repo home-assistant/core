@@ -9,7 +9,7 @@ from homeassistant import config_entries
 from homeassistant.components.gree.const import DOMAIN
 from homeassistant.const import CONF_IP_ADDRESS
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.data_entry_flow import FlowResultType, InvalidData
 
 from .common import FakeDiscovery, build_device_mock
 
@@ -224,7 +224,7 @@ async def test_manual_step_single_instance_allowed(
 async def test_manual_step_invalid_ip(
     hass: HomeAssistant, mock_setup_entry: AsyncMock
 ) -> None:
-    """Test manual step shows form error for invalid IP address."""
+    """Test manual step rejects invalid IP address via schema validation."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -234,8 +234,7 @@ async def test_manual_step_invalid_ip(
     )
     assert result["type"] is FlowResultType.FORM
 
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {CONF_IP_ADDRESS: "not-an-ip"}
-    )
-    assert result["type"] is FlowResultType.FORM
-    assert CONF_IP_ADDRESS in result["errors"] or "base" in result["errors"]
+    with pytest.raises(InvalidData):
+        await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_IP_ADDRESS: "not-an-ip"}
+        )
