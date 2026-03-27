@@ -210,7 +210,7 @@ class WaterFurnaceEnergyCoordinator(DataUpdateCoordinator[None]):
         now = dt_util.utcnow()
 
         if last is None:
-            _LOGGER.info("No prior statistics found, fetching last 24 hours")
+            _LOGGER.info("No prior statistics found, fetching recent energy data")
             last_ts = 0.0
             last_sum = 0.0
             start_dt = now - timedelta(days=1)
