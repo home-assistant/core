@@ -11,6 +11,7 @@ from collections.abc import Callable, Iterable
 from typing import TYPE_CHECKING, cast
 
 from bleak import BleakScanner
+from bleak.backends.scanner import BaseBleakScanner
 from habluetooth import (
     BaseHaScanner,
     BluetoothScannerDevice,
@@ -49,6 +50,16 @@ def async_get_scanner(hass: HomeAssistant) -> BleakScanner:
     libraries expecting a BleakScanner instance.
     """
     return cast(BleakScanner, HaBleakScannerWrapper())
+
+
+@hass_callback
+def async_get_scanner_backend(hass: HomeAssistant) -> type[BaseBleakScanner]:
+    """Return a the type of our scanner wrapper.
+
+    This is a wrapper type around our BaseBleakScanner singleton
+    that allows multiple integrations to share the same scanner backend.
+    """
+    return HaBleakScannerWrapper
 
 
 @hass_callback

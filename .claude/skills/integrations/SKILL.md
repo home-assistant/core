@@ -272,7 +272,13 @@ rules:
 - **Connectable**: Set `"connectable": true` for connection-required devices
 - **Scanner Usage**: Always use shared scanner instance
   ```python
-  scanner = bluetooth.async_get_scanner()
+  # For explicit scanner use in existing library
+  scanner_backend = bluetooth.async_get_scanner_backend()
+  with BleakScanner(backend=scanner_backend) as scanner:
+      # Use scanner
+      pass
+
+  # For direct scanner callback data with filters
   entry.async_on_unload(
       bluetooth.async_register_callback(
           hass, _async_discovered_device,
