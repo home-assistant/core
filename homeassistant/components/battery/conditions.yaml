@@ -53,8 +53,6 @@ is_level:
     entity:
       - domain: sensor
         device_class: battery
-      - domain: number
-        device_class: battery
   fields:
     behavior: *condition_behavior
     threshold:

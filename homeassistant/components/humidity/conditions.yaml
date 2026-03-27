@@ -17,8 +17,6 @@ is_value:
     entity:
       - domain: sensor
         device_class: humidity
-      - domain: number
-        device_class: humidity
       - domain: climate
       - domain: humidifier
   fields:

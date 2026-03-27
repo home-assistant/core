@@ -370,6 +370,7 @@ async def test_container_buttons_exceptions(
         ("button.pve1_start_all", "no_permission_node_power"),
         ("button.ct_nginx_start", "no_permission_vm_lxc_power"),
         ("button.vm_web_start", "no_permission_vm_lxc_power"),
+        ("button.vm_web_create_snapshot", "no_permission_snapshot"),
     ],
 )
 async def test_node_buttons_permission_denied_for_auditor_role(
@@ -394,19 +395,29 @@ async def test_node_buttons_permission_denied_for_auditor_role(
     assert exc_info.value.translation_key == translation_key
 
 
+@pytest.mark.parametrize(
+    ("entity_id", "translation_key"),
+    [
+        ("button.vm_db_start", "no_permission_vm_lxc_power"),
+        ("button.vm_db_create_snapshot", "no_permission_snapshot"),
+    ],
+)
 async def test_vm_buttons_denied_for_specific_vm(
     hass: HomeAssistant,
     mock_proxmox_client: MagicMock,
     mock_config_entry: MockConfigEntry,
+    entity_id: str,
+    translation_key: str,
 ) -> None:
     """Test that button only works on actual permissions."""
     await setup_integration(hass, mock_config_entry)
     mock_proxmox_client._node_mock.qemu(101)
 
-    with pytest.raises(ServiceValidationError):
+    with pytest.raises(ServiceValidationError) as exc_info:
         await hass.services.async_call(
             BUTTON_DOMAIN,
             SERVICE_PRESS,
-            {ATTR_ENTITY_ID: "button.vm_db_start"},
+            {ATTR_ENTITY_ID: entity_id},
             blocking=True,
         )
+    assert exc_info.value.translation_key == translation_key
