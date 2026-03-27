@@ -23,7 +23,7 @@
     }),
     'entry_data': dict({
       'auth_implementation': '**REDACTED**',
-      'character_id': 12345678,
+      'character_id': '**REDACTED**',
       'character_name': 'Test Capsuleer',
       'token': '**REDACTED**',
     }),

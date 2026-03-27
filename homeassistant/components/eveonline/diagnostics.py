@@ -13,12 +13,9 @@ from .coordinator import EveOnlineConfigEntry
 TO_REDACT_CONFIG = {
     "access_token",
     "auth_implementation",
+    "character_id",
     "refresh_token",
     "token",
-}
-
-TO_REDACT_DATA = {
-    "character_id",
 }
 
 
