@@ -1,4 +1,4 @@
-"""Test the SFR Box sensors."""
+"""Test the SFR Box events."""
 
 from collections.abc import Generator
 from unittest.mock import patch
@@ -6,6 +6,7 @@ from unittest.mock import patch
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
+# from homeassistant.components.event import DOMAIN as EVENT_DOMAIN, SERVICE_PRESS
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
@@ -24,39 +25,21 @@ pytestmark = pytest.mark.usefixtures(
 
 @pytest.fixture(autouse=True)
 def override_platforms() -> Generator[None]:
-    """Override PLATFORMS."""
+    """Override PLATFORMS_WITH_AUTH."""
     with (
-        patch("homeassistant.components.sfr_box.PLATFORMS", [Platform.SENSOR]),
-        patch(
-            "homeassistant.components.sfr_box.PLATFORMS_WITH_AUTH", [Platform.SENSOR]
-        ),
+        patch("homeassistant.components.sfr_box.PLATFORMS_WITH_AUTH", [Platform.EVENT]),
         patch("homeassistant.components.sfr_box.coordinator.SFRBox.authenticate"),
     ):
         yield
 
 
-@pytest.mark.usefixtures("entity_registry_enabled_by_default")
-async def test_sensors(
-    hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    entity_registry: er.EntityRegistry,
-    snapshot: SnapshotAssertion,
-) -> None:
-    """Test for SFR Box sensors."""
-    await hass.config_entries.async_setup(config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    await snapshot_platform(hass, entity_registry, snapshot, config_entry.entry_id)
-
-
-@pytest.mark.usefixtures("entity_registry_enabled_by_default")
-async def test_sensors_with_auth(
+async def test_events(
     hass: HomeAssistant,
     config_entry_with_auth: ConfigEntry,
     entity_registry: er.EntityRegistry,
     snapshot: SnapshotAssertion,
 ) -> None:
-    """Test for SFR Box sensors."""
+    """Test for SFR Box events."""
     await hass.config_entries.async_setup(config_entry_with_auth.entry_id)
     await hass.async_block_till_done()
 

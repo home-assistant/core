@@ -4,7 +4,15 @@ from collections.abc import AsyncGenerator, Generator
 from unittest.mock import AsyncMock, patch
 
 import pytest
-from sfrbox_api.models import DslInfo, FtthInfo, SystemInfo, VoipInfo, WanInfo
+from sfrbox_api.models import (
+    DslInfo,
+    FtthInfo,
+    SystemInfo,
+    VoipCallHistoryCall,
+    VoipCallHistoryList,
+    VoipInfo,
+    WanInfo,
+)
 
 from homeassistant.components.sfr_box.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER, ConfigEntry
@@ -91,6 +99,25 @@ async def system_get_info(hass: HomeAssistant) -> AsyncGenerator[SystemInfo]:
     )
     with patch(
         "homeassistant.components.sfr_box.coordinator.SFRBox.system_get_info",
+        return_value=info,
+    ):
+        yield info
+
+
+@pytest.fixture
+async def voip_get_call_history_list(
+    hass: HomeAssistant,
+) -> AsyncGenerator[VoipCallHistoryList]:
+    """Fixture for SFRBox.voip_get_call_history_list."""
+    fixture_data = await async_load_json_object_fixture(
+        hass, "voip_get_call_history_list.json", DOMAIN
+    )
+    fixture_data["calls"] = [
+        VoipCallHistoryCall(**call) for call in fixture_data.get("calls", [])
+    ]
+    info = VoipCallHistoryList(**fixture_data)
+    with patch(
+        "homeassistant.components.sfr_box.coordinator.SFRBox.voip_get_call_history_list",
         return_value=info,
     ):
         yield info
