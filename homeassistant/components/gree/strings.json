@@ -1,12 +1,26 @@
 {
   "config": {
     "abort": {
-      "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]",
-      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
     },
     "step": {
-      "confirm": {
+      "user": {
+        "menu_options": {
+          "discovery": "Scan the network for devices",
+          "manual": "Enter IP address manually"
+        }
+      },
+      "discovery": {
         "description": "[%key:common::config_flow::description::confirm_setup%]"
+      },
+      "manual": {
+        "data": {
+          "ip_address": "IP address"
+        }
       }
     }
   },

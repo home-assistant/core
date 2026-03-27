@@ -5,12 +5,14 @@ from __future__ import annotations
 from datetime import timedelta
 import logging
 
+from greeclimate.device import DeviceInfo
+
 from homeassistant.components.network import async_get_ipv4_broadcast_addresses
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.event import async_track_time_interval
 
-from .const import DISCOVERY_SCAN_INTERVAL
+from .const import CONF_IP_ADDRESS, DEFAULT_PORT, DISCOVERY_SCAN_INTERVAL
 from .coordinator import DiscoveryService, GreeConfigEntry, GreeRuntimeData
 
 _LOGGER = logging.getLogger(__name__)
@@ -25,18 +27,25 @@ async def async_setup_entry(hass: HomeAssistant, entry: GreeConfigEntry) -> bool
         discovery_service=gree_discovery, coordinators=[]
     )
 
-    async def _async_scan_update(_=None):
-        bcast_addr = list(await async_get_ipv4_broadcast_addresses(hass))
-        await gree_discovery.discovery.scan(0, bcast_ifaces=bcast_addr)
+    if CONF_IP_ADDRESS in entry.data:
+        # Static IP mode: create device directly, no scanning
+        ip_address = entry.data[CONF_IP_ADDRESS]
+        device_info = DeviceInfo(ip_address, DEFAULT_PORT, "", "")
+        await gree_discovery.device_found(device_info)
+    else:
+        # Discovery mode: scan network for devices
+        async def _async_scan_update(_=None):
+            bcast_addr = list(await async_get_ipv4_broadcast_addresses(hass))
+            await gree_discovery.discovery.scan(0, bcast_ifaces=bcast_addr)
 
-    _LOGGER.debug("Scanning network for Gree devices")
-    await _async_scan_update()
+        _LOGGER.debug("Scanning network for Gree devices")
+        await _async_scan_update()
 
-    entry.async_on_unload(
-        async_track_time_interval(
-            hass, _async_scan_update, timedelta(seconds=DISCOVERY_SCAN_INTERVAL)
+        entry.async_on_unload(
+            async_track_time_interval(
+                hass, _async_scan_update, timedelta(seconds=DISCOVERY_SCAN_INTERVAL)
+            )
         )
-    )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 

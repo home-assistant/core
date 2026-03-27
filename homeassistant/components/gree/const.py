@@ -4,6 +4,10 @@ DISCOVERY_SCAN_INTERVAL = 300
 DISCOVERY_TIMEOUT = 8
 DISPATCH_DEVICE_DISCOVERED = "gree_device_discovered"
 
+CONF_IP_ADDRESS = "ip_address"
+
+DEFAULT_PORT = 7000
+
 DOMAIN = "gree"
 
 FAN_MEDIUM_LOW = "medium low"
