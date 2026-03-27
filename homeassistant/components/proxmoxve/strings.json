@@ -15,60 +15,122 @@
     "step": {
       "reauth_confirm": {
         "data": {
-          "password": "[%key:common::config_flow::data::password%]"
+          "password": "[%key:common::config_flow::data::password%]",
+          "realm": "[%key:component::proxmoxve::config::step::user_auth::data::realm%]",
+          "token_id": "[%key:component::proxmoxve::config::step::user_auth::data::token_id%]",
+          "token_value": "[%key:component::proxmoxve::config::step::user_auth::data::token_value%]"
         },
         "data_description": {
-          "password": "The new password for the Proxmox VE server"
+          "password": "[%key:component::proxmoxve::config::step::user_auth::data_description::password%]",
+          "realm": "[%key:component::proxmoxve::config::step::user_auth::data_description::realm%]",
+          "token_id": "[%key:component::proxmoxve::config::step::user_auth::data_description::token_id%]",
+          "token_value": "[%key:component::proxmoxve::config::step::user_auth::data_description::token_value%]"
         },
-        "description": "The connection to the Proxmox VE server requires re-authentication. Please enter your password to continue.",
+        "description": "The connection to the Proxmox VE server requires re-authentication. Please update your credentials to continue.",
         "title": "Re-authenticate Proxmox VE integration"
       },
       "reconfigure": {
         "data": {
+          "auth_method": "[%key:component::proxmoxve::config::step::user::data::auth_method%]",
           "host": "[%key:common::config_flow::data::host%]",
-          "password": "[%key:common::config_flow::data::password%]",
           "port": "[%key:common::config_flow::data::port%]",
-          "realm": "[%key:component::proxmoxve::config::step::user::data::realm%]",
+          "token": "[%key:component::proxmoxve::config::step::user::data::token%]",
           "username": "[%key:common::config_flow::data::username%]",
           "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
         },
         "data_description": {
+          "auth_method": "[%key:component::proxmoxve::config::step::user::data_description::auth_method%]",
           "host": "[%key:component::proxmoxve::config::step::user::data_description::host%]",
-          "password": "[%key:component::proxmoxve::config::step::user::data_description::password%]",
           "port": "[%key:component::proxmoxve::config::step::user::data_description::port%]",
-          "realm": "[%key:component::proxmoxve::config::step::user::data_description::realm%]",
+          "token": "[%key:component::proxmoxve::config::step::user::data_description::token%]",
           "username": "[%key:component::proxmoxve::config::step::user::data_description::username%]",
           "verify_ssl": "[%key:component::proxmoxve::config::step::user::data_description::verify_ssl%]"
         },
         "description": "Use the following form to reconfigure your Proxmox VE server connection.",
         "title": "Reconfigure Proxmox VE integration"
       },
+      "reconfigure_auth": {
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]",
+          "realm": "[%key:component::proxmoxve::config::step::user_auth::data::realm%]",
+          "token_id": "[%key:component::proxmoxve::config::step::user_auth::data::token_id%]",
+          "token_value": "[%key:component::proxmoxve::config::step::user_auth::data::token_value%]"
+        },
+        "data_description": {
+          "password": "[%key:component::proxmoxve::config::step::user_auth::data_description::password%]",
+          "realm": "[%key:component::proxmoxve::config::step::user_auth::data_description::realm%]",
+          "token_id": "[%key:component::proxmoxve::config::step::user_auth::data_description::token_id%]",
+          "token_value": "[%key:component::proxmoxve::config::step::user_auth::data_description::token_value%]"
+        },
+        "description": "[%key:component::proxmoxve::config::step::user_auth::description%]",
+        "title": "[%key:component::proxmoxve::config::step::user_auth::title%]"
+      },
       "user": {
         "data": {
+          "auth_method": "Authentication method",
           "host": "[%key:common::config_flow::data::host%]",
-          "password": "[%key:common::config_flow::data::password%]",
           "port": "[%key:common::config_flow::data::port%]",
-          "realm": "Realm",
+          "token": "Use an API token",
           "username": "[%key:common::config_flow::data::username%]",
           "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
         },
         "data_description": {
+          "auth_method": "Select authentication provider for your Proxmox VE server",
           "host": "The hostname or IP address of your Proxmox VE server",
-          "password": "The password for the Proxmox VE server",
           "port": "The port of your Proxmox VE server (default: 8006)",
-          "realm": "The authentication realm for the Proxmox VE server (default: 'pam')",
+          "token": "Enable to use an API token or leave disabled to authenticate with a password",
           "username": "The username for the Proxmox VE server",
           "verify_ssl": "Whether to verify SSL certificates. Disable only if you have a self-signed certificate"
         },
         "description": "Enter your Proxmox VE server details to set up the integration.",
         "title": "Connect to Proxmox VE"
+      },
+      "user_auth": {
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]",
+          "realm": "Realm",
+          "token_id": "Token ID",
+          "token_value": "Secret"
+        },
+        "data_description": {
+          "password": "The password for the user",
+          "realm": "Specify your authentication realm",
+          "token_id": "The name given to the API token",
+          "token_value": "The secret generated for the API token"
+        },
+        "description": "Enter your credentials to authenticate with Proxmox VE.",
+        "title": "Proxmox VE credentials"
       }
     }
   },
   "entity": {
     "binary_sensor": {
+      "node_backup_status": {
+        "name": "Backup status"
+      },
       "status": {
         "name": "Status"
+      },
+      "storage_active": {
+        "name": "Storage active",
+        "state": {
+          "off": "Inactive",
+          "on": "Active"
+        }
+      },
+      "storage_enabled": {
+        "name": "Storage enabled",
+        "state": {
+          "off": "Disabled",
+          "on": "Enabled"
+        }
+      },
+      "storage_shared": {
+        "name": "Storage shared",
+        "state": {
+          "off": "Not shared",
+          "on": "Shared"
+        }
       }
     },
     "button": {
@@ -81,6 +143,9 @@
       "shutdown": {
         "name": "Shutdown"
       },
+      "snapshot_create": {
+        "name": "Create snapshot"
+      },
       "start": {
         "name": "Start"
       },
@@ -92,6 +157,9 @@
       },
       "stop_all": {
         "name": "Stop all"
+      },
+      "suspend_all": {
+        "name": "Suspend all"
       }
     },
     "sensor": {
@@ -113,6 +181,15 @@
       "container_memory": {
         "name": "Memory usage"
       },
+      "container_memory_percentage": {
+        "name": "Memory usage percentage"
+      },
+      "container_netin": {
+        "name": "Network input"
+      },
+      "container_netout": {
+        "name": "Network output"
+      },
       "container_status": {
         "name": "Status",
         "state": {
@@ -120,6 +197,15 @@
           "stopped": "Stopped",
           "suspended": "Suspended"
         }
+      },
+      "container_uptime": {
+        "name": "Uptime"
+      },
+      "node_backup_duration": {
+        "name": "Backup duration"
+      },
+      "node_backup_last_backup": {
+        "name": "Last backup"
       },
       "node_cpu": {
         "name": "CPU usage"
@@ -139,12 +225,30 @@
       "node_memory": {
         "name": "Memory usage"
       },
+      "node_memory_percentage": {
+        "name": "Memory usage percentage"
+      },
       "node_status": {
         "name": "Status",
         "state": {
           "offline": "Offline",
           "online": "Online"
         }
+      },
+      "node_uptime": {
+        "name": "Uptime"
+      },
+      "storage_available": {
+        "name": "Available storage"
+      },
+      "storage_total": {
+        "name": "Total storage"
+      },
+      "storage_used": {
+        "name": "Used storage"
+      },
+      "storage_used_percentage": {
+        "name": "Storage usage percentage"
       },
       "vm_cpu": {
         "name": "CPU usage"
@@ -164,6 +268,15 @@
       "vm_memory": {
         "name": "Memory usage"
       },
+      "vm_memory_percentage": {
+        "name": "Memory usage percentage"
+      },
+      "vm_netin": {
+        "name": "Network input"
+      },
+      "vm_netout": {
+        "name": "Network output"
+      },
       "vm_status": {
         "name": "Status",
         "state": {
@@ -171,6 +284,9 @@
           "stopped": "Stopped",
           "suspended": "Suspended"
         }
+      },
+      "vm_uptime": {
+        "name": "Uptime"
       }
     }
   },
@@ -198,6 +314,9 @@
     },
     "no_permission_node_power": {
       "message": "The configured Proxmox VE user does not have permission to manage the power state of nodes. Please grant the user the 'VM.PowerMgmt' permission and try again."
+    },
+    "no_permission_snapshot": {
+      "message": "The configured Proxmox VE user does not have permission to create snapshots of VMs and containers. Please grant the user the 'VM.Snapshot' permission and try again."
     },
     "no_permission_vm_lxc_power": {
       "message": "The configured Proxmox VE user does not have permission to manage the power state of VMs and containers. Please grant the user the 'VM.PowerMgmt' permission and try again."
@@ -235,6 +354,15 @@
     "deprecated_yaml_import_issue_ssl_error": {
       "description": "Configuring {integration_title} via YAML is deprecated and will be removed in a future release. While importing your configuration, an SSL error occurred. Please correct your YAML configuration and restart Home Assistant, or remove the {domain} key from your configuration and configure the integration via the UI.",
       "title": "[%key:component::proxmoxve::issues::deprecated_yaml_import_issue_connect_timeout::title%]"
+    }
+  },
+  "selector": {
+    "auth_method": {
+      "options": {
+        "other": "Use another realm (specified in the next step)",
+        "pam": "Linux user - PAM standard authentication",
+        "pve": "Proxmox user - Proxmox VE authentication server"
+      }
     }
   }
 }

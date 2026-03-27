@@ -1,0 +1,48 @@
+.detected_condition_common: &detected_condition_common
+  target:
+    entity:
+      - domain: binary_sensor
+        device_class: moisture
+  fields:
+    behavior: &condition_behavior
+      required: true
+      default: any
+      selector:
+        select:
+          translation_key: condition_behavior
+          options:
+            - all
+            - any
+
+.moisture_threshold_entity: &moisture_threshold_entity
+  - domain: input_number
+    unit_of_measurement: "%"
+  - domain: sensor
+    device_class: moisture
+  - domain: number
+    device_class: moisture
+
+.moisture_threshold_number: &moisture_threshold_number
+  min: 0
+  max: 100
+  mode: box
+  unit_of_measurement: "%"
+
+is_detected: *detected_condition_common
+
+is_not_detected: *detected_condition_common
+
+is_value:
+  target:
+    entity:
+      - domain: sensor
+        device_class: moisture
+  fields:
+    behavior: *condition_behavior
+    threshold:
+      required: true
+      selector:
+        numeric_threshold:
+          entity: *moisture_threshold_entity
+          mode: is
+          number: *moisture_threshold_number

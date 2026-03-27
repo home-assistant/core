@@ -78,30 +78,50 @@ async def test_config_entry_auth_failed_triggers_reauth(
 
 
 @pytest.mark.parametrize(
-    ("method", "exception", "expected_state"),
+    ("method", "exception", "expected_state", "assert_static_fallback"),
     [
+        (
+            "initialize",
+            BSBLANError("General error"),
+            ConfigEntryState.SETUP_ERROR,
+            False,
+        ),
         (
             "device",
             BSBLANConnectionError("Connection failed"),
             ConfigEntryState.SETUP_RETRY,
+            False,
         ),
         (
             "info",
             BSBLANAuthError("Authentication failed"),
             ConfigEntryState.SETUP_ERROR,
+            False,
         ),
-        ("static_values", BSBLANError("General error"), ConfigEntryState.SETUP_ERROR),
+        (
+            "static_values",
+            BSBLANError("General error"),
+            ConfigEntryState.LOADED,
+            True,
+        ),
+        (
+            "static_values",
+            TimeoutError("Connection timeout"),
+            ConfigEntryState.LOADED,
+            True,
+        ),
     ],
 )
-async def test_config_entry_static_data_errors(
+async def test_config_entry_setup_errors(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_bsblan: MagicMock,
     method: str,
     exception: Exception,
     expected_state: ConfigEntryState,
+    assert_static_fallback: bool,
 ) -> None:
-    """Test various errors during static data fetching trigger appropriate config entry states."""
+    """Test setup errors trigger appropriate config entry states."""
     # Mock the specified method to raise the exception
     getattr(mock_bsblan, method).side_effect = exception
 
@@ -110,6 +130,8 @@ async def test_config_entry_static_data_errors(
     await hass.async_block_till_done()
 
     assert mock_config_entry.state is expected_state
+    if assert_static_fallback:
+        assert mock_config_entry.runtime_data.static is None
 
 
 async def test_coordinator_dhw_config_update_error(

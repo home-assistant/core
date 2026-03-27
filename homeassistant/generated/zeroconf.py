@@ -711,6 +711,9 @@ ZEROCONF = {
         {
             "domain": "linkplay",
         },
+        {
+            "domain": "wiim",
+        },
     ],
     "_lookin._tcp.local.": [
         {
@@ -927,6 +930,11 @@ ZEROCONF = {
     "_smoip._tcp.local.": [
         {
             "domain": "cambridge_audio",
+        },
+    ],
+    "_solarman._tcp.local.": [
+        {
+            "domain": "solarman",
         },
     ],
     "_sonos._tcp.local.": [
