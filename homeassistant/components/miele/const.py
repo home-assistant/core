@@ -270,6 +270,7 @@ class ProgramPhaseOven(MieleEnum, missing_to_none=True):
     process_finished = 3078
     searing = 3080
     roasting = 3081
+    cooling_down = 3083
     energy_save = 3084
     pre_heating = 3099
 
