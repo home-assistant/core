@@ -8,6 +8,8 @@ from homeassistant.const import CONF_IP_ADDRESS
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
+from .common import build_device_mock
+
 from tests.common import MockConfigEntry
 
 
@@ -60,7 +62,13 @@ async def test_setup_static_ip(hass: HomeAssistant) -> None:
     )
     entry.add_to_hass(hass)
 
+    mock_device = build_device_mock(ipAddress="192.168.1.100")
+
     with (
+        patch(
+            "homeassistant.components.gree.__init__.Device",
+            return_value=mock_device,
+        ),
         patch(
             "homeassistant.components.gree.climate.async_setup_entry",
             return_value=True,
@@ -76,3 +84,4 @@ async def test_setup_static_ip(hass: HomeAssistant) -> None:
         assert len(climate_setup.mock_calls) == 1
         assert len(switch_setup.mock_calls) == 1
         assert entry.state is ConfigEntryState.LOADED
+        mock_device.bind.assert_called_once()
