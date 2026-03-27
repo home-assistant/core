@@ -123,7 +123,7 @@ async def test_manual_step_cannot_connect(
 ) -> None:
     """Test manual step shows error when device cannot be reached."""
     mock_device = build_device_mock()
-    mock_device.bind = AsyncMock(side_effect=DeviceTimeoutError)
+    mock_device.bind = AsyncMock(side_effect=DeviceTimeoutError())
 
     with patch(
         "homeassistant.components.gree.config_flow.Device",

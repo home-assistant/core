@@ -86,7 +86,7 @@ async def test_setup_static_ip(hass: HomeAssistant) -> None:
         assert len(climate_setup.mock_calls) == 1
         assert len(switch_setup.mock_calls) == 1
         assert entry.state is ConfigEntryState.LOADED
-        mock_device.bind.assert_called_once()
+        mock_device.bind.assert_awaited_once()
 
 
 async def test_setup_static_ip_bind_failure(hass: HomeAssistant) -> None:
@@ -98,7 +98,7 @@ async def test_setup_static_ip_bind_failure(hass: HomeAssistant) -> None:
     entry.add_to_hass(hass)
 
     mock_device = build_device_mock(ipAddress="192.168.1.100")
-    mock_device.bind = AsyncMock(side_effect=DeviceTimeoutError)
+    mock_device.bind = AsyncMock(side_effect=DeviceTimeoutError())
 
     with patch(
         "homeassistant.components.gree.Device",
@@ -108,4 +108,4 @@ async def test_setup_static_ip_bind_failure(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
         assert entry.state is ConfigEntryState.SETUP_RETRY
-        mock_device.bind.assert_called_once()
+        mock_device.bind.assert_awaited_once()
