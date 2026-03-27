@@ -161,6 +161,9 @@ class SatelConfigFlow(ConfigFlow, domain=DOMAIN):
         reconfigure_entry = self._get_reconfigure_entry()
 
         if user_input is not None:
+            if reconfigure_entry.data == user_input:
+                return self.async_abort(reason="already_configured")
+
             self._async_abort_entries_match({CONF_HOST: user_input[CONF_HOST]})
 
             if await self.test_connection(user_input[CONF_HOST], user_input[CONF_PORT]):
