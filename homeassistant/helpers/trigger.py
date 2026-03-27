@@ -461,7 +461,7 @@ class EntityTargetStateTriggerBase(EntityTriggerBase):
     state-based and attribute-based triggers depending on the DomainSpec.
     """
 
-    _to_states: set[str]
+    _to_states: set[str | bool]
 
     def is_valid_transition(self, from_state: State, to_state: State) -> bool:
         """Check if the origin state is valid and the state has changed."""
@@ -812,7 +812,7 @@ def _normalize_domain_specs(
 
 def make_entity_target_state_trigger(
     domain_specs: Mapping[str, DomainSpec] | str,
-    to_states: str | set[str],
+    to_states: str | bool | set[str | bool],
 ) -> type[EntityTargetStateTriggerBase]:
     """Create a trigger for entity state changes to specific state(s).
 
@@ -821,7 +821,7 @@ def make_entity_target_state_trigger(
     """
     specs = _normalize_domain_specs(domain_specs)
 
-    if isinstance(to_states, str):
+    if isinstance(to_states, (str | bool)):
         to_states_set = {to_states}
     else:
         to_states_set = to_states
