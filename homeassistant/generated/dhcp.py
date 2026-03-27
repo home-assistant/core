@@ -915,14 +915,6 @@ DHCP: Final[list[dict[str, str | bool]]] = [
         "hostname": "ruuvigateway*",
     },
     {
-        "domain": "saj",
-        "hostname": "saj-*",
-    },
-    {
-        "domain": "saj",
-        "macaddress": "441793*",
-    },
-    {
         "domain": "samsungtv",
         "registered_devices": True,
     },

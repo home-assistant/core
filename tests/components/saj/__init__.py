@@ -19,23 +19,6 @@ MOCK_USER_INPUT_WIFI = {
 }
 
 MOCK_SERIAL_NUMBER = "TEST123456789"
-MOCK_MAC_ADDRESS = "44:17:93:aa:bb:cc"
-MOCK_MAC_ADDRESS_FORMATTED = "441793aabbcc"
-# DHCP discovery uses normalized uppercase MAC as config entry unique_id
-MOCK_DHCP_UNIQUE_ID = MOCK_MAC_ADDRESS_FORMATTED.upper()
-MOCK_DHCP_UNIQUE_ID_ALT = "441793DDEEFF"
-
-MOCK_DHCP_DISCOVERY = {
-    "ip": "192.168.1.100",
-    "hostname": "saj-test-device-001",
-    "macaddress": MOCK_MAC_ADDRESS_FORMATTED,
-}
-
-MOCK_DHCP_DISCOVERY_ETHERNET = {
-    "ip": "192.168.1.101",
-    "hostname": "saj-inverter-test",
-    "macaddress": "441793ddeeff",
-}
 
 
 async def setup_integration(

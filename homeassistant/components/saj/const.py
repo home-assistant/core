@@ -7,5 +7,3 @@ DOMAIN: Final = "saj"
 INTEGRATION_TITLE: Final = "SAJ Solar Inverter"
 
 CONNECTION_TYPES = ["ethernet", "wifi"]
-
-CONF_MAC: Final = "mac"

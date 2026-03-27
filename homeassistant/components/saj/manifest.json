@@ -3,14 +3,6 @@
   "name": "SAJ Solar Inverter",
   "codeowners": ["@fredericvl"],
   "config_flow": true,
-  "dhcp": [
-    {
-      "hostname": "saj-*"
-    },
-    {
-      "macaddress": "441793*"
-    }
-  ],
   "documentation": "https://www.home-assistant.io/integrations/saj",
   "integration_type": "hub",
   "iot_class": "local_polling",
