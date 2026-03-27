@@ -2,6 +2,8 @@
   "common": {
     "condition_behavior_description": "How the state should match on the targeted lights.",
     "condition_behavior_name": "Behavior",
+    "condition_threshold_description": "What to test for and threshold values.",
+    "condition_threshold_name": "Threshold configuration",
     "field_brightness_description": "Number indicating brightness, where 0 turns the light off, 1 is the minimum brightness, and 255 is the maximum brightness.",
     "field_brightness_name": "Brightness value",
     "field_brightness_pct_description": "Number indicating the percentage of full brightness, where 0 turns the light off, 1 is the minimum brightness, and 100 is the maximum brightness.",
@@ -42,6 +44,20 @@
     "trigger_threshold_name": "Threshold configuration"
   },
   "conditions": {
+    "is_brightness": {
+      "description": "Tests the brightness of one or more lights.",
+      "fields": {
+        "behavior": {
+          "description": "[%key:component::light::common::condition_behavior_description%]",
+          "name": "[%key:component::light::common::condition_behavior_name%]"
+        },
+        "threshold": {
+          "description": "[%key:component::light::common::condition_threshold_description%]",
+          "name": "[%key:component::light::common::condition_threshold_name%]"
+        }
+      },
+      "name": "Light brightness"
+    },
     "is_off": {
       "description": "Tests if one or more lights are off.",
       "fields": {

@@ -1,4 +1,26 @@
 {
+  "conditions": {
+    "is_closed": {
+      "description": "Tests if one or more valves are closed.",
+      "fields": {
+        "behavior": {
+          "description": "Whether the condition should pass when any or all targeted entities match.",
+          "name": "Behavior"
+        }
+      },
+      "name": "Valve is closed"
+    },
+    "is_open": {
+      "description": "Tests if one or more valves are open.",
+      "fields": {
+        "behavior": {
+          "description": "Whether the condition should pass when any or all targeted entities match.",
+          "name": "Behavior"
+        }
+      },
+      "name": "Valve is open"
+    }
+  },
   "entity_component": {
     "_": {
       "name": "[%key:component::valve::title%]",
@@ -20,6 +42,14 @@
     },
     "water": {
       "name": "Water"
+    }
+  },
+  "selector": {
+    "condition_behavior": {
+      "options": {
+        "all": "All",
+        "any": "Any"
+      }
     }
   },
   "services": {

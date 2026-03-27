@@ -342,10 +342,10 @@ ENTITY_STATE_CONDITION_SCHEMA_ANY_ALL = vol.Schema(
 )
 
 
-class EntityConditionBase[DomainSpecT: DomainSpec = DomainSpec](Condition):
+class EntityConditionBase(Condition):
     """Base class for entity conditions."""
 
-    _domain_specs: Mapping[str, DomainSpecT]
+    _domain_specs: Mapping[str, DomainSpec]
     _schema: vol.Schema = ENTITY_STATE_CONDITION_SCHEMA_ANY_ALL
 
     @override
@@ -421,7 +421,7 @@ class EntityConditionBase[DomainSpecT: DomainSpec = DomainSpec](Condition):
 class EntityStateConditionBase(EntityConditionBase):
     """State condition."""
 
-    _states: set[str]
+    _states: set[str | bool]
 
     def is_valid_state(self, entity_state: State) -> bool:
         """Check if the state matches the expected state(s)."""
@@ -439,7 +439,7 @@ def _normalize_domain_specs(
 
 def make_entity_state_condition(
     domain_specs: Mapping[str, DomainSpec] | str,
-    states: str | set[str],
+    states: str | bool | set[str | bool],
 ) -> type[EntityStateConditionBase]:
     """Create a condition for entity state changes to specific state(s).
 
@@ -448,8 +448,8 @@ def make_entity_state_condition(
     """
     specs = _normalize_domain_specs(domain_specs)
 
-    if isinstance(states, str):
-        states_set = {states}
+    if isinstance(states, (str, bool)):
+        states_set: set[str | bool] = {states}
     else:
         states_set = states
 
@@ -462,19 +462,13 @@ def make_entity_state_condition(
     return CustomCondition
 
 
-NUMERICAL_CONDITION_SCHEMA = vol.Schema(
+NUMERICAL_CONDITION_SCHEMA = ENTITY_STATE_CONDITION_SCHEMA_ANY_ALL.extend(
     {
-        vol.Required(CONF_TARGET): cv.TARGET_FIELDS,
-        vol.Required(CONF_OPTIONS): vol.All(
-            {
-                vol.Required(ATTR_BEHAVIOR, default=BEHAVIOR_ANY): vol.In(
-                    [BEHAVIOR_ANY, BEHAVIOR_ALL]
-                ),
-                vol.Required("threshold"): NumericThresholdSelector(
-                    NumericThresholdSelectorConfig(mode=NumericThresholdMode.IS)
-                ),
-            },
-        ),
+        vol.Required(CONF_OPTIONS): {
+            vol.Required("threshold"): NumericThresholdSelector(
+                NumericThresholdSelectorConfig(mode=NumericThresholdMode.IS)
+            ),
+        },
     }
 )
 
@@ -588,22 +582,16 @@ def _make_numerical_condition_with_unit_schema(
     unit_converter: type[BaseUnitConverter],
 ) -> vol.Schema:
     """Factory for numerical condition schema with unit option."""
-    return vol.Schema(
+    return ENTITY_STATE_CONDITION_SCHEMA_ANY_ALL.extend(
         {
-            vol.Required(CONF_TARGET): cv.TARGET_FIELDS,
-            vol.Required(CONF_OPTIONS): vol.All(
-                {
-                    vol.Required(ATTR_BEHAVIOR, default=BEHAVIOR_ANY): vol.In(
-                        [BEHAVIOR_ANY, BEHAVIOR_ALL]
-                    ),
-                    vol.Required("threshold"): NumericThresholdSelector(
-                        NumericThresholdSelectorConfig(
-                            mode=NumericThresholdMode.IS,
-                            unit_of_measurement=list(unit_converter.VALID_UNITS),
-                        )
-                    ),
-                },
-            ),
+            vol.Required(CONF_OPTIONS): {
+                vol.Required("threshold"): NumericThresholdSelector(
+                    NumericThresholdSelectorConfig(
+                        mode=NumericThresholdMode.IS,
+                        unit_of_measurement=list(unit_converter.VALID_UNITS),
+                    )
+                ),
+            },
         }
     )
 

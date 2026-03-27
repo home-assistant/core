@@ -1944,6 +1944,10 @@ class EntityRegistry(BaseRegistry):
 
     async def _async_load(self) -> None:
         """Load the entity registry."""
+        # Device registry must be loaded before entity registry because
+        # migration and entity processing reference device names.
+        await dr.async_get(self.hass).async_wait_loaded()
+
         _async_setup_cleanup(self.hass, self)
         _async_setup_entity_restore(self.hass, self)
 
