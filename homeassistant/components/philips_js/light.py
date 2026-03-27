@@ -137,11 +137,10 @@ class PhilipsTVLightEntity(PhilipsJsEntity, LightEntity):
 
     _attr_effect: str
     _attr_translation_key = "ambilight"
+    _attr_supported_color_modes = {ColorMode.HS}
+    _attr_supported_features = LightEntityFeature.EFFECT
 
-    def __init__(
-        self,
-        coordinator: PhilipsTVDataUpdateCoordinator,
-    ) -> None:
+    def __init__(self, coordinator: PhilipsTVDataUpdateCoordinator) -> None:
         """Initialize light."""
         self._tv = coordinator.api
         self._hs = None
@@ -150,8 +149,6 @@ class PhilipsTVLightEntity(PhilipsJsEntity, LightEntity):
         self._last_selected_effect: AmbilightEffect | None = None
         super().__init__(coordinator)
 
-        self._attr_supported_color_modes = {ColorMode.HS, ColorMode.ONOFF}
-        self._attr_supported_features = LightEntityFeature.EFFECT
         self._attr_unique_id = coordinator.unique_id
 
         self._update_from_coordinator()

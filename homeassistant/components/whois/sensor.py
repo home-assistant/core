@@ -19,10 +19,7 @@ from homeassistant.const import CONF_DOMAIN, EntityCategory, UnitOfTime
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-    DataUpdateCoordinator,
-)
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import dt as dt_util
 
 from .const import (
@@ -33,6 +30,7 @@ from .const import (
     DOMAIN,
     STATUS_TYPES,
 )
+from .coordinator import WhoisCoordinator
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -164,9 +162,7 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the platform from config_entry."""
-    coordinator: DataUpdateCoordinator[Domain | None] = hass.data[DOMAIN][
-        entry.entry_id
-    ]
+    coordinator: WhoisCoordinator = hass.data[DOMAIN][entry.entry_id]
     async_add_entities(
         [
             WhoisSensorEntity(
@@ -179,9 +175,7 @@ async def async_setup_entry(
     )
 
 
-class WhoisSensorEntity(
-    CoordinatorEntity[DataUpdateCoordinator[Domain | None]], SensorEntity
-):
+class WhoisSensorEntity(CoordinatorEntity[WhoisCoordinator], SensorEntity):
     """Implementation of a WHOIS sensor."""
 
     entity_description: WhoisSensorEntityDescription
@@ -189,7 +183,7 @@ class WhoisSensorEntity(
 
     def __init__(
         self,
-        coordinator: DataUpdateCoordinator[Domain | None],
+        coordinator: WhoisCoordinator,
         description: WhoisSensorEntityDescription,
         domain: str,
     ) -> None:

@@ -31,7 +31,7 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.hassio import get_supervisor_ip, is_hassio
 from homeassistant.util import dt as dt_util, yaml as yaml_util
 
-from .const import DOMAIN, KEY_HASS
+from .const import DOMAIN, KEY_HASS, is_supervisor_unix_socket_request
 from .view import HomeAssistantView
 
 _LOGGER: Final = logging.getLogger(__name__)
@@ -95,6 +95,10 @@ async def ban_middleware(
     request: Request, handler: Callable[[Request], Awaitable[StreamResponse]]
 ) -> StreamResponse:
     """IP Ban middleware."""
+    # Unix socket connections are trusted, skip ban checks
+    if is_supervisor_unix_socket_request(request):
+        return await handler(request)
+
     if (ban_manager := request.app.get(KEY_BAN_MANAGER)) is None:
         _LOGGER.error("IP Ban middleware loaded but banned IPs not loaded")
         return await handler(request)

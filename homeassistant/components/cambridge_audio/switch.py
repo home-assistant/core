@@ -33,6 +33,13 @@ def room_correction_enabled(client: StreamMagicClient) -> bool:
     return client.audio.tilt_eq.enabled
 
 
+def equalizer_enabled(client: StreamMagicClient) -> bool:
+    """Check if equalizer is enabled."""
+    if TYPE_CHECKING:
+        assert client.audio.user_eq is not None
+    return client.audio.user_eq.enabled
+
+
 CONTROL_ENTITIES: tuple[CambridgeAudioSwitchEntityDescription, ...] = (
     CambridgeAudioSwitchEntityDescription(
         key="pre_amp",
@@ -55,6 +62,14 @@ CONTROL_ENTITIES: tuple[CambridgeAudioSwitchEntityDescription, ...] = (
         load_fn=lambda client: client.audio.tilt_eq is not None,
         value_fn=room_correction_enabled,
         set_value_fn=lambda client, value: client.set_room_correction_mode(value),
+    ),
+    CambridgeAudioSwitchEntityDescription(
+        key="equalizer",
+        translation_key="equalizer",
+        entity_category=EntityCategory.CONFIG,
+        load_fn=lambda client: client.audio.user_eq is not None,
+        value_fn=equalizer_enabled,
+        set_value_fn=lambda client, value: client.set_equalizer_mode(value),
     ),
 )
 

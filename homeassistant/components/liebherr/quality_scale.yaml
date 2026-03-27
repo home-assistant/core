@@ -47,7 +47,7 @@ rules:
     comment: Cloud API does not require updating entry data from network discovery.
   discovery: done
   docs-data-update: done
-  docs-examples: todo
+  docs-examples: done
   docs-known-limitations: done
   docs-supported-devices: done
   docs-supported-functions: done
@@ -68,7 +68,7 @@ rules:
   repair-issues:
     status: exempt
     comment: No repair issues to implement at this time.
-  stale-devices: todo
+  stale-devices: done
 
   # Platinum
   async-dependency: done
