@@ -1,10 +1,10 @@
 {
   "entity": {
-    "sensor": {
+    "binary_sensor": {
       "voip_hook_status": {
         "default": "mdi:phone",
         "state": {
-          "offhook": "mdi:phone-in-talk"
+          "on": "mdi:phone-in-talk"
         }
       }
     }

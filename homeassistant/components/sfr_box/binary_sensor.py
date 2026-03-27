@@ -63,6 +63,11 @@ VOIP_SENSOR_TYPES: tuple[SFRBoxBinarySensorEntityDescription[VoipInfo], ...] = (
         value_fn=lambda x: x.callhistory_active == "on",
         translation_key="voip_callhistory_active",
     ),
+    SFRBoxBinarySensorEntityDescription[VoipInfo](
+        key="hook_status",
+        value_fn=lambda x: x.hook_status == "offhook",
+        translation_key="voip_hook_status",
+    ),
 )
 WAN_SENSOR_TYPES: tuple[SFRBoxBinarySensorEntityDescription[WanInfo], ...] = (
     SFRBoxBinarySensorEntityDescription[WanInfo](

@@ -50,6 +50,13 @@
       "voip_callhistory_active": {
         "name": "VoIP call history active"
       },
+      "voip_hook_status": {
+        "name": "VoIP phone hook status",
+        "state": {
+          "off": "Onhook",
+          "on": "Offhook"
+        }
+      },
       "voip_status": {
         "name": "VoIP status"
       },
@@ -117,13 +124,6 @@
           "adsl": "ADSL",
           "ftth": "FTTH",
           "gprs": "GPRS"
-        }
-      },
-      "voip_hook_status": {
-        "name": "VoIP Phone state",
-        "state": {
-          "idle": "Idle",
-          "offhook": "Offhook"
         }
       },
       "voip_infra": {

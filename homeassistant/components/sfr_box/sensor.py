@@ -197,17 +197,6 @@ VOIP_SENSOR_TYPES: tuple[SFRBoxSensorEntityDescription[VoipInfo], ...] = (
         translation_key="voip_infra",
         value_fn=lambda x: _value_to_option(x.infra),
     ),
-    SFRBoxSensorEntityDescription[VoipInfo](
-        key="hook_status",
-        device_class=SensorDeviceClass.ENUM,
-        entity_registry_enabled_default=True,
-        options=[
-            "idle",
-            "offhook",
-        ],
-        translation_key="voip_hook_status",
-        value_fn=lambda x: _get_phone_status(x.hook_status),
-    ),
 )
 WAN_SENSOR_TYPES: tuple[SFRBoxSensorEntityDescription[WanInfo], ...] = (
     SFRBoxSensorEntityDescription[WanInfo](
