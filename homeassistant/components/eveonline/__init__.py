@@ -55,8 +55,9 @@ async def async_unload_entry(hass: HomeAssistant, entry: EveOnlineConfigEntry) -
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
     # Release server entity ownership so another entry can claim it on reload.
-    if domain_data := hass.data.get(DOMAIN):
-        if domain_data.get("server_sensor_entry") == entry.entry_id:
-            domain_data.pop("server_sensor_entry")
+    if unload_ok:
+        if domain_data := hass.data.get(DOMAIN):
+            if domain_data.get("server_sensor_entry") == entry.entry_id:
+                domain_data.pop("server_sensor_entry")
 
     return unload_ok
