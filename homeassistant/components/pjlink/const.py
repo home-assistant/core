@@ -2,4 +2,7 @@
 
 CONF_ENCODING = "encoding"
 
+DEFAULT_PORT = 4352
+DEFAULT_ENCODING = "utf-8"
+
 DOMAIN = "pjlink"

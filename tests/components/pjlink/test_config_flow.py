@@ -7,18 +7,27 @@ from unittest.mock import AsyncMock, patch
 import pytest
 
 from homeassistant import config_entries
-from homeassistant.components.pjlink.const import CONF_ENCODING, DOMAIN
+from homeassistant.components.pjlink.const import (
+    CONF_ENCODING,
+    DEFAULT_ENCODING,
+    DEFAULT_PORT,
+    DOMAIN,
+)
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-_DEFAULT_DATA = {CONF_HOST: "1.1.1.1", CONF_PORT: 4352, CONF_PASSWORD: "test-password"}
+_DEFAULT_DATA = {
+    CONF_HOST: "1.1.1.1",
+    CONF_PORT: DEFAULT_PORT,
+    CONF_PASSWORD: "test-password",
+}
 _DEFAULT_DATA_WO_PORT = {CONF_HOST: "1.1.1.1", CONF_PASSWORD: "test-password"}
 _DEFAULT_DATA_W_ENCODING = {
     CONF_HOST: "1.1.1.1",
-    CONF_PORT: 4352,
+    CONF_PORT: DEFAULT_PORT,
     CONF_PASSWORD: "test-password",
-    CONF_ENCODING: "utf-8",
+    CONF_ENCODING: DEFAULT_ENCODING,
 }
 
 

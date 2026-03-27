@@ -13,14 +13,14 @@ from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_PORT
 from homeassistant.helpers import config_validation as cv
 
-from .const import DOMAIN
+from .const import DEFAULT_PORT, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_HOST): str,
-        vol.Required(CONF_PORT, default=4352): cv.port,
+        vol.Required(CONF_PORT, default=DEFAULT_PORT): cv.port,
         vol.Optional(CONF_PASSWORD): str,
     }
 )
@@ -76,7 +76,7 @@ class PJLinkConfigFlow(ConfigFlow, domain=DOMAIN):
         """Import a config entry from configuration.yaml."""
 
         host: str = import_config[CONF_HOST]
-        port: int = import_config.get(CONF_PORT, 4352)
+        port: int = import_config.get(CONF_PORT, DEFAULT_PORT)
         password: str | None = import_config.get(CONF_PASSWORD)
 
         self._async_abort_entries_match({CONF_HOST: host, CONF_PORT: port})

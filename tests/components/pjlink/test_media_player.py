@@ -11,7 +11,12 @@ from pypjlink.projector import ProjectorError
 import pytest
 
 from homeassistant.components import media_player
-from homeassistant.components.pjlink.const import CONF_ENCODING, DOMAIN
+from homeassistant.components.pjlink.const import (
+    CONF_ENCODING,
+    DEFAULT_ENCODING,
+    DEFAULT_PORT,
+    DOMAIN,
+)
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_HOST,
@@ -32,9 +37,9 @@ _EXAMPLE_YAML_CONFIG = {
         {
             CONF_PLATFORM: DOMAIN,
             CONF_HOST: "1.1.1.1",
-            CONF_PORT: 4352,
+            CONF_PORT: DEFAULT_PORT,
             CONF_PASSWORD: "test-password",
-            CONF_ENCODING: "utf-8",
+            CONF_ENCODING: DEFAULT_ENCODING,
         }
     ]
 }
@@ -75,7 +80,7 @@ async def setup_pjlink_entry(hass: HomeAssistant) -> MockConfigEntry:
     """Set up PJLink integration via config entry."""
     entry = MockConfigEntry(
         domain="pjlink",
-        data={"host": "127.0.0.1", "port": 4352},
+        data={"host": "127.0.0.1", "port": DEFAULT_PORT},
         title="test",
     )
     entry.add_to_hass(hass)
