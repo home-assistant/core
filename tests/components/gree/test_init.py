@@ -66,7 +66,7 @@ async def test_setup_static_ip(hass: HomeAssistant) -> None:
 
     with (
         patch(
-            "homeassistant.components.gree.__init__.Device",
+            "homeassistant.components.gree.Device",
             return_value=mock_device,
         ),
         patch(
