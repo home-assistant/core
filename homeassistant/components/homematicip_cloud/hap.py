@@ -166,9 +166,7 @@ class HomematicipHAP:
             self.set_all_to_unavailable()
         elif self._ws_connection_closed.is_set():
             _LOGGER.info("HMIP access point has reconnected to the cloud")
-            self._get_state_task = self.hass.async_create_task(self._try_get_state())
-            self._get_state_task.add_done_callback(self.get_state_finished)
-            self._ws_connection_closed.clear()
+            self._start_get_state_task()
 
     @callback
     def async_create_entity(self, *args, **kwargs) -> None:
@@ -181,6 +179,16 @@ class HomematicipHAP:
         if is_device:
             await asyncio.sleep(30)
         await self.hass.config_entries.async_reload(self.config_entry.entry_id)
+
+    @callback
+    def _start_get_state_task(self) -> None:
+        """Cancel any existing get_state task and start a new one."""
+        if self._get_state_task is not None and not self._get_state_task.done():
+            _LOGGER.debug("Cancelling existing get_state task before starting new one")
+            self._get_state_task.cancel()
+        self._get_state_task = self.hass.async_create_task(self._try_get_state())
+        self._get_state_task.add_done_callback(self.get_state_finished)
+        self._ws_connection_closed.clear()
 
     async def _try_get_state(self) -> None:
         """Call get_state in a loop until no error occurs, using exponential backoff on error."""
@@ -207,6 +215,14 @@ class HomematicipHAP:
                 )
                 await asyncio.sleep(delay)
                 delay = min(delay * 2, max_delay)
+            except Exception as err:  # noqa: BLE001
+                _LOGGER.error(
+                    "Unexpected error during get_state, retrying in %s seconds: %s",
+                    delay,
+                    err,
+                )
+                await asyncio.sleep(delay)
+                delay = min(delay * 2, max_delay)
 
     async def get_state(self) -> None:
         """Update HMIP state and tell Home Assistant."""
@@ -217,6 +233,8 @@ class HomematicipHAP:
         """Execute when try_get_state coroutine has finished."""
         try:
             future.result()
+        except asyncio.CancelledError:
+            _LOGGER.debug("Get_state task was cancelled")
         except Exception as err:  # noqa: BLE001
             _LOGGER.error(
                 "Error updating state after HMIP access point reconnect: %s", err
@@ -273,10 +291,7 @@ class HomematicipHAP:
         """Handle websocket connected."""
         _LOGGER.info("Websocket connection to HomematicIP Cloud established")
         if self._ws_connection_closed.is_set():
-            self._get_state_task = self.hass.async_create_task(self._try_get_state())
-            self._get_state_task.add_done_callback(self.get_state_finished)
-
-            self._ws_connection_closed.clear()
+            self._start_get_state_task()
 
     async def ws_disconnected_handler(self) -> None:
         """Handle websocket disconnection."""
