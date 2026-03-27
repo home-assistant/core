@@ -25,7 +25,6 @@ from tests.common import (
     mock_integration,
     mock_platform,
 )
-from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 @pytest.fixture(name="mock_mqtt")
@@ -99,17 +98,12 @@ async def test_hassio_discovery_startup(
 @pytest.mark.usefixtures("hassio_client")
 async def test_hassio_discovery_startup_done(
     hass: HomeAssistant,
-    aioclient_mock: AiohttpClientMocker,
     mock_mqtt: type[config_entries.ConfigFlow],
     addon_installed: AsyncMock,
     get_addon_discovery_info: AsyncMock,
     supervisor_root_info: AsyncMock,
 ) -> None:
     """Test startup and discovery with hass discovery."""
-    aioclient_mock.post(
-        "http://127.0.0.1/supervisor/options",
-        json={"result": "ok", "data": {}},
-    )
     get_addon_discovery_info.return_value = [
         Discovery(
             addon="mosquitto",
@@ -239,15 +233,12 @@ TEST_UUID = str(uuid4())
         config_entries.SOURCE_USER,
     ],
 )
+@pytest.mark.usefixtures("hassio_client", "addon_installed", "get_addon_discovery_info")
 async def test_hassio_rediscover(
     hass: HomeAssistant,
-    aioclient_mock: AiohttpClientMocker,
-    hassio_client: TestClient,
-    addon_installed: AsyncMock,
     entry_domain: str,
     entry_discovery_keys: dict[str, tuple[DiscoveryKey, ...]],
     entry_source: str,
-    get_addon_discovery_info: AsyncMock,
     get_discovery_message: AsyncMock,
 ) -> None:
     """Test we reinitiate flows when an ignored config entry is removed."""
