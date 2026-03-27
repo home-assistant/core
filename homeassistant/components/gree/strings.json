@@ -11,7 +11,7 @@
     "step": {
       "manual": {
         "data": {
-          "ip_address": "IP address"
+          "ip_address": "[%key:common::config_flow::data::ip%]"
         }
       },
       "scan": {
