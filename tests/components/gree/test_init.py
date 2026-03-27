@@ -1,6 +1,8 @@
 """Tests for the Gree Integration."""
 
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
+
+from greeclimate.exceptions import DeviceTimeoutError
 
 from homeassistant.components.gree.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
@@ -84,4 +86,26 @@ async def test_setup_static_ip(hass: HomeAssistant) -> None:
         assert len(climate_setup.mock_calls) == 1
         assert len(switch_setup.mock_calls) == 1
         assert entry.state is ConfigEntryState.LOADED
+        mock_device.bind.assert_called_once()
+
+
+async def test_setup_static_ip_bind_failure(hass: HomeAssistant) -> None:
+    """Test static IP entry goes to retry state when bind fails."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_IP_ADDRESS: "192.168.1.100"},
+    )
+    entry.add_to_hass(hass)
+
+    mock_device = build_device_mock(ipAddress="192.168.1.100")
+    mock_device.bind = AsyncMock(side_effect=DeviceTimeoutError)
+
+    with patch(
+        "homeassistant.components.gree.Device",
+        return_value=mock_device,
+    ):
+        assert await async_setup_component(hass, DOMAIN, {})
+        await hass.async_block_till_done()
+
+        assert entry.state is ConfigEntryState.SETUP_RETRY
         mock_device.bind.assert_called_once()
