@@ -12,8 +12,9 @@ import voluptuous as vol
 
 from homeassistant.components.network import async_get_ipv4_broadcast_addresses
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.const import CONF_IP_ADDRESS
 
-from .const import CONF_IP_ADDRESS, DEFAULT_PORT, DISCOVERY_TIMEOUT, DOMAIN
+from .const import DEFAULT_PORT, DISCOVERY_TIMEOUT, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -44,6 +45,8 @@ class GreeConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle network scan step."""
         if user_input is None:
             return self.async_show_form(step_id="scan")
+
+        self._async_abort_entries_match({})
 
         gree_discovery = Discovery(DISCOVERY_TIMEOUT)
         bcast_addr = list(await async_get_ipv4_broadcast_addresses(self.hass))

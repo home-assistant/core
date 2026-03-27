@@ -6,7 +6,8 @@ from greeclimate.exceptions import DeviceTimeoutError
 import pytest
 
 from homeassistant import config_entries
-from homeassistant.components.gree.const import CONF_IP_ADDRESS, DOMAIN
+from homeassistant.components.gree.const import DOMAIN
+from homeassistant.const import CONF_IP_ADDRESS
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 

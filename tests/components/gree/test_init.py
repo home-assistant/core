@@ -2,8 +2,9 @@
 
 from unittest.mock import patch
 
-from homeassistant.components.gree.const import CONF_IP_ADDRESS, DOMAIN
+from homeassistant.components.gree.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import CONF_IP_ADDRESS
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
