@@ -1,1 +1,6 @@
 unban:
+  description: Unban an IP address.
+  fields:
+    ip_address:
+      description: IP address to unban.
+      example: "192.168.0.1"

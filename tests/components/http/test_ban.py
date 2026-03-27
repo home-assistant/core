@@ -77,7 +77,7 @@ async def test_access_from_banned_ip(
         assert resp.status == HTTPStatus.FORBIDDEN
 
 
-async def test_clear_bans(
+async def test_unban(
     hass: HomeAssistant, aiohttp_client: ClientSessionGenerator
 ) -> None:
     """Test clean bans."""
@@ -99,7 +99,9 @@ async def test_clear_bans(
         resp = await client.get("/")
         assert resp.status == HTTPStatus.FORBIDDEN
 
-    await app[KEY_BAN_MANAGER].async_clear_bans()
+    for remote_address in BANNED_IPS:
+        await app[KEY_BAN_MANAGER].async_remove_ban(ip_address(remote_address))
+
     assert len(app[KEY_BAN_MANAGER]) == 0
 
     for remote_addr in BANNED_IPS:

@@ -9,7 +9,6 @@ from datetime import datetime
 from http import HTTPStatus
 from ipaddress import IPv4Address, IPv6Address, ip_address
 import logging
-from pathlib import Path
 from socket import gethostbyaddr, herror
 from typing import Any, Concatenate, Final
 
@@ -25,6 +24,7 @@ from aiohttp.web_exceptions import HTTPForbidden, HTTPUnauthorized
 import voluptuous as vol
 
 from homeassistant.config import load_yaml_config_file
+from homeassistant.const import CONF_IP_ADDRESS
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
@@ -54,6 +54,12 @@ SCHEMA_IP_BAN_ENTRY: Final = vol.Schema(
 
 SERVICE_UNBAN: Final = "unban"
 
+SCHEMA_UNBAN_SERVICE: Final = vol.Schema(
+    {
+        vol.Required(CONF_IP_ADDRESS): cv.string,
+    }
+)
+
 
 @callback
 def setup_bans(hass: HomeAssistant, app: Application, login_threshold: int) -> None:
@@ -73,12 +79,14 @@ def setup_bans(hass: HomeAssistant, app: Application, login_threshold: int) -> N
         service: ServiceCall,
     ) -> None:
         """Handle calls to http.unban."""
-        await app[KEY_BAN_MANAGER].async_clear_bans()
+        ip_address_ = ip_address(service.data[CONF_IP_ADDRESS])
+        await app[KEY_BAN_MANAGER].async_remove_ban(ip_address_)
 
     hass.services.async_register(
         DOMAIN,
         SERVICE_UNBAN,
         async_handle_unban_service,
+        schema=SCHEMA_UNBAN_SERVICE,
     )
 
 
@@ -137,10 +145,7 @@ async def process_wrong_login(request: Request) -> None:
             gethostbyaddr, request.remote
         )
 
-    base_msg = (
-        "Login attempt or request with invalid authentication from"
-        f" {remote_host} ({remote_addr})."
-    )
+    base_msg = f"Login attempt or request with invalid authentication from {remote_host} ({remote_addr})."
 
     # The user-agent is unsanitized input so we only include it in the log
     user_agent = request.headers.get("user-agent")
@@ -267,12 +272,14 @@ class IpBanManager:
             # Write in a single write call to avoid interleaved writes
             out.write("\n" + yaml_util.dump(ip_))
 
-    def _clear_bans(self) -> None:
-        """Remove all IP addresses from the banned list."""
-        self.ip_bans_lookup.clear()
-        with suppress(FileNotFoundError):
-            Path(self.path).unlink()
-        _LOGGER.debug("Cleared all banned IP addresses")
+    def _save_all_bans(self) -> None:
+        """Save all banned IP addresses to the config file."""
+        ip_bans = {
+            str(ban.ip_address): {ATTR_BANNED_AT: ban.banned_at.isoformat()}
+            for ban in self.ip_bans_lookup.values()
+        }
+        with open(self.path, "w", encoding="utf8") as out:
+            out.write(yaml_util.dump(ip_bans))
 
     async def async_add_ban(self, remote_addr: IPv4Address | IPv6Address) -> None:
         """Add a new IP address to the banned list."""
@@ -280,6 +287,7 @@ class IpBanManager:
             new_ban = self.ip_bans_lookup[remote_addr] = IpBan(remote_addr)
             await self.hass.async_add_executor_job(self._add_ban, new_ban)
 
-    async def async_clear_bans(self) -> None:
-        """Remove all banned IP addresses from the banned list."""
-        await self.hass.async_add_executor_job(self._clear_bans)
+    async def async_remove_ban(self, remote_addr: IPv4Address | IPv6Address) -> None:
+        """Remove a banned IP address from the banned list."""
+        if self.ip_bans_lookup.pop(remote_addr, None):
+            await self.hass.async_add_executor_job(self._save_all_bans)
