@@ -65,6 +65,12 @@ class NINADataUpdateCoordinator(
         ]
         self.area_filter: str = config_entry.data[CONF_FILTERS][CONF_AREA_FILTER]
 
+        self.device_info = DeviceInfo(
+            identifiers={(DOMAIN, config_entry.entry_id)},
+            manufacturer="NINA",
+            entry_type=DeviceEntryType.SERVICE,
+        )
+
         regions: dict[str, str] = config_entry.data[CONF_REGIONS]
         for region in regions:
             self._nina.add_region(region)
@@ -75,15 +81,6 @@ class NINADataUpdateCoordinator(
             config_entry=config_entry,
             name=DOMAIN,
             update_interval=SCAN_INTERVAL,
-        )
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return device information for nina entries."""
-        return DeviceInfo(
-            identifiers={(DOMAIN, self.config_entry.entry_id)},
-            manufacturer="NINA",
-            entry_type=DeviceEntryType.SERVICE,
         )
 
     async def _async_update_data(self) -> dict[str, list[NinaWarningData]]:
