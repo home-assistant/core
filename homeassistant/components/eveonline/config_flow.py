@@ -69,7 +69,7 @@ class OAuth2FlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
             )
 
         if self.source == SOURCE_RECONFIGURE:
-            self._abort_if_unique_id_mismatch(reason="reauth_account_mismatch")
+            self._abort_if_unique_id_mismatch(reason="reconfigure_account_mismatch")
             return self.async_update_reload_and_abort(
                 self._get_reconfigure_entry(),
                 title=character_name,
