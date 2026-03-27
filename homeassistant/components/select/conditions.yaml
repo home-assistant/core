@@ -1,0 +1,26 @@
+is_option_selected:
+  target:
+    entity:
+      - domain: select
+      - domain: input_select
+  fields:
+    behavior:
+      required: true
+      default: any
+      selector:
+        select:
+          translation_key: condition_behavior
+          options:
+            - all
+            - any
+    option:
+      context:
+        filter_target: target
+      required: true
+      selector:
+        state:
+          attribute: options
+          hide_states:
+            - unavailable
+            - unknown
+          multiple: true
