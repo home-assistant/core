@@ -50,6 +50,20 @@
         }
       }
     },
+    "event": {
+      "torrent": {
+        "name": "Torrent",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "transmission_downloaded_torrent": "Downloaded",
+              "transmission_removed_torrent": "Removed",
+              "transmission_started_torrent": "Started"
+            }
+          }
+        }
+      }
+    },
     "sensor": {
       "active_torrents": {
         "name": "Active torrents",
