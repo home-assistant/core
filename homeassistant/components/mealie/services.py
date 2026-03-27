@@ -1,7 +1,7 @@
 """Define services for the Mealie integration."""
 
 from dataclasses import asdict
-from datetime import date
+from datetime import date, timedelta
 from typing import Any, cast
 
 from aiomealie import (
@@ -13,6 +13,7 @@ from aiomealie import (
 from awesomeversion import AwesomeVersion
 import voluptuous as vol
 
+from homeassistant.components.http.auth import async_sign_path
 from homeassistant.components.todo import DOMAIN as TODO_DOMAIN
 from homeassistant.const import ATTR_CONFIG_ENTRY_ID, ATTR_DATE
 from homeassistant.core import (
@@ -43,6 +44,8 @@ from .const import (
     MEALIE_IMAGE_PROXY_PATH,
 )
 from .coordinator import MealieConfigEntry
+
+_IMAGE_URL_SIGN_EXPIRY = timedelta(hours=24)
 
 SERVICE_GET_MEALPLAN = "get_mealplan"
 SERVICE_GET_MEALPLAN_SCHEMA = vol.Schema(
@@ -128,13 +131,15 @@ def _get_image_base_url(hass: HomeAssistant) -> str:
 
 
 def _inject_recipe_image_url(
-    base_url: str, entry_id: str, recipe: dict[str, Any]
+    hass: HomeAssistant, base_url: str, entry_id: str, recipe: dict[str, Any]
 ) -> None:
-    """Replace the raw image field with the HA proxy URL."""
+    """Replace the raw image field with a signed HA proxy URL."""
     if recipe.get("image") and recipe.get("recipe_id"):
-        recipe["image"] = (
-            f"{base_url}{MEALIE_IMAGE_PROXY_PATH}/{entry_id}/{recipe['recipe_id']}"
+        path = f"{MEALIE_IMAGE_PROXY_PATH}/{entry_id}/{recipe['recipe_id']}"
+        signed_path = async_sign_path(
+            hass, path, _IMAGE_URL_SIGN_EXPIRY, use_content_user=True
         )
+        recipe["image"] = f"{base_url}{signed_path}"
 
 
 def _validate_mealplan_type(version: AwesomeVersion, entry_type: str) -> None:
@@ -182,7 +187,7 @@ async def _async_get_mealplan(call: ServiceCall) -> ServiceResponse:
     base_url = _get_image_base_url(call.hass)
     for item in mealplan_list:
         if recipe := item.get("recipe"):
-            _inject_recipe_image_url(base_url, entry.entry_id, recipe)
+            _inject_recipe_image_url(call.hass, base_url, entry.entry_id, recipe)
     return {"mealplan": cast(list[JsonValueType], mealplan_list)}
 
 
@@ -208,7 +213,7 @@ async def _async_get_recipe(call: ServiceCall) -> ServiceResponse:
         ) from err
     recipe_dict = asdict(recipe)
     _inject_recipe_image_url(
-        _get_image_base_url(call.hass), entry.entry_id, recipe_dict
+        call.hass, _get_image_base_url(call.hass), entry.entry_id, recipe_dict
     )
     return {"recipe": recipe_dict}
 
@@ -236,7 +241,7 @@ async def _async_get_recipes(call: ServiceCall) -> ServiceResponse:
     recipes_dict = asdict(recipes)
     base_url = _get_image_base_url(call.hass)
     for recipe in recipes_dict.get("items", []):
-        _inject_recipe_image_url(base_url, entry.entry_id, recipe)
+        _inject_recipe_image_url(call.hass, base_url, entry.entry_id, recipe)
     return {"recipes": recipes_dict}
 
 
@@ -262,7 +267,7 @@ async def _async_import_recipe(call: ServiceCall) -> ServiceResponse:
         ) from err
     recipe_dict = asdict(recipe)
     _inject_recipe_image_url(
-        _get_image_base_url(call.hass), entry.entry_id, recipe_dict
+        call.hass, _get_image_base_url(call.hass), entry.entry_id, recipe_dict
     )
     if call.return_response:
         return {"recipe": recipe_dict}

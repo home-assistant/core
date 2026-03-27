@@ -49,7 +49,7 @@ def no_platforms() -> Generator[None]:
 
 async def test_view_proxies_image(
     hass: HomeAssistant,
-    hass_client_no_auth: ClientSessionGenerator,
+    hass_client: ClientSessionGenerator,
     mock_mealie_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
     aioclient_mock: AiohttpClientMocker,
@@ -63,7 +63,7 @@ async def test_view_proxies_image(
 
     await setup_integration(hass, mock_config_entry)
 
-    client = await hass_client_no_auth()
+    client = await hass_client()
     response = await client.get(PROXY_URL)
 
     assert response.status == HTTPStatus.OK
@@ -74,7 +74,7 @@ async def test_view_proxies_image(
 
 async def test_view_returns_not_found_for_wrong_domain_entry(
     hass: HomeAssistant,
-    hass_client_no_auth: ClientSessionGenerator,
+    hass_client: ClientSessionGenerator,
     mock_mealie_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
@@ -87,7 +87,7 @@ async def test_view_returns_not_found_for_wrong_domain_entry(
     other_entry.add_to_hass(hass)
     await setup_integration(hass, mock_config_entry)
 
-    client = await hass_client_no_auth()
+    client = await hass_client()
     response = await client.get(
         f"/api/mealie_image_proxy/{other_entry.entry_id}/{RECIPE_ID}"
     )
@@ -96,14 +96,14 @@ async def test_view_returns_not_found_for_wrong_domain_entry(
 
 async def test_view_returns_not_found_for_unknown_entry(
     hass: HomeAssistant,
-    hass_client_no_auth: ClientSessionGenerator,
+    hass_client: ClientSessionGenerator,
     mock_mealie_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test that the view returns 404 for an unknown config entry."""
     await setup_integration(hass, mock_config_entry)
 
-    client = await hass_client_no_auth()
+    client = await hass_client()
     response = await client.get(f"/api/mealie_image_proxy/unknown_entry/{RECIPE_ID}")
 
     assert response.status == HTTPStatus.NOT_FOUND
@@ -111,7 +111,7 @@ async def test_view_returns_not_found_for_unknown_entry(
 
 async def test_view_returns_not_found_when_mealie_errors(
     hass: HomeAssistant,
-    hass_client_no_auth: ClientSessionGenerator,
+    hass_client: ClientSessionGenerator,
     mock_mealie_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
     aioclient_mock: AiohttpClientMocker,
@@ -121,7 +121,7 @@ async def test_view_returns_not_found_when_mealie_errors(
 
     await setup_integration(hass, mock_config_entry)
 
-    client = await hass_client_no_auth()
+    client = await hass_client()
     response = await client.get(PROXY_URL)
 
     assert response.status == HTTPStatus.NOT_FOUND
@@ -129,7 +129,7 @@ async def test_view_returns_not_found_when_mealie_errors(
 
 async def test_view_returns_unavailable_on_client_error(
     hass: HomeAssistant,
-    hass_client_no_auth: ClientSessionGenerator,
+    hass_client: ClientSessionGenerator,
     mock_mealie_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
     aioclient_mock: AiohttpClientMocker,
@@ -139,7 +139,7 @@ async def test_view_returns_unavailable_on_client_error(
 
     await setup_integration(hass, mock_config_entry)
 
-    client = await hass_client_no_auth()
+    client = await hass_client()
     response = await client.get(PROXY_URL)
 
     assert response.status == HTTPStatus.SERVICE_UNAVAILABLE
@@ -147,7 +147,7 @@ async def test_view_returns_unavailable_on_client_error(
 
 async def test_view_returns_bad_gateway_for_invalid_content_type(
     hass: HomeAssistant,
-    hass_client_no_auth: ClientSessionGenerator,
+    hass_client: ClientSessionGenerator,
     mock_mealie_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
     aioclient_mock: AiohttpClientMocker,
@@ -160,7 +160,7 @@ async def test_view_returns_bad_gateway_for_invalid_content_type(
     )
     await setup_integration(hass, mock_config_entry)
 
-    client = await hass_client_no_auth()
+    client = await hass_client()
     response = await client.get(PROXY_URL)
 
     assert response.status == HTTPStatus.BAD_GATEWAY
@@ -168,7 +168,7 @@ async def test_view_returns_bad_gateway_for_invalid_content_type(
 
 async def test_view_returns_bad_gateway_for_oversized_image(
     hass: HomeAssistant,
-    hass_client_no_auth: ClientSessionGenerator,
+    hass_client: ClientSessionGenerator,
     mock_mealie_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
     aioclient_mock: AiohttpClientMocker,
@@ -184,7 +184,7 @@ async def test_view_returns_bad_gateway_for_oversized_image(
     )
     await setup_integration(hass, mock_config_entry)
 
-    client = await hass_client_no_auth()
+    client = await hass_client()
     response = await client.get(PROXY_URL)
 
     assert response.status == HTTPStatus.BAD_GATEWAY
@@ -192,7 +192,7 @@ async def test_view_returns_bad_gateway_for_oversized_image(
 
 async def test_view_returns_unavailable_on_timeout(
     hass: HomeAssistant,
-    hass_client_no_auth: ClientSessionGenerator,
+    hass_client: ClientSessionGenerator,
     mock_mealie_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
     aioclient_mock: AiohttpClientMocker,
@@ -202,7 +202,39 @@ async def test_view_returns_unavailable_on_timeout(
 
     await setup_integration(hass, mock_config_entry)
 
-    client = await hass_client_no_auth()
+    client = await hass_client()
     response = await client.get(PROXY_URL)
 
     assert response.status == HTTPStatus.SERVICE_UNAVAILABLE
+
+
+async def test_view_rejects_unauthenticated(
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    mock_mealie_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test that the view returns 403 for requests without credentials."""
+    await setup_integration(hass, mock_config_entry)
+
+    client = await hass_client_no_auth()
+    response = await client.get(PROXY_URL)
+
+    assert response.status == HTTPStatus.FORBIDDEN
+
+
+async def test_view_rejects_invalid_bearer_token(
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    mock_mealie_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test that the view returns 401 when an invalid Bearer token is presented."""
+    await setup_integration(hass, mock_config_entry)
+
+    client = await hass_client_no_auth()
+    response = await client.get(
+        PROXY_URL, headers={"Authorization": "Bearer invalid_token"}
+    )
+
+    assert response.status == HTTPStatus.UNAUTHORIZED

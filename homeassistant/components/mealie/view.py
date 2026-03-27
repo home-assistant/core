@@ -5,11 +5,12 @@ from __future__ import annotations
 from http import HTTPStatus
 
 import aiohttp
-from aiohttp import ClientError, web
+from aiohttp import ClientError, hdrs, web
 from aiohttp.hdrs import AUTHORIZATION, CACHE_CONTROL
 from aiohttp.typedefs import LooseHeaders
 
 from homeassistant.components.http import KEY_HASS, HomeAssistantView
+from homeassistant.components.http.const import KEY_AUTHENTICATED
 from homeassistant.const import CONF_API_TOKEN, CONF_HOST, CONF_VERIFY_SSL
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
@@ -35,6 +36,11 @@ class MealieImageView(HomeAssistantView):
         recipe_id: str,
     ) -> web.Response:
         """Return a proxied recipe image from Mealie."""
+        if not request[KEY_AUTHENTICATED]:
+            if hdrs.AUTHORIZATION in request.headers:
+                raise web.HTTPUnauthorized
+            raise web.HTTPForbidden
+
         hass = request.app[KEY_HASS]
 
         entry = hass.config_entries.async_get_entry(entry_id)
@@ -55,9 +61,10 @@ class MealieImageView(HomeAssistantView):
                 image_url,
                 headers={AUTHORIZATION: f"Bearer {token}"},
                 timeout=_IMAGE_PROXY_TIMEOUT,
+                allow_redirects=False,
             ) as response:
                 if response.status != HTTPStatus.OK:
-                    return web.Response(status=HTTPStatus.NOT_FOUND)
+                    return web.Response(status=response.status)
                 content_type = response.content_type
                 if content_type not in _ALLOWED_CONTENT_TYPES:
                     _LOGGER.warning(

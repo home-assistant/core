@@ -37,6 +37,16 @@ def mock_get_url() -> Generator[None]:
         yield
 
 
+@pytest.fixture(autouse=True)
+def mock_async_sign_path() -> Generator[None]:
+    """Mock async_sign_path to return a deterministic path for snapshot stability."""
+    with patch(
+        "homeassistant.components.mealie.services.async_sign_path",
+        side_effect=lambda _hass, path, _expiry, **_kwargs: path,
+    ):
+        yield
+
+
 @pytest.fixture
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
