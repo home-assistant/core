@@ -14,13 +14,18 @@ from homeassistant.components.media_player import (
     MediaPlayerEntityFeature,
     MediaPlayerState,
 )
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_PORT
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers import config_validation as cv, issue_registry as ir
+from homeassistant.helpers.entity_platform import (
+    AddConfigEntryEntitiesCallback,
+    AddEntitiesCallback,
+)
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from .const import CONF_ENCODING
+from .const import CONF_ENCODING, DOMAIN
 
 ERR_PROJECTOR_UNAVAILABLE = "projector unavailable"
 
@@ -33,6 +38,53 @@ PLATFORM_SCHEMA = MEDIA_PLAYER_PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_PASSWORD): cv.string,
     }
 )
+
+
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
+    """Set up the PJLink platform."""
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_IMPORT}, data=config
+    )
+    if (
+        result.get("type") is FlowResultType.ABORT
+        and result.get("reason") != "already_configured"
+    ):
+        ir.async_create_issue(
+            hass,
+            DOMAIN,
+            f"deprecated_yaml_import_issue_{result.get('reason')}",
+            breaks_in_ha_version="2026.8.0",
+            is_fixable=False,
+            issue_domain=DOMAIN,
+            severity=ir.IssueSeverity.WARNING,
+            translation_key=f"deprecated_yaml_import_issue_{result.get('reason')}",
+            translation_placeholders={
+                "domain": DOMAIN,
+                "integration_title": "PJLink",
+            },
+        )
+        return
+
+    ir.async_create_issue(
+        hass,
+        HOMEASSISTANT_DOMAIN,
+        "deprecated_yaml",
+        breaks_in_ha_version="2026.8.0",
+        is_fixable=False,
+        issue_domain=DOMAIN,
+        severity=ir.IssueSeverity.WARNING,
+        translation_key="deprecated_yaml",
+        translation_placeholders={
+            "domain": DOMAIN,
+            "integration_title": "PJLink",
+        },
+    )
 
 
 async def async_setup_entry(

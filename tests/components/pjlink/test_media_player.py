@@ -11,11 +11,33 @@ from pypjlink.projector import ProjectorError
 import pytest
 
 from homeassistant.components import media_player
-from homeassistant.const import ATTR_ENTITY_ID
-from homeassistant.core import HomeAssistant
+from homeassistant.components.pjlink.const import CONF_ENCODING, DOMAIN
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    CONF_HOST,
+    CONF_PASSWORD,
+    CONF_PLATFORM,
+    CONF_PORT,
+    Platform,
+)
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
+from homeassistant.helpers import issue_registry as ir
+from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
 from tests.common import MockConfigEntry, async_fire_time_changed
+
+_EXAMPLE_YAML_CONFIG = {
+    Platform.MEDIA_PLAYER: [
+        {
+            CONF_PLATFORM: DOMAIN,
+            CONF_HOST: "1.1.1.1",
+            CONF_PORT: 4352,
+            CONF_PASSWORD: "test-password",
+            CONF_ENCODING: "utf-8",
+        }
+    ]
+}
 
 
 @pytest.fixture(name="projector_from_address")
@@ -34,18 +56,19 @@ def mocked_projector(projector_from_address: MagicMock) -> Generator[MagicMock]:
 
     instance = projector_from_address.return_value
 
-    with instance as mocked_instance:
-        mocked_instance.get_name.return_value = "Test"
-        mocked_instance.get_power.return_value = "on"
-        mocked_instance.get_mute.return_value = [0, True]
-        mocked_instance.get_input.return_value = [0, 1]
-        mocked_instance.get_inputs.return_value = (
-            ("HDMI", 1),
-            ("HDMI", 2),
-            ("VGA", 1),
-        )
+    instance.get_name.return_value = "Test"
+    instance.get_power.return_value = "on"
+    instance.get_mute.return_value = [0, True]
+    instance.get_input.return_value = [0, 1]
+    instance.get_inputs.return_value = (
+        ("HDMI", 1),
+        ("HDMI", 2),
+        ("VGA", 1),
+    )
 
-        yield mocked_instance
+    instance.__enter__.return_value = instance
+
+    return instance
 
 
 async def setup_pjlink_entry(hass: HomeAssistant) -> MockConfigEntry:
@@ -268,3 +291,59 @@ async def test_select_source(mocked_projector: MagicMock, hass: HomeAssistant) -
     )
 
     mocked_projector.set_input.assert_called_with("VGA", 1)
+
+
+async def test_yaml_import(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    mocked_projector: MagicMock,
+) -> None:
+    """Test a YAML sensor is imported and becomes an operational config entry."""
+    assert await async_setup_component(
+        hass, Platform.MEDIA_PLAYER, _EXAMPLE_YAML_CONFIG
+    )
+    await hass.async_block_till_done()
+
+    # Verify the config entry was created
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
+
+    # Verify a warning was issued about YAML deprecation
+    assert issue_registry.async_get_issue(HOMEASSISTANT_DOMAIN, "deprecated_yaml")
+
+
+@pytest.mark.parametrize(
+    ("side_effect", "error_str"),
+    [
+        (RuntimeError, "invalid_auth"),
+        (TimeoutError, "cannot_connect"),
+        (Exception, "unknown"),
+    ],
+)
+async def test_failed_yaml_import(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    mocked_projector: MagicMock,
+    caplog: pytest.LogCaptureFixture,
+    side_effect: Exception,
+    error_str: str,
+) -> None:
+    """Test a YAML sensor is imported and becomes an operational config entry."""
+
+    with patch("pypjlink.Projector.from_address", side_effect=side_effect):
+        assert await async_setup_component(
+            hass, Platform.MEDIA_PLAYER, _EXAMPLE_YAML_CONFIG
+        )
+        await hass.async_block_till_done()
+
+    # Verify the config entry was not created
+    entries = hass.config_entries.async_entries(DOMAIN)
+    assert len(entries) == 0
+
+    # verify no flows still in progress
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 0
+
+    # Verify a warning was issued about YAML not being imported
+    assert issue_registry.async_get_issue(
+        DOMAIN, f"deprecated_yaml_import_issue_{error_str}"
+    )
