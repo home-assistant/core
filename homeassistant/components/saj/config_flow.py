@@ -216,37 +216,43 @@ class SAJConfigFlow(ConfigFlow, domain=DOMAIN):
         errors = {}
 
         if user_input is not None:
-            # Combine data from both steps
-            combined_input = {
-                CONF_HOST: self._host,
-                CONF_TYPE: self._connection_type,
-                CONF_USERNAME: user_input.get(CONF_USERNAME, None),
-                CONF_PASSWORD: user_input.get(CONF_PASSWORD, None),
-            }
-
-            try:
-                serial_number = await self._async_validate_input(combined_input)
-                data = _config_entry_data(combined_input)
-            except InvalidAuth as err:
-                errors["base"] = "invalid_auth"
-                _LOGGER.debug("Authentication failed: %s", err)
-            except CannotConnect as err:
-                errors["base"] = "cannot_connect"
-                _LOGGER.debug("Connection failed: %s", err)
-            except data_entry_flow.AbortFlow:
-                raise  # Let AbortFlow propagate (e.g., already_configured)
-            except Exception:
-                _LOGGER.exception("Unexpected error during device credentials flow")
+            # Ensure required connection parameters are available
+            if self._host is None or self._connection_type is None:
+                _LOGGER.error(
+                    "Missing host or connection type when handling device credentials step"
+                )
                 errors["base"] = "unknown"
             else:
-                await self.async_set_unique_id(serial_number)
-                self._abort_if_unique_id_configured(updates=data)
+                # Combine data from both steps
+                combined_input = {
+                    CONF_HOST: self._host,
+                    CONF_TYPE: self._connection_type,
+                    CONF_USERNAME: user_input.get(CONF_USERNAME, "") or "",
+                    CONF_PASSWORD: user_input.get(CONF_PASSWORD, "") or "",
+                }
 
-                title = (
-                    user_input.get(CONF_NAME) or ""
-                ).strip() or self._pending_entry_name
-                return self.async_create_entry(title=title, data=data)
+                try:
+                    serial_number = await self._async_validate_input(combined_input)
+                    data = _config_entry_data(combined_input)
+                except InvalidAuth as err:
+                    errors["base"] = "invalid_auth"
+                    _LOGGER.debug("Authentication failed: %s", err)
+                except CannotConnect as err:
+                    errors["base"] = "cannot_connect"
+                    _LOGGER.debug("Connection failed: %s", err)
+                except data_entry_flow.AbortFlow:
+                    raise  # Let AbortFlow propagate (e.g., already_configured)
+                except Exception:
+                    _LOGGER.exception("Unexpected error during device credentials flow")
+                    errors["base"] = "unknown"
+                else:
+                    await self.async_set_unique_id(serial_number)
+                    self._abort_if_unique_id_configured(updates=data)
 
+                    title = (
+                        user_input.get(CONF_NAME) or ""
+                    ).strip() or self._pending_entry_name
+                    return self.async_create_entry(title=title, data=data)
         return self.async_show_form(
             step_id="device_credentials",
             data_schema=self._schema_device_credentials(),
