@@ -313,7 +313,9 @@ async def test_yaml_import(
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
 
     # Verify a warning was issued about YAML deprecation
-    assert issue_registry.async_get_issue(HOMEASSISTANT_DOMAIN, "deprecated_yaml")
+    assert issue_registry.async_get_issue(
+        HOMEASSISTANT_DOMAIN, f"deprecated_yaml_{DOMAIN}"
+    )
 
 
 @pytest.mark.parametrize(
