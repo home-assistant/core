@@ -4,7 +4,7 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 from syrupy.assertion import SnapshotAssertion
-from whois.exceptions import (
+from whoisdomain.exceptions import (
     FailedParsingWhoisOutput,
     UnknownDateFormat,
     UnknownTld,

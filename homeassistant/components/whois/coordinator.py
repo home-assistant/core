@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-from whois import Domain, query as whois_query
-from whois.exceptions import (
+from whoisdomain import Domain, query as whoisdomain_query
+from whoisdomain.exceptions import (
     FailedParsingWhoisOutput,
     UnknownDateFormat,
     UnknownTld,
@@ -37,7 +37,7 @@ class WhoisCoordinator(DataUpdateCoordinator[Domain | None]):
         """Query WHOIS for domain information."""
         try:
             return await self.hass.async_add_executor_job(
-                whois_query, self.config_entry.data[CONF_DOMAIN]
+                whoisdomain_query, self.config_entry.data[CONF_DOMAIN]
             )
         except UnknownTld as ex:
             raise UpdateFailed("Could not set up whois, TLD is unknown") from ex
