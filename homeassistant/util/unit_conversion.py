@@ -132,10 +132,9 @@ class _UnitClassConversion(TypedDict):
     inverse: NotRequired[list[str]]
 
 
-# When determining unit ratios, offset and rounding operations are not applicable
+# When determining unit ratios, only scale operations are applicable
 def _is_ratio_op(opInfo: UnitConvertOpInfo) -> bool:
-    (op, _unused) = opInfo
-    return op not in (UnitConvertOpType.OFFSET, UnitConvertOpType.ROUND)
+    return opInfo[0] is UnitConvertOpType.SCALE
 
 
 # Maps of operation info to executable functions, in both the from and to directions.
