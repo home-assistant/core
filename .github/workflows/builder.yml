@@ -218,6 +218,7 @@ jobs:
           image-tags: ${{ needs.init.outputs.version }}
           push: true
           version: ${{ needs.init.outputs.version }}
+          setup-buildx: false
 
   # build_machine:
   #   name: Build ${{ matrix.machine }} machine core image
