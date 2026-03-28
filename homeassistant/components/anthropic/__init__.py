@@ -44,7 +44,7 @@ class AnthropicRuntimeData:
     client: anthropic.AsyncClient
     is_available: bool = True
 
-    async def _check_availability(self, time: datetime) -> None:
+    async def _check_availability(self, _time: datetime) -> None:
         """Check if the API is still unavailable."""
         if self.is_available:
             return
