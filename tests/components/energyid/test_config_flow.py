@@ -40,6 +40,15 @@ def mock_polling_interval_fixture() -> Generator[int]:
         yield polling_interval
 
 
+@pytest.fixture(autouse=True)
+def mock_setup_entry() -> Generator[AsyncMock]:
+    """Mock setting up a config entry."""
+    with patch(
+        "homeassistant.components.energyid.async_setup_entry", return_value=True
+    ) as mock_setup:
+        yield mock_setup
+
+
 async def test_config_flow_user_step_success_claimed(hass: HomeAssistant) -> None:
     """Test user step where device is already claimed."""
     mock_client = MagicMock()
@@ -105,7 +114,7 @@ async def test_config_flow_auth_and_claim_step_success(hass: HomeAssistant) -> N
             "homeassistant.components.energyid.config_flow.WebhookClient",
             side_effect=mock_webhook_client,
         ),
-        patch("homeassistant.components.energyid.config_flow.asyncio.sleep"),
+        patch("homeassistant.components.energyid.config_flow.POLLING_INTERVAL", new=0),
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -552,7 +561,7 @@ async def test_config_flow_reauth_needs_claim(hass: HomeAssistant) -> None:
             "homeassistant.components.energyid.config_flow.WebhookClient",
             return_value=mock_client,
         ),
-        patch("homeassistant.components.energyid.config_flow.asyncio.sleep"),
+        patch("homeassistant.components.energyid.config_flow.POLLING_INTERVAL", new=0),
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
@@ -613,7 +622,7 @@ async def test_polling_stops_on_invalid_auth_error(hass: HomeAssistant) -> None:
             "homeassistant.components.energyid.config_flow.WebhookClient",
             side_effect=mock_webhook_client,
         ),
-        patch("homeassistant.components.energyid.config_flow.asyncio.sleep"),
+        patch("homeassistant.components.energyid.config_flow.POLLING_INTERVAL", new=0),
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -661,7 +670,7 @@ async def test_polling_stops_on_cannot_connect_error(hass: HomeAssistant) -> Non
             "homeassistant.components.energyid.config_flow.WebhookClient",
             side_effect=mock_webhook_client,
         ),
-        patch("homeassistant.components.energyid.config_flow.asyncio.sleep"),
+        patch("homeassistant.components.energyid.config_flow.POLLING_INTERVAL", new=0),
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -713,7 +722,7 @@ async def test_auth_and_claim_subsequent_auth_error(hass: HomeAssistant) -> None
             "homeassistant.components.energyid.config_flow.WebhookClient",
             side_effect=mock_webhook_client,
         ),
-        patch("homeassistant.components.energyid.config_flow.asyncio.sleep"),
+        patch("homeassistant.components.energyid.config_flow.POLLING_INTERVAL", new=0),
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -821,7 +830,7 @@ async def test_polling_cancellation_on_auth_failure(hass: HomeAssistant) -> None
             "homeassistant.components.energyid.config_flow.WebhookClient",
             side_effect=mock_webhook_client,
         ),
-        patch("homeassistant.components.energyid.config_flow.asyncio.sleep"),
+        patch("homeassistant.components.energyid.config_flow.POLLING_INTERVAL", new=0),
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -894,7 +903,7 @@ async def test_polling_cancellation_on_success(hass: HomeAssistant) -> None:
             "homeassistant.components.energyid.config_flow.WebhookClient",
             side_effect=mock_webhook_client,
         ),
-        patch("homeassistant.components.energyid.config_flow.asyncio.sleep"),
+        patch("homeassistant.components.energyid.config_flow.POLLING_INTERVAL", new=0),
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -918,24 +927,16 @@ async def test_polling_cancellation_on_success(hass: HomeAssistant) -> None:
 
         # Verify polling made authentication attempt
         # auth_call_count should be 1 (polling detected device is claimed)
-        assert auth_call_count >= 1
-        claimed_auth_count = auth_call_count
+        assert auth_call_count == 2  # One for polling, one for the final check
 
         # User continues - device is already claimed, polling should be cancelled
         result_done = await hass.config_entries.flow.async_configure(
             result_external["flow_id"]
         )
-        assert result_done["type"] is FlowResultType.EXTERNAL_STEP_DONE
+        assert result_done["type"] is FlowResultType.CREATE_ENTRY
 
-        # Verify polling was cancelled - the auth count should only increase by 1
-        # (for the manual check when user continues, not from polling)
-        assert auth_call_count == claimed_auth_count + 1
-
-        # Final call to create entry
-        final_result = await hass.config_entries.flow.async_configure(
-            result_external["flow_id"]
-        )
-        assert final_result["type"] is FlowResultType.CREATE_ENTRY
+        # Verify polling was cancelled - the auth count should not increase
+        assert auth_call_count == 2
 
         # Wait a bit and verify no further authentication attempts from polling
         await hass.async_block_till_done()
