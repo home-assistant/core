@@ -42,6 +42,11 @@
       }
     }
   },
+  "exceptions": {
+    "oauth2_implementation_unavailable": {
+      "message": "[%key:common::exceptions::oauth2_implementation_unavailable::message%]"
+    }
+  },
   "services": {
     "append_sheet": {
       "description": "Appends data to a worksheet in Google Sheets.",
