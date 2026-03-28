@@ -12,9 +12,9 @@ from homeassistant.components import event as event_component
 from homeassistant.components.event import ATTR_EVENT_TYPE, ATTR_EVENT_TYPES
 from homeassistant.components.transmission.const import (
     DEFAULT_SCAN_INTERVAL,
-    EVENT_DOWNLOADED_TORRENT,
-    EVENT_REMOVED_TORRENT,
-    EVENT_STARTED_TORRENT,
+    EVENT_TYPE_DOWNLOADED,
+    EVENT_TYPE_REMOVED,
+    EVENT_TYPE_STARTED,
 )
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
@@ -40,18 +40,18 @@ async def test_event_entity_setup(
     assert state.state == "unknown"
     assert state.attributes[ATTR_EVENT_TYPE] is None
     assert state.attributes[ATTR_EVENT_TYPES] == [
-        EVENT_STARTED_TORRENT,
-        EVENT_DOWNLOADED_TORRENT,
-        EVENT_REMOVED_TORRENT,
+        EVENT_TYPE_STARTED,
+        EVENT_TYPE_DOWNLOADED,
+        EVENT_TYPE_REMOVED,
     ]
 
 
 @pytest.mark.parametrize(
     ("hass_event", "expected_event_type"),
     [
-        (EVENT_STARTED_TORRENT, EVENT_STARTED_TORRENT),
-        (EVENT_DOWNLOADED_TORRENT, EVENT_DOWNLOADED_TORRENT),
-        (EVENT_REMOVED_TORRENT, EVENT_REMOVED_TORRENT),
+        (EVENT_TYPE_STARTED, EVENT_TYPE_STARTED),
+        (EVENT_TYPE_DOWNLOADED, EVENT_TYPE_DOWNLOADED),
+        (EVENT_TYPE_REMOVED, EVENT_TYPE_REMOVED),
     ],
 )
 async def test_event_updates_state(
@@ -69,9 +69,9 @@ async def test_event_updates_state(
 
     client = mock_transmission_client.return_value
     torrent_status = {
-        EVENT_STARTED_TORRENT: "downloading",
-        EVENT_DOWNLOADED_TORRENT: "seeding",
-        EVENT_REMOVED_TORRENT: "stopped",
+        EVENT_TYPE_STARTED: "downloading",
+        EVENT_TYPE_DOWNLOADED: "seeding",
+        EVENT_TYPE_REMOVED: "stopped",
     }[hass_event]
     torrent = SimpleNamespace(
         id=1,
@@ -82,9 +82,9 @@ async def test_event_updates_state(
     )
 
     torrents_sequence = {
-        EVENT_STARTED_TORRENT: [[torrent]],
-        EVENT_DOWNLOADED_TORRENT: [[torrent]],
-        EVENT_REMOVED_TORRENT: [[torrent], []],
+        EVENT_TYPE_STARTED: [[torrent]],
+        EVENT_TYPE_DOWNLOADED: [[torrent]],
+        EVENT_TYPE_REMOVED: [[torrent], []],
     }[hass_event]
 
     client.get_torrents.side_effect = torrents_sequence
@@ -136,7 +136,7 @@ async def test_unknown_event_ignored(
     client.get_torrents.side_effect = [[torrent]]
 
     with patch(
-        "homeassistant.components.transmission.coordinator.EVENT_STARTED_TORRENT",
+        "homeassistant.components.transmission.coordinator.EVENT_TYPE_STARTED",
         "transmission_unknown_event",
     ):
         await coordinator.async_refresh()

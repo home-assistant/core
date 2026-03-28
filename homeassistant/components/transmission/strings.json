@@ -56,9 +56,9 @@
         "state_attributes": {
           "event_type": {
             "state": {
-              "transmission_downloaded_torrent": "Downloaded",
-              "transmission_removed_torrent": "Removed",
-              "transmission_started_torrent": "Started"
+              "downloaded": "Downloaded",
+              "removed": "Removed",
+              "started": "Started"
             }
           }
         }

@@ -28,6 +28,9 @@ from .const import (
     EVENT_DOWNLOADED_TORRENT,
     EVENT_REMOVED_TORRENT,
     EVENT_STARTED_TORRENT,
+    EVENT_TYPE_DOWNLOADED,
+    EVENT_TYPE_REMOVED,
+    EVENT_TYPE_STARTED,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -145,6 +148,7 @@ class TransmissionDataUpdateCoordinator(DataUpdateCoordinator[SessionStats]):
 
         for torrent in current_completed_torrents:
             if torrent.id not in old_completed_torrents:
+                # Once event triggers are out of labs we can remove the bus event
                 self.hass.bus.async_fire(
                     EVENT_DOWNLOADED_TORRENT,
                     {
@@ -155,7 +159,7 @@ class TransmissionDataUpdateCoordinator(DataUpdateCoordinator[SessionStats]):
                     },
                 )
                 event = TransmissionEventData(
-                    event_type=EVENT_DOWNLOADED_TORRENT,
+                    event_type=EVENT_TYPE_DOWNLOADED,
                     name=torrent.name,
                     id=torrent.id,
                     download_path=torrent.download_dir or "",
@@ -175,6 +179,7 @@ class TransmissionDataUpdateCoordinator(DataUpdateCoordinator[SessionStats]):
 
         for torrent in current_started_torrents:
             if torrent.id not in old_started_torrents:
+                # Once event triggers are out of labs we can remove the bus event
                 self.hass.bus.async_fire(
                     EVENT_STARTED_TORRENT,
                     {
@@ -185,7 +190,7 @@ class TransmissionDataUpdateCoordinator(DataUpdateCoordinator[SessionStats]):
                     },
                 )
                 event = TransmissionEventData(
-                    event_type=EVENT_STARTED_TORRENT,
+                    event_type=EVENT_TYPE_STARTED,
                     name=torrent.name,
                     id=torrent.id,
                     download_path=torrent.download_dir or "",
@@ -201,6 +206,7 @@ class TransmissionDataUpdateCoordinator(DataUpdateCoordinator[SessionStats]):
 
         for torrent in self._all_torrents:
             if torrent.id not in current_torrents:
+                # Once event triggers are out of labs we can remove the bus event
                 self.hass.bus.async_fire(
                     EVENT_REMOVED_TORRENT,
                     {
@@ -211,7 +217,7 @@ class TransmissionDataUpdateCoordinator(DataUpdateCoordinator[SessionStats]):
                     },
                 )
                 event = TransmissionEventData(
-                    event_type=EVENT_REMOVED_TORRENT,
+                    event_type=EVENT_TYPE_REMOVED,
                     name=torrent.name,
                     id=torrent.id,
                     download_path=torrent.download_dir or "",

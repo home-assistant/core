@@ -13,9 +13,9 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from .const import (
     ATTR_DOWNLOAD_PATH,
     ATTR_LABELS,
-    EVENT_DOWNLOADED_TORRENT,
-    EVENT_REMOVED_TORRENT,
-    EVENT_STARTED_TORRENT,
+    EVENT_TYPE_DOWNLOADED,
+    EVENT_TYPE_REMOVED,
+    EVENT_TYPE_STARTED,
 )
 from .coordinator import TransmissionConfigEntry, TransmissionEventData
 from .entity import TransmissionEntity
@@ -37,9 +37,9 @@ async def async_setup_entry(
         key="torrent",
         translation_key="torrent",
         event_types=[
-            EVENT_STARTED_TORRENT,
-            EVENT_DOWNLOADED_TORRENT,
-            EVENT_REMOVED_TORRENT,
+            EVENT_TYPE_STARTED,
+            EVENT_TYPE_DOWNLOADED,
+            EVENT_TYPE_REMOVED,
         ],
     )
 
