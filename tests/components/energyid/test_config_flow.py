@@ -918,7 +918,6 @@ async def test_polling_cancellation_on_success(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
         # Verify polling made authentication attempt
-        # auth_call_count should be 1 (polling detected device is claimed)
         assert auth_call_count == 2  # One for polling, one for the final check
 
         # User continues - device is already claimed, polling should be cancelled
