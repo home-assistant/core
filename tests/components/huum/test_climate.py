@@ -45,24 +45,35 @@ async def test_climate_entity(
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
+@pytest.mark.parametrize(
+    ("hvac_mode", "status", "client_method"),
+    [
+        (HVACMode.HEAT, SaunaStatus.ONLINE_HEATING, "turn_on"),
+        (HVACMode.OFF, SaunaStatus.ONLINE_NOT_HEATING, "turn_off"),
+    ],
+)
 @pytest.mark.usefixtures("init_integration")
 async def test_set_hvac_mode(
     hass: HomeAssistant,
     mock_huum_client: AsyncMock,
+    hvac_mode: HVACMode,
+    status: SaunaStatus,
+    client_method: str,
 ) -> None:
     """Test setting HVAC mode."""
-    mock_huum_client.status.return_value.status = SaunaStatus.ONLINE_HEATING
+    mock_huum_client.status.return_value.status = status
+
     await hass.services.async_call(
         CLIMATE_DOMAIN,
         SERVICE_SET_HVAC_MODE,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_HVAC_MODE: HVACMode.HEAT},
+        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_HVAC_MODE: hvac_mode},
         blocking=True,
     )
 
     state = hass.states.get(ENTITY_ID)
-    assert state.state == HVACMode.HEAT
+    assert state.state == hvac_mode
 
-    mock_huum_client.turn_on.assert_awaited_once()
+    getattr(mock_huum_client, client_method).assert_awaited_once()
 
 
 @pytest.mark.usefixtures("init_integration")
