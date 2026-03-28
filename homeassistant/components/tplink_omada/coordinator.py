@@ -245,7 +245,8 @@ async def _async_get_known_wireless_client_macs(
     """Return the set of wireless client MAC addresses known to the controller."""
     macs: set[str] = set()
     async for client in controller.omada_client.get_known_clients():
-        macs.add(client.mac)
+        if isinstance(client, OmadaWirelessClient):
+            macs.add(client.mac)
     return macs
 
 
