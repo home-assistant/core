@@ -440,6 +440,7 @@ class WashingMachineProgramId(MieleEnum, missing_to_none=True):
 
     no_program = 0, -1
     cottons = 1, 10001
+    normal = 2
     minimum_iron = 3
     delicates = 4, 10022
     woollens = 8, 10040
