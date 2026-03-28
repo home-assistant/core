@@ -1,0 +1,12 @@
+{
+  "domain": "unifi_access",
+  "name": "UniFi Access",
+  "codeowners": ["@imhotep", "@RaHehl"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/unifi_access",
+  "integration_type": "hub",
+  "iot_class": "local_push",
+  "loggers": ["unifi_access_api"],
+  "quality_scale": "silver",
+  "requirements": ["py-unifi-access==1.1.3"]
+}
