@@ -110,7 +110,7 @@ _SULPHUR_DIOXIDE_MOLAR_MASS = 64.066
 
 
 # Possible unit conversion operations from JSON file
-# **important** any changes made to the operations here must also be applied in the frontend
+# **important** any new operations added here must also be added in the frontend
 class UnitConvertOpType(StrEnum):
     """Unit conversion operations."""
 
@@ -128,7 +128,7 @@ type UnitConvertOpInfo = tuple[UnitConvertOpType, float]
 class _UnitClassConversion(TypedDict):
     needs_class: NotRequired[bool]
     base: Required[str]
-    units: Required[dict[str, float | list[UnitConvertOpInfo]]]
+    units: Required[dict[str, float | list[tuple[str, float]]]]
     inverse: NotRequired[list[str]]
 
 
@@ -225,6 +225,8 @@ class BaseUnitConverter:
             "base": cls.BASE_UNIT if cls.BASE_UNIT is not None else "",
             "units": {
                 (unit if unit is not None else ""): factor
+                if not isinstance(factor, list)
+                else [(op.value, param) for (op, param) in factor]
                 for unit, factor in sorted(
                     cls._UNIT_CONVERSION.items(),
                     key=lambda item: "" if item[0] is None else item[0],
@@ -237,7 +239,7 @@ class BaseUnitConverter:
             )
         if not cls.IS_PRIMARY:
             data["needs_class"] = True
-        return {cls.UNIT_CLASS: data}
+        return {cls.UNIT_CLASS: dict(sorted(data.items()))}
 
     @classmethod
     @lru_cache
