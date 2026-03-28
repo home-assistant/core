@@ -91,10 +91,7 @@ async def test_event_updates_state(
 
     for _ in torrents_sequence:
         freezer.tick(timedelta(seconds=DEFAULT_SCAN_INTERVAL + 1))
-        async_fire_time_changed(
-            hass,
-            dt_util.utcnow() + timedelta(seconds=DEFAULT_SCAN_INTERVAL + 1),
-        )
+        async_fire_time_changed(hass)
         await hass.async_block_till_done(wait_background_tasks=True)
 
     state = hass.states.get("event.transmission_torrent")
