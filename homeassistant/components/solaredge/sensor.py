@@ -303,18 +303,8 @@ async def async_setup_entry(
                 hass.async_create_task(
                     sensor_factory.storage_service.coordinator.async_refresh()
                 )
-                # Create and register storage entities
-                storage_entities: list[SolarEdgeSensorEntity] = list(result)
-                for sensor_type in SENSOR_TYPES:
-                    if sensor_type.key in (
-                        "storage_charge_energy",
-                        "storage_discharge_energy",
-                    ):
-                        sensor = sensor_factory.create_sensor(sensor_type)
-                        if sensor is not None:
-                            storage_entities.append(sensor)
-                if storage_entities:
-                    async_add_entities(storage_entities)
+                if result:
+                    async_add_entities(result)
             if result is not None:
                 # Either success or confirmed no batteries - stop listening
                 unsub()
@@ -325,6 +315,8 @@ async def async_setup_entry(
         entry.async_on_unload(unsub)
 
     for sensor_type in SENSOR_TYPES:
+        if sensor_type.key in ("storage_charge_energy", "storage_discharge_energy"):
+            continue
         sensor = sensor_factory.create_sensor(sensor_type)
         if sensor is not None:
             entities.append(sensor)
@@ -423,11 +415,18 @@ class SolarEdgeSensorFactory:
         for key in ("storage_charge_energy", "storage_discharge_energy"):
             self.services[key] = (SolarEdgeStorageDataSensor, self.storage_service)
 
+        # Create aggregate storage sensors
+        storage_entities: list[SolarEdgeSensorEntity] = []
+        for sensor_type in SENSOR_TYPES:
+            if sensor_type.key in ("storage_charge_energy", "storage_discharge_energy"):
+                sensor = self.create_sensor(sensor_type)
+                if sensor is not None:
+                    storage_entities.append(sensor)
+
         # Create per-battery entities
-        battery_entities: list[SolarEdgeSensorEntity] = []
         for battery in inventory_batteries:
             serial = battery.get("SN", battery.get("serialNumber", "unknown"))
-            battery_entities.extend(
+            storage_entities.extend(
                 SolarEdgeBatterySensor(sensor_type, self.storage_service, serial)
                 for sensor_type in BATTERY_SENSOR_TYPES
             )
@@ -435,7 +434,7 @@ class SolarEdgeSensorFactory:
         LOGGER.debug(
             "Storage sensors enabled, found %d batteries", len(inventory_batteries)
         )
-        return battery_entities
+        return storage_entities
 
     def create_sensor(
         self, sensor_type: SolarEdgeSensorEntityDescription
