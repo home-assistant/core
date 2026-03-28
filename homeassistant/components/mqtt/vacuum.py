@@ -309,13 +309,21 @@ class MqttStateVacuum(MqttEntity, StateVacuumEntity):
                 POSSIBLE_STATES[cast(str, state)] if payload[STATE] else None
             )
             del payload[STATE]
-        if SEGMENTS in payload:
-            segments = cast(dict[str, str], payload[SEGMENTS])
-            self._segments = [
-                Segment(id=segment_id, name=str(name or segment_id))
-                for segment_id, name in segments.items()
-            ]
-            self._process_entity_update()
+        if SEGMENTS in payload and (segments := payload[SEGMENTS]):
+            if not isinstance(segments, dict) or not all(
+                isinstance(k, str) and isinstance(v, (str, type(None)))
+                for k, v in segments.items()
+            ):
+                _LOGGER.debug(
+                    "Ignoring invalid `segments` value in state payload: %s",
+                    segments,
+                )
+            else:
+                self._segments = [
+                    Segment(id=segment_id, name=str(name or segment_id))
+                    for segment_id, name in segments.items()
+                ]
+                self._process_entity_update()
         self._update_state_attributes(payload)
 
     @callback
