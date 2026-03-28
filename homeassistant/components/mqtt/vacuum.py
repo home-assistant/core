@@ -338,7 +338,7 @@ class MqttStateVacuum(MqttEntity, StateVacuumEntity):
             del payload[STATE]
         if SEGMENTS in payload and (segments := payload[SEGMENTS]):
             if not isinstance(segments, dict) or not all(
-                isinstance(k, str) and isinstance(v, (str, type(None)))
+                isinstance(k, str) and isinstance(v, (str, type(None))) and k
                 for k, v in segments.items()
             ):
                 _LOGGER.debug(
@@ -351,6 +351,7 @@ class MqttStateVacuum(MqttEntity, StateVacuumEntity):
                     for segment_id, name in segments.items()
                 ]
                 self._process_entity_update()
+            del payload[SEGMENTS]
         self._update_state_attributes(payload)
 
     @callback
