@@ -9,7 +9,7 @@ from openai.types import CompletionUsage
 from openai.types.chat import ChatCompletion, ChatCompletionMessage
 from openai.types.chat.chat_completion import Choice
 import pytest
-from python_open_router import ModelsDataWrapper
+from python_open_router import KeyData, ModelsDataWrapper
 
 from homeassistant.components.open_router.const import (
     CONF_PROMPT,
@@ -150,6 +150,13 @@ async def mock_open_router_client(hass: HomeAssistant) -> AsyncGenerator[AsyncMo
         autospec=True,
     ) as mock_client:
         client = mock_client.return_value
+        client.get_key_data.return_value = KeyData(
+            label="Test account",
+            usage=0,
+            is_provisioning_key=False,
+            limit_remaining=None,
+            is_free_tier=True,
+        )
         models = await async_load_fixture(hass, "models.json", DOMAIN)
         client.get_models.return_value = ModelsDataWrapper.from_json(models).data
         yield client

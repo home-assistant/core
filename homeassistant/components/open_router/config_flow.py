@@ -73,7 +73,7 @@ class OpenRouterConfigFlow(ConfigFlow, domain=DOMAIN):
                 user_input[CONF_API_KEY], async_get_clientsession(self.hass)
             )
             try:
-                await client.get_key_data()
+                key_data = await client.get_key_data()
             except OpenRouterError:
                 errors["base"] = "cannot_connect"
             except Exception:
@@ -81,7 +81,7 @@ class OpenRouterConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "unknown"
             else:
                 return self.async_create_entry(
-                    title="OpenRouter",
+                    title=key_data.label,
                     data=user_input,
                 )
         return self.async_show_form(

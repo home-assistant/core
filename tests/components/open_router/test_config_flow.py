@@ -39,7 +39,31 @@ async def test_full_flow(
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "Test account"
     assert result["data"] == {CONF_API_KEY: "bla"}
+
+
+async def test_second_account(
+    hass: HomeAssistant,
+    mock_open_router_client: AsyncMock,
+    mock_setup_entry: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test that a second account with a different API key can be added."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_API_KEY: "different_key"},
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "Test account"
+    assert result["data"] == {CONF_API_KEY: "different_key"}
 
 
 @pytest.mark.parametrize(
@@ -277,6 +301,12 @@ async def test_reconfigure_conversation_agent(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
+
+    subentry = mock_config_entry.subentries[subentry_id]
+    assert subentry.data[CONF_MODEL] == "openai/gpt-4"
+    assert subentry.data[CONF_PROMPT] == "updated prompt"
+    assert subentry.data[CONF_LLM_HASS_API] == ["assist"]
+    assert subentry.data[CONF_WEB_SEARCH] is True
 
 
 async def test_reconfigure_ai_task(
