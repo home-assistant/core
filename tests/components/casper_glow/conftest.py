@@ -1,6 +1,6 @@
 """Casper Glow session fixtures."""
 
-from collections.abc import Generator
+from collections.abc import Callable, Generator
 from unittest.mock import MagicMock, patch
 
 from pycasperglow import GlowState
@@ -49,6 +49,21 @@ def mock_casper_glow() -> Generator[MagicMock]:
         mock_device.address = CASPER_GLOW_DISCOVERY_INFO.address
         mock_device.state = GlowState()
         yield mock_device
+
+
+@pytest.fixture
+def fire_callbacks(
+    mock_casper_glow: MagicMock,
+) -> Callable[[GlowState], None]:
+    """Return a helper that fires all registered device callbacks with a given state."""
+
+    def _fire(state: GlowState) -> None:
+        for cb in (
+            call[0][0] for call in mock_casper_glow.register_callback.call_args_list
+        ):
+            cb(state)
+
+    return _fire
 
 
 @pytest.fixture
