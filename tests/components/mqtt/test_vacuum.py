@@ -377,14 +377,110 @@ async def test_clean_segments_initial_setup_without_repair_issue(
     assert len(issue_registry.issues) == 0
 
 
-@pytest.mark.parametrize("hass_config", [CONFIG_CLEAN_SEGMENTS])
-async def test_clean_segments_command(
+@pytest.mark.parametrize("hass_config", [CONFIG_CLEAN_SEGMENTS_1])
+async def test_clean_segments_command_without_id(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     entity_registry: er.EntityRegistry,
     mqtt_mock_entry: MqttMockHAClientGenerator,
 ) -> None:
-    """Test cleanable segments with explicit segment IDs."""
+    """Test cleanable segments without ID."""
+    config_entry = hass.config_entries.async_entries(mqtt.DOMAIN)[0]
+    entity_registry.async_get_or_create(
+        vacuum.DOMAIN,
+        mqtt.DOMAIN,
+        "veryunique",
+        config_entry=config_entry,
+        suggested_object_id="test",
+    )
+    entity_registry.async_update_entity_options(
+        "vacuum.test",
+        vacuum.DOMAIN,
+        {
+            "area_mapping": {"Nabu Casa": ["Kitchen", "Livingroom"]},
+            "last_seen_segments": [
+                {"id": "Livingroom", "name": "Livingroom"},
+                {"id": "Kitchen", "name": "Kitchen"},
+            ],
+        },
+    )
+    mqtt_mock = await mqtt_mock_entry()
+    await hass.async_block_till_done()
+    issue_registry = ir.async_get(hass)
+    # We do not expect a repair flow
+    assert len(issue_registry.issues) == 0
+
+    state = hass.states.get("vacuum.test")
+    assert state.state == STATE_UNKNOWN
+    await common.async_clean_area(hass, ["Nabu Casa"], entity_id="vacuum.test")
+    assert (
+        call("vacuum/clean_segment", '["Kitchen","Livingroom"]', 0, False)
+        in mqtt_mock.async_publish.mock_calls
+    )
+
+    client = await hass_ws_client(hass)
+    await client.send_json_auto_id(
+        {"type": "vacuum/get_segments", "entity_id": "vacuum.test"}
+    )
+    msg = await client.receive_json()
+    assert msg["success"]
+    assert msg["result"]["segments"] == [
+        {"id": "Livingroom", "name": "Livingroom", "group": None},
+        {"id": "Kitchen", "name": "Kitchen", "group": None},
+    ]
+
+
+@pytest.mark.parametrize("hass_config", [CONFIG_CLEAN_SEGMENTS_2])
+async def test_clean_segments_command_with_id(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    entity_registry: er.EntityRegistry,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+) -> None:
+    """Test cleanable segments with ID."""
+    mqtt_mock = await mqtt_mock_entry()
+    # Set the area mapping
+    entity_registry.async_update_entity_options(
+        "vacuum.test",
+        vacuum.DOMAIN,
+        {
+            "area_mapping": {"Livingroom": ["1"], "Kitchen": ["2"]},
+            "last_seen_segments": [
+                {"id": "1", "name": "Livingroom"},
+                {"id": "2", "name": "Kitchen"},
+            ],
+        },
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get("vacuum.test")
+    assert state.state == STATE_UNKNOWN
+    await common.async_clean_area(hass, ["Kitchen"], entity_id="vacuum.test")
+    assert (
+        call("vacuum/clean_segment", '["2"]', 0, False)
+        in mqtt_mock.async_publish.mock_calls
+    )
+
+    client = await hass_ws_client(hass)
+    await client.send_json_auto_id(
+        {"type": "vacuum/get_segments", "entity_id": "vacuum.test"}
+    )
+    msg = await client.receive_json()
+    assert msg["success"]
+    assert msg["result"]["segments"] == [
+        {"id": "1", "name": "Livingroom", "group": None},
+        {"id": "2", "name": "Kitchen", "group": None},
+    ]
+
+
+@pytest.mark.parametrize("hass_config", [CONFIG_CLEAN_SEGMENTS])
+async def test_clean_segments_command_from_state_topic(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    entity_registry: er.EntityRegistry,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+) -> None:
+    """Test cleanable segments from state topic."""
     config_entry = hass.config_entries.async_entries(mqtt.DOMAIN)[0]
     entity_registry.async_get_or_create(
         vacuum.DOMAIN,
