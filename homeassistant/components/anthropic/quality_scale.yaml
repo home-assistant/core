@@ -59,10 +59,7 @@ rules:
     status: exempt
     comment: |
       No data updates.
-  docs-examples:
-    status: todo
-    comment: |
-      To give examples of how people use the integration
+  docs-examples: done
   docs-known-limitations: done
   docs-supported-devices:
     status: todo
