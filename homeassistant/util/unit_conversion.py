@@ -6,7 +6,7 @@ from collections.abc import Callable
 from enum import StrEnum
 from functools import lru_cache, partial
 from math import floor, log10
-from typing import Any, Final, NotRequired, Required, TypedDict
+from typing import Any, Final, NotRequired, Required, TypedDict, TypeIs
 
 from homeassistant.const import (
     CONCENTRATION_GRAMS_PER_CUBIC_METER,
@@ -190,6 +190,8 @@ class BaseUnitConverter:
         if from_unit == to_unit:
             return lambda val: val
         convert_ops = cls._get_from_to_ops(from_unit, to_unit)
+        if not cls._is_operation_list(convert_ops):
+            return lambda val: val * convert_ops
         return partial(BaseUnitConverter._convert_fn, ops=convert_ops)
 
     @classmethod
@@ -201,6 +203,8 @@ class BaseUnitConverter:
         if from_unit == to_unit:
             return lambda val: val
         convert_ops = cls._get_from_to_ops(from_unit, to_unit)
+        if not cls._is_operation_list(convert_ops):
+            return lambda val: None if val is None else val * convert_ops
         return partial(BaseUnitConverter._convert_allow_none_fn, ops=convert_ops)
 
     @classmethod
@@ -210,6 +214,8 @@ class BaseUnitConverter:
         if from_unit == to_unit:
             return 1
         convert_ops = cls._get_from_to_ops(to_unit, from_unit, True)
+        if not cls._is_operation_list(convert_ops):
+            return convert_ops
         return BaseUnitConverter._convert_fn(1, convert_ops)
 
     @classmethod
@@ -248,40 +254,58 @@ class BaseUnitConverter:
     @lru_cache
     def _get_from_to_ops(
         cls, from_unit: str | None, to_unit: str | None, for_ratio: bool = False
-    ) -> list[UnitConvertOp]:
-        """Get operations to convert between units of measurement."""
-        from_op = cls._get_conversion_ops(from_unit, True, for_ratio)
+    ) -> list[UnitConvertOp] | float:
+        """Get either scale factor or operations to convert between two units."""
+        from_info = cls._get_unit_info(from_unit)
+        to_info = cls._get_unit_info(to_unit)
+        # If both units are simple scale factors, optimise to single operation
+        if (
+            not BaseUnitConverter._is_operation_list(from_info)
+            and not BaseUnitConverter._is_operation_list(to_info)
+            and not cls._are_unit_inverses(from_unit, to_unit)
+        ):
+            return to_info / from_info
+        # Otherwise create required conversion steps
+        from_op = cls._get_conversion_ops(from_unit, from_info, True, for_ratio)
         inverse_op = cls._get_inverse_ops(from_unit, to_unit, for_ratio)
-        to_op = cls._get_conversion_ops(to_unit, False, for_ratio)
+        to_op = cls._get_conversion_ops(to_unit, to_info, False, for_ratio)
         return [*reversed(from_op), *inverse_op, *to_op]
 
     @classmethod
-    @lru_cache
     def _get_conversion_ops(
-        cls, unit: str | None, is_from: bool = False, for_ratio: bool = False
+        cls,
+        unit: str | None,
+        op_info: list[UnitConvertOpInfo] | float,
+        is_from: bool = False,
+        for_ratio: bool = False,
     ) -> list[UnitConvertOp]:
         """Return a list of operations to convert between a unit and its base."""
         # For the base unit we don't need to perform any operations
         if unit == cls.BASE_UNIT:
             return []
-        # Otherwise lookup the required operation information for the selected unit
+        # Select the correct function lambdas depending on whether converting from or to
+        op_map = _UNIT_CONVERT_FROM_OP if is_from else _UNIT_CONVERT_TO_OP
+        # If the unit is a simple scale factor, we can directly map to a scale operation
+        if not BaseUnitConverter._is_operation_list(op_info):
+            return [(op_map[UnitConvertOpType.SCALE], op_info)]
+        # Otherwise map all the required operations
+        return [
+            (op_map[op[0]], op[1])
+            for op in op_info
+            if not for_ratio or (op[0] is UnitConvertOpType.SCALE)
+        ]
+
+    @classmethod
+    @lru_cache
+    def _get_unit_info(cls, unit: str | None) -> list[UnitConvertOpInfo] | float:
+        """Get operation info for a given unit and whether it is a simple scale factor."""
         try:
-            required_ops = cls._UNIT_CONVERSION[unit]
+            op_info = cls._UNIT_CONVERSION[unit]
         except KeyError as err:
             raise HomeAssistantError(
                 UNIT_NOT_RECOGNIZED_TEMPLATE.format(err.args[0], cls.UNIT_CLASS)
             ) from err
-        # And map that to the required function lambdas depending on whether converting from or to.
-        op_map = _UNIT_CONVERT_FROM_OP if is_from else _UNIT_CONVERT_TO_OP
-        # For simple scale factor conversions, we can directly map to a single operation
-        if not isinstance(required_ops, list):
-            return [(op_map[UnitConvertOpType.SCALE], float(required_ops))]
-        # Otherwise map all the required operations
-        return [
-            (op_map[op_info[0]], op_info[1])
-            for op_info in required_ops
-            if not for_ratio or (op_info[0] is UnitConvertOpType.SCALE)
-        ]
+        return op_info
 
     @classmethod
     @lru_cache
@@ -291,14 +315,24 @@ class BaseUnitConverter:
         """Return inverse operation if units are inverses and operation is required."""
         return (
             [(_UNIT_CONVERT_TO_OP[UnitConvertOpType.POWER], -1)]
-            if not for_ratio
-            and ((from_unit in cls._UNIT_INVERSES) != (to_unit in cls._UNIT_INVERSES))
+            if not for_ratio and cls._are_unit_inverses(from_unit, to_unit)
             else []
         )
 
+    @classmethod
+    @lru_cache
+    def _are_unit_inverses(cls, from_unit: str | None, to_unit: str | None) -> bool:
+        return (from_unit in cls._UNIT_INVERSES) != (to_unit in cls._UNIT_INVERSES)
+
+    @staticmethod
+    def _is_operation_list(
+        op_info: list[Any] | float,
+    ) -> TypeIs[list[Any]]:
+        return isinstance(op_info, list)
+
     @staticmethod
     def _convert_fn(val: float, ops: list[UnitConvertOp]) -> float:
-        """Execute a list of conversion operations one by one."""
+        """Execute a list of conversion operations in turn."""
         for op, factor in ops:
             val = op(val, factor)
         return val
@@ -307,7 +341,10 @@ class BaseUnitConverter:
     def _convert_allow_none_fn(
         val: float | None, ops: list[UnitConvertOp]
     ) -> float | None:
-        """Execute a list of conversion operations one by one."""
+        """Execute a list of conversion operations in turn allowing None value.
+
+        Will return None if value is None or there is a math error.
+        """
         for op, factor in ops:
             if val is None:
                 break
