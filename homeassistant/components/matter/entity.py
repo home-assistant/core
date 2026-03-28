@@ -219,18 +219,19 @@ class MatterEntity(Entity):
         if self._endpoint.has_attribute(
             None, clusters.BridgedDeviceBasicInformation.Attributes.Reachable
         ):
-            self._unsubscribes.append(
-                self.matter_client.subscribe_events(
-                    callback=self._on_matter_event,
-                    event_filter=EventType.ATTRIBUTE_UPDATED,
-                    node_filter=self._endpoint.node.node_id,
-                    attr_path_filter=create_attribute_path(
-                        self._endpoint.endpoint_id,
-                        clusters.BridgedDeviceBasicInformation.id,
-                        clusters.BridgedDeviceBasicInformation.Attributes.Reachable.attribute_id,
-                    ),
-                )
+            reachable_attr_path = self.get_matter_attribute_path(
+                clusters.BridgedDeviceBasicInformation.Attributes.Reachable
             )
+            if reachable_attr_path not in sub_paths:
+                sub_paths.append(reachable_attr_path)
+                self._unsubscribes.append(
+                    self.matter_client.subscribe_events(
+                        callback=self._on_matter_event,
+                        event_filter=EventType.ATTRIBUTE_UPDATED,
+                        node_filter=self._endpoint.node.node_id,
+                        attr_path_filter=reachable_attr_path,
+                    )
+                )
         # subscribe to FeatureMap attribute (as that can dynamically change)
         self._unsubscribes.append(
             self.matter_client.subscribe_events(
@@ -258,14 +259,9 @@ class MatterEntity(Entity):
 
     @callback
     def _get_bridged_reachable(self) -> bool:
-        """Return the Reachable attribute value for bridged devices.
-
-        For endpoints that expose the BridgedDeviceBasicInformation cluster,
-        the Reachable attribute (AttributeId: 17) reflects whether the bridged
-        device is reachable via the bridge. Returns True for non-bridged devices.
-        """
-        reachable = self._endpoint.get_attribute_value(
-            None, clusters.BridgedDeviceBasicInformation.Attributes.Reachable
+        """Return reachability state for bridged endpoints, True if not applicable."""
+        reachable = self.get_matter_attribute_value(
+            clusters.BridgedDeviceBasicInformation.Attributes.Reachable
         )
         if reachable is None:
             return True
