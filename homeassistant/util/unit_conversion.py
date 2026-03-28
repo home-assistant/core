@@ -329,10 +329,12 @@ class BaseUnitConverter:
     @classmethod
     @lru_cache
     def _are_unit_inverses(cls, from_unit: str | None, to_unit: str | None) -> bool:
+        """Return true if one unit is an inverse but not the other."""
         return (from_unit in cls._UNIT_INVERSES) != (to_unit in cls._UNIT_INVERSES)
 
     @staticmethod
     def _is_operation_list(op_info: Any) -> TypeIs[list[Any]]:
+        """Return true if provided op info is a list type."""
         return isinstance(op_info, list)
 
     @staticmethod
