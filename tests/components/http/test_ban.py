@@ -85,6 +85,7 @@ async def test_unban(
     app[KEY_HASS] = hass
     setup_bans(hass, app, 5)
     set_real_ip = mock_real_ip(app)
+    m_open = mock_open()
 
     with patch(
         "homeassistant.components.http.ban.load_yaml_config_file",
@@ -99,8 +100,9 @@ async def test_unban(
         resp = await client.get("/")
         assert resp.status == HTTPStatus.FORBIDDEN
 
-    for remote_address in BANNED_IPS:
-        await app[KEY_BAN_MANAGER].async_remove_ban(ip_address(remote_address))
+    with patch("homeassistant.components.http.ban.open", m_open, create=True):
+        for remote_address in BANNED_IPS:
+            await app[KEY_BAN_MANAGER].async_remove_ban(ip_address(remote_address))
 
     assert len(app[KEY_BAN_MANAGER]) == 0
 
