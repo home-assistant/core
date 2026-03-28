@@ -27,7 +27,7 @@ import voluptuous as vol
 from homeassistant.config import load_yaml_config_file
 from homeassistant.const import CONF_IP_ADDRESS
 from homeassistant.core import HomeAssistant, ServiceCall, callback
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.hassio import get_supervisor_ip, is_hassio
 from homeassistant.helpers.service import async_register_admin_service
@@ -77,18 +77,12 @@ def setup_bans(hass: HomeAssistant, app: Application, login_threshold: int) -> N
 
     app.on_startup.append(ban_startup)
 
-    async def async_handle_unban_service(
-        service: ServiceCall,
-    ) -> None:
+    async def async_handle_unban_service(service: ServiceCall) -> None:
         """Handle calls to http.unban."""
         try:
             ip_address_ = ip_address(service.data[CONF_IP_ADDRESS])
-        except ValueError:
-            _LOGGER.error(
-                "Invalid IP address provided for unban: %s",
-                service.data[CONF_IP_ADDRESS],
-            )
-            return
+        except ValueError as exc:
+            raise ServiceValidationError("Invalid IP address") from exc
         await app[KEY_BAN_MANAGER].async_remove_ban(ip_address_)
 
     async_register_admin_service(
