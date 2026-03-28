@@ -89,12 +89,12 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> None:
         target = await async_create_transport_target(host, port, DEFAULT_TIMEOUT)
     except PySnmpError as err:
         _LOGGER.warning("SNMP target creation failed: %s", err)
-        raise CannotConnect(f"SNMP target creation failed: {err}") from None
+        raise CannotConnect(f"SNMP target creation failed: {err}") from err
 
     try:
         auth_data = create_auth_data(data, version)
     except PySnmpError as err:
-        raise InvalidAuth(str(err)) from None
+        raise InvalidAuth(str(err)) from err
 
     # Use sysDescr.0 to verify connectivity and authentication.
     # This OID is standard and responds to GET on almost all devices.
@@ -106,18 +106,18 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> None:
 
     try:
         err_indication, err_status, _, _ = await get_cmd(*request_args)
-    except WrongValueError:
+    except WrongValueError as err:
         # pysnmp raises WrongValueError when v3 credentials/keys match the wrong protocol
-        raise InvalidAuth("Invalid authentication credentials or protocols") from None
+        raise InvalidAuth("Invalid authentication credentials or protocols") from err
     except PySnmpError as err:
         # Handle other pysnmp errors like StatusInformation/SerializationError
-        raise CannotConnect(str(err)) from None
+        raise CannotConnect(str(err)) from err
 
     if err_indication:
-        raise CannotConnect(str(err_indication)) from None
+        raise CannotConnect(str(err_indication))
 
     if version == "3" and err_status:
-        raise InvalidAuth(err_status.prettyPrint()) from None
+        raise InvalidAuth(err_status.prettyPrint())
 
     # Also verify that the user-provided baseoid is serializable and valid.
     # This catches errors like "Short OID 1" during the config flow.
@@ -129,7 +129,7 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> None:
         # We don't necessarily care about the result, just that it serializes and sends.
         await get_cmd(*base_request_args)
     except (PySnmpError, WrongValueError) as err:
-        raise CannotConnect(f"Invalid OID '{base_oid}': {err}") from None
+        raise CannotConnect(f"Invalid OID '{base_oid}': {err}") from err
 
 
 class SnmpConfigFlow(ConfigFlow, domain=DOMAIN):

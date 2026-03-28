@@ -121,7 +121,8 @@ class SnmpTrackerEntity(CoordinatorEntity[SnmpUpdateCoordinator], ScannerEntity)
         self._attr_mac_address = mac
         self._attr_entity_registry_enabled_default = default_enabled
         self._attr_unique_id = mac
-        self._attr_ip_address = coordinator.data.get(mac)
+        self._attr_name = mac.replace(":", "_")
+        self._attr_ip_address = coordinator.data.get(mac) if coordinator.data else None
         self._attr_translation_key = "device_tracker"
 
     @property
@@ -135,7 +136,11 @@ class SnmpTrackerEntity(CoordinatorEntity[SnmpUpdateCoordinator], ScannerEntity)
     def _handle_coordinator_update(self) -> None:
         """Update attribute so base class can use it."""
         assert self._attr_mac_address is not None
-        self._attr_ip_address = self.coordinator.data.get(self._attr_mac_address)
+        self._attr_ip_address = (
+            self.coordinator.data.get(self._attr_mac_address)
+            if self.coordinator.data
+            else None
+        )
         super()._handle_coordinator_update()
 
     @property
@@ -145,10 +150,3 @@ class SnmpTrackerEntity(CoordinatorEntity[SnmpUpdateCoordinator], ScannerEntity)
             self._attr_entity_registry_enabled_default
             or super().entity_registry_enabled_default
         )
-
-    @property
-    def name(self) -> str:
-        """Return the name of the device (MAC address with underscores)."""
-        # Format MAC address as entity name: 00:11:22:33:44:55 -> 00_11_22_33_44_55
-        assert self._attr_mac_address is not None
-        return self._attr_mac_address.replace(":", "_")

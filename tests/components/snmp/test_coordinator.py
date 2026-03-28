@@ -109,8 +109,8 @@ async def test_coordinator_walk_error(hass: HomeAssistant) -> None:
 
     async def mock_walk_error(*args, **kwargs):
         """Simulate an error raised during iteration."""
-        if kwargs is not None:
-            raise PySnmpError("Network unreachable")
+        # pylint: disable=unreachable
+        raise PySnmpError("Network unreachable")
         yield
 
     with (

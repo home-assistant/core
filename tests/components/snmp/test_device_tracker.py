@@ -395,7 +395,7 @@ async def test_device_tracker_properties_empty_coordinator(
     mock_coord = Mock()
     mock_coord.data = {}
 
-    entity = SnmpTrackerEntity(mock_coord, entry, "00:11:22:33:44:55")
+    entity = SnmpTrackerEntity(mock_coord, "00:11:22:33:44:55")
     assert not entity.is_connected
     assert entity.ip_address is None
 
@@ -423,17 +423,26 @@ async def test_device_tracker_state_cleanup(
     # Set a state that should be cleaned up
     hass.states.async_set(reg_entry.entity_id, STATE_HOME)
 
-    with patch(
-        "homeassistant.components.snmp.util.UdpTransportTarget.create",
-        return_value=Mock(),
+    original_remove = hass.states.async_remove
+
+    def mock_remove_side_effect(self, entity_id, context=None):
+        return original_remove(entity_id, context=context)
+
+    with (
+        patch(
+            "homeassistant.components.snmp.util.UdpTransportTarget.create",
+            return_value=Mock(),
+        ),
+        patch(
+            "homeassistant.core.StateMachine.async_remove",
+            side_effect=mock_remove_side_effect,
+            autospec=True,
+        ) as mock_remove,
     ):
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
-    # The state should have been removed and then re-added by the coordinator update
-    # But during setup it was removed.
-    # To verify line 70 was hit, we'd need to mock hass.states.async_remove.
-    # But since it's already at 59% let's just run it.
+    mock_remove.assert_called_with(hass.states, reg_entry.entity_id)
 
 
 async def test_device_tracker_update_empty_data(
