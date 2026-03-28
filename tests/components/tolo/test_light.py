@@ -22,7 +22,7 @@ from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
 
-LIGHT_ENTITY_ID = "light.tolo_sauna"
+LIGHT_ENTITY_ID = "light.tolo_sauna_light"
 
 
 @pytest.mark.usefixtures("init_integration")

@@ -18,7 +18,7 @@ from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
 
-BUTTON_ENTITY_ID = "button.tolo_sauna"
+BUTTON_ENTITY_ID = "button.tolo_sauna_next_color"
 
 
 @pytest.mark.usefixtures("init_integration")

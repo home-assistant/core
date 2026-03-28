@@ -16,7 +16,7 @@ from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
 
-FAN_ENTITY_ID = "fan.tolo_sauna"
+FAN_ENTITY_ID = "fan.tolo_sauna_fan"
 
 
 @pytest.mark.usefixtures("init_integration")

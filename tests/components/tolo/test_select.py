@@ -12,9 +12,8 @@ from homeassistant.components.select import (
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
 
-# Entity IDs based on registration order: lamp_mode, aroma_therapy_slot
-LAMP_MODE_ENTITY_ID = "select.tolo_sauna"
-AROMA_THERAPY_SLOT_ENTITY_ID = "select.tolo_sauna_2"
+LAMP_MODE_ENTITY_ID = "select.tolo_sauna_lamp_mode"
+AROMA_THERAPY_SLOT_ENTITY_ID = "select.tolo_sauna_aroma_therapy_slot"
 
 
 @pytest.mark.usefixtures("init_integration")

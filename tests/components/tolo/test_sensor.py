@@ -17,13 +17,11 @@ from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
 
-# Entity IDs based on registration order:
-# water_level, tank_temperature, power_timer_remaining, salt_bath_timer_remaining, fan_timer_remaining
-WATER_LEVEL_ENTITY_ID = "sensor.tolo_sauna"
-TANK_TEMPERATURE_ENTITY_ID = "sensor.tolo_sauna_2"
-POWER_TIMER_REMAINING_ENTITY_ID = "sensor.tolo_sauna_3"
-SALT_BATH_TIMER_REMAINING_ENTITY_ID = "sensor.tolo_sauna_4"
-FAN_TIMER_REMAINING_ENTITY_ID = "sensor.tolo_sauna_5"
+WATER_LEVEL_ENTITY_ID = "sensor.tolo_sauna_water_level"
+TANK_TEMPERATURE_ENTITY_ID = "sensor.tolo_sauna_tank_temperature"
+POWER_TIMER_REMAINING_ENTITY_ID = "sensor.tolo_sauna_power_timer"
+SALT_BATH_TIMER_REMAINING_ENTITY_ID = "sensor.tolo_sauna_salt_bath_timer"
+FAN_TIMER_REMAINING_ENTITY_ID = "sensor.tolo_sauna_fan_timer"
 
 
 @pytest.mark.usefixtures("init_integration")

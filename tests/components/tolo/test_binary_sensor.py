@@ -11,8 +11,8 @@ from homeassistant.helpers import entity_registry as er
 
 from tests.common import MockConfigEntry
 
-FLOW_IN_ENTITY_ID = "binary_sensor.tolo_sauna"
-FLOW_OUT_ENTITY_ID = "binary_sensor.tolo_sauna_2"
+FLOW_IN_ENTITY_ID = "binary_sensor.tolo_sauna_water_in_valve"
+FLOW_OUT_ENTITY_ID = "binary_sensor.tolo_sauna_water_out_valve"
 
 
 @pytest.mark.usefixtures("init_integration")

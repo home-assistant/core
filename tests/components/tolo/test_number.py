@@ -12,10 +12,9 @@ from homeassistant.components.number import (
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
 
-# Entity IDs based on registration order: power_timer, salt_bath_timer, fan_timer
-POWER_TIMER_ENTITY_ID = "number.tolo_sauna"
-SALT_BATH_TIMER_ENTITY_ID = "number.tolo_sauna_2"
-FAN_TIMER_ENTITY_ID = "number.tolo_sauna_3"
+POWER_TIMER_ENTITY_ID = "number.tolo_sauna_power_timer"
+SALT_BATH_TIMER_ENTITY_ID = "number.tolo_sauna_salt_bath_timer"
+FAN_TIMER_ENTITY_ID = "number.tolo_sauna_fan_timer"
 
 
 @pytest.mark.usefixtures("init_integration")

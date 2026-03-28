@@ -17,9 +17,8 @@ from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
 
-# Entity IDs based on registration order: aroma_therapy_on, salt_bath_on
-AROMA_THERAPY_ENTITY_ID = "switch.tolo_sauna"
-SALT_BATH_ENTITY_ID = "switch.tolo_sauna_2"
+AROMA_THERAPY_ENTITY_ID = "switch.tolo_sauna_aroma_therapy"
+SALT_BATH_ENTITY_ID = "switch.tolo_sauna_salt_bath"
 
 
 @pytest.mark.usefixtures("init_integration")
