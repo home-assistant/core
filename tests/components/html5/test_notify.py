@@ -46,7 +46,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import entity_registry as er, issue_registry as ir
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry, snapshot_platform
@@ -1109,3 +1109,32 @@ async def test_html5_send_message(
 
     assert webpush_async.await_args.kwargs["ttl"] == expected_ttl
     assert webpush_async.await_args.kwargs["headers"] == expected_headers
+
+
+@pytest.mark.usefixtures("mock_wp", "mock_jwt", "mock_vapid", "mock_uuid")
+async def test_deprecation_action_call(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    load_config: MagicMock,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test deprecation action call."""
+    load_config.return_value = {"my-desktop": SUBSCRIPTION_1}
+
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    await hass.services.async_call(
+        NOTIFY_DOMAIN,
+        DOMAIN,
+        {"message": "Hello"},
+        blocking=True,
+    )
+
+    assert issue_registry.async_get_issue(
+        domain=DOMAIN,
+        issue_id="deprecated_notify_action_notify.html5",
+    )

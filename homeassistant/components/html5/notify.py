@@ -60,6 +60,7 @@ from .const import (
     SERVICE_DISMISS,
 )
 from .entity import HTML5Entity, Registration
+from .issue import deprecated_notify_action_call
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -467,6 +468,9 @@ class HTML5NotificationService(BaseNotificationService):
 
     async def async_send_message(self, message: str = "", **kwargs: Any) -> None:
         """Send a message to a user."""
+
+        deprecated_notify_action_call(self.hass, kwargs.get(ATTR_TARGET))
+
         tag = str(uuid.uuid4())
         payload: dict[str, Any] = {
             "badge": DEFAULT_BADGE,
