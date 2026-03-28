@@ -95,11 +95,15 @@ STORAGE_DATA_SINGLE_BATTERY = {
                         "timeStamp": "2025-01-01 00:00:00",
                         "lifeTimeEnergyCharged": 1000.0,
                         "lifeTimeEnergyDischarged": 500.0,
+                        "batteryPercentageState": 50.0,
+                        "power": 100.0,
                     },
                     {
                         "timeStamp": "2025-01-01 12:00:00",
                         "lifeTimeEnergyCharged": 1500.0,
                         "lifeTimeEnergyDischarged": 800.0,
+                        "batteryPercentageState": 75.0,
+                        "power": 200.0,
                     },
                 ],
             }
@@ -117,11 +121,15 @@ STORAGE_DATA_MULTI_BATTERY = {
                         "timeStamp": "2025-01-01 00:00:00",
                         "lifeTimeEnergyCharged": 1000.0,
                         "lifeTimeEnergyDischarged": 500.0,
+                        "batteryPercentageState": 50.0,
+                        "power": 100.0,
                     },
                     {
                         "timeStamp": "2025-01-01 12:00:00",
                         "lifeTimeEnergyCharged": 1500.0,
                         "lifeTimeEnergyDischarged": 800.0,
+                        "batteryPercentageState": 75.0,
+                        "power": 200.0,
                     },
                 ],
             },
@@ -132,11 +140,15 @@ STORAGE_DATA_MULTI_BATTERY = {
                         "timeStamp": "2025-01-01 00:00:00",
                         "lifeTimeEnergyCharged": 2000.0,
                         "lifeTimeEnergyDischarged": 1000.0,
+                        "batteryPercentageState": 40.0,
+                        "power": 150.0,
                     },
                     {
                         "timeStamp": "2025-01-01 12:00:00",
                         "lifeTimeEnergyCharged": 2700.0,
                         "lifeTimeEnergyDischarged": 1400.0,
+                        "batteryPercentageState": 80.0,
+                        "power": 250.0,
                     },
                 ],
             },
@@ -542,7 +554,7 @@ async def test_storage_data_service(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    # Look up entity IDs from the entity registry by unique_id
+    # Aggregate sensors
     charge_entry = entity_registry.async_get_entity_id(
         "sensor", DOMAIN, f"{SITE_ID}_storage_charge_energy"
     )
@@ -552,15 +564,47 @@ async def test_storage_data_service(
     assert charge_entry is not None
     assert discharge_entry is not None
 
-    # Check battery charge today sensor
     state = hass.states.get(charge_entry)
     assert state is not None
     assert float(state.state) == 500.0  # 1500 - 1000
 
-    # Check battery discharge today sensor
     state = hass.states.get(discharge_entry)
     assert state is not None
     assert float(state.state) == 300.0  # 800 - 500
+
+    # Per-battery entities
+    bat_charge = entity_registry.async_get_entity_id(
+        "sensor", DOMAIN, f"{SITE_ID}_BAT001_battery_charge_energy"
+    )
+    bat_discharge = entity_registry.async_get_entity_id(
+        "sensor", DOMAIN, f"{SITE_ID}_BAT001_battery_discharge_energy"
+    )
+    bat_soc = entity_registry.async_get_entity_id(
+        "sensor", DOMAIN, f"{SITE_ID}_BAT001_battery_state_of_charge"
+    )
+    bat_power = entity_registry.async_get_entity_id(
+        "sensor", DOMAIN, f"{SITE_ID}_BAT001_battery_power"
+    )
+    assert bat_charge is not None
+    assert bat_discharge is not None
+    assert bat_soc is not None
+    assert bat_power is not None
+
+    state = hass.states.get(bat_charge)
+    assert state is not None
+    assert float(state.state) == 500.0
+
+    state = hass.states.get(bat_discharge)
+    assert state is not None
+    assert float(state.state) == 300.0
+
+    state = hass.states.get(bat_soc)
+    assert state is not None
+    assert float(state.state) == 75.0
+
+    state = hass.states.get(bat_power)
+    assert state is not None
+    assert float(state.state) == 200.0
 
 
 @patch("homeassistant.components.solaredge.SolarEdge")
@@ -605,6 +649,33 @@ async def test_storage_data_service_multi_battery(
     assert state is not None
     assert float(state.state) == 700.0  # 300 + 400
 
+    # Per-battery entities for BAT001
+    bat1_soc = entity_registry.async_get_entity_id(
+        "sensor", DOMAIN, f"{SITE_ID}_BAT001_battery_state_of_charge"
+    )
+    assert bat1_soc is not None
+    state = hass.states.get(bat1_soc)
+    assert state is not None
+    assert float(state.state) == 75.0
+
+    # Per-battery entities for BAT002
+    bat2_charge = entity_registry.async_get_entity_id(
+        "sensor", DOMAIN, f"{SITE_ID}_BAT002_battery_charge_energy"
+    )
+    bat2_soc = entity_registry.async_get_entity_id(
+        "sensor", DOMAIN, f"{SITE_ID}_BAT002_battery_state_of_charge"
+    )
+    assert bat2_charge is not None
+    assert bat2_soc is not None
+
+    state = hass.states.get(bat2_charge)
+    assert state is not None
+    assert float(state.state) == 700.0
+
+    state = hass.states.get(bat2_soc)
+    assert state is not None
+    assert float(state.state) == 80.0
+
 
 @patch("homeassistant.components.solaredge.SolarEdge")
 async def test_storage_data_service_no_batteries(
@@ -648,7 +719,7 @@ async def test_storage_data_service_api_error(
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test storage data service handles API errors gracefully."""
-    mock_solaredge_api.get_storage_data = AsyncMock(side_effect=KeyError("storageData"))
+    mock_solaredge_api.get_storage_data = AsyncMock(side_effect=Exception("API error"))
     mock_solaredge.return_value = mock_solaredge_api
 
     mock_config_entry.add_to_hass(hass)
