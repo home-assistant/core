@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock, Mock, patch
 from pysnmp.error import PySnmpError
 from pysnmp.hlapi.v3arch.asyncio import SnmpEngine
 from pysnmp.hlapi.v3arch.asyncio.cmdgen import LCD
+from pysnmp.smi.error import WrongValueError
 
 from homeassistant.components import snmp
 from homeassistant.components.snmp.const import DOMAIN
@@ -213,6 +214,33 @@ async def test_async_setup_entry_refresh_fail(hass: HomeAssistant) -> None:
             "homeassistant.components.snmp.SnmpUpdateCoordinator.async_config_entry_first_refresh",
             side_effect=PySnmpError,
         ),
+    ):
+        assert not await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+
+async def test_async_setup_entry_wrong_value_error(hass: HomeAssistant) -> None:
+    """Test async_setup_entry with WrongValueError."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_HOST: "1.2.3.4",
+            "baseoid": "1.3.6.1.2.1.1",
+            "version": "2c",
+        },
+    )
+    entry.add_to_hass(hass)
+
+    with (
+        patch(
+            "homeassistant.components.snmp.util.UdpTransportTarget.create",
+            return_value=Mock(),
+        ),
+        patch(
+            "homeassistant.components.snmp.SnmpUpdateCoordinator.async_config_entry_first_refresh",
+            side_effect=WrongValueError,
+        ),
+        patch("homeassistant.config_entries.ConfigEntry.async_start_reauth"),
     ):
         assert not await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()

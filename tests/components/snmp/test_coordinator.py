@@ -336,3 +336,36 @@ async def test_coordinator_auto_fetch_host_info(
         await coordinator._async_update_data()
         mock_get_info.assert_called_once()
         assert coordinator.model == "Descr"
+
+
+async def test_coordinator_walk_end_of_mib(
+    hass: HomeAssistant, mock_request_args
+) -> None:
+    """Test walk loop breaks when is_end_of_mib returns True."""
+    entry = MockConfigEntry(
+        domain=DOMAIN, data={"host": "1.1.1.1", "baseoid": "1.3.6.1.2.1.1"}
+    )
+    coordinator = SnmpUpdateCoordinator(hass, entry)
+    coordinator.model = "Test"
+
+    oid = Mock()
+    oid.asTuple.return_value = (1, 3, 6, 1, 2, 1, 4, 22, 1, 6, 1, 192, 168, 1, 1)
+    val = OctetString(b"\x00\x11\x22\x33\x44\x55")
+
+    async def mock_walk(*args, **kwargs):
+        # We need to yield twice to show that it breaks on the second one
+        yield None, None, None, [(oid, val)]
+        yield None, None, None, [(oid, val)]
+
+    with (
+        patch(
+            "homeassistant.components.snmp.coordinator.bulk_walk_cmd",
+            side_effect=mock_walk,
+        ),
+        patch(
+            "homeassistant.components.snmp.coordinator.is_end_of_mib",
+            side_effect=[False, True],
+        ) as mock_is_end,
+    ):
+        await coordinator._async_update_data()
+        assert mock_is_end.call_count == 2
