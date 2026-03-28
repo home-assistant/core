@@ -70,8 +70,7 @@
           "extreme": "Extreme",
           "minor": "Minor",
           "moderate": "Moderate",
-          "severe": "Severe",
-          "unknown": "Unknown"
+          "severe": "Severe"
         }
       }
     }

@@ -35,7 +35,7 @@ class NinaWarningData:
     headline: str
     description: str
     sender: str
-    severity: str
+    severity: str | None
     recommended_actions: str
     affected_areas_short: str
     affected_areas: str
@@ -146,12 +146,18 @@ class NINADataUpdateCoordinator(
                     else affected_areas_string
                 )
 
+                severity = (
+                    None
+                    if raw_warn.severity.lower() == "unknown"
+                    else raw_warn.severity
+                )
+
                 warning_data: NinaWarningData = NinaWarningData(
                     raw_warn.id,
                     raw_warn.headline,
                     raw_warn.description,
                     raw_warn.sender or "",
-                    raw_warn.severity,
+                    severity,
                     " ".join([str(action) for action in raw_warn.recommended_actions]),
                     shortened_affected_areas,
                     affected_areas_string,
