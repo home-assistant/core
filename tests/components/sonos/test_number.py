@@ -256,6 +256,32 @@ async def test_group_volume_exception(
         assert state.state == STATE_UNKNOWN
 
 
+async def test_group_volume_transitions_to_unknown_after_good_read(
+    hass: HomeAssistant, async_setup_sonos, soco: MockSoCo
+) -> None:
+    """State transitions to STATE_UNKNOWN when volume read fails after a successful read."""
+    _force_grouped(soco)
+    soco.group.volume = 20
+    await _setup_numbers_only(async_setup_sonos)
+
+    # Establish a known good state first.
+    await _refresh_group_volume_entity(hass)
+    state = hass.states.get(GROUP_VOLUME_ENTITY_ID)
+    assert state is not None
+    assert int(float(state.state)) == 20
+
+    # Now make group.volume raise on every subsequent read.
+    with patch.object(
+        type(soco.group), "volume", new_callable=PropertyMock
+    ) as mock_volume:
+        mock_volume.side_effect = SoCoException("Boom!")
+        await _refresh_group_volume_entity(hass)
+
+    state = hass.states.get(GROUP_VOLUME_ENTITY_ID)
+    assert state is not None
+    assert state.state == STATE_UNKNOWN
+
+
 async def test_group_volume_refreshes_on_topology_change(
     hass: HomeAssistant, async_setup_sonos, soco: MockSoCo
 ) -> None:

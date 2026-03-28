@@ -245,7 +245,13 @@ class SonosGroupVolumeEntity(SonosEntity, NumberEntity):
 
         self._is_coord = True
 
-        if vol is not None and self._value != vol:
+        if vol is None:
+            if self._value is not None:
+                self._value = None
+                self.async_write_ha_state()
+            return
+
+        if self._value != vol:
             self._value = vol
             self.async_write_ha_state()
 
