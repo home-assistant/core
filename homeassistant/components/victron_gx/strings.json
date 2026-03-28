@@ -1298,6 +1298,9 @@
       "system_ess_max_charge_current": {
         "name": "ESS max charge current"
       },
+      "system_ess_max_charge_power": {
+        "name": "ESS max charge power limit"
+      },
       "system_ess_max_charge_voltage": {
         "name": "ESS max charge voltage"
       },
