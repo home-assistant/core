@@ -67,6 +67,19 @@
         "name": "Thumbnail"
       }
     },
+    "select": {
+      "door_lock_rule": {
+        "name": "Lock rule",
+        "state": {
+          "custom": "Custom",
+          "keep_lock": "Keep locked",
+          "keep_unlock": "Keep unlocked",
+          "lock_early": "Lock early",
+          "reset": "Reset",
+          "schedule": "Schedule"
+        }
+      }
+    },
     "sensor": {
       "door_lock_rule": {
         "name": "Lock rule",
@@ -96,6 +109,9 @@
   "exceptions": {
     "emergency_failed": {
       "message": "Failed to set emergency status."
+    },
+    "lock_rule_failed": {
+      "message": "Failed to update the door lock rule."
     },
     "unlock_failed": {
       "message": "Failed to unlock the door."
