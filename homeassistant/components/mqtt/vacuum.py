@@ -54,6 +54,7 @@ POSSIBLE_STATES: dict[str, VacuumActivity] = {
     STATE_CLEANING: VacuumActivity.CLEANING,
 }
 
+CONF_SEGMENTS = "segments"
 CONF_CLEAN_SEGMENTS_COMMAND_TOPIC = "clean_segments_command_topic"
 CONF_CLEAN_SEGMENTS_COMMAND_TEMPLATE = "clean_segments_command_template"
 CONF_SUPPORTED_FEATURES = ATTR_SUPPORTED_FEATURES
@@ -142,17 +143,35 @@ MQTT_VACUUM_DOCS_URL = "https://www.home-assistant.io/integrations/vacuum.mqtt/"
 
 
 def validate_clean_area_config(config: ConfigType) -> ConfigType:
-    """Validate clean area config requires unique_id."""
+    """Check for a valid configuration and check segments."""
+    if config[CONF_SEGMENTS] and CONF_CLEAN_SEGMENTS_COMMAND_TOPIC not in config:
+        raise vol.Invalid(
+            f"Options `{CONF_SEGMENTS}` and "
+            f"`{CONF_CLEAN_SEGMENTS_COMMAND_TOPIC}` must be defined together"
+        )
     if CONF_CLEAN_SEGMENTS_COMMAND_TOPIC in config and not config.get(CONF_UNIQUE_ID):
         raise vol.Invalid(
             f"Option `{CONF_CLEAN_SEGMENTS_COMMAND_TOPIC}` requires"
             f" `{CONF_UNIQUE_ID}` to be configured"
         )
+    segments: list[str]
+    if segments := config[CONF_SEGMENTS]:
+        unique_segments: set[str] = set()
+        for segment in segments:
+            segment_id, _, _ = segment.partition(".")
+            if not segment_id or segment_id in unique_segments:
+                raise vol.Invalid(
+                    f"The `{CONF_SEGMENTS}` option contains an invalid or non-"
+                    f"unique segment ID '{segment_id}'. Got {segments}"
+                )
+            unique_segments.add(segment_id)
+
     return config
 
 
 _BASE_SCHEMA = MQTT_BASE_SCHEMA.extend(
     {
+        vol.Optional(CONF_SEGMENTS, default=[]): vol.All(cv.ensure_list, [cv.string]),
         vol.Optional(CONF_CLEAN_SEGMENTS_COMMAND_TOPIC): valid_publish_topic,
         vol.Optional(CONF_CLEAN_SEGMENTS_COMMAND_TEMPLATE): cv.template,
         vol.Optional(CONF_FAN_SPEED_LIST, default=[]): vol.All(
@@ -253,6 +272,14 @@ class MqttStateVacuum(MqttEntity, StateVacuumEntity):
         )
         if CONF_CLEAN_SEGMENTS_COMMAND_TOPIC in config:
             self._attr_supported_features |= VacuumEntityFeature.CLEAN_AREA
+            if config[CONF_SEGMENTS]:
+                segments: list[str] = config[CONF_SEGMENTS]
+                self._segments = [
+                    Segment(id=segment_id, name=name or segment_id)
+                    for segment_id, _, name in [
+                        segment.partition(".") for segment in segments
+                    ]
+                ]
             self._clean_segments_command_topic = config[
                 CONF_CLEAN_SEGMENTS_COMMAND_TOPIC
             ]

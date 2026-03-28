@@ -98,6 +98,30 @@ CONFIG_CLEAN_SEGMENTS = {
     }
 }
 
+CONFIG_CLEAN_SEGMENTS_1 = {
+    mqtt.DOMAIN: {
+        vacuum.DOMAIN: {
+            "name": "test",
+            "unique_id": "veryunique",
+            "state_topic": "vacuum/state",
+            "segments": ["Livingroom", "Kitchen"],
+            "clean_segments_command_topic": "vacuum/clean_segment",
+        }
+    }
+}
+
+CONFIG_CLEAN_SEGMENTS_2 = {
+    mqtt.DOMAIN: {
+        vacuum.DOMAIN: {
+            "name": "test",
+            "unique_id": "veryunique",
+            "state_topic": "vacuum/state",
+            "segments": ["1.Livingroom", "2.Kitchen"],
+            "clean_segments_command_topic": "vacuum/clean_segment",
+        }
+    }
+}
+
 DEFAULT_CONFIG_2 = {mqtt.DOMAIN: {vacuum.DOMAIN: {"name": "test"}}}
 
 CONFIG_ALL_SERVICES = help_custom_config(
@@ -482,6 +506,64 @@ async def test_clean_segments_command_update(
     ]
 
 
+@pytest.mark.parametrize(
+    "hass_config",
+    [
+        {
+            mqtt.DOMAIN: {
+                vacuum.DOMAIN: {
+                    "name": "test",
+                    "unique_id": "veryunique",
+                    "segments": ["Livingroom", "Kitchen", "Kitchen"],
+                    "clean_segments_command_topic": "vacuum/clean_segment",
+                }
+            }
+        },
+        {
+            mqtt.DOMAIN: {
+                vacuum.DOMAIN: {
+                    "name": "test",
+                    "unique_id": "veryunique",
+                    "segments": ["Livingroom", "Kitchen", ""],
+                    "clean_segments_command_topic": "vacuum/clean_segment",
+                }
+            }
+        },
+        {
+            mqtt.DOMAIN: {
+                vacuum.DOMAIN: {
+                    "name": "test",
+                    "unique_id": "veryunique",
+                    "segments": ["1.Livingroom", "1.Kitchen"],
+                    "clean_segments_command_topic": "vacuum/clean_segment",
+                }
+            }
+        },
+        {
+            mqtt.DOMAIN: {
+                vacuum.DOMAIN: {
+                    "name": "test",
+                    "unique_id": "veryunique",
+                    "segments": ["1.Livingroom", "1.Kitchen", ".Diningroom"],
+                    "clean_segments_command_topic": "vacuum/clean_segment",
+                }
+            }
+        },
+    ],
+)
+async def test_non_unique_segments(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test with non-unique list of cleanable segments with valid segment IDs."""
+    await mqtt_mock_entry()
+    assert (
+        "The `segments` option contains an invalid or non-unique segment ID"
+        in caplog.text
+    )
+
+
 @pytest.mark.usefixtures("hass")
 @pytest.mark.parametrize(
     ("hass_config", "error_message"),
@@ -491,6 +573,29 @@ async def test_clean_segments_command_update(
                 vacuum.DOMAIN,
                 DEFAULT_CONFIG,
                 ({"clean_segments_command_topic": "test-topic"},),
+            ),
+            "Option `clean_segments_command_topic` requires"
+            " `unique_id` to be configured",
+        ),
+        (
+            help_custom_config(
+                vacuum.DOMAIN,
+                DEFAULT_CONFIG,
+                ({"segments": ["Livingroom"]},),
+            ),
+            "Options `segments` and "
+            "`clean_segments_command_topic` must be defined together",
+        ),
+        (
+            help_custom_config(
+                vacuum.DOMAIN,
+                DEFAULT_CONFIG,
+                (
+                    {
+                        "segments": ["Livingroom"],
+                        "clean_segments_command_topic": "test-topic",
+                    },
+                ),
             ),
             "Option `clean_segments_command_topic` requires"
             " `unique_id` to be configured",
@@ -574,6 +679,76 @@ async def test_clean_segments_command_with_command_template(
         {"id": "1", "name": "Livingroom", "group": None},
         {"id": "2", "name": "Kitchen", "group": None},
     ]
+
+
+@pytest.mark.parametrize("hass_config", [CONFIG_CLEAN_SEGMENTS_2])
+async def test_clean_segments_config_overridden_by_state_topic(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    entity_registry: er.EntityRegistry,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+) -> None:
+    """Test segments from config are overridden by state topic segments."""
+    mqtt_mock = await mqtt_mock_entry()
+    entity_registry.async_update_entity_options(
+        "vacuum.test",
+        vacuum.DOMAIN,
+        {
+            "area_mapping": {"Livingroom": ["1"], "Kitchen": ["2"]},
+            "last_seen_segments": [
+                {"id": "1", "name": "Livingroom"},
+                {"id": "2", "name": "Kitchen"},
+            ],
+        },
+    )
+    await hass.async_block_till_done()
+
+    # Verify initial segments from config
+    client = await hass_ws_client(hass)
+    await client.send_json_auto_id(
+        {"type": "vacuum/get_segments", "entity_id": "vacuum.test"}
+    )
+    msg = await client.receive_json()
+    assert msg["success"]
+    assert msg["result"]["segments"] == [
+        {"id": "1", "name": "Livingroom", "group": None},
+        {"id": "2", "name": "Kitchen", "group": None},
+    ]
+
+    issue_registry = ir.async_get(hass)
+    assert len(issue_registry.issues) == 0
+
+    # Send updated segments via state topic — adds a new segment
+    async_fire_mqtt_message(
+        hass,
+        "vacuum/state",
+        json.dumps(
+            {"segments": {"1": "Livingroom", "2": "Kitchen", "3": "Diningroom"}}
+        ),
+    )
+    await hass.async_block_till_done()
+
+    # Segments should be overridden by state topic
+    await client.send_json_auto_id(
+        {"type": "vacuum/get_segments", "entity_id": "vacuum.test"}
+    )
+    msg = await client.receive_json()
+    assert msg["success"]
+    assert msg["result"]["segments"] == [
+        {"id": "1", "name": "Livingroom", "group": None},
+        {"id": "2", "name": "Kitchen", "group": None},
+        {"id": "3", "name": "Diningroom", "group": None},
+    ]
+
+    # A repair flow should start because segments changed vs last_seen
+    assert len(issue_registry.issues) == 1
+
+    # Clean area should use the new segments
+    await common.async_clean_area(hass, ["Kitchen"], entity_id="vacuum.test")
+    assert (
+        call("vacuum/clean_segment", '["2"]', 0, False)
+        in mqtt_mock.async_publish.mock_calls
+    )
 
 
 @pytest.mark.parametrize("hass_config", [CONFIG_ALL_SERVICES])
