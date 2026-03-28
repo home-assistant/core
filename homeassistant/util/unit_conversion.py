@@ -191,7 +191,10 @@ class BaseUnitConverter:
             return lambda val: val
         convert_ops = cls._get_from_to_ops(from_unit, to_unit)
         if not cls._is_operation_list(convert_ops):
-            return lambda val: val * convert_ops
+            (from_ratio, to_ratio, is_inverse) = convert_ops
+            if is_inverse:
+                return lambda val: to_ratio / (val / from_ratio)
+            return lambda val: (val / from_ratio) * to_ratio
         return partial(BaseUnitConverter._convert_fn, ops=convert_ops)
 
     @classmethod
@@ -204,7 +207,12 @@ class BaseUnitConverter:
             return lambda val: val
         convert_ops = cls._get_from_to_ops(from_unit, to_unit)
         if not cls._is_operation_list(convert_ops):
-            return lambda val: None if val is None else val * convert_ops
+            (from_ratio, to_ratio, is_inverse) = convert_ops
+            if is_inverse:
+                return lambda val: (
+                    None if val is None or val == 0 else to_ratio / (val / from_ratio)
+                )
+            return lambda val: None if val is None else (val / from_ratio) * to_ratio
         return partial(BaseUnitConverter._convert_allow_none_fn, ops=convert_ops)
 
     @classmethod
@@ -215,7 +223,8 @@ class BaseUnitConverter:
             return 1
         convert_ops = cls._get_from_to_ops(to_unit, from_unit, True)
         if not cls._is_operation_list(convert_ops):
-            return convert_ops
+            (from_ratio, to_ratio, _is_inverse) = convert_ops
+            return to_ratio / from_ratio
         return BaseUnitConverter._convert_fn(1, convert_ops)
 
     @classmethod
@@ -254,17 +263,15 @@ class BaseUnitConverter:
     @lru_cache
     def _get_from_to_ops(
         cls, from_unit: str | None, to_unit: str | None, for_ratio: bool = False
-    ) -> list[UnitConvertOp] | float:
+    ) -> list[UnitConvertOp] | tuple[float, float, bool]:
         """Get either scale factor or operations to convert between two units."""
         from_info = cls._get_unit_info(from_unit)
         to_info = cls._get_unit_info(to_unit)
         # If both units are simple scale factors, optimise to single operation
-        if (
-            not BaseUnitConverter._is_operation_list(from_info)
-            and not BaseUnitConverter._is_operation_list(to_info)
-            and not cls._are_unit_inverses(from_unit, to_unit)
-        ):
-            return to_info / from_info
+        if not BaseUnitConverter._is_operation_list(
+            from_info
+        ) and not BaseUnitConverter._is_operation_list(to_info):
+            return (from_info, to_info, cls._are_unit_inverses(from_unit, to_unit))
         # Otherwise create required conversion steps
         from_op = cls._get_conversion_ops(from_unit, from_info, True, for_ratio)
         inverse_op = cls._get_inverse_ops(from_unit, to_unit, for_ratio)
@@ -325,9 +332,7 @@ class BaseUnitConverter:
         return (from_unit in cls._UNIT_INVERSES) != (to_unit in cls._UNIT_INVERSES)
 
     @staticmethod
-    def _is_operation_list(
-        op_info: list[Any] | float,
-    ) -> TypeIs[list[Any]]:
+    def _is_operation_list(op_info: Any) -> TypeIs[list[Any]]:
         return isinstance(op_info, list)
 
     @staticmethod
