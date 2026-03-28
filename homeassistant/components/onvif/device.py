@@ -500,8 +500,9 @@ class ONVIFDevice:
     ):
         """Perform a PTZ action on the camera.
 
-        Calling this service with continuous_duration = 0 disables automatic stopping
-        of the PTZ action.
+        For ContinuousMove operations, calling this service with
+        continuous_duration = 0 disables the automatic Stop call; other move
+        modes do not auto-stop.
         """
         if not self.capabilities.ptz:
             LOGGER.warning("PTZ actions are not supported on device '%s'", self.name)
