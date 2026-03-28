@@ -20,6 +20,7 @@ from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import config_validation as cv, issue_registry as ir
 from homeassistant.helpers.start import async_at_start
 from homeassistant.helpers.typing import ConfigType
+from homeassistant.util.hass_dict import HassKey
 
 from .const import (
     CONF_DEVICE_DESCRIPTOR,
@@ -44,6 +45,8 @@ from .const import (
 )
 
 _LOGGER = logging.getLogger(__name__)
+
+DATA_MANAGER: HassKey[KeyboardRemoteManager] = HassKey(DOMAIN)
 
 # Legacy YAML constants (used only for CONFIG_SCHEMA parsing)
 _DEVICE_DESCRIPTOR = "device_descriptor"
@@ -138,11 +141,9 @@ async def _async_import_yaml_device(
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a single keyboard remote device from a config entry."""
     # Get or create the shared manager
-    if DOMAIN not in hass.data:
+    if (manager := hass.data.get(DATA_MANAGER)) is None:
         manager = KeyboardRemoteManager(hass)
-        hass.data[DOMAIN] = manager
-    else:
-        manager = hass.data[DOMAIN]
+        hass.data[DATA_MANAGER] = manager
 
     # Create the device handler for this entry and register it
     handler = DeviceHandler(hass, entry)
@@ -161,13 +162,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a keyboard remote config entry."""
-    manager: KeyboardRemoteManager = hass.data[DOMAIN]
+    manager = hass.data[DATA_MANAGER]
     await manager.unregister_handler(entry.entry_id)
 
     # If this was the last loaded entry, tear down the shared manager
     if not hass.config_entries.async_loaded_entries(DOMAIN):
         await manager.async_stop()
-        hass.data.pop(DOMAIN, None)
+        hass.data.pop(DATA_MANAGER, None)
 
     return True
 
@@ -434,13 +435,17 @@ class DeviceHandler:
 
         # Check by-id or configured path
         device_path = self._device_path
-        if device_path and os.path.exists(device_path) and os.path.realpath(device_path) == real_path:
-                return True
+        if (
+            device_path
+            and os.path.exists(device_path)
+            and os.path.realpath(device_path) == real_path
+        ):
+            return True
 
         # Check original YAML descriptor
         yaml_descriptor = self._device_descriptor
         if yaml_descriptor and os.path.realpath(yaml_descriptor) == real_path:
-                return True
+            return True
 
         # Check by device name
         if self._device_name_config and dev.name == self._device_name_config:

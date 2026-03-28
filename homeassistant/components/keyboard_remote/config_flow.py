@@ -45,10 +45,9 @@ def _get_device_name(device_path: str) -> str | None:
         dev = InputDevice(os.path.realpath(device_path))
     except OSError:
         return None
-    try:
-        return dev.name
-    finally:
-        dev.close()
+    name = dev.name
+    dev.close()
+    return name
 
 
 def _scan_input_devices_sync() -> list[selector.SelectOptionDict]:
@@ -295,18 +294,9 @@ class KeyboardRemoteOptionsFlow(OptionsFlowWithReload):
                     {
                         vol.Required(CONF_KEY_TYPES): selector.SelectSelector(
                             selector.SelectSelectorConfig(
-                                options=[
-                                    selector.SelectOptionDict(
-                                        value="key_up", label="Key up"
-                                    ),
-                                    selector.SelectOptionDict(
-                                        value="key_down", label="Key down"
-                                    ),
-                                    selector.SelectOptionDict(
-                                        value="key_hold", label="Key hold"
-                                    ),
-                                ],
+                                options=["key_up", "key_down", "key_hold"],
                                 multiple=True,
+                                translation_key=CONF_KEY_TYPES,
                                 mode=selector.SelectSelectorMode.LIST,
                             )
                         ),
