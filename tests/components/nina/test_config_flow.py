@@ -21,6 +21,7 @@ from homeassistant.components.nina.const import (
     CONST_REGION_R_TO_U,
     CONST_REGION_V_TO_Z,
     DOMAIN,
+    SENSOR_SUFFIXES,
 )
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.core import HomeAssistant
@@ -289,7 +290,7 @@ async def test_options_flow_entity_removal(
         entity_registry, mock_config_entry.entry_id
     )
 
-    entities_per_slot = 6
+    entities_per_slot = len(SENSOR_SUFFIXES) + 1
 
     assert (
         len(entries)
