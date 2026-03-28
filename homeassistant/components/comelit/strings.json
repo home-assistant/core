@@ -113,9 +113,6 @@
     "humidity_while_off": {
       "message": "Cannot change humidity while off"
     },
-    "invalid_clima_data": {
-      "message": "Invalid 'clima' data"
-    },
     "update_failed": {
       "message": "Failed to update data: {error}"
     }
