@@ -224,8 +224,9 @@ class TtnDataSensor(TTNEntity, SensorEntity):
                 self._attr_suggested_display_precision = int(precision)
             except ValueError, TypeError:
                 _LOGGER.warning(
-                    "Invalid suggested_display_precision for %s: %r",
+                    "Invalid suggested_display_precision for %s (unique_id=%s): %r",
                     ttn_value.field_id,
+                    self.unique_id,
                     precision,
                 )
 
