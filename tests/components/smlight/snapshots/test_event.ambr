@@ -1,0 +1,74 @@
+# serializer version: 1
+# name: test_event_setup_ultima[event.mock_title_events-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'event_types': list([
+        'ir_code_received',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'event',
+    'entity_category': None,
+    'entity_id': 'event.mock_title_events',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Events',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Events',
+    'platform': 'smlight',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'event',
+    'unique_id': 'aa:bb:cc:dd:ee:ff_event',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_event_setup_ultima[event.mock_title_events-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'event_type': None,
+      'event_types': list([
+        'ir_code_received',
+      ]),
+      'friendly_name': 'Mock Title Events',
+    }),
+    'context': <ANY>,
+    'entity_id': 'event.mock_title_events',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_ir_code_event
+  ReadOnlyDict({
+    'addr': '0xb683',
+    'cmd': '0x000b',
+    'event_type': 'ir_code_received',
+    'event_types': list([
+      'ir_code_received',
+    ]),
+    'friendly_name': 'Mock Title Events',
+    'proto': 8,
+    'raw': 'b5590d200d200c0b0c0a0c0a0d0a0c0a0d200d0a0c210c200d0a0c210c210c0a0c210c210c210c0a0c210c0a0d0a0c0a0d0a0c0a0c0b0c200d0a0c210c210c210c200d',
+    'repeat': 0,
+    'seq': 12,
+  })
+# ---
