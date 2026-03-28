@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import inspect
 from itertools import chain
+from typing import Any
 
 import pytest
 
@@ -63,6 +64,7 @@ from homeassistant.util.unit_conversion import (
     SulphurDioxideConcentrationConverter,
     TemperatureConverter,
     TemperatureDeltaConverter,
+    UnitConvertOpType,
     UnitlessRatioConverter,
     VolumeConverter,
     VolumeFlowRateConverter,
@@ -1581,3 +1583,125 @@ def test_temperature_delta_convert(
     """Test conversion to other units."""
     expected = pytest.approx(expected)
     assert TemperatureDeltaConverter.convert(value, from_unit, to_unit) == expected
+
+
+_TEST_CONVERTER_UNIT_CLASS = "test"
+_TEST_CONVERTER_INVERSE_UNITS = ["C", "D"]
+
+
+class TestConverter(BaseUnitConverter):
+    """Fake unit converter used to test JSON export."""
+
+    UNIT_CLASS = _TEST_CONVERTER_UNIT_CLASS
+    BASE_UNIT = "B"
+    VALID_UNITS = {"A", "B", "C", "D", "E"}
+    _UNIT_CONVERSION = {
+        # Simple number
+        "A": 10.0,
+        "B": 1.0,
+        # Single operation
+        "C": [
+            (UnitConvertOpType.OFFSET, 273.15),
+        ],
+        # Multiple operation samples
+        "D": [
+            (UnitConvertOpType.SCALE, 1.8),
+            (UnitConvertOpType.OFFSET, 32.0),
+        ],
+        # All operations
+        "E": [(op, param) for param, op in enumerate([*UnitConvertOpType], start=1)],
+    }
+
+    @classmethod
+    def set_test_properties(cls, prim, inverses):
+        """Overrides to test optional class fields."""
+        cls.IS_PRIMARY = prim
+        cls._UNIT_INVERSES = inverses if inverses is not None else set()
+
+
+@pytest.mark.parametrize(
+    ("is_primary", "inverses", "expected"),
+    [
+        # Primary with no inverses
+        (
+            True,
+            None,
+            {
+                _TEST_CONVERTER_UNIT_CLASS: {
+                    "base": "B",
+                    "units": {
+                        "A": 10.0,
+                        "B": 1.0,
+                        "C": [("offset", 273.15)],
+                        "D": [("scale", 1.8), ("offset", 32.0)],
+                        "E": [("scale", 1), ("offset", 2), ("power", 3), ("round", 4)],
+                    },
+                }
+            },
+        ),
+        # Secondary with no inverses
+        (
+            False,
+            None,
+            {
+                _TEST_CONVERTER_UNIT_CLASS: {
+                    "base": "B",
+                    "needs_class": True,
+                    "units": {
+                        "A": 10.0,
+                        "B": 1.0,
+                        "C": [("offset", 273.15)],
+                        "D": [("scale", 1.8), ("offset", 32.0)],
+                        "E": [("scale", 1), ("offset", 2), ("power", 3), ("round", 4)],
+                    },
+                }
+            },
+        ),
+        # Primary with inverses
+        (
+            True,
+            _TEST_CONVERTER_INVERSE_UNITS,
+            {
+                _TEST_CONVERTER_UNIT_CLASS: {
+                    "base": "B",
+                    "inverse": _TEST_CONVERTER_INVERSE_UNITS,
+                    "units": {
+                        "A": 10.0,
+                        "B": 1.0,
+                        "C": [("offset", 273.15)],
+                        "D": [("scale", 1.8), ("offset", 32.0)],
+                        "E": [("scale", 1), ("offset", 2), ("power", 3), ("round", 4)],
+                    },
+                }
+            },
+        ),
+        # Secondary with inverses
+        (
+            False,
+            _TEST_CONVERTER_INVERSE_UNITS,
+            {
+                _TEST_CONVERTER_UNIT_CLASS: {
+                    "base": "B",
+                    "inverse": _TEST_CONVERTER_INVERSE_UNITS,
+                    "needs_class": True,
+                    "units": {
+                        "A": 10.0,
+                        "B": 1.0,
+                        "C": [("offset", 273.15)],
+                        "D": [("scale", 1.8), ("offset", 32.0)],
+                        "E": [("scale", 1), ("offset", 2), ("power", 3), ("round", 4)],
+                    },
+                }
+            },
+        ),
+    ],
+)
+def test_dict_export(
+    is_primary: bool, inverses: set[str | None] | None, expected: dict[str, Any]
+) -> None:
+    """Test converter JSON export consistency."""
+    # Configure test converter
+    converter = TestConverter
+    converter.set_test_properties(is_primary, inverses)
+
+    assert expected == converter.as_dict()
