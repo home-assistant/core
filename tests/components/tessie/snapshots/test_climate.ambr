@@ -9,7 +9,6 @@
       'hvac_modes': list([
         <HVACMode.OFF: 'off'>,
         <HVACMode.COOL: 'cool'>,
-        <HVACMode.FAN_ONLY: 'fan_only'>,
       ]),
       'max_temp': 40,
       'min_temp': 30,
@@ -53,7 +52,6 @@
       'hvac_modes': list([
         <HVACMode.OFF: 'off'>,
         <HVACMode.COOL: 'cool'>,
-        <HVACMode.FAN_ONLY: 'fan_only'>,
       ]),
       'max_temp': 40,
       'min_temp': 30,
