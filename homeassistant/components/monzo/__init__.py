@@ -6,13 +6,16 @@ import logging
 
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.config_entry_oauth2_flow import (
+    ImplementationUnavailableError,
     OAuth2Session,
     async_get_config_entry_implementation,
 )
 
 from .api import AuthenticatedMonzoAPI
+from .const import DOMAIN
 from .coordinator import MonzoConfigEntry, MonzoCoordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -39,7 +42,13 @@ async def async_migrate_entry(hass: HomeAssistant, entry: MonzoConfigEntry) -> b
 
 async def async_setup_entry(hass: HomeAssistant, entry: MonzoConfigEntry) -> bool:
     """Set up Monzo from a config entry."""
-    implementation = await async_get_config_entry_implementation(hass, entry)
+    try:
+        implementation = await async_get_config_entry_implementation(hass, entry)
+    except ImplementationUnavailableError as err:
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="oauth2_implementation_unavailable",
+        ) from err
 
     session = OAuth2Session(hass, entry, implementation)
 
