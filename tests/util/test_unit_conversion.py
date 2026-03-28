@@ -1250,6 +1250,10 @@ def test_all_converters(converter: type[BaseUnitConverter]) -> None:
         "base unit does not have a conversion operation of scalar factor 1"
     )
 
+    assert converter._UNIT_INVERSES.issubset(converter.VALID_UNITS), (
+        "not all unit inverses are present in valid units"
+    )
+
     assert converter in _CONVERTED_VALUE, "converter is not present in _CONVERTED_VALUE"
     converted_value_items = _CONVERTED_VALUE[converter]
     for valid_unit in converter.VALID_UNITS:
