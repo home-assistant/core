@@ -82,7 +82,7 @@ def setup_bans(hass: HomeAssistant, app: Application, login_threshold: int) -> N
         ip_address_ = ip_address(service.data[CONF_IP_ADDRESS])
         await app[KEY_BAN_MANAGER].async_remove_ban(ip_address_)
 
-    hass.services.async_register(
+    hass.services.async_register_admin_service(
         DOMAIN,
         SERVICE_UNBAN,
         async_handle_unban_service,
