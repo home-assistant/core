@@ -9,6 +9,7 @@ from homeassistant.components.network import async_get_source_ip
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
@@ -22,8 +23,8 @@ from .const import (
     SWITCH_TYPE_PORTFORWARD,
     SWITCH_TYPE_PROFILE,
     SWITCH_TYPE_WIFINETWORK,
-    WIFI_STANDARD,
     MeshRoles,
+    Platform,
 )
 from .coordinator import FRITZ_DATA_KEY, AvmWrapper, FritzConfigEntry, FritzData
 from .entity import FritzBoxBaseEntity
@@ -34,6 +35,107 @@ _LOGGER = logging.getLogger(__name__)
 
 # Set a sane value to avoid too many updates
 PARALLEL_UPDATES = 5
+
+WIFI_STANDARD = {1: "2.4Ghz", 2: "5Ghz", 3: "5Ghz", 4: "Guest"}
+
+WIFI_SCHEMA = {
+    0: {"band": "2.4Ghz", "type": "Main"},
+    1: {"band": "5Ghz", "type": "Main"},
+    3: {"band": "5Ghz High / 6Ghz", "type": "Main"},
+}
+
+
+def _wifi_naming(
+    network_info: dict[str, Any], wifi_index: int, wifi_count: int
+) -> str | None:
+    """Return a friendly name for a Wi-Fi network."""
+
+    if wifi_index == 2 and wifi_count == 4:
+        # In case of 4 Wi-Fi networks, the 2nd one is used for internal communication
+        # between mesh devices and should not be named like the others to avoid confusion
+        return None
+
+    if (wifi_index + 1) == wifi_count:
+        # Last Wi-Fi network in the guest network, both bands available
+        return "Guest"
+
+    # Cast to correct type for type checker
+    result = WIFI_SCHEMA.get(wifi_index)
+    if result is not None:
+        return result["type"] + (f" {result['band']}" if result["band"] else "")
+
+    return None
+
+
+async def _get_wifi_networks_list(avm_wrapper: AvmWrapper) -> dict[int, dict[str, Any]]:
+    """Get a list of wifi networks with friendly names."""
+    wifi_count = len(
+        [
+            s
+            for s in avm_wrapper.connection.services
+            if s.startswith("WLANConfiguration")
+        ]
+    )
+    _LOGGER.debug("WiFi networks count: %s", wifi_count)
+    networks: dict[int, dict[str, Any]] = {}
+    for i in range(1, wifi_count + 1):
+        network_info = await avm_wrapper.async_get_wlan_configuration(i)
+        if (switch_name := _wifi_naming(network_info, i - 1, wifi_count)) is None:
+            continue
+        networks[i] = network_info
+        networks[i]["switch_name"] = switch_name
+
+    _LOGGER.debug("WiFi networks list: %s", networks)
+    return networks
+
+
+async def _migrate_to_new_unique_id(
+    hass: HomeAssistant, avm_wrapper: AvmWrapper
+) -> None:
+    """Migrate old unique ids to new unique ids."""
+
+    _LOGGER.debug("Migrating Wi-Fi switches")
+    entity_registry = er.async_get(hass)
+
+    networks = await _get_wifi_networks_list(avm_wrapper)
+    for index, network in networks.items():
+        old_unique_id_suffix = f"wi_fi_{network['NewSSID'].lower()}"
+        if (
+            len(
+                [
+                    j
+                    for j, n in networks.items()
+                    if slugify(n["NewSSID"]) == slugify(network["NewSSID"])
+                ]
+            )
+            > 1
+        ):
+            old_unique_id_suffix += f" ({WIFI_STANDARD[index]})"
+
+        new_unique_id_suffix = (
+            f"wi_fi_{slugify(_wifi_naming(network, index - 1, len(networks)))}"
+        )
+
+        entity_id = entity_registry.async_get_entity_id(
+            Platform.SWITCH, DOMAIN, f"{avm_wrapper.unique_id}-{old_unique_id_suffix}"
+        )
+
+        if entity_id is not None:
+            new_entity_id = entity_id.replace(
+                old_unique_id_suffix, new_unique_id_suffix
+            )
+            entity_registry.async_update_entity(
+                entity_id,
+                new_entity_id=new_entity_id,
+                new_unique_id=f"{avm_wrapper.unique_id}-{new_unique_id_suffix}",
+            )
+            _LOGGER.debug(
+                "Migrating Wi-FI switch [%s] unique_id and entity_id [%s]",
+                f"{avm_wrapper.unique_id}-{old_unique_id_suffix}",
+                entity_id,
+            )
+
+    _LOGGER.debug("Migration completed")
 
 
 async def _async_deflection_entities_list(
@@ -125,35 +227,7 @@ async def _async_wifi_entities_list(
     #
     # https://avm.de/fileadmin/user_upload/Global/Service/Schnittstellen/wlanconfigSCPD.pdf
     #
-    wifi_count = len(
-        [
-            s
-            for s in avm_wrapper.connection.services
-            if s.startswith("WLANConfiguration")
-        ]
-    )
-    _LOGGER.debug("WiFi networks count: %s", wifi_count)
-    networks: dict[int, dict[str, Any]] = {}
-    for i in range(1, wifi_count + 1):
-        network_info = await avm_wrapper.async_get_wlan_configuration(i)
-        # Devices with 4 WLAN services, use the 2nd for internal communications
-        if not (wifi_count == 4 and i == 2):
-            networks[i] = network_info
-    for i, network in networks.copy().items():
-        networks[i]["switch_name"] = network["NewSSID"]
-        if (
-            len(
-                [
-                    j
-                    for j, n in networks.items()
-                    if slugify(n["NewSSID"]) == slugify(network["NewSSID"])
-                ]
-            )
-            > 1
-        ):
-            networks[i]["switch_name"] += f" ({WIFI_STANDARD[i]})"
-
-    _LOGGER.debug("WiFi networks list: %s", networks)
+    networks = await _get_wifi_networks_list(avm_wrapper)
     return [
         FritzBoxWifiSwitch(avm_wrapper, device_friendly_name, index, data)
         for index, data in networks.items()
@@ -224,6 +298,8 @@ async def async_setup_entry(
     _LOGGER.debug("Fritzbox services: %s", avm_wrapper.connection.services)
 
     local_ip = await async_get_source_ip(avm_wrapper.hass, target_ip=avm_wrapper.host)
+
+    await _migrate_to_new_unique_id(hass, avm_wrapper)
 
     entities_list = await async_all_entities_list(
         avm_wrapper,
@@ -554,8 +630,12 @@ class FritzBoxWifiSwitch(FritzBoxBaseSwitch):
         )
         self._network_num = network_num
 
+        description = f"Wi-Fi {network_data['switch_name']}"
+        self._attr_translation_key = slugify(description)
+
+        _LOGGER.error("Switch: %s", description)
         switch_info = SwitchInfo(
-            description=f"Wi-Fi {network_data['switch_name']}",
+            description=description,
             friendly_name=device_friendly_name,
             icon="mdi:wifi",
             type=SWITCH_TYPE_WIFINETWORK,

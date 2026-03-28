@@ -3,13 +3,14 @@
 from __future__ import annotations
 
 from copy import deepcopy
-from unittest.mock import MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 from fritzconnection.core.exceptions import FritzActionError
 from fritzconnection.lib.fritzstatus import DefaultConnectionService
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.components.fritz import switch as fritz_switch
 from homeassistant.components.fritz.const import DOMAIN
 from homeassistant.components.switch import (
     DOMAIN as SWITCH_DOMAIN,
@@ -25,13 +26,15 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers.entity_registry import EntityRegistry
 
 from .conftest import FritzConnectionMock
 from .const import (
     MOCK_CALL_DEFLECTION_DATA,
     MOCK_FB_SERVICES,
     MOCK_HOST_ATTRIBUTES_DATA,
+    MOCK_MESH_MASTER_MAC,
     MOCK_USER_DATA,
 )
 
@@ -397,7 +400,7 @@ async def test_switch_device_no_ip_address(
             STATE_ON,
         ),
         (
-            "switch.mock_title_wi_fi_mywifi",
+            "switch.mock_title_wi_fi_guest",
             "async_set_wlan_configuration",
             STATE_ON,
         ),
@@ -455,3 +458,80 @@ async def test_switch_turn_on_off(
 
     assert (state := hass.states.get(entity_id))
     assert state.state == state_value
+
+
+async def test_migrate_to_new_unique_id(
+    hass: HomeAssistant,
+    fc_class_mock,
+    fh_class_mock,
+    fs_class_mock,
+    entity_registry: EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test migrate from old unique ids to new unique ids."""
+
+    MOCK_UNIQUE_ID = "1234567890"
+
+    entry = MockConfigEntry(
+        domain=DOMAIN, data=MOCK_USER_DATA, unique_id=MOCK_UNIQUE_ID
+    )
+    entry.add_to_hass(hass)
+
+    old_unique_id = f"{MOCK_MESH_MASTER_MAC}-wi_fi_mywifi"
+    new_unique_id = f"{MOCK_MESH_MASTER_MAC}-wi_fi_guest"
+
+    entity_registry.async_get_or_create(
+        suggested_object_id="mock_title_wi_fi_mywifi",
+        disabled_by=None,
+        domain=SWITCH_DOMAIN,
+        platform=DOMAIN,
+        unique_id=old_unique_id,
+        config_entry=entry,
+    )
+
+    device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers={(DOMAIN, MOCK_UNIQUE_ID)},
+        connections={
+            (dr.CONNECTION_NETWORK_MAC, MOCK_MESH_MASTER_MAC),
+        },
+    )
+    await hass.async_block_till_done()
+
+    entity_entry = entity_registry.async_get("switch.mock_title_wi_fi_mywifi")
+    assert entity_entry
+    assert entity_entry.unique_id == old_unique_id
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    entity_entry = entity_registry.async_get("switch.mock_title_wi_fi_guest")
+    assert entity_entry
+    assert entity_entry.unique_id == new_unique_id
+
+
+async def test_wifi_naming_internal_comm_and_skipped() -> None:
+    """Test skip internal Wi-Fi network."""
+    # Prepare AvmWrapper mock with 4 Wi-Fi networks
+    avm_wrapper = MagicMock()
+    avm_wrapper.connection.services = [
+        "WLANConfiguration1",
+        "WLANConfiguration2",
+        "WLANConfiguration3",
+        "WLANConfiguration4",
+    ]
+    # The 3rd network (index 2) should be skipped
+    wifi_configs = [
+        {"NewSSID": "wifi1"},
+        {"NewSSID": "wifi2"},
+        {"NewSSID": "wifi3"},
+        {"NewSSID": "wifi4"},
+    ]
+    avm_wrapper.async_get_wlan_configuration = AsyncMock(side_effect=wifi_configs)
+
+    networks = await fritz_switch._get_wifi_networks_list(avm_wrapper)
+    # The 3rd network (index 2) should be skipped
+    assert 3 not in networks  # 1-based index, so 3 is the 3rd
+    # The rest should be present
+    assert set(networks.keys()) == {1, 2, 4}
