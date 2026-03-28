@@ -11,6 +11,9 @@
     },
     "is_on": {
       "condition": "mdi:air-humidifier"
+    },
+    "is_target_humidity": {
+      "condition": "mdi:water-percent"
     }
   },
   "entity_component": {

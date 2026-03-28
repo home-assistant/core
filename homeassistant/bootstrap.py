@@ -242,12 +242,16 @@ DEFAULT_INTEGRATIONS = {
     #
     # Integrations providing triggers and conditions for base platforms:
     "air_quality",
+    "battery",
     "door",
     "garage_door",
     "gate",
     "humidity",
+    "illuminance",
+    "moisture",
     "motion",
     "occupancy",
+    "power",
     "temperature",
     "window",
 }

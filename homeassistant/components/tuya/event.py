@@ -3,9 +3,11 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any
 
-from tuya_device_handlers.device_wrapper.base import DeviceWrapper
+from tuya_device_handlers.definition.event import (
+    TuyaEventDefinition,
+    get_default_definition,
+)
 from tuya_device_handlers.device_wrapper.common import DPCodeTypeInformationWrapper
 from tuya_device_handlers.device_wrapper.event import (
     Base64Utf8RawEventWrapper,
@@ -128,13 +130,11 @@ async def async_setup_entry(
             device = manager.device_map[device_id]
             if descriptions := EVENTS.get(device.category):
                 entities.extend(
-                    TuyaEventEntity(
-                        device, manager, description, dpcode_wrapper=dpcode_wrapper
-                    )
+                    TuyaEventEntity(device, manager, description, definition)
                     for description in descriptions
                     if (
-                        dpcode_wrapper := description.wrapper_class.find_dpcode(
-                            device, description.key
+                        definition := get_default_definition(
+                            device, description.key, description.wrapper_class
                         )
                     )
                 )
@@ -158,12 +158,12 @@ class TuyaEventEntity(TuyaEntity, EventEntity):
         device: CustomerDevice,
         device_manager: Manager,
         description: EventEntityDescription,
-        dpcode_wrapper: DeviceWrapper[tuple[str, dict[str, Any] | None]],
+        definition: TuyaEventDefinition,
     ) -> None:
         """Init Tuya event entity."""
         super().__init__(device, device_manager, description)
-        self._dpcode_wrapper = dpcode_wrapper
-        self._attr_event_types = dpcode_wrapper.options
+        self._dpcode_wrapper = definition.event_wrapper
+        self._attr_event_types = definition.event_wrapper.options
 
     async def _process_device_update(
         self,
