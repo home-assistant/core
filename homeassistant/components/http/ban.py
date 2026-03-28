@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 from collections import defaultdict
 from collections.abc import Awaitable, Callable, Coroutine
 from contextlib import suppress
@@ -79,7 +80,14 @@ def setup_bans(hass: HomeAssistant, app: Application, login_threshold: int) -> N
         service: ServiceCall,
     ) -> None:
         """Handle calls to http.unban."""
-        ip_address_ = ip_address(service.data[CONF_IP_ADDRESS])
+        try:
+            ip_address_ = ip_address(service.data[CONF_IP_ADDRESS])
+        except ValueError:
+            _LOGGER.error(
+                "Invalid IP address provided for unban: %s",
+                service.data[CONF_IP_ADDRESS],
+            )
+            return
         await app[KEY_BAN_MANAGER].async_remove_ban(ip_address_)
 
     hass.services.async_register_admin_service(
@@ -235,6 +243,7 @@ class IpBanManager:
         self.hass = hass
         self.path = hass.config.path(IP_BANS_FILE)
         self.ip_bans_lookup: dict[IPv4Address | IPv6Address, IpBan] = {}
+        self.ip_bans_lock = asyncio.Lock()
 
     async def async_load(self) -> None:
         """Load the existing IP bans."""
@@ -282,16 +291,19 @@ class IpBanManager:
             str(ban.ip_address): {ATTR_BANNED_AT: ban.banned_at.isoformat()}
             for ban in self.ip_bans_lookup.values()
         }
+        ip_bans_yaml_data = yaml_util.dump(ip_bans)
         with open(self.path, "w", encoding="utf8") as out:
-            out.write(yaml_util.dump(ip_bans))
+            out.write(ip_bans_yaml_data)
 
     async def async_add_ban(self, remote_addr: IPv4Address | IPv6Address) -> None:
         """Add a new IP address to the banned list."""
         if remote_addr not in self.ip_bans_lookup:
             new_ban = self.ip_bans_lookup[remote_addr] = IpBan(remote_addr)
-            await self.hass.async_add_executor_job(self._add_ban, new_ban)
+            async with self.ip_bans_lock:
+                await self.hass.async_add_executor_job(self._add_ban, new_ban)
 
     async def async_remove_ban(self, remote_addr: IPv4Address | IPv6Address) -> None:
         """Remove a banned IP address from the banned list."""
         if self.ip_bans_lookup.pop(remote_addr, None):
-            await self.hass.async_add_executor_job(self._save_all_bans)
+            async with self.ip_bans_lock:
+                await self.hass.async_add_executor_job(self._save_all_bans)
