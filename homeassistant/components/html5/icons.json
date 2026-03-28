@@ -1,4 +1,11 @@
 {
+  "entity": {
+    "event": {
+      "event": {
+        "default": "mdi:gesture-tap-button"
+      }
+    }
+  },
   "services": {
     "dismiss": {
       "service": "mdi:bell-off"

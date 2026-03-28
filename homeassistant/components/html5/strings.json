@@ -20,6 +20,23 @@
       }
     }
   },
+  "entity": {
+    "event": {
+      "event": {
+        "state_attributes": {
+          "action": { "name": "Action" },
+          "event_type": {
+            "state": {
+              "clicked": "Clicked",
+              "closed": "Closed",
+              "received": "Received"
+            }
+          },
+          "tag": { "name": "Tag" }
+        }
+      }
+    }
+  },
   "exceptions": {
     "channel_expired": {
       "message": "Notification channel for {target} has expired"
