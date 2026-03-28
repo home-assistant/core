@@ -6,7 +6,16 @@
       'services': dict({
         'unban': dict({
           'fields': dict({
-            'ip_address': dict({}),
+            'ip_address': dict({
+              'example': '192.168.0.1',
+              'required': True,
+              'selector': dict({
+                'text': dict({
+                  'multiline': False,
+                  'multiple': False,
+                }),
+              }),
+            }),
           }),
         }),
       }),
