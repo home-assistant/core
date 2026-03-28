@@ -85,6 +85,18 @@
       "batteries": {
         "name": "Batteries"
       },
+      "battery_charge_energy": {
+        "name": "Battery {serial} charge energy today"
+      },
+      "battery_discharge_energy": {
+        "name": "Battery {serial} discharge energy today"
+      },
+      "battery_power": {
+        "name": "Battery {serial} power"
+      },
+      "battery_state_of_charge": {
+        "name": "Battery {serial} state of charge"
+      },
       "consumption_energy": {
         "name": "Consumed energy"
       },
@@ -138,18 +150,6 @@
       },
       "solar_power": {
         "name": "Solar power"
-      },
-      "battery_charge_energy": {
-        "name": "Battery {serial} charge energy today"
-      },
-      "battery_discharge_energy": {
-        "name": "Battery {serial} discharge energy today"
-      },
-      "battery_power": {
-        "name": "Battery {serial} power"
-      },
-      "battery_state_of_charge": {
-        "name": "Battery {serial} state of charge"
       },
       "storage_charge_energy": {
         "name": "Storage charge energy today"
