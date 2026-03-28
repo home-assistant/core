@@ -899,7 +899,9 @@ class AnthropicBaseLLMEntity(Entity):
             except anthropic.APIConnectionError as err:
                 self.entry.runtime_data.mark_unavailable()
                 raise HomeAssistantError(
-                    f"Connection error while talking to Anthropic: {err}"
+                    translation_domain=DOMAIN,
+                    translation_key="api_error",
+                    translation_placeholders={"message": err.message},
                 ) from err
             except anthropic.AnthropicError as err:
                 self.entry.runtime_data.mark_available()
