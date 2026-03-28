@@ -1238,6 +1238,18 @@ def test_all_converters(converter: type[BaseUnitConverter]) -> None:
     unit_ratio_item = _GET_UNIT_RATIO[converter]
     assert unit_ratio_item[0] != unit_ratio_item[1], "ratio units should be different"
 
+    assert converter.BASE_UNIT in converter.VALID_UNITS, (
+        "base unit not present in valid units"
+    )
+
+    assert converter._UNIT_CONVERSION.keys() == converter.VALID_UNITS, (
+        "set of valid units not equal to set of conversion keys"
+    )
+
+    assert converter._UNIT_CONVERSION[converter.BASE_UNIT] == 1, (
+        "base unit does not have a conversion operation of scalar factor 1"
+    )
+
     assert converter in _CONVERTED_VALUE, "converter is not present in _CONVERTED_VALUE"
     converted_value_items = _CONVERTED_VALUE[converter]
     for valid_unit in converter.VALID_UNITS:
