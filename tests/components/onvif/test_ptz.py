@@ -40,7 +40,7 @@ def _build_onvif_test_objects():
     )
 
     devicemgmt_service = MagicMock()
-    devicemgmt_service.GetSystemDateAndTime = AsyncMock(return_value=MagicMock())
+    devicemgmt_service.GetSystemDateAndTime = AsyncMock()
     devicemgmt_service.GetNetworkInterfaces = AsyncMock()
     devicemgmt_service.GetDeviceInformation = AsyncMock(
         return_value=SimpleNamespace(
