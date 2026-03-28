@@ -48,11 +48,11 @@ async def test_number_default_value(
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test number entity defaults to 10 minutes when enabled."""
-    with patch(
-        "homeassistant.components.unifi_access.PLATFORMS", [Platform.NUMBER]
-    ):
+    with patch("homeassistant.components.unifi_access.PLATFORMS", [Platform.NUMBER]):
         await setup_integration(hass, mock_config_entry)
-        entity_registry.async_update_entity(FRONT_DOOR_INTERVAL_ENTITY, disabled_by=None)
+        entity_registry.async_update_entity(
+            FRONT_DOOR_INTERVAL_ENTITY, disabled_by=None
+        )
         await hass.config_entries.async_reload(mock_config_entry.entry_id)
         await hass.async_block_till_done()
 
@@ -73,7 +73,9 @@ async def test_number_set_value_syncs_to_coordinator(
         [Platform.NUMBER, Platform.SELECT],
     ):
         await setup_integration(hass, mock_config_entry)
-        entity_registry.async_update_entity(FRONT_DOOR_INTERVAL_ENTITY, disabled_by=None)
+        entity_registry.async_update_entity(
+            FRONT_DOOR_INTERVAL_ENTITY, disabled_by=None
+        )
         await hass.config_entries.async_reload(mock_config_entry.entry_id)
         await hass.async_block_till_done()
 
@@ -96,9 +98,7 @@ async def test_number_not_created_when_lock_rules_unsupported(
 ) -> None:
     """Test that number entities are not created when lock rules are unsupported."""
     mock_client.get_door_lock_rule.side_effect = ApiNotFoundError()
-    with patch(
-        "homeassistant.components.unifi_access.PLATFORMS", [Platform.NUMBER]
-    ):
+    with patch("homeassistant.components.unifi_access.PLATFORMS", [Platform.NUMBER]):
         await setup_integration(hass, mock_config_entry)
 
     assert hass.states.get(FRONT_DOOR_INTERVAL_ENTITY) is None
@@ -111,11 +111,11 @@ async def test_number_restores_last_value(
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test number restores its last value after reload."""
-    with patch(
-        "homeassistant.components.unifi_access.PLATFORMS", [Platform.NUMBER]
-    ):
+    with patch("homeassistant.components.unifi_access.PLATFORMS", [Platform.NUMBER]):
         await setup_integration(hass, mock_config_entry)
-        entity_registry.async_update_entity(FRONT_DOOR_INTERVAL_ENTITY, disabled_by=None)
+        entity_registry.async_update_entity(
+            FRONT_DOOR_INTERVAL_ENTITY, disabled_by=None
+        )
         await hass.config_entries.async_reload(mock_config_entry.entry_id)
         await hass.async_block_till_done()
 

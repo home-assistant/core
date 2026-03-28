@@ -32,9 +32,7 @@ async def async_setup_entry(
             return
 
         created_door_ids: list[str] = [
-            door_id
-            for door_id in new_door_ids
-            if door_id in coordinator.data.doors
+            door_id for door_id in new_door_ids if door_id in coordinator.data.doors
         ]
         async_add_entities(
             UnifiAccessDoorLockRuleIntervalNumberEntity(
