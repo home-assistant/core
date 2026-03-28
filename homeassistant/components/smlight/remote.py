@@ -1,12 +1,19 @@
 """Remote platform for SLZB-Ultima."""
 
+import asyncio
 from collections.abc import Iterable
 from typing import Any
 
 from pysmlight.exceptions import SmlightError
 from pysmlight.models import IRPayload
 
-from homeassistant.components.remote import RemoteEntity
+from homeassistant.components.remote import (
+    ATTR_DELAY_SECS,
+    ATTR_NUM_REPEATS,
+    DEFAULT_DELAY_SECS,
+    DEFAULT_NUM_REPEATS,
+    RemoteEntity,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -43,14 +50,21 @@ class SmRemoteEntity(SmEntity, RemoteEntity):
 
     async def async_send_command(self, command: Iterable[str], **kwargs: Any) -> None:
         """Send a sequence of commands to a device."""
-        for cmd in command:
-            try:
-                await self.coordinator.async_execute_command(
-                    self.coordinator.client.actions.send_ir_code, IRPayload(code=cmd)
-                )
-            except SmlightError as err:
-                raise HomeAssistantError(
-                    translation_domain=DOMAIN,
-                    translation_key="send_ir_code_failed",
-                    translation_placeholders={"error": str(err)},
-                ) from err
+        num_repeats = kwargs.get(ATTR_NUM_REPEATS, DEFAULT_NUM_REPEATS)
+        delay_secs = kwargs.get(ATTR_DELAY_SECS, DEFAULT_DELAY_SECS)
+
+        for _ in range(num_repeats):
+            for cmd in command:
+                try:
+                    await self.coordinator.async_execute_command(
+                        self.coordinator.client.actions.send_ir_code,
+                        IRPayload(code=cmd),
+                    )
+                except SmlightError as err:
+                    raise HomeAssistantError(
+                        translation_domain=DOMAIN,
+                        translation_key="send_ir_code_failed",
+                        translation_placeholders={"error": str(err)},
+                    ) from err
+
+                await asyncio.sleep(delay_secs)

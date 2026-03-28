@@ -9,6 +9,8 @@ import pytest
 
 from homeassistant.components.remote import (
     ATTR_COMMAND,
+    ATTR_DELAY_SECS,
+    ATTR_NUM_REPEATS,
     DOMAIN as REMOTE_DOMAIN,
     SERVICE_SEND_COMMAND,
 )
@@ -116,3 +118,32 @@ async def test_remote_send_command_error(
             blocking=True,
         )
     assert exc_info.value.translation_key == "send_ir_code_failed"
+
+
+async def test_remote_send_command_repeats(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_smlight_client: MagicMock,
+) -> None:
+    """Test sending IR command with repeats and delay."""
+    mock_smlight_client.get_info.side_effect = None
+    mock_smlight_client.get_info.return_value = MOCK_ULTIMA
+    await setup_integration(hass, mock_config_entry)
+
+    entity_id = "remote.mock_title_ir_remote"
+    state = hass.states.get(entity_id)
+    assert state is not None
+
+    await hass.services.async_call(
+        REMOTE_DOMAIN,
+        SERVICE_SEND_COMMAND,
+        {
+            ATTR_ENTITY_ID: entity_id,
+            ATTR_COMMAND: ["my_code", "another_code"],
+            ATTR_NUM_REPEATS: 2,
+            ATTR_DELAY_SECS: 0.1,
+        },
+        blocking=True,
+    )
+
+    assert mock_smlight_client.actions.send_ir_code.call_count == 4
