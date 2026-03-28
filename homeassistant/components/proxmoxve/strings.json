@@ -105,8 +105,32 @@
   },
   "entity": {
     "binary_sensor": {
+      "node_backup_status": {
+        "name": "Backup status"
+      },
       "status": {
         "name": "Status"
+      },
+      "storage_active": {
+        "name": "Storage active",
+        "state": {
+          "off": "Inactive",
+          "on": "Active"
+        }
+      },
+      "storage_enabled": {
+        "name": "Storage enabled",
+        "state": {
+          "off": "Disabled",
+          "on": "Enabled"
+        }
+      },
+      "storage_shared": {
+        "name": "Storage shared",
+        "state": {
+          "off": "Not shared",
+          "on": "Shared"
+        }
       }
     },
     "button": {
@@ -118,6 +142,9 @@
       },
       "shutdown": {
         "name": "Shutdown"
+      },
+      "snapshot_create": {
+        "name": "Create snapshot"
       },
       "start": {
         "name": "Start"
@@ -174,6 +201,12 @@
       "container_uptime": {
         "name": "Uptime"
       },
+      "node_backup_duration": {
+        "name": "Backup duration"
+      },
+      "node_backup_last_backup": {
+        "name": "Last backup"
+      },
       "node_cpu": {
         "name": "CPU usage"
       },
@@ -204,6 +237,18 @@
       },
       "node_uptime": {
         "name": "Uptime"
+      },
+      "storage_available": {
+        "name": "Available storage"
+      },
+      "storage_total": {
+        "name": "Total storage"
+      },
+      "storage_used": {
+        "name": "Used storage"
+      },
+      "storage_used_percentage": {
+        "name": "Storage usage percentage"
       },
       "vm_cpu": {
         "name": "CPU usage"
@@ -269,6 +314,9 @@
     },
     "no_permission_node_power": {
       "message": "The configured Proxmox VE user does not have permission to manage the power state of nodes. Please grant the user the 'VM.PowerMgmt' permission and try again."
+    },
+    "no_permission_snapshot": {
+      "message": "The configured Proxmox VE user does not have permission to create snapshots of VMs and containers. Please grant the user the 'VM.Snapshot' permission and try again."
     },
     "no_permission_vm_lxc_power": {
       "message": "The configured Proxmox VE user does not have permission to manage the power state of VMs and containers. Please grant the user the 'VM.PowerMgmt' permission and try again."

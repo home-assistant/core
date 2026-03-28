@@ -29,6 +29,8 @@ from homeassistant.const import (
     CONF_PORT,
     CONF_USERNAME,
     CONF_VERIFY_SSL,
+    STATE_OFF,
+    STATE_ON,
 )
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -37,7 +39,7 @@ from homeassistant.setup import async_setup_component
 
 from . import setup_integration
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_load_json_array_fixture
 
 
 async def test_config_import(
@@ -233,6 +235,24 @@ async def test_migration_v1_to_v3(
     assert container_entity_after.unique_id == f"{entry.entry_id}_200_status"
 
 
+async def test_offline_node(
+    hass: HomeAssistant,
+    mock_proxmox_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test that an offline node doesn't cause the entire update to fail."""
+    mock_proxmox_client.nodes.get.return_value = mock_proxmox_client._all_nodes
+    await setup_integration(hass, mock_config_entry)
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+
+    state = hass.states.get("binary_sensor.pve1_status")
+    assert state.state == STATE_ON
+
+    state = hass.states.get("binary_sensor.pve3_status")
+    assert state.state == STATE_OFF
+
+
 async def test_migration_v2_to_v3(
     hass: HomeAssistant,
 ) -> None:
@@ -259,3 +279,69 @@ async def test_migration_v2_to_v3(
     assert entry.version == 3
     assert entry.data[CONF_AUTH_METHOD] == AUTH_PAM
     assert entry.data[CONF_REALM] == AUTH_PAM
+
+
+async def test_new_vm_creates_entity(
+    hass: HomeAssistant,
+    mock_proxmox_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test that a VM appearing after initial load gets an entity created."""
+    mock_proxmox_client._node_mock.qemu.get.return_value = []
+    await setup_integration(hass, mock_config_entry)
+    assert mock_config_entry.state == ConfigEntryState.LOADED
+
+    initial_count = len(
+        er.async_entries_for_config_entry(entity_registry, mock_config_entry.entry_id)
+    )
+
+    mock_proxmox_client._node_mock.qemu.get.return_value = (
+        await async_load_json_array_fixture(hass, "nodes/qemu.json", DOMAIN)
+    )
+
+    coordinator = mock_config_entry.runtime_data
+    await coordinator.async_refresh()
+    await hass.async_block_till_done()
+
+    assert (
+        len(
+            er.async_entries_for_config_entry(
+                entity_registry, mock_config_entry.entry_id
+            )
+        )
+        > initial_count
+    )
+
+
+async def test_new_container_creates_entity(
+    hass: HomeAssistant,
+    mock_proxmox_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test that a container appearing after initial load gets an entity created."""
+    mock_proxmox_client._node_mock.lxc.get.return_value = []
+    await setup_integration(hass, mock_config_entry)
+    assert mock_config_entry.state == ConfigEntryState.LOADED
+
+    initial_count = len(
+        er.async_entries_for_config_entry(entity_registry, mock_config_entry.entry_id)
+    )
+
+    mock_proxmox_client._node_mock.lxc.get.return_value = (
+        await async_load_json_array_fixture(hass, "nodes/lxc.json", DOMAIN)
+    )
+
+    coordinator = mock_config_entry.runtime_data
+    await coordinator.async_refresh()
+    await hass.async_block_till_done()
+
+    assert (
+        len(
+            er.async_entries_for_config_entry(
+                entity_registry, mock_config_entry.entry_id
+            )
+        )
+        > initial_count
+    )

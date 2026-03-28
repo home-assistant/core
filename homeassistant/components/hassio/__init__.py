@@ -666,7 +666,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
 
     # Init add-on ingress panels
     panels_task = hass.async_create_task(
-        async_setup_addon_panel(hass, hassio), eager_start=True
+        async_setup_addon_panel(hass), eager_start=True
     )
 
     # Make sure to await the update_info task before
