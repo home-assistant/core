@@ -118,16 +118,12 @@ async def test_initialization(
 
 @pytest.mark.parametrize("power_state", ["on", "warm-up"])
 async def test_on_state_init(
-    projector_from_address: MagicMock, hass: HomeAssistant, power_state: str
+    mocked_projector: MagicMock, hass: HomeAssistant, power_state: str
 ) -> None:
     """Test a device that is available."""
 
-    mocked_instance = projector_from_address.return_value
-
-    mocked_instance.get_name.return_value = "Test"
-    mocked_instance.get_power.return_value = power_state
-    mocked_instance.get_inputs.return_value = (("HDMI", 1),)
-    mocked_instance.get_input.return_value = ("HDMI", 1)
+    mocked_projector.get_power.return_value = power_state
+    mocked_projector.get_input.return_value = ("HDMI", 1)
 
     await setup_pjlink_entry(hass)
 
@@ -137,20 +133,10 @@ async def test_on_state_init(
     assert state.attributes["source"] == "HDMI 1"
 
 
-async def test_api_error(
-    projector_from_address: MagicMock, hass: HomeAssistant
-) -> None:
+async def test_api_error(mocked_projector: MagicMock, hass: HomeAssistant) -> None:
     """Test invalid api responses."""
 
-    mocked_instance = projector_from_address.return_value
-
-    mocked_instance.get_name.return_value = "Test"
-    mocked_instance.get_inputs.return_value = (
-        ("HDMI", 1),
-        ("HDMI", 2),
-        ("VGA", 1),
-    )
-    mocked_instance.get_power.side_effect = KeyError("OK")
+    mocked_projector.get_power.side_effect = KeyError("OK")
 
     await setup_pjlink_entry(hass)
 
