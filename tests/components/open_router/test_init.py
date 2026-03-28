@@ -15,17 +15,17 @@ from homeassistant.helpers import llm
 from tests.common import MockConfigEntry
 
 
-async def test_migrate_entry_from_v1_0_to_v1_1(
+async def test_migrate_entry_from_v1_1_to_v1_2(
     hass: HomeAssistant,
 ) -> None:
-    """Test migration from version 1.0 to 1.1."""
+    """Test migration from version 1.1 to 1.2."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         data={
             CONF_API_KEY: "bla",
         },
         version=1,
-        minor_version=0,
+        minor_version=1,
         subentries_data=[
             ConfigSubentryData(
                 data={
@@ -59,7 +59,7 @@ async def test_migrate_entry_from_v1_0_to_v1_1(
         await hass.async_block_till_done()
 
     assert entry.version == 1
-    assert entry.minor_version == 1
+    assert entry.minor_version == 2
 
     conversation_subentry = entry.subentries["conversation_subentry"]
     assert conversation_subentry.data[CONF_MODEL] == "openai/gpt-3.5-turbo"
@@ -75,7 +75,7 @@ async def test_migrate_entry_from_v1_0_to_v1_1(
 async def test_migrate_entry_already_migrated(
     hass: HomeAssistant,
 ) -> None:
-    """Test migration is skipped when already on version 1.1."""
+    """Test migration is skipped when already on version 1.2."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         data={
@@ -107,7 +107,7 @@ async def test_migrate_entry_already_migrated(
         await hass.async_block_till_done()
 
     assert entry.version == 1
-    assert entry.minor_version == 1
+    assert entry.minor_version == 2
 
     conversation_subentry = entry.subentries["conversation_subentry"]
     assert conversation_subentry.data[CONF_MODEL] == "openai/gpt-3.5-turbo"

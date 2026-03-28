@@ -265,11 +265,13 @@ class OpenRouterEntity(Entity):
 
         last_content = chat_log.content[-1]
 
+        # Handle attachments by adding them to the last user message
         if last_content.role == "user" and last_content.attachments:
             last_message: ChatCompletionMessageParam = model_args["messages"][-1]
             assert last_message["role"] == "user" and isinstance(
                 last_message["content"], str
             )
+            # Encode files with base64 and append them to the text prompt
             files = await async_prepare_files_for_prompt(
                 self.hass,
                 [(a.path, a.mime_type) for a in last_content.attachments],

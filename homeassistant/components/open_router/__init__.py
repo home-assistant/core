@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from types import MappingProxyType
-
 from openai import AsyncOpenAI, AuthenticationError, OpenAIError
 
 from homeassistant.config_entries import ConfigEntry
@@ -63,25 +61,26 @@ async def async_unload_entry(hass: HomeAssistant, entry: OpenRouterConfigEntry) 
 async def async_migrate_entry(
     hass: HomeAssistant, entry: OpenRouterConfigEntry
 ) -> bool:
-    """Migrate entry."""
+    """Migrate config entry."""
     LOGGER.debug("Migrating from version %s.%s", entry.version, entry.minor_version)
 
-    if entry.version > 1 or (entry.version == 1 and entry.minor_version > 1):
+    if entry.version > 1 or (entry.version == 1 and entry.minor_version > 2):
         return False
 
-    if entry.version == 1 and entry.minor_version < 1:
+    if entry.version == 1 and entry.minor_version < 2:
         for subentry in entry.subentries.values():
-            updated_data = dict(subentry.data)
-            if CONF_WEB_SEARCH not in updated_data:
-                updated_data[CONF_WEB_SEARCH] = False
+            if CONF_WEB_SEARCH in subentry.data:
+                continue
+
+            updated_data = {**subentry.data, CONF_WEB_SEARCH: False}
 
             hass.config_entries.async_update_subentry(
-                entry, subentry, data=MappingProxyType(updated_data)
+                entry, subentry, data=updated_data
             )
 
-        hass.config_entries.async_update_entry(entry, minor_version=1)
+        hass.config_entries.async_update_entry(entry, minor_version=2)
 
-    LOGGER.debug(
+    LOGGER.info(
         "Migration to version %s.%s successful", entry.version, entry.minor_version
     )
 

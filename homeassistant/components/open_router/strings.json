@@ -61,6 +61,8 @@
             "web_search": "Enable web search"
           },
           "data_description": {
+            "llm_hass_api": "Select which tools the model can use to interact with your devices and entities.",
+            "model": "The model to use for the conversation agent",
             "prompt": "Instruct how the LLM should respond. This can be a template.",
             "web_search": "Allow the model to search the web for answers"
           },

@@ -81,8 +81,7 @@ rules:
   exception-translations: todo
   icon-translations: todo
   reconfiguration-flow:
-    status: exempt
-    comment: main entry only stores API key; reconfiguration is handled via subentries
+    status: done
   repair-issues:
     status: exempt
     comment: the integration has no repairs
