@@ -13,7 +13,7 @@ from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.httpx_client import get_async_client
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import LOGGER
+from .const import DOMAIN, LOGGER
 
 UPDATE_INTERVAL_CONNECTED = timedelta(hours=12)
 UPDATE_INTERVAL_DISCONNECTED = timedelta(minutes=1)
@@ -56,9 +56,17 @@ class AnthropicCoordinator(DataUpdateCoordinator[None]):
         except anthropic.APITimeoutError as err:
             raise TimeoutError(err.message or str(err)) from err
         except anthropic.AuthenticationError as err:
-            raise ConfigEntryAuthFailed(err.message or str(err)) from err
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN,
+                translation_key="api_authentication_error",
+                translation_placeholders={"message": err.message},
+            ) from err
         except anthropic.APIError as err:
-            raise UpdateFailed(err.message or str(err)) from err
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="api_error",
+                translation_placeholders={"message": err.message},
+            ) from err
 
     def mark_connection_error(self) -> None:
         """Mark the connection as having an error and reschedule background check."""

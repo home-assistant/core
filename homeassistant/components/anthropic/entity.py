@@ -873,14 +873,16 @@ class AnthropicBaseLLMEntity(CoordinatorEntity[AnthropicCoordinator]):
                 await coordinator.async_request_refresh()
                 raise HomeAssistantError(
                     translation_domain=DOMAIN,
-                    translation_key="api_authentication_error" if isinstance(err, anthropic.AuthenticationError) else "api_error",
+                    translation_key="api_authentication_error",
                     translation_placeholders={"message": err.message},
                 ) from err
             except anthropic.APIConnectionError as err:
                 LOGGER.info("Connection error while talking to Anthropic: %s", err)
                 coordinator.mark_connection_error()
                 raise HomeAssistantError(
-                    f"Sorry, I had a problem talking to Anthropic: {err}"
+                    translation_domain=DOMAIN,
+                    translation_key="api_error",
+                    translation_placeholders={"message": err.message},
                 ) from err
             except anthropic.AnthropicError as err:
                 # Non-connection error, mark connection as healthy
