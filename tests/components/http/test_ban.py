@@ -102,7 +102,12 @@ async def test_unban(
 
     with patch("homeassistant.components.http.ban.open", m_open, create=True):
         for remote_address in BANNED_IPS:
-            await app[KEY_BAN_MANAGER].async_remove_ban(ip_address(remote_address))
+            await hass.services.async_call(
+                "http",
+                "unban",
+                {"ip_address": remote_address},
+                blocking=True,
+            )
 
     assert len(app[KEY_BAN_MANAGER]) == 0
 

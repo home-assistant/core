@@ -11,7 +11,7 @@
   },
   "services": {
     "unban": {
-      "description": "Remove a previously banned IP address from the list of banned IP addresses.",
+      "description": "Removes an IP address from the list of banned IP addresses.",
       "fields": {
         "ip_address": {
           "description": "IP address to remove from the list of banned IP addresses.",

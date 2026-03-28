@@ -202,7 +202,7 @@ def process_success_login(request: Request) -> None:
 
     Reset failed login attempts counter for remote IP address.
     No release IP address from banned list function, it can only be done by
-    manual modify ip bans config file or by calling the http.unban action.
+    manually modify ip bans config file or by calling the http.unban action.
     """
     app = request.app
     # Check if ban middleware is loaded
@@ -300,6 +300,6 @@ class IpBanManager:
 
     async def async_remove_ban(self, remote_addr: IPv4Address | IPv6Address) -> None:
         """Remove a banned IP address from the banned list."""
-        if self.ip_bans_lookup.pop(remote_addr, None):
-            async with self.ip_bans_lock:
+        async with self.ip_bans_lock:
+            if self.ip_bans_lookup.pop(remote_addr, None):
                 await self.hass.async_add_executor_job(self._save_all_bans)
