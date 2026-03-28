@@ -347,17 +347,18 @@ class SolarEdgeStorageDataService(SolarEdgeDataService):
         """Update the data from the SolarEdge Monitoring API."""
         now = dt_util.now()
         start_of_day = now.replace(hour=0, minute=0, second=0, microsecond=0)
-        try:
-            data = await self.api.get_storage_data(
-                self.site_id,
-                start_of_day,
-                now,
-            )
-            # Use direct key access to properly raise UpdateFailed on missing keys
-            storage_data = data["storageData"]
-            batteries = storage_data["batteries"]
-        except KeyError as ex:
-            raise UpdateFailed(f"Missing storage data key: {ex}") from ex
+        data = await self.api.get_storage_data(
+            self.site_id,
+            start_of_day,
+            now,
+        )
+        storage_data = data.get("storageData")
+        if storage_data is None:
+            raise UpdateFailed("Storage data not available from API")
+
+        batteries = storage_data.get("batteries")
+        if batteries is None:
+            raise UpdateFailed("Battery data not available from API")
 
         self.data = {}
         self.attributes = {}
@@ -369,42 +370,45 @@ class SolarEdgeStorageDataService(SolarEdgeDataService):
         # Aggregate totals across all batteries
         total_charge_energy = 0.0
         total_discharge_energy = 0.0
-        battery_count = len(batteries)
 
         for battery in batteries:
             serial = battery.get("serialNumber", "unknown")
             telemetries = battery.get("telemetries", [])
 
-            if len(telemetries) < 2:
+            if not telemetries:
                 continue
 
-            # Compute daily delta from lifetime counters
-            first = telemetries[0]
             latest = telemetries[-1]
-            charge_energy = latest.get("lifeTimeEnergyCharged", 0.0) - first.get(
-                "lifeTimeEnergyCharged", 0.0
+
+            # Per-battery current values
+            self.data[f"{serial}_state_of_charge"] = latest.get(
+                "batteryPercentageState"
             )
-            discharge_energy = latest.get("lifeTimeEnergyDischarged", 0.0) - first.get(
-                "lifeTimeEnergyDischarged", 0.0
-            )
+            self.data[f"{serial}_power"] = latest.get("power")
+
+            # Compute daily charge/discharge delta from lifetime counters
+            if len(telemetries) >= 2:
+                first = telemetries[0]
+                charge_energy = latest.get("lifeTimeEnergyCharged", 0.0) - first.get(
+                    "lifeTimeEnergyCharged", 0.0
+                )
+                discharge_energy = latest.get(
+                    "lifeTimeEnergyDischarged", 0.0
+                ) - first.get("lifeTimeEnergyDischarged", 0.0)
+            else:
+                charge_energy = 0.0
+                discharge_energy = 0.0
 
             total_charge_energy += charge_energy
             total_discharge_energy += discharge_energy
 
-            self.attributes[serial] = {
-                "charge_energy": charge_energy,
-                "discharge_energy": discharge_energy,
-                "state_of_charge": latest.get("batteryPercentageState"),
-                "power": latest.get("power"),
-            }
+            self.data[f"{serial}_charge_energy"] = charge_energy
+            self.data[f"{serial}_discharge_energy"] = discharge_energy
 
         self.data["charge_energy"] = total_charge_energy
         self.data["discharge_energy"] = total_discharge_energy
-        self.data["battery_count"] = battery_count
 
-        LOGGER.debug(
-            "Updated SolarEdge storage data: %s, %s", self.data, self.attributes
-        )
+        LOGGER.debug("Updated SolarEdge storage data: %s", self.data)
 
 
 class SolarEdgeModulesCoordinator(DataUpdateCoordinator[None]):

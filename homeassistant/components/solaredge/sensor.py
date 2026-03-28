@@ -228,6 +228,46 @@ SENSOR_TYPES = [
     ),
 ]
 
+# Per-battery sensor descriptions, created dynamically per serial number
+BATTERY_SENSOR_TYPES = [
+    SolarEdgeSensorEntityDescription(
+        key="battery_charge_energy",
+        json_key="charge_energy",
+        translation_key="battery_charge_energy",
+        entity_registry_enabled_default=False,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        device_class=SensorDeviceClass.ENERGY,
+    ),
+    SolarEdgeSensorEntityDescription(
+        key="battery_discharge_energy",
+        json_key="discharge_energy",
+        translation_key="battery_discharge_energy",
+        entity_registry_enabled_default=False,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        device_class=SensorDeviceClass.ENERGY,
+    ),
+    SolarEdgeSensorEntityDescription(
+        key="battery_state_of_charge",
+        json_key="state_of_charge",
+        translation_key="battery_state_of_charge",
+        entity_registry_enabled_default=False,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=PERCENTAGE,
+        device_class=SensorDeviceClass.BATTERY,
+    ),
+    SolarEdgeSensorEntityDescription(
+        key="battery_power",
+        json_key="power",
+        translation_key="battery_power",
+        entity_registry_enabled_default=False,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfPower.WATT,
+        device_class=SensorDeviceClass.POWER,
+    ),
+]
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -247,22 +287,24 @@ async def async_setup_entry(
         service.async_setup()
         await service.coordinator.async_refresh()
 
+    entities: list[SolarEdgeSensorEntity] = []
+
     # Set up storage sensors only if inventory shows batteries are present
-    # Returns: True (set up), False (no batteries), None (inventory failed)
     storage_result = sensor_factory.setup_storage_sensors()
-    if storage_result is True:
+    if isinstance(storage_result, list):
         await sensor_factory.storage_service.coordinator.async_refresh()
+        entities.extend(storage_result)
     elif storage_result is None:
         # Inventory fetch failed, register listener to retry when data arrives
         def on_inventory_update() -> None:
             """Handle inventory update to set up storage sensors."""
             result = sensor_factory.setup_storage_sensors()
-            if result is True:
+            if isinstance(result, list):
                 hass.async_create_task(
                     sensor_factory.storage_service.coordinator.async_refresh()
                 )
-                # Create and register storage entities now that services are available
-                storage_entities = []
+                # Create and register storage entities
+                storage_entities: list[SolarEdgeSensorEntity] = list(result)
                 for sensor_type in SENSOR_TYPES:
                     if sensor_type.key in (
                         "storage_charge_energy",
@@ -282,7 +324,6 @@ async def async_setup_entry(
         )
         entry.async_on_unload(unsub)
 
-    entities = []
     for sensor_type in SENSOR_TYPES:
         sensor = sensor_factory.create_sensor(sensor_type)
         if sensor is not None:
@@ -354,14 +395,13 @@ class SolarEdgeSensorFactory:
         ):
             self.services[key] = (SolarEdgeEnergyDetailsSensor, energy)
 
-    def setup_storage_sensors(self) -> bool | None:
+    def setup_storage_sensors(
+        self,
+    ) -> list[SolarEdgeSensorEntity] | bool | None:
         """Set up storage sensors if batteries are available.
 
-        This should be called after inventory data has been fetched to check
-        if the site has batteries before enabling storage data polling.
-
         Returns:
-            True: Storage sensors were set up successfully
+            list: Storage sensor entities to add
             False: Inventory confirmed no batteries present (don't retry)
             None: Inventory fetch failed, should retry later
         """
@@ -370,8 +410,9 @@ class SolarEdgeSensorFactory:
             LOGGER.debug("Inventory data not available, will retry later")
             return None
 
-        battery_count = self.inventory_service.data.get("batteries", 0)
-        if battery_count == 0:
+        battery_attr = self.inventory_service.attributes.get("batteries", {})
+        inventory_batteries = battery_attr.get("batteries", [])
+        if not inventory_batteries:
             LOGGER.debug("No batteries found in inventory, skipping storage sensors")
             return False
 
@@ -382,8 +423,19 @@ class SolarEdgeSensorFactory:
         for key in ("storage_charge_energy", "storage_discharge_energy"):
             self.services[key] = (SolarEdgeStorageDataSensor, self.storage_service)
 
-        LOGGER.debug("Storage sensors enabled, found %d batteries", battery_count)
-        return True
+        # Create per-battery entities
+        battery_entities: list[SolarEdgeSensorEntity] = []
+        for battery in inventory_batteries:
+            serial = battery.get("SN", battery.get("serialNumber", "unknown"))
+            battery_entities.extend(
+                SolarEdgeBatterySensor(sensor_type, self.storage_service, serial)
+                for sensor_type in BATTERY_SENSOR_TYPES
+            )
+
+        LOGGER.debug(
+            "Storage sensors enabled, found %d batteries", len(inventory_batteries)
+        )
+        return battery_entities
 
     def create_sensor(
         self, sensor_type: SolarEdgeSensorEntityDescription
@@ -540,14 +592,40 @@ class SolarEdgeStorageLevelSensor(SolarEdgeSensorEntity):
 
 
 class SolarEdgeStorageDataSensor(SolarEdgeSensorEntity):
-    """Representation of an SolarEdge storage data sensor."""
-
-    @property
-    def extra_state_attributes(self) -> dict[str, Any] | None:
-        """Return the state attributes with per-battery breakdown."""
-        return self.data_service.attributes or None
+    """Representation of an SolarEdge aggregate storage data sensor."""
 
     @property
     def native_value(self) -> float | None:
         """Return the state of the sensor."""
         return self.data_service.data.get(self.entity_description.json_key)
+
+
+class SolarEdgeBatterySensor(SolarEdgeSensorEntity):
+    """Representation of a per-battery SolarEdge sensor."""
+
+    def __init__(
+        self,
+        description: SolarEdgeSensorEntityDescription,
+        data_service: SolarEdgeStorageDataService,
+        serial: str,
+    ) -> None:
+        """Initialize the per-battery sensor."""
+        super().__init__(description, data_service)
+        self._serial = serial
+        self._attr_translation_placeholders = {"serial": serial}
+
+    @property
+    def unique_id(self) -> str | None:
+        """Return a unique ID."""
+        if not self.data_service.site_id:
+            return None
+        return (
+            f"{self.data_service.site_id}_{self._serial}_{self.entity_description.key}"
+        )
+
+    @property
+    def native_value(self) -> float | None:
+        """Return the state of the sensor."""
+        return self.data_service.data.get(
+            f"{self._serial}_{self.entity_description.json_key}"
+        )

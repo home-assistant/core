@@ -145,6 +145,18 @@
       "storage_discharge_energy": {
         "name": "Storage discharge energy today"
       },
+      "battery_charge_energy": {
+        "name": "Battery {serial} charge energy today"
+      },
+      "battery_discharge_energy": {
+        "name": "Battery {serial} discharge energy today"
+      },
+      "battery_state_of_charge": {
+        "name": "Battery {serial} state of charge"
+      },
+      "battery_power": {
+        "name": "Battery {serial} power"
+      },
       "storage_level": {
         "name": "Storage level"
       },
