@@ -348,13 +348,13 @@ def long_repr_strings() -> Generator[None]:
         arepr.maxother = original_maxother
 
 
-@pytest.fixture(autouse=True)
+@pytest_asyncio.fixture(autouse=True)
 def enable_event_loop_debug() -> None:
     """Enable event loop debug mode."""
     asyncio.get_event_loop().set_debug(True)
 
 
-@pytest.fixture(autouse=True)
+@pytest_asyncio.fixture(autouse=True)
 def verify_cleanup(
     expected_lingering_tasks: bool,
     expected_lingering_timers: bool,
