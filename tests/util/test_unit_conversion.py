@@ -1664,7 +1664,7 @@ class TestConverter(BaseUnitConverter):
         # Primary with inverses
         (
             True,
-            _TEST_CONVERTER_INVERSE_UNITS,
+            set(_TEST_CONVERTER_INVERSE_UNITS),
             {
                 _TEST_CONVERTER_UNIT_CLASS: {
                     "base": "B",
@@ -1682,7 +1682,7 @@ class TestConverter(BaseUnitConverter):
         # Secondary with inverses
         (
             False,
-            _TEST_CONVERTER_INVERSE_UNITS,
+            set(_TEST_CONVERTER_INVERSE_UNITS),
             {
                 _TEST_CONVERTER_UNIT_CLASS: {
                     "base": "B",
