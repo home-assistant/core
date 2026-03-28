@@ -55,6 +55,10 @@ EVENT_STARTED_TORRENT = "transmission_started_torrent"
 EVENT_REMOVED_TORRENT = "transmission_removed_torrent"
 EVENT_DOWNLOADED_TORRENT = "transmission_downloaded_torrent"
 
+EVENT_TYPE_STARTED = "started"
+EVENT_TYPE_REMOVED = "removed"
+EVENT_TYPE_DOWNLOADED = "downloaded"
+
 STATE_UP_DOWN = "up_down"
 STATE_SEEDING = "seeding"
 STATE_DOWNLOADING = "downloading"

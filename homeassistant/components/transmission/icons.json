@@ -8,6 +8,11 @@
         }
       }
     },
+    "event": {
+      "torrent": {
+        "default": "mdi:folder-file-outline"
+      }
+    },
     "sensor": {
       "active_torrents": {
         "default": "mdi:counter"
