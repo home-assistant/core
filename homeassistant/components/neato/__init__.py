@@ -2,14 +2,19 @@
 
 import logging
 
-import aiohttp
+from aiohttp import ClientError
 from pybotvac import Account
 from pybotvac.exceptions import NeatoException
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_TOKEN, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    ConfigEntryNotReady,
+    OAuth2TokenRequestError,
+    OAuth2TokenRequestReauthError,
+)
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.config_entry_oauth2_flow import (
     ImplementationUnavailableError,
@@ -58,10 +63,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     session = OAuth2Session(hass, entry, implementation)
     try:
         await session.async_ensure_token_valid()
-    except aiohttp.ClientResponseError as ex:
-        _LOGGER.debug("API error: %s (%s)", ex.code, ex.message)
-        if ex.code in (401, 403):
-            raise ConfigEntryAuthFailed("Token not valid, trigger renewal") from ex
+    except OAuth2TokenRequestReauthError as ex:
+        raise ConfigEntryAuthFailed from ex
+    except (OAuth2TokenRequestError, ClientError) as ex:
         raise ConfigEntryNotReady from ex
 
     neato_session = api.ConfigEntryAuth(hass, entry, implementation)
