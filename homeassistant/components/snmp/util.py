@@ -7,6 +7,7 @@ import logging
 from typing import Any
 
 from pysnmp.error import PySnmpError
+import pysnmp.hlapi.v3arch.asyncio as hlapi
 from pysnmp.hlapi.v3arch.asyncio import (
     CommunityData,
     ContextData,
@@ -30,6 +31,7 @@ from .const import (
     CONF_COMMUNITY,
     CONF_PRIV_KEY,
     CONF_PRIV_PROTOCOL,
+    DEFAULT_AUTH_PROTOCOL,
     DEFAULT_COMMUNITY,
     DEFAULT_PRIV_PROTOCOL,
     MAP_AUTH_PROTOCOLS,
@@ -64,18 +66,18 @@ def create_auth_data(
     if version == "3":
         username: str = data[CONF_USERNAME]
         auth_key: str | None = data.get(CONF_AUTH_KEY)
-        auth_proto: str | None = data.get(CONF_AUTH_PROTOCOL)
+        auth_proto: str = data.get(CONF_AUTH_PROTOCOL, DEFAULT_AUTH_PROTOCOL)
         priv_key: str | None = data.get(CONF_PRIV_KEY)
         priv_proto: str = data.get(CONF_PRIV_PROTOCOL, DEFAULT_PRIV_PROTOCOL)
 
         return UsmUserData(
             username,
             authKey=auth_key,
-            authProtocol=MAP_AUTH_PROTOCOLS.get(auth_proto) if auth_proto else None,
+            authProtocol=getattr(hlapi, MAP_AUTH_PROTOCOLS[auth_proto]),
             privKey=priv_key,
-            privProtocol=MAP_PRIV_PROTOCOLS.get(priv_proto)
+            privProtocol=getattr(hlapi, MAP_PRIV_PROTOCOLS[priv_proto])
             if (data.get(CONF_PRIV_PROTOCOL) or priv_key)
-            else None,
+            else getattr(hlapi, MAP_PRIV_PROTOCOLS["none"]),
         )
 
     community: str = data.get(CONF_COMMUNITY, DEFAULT_COMMUNITY)
