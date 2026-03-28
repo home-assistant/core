@@ -84,6 +84,11 @@
         "name": "Ambilight"
       }
     },
+    "remote": {
+      "remote": {
+        "name": "IR Remote"
+      }
+    },
     "sensor": {
       "core_temperature": {
         "name": "Core chip temp"
@@ -159,6 +164,9 @@
     },
     "firmware_update_failed": {
       "message": "Firmware update failed for {device_name}."
+    },
+    "send_ir_code_failed": {
+      "message": "Failed to send IR code: {error}."
     }
   },
   "issues": {
