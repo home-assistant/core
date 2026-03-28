@@ -6,7 +6,7 @@ from unifi_access_api import Door
 
 from homeassistant.components.number import NumberDeviceClass, NumberMode, RestoreNumber
 from homeassistant.const import EntityCategory, UnitOfTime
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DEFAULT_LOCK_RULE_INTERVAL
@@ -23,11 +23,25 @@ async def async_setup_entry(
 ) -> None:
     """Set up UniFi Access number entities."""
     coordinator = entry.runtime_data
-    if coordinator.data.supports_lock_rules:
+    added_doors: set[str] = set()
+
+    @callback
+    def _async_add_lock_rule_numbers() -> None:
+        new_door_ids = sorted(coordinator.get_lock_rule_sensor_door_ids() - added_doors)
+        if not new_door_ids:
+            return
+
         async_add_entities(
-            UnifiAccessDoorLockRuleIntervalNumberEntity(coordinator, door)
-            for door in coordinator.data.doors.values()
+            UnifiAccessDoorLockRuleIntervalNumberEntity(
+                coordinator, coordinator.data.doors[door_id]
+            )
+            for door_id in new_door_ids
+            if door_id in coordinator.data.doors
         )
+        added_doors.update(new_door_ids)
+
+    _async_add_lock_rule_numbers()
+    entry.async_on_unload(coordinator.async_add_listener(_async_add_lock_rule_numbers))
 
 
 class UnifiAccessDoorLockRuleIntervalNumberEntity(UnifiAccessEntity, RestoreNumber):

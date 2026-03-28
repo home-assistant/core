@@ -62,6 +62,46 @@
         }
       }
     },
+    "image": {
+      "door_thumbnail": {
+        "name": "Thumbnail"
+      }
+    },
+    "number": {
+      "door_lock_rule_interval": {
+        "name": "Rule interval"
+      }
+    },
+    "select": {
+      "door_lock_rule": {
+        "name": "Lock rule",
+        "state": {
+          "custom": "Custom",
+          "keep_lock": "Keep locked",
+          "keep_unlock": "Keep unlocked",
+          "lock_early": "Lock early",
+          "reset": "Reset",
+          "schedule": "Schedule"
+        }
+      }
+    },
+    "sensor": {
+      "door_lock_rule": {
+        "name": "Lock rule",
+        "state": {
+          "custom": "Custom",
+          "keep_lock": "Locked",
+          "keep_unlock": "Unlocked",
+          "lock_early": "Lock early",
+          "lock_now": "Lock now",
+          "reset": "Reset",
+          "schedule": "Schedule"
+        }
+      },
+      "door_lock_rule_ended_time": {
+        "name": "Rule end time"
+      }
+    },
     "switch": {
       "evacuation": {
         "name": "Evacuation"
@@ -69,52 +109,17 @@
       "lockdown": {
         "name": "Lockdown"
       }
-    },
-    "sensor": {
-      "door_lock_rule": {
-        "name": "Door Lock Rule",
-        "state": {
-          "custom": "Custom",
-          "keep_lock": "Locked",
-          "keep_unlock": "Unlocked",
-          "lock_early": "Lock Early",
-          "lock_now": "Lock Now",
-          "reset": "Reset",
-          "schedule": "Schedule"
-        }
-      },
-      "door_lock_rule_ended_time": {
-        "name": "Rule End Time"
-      }
-    },
-    "select": {
-      "door_lock_rules": {
-        "name": "Door Lock Rule",
-        "state": {
-          "custom": "Custom (set interval)",
-          "keep_lock": "Keep it locked",
-          "keep_unlock": "Keep it unlocked",
-          "lock_early": "Lock early",
-          "reset": "Reset rule",
-          "schedule": "Schedule"
-        }
-      }
-    },
-    "number": {
-      "door_lock_rule_interval": {
-        "name": "Rule Interval"
-      }
     }
   },
   "exceptions": {
     "emergency_failed": {
       "message": "Failed to set emergency status."
     },
-    "unlock_failed": {
-      "message": "Failed to unlock the door."
-    },
     "lock_rule_failed": {
       "message": "Failed to update the door lock rule."
+    },
+    "unlock_failed": {
+      "message": "Failed to unlock the door."
     }
   }
 }

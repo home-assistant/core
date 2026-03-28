@@ -5,7 +5,7 @@ from __future__ import annotations
 from unifi_access_api import Door, DoorLockRuleType, UnifiAccessError
 
 from homeassistant.components.select import SelectEntity
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -23,17 +23,31 @@ async def async_setup_entry(
 ) -> None:
     """Set up UniFi Access select entities."""
     coordinator = entry.runtime_data
-    if coordinator.data.supports_lock_rules:
+    added_doors: set[str] = set()
+
+    @callback
+    def _async_add_lock_rule_selects() -> None:
+        new_door_ids = sorted(coordinator.get_lock_rule_sensor_door_ids() - added_doors)
+        if not new_door_ids:
+            return
+
         async_add_entities(
-            UnifiAccessDoorLockRuleSelectEntity(coordinator, door)
-            for door in coordinator.data.doors.values()
+            UnifiAccessDoorLockRuleSelectEntity(
+                coordinator, coordinator.data.doors[door_id]
+            )
+            for door_id in new_door_ids
+            if door_id in coordinator.data.doors
         )
+        added_doors.update(new_door_ids)
+
+    _async_add_lock_rule_selects()
+    entry.async_on_unload(coordinator.async_add_listener(_async_add_lock_rule_selects))
 
 
 class UnifiAccessDoorLockRuleSelectEntity(UnifiAccessEntity, SelectEntity):
     """Select entity for choosing the active temporary lock rule on a door."""
 
-    _attr_translation_key = "door_lock_rules"
+    _attr_translation_key = "door_lock_rule"
 
     def __init__(
         self,
@@ -50,9 +64,11 @@ class UnifiAccessDoorLockRuleSelectEntity(UnifiAccessEntity, SelectEntity):
         if rule_status is None or rule_status.type in (
             DoorLockRuleType.NONE,
             DoorLockRuleType.RESET,
+            DoorLockRuleType.LOCK_NOW,
         ):
             return None
-        return rule_status.type.value
+        value = rule_status.type.value
+        return value if value in self.options else None
 
     @property
     def options(self) -> list[str]:
@@ -65,6 +81,13 @@ class UnifiAccessDoorLockRuleSelectEntity(UnifiAccessEntity, SelectEntity):
         ):
             opts.extend(["schedule", "lock_early"])
         return opts
+
+    @property
+    def available(self) -> bool:
+        """Return whether the select should currently be shown as available."""
+        return super().available and (
+            self._door_id in self.coordinator.get_lock_rule_sensor_door_ids()
+        )
 
     async def async_select_option(self, option: str) -> None:
         """Apply the selected lock rule to the door."""
