@@ -146,13 +146,14 @@ async def test_config_flow_claim_timeout(hass: HomeAssistant) -> None:
             "homeassistant.components.energyid.config_flow.WebhookClient",
             return_value=mock_unclaimed_client,
         ),
-        patch(
-            "homeassistant.components.energyid.config_flow.asyncio.sleep",
-        ) as mock_sleep,
+        patch("homeassistant.components.energyid.config_flow.POLLING_INTERVAL", new=0),
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
+
+        assert mock_unclaimed_client.authenticate.call_count == 0
+
         result_external = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
@@ -160,7 +161,16 @@ async def test_config_flow_claim_timeout(hass: HomeAssistant) -> None:
                 CONF_PROVISIONING_SECRET: TEST_PROVISIONING_SECRET,
             },
         )
+
         assert result_external["type"] is FlowResultType.EXTERNAL_STEP
+
+        # Wait for the polling to time out.
+        await hass.async_block_till_done()
+
+        # Verify polling actually ran the expected number of times
+        # +1 for the initial attempt before polling starts
+        assert mock_unclaimed_client.authenticate.call_count == MAX_POLLING_ATTEMPTS + 1
+        mock_unclaimed_client.authenticate.reset_mock()
 
         # Simulate polling timeout, then user continuing the flow
         result_after_timeout = await hass.config_entries.flow.async_configure(
@@ -169,13 +179,9 @@ async def test_config_flow_claim_timeout(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
         # After timeout, polling stops and user continues - should see external step again
+        assert mock_unclaimed_client.authenticate.call_count == 1
         assert result_after_timeout["type"] is FlowResultType.EXTERNAL_STEP
         assert result_after_timeout["step_id"] == "auth_and_claim"
-
-        # Verify polling actually ran the expected number of times
-        # Sleep happens at beginning of polling loop, so MAX_POLLING_ATTEMPTS + 1 sleeps
-        # but only MAX_POLLING_ATTEMPTS authentication attempts
-        assert mock_sleep.call_count == MAX_POLLING_ATTEMPTS + 1
 
 
 async def test_duplicate_unique_id_prevented(hass: HomeAssistant) -> None:
