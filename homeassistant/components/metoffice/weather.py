@@ -23,7 +23,6 @@ from homeassistant.components.weather import (
     Forecast as WeatherForecast,
     WeatherEntityFeature,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     UnitOfLength,
     UnitOfPressure,
@@ -42,40 +41,39 @@ from .const import (
     DAY_FORECAST_ATTRIBUTE_MAP,
     DOMAIN,
     HOURLY_FORECAST_ATTRIBUTE_MAP,
-    METOFFICE_COORDINATES,
-    METOFFICE_DAILY_COORDINATOR,
-    METOFFICE_HOURLY_COORDINATOR,
-    METOFFICE_NAME,
-    METOFFICE_TWICE_DAILY_COORDINATOR,
     NIGHT_FORECAST_ATTRIBUTE_MAP,
 )
-from .coordinator import MetOfficeUpdateCoordinator
+from .coordinator import (
+    MetOfficeConfigEntry,
+    MetOfficeRuntimeData,
+    MetOfficeUpdateCoordinator,
+)
 from .helpers import get_attribute
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: MetOfficeConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Met Office weather sensor platform."""
     entity_registry = er.async_get(hass)
-    hass_data = hass.data[DOMAIN][entry.entry_id]
+    hass_data = entry.runtime_data
 
     # Remove daily entity from legacy config entries
     if entity_id := entity_registry.async_get_entity_id(
         WEATHER_DOMAIN,
         DOMAIN,
-        f"{hass_data[METOFFICE_COORDINATES]}_daily",
+        f"{hass_data.coordinates}_daily",
     ):
         entity_registry.async_remove(entity_id)
 
     async_add_entities(
         [
             MetOfficeWeather(
-                hass_data[METOFFICE_DAILY_COORDINATOR],
-                hass_data[METOFFICE_HOURLY_COORDINATOR],
-                hass_data[METOFFICE_TWICE_DAILY_COORDINATOR],
+                hass_data.daily_coordinator,
+                hass_data.hourly_coordinator,
+                hass_data.twice_daily_coordinator,
                 hass_data,
             )
         ],
@@ -178,7 +176,7 @@ class MetOfficeWeather(
         coordinator_daily: MetOfficeUpdateCoordinator,
         coordinator_hourly: MetOfficeUpdateCoordinator,
         coordinator_twice_daily: MetOfficeUpdateCoordinator,
-        hass_data: dict[str, Any],
+        hass_data: MetOfficeRuntimeData,
     ) -> None:
         """Initialise the platform with a data instance."""
         observation_coordinator = coordinator_hourly
@@ -190,9 +188,9 @@ class MetOfficeWeather(
         )
 
         self._attr_device_info = get_device_info(
-            coordinates=hass_data[METOFFICE_COORDINATES], name=hass_data[METOFFICE_NAME]
+            coordinates=hass_data.coordinates, name=hass_data.name
         )
-        self._attr_unique_id = hass_data[METOFFICE_COORDINATES]
+        self._attr_unique_id = hass_data.coordinates
 
     @property
     def condition(self) -> str | None:

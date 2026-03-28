@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 import logging
 from typing import Literal
 
@@ -21,6 +22,19 @@ from homeassistant.helpers.update_coordinator import (
 from .const import DEFAULT_SCAN_INTERVAL
 
 _LOGGER = logging.getLogger(__name__)
+
+type MetOfficeConfigEntry = ConfigEntry[MetOfficeRuntimeData]
+
+
+@dataclass
+class MetOfficeRuntimeData:
+    """Met Office config entry."""
+
+    coordinates: str
+    hourly_coordinator: MetOfficeUpdateCoordinator
+    daily_coordinator: MetOfficeUpdateCoordinator
+    twice_daily_coordinator: MetOfficeUpdateCoordinator
+    name: str
 
 
 class MetOfficeUpdateCoordinator(TimestampDataUpdateCoordinator[Forecast]):

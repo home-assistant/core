@@ -47,8 +47,6 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from . import get_camera_from_cameras, is_acceptable_camera, listen_for_new_cameras
 from .const import (
     CONF_ACTION,
-    CONF_CLIENT,
-    CONF_COORDINATOR,
     CONF_STREAM_URL_TEMPLATE,
     CONF_SURVEILLANCE_PASSWORD,
     CONF_SURVEILLANCE_USERNAME,
@@ -98,7 +96,7 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up motionEye from a config entry."""
-    entry_data = hass.data[DOMAIN][entry.entry_id]
+    coordinator = hass.data[DOMAIN][entry.entry_id]
 
     @callback
     def camera_add(camera: dict[str, Any]) -> None:
@@ -112,8 +110,8 @@ async def async_setup_entry(
                     ),
                     entry.data.get(CONF_SURVEILLANCE_PASSWORD, ""),
                     camera,
-                    entry_data[CONF_CLIENT],
-                    entry_data[CONF_COORDINATOR],
+                    coordinator.client,
+                    coordinator,
                     entry.options,
                 )
             ]

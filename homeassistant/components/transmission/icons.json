@@ -1,5 +1,13 @@
 {
   "entity": {
+    "binary_sensor": {
+      "port_forwarding": {
+        "default": "mdi:shield-check",
+        "state": {
+          "off": "mdi:shield-off"
+        }
+      }
+    },
     "sensor": {
       "active_torrents": {
         "default": "mdi:counter"
@@ -13,11 +21,29 @@
       "paused_torrents": {
         "default": "mdi:counter"
       },
+      "session_download": {
+        "default": "mdi:download"
+      },
+      "session_ratio": {
+        "default": "mdi:swap-vertical"
+      },
+      "session_upload": {
+        "default": "mdi:upload"
+      },
       "started_torrents": {
         "default": "mdi:counter"
       },
+      "total_download": {
+        "default": "mdi:download-multiple"
+      },
+      "total_ratio": {
+        "default": "mdi:swap-vertical-bold"
+      },
       "total_torrents": {
         "default": "mdi:counter"
+      },
+      "total_upload": {
+        "default": "mdi:upload-multiple"
       },
       "transmission_status": {
         "default": "mdi:information-outline"
