@@ -1,7 +1,8 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Device is already configured"
+            "already_configured": "Device is already configured",
+            "reauth_successful": "Re-authentication was successful"
         },
         "error": {
             "cannot_connect": "Failed to connect",
@@ -9,6 +10,15 @@
             "unknown": "Unexpected error"
         },
         "step": {
+            "reauth_confirm": {
+                "data": {
+                    "api_token": "API token"
+                },
+                "data_description": {
+                    "api_token": "API token generated in the UniFi Access settings."
+                },
+                "description": "The API token for UniFi Access at {host} is invalid. Please provide a new token."
+            },
             "user": {
                 "data": {
                     "api_token": "API token",
@@ -52,34 +62,44 @@
                 }
             }
         },
+        "image": {
+            "door_thumbnail": {
+                "name": "Thumbnail"
+            }
+        },
+        "number": {
+            "door_lock_rule_interval": {
+                "name": "Rule interval"
+            }
+        },
         "select": {
-            "door_lock_rules": {
-                "name": "Door Lock Rule",
+            "door_lock_rule": {
+                "name": "Lock rule",
                 "state": {
-                    "custom": "Custom (set interval)",
-                    "keep_lock": "Keep it locked",
-                    "keep_unlock": "Keep it unlocked",
+                    "custom": "Custom",
+                    "keep_lock": "Keep locked",
+                    "keep_unlock": "Keep unlocked",
                     "lock_early": "Lock early",
-                    "reset": "Reset rule",
+                    "reset": "Reset",
                     "schedule": "Schedule"
                 }
             }
         },
         "sensor": {
             "door_lock_rule": {
-                "name": "Door Lock Rule",
+                "name": "Lock rule",
                 "state": {
                     "custom": "Custom",
                     "keep_lock": "Locked",
                     "keep_unlock": "Unlocked",
-                    "lock_early": "Lock Early",
-                    "lock_now": "Lock Now",
+                    "lock_early": "Lock early",
+                    "lock_now": "Lock now",
                     "reset": "Reset",
                     "schedule": "Schedule"
                 }
             },
             "door_lock_rule_ended_time": {
-                "name": "Rule End Time"
+                "name": "Rule end time"
             }
         },
         "switch": {
@@ -89,22 +109,17 @@
             "lockdown": {
                 "name": "Lockdown"
             }
-        },
-        "number": {
-            "door_lock_rule_interval": {
-                "name": "Rule Interval"
-            }
         }
     },
     "exceptions": {
         "emergency_failed": {
             "message": "Failed to set emergency status."
         },
-        "unlock_failed": {
-            "message": "Failed to unlock the door."
-        },
         "lock_rule_failed": {
             "message": "Failed to update the door lock rule."
+        },
+        "unlock_failed": {
+            "message": "Failed to unlock the door."
         }
     }
 }

@@ -26,12 +26,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Rule Interval',
+    'object_id_base': 'Rule interval',
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
-    'original_name': 'Rule Interval',
+    'original_name': 'Rule interval',
     'platform': 'unifi_access',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -45,7 +45,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
-      'friendly_name': 'Back Door Rule Interval',
+      'friendly_name': 'Back Door Rule interval',
       'max': 480,
       'min': 1,
       'mode': <NumberMode.BOX: 'box'>,
@@ -87,12 +87,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Rule Interval',
+    'object_id_base': 'Rule interval',
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
-    'original_name': 'Rule Interval',
+    'original_name': 'Rule interval',
     'platform': 'unifi_access',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -106,7 +106,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
-      'friendly_name': 'Front Door Rule Interval',
+      'friendly_name': 'Front Door Rule interval',
       'max': 480,
       'min': 1,
       'mode': <NumberMode.BOX: 'box'>,
