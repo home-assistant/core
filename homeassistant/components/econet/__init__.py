@@ -61,12 +61,7 @@ async def async_setup_entry(
         equipment = await api.get_equipment_by_type(
             [EquipmentType.WATER_HEATER, EquipmentType.THERMOSTAT]
         )
-    except (
-        ClientError,
-        GenericHTTPError,
-        InvalidResponseFormat,
-        ValueError,
-    ) as err:
+    except (ClientError, GenericHTTPError, InvalidResponseFormat) as err:
         raise ConfigEntryNotReady from err
 
     config_entry.runtime_data = equipment

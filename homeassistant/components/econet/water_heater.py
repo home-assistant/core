@@ -36,7 +36,6 @@ ECONET_STATE_TO_HA = {
     WaterHeaterOperationMode.ELECTRIC_MODE: STATE_ELECTRIC,
     WaterHeaterOperationMode.GAS: STATE_GAS,
     WaterHeaterOperationMode.PERFORMANCE: STATE_PERFORMANCE,
-    WaterHeaterOperationMode.VACATION: STATE_OFF,
 }
 HA_STATE_TO_ECONET = {value: key for key, value in ECONET_STATE_TO_HA.items()}
 
@@ -44,6 +43,13 @@ SUPPORT_FLAGS_HEATER = (
     WaterHeaterEntityFeature.TARGET_TEMPERATURE
     | WaterHeaterEntityFeature.OPERATION_MODE
 )
+
+
+def _operation_mode_to_ha(mode: WaterHeaterOperationMode | None) -> str:
+    """Translate an EcoNet operation mode to a Home Assistant state."""
+    if mode in (None, WaterHeaterOperationMode.VACATION):
+        return STATE_OFF
+    return ECONET_STATE_TO_HA[mode]
 
 
 async def async_setup_entry(
@@ -81,26 +87,22 @@ class EcoNetWaterHeater(EcoNetEntity[WaterHeater], WaterHeaterEntity):
     @property
     def current_operation(self) -> str:
         """Return current operation."""
-        econet_mode = self.water_heater.mode
-        _current_op = STATE_OFF
-        if econet_mode is not None:
-            _current_op = ECONET_STATE_TO_HA[econet_mode]
-
-        return _current_op
+        return _operation_mode_to_ha(self.water_heater.mode)
 
     @property
     def operation_list(self) -> list[str]:
         """List of available operation modes."""
-        econet_modes = self.water_heater.modes
-        operation_modes = set()
-        for mode in econet_modes:
-            if (
-                mode is not WaterHeaterOperationMode.UNKNOWN
-                and mode is not WaterHeaterOperationMode.VACATION
-            ):
-                ha_mode = ECONET_STATE_TO_HA[mode]
-                operation_modes.add(ha_mode)
-        return list(operation_modes)
+        return list(
+            dict.fromkeys(
+                ECONET_STATE_TO_HA[mode]
+                for mode in self.water_heater.modes
+                if mode
+                not in (
+                    WaterHeaterOperationMode.UNKNOWN,
+                    WaterHeaterOperationMode.VACATION,
+                )
+            )
+        )
 
     @property
     def supported_features(self) -> WaterHeaterEntityFeature:
