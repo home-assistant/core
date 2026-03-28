@@ -25,7 +25,6 @@ from ..coordinator import UnifiDataUpdateCoordinator
 from ..entity import UnifiEntity, UnifiEntityDescription
 
 if TYPE_CHECKING:
-    from .. import UnifiConfigEntry
     from .hub import UnifiHub
 
 CHECK_HEARTBEAT_INTERVAL = timedelta(seconds=1)
@@ -34,9 +33,10 @@ CHECK_HEARTBEAT_INTERVAL = timedelta(seconds=1)
 class UnifiEntityLoader:
     """UniFi Network integration handling platforms for entity registration."""
 
-    def __init__(self, hub: UnifiHub, config_entry: UnifiConfigEntry) -> None:
+    def __init__(self, hub: UnifiHub) -> None:
         """Initialize the UniFi entity loader."""
         self.hub = hub
+        config_entry = hub.config.entry
         self.api_updaters = (
             hub.api.clients.update,
             hub.api.clients_all.update,
