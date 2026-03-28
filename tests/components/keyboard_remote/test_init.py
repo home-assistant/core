@@ -545,8 +545,8 @@ async def test_monitor_input_oserror_cleanup(
 
     # Make async_read_loop return an async iterator that raises OSError
     async def _raise_oserror():
-        yield  # make it an async generator
         raise OSError("Device removed")
+        yield  # pylint: disable=unreachable
 
     mock_input_device.async_read_loop.return_value = _raise_oserror()
 
