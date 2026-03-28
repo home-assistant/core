@@ -20,9 +20,9 @@ class NinaEntity(CoordinatorEntity[NINADataUpdateCoordinator]):
         """Initialize."""
         super().__init__(coordinator)
 
-        self._region: str = region
-        self._warning_index: int = slot_id - 1
-        self._region_name: str = region_name
+        self._region = region
+        self._warning_index = slot_id - 1
+        self._region_name = region_name
 
         self._attr_translation_placeholders = {
             "slot_id": str(slot_id),
