@@ -3134,6 +3134,8 @@ async def test_getting_the_scanner_returns_the_wrapped_instance(
     """Test getting the scanner returns the wrapped instance."""
     scanner = bluetooth.async_get_scanner(hass)
     assert isinstance(scanner, HaBleakScannerWrapper)
+    scanner_backend = bluetooth.async_get_scanner_backend(hass)
+    assert issubclass(scanner_backend, HaBleakScannerWrapper)
 
 
 @pytest.mark.usefixtures("enable_bluetooth")
