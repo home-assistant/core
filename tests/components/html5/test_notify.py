@@ -33,6 +33,7 @@ from homeassistant.components.html5.notify import ATTR_ACTION, DEFAULT_TTL
 from homeassistant.components.notify import (
     ATTR_DATA,
     ATTR_MESSAGE,
+    ATTR_TARGET,
     ATTR_TITLE,
     DOMAIN as NOTIFY_DOMAIN,
     SERVICE_SEND_MESSAGE,
@@ -1144,7 +1145,7 @@ async def test_deprecation_action_call(
     await hass.services.async_call(
         NOTIFY_DOMAIN,
         DOMAIN,
-        {"message": "Hello", "target": target},
+        {ATTR_MESSAGE: "Hello", ATTR_TARGET: target},
         blocking=True,
     )
 
