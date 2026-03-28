@@ -43,7 +43,7 @@ async def async_get_config_entry_diagnostics(
         "client": f"{__title__}=={__version__}",
         "title": entry.title,
         "entry_id": entry.entry_id,
-        "entry_version": float(f"{entry.version}.{entry.minor_version}"),
+        "entry_version": f"{entry.version}.{entry.minor_version}",
         "state": entry.state.value,
         "data": async_redact_data(entry.data, TO_REDACT),
         "options": async_redact_data(entry.options, TO_REDACT),
