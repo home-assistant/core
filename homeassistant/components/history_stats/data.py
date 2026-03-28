@@ -8,7 +8,7 @@ import logging
 import math
 
 from homeassistant.components.recorder import get_instance, history
-from homeassistant.core import Event, EventStateChangedData, HomeAssistant, State
+from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers.template import Template
 from homeassistant.util import dt as dt_util
 
@@ -64,12 +64,10 @@ class HistoryStats:
         self._end = end
         self._preview = preview
 
-        self._pending_events: list[Event[EventStateChangedData]] = []
+        self._pending_events: list[State] = []
         self._query_count = 0
 
-    async def async_update(
-        self, event: Event[EventStateChangedData] | None
-    ) -> HistoryStatsState:
+    async def async_update(self, new_state: State | None) -> HistoryStatsState:
         """Update the stats at a given time."""
         # Get previous values of start and end
         previous_period_start, previous_period_end = self._period
@@ -99,8 +97,8 @@ class HistoryStats:
         # the first recorder query returns. In that case a second recorder query will be done
         # and we need to hold the new event so that we can append it after the second query.
         # Otherwise the event will be dropped.
-        if event:
-            self._pending_events.append(event)
+        if new_state:
+            self._pending_events.append(new_state)
 
         if current_period_start_timestamp > now_timestamp:
             # History cannot tell the future
@@ -135,7 +133,7 @@ class HistoryStats:
                 self._prune_history_cache(current_period_start_timestamp)
 
             new_data = False
-            if event and (new_state := event.data["new_state"]) is not None:
+            if new_state is not None:
                 if current_period_start_timestamp <= floored_timestamp(
                     new_state.last_changed
                 ):
@@ -156,16 +154,15 @@ class HistoryStats:
             await self._async_history_from_db(
                 current_period_start_timestamp, now_timestamp
             )
-            for pending_event in self._pending_events:
-                if (new_state := pending_event.data["new_state"]) is not None:
-                    if current_period_start_timestamp <= floored_timestamp(
-                        new_state.last_changed
-                    ):
-                        self._history_current_period.append(
-                            HistoryState(
-                                new_state.state, new_state.last_changed_timestamp
-                            )
+            for pending_state in self._pending_events:
+                if current_period_start_timestamp <= floored_timestamp(
+                    pending_state.last_changed
+                ):
+                    self._history_current_period.append(
+                        HistoryState(
+                            pending_state.state, pending_state.last_changed_timestamp
                         )
+                    )
 
             self._has_recorder_data = True
 
