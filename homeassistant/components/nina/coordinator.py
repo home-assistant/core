@@ -65,12 +65,6 @@ class NINADataUpdateCoordinator(
         ]
         self.area_filter: str = config_entry.data[CONF_FILTERS][CONF_AREA_FILTER]
 
-        self.device_info = DeviceInfo(
-            identifiers={(DOMAIN, config_entry.entry_id)},
-            manufacturer="NINA",
-            entry_type=DeviceEntryType.SERVICE,
-        )
-
         regions: dict[str, str] = config_entry.data[CONF_REGIONS]
         for region in regions:
             self._nina.add_region(region)

@@ -28,11 +28,8 @@ class NinaEntity(CoordinatorEntity[NINADataUpdateCoordinator]):
             "slot_id": str(slot_id),
         }
 
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return the device info."""
-        return DeviceInfo(
-            identifiers={(DOMAIN, f"{self._region}")},
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, self._region)},
             manufacturer="NINA",
             name=self._region_name,
             entry_type=DeviceEntryType.SERVICE,
