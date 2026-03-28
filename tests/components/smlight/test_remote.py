@@ -1,6 +1,6 @@
 """Tests for SLZB-Ultima remote entity."""
 
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 from pysmlight import Info
 from pysmlight.exceptions import SmlightError
@@ -24,7 +24,7 @@ from tests.common import MockConfigEntry
 
 
 @pytest.fixture
-def platforms() -> Platform | list[Platform]:
+def platforms() -> list[Platform]:
     """Platforms, which should be loaded during the test."""
     return [Platform.REMOTE]
 
@@ -83,7 +83,11 @@ async def test_remote_send_command(
     await hass.services.async_call(
         REMOTE_DOMAIN,
         SERVICE_SEND_COMMAND,
-        {ATTR_ENTITY_ID: entity_id, ATTR_COMMAND: ["my_code", "another_code"]},
+        {
+            ATTR_ENTITY_ID: entity_id,
+            ATTR_COMMAND: ["my_code", "another_code"],
+            ATTR_DELAY_SECS: 0,
+        },
         blocking=True,
     )
 
@@ -120,7 +124,9 @@ async def test_remote_send_command_error(
     assert exc_info.value.translation_key == "send_ir_code_failed"
 
 
+@patch("homeassistant.components.smlight.remote.asyncio.sleep")
 async def test_remote_send_command_repeats(
+    mock_sleep: MagicMock,
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_smlight_client: MagicMock,
@@ -141,9 +147,11 @@ async def test_remote_send_command_repeats(
             ATTR_ENTITY_ID: entity_id,
             ATTR_COMMAND: ["my_code", "another_code"],
             ATTR_NUM_REPEATS: 2,
-            ATTR_DELAY_SECS: 0.1,
+            ATTR_DELAY_SECS: 0.5,
         },
         blocking=True,
     )
 
     assert mock_smlight_client.actions.send_ir_code.call_count == 4
+    assert mock_sleep.call_count == 5
+    mock_sleep.assert_called_with(0.5)
