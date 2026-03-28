@@ -317,9 +317,7 @@ async def async_setup_entry(
     for sensor_type in SENSOR_TYPES:
         if sensor_type.key in ("storage_charge_energy", "storage_discharge_energy"):
             continue
-        sensor = sensor_factory.create_sensor(sensor_type)
-        if sensor is not None:
-            entities.append(sensor)
+        entities.append(sensor_factory.create_sensor(sensor_type))
     async_add_entities(entities)
 
 
@@ -415,12 +413,11 @@ class SolarEdgeSensorFactory:
             self.services[key] = (SolarEdgeStorageDataSensor, self.storage_service)
 
         # Create aggregate storage sensors
-        storage_entities: list[SolarEdgeSensorEntity] = []
-        for sensor_type in SENSOR_TYPES:
-            if sensor_type.key in ("storage_charge_energy", "storage_discharge_energy"):
-                sensor = self.create_sensor(sensor_type)
-                if sensor is not None:
-                    storage_entities.append(sensor)
+        storage_entities: list[SolarEdgeSensorEntity] = [
+            self.create_sensor(sensor_type)
+            for sensor_type in SENSOR_TYPES
+            if sensor_type.key in ("storage_charge_energy", "storage_discharge_energy")
+        ]
 
         # Create per-battery entities
         for battery in inventory_batteries:
@@ -437,15 +434,8 @@ class SolarEdgeSensorFactory:
 
     def create_sensor(
         self, sensor_type: SolarEdgeSensorEntityDescription
-    ) -> SolarEdgeSensorEntity | None:
-        """Create and return a sensor based on the sensor_key.
-
-        Returns None if the sensor type is not available (e.g., storage sensors
-        when no batteries are present).
-        """
-        if sensor_type.key not in self.services:
-            return None
-
+    ) -> SolarEdgeSensorEntity:
+        """Create and return a sensor based on the sensor_key."""
         sensor_class, service = self.services[sensor_type.key]
 
         return sensor_class(sensor_type, service)
