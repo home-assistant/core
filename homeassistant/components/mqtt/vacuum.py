@@ -16,7 +16,7 @@ from homeassistant.components.vacuum import (
     VacuumEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_SUPPORTED_FEATURES, CONF_NAME
+from homeassistant.const import ATTR_SUPPORTED_FEATURES, CONF_NAME, CONF_UNIQUE_ID
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -141,6 +141,16 @@ MQTT_VACUUM_ATTRIBUTES_BLOCKED = frozenset(
 MQTT_VACUUM_DOCS_URL = "https://www.home-assistant.io/integrations/vacuum.mqtt/"
 
 
+def validate_clean_area_config(config: ConfigType) -> ConfigType:
+    """Validate clean area config requires unique_id."""
+    if CONF_CLEAN_SEGMENTS_COMMAND_TOPIC in config and not config.get(CONF_UNIQUE_ID):
+        raise vol.Invalid(
+            f"Option `{CONF_CLEAN_SEGMENTS_COMMAND_TOPIC}` requires"
+            f" `{CONF_UNIQUE_ID}` to be configured"
+        )
+    return config
+
+
 _BASE_SCHEMA = MQTT_BASE_SCHEMA.extend(
     {
         vol.Optional(CONF_CLEAN_SEGMENTS_COMMAND_TOPIC): valid_publish_topic,
@@ -170,8 +180,10 @@ _BASE_SCHEMA = MQTT_BASE_SCHEMA.extend(
     }
 ).extend(MQTT_ENTITY_COMMON_SCHEMA.schema)
 
-PLATFORM_SCHEMA_MODERN = vol.All(_BASE_SCHEMA)
-DISCOVERY_SCHEMA = vol.All(_BASE_SCHEMA.extend({}, extra=vol.ALLOW_EXTRA))
+PLATFORM_SCHEMA_MODERN = vol.All(_BASE_SCHEMA, validate_clean_area_config)
+DISCOVERY_SCHEMA = vol.All(
+    _BASE_SCHEMA.extend({}, extra=vol.ALLOW_EXTRA), validate_clean_area_config
+)
 
 
 async def async_setup_entry(

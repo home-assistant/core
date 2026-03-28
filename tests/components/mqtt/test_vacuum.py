@@ -482,6 +482,31 @@ async def test_clean_segments_command_update(
     ]
 
 
+@pytest.mark.usefixtures("hass")
+@pytest.mark.parametrize(
+    ("hass_config", "error_message"),
+    [
+        (
+            help_custom_config(
+                vacuum.DOMAIN,
+                DEFAULT_CONFIG,
+                ({"clean_segments_command_topic": "test-topic"},),
+            ),
+            "Option `clean_segments_command_topic` requires"
+            " `unique_id` to be configured",
+        ),
+    ],
+)
+async def test_clean_segments_config_validation(
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    error_message: str,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test status clean segment config validation."""
+    await mqtt_mock_entry()
+    assert error_message in caplog.text
+
+
 @pytest.mark.parametrize(
     "hass_config",
     [
