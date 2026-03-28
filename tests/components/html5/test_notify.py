@@ -1024,6 +1024,7 @@ async def test_send_message_unavailable(
         ({ATTR_LANG: "es-419"}, {"lang": "es-419"}, DEFAULT_TTL, None),
         ({ATTR_TIMESTAMP: "1970-01-01 00:00:00"}, {"timestamp": 0}, DEFAULT_TTL, None),
         ({ATTR_TTL: {"days": 28}}, {}, 2419200, None),
+        ({ATTR_TTL: {"seconds": 0}}, {}, 0, None),
         (
             {ATTR_URGENCY: "high"},
             {},
@@ -1111,15 +1112,28 @@ async def test_html5_send_message(
     assert webpush_async.await_args.kwargs["headers"] == expected_headers
 
 
+@pytest.mark.parametrize(
+    ("target", "issue_id"),
+    [
+        (["my-desktop"], "deprecated_notify_action_notify.html5_my_desktop"),
+        (None, "deprecated_notify_action_notify.html5"),
+        (["my-desktop", "my-phone"], "deprecated_notify_action_notify.html5"),
+    ],
+)
 @pytest.mark.usefixtures("mock_wp", "mock_jwt", "mock_vapid", "mock_uuid")
 async def test_deprecation_action_call(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     load_config: MagicMock,
     issue_registry: ir.IssueRegistry,
+    target: list[str] | None,
+    issue_id: str,
 ) -> None:
     """Test deprecation action call."""
-    load_config.return_value = {"my-desktop": SUBSCRIPTION_1}
+    load_config.return_value = {
+        "my-desktop": SUBSCRIPTION_1,
+        "my-phone": SUBSCRIPTION_2,
+    }
 
     config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(config_entry.entry_id)
@@ -1130,11 +1144,11 @@ async def test_deprecation_action_call(
     await hass.services.async_call(
         NOTIFY_DOMAIN,
         DOMAIN,
-        {"message": "Hello"},
+        {"message": "Hello", "target": target},
         blocking=True,
     )
 
     assert issue_registry.async_get_issue(
         domain=DOMAIN,
-        issue_id="deprecated_notify_action_notify.html5",
+        issue_id=issue_id,
     )

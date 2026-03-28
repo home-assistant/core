@@ -2,6 +2,7 @@
 
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
+from homeassistant.util import slugify
 
 from .const import DOMAIN
 
@@ -13,7 +14,9 @@ def deprecated_notify_action_call(
     """Deprecated action call."""
 
     action = (
-        f"notify.html5_{target[0]}" if target and len(target) != 1 else "notify.html5"
+        f"notify.html5_{slugify(target[0])}"
+        if target and len(target) == 1
+        else "notify.html5"
     )
 
     async_create_issue(
@@ -24,5 +27,5 @@ def deprecated_notify_action_call(
         is_fixable=False,
         severity=IssueSeverity.WARNING,
         translation_key="deprecated_notify_action",
-        translation_placeholders={"action": action.lower()},
+        translation_placeholders={"action": action},
     )

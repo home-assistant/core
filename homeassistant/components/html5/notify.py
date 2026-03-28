@@ -666,7 +666,7 @@ class HTML5NotifyEntity(HTML5Entity, NotifyEntity):
                 json.dumps(payload),
                 self.config_entry.data[ATTR_VAPID_PRV_KEY],
                 vapid_claims,
-                ttl=int(ttl.total_seconds()) if ttl else DEFAULT_TTL,
+                ttl=int(ttl.total_seconds()) if ttl is not None else DEFAULT_TTL,
                 headers={"Urgency": urgency} if urgency else None,
                 aiohttp_session=self.session,
             )
