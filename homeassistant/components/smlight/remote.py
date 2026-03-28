@@ -27,10 +27,10 @@ async def async_setup_entry(
     coordinator = entry.runtime_data.data
 
     if coordinator.data.info.has_peripherals:
-        async_add_entities([SmlightRemoteEntity(coordinator)])
+        async_add_entities([SmRemoteEntity(coordinator)])
 
 
-class SmlightRemoteEntity(SmEntity, RemoteEntity):
+class SmRemoteEntity(SmEntity, RemoteEntity):
     """Representation of a SLZB-Ultima remote."""
 
     _attr_translation_key = "remote"
@@ -41,21 +41,8 @@ class SmlightRemoteEntity(SmEntity, RemoteEntity):
         super().__init__(coordinator)
         self._attr_unique_id = f"{coordinator.unique_id}-remote"
 
-    async def async_turn_on(self, **kwargs: Any) -> None:
-        """Turn the remote on."""
-        self._attr_is_on = True
-        self.async_write_ha_state()
-
-    async def async_turn_off(self, **kwargs: Any) -> None:
-        """Turn the remote off."""
-        self._attr_is_on = False
-        self.async_write_ha_state()
-
     async def async_send_command(self, command: Iterable[str], **kwargs: Any) -> None:
         """Send a sequence of commands to a device."""
-        if not self.is_on:
-            return
-
         for cmd in command:
             try:
                 await self.coordinator.async_execute_command(
