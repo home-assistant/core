@@ -100,7 +100,7 @@
       },
       "robotCleanerTurboMode": {
         "robotCleanerTurboMode": {
-          "value": "off",
+          "value": "on",
           "timestamp": "2026-02-27T10:49:04.309Z"
         }
       },

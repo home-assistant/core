@@ -6,11 +6,14 @@ import logging
 
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.config_entry_oauth2_flow import (
+    ImplementationUnavailableError,
     OAuth2Session,
     async_get_config_entry_implementation,
 )
 
+from .const import DOMAIN
 from .coordinator import (
     IottyConfigEntry,
     IottyConfigEntryData,
@@ -26,7 +29,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: IottyConfigEntry) -> boo
     """Set up iotty from a config entry."""
     _LOGGER.debug("async_setup_entry entry_id=%s", entry.entry_id)
 
-    implementation = await async_get_config_entry_implementation(hass, entry)
+    try:
+        implementation = await async_get_config_entry_implementation(hass, entry)
+    except ImplementationUnavailableError as err:
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="oauth2_implementation_unavailable",
+        ) from err
     session = OAuth2Session(hass, entry, implementation)
 
     data_update_coordinator = IottyDataUpdateCoordinator(hass, entry, session)
