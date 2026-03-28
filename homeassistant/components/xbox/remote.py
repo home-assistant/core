@@ -152,6 +152,6 @@ class XboxRemote(XboxConsoleBaseEntity, RemoteEntity):
                     )
                 else:
                     await self.client.smartglass.insert_text(
-                        self._console.id, single_command
+                        self._console.id, single_command.removeprefix("text:")
                     )
                 await asyncio.sleep(delay)
