@@ -1271,6 +1271,15 @@ def test_all_converters(converter: type[BaseUnitConverter]) -> None:
         ), f"Unit `{valid_unit}` is not tested in _CONVERTED_VALUE"
 
 
+@pytest.mark.parametrize(("converters"), [_ALL_CONVERTERS])
+def test_no_duplicate_unit_classes(converters: list[type[BaseUnitConverter]]) -> None:
+    """Ensure no duplicate unit class strings across all converters."""
+    all_unit_classes = [conv.UNIT_CLASS for conv in converters]
+    assert len(all_unit_classes) == len(set(all_unit_classes)), (
+        "list of all unit converter UNIT_CLASS fields contained duplicateds"
+    )
+
+
 @pytest.mark.parametrize(
     ("converter", "valid_unit"),
     [
