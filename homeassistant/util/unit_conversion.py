@@ -260,11 +260,11 @@ class BaseUnitConverter:
     def _get_conversion_ops(
         cls, unit: str | None, is_from: bool = False, for_ratio: bool = False
     ) -> list[UnitConvertOp]:
-        """Return a list of operations to convert between a between a unit and its base."""
+        """Return a list of operations to convert between a unit and its base."""
         # For the base unit we don't need to perform any operations
         if unit == cls.BASE_UNIT:
             return []
-        # Otherwise lookup the required operation information for the selected unit unit
+        # Otherwise lookup the required operation information for the selected unit
         try:
             required_ops = cls._UNIT_CONVERSION[unit]
         except KeyError as err:
