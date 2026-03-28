@@ -6,6 +6,7 @@
       'services': dict({
         'unban': dict({
           'fields': dict({
+            'ip_address': dict({}),
           }),
         }),
       }),
