@@ -923,8 +923,8 @@ class VolumeFlowRateConverter(BaseUnitConverter):
 
 
 def _all_unit_converters() -> list[type[BaseUnitConverter]]:
-    """Return all available unit converters."""
-    return list(BaseUnitConverter.__subclasses__())
+    """Return all available unit converters sorted by unit class."""
+    return sorted(BaseUnitConverter.__subclasses__(), key=lambda x: x.UNIT_CLASS)
 
 
 # A list of all available unit converters
