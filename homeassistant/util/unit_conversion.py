@@ -10,12 +10,16 @@ from math import floor, log10
 from typing import Any, Final, NotRequired, Required, TypedDict
 
 from homeassistant.const import (
+    CONCENTRATION_GRAMS_PER_CUBIC_METER,
+    CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+    CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER,
+    CONCENTRATION_PARTS_PER_BILLION,
+    CONCENTRATION_PARTS_PER_MILLION,
     PERCENTAGE,
     UNIT_NOT_RECOGNIZED_TEMPLATE,
     UnitOfApparentPower,
     UnitOfArea,
     UnitOfBloodGlucoseConcentration,
-    UnitOfConcentration,
     UnitOfConductivity,
     UnitOfDataRate,
     UnitOfElectricCurrent,
@@ -381,20 +385,20 @@ class CarbonMonoxideConcentrationConverter(BaseUnitConverter):
     """
 
     UNIT_CLASS = "carbon_monoxide"
-    BASE_UNIT = UnitOfConcentration.PARTS_PER_BILLION
+    BASE_UNIT = CONCENTRATION_PARTS_PER_BILLION
     VALID_UNITS = {
-        UnitOfConcentration.PARTS_PER_BILLION,
-        UnitOfConcentration.PARTS_PER_MILLION,
-        UnitOfConcentration.MILLIGRAMS_PER_CUBIC_METER,
-        UnitOfConcentration.MICROGRAMS_PER_CUBIC_METER,
+        CONCENTRATION_PARTS_PER_BILLION,
+        CONCENTRATION_PARTS_PER_MILLION,
+        CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER,
+        CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     }
     _UNIT_CONVERSION = {
-        UnitOfConcentration.PARTS_PER_BILLION: 1,
-        UnitOfConcentration.PARTS_PER_MILLION: 1e-3,
-        UnitOfConcentration.MILLIGRAMS_PER_CUBIC_METER: (
+        CONCENTRATION_PARTS_PER_BILLION: 1,
+        CONCENTRATION_PARTS_PER_MILLION: 1e-3,
+        CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER: (
             _CARBON_MONOXIDE_MOLAR_MASS / _AMBIENT_IDEAL_GAS_MOLAR_VOLUME * 1e-6
         ),
-        UnitOfConcentration.MICROGRAMS_PER_CUBIC_METER: (
+        CONCENTRATION_MICROGRAMS_PER_CUBIC_METER: (
             _CARBON_MONOXIDE_MOLAR_MASS / _AMBIENT_IDEAL_GAS_MOLAR_VOLUME * 1e-3
         ),
     }
@@ -610,16 +614,16 @@ class MassVolumeConcentrationConverter(BaseUnitConverter):
 
     UNIT_CLASS = "concentration"
     IS_PRIMARY = True
-    BASE_UNIT = UnitOfConcentration.GRAMS_PER_CUBIC_METER
+    BASE_UNIT = CONCENTRATION_GRAMS_PER_CUBIC_METER
     VALID_UNITS = {
-        UnitOfConcentration.MICROGRAMS_PER_CUBIC_METER,
-        UnitOfConcentration.MILLIGRAMS_PER_CUBIC_METER,
-        UnitOfConcentration.GRAMS_PER_CUBIC_METER,
+        CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER,
+        CONCENTRATION_GRAMS_PER_CUBIC_METER,
     }
     _UNIT_CONVERSION = {
-        UnitOfConcentration.MICROGRAMS_PER_CUBIC_METER: 1_000_000.0,  # 1000 µg/m³ = 1 mg/m³
-        UnitOfConcentration.MILLIGRAMS_PER_CUBIC_METER: 1000.0,  # 1000 mg/m³ = 1 g/m³
-        UnitOfConcentration.GRAMS_PER_CUBIC_METER: 1,
+        CONCENTRATION_MICROGRAMS_PER_CUBIC_METER: 1_000_000.0,  # 1000 µg/m³ = 1 mg/m³
+        CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER: 1000.0,  # 1000 mg/m³ = 1 g/m³
+        CONCENTRATION_GRAMS_PER_CUBIC_METER: 1,
     }
 
 
@@ -627,16 +631,16 @@ class NitrogenDioxideConcentrationConverter(BaseUnitConverter):
     """Convert nitrogen dioxide ratio to mass per volume."""
 
     UNIT_CLASS = "nitrogen_dioxide"
-    BASE_UNIT = UnitOfConcentration.PARTS_PER_BILLION
+    BASE_UNIT = CONCENTRATION_PARTS_PER_BILLION
     VALID_UNITS = {
-        UnitOfConcentration.PARTS_PER_BILLION,
-        UnitOfConcentration.PARTS_PER_MILLION,
-        UnitOfConcentration.MICROGRAMS_PER_CUBIC_METER,
+        CONCENTRATION_PARTS_PER_BILLION,
+        CONCENTRATION_PARTS_PER_MILLION,
+        CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     }
     _UNIT_CONVERSION = {
-        UnitOfConcentration.PARTS_PER_BILLION: 1,
-        UnitOfConcentration.PARTS_PER_MILLION: 1e-3,
-        UnitOfConcentration.MICROGRAMS_PER_CUBIC_METER: (
+        CONCENTRATION_PARTS_PER_BILLION: 1,
+        CONCENTRATION_PARTS_PER_MILLION: 1e-3,
+        CONCENTRATION_MICROGRAMS_PER_CUBIC_METER: (
             _NITROGEN_DIOXIDE_MOLAR_MASS / _AMBIENT_IDEAL_GAS_MOLAR_VOLUME * 1e-3
         ),
     }
@@ -646,14 +650,14 @@ class NitrogenMonoxideConcentrationConverter(BaseUnitConverter):
     """Convert nitrogen monoxide ratio to mass per volume."""
 
     UNIT_CLASS = "nitrogen_monoxide"
-    BASE_UNIT = UnitOfConcentration.PARTS_PER_BILLION
+    BASE_UNIT = CONCENTRATION_PARTS_PER_BILLION
     VALID_UNITS = {
-        UnitOfConcentration.PARTS_PER_BILLION,
-        UnitOfConcentration.MICROGRAMS_PER_CUBIC_METER,
+        CONCENTRATION_PARTS_PER_BILLION,
+        CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     }
     _UNIT_CONVERSION = {
-        UnitOfConcentration.PARTS_PER_BILLION: 1,
-        UnitOfConcentration.MICROGRAMS_PER_CUBIC_METER: (
+        CONCENTRATION_PARTS_PER_BILLION: 1,
+        CONCENTRATION_MICROGRAMS_PER_CUBIC_METER: (
             _NITROGEN_MONOXIDE_MOLAR_MASS / _AMBIENT_IDEAL_GAS_MOLAR_VOLUME * 1e-3
         ),
     }
@@ -663,16 +667,16 @@ class OzoneConcentrationConverter(BaseUnitConverter):
     """Convert ozone ratio to mass per volume."""
 
     UNIT_CLASS = "ozone"
-    BASE_UNIT = UnitOfConcentration.PARTS_PER_BILLION
+    BASE_UNIT = CONCENTRATION_PARTS_PER_BILLION
     VALID_UNITS = {
-        UnitOfConcentration.PARTS_PER_BILLION,
-        UnitOfConcentration.PARTS_PER_MILLION,
-        UnitOfConcentration.MICROGRAMS_PER_CUBIC_METER,
+        CONCENTRATION_PARTS_PER_BILLION,
+        CONCENTRATION_PARTS_PER_MILLION,
+        CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     }
     _UNIT_CONVERSION = {
-        UnitOfConcentration.PARTS_PER_BILLION: 1,
-        UnitOfConcentration.PARTS_PER_MILLION: 1e-3,
-        UnitOfConcentration.MICROGRAMS_PER_CUBIC_METER: (
+        CONCENTRATION_PARTS_PER_BILLION: 1,
+        CONCENTRATION_PARTS_PER_MILLION: 1e-3,
+        CONCENTRATION_MICROGRAMS_PER_CUBIC_METER: (
             _OZONE_MOLAR_MASS / _AMBIENT_IDEAL_GAS_MOLAR_VOLUME * 1e-3
         ),
     }
@@ -794,14 +798,14 @@ class SulphurDioxideConcentrationConverter(BaseUnitConverter):
     """Convert sulphur dioxide ratio to mass per volume."""
 
     UNIT_CLASS = "sulphur_dioxide"
-    BASE_UNIT = UnitOfConcentration.PARTS_PER_BILLION
+    BASE_UNIT = CONCENTRATION_PARTS_PER_BILLION
     VALID_UNITS = {
-        UnitOfConcentration.PARTS_PER_BILLION,
-        UnitOfConcentration.MICROGRAMS_PER_CUBIC_METER,
+        CONCENTRATION_PARTS_PER_BILLION,
+        CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     }
     _UNIT_CONVERSION = {
-        UnitOfConcentration.PARTS_PER_BILLION: 1,
-        UnitOfConcentration.MICROGRAMS_PER_CUBIC_METER: (
+        CONCENTRATION_PARTS_PER_BILLION: 1,
+        CONCENTRATION_MICROGRAMS_PER_CUBIC_METER: (
             _SULPHUR_DIOXIDE_MOLAR_MASS / _AMBIENT_IDEAL_GAS_MOLAR_VOLUME * 1e-3
         ),
     }
@@ -865,14 +869,14 @@ class UnitlessRatioConverter(BaseUnitConverter):
     BASE_UNIT = None
     VALID_UNITS = {
         None,
-        UnitOfConcentration.PARTS_PER_BILLION,
-        UnitOfConcentration.PARTS_PER_MILLION,
+        CONCENTRATION_PARTS_PER_BILLION,
+        CONCENTRATION_PARTS_PER_MILLION,
         PERCENTAGE,
     }
     _UNIT_CONVERSION = {
         None: 1,
-        UnitOfConcentration.PARTS_PER_BILLION: 1000000000,
-        UnitOfConcentration.PARTS_PER_MILLION: 1000000,
+        CONCENTRATION_PARTS_PER_BILLION: 1000000000,
+        CONCENTRATION_PARTS_PER_MILLION: 1000000,
         PERCENTAGE: 100,
     }
 
