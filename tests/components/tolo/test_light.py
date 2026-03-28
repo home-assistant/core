@@ -8,8 +8,8 @@ from tololib import Calefaction, Model, ToloStatus
 from homeassistant.components.light import (
     ATTR_COLOR_MODE,
     ATTR_SUPPORTED_COLOR_MODES,
-    ColorMode,
     DOMAIN as LIGHT_DOMAIN,
+    ColorMode,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,

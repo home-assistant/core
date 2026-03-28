@@ -12,8 +12,6 @@ from homeassistant.components.number import (
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
 
-from tests.common import MockConfigEntry
-
 # Entity IDs based on registration order: power_timer, salt_bath_timer, fan_timer
 POWER_TIMER_ENTITY_ID = "number.tolo_sauna"
 SALT_BATH_TIMER_ENTITY_ID = "number.tolo_sauna_2"

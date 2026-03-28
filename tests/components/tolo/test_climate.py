@@ -20,11 +20,11 @@ from homeassistant.components.climate import (
     DOMAIN as CLIMATE_DOMAIN,
     FAN_OFF,
     FAN_ON,
-    HVACAction,
-    HVACMode,
     SERVICE_SET_FAN_MODE,
     SERVICE_SET_HUMIDITY,
     SERVICE_SET_TEMPERATURE,
+    HVACAction,
+    HVACMode,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,

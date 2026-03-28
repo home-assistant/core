@@ -1,6 +1,6 @@
 """Tests for the TOLO Sauna integration setup."""
 
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 import pytest
 
