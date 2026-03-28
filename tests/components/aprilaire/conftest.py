@@ -1,28 +1,17 @@
 """Common fixtures for Aprilaire tests."""
 
-from collections.abc import Generator
+from collections.abc import AsyncGenerator, Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from pyaprilaire.const import Attribute
 import pytest
 
+from homeassistant.components.aprilaire import PLATFORMS
 from homeassistant.components.aprilaire.const import DOMAIN
-from homeassistant.const import CONF_HOST, CONF_PORT
+from homeassistant.const import CONF_HOST, CONF_PORT, Platform
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
-
-@pytest.fixture
-def ignore_missing_translations(request: pytest.FixtureRequest) -> str | list[str]:
-    """Ignore missing translations for platform services in HA core."""
-    if "mock_aprilaire" in request.fixturenames:
-        return [
-            "component.climate.services.",
-            "component.humidifier.services.",
-            "component.select.services.",
-        ]
-    return []
-
 
 MOCK_MAC = "aa:bb:cc:dd:ee:ff"
 MOCK_HOST = "192.168.1.100"
@@ -41,6 +30,21 @@ def mock_config_entry() -> MockConfigEntry:
         },
         title="AprilAire",
     )
+
+
+@pytest.fixture
+def platforms() -> list[Platform]:
+    """Platforms, which should be loaded during the test."""
+    return PLATFORMS
+
+
+@pytest.fixture(autouse=True)
+async def mock_patch_platforms(platforms: list[Platform]) -> AsyncGenerator[None]:
+    """Fixture to set up platforms for tests."""
+    with patch(
+        f"homeassistant.components.{DOMAIN}.PLATFORMS", platforms
+    ):
+        yield
 
 
 @pytest.fixture
@@ -128,7 +132,7 @@ def mock_aprilaire(
     def capture_client(host, port, callback, *args, **kwargs):
         nonlocal data_callback
         data_callback = callback
-        # When start_listen is called, push initial data through the callback
+
         async def on_start_listen():
             if data_callback:
                 data_callback(base_coordinator_data)
@@ -147,8 +151,9 @@ def mock_aprilaire(
 async def setup_integration(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-) -> None:
+) -> MockConfigEntry:
     """Set up the Aprilaire integration for testing."""
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
+    return mock_config_entry

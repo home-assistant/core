@@ -1,196 +1,171 @@
-"""Tests for the Aprilaire select entity."""
+"""Tests for the Aprilaire select platform."""
 
 from unittest.mock import MagicMock
 
 from pyaprilaire.const import Attribute
+import pytest
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.select import DOMAIN as SELECT_DOMAIN
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 
-from .conftest import setup_integration
+from .conftest import MOCK_MAC, setup_integration
 
-from tests.common import MockConfigEntry
-
-AIR_CLEANING_EVENT = "select.test_thermostat"
-AIR_CLEANING_MODE = "select.test_thermostat_2"
-FRESH_AIR_EVENT = "select.test_thermostat_3"
-FRESH_AIR_MODE = "select.test_thermostat_4"
+from tests.common import MockConfigEntry, snapshot_platform
 
 
-async def test_air_cleaning_event_state(
+@pytest.fixture
+def platforms() -> list[Platform]:
+    """Platforms, which should be loaded during the test."""
+    return [Platform.SELECT]
+
+
+pytestmark = [
+    pytest.mark.usefixtures("mock_aprilaire"),
+]
+
+
+def _get_entity_id(
+    entity_registry: er.EntityRegistry, unique_id_suffix: str
+) -> str:
+    """Get entity_id from the entity registry by unique_id suffix."""
+    entry = entity_registry.async_get_entity_id(
+        SELECT_DOMAIN, "aprilaire", f"{MOCK_MAC}_{unique_id_suffix}"
+    )
+    assert entry is not None
+    return entry
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_all_entities(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     mock_config_entry: MockConfigEntry,
-    mock_aprilaire: MagicMock,
+    snapshot: SnapshotAssertion,
 ) -> None:
-    """Test air cleaning event select state."""
-    await setup_integration(hass, mock_config_entry)
-
-    state = hass.states.get(AIR_CLEANING_EVENT)
-    assert state is not None
-    assert state.state == "off"
-    assert state.attributes["options"] == ["off", "event_clean", "allergies"]
+    """Test all select entities via snapshot."""
+    entry = await setup_integration(hass, mock_config_entry)
+    await snapshot_platform(hass, entity_registry, snapshot, entry.entry_id)
 
 
-async def test_air_cleaning_mode_state(
+async def test_select_air_cleaning_event(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     mock_config_entry: MockConfigEntry,
-    mock_aprilaire: MagicMock,
-) -> None:
-    """Test air cleaning mode select state."""
-    await setup_integration(hass, mock_config_entry)
-
-    state = hass.states.get(AIR_CLEANING_MODE)
-    assert state is not None
-    assert state.state == "constant_clean"
-    assert state.attributes["options"] == ["off", "constant_clean", "automatic"]
-
-
-async def test_fresh_air_event_state(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_aprilaire: MagicMock,
-) -> None:
-    """Test fresh air event select state."""
-    await setup_integration(hass, mock_config_entry)
-
-    state = hass.states.get(FRESH_AIR_EVENT)
-    assert state is not None
-    assert state.state == "off"
-
-
-async def test_fresh_air_mode_state(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_aprilaire: MagicMock,
-) -> None:
-    """Test fresh air mode select state."""
-    await setup_integration(hass, mock_config_entry)
-
-    state = hass.states.get(FRESH_AIR_MODE)
-    assert state is not None
-    assert state.state == "automatic"
-    assert state.attributes["options"] == ["off", "automatic"]
-
-
-async def test_select_air_cleaning_event_option(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_aprilaire: MagicMock,
     mock_client: MagicMock,
 ) -> None:
     """Test selecting an air cleaning event option."""
     await setup_integration(hass, mock_config_entry)
+    entity_id = _get_entity_id(entity_registry, "air_cleaning_event")
 
     await hass.services.async_call(
         SELECT_DOMAIN,
         "select_option",
         {
-            ATTR_ENTITY_ID: AIR_CLEANING_EVENT,
+            ATTR_ENTITY_ID: entity_id,
             "option": "allergies",
         },
         blocking=True,
     )
 
     # event_value=4 (allergies), mode_value=1 (current mode from data)
-    mock_client.set_air_cleaning.assert_called_once_with(1, 4)
+    mock_client.set_air_cleaning.assert_awaited_once_with(1, 4)
 
 
-async def test_select_air_cleaning_mode_option(
+async def test_select_air_cleaning_mode(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     mock_config_entry: MockConfigEntry,
-    mock_aprilaire: MagicMock,
     mock_client: MagicMock,
 ) -> None:
     """Test selecting an air cleaning mode option."""
     await setup_integration(hass, mock_config_entry)
+    entity_id = _get_entity_id(entity_registry, "air_cleaning_mode")
 
     await hass.services.async_call(
         SELECT_DOMAIN,
         "select_option",
         {
-            ATTR_ENTITY_ID: AIR_CLEANING_MODE,
+            ATTR_ENTITY_ID: entity_id,
             "option": "automatic",
         },
         blocking=True,
     )
 
     # mode_value=2 (automatic), event_value=0 (current event from data)
-    mock_client.set_air_cleaning.assert_called_once_with(2, 0)
+    mock_client.set_air_cleaning.assert_awaited_once_with(2, 0)
 
 
-async def test_select_fresh_air_event_option(
+async def test_select_fresh_air_event(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     mock_config_entry: MockConfigEntry,
-    mock_aprilaire: MagicMock,
     mock_client: MagicMock,
 ) -> None:
     """Test selecting a fresh air event option."""
     await setup_integration(hass, mock_config_entry)
+    entity_id = _get_entity_id(entity_registry, "fresh_air_event")
 
     await hass.services.async_call(
         SELECT_DOMAIN,
         "select_option",
         {
-            ATTR_ENTITY_ID: FRESH_AIR_EVENT,
+            ATTR_ENTITY_ID: entity_id,
             "option": "3hour",
         },
         blocking=True,
     )
 
     # event_value=2 (3hour), mode_value=1 (current mode from data)
-    mock_client.set_fresh_air.assert_called_once_with(1, 2)
+    mock_client.set_fresh_air.assert_awaited_once_with(1, 2)
 
 
-async def test_select_fresh_air_mode_option(
+async def test_select_fresh_air_mode(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     mock_config_entry: MockConfigEntry,
-    mock_aprilaire: MagicMock,
     mock_client: MagicMock,
 ) -> None:
     """Test selecting a fresh air mode option."""
     await setup_integration(hass, mock_config_entry)
+    entity_id = _get_entity_id(entity_registry, "fresh_air_mode")
 
     await hass.services.async_call(
         SELECT_DOMAIN,
         "select_option",
         {
-            ATTR_ENTITY_ID: FRESH_AIR_MODE,
+            ATTR_ENTITY_ID: entity_id,
             "option": "off",
         },
         blocking=True,
     )
 
     # mode_value=0 (off), event_value=0 (current event from data)
-    mock_client.set_fresh_air.assert_called_once_with(0, 0)
+    mock_client.set_fresh_air.assert_awaited_once_with(0, 0)
 
 
 async def test_select_not_created_when_unavailable(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     mock_config_entry: MockConfigEntry,
-    mock_aprilaire: MagicMock,
     base_coordinator_data: dict,
 ) -> None:
-    """Test select entities aren't created when features unavailable."""
+    """Test select entities not created when features not available."""
     base_coordinator_data[Attribute.AIR_CLEANING_AVAILABLE] = 0
     base_coordinator_data[Attribute.VENTILATION_AVAILABLE] = 0
     await setup_integration(hass, mock_config_entry)
 
-    assert hass.states.get(AIR_CLEANING_EVENT) is None
-    assert hass.states.get(AIR_CLEANING_MODE) is None
-    assert hass.states.get(FRESH_AIR_EVENT) is None
-    assert hass.states.get(FRESH_AIR_MODE) is None
-
-
-async def test_select_current_option_with_active_event(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_aprilaire: MagicMock,
-    base_coordinator_data: dict,
-) -> None:
-    """Test select shows correct current option when event is active."""
-    base_coordinator_data[Attribute.AIR_CLEANING_EVENT] = 3
-    await setup_integration(hass, mock_config_entry)
-
-    state = hass.states.get(AIR_CLEANING_EVENT)
-    assert state.state == "event_clean"
+    assert (
+        entity_registry.async_get_entity_id(
+            SELECT_DOMAIN, "aprilaire", f"{MOCK_MAC}_air_cleaning_event"
+        )
+        is None
+    )
+    assert (
+        entity_registry.async_get_entity_id(
+            SELECT_DOMAIN, "aprilaire", f"{MOCK_MAC}_fresh_air_event"
+        )
+        is None
+    )
