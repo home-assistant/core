@@ -12,6 +12,7 @@ from pynina import ApiError, Nina
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import (
@@ -63,6 +64,12 @@ class NINADataUpdateCoordinator(
             CONF_HEADLINE_FILTER
         ]
         self.area_filter: str = config_entry.data[CONF_FILTERS][CONF_AREA_FILTER]
+
+        self.device_info = DeviceInfo(
+            identifiers={(DOMAIN, config_entry.entry_id)},
+            manufacturer="NINA",
+            entry_type=DeviceEntryType.SERVICE,
+        )
 
         regions: dict[str, str] = config_entry.data[CONF_REGIONS]
         for region in regions:

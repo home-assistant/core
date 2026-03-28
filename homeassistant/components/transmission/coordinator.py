@@ -1,19 +1,24 @@
-"""Coordinator for transmssion integration."""
+"""Coordinator for transmission integration."""
 
 from __future__ import annotations
 
+from collections.abc import Callable
+from dataclasses import dataclass
 from datetime import timedelta
+from functools import partial
 import logging
 
 import transmission_rpc
 from transmission_rpc.session import SessionStats
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST
-from homeassistant.core import HomeAssistant
+from homeassistant.const import ATTR_ID, ATTR_NAME, CONF_HOST
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import (
+    ATTR_DOWNLOAD_PATH,
+    ATTR_LABELS,
     CONF_LIMIT,
     CONF_ORDER,
     DEFAULT_LIMIT,
@@ -23,11 +28,26 @@ from .const import (
     EVENT_DOWNLOADED_TORRENT,
     EVENT_REMOVED_TORRENT,
     EVENT_STARTED_TORRENT,
+    EVENT_TYPE_DOWNLOADED,
+    EVENT_TYPE_REMOVED,
+    EVENT_TYPE_STARTED,
 )
 
 _LOGGER = logging.getLogger(__name__)
 
+type EventCallback = Callable[[TransmissionEventData], None]
 type TransmissionConfigEntry = ConfigEntry[TransmissionDataUpdateCoordinator]
+
+
+@dataclass
+class TransmissionEventData:
+    """Data for a single event."""
+
+    event_type: str
+    name: str
+    id: int
+    download_path: str
+    labels: list[str]
 
 
 class TransmissionDataUpdateCoordinator(DataUpdateCoordinator[SessionStats]):
@@ -49,6 +69,7 @@ class TransmissionDataUpdateCoordinator(DataUpdateCoordinator[SessionStats]):
         self._all_torrents: list[transmission_rpc.Torrent] = []
         self._completed_torrents: list[transmission_rpc.Torrent] = []
         self._started_torrents: list[transmission_rpc.Torrent] = []
+        self._event_listeners: dict[str, EventCallback] = {}
         self.torrents: list[transmission_rpc.Torrent] = []
         super().__init__(
             hass,
@@ -68,9 +89,32 @@ class TransmissionDataUpdateCoordinator(DataUpdateCoordinator[SessionStats]):
         """Return order."""
         return self.config_entry.options.get(CONF_ORDER, DEFAULT_ORDER)  # type: ignore[no-any-return]
 
+    @callback
+    def async_add_event_listener(
+        self, update_callback: EventCallback, target_event_id: str
+    ) -> Callable[[], None]:
+        """Listen for updates."""
+        self._event_listeners[target_event_id] = update_callback
+        return partial(self.__async_remove_listener_internal, target_event_id)
+
+    def __async_remove_listener_internal(self, listener_id: str) -> None:
+        self._event_listeners.pop(listener_id, None)
+
+    @callback
+    def _async_notify_event_listeners(self, event: TransmissionEventData) -> None:
+        """Notify event listeners in the event loop."""
+        for listener in list(self._event_listeners.values()):
+            listener(event)
+
     async def _async_update_data(self) -> SessionStats:
         """Update transmission data."""
-        return await self.hass.async_add_executor_job(self.update)
+        data = await self.hass.async_add_executor_job(self.update)
+
+        self.check_completed_torrent()
+        self.check_started_torrent()
+        self.check_removed_torrent()
+
+        return data
 
     def update(self) -> SessionStats:
         """Get the latest data from Transmission instance."""
@@ -81,10 +125,6 @@ class TransmissionDataUpdateCoordinator(DataUpdateCoordinator[SessionStats]):
             self.port_forwarding = self.api.port_test()
         except transmission_rpc.TransmissionError as err:
             raise UpdateFailed("Unable to connect to Transmission client") from err
-
-        self.check_completed_torrent()
-        self.check_started_torrent()
-        self.check_removed_torrent()
 
         return data
 
@@ -108,15 +148,24 @@ class TransmissionDataUpdateCoordinator(DataUpdateCoordinator[SessionStats]):
 
         for torrent in current_completed_torrents:
             if torrent.id not in old_completed_torrents:
-                self.hass.bus.fire(
+                # Once event triggers are out of labs we can remove the bus event
+                self.hass.bus.async_fire(
                     EVENT_DOWNLOADED_TORRENT,
                     {
-                        "name": torrent.name,
-                        "id": torrent.id,
-                        "download_path": torrent.download_dir,
-                        "labels": torrent.labels,
+                        ATTR_NAME: torrent.name,
+                        ATTR_ID: torrent.id,
+                        ATTR_DOWNLOAD_PATH: torrent.download_dir,
+                        ATTR_LABELS: torrent.labels,
                     },
                 )
+                event = TransmissionEventData(
+                    event_type=EVENT_TYPE_DOWNLOADED,
+                    name=torrent.name,
+                    id=torrent.id,
+                    download_path=torrent.download_dir or "",
+                    labels=torrent.labels,
+                )
+                self._async_notify_event_listeners(event)
 
         self._completed_torrents = current_completed_torrents
 
@@ -130,15 +179,24 @@ class TransmissionDataUpdateCoordinator(DataUpdateCoordinator[SessionStats]):
 
         for torrent in current_started_torrents:
             if torrent.id not in old_started_torrents:
-                self.hass.bus.fire(
+                # Once event triggers are out of labs we can remove the bus event
+                self.hass.bus.async_fire(
                     EVENT_STARTED_TORRENT,
                     {
-                        "name": torrent.name,
-                        "id": torrent.id,
-                        "download_path": torrent.download_dir,
-                        "labels": torrent.labels,
+                        ATTR_NAME: torrent.name,
+                        ATTR_ID: torrent.id,
+                        ATTR_DOWNLOAD_PATH: torrent.download_dir,
+                        ATTR_LABELS: torrent.labels,
                     },
                 )
+                event = TransmissionEventData(
+                    event_type=EVENT_TYPE_STARTED,
+                    name=torrent.name,
+                    id=torrent.id,
+                    download_path=torrent.download_dir or "",
+                    labels=torrent.labels,
+                )
+                self._async_notify_event_listeners(event)
 
         self._started_torrents = current_started_torrents
 
@@ -148,15 +206,24 @@ class TransmissionDataUpdateCoordinator(DataUpdateCoordinator[SessionStats]):
 
         for torrent in self._all_torrents:
             if torrent.id not in current_torrents:
-                self.hass.bus.fire(
+                # Once event triggers are out of labs we can remove the bus event
+                self.hass.bus.async_fire(
                     EVENT_REMOVED_TORRENT,
                     {
-                        "name": torrent.name,
-                        "id": torrent.id,
-                        "download_path": torrent.download_dir,
-                        "labels": torrent.labels,
+                        ATTR_NAME: torrent.name,
+                        ATTR_ID: torrent.id,
+                        ATTR_DOWNLOAD_PATH: torrent.download_dir,
+                        ATTR_LABELS: torrent.labels,
                     },
                 )
+                event = TransmissionEventData(
+                    event_type=EVENT_TYPE_REMOVED,
+                    name=torrent.name,
+                    id=torrent.id,
+                    download_path=torrent.download_dir or "",
+                    labels=torrent.labels,
+                )
+                self._async_notify_event_listeners(event)
 
         self._all_torrents = self.torrents.copy()
 
