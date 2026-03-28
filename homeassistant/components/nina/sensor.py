@@ -25,7 +25,7 @@ PARALLEL_UPDATES = 0
 class NinaSensorEntityDescription(SensorEntityDescription):
     """Describes NINA sensor entity."""
 
-    value_fn: Callable[[NinaWarningData], str]
+    value_fn: Callable[[NinaWarningData], str | None]
 
 
 SENSOR_TYPES: tuple[NinaSensorEntityDescription, ...] = (
@@ -44,7 +44,9 @@ SENSOR_TYPES: tuple[NinaSensorEntityDescription, ...] = (
         options=SEVERITY_VALUES,
         device_class=SensorDeviceClass.ENUM,
         translation_key="severity",
-        value_fn=lambda data: data.severity.lower(),
+        value_fn=lambda data: (
+            data.severity.lower() if data.severity is not None else None
+        ),
     ),
     NinaSensorEntityDescription(
         key=SENSOR_SUFFIXES[3],
