@@ -16,7 +16,7 @@ from homeassistant.components.vacuum import (
     VacuumEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_SUPPORTED_FEATURES, CONF_NAME, CONF_UNIQUE_ID
+from homeassistant.const import ATTR_SUPPORTED_FEATURES, CONF_NAME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -34,6 +34,7 @@ from .util import valid_publish_topic
 
 PARALLEL_UPDATES = 0
 
+SEGMENTS = "segments"
 FAN_SPEED = "fan_speed"
 STATE = "state"
 
@@ -53,7 +54,6 @@ POSSIBLE_STATES: dict[str, VacuumActivity] = {
     STATE_CLEANING: VacuumActivity.CLEANING,
 }
 
-CONF_SEGMENTS = "segments"
 CONF_CLEAN_SEGMENTS_COMMAND_TOPIC = "clean_segments_command_topic"
 CONF_CLEAN_SEGMENTS_COMMAND_TEMPLATE = "clean_segments_command_template"
 CONF_SUPPORTED_FEATURES = ATTR_SUPPORTED_FEATURES
@@ -141,37 +141,8 @@ MQTT_VACUUM_ATTRIBUTES_BLOCKED = frozenset(
 MQTT_VACUUM_DOCS_URL = "https://www.home-assistant.io/integrations/vacuum.mqtt/"
 
 
-def validate_clean_area_config(config: ConfigType) -> ConfigType:
-    """Check for a valid configuration and check segments."""
-    if (config[CONF_SEGMENTS] and CONF_CLEAN_SEGMENTS_COMMAND_TOPIC not in config) or (
-        not config[CONF_SEGMENTS] and CONF_CLEAN_SEGMENTS_COMMAND_TOPIC in config
-    ):
-        raise vol.Invalid(
-            f"Options `{CONF_SEGMENTS}` and "
-            f"`{CONF_CLEAN_SEGMENTS_COMMAND_TOPIC}` must be defined together"
-        )
-    segments: list[str]
-    if segments := config[CONF_SEGMENTS]:
-        if not config.get(CONF_UNIQUE_ID):
-            raise vol.Invalid(
-                f"Option `{CONF_SEGMENTS}` requires `{CONF_UNIQUE_ID}` to be configured"
-            )
-        unique_segments: set[str] = set()
-        for segment in segments:
-            segment_id, _, _ = segment.partition(".")
-            if not segment_id or segment_id in unique_segments:
-                raise vol.Invalid(
-                    f"The `{CONF_SEGMENTS}` option contains an invalid or non-"
-                    f"unique segment ID '{segment_id}'. Got {segments}"
-                )
-            unique_segments.add(segment_id)
-
-    return config
-
-
 _BASE_SCHEMA = MQTT_BASE_SCHEMA.extend(
     {
-        vol.Optional(CONF_SEGMENTS, default=[]): vol.All(cv.ensure_list, [cv.string]),
         vol.Optional(CONF_CLEAN_SEGMENTS_COMMAND_TOPIC): valid_publish_topic,
         vol.Optional(CONF_CLEAN_SEGMENTS_COMMAND_TEMPLATE): cv.template,
         vol.Optional(CONF_FAN_SPEED_LIST, default=[]): vol.All(
@@ -199,10 +170,8 @@ _BASE_SCHEMA = MQTT_BASE_SCHEMA.extend(
     }
 ).extend(MQTT_ENTITY_COMMON_SCHEMA.schema)
 
-PLATFORM_SCHEMA_MODERN = vol.All(_BASE_SCHEMA, validate_clean_area_config)
-DISCOVERY_SCHEMA = vol.All(
-    _BASE_SCHEMA.extend({}, extra=vol.ALLOW_EXTRA), validate_clean_area_config
-)
+PLATFORM_SCHEMA_MODERN = vol.All(_BASE_SCHEMA)
+DISCOVERY_SCHEMA = vol.All(_BASE_SCHEMA.extend({}, extra=vol.ALLOW_EXTRA))
 
 
 async def async_setup_entry(
@@ -229,7 +198,7 @@ class MqttStateVacuum(MqttEntity, StateVacuumEntity):
     _entity_id_format = ENTITY_ID_FORMAT
     _attributes_extra_blocked = MQTT_VACUUM_ATTRIBUTES_BLOCKED
 
-    _segments: list[Segment]
+    _segments: list[Segment] | None
     _command_topic: str | None
     _set_fan_speed_topic: str | None
     _send_command_topic: str | None
@@ -245,6 +214,7 @@ class MqttStateVacuum(MqttEntity, StateVacuumEntity):
     ) -> None:
         """Initialize the vacuum."""
         self._state_attrs: dict[str, Any] = {}
+        self._segments = None
 
         MqttEntity.__init__(self, hass, config, config_entry, discovery_data)
 
@@ -269,15 +239,8 @@ class MqttStateVacuum(MqttEntity, StateVacuumEntity):
         self._attr_supported_features = _strings_to_services(
             supported_feature_strings, STRING_TO_SERVICE
         )
-        if config[CONF_SEGMENTS] and CONF_CLEAN_SEGMENTS_COMMAND_TOPIC in config:
+        if CONF_CLEAN_SEGMENTS_COMMAND_TOPIC in config:
             self._attr_supported_features |= VacuumEntityFeature.CLEAN_AREA
-            segments: list[str] = config[CONF_SEGMENTS]
-            self._segments = [
-                Segment(id=segment_id, name=name or segment_id)
-                for segment_id, _, name in [
-                    segment.partition(".") for segment in segments
-                ]
-            ]
             self._clean_segments_command_topic = config[
                 CONF_CLEAN_SEGMENTS_COMMAND_TOPIC
             ]
@@ -309,6 +272,7 @@ class MqttStateVacuum(MqttEntity, StateVacuumEntity):
         if (
             self._attr_supported_features & VacuumEntityFeature.CLEAN_AREA
             and (last_seen := self.last_seen_segments) is not None
+            and self._segments is not None
             and {s.id: s for s in last_seen} != {s.id: s for s in self._segments}
         ):
             self.async_create_segments_issue()
@@ -333,6 +297,13 @@ class MqttStateVacuum(MqttEntity, StateVacuumEntity):
                 POSSIBLE_STATES[cast(str, state)] if payload[STATE] else None
             )
             del payload[STATE]
+        if SEGMENTS in payload:
+            segments = cast(dict[str, str], payload[SEGMENTS])
+            self._segments = [
+                Segment(id=segment_id, name=str(name or segment_id))
+                for segment_id, name in segments.items()
+            ]
+            self._process_entity_update()
         self._update_state_attributes(payload)
 
     @callback
@@ -359,7 +330,7 @@ class MqttStateVacuum(MqttEntity, StateVacuumEntity):
 
     async def async_get_segments(self) -> list[Segment]:
         """Return the available segments."""
-        return self._segments
+        return self._segments if self._segments is not None else []
 
     async def _async_publish_command(self, feature: VacuumEntityFeature) -> None:
         """Publish a command."""
