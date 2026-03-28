@@ -7,5 +7,5 @@
   "integration_type": "hub",
   "iot_class": "cloud_polling",
   "loggers": ["pydrawise"],
-  "requirements": ["pydrawise==2025.9.0"]
+  "requirements": ["pydrawise==2026.3.0"]
 }
