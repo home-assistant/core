@@ -1196,6 +1196,7 @@ async def test_traffic_rules(
     )
 
     call_count = aioclient_mock.call_count
+    traffic_rule_payload[0]["enabled"] = False
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
@@ -1209,8 +1210,10 @@ async def test_traffic_rules(
     expected_disable_call["enabled"] = False
 
     assert aioclient_mock.mock_calls[call_count][2] == expected_disable_call
+    assert hass.states.get("switch.unifi_network_test_traffic_rule").state == STATE_OFF
 
     call_count = aioclient_mock.call_count
+    traffic_rule_payload[0]["enabled"] = True
 
     # Enable traffic rule
     await hass.services.async_call(
@@ -1225,6 +1228,7 @@ async def test_traffic_rules(
 
     assert aioclient_mock.call_count == call_count + 2
     assert aioclient_mock.mock_calls[call_count][2] == expected_enable_call
+    assert hass.states.get("switch.unifi_network_test_traffic_rule").state == STATE_ON
 
 
 @pytest.mark.parametrize(("traffic_route_payload"), [([TRAFFIC_ROUTE])])
@@ -1250,6 +1254,7 @@ async def test_traffic_routes(
     )
 
     call_count = aioclient_mock.call_count
+    traffic_route_payload[0]["enabled"] = False
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
@@ -1263,8 +1268,10 @@ async def test_traffic_routes(
     expected_disable_call["enabled"] = False
 
     assert aioclient_mock.mock_calls[call_count][2] == expected_disable_call
+    assert hass.states.get("switch.unifi_network_test_traffic_route").state == STATE_OFF
 
     call_count = aioclient_mock.call_count
+    traffic_route_payload[0]["enabled"] = True
 
     # Enable traffic route
     await hass.services.async_call(
@@ -1279,6 +1286,7 @@ async def test_traffic_routes(
 
     assert aioclient_mock.call_count == call_count + 2
     assert aioclient_mock.mock_calls[call_count][2] == expected_enable_call
+    assert hass.states.get("switch.unifi_network_test_traffic_route").state == STATE_ON
 
 
 @pytest.mark.parametrize(("firewall_policy_payload"), [([FIREWALL_POLICY])])

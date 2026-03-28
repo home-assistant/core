@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from datetime import timedelta
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, TypeVar
 
 from aiounifi.interfaces.api_handlers import APIHandler
 
@@ -15,17 +15,19 @@ if TYPE_CHECKING:
     from . import UnifiConfigEntry
     from .hub.hub import UnifiHub
 
+HandlerT = TypeVar("HandlerT", bound=APIHandler)
+
 POLL_INTERVAL = timedelta(seconds=10)
 
 
-class UnifiDataUpdateCoordinator(DataUpdateCoordinator[None]):
+class UnifiDataUpdateCoordinator[HandlerT: APIHandler](DataUpdateCoordinator[None]):
     """Coordinator managing polling for a single UniFi API data source."""
 
     def __init__(
         self,
         hub: UnifiHub,
         config_entry: UnifiConfigEntry,
-        handler: APIHandler,
+        handler: HandlerT,
     ) -> None:
         """Initialize coordinator."""
         super().__init__(
@@ -33,11 +35,15 @@ class UnifiDataUpdateCoordinator(DataUpdateCoordinator[None]):
             LOGGER,
             name=f"UniFi {type(handler).__name__}",
             config_entry=config_entry,
-            update_method=self._async_update,
             update_interval=POLL_INTERVAL,
         )
         self._handler = handler
 
-    async def _async_update(self) -> None:
+    @property
+    def handler(self) -> HandlerT:
+        """Return the aiounifi handler managed by this coordinator."""
+        return self._handler
+
+    async def _async_update_data(self) -> None:
         """Update data from the API handler."""
         await self._handler.update()

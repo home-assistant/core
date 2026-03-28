@@ -12,7 +12,7 @@ from datetime import timedelta
 from functools import partial
 from typing import TYPE_CHECKING, Any
 
-from aiounifi.interfaces.api_handlers import ItemEvent
+from aiounifi.interfaces.api_handlers import APIHandler, ItemEvent
 
 from homeassistant.const import Platform
 from homeassistant.core import callback
@@ -51,11 +51,15 @@ class UnifiEntityLoader:
         )
         self.wireless_clients = hub.hass.data[UNIFI_WIRELESS_CLIENTS]
 
-        self._polling_coordinators = [
-            UnifiDataUpdateCoordinator(hub, config_entry, hub.api.traffic_rules),
-            UnifiDataUpdateCoordinator(hub, config_entry, hub.api.traffic_routes),
-        ]
-        for coordinator in self._polling_coordinators:
+        self._polling_coordinators: dict[int, UnifiDataUpdateCoordinator] = {
+            id(hub.api.traffic_rules): UnifiDataUpdateCoordinator(
+                hub, config_entry, hub.api.traffic_rules
+            ),
+            id(hub.api.traffic_routes): UnifiDataUpdateCoordinator(
+                hub, config_entry, hub.api.traffic_routes
+            ),
+        }
+        for coordinator in self._polling_coordinators.values():
             coordinator.async_add_listener(lambda: None)
 
         self.platforms: list[
@@ -72,7 +76,13 @@ class UnifiEntityLoader:
 
     async def initialize(self) -> None:
         """Initialize API data and extra client support."""
-        await self._refresh_api_data()
+        await asyncio.gather(
+            self._refresh_api_data(),
+            *[
+                coordinator.async_config_entry_first_refresh()
+                for coordinator in self._polling_coordinators.values()
+            ],
+        )
         self._restore_inactive_clients()
         self.wireless_clients.update_clients(set(self.hub.api.clients.values()))
 
@@ -147,6 +157,13 @@ class UnifiEntityLoader:
             and description.allowed_fn(self.hub, obj_id)
             and description.supported_fn(self.hub, obj_id)
         )
+
+    @callback
+    def get_data_update_coordinator(
+        self, handler: APIHandler
+    ) -> UnifiDataUpdateCoordinator | None:
+        """Return the polling coordinator for a handler, if available."""
+        return self._polling_coordinators.get(id(handler))
 
     @callback
     def _load_entities(
