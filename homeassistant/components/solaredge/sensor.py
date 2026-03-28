@@ -291,22 +291,22 @@ async def async_setup_entry(
 
     # Set up storage sensors only if inventory shows batteries are present
     storage_result = sensor_factory.setup_storage_sensors()
-    if isinstance(storage_result, list):
-        await sensor_factory.storage_service.coordinator.async_refresh()
-        entities.extend(storage_result)
-    elif storage_result is None:
+    if storage_result is not None:
+        if storage_result:
+            await sensor_factory.storage_service.coordinator.async_refresh()
+            entities.extend(storage_result)
+    else:
         # Inventory fetch failed, register listener to retry when data arrives
         def on_inventory_update() -> None:
             """Handle inventory update to set up storage sensors."""
             result = sensor_factory.setup_storage_sensors()
-            if isinstance(result, list):
-                hass.async_create_task(
-                    sensor_factory.storage_service.coordinator.async_refresh()
-                )
-                if result:
-                    async_add_entities(result)
             if result is not None:
-                # Either success or confirmed no batteries - stop listening
+                if result:
+                    hass.async_create_task(
+                        sensor_factory.storage_service.coordinator.async_refresh()
+                    )
+                    async_add_entities(result)
+                # Success or confirmed no batteries - stop listening
                 unsub()
 
         unsub = sensor_factory.inventory_service.coordinator.async_add_listener(
@@ -389,12 +389,11 @@ class SolarEdgeSensorFactory:
 
     def setup_storage_sensors(
         self,
-    ) -> list[SolarEdgeSensorEntity] | bool | None:
+    ) -> list[SolarEdgeSensorEntity] | None:
         """Set up storage sensors if batteries are available.
 
         Returns:
-            list: Storage sensor entities to add
-            False: Inventory confirmed no batteries present (don't retry)
+            list: Storage sensor entities to add (empty if no batteries)
             None: Inventory fetch failed, should retry later
         """
         # Check if inventory data was successfully fetched
@@ -406,7 +405,7 @@ class SolarEdgeSensorFactory:
         inventory_batteries = battery_attr.get("batteries", [])
         if not inventory_batteries:
             LOGGER.debug("No batteries found in inventory, skipping storage sensors")
-            return False
+            return []
 
         # Set up storage service and add to services
         self.storage_service.async_setup()

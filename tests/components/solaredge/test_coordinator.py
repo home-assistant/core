@@ -2,7 +2,7 @@
 
 import asyncio
 from datetime import datetime, timedelta
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
@@ -159,7 +159,7 @@ STORAGE_DATA_MULTI_BATTERY = {
 
 @patch("homeassistant.components.solaredge.SolarEdge")
 async def test_solaredgeoverviewdataservice_energy_values_validity(
-    mock_solaredge,
+    mock_solaredge: MagicMock,
     recorder_mock: Recorder,
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
@@ -539,7 +539,7 @@ async def test_modules_coordinator_no_energy_data(
 
 @patch("homeassistant.components.solaredge.SolarEdge")
 async def test_storage_data_service(
-    mock_solaredge,
+    mock_solaredge: MagicMock,
     recorder_mock: Recorder,
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
@@ -609,7 +609,7 @@ async def test_storage_data_service(
 
 @patch("homeassistant.components.solaredge.SolarEdge")
 async def test_storage_data_service_multi_battery(
-    mock_solaredge,
+    mock_solaredge: MagicMock,
     recorder_mock: Recorder,
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
@@ -679,7 +679,7 @@ async def test_storage_data_service_multi_battery(
 
 @patch("homeassistant.components.solaredge.SolarEdge")
 async def test_storage_data_service_no_batteries(
-    mock_solaredge,
+    mock_solaredge: MagicMock,
     recorder_mock: Recorder,
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
@@ -710,7 +710,7 @@ async def test_storage_data_service_no_batteries(
 
 @patch("homeassistant.components.solaredge.SolarEdge")
 async def test_storage_data_service_api_error(
-    mock_solaredge,
+    mock_solaredge: MagicMock,
     recorder_mock: Recorder,
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
@@ -747,7 +747,7 @@ async def test_storage_data_service_api_error(
 
 @patch("homeassistant.components.solaredge.SolarEdge")
 async def test_storage_data_missing_keys_in_response(
-    mock_solaredge,
+    mock_solaredge: MagicMock,
     recorder_mock: Recorder,
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
@@ -785,7 +785,7 @@ async def test_storage_data_missing_keys_in_response(
 
 @patch("homeassistant.components.solaredge.SolarEdge")
 async def test_storage_data_missing_batteries_key(
-    mock_solaredge,
+    mock_solaredge: MagicMock,
     recorder_mock: Recorder,
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
@@ -816,7 +816,7 @@ async def test_storage_data_missing_batteries_key(
 
 @patch("homeassistant.components.solaredge.SolarEdge")
 async def test_storage_service_deferred_after_inventory_failure(
-    mock_solaredge,
+    mock_solaredge: MagicMock,
     recorder_mock: Recorder,
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
@@ -865,7 +865,7 @@ async def test_storage_service_deferred_after_inventory_failure(
 
 @patch("homeassistant.components.solaredge.SolarEdge")
 async def test_storage_service_not_created_when_inventory_has_no_batteries(
-    mock_solaredge,
+    mock_solaredge: MagicMock,
     recorder_mock: Recorder,
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
