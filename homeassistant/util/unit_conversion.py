@@ -361,7 +361,7 @@ class BaseUnitConverter:
     ) -> float | None:
         """Execute a list of conversion operations in turn allowing None value.
 
-        Will return None if value is None or there is a math error.
+        Will return None if value is None or there is a zero division error.
         """
         for op, factor in ops:
             if val is None:
@@ -369,7 +369,7 @@ class BaseUnitConverter:
             try:
                 val = op(val, factor)
             except ZeroDivisionError:
-                val = None  # On math failure treat result as None
+                val = None  # On zero division error treat result as None
         return val
 
 
