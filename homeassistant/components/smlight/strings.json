@@ -79,6 +79,18 @@
         "name": "Zigbee restart"
       }
     },
+    "event": {
+      "event": {
+        "name": "Events",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "ir_code_received": "IR code received"
+            }
+          }
+        }
+      }
+    },
     "light": {
       "ambilight": {
         "name": "Ambilight"
