@@ -5,11 +5,13 @@ from unittest.mock import Mock, patch
 
 from pysnmp.error import PySnmpError
 from pysnmp.proto.rfc1902 import OctetString
+from pysnmp.smi.error import WrongValueError
 import pytest
 
 from homeassistant.components.snmp.const import DOMAIN
 from homeassistant.components.snmp.coordinator import SnmpUpdateCoordinator
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import UpdateFailed
 
 from tests.common import MockConfigEntry
@@ -140,6 +142,27 @@ async def test_coordinator_host_info_error(
     ):
         await coordinator._async_fetch_host_info()
         assert coordinator.model == ""  # Should be set to empty string to prevent retry
+
+
+async def test_coordinator_host_info_auth_error(
+    hass: HomeAssistant, mock_request_args
+) -> None:
+    """Test handling of WrongValueError during host info fetching."""
+    entry = MockConfigEntry(
+        domain=DOMAIN, data={"host": "1.1.1.1", "baseoid": "1.3.6.1.2.1.1"}
+    )
+    coordinator = SnmpUpdateCoordinator(hass, entry)
+
+    with (
+        patch(
+            "homeassistant.components.snmp.coordinator.get_cmd",
+            side_effect=WrongValueError(),
+        ),
+        pytest.raises(
+            ConfigEntryAuthFailed, match="Invalid authentication credentials"
+        ),
+    ):
+        await coordinator._async_fetch_host_info()
 
 
 async def test_coordinator_walk_errindication(
@@ -369,3 +392,25 @@ async def test_coordinator_walk_end_of_mib(
     ):
         await coordinator._async_update_data()
         assert mock_is_end.call_count == 2
+
+
+async def test_coordinator_update_auth_error(
+    hass: HomeAssistant, mock_request_args
+) -> None:
+    """Test handling of WrongValueError during update data."""
+    entry = MockConfigEntry(
+        domain=DOMAIN, data={"host": "1.1.1.1", "baseoid": "1.3.6.1.2.1.1"}
+    )
+    coordinator = SnmpUpdateCoordinator(hass, entry)
+    coordinator.model = "Test"
+
+    with (
+        patch(
+            "homeassistant.components.snmp.coordinator.bulk_walk_cmd",
+            side_effect=WrongValueError(),
+        ),
+        pytest.raises(
+            ConfigEntryAuthFailed, match="Invalid authentication credentials"
+        ),
+    ):
+        await coordinator._async_update_data()

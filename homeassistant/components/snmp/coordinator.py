@@ -13,10 +13,12 @@ from pysnmp.hlapi.v3arch.asyncio import (
     get_cmd,
     is_end_of_mib,
 )
+from pysnmp.smi.error import WrongValueError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import (
@@ -94,6 +96,10 @@ class SnmpUpdateCoordinator(DataUpdateCoordinator[dict[str, str | None]]):
         """Fetch host-specific info for the device registry."""
         try:
             request_args = await self._async_ensure_request_args()
+        except WrongValueError as err:
+            raise ConfigEntryAuthFailed(
+                f"Invalid authentication credentials or protocols: {err}"
+            ) from err
         except PySnmpError as err:
             _LOGGER.warning("Failed to setup SNMP for host info: %s", err)
             self.model = ""  # Prevent re-fetching
@@ -111,6 +117,10 @@ class SnmpUpdateCoordinator(DataUpdateCoordinator[dict[str, str | None]]):
                 ObjectType(ObjectIdentity("1.3.6.1.2.1.1.1.0")),
                 ObjectType(ObjectIdentity("1.3.6.1.2.1.1.5.0")),
             )
+        except WrongValueError as err:
+            raise ConfigEntryAuthFailed(
+                f"Invalid authentication credentials or protocols: {err}"
+            ) from err
         except PySnmpError as err:
             _LOGGER.warning("Failed to fetch host info: %s", err)
             self.model = ""  # Prevent re-fetching
@@ -138,22 +148,26 @@ class SnmpUpdateCoordinator(DataUpdateCoordinator[dict[str, str | None]]):
 
         try:
             request_args = await self._async_ensure_request_args()
+        except WrongValueError as err:
+            raise ConfigEntryAuthFailed(
+                f"Invalid authentication credentials or protocols: {err}"
+            ) from err
         except PySnmpError as err:
             raise UpdateFailed(f"SNMP setup failed: {err}") from err
 
         engine, auth_data, target, context_data, object_type = request_args
 
-        walker = bulk_walk_cmd(
-            engine,
-            auth_data,
-            target,
-            context_data,
-            0,
-            50,
-            object_type,
-            lexicographicMode=False,
-        )
         try:
+            walker = bulk_walk_cmd(
+                engine,
+                auth_data,
+                target,
+                context_data,
+                0,
+                50,
+                object_type,
+                lexicographicMode=False,
+            )
             async for errindication, errstatus, errindex, res in walker:
                 if errindication:
                     message = f"SNMPLIB error: {errindication}"
@@ -190,6 +204,10 @@ class SnmpUpdateCoordinator(DataUpdateCoordinator[dict[str, str | None]]):
                         if len(oid_tuple) >= 4:
                             ip = ".".join(map(str, oid_tuple[-4:]))
                     devices[mac] = ip
+        except WrongValueError as err:
+            raise ConfigEntryAuthFailed(
+                f"Invalid authentication credentials or protocols: {err}"
+            ) from err
         except PySnmpError as err:
             raise UpdateFailed(f"SNMP error during walk: {err}") from err
 

@@ -5,12 +5,12 @@ from unittest.mock import AsyncMock, Mock, patch
 from pysnmp.error import PySnmpError
 from pysnmp.hlapi.v3arch.asyncio import SnmpEngine
 from pysnmp.hlapi.v3arch.asyncio.cmdgen import LCD
-from pysnmp.smi.error import WrongValueError
 
 from homeassistant.components import snmp
 from homeassistant.components.snmp.const import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_PORT, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed
 
 from tests.common import MockConfigEntry
 
@@ -238,7 +238,7 @@ async def test_async_setup_entry_wrong_value_error(hass: HomeAssistant) -> None:
         ),
         patch(
             "homeassistant.components.snmp.SnmpUpdateCoordinator.async_config_entry_first_refresh",
-            side_effect=WrongValueError,
+            side_effect=ConfigEntryAuthFailed,
         ),
         patch("homeassistant.config_entries.ConfigEntry.async_start_reauth"),
     ):
