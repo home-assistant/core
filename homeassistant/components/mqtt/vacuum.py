@@ -143,28 +143,22 @@ MQTT_VACUUM_DOCS_URL = "https://www.home-assistant.io/integrations/vacuum.mqtt/"
 
 def validate_clean_area_config(config: ConfigType) -> ConfigType:
     """Check for a valid configuration and check segments."""
-    if (config[CONF_SEGMENTS] and CONF_CLEAN_SEGMENTS_COMMAND_TOPIC not in config) or (
-        not config[CONF_SEGMENTS] and CONF_CLEAN_SEGMENTS_COMMAND_TOPIC in config
-    ):
+    if CONF_CLEAN_SEGMENTS_COMMAND_TOPIC not in config:
+        return config
+    if not config.get(CONF_UNIQUE_ID):
         raise vol.Invalid(
-            f"Options `{CONF_SEGMENTS}` and "
-            f"`{CONF_CLEAN_SEGMENTS_COMMAND_TOPIC}` must be defined together"
+            f"Option `{CONF_CLEAN_SEGMENTS_COMMAND_TOPIC}` requires `{CONF_UNIQUE_ID}` to be configured"
         )
-    segments: list[str]
-    if segments := config[CONF_SEGMENTS]:
-        if not config.get(CONF_UNIQUE_ID):
+    segments: list[str] = config[CONF_SEGMENTS]
+    unique_segments: set[str] = set()
+    for segment in segments:
+        segment_id, _, _ = segment.partition(".")
+        if not segment_id or segment_id in unique_segments:
             raise vol.Invalid(
-                f"Option `{CONF_SEGMENTS}` requires `{CONF_UNIQUE_ID}` to be configured"
+                f"The `{CONF_SEGMENTS}` option contains an invalid or non-"
+                f"unique segment ID '{segment_id}'. Got {segments}"
             )
-        unique_segments: set[str] = set()
-        for segment in segments:
-            segment_id, _, _ = segment.partition(".")
-            if not segment_id or segment_id in unique_segments:
-                raise vol.Invalid(
-                    f"The `{CONF_SEGMENTS}` option contains an invalid or non-"
-                    f"unique segment ID '{segment_id}'. Got {segments}"
-                )
-            unique_segments.add(segment_id)
+        unique_segments.add(segment_id)
 
     return config
 
@@ -235,6 +229,7 @@ class MqttStateVacuum(MqttEntity, StateVacuumEntity):
     _send_command_topic: str | None
     _clean_segments_command_topic: str
     _payloads: dict[str, str | None]
+    _initial_setup: bool = True
 
     def __init__(
         self,
@@ -269,7 +264,7 @@ class MqttStateVacuum(MqttEntity, StateVacuumEntity):
         self._attr_supported_features = _strings_to_services(
             supported_feature_strings, STRING_TO_SERVICE
         )
-        if config[CONF_SEGMENTS] and CONF_CLEAN_SEGMENTS_COMMAND_TOPIC in config:
+        if CONF_CLEAN_SEGMENTS_COMMAND_TOPIC in config:
             self._attr_supported_features |= VacuumEntityFeature.CLEAN_AREA
             segments: list[str] = config[CONF_SEGMENTS]
             self._segments = [
@@ -308,14 +303,16 @@ class MqttStateVacuum(MqttEntity, StateVacuumEntity):
         """Check vacuum segments with registry entry."""
         if (
             self._attr_supported_features & VacuumEntityFeature.CLEAN_AREA
-            and (last_seen := self.last_seen_segments) is not None
-            and {s.id: s for s in last_seen} != {s.id: s for s in self._segments}
+            and not self._initial_setup
+            and {s.id: s for s in self.last_seen_segments or []}
+            != {s.id: s for s in self._segments}
         ):
             self.async_create_segments_issue()
 
     async def mqtt_async_added_to_hass(self) -> None:
         """Check vacuum segments with registry entry."""
         self._process_entity_update()
+        self._initial_setup = False
 
     def _update_state_attributes(self, payload: dict[str, Any]) -> None:
         """Update the entity state attributes."""

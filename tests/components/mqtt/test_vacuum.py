@@ -87,6 +87,15 @@ DEFAULT_CONFIG = {
     }
 }
 
+CONFIG_CLEAN_SEGMENTS_0 = {
+    mqtt.DOMAIN: {
+        vacuum.DOMAIN: {
+            "name": "test",
+            "unique_id": "veryunique",
+            "clean_segments_command_topic": "vacuum/clean_segment",
+        }
+    }
+}
 CONFIG_CLEAN_SEGMENTS_1 = {
     mqtt.DOMAIN: {
         vacuum.DOMAIN: {
@@ -503,6 +512,76 @@ async def test_clean_segments_command_update(
     )
 
 
+async def test_clean_segments_command_update_without_initial_segments(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    entity_registry: er.EntityRegistry,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test cleanable segments update via discovery without initial segments."""
+    # Prepare original entity config entry
+    config_entry = hass.config_entries.async_entries(mqtt.DOMAIN)[0]
+    entity_registry.async_get_or_create(
+        vacuum.DOMAIN,
+        mqtt.DOMAIN,
+        "veryunique",
+        config_entry=config_entry,
+        suggested_object_id="test",
+    )
+    entity_registry.async_update_entity_options(
+        "vacuum.test",
+        vacuum.DOMAIN,
+        {},
+    )
+    await mqtt_mock_entry()
+    # Do initial discovery
+    config1 = CONFIG_CLEAN_SEGMENTS_0[mqtt.DOMAIN][vacuum.DOMAIN]
+    payload1 = json.dumps(config1)
+    config_topic = "homeassistant/vacuum/bla/config"
+    async_fire_mqtt_message(hass, config_topic, payload1)
+    await hass.async_block_till_done()
+    state = hass.states.get("vacuum.test")
+    assert state.state == STATE_UNKNOWN
+
+    issue_registry = ir.async_get(hass)
+    # We do not expect a repair flow
+    assert len(issue_registry.issues) == 0
+
+    # Update the segments
+    config2 = config1.copy()
+    config2["segments"] = ["1.Livingroom", "2.Kitchen", "3.Diningroom"]
+    payload2 = json.dumps(config2)
+    async_fire_mqtt_message(hass, config_topic, payload2)
+    await hass.async_block_till_done()
+
+    # A repair flow should start
+    assert len(issue_registry.issues) == 1
+
+    client = await hass_ws_client(hass)
+    await client.send_json_auto_id(
+        {"type": "vacuum/get_segments", "entity_id": "vacuum.test"}
+    )
+    msg = await client.receive_json()
+    assert msg["success"]
+    assert msg["result"]["segments"] == [
+        {"id": "1", "name": "Livingroom", "group": None},
+        {"id": "2", "name": "Kitchen", "group": None},
+        {"id": "3", "name": "Diningroom", "group": None},
+    ]
+
+    # Test update with a non-unique segment list fails
+    config3 = config1.copy()
+    config3["segments"] = ["1.Livingroom", "2.Kitchen", "2.Diningroom"]
+    payload3 = json.dumps(config3)
+    async_fire_mqtt_message(hass, config_topic, payload3)
+    await hass.async_block_till_done()
+    assert (
+        "Error 'The `segments` option contains an invalid or non-unique segment ID '2'"
+        in caplog.text
+    )
+
+
 @pytest.mark.parametrize(
     "hass_config",
     [
@@ -569,24 +648,6 @@ async def test_non_unique_segments(
             help_custom_config(
                 vacuum.DOMAIN,
                 DEFAULT_CONFIG,
-                ({"clean_segments_command_topic": "test-topic"},),
-            ),
-            "Options `segments` and "
-            "`clean_segments_command_topic` must be defined together",
-        ),
-        (
-            help_custom_config(
-                vacuum.DOMAIN,
-                DEFAULT_CONFIG,
-                ({"segments": ["Livingroom"]},),
-            ),
-            "Options `segments` and "
-            "`clean_segments_command_topic` must be defined together",
-        ),
-        (
-            help_custom_config(
-                vacuum.DOMAIN,
-                DEFAULT_CONFIG,
                 (
                     {
                         "segments": ["Livingroom"],
@@ -594,7 +655,7 @@ async def test_non_unique_segments(
                     },
                 ),
             ),
-            "Option `segments` requires `unique_id` to be configured",
+            "Option `clean_segments_command_topic` requires `unique_id` to be configured",
         ),
     ],
 )
