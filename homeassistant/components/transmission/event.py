@@ -3,9 +3,9 @@
 from __future__ import annotations
 
 import logging
+from typing import TYPE_CHECKING
 
 from homeassistant.components.event import EventEntity, EventEntityDescription
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_ID, ATTR_NAME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -17,7 +17,7 @@ from .const import (
     EVENT_REMOVED_TORRENT,
     EVENT_STARTED_TORRENT,
 )
-from .coordinator import TransmissionEventData
+from .coordinator import TransmissionConfigEntry, TransmissionEventData
 from .entity import TransmissionEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -27,7 +27,7 @@ PARALLEL_UPDATES = 0
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: TransmissionConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Transmission event platform."""
@@ -49,13 +49,12 @@ async def async_setup_entry(
 class TransmissionEvent(TransmissionEntity, EventEntity):
     """Representation of a Transmission event entity."""
 
-    _attr_should_poll = False
-
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
         await super().async_added_to_hass()
 
-        assert self._attr_unique_id
+        if TYPE_CHECKING:
+            assert self._attr_unique_id
 
         self.async_on_remove(
             self.coordinator.async_add_event_listener(

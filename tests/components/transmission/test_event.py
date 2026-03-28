@@ -1,14 +1,17 @@
 """Tests for the Transmission event platform."""
 
+from datetime import timedelta
 import logging
 from types import SimpleNamespace
 from unittest.mock import AsyncMock, patch
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 
 from homeassistant.components import event as event_component
 from homeassistant.components.event import ATTR_EVENT_TYPE, ATTR_EVENT_TYPES
 from homeassistant.components.transmission.const import (
+    DEFAULT_SCAN_INTERVAL,
     EVENT_DOWNLOADED_TORRENT,
     EVENT_REMOVED_TORRENT,
     EVENT_STARTED_TORRENT,
@@ -19,7 +22,7 @@ from homeassistant.util import dt as dt_util
 
 from . import setup_integration
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 async def test_event_entity_setup(
@@ -55,6 +58,7 @@ async def test_event_updates_state(
     hass: HomeAssistant,
     mock_transmission_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
     hass_event: str,
     expected_event_type: str,
 ) -> None:
@@ -62,11 +66,6 @@ async def test_event_updates_state(
     with patch("homeassistant.components.transmission.PLATFORMS", [Platform.EVENT]):
         await setup_integration(hass, mock_config_entry)
         await hass.async_block_till_done()
-
-    coordinator = mock_config_entry.runtime_data
-    component = hass.data[event_component.DATA_COMPONENT]
-    entity = component.get_entity("event.transmission_torrent")
-    assert entity is not None
 
     client = mock_transmission_client.return_value
     torrent_status = {
@@ -91,8 +90,12 @@ async def test_event_updates_state(
     client.get_torrents.side_effect = torrents_sequence
 
     for _ in torrents_sequence:
-        await coordinator.async_refresh()
-        await hass.async_block_till_done()
+        freezer.tick(timedelta(seconds=DEFAULT_SCAN_INTERVAL + 1))
+        async_fire_time_changed(
+            hass,
+            dt_util.utcnow() + timedelta(seconds=DEFAULT_SCAN_INTERVAL + 1),
+        )
+        await hass.async_block_till_done(wait_background_tasks=True)
 
     state = hass.states.get("event.transmission_torrent")
     assert state is not None

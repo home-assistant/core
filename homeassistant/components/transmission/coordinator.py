@@ -105,7 +105,13 @@ class TransmissionDataUpdateCoordinator(DataUpdateCoordinator[SessionStats]):
 
     async def _async_update_data(self) -> SessionStats:
         """Update transmission data."""
-        return await self.hass.async_add_executor_job(self.update)
+        data = await self.hass.async_add_executor_job(self.update)
+
+        self.check_completed_torrent()
+        self.check_started_torrent()
+        self.check_removed_torrent()
+
+        return data
 
     def update(self) -> SessionStats:
         """Get the latest data from Transmission instance."""
@@ -116,10 +122,6 @@ class TransmissionDataUpdateCoordinator(DataUpdateCoordinator[SessionStats]):
             self.port_forwarding = self.api.port_test()
         except transmission_rpc.TransmissionError as err:
             raise UpdateFailed("Unable to connect to Transmission client") from err
-
-        self.check_completed_torrent()
-        self.check_started_torrent()
-        self.check_removed_torrent()
 
         return data
 
@@ -159,9 +161,7 @@ class TransmissionDataUpdateCoordinator(DataUpdateCoordinator[SessionStats]):
                     download_path=torrent.download_dir or "",
                     labels=torrent.labels,
                 )
-                self.hass.loop.call_soon_threadsafe(
-                    self._async_notify_event_listeners, event
-                )
+                self._async_notify_event_listeners(event)
 
         self._completed_torrents = current_completed_torrents
 
@@ -191,9 +191,7 @@ class TransmissionDataUpdateCoordinator(DataUpdateCoordinator[SessionStats]):
                     download_path=torrent.download_dir or "",
                     labels=torrent.labels,
                 )
-                self.hass.loop.call_soon_threadsafe(
-                    self._async_notify_event_listeners, event
-                )
+                self._async_notify_event_listeners(event)
 
         self._started_torrents = current_started_torrents
 
@@ -219,9 +217,7 @@ class TransmissionDataUpdateCoordinator(DataUpdateCoordinator[SessionStats]):
                     download_path=torrent.download_dir or "",
                     labels=torrent.labels,
                 )
-                self.hass.loop.call_soon_threadsafe(
-                    self._async_notify_event_listeners, event
-                )
+                self._async_notify_event_listeners(event)
 
         self._all_torrents = self.torrents.copy()
 
