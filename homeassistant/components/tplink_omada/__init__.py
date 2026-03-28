@@ -17,10 +17,10 @@ from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
-from .cleanup import async_cleanup_client_trackers, async_cleanup_devices
 from .config_flow import CONF_SITE, create_omada_client
 from .const import DOMAIN
 from .controller import OmadaSiteController
+from .coordinator import async_cleanup_client_trackers, async_cleanup_devices
 from .services import async_setup_services
 
 PLATFORMS: list[Platform] = [
@@ -72,11 +72,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: OmadaConfigEntry) -> boo
     async def _async_cleanup_task() -> None:
         await async_cleanup_devices(
             hass,
-            config_entry_ids={entry.entry_id},
+            config_entry_id=entry.entry_id,
         )
         await async_cleanup_client_trackers(
             hass,
-            config_entry_ids={entry.entry_id},
+            config_entry_id=entry.entry_id,
             raise_on_error=False,
         )
 

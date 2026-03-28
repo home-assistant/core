@@ -5,11 +5,11 @@ from unittest.mock import MagicMock
 import pytest
 from tplink_omada_client.exceptions import OmadaClientException
 
-from homeassistant.components.tplink_omada.cleanup import (
+from homeassistant.components.tplink_omada.const import DOMAIN
+from homeassistant.components.tplink_omada.coordinator import (
     async_cleanup_client_trackers,
     async_cleanup_devices,
 )
-from homeassistant.components.tplink_omada.const import DOMAIN
 from homeassistant.components.tplink_omada.services import async_setup_services
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
@@ -216,7 +216,7 @@ async def test_cleanup_helpers_remove_unknown_clients(
 
     await async_cleanup_client_trackers(
         hass,
-        config_entry_ids={mock_config_entry.entry_id},
+        config_entry_id=mock_config_entry.entry_id,
         raise_on_error=True,
     )
 
@@ -285,7 +285,7 @@ async def test_cleanup_devices_removes_orphans(
 
     await async_cleanup_devices(
         hass,
-        config_entry_ids={mock_config_entry.entry_id},
+        config_entry_id=mock_config_entry.entry_id,
     )
 
     assert device_registry.async_get(orphan.id) is None
