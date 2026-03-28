@@ -617,7 +617,7 @@ async def _transform_stream(  # noqa: C901 - This is complex, but better to have
                         llm.ToolInput(
                             id=current_tool_block["id"],
                             tool_name=current_tool_block["name"],
-                            tool_args=tool_args,
+                            tool_args=current_tool_block["input"],
                             external=current_tool_block["type"] == "server_tool_use",
                         )
                     ]

@@ -1552,6 +1552,7 @@
           'external': True,
           'id': 'srvtoolu_016vjte6G4Lj6yzLc2ak1vY4',
           'tool_args': dict({
+            'query': 'Nobel Prize chemistry 2025 winner',
           }),
           'tool_name': 'web_search',
         }),
@@ -1648,6 +1649,7 @@
         dict({
           'id': 'srvtoolu_016vjte6G4Lj6yzLc2ak1vY4',
           'input': dict({
+            'query': 'Nobel Prize chemistry 2025 winner',
           }),
           'name': 'web_search',
           'type': 'server_tool_use',
