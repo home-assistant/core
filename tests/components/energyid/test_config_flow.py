@@ -114,7 +114,6 @@ async def test_config_flow_auth_and_claim_step_success(hass: HomeAssistant) -> N
             "homeassistant.components.energyid.config_flow.WebhookClient",
             side_effect=mock_webhook_client,
         ),
-        patch("homeassistant.components.energyid.config_flow.POLLING_INTERVAL", new=0),
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -155,7 +154,6 @@ async def test_config_flow_claim_timeout(hass: HomeAssistant) -> None:
             "homeassistant.components.energyid.config_flow.WebhookClient",
             return_value=mock_unclaimed_client,
         ),
-        patch("homeassistant.components.energyid.config_flow.POLLING_INTERVAL", new=0),
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -561,7 +559,6 @@ async def test_config_flow_reauth_needs_claim(hass: HomeAssistant) -> None:
             "homeassistant.components.energyid.config_flow.WebhookClient",
             return_value=mock_client,
         ),
-        patch("homeassistant.components.energyid.config_flow.POLLING_INTERVAL", new=0),
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
@@ -622,7 +619,6 @@ async def test_polling_stops_on_invalid_auth_error(hass: HomeAssistant) -> None:
             "homeassistant.components.energyid.config_flow.WebhookClient",
             side_effect=mock_webhook_client,
         ),
-        patch("homeassistant.components.energyid.config_flow.POLLING_INTERVAL", new=0),
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -670,7 +666,6 @@ async def test_polling_stops_on_cannot_connect_error(hass: HomeAssistant) -> Non
             "homeassistant.components.energyid.config_flow.WebhookClient",
             side_effect=mock_webhook_client,
         ),
-        patch("homeassistant.components.energyid.config_flow.POLLING_INTERVAL", new=0),
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -722,7 +717,6 @@ async def test_auth_and_claim_subsequent_auth_error(hass: HomeAssistant) -> None
             "homeassistant.components.energyid.config_flow.WebhookClient",
             side_effect=mock_webhook_client,
         ),
-        patch("homeassistant.components.energyid.config_flow.POLLING_INTERVAL", new=0),
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -830,7 +824,6 @@ async def test_polling_cancellation_on_auth_failure(hass: HomeAssistant) -> None
             "homeassistant.components.energyid.config_flow.WebhookClient",
             side_effect=mock_webhook_client,
         ),
-        patch("homeassistant.components.energyid.config_flow.POLLING_INTERVAL", new=0),
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -903,7 +896,6 @@ async def test_polling_cancellation_on_success(hass: HomeAssistant) -> None:
             "homeassistant.components.energyid.config_flow.WebhookClient",
             side_effect=mock_webhook_client,
         ),
-        patch("homeassistant.components.energyid.config_flow.POLLING_INTERVAL", new=0),
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
