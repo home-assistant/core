@@ -94,6 +94,7 @@ from .const import (
     CONF_CLOUDHOOK_URL,
     CONF_REMOTE_UI_URL,
     CONF_SECRET,
+    CONF_USER_ID,
     DATA_CONFIG_ENTRIES,
     DATA_DELETED_IDS,
     DATA_DEVICES,
@@ -109,6 +110,7 @@ from .const import (
     SIGNAL_SENSOR_UPDATE,
 )
 from .helpers import (
+    async_is_local_only_user,
     decrypt_payload,
     decrypt_payload_legacy,
     empty_okay_response,
@@ -756,7 +758,9 @@ async def webhook_get_config(
         "theme_color": MANIFEST_JSON["theme_color"],
     }
 
-    if cloud.async_active_subscription(hass):
+    if cloud.async_active_subscription(hass) and not await async_is_local_only_user(
+        hass, config_entry.data[CONF_USER_ID]
+    ):
         if CONF_CLOUDHOOK_URL in config_entry.data:
             resp[CONF_CLOUDHOOK_URL] = config_entry.data[CONF_CLOUDHOOK_URL]
         with suppress(cloud.CloudNotAvailable):

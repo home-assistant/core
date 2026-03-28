@@ -147,6 +147,108 @@ async def test_remove_router_reconnect(
     assert entity is None
 
 
+@pytest.mark.parametrize(
+    ("key", "idx"),
+    [
+        ("zigbee_restart", 0),
+        ("zigbee_flash_mode", 0),
+        ("zigbee_restart", 1),
+        ("zigbee_flash_mode", 1),
+    ],
+)
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_multi_radio_buttons_u_device(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    key: str,
+    idx: int,
+    mock_config_entry: MockConfigEntry,
+    mock_smlight_client: MagicMock,
+) -> None:
+    """Test per-radio restart and flash mode buttons on a u-device."""
+    mock_smlight_client.get_info.side_effect = None
+    info = Info.from_dict(
+        await async_load_json_object_fixture(hass, "info-MR1.json", DOMAIN)
+    )
+    info.u_device = True
+    mock_smlight_client.get_info.return_value = info
+
+    await setup_integration(hass, mock_config_entry)
+
+    unique_id_suffix = f"_{idx}" if idx else ""
+    unique_id = f"aa:bb:cc:dd:ee:ff-{key}{unique_id_suffix}"
+    assert (
+        entity_registry.async_get_entity_id(BUTTON_DOMAIN, DOMAIN, unique_id)
+        is not None
+    )
+
+
+@pytest.mark.parametrize(
+    ("key", "method", "idx"),
+    [
+        ("zigbee_restart", "zb_restart", 0),
+        ("zigbee_restart", "zb_restart", 1),
+        ("zigbee_flash_mode", "zb_bootloader", 0),
+        ("zigbee_flash_mode", "zb_bootloader", 1),
+    ],
+)
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_multi_radio_press_calls_idx(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    key: str,
+    method: str,
+    idx: int,
+    mock_config_entry: MockConfigEntry,
+    mock_smlight_client: MagicMock,
+) -> None:
+    """Test pressing per-radio buttons passes the correct idx to the command."""
+    mock_smlight_client.get_info.side_effect = None
+    info = Info.from_dict(
+        await async_load_json_object_fixture(hass, "info-MR1.json", DOMAIN)
+    )
+    info.u_device = True
+    mock_smlight_client.get_info.return_value = info
+
+    await setup_integration(hass, mock_config_entry)
+
+    unique_id_suffix = f"_{idx}" if idx else ""
+    unique_id = f"aa:bb:cc:dd:ee:ff-{key}{unique_id_suffix}"
+    entity_id = entity_registry.async_get_entity_id(BUTTON_DOMAIN, DOMAIN, unique_id)
+    assert entity_id is not None
+
+    mock_method = getattr(mock_smlight_client.cmds, method)
+
+    await hass.services.async_call(
+        BUTTON_DOMAIN,
+        SERVICE_PRESS,
+        {ATTR_ENTITY_ID: entity_id},
+        blocking=True,
+    )
+
+    mock_method.assert_called_once_with(idx=idx)
+
+
+@pytest.mark.parametrize("key", ["zigbee_restart", "zigbee_flash_mode"])
+async def test_multi_radio_buttons_shared_non_u_device(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    key: str,
+    mock_config_entry: MockConfigEntry,
+    mock_smlight_client: MagicMock,
+) -> None:
+    """Test that idx>0 radio buttons are not created for non-u-devices."""
+    mock_smlight_client.get_info.side_effect = None
+    mock_smlight_client.get_info.return_value = Info.from_dict(
+        await async_load_json_object_fixture(hass, "info-MR1.json", DOMAIN)
+    )
+    await setup_integration(hass, mock_config_entry)
+
+    assert not entity_registry.async_get_entity_id(
+        BUTTON_DOMAIN, DOMAIN, f"aa:bb:cc:dd:ee:ff-{key}_1"
+    )
+
+
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_router_button_with_3_radios(
     hass: HomeAssistant,
