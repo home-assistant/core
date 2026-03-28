@@ -63,6 +63,13 @@ class UnifiAccessDoorLockRuleIntervalNumberEntity(UnifiAccessEntity, RestoreNumb
     _attr_native_unit_of_measurement = UnitOfTime.MINUTES
     _attr_translation_key = "door_lock_rule_interval"
 
+    @property
+    def available(self) -> bool:
+        """Return whether the number entity should currently be available."""
+        return super().available and (
+            self._door_id in self.coordinator.get_lock_rule_sensor_door_ids()
+        )
+
     def __init__(
         self,
         coordinator: UnifiAccessCoordinator,

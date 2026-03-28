@@ -39,10 +39,9 @@ from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DOMAIN
+from .const import DEFAULT_LOCK_RULE_INTERVAL, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
-DEFAULT_LOCK_RULE_INTERVAL = 10
 
 type UnifiAccessConfigEntry = ConfigEntry[UnifiAccessCoordinator]
 
