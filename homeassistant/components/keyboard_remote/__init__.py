@@ -102,9 +102,8 @@ async def _async_import_yaml_device(
 
     if (
         result.get("type") is FlowResultType.ABORT
-        and result.get("reason") != "already_configured"
+        and (reason := result.get("reason", "unknown")) != "already_configured"
     ):
-        reason = result.get("reason", "unknown")
         ir.async_create_issue(
             hass,
             DOMAIN,
@@ -115,7 +114,7 @@ async def _async_import_yaml_device(
             severity=ir.IssueSeverity.WARNING,
             translation_key=f"deprecated_yaml_import_issue_{reason}",
             translation_placeholders={
-                "url": "/config/integrations/dashboard/add?domain=keyboard_remote"
+                "url": f"/config/integrations/dashboard/add?domain={DOMAIN}"
             },
         )
         return
@@ -435,14 +434,12 @@ class DeviceHandler:
 
         # Check by-id or configured path
         device_path = self._device_path
-        if device_path and os.path.exists(device_path):
-            if os.path.realpath(device_path) == real_path:
+        if device_path and os.path.exists(device_path) and os.path.realpath(device_path) == real_path:
                 return True
 
         # Check original YAML descriptor
         yaml_descriptor = self._device_descriptor
-        if yaml_descriptor:
-            if os.path.realpath(yaml_descriptor) == real_path:
+        if yaml_descriptor and os.path.realpath(yaml_descriptor) == real_path:
                 return True
 
         # Check by device name
