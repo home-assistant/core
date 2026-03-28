@@ -30,6 +30,7 @@ from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.hassio import get_supervisor_ip, is_hassio
+from homeassistant.helpers.service import async_register_admin_service
 from homeassistant.util import dt as dt_util, yaml as yaml_util
 
 from .const import DOMAIN, KEY_HASS, is_supervisor_unix_socket_request
@@ -90,7 +91,8 @@ def setup_bans(hass: HomeAssistant, app: Application, login_threshold: int) -> N
             return
         await app[KEY_BAN_MANAGER].async_remove_ban(ip_address_)
 
-    hass.services.async_register_admin_service(
+    async_register_admin_service(
+        hass,
         DOMAIN,
         SERVICE_UNBAN,
         async_handle_unban_service,
