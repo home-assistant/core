@@ -5,7 +5,6 @@ from __future__ import annotations
 from collections.abc import Callable
 from enum import StrEnum
 from functools import lru_cache, partial
-from itertools import chain
 from math import floor, log10
 from typing import Any, Final, NotRequired, Required, TypedDict
 
@@ -251,60 +250,51 @@ class BaseUnitConverter:
         cls, from_unit: str | None, to_unit: str | None, for_ratio: bool = False
     ) -> list[UnitConvertOp]:
         """Get operations to convert between units of measurement."""
-        from_op_info = cls._get_op_info(from_unit)
-        inverse_op_info = cls._get_inverse_op(from_unit, to_unit)
-        to_op_info = cls._get_op_info(to_unit)
-        from_op = [
-            BaseUnitConverter._get_op(op, True)
-            for op in from_op_info
-            if not cls._skip_op(op, for_ratio)
-        ]
-        to_op = [
-            BaseUnitConverter._get_op(op, False)
-            for op in chain(inverse_op_info, to_op_info)
-            if not cls._skip_op(op, for_ratio)
-        ]
-        return [*reversed(from_op), *to_op]
+        from_op = cls._get_conversion_ops(from_unit, True, for_ratio)
+        inverse_op = cls._get_inverse_ops(from_unit, to_unit, for_ratio)
+        to_op = cls._get_conversion_ops(to_unit, False, for_ratio)
+        return [*reversed(from_op), *inverse_op, *to_op]
 
     @classmethod
     @lru_cache
-    def _skip_op(cls, op: UnitConvertOpInfo, for_ratio: bool) -> bool:
-        # When determining unit ratios, only scale operations are applicable
-        return for_ratio and (op[0] is not UnitConvertOpType.SCALE)
-
-    @classmethod
-    @lru_cache
-    def _get_op_info(cls, unit: str | None) -> list[UnitConvertOpInfo]:
+    def _get_conversion_ops(
+        cls, unit: str | None, is_from: bool = False, for_ratio: bool = False
+    ) -> list[UnitConvertOp]:
+        """Return a list of operations to convert between a between a unit and its base."""
+        # For the base unit we don't need to perform any operations
         if unit == cls.BASE_UNIT:
-            return []  # Don't have any operations to perform if unit is already the base unit.
+            return []
+        # Otherwise lookup the required operation information for the selected unit unit
         try:
-            ops = cls._UNIT_CONVERSION[unit]
+            required_ops = cls._UNIT_CONVERSION[unit]
         except KeyError as err:
             raise HomeAssistantError(
                 UNIT_NOT_RECOGNIZED_TEMPLATE.format(err.args[0], cls.UNIT_CLASS)
             ) from err
-        if not isinstance(ops, list):
-            return [(UnitConvertOpType.SCALE, ops)]
-        return ops
+        # And map that to the required function lambdas depending on whether converting from or to.
+        op_map = _UNIT_CONVERT_FROM_OP if is_from else _UNIT_CONVERT_TO_OP
+        # For simple scale factor conversions, we can directly map to a single operation
+        if not isinstance(required_ops, list):
+            return [(op_map[UnitConvertOpType.SCALE], float(required_ops))]
+        # Otherwise map all the required operations
+        return [
+            (op_map[op_info[0]], op_info[1])
+            for op_info in required_ops
+            if not for_ratio or (op_info[0] is UnitConvertOpType.SCALE)
+        ]
 
     @classmethod
     @lru_cache
-    def _get_inverse_op(
-        cls, from_unit: str | None, to_unit: str | None
-    ) -> list[UnitConvertOpInfo]:
-        """Return inverse operation if units are inverses."""
+    def _get_inverse_ops(
+        cls, from_unit: str | None, to_unit: str | None, for_ratio: bool
+    ) -> list[UnitConvertOp]:
+        """Return inverse operation if units are inverses and operation is required."""
         return (
-            [(UnitConvertOpType.POWER, -1)]
-            if (from_unit in cls._UNIT_INVERSES) != (to_unit in cls._UNIT_INVERSES)
+            [(_UNIT_CONVERT_TO_OP[UnitConvertOpType.POWER], -1)]
+            if not for_ratio
+            and ((from_unit in cls._UNIT_INVERSES) != (to_unit in cls._UNIT_INVERSES))
             else []
         )
-
-    @staticmethod
-    def _get_op(op_info: UnitConvertOpInfo, is_from: bool = False) -> UnitConvertOp:
-        """Maps from operation info to converter function."""
-        (op_name, factor) = op_info
-        op_map = _UNIT_CONVERT_FROM_OP if is_from else _UNIT_CONVERT_TO_OP
-        return (op_map[op_name], factor)
 
     @staticmethod
     def _convert_fn(val: float, ops: list[UnitConvertOp]) -> float:
