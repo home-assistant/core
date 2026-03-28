@@ -31,14 +31,18 @@ async def async_setup_entry(
         if not new_door_ids:
             return
 
+        created_door_ids: list[str] = [
+            door_id
+            for door_id in new_door_ids
+            if door_id in coordinator.data.doors
+        ]
         async_add_entities(
             UnifiAccessDoorLockRuleIntervalNumberEntity(
                 coordinator, coordinator.data.doors[door_id]
             )
-            for door_id in new_door_ids
-            if door_id in coordinator.data.doors
+            for door_id in created_door_ids
         )
-        added_doors.update(new_door_ids)
+        added_doors.update(created_door_ids)
 
     _async_add_lock_rule_numbers()
     entry.async_on_unload(coordinator.async_add_listener(_async_add_lock_rule_numbers))
@@ -76,12 +80,13 @@ class UnifiAccessDoorLockRuleIntervalNumberEntity(UnifiAccessEntity, RestoreNumb
         last_data = await self.async_get_last_number_data()
         if last_data and last_data.native_value is not None:
             self._attr_native_value = last_data.native_value
-        self.coordinator.lock_rule_intervals[self._door_id] = int(
-            self.native_value or DEFAULT_LOCK_RULE_INTERVAL
+        self.coordinator.lock_rule_intervals[self._door_id] = round(
+            self._attr_native_value
         )
 
     async def async_set_native_value(self, value: float) -> None:
         """Set a new interval value and sync it to the coordinator."""
-        self._attr_native_value = value
-        self.coordinator.lock_rule_intervals[self._door_id] = int(value)
+        rounded = round(value)
+        self._attr_native_value = float(rounded)
+        self.coordinator.lock_rule_intervals[self._door_id] = rounded
         self.async_write_ha_state()
