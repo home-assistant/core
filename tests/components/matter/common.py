@@ -99,6 +99,7 @@ FIXTURES = [
     "silabs_fan",
     "silabs_laundrywasher",
     "silabs_light_switch",
+    "silabs_range_hood",
     "silabs_refrigerator",
     "silabs_water_heater",
     "switchbot_k11_plus",
