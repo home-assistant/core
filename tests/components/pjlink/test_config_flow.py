@@ -1,51 +1,27 @@
 """Test the PJLink config flow."""
 
-from collections.abc import Generator
 from typing import Any
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
 from homeassistant import config_entries
-from homeassistant.components.pjlink.const import (
-    CONF_ENCODING,
-    DEFAULT_ENCODING,
-    DEFAULT_PORT,
-    DOMAIN,
-)
-from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT
+from homeassistant.components.pjlink.const import DOMAIN
+from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-_DEFAULT_DATA = {
-    CONF_HOST: "1.1.1.1",
-    CONF_PORT: DEFAULT_PORT,
-    CONF_PASSWORD: "test-password",
-}
-_DEFAULT_DATA_WO_PORT = {CONF_HOST: "1.1.1.1", CONF_PASSWORD: "test-password"}
-_DEFAULT_DATA_W_ENCODING = {
-    CONF_HOST: "1.1.1.1",
-    CONF_PORT: DEFAULT_PORT,
-    CONF_PASSWORD: "test-password",
-    CONF_ENCODING: DEFAULT_ENCODING,
-}
+from .const import DEFAULT_DATA, DEFAULT_DATA_W_ENCODING, DEFAULT_DATA_WO_PORT
+
+from tests.common import MockConfigEntry
 
 
-@pytest.fixture(autouse=True)
-def mock_projector() -> Generator[MagicMock]:
-    """Mock the PJLink Projector in the config flow."""
-    with patch(
-        "homeassistant.components.pjlink.config_flow.Projector",
-        autospec=True,
-    ) as mock_projector:
-        mock_instance = mock_projector.from_address.return_value
-        mock_instance.get_name.return_value = "test name"
-        mock_instance.__enter__.return_value = mock_instance
-        yield mock_projector
-
-
-async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
-    """Test we get the form."""
+async def test_user_flow_creates_entry(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_projector: MagicMock,
+) -> None:
+    """Test that the user flow creates an entry."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -53,14 +29,37 @@ async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
     assert result["errors"] == {}
 
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], _DEFAULT_DATA
+        result["flow_id"], DEFAULT_DATA
     )
-    await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "test name"
-    assert result["data"] == _DEFAULT_DATA
+    assert result["data"] == DEFAULT_DATA
     assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_user_flow_aborts_if_already_configured(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_projector: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test user flow aborts if already configured."""
+
+    mock_config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], DEFAULT_DATA
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
 
 
 @pytest.mark.parametrize(
@@ -86,7 +85,7 @@ async def test_form_invalid_inputs(
     mock_instance = mock_projector.from_address.return_value
     mock_instance.authenticate.side_effect = side_effect
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], _DEFAULT_DATA
+        result["flow_id"], DEFAULT_DATA
     )
 
     assert result["type"] is FlowResultType.FORM
@@ -94,48 +93,49 @@ async def test_form_invalid_inputs(
 
     mock_instance.authenticate.side_effect = None
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], _DEFAULT_DATA
+        result["flow_id"], DEFAULT_DATA
     )
-    await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "test name"
-    assert result["data"] == _DEFAULT_DATA
+    assert result["data"] == DEFAULT_DATA
     assert len(mock_setup_entry.mock_calls) == 1
 
 
 @pytest.mark.parametrize(
     "import_data",
-    [_DEFAULT_DATA, _DEFAULT_DATA_WO_PORT, _DEFAULT_DATA_W_ENCODING],
+    [DEFAULT_DATA, DEFAULT_DATA_WO_PORT, DEFAULT_DATA_W_ENCODING],
 )
 async def test_import_creates_entry(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock, import_data: dict[str, Any]
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_projector: MagicMock,
+    import_data: dict[str, Any],
 ) -> None:
     """Test importing a YAML config creates an entry."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": "import"}, data=import_data
+        DOMAIN, context={"source": SOURCE_IMPORT}, data=import_data
     )
     await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "test name"
-    assert result["data"] == _DEFAULT_DATA
+    assert result["data"] == DEFAULT_DATA
     assert len(mock_setup_entry.mock_calls) == 1
 
 
 async def test_import_aborts_if_already_configured(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_projector: MagicMock,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test importing a YAML config aborts if already configured."""
-    # First import creates the entry
-    await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": "import"}, data=_DEFAULT_DATA
-    )
-    await hass.async_block_till_done()
 
-    # Second import with same host and same port should abort
+    mock_config_entry.add_to_hass(hass)
+
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": "import"}, data=_DEFAULT_DATA
+        DOMAIN, context={"source": SOURCE_IMPORT}, data=DEFAULT_DATA
     )
     assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "already_configured"
@@ -161,7 +161,7 @@ async def test_import_invalid_inputs(
     mock_instance = mock_projector.from_address.return_value
     mock_instance.authenticate.side_effect = side_effect
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": "import"}, data=_DEFAULT_DATA
+        DOMAIN, context={"source": SOURCE_IMPORT}, data=DEFAULT_DATA
     )
 
     assert result["type"] is FlowResultType.ABORT

@@ -29,7 +29,9 @@ from homeassistant.helpers import issue_registry as ir
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
-from tests.common import MockConfigEntry, async_fire_time_changed
+from . import setup_pjlink_entry
+
+from tests.common import async_fire_time_changed
 
 _EXAMPLE_YAML_CONFIG = {
     Platform.MEDIA_PLAYER: [
@@ -50,7 +52,8 @@ def projector_from_address():
 
     with patch("pypjlink.Projector.from_address") as from_address:
         constructor = create_autospec(pypjlink.Projector)
-        from_address.return_value = constructor.return_value
+        constructor.__enter__.return_value = constructor
+        from_address.return_value = constructor
         yield from_address
 
 
@@ -75,20 +78,6 @@ def mocked_projector(projector_from_address: MagicMock) -> MagicMock:
     return instance
 
 
-async def setup_pjlink_entry(hass: HomeAssistant) -> MockConfigEntry:
-    """Set up PJLink integration via config entry."""
-    entry = MockConfigEntry(
-        domain="pjlink",
-        data={"host": "127.0.0.1", "port": DEFAULT_PORT},
-        title="test",
-    )
-    entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
-
-    return entry
-
-
 @pytest.mark.parametrize("side_effect", [socket.timeout, OSError])
 async def test_offline_initialization(
     projector_from_address: MagicMock, hass: HomeAssistant, side_effect: type[Exception]
@@ -108,15 +97,14 @@ async def test_initialization(
 ) -> None:
     """Test a device that is available."""
 
-    instance = projector_from_address.return_value
+    mocked_instance = projector_from_address.return_value
 
-    with instance as mocked_instance:
-        mocked_instance.get_name.return_value = "Test"
-        mocked_instance.get_inputs.return_value = (
-            ("HDMI", 1),
-            ("HDMI", 2),
-            ("VGA", 1),
-        )
+    mocked_instance.get_name.return_value = "Test"
+    mocked_instance.get_inputs.return_value = (
+        ("HDMI", 1),
+        ("HDMI", 2),
+        ("VGA", 1),
+    )
     await setup_pjlink_entry(hass)
 
     state = hass.states.get("media_player.test")
@@ -134,13 +122,12 @@ async def test_on_state_init(
 ) -> None:
     """Test a device that is available."""
 
-    instance = projector_from_address.return_value
+    mocked_instance = projector_from_address.return_value
 
-    with instance as mocked_instance:
-        mocked_instance.get_name.return_value = "Test"
-        mocked_instance.get_power.return_value = power_state
-        mocked_instance.get_inputs.return_value = (("HDMI", 1),)
-        mocked_instance.get_input.return_value = ("HDMI", 1)
+    mocked_instance.get_name.return_value = "Test"
+    mocked_instance.get_power.return_value = power_state
+    mocked_instance.get_inputs.return_value = (("HDMI", 1),)
+    mocked_instance.get_input.return_value = ("HDMI", 1)
 
     await setup_pjlink_entry(hass)
 
@@ -155,16 +142,15 @@ async def test_api_error(
 ) -> None:
     """Test invalid api responses."""
 
-    instance = projector_from_address.return_value
+    mocked_instance = projector_from_address.return_value
 
-    with instance as mocked_instance:
-        mocked_instance.get_name.return_value = "Test"
-        mocked_instance.get_inputs.return_value = (
-            ("HDMI", 1),
-            ("HDMI", 2),
-            ("VGA", 1),
-        )
-        mocked_instance.get_power.side_effect = KeyError("OK")
+    mocked_instance.get_name.return_value = "Test"
+    mocked_instance.get_inputs.return_value = (
+        ("HDMI", 1),
+        ("HDMI", 2),
+        ("VGA", 1),
+    )
+    mocked_instance.get_power.side_effect = KeyError("OK")
 
     await setup_pjlink_entry(hass)
 
@@ -177,15 +163,14 @@ async def test_update_unavailable(
 ) -> None:
     """Test update to a device that is unavailable."""
 
-    instance = projector_from_address.return_value
+    mocked_instance = projector_from_address.return_value
 
-    with instance as mocked_instance:
-        mocked_instance.get_name.return_value = "Test"
-        mocked_instance.get_inputs.return_value = (
-            ("HDMI", 1),
-            ("HDMI", 2),
-            ("VGA", 1),
-        )
+    mocked_instance.get_name.return_value = "Test"
+    mocked_instance.get_inputs.return_value = (
+        ("HDMI", 1),
+        ("HDMI", 2),
+        ("VGA", 1),
+    )
 
     await setup_pjlink_entry(hass)
 
