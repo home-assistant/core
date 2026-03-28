@@ -98,12 +98,12 @@ class TransmissionDataUpdateCoordinator(DataUpdateCoordinator[SessionStats]):
         return partial(self.__async_remove_listener_internal, target_event_id)
 
     def __async_remove_listener_internal(self, listener_id: str) -> None:
-        del self._event_listeners[listener_id]
+        self._event_listeners.pop(listener_id, None)
 
     @callback
     def _async_notify_event_listeners(self, event: TransmissionEventData) -> None:
         """Notify event listeners in the event loop."""
-        for listener in self._event_listeners.values():
+        for listener in list(self._event_listeners.values()):
             listener(event)
 
     async def _async_update_data(self) -> SessionStats:
