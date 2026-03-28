@@ -6,7 +6,7 @@ from copy import deepcopy
 from typing import Any
 from unittest.mock import AsyncMock
 
-from pynina import ApiError
+from pynina import ApiError, Warning
 
 from homeassistant.components.nina.const import (
     CONF_AREA_FILTER,

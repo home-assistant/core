@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from unittest.mock import AsyncMock
 
+from pynina import Warning
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.nina.const import ATTR_HEADLINE
