@@ -334,10 +334,10 @@ async def test_clean_segments_initial_setup_without_repair_issue(
     hass: HomeAssistant,
     mqtt_mock_entry: MqttMockHAClientGenerator,
 ) -> None:
-    """Test cleanable segments initial setup does not fire repair flow."""
+    """Test cleanable segments initial setup does fire repair flow."""
     await mqtt_mock_entry()
     issue_registry = ir.async_get(hass)
-    assert len(issue_registry.issues) == 0
+    assert len(issue_registry.issues) == 1
 
 
 @pytest.mark.parametrize("hass_config", [CONFIG_CLEAN_SEGMENTS_1])

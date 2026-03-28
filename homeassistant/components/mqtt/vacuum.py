@@ -229,7 +229,6 @@ class MqttStateVacuum(MqttEntity, StateVacuumEntity):
     _send_command_topic: str | None
     _clean_segments_command_topic: str
     _payloads: dict[str, str | None]
-    _initial_setup: bool = True
 
     def __init__(
         self,
@@ -301,18 +300,14 @@ class MqttStateVacuum(MqttEntity, StateVacuumEntity):
     @callback
     def _process_entity_update(self) -> None:
         """Check vacuum segments with registry entry."""
-        if (
-            self._attr_supported_features & VacuumEntityFeature.CLEAN_AREA
-            and not self._initial_setup
-            and {s.id: s for s in self.last_seen_segments or []}
-            != {s.id: s for s in self._segments}
-        ):
+        if self._attr_supported_features & VacuumEntityFeature.CLEAN_AREA and {
+            s.id: s for s in self.last_seen_segments or []
+        } != {s.id: s for s in self._segments}:
             self.async_create_segments_issue()
 
     async def mqtt_async_added_to_hass(self) -> None:
         """Check vacuum segments with registry entry."""
         self._process_entity_update()
-        self._initial_setup = False
 
     def _update_state_attributes(self, payload: dict[str, Any]) -> None:
         """Update the entity state attributes."""
