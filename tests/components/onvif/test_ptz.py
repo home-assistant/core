@@ -3,6 +3,7 @@
 from types import SimpleNamespace
 from unittest.mock import AsyncMock, MagicMock, patch
 
+from homeassistant.components.onvif.const import DIR_DOWN, DIR_LEFT
 from homeassistant.components.onvif.device import CONTINUOUS_MOVE, ONVIFDevice
 from homeassistant.components.onvif.models import Capabilities
 from homeassistant.core import HomeAssistant
@@ -40,8 +41,8 @@ async def test_continuous_move_calls_stop_when_duration_nonzero(
             move_mode=CONTINUOUS_MOVE,
             continuous_duration=2,
             preset=None,
-            pan=0,
-            tilt=0,
+            pan=DIR_DOWN,
+            tilt=DIR_LEFT,
             zoom=None,
         )
 
@@ -87,8 +88,8 @@ async def test_continuous_move_does_not_call_stop_when_duration_zero(
             move_mode=CONTINUOUS_MOVE,
             continuous_duration=0,  # ZERO duration
             preset=None,
-            pan=0,
-            tilt=0,
+            pan=DIR_DOWN,
+            tilt=DIR_LEFT,
             zoom=None,
         )
 
