@@ -198,7 +198,7 @@ def process_success_login(request: Request) -> None:
 
     Reset failed login attempts counter for remote IP address.
     No release IP address from banned list function, it can only be done by
-    manual modify ip bans config file.
+    manual modify ip bans config file or by calling the http.unban action.
     """
     app = request.app
     # Check if ban middleware is loaded
