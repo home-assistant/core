@@ -145,7 +145,7 @@ class TransmissionDataUpdateCoordinator(DataUpdateCoordinator[SessionStats]):
 
         for torrent in current_completed_torrents:
             if torrent.id not in old_completed_torrents:
-                self.hass.bus.fire(
+                self.hass.bus.async_fire(
                     EVENT_DOWNLOADED_TORRENT,
                     {
                         ATTR_NAME: torrent.name,
@@ -175,7 +175,7 @@ class TransmissionDataUpdateCoordinator(DataUpdateCoordinator[SessionStats]):
 
         for torrent in current_started_torrents:
             if torrent.id not in old_started_torrents:
-                self.hass.bus.fire(
+                self.hass.bus.async_fire(
                     EVENT_STARTED_TORRENT,
                     {
                         ATTR_NAME: torrent.name,
@@ -201,7 +201,7 @@ class TransmissionDataUpdateCoordinator(DataUpdateCoordinator[SessionStats]):
 
         for torrent in self._all_torrents:
             if torrent.id not in current_torrents:
-                self.hass.bus.fire(
+                self.hass.bus.async_fire(
                     EVENT_REMOVED_TORRENT,
                     {
                         ATTR_NAME: torrent.name,
