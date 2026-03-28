@@ -37,8 +37,6 @@ is_value:
     entity:
       - domain: sensor
         device_class: moisture
-      - domain: number
-        device_class: moisture
   fields:
     behavior: *condition_behavior
     threshold:
