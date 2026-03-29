@@ -138,6 +138,16 @@ class SnmpUpdateCoordinator(DataUpdateCoordinator[dict[str, str | None]]):
                 self.manufacturer, self.model = descr.split(" ", 1)
             else:
                 self.model = descr
+        else:
+            _LOGGER.warning(
+                "Failed to fetch host info: errindication=%s, errstatus=%s, items=%d. Generic name will be used instead",
+                errindication,
+                errstatus,
+                len(restable),
+            )
+            self.model = (
+                "SNMP Server"  # Set generic name to avoid continuous re-fetching
+            )
 
     async def _async_update_data(self) -> dict[str, str | None]:
         """Fetch the current list of MAC addresses via an SNMP Walk."""
