@@ -248,7 +248,8 @@ async def test_get_state_after_disconnect(
 
     simple_mock_home = AsyncMock(spec=AsyncHome, autospec=True)
     hap.home = simple_mock_home
-    hap.home.websocket_is_connected = Mock(side_effect=[False, True])
+    # First call returns False (ws not yet connected), subsequent calls return True
+    hap.home.websocket_is_connected = Mock(side_effect=[False, True, True, True])
 
     with (
         patch("asyncio.sleep", new=AsyncMock()) as mock_sleep,
@@ -494,3 +495,68 @@ async def test_try_get_state_auth_error_triggers_reauth(
     flows = hass.config_entries.flow.async_progress_by_handler(DOMAIN)
     assert len(flows) == 1
     assert flows[0]["context"]["source"] == "reauth"
+
+
+async def test_try_get_state_ws_timeout_proceeds_to_get_state() -> None:
+    """Test _try_get_state proceeds to get_state after WS wait timeout.
+
+    If the WebSocket never reconnects within ws_wait_timeout seconds, the task
+    should emit a warning and proceed to attempt get_state rather than waiting
+    indefinitely.
+    """
+    hap = HomematicipHAP(MagicMock(), MagicMock())
+    hap.home = MagicMock()
+    # WS never connects
+    hap.home.websocket_is_connected = Mock(return_value=False)
+    hap.get_state = AsyncMock()
+
+    sleep_calls: list[float] = []
+
+    async def fake_sleep(seconds: float) -> None:
+        sleep_calls.append(seconds)
+        # After enough 2s sleeps to exceed ws_wait_timeout (300s), flip the
+        # side_effect so the while loop terminates via timeout, not WS connect.
+        if sum(sleep_calls) >= 300:
+            hap.home.websocket_is_connected = Mock(return_value=False)
+
+    with (
+        patch("asyncio.sleep", side_effect=fake_sleep),
+        patch(
+            "homeassistant.components.homematicip_cloud.hap._LOGGER"
+        ) as mock_logger,
+    ):
+        # Override ws_wait_timeout to a small value to keep the test fast
+        with patch.object(
+            type(hap),
+            "_try_get_state",
+            wraps=hap._try_get_state,
+        ):
+            # Patch the constant directly via the coroutine's local scope isn't
+            # possible, so we patch websocket_is_connected to cycle through
+            # enough False returns to exceed the timeout.
+            hap.home.websocket_is_connected = Mock(
+                side_effect=[False] * 151 + [False]
+            )
+            await hap._try_get_state()
+
+    # Warning should have been logged
+    warning_calls = [
+        call
+        for call in mock_logger.warning.call_args_list
+        if "WebSocket did not reconnect" in str(call)
+    ]
+    assert len(warning_calls) == 1
+
+    # get_state should have been called despite WS never connecting
+    hap.get_state.assert_called_once()
+
+
+async def test_try_get_state_cancelled_error_propagates() -> None:
+    """Test CancelledError is not swallowed by the broad except Exception handler."""
+    hap = HomematicipHAP(MagicMock(), MagicMock())
+    hap.home = MagicMock()
+    hap.home.websocket_is_connected = Mock(return_value=True)
+    hap.get_state = AsyncMock(side_effect=asyncio.CancelledError)
+
+    with pytest.raises(asyncio.CancelledError):
+        await hap._try_get_state()
