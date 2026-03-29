@@ -165,7 +165,9 @@ class HomematicipHAP:
             self._ws_connection_closed.set()
             self.set_all_to_unavailable()
         elif self._ws_connection_closed.is_set():
-            _LOGGER.info("HMIP access point has reconnected to the cloud")
+            _LOGGER.info(
+                "HMIP access point has reconnected to the cloud (via HOME_CHANGED event)"
+            )
             self._start_get_state_task()
 
     @callback
