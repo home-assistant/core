@@ -96,13 +96,9 @@ CONFIG_CLEAN_SEGMENTS = {
     mqtt.DOMAIN: {
         vacuum.DOMAIN: {
             CONF_NAME: "test",
-            CONF_COMMAND_TOPIC: COMMAND_TOPIC,
-            mqttvacuum.CONF_SEND_COMMAND_TOPIC: SEND_COMMAND_TOPIC,
             CONF_STATE_TOPIC: STATE_TOPIC,
             "unique_id": "veryunique",
-            "clean_segments_command_topic": "vacuum/clean_segment",
-            mqttvacuum.CONF_SET_FAN_SPEED_TOPIC: "vacuum/set_fan_speed",
-            mqttvacuum.CONF_FAN_SPEED_LIST: ["min", "medium", "high", "max"],
+            mqttvacuum.CONF_CLEAN_SEGMENTS_COMMAND_TOPIC: "vacuum/clean_segment",
         }
     }
 }
@@ -527,6 +523,73 @@ async def test_clean_segments_config_validation(
     """Test status clean segment config validation."""
     await mqtt_mock_entry()
     assert error_message in caplog.text
+
+
+async def test_removing_clean_segments_command_topic_resets_feature(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+) -> None:
+    """Test the clwean area feaure is reset if the vacuum is reconfigured.
+
+    The `clean_segments_command_topic` is required to support clean area support.
+    When this option is removed, the clean area feature should be reset.
+    """
+    await mqtt_mock_entry()
+
+    config_with_clean_segments_command_topic = CONFIG_CLEAN_SEGMENTS[mqtt.DOMAIN][
+        vacuum.DOMAIN
+    ]
+    async_fire_mqtt_message(
+        hass,
+        "homeassistant/vacuum/bla/config",
+        json.dumps(config_with_clean_segments_command_topic),
+    )
+    await hass.async_block_till_done()
+    message = """{
+        "battery_level": 54,
+        "state": "idle",
+        "segments":{
+            "1":"Livingroom",
+            "2":"Kitchen"
+        }
+    }"""
+    async_fire_mqtt_message(hass, "vacuum/state", message)
+    await hass.async_block_till_done()
+    state = hass.states.get("vacuum.test")
+    assert state.state == VacuumActivity.IDLE
+    assert (
+        state.attributes.get(ATTR_SUPPORTED_FEATURES)
+        & vacuum.VacuumEntityFeature.CLEAN_AREA
+    )
+
+    config_without_clean_segments_command_topic = (
+        config_with_clean_segments_command_topic.copy()
+    )
+    config_without_clean_segments_command_topic.pop(
+        mqttvacuum.CONF_CLEAN_SEGMENTS_COMMAND_TOPIC
+    )
+    async_fire_mqtt_message(
+        hass,
+        "homeassistant/vacuum/bla/config",
+        json.dumps(config_without_clean_segments_command_topic),
+    )
+    await hass.async_block_till_done()
+    message = """{
+        "battery_level": 30,
+        "state": "cleaning",
+        "segments":{
+            "1":"Livingroom",
+            "2":"Kitchen"
+        }
+    }"""
+    async_fire_mqtt_message(hass, "vacuum/state", message)
+    await hass.async_block_till_done()
+    state = hass.states.get("vacuum.test")
+    assert state.state == VacuumActivity.CLEANING
+    assert not (
+        state.attributes.get(ATTR_SUPPORTED_FEATURES)
+        & vacuum.VacuumEntityFeature.CLEAN_AREA
+    )
 
 
 @pytest.mark.parametrize("hass_config", [CONFIG_ALL_SERVICES])
