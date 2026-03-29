@@ -9,7 +9,7 @@ from .const import DOMAIN
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
-PLATFORMS = [Platform.NOTIFY]
+PLATFORMS = [Platform.EVENT, Platform.NOTIFY]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:

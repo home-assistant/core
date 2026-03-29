@@ -87,22 +87,26 @@ def _get_coordinator(
     return coordinators[serial_number]
 
 
-def _parse_time_str(time_str: str, field_name: str) -> time:
+def _parse_time_str(
+    time_str: str,
+    translation_key: str,
+    translation_placeholders: dict[str, str] | None = None,
+) -> time:
     """Parse a time string (HH:MM or HH:MM:SS) to a datetime.time object."""
     parts = time_str.split(":")
     if len(parts) not in (2, 3):
         raise ServiceValidationError(
             translation_domain=DOMAIN,
-            translation_key="invalid_time_format",
-            translation_placeholders={"field_name": field_name},
+            translation_key=translation_key,
+            translation_placeholders=translation_placeholders or {},
         )
     try:
         return datetime.strptime(f"{parts[0]}:{parts[1]}", "%H:%M").time()
     except (ValueError, IndexError) as err:
         raise ServiceValidationError(
             translation_domain=DOMAIN,
-            translation_key="invalid_time_format",
-            translation_placeholders={"field_name": field_name},
+            translation_key=translation_key,
+            translation_placeholders=translation_placeholders or {},
         ) from err
 
 
@@ -142,8 +146,8 @@ def async_setup_services(hass: HomeAssistant) -> None:
             )
         batt_mode: int = valid_modes[batt_mode_str]
 
-        start_time = _parse_time_str(start_time_str, "start_time")
-        end_time = _parse_time_str(end_time_str, "end_time")
+        start_time = _parse_time_str(start_time_str, "invalid_time_format_start_time")
+        end_time = _parse_time_str(end_time_str, "invalid_time_format_end_time")
 
         coordinator: GrowattCoordinator = _get_coordinator(hass, device_id, "min")
         await coordinator.update_time_segment(
@@ -192,11 +196,13 @@ def async_setup_services(hass: HomeAssistant) -> None:
             cached = current["periods"][i - 1]
             start = _parse_time_str(
                 call.data.get(f"period_{i}_start", cached["start_time"]),
-                f"period_{i}_start",
+                "invalid_time_format_period_start",
+                {"period": str(i)},
             )
             end = _parse_time_str(
                 call.data.get(f"period_{i}_end", cached["end_time"]),
-                f"period_{i}_end",
+                "invalid_time_format_period_end",
+                {"period": str(i)},
             )
             enabled: bool = call.data.get(f"period_{i}_enabled", cached["enabled"])
             periods.append({"start_time": start, "end_time": end, "enabled": enabled})
@@ -238,11 +244,13 @@ def async_setup_services(hass: HomeAssistant) -> None:
             cached = current["periods"][i - 1]
             start = _parse_time_str(
                 call.data.get(f"period_{i}_start", cached["start_time"]),
-                f"period_{i}_start",
+                "invalid_time_format_period_start",
+                {"period": str(i)},
             )
             end = _parse_time_str(
                 call.data.get(f"period_{i}_end", cached["end_time"]),
-                f"period_{i}_end",
+                "invalid_time_format_period_end",
+                {"period": str(i)},
             )
             enabled: bool = call.data.get(f"period_{i}_enabled", cached["enabled"])
             periods.append({"start_time": start, "end_time": end, "enabled": enabled})

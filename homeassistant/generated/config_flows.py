@@ -547,6 +547,7 @@ FLOWS = {
         "pi_hole",
         "picnic",
         "ping",
+        "pjlink",
         "plaato",
         "playstation_network",
         "plex",
