@@ -11,6 +11,8 @@ import aiohttp
 import pytest
 from yarl import URL
 
+from homeassistant.core import HomeAssistant
+
 cf_mod = importlib.import_module("homeassistant.components.opnsense.config_flow")
 
 
@@ -474,7 +476,9 @@ async def test_options_flow_granular_sync_calls_validate_and_updates(
     flow.hass.config_entries.async_update_entry = MagicMock()
 
     # monkeypatch validate_input to return no errors
-    async def fake_validate(hass, user_input, errors, **kwargs):
+    async def fake_validate(
+        hass: HomeAssistant | None, user_input, errors, **kwargs
+    ) -> dict:
         return {}
 
     monkeypatch.setattr(cf_mod, "validate_input", fake_validate)
@@ -503,8 +507,8 @@ async def test_async_step_import_preserves_import_options(
     flow.hass = MagicMock()
 
     async def _fake_validate_input(
-        hass, user_input, config_step, errors, expected_id=None
-    ):
+        hass: HomeAssistant | None, user_input, config_step, errors, expected_id=None
+    ) -> dict:
         return {}
 
     async def _noop_unique_id(*args, **kwargs):
@@ -631,8 +635,8 @@ async def test_async_step_reauth_confirm_updates_existing_entry(
     flow.hass = MagicMock()
 
     async def _fake_validate_input(
-        hass, user_input, config_step, errors, expected_id=None
-    ):
+        hass: HomeAssistant | None, user_input, config_step, errors, expected_id=None
+    ) -> dict:
         return {}
 
     reauth_entry = MagicMock()
@@ -707,8 +711,8 @@ async def test_async_step_reconfigure_updates_existing_entry(
     flow.hass = MagicMock()
 
     async def _fake_validate_input(
-        hass, user_input, config_step, errors, expected_id=None
-    ):
+        hass: HomeAssistant | None, user_input, config_step, errors, expected_id=None
+    ) -> dict:
         return {}
 
     reconfigure_entry = make_config_entry(
@@ -750,7 +754,9 @@ async def test_async_step_import_abort_and_reauth_show_form(
     flow = cf_mod.OPNsenseConfigFlow()
     flow.hass = MagicMock()
 
-    async def _import_errors(hass, user_input, config_step, errors, expected_id=None):
+    async def _import_errors(
+        hass: HomeAssistant | None, user_input, config_step, errors, expected_id=None
+    ) -> dict[str, str]:
         return {"base": "cannot_connect"}
 
     monkeypatch.setattr(cf_mod, "validate_input", _import_errors)
@@ -805,7 +811,9 @@ async def test_device_tracker_shows_form_when_no_user_input(
     flow.hass = MagicMock()
 
     # monkeypatch _get_dt_entries to return an ordered dict-like mapping
-    async def fake_get_dt_entries(hass, config, selected_devices):
+    async def fake_get_dt_entries(
+        hass: HomeAssistant | None, config, selected_devices
+    ) -> dict[str, str]:
         return {"11:22:33:44:55:66": "label1", "aa:bb:cc:dd:ee:ff": "label2"}
 
     monkeypatch.setattr(cf_mod, "_get_dt_entries", fake_get_dt_entries)
