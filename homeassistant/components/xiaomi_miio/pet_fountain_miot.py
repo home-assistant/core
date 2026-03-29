@@ -70,19 +70,25 @@ class XiaomiPetFountainStatus(DeviceStatus):
     @property
     def status(self) -> PetFountainStatus | None:
         """Return the fountain operating status."""
+        raw_status = self.data.get("status")
+        if not isinstance(raw_status, int):
+            return None
         return {
             1: PetFountainStatus.NoWater,
             2: PetFountainStatus.Watering,
-        }.get(self.data.get("status"))
+        }.get(raw_status)
 
     @property
     def mode(self) -> PetFountainMode | None:
         """Return the configured water mode."""
+        raw_mode = self.data.get("mode")
+        if not isinstance(raw_mode, int):
+            return None
         return {
             0: PetFountainMode.Auto,
             1: PetFountainMode.Interval,
             2: PetFountainMode.Continuous,
-        }.get(self.data.get("mode"))
+        }.get(raw_mode)
 
     @property
     def water_interval(self) -> int | None:
@@ -119,11 +125,14 @@ class XiaomiPetFountainStatus(DeviceStatus):
     @property
     def charging_state(self) -> ChargingState | None:
         """Return the charging state."""
+        raw_state = self.data.get("charging_state")
+        if not isinstance(raw_state, int):
+            return None
         return {
             0: ChargingState.NotCharging,
             1: ChargingState.Charging,
             2: ChargingState.Charged,
-        }.get(self.data.get("charging_state"))
+        }.get(raw_state)
 
     @property
     def do_not_disturb(self) -> bool | None:

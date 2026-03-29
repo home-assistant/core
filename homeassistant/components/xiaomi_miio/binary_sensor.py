@@ -219,7 +219,7 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Xiaomi sensor from a config entry."""
-    entities = []
+    entities: list[BinarySensorEntity] = []
 
     if config_entry.data[CONF_FLOW_TYPE] == CONF_DEVICE:
         model = config_entry.data[CONF_MODEL]

@@ -71,14 +71,14 @@
       "no_water": {
         "name": "Water tank empty"
       },
-      "pump_blocked": {
-        "name": "Pump blocked"
-      },
       "powersupply_attached": {
         "name": "Power supply"
       },
       "ptc_status": {
         "name": "Auxiliary heat status"
+      },
+      "pump_blocked": {
+        "name": "Pump blocked"
       },
       "usb_power": {
         "name": "USB power"
@@ -141,9 +141,6 @@
       "favorite_rpm": {
         "name": "Favorite motor speed"
       },
-      "water_interval": {
-        "name": "Water interval"
-      },
       "led_brightness": {
         "name": "LED brightness"
       },
@@ -155,6 +152,9 @@
       },
       "volume": {
         "name": "Volume"
+      },
+      "water_interval": {
+        "name": "Water interval"
       }
     },
     "select": {
@@ -163,14 +163,6 @@
           "auto": "[%key:common::state::auto%]",
           "favorite": "Favorite",
           "silent": "Silent"
-        }
-      },
-      "pet_fountain_mode": {
-        "name": "Water mode",
-        "state": {
-          "auto": "[%key:common::state::auto%]",
-          "continuous": "Continuous",
-          "interval": "Interval"
         }
       },
       "display_orientation": {
@@ -185,6 +177,14 @@
           "bright": "Bright",
           "dim": "Dim",
           "off": "[%key:common::state::off%]"
+        }
+      },
+      "pet_fountain_mode": {
+        "name": "Water mode",
+        "state": {
+          "auto": "[%key:common::state::auto%]",
+          "continuous": "Continuous",
+          "interval": "Interval"
         }
       },
       "ptc_level": {
@@ -232,14 +232,14 @@
       "dust_collection_count": {
         "name": "Total dust collection count"
       },
-      "fault_code": {
-        "name": "Fault code"
-      },
       "dust_filter_life_remaining": {
         "name": "Dust filter life remaining"
       },
       "dust_filter_life_remaining_days": {
         "name": "Dust filter lifetime remaining days"
+      },
+      "fault_code": {
+        "name": "Fault code"
       },
       "favorite_speed": {
         "name": "Favorite speed"
@@ -345,14 +345,14 @@
       "child_lock": {
         "name": "Child lock"
       },
-      "do_not_disturb": {
-        "name": "Do not disturb"
-      },
       "clean_mode": {
         "name": "Clean mode"
       },
       "display": {
         "name": "Display"
+      },
+      "do_not_disturb": {
+        "name": "Do not disturb"
       },
       "dry": {
         "name": "Dry mode"
