@@ -147,8 +147,8 @@ async def test_update(
             ATTR_CELL_VOLTAGES,
             [3.1, 3, 3.123],
         ),
-        ("highest_cell_voltage", "cell_number", [2]),
-        ("lowest_cell_voltage", "cell_number", [1]),
+        ("highest_cell_voltage", "cell_number", [3]),
+        ("lowest_cell_voltage", "cell_number", [2]),
         (
             ATTR_TEMPERATURE,
             ATTR_TEMP_SENSORS,

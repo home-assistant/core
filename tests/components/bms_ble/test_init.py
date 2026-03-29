@@ -114,7 +114,6 @@ async def test_unload_entry(
     assert cfg.state is ConfigEntryState.LOADED
 
     # run removal of entry (actual test)
-
     assert await hass.config_entries.async_remove(cfg.entry_id)
     await hass.async_block_till_done(wait_background_tasks=True)
 
