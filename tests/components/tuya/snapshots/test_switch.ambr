@@ -3556,7 +3556,6 @@
     'name': None,
     'object_id_base': 'Time watermark',
     'options': dict({
-<<<<<<< Updated upstream
     }),
     'original_device_class': None,
     'original_icon': None,
@@ -3575,26 +3574,6 @@
     'attributes': ReadOnlyDict({
       'friendly_name': 'Dolní vchod - západ Time watermark',
     }),
-=======
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Time watermark',
-    'platform': 'tuya',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'time_watermark',
-    'unique_id': 'tuya.o4hpbl5uarjfbzhepsbasic_osd',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_platform_setup_and_discovery[switch.dolni_vchod_zapad_time_watermark-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Dolní vchod - západ Time watermark',
-    }),
->>>>>>> Stashed changes
     'context': <ANY>,
     'entity_id': 'switch.dolni_vchod_zapad_time_watermark',
     'last_changed': <ANY>,
