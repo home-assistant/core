@@ -545,7 +545,7 @@
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-TotalVolatileOrganicCompoundsSensor-1070-0',
-    'unit_of_measurement': 'ppm',
+    'unit_of_measurement': 'ppb',
   })
 # ---
 # name: test_sensors[air_quality_sensor][sensor.lightfi_aq1_air_quality_sensor_volatile_organic_compounds_parts-state]
@@ -554,7 +554,7 @@
       'device_class': 'volatile_organic_compounds_parts',
       'friendly_name': 'lightfi-aq1-air-quality-sensor Volatile organic compounds parts',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'ppm',
+      'unit_of_measurement': 'ppb',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.lightfi_aq1_air_quality_sensor_volatile_organic_compounds_parts',
@@ -8670,7 +8670,7 @@
     'state': 'low',
   })
 # ---
-# name: test_sensors[mock_air_purifier][sensor.mock_air_purifier_volatile_organic_compounds_parts-entry]
+# name: test_sensors[mock_air_purifier][sensor.mock_air_purifier_volatile_organic_compounds-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -8686,7 +8686,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.mock_air_purifier_volatile_organic_compounds_parts',
+    'entity_id': 'sensor.mock_air_purifier_volatile_organic_compounds',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -8694,31 +8694,31 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Volatile organic compounds parts',
+    'object_id_base': 'Volatile organic compounds',
     'options': dict({
     }),
-    'original_device_class': <SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS_PARTS: 'volatile_organic_compounds_parts'>,
+    'original_device_class': <SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS: 'volatile_organic_compounds'>,
     'original_icon': None,
-    'original_name': 'Volatile organic compounds parts',
+    'original_name': 'Volatile organic compounds',
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00000000000004D2-000000000000008F-MatterNodeDevice-2-TotalVolatileOrganicCompoundsSensor-1070-0',
-    'unit_of_measurement': 'ppm',
+    'unit_of_measurement': 'μg/m³',
   })
 # ---
-# name: test_sensors[mock_air_purifier][sensor.mock_air_purifier_volatile_organic_compounds_parts-state]
+# name: test_sensors[mock_air_purifier][sensor.mock_air_purifier_volatile_organic_compounds-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'volatile_organic_compounds_parts',
-      'friendly_name': 'Mock Air Purifier Volatile organic compounds parts',
+      'device_class': 'volatile_organic_compounds',
+      'friendly_name': 'Mock Air Purifier Volatile organic compounds',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'ppm',
+      'unit_of_measurement': 'μg/m³',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.mock_air_purifier_volatile_organic_compounds_parts',
+    'entity_id': 'sensor.mock_air_purifier_volatile_organic_compounds',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
