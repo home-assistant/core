@@ -8,7 +8,13 @@ from homeassistant.const import CONF_API_TOKEN, CONF_HOST, CONF_VERIFY_SSL, Plat
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.issue_registry import (
+    IssueSeverity,
+    async_create_issue,
+    async_delete_issue,
+)
 
+from .const import DOMAIN
 from .coordinator import UnifiAccessConfigEntry, UnifiAccessCoordinator
 
 PLATFORMS: list[Platform] = [
@@ -36,6 +42,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: UnifiAccessConfigEntry) 
     try:
         await client.authenticate()
     except ApiAuthError as err:
+        async_create_issue(
+            hass,
+            DOMAIN,
+            "api_token_expired",
+            is_fixable=True,
+            is_persistent=True,
+            learn_more_url="https://www.home-assistant.io/integrations/unifi_access/",
+            severity=IssueSeverity.ERROR,
+            translation_key="api_token_expired",
+            translation_placeholders={"host": entry.data[CONF_HOST]},
+            data={"entry_id": entry.entry_id},
+        )
         raise ConfigEntryAuthFailed(
             f"Authentication failed for UniFi Access at {entry.data[CONF_HOST]}"
         ) from err
@@ -43,6 +61,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: UnifiAccessConfigEntry) 
         raise ConfigEntryNotReady(
             f"Unable to connect to UniFi Access at {entry.data[CONF_HOST]}"
         ) from err
+
+    async_delete_issue(hass, DOMAIN, "api_token_expired")
 
     coordinator = UnifiAccessCoordinator(hass, entry, client)
     await coordinator.async_config_entry_first_refresh()

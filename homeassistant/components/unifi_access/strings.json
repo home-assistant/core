@@ -116,5 +116,18 @@
     "unlock_failed": {
       "message": "Failed to unlock the door."
     }
+  },
+  "issues": {
+    "api_token_expired": {
+      "fix_flow": {
+        "step": {
+          "confirm": {
+            "description": "The API token for your UniFi Access controller at `{host}` is no longer valid.\n\nGenerate a new API token in the UniFi Access settings and confirm this repair to start the reauthentication flow.",
+            "title": "API token expired for UniFi Access"
+          }
+        }
+      },
+      "title": "API token expired for UniFi Access"
+    }
   }
 }
