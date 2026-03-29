@@ -17,7 +17,6 @@ from tests.common import MockConfigEntry
 async def _setup_integration(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_eveonline_client: AsyncMock,
 ) -> None:
     """Set up the eveonline integration with mocked data."""
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
@@ -37,7 +36,7 @@ async def test_server_sensors(
         players=31250
     )
 
-    await _setup_integration(hass, mock_config_entry, mock_eveonline_client)
+    await _setup_integration(hass, mock_config_entry)
 
     state = hass.states.get("sensor.eve_online_tranquility_players_online")
     assert state is not None
@@ -56,7 +55,7 @@ async def test_character_wallet_sensor(
         balance=1234567.89
     )
 
-    await _setup_integration(hass, mock_config_entry, mock_eveonline_client)
+    await _setup_integration(hass, mock_config_entry)
 
     state = hass.states.get("sensor.test_capsuleer_wallet_balance")
     assert state is not None
@@ -88,7 +87,7 @@ async def test_character_skill_queue_sensor(
         ),
     ]
 
-    await _setup_integration(hass, mock_config_entry, mock_eveonline_client)
+    await _setup_integration(hass, mock_config_entry)
 
     state = hass.states.get("sensor.test_capsuleer_skill_queue")
     assert state is not None
@@ -106,7 +105,7 @@ async def test_unavailable_character_sensor(
     # wallet_balance defaults to None in conftest → sensor should be unavailable
     mock_eveonline_client.async_get_wallet_balance.return_value = None
 
-    await _setup_integration(hass, mock_config_entry, mock_eveonline_client)
+    await _setup_integration(hass, mock_config_entry)
 
     state = hass.states.get("sensor.test_capsuleer_wallet_balance")
     assert state is not None
@@ -129,7 +128,7 @@ async def test_server_sensors_not_duplicated_for_second_entry(
     )
 
     # Set up first entry
-    await _setup_integration(hass, mock_config_entry, mock_eveonline_client)
+    await _setup_integration(hass, mock_config_entry)
 
     # Create and set up a second entry for a different character
     second_entry = MockConfigEntry(
