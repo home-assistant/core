@@ -187,6 +187,32 @@ async def test_setup_entry_invalid_tracker_interface(
     assert entry.state is config_entries.ConfigEntryState.SETUP_ERROR
 
 
+async def test_setup_entry_interface_fetch_error(
+    hass: HomeAssistant, mock_opnsense_client: AsyncMock
+) -> None:
+    """Test that interface fetch failure raises ConfigEntryNotReady."""
+    mock_opnsense_client.get_interfaces = AsyncMock(
+        side_effect=OPNsenseApiError("timeout")
+    )
+
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_URL: "https://opnsense.local/api",
+            CONF_API_KEY: "test_key",
+            CONF_API_SECRET: "test_secret",
+            CONF_VERIFY_SSL: False,
+            CONF_TRACKER_INTERFACES: "LAN",
+        },
+    )
+    entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert entry.state is config_entries.ConfigEntryState.SETUP_RETRY
+
+
 async def test_setup_entry_connection_error(
     hass: HomeAssistant, mock_opnsense_client: AsyncMock
 ) -> None:
