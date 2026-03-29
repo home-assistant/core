@@ -13,6 +13,7 @@ from homeassistant.components.xiaomi_miio import const
 from homeassistant.const import CONF_DEVICE, CONF_HOST, CONF_MAC, CONF_MODEL, CONF_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from . import TEST_MAC
@@ -225,7 +226,7 @@ async def test_config_flow_pet_fountain_manual_success(hass: HomeAssistant) -> N
         CONF_HOST: TEST_HOST,
         CONF_TOKEN: TEST_TOKEN,
         CONF_MODEL: const.MODEL_PET_FOUNTAIN_70M2,
-        CONF_MAC: TEST_MAC_DEVICE,
+        CONF_MAC: format_mac(TEST_MAC_DEVICE),
     }
 
 
