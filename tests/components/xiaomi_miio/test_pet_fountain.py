@@ -1,5 +1,6 @@
 """Tests for the Xiaomi pet fountain support."""
 
+from collections.abc import Generator
 from datetime import time
 from types import SimpleNamespace
 from unittest.mock import MagicMock, patch
@@ -49,7 +50,7 @@ from tests.common import MockConfigEntry
 
 
 @pytest.fixture
-def mock_pet_fountain():
+def mock_pet_fountain() -> Generator[MagicMock]:
     """Mock the Xiaomi Pet Fountain device."""
     mock_device = MagicMock()
     mock_device.status.return_value = SimpleNamespace(
@@ -90,7 +91,7 @@ def mock_pet_fountain():
 async def test_pet_fountain_entities(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
-    mock_pet_fountain,
+    mock_pet_fountain: MagicMock,
 ) -> None:
     """Test the pet fountain entity set."""
     base_entity_id = await setup_component(hass, "test_pet_fountain")
@@ -143,7 +144,7 @@ async def test_pet_fountain_entities(
 
 async def test_pet_fountain_controls(
     hass: HomeAssistant,
-    mock_pet_fountain,
+    mock_pet_fountain: MagicMock,
 ) -> None:
     """Test the pet fountain controls."""
     await setup_component(hass, "test_pet_fountain")
