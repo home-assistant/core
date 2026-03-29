@@ -189,11 +189,6 @@ FORBIDDEN_PACKAGE_EXCEPTIONS: dict[str, dict[str, set[str]]] = {
     "norway_air": {"pymetno": {"async-timeout"}},
     "opengarage": {"open-garage": {"async-timeout"}},
     "opensensemap": {"opensensemap-api": {"async-timeout"}},
-    "opnsense": {
-        # https://github.com/mtreinish/pyopnsense/issues/27
-        # pyopnsense > pbr > setuptools
-        "pbr": {"setuptools"}
-    },
     "pvpc_hourly_pricing": {"aiopvpc": {"async-timeout"}},
     "remote_rpi_gpio": {
         # https://github.com/waveform80/colorzero/issues/9
@@ -298,10 +293,6 @@ FORBIDDEN_PACKAGE_FILES_EXCEPTIONS = {
     },
     # https://github.com/ejpenney/pyobihai
     "obihai": {"homeassistant": {"pyobihai"}},
-    "opnsense": {
-        # Setuptools - distutils-precedence.pth
-        "pbr": {"setuptools"}
-    },
     # https://github.com/iamkubi/pydactyl
     "pterodactyl": {"homeassistant": {"py-dactyl"}},
     "remote_rpi_gpio": {
@@ -558,8 +549,7 @@ def get_requirements(integration: Integration, packages: set[str]) -> set[str]:
             integration.add_warning_or_error(
                 package in python_version_check_exceptions.get("homeassistant", set()),
                 "requirements",
-                "Version restrictions for Python are too strict "
-                f"({requires_python}) in {package}",
+                f"Version restrictions for Python are too strict ({requires_python}) in {package}",
             )
 
         # Check package names
