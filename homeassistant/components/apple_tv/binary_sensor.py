@@ -2,15 +2,16 @@
 
 from __future__ import annotations
 
-from pyatv.const import KeyboardFocusState
+from pyatv.const import FeatureName, FeatureState, KeyboardFocusState
 from pyatv.interface import AppleTV, KeyboardListener
 
 from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.const import CONF_NAME
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import AppleTvConfigEntry
+from . import SIGNAL_CONNECTED, AppleTvConfigEntry
 from .entity import AppleTVEntity
 
 
@@ -21,10 +22,22 @@ async def async_setup_entry(
 ) -> None:
     """Load Apple TV binary sensor based on a config entry."""
     # apple_tv config entries always have a unique id
-    assert config_entry.unique_id is not None
-    name: str = config_entry.data[CONF_NAME]
     manager = config_entry.runtime_data
-    async_add_entities([AppleTVKeyboardFocused(name, config_entry.unique_id, manager)])
+    cb: CALLBACK_TYPE
+
+    def setup_entities(atv: AppleTV) -> None:
+        if atv.features.in_state(FeatureState.Available, FeatureName.TextFocusState):
+            assert config_entry.unique_id is not None
+            name: str = config_entry.data[CONF_NAME]
+            async_add_entities(
+                [AppleTVKeyboardFocused(name, config_entry.unique_id, manager)]
+            )
+            cb()
+
+    cb = async_dispatcher_connect(
+        hass, f"{SIGNAL_CONNECTED}_{config_entry.unique_id}", setup_entities
+    )
+    config_entry.async_on_unload(cb)
 
 
 class AppleTVKeyboardFocused(AppleTVEntity, BinarySensorEntity, KeyboardListener):

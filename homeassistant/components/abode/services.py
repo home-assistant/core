@@ -10,11 +10,7 @@ from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.dispatcher import dispatcher_send
 
-from .const import DOMAIN, LOGGER
-
-SERVICE_SETTINGS = "change_setting"
-SERVICE_CAPTURE_IMAGE = "capture_image"
-SERVICE_TRIGGER_AUTOMATION = "trigger_automation"
+from .const import DOMAIN, DOMAIN_DATA, LOGGER
 
 ATTR_SETTING = "setting"
 ATTR_VALUE = "value"
@@ -35,7 +31,7 @@ def _change_setting(call: ServiceCall) -> None:
     value = call.data[ATTR_VALUE]
 
     try:
-        call.hass.data[DOMAIN].abode.set_setting(setting, value)
+        call.hass.data[DOMAIN_DATA].abode.set_setting(setting, value)
     except AbodeException as ex:
         LOGGER.warning(ex)
 
@@ -46,7 +42,7 @@ def _capture_image(call: ServiceCall) -> None:
 
     target_entities = [
         entity_id
-        for entity_id in call.hass.data[DOMAIN].entity_ids
+        for entity_id in call.hass.data[DOMAIN_DATA].entity_ids
         if entity_id in entity_ids
     ]
 
@@ -61,7 +57,7 @@ def _trigger_automation(call: ServiceCall) -> None:
 
     target_entities = [
         entity_id
-        for entity_id in call.hass.data[DOMAIN].entity_ids
+        for entity_id in call.hass.data[DOMAIN_DATA].entity_ids
         if entity_id in entity_ids
     ]
 
@@ -75,16 +71,13 @@ def async_setup_services(hass: HomeAssistant) -> None:
     """Home Assistant services."""
 
     hass.services.async_register(
-        DOMAIN, SERVICE_SETTINGS, _change_setting, schema=CHANGE_SETTING_SCHEMA
+        DOMAIN, "change_setting", _change_setting, schema=CHANGE_SETTING_SCHEMA
     )
 
     hass.services.async_register(
-        DOMAIN, SERVICE_CAPTURE_IMAGE, _capture_image, schema=CAPTURE_IMAGE_SCHEMA
+        DOMAIN, "capture_image", _capture_image, schema=CAPTURE_IMAGE_SCHEMA
     )
 
     hass.services.async_register(
-        DOMAIN,
-        SERVICE_TRIGGER_AUTOMATION,
-        _trigger_automation,
-        schema=AUTOMATION_SCHEMA,
+        DOMAIN, "trigger_automation", _trigger_automation, schema=AUTOMATION_SCHEMA
     )

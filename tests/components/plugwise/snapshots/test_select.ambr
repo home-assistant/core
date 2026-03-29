@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_adam_2_select_entities[platforms0-True-m_adam_cooling][select.adam_gateway_mode-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -61,8 +62,9 @@
 # ---
 # name: test_adam_2_select_entities[platforms0-True-m_adam_cooling][select.adam_regulation_mode-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -125,8 +127,9 @@
 # ---
 # name: test_adam_2_select_entities[platforms0-True-m_adam_cooling][select.bathroom_thermostat_schedule-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -189,8 +192,9 @@
 # ---
 # name: test_adam_2_select_entities[platforms0-True-m_adam_cooling][select.bathroom_zone_profile-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -249,8 +253,9 @@
 # ---
 # name: test_adam_2_select_entities[platforms0-True-m_adam_cooling][select.living_room_thermostat_schedule-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -313,8 +318,9 @@
 # ---
 # name: test_adam_2_select_entities[platforms0-True-m_adam_cooling][select.living_room_zone_profile-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -373,8 +379,9 @@
 # ---
 # name: test_adam_select_entities[platforms0][select.badkamer_thermostat_schedule-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -439,8 +446,9 @@
 # ---
 # name: test_adam_select_entities[platforms0][select.bios_thermostat_schedule-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -505,8 +513,9 @@
 # ---
 # name: test_adam_select_entities[platforms0][select.jessie_thermostat_schedule-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -571,8 +580,9 @@
 # ---
 # name: test_adam_select_entities[platforms0][select.woonkamer_thermostat_schedule-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([

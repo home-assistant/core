@@ -573,7 +573,7 @@ def stream_worker(
     keyframe_converter.create_codec_context(codec_context=video_stream.codec_context)
     try:
         audio_stream = container.streams.audio[0]
-    except (KeyError, IndexError):
+    except KeyError, IndexError:
         audio_stream = None
     if audio_stream and audio_stream.name not in AUDIO_CODECS:
         audio_stream = None

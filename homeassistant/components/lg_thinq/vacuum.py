@@ -57,6 +57,14 @@ ROBOT_STATUS_TO_HA = {
     "sleep": VacuumActivity.IDLE,
     "standby": VacuumActivity.IDLE,
     "working": VacuumActivity.CLEANING,
+    "station": VacuumActivity.CLEANING,
+    "station_dry": VacuumActivity.CLEANING,
+    "clean_learning": VacuumActivity.CLEANING,
+    "station_mop": VacuumActivity.CLEANING,
+    "water_removal": VacuumActivity.CLEANING,
+    "water_injection": VacuumActivity.CLEANING,
+    "clean_select": VacuumActivity.CLEANING,
+    "clean_select_gozone": VacuumActivity.CLEANING,
     "error": VacuumActivity.ERROR,
 }
 ROBOT_BATT_TO_HA = {
@@ -111,7 +119,7 @@ class ThinQStateVacuumEntity(ThinQEntity, StateVacuumEntity):
         super()._update_status()
 
         # Update state.
-        self._attr_activity = ROBOT_STATUS_TO_HA[self.data.current_state]
+        self._attr_activity = ROBOT_STATUS_TO_HA.get(self.data.current_state)
 
         # Update battery.
         if (level := self.data.battery) is not None:

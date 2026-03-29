@@ -2,6 +2,8 @@
   "common": {
     "condition_behavior_description": "How the state should match on the targeted lights.",
     "condition_behavior_name": "Behavior",
+    "condition_threshold_description": "What to test for and threshold values.",
+    "condition_threshold_name": "Threshold configuration",
     "field_brightness_description": "Number indicating brightness, where 0 turns the light off, 1 is the minimum brightness, and 255 is the maximum brightness.",
     "field_brightness_name": "Brightness value",
     "field_brightness_pct_description": "Number indicating the percentage of full brightness, where 0 turns the light off, 1 is the minimum brightness, and 100 is the maximum brightness.",
@@ -12,10 +14,8 @@
     "field_brightness_step_pct_name": "Brightness step",
     "field_color_name_description": "A human-readable color name.",
     "field_color_name_name": "Color name",
-    "field_color_temp_description": "Color temperature in mireds.",
     "field_color_temp_kelvin_description": "Color temperature in Kelvin.",
     "field_color_temp_kelvin_name": "Color temperature",
-    "field_color_temp_name": "Color temperature",
     "field_effect_description": "Light effect.",
     "field_effect_name": "Effect",
     "field_flash_description": "Tell light to flash, can be either value short or long.",
@@ -38,9 +38,26 @@
     "field_xy_color_name": "XY-color",
     "section_advanced_fields_name": "Advanced options",
     "trigger_behavior_description": "The behavior of the targeted lights to trigger on.",
-    "trigger_behavior_name": "Behavior"
+    "trigger_behavior_name": "Behavior",
+    "trigger_threshold_changed_description": "Which changes to trigger on and threshold values.",
+    "trigger_threshold_crossed_description": "Which threshold crossing to trigger on and threshold values.",
+    "trigger_threshold_name": "Threshold configuration"
   },
   "conditions": {
+    "is_brightness": {
+      "description": "Tests the brightness of one or more lights.",
+      "fields": {
+        "behavior": {
+          "description": "[%key:component::light::common::condition_behavior_description%]",
+          "name": "[%key:component::light::common::condition_behavior_name%]"
+        },
+        "threshold": {
+          "description": "[%key:component::light::common::condition_threshold_description%]",
+          "name": "[%key:component::light::common::condition_threshold_name%]"
+        }
+      },
+      "name": "Light brightness"
+    },
     "is_off": {
       "description": "Tests if one or more lights are off.",
       "fields": {
@@ -112,9 +129,6 @@
             "xy": "XY"
           }
         },
-        "color_temp": {
-          "name": "Color temperature (mireds)"
-        },
         "color_temp_kelvin": {
           "name": "Color temperature (Kelvin)"
         },
@@ -130,14 +144,8 @@
         "max_color_temp_kelvin": {
           "name": "Maximum color temperature (Kelvin)"
         },
-        "max_mireds": {
-          "name": "Maximum color temperature (mireds)"
-        },
         "min_color_temp_kelvin": {
           "name": "Minimum color temperature (Kelvin)"
-        },
-        "min_mireds": {
-          "name": "Minimum color temperature (mireds)"
         },
         "supported_color_modes": {
           "name": "Available color modes",
@@ -322,12 +330,6 @@
         "short": "Short"
       }
     },
-    "number_or_entity": {
-      "choices": {
-        "entity": "Entity",
-        "number": "Number"
-      }
-    },
     "state": {
       "options": {
         "off": "[%key:common::state::off%]",
@@ -339,14 +341,6 @@
         "any": "Any",
         "first": "First",
         "last": "Last"
-      }
-    },
-    "trigger_threshold_type": {
-      "options": {
-        "above": "Above a value",
-        "below": "Below a value",
-        "between": "In a range",
-        "outside": "Outside a range"
       }
     }
   },
@@ -365,10 +359,6 @@
         "color_name": {
           "description": "[%key:component::light::common::field_color_name_description%]",
           "name": "[%key:component::light::common::field_color_name_name%]"
-        },
-        "color_temp": {
-          "description": "[%key:component::light::common::field_color_temp_description%]",
-          "name": "[%key:component::light::common::field_color_temp_name%]"
         },
         "color_temp_kelvin": {
           "description": "[%key:component::light::common::field_color_temp_kelvin_description%]",
@@ -415,7 +405,7 @@
           "name": "[%key:component::light::common::field_xy_color_name%]"
         }
       },
-      "name": "[%key:common::action::toggle%]",
+      "name": "Toggle light",
       "sections": {
         "advanced_fields": {
           "name": "[%key:component::light::common::section_advanced_fields_name%]"
@@ -434,7 +424,7 @@
           "name": "[%key:component::light::common::field_transition_name%]"
         }
       },
-      "name": "[%key:common::action::turn_off%]",
+      "name": "Turn off light",
       "sections": {
         "advanced_fields": {
           "name": "[%key:component::light::common::section_advanced_fields_name%]"
@@ -464,10 +454,6 @@
           "description": "[%key:component::light::common::field_color_name_description%]",
           "name": "[%key:component::light::common::field_color_name_name%]"
         },
-        "color_temp": {
-          "description": "[%key:component::light::common::field_color_temp_description%]",
-          "name": "[%key:component::light::common::field_color_temp_name%]"
-        },
         "color_temp_kelvin": {
           "description": "[%key:component::light::common::field_color_temp_kelvin_description%]",
           "name": "[%key:component::light::common::field_color_temp_kelvin_name%]"
@@ -513,7 +499,7 @@
           "name": "[%key:component::light::common::field_xy_color_name%]"
         }
       },
-      "name": "[%key:common::action::turn_on%]",
+      "name": "Turn on light",
       "sections": {
         "advanced_fields": {
           "name": "[%key:component::light::common::section_advanced_fields_name%]"
@@ -526,13 +512,9 @@
     "brightness_changed": {
       "description": "Triggers after the brightness of one or more lights changes.",
       "fields": {
-        "above": {
-          "description": "Trigger when the target brightness is above this value.",
-          "name": "Above"
-        },
-        "below": {
-          "description": "Trigger when the target brightness is below this value.",
-          "name": "Below"
+        "threshold": {
+          "description": "[%key:component::light::common::trigger_threshold_changed_description%]",
+          "name": "[%key:component::light::common::trigger_threshold_name%]"
         }
       },
       "name": "Light brightness changed"
@@ -544,17 +526,9 @@
           "description": "[%key:component::light::common::trigger_behavior_description%]",
           "name": "[%key:component::light::common::trigger_behavior_name%]"
         },
-        "lower_limit": {
-          "description": "Lower threshold limit.",
-          "name": "Lower threshold"
-        },
-        "threshold_type": {
-          "description": "Type of threshold crossing to trigger on.",
-          "name": "Threshold type"
-        },
-        "upper_limit": {
-          "description": "Upper threshold limit.",
-          "name": "Upper threshold"
+        "threshold": {
+          "description": "[%key:component::light::common::trigger_threshold_crossed_description%]",
+          "name": "[%key:component::light::common::trigger_threshold_name%]"
         }
       },
       "name": "Light brightness crossed threshold"

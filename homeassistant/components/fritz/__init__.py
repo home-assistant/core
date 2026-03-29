@@ -86,7 +86,9 @@ async def async_unload_entry(hass: HomeAssistant, entry: FritzConfigEntry) -> bo
     avm_wrapper = entry.runtime_data
 
     fritz_data = hass.data[FRITZ_DATA_KEY]
-    fritz_data.tracked.pop(avm_wrapper.unique_id)
+
+    if avm_wrapper.unique_id in fritz_data.tracked:
+        fritz_data.tracked.pop(avm_wrapper.unique_id)
 
     if not bool(fritz_data.tracked):
         hass.data.pop(FRITZ_DATA_KEY)

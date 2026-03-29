@@ -161,7 +161,7 @@ class MealieConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_hassio(
         self, discovery_info: HassioServiceInfo
     ) -> ConfigFlowResult:
-        """Prepare configuration for a Mealie add-on.
+        """Prepare configuration for a Mealie app.
 
         This flow is triggered by the discovery component.
         """

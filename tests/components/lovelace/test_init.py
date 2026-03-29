@@ -5,9 +5,10 @@ from typing import Any
 from unittest.mock import MagicMock, patch
 
 import pytest
+import voluptuous as vol
 
+from homeassistant.components.lovelace import _validate_url_slug
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import frame
 from homeassistant.setup import async_setup_component
 
 from tests.typing import WebSocketGenerator
@@ -99,36 +100,28 @@ async def test_create_dashboards_when_not_onboarded(
     assert response["result"] == {"strategy": {"type": "map"}}
 
 
-@pytest.mark.parametrize("integration_frame_path", ["custom_components/my_integration"])
-@pytest.mark.usefixtures("mock_integration_frame")
-async def test_hass_data_compatibility(
-    hass: HomeAssistant,
-    caplog: pytest.LogCaptureFixture,
-) -> None:
-    """Test compatibility for external access.
+@pytest.mark.parametrize(
+    ("value", "expected"),
+    [
+        ("lovelace", "lovelace"),
+        ("my-dashboard", "my-dashboard"),
+        ("my-cool-dashboard", "my-cool-dashboard"),
+    ],
+)
+def test_validate_url_slug_valid(value: str, expected: str) -> None:
+    """Test _validate_url_slug with valid values."""
+    assert _validate_url_slug(value) == expected
 
-    See:
-    https://github.com/hacs/integration/blob/4a820e8b1b066bc54a1c9c61102038af6c030603
-    /custom_components/hacs/repositories/plugin.py#L173
-    """
-    expected_prefix = (
-        "Detected that custom integration 'my_integration' accessed lovelace_data"
-    )
 
-    assert await async_setup_component(hass, "lovelace", {})
-
-    assert (lovelace_data := hass.data.get("lovelace")) is not None
-
-    # Direct access to resources is fine
-    assert lovelace_data.resources is not None
-    assert expected_prefix not in caplog.text
-
-    # Dict compatibility logs warning
-    with patch.object(frame, "_REPORTED_INTEGRATIONS", set()):
-        assert lovelace_data["resources"] is not None
-    assert f"{expected_prefix}['resources']" in caplog.text
-
-    # Dict get compatibility logs warning
-    with patch.object(frame, "_REPORTED_INTEGRATIONS", set()):
-        assert lovelace_data.get("resources") is not None
-    assert f"{expected_prefix}.get('resources')" in caplog.text
+@pytest.mark.parametrize(
+    ("value", "error_message"),
+    [
+        (None, r"Slug should not be None"),
+        ("nodash", r"Url path needs to contain a hyphen \(-\)"),
+        ("my-dash board", r"invalid slug my-dash board \(try my-dash-board\)"),
+    ],
+)
+def test_validate_url_slug_invalid(value: Any, error_message: str) -> None:
+    """Test _validate_url_slug with invalid values."""
+    with pytest.raises(vol.Invalid, match=error_message):
+        _validate_url_slug(value)

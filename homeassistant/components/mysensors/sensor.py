@@ -185,7 +185,7 @@ SENSORS: dict[str, SensorEntityDescription] = {
     ),
     "V_PH": SensorEntityDescription(
         key="V_PH",
-        native_unit_of_measurement="pH",
+        device_class=SensorDeviceClass.PH,
     ),
     "V_ORP": SensorEntityDescription(
         key="V_ORP",
@@ -244,7 +244,7 @@ async def async_setup_entry(
     config_entry.async_on_unload(
         async_dispatcher_connect(
             hass,
-            MYSENSORS_NODE_DISCOVERY,
+            MYSENSORS_NODE_DISCOVERY.format(config_entry.entry_id),
             async_node_discover,
         ),
     )

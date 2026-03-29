@@ -12,6 +12,7 @@ import voluptuous as vol
 
 from homeassistant.config_entries import (
     SOURCE_RECONFIGURE,
+    ConfigEntryState,
     ConfigFlow,
     ConfigFlowResult,
     ConfigSubentryFlow,
@@ -32,13 +33,15 @@ from homeassistant.helpers.selector import (
 )
 
 from . import initialize_bot
-from .bot import TelegramBotConfigEntry
+from .bot import TelegramBotConfigEntry, TelegramNotificationService
 from .const import (
     ATTR_PARSER,
     BOT_NAME,
+    CONF_API_ENDPOINT,
     CONF_CHAT_ID,
     CONF_PROXY_URL,
     CONF_TRUSTED_NETWORKS,
+    DEFAULT_API_ENDPOINT,
     DEFAULT_TRUSTED_NETWORKS,
     DOMAIN,
     ERROR_FIELD,
@@ -59,9 +62,11 @@ _LOGGER = logging.getLogger(__name__)
 DESCRIPTION_PLACEHOLDERS: dict[str, str] = {
     "botfather_username": "@BotFather",
     "botfather_url": "https://t.me/botfather",
-    "getidsbot_username": "@GetIDs Bot",
-    "getidsbot_url": "https://t.me/getidsbot",
+    "id_bot_username": "@id_bot",
+    "id_bot_url": "https://t.me/id_bot",
     "socks_url": "socks5://username:password@proxy_ip:proxy_port",
+    # used in advanced settings section
+    "default_api_endpoint": DEFAULT_API_ENDPOINT,
 }
 
 STEP_USER_DATA_SCHEMA: vol.Schema = vol.Schema(
@@ -85,6 +90,12 @@ STEP_USER_DATA_SCHEMA: vol.Schema = vol.Schema(
         vol.Required(SECTION_ADVANCED_SETTINGS): section(
             vol.Schema(
                 {
+                    vol.Required(
+                        CONF_API_ENDPOINT,
+                        default=DEFAULT_API_ENDPOINT,
+                    ): TextSelector(
+                        config=TextSelectorConfig(type=TextSelectorType.URL)
+                    ),
                     vol.Optional(CONF_PROXY_URL): TextSelector(
                         config=TextSelectorConfig(type=TextSelectorType.URL)
                     ),
@@ -109,6 +120,12 @@ STEP_RECONFIGURE_USER_DATA_SCHEMA: vol.Schema = vol.Schema(
         vol.Required(SECTION_ADVANCED_SETTINGS): section(
             vol.Schema(
                 {
+                    vol.Required(
+                        CONF_API_ENDPOINT,
+                        default=DEFAULT_API_ENDPOINT,
+                    ): TextSelector(
+                        config=TextSelectorConfig(type=TextSelectorType.URL)
+                    ),
                     vol.Optional(CONF_PROXY_URL): TextSelector(
                         config=TextSelectorConfig(type=TextSelectorType.URL)
                     ),
@@ -136,6 +153,7 @@ STEP_WEBHOOKS_DATA_SCHEMA: vol.Schema = vol.Schema(
         vol.Required(CONF_TRUSTED_NETWORKS): vol.Coerce(str),
     }
 )
+SUBENTRY_SCHEMA: vol.Schema = vol.Schema({vol.Required(CONF_CHAT_ID): vol.Coerce(int)})
 OPTIONS_SCHEMA: vol.Schema = vol.Schema(
     {
         vol.Required(
@@ -145,7 +163,7 @@ OPTIONS_SCHEMA: vol.Schema = vol.Schema(
                 options=[PARSER_MD, PARSER_MD2, PARSER_HTML, PARSER_PLAIN_TEXT],
                 translation_key="parse_mode",
             )
-        )
+        ),
     }
 )
 
@@ -170,10 +188,11 @@ class OptionsFlowHandler(OptionsFlow):
         )
 
 
-class TelgramBotConfigFlow(ConfigFlow, domain=DOMAIN):
+class TelegramBotConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Telegram."""
 
     VERSION = 1
+    MINOR_VERSION = 2
 
     @staticmethod
     @callback
@@ -219,6 +238,9 @@ class TelgramBotConfigFlow(ConfigFlow, domain=DOMAIN):
 
         # validate connection to Telegram API
         errors: dict[str, str] = {}
+        user_input[CONF_API_ENDPOINT] = user_input[SECTION_ADVANCED_SETTINGS][
+            CONF_API_ENDPOINT
+        ]
         user_input[CONF_PROXY_URL] = user_input[SECTION_ADVANCED_SETTINGS].get(
             CONF_PROXY_URL
         )
@@ -243,6 +265,7 @@ class TelgramBotConfigFlow(ConfigFlow, domain=DOMAIN):
                 title=bot_name,
                 data={
                     CONF_PLATFORM: user_input[CONF_PLATFORM],
+                    CONF_API_ENDPOINT: user_input[CONF_API_ENDPOINT],
                     CONF_API_KEY: user_input[CONF_API_KEY],
                     CONF_PROXY_URL: user_input[SECTION_ADVANCED_SETTINGS].get(
                         CONF_PROXY_URL
@@ -357,6 +380,9 @@ class TelgramBotConfigFlow(ConfigFlow, domain=DOMAIN):
             data={
                 CONF_PLATFORM: self._step_user_data[CONF_PLATFORM],
                 CONF_API_KEY: self._step_user_data[CONF_API_KEY],
+                CONF_API_ENDPOINT: self._step_user_data[SECTION_ADVANCED_SETTINGS][
+                    CONF_API_ENDPOINT
+                ],
                 CONF_PROXY_URL: self._step_user_data[SECTION_ADVANCED_SETTINGS].get(
                     CONF_PROXY_URL
                 ),
@@ -385,7 +411,10 @@ class TelgramBotConfigFlow(ConfigFlow, domain=DOMAIN):
                     "URL is required since you have not configured an external URL in Home Assistant"
                 )
                 return
-        elif not url.startswith("https"):
+        elif (
+            not url.startswith("https")
+            and self._step_user_data[CONF_API_ENDPOINT] == DEFAULT_API_ENDPOINT
+        ):
             errors["base"] = "invalid_url"
             description_placeholders[ERROR_FIELD] = "URL"
             description_placeholders[ERROR_MESSAGE] = "URL must start with https"
@@ -428,6 +457,9 @@ class TelgramBotConfigFlow(ConfigFlow, domain=DOMAIN):
                     {
                         **self._get_reconfigure_entry().data,
                         SECTION_ADVANCED_SETTINGS: {
+                            CONF_API_ENDPOINT: self._get_reconfigure_entry().data[
+                                CONF_API_ENDPOINT
+                            ],
                             CONF_PROXY_URL: self._get_reconfigure_entry().data.get(
                                 CONF_PROXY_URL
                             ),
@@ -440,6 +472,10 @@ class TelgramBotConfigFlow(ConfigFlow, domain=DOMAIN):
             CONF_PROXY_URL
         )
 
+        user_input[CONF_API_ENDPOINT] = user_input[SECTION_ADVANCED_SETTINGS][
+            CONF_API_ENDPOINT
+        ]
+
         errors: dict[str, str] = {}
         description_placeholders: dict[str, str] = DESCRIPTION_PLACEHOLDERS.copy()
 
@@ -449,6 +485,35 @@ class TelgramBotConfigFlow(ConfigFlow, domain=DOMAIN):
         )
         self._bot_name = bot_name
 
+        existing_api_endpoint: str = self._get_reconfigure_entry().data[
+            CONF_API_ENDPOINT
+        ]
+        if (
+            self._get_reconfigure_entry().state == ConfigEntryState.LOADED
+            and user_input[CONF_API_ENDPOINT] != DEFAULT_API_ENDPOINT
+            and existing_api_endpoint == DEFAULT_API_ENDPOINT
+        ):
+            # logout existing bot from the official Telegram bot API
+            # logout is only used when changing the API endpoint from official to a custom one
+            # there is a 10-minute lockout period after logout so we only logout if necessary
+            service: TelegramNotificationService = (
+                self._get_reconfigure_entry().runtime_data
+            )
+            try:
+                is_logged_out = await service.bot.log_out()
+            except TelegramError as err:
+                errors["base"] = "telegram_error"
+                description_placeholders[ERROR_MESSAGE] = str(err)
+            else:
+                _LOGGER.info(
+                    "[%s %s] Logged out: %s",
+                    service.bot.username,
+                    service.bot.id,
+                    is_logged_out,
+                )
+                if not is_logged_out:
+                    errors["base"] = "bot_logout_failed"
+
         if errors:
             return self.async_show_form(
                 step_id="reconfigure",
@@ -457,6 +522,7 @@ class TelgramBotConfigFlow(ConfigFlow, domain=DOMAIN):
                     {
                         **user_input,
                         SECTION_ADVANCED_SETTINGS: {
+                            CONF_API_ENDPOINT: user_input[CONF_API_ENDPOINT],
                             CONF_PROXY_URL: user_input.get(CONF_PROXY_URL),
                         },
                     },
@@ -496,8 +562,10 @@ class TelgramBotConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
         description_placeholders: dict[str, str] = {}
 
+        updated_data = {**self._get_reauth_entry().data}
+        updated_data[CONF_API_KEY] = user_input[CONF_API_KEY]
         bot_name = await self._validate_bot(
-            user_input, errors, description_placeholders
+            updated_data, errors, description_placeholders
         )
         await self._shutdown_bot()
 
@@ -512,7 +580,7 @@ class TelgramBotConfigFlow(ConfigFlow, domain=DOMAIN):
             )
 
         return self.async_update_reload_and_abort(
-            self._get_reauth_entry(), title=bot_name, data_updates=user_input
+            self._get_reauth_entry(), title=bot_name, data_updates=updated_data
         )
 
 
@@ -524,34 +592,95 @@ class AllowedChatIdsSubEntryFlowHandler(ConfigSubentryFlow):
     ) -> SubentryFlowResult:
         """Create allowed chat ID."""
 
+        if self._get_entry().state != ConfigEntryState.LOADED:
+            return self.async_abort(
+                reason="entry_not_loaded",
+                description_placeholders={"telegram_bot": self._get_entry().title},
+            )
+
         errors: dict[str, str] = {}
+        description_placeholders = DESCRIPTION_PLACEHOLDERS.copy()
 
         if user_input is not None:
             config_entry: TelegramBotConfigEntry = self._get_entry()
             bot = config_entry.runtime_data.bot
 
+            # validate chat id
             chat_id: int = user_input[CONF_CHAT_ID]
-            chat_name = await _async_get_chat_name(bot, chat_id)
-            if chat_name:
+            try:
+                chat_info: ChatFullInfo = await bot.get_chat(chat_id)
+            except BadRequest:
+                errors["base"] = "chat_not_found"
+            except TelegramError as err:
+                errors["base"] = "telegram_error"
+                description_placeholders[ERROR_MESSAGE] = str(err)
+
+            if not errors:
                 return self.async_create_entry(
-                    title=f"{chat_name} ({chat_id})",
+                    title=chat_info.effective_name or str(chat_id),
                     data={CONF_CHAT_ID: chat_id},
                     unique_id=str(chat_id),
                 )
 
-            errors["base"] = "chat_not_found"
+        service: TelegramNotificationService = self._get_entry().runtime_data
+        description_placeholders["bot_username"] = f"@{service.bot.username}"
+        description_placeholders["bot_url"] = f"https://t.me/{service.bot.username}"
+
+        # suggest chat id based on the most recent chat
+        suggested_values = {}
+        description_placeholders["most_recent_chat"] = "Not available"
+        try:
+            most_recent_chat = await _get_most_recent_chat(service)
+        except TelegramError as err:
+            _LOGGER.warning("Error occurred while fetching recent chat: %s", err)
+            most_recent_chat = None
+        if most_recent_chat is not None:
+            suggested_values[CONF_CHAT_ID] = most_recent_chat[0]
+
+            description_placeholders["most_recent_chat"] = (
+                f"{most_recent_chat[1]} ({most_recent_chat[0]})"
+                if most_recent_chat[1]
+                else str(most_recent_chat[0])
+            )
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema({vol.Required(CONF_CHAT_ID): vol.Coerce(int)}),
-            description_placeholders=DESCRIPTION_PLACEHOLDERS,
+            data_schema=self.add_suggested_values_to_schema(
+                SUBENTRY_SCHEMA,
+                suggested_values,
+            ),
+            description_placeholders=description_placeholders,
             errors=errors,
         )
 
 
-async def _async_get_chat_name(bot: Bot, chat_id: int) -> str:
-    try:
-        chat_info: ChatFullInfo = await bot.get_chat(chat_id)
-        return chat_info.effective_name or str(chat_id)
-    except BadRequest:
-        return ""
+async def _get_most_recent_chat(
+    service: TelegramNotificationService,
+) -> tuple[int, str | None] | None:
+    """Get the most recent chat ID and name.
+
+    For broadcast bot, this is retrieved using get_updates() to find the most recent message received.
+    For polling or webhook bot, this is retrieved from the runtime data which is updated whenever a message is received.
+    """
+
+    if service.app is not None:
+        # this is either polling or webhook bot
+
+        if service.app.most_recent_chat_id is None:
+            return None
+
+        chat = await service.bot.get_chat(service.app.most_recent_chat_id)
+        return (service.app.most_recent_chat_id, chat.effective_name)
+
+    # broadcast bot
+    updates = await service.bot.get_updates(offset=0)
+    if updates:
+        last_update = updates[-1]
+        if last_update.effective_chat:
+            chat_name = last_update.effective_chat.effective_name
+            return (
+                last_update.effective_chat.id,
+                chat_name,
+            )
+
+    return None

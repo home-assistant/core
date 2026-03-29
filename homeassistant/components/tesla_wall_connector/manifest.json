@@ -18,6 +18,7 @@
     }
   ],
   "documentation": "https://www.home-assistant.io/integrations/tesla_wall_connector",
+  "integration_type": "device",
   "iot_class": "local_polling",
   "loggers": ["tesla_wall_connector"],
   "requirements": ["tesla-wall-connector==1.1.0"]

@@ -2,12 +2,12 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 import logging
 from xml.etree.ElementTree import ParseError
 
 from pyhik.constants import SENSOR_MAP
-from pyhik.hikvision import HikCamera
+from pyhik.hikvision import HikCamera, VideoChannel, get_video_channels
 import requests
 
 from homeassistant.config_entries import ConfigEntry
@@ -38,6 +38,10 @@ class HikvisionData:
     device_id: str
     device_name: str
     device_type: str
+    host: str
+    username: str
+    password: str
+    channels: dict[int, VideoChannel] = field(default_factory=dict)
 
 
 type HikvisionConfigEntry = ConfigEntry[HikvisionData]
@@ -68,11 +72,24 @@ async def async_setup_entry(hass: HomeAssistant, entry: HikvisionConfigEntry) ->
     device_name = camera.get_name or host
     device_type = camera.get_type or "Camera"
 
+    # For NVRs, fetch video channel information
+    channels: dict[int, VideoChannel] = {}
+    if device_type == "NVR":
+        channel_list = await hass.async_add_executor_job(
+            get_video_channels, host, port, username, password, ssl
+        )
+        channels = {ch.id: ch for ch in channel_list}
+        _LOGGER.debug("Found %d video channels", len(channels))
+
     entry.runtime_data = HikvisionData(
         camera=camera,
         device_id=device_id,
         device_name=device_name,
         device_type=device_type,
+        host=host,
+        username=username,
+        password=password,
+        channels=channels,
     )
 
     _LOGGER.debug(
@@ -100,13 +117,21 @@ async def async_setup_entry(hass: HomeAssistant, entry: HikvisionConfigEntry) ->
                 # Map raw event type names to friendly names using SENSOR_MAP
                 mapped_events: dict[str, list[int]] = {}
                 for event_type, channels in nvr_events.items():
-                    friendly_name = SENSOR_MAP.get(event_type.lower(), event_type)
+                    event_key = event_type.lower()
+                    # Skip videoloss - used as watchdog by pyhik, not a real sensor
+                    if event_key == "videoloss":
+                        continue
+                    friendly_name = SENSOR_MAP.get(event_key)
+                    if friendly_name is None:
+                        _LOGGER.debug("Skipping unmapped event type: %s", event_type)
+                        continue
                     if friendly_name in mapped_events:
                         mapped_events[friendly_name].extend(channels)
                     else:
                         mapped_events[friendly_name] = list(channels)
                 _LOGGER.debug("Mapped NVR events: %s", mapped_events)
-                camera.inject_events(mapped_events)
+                if mapped_events:
+                    camera.inject_events(mapped_events)
             else:
                 _LOGGER.debug(
                     "No event triggers returned from %s. "

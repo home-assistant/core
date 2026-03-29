@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_update[update.test_update-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -40,7 +41,7 @@
     'attributes': ReadOnlyDict({
       'auto_update': False,
       'display_precision': 0,
-      'entity_picture': 'https://brands.home-assistant.io/_/teslemetry/icon.png',
+      'entity_picture': '/api/brands/integration/teslemetry/icon.png',
       'friendly_name': 'Test Update',
       'in_progress': False,
       'installed_version': '2026.0.0',
@@ -62,8 +63,9 @@
 # ---
 # name: test_update_alt[update.test_update-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -101,7 +103,7 @@
     'attributes': ReadOnlyDict({
       'auto_update': False,
       'display_precision': 0,
-      'entity_picture': 'https://brands.home-assistant.io/_/teslemetry/icon.png',
+      'entity_picture': '/api/brands/integration/teslemetry/icon.png',
       'friendly_name': 'Test Update',
       'in_progress': False,
       'installed_version': '2024.44.25',
@@ -126,7 +128,7 @@
     'attributes': ReadOnlyDict({
       'auto_update': False,
       'display_precision': 0,
-      'entity_picture': 'https://brands.home-assistant.io/_/teslemetry/icon.png',
+      'entity_picture': '/api/brands/integration/teslemetry/icon.png',
       'friendly_name': 'Test Update',
       'in_progress': False,
       'installed_version': '2025.1.1',
@@ -151,7 +153,7 @@
     'attributes': ReadOnlyDict({
       'auto_update': False,
       'display_precision': 0,
-      'entity_picture': 'https://brands.home-assistant.io/_/teslemetry/icon.png',
+      'entity_picture': '/api/brands/integration/teslemetry/icon.png',
       'friendly_name': 'Test Update',
       'in_progress': False,
       'installed_version': '2025.1.1',
@@ -176,7 +178,7 @@
     'attributes': ReadOnlyDict({
       'auto_update': False,
       'display_precision': 0,
-      'entity_picture': 'https://brands.home-assistant.io/_/teslemetry/icon.png',
+      'entity_picture': '/api/brands/integration/teslemetry/icon.png',
       'friendly_name': 'Test Update',
       'in_progress': False,
       'installed_version': '2025.1.1',
@@ -201,7 +203,7 @@
     'attributes': ReadOnlyDict({
       'auto_update': False,
       'display_precision': 0,
-      'entity_picture': 'https://brands.home-assistant.io/_/teslemetry/icon.png',
+      'entity_picture': '/api/brands/integration/teslemetry/icon.png',
       'friendly_name': 'Test Update',
       'in_progress': False,
       'installed_version': '2025.2.1',
@@ -226,7 +228,7 @@
     'attributes': ReadOnlyDict({
       'auto_update': False,
       'display_precision': 0,
-      'entity_picture': 'https://brands.home-assistant.io/_/teslemetry/icon.png',
+      'entity_picture': '/api/brands/integration/teslemetry/icon.png',
       'friendly_name': 'Test Update',
       'in_progress': False,
       'installed_version': '2025.2.1',

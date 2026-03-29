@@ -62,7 +62,7 @@ class HeatPumpInfo(HeatPumpDiscovery.HeatPumpInfo):
     @property
     def readable_name(self) -> str | None:
         """Return the readable name of the heat pump."""
-        return self.device_name if self.device_name else self.model
+        return self.device_name or self.model
 
     @property
     def heatpump_id(self) -> str:
