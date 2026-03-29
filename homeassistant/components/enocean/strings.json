@@ -266,7 +266,7 @@
         }
       },
       "select_device_to_edit": {
-        "data": { "device": "Device" },
+        "data": { "id": "Device" },
         "description": "Select the EnOcean device whose settings you want to change.",
         "title": "Select EnOcean device for editing"
       }
