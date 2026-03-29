@@ -54,6 +54,9 @@ PARALLEL_UPDATES = 1
 API_CONTROL_DEVICE = "control_device"
 API_SET_AUTO_SHUTDOWN = "set_auto_shutdown"
 API_SET_CHILD_LOCK = "set_shutter_child_lock"
+API_GET_SCHEDULES = "get_schedules"
+API_CREATE_SCHEDULE = "create_schedule"
+API_DELETE_SCHEDULE = "delete_schedule"
 
 SERVICE_SET_AUTO_OFF_SCHEMA: VolDictType = {
     vol.Required(CONF_AUTO_OFF): cv.time_period_str,
@@ -226,7 +229,7 @@ class SwitcherHeaterSwitchEntity(SwitcherBaseSwitchEntity):
         """Return all schedules configured on the device."""
         response = cast(
             SwitcherGetSchedulesResponse,
-            await self._async_call_api("get_schedules"),
+            await self._async_call_api(API_GET_SCHEDULES),
         )
         return {
             "schedules": [
@@ -254,7 +257,7 @@ class SwitcherHeaterSwitchEntity(SwitcherBaseSwitchEntity):
                 translation_key="schedule_end_time_not_after_start_time",
             )
         await self._async_call_api(
-            "create_schedule",
+            API_CREATE_SCHEDULE,
             start_time.strftime("%H:%M"),
             end_time.strftime("%H:%M"),
             {DAYS_MAPPING[d] for d in days},
@@ -262,7 +265,7 @@ class SwitcherHeaterSwitchEntity(SwitcherBaseSwitchEntity):
 
     async def async_delete_schedule_service(self, schedule_id: str) -> None:
         """Delete a schedule from the device by its ID."""
-        await self._async_call_api("delete_schedule", schedule_id)
+        await self._async_call_api(API_DELETE_SCHEDULE, schedule_id)
 
 
 class SwitcherShutterChildLockBaseSwitchEntity(SwitcherEntity, SwitchEntity):
