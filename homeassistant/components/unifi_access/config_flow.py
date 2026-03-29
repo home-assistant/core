@@ -54,9 +54,9 @@ class UnifiAccessConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         if user_input is not None:
+            self._async_abort_entries_match({CONF_HOST: user_input[CONF_HOST]})
             errors = await self._validate_input(user_input)
             if not errors:
-                self._async_abort_entries_match({CONF_HOST: user_input[CONF_HOST]})
                 return self.async_create_entry(
                     title="UniFi Access",
                     data=user_input,
@@ -82,11 +82,11 @@ class UnifiAccessConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         if user_input is not None:
+            self._async_abort_entries_match(
+                {CONF_HOST: user_input[CONF_HOST]},
+            )
             errors = await self._validate_input(user_input)
             if not errors:
-                self._async_abort_entries_match(
-                    {CONF_HOST: user_input[CONF_HOST]},
-                )
                 return self.async_update_reload_and_abort(
                     reconfigure_entry,
                     data_updates=user_input,
