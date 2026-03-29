@@ -189,8 +189,7 @@ class HomematicipHAP:
             _LOGGER.debug("Cancelling existing get_state task before starting new one")
             self._get_state_task.cancel()
         _LOGGER.debug(
-            "Starting get_state task (ws_connected=%s, ws_closed_event=%s)",
-            self.home.websocket_is_connected(),
+            "Starting get_state task (ws_closed_event=%s)",
             self._ws_connection_closed.is_set(),
         )
         self._get_state_task = self.hass.async_create_task(self._try_get_state())
@@ -229,10 +228,12 @@ class HomematicipHAP:
         max_delay = 1500
         while True:
             try:
-                _LOGGER.debug("Calling get_current_state_async")
+                _LOGGER.debug("Calling get_state")
                 await self.get_state()
-                _LOGGER.debug("get_current_state_async succeeded")
+                _LOGGER.debug("get_state succeeded")
                 break
+            except asyncio.CancelledError:
+                raise
             except HmipAuthenticationError:
                 _LOGGER.error(
                     "Authentication error from HomematicIP Cloud, triggering reauth"
