@@ -61,7 +61,6 @@ MOCK_ENVIRON = {"SUPERVISOR": "127.0.0.1", "SUPERVISOR_TOKEN": "abcdefgh"}
 
 @pytest.fixture(autouse=True)
 def mock_all(
-    aioclient_mock: AiohttpClientMocker,
     store_info: AsyncMock,
     addon_info: AsyncMock,
     addon_stats: AsyncMock,
@@ -78,10 +77,9 @@ def mock_all(
     homeassistant_stats: AsyncMock,
     supervisor_stats: AsyncMock,
     addon_installed: AsyncMock,
+    ingress_panels: AsyncMock,
 ) -> None:
     """Mock all setup requests."""
-    aioclient_mock.post("http://127.0.0.1/homeassistant/options", json={"result": "ok"})
-    aioclient_mock.post("http://127.0.0.1/supervisor/options", json={"result": "ok"})
     addons_list.return_value[0] = replace(
         addons_list.return_value[0],
         version="1.0.0",
@@ -142,15 +140,10 @@ def mock_all(
         return addon
 
     addon_info.side_effect = mock_addon_info
-    aioclient_mock.get(
-        "http://127.0.0.1/ingress/panels", json={"result": "ok", "data": {"panels": {}}}
-    )
 
 
 async def test_setup_api_ping(
-    hass: HomeAssistant,
-    aioclient_mock: AiohttpClientMocker,
-    supervisor_client: AsyncMock,
+    hass: HomeAssistant, supervisor_client: AsyncMock
 ) -> None:
     """Test setup with API ping."""
     with patch.dict(os.environ, MOCK_ENVIRON):
@@ -158,14 +151,12 @@ async def test_setup_api_ping(
         await hass.async_block_till_done()
 
     assert result
-    assert aioclient_mock.call_count + len(supervisor_client.mock_calls) == 23
+    assert len(supervisor_client.mock_calls) == 23
     assert get_core_info(hass)["version_latest"] == "1.0.0"
     assert is_hassio(hass)
 
 
-async def test_setup_api_panel(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
-) -> None:
+async def test_setup_api_panel(hass: HomeAssistant) -> None:
     """Test setup with API ping."""
     assert await async_setup_component(hass, "frontend", {})
     with patch.dict(os.environ, MOCK_ENVIRON):
@@ -217,9 +208,7 @@ async def test_setup_app_panel(hass: HomeAssistant) -> None:
 
 
 async def test_setup_api_push_api_data(
-    hass: HomeAssistant,
-    aioclient_mock: AiohttpClientMocker,
-    supervisor_client: AsyncMock,
+    hass: HomeAssistant, supervisor_client: AsyncMock
 ) -> None:
     """Test setup with API push."""
     with patch.dict(os.environ, MOCK_ENVIRON):
@@ -229,17 +218,14 @@ async def test_setup_api_push_api_data(
         await hass.async_block_till_done()
 
     assert result
-    assert aioclient_mock.call_count + len(supervisor_client.mock_calls) == 23
+    assert len(supervisor_client.mock_calls) == 23
     supervisor_client.homeassistant.set_options.assert_called_once_with(
         HomeAssistantOptions(ssl=False, port=9999, refresh_token=ANY)
     )
 
 
 async def test_setup_api_push_api_data_error(
-    hass: HomeAssistant,
-    aioclient_mock: AiohttpClientMocker,
-    supervisor_client: AsyncMock,
-    caplog: pytest.LogCaptureFixture,
+    hass: HomeAssistant, supervisor_client: AsyncMock, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test setup with error while pushing core config data to API."""
     supervisor_client.homeassistant.set_options.side_effect = SupervisorError("boom")
@@ -248,14 +234,12 @@ async def test_setup_api_push_api_data_error(
         await hass.async_block_till_done()
 
     assert result
-    assert aioclient_mock.call_count + len(supervisor_client.mock_calls) == 23
+    assert len(supervisor_client.mock_calls) == 23
     assert "Failed to update Home Assistant options in Supervisor: boom" in caplog.text
 
 
 async def test_setup_api_push_api_data_server_host(
-    hass: HomeAssistant,
-    aioclient_mock: AiohttpClientMocker,
-    supervisor_client: AsyncMock,
+    hass: HomeAssistant, supervisor_client: AsyncMock
 ) -> None:
     """Test setup with API push with active server host."""
     with patch.dict(os.environ, MOCK_ENVIRON):
@@ -267,17 +251,14 @@ async def test_setup_api_push_api_data_server_host(
         await hass.async_block_till_done()
 
     assert result
-    assert aioclient_mock.call_count + len(supervisor_client.mock_calls) == 23
+    assert len(supervisor_client.mock_calls) == 23
     supervisor_client.homeassistant.set_options.assert_called_once_with(
         HomeAssistantOptions(ssl=False, port=9999, refresh_token=ANY, watchdog=False)
     )
 
 
 async def test_setup_api_push_api_data_default(
-    hass: HomeAssistant,
-    aioclient_mock: AiohttpClientMocker,
-    hass_storage: dict[str, Any],
-    supervisor_client: AsyncMock,
+    hass: HomeAssistant, hass_storage: dict[str, Any], supervisor_client: AsyncMock
 ) -> None:
     """Test setup with API push default data."""
     with (
@@ -288,7 +269,7 @@ async def test_setup_api_push_api_data_default(
         await hass.async_block_till_done()
 
     assert result
-    assert aioclient_mock.call_count + len(supervisor_client.mock_calls) == 23
+    assert len(supervisor_client.mock_calls) == 23
     supervisor_client.homeassistant.set_options.assert_called_once_with(
         HomeAssistantOptions(ssl=False, port=8123, refresh_token=ANY)
     )
@@ -311,9 +292,7 @@ async def test_setup_api_push_api_data_default(
 
 
 async def test_setup_adds_admin_group_to_user(
-    hass: HomeAssistant,
-    aioclient_mock: AiohttpClientMocker,
-    hass_storage: dict[str, Any],
+    hass: HomeAssistant, hass_storage: dict[str, Any]
 ) -> None:
     """Test setup with API push default data."""
     # Create user without admin
@@ -335,9 +314,7 @@ async def test_setup_adds_admin_group_to_user(
 
 
 async def test_setup_migrate_user_name(
-    hass: HomeAssistant,
-    aioclient_mock: AiohttpClientMocker,
-    hass_storage: dict[str, Any],
+    hass: HomeAssistant, hass_storage: dict[str, Any]
 ) -> None:
     """Test setup with migrating the user name."""
     # Create user with old name
@@ -358,10 +335,7 @@ async def test_setup_migrate_user_name(
 
 
 async def test_setup_api_existing_hassio_user(
-    hass: HomeAssistant,
-    aioclient_mock: AiohttpClientMocker,
-    hass_storage: dict[str, Any],
-    supervisor_client: AsyncMock,
+    hass: HomeAssistant, hass_storage: dict[str, Any], supervisor_client: AsyncMock
 ) -> None:
     """Test setup with API push default data."""
     user = await hass.auth.async_create_system_user("Hass.io test")
@@ -372,16 +346,14 @@ async def test_setup_api_existing_hassio_user(
         await hass.async_block_till_done()
 
     assert result
-    assert aioclient_mock.call_count + len(supervisor_client.mock_calls) == 23
+    assert len(supervisor_client.mock_calls) == 23
     supervisor_client.homeassistant.set_options.assert_called_once_with(
         HomeAssistantOptions(ssl=False, port=8123, refresh_token=token.token)
     )
 
 
 async def test_setup_core_push_config(
-    hass: HomeAssistant,
-    aioclient_mock: AiohttpClientMocker,
-    supervisor_client: AsyncMock,
+    hass: HomeAssistant, supervisor_client: AsyncMock
 ) -> None:
     """Test setup with API push default data."""
     hass.config.time_zone = "testzone"
@@ -391,7 +363,7 @@ async def test_setup_core_push_config(
         await hass.async_block_till_done()
 
     assert result
-    assert aioclient_mock.call_count + len(supervisor_client.mock_calls) == 23
+    assert len(supervisor_client.mock_calls) == 23
     supervisor_client.supervisor.set_options.assert_called_once_with(
         SupervisorOptions(timezone="testzone")
     )
@@ -405,10 +377,7 @@ async def test_setup_core_push_config(
 
 
 async def test_setup_core_push_config_error(
-    hass: HomeAssistant,
-    aioclient_mock: AiohttpClientMocker,
-    supervisor_client: AsyncMock,
-    caplog: pytest.LogCaptureFixture,
+    hass: HomeAssistant, supervisor_client: AsyncMock, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test setup with error while pushing supervisor config data to API."""
     hass.config.time_zone = "testzone"
@@ -419,14 +388,12 @@ async def test_setup_core_push_config_error(
         await hass.async_block_till_done()
 
     assert result
-    assert aioclient_mock.call_count + len(supervisor_client.mock_calls) == 23
+    assert len(supervisor_client.mock_calls) == 23
     assert "Failed to update Supervisor options: boom" in caplog.text
 
 
 async def test_setup_hassio_no_additional_data(
-    hass: HomeAssistant,
-    aioclient_mock: AiohttpClientMocker,
-    supervisor_client: AsyncMock,
+    hass: HomeAssistant, supervisor_client: AsyncMock
 ) -> None:
     """Test setup with API push default data."""
     with (
@@ -437,8 +404,7 @@ async def test_setup_hassio_no_additional_data(
         await hass.async_block_till_done()
 
     assert result
-    assert aioclient_mock.call_count + len(supervisor_client.mock_calls) == 23
-    assert aioclient_mock.mock_calls[-1][3]["Authorization"] == "Bearer 123456"
+    assert len(supervisor_client.mock_calls) == 23
 
 
 async def test_fail_setup_without_environ_var(hass: HomeAssistant) -> None:
@@ -651,10 +617,7 @@ async def test_service_calls(
     ["app", "addon"],
 )
 async def test_invalid_service_calls(
-    hass: HomeAssistant,
-    aioclient_mock: AiohttpClientMocker,
-    supervisor_is_connected: AsyncMock,
-    app_or_addon: str,
+    hass: HomeAssistant, supervisor_is_connected: AsyncMock, app_or_addon: str
 ) -> None:
     """Call service with invalid input and check that it raises."""
     supervisor_is_connected.side_effect = SupervisorError
@@ -1035,7 +998,6 @@ async def test_coordinator_updates_stats_entities_enabled(
 )
 async def test_setup_hardware_integration(
     hass: HomeAssistant,
-    aioclient_mock: AiohttpClientMocker,
     supervisor_client: AsyncMock,
     os_info: AsyncMock,
     board: str,
@@ -1059,7 +1021,7 @@ async def test_setup_hardware_integration(
         await hass.async_block_till_done(wait_background_tasks=True)
 
     assert result
-    assert aioclient_mock.call_count + len(supervisor_client.mock_calls) == 23
+    assert len(supervisor_client.mock_calls) == 23
     assert len(mock_setup_entry.mock_calls) == 1
 
 

@@ -3,7 +3,6 @@
 from typing import Any
 
 from roborock.devices.traits.v1.command import CommandTrait
-from roborock.devices.traits.v1.status import StatusTrait
 from roborock.exceptions import RoborockException
 from roborock.roborock_typing import RoborockCommand
 
@@ -93,12 +92,6 @@ class RoborockCoordinatedEntityV1(
         )
         CoordinatorEntity.__init__(self, coordinator=coordinator)
         self._attr_unique_id = unique_id
-
-    @property
-    def _device_status(self) -> StatusTrait:
-        """Return the status of the device."""
-        data = self.coordinator.data
-        return data.status
 
     async def send(
         self,
