@@ -120,7 +120,7 @@
           'model': 'TL-SG3210XHP-M2',
           'modelVersion': '1.0',
           'name': 'Test PoE Switch',
-          'needUpgrade': False,
+          'needUpgrade': True,
           'showModel': 'TL-SG3210XHP-M2 v1.0',
           'status': 14,
           'statusCategory': 1,
