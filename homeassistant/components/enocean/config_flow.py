@@ -236,7 +236,7 @@ class OptionsFlowHandler(OptionsFlow):
         default_device_type = ""
         default_device_id = ""
         gateway: Gateway = self.config_entry.runtime_data
-        default_sender_id = str(await gateway.base_id)
+        default_sender_id = str(gateway.base_id)
 
         device_id: EURID | None = None
         sender_id: Address | None = None
@@ -263,7 +263,7 @@ class OptionsFlowHandler(OptionsFlow):
 
             # sender id must be a valid EnOcean address string
             if user_input[CONF_ENOCEAN_SENDER_ID].strip() == "":
-                sender_id = await gateway.base_id
+                sender_id = gateway.base_id
             else:
                 try:
                     sender_id = Address(user_input[CONF_ENOCEAN_SENDER_ID])
@@ -296,7 +296,7 @@ class OptionsFlowHandler(OptionsFlow):
         ]
         supported_devices.sort(key=lambda entry: entry["label"].upper())
 
-        sender_options = [str(s) for s in (await gateway.sender_slots)]
+        sender_options = [str(s) for s in gateway.sender_slots]
 
         add_device_schema = vol.Schema(
             {
@@ -425,7 +425,7 @@ class OptionsFlowHandler(OptionsFlow):
         ]
         supported_devices.sort(key=lambda entry: entry["label"].upper())
 
-        sender_options = [str(s) for s in (await gateway.sender_slots)]
+        sender_options = [str(s) for s in gateway.sender_slots]
 
         edit_device_schema = vol.Schema(
             {
