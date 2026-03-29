@@ -1,7 +1,7 @@
 {
   "domain": "snmp",
   "name": "SNMP",
-  "codeowners": ["@nmaggioni"],
+  "codeowners": ["@nmaggioni", "@IsaccoBenedetti"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/snmp",
   "integration_type": "hub",
