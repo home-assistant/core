@@ -69,6 +69,28 @@ def test_try_connect_and_fetch_identifier_aurora_error() -> None:
     mock_client.close.assert_called_once()
 
 
+def test_try_connect_and_fetch_identifier_timeout() -> None:
+    """Test that AuroraTimeoutError is wrapped in AuroraClientTimeoutError."""
+    mock_client = MagicMock()
+    mock_client.connect.side_effect = AuroraTimeoutError("timed out")
+
+    aurora = AuroraClient(mock_client)
+    with pytest.raises(AuroraClientTimeoutError):
+        aurora.try_connect_and_fetch_identifier()
+    mock_client.close.assert_called_once()
+
+
+def test_try_connect_and_fetch_identifier_serial_exception() -> None:
+    """Test that SerialException is wrapped in AuroraClientError."""
+    mock_client = MagicMock()
+    mock_client.connect.side_effect = SerialException("port not found")
+
+    aurora = AuroraClient(mock_client)
+    with pytest.raises(AuroraClientError):
+        aurora.try_connect_and_fetch_identifier()
+    mock_client.close.assert_called_once()
+
+
 def test_try_connect_and_fetch_identifier_close_suppressed_on_error() -> None:
     """Test that close() exceptions are suppressed after a connection failure."""
     mock_client = MagicMock()

@@ -2,6 +2,7 @@
 
 from dataclasses import asdict
 import logging
+from time import sleep
 from typing import Any
 
 from homeassistant.config_entries import ConfigEntry
@@ -46,6 +47,7 @@ class AuroraAbbDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         This is the only function that should fetch new data for Home Assistant.
         """
         self.available_prev = self.available
+        result = None
         retries: int = 3
         while retries > 0:
             try:
@@ -65,6 +67,7 @@ class AuroraAbbDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                     repr(error),
                     retries,
                 )
+                sleep(1)
             else:
                 self.available = True
                 break

@@ -99,7 +99,9 @@ class AuroraClient:
             serial_number = self._client.serial_number()
             model = f"{self._client.version()} ({self._client.pn()})"
             firmware = self._client.firmware(1)
-        except AuroraError as error:
+        except AuroraTimeoutError as error:
+            raise AuroraClientTimeoutError(str(error)) from error
+        except (SerialException, AuroraError) as error:
             raise AuroraClientError(str(error)) from error
         finally:
             with contextlib.suppress(Exception):
