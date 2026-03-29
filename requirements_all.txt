@@ -339,7 +339,7 @@ aionanoleaf2==1.0.2
 aionotion==2024.03.0
 
 # homeassistant.components.ntfy
-aiontfy==0.8.1
+aiontfy==0.8.3
 
 # homeassistant.components.nut
 aionut==4.3.4
@@ -1173,7 +1173,7 @@ ha-philipsjs==3.2.4
 ha-silabs-firmware-client==0.3.0
 
 # homeassistant.components.habitica
-habiticalib==0.4.6
+habiticalib==0.4.7
 
 # homeassistant.components.bluetooth
 habluetooth==5.11.1
@@ -3365,7 +3365,7 @@ yolink-api==0.6.3
 youless-api==2.2.0
 
 # homeassistant.components.youtube
-youtubeaio==2.1.1
+youtubeaio==2.1.2
 
 # homeassistant.components.media_extractor
 yt-dlp[default]==2026.03.17
