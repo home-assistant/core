@@ -7,7 +7,7 @@ from datetime import timedelta
 import logging
 from typing import Any
 
-import aiohttp
+from aioopnsense import OPNsenseApiError
 
 from homeassistant.components.device_tracker import ScannerEntity, SourceType
 from homeassistant.config_entries import ConfigEntry
@@ -40,7 +40,7 @@ async def async_setup_entry(
         async with update_lock:
             try:
                 devices = await client.get_arp()
-            except aiohttp.ClientError:
+            except OPNsenseApiError:
                 _LOGGER.exception("Error fetching OPNsense ARP table")
                 return
 

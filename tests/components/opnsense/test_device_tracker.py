@@ -34,10 +34,13 @@ ARP_RESPONSE = [
 ]
 
 
-def _mock_client(arp_data: list, interfaces_data: dict | None = None) -> AsyncMock:
+def _mock_client(
+    arp_data: list | None = None,
+    interfaces_data: dict | None = None,
+) -> AsyncMock:
     """Create a mock OPNsenseClient."""
     client = AsyncMock()
-    client.get_arp = AsyncMock(return_value=arp_data)
+    client.get_arp = AsyncMock(return_value=arp_data or [])
     if interfaces_data is not None:
         client.get_interfaces = AsyncMock(return_value=interfaces_data)
     return client

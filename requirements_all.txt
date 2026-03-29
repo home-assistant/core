@@ -347,6 +347,9 @@ aionut==4.3.4
 # homeassistant.components.onkyo
 aioonkyo==0.4.0
 
+# homeassistant.components.opnsense
+aioopnsense==0.1.0
+
 # homeassistant.components.openexchangerates
 aioopenexchangerates==0.6.8
 

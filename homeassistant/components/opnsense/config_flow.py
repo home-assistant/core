@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
-import aiohttp
+from aioopnsense import OPNsenseApiError, OPNsenseAuthError, OPNsenseClient
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
@@ -32,25 +32,19 @@ class OPNsenseConfigFlow(ConfigFlow, domain=DOMAIN):
                 self.hass,
                 verify_ssl=user_input.get(CONF_VERIFY_SSL, False),
             )
-            url = user_input[CONF_URL].rstrip("/")
-            auth = aiohttp.BasicAuth(
-                user_input[CONF_API_KEY], user_input[CONF_API_SECRET]
+            client = OPNsenseClient(
+                url=user_input[CONF_URL],
+                api_key=user_input[CONF_API_KEY],
+                api_secret=user_input[CONF_API_SECRET],
+                session=session,
+                verify_ssl=user_input.get(CONF_VERIFY_SSL, False),
             )
 
             try:
-                async with session.get(
-                    f"{url}/diagnostics/interface/get_arp",
-                    auth=auth,
-                    ssl=user_input.get(CONF_VERIFY_SSL, False),
-                    timeout=aiohttp.ClientTimeout(total=20),
-                ) as resp:
-                    resp.raise_for_status()
-            except aiohttp.ClientResponseError as err:
-                if err.status in (401, 403):
-                    errors["base"] = "invalid_auth"
-                else:
-                    errors["base"] = "cannot_connect"
-            except aiohttp.ClientError:
+                await client.get_arp()
+            except OPNsenseAuthError:
+                errors["base"] = "invalid_auth"
+            except OPNsenseApiError:
                 errors["base"] = "cannot_connect"
             else:
                 return self.async_create_entry(

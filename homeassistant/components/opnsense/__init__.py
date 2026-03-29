@@ -3,9 +3,8 @@
 from __future__ import annotations
 
 import logging
-from typing import Any
 
-import aiohttp
+from aioopnsense import OPNsenseApiError, OPNsenseClient
 import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
@@ -21,8 +20,6 @@ from .const import CONF_API_SECRET, CONF_TRACKER_INTERFACES, DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS = [Platform.DEVICE_TRACKER]
-
-REQUEST_TIMEOUT = aiohttp.ClientTimeout(total=20)
 
 CONFIG_SCHEMA = vol.Schema(
     {
@@ -40,48 +37,6 @@ CONFIG_SCHEMA = vol.Schema(
     },
     extra=vol.ALLOW_EXTRA,
 )
-
-
-class OPNsenseClient:
-    """Client for the OPNsense API."""
-
-    def __init__(
-        self,
-        url: str,
-        api_key: str,
-        api_secret: str,
-        session: aiohttp.ClientSession,
-        verify_ssl: bool,
-    ) -> None:
-        """Initialize the OPNsense client."""
-        self._url = url.rstrip("/")
-        self._auth = aiohttp.BasicAuth(api_key, api_secret)
-        self._session = session
-        self._verify_ssl = verify_ssl
-
-    async def get_arp(self) -> list[dict[str, Any]]:
-        """Get the ARP table from OPNsense."""
-        result: list[dict[str, Any]] = await self._get("diagnostics/interface/get_arp")
-        return result
-
-    async def get_interfaces(self) -> dict[str, str]:
-        """Get available network interfaces from OPNsense."""
-        result: dict[str, str] = await self._get(
-            "diagnostics/networkinsight/get_interfaces"
-        )
-        return result
-
-    async def _get(self, endpoint: str) -> Any:
-        """Make a GET request to the OPNsense API."""
-        url = f"{self._url}/{endpoint}"
-        async with self._session.get(
-            url,
-            auth=self._auth,
-            ssl=self._verify_ssl,
-            timeout=REQUEST_TIMEOUT,
-        ) as resp:
-            resp.raise_for_status()
-            return await resp.json()
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -119,13 +74,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     try:
         await client.get_arp()
-    except (aiohttp.ClientError, TimeoutError) as err:
+    except OPNsenseApiError as err:
         raise ConfigEntryNotReady("Failed to connect to OPNsense API endpoint") from err
 
     if tracker_interfaces:
         try:
             interfaces_resp = await client.get_interfaces()
-        except (aiohttp.ClientError, TimeoutError) as err:
+        except OPNsenseApiError as err:
             raise ConfigEntryNotReady(
                 "Failed to retrieve OPNsense network interfaces"
             ) from err

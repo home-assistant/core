@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, patch
 
-import aiohttp
+from aioopnsense import OPNsenseApiError, OPNsenseAuthError
 
 from homeassistant import config_entries
 from homeassistant.components.opnsense.const import (
@@ -27,25 +27,11 @@ MOCK_USER_INPUT = {
 }
 
 
-def _mock_session_success() -> MagicMock:
-    """Return a mock session where get() returns an async context manager."""
-    mock_resp = MagicMock()
-    mock_resp.raise_for_status = MagicMock()
-
-    mock_ctx = AsyncMock()
-    mock_ctx.__aenter__ = AsyncMock(return_value=mock_resp)
-    mock_ctx.__aexit__ = AsyncMock(return_value=False)
-
-    mock_session = MagicMock()
-    mock_session.get = MagicMock(return_value=mock_ctx)
-    return mock_session
-
-
-def _mock_session_error(error: Exception) -> MagicMock:
-    """Return a mock session where get() raises an error."""
-    mock_session = MagicMock()
-    mock_session.get = MagicMock(side_effect=error)
-    return mock_session
+def _mock_client(get_arp_result: list | None = None) -> AsyncMock:
+    """Create a mock OPNsenseClient."""
+    client = AsyncMock()
+    client.get_arp = AsyncMock(return_value=get_arp_result or [])
+    return client
 
 
 async def test_user_form(hass: HomeAssistant) -> None:
@@ -60,21 +46,16 @@ async def test_user_form(hass: HomeAssistant) -> None:
 
 async def test_user_form_success(hass: HomeAssistant) -> None:
     """Test successful user config flow."""
-    mock_session = _mock_session_success()
-
     with (
         patch(
-            "homeassistant.components.opnsense.config_flow.async_get_clientsession",
-            return_value=mock_session,
+            "homeassistant.components.opnsense.config_flow.OPNsenseClient",
+            return_value=_mock_client(),
         ),
         patch(
             "homeassistant.components.opnsense.OPNsenseClient",
-            autospec=True,
-        ) as mock_client_cls,
+            return_value=_mock_client(),
+        ),
     ):
-        client = mock_client_cls.return_value
-        client.get_arp = AsyncMock(return_value=[])
-
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_USER},
@@ -90,23 +71,12 @@ async def test_user_form_success(hass: HomeAssistant) -> None:
 
 async def test_user_form_invalid_auth(hass: HomeAssistant) -> None:
     """Test we handle invalid auth."""
-    mock_resp = MagicMock()
-    mock_resp.raise_for_status = MagicMock(
-        side_effect=aiohttp.ClientResponseError(
-            request_info=MagicMock(), history=(), status=403, message="Forbidden"
-        )
-    )
-
-    mock_ctx = AsyncMock()
-    mock_ctx.__aenter__ = AsyncMock(return_value=mock_resp)
-    mock_ctx.__aexit__ = AsyncMock(return_value=False)
-
-    mock_session = MagicMock()
-    mock_session.get = MagicMock(return_value=mock_ctx)
+    mock_client = _mock_client()
+    mock_client.get_arp = AsyncMock(side_effect=OPNsenseAuthError("auth failed"))
 
     with patch(
-        "homeassistant.components.opnsense.config_flow.async_get_clientsession",
-        return_value=mock_session,
+        "homeassistant.components.opnsense.config_flow.OPNsenseClient",
+        return_value=mock_client,
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
@@ -120,11 +90,12 @@ async def test_user_form_invalid_auth(hass: HomeAssistant) -> None:
 
 async def test_user_form_cannot_connect(hass: HomeAssistant) -> None:
     """Test we handle connection error."""
-    mock_session = _mock_session_error(aiohttp.ClientError())
+    mock_client = _mock_client()
+    mock_client.get_arp = AsyncMock(side_effect=OPNsenseApiError("connection failed"))
 
     with patch(
-        "homeassistant.components.opnsense.config_flow.async_get_clientsession",
-        return_value=mock_session,
+        "homeassistant.components.opnsense.config_flow.OPNsenseClient",
+        return_value=mock_client,
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
@@ -149,11 +120,9 @@ async def test_user_form_already_configured(hass: HomeAssistant) -> None:
     )
     entry.add_to_hass(hass)
 
-    mock_session = _mock_session_success()
-
     with patch(
-        "homeassistant.components.opnsense.config_flow.async_get_clientsession",
-        return_value=mock_session,
+        "homeassistant.components.opnsense.config_flow.OPNsenseClient",
+        return_value=_mock_client(),
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
@@ -167,14 +136,13 @@ async def test_user_form_already_configured(hass: HomeAssistant) -> None:
 
 async def test_import_flow(hass: HomeAssistant) -> None:
     """Test YAML import creates a config entry."""
+    mock_client = _mock_client()
+    mock_client.get_interfaces = AsyncMock(return_value={"igb0": "WAN", "igb1": "LAN"})
+
     with patch(
         "homeassistant.components.opnsense.OPNsenseClient",
-        autospec=True,
-    ) as mock_client_cls:
-        client = mock_client_cls.return_value
-        client.get_arp = AsyncMock(return_value=[])
-        client.get_interfaces = AsyncMock(return_value={"igb0": "WAN", "igb1": "LAN"})
-
+        return_value=mock_client,
+    ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_IMPORT},
