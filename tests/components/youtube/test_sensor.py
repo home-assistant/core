@@ -70,7 +70,7 @@ async def test_sensor_without_uploaded_video(
 async def test_sensor_with_short(
     hass: HomeAssistant, snapshot: SnapshotAssertion, setup_integration: ComponentSetup
 ) -> None:
-    """Test latest_short sensor when all uploads are Shorts."""
+    """Test sensors when the channel has a Short upload."""
     await setup_integration()
 
     with patch(
