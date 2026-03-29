@@ -4,7 +4,11 @@ play_rtttl:
       required: true
       selector:
         device:
-          integration: smlight
+          filter:
+            - integration: smlight
+              model: SLZB-Ultima3
+            - integration: smlight
+              model: SLZB-Ultima4
     tone:
       required: true
       example: "Doorbell:d=4,o=5,b=100:e,c"
