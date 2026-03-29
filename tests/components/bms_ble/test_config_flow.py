@@ -239,7 +239,9 @@ async def test_async_setup_entry(
 
 
 @pytest.mark.usefixtures("enable_bluetooth")
-async def test_setup_entry_missing_unique_id(bms_fixture, hass: HomeAssistant) -> None:
+async def test_setup_entry_missing_unique_id(
+    bms_fixture: str, hass: HomeAssistant
+) -> None:
     """Test async_setup_entry with missing unique id."""
 
     cfg: MockConfigEntry = mock_config(bms=bms_fixture, unique_id=None)
