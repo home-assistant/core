@@ -8,6 +8,7 @@ from zwave_js_server.event import Event
 from zwave_js_server.model.node import Node
 
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
+from homeassistant.components.cover import CoverEntityFeature
 from homeassistant.components.light import ATTR_SUPPORTED_COLOR_MODES, ColorMode
 from homeassistant.components.number import (
     ATTR_VALUE,
@@ -31,6 +32,7 @@ from homeassistant.components.zwave_js.discovery_data_template import (
 from homeassistant.config_entries import RELOAD_AFTER_UPDATE_DELAY
 from homeassistant.const import (
     ATTR_ENTITY_ID,
+    ATTR_SUPPORTED_FEATURES,
     STATE_OFF,
     STATE_UNKNOWN,
     EntityCategory,
@@ -275,6 +277,17 @@ async def test_qubino_shutter_disabled_entities(
     # Test if the main entity from endpoint 1 was created.
     state = hass.states.get("cover.flush_shutter")
     assert state
+
+    # Verify that the main entity has both position and tilt features
+    # since the device is in venetian mode (config parameter 71 = 1)
+    assert state.attributes[ATTR_SUPPORTED_FEATURES] == (
+        CoverEntityFeature.OPEN
+        | CoverEntityFeature.CLOSE
+        | CoverEntityFeature.SET_POSITION
+        | CoverEntityFeature.OPEN_TILT
+        | CoverEntityFeature.CLOSE_TILT
+        | CoverEntityFeature.SET_TILT_POSITION
+    )
 
 
 async def test_merten_507801_disabled_enitites(
