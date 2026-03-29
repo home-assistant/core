@@ -133,7 +133,10 @@ class BTBmsCoordinator(DataUpdateCoordinator[BMSSample]):
         start: Final = monotonic()
         try:
             if not (bms_data := await self._device.async_update()):
-                raise UpdateFailed("no valid data received.")
+                raise UpdateFailed(
+                    translation_domain=DOMAIN,
+                    translation_key="bms_no_valid_data",
+                )
         except TimeoutError as err:
             raise UpdateFailed(
                 translation_domain=DOMAIN, translation_key="bms_timeout"

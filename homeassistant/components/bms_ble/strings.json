@@ -56,6 +56,9 @@
     "bms_com_fail_rssi": {
       "message": "BMS communication failed: {err_msg}. Try to increase signal strength from {rssi} dBm."
     },
+    "bms_no_valid_data": {
+      "message": "BMS did not provide valid data."
+    },
     "bms_timeout": {
       "message": "BMS communication timed out."
     },
