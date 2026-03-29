@@ -2,15 +2,15 @@
 
 from collections.abc import Generator
 from http import HTTPStatus
-from unittest.mock import AsyncMock, Mock, patch
+from unittest.mock import AsyncMock, patch
 from uuid import uuid4
 
+from aiohasupervisor import SupervisorError
 from aiohasupervisor.models import Discovery
 from aiohttp.test_utils import TestClient
 import pytest
 
 from homeassistant import config_entries
-from homeassistant.components.hassio.handler import HassioAPIError
 from homeassistant.components.mqtt import DOMAIN as MQTT_DOMAIN
 from homeassistant.const import EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STARTED
 from homeassistant.core import HomeAssistant
@@ -25,7 +25,6 @@ from tests.common import (
     mock_integration,
     mock_platform,
 )
-from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 @pytest.fixture(name="mock_mqtt")
@@ -99,16 +98,12 @@ async def test_hassio_discovery_startup(
 @pytest.mark.usefixtures("hassio_client")
 async def test_hassio_discovery_startup_done(
     hass: HomeAssistant,
-    aioclient_mock: AiohttpClientMocker,
     mock_mqtt: type[config_entries.ConfigFlow],
     addon_installed: AsyncMock,
     get_addon_discovery_info: AsyncMock,
+    supervisor_root_info: AsyncMock,
 ) -> None:
     """Test startup and discovery with hass discovery."""
-    aioclient_mock.post(
-        "http://127.0.0.1/supervisor/options",
-        json={"result": "ok", "data": {}},
-    )
     get_addon_discovery_info.return_value = [
         Discovery(
             addon="mosquitto",
@@ -125,37 +120,28 @@ async def test_hassio_discovery_startup_done(
     ]
     addon_installed.return_value.name = "Mosquitto Test"
 
-    with (
-        patch(
-            "homeassistant.components.hassio.HassIO.update_hass_api",
-            return_value={"result": "ok"},
-        ),
-        patch(
-            "homeassistant.components.hassio.HassIO.get_info",
-            Mock(side_effect=HassioAPIError()),
-        ),
-    ):
-        await hass.async_start()
-        await async_setup_component(hass, "hassio", {})
-        await hass.async_block_till_done()
+    supervisor_root_info.side_effect = SupervisorError()
+    await hass.async_start()
+    await async_setup_component(hass, "hassio", {})
+    await hass.async_block_till_done()
 
-        assert get_addon_discovery_info.call_count == 1
-        assert mock_mqtt.async_step_hassio.called
-        mock_mqtt.async_step_hassio.assert_called_with(
-            HassioServiceInfo(
-                config={
-                    "broker": "mock-broker",
-                    "port": 1883,
-                    "username": "mock-user",
-                    "password": "mock-pass",
-                    "protocol": "3.1.1",
-                    "addon": "Mosquitto Test",
-                },
-                name="Mosquitto Test",
-                slug="mosquitto",
-                uuid=uuid.hex,
-            )
+    assert get_addon_discovery_info.call_count == 1
+    assert mock_mqtt.async_step_hassio.called
+    mock_mqtt.async_step_hassio.assert_called_with(
+        HassioServiceInfo(
+            config={
+                "broker": "mock-broker",
+                "port": 1883,
+                "username": "mock-user",
+                "password": "mock-pass",
+                "protocol": "3.1.1",
+                "addon": "Mosquitto Test",
+            },
+            name="Mosquitto Test",
+            slug="mosquitto",
+            uuid=uuid.hex,
         )
+    )
 
 
 async def test_hassio_discovery_webhook(
@@ -247,15 +233,12 @@ TEST_UUID = str(uuid4())
         config_entries.SOURCE_USER,
     ],
 )
+@pytest.mark.usefixtures("hassio_client", "addon_installed", "get_addon_discovery_info")
 async def test_hassio_rediscover(
     hass: HomeAssistant,
-    aioclient_mock: AiohttpClientMocker,
-    hassio_client: TestClient,
-    addon_installed: AsyncMock,
     entry_domain: str,
     entry_discovery_keys: dict[str, tuple[DiscoveryKey, ...]],
     entry_source: str,
-    get_addon_discovery_info: AsyncMock,
     get_discovery_message: AsyncMock,
 ) -> None:
     """Test we reinitiate flows when an ignored config entry is removed."""
