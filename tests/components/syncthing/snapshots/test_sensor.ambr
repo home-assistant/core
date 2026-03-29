@@ -1,8 +1,9 @@
 # serializer version: 1
-# name: test_folder_sensor_updates_on_event[syncthing_folder_paused_received-event2][sensor.yzxabcd_test_folder_test_folder-entry]
+# name: test_folder_sensor_updates_on_event[syncthing_folder_paused_received-event2][sensor.syncthing_this_device_yzxabcd_test_folder_test_folder-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -12,7 +13,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.yzxabcd_test_folder_test_folder',
+    'entity_id': 'sensor.syncthing_this_device_yzxabcd_test_folder_test_folder',
     'has_entity_name': False,
     'hidden_by': None,
     'icon': None,
@@ -35,11 +36,11 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_folder_sensor_updates_on_event[syncthing_folder_paused_received-event2][sensor.yzxabcd_test_folder_test_folder-state]
+# name: test_folder_sensor_updates_on_event[syncthing_folder_paused_received-event2][sensor.syncthing_this_device_yzxabcd_test_folder_test_folder-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'errors': 0,
-      'friendly_name': 'YZXABCD test-folder Test Folder',
+      'friendly_name': 'Syncthing This Device YZXABCD test-folder Test Folder',
       'global_bytes': 1000000,
       'global_deleted': 0,
       'global_directories': 10,
@@ -68,17 +69,18 @@
       'state': 'paused',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.yzxabcd_test_folder_test_folder',
+    'entity_id': 'sensor.syncthing_this_device_yzxabcd_test_folder_test_folder',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'paused',
   })
 # ---
-# name: test_folder_sensor_updates_on_event[syncthing_folder_summary_received-event0][sensor.yzxabcd_test_folder_test_folder-entry]
+# name: test_folder_sensor_updates_on_event[syncthing_folder_summary_received-event0][sensor.syncthing_this_device_yzxabcd_test_folder_test_folder-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -88,7 +90,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.yzxabcd_test_folder_test_folder',
+    'entity_id': 'sensor.syncthing_this_device_yzxabcd_test_folder_test_folder',
     'has_entity_name': False,
     'hidden_by': None,
     'icon': None,
@@ -111,11 +113,11 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_folder_sensor_updates_on_event[syncthing_folder_summary_received-event0][sensor.yzxabcd_test_folder_test_folder-state]
+# name: test_folder_sensor_updates_on_event[syncthing_folder_summary_received-event0][sensor.syncthing_this_device_yzxabcd_test_folder_test_folder-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'errors': 0,
-      'friendly_name': 'YZXABCD test-folder Test Folder',
+      'friendly_name': 'Syncthing This Device YZXABCD test-folder Test Folder',
       'global_bytes': 1000000,
       'global_deleted': 0,
       'global_directories': 10,
@@ -144,17 +146,18 @@
       'state': 'syncing',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.yzxabcd_test_folder_test_folder',
+    'entity_id': 'sensor.syncthing_this_device_yzxabcd_test_folder_test_folder',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'syncing',
   })
 # ---
-# name: test_folder_sensor_updates_on_event[syncthing_state_changed_received-event1][sensor.yzxabcd_test_folder_test_folder-entry]
+# name: test_folder_sensor_updates_on_event[syncthing_state_changed_received-event1][sensor.syncthing_this_device_yzxabcd_test_folder_test_folder-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -164,7 +167,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.yzxabcd_test_folder_test_folder',
+    'entity_id': 'sensor.syncthing_this_device_yzxabcd_test_folder_test_folder',
     'has_entity_name': False,
     'hidden_by': None,
     'icon': None,
@@ -187,11 +190,11 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_folder_sensor_updates_on_event[syncthing_state_changed_received-event1][sensor.yzxabcd_test_folder_test_folder-state]
+# name: test_folder_sensor_updates_on_event[syncthing_state_changed_received-event1][sensor.syncthing_this_device_yzxabcd_test_folder_test_folder-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'errors': 0,
-      'friendly_name': 'YZXABCD test-folder Test Folder',
+      'friendly_name': 'Syncthing This Device YZXABCD test-folder Test Folder',
       'global_bytes': 1000000,
       'global_deleted': 0,
       'global_directories': 10,
@@ -220,17 +223,18 @@
       'state': 'syncing',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.yzxabcd_test_folder_test_folder',
+    'entity_id': 'sensor.syncthing_this_device_yzxabcd_test_folder_test_folder',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'syncing',
   })
 # ---
-# name: test_sensor_platform_setup[sensor.yzxabcd_test_folder_test_folder-entry]
+# name: test_sensor_platform_setup[sensor.syncthing_this_device_yzxabcd_test_folder_test_folder-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -240,7 +244,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.yzxabcd_test_folder_test_folder',
+    'entity_id': 'sensor.syncthing_this_device_yzxabcd_test_folder_test_folder',
     'has_entity_name': False,
     'hidden_by': None,
     'icon': None,
@@ -263,11 +267,11 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor_platform_setup[sensor.yzxabcd_test_folder_test_folder-state]
+# name: test_sensor_platform_setup[sensor.syncthing_this_device_yzxabcd_test_folder_test_folder-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'errors': 0,
-      'friendly_name': 'YZXABCD test-folder Test Folder',
+      'friendly_name': 'Syncthing This Device YZXABCD test-folder Test Folder',
       'global_bytes': 1000000,
       'global_deleted': 0,
       'global_directories': 10,
@@ -296,7 +300,7 @@
       'state': 'idle',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.yzxabcd_test_folder_test_folder',
+    'entity_id': 'sensor.syncthing_this_device_yzxabcd_test_folder_test_folder',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

@@ -25,8 +25,8 @@ SERVER_NAME_HA = SERVER_NAME.lower().replace(" ", "_")
 FOLDER_ID_HA = FOLDER_ID.lower().replace("-", "_")
 FOLDER_LABEL_HA = FOLDER_LABEL.lower().replace(" ", "_")
 
-SERVER_ENTITY_ID = f"sensor.{SERVER_ID_SHORT}_{SERVER_ID_SHORT}_{SERVER_NAME_HA}"
-FOLDER_ENTITY_ID = f"sensor.{SERVER_ID_SHORT}_{FOLDER_ID_HA}_{FOLDER_LABEL_HA}"
+SERVER_ENTITY_ID = f"sensor.syncthing_{SERVER_NAME_HA}_{SERVER_ID_SHORT}_{SERVER_ID_SHORT}_{SERVER_NAME_HA}"
+FOLDER_ENTITY_ID = f"sensor.syncthing_{SERVER_NAME_HA}_{SERVER_ID_SHORT}_{FOLDER_ID_HA}_{FOLDER_LABEL_HA}"
 
 MOCK_SYSTEM_STATUS = {"myID": SERVER_ID}
 
@@ -39,6 +39,12 @@ MOCK_CONFIG = {
         {
             "id": FOLDER_ID,
             "label": FOLDER_LABEL,
+        }
+    ],
+    "devices": [
+        {
+            "deviceID": SERVER_ID,
+            "name": SERVER_NAME,
         }
     ],
 }
