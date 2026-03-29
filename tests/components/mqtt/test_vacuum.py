@@ -418,7 +418,7 @@ async def test_clean_segments_command(
     }"""
     async_fire_mqtt_message(hass, "vacuum/state", message)
     await hass.async_block_till_done()
-    # Should have ar
+    # We expect a repair issue now as the available segments have changed
     assert len(issue_registry.issues) == 1
 
     client = await hass_ws_client(hass)

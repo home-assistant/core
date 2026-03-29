@@ -142,7 +142,7 @@ MQTT_VACUUM_DOCS_URL = "https://www.home-assistant.io/integrations/vacuum.mqtt/"
 
 
 def validate_clean_area_config(config: ConfigType) -> ConfigType:
-    """Check for a valid configuration and check segments."""
+    """Validate clean area configuration."""
     if CONF_CLEAN_SEGMENTS_COMMAND_TOPIC not in config:
         return config
     if not config.get(CONF_UNIQUE_ID):
@@ -218,7 +218,6 @@ class MqttStateVacuum(MqttEntity, StateVacuumEntity):
     _send_command_topic: str | None
     _clean_segments_command_topic: str | None = None
     _payloads: dict[str, str | None]
-    _initial_setup: bool = True
 
     def __init__(
         self,
@@ -253,6 +252,17 @@ class MqttStateVacuum(MqttEntity, StateVacuumEntity):
         self._attr_supported_features = _strings_to_services(
             supported_feature_strings, STRING_TO_SERVICE
         )
+        self._clean_segments_command_topic = config.get(
+            CONF_CLEAN_SEGMENTS_COMMAND_TOPIC
+        )
+        self._clean_segments_command_template = MqttCommandTemplate(
+            config.get(CONF_CLEAN_SEGMENTS_COMMAND_TEMPLATE),
+            entity=self,
+        ).async_render
+        if self._clean_segments_command_topic is None:
+            # Clear any previously configured clean-segments handling when the
+            # option is absent in the new config af a discovery update.
+            self._attr_supported_features &= ~VacuumEntityFeature.CLEAN_AREA
         if CONF_CLEAN_SEGMENTS_COMMAND_TOPIC in config:
             self._clean_segments_command_topic = config[
                 CONF_CLEAN_SEGMENTS_COMMAND_TOPIC
