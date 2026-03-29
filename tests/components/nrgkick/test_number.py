@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from datetime import timedelta
 from unittest.mock import AsyncMock
 
 from nrgkick_api import NRGkickCommandRejectedError
@@ -22,10 +23,11 @@ from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
+from homeassistant.util import dt as dt_util
 
 from . import setup_integration
 
-from tests.common import MockConfigEntry, snapshot_platform
+from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 pytestmark = pytest.mark.usefixtures("entity_registry_enabled_by_default")
 
@@ -158,12 +160,21 @@ async def test_phase_count_ignores_transient_zero(
         {ATTR_ENTITY_ID: entity_id, ATTR_VALUE: 1},
         blocking=True,
     )
+    mock_nrgkick_api.set_phase_count.assert_awaited_once_with(1)
 
     # State must not show 0; the entity keeps the optimistic value.
     assert (state := hass.states.get(entity_id))
     assert state.state == "1"
 
-    mock_nrgkick_api.set_phase_count.assert_awaited_once_with(1)
+    # Once the device settles it reports the real phase count again.
+    control_data = mock_nrgkick_api.get_control.return_value.copy()
+    control_data[CONTROL_KEY_PHASE_COUNT] = 1
+    mock_nrgkick_api.get_control.return_value = control_data
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=30))
+    await hass.async_block_till_done()
+
+    assert (state := hass.states.get(entity_id))
+    assert state.state == "1"
 
 
 async def test_number_command_rejected_by_device(
