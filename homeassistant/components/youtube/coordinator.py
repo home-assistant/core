@@ -81,9 +81,21 @@ class YouTubeDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                     "Fetched %d videos for channel %s", len(videos), channel.channel_id
                 )
                 # Detect Shorts concurrently to minimise latency.
-                is_short_flags = await asyncio.gather(
-                    *[youtube.is_short(v.content_details.video_id) for v in videos]
+                is_short_results = await asyncio.gather(
+                    *[youtube.is_short(v.content_details.video_id) for v in videos],
+                    return_exceptions=True,
                 )
+                is_short_flags: list[bool] = []
+                for video, result in zip(videos, is_short_results, strict=False):
+                    if isinstance(result, Exception):
+                        LOGGER.warning(
+                            "Error determining if video %s is a Short; treating as non-Short: %s",
+                            video.content_details.video_id,
+                            result,
+                        )
+                        is_short_flags.append(False)
+                    else:
+                        is_short_flags.append(result)
                 latest_upload: dict[str, Any] | None = None
                 latest_short: dict[str, Any] | None = None
                 latest_video_non_short: dict[str, Any] | None = None
