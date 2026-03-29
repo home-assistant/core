@@ -659,7 +659,7 @@ class XiaomiGenericCoordinatedSwitch(
     async def async_set_do_not_disturb_on(self) -> bool:
         """Turn do not disturb on."""
         return await self._try_command(
-            "Turning do not disturb of the miio device on failed.",
+            "Turning on do not disturb for the miio device failed.",
             self._device.set_do_not_disturb,  # type: ignore[attr-defined]
             True,
         )
@@ -667,7 +667,7 @@ class XiaomiGenericCoordinatedSwitch(
     async def async_set_do_not_disturb_off(self) -> bool:
         """Turn do not disturb off."""
         return await self._try_command(
-            "Turning do not disturb of the miio device off failed.",
+            "Turning off do not disturb for the miio device failed.",
             self._device.set_do_not_disturb,  # type: ignore[attr-defined]
             False,
         )

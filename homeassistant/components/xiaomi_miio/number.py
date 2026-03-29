@@ -23,6 +23,7 @@ from homeassistant.const import (
     UnitOfTime,
 )
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
@@ -369,17 +370,16 @@ async def async_setup_entry(
             )
 
     if model == MODEL_PET_FOUNTAIN_70M2:
-        for description in PET_FOUNTAIN_NUMBER_TYPES:
-            entities.append(
-                XiaomiNumberEntity(
-                    device,
-                    config_entry,
-                    f"{description.key}_{config_entry.unique_id}",
-                    coordinator,
-                    description,
-                )
+        entities.extend(
+            XiaomiNumberEntity(
+                device,
+                config_entry,
+                f"{description.key}_{config_entry.unique_id}",
+                coordinator,
+                description,
             )
-
+            for description in PET_FOUNTAIN_NUMBER_TYPES
+        )
     async_add_entities(entities)
 
 
@@ -507,6 +507,14 @@ class XiaomiNumberEntity(
 
     async def async_set_water_interval(self, minutes: int) -> bool:
         """Set the water interval for interval mode."""
+        if not 10 <= minutes <= 120:
+            raise ServiceValidationError(
+                "Water interval must be between 10 and 120 minutes"
+            )
+        if minutes % 5 != 0:
+            raise ServiceValidationError(
+                "Water interval must be set in 5 minute increments"
+            )
         return await self._try_command(
             "Setting the water interval of the miio device failed.",
             self._device.set_water_interval,  # type: ignore[attr-defined]

@@ -235,16 +235,16 @@ async def async_setup_entry(
         elif model in MODELS_HUMIDIFIER_MJJSQ:
             sensors = HUMIDIFIER_MJJSQ_BINARY_SENSORS
         elif model == MODEL_PET_FOUNTAIN_70M2:
-            for description in PET_FOUNTAIN_BINARY_SENSORS:
-                entities.append(
-                    XiaomiGenericBinarySensor(
-                        config_entry.runtime_data.device,
-                        config_entry,
-                        f"{description.key}_{config_entry.unique_id}",
-                        config_entry.runtime_data.device_coordinator,
-                        description,
-                    )
+            entities.extend(
+                XiaomiGenericBinarySensor(
+                    config_entry.runtime_data.device,
+                    config_entry,
+                    f"{description.key}_{config_entry.unique_id}",
+                    config_entry.runtime_data.device_coordinator,
+                    description,
                 )
+                for description in PET_FOUNTAIN_BINARY_SENSORS
+            )
             async_add_entities(entities)
             return
         elif model in MODELS_VACUUM:

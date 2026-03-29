@@ -60,7 +60,7 @@ class XiaomiPetFountainStatus(DeviceStatus):
     @property
     def fault_code(self) -> int:
         """Return the raw fault code."""
-        return int(self.data["fault_code"] or 0)
+        return int(self.data.get("fault_code") or 0)
 
     @property
     def has_fault(self) -> bool:
@@ -68,90 +68,96 @@ class XiaomiPetFountainStatus(DeviceStatus):
         return self.fault_code > 0
 
     @property
-    def status(self) -> PetFountainStatus:
+    def status(self) -> PetFountainStatus | None:
         """Return the fountain operating status."""
         return {
             1: PetFountainStatus.NoWater,
             2: PetFountainStatus.Watering,
-        }[self.data["status"]]
+        }.get(self.data.get("status"))
 
     @property
-    def mode(self) -> PetFountainMode:
+    def mode(self) -> PetFountainMode | None:
         """Return the configured water mode."""
         return {
             0: PetFountainMode.Auto,
             1: PetFountainMode.Interval,
             2: PetFountainMode.Continuous,
-        }[self.data["mode"]]
+        }.get(self.data.get("mode"))
 
     @property
-    def water_interval(self) -> int:
+    def water_interval(self) -> int | None:
         """Return the configured water interval in minutes."""
-        return self.data["water_interval"]
+        return self.data.get("water_interval")
 
     @property
-    def water_shortage(self) -> bool:
+    def water_shortage(self) -> bool | None:
         """Return true when the fountain is low on water."""
-        return self.data["water_shortage"]
+        return self.data.get("water_shortage")
 
     @property
-    def filter_life_remaining(self) -> int:
+    def filter_life_remaining(self) -> int | None:
         """Return the remaining filter life in percent."""
-        return self.data["filter_life_remaining"]
+        return self.data.get("filter_life_remaining")
 
     @property
-    def filter_left_time(self) -> float:
+    def filter_left_time(self) -> float | None:
         """Return the remaining filter time in days."""
-        return round(self.data["filter_left_time"] / 24, 2)
+        if (value := self.data.get("filter_left_time")) is None:
+            return None
+        return round(value / 24, 2)
 
     @property
-    def child_lock(self) -> bool:
+    def child_lock(self) -> bool | None:
         """Return true when physical controls are locked."""
-        return self.data["child_lock"]
+        return self.data.get("child_lock")
 
     @property
-    def battery(self) -> int:
+    def battery(self) -> int | None:
         """Return battery level percentage."""
-        return self.data["battery"]
+        return self.data.get("battery")
 
     @property
-    def charging_state(self) -> ChargingState:
+    def charging_state(self) -> ChargingState | None:
         """Return the charging state."""
         return {
             0: ChargingState.NotCharging,
             1: ChargingState.Charging,
             2: ChargingState.Charged,
-        }[self.data["charging_state"]]
+        }.get(self.data.get("charging_state"))
 
     @property
-    def do_not_disturb(self) -> bool:
+    def do_not_disturb(self) -> bool | None:
         """Return true when do not disturb is enabled."""
-        return self.data["do_not_disturb"]
+        return self.data.get("do_not_disturb")
 
     @property
-    def low_battery(self) -> bool:
+    def low_battery(self) -> bool | None:
         """Return true when the device reports low battery."""
-        return self.data["low_battery"]
+        return self.data.get("low_battery")
 
     @property
-    def usb_power(self) -> bool:
+    def usb_power(self) -> bool | None:
         """Return true when USB power is connected."""
-        return self.data["usb_power"]
+        return self.data.get("usb_power")
 
     @property
-    def dnd_start(self) -> time:
+    def dnd_start(self) -> time | None:
         """Return the DnD start time."""
-        return _seconds_to_time(self.data["dnd_start"])
+        if (value := self.data.get("dnd_start")) is None:
+            return None
+        return _seconds_to_time(value)
 
     @property
-    def dnd_end(self) -> time:
+    def dnd_end(self) -> time | None:
         """Return the DnD end time."""
-        return _seconds_to_time(self.data["dnd_end"])
+        if (value := self.data.get("dnd_end")) is None:
+            return None
+        return _seconds_to_time(value)
 
     @property
-    def pump_blocked(self) -> bool:
+    def pump_blocked(self) -> bool | None:
         """Return true when the pump is blocked."""
-        return self.data["pump_blocked"]
+        return self.data.get("pump_blocked")
 
 
 class XiaomiPetFountain(MiotDevice):
@@ -198,10 +204,6 @@ class XiaomiPetFountain(MiotDevice):
 
     def set_water_interval(self, minutes: int) -> list[dict[str, Any]]:
         """Set the interval mode water interval in minutes."""
-        if not 10 <= minutes <= 120:
-            raise ValueError("Water interval must be between 10 and 120 minutes")
-        if minutes % 5 != 0:
-            raise ValueError("Water interval must be set in 5 minute increments")
         return self.set_property("water_interval", minutes)
 
     def set_child_lock(self, enabled: bool) -> list[dict[str, Any]]:
@@ -214,7 +216,8 @@ class XiaomiPetFountain(MiotDevice):
 
     def reset_filter_life(self) -> dict[str, Any]:
         """Reset filter life."""
-        return self.call_action_from_mapping("reset_filter_life")
+        action = self._get_mapping()["reset_filter_life"]
+        return self.call_action_by(action["siid"], action["aiid"])
 
     def set_dnd_start(self, value: time) -> list[dict[str, Any]]:
         """Set the DnD start time."""
