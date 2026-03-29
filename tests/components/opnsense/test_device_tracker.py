@@ -11,6 +11,7 @@ from homeassistant.components.opnsense.const import (
 )
 from homeassistant.const import CONF_API_KEY, CONF_URL, CONF_VERIFY_SSL, STATE_HOME
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 
 from tests.common import MockConfigEntry
 
@@ -67,13 +68,19 @@ async def test_setup_entry_creates_device_entities(hass: HomeAssistant) -> None:
         return_value=mock_client,
     ):
         await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
-    states = hass.states.async_all("device_tracker")
-    assert len(states) == 2
+    entity_registry = er.async_get(hass)
+    entities = er.async_entries_for_config_entry(entity_registry, entry.entry_id)
+    assert len(entities) == 2
 
-    for state in states:
-        assert state.state == STATE_HOME
+    device_1 = hass.states.get("device_tracker.ff_ff_ff_ff_ff_ff")
+    assert device_1 is not None
+    assert device_1.state == STATE_HOME
+
+    device_2 = hass.states.get("device_tracker.desktop")
+    assert device_2 is not None
+    assert device_2.state == STATE_HOME
 
 
 async def test_setup_entry_filters_by_interface(hass: HomeAssistant) -> None:
@@ -108,9 +115,14 @@ async def test_setup_entry_filters_by_interface(hass: HomeAssistant) -> None:
         return_value=mock_client,
     ):
         await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    entity_registry = er.async_get(hass)
+    entities = er.async_entries_for_config_entry(entity_registry, entry.entry_id)
 
     # Only WAN device should be tracked
-    states = hass.states.async_all("device_tracker")
-    assert len(states) == 1
-    assert states[0].state == STATE_HOME
+    assert len(entities) == 1
+
+    device = hass.states.get("device_tracker.wandevice")
+    assert device is not None
+    assert device.state == STATE_HOME
