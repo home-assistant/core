@@ -49,4 +49,4 @@ class CCLEntity(CoordinatorEntity[CCLCoordinator]):
     @property
     def available(self) -> bool:
         """Return the availability."""
-        return self._internal.value is not None and super().available
+        return super().available

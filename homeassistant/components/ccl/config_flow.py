@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
+import secrets
 from typing import Any
 
 from aioccl import CCLDevice, CCLServer
@@ -28,6 +29,8 @@ _LOGGER = logging.getLogger(__name__)
 class CCLConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow."""
 
+    VERSION = 1
+
     def __init__(self) -> None:
         """Initialize the config flow."""
         self.data: dict[str, Any] = {}
@@ -42,11 +45,7 @@ class CCLConfigFlow(ConfigFlow, domain=DOMAIN):
 
         # Initial step, set up the webhook and device
         if CONF_PATH not in self.data:
-            # Generate a unique webhook ID
-            while True:
-                self.data[CONF_WEBHOOK_ID] = webhook.async_generate_id()
-                if await self.async_set_unique_id(self.data[CONF_WEBHOOK_ID]) is None:
-                    break
+            self.data[CONF_WEBHOOK_ID] = secrets.token_hex(32)
 
             try:
                 url = URL(get_url(self.hass))
@@ -78,7 +77,7 @@ class CCLConfigFlow(ConfigFlow, domain=DOMAIN):
                     hass: HomeAssistant, webhook_id: str, request: web.Request
                 ) -> Any:
                     """Handle incoming requests from CCL devices."""
-                    return CCLServer.handler(request)
+                    return CCLServer.handler(request, devices)
 
                 try:
                     webhook_url = webhook.async_generate_url(
@@ -106,16 +105,15 @@ class CCLConfigFlow(ConfigFlow, domain=DOMAIN):
         if not self.task_one:
 
             async def check_task() -> None:
-                assert self.device is not None
-
                 async def _wait_for_update() -> None:
-                    while (
-                        self.device is not None and self.device.last_update_time is None
-                    ):
+                    assert self.device is not None
+                    while self.device.last_update_time is None:
                         await asyncio.sleep(1)
+                    assert self.device.device_id is not None
+                    await self.async_set_unique_id(self.device.device_id)
+                    self._abort_if_unique_id_configured()
 
-                # Limit how long we wait for the device to send an update to
-                # avoid a background task that can run indefinitely.
+                # Avoid a background task that can run indefinitely.
                 await asyncio.wait_for(_wait_for_update(), timeout=300)
 
             self.task_one = self.hass.async_create_task(check_task())
@@ -131,6 +129,8 @@ class CCLConfigFlow(ConfigFlow, domain=DOMAIN):
             except TimeoutError:
                 _LOGGER.error("Timed out waiting for device update during config flow")
                 self.task_one = None
+                webhook.async_unregister(self.hass, self.data[CONF_WEBHOOK_ID])
+                devices.pop(self.data[CONF_WEBHOOK_ID], None)
                 return self.async_abort(reason="cannot_connect")
 
         if uncompleted_task:

@@ -9,12 +9,12 @@ from aioccl import CCLDevice, CCLServer
 from aioccl.server import register
 from aiohttp import web
 from aiohttp.hdrs import METH_POST
-from const import DOMAIN, NAME
 
 from homeassistant.components import webhook
 from homeassistant.const import CONF_WEBHOOK_ID, Platform
 from homeassistant.core import HomeAssistant, callback
 
+from .const import DOMAIN, NAME
 from .coordinator import CCLConfigEntry, CCLCoordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -43,7 +43,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: CCLConfigEntry) -> bool:
                 hass: HomeAssistant, webhook_id: str, request: web.Request
             ) -> Any:
                 """Handle incoming requests from CCL devices."""
-                return CCLServer.handler(request)
+                return CCLServer.handler(request, devices)
 
             try:
                 webhook_url = webhook.async_generate_url(
@@ -89,5 +89,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: CCLConfigEntry) -> bool:
 async def async_unload_entry(hass: HomeAssistant, entry: CCLConfigEntry) -> bool:
     """Unload a config entry."""
     webhook.async_unregister(hass, entry.data[CONF_WEBHOOK_ID])
+    devices.pop(entry.data[CONF_WEBHOOK_ID], None)
 
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)

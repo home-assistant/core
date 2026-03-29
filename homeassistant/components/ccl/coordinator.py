@@ -17,7 +17,7 @@ from .const import DOMAIN
 _LOGGER = logging.getLogger(__name__)
 _CHECKING_INTERVAL = 600
 
-type CCLConfigEntry = ConfigEntry[CCLDevice]
+type CCLConfigEntry = ConfigEntry[CCLCoordinator]
 
 
 class CCLCoordinator(DataUpdateCoordinator[dict[str, CCLSensor]]):
@@ -49,7 +49,11 @@ class CCLCoordinator(DataUpdateCoordinator[dict[str, CCLSensor]]):
             time.monotonic(),
         )
         if self.device.last_update_time is None:
-            raise UpdateFailed("Device is offline or not ready")
+            _LOGGER.debug(
+                "No data received yet from device(%s), returning empty data",
+                self.device.device_id,
+            )
+            return {}
         if time.monotonic() - self.device.last_update_time >= _CHECKING_INTERVAL:
-            raise UpdateFailed("Device is offline or not ready")
+            raise UpdateFailed("Device timed out or is not responding")
         return self.device.get_sensors()  # raise CCLDataUpdateException when failed

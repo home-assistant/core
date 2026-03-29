@@ -36,7 +36,7 @@ from .entity import CCLEntity
 
 PARALLEL_UPDATES = 0
 
-CCL_SENSOR_DESCRIPTIONS: dict[str, SensorEntityDescription] = {
+CCL_SENSOR_DESCRIPTIONS: dict[CCLSensorTypes, SensorEntityDescription] = {
     CCLSensorTypes.PRESSURE: SensorEntityDescription(
         key="PRESSURE",
         device_class=SensorDeviceClass.PRESSURE,
@@ -55,7 +55,7 @@ CCL_SENSOR_DESCRIPTIONS: dict[str, SensorEntityDescription] = {
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=PERCENTAGE,
     ),
-    CCLSensorTypes.WIND_DIRECITON: SensorEntityDescription(
+    CCLSensorTypes.WIND_DIRECTION: SensorEntityDescription(
         key="WIND_DIRECTION",
         device_class=SensorDeviceClass.WIND_DIRECTION,
         state_class=SensorStateClass.MEASUREMENT_ANGLE,
@@ -198,7 +198,7 @@ async def async_setup_entry(
     coordinator.device.set_new_sensor_callback(_new_sensors)
 
     if coordinator.data is not None:
-        _new_sensors(coordinator.data.values())
+        _new_sensors(coordinator.data)
 
 
 class CCLSensorEntity(CCLEntity, SensorEntity):
@@ -216,6 +216,6 @@ class CCLSensorEntity(CCLEntity, SensorEntity):
         self.entity_description = entity_description
 
     @property
-    def native_value(self) -> int | float | str:
+    def native_value(self) -> int | float | str | None:
         """Return the state of the sensor."""
         return self._internal.value

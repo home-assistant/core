@@ -3,7 +3,6 @@
 from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from aioccl import CCLSensor
 import pytest
 
 from homeassistant.components.ccl.const import DOMAIN
@@ -41,15 +40,11 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 
 @pytest.fixture
 def mock_ccl() -> Generator[MagicMock]:
-    """Return a mocked ccl client."""
-    with (
-        patch(
-            "homeassistant.components.ccl.coordinator.CCLDevice", autospec=True
-        ) as ccl_mock,
-    ):
-        ccl = ccl_mock.return_value
+    """Return a mocked CCL device."""
+    with patch("aioccl.CCLDevice", autospec=True) as device_mock:
+        device_mock = device_mock.return_value
 
-        ccl._info = {
+        device_mock.info = {
             "fw_ver": "1.0.0",
             "last_update_time": None,
             "mac_address": "48:31:B7:06:D5:59",
@@ -57,56 +52,9 @@ def mock_ccl() -> Generator[MagicMock]:
             "passkey": WEBHOOK_ID,
             "serial_no": "12345",
         }
+        device_mock.sensors = {}
 
-        ccl._sensors = {}
-        ccl._update_callback = None
-
-        ccl._new_sensors = {}
-        ccl._new_sensor_callbacks = None
-
-        def get_sensors():
-            return ccl._sensors
-
-        ccl.set_get_sensors.side_effect = get_sensors
-
-        def set_update_callback(callback):
-            ccl._update_callback = callback
-
-        ccl.set_update_callback.side_effect = set_update_callback
-
-        def set_new_sensor_callback(callback):
-            ccl._new_sensor_callback = callback
-
-        ccl.set_new_sensor_callback.side_effect = set_new_sensor_callback
-
-        def update_info(info):
-            for key, value in info.items():
-                if key in ccl._info:
-                    ccl._info[key] = value
-
-        ccl.update_info.side_effect = update_info
-
-        def process_data(data):
-            assert ccl._new_sensor_callback is not None
-            assert ccl._update_callback is not None
-
-            new_sensors = []
-
-            for key, value in data.items():
-                if key not in ccl._sensors:
-                    ccl._sensors[key] = CCLSensor(key)
-                    new_sensors.append(ccl._sensors[key])
-                ccl._sensors[key].value = value
-
-            for sensor in new_sensors:
-                ccl._new_sensor_callback(sensor)
-                ccl._new_sensors.remove(sensor)
-
-            ccl._update_callback(ccl._data)
-
-        ccl.process_data.side_effect = process_data
-
-        yield ccl
+        yield device_mock
 
 
 @pytest.fixture
