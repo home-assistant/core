@@ -1,5 +1,25 @@
 {
   "entity": {
+    "binary_sensor": {
+      "storage_active": {
+        "default": "mdi:play",
+        "state": {
+          "off": "mdi:stop"
+        }
+      },
+      "storage_enabled": {
+        "default": "mdi:power",
+        "state": {
+          "off": "mdi:power-off"
+        }
+      },
+      "storage_shared": {
+        "default": "mdi:lan-connect",
+        "state": {
+          "off": "mdi:lan-disconnect"
+        }
+      }
+    },
     "button": {
       "hibernate": {
         "default": "mdi:power-sleep"
@@ -7,11 +27,26 @@
       "reset": {
         "default": "mdi:restart"
       },
+      "shutdown": {
+        "default": "mdi:power"
+      },
+      "snapshot_create": {
+        "default": "mdi:backup-restore"
+      },
       "start": {
+        "default": "mdi:play"
+      },
+      "start_all": {
         "default": "mdi:play"
       },
       "stop": {
         "default": "mdi:stop"
+      },
+      "stop_all": {
+        "default": "mdi:stop"
+      },
+      "suspend_all": {
+        "default": "mdi:pause"
       }
     },
     "sensor": {
@@ -32,6 +67,15 @@
       },
       "container_memory": {
         "default": "mdi:memory"
+      },
+      "container_memory_percentage": {
+        "default": "mdi:memory"
+      },
+      "container_netin": {
+        "default": "mdi:download-network"
+      },
+      "container_netout": {
+        "default": "mdi:upload-network"
       },
       "container_status": {
         "default": "mdi:server"
@@ -54,8 +98,23 @@
       "node_memory": {
         "default": "mdi:memory"
       },
+      "node_memory_percentage": {
+        "default": "mdi:memory"
+      },
       "node_status": {
         "default": "mdi:server"
+      },
+      "storage_available": {
+        "default": "mdi:harddisk"
+      },
+      "storage_total": {
+        "default": "mdi:harddisk"
+      },
+      "storage_used": {
+        "default": "mdi:harddisk"
+      },
+      "storage_used_percentage": {
+        "default": "mdi:harddisk"
       },
       "vm_cpu": {
         "default": "mdi:cpu-64-bit"
@@ -74,6 +133,15 @@
       },
       "vm_memory": {
         "default": "mdi:memory"
+      },
+      "vm_memory_percentage": {
+        "default": "mdi:memory"
+      },
+      "vm_netin": {
+        "default": "mdi:download-network"
+      },
+      "vm_netout": {
+        "default": "mdi:upload-network"
       },
       "vm_status": {
         "default": "mdi:server"
