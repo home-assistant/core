@@ -1524,6 +1524,9 @@ micloud==0.5
 # homeassistant.components.microbees
 microBeesPy==0.3.5
 
+# homeassistant.components.mijn_ista
+mijn-ista-api==0.1.1
+
 # homeassistant.components.mill
 mill-local==0.5.0
 

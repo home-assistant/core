@@ -39,6 +39,7 @@ class AnnualMeterSummary:
     dec_pos: int
 
     def as_dict(self) -> dict[str, Any]:
+        """Return a serialisable dict for diagnostics and attributes."""
         return {
             "meter_id": self.meter_id,
             "service_id": self.service_id,
@@ -83,6 +84,7 @@ class DeviceConsumption:
     main_device: dict[str, Any] | None = None
 
     def as_dict(self) -> dict[str, Any]:
+        """Return a serialisable dict for diagnostics and attributes."""
         return {
             "meter_id": self.meter_id,
             "serial_nr": self.serial_nr,
@@ -287,6 +289,7 @@ class MijnIstaCoordinator(DataUpdateCoordinator):
         entry: ConfigEntry,
         api: MijnIstaAPI,
     ) -> None:
+        """Initialize the coordinator."""
         self.api = api
         super().__init__(
             hass=hass,
@@ -337,9 +340,9 @@ class MijnIstaCoordinator(DataUpdateCoordinator):
                     cuid,
                 )
 
-            return result
-
         except MijnIstaAuthError as exc:
             raise ConfigEntryAuthFailed from exc
         except MijnIstaConnectionError as exc:
             raise UpdateFailed(str(exc)) from exc
+        else:
+            return result

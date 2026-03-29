@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+from contextlib import contextmanager
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import aiohttp
@@ -48,7 +49,10 @@ def _mock_session(response):
 
 
 class TestAuthenticate:
+    """Tests for the authenticate method."""
+
     async def test_success_stores_jwt(self):
+        """Successful auth stores the returned JWT token."""
         resp = _mock_response(200, {"JWT": "my-jwt-token"})
         session = _mock_session(resp)
         api = MijnIstaAPI(session, "user@example.com", "secret")
@@ -56,6 +60,7 @@ class TestAuthenticate:
         assert api._jwt == "my-jwt-token"
 
     async def test_http_400_raises_auth_error(self):
+        """HTTP 400 response raises MijnIstaAuthError."""
         resp = _mock_response(400, {})
         session = _mock_session(resp)
         api = MijnIstaAPI(session, "user@example.com", "wrong")
@@ -63,6 +68,7 @@ class TestAuthenticate:
             await api.authenticate()
 
     async def test_network_error_raises_connection_error(self):
+        """Network error raises MijnIstaConnectionError."""
         session = MagicMock()
         cm = MagicMock()
         cm.__aenter__ = AsyncMock(side_effect=aiohttp.ClientError("network down"))
@@ -73,6 +79,7 @@ class TestAuthenticate:
             await api.authenticate()
 
     async def test_timeout_raises_connection_error(self):
+        """Timeout raises MijnIstaConnectionError."""
         session = MagicMock()
         cm = MagicMock()
         cm.__aenter__ = AsyncMock(side_effect=asyncio.TimeoutError)
@@ -83,6 +90,7 @@ class TestAuthenticate:
             await api.authenticate()
 
     async def test_missing_jwt_in_response_raises_auth_error(self):
+        """Missing JWT key in a 200 response raises MijnIstaAuthError."""
         resp = _mock_response(200, {"SomethingElse": "value"})
         session = _mock_session(resp)
         api = MijnIstaAPI(session, "user@example.com", "secret")
@@ -96,6 +104,8 @@ class TestAuthenticate:
 
 
 class TestJWTAbsorption:
+    """Tests for JWT absorption from responses."""
+
     async def test_response_jwt_is_absorbed(self):
         """Every successful response should update the stored JWT."""
         auth_resp = _mock_response(200, {"JWT": "initial-jwt"})
@@ -129,6 +139,8 @@ class TestJWTAbsorption:
 
 
 class TestRetryOn401:
+    """Tests for the 401 retry mechanism."""
+
     async def test_401_triggers_reauth_and_retries(self):
         """A 401 response should trigger re-authentication and one retry."""
         call_count = 0
@@ -137,15 +149,10 @@ class TestRetryOn401:
             nonlocal call_count
             call_count += 1
             if call_count == 1:
-                # First call: 401
-                resp = _mock_response(401, {})
-                return resp
-            elif call_count == 2:
-                # Re-auth call: 200 with new JWT
+                return _mock_response(401, {})
+            if call_count == 2:
                 return _mock_response(200, {"JWT": "new-jwt"})
-            else:
-                # Retry call: 200 with data
-                return _mock_response(200, {"JWT": "new-jwt", "Cus": []})
+            return _mock_response(200, {"JWT": "new-jwt", "Cus": []})
 
         session = MagicMock()
         cm = MagicMock()
@@ -165,13 +172,17 @@ class TestRetryOn401:
 
 
 class TestRequestBody:
+    """Tests for request body construction."""
+
     def test_body_merges_jwt_and_lang(self):
+        """Body merges JWT and LANG into every request."""
         api = MijnIstaAPI(MagicMock(), "u", "p", lang="nl-NL")
         api._jwt = "tok"
         body = api._body({"extra": "val"})
         assert body == {"JWT": "tok", "LANG": "nl-NL", "extra": "val"}
 
     def test_body_extra_overrides_nothing_unexpectedly(self):
+        """Extra fields are merged without overriding JWT."""
         api = MijnIstaAPI(MagicMock(), "u", "p", lang="en-GB")
         api._jwt = "tok"
         body = api._body({"Cuid": "abc"})
@@ -190,6 +201,8 @@ class TestRequestBody:
 
 
 class TestRetryOn425And503:
+    """Tests for the 425/503 retry mechanism."""
+
     async def test_425_retries_and_succeeds(self):
         """A 425 response should trigger a retry; success on second attempt."""
         responses = [
@@ -217,6 +230,7 @@ class TestRetryOn425And503:
         assert result.get("Cus") == []
 
     async def test_503_retries_and_succeeds(self):
+        """A 503 response should trigger a retry; success on second attempt."""
         responses = [
             _mock_response(503, {}),
             _mock_response(200, {"Cus": []}),
@@ -254,9 +268,10 @@ class TestRetryOn425And503:
 
         api = MijnIstaAPI(session, "u", "p")
         api._jwt = "tok"
-        with patch("asyncio.sleep", new_callable=AsyncMock):
-            with pytest.raises(MijnIstaConnectionError):
-                await api.get_user_values()
+        with patch("asyncio.sleep", new_callable=AsyncMock), pytest.raises(
+            MijnIstaConnectionError
+        ):
+            await api.get_user_values()
 
 
 # ---------------------------------------------------------------------------
@@ -265,7 +280,10 @@ class TestRetryOn425And503:
 
 
 class TestJWTRefreshEndpoint:
+    """Tests for the JWT refresh endpoint."""
+
     async def test_refresh_jwt_updates_stored_jwt(self):
+        """Successful refresh updates the stored JWT."""
         resp = _mock_response(200, {"JWT": "refreshed-tok"})
         api = MijnIstaAPI(_mock_session(resp), "u", "p")
         api._jwt = "old-tok"
@@ -282,6 +300,7 @@ class TestJWTRefreshEndpoint:
         api.authenticate.assert_called_once()
 
     async def test_refresh_jwt_falls_back_on_network_error(self):
+        """Network error during refresh falls back to full authenticate()."""
         session = MagicMock()
         cm = MagicMock()
         cm.__aenter__ = AsyncMock(side_effect=aiohttp.ClientError("err"))
@@ -327,6 +346,8 @@ class TestJWTRefreshEndpoint:
 
 
 class TestMonthValuesShardsPolling:
+    """Tests for MonthValues shard polling."""
+
     async def test_polls_until_shards_loaded(self):
         """Should re-poll when hs < sh, stop when hs >= sh."""
         responses = [
@@ -388,13 +409,17 @@ class TestMonthValuesShardsPolling:
 
 
 class TestEndpoints:
+    """Tests for API endpoint methods."""
+
     @pytest.fixture
     def api_with_jwt(self):
+        """Return an API instance with a pre-set JWT token."""
         api = MijnIstaAPI(MagicMock(), "u", "p")
         api._jwt = "tok"
         return api
 
     async def test_get_user_values_posts_to_correct_path(self, api_with_jwt):
+        """get_user_values posts to the correct API path."""
         resp = _mock_response(200, {"DisplayName": "Test"})
         api_with_jwt._session = _mock_session(resp)
         result = await api_with_jwt.get_user_values()
@@ -403,6 +428,7 @@ class TestEndpoints:
         assert "/api/Values/UserValues" in url
 
     async def test_get_month_values_sends_cuid(self, api_with_jwt):
+        """get_month_values includes the Cuid in the request body."""
         resp = _mock_response(200, {"mc": []})
         api_with_jwt._session = _mock_session(resp)
         await api_with_jwt.get_month_values("my-cuid")
@@ -410,6 +436,7 @@ class TestEndpoints:
         assert body["Cuid"] == "my-cuid"
 
     async def test_get_consumption_averages_sends_par(self, api_with_jwt):
+        """get_consumption_averages sends PAR with date range and cuid."""
         resp = _mock_response(200, {"Averages": []})
         api_with_jwt._session = _mock_session(resp)
         await api_with_jwt.get_consumption_averages("cuid-1", "2024-01-01", "2024-12-31")

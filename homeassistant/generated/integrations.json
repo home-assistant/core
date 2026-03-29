@@ -4226,6 +4226,12 @@
       "iot_class": "cloud_push",
       "single_config_entry": true
     },
+    "mijn_ista": {
+      "name": "ista Nederland (mijn.ista.nl)",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
     "mijndomein_energie": {
       "name": "Mijndomein Energie",
       "integration_type": "virtual",

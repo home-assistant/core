@@ -7,6 +7,7 @@ from unittest.mock import AsyncMock, patch
 import pytest
 
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from homeassistant.core import HomeAssistant
 
 from homeassistant.components.mijn_ista.const import CONF_UPDATE_INTERVAL, DOMAIN
 
@@ -203,11 +204,8 @@ MOCK_AVG_VALUES: dict = {
 
 
 @pytest.fixture
-def mock_config_entry(hass):
+def mock_config_entry(hass: HomeAssistant):
     """Return a mock config entry (not yet added to hass)."""
-    from homeassistant.config_entries import ConfigEntry
-    from homeassistant.data_entry_flow import FlowResultType
-
     return {
         CONF_USERNAME: "test@example.com",
         CONF_PASSWORD: "secret",

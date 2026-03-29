@@ -4,7 +4,7 @@
   "codeowners": ["@aalaei"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/mijn_ista",
+  "integration_type": "hub",
   "iot_class": "cloud_polling",
-  "issue_tracker": "https://github.com/home-assistant/core/issues",
   "requirements": ["mijn-ista-api==0.1.1"]
 }

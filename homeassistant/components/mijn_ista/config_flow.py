@@ -8,6 +8,7 @@ from typing import Any
 import voluptuous as vol
 
 from homeassistant import config_entries
+from homeassistant.config_entries import ConfigFlowResult
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -78,9 +79,13 @@ class MijnIstaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     def async_get_options_flow(
         config_entry: config_entries.ConfigEntry,
     ) -> config_entries.OptionsFlow:
+        """Return the options flow."""
         return MijnIstaOptionsFlowHandler(config_entry)
 
-    async def async_step_user(self, user_input: dict[str, Any] | None = None):
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle the initial setup step."""
         errors: dict[str, str] = {}
 
         if user_input is not None:
@@ -110,7 +115,9 @@ class MijnIstaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def async_step_reconfigure(self, user_input: dict[str, Any] | None = None):
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Allow the user to update their credentials."""
         errors: dict[str, str] = {}
         reconfigure_entry = self._get_reconfigure_entry()
@@ -143,7 +150,10 @@ class MijnIstaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 class MijnIstaOptionsFlowHandler(config_entries.OptionsFlowWithConfigEntry):
     """Handle options flow for mijn.ista.nl."""
 
-    async def async_step_init(self, user_input: dict[str, Any] | None = None):
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle the options step."""
         if user_input is not None:
             return self.async_create_entry(
                 title="",

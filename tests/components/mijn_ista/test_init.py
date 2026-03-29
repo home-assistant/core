@@ -10,9 +10,12 @@ from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 
+from homeassistant.components.mijn_ista import async_migrate_entry
 from homeassistant.components.mijn_ista.const import CONF_UPDATE_INTERVAL, DOMAIN
 
 from .conftest import MOCK_AVG_VALUES, MOCK_MONTH_VALUES, MOCK_USER_VALUES
+
+from tests.common import MockConfigEntry
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -22,7 +25,7 @@ ENTRY_DATA = {CONF_USERNAME: "test@example.com", CONF_PASSWORD: "secret"}
 ENTRY_OPTIONS = {CONF_UPDATE_INTERVAL: 24}
 
 
-def _make_mock_coordinator(hass):
+def _make_mock_coordinator(hass: HomeAssistant):
     """Return a coordinator stub that doesn't make real HTTP calls."""
     coord = MagicMock()
     coord.async_config_entry_first_refresh = AsyncMock()
@@ -38,9 +41,12 @@ def _make_mock_coordinator(hass):
 
 
 class TestSetupEntry:
+    """Tests for async_setup_entry."""
+
     async def test_setup_entry_stores_coordinator_in_runtime_data(
         self, hass: HomeAssistant
     ):
+        """async_setup_entry creates a coordinator and stores it in runtime_data."""
         entry = MockConfigEntry(domain=DOMAIN, data=ENTRY_DATA, options=ENTRY_OPTIONS)
         entry.add_to_hass(hass)
 
@@ -91,6 +97,7 @@ class TestSetupEntry:
         assert captured_lang.get("lang") == "nl-NL"
 
     async def test_setup_entry_uses_en_gb_for_english_hass(self, hass: HomeAssistant):
+        """When HA language is English, API should be initialised with en-GB."""
         hass.config.language = "en"
         entry = MockConfigEntry(domain=DOMAIN, data=ENTRY_DATA, options=ENTRY_OPTIONS)
         entry.add_to_hass(hass)
@@ -125,7 +132,10 @@ class TestSetupEntry:
 
 
 class TestUnloadEntry:
+    """Tests for async_unload_entry."""
+
     async def test_unload_entry_succeeds(self, hass: HomeAssistant):
+        """Unloading a loaded entry returns True."""
         entry = MockConfigEntry(domain=DOMAIN, data=ENTRY_DATA, options=ENTRY_OPTIONS)
         entry.add_to_hass(hass)
 
@@ -159,6 +169,8 @@ class TestUnloadEntry:
 
 
 class TestMigrateEntry:
+    """Tests for async_migrate_entry."""
+
     async def test_migrate_v1_removes_language_field(self, hass: HomeAssistant):
         """Version 1 entries have a 'language' key that must be removed in v2."""
         entry = MockConfigEntry(
@@ -168,8 +180,6 @@ class TestMigrateEntry:
             version=1,
         )
         entry.add_to_hass(hass)
-
-        from homeassistant.components.mijn_ista import async_migrate_entry
 
         result = await async_migrate_entry(hass, entry)
 
@@ -184,16 +194,6 @@ class TestMigrateEntry:
         )
         entry.add_to_hass(hass)
 
-        from homeassistant.components.mijn_ista import async_migrate_entry
-
         result = await async_migrate_entry(hass, entry)
         assert result is True
         assert entry.version == 2
-
-
-# ---------------------------------------------------------------------------
-# Import helper (avoids importing pytest_homeassistant_custom_component everywhere)
-# ---------------------------------------------------------------------------
-
-
-from pytest_homeassistant_custom_component.common import MockConfigEntry  # noqa: E402

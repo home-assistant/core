@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
 import pytest
 
@@ -14,7 +14,7 @@ from homeassistant.components.mijn_ista.diagnostics import async_get_config_entr
 from .conftest import MOCK_AVG_VALUES, MOCK_MONTH_VALUES, MOCK_USER_VALUES
 
 
-def _make_entry_with_coordinator(hass):
+def _make_entry_with_coordinator(hass: HomeAssistant):
     """Return a mock config entry with a loaded coordinator."""
     customer = _parse_customer(
         MOCK_USER_VALUES["Cus"][0], MOCK_MONTH_VALUES, MOCK_AVG_VALUES
@@ -32,22 +32,28 @@ def _make_entry_with_coordinator(hass):
 
 
 class TestDiagnostics:
+    """Tests for the diagnostics output."""
+
     async def test_returns_dict(self, hass: HomeAssistant):
+        """Diagnostics returns a dictionary."""
         entry = _make_entry_with_coordinator(hass)
         result = await async_get_config_entry_diagnostics(hass, entry)
         assert isinstance(result, dict)
 
     async def test_password_is_redacted(self, hass: HomeAssistant):
+        """Password is replaced with a redaction placeholder."""
         entry = _make_entry_with_coordinator(hass)
         result = await async_get_config_entry_diagnostics(hass, entry)
         assert result["entry"]["data"]["password"] == "**REDACTED**"
 
     async def test_username_is_redacted(self, hass: HomeAssistant):
+        """Username is replaced with a redaction placeholder."""
         entry = _make_entry_with_coordinator(hass)
         result = await async_get_config_entry_diagnostics(hass, entry)
         assert result["entry"]["data"]["username"] == "**REDACTED**"
 
     async def test_coordinator_structure_present(self, hass: HomeAssistant):
+        """Coordinator section contains last_update_success and properties."""
         entry = _make_entry_with_coordinator(hass)
         result = await async_get_config_entry_diagnostics(hass, entry)
         coord = result["coordinator"]
@@ -55,6 +61,7 @@ class TestDiagnostics:
         assert len(coord["properties"]) == 1
 
     async def test_property_contains_service_info(self, hass: HomeAssistant):
+        """Each property dict contains services and monthly_entries."""
         entry = _make_entry_with_coordinator(hass)
         result = await async_get_config_entry_diagnostics(hass, entry)
         props = result["coordinator"]["properties"]
@@ -64,6 +71,7 @@ class TestDiagnostics:
         assert prop["monthly_entries"] == 2
 
     async def test_property_key_is_truncated_cuid(self, hass: HomeAssistant):
+        """Property keys are truncated CUIDs followed by an ellipsis."""
         entry = _make_entry_with_coordinator(hass)
         result = await async_get_config_entry_diagnostics(hass, entry)
         props = result["coordinator"]["properties"]
@@ -73,6 +81,7 @@ class TestDiagnostics:
         assert len(key) == 9
 
     async def test_empty_coordinator_data(self, hass: HomeAssistant):
+        """Empty coordinator data results in an empty properties dict."""
         entry = _make_entry_with_coordinator(hass)
         entry.runtime_data.data = None
         result = await async_get_config_entry_diagnostics(hass, entry)

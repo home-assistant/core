@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from contextlib import contextmanager
 from unittest.mock import AsyncMock, patch
 
 import pytest
@@ -25,8 +26,6 @@ VALID_INPUT = {
 
 def _patch_api(authenticate=None, get_user_values=None):
     """Return a context manager that patches MijnIstaAPI in config_flow and blocks real setup."""
-    from contextlib import ExitStack, contextmanager
-
     mock_instance = AsyncMock()
     mock_instance.authenticate = authenticate or AsyncMock()
     mock_instance.get_user_values = get_user_values or AsyncMock(
@@ -56,7 +55,10 @@ def _patch_api(authenticate=None, get_user_values=None):
 
 
 class TestUserStep:
+    """Tests for the user setup step."""
+
     async def test_shows_form_on_get(self, hass: HomeAssistant):
+        """Initial GET shows the user form with no errors."""
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
@@ -65,6 +67,7 @@ class TestUserStep:
         assert result["errors"] == {}
 
     async def test_success_creates_entry(self, hass: HomeAssistant):
+        """Valid credentials create a config entry."""
         with _patch_api():
             result = await hass.config_entries.flow.async_init(
                 DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -84,6 +87,7 @@ class TestUserStep:
         assert options[CONF_UPDATE_INTERVAL] == 12
 
     async def test_invalid_auth_shows_error(self, hass: HomeAssistant):
+        """Invalid credentials show an invalid_auth error."""
         auth_mock = AsyncMock(side_effect=MijnIstaAuthError)
         with _patch_api(authenticate=auth_mock):
             result = await hass.config_entries.flow.async_init(
@@ -97,6 +101,7 @@ class TestUserStep:
         assert result["errors"] == {"base": "invalid_auth"}
 
     async def test_cannot_connect_shows_error(self, hass: HomeAssistant):
+        """Connection failure shows a cannot_connect error."""
         auth_mock = AsyncMock(side_effect=MijnIstaConnectionError)
         with _patch_api(authenticate=auth_mock):
             result = await hass.config_entries.flow.async_init(
@@ -110,6 +115,7 @@ class TestUserStep:
         assert result["errors"] == {"base": "cannot_connect"}
 
     async def test_unexpected_exception_shows_unknown_error(self, hass: HomeAssistant):
+        """Unexpected exception shows an unknown error."""
         auth_mock = AsyncMock(side_effect=RuntimeError("boom"))
         with _patch_api(authenticate=auth_mock):
             result = await hass.config_entries.flow.async_init(
@@ -123,6 +129,7 @@ class TestUserStep:
         assert result["errors"] == {"base": "unknown"}
 
     async def test_duplicate_entry_aborts(self, hass: HomeAssistant):
+        """A second entry with the same username is aborted."""
         # Create the first entry
         with _patch_api():
             result = await hass.config_entries.flow.async_init(
@@ -145,6 +152,7 @@ class TestUserStep:
         assert result2["reason"] == "already_configured"
 
     async def test_display_name_falls_back_to_username(self, hass: HomeAssistant):
+        """When DisplayName is missing, the username is used as the entry title."""
         user_values_no_name = {**MOCK_USER_VALUES, "DisplayName": None}
         user_mock = AsyncMock(return_value=user_values_no_name)
         with _patch_api(get_user_values=user_mock):
@@ -165,7 +173,10 @@ class TestUserStep:
 
 
 class TestOptionsFlow:
+    """Tests for the options flow."""
+
     async def _create_entry(self, hass: HomeAssistant) -> config_entries.ConfigEntry:
+        """Create and return a configured entry."""
         with _patch_api():
             result = await hass.config_entries.flow.async_init(
                 DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -177,12 +188,14 @@ class TestOptionsFlow:
         return hass.config_entries.async_entries(DOMAIN)[0]
 
     async def test_options_flow_shows_form(self, hass: HomeAssistant):
+        """Opening the options flow shows the init form."""
         entry = await self._create_entry(hass)
         result = await hass.config_entries.options.async_init(entry.entry_id)
         assert result["type"] == FlowResultType.FORM
         assert result["step_id"] == "init"
 
     async def test_options_flow_updates_interval(self, hass: HomeAssistant):
+        """Submitting the options form updates the update interval."""
         entry = await self._create_entry(hass)
         result = await hass.config_entries.options.async_init(entry.entry_id)
         result = await hass.config_entries.options.async_configure(
@@ -198,7 +211,10 @@ class TestOptionsFlow:
 
 
 class TestReconfigureStep:
+    """Tests for the reconfigure step."""
+
     async def _create_entry(self, hass: HomeAssistant) -> config_entries.ConfigEntry:
+        """Create and return a configured entry."""
         with _patch_api():
             result = await hass.config_entries.flow.async_init(
                 DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -210,6 +226,7 @@ class TestReconfigureStep:
         return hass.config_entries.async_entries(DOMAIN)[0]
 
     async def test_reconfigure_shows_form(self, hass: HomeAssistant):
+        """Reconfigure flow shows the reconfigure form."""
         entry = await self._create_entry(hass)
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
@@ -219,6 +236,7 @@ class TestReconfigureStep:
         assert result["step_id"] == "reconfigure"
 
     async def test_reconfigure_success_updates_credentials(self, hass: HomeAssistant):
+        """Valid new credentials update the entry and reload."""
         entry = await self._create_entry(hass)
         with _patch_api():
             result = await hass.config_entries.flow.async_init(
@@ -236,6 +254,7 @@ class TestReconfigureStep:
         assert entry.data[CONF_PASSWORD] == "newpass"
 
     async def test_reconfigure_bad_credentials_shows_error(self, hass: HomeAssistant):
+        """Bad credentials during reconfigure show an invalid_auth error."""
         entry = await self._create_entry(hass)
         auth_mock = AsyncMock(side_effect=MijnIstaAuthError)
         with _patch_api(authenticate=auth_mock):
