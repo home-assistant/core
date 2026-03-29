@@ -207,12 +207,33 @@ def pytest_runtest_setup() -> None:
     pytest_socket.socket_allow_hosts(["127.0.0.1"])
     pytest_socket.disable_socket(allow_unix_socket=True)
 
-    def disable_dns(*args: Any, **kwargs: Any) -> None:
+    orig_getaddrinfo = socket.getaddrinfo
+
+    def disable_dns(host, *args: Any, **kwargs: Any) -> None:
+        # Allow localhost/127.0.0.1/::1 for integration tests
+        if host in ("localhost", "127.0.0.1", "::1"):
+            return orig_getaddrinfo(host, *args, **kwargs)
         raise RuntimeError("DNS resolution disabled in tests")
 
     setattr(socket, "getaddrinfo", disable_dns)
-    setattr(socket, "gethostbyname", disable_dns)
-    setattr(socket, "gethostbyname_ex", disable_dns)
+    setattr(
+        socket,
+        "gethostbyname",
+        lambda host, *a, **k: (
+            "127.0.0.1"
+            if host in ("localhost", "127.0.0.1", "::1")
+            else (_ for _ in ()).throw(RuntimeError("DNS resolution disabled in tests"))
+        ),
+    )
+    setattr(
+        socket,
+        "gethostbyname_ex",
+        lambda host, *a, **k: (
+            (host, [], ["127.0.0.1"])
+            if host in ("localhost", "127.0.0.1", "::1")
+            else (_ for _ in ()).throw(RuntimeError("DNS resolution disabled in tests"))
+        ),
+    )
 
     pytest_socket.SocketBlockedError = HASocketBlockedError
 
