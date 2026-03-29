@@ -2,9 +2,12 @@
 
 from __future__ import annotations
 
+import asyncio
 from datetime import timedelta
 import logging
 from typing import Any
+
+import aiohttp
 
 from homeassistant.components.device_tracker import ScannerEntity, SourceType
 from homeassistant.config_entries import ConfigEntry
@@ -27,51 +30,59 @@ async def async_setup_entry(
     tracker_interfaces: list[str] = config_entry.runtime_data["tracker_interfaces"]
 
     tracked: dict[str, OPNsenseDevice] = {}
+    update_lock = asyncio.Lock()
 
     async def _async_update_devices(_now: Any = None) -> None:
         """Update devices from OPNsense ARP table."""
-        try:
-            devices = await client.get_arp()
-        except Exception:
-            _LOGGER.exception("Error fetching OPNsense ARP table")
+        if update_lock.locked():
             return
 
-        new_entities: list[OPNsenseDevice] = []
-        seen_macs: set[str] = set()
+        async with update_lock:
+            try:
+                devices = await client.get_arp()
+            except (aiohttp.ClientError, TimeoutError):
+                _LOGGER.exception("Error fetching OPNsense ARP table")
+                return
 
-        for device in devices:
-            if (
-                tracker_interfaces
-                and device.get("intf_description") not in tracker_interfaces
-            ):
-                continue
+            new_entities: list[OPNsenseDevice] = []
+            seen_macs: set[str] = set()
 
-            mac = device.get("mac")
-            if not mac:
-                continue
+            for device in devices:
+                if (
+                    tracker_interfaces
+                    and device.get("intf_description")
+                    not in tracker_interfaces
+                ):
+                    continue
 
-            seen_macs.add(mac)
+                mac = device.get("mac")
+                if not mac:
+                    continue
 
-            if mac in tracked:
-                tracked[mac].update_from_arp(device)
-            else:
-                entity = OPNsenseDevice(device)
-                tracked[mac] = entity
-                new_entities.append(entity)
+                seen_macs.add(mac)
 
-        # Mark devices not in ARP table as not connected
-        for mac, entity in tracked.items():
-            if mac not in seen_macs:
-                entity.mark_disconnected()
+                if mac in tracked:
+                    tracked[mac].update_from_arp(device)
+                else:
+                    entity = OPNsenseDevice(device)
+                    tracked[mac] = entity
+                    new_entities.append(entity)
 
-        if new_entities:
-            async_add_entities(new_entities)
+            # Mark devices not in ARP table as not connected
+            for mac, entity in tracked.items():
+                if mac not in seen_macs:
+                    entity.mark_disconnected()
+
+            if new_entities:
+                async_add_entities(new_entities)
 
     # Initial scan
     await _async_update_devices()
 
-    # Schedule periodic scans
-    async_track_time_interval(hass, _async_update_devices, SCAN_INTERVAL)
+    # Schedule periodic scans and cancel on unload
+    config_entry.async_on_unload(
+        async_track_time_interval(hass, _async_update_devices, SCAN_INTERVAL)
+    )
 
 
 class OPNsenseDevice(ScannerEntity):

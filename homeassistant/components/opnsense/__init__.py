@@ -11,6 +11,7 @@ import voluptuous as vol
 from homeassistant.config_entries import ConfigEntry, SOURCE_IMPORT
 from homeassistant.const import CONF_API_KEY, CONF_URL, CONF_VERIFY_SSL, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.typing import ConfigType
@@ -20,6 +21,8 @@ from .const import CONF_API_SECRET, CONF_TRACKER_INTERFACES, DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS = [Platform.DEVICE_TRACKER]
+
+REQUEST_TIMEOUT = aiohttp.ClientTimeout(total=20)
 
 CONFIG_SCHEMA = vol.Schema(
     {
@@ -58,7 +61,9 @@ class OPNsenseClient:
 
     async def get_arp(self) -> list[dict[str, Any]]:
         """Get the ARP table from OPNsense."""
-        result: list[dict[str, Any]] = await self._get("diagnostics/interface/get_arp")
+        result: list[dict[str, Any]] = await self._get(
+            "diagnostics/interface/get_arp"
+        )
         return result
 
     async def get_interfaces(self) -> dict[str, str]:
@@ -71,9 +76,14 @@ class OPNsenseClient:
     async def _get(self, endpoint: str) -> Any:
         """Make a GET request to the OPNsense API."""
         url = f"{self._url}/{endpoint}"
-        resp = await self._session.get(url, auth=self._auth, ssl=self._verify_ssl)
-        resp.raise_for_status()
-        return await resp.json()
+        async with self._session.get(
+            url,
+            auth=self._auth,
+            ssl=self._verify_ssl,
+            timeout=REQUEST_TIMEOUT,
+        ) as resp:
+            resp.raise_for_status()
+            return await resp.json()
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -111,16 +121,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     try:
         await client.get_arp()
-    except aiohttp.ClientError:
-        _LOGGER.exception("Failure while connecting to OPNsense API endpoint")
-        return False
+    except (aiohttp.ClientError, TimeoutError) as err:
+        raise ConfigEntryNotReady(
+            "Failed to connect to OPNsense API endpoint"
+        ) from err
 
     if tracker_interfaces:
         try:
             interfaces_resp = await client.get_interfaces()
-        except aiohttp.ClientError:
-            _LOGGER.exception("Failure while retrieving OPNsense network interfaces")
-            return False
+        except (aiohttp.ClientError, TimeoutError) as err:
+            raise ConfigEntryNotReady(
+                "Failed to retrieve OPNsense network interfaces"
+            ) from err
         interfaces = list(interfaces_resp.values())
         for interface in tracker_interfaces:
             if interface not in interfaces:

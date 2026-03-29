@@ -38,18 +38,19 @@ class OPNsenseConfigFlow(ConfigFlow, domain=DOMAIN):
             )
 
             try:
-                resp = await session.get(
+                async with session.get(
                     f"{url}/diagnostics/interface/get_arp",
                     auth=auth,
                     ssl=user_input.get(CONF_VERIFY_SSL, False),
-                )
-                resp.raise_for_status()
+                    timeout=aiohttp.ClientTimeout(total=20),
+                ) as resp:
+                    resp.raise_for_status()
             except aiohttp.ClientResponseError as err:
                 if err.status in (401, 403):
                     errors["base"] = "invalid_auth"
                 else:
                     errors["base"] = "cannot_connect"
-            except aiohttp.ClientError:
+            except (aiohttp.ClientError, TimeoutError):
                 errors["base"] = "cannot_connect"
             else:
                 return self.async_create_entry(
