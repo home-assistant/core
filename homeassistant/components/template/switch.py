@@ -57,11 +57,16 @@ LEGACY_FIELDS = {
 
 DEFAULT_NAME = "Template Switch"
 
+SCRIPT_FIELDS = (
+    CONF_TURN_OFF,
+    CONF_TURN_ON,
+)
+
 SWITCH_COMMON_SCHEMA = vol.Schema(
     {
         vol.Optional(CONF_STATE): cv.template,
-        vol.Optional(CONF_TURN_ON): cv.SCRIPT_SCHEMA,
         vol.Optional(CONF_TURN_OFF): cv.SCRIPT_SCHEMA,
+        vol.Optional(CONF_TURN_ON): cv.SCRIPT_SCHEMA,
     }
 )
 
@@ -109,6 +114,7 @@ async def async_setup_platform(
         discovery_info,
         LEGACY_FIELDS,
         legacy_key=CONF_SWITCHES,
+        script_options=SCRIPT_FIELDS,
     )
 
 
@@ -125,6 +131,7 @@ async def async_setup_entry(
         StateSwitchEntity,
         SWITCH_CONFIG_ENTRY_SCHEMA,
         True,
+        script_options=SCRIPT_FIELDS,
     )
 
 
@@ -148,6 +155,7 @@ class AbstractTemplateSwitch(AbstractTemplateEntity, SwitchEntity, RestoreEntity
 
     _entity_id_format = ENTITY_ID_FORMAT
     _optimistic_entity = True
+    _state_option = CONF_STATE
 
     # The super init is not called because TemplateEntity and TriggerEntity will call AbstractTemplateEntity.__init__.
     # This ensures that the __init__ on AbstractTemplateEntity is not called twice.
@@ -155,7 +163,6 @@ class AbstractTemplateSwitch(AbstractTemplateEntity, SwitchEntity, RestoreEntity
         """Initialize the features."""
 
         self.setup_state_template(
-            CONF_STATE,
             "_attr_is_on",
             template_validators.boolean(self, CONF_STATE),
         )

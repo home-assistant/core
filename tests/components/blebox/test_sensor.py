@@ -35,7 +35,7 @@ def airsensor_fixture():
     product = feature.product
     type(product).name = PropertyMock(return_value="My air sensor")
     type(product).model = PropertyMock(return_value="airSensor")
-    return (feature, "sensor.airsensor_0_air")
+    return (feature, "sensor.my_air_sensor_airsensor_0_air")
 
 
 @pytest.fixture(name="tempsensor")
@@ -54,7 +54,7 @@ def tempsensor_fixture():
     product = feature.product
     type(product).name = PropertyMock(return_value="My temperature sensor")
     type(product).model = PropertyMock(return_value="tempSensor")
-    return (feature, "sensor.tempsensor_0_temperature")
+    return (feature, "sensor.my_temperature_sensor_tempsensor_0_temperature")
 
 
 async def test_init(
@@ -67,7 +67,7 @@ async def test_init(
     assert entry.unique_id == "BleBox-tempSensor-1afe34db9437-0.temperature"
 
     state = hass.states.get(entity_id)
-    assert state.name == "tempSensor-0.temperature"
+    assert state.name == "My temperature sensor tempSensor-0.temperature"
 
     assert state.attributes[ATTR_DEVICE_CLASS] == SensorDeviceClass.TEMPERATURE
     assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == UnitOfTemperature.CELSIUS
@@ -122,7 +122,7 @@ async def test_airsensor_init(
     assert entry.unique_id == "BleBox-airSensor-1afe34db9437-0.air"
 
     state = hass.states.get(entity_id)
-    assert state.name == "airSensor-0.air"
+    assert state.name == "My air sensor airSensor-0.air"
 
     assert state.attributes[ATTR_DEVICE_CLASS] == SensorDeviceClass.PM1
     assert state.state == STATE_UNKNOWN

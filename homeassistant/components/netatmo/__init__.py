@@ -2,12 +2,11 @@
 
 from __future__ import annotations
 
-from http import HTTPStatus
 import logging
 import secrets
 from typing import Any
 
-import aiohttp
+from aiohttp import ClientError
 import pyatmo
 
 from homeassistant.components import cloud
@@ -19,7 +18,12 @@ from homeassistant.components.webhook import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_WEBHOOK_ID, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    ConfigEntryNotReady,
+    OAuth2TokenRequestError,
+    OAuth2TokenRequestReauthError,
+)
 from homeassistant.helpers import aiohttp_client, config_validation as cv
 from homeassistant.helpers.config_entry_oauth2_flow import (
     ImplementationUnavailableError,
@@ -89,14 +93,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     session = OAuth2Session(hass, entry, implementation)
     try:
         await session.async_ensure_token_valid()
-    except aiohttp.ClientResponseError as ex:
-        _LOGGER.warning("API error: %s (%s)", ex.status, ex.message)
-        if ex.status in (
-            HTTPStatus.BAD_REQUEST,
-            HTTPStatus.UNAUTHORIZED,
-            HTTPStatus.FORBIDDEN,
-        ):
-            raise ConfigEntryAuthFailed("Token not valid, trigger renewal") from ex
+    except OAuth2TokenRequestReauthError as ex:
+        raise ConfigEntryAuthFailed("Token not valid, trigger renewal") from ex
+    except (OAuth2TokenRequestError, ClientError) as ex:
         raise ConfigEntryNotReady from ex
 
     required_scopes = api.get_api_scopes(entry.data["auth_implementation"])

@@ -185,7 +185,7 @@ SENSORS: dict[str, SensorEntityDescription] = {
     ),
     "V_PH": SensorEntityDescription(
         key="V_PH",
-        native_unit_of_measurement="pH",
+        device_class=SensorDeviceClass.PH,
     ),
     "V_ORP": SensorEntityDescription(
         key="V_ORP",
