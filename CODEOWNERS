@@ -1228,8 +1228,8 @@ build.json @home-assistant/supervisor
 /tests/components/onewire/ @garbled1 @epenet
 /homeassistant/components/onkyo/ @arturpragacz @eclair4151
 /tests/components/onkyo/ @arturpragacz @eclair4151
-/homeassistant/components/onvif/ @hunterjm @jterrace
-/tests/components/onvif/ @hunterjm @jterrace
+/homeassistant/components/onvif/ @jterrace
+/tests/components/onvif/ @jterrace
 /homeassistant/components/open_meteo/ @frenck
 /tests/components/open_meteo/ @frenck
 /homeassistant/components/open_router/ @joostlek
