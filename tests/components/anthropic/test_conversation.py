@@ -645,7 +645,7 @@ async def test_double_system_messages(
     assert result.response.error_code == "unknown"
     assert (
         result.response.speech["plain"]["speech"]
-        == "Unexpected content type in chat log"
+        == "Unexpected content type in chat log: SystemContent"
     )
 
 

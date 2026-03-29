@@ -13,6 +13,7 @@ from homeassistant.components.infrared import (
     DOMAIN as INFRARED_DOMAIN,
     InfraredEntity,
 )
+from homeassistant.components.lg_infrared import PLATFORMS
 from homeassistant.components.lg_infrared.const import (
     CONF_DEVICE_TYPE,
     CONF_INFRARED_ENTITY_ID,
@@ -68,7 +69,7 @@ def mock_infrared_entity() -> MockInfraredEntity:
 @pytest.fixture
 def platforms() -> list[Platform]:
     """Return platforms to set up."""
-    return [Platform.MEDIA_PLAYER]
+    return PLATFORMS
 
 
 @pytest.fixture

@@ -5,7 +5,7 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from satel_integra.satel_integra import AsyncSatel
+from satel_integra import AsyncSatel
 import voluptuous as vol
 
 from homeassistant.components.binary_sensor import BinarySensorDeviceClass
@@ -191,14 +191,19 @@ class SatelConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def test_connection(self, host: str, port: int) -> bool:
         """Test a connection to the Satel alarm."""
-        controller = AsyncSatel(host, port, self.hass.loop)
+        controller = AsyncSatel(host, port)
 
-        result = await controller.connect()
-
-        # Make sure we close the connection again
-        controller.close()
-
-        return result
+        try:
+            return await controller.connect(check_busy=False)
+        except Exception:
+            _LOGGER.exception(
+                "Unexpected error during connection test to %s:%s",
+                host,
+                port,
+            )
+            return False
+        finally:
+            await controller.close()
 
 
 class SatelOptionsFlow(OptionsFlow):

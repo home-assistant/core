@@ -188,7 +188,7 @@ class OptionsFlowHandler(OptionsFlow):
         )
 
 
-class TelgramBotConfigFlow(ConfigFlow, domain=DOMAIN):
+class TelegramBotConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Telegram."""
 
     VERSION = 1
