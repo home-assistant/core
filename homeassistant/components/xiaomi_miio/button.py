@@ -8,10 +8,7 @@ from typing import Any
 from miio import Device as MiioDevice
 from miio.integrations.vacuum.roborock.vacuum import Consumable
 
-from homeassistant.components.button import (
-    ButtonEntity,
-    ButtonEntityDescription,
-)
+from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
 from homeassistant.const import CONF_MODEL, EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback

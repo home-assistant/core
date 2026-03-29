@@ -58,14 +58,18 @@ class XiaomiPetFountainStatus(DeviceStatus):
         return True
 
     @property
-    def fault_code(self) -> int:
+    def fault_code(self) -> int | None:
         """Return the raw fault code."""
-        return int(self.data.get("fault_code") or 0)
+        raw_fault = self.data.get("fault_code")
+        if not isinstance(raw_fault, int):
+            return None
+        return raw_fault
 
     @property
     def has_fault(self) -> bool:
         """Return true when the device reports a fault."""
-        return self.fault_code > 0
+        code = self.fault_code
+        return code is not None and code > 0
 
     @property
     def status(self) -> PetFountainStatus | None:

@@ -115,8 +115,8 @@ async def test_pet_fountain_entities(
     assert hass.states.get(usb_power_entity_id).state == "off"
     assert hass.states.get(water_mode_entity_id).state == "auto"
     assert float(hass.states.get(water_interval_entity_id).state) == 25
-    assert hass.states.get(f"switch.test_pet_fountain_do_not_disturb").state == "off"
-    assert hass.states.get(f"switch.test_pet_fountain_child_lock").state == "off"
+    assert hass.states.get("switch.test_pet_fountain_do_not_disturb").state == "off"
+    assert hass.states.get("switch.test_pet_fountain_child_lock").state == "off"
     assert hass.states.get(dnd_start_entity_id).state == "22:00:00"
     assert hass.states.get(dnd_end_entity_id).state == "08:30:00"
     assert hass.states.get(reset_filter_entity_id).state == "unknown"
