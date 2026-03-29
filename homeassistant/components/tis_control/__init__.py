@@ -42,11 +42,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: TISConfigEntry) -> bool:
 
     try:
         await tis_api.connect()
-    except ConnectionError as e:
+    except (ConnectionError, OSError) as e:
         # If connection fails, raise ConfigEntryNotReady
         # to prompt Home Assistant to retry setup later.
-        _LOGGER.error("Failed to connect: %s", e)
-        raise ConfigEntryNotReady("Failed to connect to gateway") from e
+        _LOGGER.error("Failed to connect %d: %s", entry.data[CONF_PORT], e)
+        raise ConfigEntryNotReady(f"Error connecting to {entry.data[CONF_PORT]}") from e
 
     entry.runtime_data = TISData(tis_api=tis_api)
 
@@ -64,9 +64,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: TISConfigEntry) -> bool:
 
     try:
         await tis_api.scan_devices()
-    except ConnectionError as e:
+    except (ConnectionError, OSError) as e:
         _LOGGER.error(
-            "Connection error occurred while scanning the network for devices: %s",
+            "Connection error occurred while scanning the network for devices %d: %s",
+            entry.data[CONF_PORT],
             e,
         )
 
