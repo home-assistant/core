@@ -12,7 +12,6 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from .const import LOGGER
 
 if TYPE_CHECKING:
-    from . import UnifiConfigEntry
     from .hub.hub import UnifiHub
 
 HandlerT = TypeVar("HandlerT", bound=APIHandler)
@@ -26,7 +25,6 @@ class UnifiDataUpdateCoordinator[HandlerT: APIHandler](DataUpdateCoordinator[Non
     def __init__(
         self,
         hub: UnifiHub,
-        config_entry: UnifiConfigEntry,
         handler: HandlerT,
     ) -> None:
         """Initialize coordinator."""
@@ -34,7 +32,7 @@ class UnifiDataUpdateCoordinator[HandlerT: APIHandler](DataUpdateCoordinator[Non
             hub.hass,
             LOGGER,
             name=f"UniFi {type(handler).__name__}",
-            config_entry=config_entry,
+            config_entry=hub.config.entry,
             update_interval=POLL_INTERVAL,
         )
         self._handler = handler

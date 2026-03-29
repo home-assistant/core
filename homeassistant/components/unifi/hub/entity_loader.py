@@ -36,7 +36,6 @@ class UnifiEntityLoader:
     def __init__(self, hub: UnifiHub) -> None:
         """Initialize the UniFi entity loader."""
         self.hub = hub
-        config_entry = hub.config.entry
         self.api_updaters = (
             hub.api.clients.update,
             hub.api.clients_all.update,
@@ -53,10 +52,10 @@ class UnifiEntityLoader:
 
         self._polling_coordinators: dict[int, UnifiDataUpdateCoordinator] = {
             id(hub.api.traffic_rules): UnifiDataUpdateCoordinator(
-                hub, config_entry, hub.api.traffic_rules
+                hub, hub.api.traffic_rules
             ),
             id(hub.api.traffic_routes): UnifiDataUpdateCoordinator(
-                hub, config_entry, hub.api.traffic_routes
+                hub, hub.api.traffic_routes
             ),
         }
         for coordinator in self._polling_coordinators.values():
