@@ -35,6 +35,11 @@ _LOGGER: logging.Logger = logging.getLogger(__name__)
 PARALLEL_UPDATES = 0
 
 
+def _normalize_mac(mac_address: str) -> str:
+    """Normalize a MAC address for internal storage and comparison."""
+    return mac_address.lower()
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
@@ -44,14 +49,18 @@ async def async_setup_entry(
 
     dev_reg = dr.async_get(hass)
 
-    previous_mac_addresses: list = config_entry.data.get(TRACKED_MACS, [])
+    previous_mac_addresses: list[str] = [
+        _normalize_mac(mac_address)
+        for mac_address in config_entry.data.get(TRACKED_MACS, [])
+        if isinstance(mac_address, str)
+    ]
     coordinator: OPNsenseDataUpdateCoordinator = getattr(
         config_entry.runtime_data, DEVICE_TRACKER_COORDINATOR
     )
     state = coordinator.data
     enabled_default = False
     entities: list = []
-    mac_addresses: list = []
+    mac_addresses: list[str] = []
 
     arp_entries = dict_get(state, "arp_table")
     if not isinstance(arp_entries, list):
@@ -70,7 +79,11 @@ async def async_setup_entry(
             configured_mac_addresses,
         )
         enabled_default = True
-        mac_addresses = configured_mac_addresses.copy()
+        mac_addresses = [
+            _normalize_mac(mac_address)
+            for mac_address in configured_mac_addresses
+            if isinstance(mac_address, str)
+        ]
         devices.extend(
             _build_device(mac_address, _find_arp_entry(arp_entries, mac_address))
             for mac_address in mac_addresses
@@ -79,7 +92,10 @@ async def async_setup_entry(
         for arp_entry in arp_entries:
             if not isinstance(arp_entry, MutableMapping):
                 continue
-            mac_address = arp_entry.get("mac")
+            raw_mac_address = arp_entry.get("mac")
+            if not isinstance(raw_mac_address, str):
+                continue
+            mac_address = _normalize_mac(raw_mac_address)
             if mac_address and mac_address not in mac_addresses:
                 mac_addresses.append(mac_address)
                 devices.append(_build_device(mac_address, arp_entry))
@@ -119,10 +135,14 @@ def _find_arp_entry(
     arp_entries: list[Any], mac_address: str
 ) -> MutableMapping[str, Any] | None:
     """Find the ARP entry for a MAC address."""
+    normalized_mac_address = _normalize_mac(mac_address)
     for arp_entry in arp_entries:
         if not isinstance(arp_entry, MutableMapping):
             continue
-        if arp_entry.get("mac", "") == mac_address:
+        raw_mac_address = arp_entry.get("mac")
+        if not isinstance(raw_mac_address, str):
+            continue
+        if _normalize_mac(raw_mac_address) == normalized_mac_address:
             return arp_entry
     return None
 
@@ -131,7 +151,7 @@ def _build_device(
     mac_address: str, arp_entry: MutableMapping[str, Any] | None
 ) -> dict[str, Any]:
     """Build tracked device metadata from an ARP entry."""
-    device: dict[str, Any] = {"mac": mac_address}
+    device: dict[str, Any] = {"mac": _normalize_mac(mac_address)}
     if arp_entry is None:
         return device
 
@@ -167,7 +187,7 @@ class OPNsenseScannerEntity(OPNsenseBaseEntity, ScannerEntity, RestoreEntity):
         self._attr_entity_registry_enabled_default: bool = enabled_default
         self._attr_hostname: str | None = hostname
         self._attr_ip_address: str | None = None
-        self._attr_mac_address: str | None = mac
+        self._attr_mac_address: str | None = _normalize_mac(mac)
         self._attr_source_type: SourceType = SourceType.ROUTER
 
     @property
@@ -261,7 +281,7 @@ class OPNsenseScannerEntity(OPNsenseBaseEntity, ScannerEntity, RestoreEntity):
         }
         for prop_name, opnsense_name in ha_to_opnsense.items():
             prop = entry.get(opnsense_name)
-            if not prop:
+            if prop is None:
                 continue
             if prop_name == "expires":
                 if not isinstance(prop, (int, float)):
@@ -292,7 +312,10 @@ class OPNsenseScannerEntity(OPNsenseBaseEntity, ScannerEntity, RestoreEntity):
         for arp_entry in arp_table:
             if not isinstance(arp_entry, MutableMapping):
                 continue
-            if arp_entry.get("mac", "").lower() == self._attr_mac_address:
+            raw_mac_address = arp_entry.get("mac")
+            if not isinstance(raw_mac_address, str):
+                continue
+            if _normalize_mac(raw_mac_address) == self._attr_mac_address:
                 entry = arp_entry
                 break
         if not entry:

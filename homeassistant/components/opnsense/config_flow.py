@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections import OrderedDict
 from collections.abc import Iterable, Mapping, MutableMapping
+import inspect
 import ipaddress
 import logging
 import re
@@ -326,9 +327,10 @@ def cleanse_sensitive_data(message: str, secrets: list | None = None) -> str:
     """Remove sensitive data from logging messages."""
     secrets = secrets or []
     for secret in secrets:
-        if secret is not None:
-            message = message.replace(secret, "[redacted]")
-            message = message.replace(quote_plus(secret), "[redacted]")
+        if not isinstance(secret, str) or secret == "":
+            continue
+        message = message.replace(secret, "[redacted]")
+        message = message.replace(quote_plus(secret), "[redacted]")
     return message
 
 
@@ -481,6 +483,31 @@ def _validate_firmware_version(firmware_version: str) -> None:
         raise BelowMinFirmware
 
 
+async def _close_temp_client(client: OPNsenseClient) -> None:
+    """Close a temporary OPNsense client used during config flow validation."""
+    for method_name in ("close", "disconnect", "async_close", "aclose"):
+        close_method = getattr(client, method_name, None)
+        if not callable(close_method):
+            continue
+        try:
+            result = close_method()
+            if inspect.isawaitable(result):
+                await result
+        except (
+            aiohttp.ClientError,
+            OSError,
+            RuntimeError,
+            TypeError,
+            ValueError,
+        ) as err:
+            _LOGGER.debug(
+                "Unable to close temporary OPNsense client via %s: %s",
+                method_name,
+                err,
+            )
+        break
+
+
 async def _handle_user_input(
     hass: HomeAssistant,
     user_input: MutableMapping[str, Any],
@@ -491,36 +518,40 @@ async def _handle_user_input(
     await _clean_and_parse_url(user_input)
 
     client: OPNsenseClient = await _get_client(user_input, hass)
-
-    user_input[CONF_FIRMWARE_VERSION] = await client.get_host_firmware_version()
-    _LOGGER.debug(
-        "[handle_user_input] Firmware Version: %s", user_input[CONF_FIRMWARE_VERSION]
-    )
-
     try:
-        _validate_firmware_version(user_input[CONF_FIRMWARE_VERSION])
-    except (
-        awesomeversion.exceptions.AwesomeVersionCompareException,
-        TypeError,
-        ValueError,
-    ) as e:
-        raise UnknownFirmware from e
+        user_input[CONF_FIRMWARE_VERSION] = await client.get_host_firmware_version()
+        _LOGGER.debug(
+            "[handle_user_input] Firmware Version: %s",
+            user_input[CONF_FIRMWARE_VERSION],
+        )
 
-    system_info: dict[str, Any] = await client.get_system_info()
-    _LOGGER.debug("[handle_user_input] system_info: %s", system_info)
+        try:
+            _validate_firmware_version(user_input[CONF_FIRMWARE_VERSION])
+        except (
+            awesomeversion.exceptions.AwesomeVersionCompareException,
+            TypeError,
+            ValueError,
+        ) as e:
+            raise UnknownFirmware from e
 
-    if not user_input.get(CONF_NAME):
-        user_input[CONF_NAME] = system_info.get("name") or "OPNsense"
+        system_info: dict[str, Any] = await client.get_system_info()
+        _LOGGER.debug("[handle_user_input] system_info: %s", system_info)
 
-    user_input[CONF_DEVICE_UNIQUE_ID] = await client.get_device_unique_id(
-        expected_id=expected_id
-    )
-    _LOGGER.debug(
-        "[handle_user_input] Device Unique ID: %s", user_input[CONF_DEVICE_UNIQUE_ID]
-    )
+        if not user_input.get(CONF_NAME):
+            user_input[CONF_NAME] = system_info.get("name") or "OPNsense"
 
-    if not user_input.get(CONF_DEVICE_UNIQUE_ID):
-        raise MissingDeviceUniqueID
+        user_input[CONF_DEVICE_UNIQUE_ID] = await client.get_device_unique_id(
+            expected_id=expected_id
+        )
+        _LOGGER.debug(
+            "[handle_user_input] Device Unique ID: %s",
+            user_input[CONF_DEVICE_UNIQUE_ID],
+        )
+
+        if not user_input.get(CONF_DEVICE_UNIQUE_ID):
+            raise MissingDeviceUniqueID
+    finally:
+        await _close_temp_client(client)
 
 
 def _log_and_set_error(
@@ -759,27 +790,32 @@ async def _get_dt_entries(
     )
     # dicts are ordered so put all previously selected items at the top
     entries: dict[str, Any] = _build_selected_device_entries(selected_devices)
-    arp_table: list = await client.get_arp_table(resolve_hostnames=True)
-    if arp_table:
-        ip_by_mac: dict[str, str] = {}
-        # follow with all arp table entries
-        for entry in arp_table:
-            normalized_mac = normalize_mac_address(str(entry.get("mac", "")))
-            mac: str = normalized_mac or str(entry.get("mac", "")).lower().strip()
-            if len(mac) < 1:
-                continue
-            ip_by_mac[mac] = str(entry.get("ip", "")).strip()
-            label: str = _format_detected_device_label(entry)
-            entries[mac] = label
+    try:
+        arp_table: list = await client.get_arp_table(resolve_hostnames=True)
+        if arp_table:
+            ip_by_mac: dict[str, str] = {}
+            # follow with all arp table entries
+            for entry in arp_table:
+                normalized_mac = normalize_mac_address(str(entry.get("mac", "")))
+                mac: str = normalized_mac or str(entry.get("mac", "")).lower().strip()
+                if len(mac) < 1:
+                    continue
+                ip_by_mac[mac] = str(entry.get("ip", "")).strip()
+                label: str = _format_detected_device_label(entry)
+                entries[mac] = label
 
-        # Sort entries: fallback labels first, then by IP address (ascending)
-        sorted_entries: dict[str, Any] = dict(
-            sorted(
-                entries.items(),
-                key=lambda item: _device_entry_sort_key(item[0], item[1], ip_by_mac),
+            # Sort entries: fallback labels first, then by IP address (ascending)
+            sorted_entries: dict[str, Any] = dict(
+                sorted(
+                    entries.items(),
+                    key=lambda item: _device_entry_sort_key(
+                        item[0], item[1], ip_by_mac
+                    ),
+                )
             )
-        )
-        return sorted_entries
+            return sorted_entries
+    finally:
+        await _close_temp_client(client)
     return entries
 
 

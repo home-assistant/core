@@ -37,6 +37,16 @@ def test_init_sets_unique_and_name_suffixes(
     assert ent.name == "Name"
 
 
+def test_init_requires_non_empty_unique_id_suffix(
+    make_config_entry, dummy_coordinator
+) -> None:
+    """Base entity should reject empty unique id suffix values."""
+    entry = make_config_entry()
+    coord = dummy_coordinator
+    with pytest.raises(ValueError, match="unique_id_suffix"):
+        OPNsenseBaseEntity(config_entry=entry, coordinator=coord, unique_id_suffix="")
+
+
 def test_available_property_toggle(make_config_entry, dummy_coordinator) -> None:
     """Entity available property reflects internal availability flag."""
     entry = make_config_entry()
@@ -130,7 +140,7 @@ async def test_async_added_to_hass_missing_client_raises(
     """async_added_to_hass raises when runtime client is missing."""
     entry = make_config_entry()
     coord = dummy_coordinator
-    # runtime_data has opnsense_client attribute but it's None -> triggers assertion
+    # runtime_data has opnsense_client attribute but it's None.
     entry.runtime_data.opnsense_client = None
 
     ent = OPNsenseBaseEntity(
@@ -140,7 +150,7 @@ async def test_async_added_to_hass_missing_client_raises(
     # avoid writing HA state (which requires hass) by stubbing the handler
     ent._handle_coordinator_update = lambda: None
     ent.hass = MagicMock()
-    with pytest.raises(AssertionError):
+    with pytest.raises(RuntimeError, match="runtime client is missing"):
         await ent.async_added_to_hass()
 
 

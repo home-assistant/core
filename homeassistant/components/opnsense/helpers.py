@@ -11,17 +11,31 @@ def dict_get(
     data: MutableMapping[str, Any], path: str, default: Any | None = None
 ) -> Any | None:
     """Parse the path to get the desired value out of the data."""
-    pathList: list = re.split(r"\.", path, flags=re.IGNORECASE)
+    path_list: list = re.split(r"\.", path, flags=re.IGNORECASE)
     result: Any | None = data
 
-    for key in pathList:
-        if key.isnumeric():
-            key = int(key)
-        if isinstance(result, MutableMapping | list) and key in result:
-            result = result[key]
-        else:
-            result = default
-            break
+    for key in path_list:
+        if isinstance(result, MutableMapping):
+            dict_key: str | int = int(key) if key.isnumeric() else key
+            if dict_key not in result:
+                result = default
+                break
+            result = result[dict_key]
+            continue
+
+        if isinstance(result, list):
+            if not key.isnumeric():
+                result = default
+                break
+            index = int(key)
+            if index < 0 or index >= len(result):
+                result = default
+                break
+            result = result[index]
+            continue
+
+        result = default
+        break
 
     return result
 

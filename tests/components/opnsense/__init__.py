@@ -1,1 +1,1 @@
-"""pytest for Home Assistant the OPNsense integration integration."""
+"""Tests for the Home Assistant OPNsense integration."""

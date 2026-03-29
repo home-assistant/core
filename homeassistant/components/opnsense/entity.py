@@ -26,17 +26,18 @@ class OPNsenseBaseEntity(CoordinatorEntity[OPNsenseDataUpdateCoordinator]):
         self,
         config_entry: ConfigEntry,
         coordinator: OPNsenseDataUpdateCoordinator,
-        unique_id_suffix: str | None = None,
+        unique_id_suffix: str,
         name_suffix: str | None = None,
     ) -> None:
         """Initialize OPNsense Entity."""
         self.config_entry: ConfigEntry = config_entry
         self.coordinator: OPNsenseDataUpdateCoordinator = coordinator
         self._device_unique_id: str = config_entry.data[CONF_DEVICE_UNIQUE_ID]
-        if unique_id_suffix:
-            self._attr_unique_id: str = slugify(
-                f"{self._device_unique_id}_{unique_id_suffix}"
-            )
+        if not unique_id_suffix:
+            raise ValueError("unique_id_suffix must be a non-empty string")
+        self._attr_unique_id: str = slugify(
+            f"{self._device_unique_id}_{unique_id_suffix}"
+        )
         if name_suffix:
             self._attr_name: str | None = name_suffix
         self._client: OPNsenseClient | None = None
@@ -66,10 +67,13 @@ class OPNsenseBaseEntity(CoordinatorEntity[OPNsenseDataUpdateCoordinator]):
         """Run once integration has been added to HA."""
         await super().async_added_to_hass()
         if self._client is None:
-            self._client = getattr(self.config_entry.runtime_data, OPNSENSE_CLIENT)
+            self._client = getattr(
+                self.config_entry.runtime_data, OPNSENSE_CLIENT, None
+            )
         if self._client is None:
-            _LOGGER.error("Unable to get client in async_added_to_hass")
-        assert self._client is not None
+            msg = "OPNsense runtime client is missing in async_added_to_hass"
+            _LOGGER.error(msg)
+            raise RuntimeError(msg)
         self._handle_coordinator_update()
 
 

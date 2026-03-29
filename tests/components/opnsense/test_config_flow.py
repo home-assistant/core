@@ -1,4 +1,4 @@
-"""Unit tests for the config flow and options flow of the the OPNsense integration integration.
+"""Unit tests for the config flow and options flow of the OPNsense integration.
 
 Tests include URL parsing/validation, exception mapping for user input,
 and options flow behaviors such as device tracker handling.

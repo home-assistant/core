@@ -1,4 +1,4 @@
-"""Test fixtures and helpers for the the OPNsense integration integration.
+"""Test fixtures and helpers for the OPNsense integration.
 
 This module provides pytest fixtures, fake clients, and monkeypatch helpers
 used across the integration's test suite to avoid network IO, neutralize

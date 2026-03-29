@@ -870,9 +870,9 @@ class OPNsenseSensor(OPNsenseEntity, SensorEntity):
             if isinstance(entity_description.name, str)
             else None
         )
-        unique_id_suffix: str | None = (
-            entity_description.key if isinstance(entity_description.key, str) else None
-        )
+        if not isinstance(entity_description.key, str) or not entity_description.key:
+            raise ValueError("Sensor entity_description.key must be a non-empty string")
+        unique_id_suffix = entity_description.key
         super().__init__(
             config_entry,
             coordinator,

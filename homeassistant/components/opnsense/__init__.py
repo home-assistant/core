@@ -319,9 +319,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 severity=ir.IssueSeverity.ERROR,
                 translation_key="below_min_firmware",
                 translation_placeholders={
-                    "version": str(VERSION),
+                    "version": firmware or "Unknown",
                     "min_firmware": str(OPNSENSE_MIN_FIRMWARE),
-                    "firmware": firmware or "Unknown",
                 },
             )
             await coordinator.async_shutdown()
