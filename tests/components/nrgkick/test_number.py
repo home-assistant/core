@@ -149,10 +149,15 @@ async def test_phase_count_ignores_transient_zero(
     assert (state := hass.states.get(entity_id))
     assert state.state == "3"
 
-    # Simulate the device returning 0 during a phase switch.
+    # Simulate the device returning 0 during the phase switch triggered by
+    # the service call below.
     control_data = mock_nrgkick_api.get_control.return_value.copy()
     control_data[CONTROL_KEY_PHASE_COUNT] = 0
     mock_nrgkick_api.get_control.return_value = control_data
+
+    # State is unchanged until the service call triggers a refresh.
+    assert (state := hass.states.get(entity_id))
+    assert state.state == "3"
 
     await hass.services.async_call(
         NUMBER_DOMAIN,
