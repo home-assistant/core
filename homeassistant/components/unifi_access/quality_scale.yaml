@@ -63,7 +63,7 @@ rules:
   reconfiguration-flow: todo
   repair-issues:
     status: exempt
-    comment: This integration does not raise any repairable issues.
+    comment: Integration raises ConfigEntryAuthFailed and relies on Home Assistant core to surface reauth/repair issues, no custom repairs are defined.
   stale-devices: todo
 
   # Platinum
