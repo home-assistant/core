@@ -1196,6 +1196,7 @@ async def test_traffic_rules(
     )
 
     call_count = aioclient_mock.call_count
+    traffic_rule_payload[0] = deepcopy(traffic_rule_payload[0])
     traffic_rule_payload[0]["enabled"] = False
 
     await hass.services.async_call(
@@ -1254,6 +1255,7 @@ async def test_traffic_routes(
     )
 
     call_count = aioclient_mock.call_count
+    traffic_route_payload[0] = deepcopy(traffic_route_payload[0])
     traffic_route_payload[0]["enabled"] = False
 
     await hass.services.async_call(

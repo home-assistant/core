@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from datetime import timedelta
-from typing import TYPE_CHECKING, TypeVar
+from typing import TYPE_CHECKING
 
 from aiounifi.interfaces.api_handlers import APIHandler
 
@@ -13,8 +13,6 @@ from .const import LOGGER
 
 if TYPE_CHECKING:
     from .hub.hub import UnifiHub
-
-HandlerT = TypeVar("HandlerT", bound=APIHandler)
 
 POLL_INTERVAL = timedelta(seconds=10)
 

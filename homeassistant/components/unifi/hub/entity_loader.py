@@ -77,10 +77,12 @@ class UnifiEntityLoader:
         """Initialize API data and extra client support."""
         await asyncio.gather(
             self._refresh_api_data(),
-            *[
-                coordinator.async_config_entry_first_refresh()
-                for coordinator in self._polling_coordinators.values()
-            ],
+            self._refresh_data(
+                [
+                    coordinator.async_refresh
+                    for coordinator in self._polling_coordinators.values()
+                ]
+            ),
         )
         self._restore_inactive_clients()
         self.wireless_clients.update_clients(set(self.hub.api.clients.values()))
