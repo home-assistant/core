@@ -77,7 +77,7 @@ BINARY_SENSORS: dict[DeviceCategory, tuple[TuyaBinarySensorEntityDescription, ..
     ),
     DeviceCategory.CS: (
         TuyaBinarySensorEntityDescription(
-            key="water_full",
+            key=f"{DPCode.FAULT}_water_full",
             dpcode=DPCode.FAULT,
             device_class=BinarySensorDeviceClass.PROBLEM,
             entity_category=EntityCategory.DIAGNOSTIC,
