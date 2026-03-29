@@ -963,7 +963,7 @@ go2rtc-client==0.4.0
 goalzero==0.2.2
 
 # homeassistant.components.goodwe
-goodwe==0.4.8
+goodwe==0.4.10
 
 # homeassistant.components.google_mail
 # homeassistant.components.google_tasks
