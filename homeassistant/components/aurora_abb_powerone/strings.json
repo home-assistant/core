@@ -2,20 +2,39 @@
   "config": {
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "no_serial_ports": "No com ports found. The integration needs a valid RS485 device to communicate."
+      "no_serial_ports": "No com ports found. The integration needs a valid RS485 device to communicate.",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
+      "unique_id_mismatch": "The serial number of the inverter does not match the previously configured inverter. Please ensure you are reconfiguring against the same device."
     },
     "error": {
-      "cannot_connect": "Unable to connect, please check serial port, address, electrical connection and that inverter is on (in daylight)",
+      "cannot_connect": "Unable to connect, please check connection settings, electrical connection and that inverter is on (in daylight)",
       "cannot_open_serial_port": "Cannot open serial port, please check and try again",
       "invalid_serial_port": "Serial port is not a valid device or could not be opened"
     },
     "step": {
-      "user": {
+      "choose_transport": {
         "data": {
-          "address": "Inverter address",
-          "port": "RS485 or USB-RS485 adaptor port"
+          "transport": "Connection type"
         },
-        "description": "The inverter must be connected via an RS485 adaptor, please select serial port and the inverter's address as configured on the LCD panel"
+        "data_description": {
+          "transport": "Select serial for a direct RS485 connection, or TCP for an Ethernet-to-RS485 gateway."
+        },
+        "description": "Select the transport used to communicate with the inverter"
+      },
+      "configure_serial": {
+        "data": {
+          "inverter_serial_address": "Inverter address",
+          "serial_comport": "RS485 or USB-RS485 adaptor port"
+        },
+        "description": "The inverter must be connected via an RS485 adaptor, please select the serial port and the inverter's address as configured on the LCD panel"
+      },
+      "configure_tcp": {
+        "data": {
+          "inverter_serial_address": "Inverter address",
+          "tcp_host": "Gateway IP address or hostname",
+          "tcp_port": "Gateway TCP port"
+        },
+        "description": "Connect via an Ethernet-to-RS485 gateway. Please enter the gateway's network address, TCP port, and the inverter's address as configured on the LCD panel"
       }
     }
   },
@@ -65,6 +84,14 @@
       },
       "voltage_in_2": {
         "name": "String 2 voltage"
+      }
+    }
+  },
+  "selector": {
+    "transport": {
+      "options": {
+        "serial": "Serial (RS485)",
+        "tcp": "TCP (Ethernet gateway)"
       }
     }
   }

@@ -1,15 +1,14 @@
 """DataUpdateCoordinator for the aurora_abb_powerone integration."""
 
+from dataclasses import asdict
 import logging
-from time import sleep
-
-from aurorapy.client import AuroraError, AuroraSerialClient, AuroraTimeoutError
-from serial import SerialException
+from typing import Any
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
+from .aurora_client import AuroraClient, AuroraClientError, AuroraClientTimeoutError
 from .const import DOMAIN, SCAN_INTERVAL
 
 _LOGGER = logging.getLogger(__name__)
@@ -18,7 +17,7 @@ _LOGGER = logging.getLogger(__name__)
 type AuroraAbbConfigEntry = ConfigEntry[AuroraAbbDataUpdateCoordinator]
 
 
-class AuroraAbbDataUpdateCoordinator(DataUpdateCoordinator[dict[str, float]]):
+class AuroraAbbDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """Class to manage fetching AuroraAbbPowerone data."""
 
     config_entry: AuroraAbbConfigEntry
@@ -27,13 +26,12 @@ class AuroraAbbDataUpdateCoordinator(DataUpdateCoordinator[dict[str, float]]):
         self,
         hass: HomeAssistant,
         config_entry: AuroraAbbConfigEntry,
-        comport: str,
-        address: int,
+        client: AuroraClient,
     ) -> None:
         """Initialize the data update coordinator."""
-        self.available_prev = False
-        self.available = False
-        self.client = AuroraSerialClient(address, comport, parity="N", timeout=1)
+        self.available_prev: bool | None = None
+        self.available: bool | None = None
+        self.client = client
         super().__init__(
             hass,
             _LOGGER,
@@ -42,83 +40,48 @@ class AuroraAbbDataUpdateCoordinator(DataUpdateCoordinator[dict[str, float]]):
             update_interval=SCAN_INTERVAL,
         )
 
-    def _update_data(self) -> dict[str, float]:
+    def _update_data(self) -> dict[str, Any]:
         """Fetch new state data for the sensors.
 
         This is the only function that should fetch new data for Home Assistant.
         """
-        data: dict[str, float] = {}
         self.available_prev = self.available
         retries: int = 3
         while retries > 0:
             try:
-                self.client.connect()
-
-                # See command 59 in the protocol manual linked in __init__.py
-                grid_voltage = self.client.measure(1, True)
-                grid_current = self.client.measure(2, True)
-                power_watts = self.client.measure(3, True)
-                frequency = self.client.measure(4)
-                i_leak_dcdc = self.client.measure(6)
-                i_leak_inverter = self.client.measure(7)
-                power_in_1 = self.client.measure(8)
-                power_in_2 = self.client.measure(9)
-                temperature_c = self.client.measure(21)
-                voltage_in_1 = self.client.measure(23)
-                current_in_1 = self.client.measure(25)
-                voltage_in_2 = self.client.measure(26)
-                current_in_2 = self.client.measure(27)
-                r_iso = self.client.measure(30)
-                energy_wh = self.client.cumulated_energy(5)
-                [alarm, *_] = self.client.alarms()
-            except AuroraTimeoutError:
+                result = self.client.try_connect_and_fetch_data()
+            except AuroraClientTimeoutError:
                 self.available = False
                 _LOGGER.debug("No response from inverter (could be dark)")
-                retries = 0
-            except (SerialException, AuroraError) as error:
+                break
+            except AuroraClientError as error:
                 self.available = False
                 retries -= 1
                 if retries <= 0:
+                    self._log_availability_change()
                     raise UpdateFailed(error) from error
                 _LOGGER.debug(
                     "Exception: %s occurred, %d retries remaining",
                     repr(error),
                     retries,
                 )
-                sleep(1)
             else:
-                data["grid_voltage"] = round(grid_voltage, 1)
-                data["grid_current"] = round(grid_current, 1)
-                data["instantaneouspower"] = round(power_watts, 1)
-                data["grid_frequency"] = round(frequency, 1)
-                data["i_leak_dcdc"] = i_leak_dcdc
-                data["i_leak_inverter"] = i_leak_inverter
-                data["power_in_1"] = round(power_in_1, 1)
-                data["power_in_2"] = round(power_in_2, 1)
-                data["temp"] = round(temperature_c, 1)
-                data["voltage_in_1"] = round(voltage_in_1, 1)
-                data["current_in_1"] = round(current_in_1, 1)
-                data["voltage_in_2"] = round(voltage_in_2, 1)
-                data["current_in_2"] = round(current_in_2, 1)
-                data["r_iso"] = r_iso
-                data["totalenergy"] = round(energy_wh / 1000, 2)
-                data["alarm"] = alarm
                 self.available = True
-                retries = 0
-            finally:
-                if self.available != self.available_prev:
-                    if self.available:
-                        _LOGGER.warning("Communication with %s back online", self.name)
-                    else:
-                        _LOGGER.warning(
-                            "Communication with %s lost",
-                            self.name,
-                        )
-                if self.client.serline.isOpen():
-                    self.client.close()
+                break
 
-        return data
+        self._log_availability_change()
+        if self.available and result is not None:
+            return asdict(result)
+        return {}
 
-    async def _async_update_data(self) -> dict[str, float]:
+    def _log_availability_change(self) -> None:
+        """Log a warning when availability changes."""
+        if self.available_prev is not None and self.available != self.available_prev:
+            if self.available:
+                _LOGGER.warning("Communication with %s back online", self.name)
+            else:
+                _LOGGER.warning("Communication with %s lost", self.name)
+
+    async def _async_update_data(self) -> dict[str, Any]:
         """Update inverter data in the executor."""
         return await self.hass.async_add_executor_job(self._update_data)
