@@ -41,6 +41,7 @@ async def async_setup_bot_platform(
 
     webhook_registered = await pushbot.register_webhook()
     if not webhook_registered:
+        await pushbot.stop_application()
         raise RuntimeError("Failed to register webhook with Telegram")
     _LOGGER.info(
         "[%s %s] Webhook registered with %s",
