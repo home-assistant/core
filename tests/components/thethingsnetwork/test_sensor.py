@@ -164,8 +164,9 @@ async def test_sensor_invalid_attributes(
     sensor_entry = entity_registry.async_get(f"sensor.{DEVICE_ID}_sensor_x")
     assert sensor_entry is not None
 
-    # Warning should have been logged
+    # Warning should have been logged with device context
     assert "unsupported device_class" in caplog.text
+    assert DEVICE_ID in caplog.text
 
 
 async def test_sensor_attr_fields_filtered(

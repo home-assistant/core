@@ -117,25 +117,30 @@ def _extract_sensor_attr(
     return sensor_attr
 
 
-def _validate_sensor_attr(attr: SensorAttrDict, field_name: str) -> None:
+def _validate_sensor_attr(
+    attr: SensorAttrDict, field_name: str, *, device_id: str
+) -> None:
     """Log unsupported Home Assistant metadata values from the decoder."""
     if (raw := attr.get("device_class")) and raw not in VALID_DEVICE_CLASSES:
         _LOGGER.warning(
-            "Field %s has unsupported device_class=%r",
+            "Device %s field %s has unsupported device_class=%r",
+            device_id,
             field_name,
             raw,
         )
 
     if (raw := attr.get("state_class")) and raw not in VALID_STATE_CLASSES:
         _LOGGER.warning(
-            "Field %s has unsupported state_class=%r",
+            "Device %s field %s has unsupported state_class=%r",
+            device_id,
             field_name,
             raw,
         )
 
     if (raw := attr.get("entity_category")) and raw not in VALID_ENTITY_CATEGORIES:
         _LOGGER.warning(
-            "Field %s has unsupported entity_category=%r",
+            "Device %s field %s has unsupported entity_category=%r",
+            device_id,
             field_name,
             raw,
         )
@@ -172,7 +177,7 @@ async def async_setup_entry(
                     continue
 
                 attr = sensor_attr.get(field_id, {})
-                _validate_sensor_attr(attr, field_id)
+                _validate_sensor_attr(attr, field_id, device_id=device_id)
 
                 new_sensors[(device_id, field_id)] = TtnDataSensor(
                     coordinator=coordinator,
@@ -224,8 +229,9 @@ class TtnDataSensor(TTNEntity, SensorEntity):
                 self._attr_suggested_display_precision = int(precision)
             except ValueError, TypeError:
                 _LOGGER.warning(
-                    "Invalid suggested_display_precision for %s: %r",
+                    "Invalid suggested_display_precision for %s (unique_id=%s): %r",
                     ttn_value.field_id,
+                    self.unique_id,
                     precision,
                 )
 
