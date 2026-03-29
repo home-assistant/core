@@ -96,9 +96,7 @@ async def test_setup_entry_filters_by_interface(hass: HomeAssistant) -> None:
     ) as mock_client_cls:
         client = mock_client_cls.return_value
         client.get_arp = AsyncMock(return_value=arp_mixed)
-        client.get_interfaces = AsyncMock(
-            return_value={"igb0": "WAN", "igb1": "LAN"}
-        )
+        client.get_interfaces = AsyncMock(return_value={"igb0": "WAN", "igb1": "LAN"})
 
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()

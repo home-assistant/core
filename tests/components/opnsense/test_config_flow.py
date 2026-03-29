@@ -3,7 +3,6 @@
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import aiohttp
-import pytest
 
 from homeassistant import config_entries
 from homeassistant.components.opnsense.const import (
@@ -159,9 +158,7 @@ async def test_import_flow(hass: HomeAssistant) -> None:
     ) as mock_client_cls:
         client = mock_client_cls.return_value
         client.get_arp = AsyncMock(return_value=[])
-        client.get_interfaces = AsyncMock(
-            return_value={"igb0": "WAN", "igb1": "LAN"}
-        )
+        client.get_interfaces = AsyncMock(return_value={"igb0": "WAN", "igb1": "LAN"})
 
         result = await hass.config_entries.flow.async_init(
             DOMAIN,

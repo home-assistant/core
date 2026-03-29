@@ -8,7 +8,7 @@ from typing import Any
 import aiohttp
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigEntry, SOURCE_IMPORT
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_API_KEY, CONF_URL, CONF_VERIFY_SSL, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
@@ -61,9 +61,7 @@ class OPNsenseClient:
 
     async def get_arp(self) -> list[dict[str, Any]]:
         """Get the ARP table from OPNsense."""
-        result: list[dict[str, Any]] = await self._get(
-            "diagnostics/interface/get_arp"
-        )
+        result: list[dict[str, Any]] = await self._get("diagnostics/interface/get_arp")
         return result
 
     async def get_interfaces(self) -> dict[str, str]:
@@ -122,9 +120,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     try:
         await client.get_arp()
     except (aiohttp.ClientError, TimeoutError) as err:
-        raise ConfigEntryNotReady(
-            "Failed to connect to OPNsense API endpoint"
-        ) from err
+        raise ConfigEntryNotReady("Failed to connect to OPNsense API endpoint") from err
 
     if tracker_interfaces:
         try:

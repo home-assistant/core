@@ -50,7 +50,7 @@ class OPNsenseConfigFlow(ConfigFlow, domain=DOMAIN):
                     errors["base"] = "invalid_auth"
                 else:
                     errors["base"] = "cannot_connect"
-            except (aiohttp.ClientError, TimeoutError):
+            except aiohttp.ClientError:
                 errors["base"] = "cannot_connect"
             else:
                 return self.async_create_entry(

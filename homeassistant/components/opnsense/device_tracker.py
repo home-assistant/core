@@ -40,7 +40,7 @@ async def async_setup_entry(
         async with update_lock:
             try:
                 devices = await client.get_arp()
-            except (aiohttp.ClientError, TimeoutError):
+            except aiohttp.ClientError:
                 _LOGGER.exception("Error fetching OPNsense ARP table")
                 return
 
@@ -50,8 +50,7 @@ async def async_setup_entry(
             for device in devices:
                 if (
                     tracker_interfaces
-                    and device.get("intf_description")
-                    not in tracker_interfaces
+                    and device.get("intf_description") not in tracker_interfaces
                 ):
                     continue
 
