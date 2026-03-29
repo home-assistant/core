@@ -66,8 +66,8 @@ async def test_syncthing_client_event_listener(
             await asyncio.sleep(0)
             yield event
 
-        await asyncio.sleep(0)
-        yield {"type": "unknown"}
+        stop_event = asyncio.Event()
+        await stop_event.wait()
 
     mock_syncthing = create_mock_syncthing_client()
     mock_syncthing.events.listen = mock_listen
