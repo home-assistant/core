@@ -4,16 +4,10 @@ from __future__ import annotations
 
 from unittest.mock import AsyncMock, MagicMock, patch
 
-import pytest
-
-from homeassistant.config_entries import ConfigEntry, ConfigEntryState
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
-from homeassistant.core import HomeAssistant
-
 from homeassistant.components.mijn_ista import async_migrate_entry
 from homeassistant.components.mijn_ista.const import CONF_UPDATE_INTERVAL, DOMAIN
-
-from .conftest import MOCK_AVG_VALUES, MOCK_MONTH_VALUES, MOCK_USER_VALUES
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
 
@@ -80,7 +74,8 @@ class TestSetupEntry:
 
         with (
             patch(
-                "homeassistant.components.mijn_ista.MijnIstaAPI", side_effect=_capture_api
+                "homeassistant.components.mijn_ista.MijnIstaAPI",
+                side_effect=_capture_api,
             ),
             patch(
                 "homeassistant.components.mijn_ista.MijnIstaCoordinator",
@@ -109,7 +104,8 @@ class TestSetupEntry:
 
         with (
             patch(
-                "homeassistant.components.mijn_ista.MijnIstaAPI", side_effect=_capture_api
+                "homeassistant.components.mijn_ista.MijnIstaAPI",
+                side_effect=_capture_api,
             ),
             patch(
                 "homeassistant.components.mijn_ista.MijnIstaCoordinator",

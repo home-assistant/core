@@ -4,12 +4,13 @@ from __future__ import annotations
 
 import logging
 
+from mijn_ista_api import MijnIstaAPI
+
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from mijn_ista_api import MijnIstaAPI
 from .coordinator import MijnIstaCoordinator
 
 PLATFORMS = [Platform.SENSOR]

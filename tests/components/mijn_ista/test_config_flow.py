@@ -5,15 +5,13 @@ from __future__ import annotations
 from contextlib import contextmanager
 from unittest.mock import AsyncMock, patch
 
-import pytest
+from mijn_ista_api import MijnIstaAuthError, MijnIstaConnectionError
 
 from homeassistant import config_entries
+from homeassistant.components.mijn_ista.const import CONF_UPDATE_INTERVAL, DOMAIN
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-
-from mijn_ista_api import MijnIstaAuthError, MijnIstaConnectionError
-from homeassistant.components.mijn_ista.const import CONF_UPDATE_INTERVAL, DOMAIN
 
 from .conftest import MOCK_USER_VALUES
 
@@ -230,7 +228,10 @@ class TestReconfigureStep:
         entry = await self._create_entry(hass)
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
-            context={"source": config_entries.SOURCE_RECONFIGURE, "entry_id": entry.entry_id},
+            context={
+                "source": config_entries.SOURCE_RECONFIGURE,
+                "entry_id": entry.entry_id,
+            },
         )
         assert result["type"] == FlowResultType.FORM
         assert result["step_id"] == "reconfigure"
@@ -241,7 +242,10 @@ class TestReconfigureStep:
         with _patch_api():
             result = await hass.config_entries.flow.async_init(
                 DOMAIN,
-                context={"source": config_entries.SOURCE_RECONFIGURE, "entry_id": entry.entry_id},
+                context={
+                    "source": config_entries.SOURCE_RECONFIGURE,
+                    "entry_id": entry.entry_id,
+                },
             )
             result = await hass.config_entries.flow.async_configure(
                 result["flow_id"],
@@ -260,7 +264,88 @@ class TestReconfigureStep:
         with _patch_api(authenticate=auth_mock):
             result = await hass.config_entries.flow.async_init(
                 DOMAIN,
-                context={"source": config_entries.SOURCE_RECONFIGURE, "entry_id": entry.entry_id},
+                context={
+                    "source": config_entries.SOURCE_RECONFIGURE,
+                    "entry_id": entry.entry_id,
+                },
+            )
+            result = await hass.config_entries.flow.async_configure(
+                result["flow_id"],
+                user_input={CONF_USERNAME: "bad@example.com", CONF_PASSWORD: "wrong"},
+            )
+
+        assert result["type"] == FlowResultType.FORM
+        assert result["errors"] == {"base": "invalid_auth"}
+
+
+# ---------------------------------------------------------------------------
+# Reauth step
+# ---------------------------------------------------------------------------
+
+
+class TestReauthStep:
+    """Tests for the reauthentication flow."""
+
+    async def _create_entry(self, hass: HomeAssistant) -> config_entries.ConfigEntry:
+        """Create and return a configured entry."""
+        with _patch_api():
+            result = await hass.config_entries.flow.async_init(
+                DOMAIN, context={"source": config_entries.SOURCE_USER}
+            )
+            await hass.config_entries.flow.async_configure(
+                result["flow_id"], user_input=VALID_INPUT
+            )
+            await hass.async_block_till_done()
+        return hass.config_entries.async_entries(DOMAIN)[0]
+
+    async def test_reauth_shows_form(self, hass: HomeAssistant):
+        """Reauth flow shows the reauth_confirm form."""
+        entry = await self._create_entry(hass)
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={
+                "source": config_entries.SOURCE_REAUTH,
+                "entry_id": entry.entry_id,
+            },
+            data=entry.data,
+        )
+        assert result["type"] == FlowResultType.FORM
+        assert result["step_id"] == "reauth_confirm"
+
+    async def test_reauth_success_updates_credentials(self, hass: HomeAssistant):
+        """Valid credentials during reauth update the entry and abort with success."""
+        entry = await self._create_entry(hass)
+        with _patch_api():
+            result = await hass.config_entries.flow.async_init(
+                DOMAIN,
+                context={
+                    "source": config_entries.SOURCE_REAUTH,
+                    "entry_id": entry.entry_id,
+                },
+                data=entry.data,
+            )
+            result = await hass.config_entries.flow.async_configure(
+                result["flow_id"],
+                user_input={CONF_USERNAME: "new@example.com", CONF_PASSWORD: "newpass"},
+            )
+
+        assert result["type"] == FlowResultType.ABORT
+        assert result["reason"] == "reauth_successful"
+        assert entry.data[CONF_USERNAME] == "new@example.com"
+        assert entry.data[CONF_PASSWORD] == "newpass"
+
+    async def test_reauth_invalid_auth_shows_error(self, hass: HomeAssistant):
+        """Bad credentials during reauth show an invalid_auth error."""
+        entry = await self._create_entry(hass)
+        auth_mock = AsyncMock(side_effect=MijnIstaAuthError)
+        with _patch_api(authenticate=auth_mock):
+            result = await hass.config_entries.flow.async_init(
+                DOMAIN,
+                context={
+                    "source": config_entries.SOURCE_REAUTH,
+                    "entry_id": entry.entry_id,
+                },
+                data=entry.data,
             )
             result = await hass.config_entries.flow.async_configure(
                 result["flow_id"],

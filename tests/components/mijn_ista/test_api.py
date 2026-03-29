@@ -3,14 +3,11 @@
 from __future__ import annotations
 
 import asyncio
-from contextlib import contextmanager
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import aiohttp
-import pytest
-
 from mijn_ista_api import MijnIstaAPI, MijnIstaAuthError, MijnIstaConnectionError
-
+import pytest
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -24,9 +21,7 @@ def _mock_response(status: int = 200, json_data: dict | None = None):
     resp.json = AsyncMock(return_value=json_data or {})
     if status >= 400:
         resp.raise_for_status = MagicMock(
-            side_effect=aiohttp.ClientResponseError(
-                MagicMock(), (), status=status
-            )
+            side_effect=aiohttp.ClientResponseError(MagicMock(), (), status=status)
         )
     else:
         resp.raise_for_status = MagicMock()
@@ -257,6 +252,7 @@ class TestRetryOn425And503:
 
     async def test_persistent_425_raises_connection_error(self):
         """Four consecutive 425 responses should raise MijnIstaConnectionError."""
+
         async def _enter():
             return _mock_response(425, {})
 
@@ -268,8 +264,9 @@ class TestRetryOn425And503:
 
         api = MijnIstaAPI(session, "u", "p")
         api._jwt = "tok"
-        with patch("asyncio.sleep", new_callable=AsyncMock), pytest.raises(
-            MijnIstaConnectionError
+        with (
+            patch("asyncio.sleep", new_callable=AsyncMock),
+            pytest.raises(MijnIstaConnectionError),
         ):
             await api.get_user_values()
 
@@ -334,7 +331,9 @@ class TestJWTRefreshEndpoint:
 
         api = MijnIstaAPI(session, "u", "p")
         api._jwt = "old-tok"
-        api._refresh_jwt = AsyncMock(side_effect=lambda: setattr(api, "_jwt", "new-tok") or None)
+        api._refresh_jwt = AsyncMock(
+            side_effect=lambda: setattr(api, "_jwt", "new-tok") or None
+        )
         result = await api.get_user_values()
         api._refresh_jwt.assert_called_once()
         assert result.get("Cus") == []
@@ -353,7 +352,9 @@ class TestMonthValuesShardsPolling:
         responses = [
             _mock_response(200, {"hs": 1, "sh": 3, "mc": []}),  # not done
             _mock_response(200, {"hs": 2, "sh": 3, "mc": []}),  # not done
-            _mock_response(200, {"hs": 3, "sh": 3, "mc": [{"y": 2024, "m": 11}]}),  # done
+            _mock_response(
+                200, {"hs": 3, "sh": 3, "mc": [{"y": 2024, "m": 11}]}
+            ),  # done
         ]
         call_idx = 0
 
@@ -379,7 +380,7 @@ class TestMonthValuesShardsPolling:
         assert mock_sleep.call_count == 2  # slept twice between 3 polls
 
     async def test_returns_immediately_when_no_shards(self):
-        """sh == 0 means no shard info; return immediately."""
+        """Sh == 0 means no shard info; return immediately."""
         resp = _mock_response(200, {"sh": 0, "hs": 0, "mc": []})
         api = MijnIstaAPI(_mock_session(resp), "u", "p")
         api._jwt = "tok"
@@ -390,6 +391,7 @@ class TestMonthValuesShardsPolling:
 
     async def test_returns_after_max_polls(self):
         """After 15 re-polls, return whatever we have."""
+
         async def _enter():
             return _mock_response(200, {"hs": 1, "sh": 99, "mc": []})
 
@@ -439,7 +441,9 @@ class TestEndpoints:
         """get_consumption_averages sends PAR with date range and cuid."""
         resp = _mock_response(200, {"Averages": []})
         api_with_jwt._session = _mock_session(resp)
-        await api_with_jwt.get_consumption_averages("cuid-1", "2024-01-01", "2024-12-31")
+        await api_with_jwt.get_consumption_averages(
+            "cuid-1", "2024-01-01", "2024-12-31"
+        )
         body = api_with_jwt._session.post.call_args[1]["json"]
         assert body["PAR"]["start"] == "2024-01-01"
         assert body["PAR"]["end"] == "2024-12-31"

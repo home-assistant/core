@@ -5,31 +5,27 @@ from __future__ import annotations
 import copy
 from unittest.mock import AsyncMock, MagicMock
 
+from mijn_ista_api import MijnIstaAuthError, MijnIstaConnectionError
 import pytest
 
-from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed
-from homeassistant.helpers.update_coordinator import UpdateFailed
-
-from mijn_ista_api import MijnIstaAuthError, MijnIstaConnectionError
-
-from homeassistant.components.mijn_ista.const import CONF_UPDATE_INTERVAL, DOMAIN
+from homeassistant.components.mijn_ista.const import CONF_UPDATE_INTERVAL
 from homeassistant.components.mijn_ista.coordinator import (
-    MijnIstaCoordinator,
     AnnualMeterSummary,
     AnnualSummary,
     CustomerData,
     DeviceConsumption,
+    MijnIstaCoordinator,
     MonthEntry,
     MonthServiceData,
-    ServiceInfo,
     _parse_annual_meter,
     _parse_customer,
     _parse_device_consumption,
 )
+from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.helpers.update_coordinator import UpdateFailed
 
 from .conftest import MOCK_AVG_VALUES, MOCK_MONTH_VALUES, MOCK_USER_VALUES
-
 
 # ---------------------------------------------------------------------------
 # _parse_annual_meter
@@ -96,8 +92,15 @@ class TestParseAnnualMeter:
         }
         d = _parse_annual_meter(raw).as_dict()
         assert set(d.keys()) == {
-            "meter_id", "service_id", "serial_nr", "art_nr",
-            "begin_date", "begin_value", "end_date", "end_value", "consumption",
+            "meter_id",
+            "service_id",
+            "serial_nr",
+            "art_nr",
+            "begin_date",
+            "begin_value",
+            "end_date",
+            "end_value",
+            "consumption",
         }
         assert d["consumption"] == 4.0
 
@@ -151,9 +154,16 @@ class TestParseDeviceConsumption:
     def test_as_dict_contains_consumption_key(self):
         """as_dict uses 'consumption' key and includes main_device."""
         raw = {
-            "Id": 1, "SerialNr": 2, "ArtNr": 0,
-            "SDate": "", "SValue": 0.0, "EDate": "", "EValue": 3.0,
-            "CValue": 3.0, "CCDValue": 0.0, "Active": "",
+            "Id": 1,
+            "SerialNr": 2,
+            "ArtNr": 0,
+            "SDate": "",
+            "SValue": 0.0,
+            "EDate": "",
+            "EValue": 3.0,
+            "CValue": 3.0,
+            "CCDValue": 0.0,
+            "Active": "",
         }
         d = _parse_device_consumption(raw).as_dict()
         assert d["consumption"] == 3.0
@@ -249,9 +259,7 @@ class TestParseCustomer:
     def test_zero_avg_temp_becomes_none(self):
         """avg_temp of 0 should be treated as None (KNMI data not yet available)."""
         cus = MOCK_USER_VALUES["Cus"][0]
-        month_data = {
-            "mc": [{"y": 2024, "m": 11, "at": 0, "ServiceConsumptions": []}]
-        }
+        month_data = {"mc": [{"y": 2024, "m": 11, "at": 0, "ServiceConsumptions": []}]}
         result = _parse_customer(cus, month_data, {"Averages": []})
         assert result.monthly[0].avg_temp is None
 
@@ -267,7 +275,12 @@ class TestParseCustomer:
         """With only one billing period, previous temp should be None."""
         cus = copy.deepcopy(MOCK_USER_VALUES["Cus"][0])
         cus["curConsumption"]["BillingPeriods"] = [
-            {"y": 2024, "s": "2024-01-01T00:00:00", "e": "2024-12-31T00:00:00", "ta": 10.5}
+            {
+                "y": 2024,
+                "s": "2024-01-01T00:00:00",
+                "e": "2024-12-31T00:00:00",
+                "ta": 10.5,
+            }
         ]
         result = _parse_customer(cus, {"mc": []}, {"Averages": []})
         assert result.cur_period_temp == 10.5
@@ -351,7 +364,10 @@ class TestCoordinatorUpdate:
     ):
         """Multiple properties (Cuids) are all included in the result."""
         second_cus = {**MOCK_USER_VALUES["Cus"][0], "Cuid": "second-cuid-xyz"}
-        user_data = {**MOCK_USER_VALUES, "Cus": [MOCK_USER_VALUES["Cus"][0], second_cus]}
+        user_data = {
+            **MOCK_USER_VALUES,
+            "Cus": [MOCK_USER_VALUES["Cus"][0], second_cus],
+        }
         mock_api.get_user_values = AsyncMock(return_value=user_data)
         coord = MijnIstaCoordinator(hass, mock_entry, mock_api)
         result = await coord._async_update_data()

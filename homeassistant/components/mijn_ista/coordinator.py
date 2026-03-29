@@ -3,10 +3,12 @@
 from __future__ import annotations
 
 import asyncio
-import logging
 from dataclasses import dataclass, field
-from datetime import datetime, timedelta
+from datetime import timedelta
+import logging
 from typing import Any
+
+from mijn_ista_api import MijnIstaAPI, MijnIstaAuthError, MijnIstaConnectionError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -14,7 +16,6 @@ from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
 
-from mijn_ista_api import MijnIstaAPI, MijnIstaAuthError, MijnIstaConnectionError
 from .const import CONF_UPDATE_INTERVAL, DEFAULT_UPDATE_INTERVAL, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)

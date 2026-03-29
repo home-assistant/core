@@ -6,10 +6,9 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 
+from homeassistant.components.mijn_ista.const import CONF_UPDATE_INTERVAL
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
-
-from homeassistant.components.mijn_ista.const import CONF_UPDATE_INTERVAL, DOMAIN
 
 # ---------------------------------------------------------------------------
 # Raw API response fixtures

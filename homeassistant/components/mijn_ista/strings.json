@@ -10,6 +10,14 @@
           "update_interval": "Update interval (hours)"
         }
       },
+      "reauth_confirm": {
+        "title": "Re-authenticate with mijn.ista.nl",
+        "description": "Your mijn.ista.nl session has expired. Please enter your credentials again.",
+        "data": {
+          "username": "Username or email",
+          "password": "Password"
+        }
+      },
       "reconfigure": {
         "title": "Update credentials",
         "description": "Enter new credentials for your mijn.ista.nl account.",
@@ -26,6 +34,7 @@
     },
     "abort": {
       "already_configured": "This account is already configured.",
+      "reauth_successful": "Re-authentication was successful.",
       "reconfigure_successful": "Credentials updated successfully."
     }
   },

@@ -2,9 +2,11 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 import logging
 from typing import Any
 
+from mijn_ista_api import MijnIstaAPI, MijnIstaAuthError, MijnIstaConnectionError
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -21,7 +23,6 @@ from homeassistant.helpers.selector import (
     TextSelectorType,
 )
 
-from mijn_ista_api import MijnIstaAPI, MijnIstaAuthError, MijnIstaConnectionError
 from .const import CONF_UPDATE_INTERVAL, DEFAULT_UPDATE_INTERVAL, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
@@ -64,7 +65,7 @@ async def _validate_credentials(
         return None, "invalid_auth"
     except MijnIstaConnectionError:
         return None, "cannot_connect"
-    except Exception:  # noqa: BLE001
+    except Exception:  # pylint: disable=broad-except
         _LOGGER.exception("Unexpected error during mijn.ista.nl credential validation")
         return None, "unknown"
 
@@ -112,6 +113,43 @@ class MijnIstaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="user",
             data_schema=_STEP_USER_SCHEMA,
+            errors=errors,
+        )
+
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
+        """Handle re-authentication when credentials become invalid."""
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle re-authentication confirmation."""
+        errors: dict[str, str] = {}
+        reauth_entry = self._get_reauth_entry()
+
+        if user_input is not None:
+            _, error = await _validate_credentials(
+                self.hass, user_input[CONF_USERNAME], user_input[CONF_PASSWORD]
+            )
+            if error:
+                errors["base"] = error
+            else:
+                return self.async_update_reload_and_abort(
+                    reauth_entry,
+                    data_updates={
+                        CONF_USERNAME: user_input[CONF_USERNAME],
+                        CONF_PASSWORD: user_input[CONF_PASSWORD],
+                    },
+                )
+
+        return self.async_show_form(
+            step_id="reauth_confirm",
+            data_schema=self.add_suggested_values_to_schema(
+                _CREDENTIALS_SCHEMA,
+                {CONF_USERNAME: reauth_entry.data[CONF_USERNAME]},
+            ),
             errors=errors,
         )
 

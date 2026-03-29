@@ -3,14 +3,10 @@
 from __future__ import annotations
 
 import copy
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from unittest.mock import MagicMock
 
 import pytest
-
-from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
-from homeassistant.const import UnitOfEnergy, UnitOfVolume
-from homeassistant.core import HomeAssistant
 
 from homeassistant.components.mijn_ista.const import DOMAIN
 from homeassistant.components.mijn_ista.coordinator import (
@@ -25,9 +21,11 @@ from homeassistant.components.mijn_ista.sensor import (
     _parse_dt,
     _translate_service,
 )
+from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
+from homeassistant.const import UnitOfEnergy, UnitOfVolume
+from homeassistant.core import HomeAssistant
 
 from .conftest import MOCK_AVG_VALUES, MOCK_MONTH_VALUES, MOCK_USER_VALUES
-
 
 # ---------------------------------------------------------------------------
 # Unit helpers
@@ -129,7 +127,7 @@ class TestParseDt:
         assert _parse_dt("") is None
 
     def test_invalid_string_returns_none(self):
-        """Unparseable string should return None."""
+        """Unparsable string should return None."""
         assert _parse_dt("not-a-date") is None
 
 
@@ -222,9 +220,7 @@ class TestBuildSensors:
         """Water (m3) sensor should have WATER device class."""
         customer = _make_customer_data()
         sensors = _build_sensors(coordinator, "test-cuid-abc123", customer)
-        water_current = next(
-            s for s in sensors if s._attr_name == "Hot water Current"
-        )
+        water_current = next(s for s in sensors if s._attr_name == "Hot water Current")
         assert water_current._attr_device_class == SensorDeviceClass.WATER
         assert (
             water_current._attr_native_unit_of_measurement == UnitOfVolume.CUBIC_METERS
@@ -414,7 +410,7 @@ class TestLastReset:
         month_sensor = next(s for s in sensors if s._attr_name == "Heating Month")
         lr = month_sensor.last_reset
         assert lr is not None
-        assert lr == datetime(2024, 11, 1, tzinfo=timezone.utc)
+        assert lr == datetime(2024, 11, 1, tzinfo=UTC)
 
     def test_measurement_sensor_has_no_last_reset(self, coordinator):
         """MEASUREMENT state-class sensors should have no last_reset."""

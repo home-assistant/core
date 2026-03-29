@@ -4,12 +4,11 @@ from __future__ import annotations
 
 from unittest.mock import MagicMock
 
-import pytest
-
-from homeassistant.core import HomeAssistant
-
 from homeassistant.components.mijn_ista.coordinator import _parse_customer
-from homeassistant.components.mijn_ista.diagnostics import async_get_config_entry_diagnostics
+from homeassistant.components.mijn_ista.diagnostics import (
+    async_get_config_entry_diagnostics,
+)
+from homeassistant.core import HomeAssistant
 
 from .conftest import MOCK_AVG_VALUES, MOCK_MONTH_VALUES, MOCK_USER_VALUES
 

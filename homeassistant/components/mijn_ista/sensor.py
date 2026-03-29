@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
-import logging
 from collections.abc import Callable
-from datetime import datetime, timezone
+from datetime import UTC, datetime
+import logging
 from typing import Any
 
 from homeassistant.components.sensor import (
@@ -32,6 +32,9 @@ from .coordinator import CustomerData, MijnIstaCoordinator, MonthEntry
 PARALLEL_UPDATES = 0
 
 _LOGGER = logging.getLogger(__name__)
+
+_SENSOR_ERRORS = (KeyError, IndexError, TypeError, AttributeError)
+_SENSOR_ERRORS_EXT = (KeyError, IndexError, TypeError, AttributeError, ValueError)
 
 # Map API unit strings → HA unit constants
 _UNIT_MAP: dict[str, str] = {
@@ -73,9 +76,7 @@ def _parse_dt(date_str: str) -> datetime | None:
     return dt_util.as_utc(dt) if dt else None
 
 
-def _find_month(
-    monthly: list[MonthEntry], service_id: int
-) -> MonthEntry | None:
+def _find_month(monthly: list[MonthEntry], service_id: int) -> MonthEntry | None:
     """Return the most recent MonthEntry that has data for service_id."""
     return next((me for me in monthly if service_id in me.services), None)
 
@@ -132,7 +133,7 @@ class MijnIstaSensor(CoordinatorEntity, SensorEntity):
             return None
         try:
             return self._value_fn(customer)
-        except (KeyError, IndexError, TypeError, AttributeError):
+        except _SENSOR_ERRORS:
             return None
 
     @property
@@ -145,7 +146,7 @@ class MijnIstaSensor(CoordinatorEntity, SensorEntity):
             return {}
         try:
             return self._attrs_fn(customer)
-        except (KeyError, IndexError, TypeError, AttributeError):
+        except _SENSOR_ERRORS:
             return {}
 
     @property
@@ -160,7 +161,7 @@ class MijnIstaSensor(CoordinatorEntity, SensorEntity):
             return None
         try:
             return self._last_reset_fn(customer)
-        except (KeyError, IndexError, TypeError, AttributeError, ValueError):
+        except _SENSOR_ERRORS_EXT:
             return None
 
 
@@ -196,25 +197,31 @@ def _build_sensors(
                 unit,
                 dc,
                 SensorStateClass.TOTAL,
-                value_fn=lambda c, s=sid: c.annual[s].total_now  # type: ignore[misc]
-                if s in c.annual
-                else None,
-                attrs_fn=lambda c, s=sid: {  # type: ignore[misc]
-                    "period_start": c.annual[s].cur_meters[0].begin_date
-                    if c.annual[s].cur_meters
-                    else None,
-                    "period_end": c.annual[s].cur_meters[0].end_date
-                    if c.annual[s].cur_meters
-                    else None,
-                    "meters": [m.as_dict() for m in c.annual[s].cur_meters],
-                }
-                if s in c.annual
-                else {},
-                last_reset_fn=lambda c, s=sid: _parse_dt(  # type: ignore[misc]
-                    c.annual[s].cur_meters[0].begin_date
-                )
-                if s in c.annual and c.annual[s].cur_meters
-                else None,
+                value_fn=lambda c, s=sid: (
+                    c.annual[s].total_now  # type: ignore[misc]
+                    if s in c.annual
+                    else None
+                ),
+                attrs_fn=lambda c, s=sid: (
+                    {  # type: ignore[misc]
+                        "period_start": c.annual[s].cur_meters[0].begin_date
+                        if c.annual[s].cur_meters
+                        else None,
+                        "period_end": c.annual[s].cur_meters[0].end_date
+                        if c.annual[s].cur_meters
+                        else None,
+                        "meters": [m.as_dict() for m in c.annual[s].cur_meters],
+                    }
+                    if s in c.annual
+                    else {}
+                ),
+                last_reset_fn=lambda c, s=sid: (
+                    _parse_dt(  # type: ignore[misc]
+                        c.annual[s].cur_meters[0].begin_date
+                    )
+                    if s in c.annual and c.annual[s].cur_meters
+                    else None
+                ),
             )
         )
 
@@ -228,20 +235,26 @@ def _build_sensors(
                 unit,
                 dc,
                 SensorStateClass.TOTAL,
-                value_fn=lambda c, s=sid: c.annual[s].total_previous  # type: ignore[misc]
-                if s in c.annual
-                else None,
-                attrs_fn=lambda c, s=sid: {  # type: ignore[misc]
-                    "total_whole_year": c.annual[s].total_whole_previous,
-                    "meters": [m.as_dict() for m in c.annual[s].comp_meters],
-                }
-                if s in c.annual
-                else {},
-                last_reset_fn=lambda c, s=sid: _parse_dt(  # type: ignore[misc]
-                    c.annual[s].comp_meters[0].begin_date
-                )
-                if s in c.annual and c.annual[s].comp_meters
-                else None,
+                value_fn=lambda c, s=sid: (
+                    c.annual[s].total_previous  # type: ignore[misc]
+                    if s in c.annual
+                    else None
+                ),
+                attrs_fn=lambda c, s=sid: (
+                    {  # type: ignore[misc]
+                        "total_whole_year": c.annual[s].total_whole_previous,
+                        "meters": [m.as_dict() for m in c.annual[s].comp_meters],
+                    }
+                    if s in c.annual
+                    else {}
+                ),
+                last_reset_fn=lambda c, s=sid: (
+                    _parse_dt(  # type: ignore[misc]
+                        c.annual[s].comp_meters[0].begin_date
+                    )
+                    if s in c.annual and c.annual[s].comp_meters
+                    else None
+                ),
             )
         )
 
@@ -255,9 +268,11 @@ def _build_sensors(
                 PERCENTAGE,
                 None,
                 SensorStateClass.MEASUREMENT,
-                value_fn=lambda c, s=sid: c.annual[s].diff_pct  # type: ignore[misc]
-                if s in c.annual
-                else None,
+                value_fn=lambda c, s=sid: (
+                    c.annual[s].diff_pct  # type: ignore[misc]
+                    if s in c.annual
+                    else None
+                ),
             )
         )
 
@@ -286,38 +301,44 @@ def _build_sensors(
                 unit,
                 dc,
                 SensorStateClass.TOTAL,
-                value_fn=lambda c, s=sid, mid=meter.meter_id: next(  # type: ignore[misc]
-                    (
-                        m.c_value
-                        for m in c.annual[s].cur_meters
-                        if m.meter_id == mid
-                    ),
-                    None,
-                )
-                if s in c.annual
-                else None,
-                attrs_fn=lambda c, s=sid, mid=meter.meter_id: next(  # type: ignore[misc]
-                    (
-                        m.as_dict()
-                        for m in c.annual[s].cur_meters
-                        if m.meter_id == mid
-                    ),
-                    {},
-                )
-                if s in c.annual
-                else {},
-                last_reset_fn=lambda c, s=sid, mid=meter.meter_id: _parse_dt(  # type: ignore[misc]
-                    next(
+                value_fn=lambda c, s=sid, mid=meter.meter_id: (
+                    next(  # type: ignore[misc]
                         (
-                            m.begin_date
+                            m.c_value
                             for m in c.annual[s].cur_meters
                             if m.meter_id == mid
                         ),
-                        "",
+                        None,
                     )
-                )
-                if s in c.annual
-                else None,
+                    if s in c.annual
+                    else None
+                ),
+                attrs_fn=lambda c, s=sid, mid=meter.meter_id: (
+                    next(  # type: ignore[misc]
+                        (
+                            m.as_dict()
+                            for m in c.annual[s].cur_meters
+                            if m.meter_id == mid
+                        ),
+                        {},
+                    )
+                    if s in c.annual
+                    else {}
+                ),
+                last_reset_fn=lambda c, s=sid, mid=meter.meter_id: (
+                    _parse_dt(  # type: ignore[misc]
+                        next(
+                            (
+                                m.begin_date
+                                for m in c.annual[s].cur_meters
+                                if m.meter_id == mid
+                            ),
+                            "",
+                        )
+                    )
+                    if s in c.annual
+                    else None
+                ),
             )
             for meter in annual.cur_meters
         )
@@ -336,9 +357,7 @@ def _build_sensors(
         unit = _ha_unit(svc.unit) if svc else None
         dc = _ha_device_class(svc.unit) if svc else None
         label = (
-            _translate_service(svc.description, ha_lang)
-            if svc
-            else f"Service {sid}"
+            _translate_service(svc.description, ha_lang) if svc else f"Service {sid}"
         )
 
         # Monthly total (most recent month with data, prior months in attributes)
@@ -380,7 +399,7 @@ def _build_sensors(
                     else {}
                 ),
                 last_reset_fn=lambda c, s=sid: (  # type: ignore[misc]
-                    datetime(me.year, me.month, 1, tzinfo=timezone.utc)
+                    datetime(me.year, me.month, 1, tzinfo=UTC)
                     if (me := _find_month(c.monthly, s)) is not None
                     else None
                 ),
@@ -445,7 +464,7 @@ def _build_sensors(
                     else {}
                 ),
                 last_reset_fn=lambda c, s=sid: (  # type: ignore[misc]
-                    datetime(me.year, me.month, 1, tzinfo=timezone.utc)
+                    datetime(me.year, me.month, 1, tzinfo=UTC)
                     if (me := _find_month(c.monthly, s)) is not None
                     else None
                 ),
