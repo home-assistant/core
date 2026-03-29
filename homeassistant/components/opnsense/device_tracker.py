@@ -73,7 +73,7 @@ async def async_setup_entry(
                     entity.mark_disconnected()
 
             if new_entities:
-                async_add_entities(new_entities)
+                async_add_entities(new_entities, True)
 
     # Initial scan
     await _async_update_devices()
