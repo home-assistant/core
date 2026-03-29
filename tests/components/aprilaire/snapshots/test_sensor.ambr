@@ -233,8 +233,8 @@
     'area_id': None,
     'capabilities': dict({
       'options': list([
-        'off',
         'idle',
+        'off',
         'on',
       ]),
     }),
@@ -274,8 +274,8 @@
       'device_class': 'enum',
       'friendly_name': 'Test Thermostat',
       'options': list([
-        'off',
         'idle',
+        'off',
         'on',
       ]),
     }),
@@ -295,8 +295,8 @@
     'area_id': None,
     'capabilities': dict({
       'options': list([
-        'off',
         'idle',
+        'off',
         'on',
       ]),
     }),
@@ -336,8 +336,8 @@
       'device_class': 'enum',
       'friendly_name': 'Test Thermostat',
       'options': list([
-        'off',
         'idle',
+        'off',
         'on',
       ]),
     }),
@@ -357,8 +357,8 @@
     'area_id': None,
     'capabilities': dict({
       'options': list([
-        'off',
         'idle',
+        'off',
         'on',
       ]),
     }),
@@ -398,8 +398,8 @@
       'device_class': 'enum',
       'friendly_name': 'Test Thermostat',
       'options': list([
-        'off',
         'idle',
+        'off',
         'on',
       ]),
     }),
@@ -419,8 +419,8 @@
     'area_id': None,
     'capabilities': dict({
       'options': list([
-        'off',
         'idle',
+        'off',
         'on',
       ]),
     }),
@@ -460,8 +460,8 @@
       'device_class': 'enum',
       'friendly_name': 'Test Thermostat',
       'options': list([
-        'off',
         'idle',
+        'off',
         'on',
       ]),
     }),
