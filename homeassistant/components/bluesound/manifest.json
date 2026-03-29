@@ -7,7 +7,7 @@
   "documentation": "https://www.home-assistant.io/integrations/bluesound",
   "integration_type": "device",
   "iot_class": "local_polling",
-  "requirements": ["pyblu==2.0.5"],
+  "requirements": ["pyblu==2.0.6"],
   "zeroconf": [
     {
       "type": "_musc._tcp.local."
