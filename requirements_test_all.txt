@@ -2195,7 +2195,7 @@ python-duco-client==0.3.0
 python-ecobee-api==0.3.2
 
 # homeassistant.components.eveonline
-python-eveonline==0.2.2
+python-eveonline==0.4.0
 
 # homeassistant.components.fully_kiosk
 python-fullykiosk==0.0.15
