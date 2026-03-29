@@ -167,6 +167,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     cache: dict[str, tuple[str, str | None, template.Template | None]] = {}
 
     for name, command in conf.items():
+        if name == SERVICE_RELOAD:
+            _LOGGER.warning("Skipping shell_command entry '%s': name is reserved", name)
+            continue
         hass.services.async_register(
             DOMAIN,
             name,
@@ -193,6 +196,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 hass.services.async_remove(DOMAIN, svc)
         cache.clear()
         for name, command in new_conf.items():
+            if name == SERVICE_RELOAD:
+                _LOGGER.warning(
+                    "Skipping shell_command entry '%s': name is reserved", name
+                )
+                continue
             hass.services.async_register(
                 DOMAIN,
                 name,
