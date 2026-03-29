@@ -73,7 +73,7 @@ async def async_setup_entry(
                     entity.mark_disconnected()
 
             if new_entities:
-                async_add_entities(new_entities, True)
+                async_add_entities(new_entities)
 
     # Initial scan
     await _async_update_devices()
@@ -87,8 +87,13 @@ async def async_setup_entry(
 class OPNsenseDevice(ScannerEntity):
     """Representation of a device tracked via OPNsense."""
 
-    _attr_source_type = SourceType.ROUTER
     _attr_should_poll = False
+    _attr_source_type = SourceType.ROUTER
+
+    @property
+    def entity_registry_enabled_default(self) -> bool:
+        """Return if entity is enabled by default."""
+        return True
 
     def __init__(self, device: dict[str, Any], entry_id: str) -> None:
         """Initialize the device."""

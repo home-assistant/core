@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock
 
 from homeassistant.components.opnsense.const import (
     CONF_API_SECRET,
@@ -35,21 +35,11 @@ ARP_RESPONSE = [
 ]
 
 
-def _mock_client(
-    arp_data: list | None = None,
-    interfaces_data: dict | None = None,
-) -> AsyncMock:
-    """Create a mock OPNsenseClient."""
-    client = AsyncMock()
-    client.get_arp = AsyncMock(return_value=arp_data or [])
-    if interfaces_data is not None:
-        client.get_interfaces = AsyncMock(return_value=interfaces_data)
-    return client
-
-
-async def test_setup_entry_creates_device_entities(hass: HomeAssistant) -> None:
+async def test_setup_entry_creates_device_entities(
+    hass: HomeAssistant, mock_opnsense_client: AsyncMock
+) -> None:
     """Test that setting up a config entry creates device tracker entities."""
-    mock_client = _mock_client(ARP_RESPONSE)
+    mock_opnsense_client.get_arp = AsyncMock(return_value=ARP_RESPONSE)
 
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -63,12 +53,8 @@ async def test_setup_entry_creates_device_entities(hass: HomeAssistant) -> None:
     )
     entry.add_to_hass(hass)
 
-    with patch(
-        "homeassistant.components.opnsense.OPNsenseClient",
-        return_value=mock_client,
-    ):
-        await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done(wait_background_tasks=True)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     entity_registry = er.async_get(hass)
     entities = er.async_entries_for_config_entry(entity_registry, entry.entry_id)
@@ -83,7 +69,9 @@ async def test_setup_entry_creates_device_entities(hass: HomeAssistant) -> None:
     assert device_2.state == STATE_HOME
 
 
-async def test_setup_entry_filters_by_interface(hass: HomeAssistant) -> None:
+async def test_setup_entry_filters_by_interface(
+    hass: HomeAssistant, mock_opnsense_client: AsyncMock
+) -> None:
     """Test that tracker interfaces filter ARP results."""
     arp_mixed = [
         *ARP_RESPONSE,
@@ -96,7 +84,7 @@ async def test_setup_entry_filters_by_interface(hass: HomeAssistant) -> None:
             "manufacturer": "Test",
         },
     ]
-    mock_client = _mock_client(arp_mixed, {"igb0": "WAN", "igb1": "LAN"})
+    mock_opnsense_client.get_arp = AsyncMock(return_value=arp_mixed)
 
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -110,17 +98,11 @@ async def test_setup_entry_filters_by_interface(hass: HomeAssistant) -> None:
     )
     entry.add_to_hass(hass)
 
-    with patch(
-        "homeassistant.components.opnsense.OPNsenseClient",
-        return_value=mock_client,
-    ):
-        await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done(wait_background_tasks=True)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     entity_registry = er.async_get(hass)
     entities = er.async_entries_for_config_entry(entity_registry, entry.entry_id)
-
-    # Only WAN device should be tracked
     assert len(entities) == 1
 
     device = hass.states.get("device_tracker.wandevice")
