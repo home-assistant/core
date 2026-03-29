@@ -491,7 +491,7 @@ LOCK_ATTRS = [{"supported_features": 1}, {}]
 NOTIFY_ATTRS = [{"supported_features": 0}, {}]
 MEDIA_PLAYER_ATTRS = [{"supported_features": 0}, {}]
 SENSOR_ATTRS = [{"icon": "mdi:calculator"}, {"max_entity_id": "sensor.input_two"}]
-VALVE_ATTRS = [{"supported_features": 0}, {}]
+VALVE_ATTRS = [{"supported_features": 0}, {"is_closed": False}]
 
 
 @pytest.mark.parametrize(
