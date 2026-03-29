@@ -39,9 +39,7 @@ pytestmark = [
 ]
 
 
-def _get_entity_id(
-    entity_registry: er.EntityRegistry, unique_id_suffix: str
-) -> str:
+def _get_entity_id(entity_registry: er.EntityRegistry, unique_id_suffix: str) -> str:
     """Get entity_id from the entity registry by unique_id suffix."""
     entry = entity_registry.async_get_entity_id(
         CLIMATE_DOMAIN, "aprilaire", f"{MOCK_MAC}_{unique_id_suffix}"

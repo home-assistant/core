@@ -1,7 +1,5 @@
 """Tests for the Aprilaire sensor platform."""
 
-from unittest.mock import MagicMock
-
 from pyaprilaire.const import Attribute
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -59,9 +57,7 @@ async def test_sensor_unavailable_when_disconnected(
     base_coordinator_data[Attribute.RECONNECTING] = False
     await setup_integration(hass, mock_config_entry)
 
-    entity_id = _get_entity_id(
-        entity_registry, "indoor_humidity_controlling_sensor"
-    )
+    entity_id = _get_entity_id(entity_registry, "indoor_humidity_controlling_sensor")
     assert entity_id is not None
     state = hass.states.get(entity_id)
     assert state is not None
@@ -80,8 +76,6 @@ async def test_sensor_not_created_when_status_missing(
     await setup_integration(hass, mock_config_entry)
 
     assert (
-        _get_entity_id(
-            entity_registry, "outdoor_temperature_controlling_sensor"
-        )
+        _get_entity_id(entity_registry, "outdoor_temperature_controlling_sensor")
         is None
     )

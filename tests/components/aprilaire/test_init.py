@@ -1,6 +1,6 @@
 """Tests for the Aprilaire integration setup."""
 
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import MagicMock, patch
 
 from pyaprilaire.const import Attribute
 import pytest
@@ -8,10 +8,9 @@ import pytest
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
-from .conftest import MOCK_MAC, setup_integration
+from .conftest import setup_integration
 
 from tests.common import MockConfigEntry
-
 
 pytestmark = [
     pytest.mark.usefixtures("mock_aprilaire"),
