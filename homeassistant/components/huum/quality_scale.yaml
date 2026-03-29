@@ -44,8 +44,12 @@ rules:
   # Gold
   devices: done
   diagnostics: done
-  discovery: todo
-  discovery-update-info: todo
+  discovery:
+    status: exempt
+    comment: Does not expose any good discovery points (no mac-fingerprinting, mdns, port scanning, SSDP, ARP)
+  discovery-update-info:
+    status: exempt
+    comment: Does not expose any good discovery points (no mac-fingerprinting, mdns, port scanning, SSDP, ARP)
   docs-data-update: done
   docs-examples: todo
   docs-known-limitations: done
