@@ -1,5 +1,7 @@
 """Tests for the OPNsense config flow."""
 
+from __future__ import annotations
+
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import aiohttp
@@ -14,6 +16,8 @@ from homeassistant.const import CONF_API_KEY, CONF_URL, CONF_VERIFY_SSL
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
+from tests.common import MockConfigEntry
+
 MOCK_USER_INPUT = {
     CONF_URL: "https://opnsense.local/api",
     CONF_API_KEY: "test_key",
@@ -24,11 +28,23 @@ MOCK_USER_INPUT = {
 
 
 def _mock_session_success() -> MagicMock:
-    """Return a mock session that succeeds on get."""
+    """Return a mock session where get() returns an async context manager."""
     mock_resp = MagicMock()
     mock_resp.raise_for_status = MagicMock()
+
+    mock_ctx = AsyncMock()
+    mock_ctx.__aenter__ = AsyncMock(return_value=mock_resp)
+    mock_ctx.__aexit__ = AsyncMock(return_value=False)
+
     mock_session = MagicMock()
-    mock_session.get = AsyncMock(return_value=mock_resp)
+    mock_session.get = MagicMock(return_value=mock_ctx)
+    return mock_session
+
+
+def _mock_session_error(error: Exception) -> MagicMock:
+    """Return a mock session where get() raises an error."""
+    mock_session = MagicMock()
+    mock_session.get = MagicMock(side_effect=error)
     return mock_session
 
 
@@ -74,12 +90,19 @@ async def test_user_form_success(hass: HomeAssistant) -> None:
 
 async def test_user_form_invalid_auth(hass: HomeAssistant) -> None:
     """Test we handle invalid auth."""
-    mock_session = MagicMock()
-    mock_session.get = AsyncMock(
+    mock_resp = MagicMock()
+    mock_resp.raise_for_status = MagicMock(
         side_effect=aiohttp.ClientResponseError(
             request_info=MagicMock(), history=(), status=403, message="Forbidden"
         )
     )
+
+    mock_ctx = AsyncMock()
+    mock_ctx.__aenter__ = AsyncMock(return_value=mock_resp)
+    mock_ctx.__aexit__ = AsyncMock(return_value=False)
+
+    mock_session = MagicMock()
+    mock_session.get = MagicMock(return_value=mock_ctx)
 
     with patch(
         "homeassistant.components.opnsense.config_flow.async_get_clientsession",
@@ -97,8 +120,7 @@ async def test_user_form_invalid_auth(hass: HomeAssistant) -> None:
 
 async def test_user_form_cannot_connect(hass: HomeAssistant) -> None:
     """Test we handle connection error."""
-    mock_session = MagicMock()
-    mock_session.get = AsyncMock(side_effect=aiohttp.ClientError())
+    mock_session = _mock_session_error(aiohttp.ClientError())
 
     with patch(
         "homeassistant.components.opnsense.config_flow.async_get_clientsession",
@@ -116,21 +138,14 @@ async def test_user_form_cannot_connect(hass: HomeAssistant) -> None:
 
 async def test_user_form_already_configured(hass: HomeAssistant) -> None:
     """Test we abort if already configured."""
-    entry = config_entries.ConfigEntry(
+    entry = MockConfigEntry(
+        domain=DOMAIN,
         data={
             CONF_URL: "https://opnsense.local/api",
             CONF_API_KEY: "test_key",
             CONF_API_SECRET: "test_secret",
             CONF_VERIFY_SSL: False,
         },
-        discovery_keys={},
-        domain=DOMAIN,
-        minor_version=1,
-        options={},
-        source=config_entries.SOURCE_USER,
-        title="https://opnsense.local/api",
-        unique_id=None,
-        version=1,
     )
     entry.add_to_hass(hass)
 
