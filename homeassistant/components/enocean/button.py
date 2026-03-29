@@ -20,6 +20,8 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from . import EnOceanConfigEntry
 from .entity import EnOceanEntity
 
+PARALLEL_UPDATES = 1
+
 _INSTRUCTABLE_TO_INSTRUCTION: dict[Instructable, type[Instruction]] = {
     Instructable.QUERY_ACTUATOR_STATUS: QueryActuatorStatus,
     Instructable.QUERY_ACTUATOR_MEASUREMENT: QueryActuatorMeasurement,

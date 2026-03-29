@@ -19,6 +19,8 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from . import EnOceanConfigEntry
 from .entity import LIB_ENTITY_CATEGORY_MAP, EnOceanEntity
 
+PARALLEL_UPDATES = 0
+
 _OBSERVABLE_TO_DEVICE_CLASS: dict[Observable, SensorDeviceClass] = {
     Observable.TEMPERATURE: SensorDeviceClass.TEMPERATURE,
     Observable.HUMIDITY: SensorDeviceClass.HUMIDITY,
@@ -40,7 +42,9 @@ async def async_setup_entry(
 ) -> None:
     """Set up entry."""
     gateway: Gateway = config_entry.runtime_data
-    gateway_eurid: EURID = gateway.eurid
+    gateway_eurid: EURID | None = gateway.eurid
+    if gateway_eurid is None:
+        return
 
     entities: list[EnOceanSensor] = []
 

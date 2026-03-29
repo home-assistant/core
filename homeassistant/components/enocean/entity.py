@@ -65,6 +65,8 @@ class EnOceanEntity(Entity):
         if self.address == gateway_eurid:
             return DeviceInfo(identifiers={(DOMAIN, str(gateway_eurid))})
         spec = self.gateway.device_spec(self.address)
+        if spec is None:
+            return None
 
         dt = spec.device_type
         manufacturer = str(dt.manufacturer) if dt.manufacturer is not None else None

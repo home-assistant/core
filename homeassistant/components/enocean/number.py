@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from enocean_async import EURID, EntityType, Gateway, NumberRange
+from enocean_async import EURID, Gateway, NumberRange
 
 from homeassistant.components.number import NumberMode, RestoreNumber
 from homeassistant.const import EntityCategory
@@ -11,6 +11,8 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import EnOceanConfigEntry
 from .entity import LIB_ENTITY_CATEGORY_MAP, EnOceanEntity
+
+PARALLEL_UPDATES = 1
 
 
 async def async_setup_entry(
@@ -31,7 +33,7 @@ async def async_setup_entry(
         )
         for eurid, spec in gateway.device_specs.items()
         for entity in spec.entities
-        if entity.entity_type == EntityType.CONFIG_NUMBER
+        if isinstance(entity.config_spec, NumberRange)
     )
 
 

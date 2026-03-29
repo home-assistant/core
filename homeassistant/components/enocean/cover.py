@@ -29,6 +29,8 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from . import EnOceanConfigEntry
 from .entity import EnOceanEntity
 
+PARALLEL_UPDATES = 1
+
 _COVER_STATE_TO_HA = {
     "opening": (True, False),
     "closing": (False, True),

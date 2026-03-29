@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from enocean_async import EURID, EntityType, EnumOptions, Gateway
+from enocean_async import EURID, EnumOptions, Gateway
 
 from homeassistant.components.select import SelectEntity
 from homeassistant.const import EntityCategory
@@ -12,6 +12,8 @@ from homeassistant.helpers.restore_state import RestoreEntity
 
 from . import EnOceanConfigEntry
 from .entity import LIB_ENTITY_CATEGORY_MAP, EnOceanEntity
+
+PARALLEL_UPDATES = 1
 
 
 async def async_setup_entry(
@@ -32,7 +34,7 @@ async def async_setup_entry(
         )
         for eurid, spec in gateway.device_specs.items()
         for entity in spec.entities
-        if entity.entity_type == EntityType.CONFIG_ENUM
+        if isinstance(entity.config_spec, EnumOptions)
     )
 
 

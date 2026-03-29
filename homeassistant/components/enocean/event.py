@@ -9,6 +9,8 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from . import EnOceanConfigEntry
 from .entity import EnOceanEntity
 
+PARALLEL_UPDATES = 0
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -29,7 +31,7 @@ async def async_setup_entry(
 class EnOceanEvent(EnOceanEntity, EventEntity):
     """Representation of an EnOcean button/rocker as an event entity."""
 
-    _attr_event_types = Observable.BUTTON_EVENT.possible_values
+    _attr_event_types = Observable.BUTTON_EVENT.possible_values or []
 
     def _update_from_observation(self, observation: Observation) -> None:
         """Handle an incoming observation."""
