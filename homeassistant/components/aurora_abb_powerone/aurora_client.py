@@ -132,7 +132,7 @@ class AuroraClient:
             energy_wh = self._client.cumulated_energy(5)
             [alarm, *_] = self._client.alarms()
         except AuroraTimeoutError as error:
-            raise AuroraClientTimeoutError from error
+            raise AuroraClientTimeoutError(str(error)) from error
         except (SerialException, AuroraError) as error:
             raise AuroraClientError(str(error)) from error
         finally:
