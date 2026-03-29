@@ -360,7 +360,6 @@ async def _compile_filesystem_sensors(
                 icon="mdi:harddisk",
                 state_class=SensorStateClass.MEASUREMENT,
                 entity_registry_enabled_default=enabled_default,
-                # entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
             ),
         )
         entities.append(entity)
@@ -558,7 +557,6 @@ async def _compile_interface_sensors(
                     suggested_display_precision=suggested_display_precision,
                     suggested_unit_of_measurement=suggested_unit_of_measurement,
                     entity_registry_enabled_default=enabled_default,
-                    # entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
                 ),
             )
             entities.append(entity)
@@ -588,7 +586,6 @@ async def _compile_gateway_sensors(
 
             if prop_name in {"delay", "stddev"}:
                 native_unit_of_measurement = UnitOfTime.MILLISECONDS
-                # device_class = SensorDeviceClass.DURATION
 
             if prop_name == "status":
                 icon = "mdi:check-network"
@@ -606,7 +603,6 @@ async def _compile_gateway_sensors(
                     icon=icon,
                     state_class=state_class,
                     entity_registry_enabled_default=enabled_default,
-                    # entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
                 ),
             )
             entities.append(entity)
@@ -668,7 +664,6 @@ async def _compile_dhcp_leases_sensors(
                 icon="mdi:devices",
                 state_class=SensorStateClass.MEASUREMENT,
                 entity_registry_enabled_default=False,
-                # entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
             ),
         )
         entities.append(entity)
@@ -684,7 +679,6 @@ async def _compile_dhcp_leases_sensors(
             icon="mdi:devices",
             state_class=SensorStateClass.MEASUREMENT,
             entity_registry_enabled_default=True,
-            # entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
         ),
     )
     entities.append(entity)

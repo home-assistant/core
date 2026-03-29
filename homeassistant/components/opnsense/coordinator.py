@@ -81,7 +81,6 @@ class OPNsenseDataUpdateCoordinator(DataUpdateCoordinator):
             "Setting up %sCoordinator",
             "DT " if self._device_tracker_coordinator else "",
         )
-        # await self._client.get_host_firmware_version() # Already triggered in __init__.py async_setup_entry
 
     async def _get_states(self, categories: list) -> dict[str, Any]:
         state: dict[str, Any] = {}

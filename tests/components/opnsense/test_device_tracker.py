@@ -1,4 +1,4 @@
-"""Unit tests for the device_tracker component of the the OPNsense integration integration.
+"""Unit tests for the device_tracker component of the OPNsense integration integration.
 
 These tests cover setup, coordinator update handling, restore state behavior,
 and device info formatting for the integration's device tracker entities.
