@@ -261,7 +261,7 @@ class MqttStateVacuum(MqttEntity, StateVacuumEntity):
         ).async_render
         if self._clean_segments_command_topic is None:
             # Clear any previously configured clean-segments handling when the
-            # option is absent in the new config af a discovery update.
+            # option is absent in the new config after a discovery update.
             self._attr_supported_features &= ~VacuumEntityFeature.CLEAN_AREA
         if CONF_CLEAN_SEGMENTS_COMMAND_TOPIC in config:
             self._clean_segments_command_topic = config[
@@ -306,8 +306,8 @@ class MqttStateVacuum(MqttEntity, StateVacuumEntity):
             )
             del payload[STATE]
         if (
-            self._clean_segments_command_topic is not None
-            and (segments_payload := payload.get(SEGMENTS))
+            (segments_payload := payload.pop(SEGMENTS, None))
+            and self._clean_segments_command_topic is not None
             and isinstance(segments_payload, dict)
             and (
                 segments := [
@@ -322,7 +322,6 @@ class MqttStateVacuum(MqttEntity, StateVacuumEntity):
                 s.id: s for s in last_seen
             } != {s.id: s for s in self._segments}:
                 self.async_create_segments_issue()
-            del payload[SEGMENTS]
 
         self._update_state_attributes(payload)
 

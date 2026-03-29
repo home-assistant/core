@@ -529,7 +529,7 @@ async def test_removing_clean_segments_command_topic_resets_feature(
     hass: HomeAssistant,
     mqtt_mock_entry: MqttMockHAClientGenerator,
 ) -> None:
-    """Test the clwean area feaure is reset if the vacuum is reconfigured.
+    """Test the clean area feature is reset if the vacuum is reconfigured.
 
     The `clean_segments_command_topic` is required to support clean area support.
     When this option is removed, the clean area feature should be reset.
