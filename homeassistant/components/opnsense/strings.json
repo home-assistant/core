@@ -4,11 +4,23 @@
       "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"
     },
     "error": {
-      "cannot_connect": "Failed to connect",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_tracker_interface": "One or more tracker interfaces are invalid",
-      "unknown": "Unexpected error"
+      "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "step": {
+      "reauth_confirm": {
+        "data": {
+          "api_key": "API Key",
+          "api_secret": "API Secret"
+        },
+        "data_description": {
+          "api_key": "Enter your updated OPNsense API key",
+          "api_secret": "Enter your updated OPNsense API secret"
+        },
+        "description": "Update your API credentials for OPNsense.",
+        "title": "Reauthenticate OPNsense"
+      },
       "user": {
         "data": {
           "api_key": "API Key",
@@ -16,6 +28,13 @@
           "tracker_interfaces": "Tracker Interfaces (comma or newline separated)",
           "url": "URL",
           "verify_ssl": "Verify SSL"
+        },
+        "data_description": {
+          "api_key": "The API key for your OPNsense user",
+          "api_secret": "The API secret for your OPNsense user",
+          "tracker_interfaces": "Optional interfaces to track, separated by commas or new lines",
+          "url": "The URL to your OPNsense API endpoint",
+          "verify_ssl": "Enable to verify the TLS certificate from your OPNsense instance"
         },
         "description": "Tracker interfaces are optional. Leave blank to track all interfaces.",
         "title": "Connect to OPNsense"

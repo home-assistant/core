@@ -30,9 +30,14 @@ async def async_get_scanner(
         and discovery_info["entry_id"] in opnsense_data
     ):
         entry_data = opnsense_data[discovery_info["entry_id"]]
-    else:
-        # Backward compatibility for any legacy test/setup path.
+    # Backward compatibility for legacy setup paths without discovery_info.
+    elif (
+        CONF_INTERFACE_CLIENT in opnsense_data
+        and CONF_TRACKER_INTERFACES in opnsense_data
+    ):
         entry_data = opnsense_data
+    else:
+        entry_data = next(iter(opnsense_data.values()))
 
     return OPNsenseDeviceScanner(
         entry_data[CONF_INTERFACE_CLIENT],

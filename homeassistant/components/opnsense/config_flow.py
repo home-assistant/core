@@ -198,6 +198,54 @@ class OPNsenseConfigFlow(ConfigFlow, domain=DOMAIN):
             data=data,
         )
 
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
+        """Handle configuration by re-auth."""
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(
+        self, user_input: MutableMapping[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Dialog that informs the user that reauth is required."""
+        errors: dict[str, str] = {}
+        entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
+
+        if entry is None:
+            return self.async_abort(reason="unknown")
+
+        if user_input is not None:
+            data = {
+                **entry.data,
+                CONF_API_KEY: user_input[CONF_API_KEY],
+                CONF_API_SECRET: user_input[CONF_API_SECRET],
+            }
+
+            try:
+                validated_data = await _async_validate_input(self.hass, data)
+            except CannotConnect:
+                errors["base"] = "cannot_connect"
+            except InvalidTrackerInterface:
+                errors["base"] = "invalid_tracker_interface"
+            except Exception:  # pragma: no cover - defensive fallback
+                _LOGGER.exception("Unexpected exception")
+                errors["base"] = "unknown"
+            else:
+                self.hass.config_entries.async_update_entry(entry, data=validated_data)
+                await self.hass.config_entries.async_reload(entry.entry_id)
+                return self.async_abort(reason="reauth_successful")
+
+        return self.async_show_form(
+            step_id="reauth_confirm",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(CONF_API_KEY): cv.string,
+                    vol.Required(CONF_API_SECRET): cv.string,
+                }
+            ),
+            errors=errors,
+        )
+
 
 class CannotConnect(Exception):
     """Error to indicate we cannot connect."""

@@ -3,18 +3,24 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
+from http import HTTPStatus
 import logging
 from typing import Any, cast
 
 from pyopnsense import diagnostics
 from pyopnsense.exceptions import APIException
+from requests import RequestException
 import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_API_KEY, CONF_URL, CONF_VERIFY_SSL, Platform
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    ConfigEntryError,
+    ConfigEntryNotReady,
+)
 from homeassistant.helpers import (
     config_validation as cv,
     discovery,
@@ -77,13 +83,26 @@ async def _async_import_from_yaml(
         and result.get("reason") != "already_configured"
     ):
         _LOGGER.warning("Failed to import OPNsense YAML config: %s", result)
+        ir.async_create_issue(
+            hass,
+            HOMEASSISTANT_DOMAIN,
+            f"yaml_import_issue_{DOMAIN}",
+            is_fixable=True,
+            issue_domain=DOMAIN,
+            severity=ir.IssueSeverity.ERROR,
+            translation_key="yaml_import_issue",
+            translation_placeholders={
+                "domain": DOMAIN,
+                "integration_title": INTEGRATION_TITLE,
+            },
+        )
         return
 
     ir.async_create_issue(
         hass,
         HOMEASSISTANT_DOMAIN,
         f"deprecated_yaml_{DOMAIN}",
-        breaks_in_ha_version="2027.1.0",
+        breaks_in_ha_version="2026.10.0",
         is_fixable=False,
         issue_domain=DOMAIN,
         severity=ir.IssueSeverity.WARNING,
@@ -119,6 +138,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     try:
         await hass.async_add_executor_job(interfaces_client.get_arp)
     except APIException as err:
+        if err.status_code in {HTTPStatus.UNAUTHORIZED, HTTPStatus.FORBIDDEN}:
+            raise ConfigEntryAuthFailed(
+                "Authentication failed while connecting to OPNsense API endpoint"
+            ) from err
+        raise ConfigEntryError(
+            f"Failure while connecting to OPNsense API endpoint: {err}"
+        ) from err
+    except RequestException as err:
         raise ConfigEntryNotReady(
             "Failure while connecting to OPNsense API endpoint"
         ) from err
@@ -133,13 +160,21 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 lambda: list(netinsight_client.get_interfaces().values())
             )
         except APIException as err:
+            if err.status_code in {HTTPStatus.UNAUTHORIZED, HTTPStatus.FORBIDDEN}:
+                raise ConfigEntryAuthFailed(
+                    "Authentication failed while validating OPNsense tracker interfaces"
+                ) from err
+            raise ConfigEntryError(
+                f"Failure while validating OPNsense tracker interfaces: {err}"
+            ) from err
+        except RequestException as err:
             raise ConfigEntryNotReady(
                 "Failure while validating OPNsense tracker interfaces"
             ) from err
 
         for interface in tracker_interfaces:
             if interface not in interfaces:
-                raise ConfigEntryNotReady(
+                raise ConfigEntryError(
                     f"Specified OPNsense tracker interface {interface} is not found"
                 )
 

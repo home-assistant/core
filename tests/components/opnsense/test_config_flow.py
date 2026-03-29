@@ -8,6 +8,7 @@ import pytest
 
 from homeassistant.components import opnsense
 from homeassistant.components.opnsense import config_flow
+from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
 from homeassistant.const import CONF_API_KEY, CONF_URL, CONF_VERIFY_SSL
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -18,8 +19,6 @@ async def test_async_step_user_create_entry(
     hass: HomeAssistant, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """User step creates an entry with normalized tracker interfaces."""
-    flow = config_flow.OPNsenseConfigFlow()
-    flow.hass = hass
     monkeypatch.setattr(
         config_flow,
         "_async_validate_input",
@@ -34,14 +33,16 @@ async def test_async_step_user_create_entry(
         ),
     )
 
-    result = await flow.async_step_user(
-        {
+    result = await hass.config_entries.flow.async_init(
+        config_flow.DOMAIN,
+        context={"source": SOURCE_USER},
+        data={
             CONF_URL: "https://router.local",
             CONF_API_KEY: "key",
             config_flow.CONF_API_SECRET: "secret",
             CONF_VERIFY_SSL: False,
             config_flow.CONF_TRACKER_INTERFACES: "LAN, OPT1",
-        }
+        },
     )
 
     assert result["type"] == FlowResultType.CREATE_ENTRY
@@ -53,22 +54,22 @@ async def test_async_step_user_invalid_interface(
     hass: HomeAssistant, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """User step returns an error when tracker interface validation fails."""
-    flow = config_flow.OPNsenseConfigFlow()
-    flow.hass = hass
     monkeypatch.setattr(
         config_flow,
         "_async_validate_input",
         AsyncMock(side_effect=config_flow.InvalidTrackerInterface),
     )
 
-    result = await flow.async_step_user(
-        {
+    result = await hass.config_entries.flow.async_init(
+        config_flow.DOMAIN,
+        context={"source": SOURCE_USER},
+        data={
             CONF_URL: "https://router.local",
             CONF_API_KEY: "key",
             config_flow.CONF_API_SECRET: "secret",
             CONF_VERIFY_SSL: False,
             config_flow.CONF_TRACKER_INTERFACES: "LAN",
-        }
+        },
     )
 
     assert result["type"] == FlowResultType.FORM
@@ -77,17 +78,16 @@ async def test_async_step_user_invalid_interface(
 
 async def test_async_step_import_normalizes_interfaces(hass: HomeAssistant) -> None:
     """Import step normalizes tracker interfaces and creates an entry."""
-    flow = config_flow.OPNsenseConfigFlow()
-    flow.hass = hass
-
-    result = await flow.async_step_import(
-        {
+    result = await hass.config_entries.flow.async_init(
+        config_flow.DOMAIN,
+        context={"source": SOURCE_IMPORT},
+        data={
             CONF_URL: "https://router.local/",
             CONF_API_KEY: "key",
             config_flow.CONF_API_SECRET: "secret",
             CONF_VERIFY_SSL: False,
             config_flow.CONF_TRACKER_INTERFACES: ["LAN", "LAN", "OPT1"],
-        }
+        },
     )
 
     assert result["type"] == FlowResultType.CREATE_ENTRY
