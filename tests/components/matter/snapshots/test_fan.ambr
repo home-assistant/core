@@ -454,7 +454,7 @@
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
-    'supported_features': <FanEntityFeature: 56>,
+    'supported_features': <FanEntityFeature: 57>,
     'translation_key': 'fan',
     'unique_id': '00000000000004D2-0000000000000072-MatterNodeDevice-1-MatterFan-514-0',
     'unit_of_measurement': None,
@@ -464,13 +464,15 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'SL-RangeHood',
+      'percentage': 0,
+      'percentage_step': 1.0,
       'preset_mode': None,
       'preset_modes': list([
         'low',
         'medium',
         'high',
       ]),
-      'supported_features': <FanEntityFeature: 56>,
+      'supported_features': <FanEntityFeature: 57>,
     }),
     'context': <ANY>,
     'entity_id': 'fan.sl_rangehood',
