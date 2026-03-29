@@ -42,7 +42,7 @@ async def async_setup_entry(
 
     server_id = syncthing.server_id
     server_name = next(
-        device["name"]
+        device.get("name", server_id)
         for device in config["devices"]
         if device["deviceID"] == server_id
     )
