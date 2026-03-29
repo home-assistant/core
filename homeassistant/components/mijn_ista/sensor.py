@@ -197,13 +197,11 @@ def _build_sensors(
                 unit,
                 dc,
                 SensorStateClass.TOTAL,
-                value_fn=lambda c, s=sid: (
-                    c.annual[s].total_now  # type: ignore[misc]
-                    if s in c.annual
-                    else None
+                value_fn=lambda c, s=sid: (  # type: ignore[misc]
+                    c.annual[s].total_now if s in c.annual else None
                 ),
-                attrs_fn=lambda c, s=sid: (
-                    {  # type: ignore[misc]
+                attrs_fn=lambda c, s=sid: (  # type: ignore[misc]
+                    {
                         "period_start": c.annual[s].cur_meters[0].begin_date
                         if c.annual[s].cur_meters
                         else None,
@@ -215,10 +213,8 @@ def _build_sensors(
                     if s in c.annual
                     else {}
                 ),
-                last_reset_fn=lambda c, s=sid: (
-                    _parse_dt(  # type: ignore[misc]
-                        c.annual[s].cur_meters[0].begin_date
-                    )
+                last_reset_fn=lambda c, s=sid: (  # type: ignore[misc]
+                    _parse_dt(c.annual[s].cur_meters[0].begin_date)
                     if s in c.annual and c.annual[s].cur_meters
                     else None
                 ),
@@ -235,23 +231,19 @@ def _build_sensors(
                 unit,
                 dc,
                 SensorStateClass.TOTAL,
-                value_fn=lambda c, s=sid: (
-                    c.annual[s].total_previous  # type: ignore[misc]
-                    if s in c.annual
-                    else None
+                value_fn=lambda c, s=sid: (  # type: ignore[misc]
+                    c.annual[s].total_previous if s in c.annual else None
                 ),
-                attrs_fn=lambda c, s=sid: (
-                    {  # type: ignore[misc]
+                attrs_fn=lambda c, s=sid: (  # type: ignore[misc]
+                    {
                         "total_whole_year": c.annual[s].total_whole_previous,
                         "meters": [m.as_dict() for m in c.annual[s].comp_meters],
                     }
                     if s in c.annual
                     else {}
                 ),
-                last_reset_fn=lambda c, s=sid: (
-                    _parse_dt(  # type: ignore[misc]
-                        c.annual[s].comp_meters[0].begin_date
-                    )
+                last_reset_fn=lambda c, s=sid: (  # type: ignore[misc]
+                    _parse_dt(c.annual[s].comp_meters[0].begin_date)
                     if s in c.annual and c.annual[s].comp_meters
                     else None
                 ),
@@ -268,10 +260,8 @@ def _build_sensors(
                 PERCENTAGE,
                 None,
                 SensorStateClass.MEASUREMENT,
-                value_fn=lambda c, s=sid: (
-                    c.annual[s].diff_pct  # type: ignore[misc]
-                    if s in c.annual
-                    else None
+                value_fn=lambda c, s=sid: (  # type: ignore[misc]
+                    c.annual[s].diff_pct if s in c.annual else None
                 ),
             )
         )
@@ -301,8 +291,8 @@ def _build_sensors(
                 unit,
                 dc,
                 SensorStateClass.TOTAL,
-                value_fn=lambda c, s=sid, mid=meter.meter_id: (
-                    next(  # type: ignore[misc]
+                value_fn=lambda c, s=sid, mid=meter.meter_id: (  # type: ignore[misc]
+                    next(
                         (
                             m.c_value
                             for m in c.annual[s].cur_meters
@@ -313,8 +303,8 @@ def _build_sensors(
                     if s in c.annual
                     else None
                 ),
-                attrs_fn=lambda c, s=sid, mid=meter.meter_id: (
-                    next(  # type: ignore[misc]
+                attrs_fn=lambda c, s=sid, mid=meter.meter_id: (  # type: ignore[misc]
+                    next(
                         (
                             m.as_dict()
                             for m in c.annual[s].cur_meters
@@ -325,8 +315,8 @@ def _build_sensors(
                     if s in c.annual
                     else {}
                 ),
-                last_reset_fn=lambda c, s=sid, mid=meter.meter_id: (
-                    _parse_dt(  # type: ignore[misc]
+                last_reset_fn=lambda c, s=sid, mid=meter.meter_id: (  # type: ignore[misc]
+                    _parse_dt(
                         next(
                             (
                                 m.begin_date
