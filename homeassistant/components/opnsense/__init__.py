@@ -10,7 +10,7 @@ import voluptuous as vol
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_API_KEY, CONF_URL, CONF_VERIFY_SSL, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.typing import ConfigType
@@ -87,11 +87,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         interfaces = list(interfaces_resp.values())
         for interface in tracker_interfaces:
             if interface not in interfaces:
-                _LOGGER.error(
-                    "Specified OPNsense tracker interface %s is not found",
-                    interface,
+                raise ConfigEntryError(
+                    f"Specified OPNsense tracker interface {interface} is not found"
                 )
-                return False
 
     entry.runtime_data = {
         "client": client,

@@ -63,7 +63,7 @@ async def async_setup_entry(
                 if mac in tracked:
                     tracked[mac].update_from_arp(device)
                 else:
-                    entity = OPNsenseDevice(device)
+                    entity = OPNsenseDevice(device, config_entry.entry_id)
                     tracked[mac] = entity
                     new_entities.append(entity)
 
@@ -88,10 +88,12 @@ class OPNsenseDevice(ScannerEntity):
     """Representation of a device tracked via OPNsense."""
 
     _attr_source_type = SourceType.ROUTER
+    _attr_should_poll = False
 
-    def __init__(self, device: dict[str, Any]) -> None:
+    def __init__(self, device: dict[str, Any], entry_id: str) -> None:
         """Initialize the device."""
         self._mac: str = device["mac"]
+        self._entry_id = entry_id
         self._attr_hostname = device.get("hostname") or None
         self._attr_ip_address = device.get("ip")
         self._attr_mac_address = self._mac
@@ -105,7 +107,7 @@ class OPNsenseDevice(ScannerEntity):
     @property
     def unique_id(self) -> str:
         """Return a unique ID for this device."""
-        return self._mac
+        return f"{self._entry_id}_{self._mac}"
 
     @property
     def is_connected(self) -> bool:

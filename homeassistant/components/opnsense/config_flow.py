@@ -26,6 +26,7 @@ class OPNsenseConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         if user_input is not None:
+            user_input[CONF_URL] = user_input[CONF_URL].rstrip("/")
             self._async_abort_entries_match({CONF_URL: user_input[CONF_URL]})
 
             session = async_get_clientsession(
