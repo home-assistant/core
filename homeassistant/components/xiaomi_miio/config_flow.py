@@ -31,6 +31,7 @@ from .const import (
     CONF_MANUAL,
     DEFAULT_CLOUD_COUNTRY,
     DOMAIN,
+    MODEL_PET_FOUNTAIN_70M2,
     MODELS_ALL,
     MODELS_ALL_DEVICES,
     MODELS_GATEWAY,
@@ -42,6 +43,10 @@ from .device import ConnectXiaomiDevice
 from .typing import XiaomiMiioConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
+
+MODEL_TO_DEFAULT_NAME = {
+    MODEL_PET_FOUNTAIN_70M2: "Xiaomi Smart Pet Fountain 2",
+}
 
 DEVICE_SETTINGS = {
     vol.Required(CONF_TOKEN): vol.All(str, vol.Length(min=32, max=32)),
@@ -407,7 +412,7 @@ class XiaomiMiioFlowHandler(ConfigFlow, domain=DOMAIN):
             return self.async_update_reload_and_abort(existing_entry, data=data)
 
         if self.name is None:
-            self.name = self.model
+            self.name = MODEL_TO_DEFAULT_NAME.get(self.model, self.model)
 
         flow_type = None
         for gateway_model in MODELS_GATEWAY:

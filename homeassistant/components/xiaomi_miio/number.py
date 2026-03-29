@@ -12,6 +12,7 @@ from homeassistant.components.number import (
     DOMAIN as PLATFORM_DOMAIN,
     NumberEntity,
     NumberEntityDescription,
+    NumberMode,
 )
 from homeassistant.const import (
     CONF_DEVICE,
@@ -93,6 +94,7 @@ from .const import (
     MODEL_FAN_ZA3,
     MODEL_FAN_ZA4,
     MODEL_FAN_ZA5,
+    MODEL_PET_FOUNTAIN_70M2,
     MODELS_PURIFIER_MIIO,
     MODELS_PURIFIER_MIOT,
 )
@@ -108,6 +110,7 @@ ATTR_LED_BRIGHTNESS_LEVEL = "led_brightness_level"
 ATTR_MOTOR_SPEED = "motor_speed"
 ATTR_OSCILLATION_ANGLE = "angle"
 ATTR_VOLUME = "volume"
+ATTR_WATER_INTERVAL = "water_interval"
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -235,6 +238,21 @@ NUMBER_TYPES = {
     ),
 }
 
+PET_FOUNTAIN_NUMBER_TYPES = (
+    XiaomiMiioNumberDescription(
+        key=ATTR_WATER_INTERVAL,
+        translation_key=ATTR_WATER_INTERVAL,
+        icon="mdi:timer-cog-outline",
+        mode=NumberMode.BOX,
+        native_unit_of_measurement=UnitOfTime.MINUTES,
+        native_min_value=10,
+        native_max_value=120,
+        native_step=5,
+        method="async_set_water_interval",
+        entity_category=EntityCategory.CONFIG,
+    ),
+)
+
 MODEL_TO_FEATURES_MAP = {
     MODEL_AIRFRESH_A1: FEATURE_FLAGS_AIRFRESH_A1,
     MODEL_AIRFRESH_VA2: FEATURE_FLAGS_AIRFRESH,
@@ -304,6 +322,8 @@ async def async_setup_entry(
         features = FEATURE_FLAGS_AIRPURIFIER_MIIO
     elif model in MODELS_PURIFIER_MIOT:
         features = FEATURE_FLAGS_AIRPURIFIER_MIOT
+    elif model == MODEL_PET_FOUNTAIN_70M2:
+        features = 0
     else:
         return
 
@@ -338,6 +358,18 @@ async def async_setup_entry(
                             native_step=favorite_level_value.step,
                         )
 
+            entities.append(
+                XiaomiNumberEntity(
+                    device,
+                    config_entry,
+                    f"{description.key}_{config_entry.unique_id}",
+                    coordinator,
+                    description,
+                )
+            )
+
+    if model == MODEL_PET_FOUNTAIN_70M2:
+        for description in PET_FOUNTAIN_NUMBER_TYPES:
             entities.append(
                 XiaomiNumberEntity(
                     device,
@@ -471,4 +503,12 @@ class XiaomiNumberEntity(
             "Setting the favorite rpm of the miio device failed.",
             self._device.set_favorite_rpm,  # type: ignore[attr-defined]
             rpm,
+        )
+
+    async def async_set_water_interval(self, minutes: int) -> bool:
+        """Set the water interval for interval mode."""
+        return await self._try_command(
+            "Setting the water interval of the miio device failed.",
+            self._device.set_water_interval,  # type: ignore[attr-defined]
+            minutes,
         )

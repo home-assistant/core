@@ -60,8 +60,10 @@ from .const import (
     MODEL_FAN_ZA1,
     MODEL_FAN_ZA3,
     MODEL_FAN_ZA4,
+    MODEL_PET_FOUNTAIN_70M2,
 )
 from .entity import XiaomiCoordinatedMiioEntity
+from .pet_fountain_miot import PetFountainMode
 from .typing import XiaomiMiioConfigEntry
 
 ATTR_DISPLAY_ORIENTATION = "display_orientation"
@@ -200,6 +202,19 @@ SELECTOR_TYPES = (
     ),
 )
 
+PET_FOUNTAIN_SELECT_TYPES = (
+    XiaomiMiioSelectDescription(
+        key=ATTR_MODE,
+        attr_name=ATTR_MODE,
+        set_method="set_mode",
+        set_method_error_message="Setting the water mode failed.",
+        icon="mdi:water-sync",
+        translation_key="pet_fountain_mode",
+        options=["auto", "interval", "continuous"],
+        entity_category=EntityCategory.CONFIG,
+    ),
+)
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -211,6 +226,24 @@ async def async_setup_entry(
         return
 
     model = config_entry.data[CONF_MODEL]
+    if model == MODEL_PET_FOUNTAIN_70M2:
+        unique_id = config_entry.unique_id
+        device = config_entry.runtime_data.device
+        coordinator = config_entry.runtime_data.device_coordinator
+
+        async_add_entities(
+            XiaomiGenericSelector(
+                device,
+                config_entry,
+                f"{description.key}_{unique_id}",
+                coordinator,
+                description,
+                PetFountainMode,
+            )
+            for description in PET_FOUNTAIN_SELECT_TYPES
+        )
+        return
+
     if model not in MODEL_TO_ATTR_MAP:
         return
 

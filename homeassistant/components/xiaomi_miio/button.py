@@ -9,7 +9,6 @@ from miio import Device as MiioDevice
 from miio.integrations.vacuum.roborock.vacuum import Consumable
 
 from homeassistant.components.button import (
-    ButtonDeviceClass,
     ButtonEntity,
     ButtonEntityDescription,
 )
@@ -18,7 +17,12 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from .const import MODEL_AIRFRESH_A1, MODEL_AIRFRESH_T2017, MODELS_VACUUM
+from .const import (
+    MODEL_AIRFRESH_A1,
+    MODEL_AIRFRESH_T2017,
+    MODEL_PET_FOUNTAIN_70M2,
+    MODELS_VACUUM,
+)
 from .entity import XiaomiCoordinatedMiioEntity
 from .typing import XiaomiMiioConfigEntry
 
@@ -32,6 +36,7 @@ ATTR_RESET_VACUUM_MAIN_BRUSH = "reset_vacuum_main_brush"
 ATTR_RESET_VACUUM_SIDE_BRUSH = "reset_vacuum_side_brush"
 ATTR_RESET_VACUUM_FILTER = "reset_vacuum_filter"
 ATTR_RESET_VACUUM_SENSOR_DIRTY = "reset_vacuum_sensor_dirty"
+ATTR_RESET_FILTER_LIFE = "reset_filter_life"
 
 
 @dataclass(frozen=True)
@@ -59,6 +64,14 @@ BUTTON_TYPES = (
         icon="mdi:air-filter",
         method_press="reset_upper_filter",
         method_press_error_message="Resetting the upper filter lifetime failed.",
+        entity_category=EntityCategory.CONFIG,
+    ),
+    XiaomiMiioButtonDescription(
+        key=ATTR_RESET_FILTER_LIFE,
+        translation_key=ATTR_RESET_FILTER_LIFE,
+        icon="mdi:air-filter",
+        method_press="reset_filter_life",
+        method_press_error_message="Resetting the filter lifetime failed.",
         entity_category=EntityCategory.CONFIG,
     ),
     # Vacuums
@@ -113,6 +126,7 @@ MODEL_TO_BUTTON_MAP: dict[str, tuple[str, ...]] = {
         ATTR_RESET_DUST_FILTER,
         ATTR_RESET_UPPER_FILTER,
     ),
+    MODEL_PET_FOUNTAIN_70M2: (ATTR_RESET_FILTER_LIFE,),
     **dict.fromkeys(MODELS_VACUUM, BUTTONS_FOR_VACUUM),
 }
 
@@ -157,8 +171,6 @@ class XiaomiGenericCoordinatedButton(
     """A button implementation for Xiaomi."""
 
     entity_description: XiaomiMiioButtonDescription
-
-    _attr_device_class = ButtonDeviceClass.RESTART
 
     def __init__(
         self,

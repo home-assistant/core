@@ -184,6 +184,51 @@ async def test_config_flow_gateway_success(hass: HomeAssistant) -> None:
     }
 
 
+async def test_config_flow_pet_fountain_manual_success(hass: HomeAssistant) -> None:
+    """Test a successful manual config flow for the pet fountain."""
+    result = await hass.config_entries.flow.async_init(
+        const.DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "cloud"
+    assert result["errors"] == {}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {const.CONF_MANUAL: True},
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "manual"
+    assert result["errors"] == {}
+
+    with patch(
+        "homeassistant.components.xiaomi_miio.device.Device.info",
+        return_value=get_mock_info(
+            model=const.MODEL_PET_FOUNTAIN_70M2,
+            mac_address=TEST_MAC_DEVICE,
+        ),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_HOST: TEST_HOST, CONF_TOKEN: TEST_TOKEN},
+        )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "Xiaomi Smart Pet Fountain 2"
+    assert result["data"] == {
+        const.CONF_FLOW_TYPE: CONF_DEVICE,
+        const.CONF_CLOUD_USERNAME: None,
+        const.CONF_CLOUD_PASSWORD: None,
+        const.CONF_CLOUD_COUNTRY: None,
+        CONF_HOST: TEST_HOST,
+        CONF_TOKEN: TEST_TOKEN,
+        CONF_MODEL: const.MODEL_PET_FOUNTAIN_70M2,
+        CONF_MAC: TEST_MAC_DEVICE,
+    }
+
+
 async def test_config_flow_gateway_cloud_success(hass: HomeAssistant) -> None:
     """Test a successful config flow using cloud."""
     result = await hass.config_entries.flow.async_init(

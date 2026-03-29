@@ -79,6 +79,7 @@ from .const import (
     MODEL_FAN_ZA3,
     MODEL_FAN_ZA4,
     MODEL_FAN_ZA5,
+    MODEL_PET_FOUNTAIN_70M2,
     MODELS_AIR_QUALITY_MONITOR,
     MODELS_HUMIDIFIER_MIIO,
     MODELS_HUMIDIFIER_MIOT,
@@ -91,6 +92,7 @@ from .const import (
 )
 from .coordinator import GatewayDeviceCoordinator
 from .entity import XiaomiCoordinatedMiioEntity, XiaomiGatewayDevice, XiaomiMiioEntity
+from .pet_fountain_miot import ChargingState, PetFountainStatus
 from .typing import XiaomiMiioConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
@@ -105,9 +107,11 @@ ATTR_AQI = "aqi"
 ATTR_BATTERY = "battery"
 ATTR_CARBON_DIOXIDE = "co2"
 ATTR_CHARGING = "charging"
+ATTR_CHARGING_STATE = "charging_state"
 ATTR_CONTROL_SPEED = "control_speed"
 ATTR_DISPLAY_CLOCK = "display_clock"
 ATTR_FAVORITE_SPEED = "favorite_speed"
+ATTR_FAULT_CODE = "fault_code"
 ATTR_FILTER_LIFE_REMAINING = "filter_life_remaining"
 ATTR_FILTER_HOURS_USED = "filter_hours_used"
 ATTR_FILTER_LEFT_TIME = "filter_left_time"
@@ -132,6 +136,7 @@ ATTR_POWER = "power"
 ATTR_PRESSURE = "pressure"
 ATTR_PURIFY_VOLUME = "purify_volume"
 ATTR_SENSOR_STATE = "sensor_state"
+ATTR_STATUS = "status"
 ATTR_USE_TIME = "use_time"
 ATTR_WATER_LEVEL = "water_level"
 ATTR_DND_START = "start"
@@ -554,6 +559,56 @@ FAN_V2_V3_SENSORS = (
 
 FAN_ZA5_SENSORS = (ATTR_HUMIDITY, ATTR_TEMPERATURE)
 
+PET_FOUNTAIN_SENSOR_TYPES = (
+    XiaomiMiioSensorDescription(
+        key=ATTR_STATUS,
+        translation_key="pet_fountain_status",
+        icon="mdi:fountain",
+        device_class=SensorDeviceClass.ENUM,
+        options=[status.value for status in PetFountainStatus],
+    ),
+    XiaomiMiioSensorDescription(
+        key=ATTR_FILTER_LIFE_REMAINING,
+        translation_key="pet_fountain_filter_life_remaining",
+        native_unit_of_measurement=PERCENTAGE,
+        icon="mdi:air-filter",
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    XiaomiMiioSensorDescription(
+        key=ATTR_FILTER_LEFT_TIME,
+        translation_key="pet_fountain_filter_left_time",
+        native_unit_of_measurement=UnitOfTime.DAYS,
+        icon="mdi:clock-outline",
+        device_class=SensorDeviceClass.DURATION,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    XiaomiMiioSensorDescription(
+        key=ATTR_BATTERY,
+        translation_key="pet_fountain_battery",
+        native_unit_of_measurement=PERCENTAGE,
+        device_class=SensorDeviceClass.BATTERY,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    XiaomiMiioSensorDescription(
+        key=ATTR_CHARGING_STATE,
+        translation_key="pet_fountain_charging_state",
+        icon="mdi:battery-charging-medium",
+        device_class=SensorDeviceClass.ENUM,
+        options=[state.value for state in ChargingState],
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    XiaomiMiioSensorDescription(
+        key=ATTR_FAULT_CODE,
+        translation_key="fault_code",
+        icon="mdi:alert-circle-outline",
+        entity_registry_enabled_default=False,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+)
+
 MODEL_TO_SENSORS_MAP: dict[str, tuple[str, ...]] = {
     MODEL_AIRFRESH_A1: AIRFRESH_SENSORS_A1,
     MODEL_AIRFRESH_VA2: AIRFRESH_SENSORS,
@@ -820,6 +875,18 @@ async def async_setup_entry(
             device = config_entry.runtime_data.device
             coordinator = config_entry.runtime_data.device_coordinator
             sensors: Iterable[str] = []
+            if model == MODEL_PET_FOUNTAIN_70M2:
+                async_add_entities(
+                    XiaomiGenericSensor(
+                        device,
+                        config_entry,
+                        f"{description.key}_{config_entry.unique_id}",
+                        coordinator,
+                        description,
+                    )
+                    for description in PET_FOUNTAIN_SENSOR_TYPES
+                )
+                return
             if model in MODEL_TO_SENSORS_MAP:
                 sensors = MODEL_TO_SENSORS_MAP[model]
             elif model in MODELS_HUMIDIFIER_MIOT:
