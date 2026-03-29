@@ -30,7 +30,7 @@ async def async_get_config_entry_diagnostics(
                 door_id: rule.model_dump(mode="json")
                 for door_id, rule in data.door_lock_rules.items()
             },
-            "unconfirmed_lock_rule_doors": list(data.unconfirmed_lock_rule_doors),
+            "unconfirmed_lock_rule_doors": sorted(data.unconfirmed_lock_rule_doors),
             "supports_lock_rules": data.supports_lock_rules,
             "lock_rule_support_complete": data.lock_rule_support_complete,
             "door_thumbnails": {
