@@ -15,6 +15,7 @@ from homeassistant.components.opnsense.const import (
 from homeassistant.const import CONF_API_KEY, CONF_URL, CONF_VERIFY_SSL
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
 
@@ -135,3 +136,78 @@ async def test_import_flow(
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"][CONF_TRACKER_INTERFACES] == "LAN,WAN"
+
+
+async def test_yaml_import_triggers_config_flow(
+    hass: HomeAssistant, mock_opnsense_client: AsyncMock
+) -> None:
+    """Test that YAML configuration triggers config flow import."""
+    await async_setup_component(
+        hass,
+        DOMAIN,
+        {
+            DOMAIN: {
+                CONF_URL: "https://opnsense.local/api",
+                CONF_API_KEY: "test_key",
+                CONF_API_SECRET: "test_secret",
+                CONF_VERIFY_SSL: False,
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    entries = hass.config_entries.async_entries(DOMAIN)
+    assert len(entries) == 1
+    assert entries[0].data[CONF_URL] == "https://opnsense.local/api"
+
+
+async def test_setup_entry_invalid_tracker_interface(
+    hass: HomeAssistant, mock_opnsense_client: AsyncMock
+) -> None:
+    """Test that invalid tracker interfaces raise ConfigEntryError."""
+    mock_opnsense_client.get_interfaces = AsyncMock(
+        return_value={"igb0": "WAN", "igb1": "LAN"}
+    )
+
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_URL: "https://opnsense.local/api",
+            CONF_API_KEY: "test_key",
+            CONF_API_SECRET: "test_secret",
+            CONF_VERIFY_SSL: False,
+            CONF_TRACKER_INTERFACES: "NONEXISTENT",
+        },
+    )
+    entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert entry.state is config_entries.ConfigEntryState.SETUP_ERROR
+
+
+async def test_setup_entry_connection_error(
+    hass: HomeAssistant, mock_opnsense_client: AsyncMock
+) -> None:
+    """Test that connection errors raise ConfigEntryNotReady."""
+    mock_opnsense_client.get_arp = AsyncMock(
+        side_effect=OPNsenseApiError("connection failed")
+    )
+
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_URL: "https://opnsense.local/api",
+            CONF_API_KEY: "test_key",
+            CONF_API_SECRET: "test_secret",
+            CONF_VERIFY_SSL: False,
+            CONF_TRACKER_INTERFACES: "",
+        },
+    )
+    entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert entry.state is config_entries.ConfigEntryState.SETUP_RETRY
