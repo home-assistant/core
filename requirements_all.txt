@@ -3365,7 +3365,7 @@ yolink-api==0.6.3
 youless-api==2.2.0
 
 # homeassistant.components.youtube
-youtubeaio==2.1.1
+youtubeaio==2.1.2
 
 # homeassistant.components.media_extractor
 yt-dlp[default]==2026.03.17
