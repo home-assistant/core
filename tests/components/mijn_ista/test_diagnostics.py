@@ -8,8 +8,8 @@ import pytest
 
 from homeassistant.core import HomeAssistant
 
-from custom_components.mijn_ista.coordinator import _parse_customer
-from custom_components.mijn_ista.diagnostics import async_get_config_entry_diagnostics
+from homeassistant.components.mijn_ista.coordinator import _parse_customer
+from homeassistant.components.mijn_ista.diagnostics import async_get_config_entry_diagnostics
 
 from .conftest import MOCK_AVG_VALUES, MOCK_MONTH_VALUES, MOCK_USER_VALUES
 

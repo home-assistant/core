@@ -11,9 +11,9 @@ from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
 from homeassistant.const import UnitOfEnergy, UnitOfVolume
 from homeassistant.core import HomeAssistant
 
-from custom_components.mijn_ista.const import DOMAIN
-from custom_components.mijn_ista.coordinator import _parse_customer
-from custom_components.mijn_ista.sensor import (
+from homeassistant.components.mijn_ista.const import DOMAIN
+from homeassistant.components.mijn_ista.coordinator import _parse_customer
+from homeassistant.components.mijn_ista.sensor import (
     MijnIstaSensor,
     _build_sensors,
     _find_month,
@@ -51,7 +51,7 @@ class TestTranslateService:
 
 class TestFindMonth:
     def test_returns_most_recent_entry_with_data(self):
-        from custom_components.mijn_ista.coordinator import MonthEntry, MonthServiceData
+        from homeassistant.components.mijn_ista.coordinator import MonthEntry, MonthServiceData
         empty = MonthEntry(year=2024, month=12, avg_temp=None, services={})
         has_data = MonthEntry(
             year=2024, month=11, avg_temp=8.2,
@@ -63,7 +63,7 @@ class TestFindMonth:
         assert result is has_data
 
     def test_returns_none_when_no_entry_has_data(self):
-        from custom_components.mijn_ista.coordinator import MonthEntry
+        from homeassistant.components.mijn_ista.coordinator import MonthEntry
         empty = MonthEntry(year=2024, month=12, avg_temp=None, services={})
         assert _find_month([empty], 99) is None
 
@@ -72,7 +72,7 @@ class TestFindMonth:
 
     def test_skips_empty_first_month(self):
         """Most recent month with empty services should be skipped."""
-        from custom_components.mijn_ista.coordinator import MonthEntry, MonthServiceData
+        from homeassistant.components.mijn_ista.coordinator import MonthEntry, MonthServiceData
         current = MonthEntry(year=2024, month=12, avg_temp=None, services={})
         prior = MonthEntry(
             year=2024, month=11, avg_temp=8.2,
@@ -215,7 +215,7 @@ class TestBuildSensors:
         """Monthly sensors must be created even if monthly[0] has no ServiceConsumptions."""
         import copy
         from unittest.mock import MagicMock
-        from custom_components.mijn_ista.coordinator import MonthEntry
+        from homeassistant.components.mijn_ista.coordinator import MonthEntry
 
         # Prepend a current-month entry with no service data (in-progress month)
         cus = MOCK_USER_VALUES["Cus"][0]

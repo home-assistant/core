@@ -12,7 +12,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from mijn_ista_api import MijnIstaAuthError, MijnIstaConnectionError
-from custom_components.mijn_ista.const import CONF_UPDATE_INTERVAL, DOMAIN
+from homeassistant.components.mijn_ista.const import CONF_UPDATE_INTERVAL, DOMAIN
 
 from .conftest import MOCK_USER_VALUES
 
@@ -37,11 +37,11 @@ def _patch_api(authenticate=None, get_user_values=None):
     def _ctx():
         with (
             patch(
-                "custom_components.mijn_ista.config_flow.MijnIstaAPI",
+                "homeassistant.components.mijn_ista.config_flow.MijnIstaAPI",
                 return_value=mock_instance,
             ),
             patch(
-                "custom_components.mijn_ista.async_setup_entry",
+                "homeassistant.components.mijn_ista.async_setup_entry",
                 return_value=True,
             ),
         ):

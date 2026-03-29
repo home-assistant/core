@@ -12,6 +12,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.util import dt as dt_util
 
 from mijn_ista_api import MijnIstaAPI, MijnIstaAuthError, MijnIstaConnectionError
 from .const import CONF_UPDATE_INTERVAL, DEFAULT_UPDATE_INTERVAL, DOMAIN
@@ -113,7 +114,7 @@ class MonthEntry:
 
     year: int
     month: int
-    avg_temp: float
+    avg_temp: float | None
     services: dict[int, MonthServiceData] = field(
         default_factory=dict
     )  # keyed by service_id
@@ -310,7 +311,7 @@ class MijnIstaCoordinator(DataUpdateCoordinator):
                 periods = cur.get("BillingPeriods", [])
 
                 # Find current year's billing period (for ConsumptionAverages date range)
-                now_year = datetime.now().year
+                now_year = dt_util.now().year
                 cur_period = next(
                     (p for p in periods if p.get("y") == now_year),
                     periods[0] if periods else None,

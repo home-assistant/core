@@ -12,8 +12,8 @@ from homeassistant.helpers.update_coordinator import UpdateFailed
 
 from mijn_ista_api import MijnIstaAuthError, MijnIstaConnectionError
 
-from custom_components.mijn_ista.const import CONF_UPDATE_INTERVAL, DOMAIN
-from custom_components.mijn_ista.coordinator import (
+from homeassistant.components.mijn_ista.const import CONF_UPDATE_INTERVAL, DOMAIN
+from homeassistant.components.mijn_ista.coordinator import (
     MijnIstaCoordinator,
     AnnualMeterSummary,
     AnnualSummary,

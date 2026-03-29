@@ -73,8 +73,8 @@ def _parse_dt(date_str: str) -> datetime | None:
 
 
 def _find_month(
-    monthly: list, service_id: int
-):
+    monthly: list[MonthEntry], service_id: int
+) -> MonthEntry | None:
     """Return the most recent MonthEntry that has data for service_id."""
     return next((me for me in monthly if service_id in me.services), None)
 
@@ -110,19 +110,11 @@ class MijnIstaSensor(CoordinatorEntity, SensorEntity):
 
     @property
     def device_info(self) -> DeviceInfo:
-        data: CustomerData | None = (
-            self.coordinator.data.get(self._cuid) if self.coordinator.data else None
-        )
-        # Address goes in model so it's visible in the device panel but
-        # never lands in entity IDs (which are derived from device name).
-        model = (
-            f"{data.address}, {data.zip_code} {data.city}" if data else self._cuid[:8]
-        )
         return DeviceInfo(
             identifiers={(DOMAIN, self._cuid)},
-            name="ista NL",
+            name=f"ista NL {self._cuid[:8]}",
             manufacturer=MANUFACTURER,
-            model=model,
+            model="mijn.ista.nl",
             entry_type=DeviceEntryType.SERVICE,
             configuration_url="https://mijn.ista.nl",
         )

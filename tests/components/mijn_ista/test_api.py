@@ -95,7 +95,7 @@ class TestAuthenticate:
 # ---------------------------------------------------------------------------
 
 
-class TestJWTRefresh:
+class TestJWTAbsorption:
     async def test_response_jwt_is_absorbed(self):
         """Every successful response should update the stored JWT."""
         auth_resp = _mock_response(200, {"JWT": "initial-jwt"})
@@ -198,7 +198,7 @@ class TestRetryOn425And503:
         ]
         call_idx = 0
 
-        async def _enter(_):
+        async def _enter():
             nonlocal call_idx
             r = responses[call_idx]
             call_idx += 1
@@ -206,7 +206,7 @@ class TestRetryOn425And503:
 
         session = MagicMock()
         cm = MagicMock()
-        cm.__aenter__ = _enter
+        cm.__aenter__ = AsyncMock(side_effect=_enter)
         cm.__aexit__ = AsyncMock(return_value=False)
         session.post = MagicMock(return_value=cm)
 
@@ -223,7 +223,7 @@ class TestRetryOn425And503:
         ]
         call_idx = 0
 
-        async def _enter(_):
+        async def _enter():
             nonlocal call_idx
             r = responses[call_idx]
             call_idx += 1
@@ -231,7 +231,7 @@ class TestRetryOn425And503:
 
         session = MagicMock()
         cm = MagicMock()
-        cm.__aenter__ = _enter
+        cm.__aenter__ = AsyncMock(side_effect=_enter)
         cm.__aexit__ = AsyncMock(return_value=False)
         session.post = MagicMock(return_value=cm)
 
@@ -243,12 +243,12 @@ class TestRetryOn425And503:
 
     async def test_persistent_425_raises_connection_error(self):
         """Four consecutive 425 responses should raise MijnIstaConnectionError."""
-        async def _enter(_):
+        async def _enter():
             return _mock_response(425, {})
 
         session = MagicMock()
         cm = MagicMock()
-        cm.__aenter__ = _enter
+        cm.__aenter__ = AsyncMock(side_effect=_enter)
         cm.__aexit__ = AsyncMock(return_value=False)
         session.post = MagicMock(return_value=cm)
 
@@ -264,7 +264,7 @@ class TestRetryOn425And503:
 # ---------------------------------------------------------------------------
 
 
-class TestJWTRefresh:
+class TestJWTRefreshEndpoint:
     async def test_refresh_jwt_updates_stored_jwt(self):
         resp = _mock_response(200, {"JWT": "refreshed-tok"})
         api = MijnIstaAPI(_mock_session(resp), "u", "p")
@@ -301,7 +301,7 @@ class TestJWTRefresh:
         ]
         call_idx = 0
 
-        async def _enter(_):
+        async def _enter():
             nonlocal call_idx
             r = responses[call_idx]
             call_idx += 1
@@ -309,7 +309,7 @@ class TestJWTRefresh:
 
         session = MagicMock()
         cm = MagicMock()
-        cm.__aenter__ = _enter
+        cm.__aenter__ = AsyncMock(side_effect=_enter)
         cm.__aexit__ = AsyncMock(return_value=False)
         session.post = MagicMock(return_value=cm)
 
@@ -336,7 +336,7 @@ class TestMonthValuesShardsPolling:
         ]
         call_idx = 0
 
-        async def _enter(_):
+        async def _enter():
             nonlocal call_idx
             r = responses[call_idx]
             call_idx += 1
@@ -344,7 +344,7 @@ class TestMonthValuesShardsPolling:
 
         session = MagicMock()
         cm = MagicMock()
-        cm.__aenter__ = _enter
+        cm.__aenter__ = AsyncMock(side_effect=_enter)
         cm.__aexit__ = AsyncMock(return_value=False)
         session.post = MagicMock(return_value=cm)
 
@@ -369,12 +369,12 @@ class TestMonthValuesShardsPolling:
 
     async def test_returns_after_max_polls(self):
         """After 15 re-polls, return whatever we have."""
-        async def _enter(_):
+        async def _enter():
             return _mock_response(200, {"hs": 1, "sh": 99, "mc": []})
 
         session = MagicMock()
         cm = MagicMock()
-        cm.__aenter__ = _enter
+        cm.__aenter__ = AsyncMock(side_effect=_enter)
         cm.__aexit__ = AsyncMock(return_value=False)
         session.post = MagicMock(return_value=cm)
 

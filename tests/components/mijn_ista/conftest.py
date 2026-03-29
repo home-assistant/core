@@ -8,7 +8,7 @@ import pytest
 
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 
-from custom_components.mijn_ista.const import CONF_UPDATE_INTERVAL, DOMAIN
+from homeassistant.components.mijn_ista.const import CONF_UPDATE_INTERVAL, DOMAIN
 
 # ---------------------------------------------------------------------------
 # Raw API response fixtures
@@ -224,7 +224,7 @@ def mock_config_entry(hass):
 def mock_api():
     """Patch MijnIstaAPI so no real HTTP calls are made."""
     with patch(
-        "custom_components.mijn_ista.config_flow.MijnIstaAPI", autospec=True
+        "homeassistant.components.mijn_ista.config_flow.MijnIstaAPI", autospec=True
     ) as mock_cls:
         instance = mock_cls.return_value
         instance.authenticate = AsyncMock()

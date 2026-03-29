@@ -10,7 +10,7 @@ from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 
-from custom_components.mijn_ista.const import CONF_UPDATE_INTERVAL, DOMAIN
+from homeassistant.components.mijn_ista.const import CONF_UPDATE_INTERVAL, DOMAIN
 
 from .conftest import MOCK_AVG_VALUES, MOCK_MONTH_VALUES, MOCK_USER_VALUES
 
@@ -45,9 +45,9 @@ class TestSetupEntry:
         entry.add_to_hass(hass)
 
         with (
-            patch("custom_components.mijn_ista.MijnIstaAPI"),
+            patch("homeassistant.components.mijn_ista.MijnIstaAPI"),
             patch(
-                "custom_components.mijn_ista.MijnIstaCoordinator",
+                "homeassistant.components.mijn_ista.MijnIstaCoordinator",
                 return_value=_make_mock_coordinator(hass),
             ),
             patch(
@@ -75,10 +75,10 @@ class TestSetupEntry:
 
         with (
             patch(
-                "custom_components.mijn_ista.MijnIstaAPI", side_effect=_capture_api
+                "homeassistant.components.mijn_ista.MijnIstaAPI", side_effect=_capture_api
             ),
             patch(
-                "custom_components.mijn_ista.MijnIstaCoordinator",
+                "homeassistant.components.mijn_ista.MijnIstaCoordinator",
                 return_value=_make_mock_coordinator(hass),
             ),
             patch(
@@ -103,10 +103,10 @@ class TestSetupEntry:
 
         with (
             patch(
-                "custom_components.mijn_ista.MijnIstaAPI", side_effect=_capture_api
+                "homeassistant.components.mijn_ista.MijnIstaAPI", side_effect=_capture_api
             ),
             patch(
-                "custom_components.mijn_ista.MijnIstaCoordinator",
+                "homeassistant.components.mijn_ista.MijnIstaCoordinator",
                 return_value=_make_mock_coordinator(hass),
             ),
             patch(
@@ -132,9 +132,9 @@ class TestUnloadEntry:
         coord = _make_mock_coordinator(hass)
 
         with (
-            patch("custom_components.mijn_ista.MijnIstaAPI"),
+            patch("homeassistant.components.mijn_ista.MijnIstaAPI"),
             patch(
-                "custom_components.mijn_ista.MijnIstaCoordinator",
+                "homeassistant.components.mijn_ista.MijnIstaCoordinator",
                 return_value=coord,
             ),
             patch(
@@ -169,7 +169,7 @@ class TestMigrateEntry:
         )
         entry.add_to_hass(hass)
 
-        from custom_components.mijn_ista import async_migrate_entry
+        from homeassistant.components.mijn_ista import async_migrate_entry
 
         result = await async_migrate_entry(hass, entry)
 
@@ -184,7 +184,7 @@ class TestMigrateEntry:
         )
         entry.add_to_hass(hass)
 
-        from custom_components.mijn_ista import async_migrate_entry
+        from homeassistant.components.mijn_ista import async_migrate_entry
 
         result = await async_migrate_entry(hass, entry)
         assert result is True
