@@ -29,9 +29,11 @@ from homeassistant.helpers import (
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
+    CLIENT_TIMEOUT,
     CONF_API_SECRET,
     CONF_INTERFACE_CLIENT,
     CONF_TRACKER_INTERFACES,
+    DEFAULT_VERIFY_SSL,
     DOMAIN,
     INTEGRATION_TITLE,
     OPNSENSE_DATA,
@@ -46,7 +48,7 @@ CONFIG_SCHEMA = vol.Schema(
                 vol.Required(CONF_URL): cv.url,
                 vol.Required(CONF_API_KEY): cv.string,
                 vol.Required(CONF_API_SECRET): cv.string,
-                vol.Optional(CONF_VERIFY_SSL, default=False): cv.boolean,
+                vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): cv.boolean,
                 vol.Optional(CONF_TRACKER_INTERFACES, default=[]): vol.All(
                     cv.ensure_list, [cv.string]
                 ),
@@ -73,7 +75,7 @@ async def _async_import_from_yaml(
             CONF_URL: yaml_config[CONF_URL],
             CONF_API_KEY: yaml_config[CONF_API_KEY],
             CONF_API_SECRET: yaml_config[CONF_API_SECRET],
-            CONF_VERIFY_SSL: yaml_config.get(CONF_VERIFY_SSL, False),
+            CONF_VERIFY_SSL: yaml_config.get(CONF_VERIFY_SSL, DEFAULT_VERIFY_SSL),
             CONF_TRACKER_INTERFACES: list(yaml_config.get(CONF_TRACKER_INTERFACES, [])),
         },
     )
@@ -132,7 +134,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     tracker_interfaces = data.get(CONF_TRACKER_INTERFACES, [])
 
     interfaces_client = diagnostics.InterfaceClient(
-        api_key, api_secret, url, verify_ssl, timeout=20
+        api_key, api_secret, url, verify_ssl, timeout=CLIENT_TIMEOUT
     )
 
     try:
@@ -152,7 +154,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     if tracker_interfaces:
         netinsight_client = diagnostics.NetworkInsightClient(
-            api_key, api_secret, url, verify_ssl, timeout=20
+            api_key, api_secret, url, verify_ssl, timeout=CLIENT_TIMEOUT
         )
 
         try:

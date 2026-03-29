@@ -6,7 +6,7 @@ from collections.abc import Mapping, MutableMapping
 import logging
 import re
 from typing import Any
-from urllib.parse import urlparse
+from urllib.parse import ParseResult, urlparse
 
 from pyopnsense import diagnostics
 from pyopnsense.exceptions import APIException
@@ -17,7 +17,14 @@ from homeassistant.const import CONF_API_KEY, CONF_URL, CONF_VERIFY_SSL
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 
-from .const import CONF_API_SECRET, CONF_TRACKER_INTERFACES, DOMAIN, INTEGRATION_TITLE
+from .const import (
+    CLIENT_TIMEOUT,
+    CONF_API_SECRET,
+    CONF_TRACKER_INTERFACES,
+    DEFAULT_VERIFY_SSL,
+    DOMAIN,
+    INTEGRATION_TITLE,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -85,7 +92,7 @@ def _build_user_schema(user_input: Mapping[str, Any] | None = None) -> vol.Schem
             ): cv.string,
             vol.Optional(
                 CONF_VERIFY_SSL,
-                default=user_input.get(CONF_VERIFY_SSL, False),
+                default=user_input.get(CONF_VERIFY_SSL, DEFAULT_VERIFY_SSL),
             ): cv.boolean,
             vol.Optional(
                 CONF_TRACKER_INTERFACES,
@@ -95,11 +102,37 @@ def _build_user_schema(user_input: Mapping[str, Any] | None = None) -> vol.Schem
     )
 
 
+async def _clean_and_parse_url(url: str) -> str:
+    """Normalize and validate the configured OPNsense base URL.
+
+    Args:
+        user_input: Mutable form payload containing `CONF_URL`.
+
+    """
+    fix_url: str = url.strip()
+    url_parts: ParseResult = urlparse(fix_url)
+
+    if not url_parts.scheme and not url_parts.netloc:
+        fix_url = "https://" + fix_url
+        url_parts = urlparse(fix_url)
+
+    if not url_parts.netloc:
+        raise InvalidURL
+
+    cleaned_url = f"{url_parts.scheme}://{url_parts.netloc}"
+    _LOGGER.debug("Cleaned URL: %s", cleaned_url)
+    return cleaned_url
+
+
 async def _async_validate_input(
     hass: HomeAssistant, user_input: Mapping[str, Any]
 ) -> dict[str, Any]:
     """Validate credentials and normalize data."""
+
     data = dict(user_input)
+
+    data[CONF_URL] = _clean_and_parse_url(user_input[CONF_URL])
+
     data[CONF_TRACKER_INTERFACES] = _normalize_tracker_interfaces(
         user_input.get(CONF_TRACKER_INTERFACES)
     )
@@ -108,8 +141,8 @@ async def _async_validate_input(
         data[CONF_API_KEY],
         data[CONF_API_SECRET],
         data[CONF_URL],
-        data.get(CONF_VERIFY_SSL, False),
-        timeout=20,
+        data.get(CONF_VERIFY_SSL, DEFAULT_VERIFY_SSL),
+        timeout=CLIENT_TIMEOUT,
     )
 
     try:
@@ -124,8 +157,8 @@ async def _async_validate_input(
             data[CONF_API_KEY],
             data[CONF_API_SECRET],
             data[CONF_URL],
-            data.get(CONF_VERIFY_SSL, False),
-            timeout=20,
+            data.get(CONF_VERIFY_SSL, DEFAULT_VERIFY_SSL),
+            timeout=CLIENT_TIMEOUT,
         )
 
         try:
@@ -163,6 +196,8 @@ class OPNsenseConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "cannot_connect"
             except InvalidTrackerInterface:
                 errors["base"] = "invalid_tracker_interface"
+            except InvalidURL:
+                errors["base"] = "invalid_url"
             except Exception:  # pragma: no cover - defensive fallback
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
@@ -245,6 +280,10 @@ class OPNsenseConfigFlow(ConfigFlow, domain=DOMAIN):
             ),
             errors=errors,
         )
+
+
+class InvalidURL(Exception):
+    """Error to indicate an invalid URL."""
 
 
 class CannotConnect(Exception):
