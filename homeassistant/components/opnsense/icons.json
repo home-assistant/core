@@ -1,0 +1,87 @@
+{
+  "entity": {
+    "binary_sensor": {
+      "pending_notices_present": {
+        "default": "mdi:alert"
+      }
+    },
+    "device_tracker": {
+      "device_tracker": {
+        "default": "mdi:lan-disconnect",
+        "state": {
+          "home": "mdi:lan-connect"
+        }
+      }
+    },
+    "switch": {
+      "firewall_rule": {
+        "default": "mdi:play-network-outline",
+        "state": {
+          "on": "mdi:play-network"
+        }
+      },
+      "nat_rule": {
+        "default": "mdi:network-outline",
+        "state": {
+          "on": "mdi:network"
+        }
+      },
+      "service_status": {
+        "default": "mdi:application-cog-outline",
+        "state": {
+          "on": "mdi:application-cog"
+        }
+      },
+      "unbound_blocklist": {
+        "default": "mdi:folder-key-network-outline"
+      },
+      "vpn_instance": {
+        "default": "mdi:folder-key-network-outline",
+        "state": {
+          "on": "mdi:folder-key-network"
+        }
+      }
+    }
+  },
+  "services": {
+    "close_notice": {
+      "service": "mdi:alert-check"
+    },
+    "generate_vouchers": {
+      "service": "mdi:ticket-confirmation-outline"
+    },
+    "get_vnstat_metrics": {
+      "service": "mdi:chart-line"
+    },
+    "kill_states": {
+      "service": "mdi:close-network-outline"
+    },
+    "reload_interface": {
+      "service": "mdi:reload"
+    },
+    "restart_service": {
+      "service": "mdi:restart"
+    },
+    "run_speedtest": {
+      "service": "mdi:speedometer"
+    },
+    "send_wol": {
+      "service": "mdi:lan-pending"
+    },
+    "start_service": {
+      "service": "mdi:play"
+    },
+    "stop_service": {
+      "service": "mdi:stop"
+    },
+    "system_halt": {
+      "service": "mdi:power"
+    },
+    "system_reboot": {
+      "service": "mdi:restart"
+    },
+    "toggle_alias": {
+      "service": "mdi:toggle-switch-outline"
+    }
+  }
+}

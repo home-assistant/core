@@ -1,0 +1,496 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
+    },
+    "error": {
+      "below_min_firmware": "OPNsense firmware {firmware} is below the minimum supported version of {min_firmware}",
+      "cannot_connect": "Failed to connect",
+      "cannot_connect_ssl": "SSL certificate verification error. If you are using a self-signed certificate, uncheck Verify SSL certificate",
+      "connect_timeout": "Connection timeout",
+      "invalid_auth": "Invalid authentication",
+      "invalid_url_format": "Invalid URL format",
+      "missing_device_unique_id": "Unable to get MAC addresses from OPNsense to use as Device Unique ID",
+      "privilege_missing": "OPNsense user has insufficient privileges. Recommend admin access",
+      "unknown": "Unexpected error",
+      "unknown_firmware": "Unable to get OPNsense firmware version",
+      "url_redirect": "Incorrect URL (redirect)"
+    },
+    "step": {
+      "granular_sync": {
+        "data": {
+          "sync_carp": "CARP information",
+          "sync_certificates": "Security certificate information",
+          "sync_dhcp_leases": "DHCP leases",
+          "sync_filters_and_nat": "Firewall and NAT rules switches",
+          "sync_firmware_updates": "Firmware updates",
+          "sync_gateways": "Gateway information",
+          "sync_interfaces": "Interface information",
+          "sync_notices": "Notice information",
+          "sync_services": "Service switches",
+          "sync_speedtest": "Speedtest results",
+          "sync_telemetry": "Basic telemetry data",
+          "sync_unbound": "Unbound blocklist switches",
+          "sync_vnstat": "vnStat bandwidth usage",
+          "sync_vpn": "VPN information and switches"
+        },
+        "title": "Choose what items to sync"
+      },
+      "reauth_confirm": {
+        "data": {
+          "password": "API Secret",
+          "url": "URL",
+          "username": "API Key",
+          "verify_ssl": "Verify SSL certificate"
+        },
+        "title": "Reauthenticate the OPNsense router"
+      },
+      "reconfigure": {
+        "data": {
+          "password": "API Secret",
+          "url": "URL",
+          "username": "API Key",
+          "verify_ssl": "Verify SSL certificate"
+        },
+        "title": "Update connection to the OPNsense router"
+      },
+      "user": {
+        "data": {
+          "granular_sync_options": "Enable Granular Sync Options",
+          "name": "Router Name",
+          "password": "API Secret",
+          "url": "URL",
+          "username": "API Key",
+          "verify_ssl": "Verify SSL certificate"
+        },
+        "title": "Connect to the OPNsense router"
+      }
+    }
+  },
+  "issues": {
+    "below_min_firmware": {
+      "description": "The OPNsense integration requires OPNsense firmware {min_firmware} or later, but this device reports {version}. Upgrade OPNsense to {min_firmware} or later before enabling the integration again.",
+      "title": "OPNsense firmware below minimum version"
+    },
+    "device_id_mismatched": {
+      "description": "The OPNsense device ID has changed, which indicates new or changed hardware. Remove and reinstall the OPNsense integration for this router. The integration will shut down until it is reconfigured.",
+      "title": "OPNsense hardware has changed"
+    }
+  },
+  "options": {
+    "error": {
+      "cannot_connect": "Failed to connect",
+      "unknown": "Unexpected error"
+    },
+    "step": {
+      "device_tracker": {
+        "data": {
+          "devices": "Devices to Track",
+          "manual_devices": "Additional MAC addresses not currently detected"
+        },
+        "data_description": {
+          "devices": "Only recently detected devices appear here. Previously selected devices that are not currently detected stay available in the list.",
+          "manual_devices": "Enter MAC addresses separated by commas or new lines. Invalid MAC addresses are ignored. Example: 00:00:00:00:00:00"
+        },
+        "description": "Choose the devices to track. Automatically detected devices come from the current OPNsense ARP table, so only recently seen devices appear in this list. If no devices are selected or manually entered, trackers for all detected devices will be created and entities are disabled by default"
+      },
+      "granular_sync": {
+        "data": {
+          "sync_carp": "CARP information",
+          "sync_certificates": "Security certificate information",
+          "sync_dhcp_leases": "DHCP leases",
+          "sync_filters_and_nat": "Firewall and NAT rules switches",
+          "sync_firmware_updates": "Firmware updates",
+          "sync_gateways": "Gateway information",
+          "sync_interfaces": "Interface information",
+          "sync_notices": "Notice information",
+          "sync_services": "Service switches",
+          "sync_speedtest": "Speedtest results",
+          "sync_telemetry": "Basic telemetry data",
+          "sync_unbound": "Unbound blocklist switches",
+          "sync_vnstat": "vnStat bandwidth usage",
+          "sync_vpn": "VPN information and switches"
+        },
+        "title": "Choose what items to sync"
+      },
+      "init": {
+        "data": {
+          "device_tracker_consider_home": "Device Tracker Consider Home (seconds)",
+          "device_tracker_scan_interval": "Device Tracker Scan Interval (seconds)",
+          "device_tracking_mode": "Device Tracker Mode",
+          "granular_sync_options": "Enable Granular Sync Options",
+          "scan_interval": "Scan Interval (seconds)"
+        },
+        "data_description": {
+          "device_tracking_mode": "For `Track only selected devices`, a next step lets you pick devices from recent ARP detections and add MAC addresses manually"
+        }
+      }
+    }
+  },
+  "selector": {
+    "device_tracking_mode": {
+      "options": {
+        "all_detected": "Track all detected devices (entities are disabled by default)",
+        "disabled": "Disabled",
+        "selected_only": "Track only selected devices (choose devices in a next step)"
+      }
+    },
+    "expirytime": {
+      "options": {
+        "0": "never",
+        "21600": "6 hours",
+        "43200": "12 hours",
+        "86400": "1 day",
+        "172800": "2 days",
+        "259200": "3 days",
+        "345600": "4 days",
+        "432000": "5 days",
+        "518400": "6 days",
+        "604800": "1 week",
+        "1209600": "2 weeks",
+        "1814400": "3 weeks",
+        "2419200": "1 month",
+        "4838400": "2 months",
+        "7257600": "3 months"
+      }
+    },
+    "toggle_on_off": {
+      "options": {
+        "off": "Off",
+        "on": "On",
+        "toggle": "Toggle"
+      }
+    },
+    "validity": {
+      "options": {
+        "14400": "4 hours",
+        "28800": "8 hours",
+        "86400": "1 day",
+        "172800": "2 days",
+        "259200": "3 days",
+        "345600": "4 days",
+        "432000": "5 days",
+        "518400": "6 days",
+        "604800": "1 week",
+        "1209600": "2 weeks"
+      }
+    },
+    "vnstat_metric_period": {
+      "options": {
+        "daily": "Daily",
+        "hourly": "Hourly",
+        "monthly": "Monthly",
+        "yearly": "Yearly"
+      }
+    }
+  },
+  "services": {
+    "close_notice": {
+      "description": "Closes one or all notices on OPNsense",
+      "fields": {
+        "device_id": {
+          "description": "Select the OPNsense router to call the command on. If not specified, the command will be sent to all OPNsense routers.",
+          "name": "OPNsense Device"
+        },
+        "entity_id": {
+          "description": "Pick any sensor in the OPNsense router you want to call the command on. If not specified, the command will be sent to all OPNsense routers.",
+          "name": "OPNsense Entity"
+        },
+        "id": {
+          "description": "The notice ID to clear. Enter 'all' to clear all notices.",
+          "name": "Notice ID"
+        }
+      },
+      "name": "Close notice",
+      "sections": {
+        "multiple_opnsense": {
+          "name": "Only needed if there is more than one OPNsense router"
+        }
+      }
+    },
+    "generate_vouchers": {
+      "description": "Generate vouchers for use with Captive Portal, such as guest Wi-Fi",
+      "fields": {
+        "count": {
+          "description": "The number of vouchers to generate",
+          "name": "Number of vouchers"
+        },
+        "device_id": {
+          "description": "Select the OPNsense router to call the command on. If not specified, the command will be sent to all OPNsense routers.",
+          "name": "OPNsense Device"
+        },
+        "entity_id": {
+          "description": "Pick any sensor in the OPNsense router you want to call the command on. If not specified, the command will be sent to all OPNsense routers.",
+          "name": "OPNsense Entity"
+        },
+        "expirytime": {
+          "description": "If manually entering a duration, enter it in seconds",
+          "name": "Expires in"
+        },
+        "validity": {
+          "description": "If manually entering a duration, enter it in seconds",
+          "name": "Validity"
+        },
+        "voucher_server": {
+          "description": "Optional. Only needed if there is more than one Captive Portal voucher server.",
+          "name": "Captive Portal Voucher Server"
+        },
+        "vouchergroup": {
+          "description": "The group name in OPNsense to create the vouchers under",
+          "name": "Group name"
+        }
+      },
+      "name": "Generate Captive Portal vouchers",
+      "sections": {
+        "multiple_opnsense": {
+          "name": "Only needed if there is more than one OPNsense router"
+        }
+      }
+    },
+    "get_vnstat_metrics": {
+      "description": "Get parsed vnStat metrics for a selected period as action response data",
+      "fields": {
+        "device_id": {
+          "description": "Select the OPNsense router to call the command on. If not specified, the command will be sent to all OPNsense routers.",
+          "name": "OPNsense Device"
+        },
+        "entity_id": {
+          "description": "Pick any sensor in the OPNsense router you want to call the command on. If not specified, the command will be sent to all OPNsense routers.",
+          "name": "OPNsense Entity"
+        },
+        "period": {
+          "description": "The vnStat period to query",
+          "name": "Period"
+        }
+      },
+      "name": "Get vnStat metrics",
+      "sections": {
+        "multiple_opnsense": {
+          "name": "Only needed if there is more than one OPNsense router"
+        }
+      }
+    },
+    "kill_states": {
+      "description": "Kill all states for an IP address",
+      "fields": {
+        "device_id": {
+          "description": "Select the OPNsense router to call the command on. If not specified, the command will be sent to all OPNsense routers.",
+          "name": "OPNsense Device"
+        },
+        "entity_id": {
+          "description": "Pick any sensor in the OPNsense router you want to call the command on. If not specified, the command will be sent to all OPNsense routers.",
+          "name": "OPNsense Entity"
+        },
+        "ip_addr": {
+          "description": "The IP address to kill all states for. IPv4 or IPv6 accepted.",
+          "name": "IP Address"
+        }
+      },
+      "name": "Kill states",
+      "sections": {
+        "multiple_opnsense": {
+          "name": "Only needed if there is more than one OPNsense router"
+        }
+      }
+    },
+    "reload_interface": {
+      "description": "Reload or restart an OPNsense interface",
+      "fields": {
+        "device_id": {
+          "description": "Select the OPNsense router to call the command on. If not specified, the command will be sent to all OPNsense routers.",
+          "name": "OPNsense Device"
+        },
+        "entity_id": {
+          "description": "Pick any sensor in the OPNsense router you want to call the command on. If not specified, the command will be sent to all OPNsense routers.",
+          "name": "OPNsense Entity"
+        },
+        "interface": {
+          "description": "The name of the interface, such as wan, lan, opt1, or opt2.",
+          "name": "Interface Name"
+        }
+      },
+      "name": "Reload an interface",
+      "sections": {
+        "multiple_opnsense": {
+          "name": "Only needed if there is more than one OPNsense router"
+        }
+      }
+    },
+    "restart_service": {
+      "description": "Restarts an OPNsense service",
+      "fields": {
+        "device_id": {
+          "description": "Select the OPNsense router to call the command on. If not specified, the command will be sent to all OPNsense routers.",
+          "name": "OPNsense Device"
+        },
+        "entity_id": {
+          "description": "Pick any sensor in the OPNsense router you want to call the command on. If not specified, the command will be sent to all OPNsense routers.",
+          "name": "OPNsense Entity"
+        },
+        "only_if_running": {
+          "description": "Restart the service only if it is already running.",
+          "name": "Only if Running"
+        },
+        "service_id": {
+          "description": "The ID or name of the service, such as udpbroadcastrelay/3, haproxy, or dhcp.",
+          "name": "Service ID or Name"
+        }
+      },
+      "name": "Restart service",
+      "sections": {
+        "multiple_opnsense": {
+          "name": "Only needed if there is more than one OPNsense router"
+        }
+      }
+    },
+    "run_speedtest": {
+      "description": "Run an OPNsense speedtest and return results as action response data",
+      "fields": {
+        "device_id": {
+          "description": "Select the OPNsense router to call the command on. If not specified, the command will be sent to all OPNsense routers.",
+          "name": "OPNsense Device"
+        },
+        "entity_id": {
+          "description": "Pick any sensor in the OPNsense router you want to call the command on. If not specified, the command will be sent to all OPNsense routers.",
+          "name": "OPNsense Entity"
+        }
+      },
+      "name": "Run Speedtest",
+      "sections": {
+        "multiple_opnsense": {
+          "name": "Only needed if there is more than one OPNsense router"
+        }
+      }
+    },
+    "send_wol": {
+      "description": "Send a Wake-on-LAN magic packet",
+      "fields": {
+        "device_id": {
+          "description": "Select the OPNsense router to call the command on. If not specified, the command will be sent to all OPNsense routers.",
+          "name": "OPNsense Device"
+        },
+        "entity_id": {
+          "description": "Pick any sensor in the OPNsense router you want to call the command on. If not specified, the command will be sent to all OPNsense routers.",
+          "name": "OPNsense Entity"
+        },
+        "interface": {
+          "description": "The name of the interface, such as wan, lan, opt1, or opt2.",
+          "name": "Interface Name"
+        },
+        "mac": {
+          "description": "The target MAC address.",
+          "name": "MAC Address"
+        }
+      },
+      "name": "Send WOL",
+      "sections": {
+        "multiple_opnsense": {
+          "name": "Only needed if there is more than one OPNsense router"
+        }
+      }
+    },
+    "start_service": {
+      "description": "Starts an OPNsense service",
+      "fields": {
+        "device_id": {
+          "description": "Select the OPNsense router to call the command on. If not specified, the command will be sent to all OPNsense routers.",
+          "name": "OPNsense Device"
+        },
+        "entity_id": {
+          "description": "Pick any sensor in the OPNsense router you want to call the command on. If not specified, the command will be sent to all OPNsense routers.",
+          "name": "OPNsense Entity"
+        },
+        "service_id": {
+          "description": "The ID or name of the service, such as udpbroadcastrelay/3, haproxy, or dhcp.",
+          "name": "Service ID or Name"
+        }
+      },
+      "name": "Start service",
+      "sections": {
+        "multiple_opnsense": {
+          "name": "Only needed if there is more than one OPNsense router"
+        }
+      }
+    },
+    "stop_service": {
+      "description": "Stops an OPNsense service",
+      "fields": {
+        "device_id": {
+          "description": "Select the OPNsense router to call the command on. If not specified, the command will be sent to all OPNsense routers.",
+          "name": "OPNsense Device"
+        },
+        "entity_id": {
+          "description": "Pick any sensor in the OPNsense router you want to call the command on. If not specified, the command will be sent to all OPNsense routers.",
+          "name": "OPNsense Entity"
+        },
+        "service_id": {
+          "description": "The ID or name of the service, such as udpbroadcastrelay/3, haproxy, or dhcp.",
+          "name": "Service ID or Name"
+        }
+      },
+      "name": "Stop service",
+      "sections": {
+        "multiple_opnsense": {
+          "name": "Only needed if there is more than one OPNsense router"
+        }
+      }
+    },
+    "system_halt": {
+      "description": "Halt the OPNsense router",
+      "fields": {
+        "device_id": {
+          "description": "Only needed if there is more than one OPNsense router. Select the OPNsense router to call the command on. If not specified, the command will be sent to all OPNsense routers.",
+          "name": "OPNsense Device"
+        },
+        "entity_id": {
+          "description": "Only needed if there is more than one OPNsense router. Pick any sensor in the OPNsense router you want to call the command on. If not specified, the command will be sent to all OPNsense routers.",
+          "name": "OPNsense Entity"
+        }
+      },
+      "name": "Halt system"
+    },
+    "system_reboot": {
+      "description": "Reboot the OPNsense router",
+      "fields": {
+        "device_id": {
+          "description": "Only needed if there is more than one OPNsense router. Select the OPNsense router to call the command on. If not specified, the command will be sent to all OPNsense routers.",
+          "name": "OPNsense Device"
+        },
+        "entity_id": {
+          "description": "Only needed if there is more than one OPNsense router. Pick any sensor in the OPNsense router you want to call the command on. If not specified, the command will be sent to all OPNsense routers.",
+          "name": "OPNsense Entity"
+        }
+      },
+      "name": "Reboot system"
+    },
+    "toggle_alias": {
+      "description": "Toggle, turn on, or turn off an alias",
+      "fields": {
+        "alias": {
+          "description": "The name of the alias in OPNsense",
+          "name": "Alias Name"
+        },
+        "device_id": {
+          "description": "Select the OPNsense router to call the command on. If not specified, the command will be sent to all OPNsense routers.",
+          "name": "OPNsense Device"
+        },
+        "entity_id": {
+          "description": "Pick any sensor in the OPNsense router you want to call the command on. If not specified, the command will be sent to all OPNsense routers.",
+          "name": "OPNsense Entity"
+        },
+        "toggle_on_off": {
+          "description": "What action to take on the alias",
+          "name": "Alias Action"
+        }
+      },
+      "name": "Toggle alias",
+      "sections": {
+        "multiple_opnsense": {
+          "name": "Only needed if there is more than one OPNsense router"
+        }
+      }
+    }
+  }
+}
