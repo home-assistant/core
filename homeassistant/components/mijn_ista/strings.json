@@ -1,0 +1,42 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "mijn.ista.nl — ista Nederland",
+        "description": "Connect your mijn.ista.nl account to expose energy, electricity and water consumption sensors.",
+        "data": {
+          "username": "Username or email",
+          "password": "Password",
+          "update_interval": "Update interval (hours)"
+        }
+      },
+      "reconfigure": {
+        "title": "Update credentials",
+        "description": "Enter new credentials for your mijn.ista.nl account.",
+        "data": {
+          "username": "Username or email",
+          "password": "Password"
+        }
+      }
+    },
+    "error": {
+      "invalid_auth": "Invalid username/email or password.",
+      "cannot_connect": "Could not connect to mijn.ista.nl. Check your internet connection.",
+      "unknown": "An unexpected error occurred."
+    },
+    "abort": {
+      "already_configured": "This account is already configured.",
+      "reconfigure_successful": "Credentials updated successfully."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "mijn.ista.nl options",
+        "data": {
+          "update_interval": "Update interval (hours)"
+        }
+      }
+    }
+  }
+}

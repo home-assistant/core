@@ -1,0 +1,78 @@
+rules:
+  # Bronze
+  action-setup:
+    status: exempt
+    comment: Integration exposes no actions/services.
+  appropriate-polling: done
+  brands: done
+  common-modules: done
+  config-flow-test-coverage: done
+  config-flow: done
+  dependency-transparency: done
+  docs-actions:
+    status: exempt
+    comment: Integration exposes no actions/services.
+  docs-high-level-description: todo
+  docs-installation-instructions: todo
+  docs-removal-instructions: todo
+  entity-event-setup:
+    status: exempt
+    comment: Integration registers no events.
+  entity-unique-id: done
+  has-entity-name: done
+  runtime-data: done
+  test-before-configure: done
+  test-before-setup: done
+  unique-config-entry: done
+
+  # Silver
+  action-exceptions:
+    status: exempt
+    comment: Integration exposes no actions/services.
+  config-entry-unloading: done
+  docs-configuration-parameters: todo
+  docs-installation-parameters: todo
+  entity-unavailable: done
+  integration-owner: done
+  log-when-unavailable:
+    status: done
+    comment: Handled by the coordinator.
+  parallel-updates: done
+  reauthentication-flow: done
+  test-coverage: done
+
+  # Gold
+  devices: done
+  diagnostics: done
+  discovery-update-info:
+    status: exempt
+    comment: Integration is a cloud service with no local devices.
+  discovery:
+    status: exempt
+    comment: Integration is a cloud service with no local devices.
+  docs-data-update: todo
+  docs-examples: todo
+  docs-known-limitations: todo
+  docs-supported-devices:
+    status: exempt
+    comment: Integration is a cloud service with no local devices.
+  docs-supported-functions: todo
+  docs-troubleshooting: todo
+  docs-use-cases: todo
+  dynamic-devices: todo
+  entity-category: todo
+  entity-device-class: done
+  entity-disabled-by-default: todo
+  entity-translations: todo
+  exception-translations: todo
+  icon-translations: todo
+  reconfiguration-flow: done
+  repair-issues:
+    status: exempt
+    comment: No repair flows needed.
+  stale-devices: todo
+
+  # Platinum
+  async-dependency: done
+  inject-websession: done
+  strict-typing: todo
