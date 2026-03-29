@@ -87,6 +87,8 @@ async def test_unload_entry(
     monkeypatch.setattr(f"{bms_class}.device_info", mock_devinfo_min)
     monkeypatch.setattr(f"{bms_class}.async_update", mock_update_min)
 
+    trace_fct: dict[str, bool] = {"shutdown_called": False}
+
     async def mock_coord_shutdown(_self) -> None:
         trace_fct["shutdown_called"] = True
 
@@ -112,7 +114,6 @@ async def test_unload_entry(
     assert cfg.state is ConfigEntryState.LOADED
 
     # run removal of entry (actual test)
-    trace_fct: dict[str, bool] = {"shutdown_called": False}
 
     assert await hass.config_entries.async_remove(cfg.entry_id)
     await hass.async_block_till_done(wait_background_tasks=True)
