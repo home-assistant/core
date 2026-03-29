@@ -58,11 +58,15 @@ class OPNsenseClient:
 
     async def get_arp(self) -> list[dict[str, Any]]:
         """Get the ARP table from OPNsense."""
-        return await self._get("diagnostics/interface/get_arp")
+        result: list[dict[str, Any]] = await self._get("diagnostics/interface/get_arp")
+        return result
 
     async def get_interfaces(self) -> dict[str, str]:
         """Get available network interfaces from OPNsense."""
-        return await self._get("diagnostics/networkinsight/get_interfaces")
+        result: dict[str, str] = await self._get(
+            "diagnostics/networkinsight/get_interfaces"
+        )
+        return result
 
     async def _get(self, endpoint: str) -> Any:
         """Make a GET request to the OPNsense API."""
@@ -115,9 +119,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         try:
             interfaces_resp = await client.get_interfaces()
         except aiohttp.ClientError:
-            _LOGGER.exception(
-                "Failure while retrieving OPNsense network interfaces"
-            )
+            _LOGGER.exception("Failure while retrieving OPNsense network interfaces")
             return False
         interfaces = list(interfaces_resp.values())
         for interface in tracker_interfaces:

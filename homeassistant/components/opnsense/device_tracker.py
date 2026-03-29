@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from datetime import timedelta
 import logging
 from typing import Any
 
@@ -10,8 +11,6 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_time_interval
-
-from datetime import timedelta
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -41,7 +40,10 @@ async def async_setup_entry(
         seen_macs: set[str] = set()
 
         for device in devices:
-            if tracker_interfaces and device.get("intf_description") not in tracker_interfaces:
+            if (
+                tracker_interfaces
+                and device.get("intf_description") not in tracker_interfaces
+            ):
                 continue
 
             mac = device.get("mac")
@@ -79,7 +81,7 @@ class OPNsenseDevice(ScannerEntity):
 
     def __init__(self, device: dict[str, Any]) -> None:
         """Initialize the device."""
-        self._mac = device["mac"]
+        self._mac: str = device["mac"]
         self._attr_hostname = device.get("hostname") or None
         self._attr_ip_address = device.get("ip")
         self._attr_mac_address = self._mac
