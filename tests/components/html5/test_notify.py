@@ -1,5 +1,6 @@
 """Test HTML5 notify platform."""
 
+from collections.abc import Generator
 from http import HTTPStatus
 import json
 from unittest.mock import AsyncMock, MagicMock, Mock, mock_open, patch
@@ -18,7 +19,12 @@ from homeassistant.components.notify import (
     SERVICE_SEND_MESSAGE,
 )
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, STATE_UNKNOWN
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
+    Platform,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -87,6 +93,16 @@ VAPID_HEADERS = {
     "urgency": "normal",
     "priority": "normal",
 }
+
+
+@pytest.fixture(autouse=True)
+def notify_only() -> Generator[None]:
+    """Enable only the notify platform."""
+    with patch(
+        "homeassistant.components.html5.PLATFORMS",
+        [Platform.NOTIFY],
+    ):
+        yield
 
 
 async def test_get_service_with_no_json(hass: HomeAssistant) -> None:
