@@ -95,7 +95,7 @@ class YouTubeDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                         )
                         is_short_flags.append(False)
                     else:
-                        is_short_flags.append(result)
+                        is_short_flags.append(bool(result))
                 latest_upload: dict[str, Any] | None = None
                 latest_short: dict[str, Any] | None = None
                 latest_video_non_short: dict[str, Any] | None = None

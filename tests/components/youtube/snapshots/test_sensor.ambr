@@ -77,6 +77,38 @@
     'state': '214141263',
   })
 # ---
+# name: test_sensor_with_short
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'entity_picture': 'https://i.ytimg.com/vi/wysukDrMdqU/maxresdefault.jpg',
+      'friendly_name': 'Google for Developers Latest short',
+      'published_at': datetime.datetime(2023, 5, 11, 0, 20, 46, tzinfo=TzInfo(0)),
+      'video_id': 'wysukDrMdqU',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.google_for_developers_latest_short',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': "What's new in Google Home in less than 1 minute",
+  })
+# ---
+# name: test_sensor_with_short.1
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'entity_picture': 'https://i.ytimg.com/vi/hleLlcHwQLM/maxresdefault.jpg',
+      'friendly_name': 'Google for Developers Latest video',
+      'published_at': datetime.datetime(2023, 5, 10, 22, 30, 48, tzinfo=TzInfo(0)),
+      'video_id': 'hleLlcHwQLM',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.google_for_developers_latest_video',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'Google I/O 2023 Developer Keynote in 5 minutes',
+  })
+# ---
 # name: test_sensor_without_uploaded_video
   StateSnapshot({
     'attributes': ReadOnlyDict({
