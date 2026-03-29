@@ -166,3 +166,56 @@ async def test_server_sensors_not_duplicated_for_second_entry(
 
     state = hass.states.get("sensor.second_capsuleer_wallet_balance")
     assert state is not None
+
+
+async def test_server_sensors_recreated_after_owning_entry_unload(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_eveonline_client: AsyncMock,
+    setup_credentials: None,
+) -> None:
+    """Test that server sensors are recreated when the owning entry is unloaded.
+
+    When the entry that owns the shared Tranquility server sensors is unloaded,
+    the remaining loaded entry should be reloaded so it can claim ownership and
+    recreate the server sensors.
+    """
+    mock_eveonline_client.async_get_server_status.return_value = mock_server_status(
+        players=25000
+    )
+
+    await _setup_integration(hass, mock_config_entry)
+
+    second_entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="Second Capsuleer",
+        unique_id="99999999",
+        data={
+            "auth_implementation": DOMAIN,
+            "token": {
+                "access_token": "mock-access-token-2",
+                "refresh_token": "mock-refresh-token-2",
+                "expires_in": 1200,
+                "expires_at": time.time() + 1200,
+                "token_type": "Bearer",
+            },
+            "character_id": 99999999,
+            "character_name": "Second Capsuleer",
+        },
+    )
+    second_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(second_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert second_entry.state is ConfigEntryState.LOADED
+
+    # Unload the first (owning) entry — this should trigger a reload of the second
+    await hass.config_entries.async_unload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
+    assert second_entry.state is ConfigEntryState.LOADED
+
+    # Server sensors should still be available via the second entry
+    state = hass.states.get("sensor.eve_online_tranquility_players_online")
+    assert state is not None

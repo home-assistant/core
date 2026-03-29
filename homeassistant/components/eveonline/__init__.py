@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from eveonline import EveOnlineClient
 
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
@@ -59,5 +60,15 @@ async def async_unload_entry(hass: HomeAssistant, entry: EveOnlineConfigEntry) -
         if domain_data := hass.data.get(DOMAIN):
             if domain_data.get("server_sensor_entry") == entry.entry_id:
                 domain_data.pop("server_sensor_entry")
+                other_entries = [
+                    e
+                    for e in hass.config_entries.async_entries(DOMAIN)
+                    if e.entry_id != entry.entry_id
+                    and e.state is ConfigEntryState.LOADED
+                ]
+                if other_entries:
+                    hass.async_create_task(
+                        hass.config_entries.async_reload(other_entries[0].entry_id)
+                    )
 
     return unload_ok
