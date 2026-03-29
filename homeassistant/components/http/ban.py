@@ -294,8 +294,8 @@ class IpBanManager:
     async def async_add_ban(self, remote_addr: IPv4Address | IPv6Address) -> None:
         """Add a new IP address to the banned list."""
         if remote_addr not in self.ip_bans_lookup:
-            new_ban = self.ip_bans_lookup[remote_addr] = IpBan(remote_addr)
             async with self.ip_bans_lock:
+                new_ban = self.ip_bans_lookup[remote_addr] = IpBan(remote_addr)
                 await self.hass.async_add_executor_job(self._add_ban, new_ban)
 
     async def async_remove_ban(self, remote_addr: IPv4Address | IPv6Address) -> None:
