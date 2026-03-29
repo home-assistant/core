@@ -77,6 +77,9 @@
     "oauth2_implementation_unavailable": {
       "message": "[%key:common::exceptions::oauth2_implementation_unavailable::message%]"
     },
+    "token_refresh_failed": {
+      "message": "Failed to refresh OAuth token: {error}"
+    },
     "update_failed": {
       "message": "Error communicating with Eve Online API: {error}"
     }
