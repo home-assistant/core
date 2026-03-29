@@ -186,6 +186,11 @@ class HomematicipHAP:
         if self._get_state_task is not None and not self._get_state_task.done():
             _LOGGER.debug("Cancelling existing get_state task before starting new one")
             self._get_state_task.cancel()
+        _LOGGER.debug(
+            "Starting get_state task (ws_connected=%s, ws_closed_event=%s)",
+            self.home.websocket_is_connected(),
+            self._ws_connection_closed.is_set(),
+        )
         self._get_state_task = self.hass.async_create_task(self._try_get_state())
         self._get_state_task.add_done_callback(self.get_state_finished)
         self._ws_connection_closed.clear()
@@ -193,15 +198,38 @@ class HomematicipHAP:
     async def _try_get_state(self) -> None:
         """Call get_state in a loop until no error occurs, using exponential backoff on error."""
 
-        # Wait until WebSocket connection is established.
+        # Wait until WebSocket connection is established, with a timeout.
+        # If the WS never reconnects, proceed anyway — get_state will fail and retry.
+        _LOGGER.debug("Waiting for WebSocket connection before get_state")
+        ws_wait_elapsed = 0
+        ws_wait_timeout = 300  # 5 minutes max wait
         while not self.home.websocket_is_connected():
             await asyncio.sleep(2)
+            ws_wait_elapsed += 2
+            if ws_wait_elapsed % 30 == 0:
+                _LOGGER.debug(
+                    "Still waiting for WebSocket connection (%ds elapsed, timeout=%ds)",
+                    ws_wait_elapsed,
+                    ws_wait_timeout,
+                )
+            if ws_wait_elapsed >= ws_wait_timeout:
+                _LOGGER.warning(
+                    "WebSocket did not reconnect within %ds — proceeding with get_state anyway",
+                    ws_wait_timeout,
+                )
+                break
+        _LOGGER.debug(
+            "WebSocket connected=%s, proceeding with get_state",
+            self.home.websocket_is_connected(),
+        )
 
         delay = 8
         max_delay = 1500
         while True:
             try:
+                _LOGGER.debug("Calling get_current_state_async")
                 await self.get_state()
+                _LOGGER.debug("get_current_state_async succeeded")
                 break
             except HmipAuthenticationError:
                 _LOGGER.error(
@@ -288,22 +316,33 @@ class HomematicipHAP:
 
     async def ws_connected_handler(self) -> None:
         """Handle websocket connected."""
-        _LOGGER.info("Websocket connection to HomematicIP Cloud established")
+        _LOGGER.info(
+            "Websocket connection to HomematicIP Cloud established (ws_closed_event=%s)",
+            self._ws_connection_closed.is_set(),
+        )
         if self._ws_connection_closed.is_set():
+            _LOGGER.debug("ws_closed_event is set — starting get_state task")
             self._start_get_state_task()
+        else:
+            _LOGGER.debug("ws_closed_event is NOT set — skipping get_state task start")
 
     async def ws_disconnected_handler(self) -> None:
         """Handle websocket disconnection."""
-        _LOGGER.warning("Websocket connection to HomematicIP Cloud closed")
+        _LOGGER.warning(
+            "Websocket connection to HomematicIP Cloud closed (get_state_task_alive=%s)",
+            self._get_state_task is not None and not self._get_state_task.done(),
+        )
         self._ws_connection_closed.set()
 
     async def ws_reconnected_handler(self, reason: str) -> None:
         """Handle websocket reconnection. Is called when Websocket tries to reconnect."""
         _LOGGER.info(
-            "Websocket connection to HomematicIP Cloud trying to reconnect due to reason: %s",
+            "Websocket connection to HomematicIP Cloud trying to reconnect due to reason: %s "
+            "(ws_closed_event=%s, get_state_task_alive=%s)",
             reason,
+            self._ws_connection_closed.is_set(),
+            self._get_state_task is not None and not self._get_state_task.done(),
         )
-
         self._ws_connection_closed.set()
 
     async def get_hap(
