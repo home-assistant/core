@@ -1,5 +1,6 @@
 """Test the Eve Online sensor platform."""
 
+import time
 from unittest.mock import AsyncMock
 
 from eveonline.models import SkillQueueEntry, WalletBalance
@@ -141,6 +142,7 @@ async def test_server_sensors_not_duplicated_for_second_entry(
                 "access_token": "mock-access-token-2",
                 "refresh_token": "mock-refresh-token-2",
                 "expires_in": 1200,
+                "expires_at": time.time() + 1200,
                 "token_type": "Bearer",
             },
             "character_id": 99999999,

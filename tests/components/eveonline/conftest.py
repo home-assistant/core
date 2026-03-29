@@ -2,6 +2,7 @@
 
 from collections.abc import Generator
 from datetime import UTC, datetime
+import time
 from unittest.mock import AsyncMock, patch
 
 from eveonline.models import ServerStatus
@@ -48,6 +49,7 @@ def mock_config_entry(hass: HomeAssistant) -> MockConfigEntry:
                 "access_token": "mock-access-token",
                 "refresh_token": "mock-refresh-token",
                 "expires_in": 1200,
+                "expires_at": time.time() + 1200,
                 "token_type": "Bearer",
             },
             "character_id": CHARACTER_ID,
