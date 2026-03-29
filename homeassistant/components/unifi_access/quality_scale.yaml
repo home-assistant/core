@@ -61,7 +61,9 @@ rules:
   exception-translations: done
   icon-translations: done
   reconfiguration-flow: todo
-  repair-issues: todo
+  repair-issues:
+    status: exempt
+    comment: This integration does not raise any repairable issues.
   stale-devices: todo
 
   # Platinum
