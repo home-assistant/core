@@ -23,8 +23,11 @@ from unifi_access_api.models.websocket import (
     WebsocketMessage,
 )
 
+from homeassistant.components.unifi_access import async_remove_config_entry_device
+from homeassistant.components.unifi_access.const import DOMAIN
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
 
 from tests.common import MockConfigEntry
 
@@ -353,3 +356,72 @@ async def test_ws_location_update_thumbnail_only_no_state(
     # Door state unchanged, thumbnail updated
     assert hass.states.get(FRONT_DOOR_BINARY_SENSOR).state == state_before
     assert hass.states.get(FRONT_DOOR_IMAGE).state != image_state_before
+
+
+async def test_remove_config_entry_device_door_still_exists(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    init_integration: MockConfigEntry,
+) -> None:
+    """Test that a device for a door still present cannot be removed."""
+    device = device_registry.async_get_device(identifiers={(DOMAIN, "door-001")})
+    assert device is not None
+
+    result = await async_remove_config_entry_device(hass, init_integration, device)
+    assert result is False
+
+
+async def test_remove_config_entry_device_hub(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    init_integration: MockConfigEntry,
+) -> None:
+    """Test that the hub device cannot be removed."""
+    device = device_registry.async_get_device(
+        identifiers={(DOMAIN, init_integration.entry_id)}
+    )
+    assert device is not None
+
+    result = await async_remove_config_entry_device(hass, init_integration, device)
+    assert result is False
+
+
+async def test_remove_config_entry_device_stale(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    init_integration: MockConfigEntry,
+) -> None:
+    """Test that a stale device can be removed."""
+    stale_device = device_registry.async_get_or_create(
+        config_entry_id=init_integration.entry_id,
+        identifiers={(DOMAIN, "door-removed")},
+    )
+
+    result = await async_remove_config_entry_device(
+        hass, init_integration, stale_device
+    )
+    assert result is True
+
+
+async def test_stale_device_removed_on_reload(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    init_integration: MockConfigEntry,
+    mock_client: MagicMock,
+) -> None:
+    """Test that stale devices are automatically removed on integration reload."""
+    # Verify both doors exist after initial setup
+    assert device_registry.async_get_device(identifiers={(DOMAIN, "door-001")})
+    assert device_registry.async_get_device(identifiers={(DOMAIN, "door-002")})
+
+    # Simulate door-002 being removed from the hub
+    mock_client.get_doors.return_value = [
+        door for door in mock_client.get_doors.return_value if door.id != "door-002"
+    ]
+
+    await hass.config_entries.async_reload(init_integration.entry_id)
+    await hass.async_block_till_done()
+
+    # door-001 still exists, door-002 was removed
+    assert device_registry.async_get_device(identifiers={(DOMAIN, "door-001")})
+    assert not device_registry.async_get_device(identifiers={(DOMAIN, "door-002")})
