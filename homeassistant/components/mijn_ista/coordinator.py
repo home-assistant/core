@@ -259,7 +259,7 @@ def _parse_customer(
 
     return CustomerData(
         cuid=cus["Cuid"],
-        address=cus.get("Adress", ""),
+        address=cus.get("Adress", ""),  # codespell:ignore adress
         zip_code=cus.get("Zip", ""),
         city=cus.get("City", ""),
         date_start=cus.get("DateStart", ""),

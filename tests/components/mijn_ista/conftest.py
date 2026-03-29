@@ -21,7 +21,7 @@ MOCK_USER_VALUES: dict = {
     "Cus": [
         {
             "Cuid": "test-cuid-abc123",
-            "Adress": "Teststraat 1",
+            "Adress": "Teststraat 1",  # codespell:ignore adress
             "Zip": "1234 AB",
             "City": "Amsterdam",
             "DateStart": "2020-01-01T00:00:00",

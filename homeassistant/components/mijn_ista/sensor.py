@@ -196,10 +196,10 @@ def _build_sensors(
                 unit,
                 dc,
                 SensorStateClass.TOTAL,
-                value_fn=lambda c, s=sid: c.annual[s].total_now
+                value_fn=lambda c, s=sid: c.annual[s].total_now  # type: ignore[misc]
                 if s in c.annual
                 else None,
-                attrs_fn=lambda c, s=sid: {
+                attrs_fn=lambda c, s=sid: {  # type: ignore[misc]
                     "period_start": c.annual[s].cur_meters[0].begin_date
                     if c.annual[s].cur_meters
                     else None,
@@ -210,7 +210,7 @@ def _build_sensors(
                 }
                 if s in c.annual
                 else {},
-                last_reset_fn=lambda c, s=sid: _parse_dt(
+                last_reset_fn=lambda c, s=sid: _parse_dt(  # type: ignore[misc]
                     c.annual[s].cur_meters[0].begin_date
                 )
                 if s in c.annual and c.annual[s].cur_meters
@@ -228,16 +228,16 @@ def _build_sensors(
                 unit,
                 dc,
                 SensorStateClass.TOTAL,
-                value_fn=lambda c, s=sid: c.annual[s].total_previous
+                value_fn=lambda c, s=sid: c.annual[s].total_previous  # type: ignore[misc]
                 if s in c.annual
                 else None,
-                attrs_fn=lambda c, s=sid: {
+                attrs_fn=lambda c, s=sid: {  # type: ignore[misc]
                     "total_whole_year": c.annual[s].total_whole_previous,
                     "meters": [m.as_dict() for m in c.annual[s].comp_meters],
                 }
                 if s in c.annual
                 else {},
-                last_reset_fn=lambda c, s=sid: _parse_dt(
+                last_reset_fn=lambda c, s=sid: _parse_dt(  # type: ignore[misc]
                     c.annual[s].comp_meters[0].begin_date
                 )
                 if s in c.annual and c.annual[s].comp_meters
@@ -255,7 +255,7 @@ def _build_sensors(
                 PERCENTAGE,
                 None,
                 SensorStateClass.MEASUREMENT,
-                value_fn=lambda c, s=sid: c.annual[s].diff_pct
+                value_fn=lambda c, s=sid: c.annual[s].diff_pct  # type: ignore[misc]
                 if s in c.annual
                 else None,
             )
@@ -272,7 +272,7 @@ def _build_sensors(
                     unit,
                     dc,
                     SensorStateClass.MEASUREMENT,
-                    value_fn=lambda c, s=sid: c.building_averages.get(s),
+                    value_fn=lambda c, s=sid: c.building_averages.get(s),  # type: ignore[misc]
                 )
             )
 
@@ -286,7 +286,7 @@ def _build_sensors(
                 unit,
                 dc,
                 SensorStateClass.TOTAL,
-                value_fn=lambda c, s=sid, mid=meter.meter_id: next(
+                value_fn=lambda c, s=sid, mid=meter.meter_id: next(  # type: ignore[misc]
                     (
                         m.c_value
                         for m in c.annual[s].cur_meters
@@ -296,7 +296,7 @@ def _build_sensors(
                 )
                 if s in c.annual
                 else None,
-                attrs_fn=lambda c, s=sid, mid=meter.meter_id: next(
+                attrs_fn=lambda c, s=sid, mid=meter.meter_id: next(  # type: ignore[misc]
                     (
                         m.as_dict()
                         for m in c.annual[s].cur_meters
@@ -306,7 +306,7 @@ def _build_sensors(
                 )
                 if s in c.annual
                 else {},
-                last_reset_fn=lambda c, s=sid, mid=meter.meter_id: _parse_dt(
+                last_reset_fn=lambda c, s=sid, mid=meter.meter_id: _parse_dt(  # type: ignore[misc]
                     next(
                         (
                             m.begin_date
@@ -351,12 +351,12 @@ def _build_sensors(
                 unit,
                 dc,
                 SensorStateClass.TOTAL,
-                value_fn=lambda c, s=sid: (
+                value_fn=lambda c, s=sid: (  # type: ignore[misc]
                     me.services[s].total_consumption
                     if (me := _find_month(c.monthly, s)) is not None
                     else None
                 ),
-                attrs_fn=lambda c, s=sid: (
+                attrs_fn=lambda c, s=sid: (  # type: ignore[misc]
                     {
                         "month": f"{me.year}-{me.month:02d}",
                         "building_average": me.services[s].building_average,
@@ -379,7 +379,7 @@ def _build_sensors(
                     if (me := _find_month(c.monthly, s)) is not None
                     else {}
                 ),
-                last_reset_fn=lambda c, s=sid: (
+                last_reset_fn=lambda c, s=sid: (  # type: ignore[misc]
                     datetime(me.year, me.month, 1, tzinfo=timezone.utc)
                     if (me := _find_month(c.monthly, s)) is not None
                     else None
@@ -397,12 +397,12 @@ def _build_sensors(
                 unit,
                 dc,
                 SensorStateClass.MEASUREMENT,
-                value_fn=lambda c, s=sid: (
+                value_fn=lambda c, s=sid: (  # type: ignore[misc]
                     me.services[s].building_average
                     if (me := _find_month(c.monthly, s)) is not None
                     else None
                 ),
-                attrs_fn=lambda c, s=sid: (
+                attrs_fn=lambda c, s=sid: (  # type: ignore[misc]
                     {"month": f"{me.year}-{me.month:02d}"}
                     if (me := _find_month(c.monthly, s)) is not None
                     else {}
@@ -420,7 +420,7 @@ def _build_sensors(
                 unit,
                 dc,
                 SensorStateClass.TOTAL,
-                value_fn=lambda c, s=sid, did=dev.meter_id: (
+                value_fn=lambda c, s=sid, did=dev.meter_id: (  # type: ignore[misc]
                     next(
                         (
                             d.c_value
@@ -432,7 +432,7 @@ def _build_sensors(
                     if (me := _find_month(c.monthly, s)) is not None
                     else None
                 ),
-                attrs_fn=lambda c, s=sid, did=dev.meter_id: (
+                attrs_fn=lambda c, s=sid, did=dev.meter_id: (  # type: ignore[misc]
                     next(
                         (
                             d.as_dict()
@@ -444,7 +444,7 @@ def _build_sensors(
                     if (me := _find_month(c.monthly, s)) is not None
                     else {}
                 ),
-                last_reset_fn=lambda c, s=sid: (
+                last_reset_fn=lambda c, s=sid: (  # type: ignore[misc]
                     datetime(me.year, me.month, 1, tzinfo=timezone.utc)
                     if (me := _find_month(c.monthly, s)) is not None
                     else None

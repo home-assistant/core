@@ -76,8 +76,7 @@ class TestSetupEntry:
 
         def _capture_api(session, username, password, lang="en-GB"):
             captured_lang["lang"] = lang
-            m = MagicMock()
-            return m
+            return MagicMock()
 
         with (
             patch(
