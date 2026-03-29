@@ -55,7 +55,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: TISConfigEntry) -> bool:
         async for event in tis_api.consume_events():
             try:
                 device_id = event["device_id"]
-                hass.bus.async_fire(f"tis_device_{device_id}", event)
+                hass.bus.async_fire(f"{DOMAIN}_event", event)
             except Exception:
                 _LOGGER.exception("Unexpected error while processing TIS event")
 
