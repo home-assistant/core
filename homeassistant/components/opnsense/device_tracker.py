@@ -1,73 +1,125 @@
 """Device tracker support for OPNsense routers."""
 
-from typing import Any, NewType
+from __future__ import annotations
 
-from pyopnsense import diagnostics
+import logging
+from typing import Any
 
-from homeassistant.components.device_tracker import DeviceScanner
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.components.device_tracker import ScannerEntity, SourceType
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.event import async_track_time_interval
 
-from .const import CONF_INTERFACE_CLIENT, CONF_TRACKER_INTERFACES, OPNSENSE_DATA
+from datetime import timedelta
 
-DeviceDetails = NewType("DeviceDetails", dict[str, Any])
-DeviceDetailsByMAC = NewType("DeviceDetailsByMAC", dict[str, DeviceDetails])
+_LOGGER = logging.getLogger(__name__)
 
-
-async def async_get_scanner(
-    hass: HomeAssistant, config: ConfigType
-) -> DeviceScanner | None:
-    """Configure the OPNsense device_tracker."""
-    return OPNsenseDeviceScanner(
-        hass.data[OPNSENSE_DATA][CONF_INTERFACE_CLIENT],
-        hass.data[OPNSENSE_DATA][CONF_TRACKER_INTERFACES],
-    )
+SCAN_INTERVAL = timedelta(seconds=120)
 
 
-class OPNsenseDeviceScanner(DeviceScanner):
-    """This class queries a router running OPNsense."""
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
+    """Set up device tracker for OPNsense."""
+    client = config_entry.runtime_data["client"]
+    tracker_interfaces: list[str] = config_entry.runtime_data["tracker_interfaces"]
 
-    def __init__(
-        self, client: diagnostics.InterfaceClient, interfaces: list[str]
-    ) -> None:
-        """Initialize the scanner."""
-        self.last_results: dict[str, Any] = {}
-        self.client = client
-        self.interfaces = interfaces
+    tracked: dict[str, OPNsenseDevice] = {}
 
-    def _get_mac_addrs(self, devices: list[DeviceDetails]) -> DeviceDetailsByMAC | dict:
-        """Create dict with mac address keys from list of devices."""
-        out_devices = {}
+    async def _async_update_devices(_now: Any = None) -> None:
+        """Update devices from OPNsense ARP table."""
+        try:
+            devices = await client.get_arp()
+        except Exception:
+            _LOGGER.exception("Error fetching OPNsense ARP table")
+            return
+
+        new_entities: list[OPNsenseDevice] = []
+        seen_macs: set[str] = set()
+
         for device in devices:
-            if not self.interfaces or device["intf_description"] in self.interfaces:
-                out_devices[device["mac"]] = device
-        return out_devices
+            if tracker_interfaces and device.get("intf_description") not in tracker_interfaces:
+                continue
 
-    def scan_devices(self) -> list[str]:
-        """Scan for new devices and return a list with found device IDs."""
-        self.update_info()
-        return list(self.last_results)
+            mac = device.get("mac")
+            if not mac:
+                continue
 
-    def get_device_name(self, device: str) -> str | None:
-        """Return the name of the given device or None if we don't know."""
-        if device not in self.last_results:
-            return None
-        return self.last_results[device].get("hostname") or None
+            seen_macs.add(mac)
 
-    def update_info(self) -> bool:
-        """Ensure the information from the OPNsense router is up to date.
+            if mac in tracked:
+                tracked[mac].update_from_arp(device)
+            else:
+                entity = OPNsenseDevice(device)
+                tracked[mac] = entity
+                new_entities.append(entity)
 
-        Return boolean if scanning successful.
-        """
-        devices = self.client.get_arp()
-        self.last_results = self._get_mac_addrs(devices)
-        return True
+        # Mark devices not in ARP table as not connected
+        for mac, entity in tracked.items():
+            if mac not in seen_macs:
+                entity.mark_disconnected()
 
-    def get_extra_attributes(self, device: str) -> dict[Any, Any]:
-        """Return the extra attrs of the given device."""
-        if device not in self.last_results:
-            return {}
-        mfg = self.last_results[device].get("manufacturer")
-        if not mfg:
-            return {}
-        return {"manufacturer": mfg}
+        if new_entities:
+            async_add_entities(new_entities)
+
+    # Initial scan
+    await _async_update_devices()
+
+    # Schedule periodic scans
+    async_track_time_interval(hass, _async_update_devices, SCAN_INTERVAL)
+
+
+class OPNsenseDevice(ScannerEntity):
+    """Representation of a device tracked via OPNsense."""
+
+    _attr_source_type = SourceType.ROUTER
+
+    def __init__(self, device: dict[str, Any]) -> None:
+        """Initialize the device."""
+        self._mac = device["mac"]
+        self._attr_hostname = device.get("hostname") or None
+        self._attr_ip_address = device.get("ip")
+        self._attr_mac_address = self._mac
+        self._is_connected = True
+        self._manufacturer = device.get("manufacturer")
+
+        # Use hostname or MAC as display name
+        name = self._attr_hostname or self._mac.replace(":", "_")
+        self._attr_name = name
+
+    @property
+    def unique_id(self) -> str:
+        """Return a unique ID for this device."""
+        return self._mac
+
+    @property
+    def is_connected(self) -> bool:
+        """Return true if the device is connected to the network."""
+        return self._is_connected
+
+    @property
+    def extra_state_attributes(self) -> dict[str, Any]:
+        """Return extra state attributes."""
+        attrs: dict[str, Any] = {}
+        if self._manufacturer:
+            attrs["manufacturer"] = self._manufacturer
+        return attrs
+
+    @callback
+    def update_from_arp(self, device: dict[str, Any]) -> None:
+        """Update device data from ARP entry."""
+        self._is_connected = True
+        self._attr_hostname = device.get("hostname") or None
+        self._attr_ip_address = device.get("ip")
+        self._manufacturer = device.get("manufacturer")
+        self.async_write_ha_state()
+
+    @callback
+    def mark_disconnected(self) -> None:
+        """Mark device as not connected."""
+        if self._is_connected:
+            self._is_connected = False
+            self.async_write_ha_state()

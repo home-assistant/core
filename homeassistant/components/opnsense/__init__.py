@@ -1,26 +1,25 @@
 """Support for OPNsense Routers."""
 
-import logging
+from __future__ import annotations
 
-from pyopnsense import diagnostics
-from pyopnsense.exceptions import APIException
+import logging
+from typing import Any
+
+import aiohttp
 import voluptuous as vol
 
+from homeassistant.config_entries import ConfigEntry, SOURCE_IMPORT
 from homeassistant.const import CONF_API_KEY, CONF_URL, CONF_VERIFY_SSL, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.discovery import load_platform
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.typing import ConfigType
 
-from .const import (
-    CONF_API_SECRET,
-    CONF_INTERFACE_CLIENT,
-    CONF_TRACKER_INTERFACES,
-    DOMAIN,
-    OPNSENSE_DATA,
-)
+from .const import CONF_API_SECRET, CONF_TRACKER_INTERFACES, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
+
+PLATFORMS = [Platform.DEVICE_TRACKER]
 
 CONFIG_SCHEMA = vol.Schema(
     {
@@ -40,42 +39,104 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-def setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up the opnsense component."""
+class OPNsenseClient:
+    """Client for the OPNsense API."""
 
-    conf = config[DOMAIN]
-    url = conf[CONF_URL]
-    api_key = conf[CONF_API_KEY]
-    api_secret = conf[CONF_API_SECRET]
-    verify_ssl = conf[CONF_VERIFY_SSL]
-    tracker_interfaces = conf[CONF_TRACKER_INTERFACES]
+    def __init__(
+        self,
+        url: str,
+        api_key: str,
+        api_secret: str,
+        session: aiohttp.ClientSession,
+        verify_ssl: bool,
+    ) -> None:
+        """Initialize the OPNsense client."""
+        self._url = url.rstrip("/")
+        self._auth = aiohttp.BasicAuth(api_key, api_secret)
+        self._session = session
+        self._verify_ssl = verify_ssl
 
-    interfaces_client = diagnostics.InterfaceClient(
-        api_key, api_secret, url, verify_ssl, timeout=20
-    )
+    async def get_arp(self) -> list[dict[str, Any]]:
+        """Get the ARP table from OPNsense."""
+        return await self._get("diagnostics/interface/get_arp")
+
+    async def get_interfaces(self) -> dict[str, str]:
+        """Get available network interfaces from OPNsense."""
+        return await self._get("diagnostics/networkinsight/get_interfaces")
+
+    async def _get(self, endpoint: str) -> Any:
+        """Make a GET request to the OPNsense API."""
+        url = f"{self._url}/{endpoint}"
+        resp = await self._session.get(url, auth=self._auth, ssl=self._verify_ssl)
+        resp.raise_for_status()
+        return await resp.json()
+
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Import OPNsense configuration from YAML."""
+    if DOMAIN in config:
+        hass.async_create_task(
+            hass.config_entries.flow.async_init(
+                DOMAIN, context={"source": SOURCE_IMPORT}, data=config[DOMAIN]
+            )
+        )
+    return True
+
+
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Set up OPNsense from a config entry."""
+    data = entry.data
+    url = data[CONF_URL]
+    api_key = data[CONF_API_KEY]
+    api_secret = data[CONF_API_SECRET]
+    verify_ssl = data.get(CONF_VERIFY_SSL, False)
+    tracker_interfaces_raw = data.get(CONF_TRACKER_INTERFACES, "")
+
+    # Parse tracker interfaces from comma-separated string or list
+    if isinstance(tracker_interfaces_raw, list):
+        tracker_interfaces = tracker_interfaces_raw
+    elif tracker_interfaces_raw:
+        tracker_interfaces = [
+            i.strip() for i in tracker_interfaces_raw.split(",") if i.strip()
+        ]
+    else:
+        tracker_interfaces = []
+
+    session = async_get_clientsession(hass, verify_ssl=verify_ssl)
+    client = OPNsenseClient(url, api_key, api_secret, session, verify_ssl)
+
     try:
-        interfaces_client.get_arp()
-    except APIException:
+        await client.get_arp()
+    except aiohttp.ClientError:
         _LOGGER.exception("Failure while connecting to OPNsense API endpoint")
         return False
 
     if tracker_interfaces:
-        # Verify that specified tracker interfaces are valid
-        netinsight_client = diagnostics.NetworkInsightClient(
-            api_key, api_secret, url, verify_ssl, timeout=20
-        )
-        interfaces = list(netinsight_client.get_interfaces().values())
+        try:
+            interfaces_resp = await client.get_interfaces()
+        except aiohttp.ClientError:
+            _LOGGER.exception(
+                "Failure while retrieving OPNsense network interfaces"
+            )
+            return False
+        interfaces = list(interfaces_resp.values())
         for interface in tracker_interfaces:
             if interface not in interfaces:
                 _LOGGER.error(
-                    "Specified OPNsense tracker interface %s is not found", interface
+                    "Specified OPNsense tracker interface %s is not found",
+                    interface,
                 )
                 return False
 
-    hass.data[OPNSENSE_DATA] = {
-        CONF_INTERFACE_CLIENT: interfaces_client,
-        CONF_TRACKER_INTERFACES: tracker_interfaces,
+    entry.runtime_data = {
+        "client": client,
+        "tracker_interfaces": tracker_interfaces,
     }
 
-    load_platform(hass, Platform.DEVICE_TRACKER, DOMAIN, tracker_interfaces, config)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
+
+
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Unload a config entry."""
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
