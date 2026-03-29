@@ -9,5 +9,5 @@ import pytest
 @pytest.fixture(autouse=True)
 def patch_gethostbyname():
     """Patch gethostbyname to avoid DNS lookups in SNMP tests."""
-    with patch.object(socket, "gethostbyname", return_value="192.168.10.100"):
+    with patch.object(socket, "gethostbyname"):
         yield
