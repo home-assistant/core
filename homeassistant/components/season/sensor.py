@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import date, datetime
+from datetime import datetime
 
 import ephem
 
@@ -12,7 +12,7 @@ from homeassistant.const import CONF_TYPE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.util.dt import utcnow
+from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN, TYPE_ASTRONOMICAL
 
@@ -50,7 +50,7 @@ async def async_setup_entry(
 
 
 def get_season(
-    current_date: date, hemisphere: str, season_tracking_type: str
+    current_datetime: datetime, hemisphere: str, season_tracking_type: str
 ) -> str | None:
     """Calculate the current season."""
 
@@ -58,22 +58,36 @@ def get_season(
         return None
 
     if season_tracking_type == TYPE_ASTRONOMICAL:
-        spring_start = ephem.next_equinox(str(current_date.year)).datetime()
-        summer_start = ephem.next_solstice(str(current_date.year)).datetime()
-        autumn_start = ephem.next_equinox(spring_start).datetime()
-        winter_start = ephem.next_solstice(summer_start).datetime()
+        spring_start = (
+            ephem.next_equinox(str(current_datetime.year))
+            .datetime()
+            .replace(tzinfo=dt_util.UTC)
+        )
+        summer_start = (
+            ephem.next_solstice(str(current_datetime.year))
+            .datetime()
+            .replace(tzinfo=dt_util.UTC)
+        )
+        autumn_start = (
+            ephem.next_equinox(spring_start).datetime().replace(tzinfo=dt_util.UTC)
+        )
+        winter_start = (
+            ephem.next_solstice(summer_start).datetime().replace(tzinfo=dt_util.UTC)
+        )
     else:
-        spring_start = datetime(2017, 3, 1).replace(year=current_date.year)
+        spring_start = current_datetime.replace(
+            month=3, day=1, hour=0, minute=0, second=0, microsecond=0
+        )
         summer_start = spring_start.replace(month=6)
         autumn_start = spring_start.replace(month=9)
         winter_start = spring_start.replace(month=12)
 
     season = STATE_WINTER
-    if spring_start <= current_date < summer_start:
+    if spring_start <= current_datetime < summer_start:
         season = STATE_SPRING
-    elif summer_start <= current_date < autumn_start:
+    elif summer_start <= current_datetime < autumn_start:
         season = STATE_SUMMER
-    elif autumn_start <= current_date < winter_start:
+    elif autumn_start <= current_datetime < winter_start:
         season = STATE_AUTUMN
 
     # If user is located in the southern hemisphere swap the season
@@ -104,6 +118,4 @@ class SeasonSensorEntity(SensorEntity):
 
     def update(self) -> None:
         """Update season."""
-        self._attr_native_value = get_season(
-            utcnow().replace(tzinfo=None), self.hemisphere, self.type
-        )
+        self._attr_native_value = get_season(dt_util.now(), self.hemisphere, self.type)

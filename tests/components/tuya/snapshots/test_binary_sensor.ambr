@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_platform_setup_and_discovery[binary_sensor.aqi_safety-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -51,8 +52,9 @@
 # ---
 # name: test_platform_setup_and_discovery[binary_sensor.boite_aux_lettres_arriere_door-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -99,10 +101,62 @@
     'state': 'off',
   })
 # ---
+# name: test_platform_setup_and_discovery[binary_sensor.c30_charging-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.c30_charging',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Charging',
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.BATTERY_CHARGING: 'battery_charging'>,
+    'original_icon': None,
+    'original_name': 'Charging',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'tuya.rirsc4vhpbv2whkp2gwcharge_state',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[binary_sensor.c30_charging-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'battery_charging',
+      'friendly_name': 'C30 Charging',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.c30_charging',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
 # name: test_platform_setup_and_discovery[binary_sensor.cat_feeder_feeding-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -150,8 +204,9 @@
 # ---
 # name: test_platform_setup_and_discovery[binary_sensor.cleverio_pf100_charging-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -250,8 +305,9 @@
 # ---
 # name: test_platform_setup_and_discovery[binary_sensor.dehumidifer_defrost-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -300,8 +356,9 @@
 # ---
 # name: test_platform_setup_and_discovery[binary_sensor.dehumidifer_tank_full-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -350,8 +407,9 @@
 # ---
 # name: test_platform_setup_and_discovery[binary_sensor.dehumidifier_defrost-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -400,8 +458,9 @@
 # ---
 # name: test_platform_setup_and_discovery[binary_sensor.dehumidifier_tank_full-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -450,8 +509,9 @@
 # ---
 # name: test_platform_setup_and_discovery[binary_sensor.dehumidifier_wet-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -500,8 +560,9 @@
 # ---
 # name: test_platform_setup_and_discovery[binary_sensor.door_garage_door-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -550,8 +611,9 @@
 # ---
 # name: test_platform_setup_and_discovery[binary_sensor.fenetre_cuisine_door-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -600,8 +662,9 @@
 # ---
 # name: test_platform_setup_and_discovery[binary_sensor.fenetre_cuisine_tamper-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -650,8 +713,9 @@
 # ---
 # name: test_platform_setup_and_discovery[binary_sensor.garage_contact_sensor_door-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -700,8 +764,9 @@
 # ---
 # name: test_platform_setup_and_discovery[binary_sensor.gas_sensor_gas-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -750,8 +815,9 @@
 # ---
 # name: test_platform_setup_and_discovery[binary_sensor.gateway_problem-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -800,8 +866,9 @@
 # ---
 # name: test_platform_setup_and_discovery[binary_sensor.home_gateway_problem-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -850,8 +917,9 @@
 # ---
 # name: test_platform_setup_and_discovery[binary_sensor.human_presence_office_occupancy-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -900,8 +968,9 @@
 # ---
 # name: test_platform_setup_and_discovery[binary_sensor.inondation_moisture-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -950,8 +1019,9 @@
 # ---
 # name: test_platform_setup_and_discovery[binary_sensor.kattenbak_bag_full-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1000,8 +1070,9 @@
 # ---
 # name: test_platform_setup_and_discovery[binary_sensor.kattenbak_cover_off-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1050,8 +1121,9 @@
 # ---
 # name: test_platform_setup_and_discovery[binary_sensor.mesh_gateway_problem-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1100,8 +1172,9 @@
 # ---
 # name: test_platform_setup_and_discovery[binary_sensor.motion_sensor_lidl_zigbee_motion-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1150,8 +1223,9 @@
 # ---
 # name: test_platform_setup_and_discovery[binary_sensor.motion_sensor_lidl_zigbee_tamper-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1200,8 +1274,9 @@
 # ---
 # name: test_platform_setup_and_discovery[binary_sensor.pir_motion-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1250,8 +1325,9 @@
 # ---
 # name: test_platform_setup_and_discovery[binary_sensor.pir_outside_stairs_motion-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1300,8 +1376,9 @@
 # ---
 # name: test_platform_setup_and_discovery[binary_sensor.rat_trap_hedge_motion-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1350,8 +1427,9 @@
 # ---
 # name: test_platform_setup_and_discovery[binary_sensor.rat_trap_hedge_tamper-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1400,8 +1478,9 @@
 # ---
 # name: test_platform_setup_and_discovery[binary_sensor.rauchmelder_alexsandro_smoke-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1450,8 +1529,9 @@
 # ---
 # name: test_platform_setup_and_discovery[binary_sensor.rauchmelder_drucker_smoke-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1500,8 +1580,9 @@
 # ---
 # name: test_platform_setup_and_discovery[binary_sensor.siren_charging-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1550,8 +1631,9 @@
 # ---
 # name: test_platform_setup_and_discovery[binary_sensor.siren_tamper-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1600,8 +1682,9 @@
 # ---
 # name: test_platform_setup_and_discovery[binary_sensor.smart_thermostats_valve-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1649,8 +1732,9 @@
 # ---
 # name: test_platform_setup_and_discovery[binary_sensor.smogo_safety-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1699,8 +1783,9 @@
 # ---
 # name: test_platform_setup_and_discovery[binary_sensor.smoke_alarm_smoke-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1749,8 +1834,9 @@
 # ---
 # name: test_platform_setup_and_discovery[binary_sensor.smoke_detector_upstairs_smoke-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1799,8 +1885,9 @@
 # ---
 # name: test_platform_setup_and_discovery[binary_sensor.soil_moisture_sensor_1_occupancy-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1849,8 +1936,9 @@
 # ---
 # name: test_platform_setup_and_discovery[binary_sensor.steel_cage_door_door-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1899,8 +1987,9 @@
 # ---
 # name: test_platform_setup_and_discovery[binary_sensor.tournesol_moisture-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1949,8 +2038,9 @@
 # ---
 # name: test_platform_setup_and_discovery[binary_sensor.wifi_smoke_alarm_smoke-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1999,8 +2089,9 @@
 # ---
 # name: test_platform_setup_and_discovery[binary_sensor.window_downstairs_door-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2049,8 +2140,9 @@
 # ---
 # name: test_platform_setup_and_discovery[binary_sensor.x5_zigbee_gateway_problem-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,

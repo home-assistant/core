@@ -607,6 +607,14 @@ async def test_initiate_backup(
     assert result["event"] == {
         "manager_state": BackupManagerState.CREATE_BACKUP,
         "reason": None,
+        "stage": CreateBackupStage.CLEANING_UP,
+        "state": CreateBackupState.IN_PROGRESS,
+    }
+
+    result = await ws_client.receive_json()
+    assert result["event"] == {
+        "manager_state": BackupManagerState.CREATE_BACKUP,
+        "reason": None,
         "stage": None,
         "state": CreateBackupState.COMPLETED,
     }
@@ -854,6 +862,14 @@ async def test_initiate_backup_with_agent_error(
     result = await ws_client.receive_json()
     while "uploaded_bytes" in result["event"]:
         result = await ws_client.receive_json()
+    assert result["event"] == {
+        "manager_state": BackupManagerState.CREATE_BACKUP,
+        "reason": None,
+        "stage": CreateBackupStage.CLEANING_UP,
+        "state": CreateBackupState.IN_PROGRESS,
+    }
+
+    result = await ws_client.receive_json()
     assert result["event"] == {
         "manager_state": BackupManagerState.CREATE_BACKUP,
         "reason": "upload_failed",
@@ -3526,7 +3542,7 @@ async def test_initiate_backup_per_agent_encryption(
         await hass.async_block_till_done()
 
     assert mock_secure_tar_archive.mock_calls[0] == call(
-        ANY, ANY, "w", bufsize=4194304, create_version=2, password=inner_tar_password
+        ANY, ANY, "w", bufsize=4194304, create_version=3, password=inner_tar_password
     )
 
     result = await ws_client.receive_json()
@@ -3549,6 +3565,14 @@ async def test_initiate_backup_per_agent_encryption(
     result = await ws_client.receive_json()
     while "uploaded_bytes" in result["event"]:
         result = await ws_client.receive_json()
+    assert result["event"] == {
+        "manager_state": BackupManagerState.CREATE_BACKUP,
+        "reason": None,
+        "stage": CreateBackupStage.CLEANING_UP,
+        "state": CreateBackupState.IN_PROGRESS,
+    }
+
+    result = await ws_client.receive_json()
     assert result["event"] == {
         "manager_state": BackupManagerState.CREATE_BACKUP,
         "reason": None,
@@ -3783,7 +3807,7 @@ async def test_upload_progress_event(
     result = await ws_client.receive_json()
     assert result["event"]["stage"] == CreateBackupStage.UPLOAD_TO_AGENTS
 
-    # Collect all upload progress events until the final state event
+    # Collect all upload progress events until the finishing backup stage event
     progress_events = []
     result = await ws_client.receive_json()
     while "uploaded_bytes" in result["event"]:
@@ -3801,6 +3825,9 @@ async def test_upload_progress_event(
     assert len(local_progress) == 1
     assert local_progress[0]["uploaded_bytes"] == local_progress[0]["total_bytes"]
 
+    assert result["event"]["stage"] == CreateBackupStage.CLEANING_UP
+
+    result = await ws_client.receive_json()
     assert result["event"]["state"] == CreateBackupState.COMPLETED
 
     result = await ws_client.receive_json()
