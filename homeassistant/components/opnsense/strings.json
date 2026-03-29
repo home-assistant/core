@@ -1,0 +1,25 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"
+    },
+    "error": {
+      "cannot_connect": "Failed to connect",
+      "invalid_tracker_interface": "One or more tracker interfaces are invalid",
+      "unknown": "Unexpected error"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "api_key": "API Key",
+          "api_secret": "API Secret",
+          "tracker_interfaces": "Tracker Interfaces (comma or newline separated)",
+          "url": "URL",
+          "verify_ssl": "Verify SSL"
+        },
+        "description": "Tracker interfaces are optional. Leave blank to track all interfaces.",
+        "title": "Connect to OPNsense"
+      }
+    }
+  }
+}

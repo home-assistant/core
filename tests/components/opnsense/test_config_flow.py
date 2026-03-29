@@ -1,0 +1,124 @@
+"""Tests for OPNsense config flow."""
+
+from __future__ import annotations
+
+from unittest.mock import AsyncMock, MagicMock
+
+import pytest
+
+from homeassistant.components import opnsense
+from homeassistant.components.opnsense import config_flow
+from homeassistant.const import CONF_API_KEY, CONF_URL, CONF_VERIFY_SSL
+from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.setup import async_setup_component
+
+
+async def test_async_step_user_create_entry(
+    hass: HomeAssistant, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """User step creates an entry with normalized tracker interfaces."""
+    flow = config_flow.OPNsenseConfigFlow()
+    flow.hass = hass
+    monkeypatch.setattr(
+        config_flow,
+        "_async_validate_input",
+        AsyncMock(
+            return_value={
+                CONF_URL: "https://router.local",
+                CONF_API_KEY: "key",
+                config_flow.CONF_API_SECRET: "secret",
+                CONF_VERIFY_SSL: False,
+                config_flow.CONF_TRACKER_INTERFACES: ["LAN", "OPT1"],
+            }
+        ),
+    )
+
+    result = await flow.async_step_user(
+        {
+            CONF_URL: "https://router.local",
+            CONF_API_KEY: "key",
+            config_flow.CONF_API_SECRET: "secret",
+            CONF_VERIFY_SSL: False,
+            config_flow.CONF_TRACKER_INTERFACES: "LAN, OPT1",
+        }
+    )
+
+    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["title"] == "router.local"
+    assert result["data"][config_flow.CONF_TRACKER_INTERFACES] == ["LAN", "OPT1"]
+
+
+async def test_async_step_user_invalid_interface(
+    hass: HomeAssistant, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """User step returns an error when tracker interface validation fails."""
+    flow = config_flow.OPNsenseConfigFlow()
+    flow.hass = hass
+    monkeypatch.setattr(
+        config_flow,
+        "_async_validate_input",
+        AsyncMock(side_effect=config_flow.InvalidTrackerInterface),
+    )
+
+    result = await flow.async_step_user(
+        {
+            CONF_URL: "https://router.local",
+            CONF_API_KEY: "key",
+            config_flow.CONF_API_SECRET: "secret",
+            CONF_VERIFY_SSL: False,
+            config_flow.CONF_TRACKER_INTERFACES: "LAN",
+        }
+    )
+
+    assert result["type"] == FlowResultType.FORM
+    assert result["errors"] == {"base": "invalid_tracker_interface"}
+
+
+async def test_async_step_import_normalizes_interfaces(hass: HomeAssistant) -> None:
+    """Import step normalizes tracker interfaces and creates an entry."""
+    flow = config_flow.OPNsenseConfigFlow()
+    flow.hass = hass
+
+    result = await flow.async_step_import(
+        {
+            CONF_URL: "https://router.local/",
+            CONF_API_KEY: "key",
+            config_flow.CONF_API_SECRET: "secret",
+            CONF_VERIFY_SSL: False,
+            config_flow.CONF_TRACKER_INTERFACES: ["LAN", "LAN", "OPT1"],
+        }
+    )
+
+    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["data"][config_flow.CONF_TRACKER_INTERFACES] == ["LAN", "OPT1"]
+
+
+async def test_async_setup_yaml_import_creates_deprecated_yaml_issue(
+    hass: HomeAssistant, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """YAML import creates deprecated YAML repair issue on success."""
+    async_init_mock = AsyncMock(return_value={"type": FlowResultType.CREATE_ENTRY})
+    create_issue_mock = MagicMock()
+
+    monkeypatch.setattr(hass.config_entries.flow, "async_init", async_init_mock)
+    monkeypatch.setattr(opnsense.ir, "async_create_issue", create_issue_mock)
+
+    result = await async_setup_component(
+        hass,
+        opnsense.DOMAIN,
+        {
+            opnsense.DOMAIN: {
+                CONF_URL: "https://router.local",
+                CONF_API_KEY: "key",
+                opnsense.CONF_API_SECRET: "secret",
+                CONF_VERIFY_SSL: False,
+                opnsense.CONF_TRACKER_INTERFACES: ["LAN"],
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert result
+    assert async_init_mock.call_count == 1
+    create_issue_mock.assert_called_once()

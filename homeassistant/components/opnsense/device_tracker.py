@@ -1,12 +1,14 @@
 """Device tracker support for OPNsense routers."""
 
+from __future__ import annotations
+
 from typing import Any, NewType
 
 from pyopnsense import diagnostics
 
 from homeassistant.components.device_tracker import DeviceScanner
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import CONF_INTERFACE_CLIENT, CONF_TRACKER_INTERFACES, OPNSENSE_DATA
 
@@ -15,12 +17,26 @@ DeviceDetailsByMAC = NewType("DeviceDetailsByMAC", dict[str, DeviceDetails])
 
 
 async def async_get_scanner(
-    hass: HomeAssistant, config: ConfigType
+    hass: HomeAssistant,
+    config: ConfigType,
+    discovery_info: DiscoveryInfoType | None = None,
 ) -> DeviceScanner | None:
     """Configure the OPNsense device_tracker."""
+    opnsense_data: dict[str, Any] = hass.data[OPNSENSE_DATA]
+
+    if (
+        isinstance(discovery_info, dict)
+        and isinstance(discovery_info.get("entry_id"), str)
+        and discovery_info["entry_id"] in opnsense_data
+    ):
+        entry_data = opnsense_data[discovery_info["entry_id"]]
+    else:
+        # Backward compatibility for any legacy test/setup path.
+        entry_data = opnsense_data
+
     return OPNsenseDeviceScanner(
-        hass.data[OPNSENSE_DATA][CONF_INTERFACE_CLIENT],
-        hass.data[OPNSENSE_DATA][CONF_TRACKER_INTERFACES],
+        entry_data[CONF_INTERFACE_CLIENT],
+        entry_data[CONF_TRACKER_INTERFACES],
     )
 
 
@@ -55,10 +71,7 @@ class OPNsenseDeviceScanner(DeviceScanner):
         return self.last_results[device].get("hostname") or None
 
     def update_info(self) -> bool:
-        """Ensure the information from the OPNsense router is up to date.
-
-        Return boolean if scanning successful.
-        """
+        """Ensure the information from the OPNsense router is up to date."""
         devices = self.client.get_arp()
         self.last_results = self._get_mac_addrs(devices)
         return True

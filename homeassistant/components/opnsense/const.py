@@ -1,6 +1,7 @@
 """Constants for OPNsense component."""
 
 DOMAIN = "opnsense"
+INTEGRATION_TITLE = "OPNsense"
 OPNSENSE_DATA = DOMAIN
 
 CONF_API_SECRET = "api_secret"
