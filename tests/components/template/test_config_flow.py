@@ -1995,3 +1995,54 @@ async def test_preview_this_variable_options_flow(
 
     msg = await client.receive_json()
     assert msg["event"]["state"] == expected_state
+
+
+async def test_binary_sensor_config_flow_with_delay_fields(
+    hass: HomeAssistant,
+) -> None:
+    """Test binary sensor config flow accepts delay_on, delay_off, and auto_off fields."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.MENU
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {"next_step_id": "binary_sensor"},
+    )
+    await hass.async_block_till_done()
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "binary_sensor"
+
+    with patch(
+        "homeassistant.components.template.async_setup_entry", wraps=async_setup_entry
+    ) as mock_setup_entry:
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                "name": "Test Binary Sensor",
+                "state": "{{ true }}",
+                "delay_on": {"seconds": 5},
+                "delay_off": {"seconds": 10},
+                "auto_off": {"seconds": 30},
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "Test Binary Sensor"
+    assert result["data"] == {}
+    assert result["options"] == {
+        "name": "Test Binary Sensor",
+        "template_type": "binary_sensor",
+        "state": "{{ true }}",
+        "delay_on": {"seconds": 5},
+        "delay_off": {"seconds": 10},
+        "auto_off": {"seconds": 30},
+    }
+    assert len(mock_setup_entry.mock_calls) == 1
+
+    config_entry = hass.config_entries.async_entries(DOMAIN)[0]
+    assert config_entry.options["delay_on"] == {"seconds": 5}
+    assert config_entry.options["delay_off"] == {"seconds": 10}
+    assert config_entry.options["auto_off"] == {"seconds": 30}
