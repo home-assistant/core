@@ -2,7 +2,7 @@
 
 from collections.abc import Callable
 
-from pywizlight.bulb import PIR_SOURCE
+from .const import OCCUPANCY_SOURCES
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
@@ -73,5 +73,5 @@ class WizOccupancyEntity(WizEntity, BinarySensorEntity):
     @callback
     def _async_update_attrs(self) -> None:
         """Handle updating _attr values."""
-        if self._device.state.get_source() == PIR_SOURCE:
+        if self._device.state.get_source() in OCCUPANCY_SOURCES:
             self._attr_is_on = self._device.status
