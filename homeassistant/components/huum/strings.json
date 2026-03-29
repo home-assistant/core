@@ -45,5 +45,10 @@
         "name": "[%key:component::sensor::entity_component::humidity::name%]"
       }
     }
+  },
+  "exceptions": {
+    "unable_to_turn_on": {
+      "message": "Unable to turn on sauna"
+    }
   }
 }
