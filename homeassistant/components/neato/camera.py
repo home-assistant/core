@@ -33,7 +33,7 @@ async def async_setup_entry(
     """Set up Neato camera with config entry."""
     hub = entry.runtime_data
     dev = [
-        NeatoCleaningMap(hub, robot, hub.map_data or None)
+        NeatoCleaningMap(hub, robot, hub.map_data)
         for robot in hub.robots
         if "maps" in robot.traits
     ]
