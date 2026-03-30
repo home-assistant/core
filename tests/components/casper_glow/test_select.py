@@ -153,7 +153,7 @@ async def test_select_ignores_remaining_time_updates(
     fire_callbacks: Callable[[GlowState], None],
 ) -> None:
     """Test that callbacks with only remaining time do not change the select state."""
-    fire_callbacks(GlowState(dimming_time_minutes=44))
+    fire_callbacks(GlowState(dimming_time_remaining_ms=44))
 
     state = hass.states.get(ENTITY_ID)
     assert state is not None
