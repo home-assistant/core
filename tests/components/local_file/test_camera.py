@@ -188,6 +188,8 @@ async def test_update_file_path(
             blocking=True,
         )
 
+    await hass.async_block_till_done()
+
     state = hass.states.get("camera.local_file")
     assert state.attributes.get("file_path") == "new/path.jpg"
 
