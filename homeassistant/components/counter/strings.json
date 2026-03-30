@@ -5,14 +5,14 @@
   },
   "conditions": {
     "is_value": {
-      "description": "Test if one or more counters match a numeric value.",
+      "description": "Tests the value of one or more counters.",
       "fields": {
         "behavior": {
-          "description": "The behavior when multiple counters are targeted.",
+          "description": "How the state should match on the targeted counters.",
           "name": "Behavior"
         },
         "threshold": {
-          "description": "The threshold value to compare against.",
+          "description": "What to test for and threshold values.",
           "name": "Threshold"
         }
       },
