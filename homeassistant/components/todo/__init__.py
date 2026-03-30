@@ -27,6 +27,9 @@ from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
+from homeassistant.helpers.integration_platform import (
+    async_process_integration_platforms,
+)
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import dt as dt_util
 
@@ -124,11 +127,31 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         _LOGGER, DOMAIN, hass, SCAN_INTERVAL
     )
 
-    frontend.async_register_built_in_panel(hass, "todo", "todo", "mdi:clipboard-list")
+    frontend_loaded = False
 
-    websocket_api.async_register_command(hass, websocket_handle_subscribe_todo_items)
-    websocket_api.async_register_command(hass, websocket_handle_todo_item_list)
-    websocket_api.async_register_command(hass, websocket_handle_todo_item_move)
+    @callback
+    def async_platform_loaded(
+        hass: HomeAssistant, integration_domain: str, platform: Any
+    ) -> None:
+        """Register frontend resources for calendar."""
+        nonlocal frontend_loaded
+
+        if frontend_loaded:
+            return
+
+        frontend_loaded = True
+
+        frontend.async_register_built_in_panel(
+            hass, "todo", "todo", "mdi:clipboard-list"
+        )
+
+        websocket_api.async_register_command(
+            hass, websocket_handle_subscribe_todo_items
+        )
+        websocket_api.async_register_command(hass, websocket_handle_todo_item_list)
+        websocket_api.async_register_command(hass, websocket_handle_todo_item_move)
+
+    await async_process_integration_platforms(hass, DOMAIN, async_platform_loaded)
 
     component.async_register_entity_service(
         TodoServices.ADD_ITEM,

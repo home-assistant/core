@@ -2,6 +2,7 @@
 
 import datetime
 from typing import Any
+from unittest.mock import AsyncMock
 import zoneinfo
 
 import pytest
@@ -22,7 +23,7 @@ from homeassistant.components.todo import (
     TodoServices,
 )
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import ATTR_ENTITY_ID, ATTR_SUPPORTED_FEATURES
+from homeassistant.const import ATTR_ENTITY_ID, ATTR_SUPPORTED_FEATURES, CONF_PLATFORM
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import (
     HomeAssistantError,
@@ -33,6 +34,7 @@ from homeassistant.setup import async_setup_component
 
 from . import create_mock_platform
 
+from tests.common import MockPlatform, mock_platform
 from tests.typing import WebSocketGenerator
 
 ITEM_1 = {
@@ -1299,3 +1301,47 @@ async def test_async_subscribe_updates(
     unsub()
     test_entity.async_write_ha_state()
     assert len(received_updates) == 4
+
+
+async def test_frontend_resources_registered_after_first_config_entry_setup(
+    hass: HomeAssistant,
+) -> None:
+    """Test that frontend resources are registered after the first config entry is set up."""
+    await async_setup_component(hass, "http", {})
+    assert "frontend_panels" not in hass.data
+    assert "websocket_api" not in hass.data
+
+    assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
+    assert "frontend_panels" not in hass.data
+    assert "websocket_api" not in hass.data
+
+    await create_mock_platform(hass, [])
+    assert set(hass.data["frontend_panels"]) == {"todo"}
+    assert set(hass.data["websocket_api"]) == {
+        "todo/item/list",
+        "todo/item/move",
+        "todo/item/subscribe",
+    }
+
+
+async def test_frontend_resources_registered_after_first_platform_setup(
+    hass: HomeAssistant,
+) -> None:
+    """Test that frontend resources are registered after the first platform is set up."""
+    mock_platform(
+        hass,
+        f"test.{DOMAIN}",
+        MockPlatform(async_setup_platform=AsyncMock()),
+    )
+
+    await async_setup_component(hass, "http", {})
+    assert "frontend_panels" not in hass.data
+    assert "websocket_api" not in hass.data
+
+    assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
+    assert set(hass.data["frontend_panels"]) == {"todo"}
+    assert set(hass.data["websocket_api"]) == {
+        "todo/item/list",
+        "todo/item/move",
+        "todo/item/subscribe",
+    }
