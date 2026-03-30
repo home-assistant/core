@@ -5,7 +5,7 @@ from __future__ import annotations
 from unittest.mock import MagicMock, patch
 
 from syrupy.assertion import SnapshotAssertion
-from unifi_access_api import ApiNotFoundError
+from unifi_access_api import ApiNotFoundError, DoorLockRuleType
 
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
@@ -91,6 +91,42 @@ async def test_number_set_value_syncs_to_coordinator(
     assert coordinator.lock_rule_intervals.get("door-001") == 30
 
 
+async def test_number_value_is_used_when_applying_lock_rule(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_client: MagicMock,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test the configured interval is used when applying a lock rule."""
+    with patch(
+        "homeassistant.components.unifi_access.PLATFORMS",
+        [Platform.NUMBER, Platform.SELECT],
+    ):
+        await setup_integration(hass, mock_config_entry)
+        entity_registry.async_update_entity(FRONT_DOOR_INTERVAL_ENTITY, disabled_by=None)
+        await hass.config_entries.async_reload(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    await hass.services.async_call(
+        Platform.NUMBER,
+        "set_value",
+        {"entity_id": FRONT_DOOR_INTERVAL_ENTITY, "value": 30},
+        blocking=True,
+    )
+    await hass.services.async_call(
+        Platform.SELECT,
+        "select_option",
+        {"entity_id": "select.front_door_door_lock_rule", "option": "keep_lock"},
+        blocking=True,
+    )
+
+    call = mock_client.set_door_lock_rule.call_args
+    assert call is not None
+    assert call.args[0] == "door-001"
+    assert call.args[1].type == DoorLockRuleType.KEEP_LOCK
+    assert call.args[1].interval == 30
+
+
 async def test_number_not_created_when_lock_rules_unsupported(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
@@ -110,8 +146,10 @@ async def test_number_restores_last_value(
     mock_client: MagicMock,
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """Test number restores its last value after reload."""
-    with patch("homeassistant.components.unifi_access.PLATFORMS", [Platform.NUMBER]):
+    """Test number restores its last normalized value after reload."""
+    with patch(
+        "homeassistant.components.unifi_access.PLATFORMS", [Platform.NUMBER]
+    ):
         await setup_integration(hass, mock_config_entry)
         entity_registry.async_update_entity(
             FRONT_DOOR_INTERVAL_ENTITY, disabled_by=None
@@ -122,7 +160,7 @@ async def test_number_restores_last_value(
         await hass.services.async_call(
             Platform.NUMBER,
             "set_value",
-            {"entity_id": FRONT_DOOR_INTERVAL_ENTITY, "value": 30},
+            {"entity_id": FRONT_DOOR_INTERVAL_ENTITY, "value": 30.9},
             blocking=True,
         )
 
@@ -131,5 +169,5 @@ async def test_number_restores_last_value(
 
     state = hass.states.get(FRONT_DOOR_INTERVAL_ENTITY)
     assert state is not None
-    assert float(state.state) == 30.0
-    assert mock_config_entry.runtime_data.lock_rule_intervals["door-001"] == 30
+    assert float(state.state) == 31.0
+    assert mock_config_entry.runtime_data.lock_rule_intervals["door-001"] == 31

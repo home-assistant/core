@@ -47,10 +47,10 @@ async def async_setup_entry(
 
 
 class UnifiAccessDoorLockRuleIntervalNumberEntity(UnifiAccessEntity, RestoreNumber):
-    """Number entity for configuring the interval of a custom lock rule.
+    """Number entity for configuring the interval of temporary lock rules.
 
-    The interval (in minutes) is stored locally and used when the user
-    selects a 'custom' temporary lock rule via the select entity.
+    The interval (in minutes) is stored locally and used by the coordinator
+    whenever a temporary lock rule is applied to this door.
     """
 
     _attr_device_class = NumberDeviceClass.DURATION
@@ -63,13 +63,6 @@ class UnifiAccessDoorLockRuleIntervalNumberEntity(UnifiAccessEntity, RestoreNumb
     _attr_native_unit_of_measurement = UnitOfTime.MINUTES
     _attr_translation_key = "door_lock_rule_interval"
 
-    @property
-    def available(self) -> bool:
-        """Return whether the number entity should currently be available."""
-        return super().available and (
-            self._door_id in self.coordinator.get_lock_rule_sensor_door_ids()
-        )
-
     def __init__(
         self,
         coordinator: UnifiAccessCoordinator,
@@ -77,21 +70,44 @@ class UnifiAccessDoorLockRuleIntervalNumberEntity(UnifiAccessEntity, RestoreNumb
     ) -> None:
         """Initialize the lock rule interval number entity."""
         super().__init__(coordinator, door, "lock_rule_interval")
-        self._attr_native_value = float(DEFAULT_LOCK_RULE_INTERVAL)
+        self._attr_native_value = float(
+            self._normalize_interval(DEFAULT_LOCK_RULE_INTERVAL)
+        )
+
+    @property
+    def available(self) -> bool:
+        """Return whether the number entity should currently be available."""
+        return super().available and (
+            self._door_id in self.coordinator.get_lock_rule_sensor_door_ids()
+        )
+
+    def _normalize_interval(self, value: float | None) -> int:
+        """Clamp and normalize an interval value to valid integer minutes."""
+        if value is None:
+            value = float(DEFAULT_LOCK_RULE_INTERVAL)
+
+        min_value = float(self._attr_native_min_value)
+        max_value = float(self._attr_native_max_value)
+        step = float(self._attr_native_step or 1)
+
+        normalized = min(max(float(value), min_value), max_value)
+        normalized = round(normalized / step) * step
+        normalized = min(max(normalized, min_value), max_value)
+        return int(normalized)
 
     async def async_added_to_hass(self) -> None:
         """Restore the last known interval value on startup."""
         await super().async_added_to_hass()
         last_data = await self.async_get_last_number_data()
-        if last_data and last_data.native_value is not None:
-            self._attr_native_value = last_data.native_value
-        self.coordinator.lock_rule_intervals[self._door_id] = round(
-            self._attr_native_value or DEFAULT_LOCK_RULE_INTERVAL
+        normalized = self._normalize_interval(
+            last_data.native_value if last_data else None
         )
+        self._attr_native_value = float(normalized)
+        self.coordinator.lock_rule_intervals[self._door_id] = normalized
 
     async def async_set_native_value(self, value: float) -> None:
         """Set a new interval value and sync it to the coordinator."""
-        rounded = round(value)
-        self._attr_native_value = float(rounded)
-        self.coordinator.lock_rule_intervals[self._door_id] = rounded
+        normalized = self._normalize_interval(value)
+        self._attr_native_value = float(normalized)
+        self.coordinator.lock_rule_intervals[self._door_id] = normalized
         self.async_write_ha_state()
