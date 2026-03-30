@@ -2,11 +2,10 @@
 
 from __future__ import annotations
 
-import base64
-import binascii
-import json
 import logging
 from typing import Any
+
+import jwt
 
 from homeassistant.config_entries import ConfigFlowResult
 from homeassistant.helpers.config_entry_oauth2_flow import AbstractOAuth2FlowHandler
@@ -44,7 +43,7 @@ class OAuth2FlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
         try:
             token = data["token"]["access_token"]
             character_info = _decode_eve_jwt(token)
-        except ValueError, KeyError, binascii.Error:
+        except ValueError, KeyError, jwt.DecodeError:
             return self.async_abort(reason="oauth_error")
 
         character_id = character_info[CONF_CHARACTER_ID]
@@ -68,21 +67,8 @@ def _decode_eve_jwt(token: str) -> dict[str, Any]:
     Eve SSO access tokens are JWTs with:
     - sub: "CHARACTER:EVE:<character_id>"
     - name: character name
-
-    We only decode the payload (no signature verification needed since
-    the token was just received from the SSO endpoint via HTTPS).
     """
-    parts = token.split(".")
-    if len(parts) != 3:
-        msg = "Invalid JWT token format"
-        raise ValueError(msg)
-
-    payload = parts[1]
-    padding = 4 - len(payload) % 4
-    if padding != 4:
-        payload += "=" * padding
-
-    decoded = json.loads(base64.urlsafe_b64decode(payload))
+    decoded = jwt.decode(token, options={"verify_signature": False})
 
     sub = decoded.get("sub", "")
     sub_parts = sub.split(":")
