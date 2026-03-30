@@ -40,12 +40,12 @@ type MotionBlindsConfigEntry = ConfigEntry[MotionBlindsData]
 class DataUpdateCoordinatorMotionBlinds(DataUpdateCoordinator):
     """Class to manage fetching data from single endpoint."""
 
-    config_entry: ConfigEntry
+    config_entry: MotionBlindsConfigEntry
 
     def __init__(
         self,
         hass: HomeAssistant,
-        config_entry: ConfigEntry,
+        config_entry: MotionBlindsConfigEntry,
         logger: logging.Logger,
         gateway: MotionGateway,
     ) -> None:
