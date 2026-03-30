@@ -23,8 +23,10 @@ from unifi_access_api.models.websocket import (
     WebsocketMessage,
 )
 
+from homeassistant.components.unifi_access.const import DOMAIN
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
 
 from tests.common import MockConfigEntry
 
@@ -353,3 +355,57 @@ async def test_ws_location_update_thumbnail_only_no_state(
     # Door state unchanged, thumbnail updated
     assert hass.states.get(FRONT_DOOR_BINARY_SENSOR).state == state_before
     assert hass.states.get(FRONT_DOOR_IMAGE).state != image_state_before
+
+
+async def test_stale_device_removed_on_refresh(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    init_integration: MockConfigEntry,
+    mock_client: MagicMock,
+) -> None:
+    """Test that stale devices are automatically removed on data refresh."""
+    # Verify both doors exist after initial setup
+    assert device_registry.async_get_device(identifiers={(DOMAIN, "door-001")})
+    assert device_registry.async_get_device(identifiers={(DOMAIN, "door-002")})
+
+    # Simulate door-002 being removed from the hub
+    mock_client.get_doors.return_value = [
+        door for door in mock_client.get_doors.return_value if door.id != "door-002"
+    ]
+
+    # Trigger natural refresh via WebSocket reconnect
+    on_disconnect = mock_client.start_websocket.call_args[1]["on_disconnect"]
+    on_connect = mock_client.start_websocket.call_args[1]["on_connect"]
+    on_disconnect()
+    await hass.async_block_till_done()
+    on_connect()
+    await hass.async_block_till_done()
+
+    # door-001 still exists, door-002 was removed
+    assert device_registry.async_get_device(identifiers={(DOMAIN, "door-001")})
+    assert not device_registry.async_get_device(identifiers={(DOMAIN, "door-002")})
+
+
+async def test_stale_device_removed_on_startup(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    mock_config_entry: MockConfigEntry,
+    mock_client: MagicMock,
+) -> None:
+    """Test stale devices present before setup are removed on initial refresh."""
+    mock_config_entry.add_to_hass(hass)
+
+    # Create a stale door device that no longer exists on the hub
+    device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id,
+        identifiers={(DOMAIN, "door-003")},
+    )
+    assert device_registry.async_get_device(identifiers={(DOMAIN, "door-003")})
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    # Valid doors from the hub should exist, stale device should be removed
+    assert device_registry.async_get_device(identifiers={(DOMAIN, "door-001")})
+    assert device_registry.async_get_device(identifiers={(DOMAIN, "door-002")})
+    assert not device_registry.async_get_device(identifiers={(DOMAIN, "door-003")})

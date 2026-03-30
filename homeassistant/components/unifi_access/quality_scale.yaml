@@ -64,7 +64,7 @@ rules:
   repair-issues:
     status: exempt
     comment: Integration raises ConfigEntryAuthFailed and relies on Home Assistant core to surface reauth/repair issues, no custom repairs are defined.
-  stale-devices: todo
+  stale-devices: done
 
   # Platinum
   async-dependency: done
