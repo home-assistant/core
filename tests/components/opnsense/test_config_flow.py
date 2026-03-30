@@ -76,8 +76,24 @@ async def test_async_step_user_invalid_interface(
     assert result["errors"] == {"base": "invalid_tracker_interface"}
 
 
-async def test_async_step_import_normalizes_interfaces(hass: HomeAssistant) -> None:
+async def test_async_step_import_normalizes_interfaces(
+    hass: HomeAssistant, monkeypatch: pytest.MonkeyPatch
+) -> None:
     """Import step normalizes tracker interfaces and creates an entry."""
+    monkeypatch.setattr(
+        config_flow,
+        "_async_validate_input",
+        AsyncMock(
+            return_value={
+                CONF_URL: "https://router.local",
+                CONF_API_KEY: "key",
+                config_flow.CONF_API_SECRET: "secret",
+                CONF_VERIFY_SSL: False,
+                config_flow.CONF_TRACKER_INTERFACES: ["LAN", "OPT1"],
+            }
+        ),
+    )
+
     result = await hass.config_entries.flow.async_init(
         config_flow.DOMAIN,
         context={"source": SOURCE_IMPORT},

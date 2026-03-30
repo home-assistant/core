@@ -71,9 +71,7 @@ def _tracker_interfaces_default(user_input: Mapping[str, Any] | None) -> str:
     value = user_input.get(CONF_TRACKER_INTERFACES, "")
     if isinstance(value, list):
         return ", ".join(item for item in value if isinstance(item, str))
-    if isinstance(value, str):
-        return value
-    return ""
+    return value if isinstance(value, str) else ""
 
 
 def _build_user_schema(user_input: Mapping[str, Any] | None = None) -> vol.Schema:
@@ -102,7 +100,7 @@ def _build_user_schema(user_input: Mapping[str, Any] | None = None) -> vol.Schem
     )
 
 
-async def _clean_and_parse_url(url: str) -> str:
+def _clean_and_parse_url(url: str) -> str:
     """Normalize and validate the configured OPNsense base URL.
 
     Args:
@@ -220,17 +218,14 @@ class OPNsenseConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: MutableMapping[str, Any]
     ) -> ConfigFlowResult:
         """Import from configuration.yaml."""
-        data = dict(user_input)
-        data[CONF_TRACKER_INTERFACES] = _normalize_tracker_interfaces(
-            user_input.get(CONF_TRACKER_INTERFACES)
-        )
+        validated_data = await _async_validate_input(self.hass, user_input)
 
-        await self.async_set_unique_id(_normalize_url(data[CONF_URL]))
+        await self.async_set_unique_id(_normalize_url(validated_data[CONF_URL]))
         self._abort_if_unique_id_configured()
 
         return self.async_create_entry(
-            title=_title_from_url(data[CONF_URL]),
-            data=data,
+            title=_title_from_url(validated_data[CONF_URL]),
+            data=validated_data,
         )
 
     async def async_step_reauth(
@@ -262,6 +257,8 @@ class OPNsenseConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "cannot_connect"
             except InvalidTrackerInterface:
                 errors["base"] = "invalid_tracker_interface"
+            except InvalidURL:
+                errors["base"] = "invalid_url"
             except Exception:  # pragma: no cover - defensive fallback
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
