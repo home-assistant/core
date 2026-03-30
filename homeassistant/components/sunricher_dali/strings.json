@@ -29,7 +29,7 @@
       "message": "Could not connect to the gateway. You can try removing it and adding it again."
     },
     "cannot_discover_devices": {
-      "message": "Unable to discover devices from the gateway."
+      "message": "Unable to discover devices and scenes from the gateway."
     }
   }
 }
