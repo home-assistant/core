@@ -21,11 +21,7 @@ from homeassistant.exceptions import (
     ConfigEntryError,
     ConfigEntryNotReady,
 )
-from homeassistant.helpers import (
-    config_validation as cv,
-    discovery,
-    issue_registry as ir,
-)
+from homeassistant.helpers import config_validation as cv, issue_registry as ir
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
@@ -80,30 +76,30 @@ async def _async_import_from_yaml(
         },
     )
 
-    if (
-        result.get("type") == FlowResultType.ABORT
-        and result.get("reason") != "already_configured"
-    ):
-        _LOGGER.warning("Failed to import OPNsense YAML config: %s", result)
-        ir.async_create_issue(
-            hass,
-            HOMEASSISTANT_DOMAIN,
-            f"yaml_import_issue_{DOMAIN}",
-            is_fixable=True,
-            issue_domain=DOMAIN,
-            severity=ir.IssueSeverity.ERROR,
-            translation_key="yaml_import_issue",
-            translation_placeholders={
-                "domain": DOMAIN,
-                "integration_title": INTEGRATION_TITLE,
-            },
-        )
+    result_type = result.get("type")
+    if result_type == FlowResultType.ABORT:
+        if result.get("reason") != "already_configured":
+            _LOGGER.warning("Failed to import OPNsense YAML config: %s", result)
+            ir.async_create_issue(
+                hass,
+                DOMAIN,
+                f"yaml_import_issue_{DOMAIN}",
+                is_fixable=False,
+                issue_domain=DOMAIN,
+                severity=ir.IssueSeverity.ERROR,
+                translation_key="deprecated_yaml_import_issue_error",
+            )
+            return
+    elif result_type != FlowResultType.CREATE_ENTRY:
+        # Flow has not resulted in a successful import; do not create deprecation issue yet.
+        _LOGGER.debug("OPNsense YAML import did not complete successfully: %s", result)
+
         return
 
     ir.async_create_issue(
         hass,
         HOMEASSISTANT_DOMAIN,
-        f"deprecated_yaml_{DOMAIN}",
+        "deprecated_yaml",
         breaks_in_ha_version="2026.10.0",
         is_fixable=False,
         issue_domain=DOMAIN,
@@ -184,16 +180,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         CONF_INTERFACE_CLIENT: interfaces_client,
         CONF_TRACKER_INTERFACES: list(tracker_interfaces),
     }
-    _entry_storage(hass)[entry.entry_id] = entry.runtime_data
 
-    await discovery.async_load_platform(
-        hass,
-        Platform.DEVICE_TRACKER,
-        DOMAIN,
-        {"entry_id": entry.entry_id},
-        hass.config.as_dict(),
+    await hass.config_entries.async_forward_entry_setups(
+        entry, [Platform.DEVICE_TRACKER]
     )
-
     return True
 
 

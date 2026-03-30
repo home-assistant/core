@@ -1,12 +1,13 @@
 {
   "config": {
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_tracker_interface": "One or more tracker interfaces are invalid",
-      "invalid_url": "Malformed URL",
+      "invalid_url": "Invalid URL",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "step": {
@@ -40,6 +41,12 @@
         "description": "Tracker interfaces are optional. Leave blank to track all interfaces.",
         "title": "Connect to OPNsense"
       }
+    }
+  },
+  "issues": {
+    "deprecated_yaml_import_issue_error": {
+      "description": "Configuring OPNsense using YAML is being removed but there was an error when trying to import the YAML configuration.\n\nEnsure the YAML configuration is correct and restart Home Assistant to try again or remove the OPNsense YAML configuration from your `configuration.yaml` file and continue to set up the integration manually.",
+      "title": "The OPNsense YAML configuration import failed"
     }
   }
 }
