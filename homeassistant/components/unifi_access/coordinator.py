@@ -333,7 +333,7 @@ class UnifiAccessCoordinator(DataUpdateCoordinator[UnifiAccessData]):
     async def _handle_setting_update(self, msg: WebsocketMessage) -> None:
         """Handle settings update messages (evacuation/lockdown)."""
         if self.data is None:
-            return
+            return  # type: ignore[unreachable]
         update = cast(SettingUpdate, msg)
         self.async_set_updated_data(
             replace(

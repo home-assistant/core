@@ -41,7 +41,7 @@ rules:
 
   # Gold
   devices: done
-  diagnostics: todo
+  diagnostics: done
   discovery-update-info: todo
   discovery: todo
   docs-data-update: todo
@@ -60,7 +60,7 @@ rules:
   entity-translations: done
   exception-translations: done
   icon-translations: done
-  reconfiguration-flow: todo
+  reconfiguration-flow: done
   repair-issues:
     status: exempt
     comment: Integration raises ConfigEntryAuthFailed and relies on Home Assistant core to surface reauth/repair issues, no custom repairs are defined.
@@ -69,4 +69,4 @@ rules:
   # Platinum
   async-dependency: done
   inject-websession: done
-  strict-typing: todo
+  strict-typing: done

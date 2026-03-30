@@ -124,6 +124,7 @@ _EXPERIMENTAL_CONDITION_PLATFORMS = {
     "battery",
     "calendar",
     "climate",
+    "counter",
     "cover",
     "device_tracker",
     "door",
@@ -193,6 +194,7 @@ _EXPERIMENTAL_TRIGGER_PLATFORMS = {
     "todo",
     "update",
     "vacuum",
+    "valve",
     "water_heater",
     "window",
 }
