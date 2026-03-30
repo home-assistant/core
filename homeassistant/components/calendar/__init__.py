@@ -692,6 +692,7 @@ class CalendarEntityComponent(EntityComponent[CalendarEntity]):
     def _register_frontend_resources(self) -> None:
         """Register frontend resources for calendar."""
         self._frontend_loaded = True
+
         self.hass.http.register_view(CalendarListView(self))
         self.hass.http.register_view(CalendarEventView(self))
 
