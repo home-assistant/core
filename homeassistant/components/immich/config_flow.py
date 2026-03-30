@@ -6,10 +6,11 @@ from collections.abc import Mapping
 import logging
 from typing import Any
 
-from aioimmich import Immich
-from aioimmich.const import CONNECT_ERRORS
-from aioimmich.exceptions import ImmichUnauthorizedError
-from aioimmich.users.models import ImmichUser
+from immichpy import AsyncClient
+from immichpy.client.generated.exceptions import UnauthorizedException
+from immichpy.client.generated.models.user_admin_response_dto import (
+    UserAdminResponseDto,
+)
 import voluptuous as vol
 from yarl import URL
 
@@ -31,7 +32,7 @@ from homeassistant.helpers.selector import (
     TextSelectorType,
 )
 
-from .const import DEFAULT_VERIFY_SSL, DOMAIN
+from .const import CONNECT_ERRORS, DEFAULT_VERIFY_SSL, DOMAIN
 
 
 class InvalidUrl(HomeAssistantError):
@@ -67,11 +68,16 @@ def _parse_url(url: str) -> tuple[str, int, bool]:
 
 async def check_user_info(
     hass: HomeAssistant, host: str, port: int, ssl: bool, verify_ssl: bool, api_key: str
-) -> ImmichUser:
+) -> UserAdminResponseDto:
     """Test connection and fetch own user info."""
-    session = async_get_clientsession(hass, verify_ssl)
-    immich = Immich(session, api_key, host, port, ssl)
-    return await immich.users.async_get_my_user()
+    scheme = "https" if ssl else "http"
+    base_url = f"{scheme}://{host}:{port}/api"
+    immich = AsyncClient(
+        api_key=api_key,
+        base_url=base_url,
+        http_client=async_get_clientsession(hass, verify_ssl),
+    )
+    return await immich.users.get_my_user()
 
 
 class ImmichConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -102,7 +108,7 @@ class ImmichConfigFlow(ConfigFlow, domain=DOMAIN):
                         user_input[CONF_VERIFY_SSL],
                         user_input[CONF_API_KEY],
                     )
-                except ImmichUnauthorizedError:
+                except UnauthorizedException:
                     errors["base"] = "invalid_auth"
                 except CONNECT_ERRORS:
                     errors["base"] = "cannot_connect"
@@ -110,7 +116,7 @@ class ImmichConfigFlow(ConfigFlow, domain=DOMAIN):
                     _LOGGER.exception("Unexpected exception")
                     errors["base"] = "unknown"
                 else:
-                    await self.async_set_unique_id(my_user_info.user_id)
+                    await self.async_set_unique_id(my_user_info.id)
                     self._abort_if_unique_id_configured()
                     return self.async_create_entry(
                         title=my_user_info.name,
@@ -152,7 +158,7 @@ class ImmichConfigFlow(ConfigFlow, domain=DOMAIN):
                     self._current_data[CONF_VERIFY_SSL],
                     user_input[CONF_API_KEY],
                 )
-            except ImmichUnauthorizedError:
+            except UnauthorizedException:
                 errors["base"] = "invalid_auth"
             except CONNECT_ERRORS:
                 errors["base"] = "cannot_connect"
@@ -160,7 +166,7 @@ class ImmichConfigFlow(ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
-                await self.async_set_unique_id(my_user_info.user_id)
+                await self.async_set_unique_id(my_user_info.id)
                 self._abort_if_unique_id_mismatch()
                 return self.async_update_reload_and_abort(
                     self._get_reauth_entry(), data_updates=user_input
@@ -202,7 +208,7 @@ class ImmichConfigFlow(ConfigFlow, domain=DOMAIN):
                         user_input[CONF_VERIFY_SSL],
                         current_data[CONF_API_KEY],
                     )
-                except ImmichUnauthorizedError:
+                except UnauthorizedException:
                     errors["base"] = "invalid_auth"
                 except CONNECT_ERRORS:
                     errors["base"] = "cannot_connect"

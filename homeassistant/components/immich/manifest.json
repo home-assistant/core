@@ -7,7 +7,7 @@
   "documentation": "https://www.home-assistant.io/integrations/immich",
   "integration_type": "service",
   "iot_class": "local_polling",
-  "loggers": ["aioimmich"],
+  "loggers": ["immichpy"],
   "quality_scale": "platinum",
-  "requirements": ["aioimmich==0.12.1"]
+  "requirements": ["immichpy==4.0.3"]
 }

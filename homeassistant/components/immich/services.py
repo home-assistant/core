@@ -1,8 +1,11 @@
 """Services for the Immich integration."""
 
+from datetime import datetime, timezone
 import logging
+from pathlib import Path
 
-from aioimmich.exceptions import ImmichError
+from immichpy.client.generated.exceptions import ApiException
+from immichpy.client.generated.models.bulk_ids_dto import BulkIdsDto
 import voluptuous as vol
 
 from homeassistant.components.media_source import async_resolve_media
@@ -53,8 +56,8 @@ async def _async_upload_file(service_call: ServiceCall) -> None:
 
     if target_album := service_call.data.get(CONF_ALBUM_ID):
         try:
-            await coordinator.api.albums.async_get_album_info(target_album, True)
-        except ImmichError as ex:
+            await coordinator.api.albums.get_album_info(id=target_album, without_assets=True)
+        except ApiException as ex:
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
                 translation_key="album_not_found",
@@ -62,12 +65,25 @@ async def _async_upload_file(service_call: ServiceCall) -> None:
             ) from ex
 
     try:
-        upload_result = await coordinator.api.assets.async_upload_asset(str(media.path))
+        filepath = Path(media.path)
+        stats = filepath.stat()
+        file_created_at = datetime.fromtimestamp(stats.st_ctime, tz=timezone.utc)
+        file_modified_at = datetime.fromtimestamp(stats.st_mtime, tz=timezone.utc)
+        device_asset_id = f"{filepath.name}-{stats.st_size}"
+
+        upload_result = await coordinator.api.assets.upload_asset(
+            asset_data=str(filepath),
+            device_asset_id=device_asset_id,
+            device_id="home-assistant",
+            file_created_at=file_created_at,
+            file_modified_at=file_modified_at,
+        )
         if target_album:
-            await coordinator.api.albums.async_add_assets_to_album(
-                target_album, [upload_result.asset_id]
+            await coordinator.api.albums.add_assets_to_album(
+                id=target_album,
+                bulk_ids_dto=BulkIdsDto(ids=[upload_result.id]),
             )
-    except ImmichError as ex:
+    except ApiException as ex:
         raise ServiceValidationError(
             translation_domain=DOMAIN,
             translation_key="upload_failed",

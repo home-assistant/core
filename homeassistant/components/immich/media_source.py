@@ -3,10 +3,15 @@
 from __future__ import annotations
 
 from logging import getLogger
+from typing import cast
+from uuid import UUID
 
 from aiohttp.web import HTTPNotFound, Request, Response, StreamResponse
-from aioimmich.assets.models import ImmichAsset
-from aioimmich.exceptions import ImmichError
+from immichpy import AsyncClient
+from immichpy.client.generated.exceptions import ApiException
+from immichpy.client.generated.models.asset_media_size import AssetMediaSize
+from immichpy.client.generated.models.asset_response_dto import AssetResponseDto
+from immichpy.client.generated.models.metadata_search_dto import MetadataSearchDto
 
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.media_player import BrowseError, MediaClass
@@ -25,7 +30,6 @@ from .const import DOMAIN
 from .coordinator import ImmichConfigEntry
 
 LOGGER = getLogger(__name__)
-
 
 async def async_get_media_source(hass: HomeAssistant) -> MediaSource:
     """Set up Immich media source."""
@@ -114,7 +118,7 @@ class ImmichMediaSource(MediaSource):
             )
         )
         assert entry
-        immich_api = entry.runtime_data.api
+        immich_api: AsyncClient = entry.runtime_data.api
 
         if identifier.collection is None:
             LOGGER.debug("Render all collections for %s", entry.title)
@@ -138,14 +142,14 @@ class ImmichMediaSource(MediaSource):
             if identifier.collection == "albums":
                 LOGGER.debug("Render all albums for %s", entry.title)
                 try:
-                    albums = await immich_api.albums.async_get_all_albums()
-                except ImmichError:
+                    albums = await immich_api.albums.get_all_albums()
+                except ApiException:
                     return []
 
                 return [
                     BrowseMediaSource(
                         domain=DOMAIN,
-                        identifier=f"{identifier.unique_id}|albums|{album.album_id}",
+                        identifier=f"{identifier.unique_id}|albums|{album.id}",
                         media_class=MediaClass.DIRECTORY,
                         media_content_type=MediaClass.IMAGE,
                         title=album.album_name,
@@ -159,14 +163,14 @@ class ImmichMediaSource(MediaSource):
             if identifier.collection == "tags":
                 LOGGER.debug("Render all tags for %s", entry.title)
                 try:
-                    tags = await immich_api.tags.async_get_all_tags()
-                except ImmichError:
+                    tags = await immich_api.tags.get_all_tags()
+                except ApiException:
                     return []
 
                 return [
                     BrowseMediaSource(
                         domain=DOMAIN,
-                        identifier=f"{identifier.unique_id}|tags|{tag.tag_id}",
+                        identifier=f"{identifier.unique_id}|tags|{tag.id}",
                         media_class=MediaClass.DIRECTORY,
                         media_content_type=MediaClass.IMAGE,
                         title=tag.name,
@@ -179,29 +183,29 @@ class ImmichMediaSource(MediaSource):
             if identifier.collection == "people":
                 LOGGER.debug("Render all people for %s", entry.title)
                 try:
-                    people = await immich_api.people.async_get_all_people()
-                except ImmichError:
+                    people_response = await immich_api.people.get_all_people()
+                except ApiException:
                     return []
 
                 return [
                     BrowseMediaSource(
                         domain=DOMAIN,
-                        identifier=f"{identifier.unique_id}|people|{person.person_id}",
+                        identifier=f"{identifier.unique_id}|people|{person.id}",
                         media_class=MediaClass.DIRECTORY,
                         media_content_type=MediaClass.IMAGE,
                         title=person.name,
                         can_play=False,
                         can_expand=True,
-                        thumbnail=f"/immich/{identifier.unique_id}/{person.person_id}/person/image/jpg",
+                        thumbnail=f"/immich/{identifier.unique_id}/{person.id}/person/image/jpg",
                     )
-                    for person in people
+                    for person in people_response.people
                 ]
 
         # --------------------------------------------------------
         # final level, render assets
         # --------------------------------------------------------
         assert identifier.collection_id is not None
-        assets: list[ImmichAsset] = []
+        assets: list[AssetResponseDto] = []
         if identifier.collection == "albums":
             LOGGER.debug(
                 "Render all assets of album %s for %s",
@@ -209,11 +213,11 @@ class ImmichMediaSource(MediaSource):
                 entry.title,
             )
             try:
-                album_info = await immich_api.albums.async_get_album_info(
-                    identifier.collection_id
+                album_info = await immich_api.albums.get_album_info(
+                    id=identifier.collection_id
                 )
                 assets = album_info.assets
-            except ImmichError:
+            except ApiException:
                 return []
 
         elif identifier.collection == "tags":
@@ -222,10 +226,13 @@ class ImmichMediaSource(MediaSource):
                 identifier.collection_id,
             )
             try:
-                assets = await immich_api.search.async_get_all_by_tag_ids(
-                    [identifier.collection_id]
+                result = await immich_api.search.search_assets(
+                    metadata_search_dto=MetadataSearchDto(
+                        tag_ids=[UUID(identifier.collection_id)]
+                    )
                 )
-            except ImmichError:
+                assets = result.assets.items
+            except ApiException:
                 return []
 
         elif identifier.collection == "people":
@@ -234,10 +241,13 @@ class ImmichMediaSource(MediaSource):
                 identifier.collection_id,
             )
             try:
-                assets = await immich_api.search.async_get_all_by_person_ids(
-                    [identifier.collection_id]
+                result = await immich_api.search.search_assets(
+                    metadata_search_dto=MetadataSearchDto(
+                        person_ids=[UUID(identifier.collection_id)]
+                    )
                 )
-            except ImmichError:
+                assets = result.assets.items
+            except ApiException:
                 return []
 
         ret: list[BrowseMediaSource] = []
@@ -263,7 +273,7 @@ class ImmichMediaSource(MediaSource):
                         f"{identifier.unique_id}|"
                         f"{identifier.collection}|"
                         f"{identifier.collection_id}|"
-                        f"{asset.asset_id}|"
+                        f"{asset.id}|"
                         f"{asset.original_file_name}|"
                         f"{mime_type}"
                     ),
@@ -272,7 +282,7 @@ class ImmichMediaSource(MediaSource):
                     title=asset.original_file_name,
                     can_play=can_play,
                     can_expand=False,
-                    thumbnail=f"/immich/{identifier.unique_id}/{asset.asset_id}/thumbnail/{thumb_mime_type}",
+                    thumbnail=f"/immich/{identifier.unique_id}/{asset.id}/thumbnail/{thumb_mime_type}",
                 )
             )
 
@@ -332,15 +342,17 @@ class ImmichMediaView(HomeAssistantView):
             )
         )
         assert entry
-        immich_api = entry.runtime_data.api
+        immich_api: AsyncClient = entry.runtime_data.api
 
         # stream response for videos
         if mime_type_base == "video":
             try:
-                resp = await immich_api.assets.async_play_video_stream(asset_id)
-            except ImmichError as exc:
+                resp = await immich_api.assets.play_asset_video_without_preload_content(
+                    id=UUID(asset_id)
+                )
+            except ApiException as exc:
                 raise HTTPNotFound from exc
-            stream = ChunkAsyncStreamIterator(resp)
+            stream = ChunkAsyncStreamIterator(resp.content)
             response = StreamResponse()
             await response.prepare(request)
             async for chunk in stream:
@@ -350,9 +362,12 @@ class ImmichMediaView(HomeAssistantView):
         # web response for images
         try:
             if size == "person":
-                image = await immich_api.people.async_get_person_thumbnail(asset_id)
+                image = await immich_api.people.get_person_thumbnail(id=UUID(asset_id))
             else:
-                image = await immich_api.assets.async_view_asset(asset_id, size)
-        except ImmichError as exc:
+                image = await immich_api.assets.view_asset(
+                    id=UUID(asset_id),
+                    size=AssetMediaSize(size),
+                )
+        except ApiException as exc:
             raise HTTPNotFound from exc
-        return Response(body=image, content_type=f"{mime_type_base}/{mime_type_format}")
+        return Response(body=bytes(image), content_type=f"{mime_type_base}/{mime_type_format}")
