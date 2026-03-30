@@ -80,8 +80,7 @@ class VizioRemote(CoordinatorEntity[VizioDeviceCoordinator], RemoteEntity):
         """Send remote commands to the device."""
         num_repeats: int = kwargs.get(ATTR_NUM_REPEATS, 1)
         delay: float = kwargs.get(ATTR_DELAY_SECS, DEFAULT_DELAY_SECS)
-        resolve = vol.All(vol.Upper, self._resolve_command)
-        resolved = [resolve(cmd) for cmd in command]
+        resolved = [vol.All(vol.Upper, self._resolve_command)(cmd) for cmd in command]
 
         for _ in range(num_repeats):
             for cmd in resolved:
