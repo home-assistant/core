@@ -504,7 +504,6 @@ async def test_rpc_smoke_mute_alarm_button(
     mock_rpc_device.initialize.side_effect = None
     mock_rpc_device.mock_online()
     await hass.async_block_till_done(wait_background_tasks=True)
-    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert (state := hass.states.get(entity_id))
     assert state.state == STATE_UNAVAILABLE
