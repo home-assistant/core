@@ -212,7 +212,7 @@ class MqttStateVacuum(MqttEntity, StateVacuumEntity):
     _entity_id_format = ENTITY_ID_FORMAT
     _attributes_extra_blocked = MQTT_VACUUM_ATTRIBUTES_BLOCKED
 
-    _segments: list[Segment] | None = None
+    _segments: list[Segment]
     _command_topic: str | None
     _set_fan_speed_topic: str | None
     _send_command_topic: str | None
@@ -342,7 +342,6 @@ class MqttStateVacuum(MqttEntity, StateVacuumEntity):
 
     async def async_get_segments(self) -> list[Segment]:
         """Return the available segments."""
-        assert self._segments is not None
         return self._segments
 
     async def _async_publish_command(self, feature: VacuumEntityFeature) -> None:
