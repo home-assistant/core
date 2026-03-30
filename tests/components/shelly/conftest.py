@@ -793,13 +793,10 @@ async def mock_sleepy_rpc_device():
 
 @pytest.fixture
 def mock_setup_entry() -> Generator[AsyncMock]:
-    """Override async_setup_entry and async_unload_entry."""
-    with (
-        patch(
-            "homeassistant.components.shelly.async_setup_entry", return_value=True
-        ) as mock_setup_entry,
-        patch("homeassistant.components.shelly.async_unload_entry", return_value=True),
-    ):
+    """Override async_setup_entry."""
+    with patch(
+        "homeassistant.components.shelly.async_setup_entry", return_value=True
+    ) as mock_setup_entry:
         yield mock_setup_entry
 
 

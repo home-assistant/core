@@ -58,16 +58,6 @@ from tests.components.bluetooth import (
 )
 from tests.typing import WebSocketGenerator
 
-
-async def _async_inject_ble_discovery(
-    hass: HomeAssistant, info: BluetoothServiceInfoBleak
-) -> None:
-    """Inject BLE discovery info and wait for processing without triggering config flows."""
-    with patch.object(hass.config_entries.flow, "async_init"):
-        inject_bluetooth_service_info_bleak(hass, info)
-        await hass.async_block_till_done()
-
-
 DISCOVERY_INFO = ZeroconfServiceInfo(
     ip_address=ip_address("1.1.1.1"),
     ip_addresses=[ip_address("1.1.1.1")],
@@ -1088,7 +1078,7 @@ async def test_user_flow_both_ble_and_zeroconf_prefers_zeroconf(
 
     # Inject BLE device with same MAC (from manufacturer data)
     # The manufacturer data contains WiFi MAC CCBA97C2D670
-    await _async_inject_ble_discovery(hass, BLE_DISCOVERY_INFO_GEN3)
+    inject_bluetooth_service_info_bleak(hass, BLE_DISCOVERY_INFO_GEN3)
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -1150,7 +1140,7 @@ async def test_user_flow_with_ble_devices(
 
     # Inject BLE device with RPC-over-BLE enabled
     # The manufacturer data contains WiFi MAC CCBA97C2D670
-    await _async_inject_ble_discovery(
+    inject_bluetooth_service_info_bleak(
         hass,
         BluetoothServiceInfoBleak(
             name="ShellyPlusGen3",  # Name without MAC so it uses manufacturer data
@@ -1172,6 +1162,15 @@ async def test_user_flow_with_ble_devices(
             tx_power=-127,
         ),
     )
+
+    # Wait for bluetooth discovery to process
+    await hass.async_block_till_done()
+
+    # Abort any auto-discovered bluetooth flows
+    flows = hass.config_entries.flow.async_progress_by_handler(DOMAIN)
+    for flow in flows:
+        if flow["context"]["source"] == config_entries.SOURCE_BLUETOOTH:
+            hass.config_entries.flow.async_abort(flow["flow_id"])
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -1845,7 +1844,10 @@ async def test_user_flow_select_ble_device(
     mock_discovery.return_value = []
 
     # Inject BLE device with RPC-over-BLE enabled (no discovery flow created)
-    await _async_inject_ble_discovery(hass, BLE_DISCOVERY_INFO_GEN3)
+    inject_bluetooth_service_info_bleak(hass, BLE_DISCOVERY_INFO_GEN3)
+
+    # Wait for bluetooth discovery to process
+    await hass.async_block_till_done()
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -2936,6 +2938,7 @@ async def test_zeroconf_sleeping_device_attempts_configure_no_url_available(
     hass.config.api = None
     mock_rpc_device.initialize.side_effect = DeviceConnectionError
     monkeypatch.setattr(mock_rpc_device, "connected", False)
+    monkeypatch.setattr(mock_rpc_device, "initialized", False)
     monkeypatch.setitem(mock_rpc_device.status["sys"], "wakeup_period", 1000)
     entry = MockConfigEntry(
         domain="shelly",
@@ -3229,7 +3232,7 @@ async def test_bluetooth_discovery(
     ]
 
     # Inject BLE device so it's available in the bluetooth scanner
-    await _async_inject_ble_discovery(hass, BLE_DISCOVERY_INFO)
+    inject_bluetooth_service_info_bleak(hass, BLE_DISCOVERY_INFO)
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -3296,7 +3299,7 @@ async def test_bluetooth_provisioning_clears_match_history(
     ]
 
     # Inject BLE device so it's available in the bluetooth scanner
-    await _async_inject_ble_discovery(hass, BLE_DISCOVERY_INFO_FOR_CLEAR_TEST)
+    inject_bluetooth_service_info_bleak(hass, BLE_DISCOVERY_INFO_FOR_CLEAR_TEST)
 
     with patch(
         "homeassistant.components.shelly.config_flow.async_clear_address_from_match_history",
@@ -3385,7 +3388,7 @@ async def test_bluetooth_factory_reset_rediscovery(
 
     # First discovery: device is already provisioned (no RPC-over-BLE)
     # Inject the device without RPC so it's in the bluetooth scanner
-    await _async_inject_ble_discovery(hass, BLE_DISCOVERY_INFO_NO_RPC)
+    inject_bluetooth_service_info_bleak(hass, BLE_DISCOVERY_INFO_NO_RPC)
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -3468,7 +3471,9 @@ async def test_bluetooth_discovery_mac_in_manufacturer_data(
 ) -> None:
     """Test bluetooth discovery with MAC in manufacturer data (newer devices)."""
     # Inject BLE device so it's available in the bluetooth scanner
-    await _async_inject_ble_discovery(hass, BLE_DISCOVERY_INFO_MAC_IN_MANUFACTURER_DATA)
+    inject_bluetooth_service_info_bleak(
+        hass, BLE_DISCOVERY_INFO_MAC_IN_MANUFACTURER_DATA
+    )
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -3491,7 +3496,7 @@ async def test_bluetooth_discovery_mac_unknown_model(
 ) -> None:
     """Test bluetooth discovery with MAC but unknown model ID."""
     # Inject BLE device so it's available in the bluetooth scanner
-    await _async_inject_ble_discovery(hass, BLE_DISCOVERY_INFO_MAC_UNKNOWN_MODEL)
+    inject_bluetooth_service_info_bleak(hass, BLE_DISCOVERY_INFO_MAC_UNKNOWN_MODEL)
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -3513,7 +3518,7 @@ async def test_bluetooth_discovery_already_configured(
 ) -> None:
     """Test bluetooth discovery when device is already configured."""
     # Inject BLE device so it's available in the bluetooth scanner
-    await _async_inject_ble_discovery(hass, BLE_DISCOVERY_INFO)
+    inject_bluetooth_service_info_bleak(hass, BLE_DISCOVERY_INFO)
 
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -3542,7 +3547,7 @@ async def test_bluetooth_discovery_already_configured_clears_match_history(
 ) -> None:
     """Test bluetooth discovery clears match history when device already configured."""
     # Inject BLE device so it's available in the bluetooth scanner
-    await _async_inject_ble_discovery(hass, BLE_DISCOVERY_INFO)
+    inject_bluetooth_service_info_bleak(hass, BLE_DISCOVERY_INFO)
 
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -3604,7 +3609,7 @@ async def test_bluetooth_wifi_scan_success(
     ]
 
     # Inject BLE device so it's available in the bluetooth scanner
-    await _async_inject_ble_discovery(hass, BLE_DISCOVERY_INFO)
+    inject_bluetooth_service_info_bleak(hass, BLE_DISCOVERY_INFO)
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -3674,7 +3679,7 @@ async def test_bluetooth_wifi_scan_failure(
     mock_ble_rpc_device.wifi_scan.side_effect = DeviceConnectionError
 
     # Inject BLE device so it's available in the bluetooth scanner
-    await _async_inject_ble_discovery(hass, BLE_DISCOVERY_INFO)
+    inject_bluetooth_service_info_bleak(hass, BLE_DISCOVERY_INFO)
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -3757,7 +3762,7 @@ async def test_bluetooth_wifi_scan_ble_not_permitted(
     )
 
     # Inject BLE device so it's available in the bluetooth scanner
-    await _async_inject_ble_discovery(hass, BLE_DISCOVERY_INFO)
+    inject_bluetooth_service_info_bleak(hass, BLE_DISCOVERY_INFO)
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -3791,7 +3796,7 @@ async def test_bluetooth_wifi_credentials_and_provision_success(
     ]
 
     # Inject BLE device so it's available in the bluetooth scanner
-    await _async_inject_ble_discovery(hass, BLE_DISCOVERY_INFO)
+    inject_bluetooth_service_info_bleak(hass, BLE_DISCOVERY_INFO)
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -3867,7 +3872,7 @@ async def test_bluetooth_wifi_provision_failure(
     mock_ble_rpc_device.wifi_setconfig.side_effect = DeviceConnectionError
 
     # Inject BLE device so it's available in the bluetooth scanner
-    await _async_inject_ble_discovery(hass, BLE_DISCOVERY_INFO)
+    inject_bluetooth_service_info_bleak(hass, BLE_DISCOVERY_INFO)
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -3955,7 +3960,7 @@ async def test_bluetooth_wifi_scan_unexpected_exception(
     mock_ble_rpc_device.wifi_scan.side_effect = RuntimeError("Unexpected error")
 
     # Inject BLE device so it's available in the bluetooth scanner
-    await _async_inject_ble_discovery(hass, BLE_DISCOVERY_INFO)
+    inject_bluetooth_service_info_bleak(hass, BLE_DISCOVERY_INFO)
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -3986,7 +3991,7 @@ async def test_bluetooth_provision_unexpected_exception(
     mock_ble_rpc_device.wifi_setconfig.side_effect = RuntimeError("Unexpected error")
 
     # Inject BLE device so it's available in the bluetooth scanner
-    await _async_inject_ble_discovery(hass, BLE_DISCOVERY_INFO)
+    inject_bluetooth_service_info_bleak(hass, BLE_DISCOVERY_INFO)
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -4032,7 +4037,7 @@ async def test_bluetooth_provision_device_connection_error_after_wifi(
     ]
 
     # Inject BLE device so it's available in the bluetooth scanner
-    await _async_inject_ble_discovery(hass, BLE_DISCOVERY_INFO)
+    inject_bluetooth_service_info_bleak(hass, BLE_DISCOVERY_INFO)
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -4093,7 +4098,7 @@ async def test_bluetooth_provision_requires_auth(
     ]
 
     # Inject BLE device so it's available in the bluetooth scanner
-    await _async_inject_ble_discovery(hass, BLE_DISCOVERY_INFO)
+    inject_bluetooth_service_info_bleak(hass, BLE_DISCOVERY_INFO)
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -4171,7 +4176,7 @@ async def test_bluetooth_provision_validate_input_fails(
     ]
 
     # Inject BLE device so it's available in the bluetooth scanner
-    await _async_inject_ble_discovery(hass, BLE_DISCOVERY_INFO)
+    inject_bluetooth_service_info_bleak(hass, BLE_DISCOVERY_INFO)
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -4244,7 +4249,7 @@ async def test_bluetooth_provision_firmware_not_fully_provisioned(
     ]
 
     # Inject BLE device so it's available in the bluetooth scanner
-    await _async_inject_ble_discovery(hass, BLE_DISCOVERY_INFO)
+    inject_bluetooth_service_info_bleak(hass, BLE_DISCOVERY_INFO)
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -4300,7 +4305,7 @@ async def test_bluetooth_provision_with_zeroconf_discovery_fast_path(
     ]
 
     # Inject BLE device
-    await _async_inject_ble_discovery(hass, BLE_DISCOVERY_INFO)
+    inject_bluetooth_service_info_bleak(hass, BLE_DISCOVERY_INFO)
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -4388,7 +4393,7 @@ async def test_bluetooth_provision_timeout_active_lookup_fails(
     mock_ble_rpc_device.status = {"wifi": {"sta_ip": None}}
 
     # Inject BLE device
-    await _async_inject_ble_discovery(hass, BLE_DISCOVERY_INFO)
+    inject_bluetooth_service_info_bleak(hass, BLE_DISCOVERY_INFO)
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -4461,7 +4466,7 @@ async def test_bluetooth_provision_timeout_ble_fallback_succeeds(
     mock_ble_rpc_device.status = {"wifi": {"sta_ip": "192.168.1.100"}}
 
     # Inject BLE device
-    await _async_inject_ble_discovery(hass, BLE_DISCOVERY_INFO)
+    inject_bluetooth_service_info_bleak(hass, BLE_DISCOVERY_INFO)
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -4541,7 +4546,7 @@ async def test_bluetooth_provision_timeout_ble_fallback_fails(
     mock_ble_rpc_device.status = {"wifi": {"sta_ip": None}}
 
     # Inject BLE device
-    await _async_inject_ble_discovery(hass, BLE_DISCOVERY_INFO)
+    inject_bluetooth_service_info_bleak(hass, BLE_DISCOVERY_INFO)
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -4601,7 +4606,7 @@ async def test_bluetooth_provision_timeout_ble_exception(
     ]
 
     # Inject BLE device
-    await _async_inject_ble_discovery(hass, BLE_DISCOVERY_INFO)
+    inject_bluetooth_service_info_bleak(hass, BLE_DISCOVERY_INFO)
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -4675,7 +4680,7 @@ async def test_bluetooth_provision_secure_device_both_enabled(
         {"ssid": "MyNetwork", "rssi": -50, "auth": 2}
     ]
 
-    await _async_inject_ble_discovery(hass, BLE_DISCOVERY_INFO)
+    inject_bluetooth_service_info_bleak(hass, BLE_DISCOVERY_INFO)
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -4690,7 +4695,11 @@ async def test_bluetooth_provision_secure_device_both_enabled(
     )
 
     # Provision and verify security calls
-    mock_device = create_mock_rpc_device()
+    mock_device = AsyncMock()
+    mock_device.initialize = AsyncMock()
+    mock_device.wifi_setconfig = AsyncMock(return_value={})
+    mock_device.ble_setconfig = AsyncMock(return_value={"restart_required": False})
+    mock_device.shutdown = AsyncMock()
 
     with (
         patch(
@@ -4735,7 +4744,7 @@ async def test_bluetooth_provision_secure_device_both_disabled(
         {"ssid": "MyNetwork", "rssi": -50, "auth": 2}
     ]
 
-    await _async_inject_ble_discovery(hass, BLE_DISCOVERY_INFO)
+    inject_bluetooth_service_info_bleak(hass, BLE_DISCOVERY_INFO)
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -4784,7 +4793,7 @@ async def test_bluetooth_provision_secure_device_only_ap_disabled(
         {"ssid": "MyNetwork", "rssi": -50, "auth": 2}
     ]
 
-    await _async_inject_ble_discovery(hass, BLE_DISCOVERY_INFO)
+    inject_bluetooth_service_info_bleak(hass, BLE_DISCOVERY_INFO)
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -4799,7 +4808,10 @@ async def test_bluetooth_provision_secure_device_only_ap_disabled(
     )
 
     # Provision and verify only AP disabled
-    mock_device = create_mock_rpc_device()
+    mock_device = AsyncMock()
+    mock_device.initialize = AsyncMock()
+    mock_device.wifi_setconfig = AsyncMock(return_value={})
+    mock_device.shutdown = AsyncMock()
 
     with (
         patch(
@@ -4843,7 +4855,7 @@ async def test_bluetooth_provision_secure_device_only_ble_disabled(
         {"ssid": "MyNetwork", "rssi": -50, "auth": 2}
     ]
 
-    await _async_inject_ble_discovery(hass, BLE_DISCOVERY_INFO)
+    inject_bluetooth_service_info_bleak(hass, BLE_DISCOVERY_INFO)
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -4858,7 +4870,10 @@ async def test_bluetooth_provision_secure_device_only_ble_disabled(
     )
 
     # Provision and verify only BLE disabled
-    mock_device = create_mock_rpc_device()
+    mock_device = AsyncMock()
+    mock_device.initialize = AsyncMock()
+    mock_device.ble_setconfig = AsyncMock(return_value={"restart_required": False})
+    mock_device.shutdown = AsyncMock()
 
     with (
         patch(
@@ -4902,7 +4917,7 @@ async def test_bluetooth_provision_secure_device_with_restart_required(
         {"ssid": "MyNetwork", "rssi": -50, "auth": 2}
     ]
 
-    await _async_inject_ble_discovery(hass, BLE_DISCOVERY_INFO)
+    inject_bluetooth_service_info_bleak(hass, BLE_DISCOVERY_INFO)
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -4917,9 +4932,12 @@ async def test_bluetooth_provision_secure_device_with_restart_required(
     )
 
     # Provision and verify restart is triggered
-    mock_device = create_mock_rpc_device()
+    mock_device = AsyncMock()
+    mock_device.initialize = AsyncMock()
+    mock_device.wifi_setconfig = AsyncMock(return_value={})
     mock_device.ble_setconfig = AsyncMock(return_value={"restart_required": True})
     mock_device.trigger_reboot = AsyncMock()
+    mock_device.shutdown = AsyncMock()
 
     with (
         patch(
@@ -4963,7 +4981,7 @@ async def test_bluetooth_provision_secure_device_fails_gracefully(
         {"ssid": "MyNetwork", "rssi": -50, "auth": 2}
     ]
 
-    await _async_inject_ble_discovery(hass, BLE_DISCOVERY_INFO)
+    inject_bluetooth_service_info_bleak(hass, BLE_DISCOVERY_INFO)
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -4978,8 +4996,10 @@ async def test_bluetooth_provision_secure_device_fails_gracefully(
     )
 
     # Provision with security calls failing - wifi_setconfig will fail
-    mock_device = create_mock_rpc_device()
+    mock_device = AsyncMock()
+    mock_device.initialize = AsyncMock()
     mock_device.wifi_setconfig = AsyncMock(side_effect=RpcCallError("RPC call failed"))
+    mock_device.shutdown = AsyncMock()
 
     with (
         patch(
@@ -5014,7 +5034,7 @@ async def test_zeroconf_aborts_idle_ble_flow(
 ) -> None:
     """Test zeroconf discovery aborts idle BLE flow (lines 316-321)."""
     # Start BLE discovery flow and leave it idle at bluetooth_confirm
-    await _async_inject_ble_discovery(hass, BLE_DISCOVERY_INFO)
+    inject_bluetooth_service_info_bleak(hass, BLE_DISCOVERY_INFO)
 
     ble_result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -5072,7 +5092,7 @@ async def test_bluetooth_flow_abort_cleans_up_ble_connection(
         {"ssid": "MyNetwork", "rssi": -50, "auth": 2}
     ]
 
-    await _async_inject_ble_discovery(hass, BLE_DISCOVERY_INFO)
+    inject_bluetooth_service_info_bleak(hass, BLE_DISCOVERY_INFO)
 
     # Start BLE flow
     result = await hass.config_entries.flow.async_init(
@@ -5111,7 +5131,7 @@ async def test_bluetooth_ble_initialize_failure_cleans_up(
     mock_device.initialize = AsyncMock(side_effect=DeviceConnectionError)
     mock_device.shutdown = AsyncMock()
 
-    await _async_inject_ble_discovery(hass, BLE_DISCOVERY_INFO)
+    inject_bluetooth_service_info_bleak(hass, BLE_DISCOVERY_INFO)
 
     # Start BLE flow
     result = await hass.config_entries.flow.async_init(
@@ -5158,7 +5178,7 @@ async def test_bluetooth_ble_shutdown_exception_handled(
     # Make shutdown raise an exception
     mock_ble_rpc_device.shutdown.side_effect = RuntimeError("Shutdown failed")
 
-    await _async_inject_ble_discovery(hass, BLE_DISCOVERY_INFO)
+    inject_bluetooth_service_info_bleak(hass, BLE_DISCOVERY_INFO)
 
     # Start BLE flow
     result = await hass.config_entries.flow.async_init(
@@ -5195,7 +5215,7 @@ async def test_bluetooth_provision_ble_reconnect_fails_during_ip_fetch(
     ]
 
     # Inject BLE device
-    await _async_inject_ble_discovery(hass, BLE_DISCOVERY_INFO)
+    inject_bluetooth_service_info_bleak(hass, BLE_DISCOVERY_INFO)
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
