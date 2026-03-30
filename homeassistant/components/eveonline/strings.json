@@ -19,7 +19,8 @@
   "entity": {
     "sensor": {
       "buy_orders": {
-        "name": "Buy orders"
+        "name": "Buy orders",
+        "unit_of_measurement": "orders"
       },
       "current_skill_finish": {
         "name": "Current skill finish"
@@ -28,7 +29,8 @@
         "name": "Current training skill"
       },
       "industry_jobs": {
-        "name": "Industry jobs"
+        "name": "Industry jobs",
+        "unit_of_measurement": "jobs"
       },
       "jump_fatigue": {
         "name": "Jump fatigue"
@@ -40,10 +42,12 @@
         "name": "Next industry finish"
       },
       "players_online": {
-        "name": "Players online"
+        "name": "Players online",
+        "unit_of_measurement": "players"
       },
       "sell_orders": {
-        "name": "Sell orders"
+        "name": "Sell orders",
+        "unit_of_measurement": "orders"
       },
       "server_version": {
         "name": "Server version"
@@ -52,19 +56,24 @@
         "name": "Ship"
       },
       "skill_queue_count": {
-        "name": "Skill queue"
+        "name": "Skill queue",
+        "unit_of_measurement": "skills"
       },
       "total_sp": {
-        "name": "Total skill points"
+        "name": "Total skill points",
+        "unit_of_measurement": "SP"
       },
       "unallocated_sp": {
-        "name": "Unallocated skill points"
+        "name": "Unallocated skill points",
+        "unit_of_measurement": "SP"
       },
       "unread_mail": {
-        "name": "Unread mail"
+        "name": "Unread mail",
+        "unit_of_measurement": "messages"
       },
       "wallet_balance": {
-        "name": "Wallet balance"
+        "name": "Wallet balance",
+        "unit_of_measurement": "ISK"
       }
     }
   },

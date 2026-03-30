@@ -36,7 +36,6 @@ SERVER_SENSORS: tuple[EveOnlineSensorDescription, ...] = (
         key="players_online",
         translation_key="players_online",
         state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement="players",
         value_fn=lambda data: data.server_status.players,
     ),
     EveOnlineSensorDescription(
@@ -76,7 +75,6 @@ CHARACTER_SENSORS: tuple[EveOnlineSensorDescription, ...] = (
         key="wallet_balance",
         translation_key="wallet_balance",
         state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement="ISK",
         suggested_display_precision=2,
         value_fn=lambda data: (
             round(data.wallet_balance.balance, 2) if data.wallet_balance else None
@@ -87,7 +85,6 @@ CHARACTER_SENSORS: tuple[EveOnlineSensorDescription, ...] = (
         key="total_sp",
         translation_key="total_sp",
         state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement="SP",
         value_fn=lambda data: data.skills.total_sp if data.skills else None,
         available_fn=lambda data: data.skills is not None,
     ),
@@ -95,7 +92,6 @@ CHARACTER_SENSORS: tuple[EveOnlineSensorDescription, ...] = (
         key="unallocated_sp",
         translation_key="unallocated_sp",
         state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement="SP",
         entity_registry_enabled_default=False,
         value_fn=lambda data: data.skills.unallocated_sp if data.skills else None,
         available_fn=lambda data: data.skills is not None,
@@ -104,7 +100,6 @@ CHARACTER_SENSORS: tuple[EveOnlineSensorDescription, ...] = (
         key="skill_queue_count",
         translation_key="skill_queue_count",
         state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement="skills",
         value_fn=lambda data: len(data.skill_queue),
     ),
     EveOnlineSensorDescription(
@@ -134,7 +129,6 @@ CHARACTER_SENSORS: tuple[EveOnlineSensorDescription, ...] = (
         key="unread_mail",
         translation_key="unread_mail",
         state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement="messages",
         value_fn=lambda data: (
             data.mail_labels.total_unread_count if data.mail_labels else None
         ),
@@ -144,7 +138,6 @@ CHARACTER_SENSORS: tuple[EveOnlineSensorDescription, ...] = (
         key="industry_jobs",
         translation_key="industry_jobs",
         state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement="jobs",
         value_fn=lambda data: sum(
             1 for j in data.industry_jobs if j.status == "active"
         ),
@@ -162,14 +155,12 @@ CHARACTER_SENSORS: tuple[EveOnlineSensorDescription, ...] = (
         key="sell_orders",
         translation_key="sell_orders",
         state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement="orders",
         value_fn=lambda data: sum(1 for o in data.market_orders if not o.is_buy_order),
     ),
     EveOnlineSensorDescription(
         key="buy_orders",
         translation_key="buy_orders",
         state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement="orders",
         value_fn=lambda data: sum(1 for o in data.market_orders if o.is_buy_order),
     ),
     EveOnlineSensorDescription(
