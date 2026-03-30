@@ -7,6 +7,6 @@
   "integration_type": "device",
   "iot_class": "cloud_polling",
   "loggers": ["waterfurnace"],
-  "quality_scale": "legacy",
+  "quality_scale": "bronze",
   "requirements": ["waterfurnace==1.6.2"]
 }
