@@ -4,14 +4,13 @@ from __future__ import annotations
 
 from typing import Any
 
-from tuya_device_handlers.device_wrapper import DEVICE_WARNINGS
+from tuya_device_handlers.helpers.diagnostics import customer_device_as_dict
 from tuya_sharing import CustomerDevice
 
 from homeassistant.components.diagnostics import REDACTED
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.device_registry import DeviceEntry
-from homeassistant.util import dt as dt_util
 
 from . import TuyaConfigEntry
 from .const import DOMAIN, DPCode
@@ -79,52 +78,13 @@ def _async_device_as_dict(
 ) -> dict[str, Any]:
     """Represent a Tuya device as a dictionary."""
 
-    # Base device information, without sensitive information.
-    data = {
-        "id": device.id,
-        "name": device.name,
-        "category": device.category,
-        "product_id": device.product_id,
-        "product_name": device.product_name,
-        "online": device.online,
-        "sub": device.sub,
-        "time_zone": device.time_zone,
-        "active_time": dt_util.utc_from_timestamp(device.active_time).isoformat(),
-        "create_time": dt_util.utc_from_timestamp(device.create_time).isoformat(),
-        "update_time": dt_util.utc_from_timestamp(device.update_time).isoformat(),
-        "function": {},
-        "status_range": {},
-        "status": {},
-        "home_assistant": {},
-        "set_up": device.set_up,
-        "support_local": device.support_local,
-        "local_strategy": device.local_strategy,
-        "warnings": DEVICE_WARNINGS.get(device.id),
-    }
+    # Base device information
+    data = customer_device_as_dict(device)
 
-    # Gather Tuya states
-    for dpcode, value in device.status.items():
-        # These statuses may contain sensitive information, redact these..
-        if dpcode in _REDACTED_DPCODES:
-            data["status"][dpcode] = REDACTED
-            continue
-
-        data["status"][dpcode] = value
-
-    # Gather Tuya functions
-    for function in device.function.values():
-        data["function"][function.code] = {
-            "type": function.type,
-            "value": function.values,
-        }
-
-    # Gather Tuya status ranges
-    for status_range in device.status_range.values():
-        data["status_range"][status_range.code] = {
-            "type": status_range.type,
-            "value": status_range.values,
-            "report_type": status_range.report_type,
-        }
+    # Redact sensitive information.
+    for key in data["status"]:
+        if key in _REDACTED_DPCODES:
+            data["status"][key] = REDACTED
 
     # Gather information how this Tuya device is represented in Home Assistant
     device_registry = dr.async_get(hass)
