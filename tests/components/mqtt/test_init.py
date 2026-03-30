@@ -2334,7 +2334,7 @@ async def test_yaml_config_without_entry(
 @pytest.mark.parametrize(
     "hass_config", [{mqtt.DOMAIN: {"sensor": {"state_topic": "test-topic"}}}]
 )
-async def test_yaml_config_with_entry_(
+async def test_yaml_config_with_active_mqtt_config_entry(
     hass: HomeAssistant,
     hass_config: ConfigType,
     mqtt_mock_entry: MqttMockHAClientGenerator,
