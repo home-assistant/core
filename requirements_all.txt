@@ -404,7 +404,7 @@ aioskybell==22.7.0
 aioslimproto==3.0.0
 
 # homeassistant.components.solaredge
-aiosolaredge==0.2.0
+aiosolaredge==1.0.2
 
 # homeassistant.components.steamist
 aiosteamist==1.0.1
@@ -963,7 +963,7 @@ feedparser==6.0.12
 file-read-backwards==2.0.0
 
 # homeassistant.components.fing
-fing_agent_api==1.0.3
+fing_agent_api==1.1.0
 
 # homeassistant.components.fints
 fints==3.1.0
@@ -1084,7 +1084,7 @@ go2rtc-client==0.4.0
 goalzero==0.2.2
 
 # homeassistant.components.goodwe
-goodwe==0.4.8
+goodwe==0.4.10
 
 # homeassistant.components.google_mail
 # homeassistant.components.google_tasks
@@ -1383,7 +1383,7 @@ kiwiki-client==0.1.1
 knocki==0.4.2
 
 # homeassistant.components.knx
-knx-frontend==2026.3.2.183756
+knx-frontend==2026.3.28.223133
 
 # homeassistant.components.konnected
 konnected==1.2.0
@@ -2001,7 +2001,7 @@ pybravia==0.4.1
 pycarwings2==2.14
 
 # homeassistant.components.casper_glow
-pycasperglow==1.1.0
+pycasperglow==1.2.0
 
 # homeassistant.components.cloudflare
 pycfdns==3.0.0
@@ -3157,7 +3157,7 @@ ttls==1.8.3
 ttn_client==1.3.0
 
 # homeassistant.components.tuya
-tuya-device-handlers==0.0.15
+tuya-device-handlers==0.0.16
 
 # homeassistant.components.tuya
 tuya-device-sharing-sdk==0.2.8
@@ -3280,7 +3280,7 @@ waterfurnace==1.6.2
 watergate-local-api==2025.1.0
 
 # homeassistant.components.weatherflow_cloud
-weatherflow4py==1.4.1
+weatherflow4py==1.5.2
 
 # homeassistant.components.cisco_webex_teams
 webexpythonsdk==2.0.1
