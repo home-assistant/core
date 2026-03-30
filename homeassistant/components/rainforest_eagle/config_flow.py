@@ -68,17 +68,32 @@ class RainforestEagleConfigFlow(ConfigFlow, domain=DOMAIN):
         else:
             user_input[CONF_TYPE] = eagle_type
 
-            # If multiple meters are available, let the user choose
-            if meters and len(meters) > 1:
-                self._meters = meters
-                self._user_input = user_input
-                return await self.async_step_meter_select()
-
             if meters:
-                # For single meter, set it automatically
-                user_input[CONF_HARDWARE_ADDRESS] = meters[0].hardware_address
+                # If there are meters, the process depends on how many there are and if any have a 'Connected' status
+                if len(meters) == 1:
+                    # If there is only one meter, just use it and create the entry
+                    user_input[CONF_HARDWARE_ADDRESS] = meters[0].hardware_address
+                else:
+                    # If there are multiple meters, look for the first one with a 'Connected' status
+                    selected_meter = None
+                    for meter in meters:
+                        if getattr(meter, "connection_status", None) == "Connected":
+                            selected_meter = meter
+                            break
+
+                    if selected_meter:
+                        # If a connected meter was found, use that and create the entry
+                        user_input[CONF_HARDWARE_ADDRESS] = (
+                            selected_meter.hardware_address
+                        )
+
+                    else:
+                        # If there was more than one meter, but none have a 'Connected' status, then let the user choose
+                        self._meters = meters
+                        self._user_input = user_input
+                        return await self.async_step_meter_select()
             else:
-                # For no meters, set to None
+                # If there are no meters, set to None
                 user_input[CONF_HARDWARE_ADDRESS] = None
 
             return self.async_create_entry(
