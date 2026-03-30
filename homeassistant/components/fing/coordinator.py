@@ -12,7 +12,6 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY, CONF_IP_ADDRESS, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
-from homeassistant.helpers.httpx_client import get_async_client
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN, UPNP_AVAILABLE
@@ -40,7 +39,6 @@ class FingDataUpdateCoordinator(DataUpdateCoordinator[FingDataObject]):
             ip=config_entry.data[CONF_IP_ADDRESS],
             port=int(config_entry.data[CONF_PORT]),
             key=config_entry.data[CONF_API_KEY],
-            client=get_async_client(hass),
         )
         self._upnp_available = config_entry.data[UPNP_AVAILABLE]
         update_interval = timedelta(seconds=30)

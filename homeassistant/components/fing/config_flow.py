@@ -10,7 +10,6 @@ import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_API_KEY, CONF_IP_ADDRESS, CONF_PORT
-from homeassistant.helpers.httpx_client import get_async_client
 
 from .const import DOMAIN, UPNP_AVAILABLE
 
@@ -41,7 +40,6 @@ class FingConfigFlow(ConfigFlow, domain=DOMAIN):
                 ip=user_input[CONF_IP_ADDRESS],
                 port=int(user_input[CONF_PORT]),
                 key=user_input[CONF_API_KEY],
-                client=get_async_client(self.hass),
             )
 
             try:
