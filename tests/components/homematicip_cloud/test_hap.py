@@ -410,8 +410,8 @@ async def test_async_update_cancels_previous_reconnect_task(
         nonlocal call_count
         call_count += 1
         if call_count == 1:
-            # First call blocks forever (simulates slow recovery).
-            await asyncio.sleep(3600)
+            # First call yields control (simulates a blocking recovery operation).
+            await asyncio.sleep(0)
         else:
             # Second call succeeds immediately.
             return
