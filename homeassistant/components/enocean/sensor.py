@@ -108,8 +108,19 @@ class EnOceanSensor(EnOceanEntity, RestoreSensor):
             self._attr_device_class = SensorDeviceClass.ENUM
             self._attr_options = observable.possible_values
             self._attr_native_unit_of_measurement = None
+            if observable is Observable.CONNECTION_STATUS:
+                self._track_gateway_availability = False
+                self._attr_available = True
         else:
             self._attr_state_class = SensorStateClass.MEASUREMENT
+
+    async def async_added_to_hass(self) -> None:
+        """Seed initial value for the connection-status sensor."""
+        await super().async_added_to_hass()
+        if self._observable is Observable.CONNECTION_STATUS:
+            self._attr_native_value = (
+                "connected" if self.gateway.is_connected else "disconnected"
+            )
 
     def _update_from_observation(self, observation: Observation) -> None:
         """Update sensor state from a matched observation."""
