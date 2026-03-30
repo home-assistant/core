@@ -47,15 +47,16 @@ from .const import (
     DATA_SCHEDULES,
     DOMAIN,
     EVENT_TYPE_CANCEL_SET_POINT,
+    EVENT_TYPE_SCHEDULE,
     EVENT_TYPE_SET_POINT,
     EVENT_TYPE_THERM_MODE,
+    INTERNAL_SIGNAL_SCHEDULE_CHANGED,
     NETATMO_CREATE_CLIMATE,
     SERVICE_CLEAR_TEMPERATURE_SETTING,
     SERVICE_SET_PRESET_MODE_WITH_END_DATETIME,
     SERVICE_SET_SCHEDULE,
     SERVICE_SET_TEMPERATURE_WITH_END_DATETIME,
     SERVICE_SET_TEMPERATURE_WITH_TIME_PERIOD,
-    SIGNAL_SCHEDULE_CHANGED,
 )
 from .data_handler import ACCOUNT, HOME, SIGNAL_NAME, NetatmoRoom
 from .entity import NetatmoRoomEntity
@@ -234,6 +235,7 @@ class NetatmoThermostat(NetatmoRoomEntity, ClimateEntity):
             EVENT_TYPE_SET_POINT,
             EVENT_TYPE_THERM_MODE,
             EVENT_TYPE_CANCEL_SET_POINT,
+            EVENT_TYPE_SCHEDULE,
         ):
             self.async_on_remove(
                 async_dispatcher_connect(
@@ -246,7 +248,7 @@ class NetatmoThermostat(NetatmoRoomEntity, ClimateEntity):
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
-                f"{SIGNAL_SCHEDULE_CHANGED}-{self.home.entity_id}",
+                f"{INTERNAL_SIGNAL_SCHEDULE_CHANGED}-{self.home.entity_id}",
                 self._handle_schedule_changed,
             )
         )
@@ -292,6 +294,23 @@ class NetatmoThermostat(NetatmoRoomEntity, ClimateEntity):
             elif self._attr_preset_mode in [PRESET_SCHEDULE, PRESET_HOME]:
                 self.async_update_callback()
                 self.data_handler.async_force_update(self._signal_name)
+            self.async_write_ha_state()
+            return
+
+        if data["event_type"] == EVENT_TYPE_SCHEDULE and "schedule_id" in data:
+            schedule_id = data["schedule_id"]
+            selected_schedule = (
+                self.hass.data[DOMAIN][DATA_SCHEDULES]
+                .get(self.home.entity_id, {})
+                .get(schedule_id)
+            )
+            self._selected_schedule = getattr(selected_schedule, "name", None)
+            self._attr_extra_state_attributes[ATTR_SELECTED_SCHEDULE] = (
+                self._selected_schedule
+            )
+            self._attr_extra_state_attributes[ATTR_SELECTED_SCHEDULE_ID] = getattr(
+                selected_schedule, "entity_id", None
+            )
             self.async_write_ha_state()
             return
 
@@ -481,7 +500,7 @@ class NetatmoThermostat(NetatmoRoomEntity, ClimateEntity):
         # notify other entities of the schedule change
         async_dispatcher_send(
             self.hass,
-            f"{SIGNAL_SCHEDULE_CHANGED}-{self.home.entity_id}",
+            f"{INTERNAL_SIGNAL_SCHEDULE_CHANGED}-{self.home.entity_id}",
             schedule_id,
         )
         # trigger immediate homesdata refresh to confirm schedule selection

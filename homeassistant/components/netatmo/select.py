@@ -19,9 +19,9 @@ from .const import (
     DATA_SCHEDULES,
     DOMAIN,
     EVENT_TYPE_SCHEDULE,
+    INTERNAL_SIGNAL_SCHEDULE_CHANGED,
     MANUFACTURER,
     NETATMO_CREATE_SELECT,
-    SIGNAL_SCHEDULE_CHANGED,
 )
 from .data_handler import ACCOUNT, HOME, SIGNAL_NAME, NetatmoHome
 from .entity import NetatmoBaseEntity
@@ -102,7 +102,7 @@ class NetatmoScheduleSelect(NetatmoBaseEntity, SelectEntity):
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
-                f"{SIGNAL_SCHEDULE_CHANGED}-{self.home.entity_id}",
+                f"{INTERNAL_SIGNAL_SCHEDULE_CHANGED}-{self.home.entity_id}",
                 self._handle_schedule_changed,
             )
         )
@@ -168,12 +168,6 @@ class NetatmoScheduleSelect(NetatmoBaseEntity, SelectEntity):
                 sched.selected = sid == new_schedule_id
             self._attr_current_option = new_option
             self.async_write_ha_state()
-            # notify other entities of the schedule change
-            async_dispatcher_send(
-                self.hass,
-                f"{SIGNAL_SCHEDULE_CHANGED}-{self.home.entity_id}",
-                new_schedule_id,
-            )
 
     async def async_select_option(self, option: str) -> None:
         """Handle schedule change triggered by a user selection in the UI."""
@@ -198,7 +192,7 @@ class NetatmoScheduleSelect(NetatmoBaseEntity, SelectEntity):
             # notify other entities of the schedule change
             async_dispatcher_send(
                 self.hass,
-                f"{SIGNAL_SCHEDULE_CHANGED}-{self.home.entity_id}",
+                f"{INTERNAL_SIGNAL_SCHEDULE_CHANGED}-{self.home.entity_id}",
                 sid,
             )
             # trigger immediate homesdata refresh to confirm schedule selection
