@@ -118,3 +118,13 @@ TMRW_ATTR_CLOUD_BASE = "cloudBase"
 TMRW_ATTR_CLOUD_CEILING = "cloudCeiling"
 TMRW_ATTR_UV_INDEX = "uvIndex"
 TMRW_ATTR_UV_HEALTH_CONCERN = "uvHealthConcern"
+
+# Precipitation intensity attributes
+TMRW_ATTR_RAIN_INTENSITY = "rainIntensity"
+TMRW_ATTR_SNOW_INTENSITY = "snowIntensity"
+TMRW_ATTR_SLEET_INTENSITY = "sleetIntensity"
+TMRW_ATTR_FREEZING_RAIN_INTENSITY = "freezingRainIntensity"
+TMRW_ATTR_PRECIPITATION_INTENSITY = "precipitationIntensity"
+
+# Additional realtime attributes
+TMRW_ATTR_ALTIMETER_SETTING = "altimeterSetting"

@@ -148,6 +148,45 @@
       },
       "wind_gust": {
         "name": "Wind gust"
+      },
+      "rain_intensity": {
+        "name": "Rain intensity"
+      },
+      "snow_intensity": {
+        "name": "Snow intensity"
+      },
+      "sleet_intensity": {
+        "name": "Sleet intensity"
+      },
+      "freezing_rain_intensity": {
+        "name": "Freezing rain intensity"
+      },
+      "precipitation_intensity": {
+        "name": "Precipitation intensity"
+      },
+      "precipitation_probability": {
+        "name": "Precipitation probability"
+      },
+      "temperature": {
+        "name": "Temperature"
+      },
+      "humidity": {
+        "name": "Humidity"
+      },
+      "pressure_sea_level": {
+        "name": "Pressure (sea level)"
+      },
+      "wind_speed": {
+        "name": "Wind speed"
+      },
+      "wind_direction": {
+        "name": "Wind direction"
+      },
+      "visibility": {
+        "name": "Visibility"
+      },
+      "altimeter_setting": {
+        "name": "Altimeter setting"
       }
     }
   },
