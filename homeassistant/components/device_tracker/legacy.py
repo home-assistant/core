@@ -48,7 +48,7 @@ from homeassistant.helpers.event import (
     async_track_utc_time_change,
 )
 from homeassistant.helpers.restore_state import RestoreEntity
-from homeassistant.helpers.typing import ConfigType, GPSType
+from homeassistant.helpers.typing import ConfigType, GPSType, StateType
 from homeassistant.setup import (
     SetupPhases,
     async_notify_setup_error,
@@ -66,7 +66,6 @@ from .const import (
     ATTR_DEV_ID,
     ATTR_GPS,
     ATTR_HOST_NAME,
-    ATTR_IN_ZONES,
     ATTR_LOCATION_NAME,
     ATTR_MAC,
     ATTR_SOURCE_TYPE,
@@ -821,7 +820,6 @@ class Device(RestoreEntity):
             self.config_picture = picture
 
         self._icon = icon
-        self._in_zones: list[str] = []
 
         self.source_type: SourceType | str | None = None
 
@@ -844,12 +842,9 @@ class Device(RestoreEntity):
 
     @final
     @property
-    def state_attributes(self) -> dict[str, Any]:
+    def state_attributes(self) -> dict[str, StateType]:
         """Return the device state attributes."""
-        attributes: dict[str, Any] = {ATTR_SOURCE_TYPE: self.source_type}
-
-        if self.source_type == SourceType.GPS:
-            attributes[ATTR_IN_ZONES] = self._in_zones
+        attributes: dict[str, StateType] = {ATTR_SOURCE_TYPE: self.source_type}
 
         if self.gps is not None:
             attributes[ATTR_LATITUDE] = self.gps[0]
@@ -920,7 +915,6 @@ class Device(RestoreEntity):
     def mark_stale(self) -> None:
         """Mark the device state as stale."""
         self._state = STATE_NOT_HOME
-        self._in_zones = []
         self.gps = None
         self.last_update_home = False
 
@@ -934,7 +928,7 @@ class Device(RestoreEntity):
         if self.location_name:
             self._state = self.location_name
         elif self.gps is not None and self.source_type == SourceType.GPS:
-            zone_state, self._in_zones = zone.async_active_zones(
+            zone_state = zone.async_active_zone(
                 self.hass, self.gps[0], self.gps[1], self.gps_accuracy
             )
             if zone_state is None:
