@@ -136,7 +136,7 @@ class NetatmoScheduleSelect(NetatmoBaseEntity, SelectEntity):
         """Handle schedule change triggered by a Netatmo webhook event."""
         data = event["data"]
 
-        if self.home.entity_id != data["home_id"]:
+        if self.home.entity_id != data.get("home_id"):
             return
 
         if data["event_type"] == EVENT_TYPE_SCHEDULE and "schedule_id" in data:

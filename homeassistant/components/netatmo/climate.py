@@ -276,10 +276,30 @@ class NetatmoThermostat(NetatmoRoomEntity, ClimateEntity):
         """Handle webhook events."""
         data = event["data"]
 
-        if self.home.entity_id != data["home_id"]:
+        if self.home.entity_id != data.get("home_id"):
             return
 
-        home = data["home"]
+        if data.get("event_type") == EVENT_TYPE_SCHEDULE and "schedule_id" in data:
+            schedule_id = data["schedule_id"]
+            selected_schedule = (
+                self.hass.data[DOMAIN][DATA_SCHEDULES]
+                .get(self.home.entity_id, {})
+                .get(schedule_id)
+            )
+            self._selected_schedule = getattr(selected_schedule, "name", None)
+            self._attr_extra_state_attributes[ATTR_SELECTED_SCHEDULE] = (
+                self._selected_schedule
+            )
+            self._attr_extra_state_attributes[ATTR_SELECTED_SCHEDULE_ID] = getattr(
+                selected_schedule, "entity_id", None
+            )
+            self.async_write_ha_state()
+            return
+
+        home = data.get("home")
+
+        if home is None:
+            return
 
         if self.home.entity_id != home["id"]:
             return
@@ -294,23 +314,6 @@ class NetatmoThermostat(NetatmoRoomEntity, ClimateEntity):
             elif self._attr_preset_mode in [PRESET_SCHEDULE, PRESET_HOME]:
                 self.async_update_callback()
                 self.data_handler.async_force_update(self._signal_name)
-            self.async_write_ha_state()
-            return
-
-        if data["event_type"] == EVENT_TYPE_SCHEDULE and "schedule_id" in data:
-            schedule_id = data["schedule_id"]
-            selected_schedule = (
-                self.hass.data[DOMAIN][DATA_SCHEDULES]
-                .get(self.home.entity_id, {})
-                .get(schedule_id)
-            )
-            self._selected_schedule = getattr(selected_schedule, "name", None)
-            self._attr_extra_state_attributes[ATTR_SELECTED_SCHEDULE] = (
-                self._selected_schedule
-            )
-            self._attr_extra_state_attributes[ATTR_SELECTED_SCHEDULE_ID] = getattr(
-                selected_schedule, "entity_id", None
-            )
             self.async_write_ha_state()
             return
 
