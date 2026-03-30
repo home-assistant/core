@@ -258,6 +258,11 @@ class HomematicipHAP:
     async def get_state(self) -> None:
         """Update HMIP state and tell Home Assistant."""
         await self.home.get_current_state_async()
+        # Reset unreach flag on all devices so entities become available again.
+        # set_all_to_unavailable() sets unreach=True on disconnect; get_current_state
+        # only clears it for devices whose state actually changed. Force-clear all.
+        for device in self.home.devices:
+            device.unreach = False
         self.update_all()
 
     def get_state_finished(self, future) -> None:
