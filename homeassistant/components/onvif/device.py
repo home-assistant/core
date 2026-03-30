@@ -41,7 +41,7 @@ from .const import (
     TILT_FACTOR,
     ZOOM_FACTOR,
 )
-from .event import EventManager
+from .event_manager import EventManager
 from .models import PTZ, Capabilities, DeviceInfo, Profile, Resolution, Video
 
 

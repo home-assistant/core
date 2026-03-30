@@ -7,5 +7,5 @@
   "integration_type": "hub",
   "iot_class": "cloud_polling",
   "loggers": ["weatherflow4py"],
-  "requirements": ["weatherflow4py==1.4.1"]
+  "requirements": ["weatherflow4py==1.5.2"]
 }
