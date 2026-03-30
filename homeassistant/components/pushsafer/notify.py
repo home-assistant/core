@@ -1,4 +1,4 @@
-"""Pushsafer platform for notify component."""
+"""Pushsafer platform for notify integration."""
 
 from __future__ import annotations
 
