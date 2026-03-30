@@ -42,10 +42,8 @@ def enable_assist() -> bool:
 
 
 @pytest.fixture
-def web_search(request: pytest.FixtureRequest) -> bool:
+def web_search() -> bool:
     """Mock web search setting."""
-    if hasattr(request, "param"):
-        return request.param
     return False
 
 

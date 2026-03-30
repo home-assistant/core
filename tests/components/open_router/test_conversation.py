@@ -83,7 +83,6 @@ async def test_default_prompt(
     ("web_search", "expected_model_suffix"),
     [(True, ":online"), (False, "")],
     ids=["web_search_enabled", "web_search_disabled"],
-    indirect=["web_search"],
 )
 async def test_web_search(
     hass: HomeAssistant,
