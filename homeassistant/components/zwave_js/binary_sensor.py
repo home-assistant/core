@@ -516,15 +516,20 @@ def _async_check_legacy_entity_repair(
             _async_delete_legacy_entity_repairs(hass, entity_id)
             return
 
-        items = [
-            f"- [{item.name or item.original_name or eid}](/config/{domain}/edit/{item.unique_id})"
-            for domain, entity_ids in (
-                ("automation", entity_automations),
-                ("script", entity_scripts),
-            )
-            for eid in entity_ids
-            if (item := ent_reg.async_get(eid))
-        ]
+        items = []
+        for domain, entity_ids in (
+            ("automation", entity_automations),
+            ("script", entity_scripts),
+        ):
+            for eid in entity_ids:
+                item = ent_reg.async_get(eid)
+                if item:
+                    items.append(
+                        f"- [{item.name or item.original_name or eid}]"
+                        f"(/config/{domain}/edit/{item.unique_id})"
+                    )
+                else:
+                    items.append(f"- {eid}")
 
         async_create_issue(
             hass,
