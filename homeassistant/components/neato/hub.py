@@ -23,7 +23,7 @@ class NeatoHub:
         """Initialize the Neato hub."""
         self._hass = hass
         self.my_neato: Account = neato
-        self.robots: list[Any] = []
+        self.robots: set[Any] = set()
         self.persistent_maps: dict[str, Any] = {}
         self.map_data: dict[str, Any] = {}
 
