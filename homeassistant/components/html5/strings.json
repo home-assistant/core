@@ -52,10 +52,6 @@
     "deprecated_notify_action": {
       "description": "The action `{action}` is deprecated and will be removed in a future release.\n\nPlease update your automations and scripts to use the notify entities with the `notify.send_message` or `html5.send_message` actions instead.",
       "title": "Detected use of deprecated action {action}"
-    },
-    "deprecated_yaml_import_issue": {
-      "description": "Configuring HTML5 push notification using YAML has been deprecated. An automatic import of your existing configuration was attempted, but it failed.\n\nPlease remove the HTML5 push notification YAML configuration from your configuration.yaml file and reconfigure HTML5 push notification again manually.",
-      "title": "HTML5 YAML configuration import failed"
     }
   },
   "selector": {
