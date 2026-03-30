@@ -50,9 +50,7 @@ class NeatoCleaningMap(NeatoEntity, Camera):
 
     _attr_translation_key = "cleaning_map"
 
-    def __init__(
-        self, neato: NeatoHub, robot: Robot, mapdata: dict[str, Any] | None
-    ) -> None:
+    def __init__(self, neato: NeatoHub, robot: Robot, mapdata: dict[str, Any]) -> None:
         """Initialize Neato cleaning map."""
         super().__init__(robot)
         Camera.__init__(self)
