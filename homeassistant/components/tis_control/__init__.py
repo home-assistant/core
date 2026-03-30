@@ -77,4 +77,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: TISConfigEntry) -> bool:
 async def async_unload_entry(hass: HomeAssistant, entry: TISConfigEntry) -> bool:
     """Unload a config entry."""
     # Unload the platforms associated with this entry, which will remove the entities.
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+
+    # Only disconnect the API if the platforms successfully unloaded
+    if unload_ok:
+        entry.runtime_data.tis_api.disconnect()
+    return unload_ok

@@ -74,5 +74,7 @@ class TISConfigFlow(ConfigFlow, domain=DOMAIN):
                 "Unexpected error while validating TIS Control connection"
             )
             return False
+        finally:
+            tis_api.disconnect()
 
         return True
