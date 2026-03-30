@@ -27,7 +27,7 @@ from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import dt as dt_util
 
 from .const import (
@@ -120,15 +120,9 @@ def _validate_supported_features(
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up Todo entities."""
-    component = hass.data[DATA_COMPONENT] = EntityComponent[TodoListEntity](
+    component = hass.data[DATA_COMPONENT] = TodoEntityComponent(
         _LOGGER, DOMAIN, hass, SCAN_INTERVAL
     )
-
-    frontend.async_register_built_in_panel(hass, "todo", "todo", "mdi:clipboard-list")
-
-    websocket_api.async_register_command(hass, websocket_handle_subscribe_todo_items)
-    websocket_api.async_register_command(hass, websocket_handle_todo_item_list)
-    websocket_api.async_register_command(hass, websocket_handle_todo_item_move)
 
     component.async_register_entity_service(
         TodoServices.ADD_ITEM,
@@ -316,6 +310,52 @@ class TodoListEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         """Notify to-do item subscribers."""
         super()._async_write_ha_state()
         self.async_update_listeners()
+
+
+class TodoEntityComponent(EntityComponent[TodoListEntity]):
+    """To-do entity component.
+
+    Sets up frontend resources and websocket API when the first platform is added.
+    """
+
+    _frontend_loaded: bool = False
+
+    async def async_setup_entry(self, config_entry: ConfigEntry) -> bool:
+        """Set up a config entry."""
+        result = await super().async_setup_entry(config_entry)
+
+        if not self._frontend_loaded:
+            self._register_frontend_resources()
+
+        return result
+
+    async def async_setup_platform(
+        self,
+        platform_type: str,
+        platform_config: ConfigType,
+        discovery_info: DiscoveryInfoType | None = None,
+    ) -> None:
+        """Set up a platform for this component."""
+        await super().async_setup_platform(
+            platform_type, platform_config, discovery_info
+        )
+
+        if not self._frontend_loaded:
+            self._register_frontend_resources()
+
+    def _register_frontend_resources(self) -> None:
+        """Register frontend resources for to-do."""
+        self._frontend_loaded = True
+
+        frontend.async_register_built_in_panel(
+            self.hass, "todo", "todo", "mdi:clipboard-list"
+        )
+
+        websocket_api.async_register_command(
+            self.hass, websocket_handle_subscribe_todo_items
+        )
+        websocket_api.async_register_command(self.hass, websocket_handle_todo_item_list)
+        websocket_api.async_register_command(self.hass, websocket_handle_todo_item_move)
 
 
 @websocket_api.websocket_command(
