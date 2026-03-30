@@ -59,7 +59,10 @@ def async_setup_services(hass: HomeAssistant) -> None:
                 raise HomeAssistantError(
                     translation_domain=DOMAIN,
                     translation_key="play_tone_failed",
-                    translation_placeholders={"error": str(err)},
+                    translation_placeholders={
+                        "device_name": target_entry.title,
+                        "error": str(err),
+                    },
                 ) from err
 
     schema = vol.Schema(

@@ -33,7 +33,7 @@ PLATFORMS: list[Platform] = [
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up the SMLIGHT Actions."""
+    """Set up the SMLIGHT services."""
     async_setup_services(hass)
     return True
 

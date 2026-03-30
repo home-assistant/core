@@ -165,9 +165,6 @@
     "firmware_update_failed": {
       "message": "Firmware update failed for {device_name}."
     },
-    "send_ir_code_failed": {
-      "message": "Failed to send IR code: {error}."
-    },
     "no_device_found": {
       "message": "No valid SMLIGHT device found for the given targets."
     },
@@ -175,7 +172,10 @@
       "message": "The selected SMLIGHT device does not support the buzzer feature. This feature is only available on Ultima models."
     },
     "play_tone_failed": {
-      "message": "Failed to play tone on device: {error}"
+      "message": "Failed to play tone on {device_name}: {error}."
+    },
+    "send_ir_code_failed": {
+      "message": "Failed to send IR code: {error}."
     }
   },
   "issues": {
