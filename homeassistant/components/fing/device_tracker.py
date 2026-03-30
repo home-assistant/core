@@ -8,8 +8,7 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import FingConfigEntry
-from .coordinator import FingDataUpdateCoordinator
+from .coordinator import FingConfigEntry, FingDataUpdateCoordinator
 from .utils import get_icon_from_type
 
 

@@ -11,6 +11,7 @@ import httpx
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY, CONF_IP_ADDRESS, CONF_PORT
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.httpx_client import get_async_client
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -67,7 +68,7 @@ class FingDataUpdateCoordinator(DataUpdateCoordinator[FingDataObject]):
             raise UpdateFailed("Timeout establishing connection") from err
         except httpx.HTTPStatusError as err:
             if err.response.status_code == 401:
-                raise UpdateFailed("Invalid API key") from err
+                raise ConfigEntryAuthFailed("Invalid API key") from err
             raise UpdateFailed(
                 f"Http request failed -> {err.response.status_code} - {err.response.reason_phrase}"
             ) from err
