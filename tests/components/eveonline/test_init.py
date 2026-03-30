@@ -56,23 +56,6 @@ async def test_setup_entry_api_error(
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
-async def test_setup_entry_auth_error(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_eveonline_client: AsyncMock,
-    setup_credentials: None,
-) -> None:
-    """Test setup failure when authentication fails."""
-    mock_eveonline_client.async_get_server_status.side_effect = EveOnlineError(
-        "Token expired"
-    )
-
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
-
-
 async def test_setup_entry_network_error(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,

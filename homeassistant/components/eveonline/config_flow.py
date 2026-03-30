@@ -62,27 +62,13 @@ class OAuth2FlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
 
 
 def _decode_eve_jwt(token: str) -> dict[str, Any]:
-    """Decode an Eve SSO JWT token to extract character info.
-
-    Eve SSO access tokens are JWTs with:
-    - sub: "CHARACTER:EVE:<character_id>"
-    - name: character name
-    """
+    """Decode an Eve SSO JWT to extract character info."""
     decoded = jwt.decode(token, options={"verify_signature": False})
-
     sub = decoded.get("sub", "")
     sub_parts = sub.split(":")
     if len(sub_parts) != 3 or sub_parts[0] != "CHARACTER" or sub_parts[1] != "EVE":
-        msg = f"Unexpected JWT subject format: {sub}"
-        raise ValueError(msg)
-
-    try:
-        character_id = int(sub_parts[2])
-    except (TypeError, ValueError) as err:
-        msg = f"Invalid character id in JWT subject: {sub}"
-        raise ValueError(msg) from err
-
+        raise ValueError(sub)
     return {
-        CONF_CHARACTER_ID: character_id,
+        CONF_CHARACTER_ID: int(sub_parts[2]),
         CONF_CHARACTER_NAME: decoded.get("name", "Unknown"),
     }
