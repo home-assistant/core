@@ -76,6 +76,11 @@
         "name": "Security status"
       }
     },
+    "button": {
+      "shutdown": {
+        "name": "Shutdown"
+      }
+    },
     "sensor": {
       "cpu_15min_load": {
         "name": "CPU load average (15 min)"
