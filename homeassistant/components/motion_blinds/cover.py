@@ -15,18 +15,16 @@ from homeassistant.components.cover import (
     CoverEntity,
     CoverEntityFeature,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import VolDictType
 
+from . import MotionBlindsConfigEntry
 from .const import (
     ATTR_ABSOLUTE_POSITION,
     ATTR_AVAILABLE,
     ATTR_WIDTH,
-    DOMAIN,
-    KEY_COORDINATOR,
     KEY_GATEWAY,
     SERVICE_SET_ABSOLUTE_POSITION,
     UPDATE_DELAY_STOP,
@@ -84,13 +82,13 @@ SET_ABSOLUTE_POSITION_SCHEMA: VolDictType = {
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: MotionBlindsConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Motion Blind from a config entry."""
     entities: list[MotionBaseDevice] = []
-    motion_gateway = hass.data[DOMAIN][config_entry.entry_id][KEY_GATEWAY]
-    coordinator = hass.data[DOMAIN][config_entry.entry_id][KEY_COORDINATOR]
+    motion_gateway = config_entry.runtime_data.gateway
+    coordinator = config_entry.runtime_data.coordinator
 
     for blind in motion_gateway.device_list.values():
         if blind.type in POSITION_DEVICE_MAP:
