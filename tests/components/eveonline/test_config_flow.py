@@ -104,7 +104,7 @@ async def test_full_flow(
         json={
             "refresh_token": "mock-refresh-token",
             "access_token": fake_jwt,
-            "type": "Bearer",
+            "token_type": "Bearer",
             "expires_in": 1200,
         },
     )
@@ -155,7 +155,7 @@ async def test_flow_rejects_duplicate_character(
         json={
             "refresh_token": "mock-refresh-token",
             "access_token": fake_jwt,
-            "type": "Bearer",
+            "token_type": "Bearer",
             "expires_in": 1200,
         },
     )
@@ -188,7 +188,7 @@ async def test_flow_rejects_duplicate_character(
         json={
             "refresh_token": "mock-refresh-token-2",
             "access_token": fake_jwt,
-            "type": "Bearer",
+            "token_type": "Bearer",
             "expires_in": 1200,
         },
     )
@@ -238,7 +238,7 @@ async def test_flow_aborts_on_bad_jwt(
         json={
             "refresh_token": "mock-refresh-token",
             "access_token": access_token,
-            "type": "Bearer",
+            "token_type": "Bearer",
             "expires_in": 1200,
         },
     )
