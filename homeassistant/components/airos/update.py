@@ -58,7 +58,6 @@ class AirOSUpdateEntity(AirOSEntity, UpdateEntity):
         self.status = status
         self.firmware = firmware
 
-        # self._attr_name = f"{status.data.host.model} Firmware Update"
         self._attr_unique_id = f"{status.data.derived.mac}_firmware_update"
 
     @property
