@@ -19,8 +19,6 @@ from homeassistant.helpers.config_entry_oauth2_flow import (
     ImplementationUnavailableError,
 )
 
-from .conftest import mock_server_status
-
 from tests.common import MockConfigEntry
 
 
@@ -31,8 +29,6 @@ async def test_setup_entry(
     setup_credentials: None,
 ) -> None:
     """Test successful setup of a config entry."""
-    mock_eveonline_client.async_get_server_status.return_value = mock_server_status()
-
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
@@ -46,7 +42,7 @@ async def test_setup_entry_api_error(
     setup_credentials: None,
 ) -> None:
     """Test setup failure when the API returns an error."""
-    mock_eveonline_client.async_get_server_status.side_effect = EveOnlineError(
+    mock_eveonline_client.async_get_character_online.side_effect = EveOnlineError(
         "API unavailable"
     )
 
@@ -63,7 +59,7 @@ async def test_setup_entry_network_error(
     setup_credentials: None,
 ) -> None:
     """Test setup failure when a network error occurs."""
-    mock_eveonline_client.async_get_server_status.side_effect = aiohttp.ClientError(
+    mock_eveonline_client.async_get_character_online.side_effect = aiohttp.ClientError(
         "Connection reset"
     )
 
@@ -80,8 +76,6 @@ async def test_unload_entry(
     setup_credentials: None,
 ) -> None:
     """Test successful unloading of a config entry."""
-    mock_eveonline_client.async_get_server_status.return_value = mock_server_status()
-
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
@@ -104,11 +98,7 @@ async def test_coordinator_optional_endpoint_error(
     When an optional endpoint raises EveOnlineError, the coordinator
     should still load successfully with None/empty values for that data.
     """
-    mock_eveonline_client.async_get_server_status.return_value = mock_server_status()
     mock_eveonline_client.async_get_wallet_balance.side_effect = EveOnlineError(
-        "Endpoint down"
-    )
-    mock_eveonline_client.async_get_character_online.side_effect = EveOnlineError(
         "Endpoint down"
     )
 
@@ -130,7 +120,6 @@ async def test_coordinator_optional_endpoint_network_error(
     setup_credentials: None,
 ) -> None:
     """Test that aiohttp.ClientError on optional endpoints degrades gracefully."""
-    mock_eveonline_client.async_get_server_status.return_value = mock_server_status()
     mock_eveonline_client.async_get_wallet_balance.side_effect = aiohttp.ClientError(
         "Connection lost"
     )
@@ -157,7 +146,6 @@ async def test_coordinator_auth_error_on_optional_endpoint(
     like any other error: the data is set to None and the sensor becomes
     unknown.
     """
-    mock_eveonline_client.async_get_server_status.return_value = mock_server_status()
     mock_eveonline_client.async_get_wallet_balance.side_effect = EveOnlineError(
         "Token revoked"
     )
@@ -179,7 +167,6 @@ async def test_coordinator_list_endpoint_error(
     setup_credentials: None,
 ) -> None:
     """Test that errors on list endpoints return empty lists gracefully."""
-    mock_eveonline_client.async_get_server_status.return_value = mock_server_status()
     mock_eveonline_client.async_get_skill_queue.side_effect = EveOnlineError(
         "Service unavailable"
     )
@@ -230,7 +217,6 @@ async def test_coordinator_list_endpoint_auth_error(
     setup_credentials: None,
 ) -> None:
     """Test that auth errors on list endpoints degrade gracefully."""
-    mock_eveonline_client.async_get_server_status.return_value = mock_server_status()
     mock_eveonline_client.async_get_skill_queue.side_effect = EveOnlineError(
         "Token revoked"
     )
@@ -252,7 +238,6 @@ async def test_coordinator_resolves_names(
     setup_credentials: None,
 ) -> None:
     """Test that the coordinator resolves IDs to names via the ESI API."""
-    mock_eveonline_client.async_get_server_status.return_value = mock_server_status()
     mock_eveonline_client.async_get_character_location.return_value = CharacterLocation(
         solar_system_id=30000142
     )
@@ -318,7 +303,6 @@ async def test_coordinator_resolve_names_error(
     setup_credentials: None,
 ) -> None:
     """Test that a resolve_names failure degrades gracefully."""
-    mock_eveonline_client.async_get_server_status.return_value = mock_server_status()
     mock_eveonline_client.async_get_character_location.return_value = CharacterLocation(
         solar_system_id=30000142
     )

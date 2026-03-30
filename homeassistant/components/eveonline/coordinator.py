@@ -82,19 +82,17 @@ class EveOnlineCoordinator(DataUpdateCoordinator[EveOnlineData]):
         self.character_name = character_name
 
     async def _async_update_data(self) -> EveOnlineData:
-        """Fetch server status and character data from ESI."""
+        """Fetch character data from ESI."""
         try:
-            await self.client.async_get_server_status()
+            character_online = await self.client.async_get_character_online(
+                self.character_id
+            )
         except (EveOnlineError, aiohttp.ClientError) as err:
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="update_failed",
                 translation_placeholders={"error": str(err)},
             ) from err
-
-        character_online = await self._fetch_optional(
-            self.client.async_get_character_online, self.character_id
-        )
         wallet_balance = await self._fetch_optional(
             self.client.async_get_wallet_balance, self.character_id
         )

@@ -7,8 +7,6 @@ from eveonline.models import SkillQueueEntry, WalletBalance
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
-from .conftest import mock_server_status
-
 from tests.common import MockConfigEntry
 
 
@@ -30,7 +28,6 @@ async def test_character_wallet_sensor(
     setup_credentials: None,
 ) -> None:
     """Test that the wallet balance sensor shows the correct value."""
-    mock_eveonline_client.async_get_server_status.return_value = mock_server_status()
     mock_eveonline_client.async_get_wallet_balance.return_value = WalletBalance(
         balance=1234567.89
     )
@@ -49,7 +46,6 @@ async def test_character_skill_queue_sensor(
     setup_credentials: None,
 ) -> None:
     """Test that the skill queue count sensor shows the correct value."""
-    mock_eveonline_client.async_get_server_status.return_value = mock_server_status()
     mock_eveonline_client.async_get_skill_queue.return_value = [
         SkillQueueEntry(
             skill_id=3436,
@@ -81,7 +77,6 @@ async def test_unavailable_character_sensor(
     setup_credentials: None,
 ) -> None:
     """Test that sensors with no data show as unknown."""
-    mock_eveonline_client.async_get_server_status.return_value = mock_server_status()
     # wallet_balance defaults to None in conftest → sensor value is unknown
     mock_eveonline_client.async_get_wallet_balance.return_value = None
 

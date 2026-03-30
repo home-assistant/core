@@ -1,11 +1,9 @@
 """Fixtures for the Eve Online integration tests."""
 
 from collections.abc import Generator
-from datetime import UTC, datetime
 import time
 from unittest.mock import AsyncMock, patch
 
-from eveonline.models import ServerStatus
 import pytest
 
 from homeassistant.components.application_credentials import (
@@ -68,7 +66,6 @@ def mock_eveonline_client() -> Generator[AsyncMock]:
         autospec=True,
     ) as mock_client_class:
         client = mock_client_class.return_value
-        client.async_get_server_status = AsyncMock()
         client.async_get_character_online = AsyncMock(return_value=None)
         client.async_get_wallet_balance = AsyncMock(return_value=None)
         client.async_get_skill_queue = AsyncMock(return_value=[])
@@ -81,13 +78,3 @@ def mock_eveonline_client() -> Generator[AsyncMock]:
         client.async_get_jump_fatigue = AsyncMock(return_value=None)
         client.async_resolve_names = AsyncMock(return_value=[])
         yield client
-
-
-def mock_server_status(players: int = 25000, vip: bool | None = None) -> ServerStatus:
-    """Return a mock ServerStatus with all required fields."""
-    return ServerStatus(
-        players=players,
-        server_version="2345678",
-        start_time=datetime(2026, 3, 27, 11, 0, 0, tzinfo=UTC),
-        vip=vip,
-    )
