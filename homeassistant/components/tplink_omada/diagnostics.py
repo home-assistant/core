@@ -42,13 +42,8 @@ def _build_identifier_replacements(mac_values: set[str]) -> dict[str, str]:
         pseudonym = format_mac(str(index).zfill(12))
         variants = {raw_mac, raw_mac.upper(), raw_mac.lower()}
 
-        try:
-            normalized = format_mac(raw_mac)
-        except ValueError:
-            normalized = None
-
-        if normalized is not None:
-            variants.update({normalized, normalized.upper(), normalized.lower()})
+        normalized = format_mac(raw_mac)
+        variants.update({normalized, normalized.upper(), normalized.lower()})
 
         for variant in variants:
             replacements[variant] = pseudonym
