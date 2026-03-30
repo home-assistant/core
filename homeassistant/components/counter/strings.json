@@ -3,6 +3,22 @@
     "trigger_behavior_description": "The behavior of the targeted counters to trigger on.",
     "trigger_behavior_name": "Behavior"
   },
+  "conditions": {
+    "is_value": {
+      "description": "Test if one or more counters match a numeric value.",
+      "fields": {
+        "behavior": {
+          "description": "The behavior when multiple counters are targeted.",
+          "name": "Behavior"
+        },
+        "threshold": {
+          "description": "The threshold value to compare against.",
+          "name": "Threshold"
+        }
+      },
+      "name": "Counter value"
+    }
+  },
   "entity_component": {
     "_": {
       "name": "[%key:component::counter::title%]",
@@ -30,6 +46,12 @@
     }
   },
   "selector": {
+    "condition_behavior": {
+      "options": {
+        "all": "All",
+        "any": "Any"
+      }
+    },
     "trigger_behavior": {
       "options": {
         "any": "Any",
