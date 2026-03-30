@@ -94,16 +94,14 @@ def async_client_device_info_fn(hub: UnifiHub, obj_id: str) -> DeviceInfo:
 
 
 @dataclass(frozen=True, kw_only=True)
-class UnifiEntityDescription[HandlerT: APIHandler, ApiItemT: ApiItem](
-    EntityDescription
-):
+class UnifiEntityDescription[HandlerT: APIHandler, ItemT: ApiItem](EntityDescription):
     """UniFi Entity Description."""
 
     api_handler_fn: Callable[[aiounifi.Controller], HandlerT]
     """Provide api_handler from api."""
     device_info_fn: Callable[[UnifiHub, str], DeviceInfo | None]
     """Provide device info object based on hub and obj_id."""
-    object_fn: Callable[[aiounifi.Controller, str], ApiItemT]
+    object_fn: Callable[[aiounifi.Controller, str], ItemT]
     """Retrieve object based on api and obj_id."""
     unique_id_fn: Callable[[UnifiHub, str], str]
     """Provide a unique ID based on hub and obj_id."""
@@ -113,7 +111,7 @@ class UnifiEntityDescription[HandlerT: APIHandler, ApiItemT: ApiItem](
     """Determine if config entry options allow creation of entity."""
     available_fn: Callable[[UnifiHub, str], bool] = lambda hub, obj_id: hub.available
     """Determine if entity is available, default is if connection is working."""
-    name_fn: Callable[[ApiItemT], str | None] = lambda obj: None
+    name_fn: Callable[[ItemT], str | None] = lambda obj: None
     """Entity name function, can be used to extend entity name beyond device name."""
     supported_fn: Callable[[UnifiHub, str], bool] = lambda hub, obj_id: True
     """Determine if UniFi object supports providing relevant data for entity."""
@@ -129,17 +127,17 @@ class UnifiEntityDescription[HandlerT: APIHandler, ApiItemT: ApiItem](
     """If entity needs to do regular checks on state."""
 
 
-class UnifiEntity[HandlerT: APIHandler, ApiItemT: ApiItem](Entity):
+class UnifiEntity[HandlerT: APIHandler, ItemT: ApiItem](Entity):
     """Representation of a UniFi entity."""
 
-    entity_description: UnifiEntityDescription[HandlerT, ApiItemT]
+    entity_description: UnifiEntityDescription[HandlerT, ItemT]
     _attr_unique_id: str
 
     def __init__(
         self,
         obj_id: str,
         hub: UnifiHub,
-        description: UnifiEntityDescription[HandlerT, ApiItemT],
+        description: UnifiEntityDescription[HandlerT, ItemT],
     ) -> None:
         """Set up UniFi switch entity."""
         self._obj_id = obj_id
@@ -257,6 +255,11 @@ class UnifiEntity[HandlerT: APIHandler, ApiItemT: ApiItem](Entity):
         Defaults to using async_update_state to set initial state.
         """
         self.async_update_state(ItemEvent.ADDED, self._obj_id)
+
+    @callback
+    def get_object(self) -> ItemT:
+        """Return the latest object for this entity."""
+        return self.entity_description.object_fn(self.api, self._obj_id)
 
     @callback
     @abstractmethod
