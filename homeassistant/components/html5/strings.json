@@ -106,10 +106,10 @@
       "name": "Dismiss"
     },
     "dismiss_message": {
-      "description": "Dismisses an HTML5 notification.",
+      "description": "Dismisses one or more HTML5 notifications.",
       "fields": {
         "tag": {
-          "description": "The tag of the notification to dismiss. If not specified, all notifications will be dismissed.",
+          "description": "The tag of the notifications to dismiss. If not specified, all notifications will be dismissed.",
           "name": "Tag"
         }
       },
