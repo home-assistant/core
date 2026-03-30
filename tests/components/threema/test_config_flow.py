@@ -6,6 +6,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 from threema.gateway import GatewayError
+from threema.gateway.exception import GatewayServerError
 
 from homeassistant import config_entries
 from homeassistant.components.threema.client import ThreemaAuthError
@@ -239,6 +240,36 @@ async def test_credentials_cannot_connect(hass: HomeAssistant) -> None:
         connection.get_credits = AsyncMock(
             side_effect=GatewayError("Connection refused")
         )
+        connection_class.return_value = connection
+
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={"setup_type": "add_gateway"},
+        )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={
+                CONF_GATEWAY_ID: MOCK_GATEWAY_ID,
+                CONF_API_SECRET: MOCK_API_SECRET,
+            },
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "cannot_connect"}
+
+
+async def test_credentials_server_error_non_auth(hass: HomeAssistant) -> None:
+    """Test credentials step with non-401 server error."""
+    with patch(
+        "homeassistant.components.threema.client.Connection", autospec=True
+    ) as connection_class:
+        connection = MagicMock()
+        connection.__aenter__ = AsyncMock(return_value=connection)
+        connection.__aexit__ = AsyncMock(return_value=None)
+        connection.get_credits = AsyncMock(side_effect=GatewayServerError(status=500))
         connection_class.return_value = connection
 
         result = await hass.config_entries.flow.async_init(

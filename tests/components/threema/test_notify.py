@@ -202,3 +202,39 @@ async def test_send_message_send_error(
                 },
                 blocking=True,
             )
+
+
+async def test_send_message_server_error_non_auth(
+    hass: HomeAssistant,
+    mock_config_entry_with_subentry: MockConfigEntry,
+    mock_connection: MagicMock,
+) -> None:
+    """Test notify entity handles non-401 server error."""
+    mock_config_entry_with_subentry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.threema.client.SimpleTextMessage", autospec=True
+    ) as simple_mock:
+        simple_instance = MagicMock()
+        simple_instance.send = AsyncMock(side_effect=GatewayServerError(status=500))
+        simple_mock.return_value = simple_instance
+
+        await hass.config_entries.async_setup(mock_config_entry_with_subentry.entry_id)
+        await hass.async_block_till_done()
+
+        entity_registry = er.async_get(hass)
+        entities = er.async_entries_for_config_entry(
+            entity_registry, mock_config_entry_with_subentry.entry_id
+        )
+        notify_entities = [e for e in entities if e.domain == NOTIFY_DOMAIN]
+
+        with pytest.raises(HomeAssistantError):
+            await hass.services.async_call(
+                NOTIFY_DOMAIN,
+                "send_message",
+                {
+                    "entity_id": notify_entities[0].entity_id,
+                    "message": "Hello!",
+                },
+                blocking=True,
+            )
