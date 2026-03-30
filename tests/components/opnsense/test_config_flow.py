@@ -192,6 +192,31 @@ async def test_async_step_user_cannot_connect(
     assert result["errors"] == {"base": "cannot_connect"}
 
 
+async def test_async_step_user_invalid_auth(
+    hass: HomeAssistant, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """User step returns invalid_auth when credentials are invalid."""
+    monkeypatch.setattr(
+        config_flow,
+        "_async_validate_input",
+        AsyncMock(side_effect=config_flow.InvalidAuth),
+    )
+
+    result = await hass.config_entries.flow.async_init(
+        config_flow.DOMAIN,
+        context={"source": SOURCE_USER},
+        data={
+            CONF_URL: "https://router.local",
+            CONF_API_KEY: "key",
+            config_flow.CONF_API_SECRET: "secret",
+            CONF_VERIFY_SSL: False,
+        },
+    )
+
+    assert result["type"] == FlowResultType.FORM
+    assert result["errors"] == {"base": "invalid_auth"}
+
+
 async def test_async_step_import_normalizes_interfaces(
     hass: HomeAssistant, monkeypatch: pytest.MonkeyPatch
 ) -> None:
@@ -275,6 +300,69 @@ async def test_async_validate_input_cannot_connect_on_interface_validation_error
     )
 
     with pytest.raises(config_flow.CannotConnect):
+        await config_flow._async_validate_input(
+            hass,
+            {
+                CONF_URL: "https://router.local",
+                CONF_API_KEY: "key",
+                config_flow.CONF_API_SECRET: "secret",
+                CONF_VERIFY_SSL: False,
+                config_flow.CONF_TRACKER_INTERFACES: ["LAN"],
+            },
+        )
+
+
+@pytest.mark.parametrize("status_code", [401, 403])
+async def test_async_validate_input_invalid_auth_on_interface_client_error(
+    hass: HomeAssistant, monkeypatch: pytest.MonkeyPatch, status_code: int
+) -> None:
+    """Validation raises InvalidAuth when ARP request is unauthorized."""
+    interface_client = MagicMock()
+    interface_client.get_arp.side_effect = config_flow.APIException(
+        status_code=status_code, resp_body="Unauthorized"
+    )
+    monkeypatch.setattr(
+        config_flow.diagnostics,
+        "InterfaceClient",
+        MagicMock(return_value=interface_client),
+    )
+
+    with pytest.raises(config_flow.InvalidAuth):
+        await config_flow._async_validate_input(
+            hass,
+            {
+                CONF_URL: "https://router.local",
+                CONF_API_KEY: "key",
+                config_flow.CONF_API_SECRET: "secret",
+                CONF_VERIFY_SSL: False,
+            },
+        )
+
+
+@pytest.mark.parametrize("status_code", [401, 403])
+async def test_async_validate_input_invalid_auth_on_interface_validation_error(
+    hass: HomeAssistant, monkeypatch: pytest.MonkeyPatch, status_code: int
+) -> None:
+    """Validation raises InvalidAuth when interface lookup is unauthorized."""
+    interface_client = MagicMock()
+    interface_client.get_arp.return_value = []
+    network_insight_client = MagicMock()
+    network_insight_client.get_interfaces.side_effect = config_flow.APIException(
+        status_code=status_code, resp_body="Unauthorized"
+    )
+
+    monkeypatch.setattr(
+        config_flow.diagnostics,
+        "InterfaceClient",
+        MagicMock(return_value=interface_client),
+    )
+    monkeypatch.setattr(
+        config_flow.diagnostics,
+        "NetworkInsightClient",
+        MagicMock(return_value=network_insight_client),
+    )
+
+    with pytest.raises(config_flow.InvalidAuth):
         await config_flow._async_validate_input(
             hass,
             {
@@ -487,3 +575,43 @@ async def test_async_step_reauth_confirm_success(
     assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
     reload_entry.assert_called_once_with(entry.entry_id)
+
+
+async def test_async_step_reauth_confirm_invalid_auth(
+    hass: HomeAssistant, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Reauth confirm returns invalid_auth when credentials are invalid."""
+    entry = MockConfigEntry(
+        domain=config_flow.DOMAIN,
+        data={
+            CONF_URL: "https://router.local",
+            CONF_API_KEY: "old",
+            config_flow.CONF_API_SECRET: "old_secret",
+            CONF_VERIFY_SSL: False,
+        },
+    )
+    entry.add_to_hass(hass)
+
+    monkeypatch.setattr(
+        config_flow,
+        "_async_validate_input",
+        AsyncMock(side_effect=config_flow.InvalidAuth),
+    )
+
+    result = await hass.config_entries.flow.async_init(
+        config_flow.DOMAIN,
+        context={"source": SOURCE_REAUTH, "entry_id": entry.entry_id},
+        data={},
+    )
+    assert result["type"] == FlowResultType.FORM
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_API_KEY: "new",
+            config_flow.CONF_API_SECRET: "new_secret",
+        },
+    )
+
+    assert result["type"] == FlowResultType.FORM
+    assert result["errors"] == {"base": "invalid_auth"}

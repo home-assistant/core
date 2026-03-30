@@ -41,6 +41,11 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
+
+class InvalidAuth(Exception):
+    """Error to indicate there is invalid auth."""
+
+
 CONFIG_SCHEMA = vol.Schema(
     {
         DOMAIN: vol.Schema(
@@ -148,47 +153,50 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
 
     try:
-        await hass.async_add_executor_job(interfaces_client.get_arp)
-    except APIException as err:
-        if err.status_code in {HTTPStatus.UNAUTHORIZED, HTTPStatus.FORBIDDEN}:
-            raise ConfigEntryAuthFailed(
-                "Authentication failed while connecting to OPNsense API endpoint"
-            ) from err
-        raise ConfigEntryError(
-            f"Failure while connecting to OPNsense API endpoint: {err}"
-        ) from err
-    except RequestException as err:
-        raise ConfigEntryNotReady(
-            "Failure while connecting to OPNsense API endpoint"
-        ) from err
-
-    if tracker_interfaces:
-        netinsight_client = diagnostics.NetworkInsightClient(
-            api_key, api_secret, url, verify_ssl, timeout=CLIENT_TIMEOUT
-        )
-
         try:
-            interfaces = await hass.async_add_executor_job(
-                lambda: list(netinsight_client.get_interfaces().values())
-            )
+            await hass.async_add_executor_job(interfaces_client.get_arp)
         except APIException as err:
             if err.status_code in {HTTPStatus.UNAUTHORIZED, HTTPStatus.FORBIDDEN}:
-                raise ConfigEntryAuthFailed(
-                    "Authentication failed while validating OPNsense tracker interfaces"
+                raise InvalidAuth(
+                    "Authentication failed while connecting to OPNsense API endpoint"
                 ) from err
             raise ConfigEntryError(
-                f"Failure while validating OPNsense tracker interfaces: {err}"
+                f"Failure while connecting to OPNsense API endpoint: {err}"
             ) from err
         except RequestException as err:
             raise ConfigEntryNotReady(
-                "Failure while validating OPNsense tracker interfaces"
+                "Failure while connecting to OPNsense API endpoint"
             ) from err
 
-        for interface in tracker_interfaces:
-            if interface not in interfaces:
-                raise ConfigEntryError(
-                    f"Specified OPNsense tracker interface {interface} is not found"
+        if tracker_interfaces:
+            netinsight_client = diagnostics.NetworkInsightClient(
+                api_key, api_secret, url, verify_ssl, timeout=CLIENT_TIMEOUT
+            )
+
+            try:
+                interfaces = await hass.async_add_executor_job(
+                    lambda: list(netinsight_client.get_interfaces().values())
                 )
+            except APIException as err:
+                if err.status_code in {HTTPStatus.UNAUTHORIZED, HTTPStatus.FORBIDDEN}:
+                    raise InvalidAuth(
+                        "Authentication failed while validating OPNsense tracker interfaces"
+                    ) from err
+                raise ConfigEntryError(
+                    f"Failure while validating OPNsense tracker interfaces: {err}"
+                ) from err
+            except RequestException as err:
+                raise ConfigEntryNotReady(
+                    "Failure while validating OPNsense tracker interfaces"
+                ) from err
+
+            for interface in tracker_interfaces:
+                if interface not in interfaces:
+                    raise ConfigEntryError(
+                        f"Specified OPNsense tracker interface {interface} is not found"
+                    )
+    except InvalidAuth as err:
+        raise ConfigEntryAuthFailed(str(err)) from err
 
     entry.runtime_data = {
         CONF_INTERFACE_CLIENT: interfaces_client,
@@ -207,4 +215,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload an OPNsense config entry."""
     entry.runtime_data = None
-    return True
+    _LOGGER.debug(
+        "OPNsense legacy device_tracker platform cannot be cleanly unloaded; "
+        "reload or removal will require a restart to fully take effect"
+    )
+    return False

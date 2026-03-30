@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping, MutableMapping
+from http import HTTPStatus
 import logging
 import re
 from typing import Any
@@ -138,7 +139,13 @@ async def _async_validate_input(
 
     try:
         await hass.async_add_executor_job(client.get_arp)
-    except (APIException, RequestException) as err:
+    except APIException as err:
+        if err.status_code in {HTTPStatus.UNAUTHORIZED, HTTPStatus.FORBIDDEN}:
+            _LOGGER.debug("Authentication failed while validating OPNsense credentials")
+            raise InvalidAuth from err
+        _LOGGER.debug("Failed to validate OPNsense credentials", exc_info=err)
+        raise CannotConnect from err
+    except RequestException as err:
         _LOGGER.debug("Failed to validate OPNsense credentials", exc_info=err)
         raise CannotConnect from err
 
@@ -156,7 +163,17 @@ async def _async_validate_input(
             interfaces = await hass.async_add_executor_job(
                 lambda: list(netinsight_client.get_interfaces().values())
             )
-        except (APIException, RequestException) as err:
+        except APIException as err:
+            if err.status_code in {HTTPStatus.UNAUTHORIZED, HTTPStatus.FORBIDDEN}:
+                _LOGGER.debug(
+                    "Authentication failed while validating OPNsense tracker interfaces"
+                )
+                raise InvalidAuth from err
+            _LOGGER.debug(
+                "Failed to validate OPNsense tracker interfaces", exc_info=err
+            )
+            raise CannotConnect from err
+        except RequestException as err:
             _LOGGER.debug(
                 "Failed to validate OPNsense tracker interfaces", exc_info=err
             )
@@ -183,6 +200,8 @@ class OPNsenseConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             try:
                 data = await _async_validate_input(self.hass, user_input)
+            except InvalidAuth:
+                errors["base"] = "invalid_auth"
             except CannotConnect:
                 errors["base"] = "cannot_connect"
             except InvalidTrackerInterface:
@@ -246,6 +265,8 @@ class OPNsenseConfigFlow(ConfigFlow, domain=DOMAIN):
 
             try:
                 validated_data = await _async_validate_input(self.hass, data)
+            except InvalidAuth:
+                errors["base"] = "invalid_auth"
             except CannotConnect:
                 errors["base"] = "cannot_connect"
             except InvalidTrackerInterface:
@@ -278,6 +299,10 @@ class InvalidURL(Exception):
 
 class CannotConnect(Exception):
     """Error to indicate we cannot connect."""
+
+
+class InvalidAuth(Exception):
+    """Error to indicate there is invalid auth."""
 
 
 class InvalidTrackerInterface(Exception):
