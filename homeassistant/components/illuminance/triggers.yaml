@@ -1,0 +1,64 @@
+.trigger_common_fields: &trigger_common_fields
+  behavior: &trigger_behavior
+    required: true
+    default: any
+    selector:
+      select:
+        translation_key: trigger_behavior
+        options:
+          - first
+          - last
+          - any
+
+.illuminance_threshold_entity: &illuminance_threshold_entity
+  - domain: input_number
+    unit_of_measurement: "lx"
+  - domain: sensor
+    device_class: illuminance
+  - domain: number
+    device_class: illuminance
+
+.illuminance_threshold_number: &illuminance_threshold_number
+  mode: box
+  unit_of_measurement: "lx"
+
+.trigger_binary_target: &trigger_binary_target
+  entity:
+    - domain: binary_sensor
+      device_class: light
+
+.trigger_numerical_target: &trigger_numerical_target
+  entity:
+    - domain: sensor
+      device_class: illuminance
+
+detected:
+  fields: *trigger_common_fields
+  target: *trigger_binary_target
+
+cleared:
+  fields: *trigger_common_fields
+  target: *trigger_binary_target
+
+changed:
+  target: *trigger_numerical_target
+  fields:
+    threshold:
+      required: true
+      selector:
+        numeric_threshold:
+          entity: *illuminance_threshold_entity
+          mode: changed
+          number: *illuminance_threshold_number
+
+crossed_threshold:
+  target: *trigger_numerical_target
+  fields:
+    behavior: *trigger_behavior
+    threshold:
+      required: true
+      selector:
+        numeric_threshold:
+          entity: *illuminance_threshold_entity
+          mode: crossed
+          number: *illuminance_threshold_number

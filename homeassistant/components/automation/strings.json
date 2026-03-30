@@ -78,11 +78,11 @@
   "services": {
     "reload": {
       "description": "Reloads the automation configuration.",
-      "name": "[%key:common::action::reload%]"
+      "name": "Reload automations"
     },
     "toggle": {
       "description": "Toggles (enable / disable) an automation.",
-      "name": "[%key:common::action::toggle%]"
+      "name": "Toggle automation"
     },
     "trigger": {
       "description": "Triggers the actions of an automation.",
@@ -92,7 +92,7 @@
           "name": "Skip conditions"
         }
       },
-      "name": "Trigger"
+      "name": "Trigger automation"
     },
     "turn_off": {
       "description": "Disables an automation.",
@@ -102,11 +102,11 @@
           "name": "Stop actions"
         }
       },
-      "name": "[%key:common::action::turn_off%]"
+      "name": "Turn off automation"
     },
     "turn_on": {
       "description": "Enables an automation.",
-      "name": "[%key:common::action::turn_on%]"
+      "name": "Turn on automation"
     }
   },
   "title": "Automation"
