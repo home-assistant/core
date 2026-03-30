@@ -31,10 +31,7 @@ rules:
   test-before-setup: done
   unique-config-entry: done
   # Silver
-  action-exceptions:
-    status: todo
-    comment: |
-      Reevaluate exceptions for entity services.
+  action-exceptions: done
   config-entry-unloading: done
   docs-configuration-parameters: done
   docs-installation-parameters: done
@@ -62,10 +59,7 @@ rules:
     status: exempt
     comment: |
       No data updates.
-  docs-examples:
-    status: todo
-    comment: |
-      To give examples of how people use the integration
+  docs-examples: done
   docs-known-limitations: done
   docs-supported-devices:
     status: todo
@@ -91,7 +85,7 @@ rules:
     comment: |
       No entities disabled by default.
   entity-translations: todo
-  exception-translations: todo
+  exception-translations: done
   icon-translations: done
   reconfiguration-flow: done
   repair-issues: done

@@ -1,5 +1,6 @@
 """Teslemetry helper functions."""
 
+from collections.abc import Awaitable
 from typing import Any
 
 from tesla_fleet_api.exceptions import TeslaFleetError
@@ -30,7 +31,7 @@ def flatten(
     return result
 
 
-async def handle_command(command) -> dict[str, Any]:
+async def handle_command(command: Awaitable[dict[str, Any]]) -> dict[str, Any]:
     """Handle a command."""
     try:
         result = await command
@@ -44,7 +45,7 @@ async def handle_command(command) -> dict[str, Any]:
     return result
 
 
-async def handle_vehicle_command(command) -> Any:
+async def handle_vehicle_command(command: Awaitable[dict[str, Any]]) -> Any:
     """Handle a vehicle command."""
     result = await handle_command(command)
     if (response := result.get("response")) is None:

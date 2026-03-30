@@ -13,7 +13,7 @@ from aiohomeconnect.model import (
     ProgramKey,
     SettingKey,
 )
-from aiohomeconnect.model.error import HomeConnectError
+from aiohomeconnect.model.error import HomeConnectError, NoProgramActiveError
 import voluptuous as vol
 
 from homeassistant.const import ATTR_DEVICE_ID
@@ -32,6 +32,7 @@ from .const import (
     PROGRAM_ENUM_OPTIONS,
     SERVICE_SET_PROGRAM_AND_OPTIONS,
     SERVICE_SETTING,
+    SERVICE_START_SELECTED_PROGRAM,
     TRANSLATION_KEYS_PROGRAMS_MAP,
 )
 from .coordinator import HomeConnectConfigEntry
@@ -46,10 +47,12 @@ PROGRAM_OPTIONS = {
         value,
     )
     for key, value in {
-        OptionKey.BSH_COMMON_DURATION: int,
-        OptionKey.BSH_COMMON_START_IN_RELATIVE: int,
-        OptionKey.BSH_COMMON_FINISH_IN_RELATIVE: int,
-        OptionKey.CONSUMER_PRODUCTS_COFFEE_MAKER_FILL_QUANTITY: int,
+        OptionKey.BSH_COMMON_DURATION: vol.All(int, vol.Range(min=0)),
+        OptionKey.BSH_COMMON_START_IN_RELATIVE: vol.All(int, vol.Range(min=0)),
+        OptionKey.BSH_COMMON_FINISH_IN_RELATIVE: vol.All(int, vol.Range(min=0)),
+        OptionKey.CONSUMER_PRODUCTS_COFFEE_MAKER_FILL_QUANTITY: vol.All(
+            int, vol.Range(min=0)
+        ),
         OptionKey.CONSUMER_PRODUCTS_COFFEE_MAKER_MULTIPLE_BEVERAGES: bool,
         OptionKey.DISHCARE_DISHWASHER_INTENSIV_ZONE: bool,
         OptionKey.DISHCARE_DISHWASHER_BRILLIANCE_DRY: bool,
@@ -60,7 +63,10 @@ PROGRAM_OPTIONS = {
         OptionKey.DISHCARE_DISHWASHER_HYGIENE_PLUS: bool,
         OptionKey.DISHCARE_DISHWASHER_ECO_DRY: bool,
         OptionKey.DISHCARE_DISHWASHER_ZEOLITE_DRY: bool,
-        OptionKey.COOKING_OVEN_SETPOINT_TEMPERATURE: int,
+        OptionKey.HEATING_VENTILATION_AIR_CONDITIONING_AIR_CONDITIONER_FAN_SPEED_PERCENTAGE: vol.All(
+            int, vol.Range(min=1, max=100)
+        ),
+        OptionKey.COOKING_OVEN_SETPOINT_TEMPERATURE: vol.All(int, vol.Range(min=0)),
         OptionKey.COOKING_OVEN_FAST_PRE_HEAT: bool,
         OptionKey.LAUNDRY_CARE_WASHER_I_DOS_1_ACTIVE: bool,
         OptionKey.LAUNDRY_CARE_WASHER_I_DOS_2_ACTIVE: bool,
@@ -119,7 +125,23 @@ SERVICE_PROGRAM_AND_OPTIONS_SCHEMA = vol.All(
     _require_program_or_at_least_one_option,
 )
 
-SERVICE_COMMAND_SCHEMA = vol.Schema({vol.Required(ATTR_DEVICE_ID): str})
+SERVICE_START_SELECTED_PROGRAM_SCHEMA = vol.All(
+    vol.Schema(
+        {
+            vol.Required(ATTR_DEVICE_ID): str,
+        }
+    ).extend(
+        {
+            vol.Optional(translation_key): schema
+            for translation_key, (key, schema) in PROGRAM_OPTIONS.items()
+            if key
+            in (
+                OptionKey.BSH_COMMON_START_IN_RELATIVE,
+                OptionKey.BSH_COMMON_FINISH_IN_RELATIVE,
+            )
+        }
+    )
+)
 
 
 async def _get_client_and_ha_id(
@@ -257,6 +279,50 @@ async def async_service_set_program_and_options(call: ServiceCall) -> None:
         ) from err
 
 
+async def async_service_start_selected_program(call: ServiceCall) -> None:
+    """Service to start a program that is already selected."""
+    data = dict(call.data)
+    client, ha_id = await _get_client_and_ha_id(call.hass, data.pop(ATTR_DEVICE_ID))
+    try:
+        try:
+            program_obj = await client.get_active_program(ha_id)
+        except NoProgramActiveError:
+            program_obj = await client.get_selected_program(ha_id)
+    except HomeConnectError as err:
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="fetch_program_error",
+            translation_placeholders=get_dict_from_home_connect_error(err),
+        ) from err
+    if not program_obj.key:
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="no_program_to_start",
+        )
+
+    program = program_obj.key
+    options_dict = {option.key: option for option in program_obj.options or []}
+    for option, value in data.items():
+        option_key = PROGRAM_OPTIONS[option][0]
+        options_dict[option_key] = Option(option_key, value)
+
+    try:
+        await client.start_program(
+            ha_id,
+            program_key=program,
+            options=list(options_dict.values()) if options_dict else None,
+        )
+    except HomeConnectError as err:
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="start_program",
+            translation_placeholders={
+                "program": program,
+                **get_dict_from_home_connect_error(err),
+            },
+        ) from err
+
+
 @callback
 def async_setup_services(hass: HomeAssistant) -> None:
     """Register custom actions."""
@@ -269,4 +335,10 @@ def async_setup_services(hass: HomeAssistant) -> None:
         SERVICE_SET_PROGRAM_AND_OPTIONS,
         async_service_set_program_and_options,
         schema=SERVICE_PROGRAM_AND_OPTIONS_SCHEMA,
+    )
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_START_SELECTED_PROGRAM,
+        async_service_start_selected_program,
+        schema=SERVICE_START_SELECTED_PROGRAM_SCHEMA,
     )
