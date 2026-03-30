@@ -804,42 +804,33 @@ class ZWaveOpeningStateBinarySensor(ZWaveBaseEntity, BinarySensorEntity):
         """Initialize an Opening state binary sensor entity."""
         super().__init__(config_entry, driver, info)
         self._known_states = set(info.primary_value.metadata.states or ())
-        self._opening_state_base_unique_id = self._attr_unique_id
         self._attr_unique_id = (
             f"{self._attr_unique_id}.{self.entity_description.state_key}"
         )
 
     @callback
     def should_rediscover_on_metadata_update(self) -> bool:
-        """Check if metadata states have changed."""
+        """Check if metadata states require adding the Tilt entity."""
         return (
             # Open and Tilt entities share the same underlying Opening state value.
-            # Let the Open entity own rediscovery so it can remove any siblings
-            # first and rediscover the shared value exactly once.
-            set(self.info.primary_value.metadata.states or ()) != self._known_states
+            # Only let the main Open entity trigger rediscovery when Tilt first
+            # appears so we can add the missing sibling without recreating the
+            # main entity and losing its registry customizations.
+            str(OpeningState.TILTED) not in self._known_states
+            and str(OpeningState.TILTED)
+            in set(self.info.primary_value.metadata.states or ())
             and self.entity_description.state_key == OpeningState.OPEN
         )
 
     async def _async_remove_and_rediscover(self, value: ZwaveValue) -> None:
-        """Remove all sibling Opening state entities and trigger re-discovery."""
-        ent_reg = er.async_get(self.hass)
-
-        opening_state_entity_ids = [
-            entry.entity_id
-            for entry in ent_reg.entities.values()
-            if entry.domain == BINARY_SENSOR_DOMAIN
-            and entry.platform == DOMAIN
-            and entry.unique_id.startswith(f"{self._opening_state_base_unique_id}.")
-        ]
-
-        for entity_id in opening_state_entity_ids:
-            ent_reg.async_remove(entity_id)
-
+        """Trigger re-discovery while preserving the main Opening state entity."""
         assert self.device_entry is not None
         controller_events = (
             self.config_entry.runtime_data.driver_events.controller_events
         )
 
+        # Unlike the base implementation, keep this entity in place so its
+        # registry entry and user customizations survive metadata rediscovery.
         controller_events.discovered_value_ids[self.device_entry.id].discard(
             value.value_id
         )

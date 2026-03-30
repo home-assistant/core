@@ -607,12 +607,13 @@ async def test_opening_state_binary_sensors_with_tilted(
     assert hass.states.get(tilted_entity_id).state == STATE_ON
 
 
-async def test_opening_state_tilted_appears_and_disappears_via_metadata_update(
+async def test_opening_state_tilted_appears_via_metadata_update(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     client,
     hoppe_ehandle_connectsense_state,
 ) -> None:
-    """Test tilt binary sensor is added and removed on metadata changes."""
+    """Test tilt binary sensor is added without recreating the main entity."""
     node = Node(client, hoppe_ehandle_connectsense_state)
     client.driver.controller.nodes[node.node_id] = node
 
@@ -623,6 +624,8 @@ async def test_opening_state_tilted_appears_and_disappears_via_metadata_update(
 
     open_entity_id = "binary_sensor.ehandle_connectsense"
     tilted_entity_id = "binary_sensor.ehandle_connectsense_tilt"
+    open_entry = entity_registry.async_get(open_entity_id)
+    assert open_entry is not None
 
     assert hass.states.get(open_entity_id) is not None
     assert hass.states.get(tilted_entity_id) is None
@@ -667,45 +670,7 @@ async def test_opening_state_tilted_appears_and_disappears_via_metadata_update(
     assert hass.states.get(open_entity_id) is not None
     tilted_state = hass.states.get(tilted_entity_id)
     assert tilted_state is not None
-
-    node.receive_event(
-        Event(
-            "metadata updated",
-            {
-                "source": "node",
-                "event": "metadata updated",
-                "nodeId": node.node_id,
-                "args": {
-                    "commandClassName": "Notification",
-                    "commandClass": 113,
-                    "endpoint": 0,
-                    "property": "Access Control",
-                    "propertyKey": "Opening state",
-                    "propertyName": "Access Control",
-                    "propertyKeyName": "Opening state",
-                    "metadata": {
-                        "type": "number",
-                        "readable": True,
-                        "writeable": False,
-                        "label": "Opening state",
-                        "ccSpecific": {"notificationType": 6},
-                        "min": 0,
-                        "max": 255,
-                        "states": {
-                            "0": "Closed",
-                            "1": "Open",
-                        },
-                        "stateful": True,
-                        "secret": False,
-                    },
-                },
-            },
-        )
-    )
-    await hass.async_block_till_done()
-
-    assert hass.states.get(open_entity_id) is not None
-    assert hass.states.get(tilted_entity_id) is None
+    assert entity_registry.async_get(open_entity_id) == open_entry
 
 
 async def test_reenabled_legacy_door_state_entity_follows_opening_state(
