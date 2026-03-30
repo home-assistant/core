@@ -193,6 +193,7 @@ _EXPERIMENTAL_TRIGGER_PLATFORMS = {
     "todo",
     "update",
     "vacuum",
+    "valve",
     "water_heater",
     "window",
 }

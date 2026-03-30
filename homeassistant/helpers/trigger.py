@@ -482,8 +482,8 @@ class EntityTargetStateTriggerBase(EntityTriggerBase):
 class EntityTransitionTriggerBase(EntityTriggerBase):
     """Trigger for entity state changes between specific states."""
 
-    _from_states: set[str]
-    _to_states: set[str]
+    _from_states: set[str | bool]
+    _to_states: set[str | bool]
 
     def is_valid_transition(self, from_state: State, to_state: State) -> bool:
         """Check if the origin state matches the expected ones."""
@@ -838,8 +838,8 @@ def make_entity_target_state_trigger(
 def make_entity_transition_trigger(
     domain_specs: Mapping[str, DomainSpec] | str,
     *,
-    from_states: set[str],
-    to_states: set[str],
+    from_states: set[str | bool],
+    to_states: set[str | bool],
 ) -> type[EntityTransitionTriggerBase]:
     """Create a trigger for entity state changes between specific states.
 

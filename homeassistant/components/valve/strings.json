@@ -1,4 +1,8 @@
 {
+  "common": {
+    "trigger_behavior_description": "The behavior of the targeted valves to trigger on.",
+    "trigger_behavior_name": "Behavior"
+  },
   "conditions": {
     "is_closed": {
       "description": "Tests if one or more valves are closed.",
@@ -50,6 +54,13 @@
         "all": "All",
         "any": "Any"
       }
+    },
+    "trigger_behavior": {
+      "options": {
+        "any": "Any",
+        "first": "First",
+        "last": "Last"
+      }
     }
   },
   "services": {
@@ -80,5 +91,27 @@
       "name": "Toggle valve"
     }
   },
-  "title": "Valve"
+  "title": "Valve",
+  "triggers": {
+    "closed": {
+      "description": "Triggers after one or more valves close.",
+      "fields": {
+        "behavior": {
+          "description": "[%key:component::valve::common::trigger_behavior_description%]",
+          "name": "[%key:component::valve::common::trigger_behavior_name%]"
+        }
+      },
+      "name": "Valve closed"
+    },
+    "opened": {
+      "description": "Triggers after one or more valves open.",
+      "fields": {
+        "behavior": {
+          "description": "[%key:component::valve::common::trigger_behavior_description%]",
+          "name": "[%key:component::valve::common::trigger_behavior_name%]"
+        }
+      },
+      "name": "Valve opened"
+    }
+  }
 }
