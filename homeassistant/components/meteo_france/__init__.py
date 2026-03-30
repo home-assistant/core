@@ -46,7 +46,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: MeteoFranceConfigEntry) 
             "1 hour rain forecast not available: %s is not in covered zone",
             entry.title,
         )
-        coordinator_rain = None
 
     department = coordinator_forecast.data.position.get("dept")
     _LOGGER.debug(
@@ -67,8 +66,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: MeteoFranceConfigEntry) 
 
             if coordinator_alert.last_update_success:
                 hass.data[DOMAIN][department] = True
-            else:
-                coordinator_alert = None
         else:
             _LOGGER.warning(
                 (
@@ -89,11 +86,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: MeteoFranceConfigEntry) 
 
     entry.async_on_unload(entry.add_update_listener(_async_update_listener))
 
+    if coordinator_rain and not coordinator_rain.last_update_success:
+        coordinator_rain = None
+    if coordinator_alert and not coordinator_alert.last_update_success:
+        coordinator_alert = None
     entry.runtime_data = MeteoFranceData(
         forecast_coordinator=coordinator_forecast,
-        rain_coordinator=coordinator_rain
-        if coordinator_rain and coordinator_rain.last_update_success
-        else None,
+        rain_coordinator=coordinator_rain,
         alert_coordinator=coordinator_alert,
     )
 
