@@ -153,19 +153,16 @@ class ProxmoxVMEntity(ProxmoxCoordinatorEntity):
 
     @property
     def _node_name(self) -> str:
-        """Dynamically resolve which node this VM is currently on."""
-        for node_name, node_data in self.coordinator.data.items():
-            if self.device_id in node_data.vms:
-                return node_name
-        raise RuntimeError(f"VM {self.device_id} not found on any node")
+        """Resolve current node from coordinator's centralized map."""
+        node = self.coordinator.vmid_node_map.get(self.device_id)
+        if node is None:
+            raise RuntimeError(f"VM {self.device_id} not found on any node")
+        return node
 
     @property
     def available(self) -> bool:
         """Return if the device is available."""
-        return super().available and any(
-            self.device_id in node_data.vms
-            for node_data in self.coordinator.data.values()
-        )
+        return super().available and self.device_id in self.coordinator.vmid_node_map
 
     @property
     def vm_data(self) -> dict[str, Any]:
@@ -211,19 +208,18 @@ class ProxmoxContainerEntity(ProxmoxCoordinatorEntity):
 
     @property
     def _node_name(self) -> str:
-        """Dynamically resolve which node this container is currently on."""
-        for node_name, node_data in self.coordinator.data.items():
-            if self.device_id in node_data.containers:
-                return node_name
-        raise RuntimeError(f"Container {self.device_id} not found on any node")
+        """Resolve current node from coordinator's centralized map."""
+        node = self.coordinator.ctid_node_map.get(self.device_id)
+        if node is None:
+            raise RuntimeError(
+                f"Container {self.device_id} not found on any node"
+            )
+        return node
 
     @property
     def available(self) -> bool:
         """Return if the device is available."""
-        return super().available and any(
-            self.device_id in node_data.containers
-            for node_data in self.coordinator.data.values()
-        )
+        return super().available and self.device_id in self.coordinator.ctid_node_map
 
     @property
     def container_data(self) -> dict[str, Any]:

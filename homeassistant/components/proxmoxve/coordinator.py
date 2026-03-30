@@ -89,6 +89,8 @@ class ProxmoxCoordinator(DataUpdateCoordinator[dict[str, ProxmoxNodeData]]):
         self.known_containers: set[int] = set()
         self.known_storages: set[tuple[str, str]] = set()
         self.permissions: dict[str, dict[str, int]] = {}
+        self.vmid_node_map: dict[int, str] = {}
+        self.ctid_node_map: dict[int, str] = {}
 
         self.new_nodes_callbacks: list[Callable[[list[ProxmoxNodeData]], None]] = []
         self.new_vms_callbacks: list[
@@ -195,7 +197,45 @@ class ProxmoxCoordinator(DataUpdateCoordinator[dict[str, ProxmoxNodeData]]):
             )
 
         self._async_add_remove_nodes(data)
+        self._build_id_node_maps(data)
         return data
+
+    def _build_id_node_maps(self, data: dict[str, ProxmoxNodeData]) -> None:
+        """Build VMID/CTID-to-node maps from current data.
+
+        During live migration a VMID may temporarily appear on two nodes.
+        When that happens, prefer the node where it was previously known
+        to keep entity resolution stable until migration completes.
+        """
+        new_vmid_map: dict[int, str] = {}
+        for node_name, node_data in data.items():
+            for vmid in node_data.vms:
+                if vmid not in new_vmid_map:
+                    new_vmid_map[vmid] = node_name
+                elif self.vmid_node_map.get(vmid) == new_vmid_map[vmid]:
+                    pass  # keep previous/source node
+                else:
+                    new_vmid_map[vmid] = node_name
+        self.vmid_node_map = new_vmid_map
+
+        new_ctid_map: dict[int, str] = {}
+        for node_name, node_data in data.items():
+            for ctid in node_data.containers:
+                if ctid not in new_ctid_map:
+                    new_ctid_map[ctid] = node_name
+                elif self.ctid_node_map.get(ctid) == new_ctid_map[ctid]:
+                    pass  # keep previous/source node
+                else:
+                    new_ctid_map[ctid] = node_name
+        self.ctid_node_map = new_ctid_map
+
+    def async_set_updated_data(
+        self, data: dict[str, ProxmoxNodeData]
+    ) -> None:
+        """Update data, track new nodes/VMs and rebuild ID-to-node maps."""
+        self._async_add_remove_nodes(data)
+        self._build_id_node_maps(data)
+        super().async_set_updated_data(data)
 
     def _init_proxmox(self) -> None:
         """Initialize ProxmoxAPI instance."""
