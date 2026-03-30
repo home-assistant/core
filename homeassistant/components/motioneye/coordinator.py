@@ -16,11 +16,16 @@ from .const import DEFAULT_SCAN_INTERVAL, DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 
+type MotionEyeConfigEntry = ConfigEntry[MotionEyeUpdateCoordinator]
+
+
 class MotionEyeUpdateCoordinator(DataUpdateCoordinator[dict[str, Any] | None]):
     """Coordinator for motionEye data."""
 
+    config_entry: MotionEyeConfigEntry
+
     def __init__(
-        self, hass: HomeAssistant, entry: ConfigEntry, client: MotionEyeClient
+        self, hass: HomeAssistant, entry: MotionEyeConfigEntry, client: MotionEyeClient
     ) -> None:
         """Initialize the coordinator."""
         super().__init__(
@@ -37,6 +42,3 @@ class MotionEyeUpdateCoordinator(DataUpdateCoordinator[dict[str, Any] | None]):
             return await self.client.async_get_cameras()
         except MotionEyeClientError as exc:
             raise UpdateFailed("Error communicating with API") from exc
-
-
-type MotionEyeConfigEntry = ConfigEntry[MotionEyeUpdateCoordinator]
