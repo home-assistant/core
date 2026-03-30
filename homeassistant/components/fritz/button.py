@@ -14,6 +14,7 @@ from homeassistant.components.button import (
 )
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -100,6 +101,19 @@ async def async_setup_entry(
         )
     )
 
+    # Deprecate the 'cleanup' button: create a Repairs issue for users
+    ir.async_create_issue(
+        hass,
+        domain="fritz",
+        issue_id="deprecated_cleanup_button",
+        is_fixable=False,
+        is_persistent=True,
+        severity=ir.IssueSeverity.WARNING,
+        translation_key="deprecated_cleanup_button",
+        translation_placeholders={"removal_version": "2026.9.0"},
+        breaks_in_ha_version="2026.9.0",
+    )
+
 
 class FritzButton(ButtonEntity):
     """Defines a Fritz!Box base button."""
@@ -126,6 +140,11 @@ class FritzButton(ButtonEntity):
 
     async def async_press(self) -> None:
         """Triggers Fritz!Box service."""
+        if self.entity_description.key == "cleanup":
+            _LOGGER.warning(
+                "The 'cleanup' button is deprecated and will be removed in Home Assistant Core 2026.9.0. "
+                "Please update your automations and dashboards",
+            )
         await self.entity_description.press_action(self.avm_wrapper)
 
 
