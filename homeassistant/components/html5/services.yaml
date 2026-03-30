@@ -8,3 +8,137 @@ dismiss:
       example: '{ "tag": "tagname" }'
       selector:
         object:
+send_message:
+  target:
+    entity:
+      domain: notify
+      integration: html5
+  fields:
+    title:
+      required: true
+      selector:
+        text:
+      example: Home Assistant
+      default: Home Assistant
+    message:
+      required: false
+      selector:
+        text:
+          multiline: true
+      example: Hello World
+    icon:
+      required: false
+      selector:
+        text:
+          type: url
+      example: /static/icons/favicon-192x192.png
+    badge:
+      required: false
+      selector:
+        text:
+          type: url
+      example: /static/images/notification-badge.png
+    image:
+      required: false
+      selector:
+        text:
+          type: url
+      example: /static/images/image.jpg
+    tag:
+      required: false
+      selector:
+        text:
+      example: message-group-1
+    actions:
+      selector:
+        object:
+          label_field: "action"
+          description_field: "title"
+          multiple: true
+          translation_key: actions
+          fields:
+            action:
+              required: true
+              selector:
+                text:
+            title:
+              required: true
+              selector:
+                text:
+            icon:
+              selector:
+                text:
+                  type: url
+      example: '[{"action": "test-action", "title": "🆗 Click here!", "icon": "/images/action-1-128x128.png"}]'
+    dir:
+      required: false
+      selector:
+        select:
+          options:
+            - auto
+            - ltr
+            - rtl
+          mode: dropdown
+          translation_key: dir
+      example: auto
+    renotify:
+      required: false
+      selector:
+        constant:
+          value: true
+          label: ""
+      example: true
+    silent:
+      required: false
+      selector:
+        constant:
+          value: true
+          label: ""
+      example: true
+    require_interaction:
+      required: false
+      selector:
+        constant:
+          value: true
+          label: ""
+      example: true
+    vibrate:
+      required: false
+      selector:
+        text:
+          multiple: true
+          type: number
+          suffix: ms
+      example: "[125,75,125,275,200,275,125,75,125,275,200,600,200,600]"
+    lang:
+      required: false
+      selector:
+        language:
+      example: es-419
+    timestamp:
+      required: false
+      selector:
+        datetime:
+      example: "1970-01-01 00:00:00"
+    ttl:
+      required: false
+      selector:
+        duration:
+          enable_day: true
+      example: "{'days': 28}"
+    urgency:
+      required: false
+      selector:
+        select:
+          options:
+            - low
+            - normal
+            - high
+          mode: dropdown
+          translation_key: urgency
+      example: normal
+    data:
+      required: false
+      selector:
+        object:
+      example: "{'customKey': 'customValue'}"

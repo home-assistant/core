@@ -3,6 +3,7 @@
 from collections.abc import Generator
 from http import HTTPStatus
 import json
+from typing import Any
 from unittest.mock import AsyncMock, MagicMock, Mock, mock_open, patch
 
 from aiohttp import ClientError
@@ -11,9 +12,28 @@ import pytest
 from pywebpush import WebPushException
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.html5 import notify as html5
+from homeassistant.components.html5 import DOMAIN, notify as html5
+from homeassistant.components.html5.const import (
+    ATTR_ACTIONS,
+    ATTR_BADGE,
+    ATTR_DIR,
+    ATTR_ICON,
+    ATTR_IMAGE,
+    ATTR_LANG,
+    ATTR_RENOTIFY,
+    ATTR_REQUIRE_INTERACTION,
+    ATTR_SILENT,
+    ATTR_TAG,
+    ATTR_TIMESTAMP,
+    ATTR_TTL,
+    ATTR_URGENCY,
+    ATTR_VIBRATE,
+)
+from homeassistant.components.html5.notify import ATTR_ACTION, DEFAULT_TTL
 from homeassistant.components.notify import (
+    ATTR_DATA,
     ATTR_MESSAGE,
+    ATTR_TARGET,
     ATTR_TITLE,
     DOMAIN as NOTIFY_DOMAIN,
     SERVICE_SEND_MESSAGE,
@@ -27,7 +47,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import entity_registry as er, issue_registry as ir
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry, snapshot_platform
@@ -817,19 +837,16 @@ async def test_send_message(
 
     webpush_async.assert_awaited_once()
     assert webpush_async.await_args
-    assert webpush_async.await_args.args == (
-        {
-            "endpoint": "https://googleapis.com",
-            "keys": {"auth": "auth", "p256dh": "p256dh"},
-        },
-        '{"badge": "/static/images/notification-badge.png", "body": "World", "icon": "/static/icons/favicon-192x192.png", "tag": "12345678-1234-5678-1234-567812345678", "title": "Hello", "timestamp": 1234567890000, "data": {"jwt": "JWT"}}',
-        "h6acSRds8_KR8hT9djD8WucTL06Gfe29XXyZ1KcUjN8",
-        {
-            "sub": "mailto:test@example.com",
-            "aud": "https://googleapis.com",
-            "exp": 1234611090,
-        },
-    )
+    _, payload, _, _ = webpush_async.await_args.args
+    assert json.loads(payload) == {
+        "title": "Hello",
+        "body": "World",
+        "badge": "/static/images/notification-badge.png",
+        "icon": "/static/icons/favicon-192x192.png",
+        "tag": "12345678-1234-5678-1234-567812345678",
+        "timestamp": 1234567890000,
+        "data": {"jwt": "JWT"},
+    }
 
 
 @pytest.mark.parametrize(
@@ -849,6 +866,7 @@ async def test_send_message(
         ),
     ],
 )
+@pytest.mark.parametrize("domain", [NOTIFY_DOMAIN, DOMAIN])
 @pytest.mark.usefixtures("mock_jwt", "mock_vapid", "mock_uuid")
 @pytest.mark.freeze_time("2009-02-13T23:31:30.000Z")
 async def test_send_message_exceptions(
@@ -858,6 +876,7 @@ async def test_send_message_exceptions(
     load_config: MagicMock,
     exception: Exception,
     translation_key: str,
+    domain: str,
 ) -> None:
     """Test sending a message with exceptions."""
     load_config.return_value = {"my-desktop": SUBSCRIPTION_1}
@@ -872,7 +891,7 @@ async def test_send_message_exceptions(
 
     with pytest.raises(HomeAssistantError) as e:
         await hass.services.async_call(
-            NOTIFY_DOMAIN,
+            domain,
             SERVICE_SEND_MESSAGE,
             {
                 ATTR_ENTITY_ID: "notify.my_desktop",
@@ -963,3 +982,174 @@ async def test_send_message_unavailable(
     state = hass.states.get("notify.my_desktop")
     assert state
     assert state.state == STATE_UNAVAILABLE
+
+
+@pytest.mark.parametrize(
+    ("service_data", "expected_payload", "expected_ttl", "expected_headers"),
+    [
+        ({ATTR_MESSAGE: "World"}, {"body": "World"}, DEFAULT_TTL, None),
+        (
+            {ATTR_ICON: "/static/icons/favicon-192x192.png"},
+            {"icon": "/static/icons/favicon-192x192.png"},
+            DEFAULT_TTL,
+            None,
+        ),
+        (
+            {ATTR_BADGE: "/static/images/notification-badge.png"},
+            {"badge": "/static/images/notification-badge.png"},
+            DEFAULT_TTL,
+            None,
+        ),
+        (
+            {ATTR_IMAGE: "/static/images/image.jpg"},
+            {"image": "/static/images/image.jpg"},
+            DEFAULT_TTL,
+            None,
+        ),
+        ({ATTR_TAG: "message-group-1"}, {"tag": "message-group-1"}, DEFAULT_TTL, None),
+        ({ATTR_DIR: "rtl"}, {"dir": "rtl"}, DEFAULT_TTL, None),
+        ({ATTR_RENOTIFY: True}, {"renotify": True}, DEFAULT_TTL, None),
+        ({ATTR_SILENT: True}, {"silent": True}, DEFAULT_TTL, None),
+        (
+            {ATTR_REQUIRE_INTERACTION: True},
+            {"requireInteraction": True},
+            DEFAULT_TTL,
+            None,
+        ),
+        (
+            {ATTR_VIBRATE: [200, 100, 200]},
+            {"vibrate": [200, 100, 200]},
+            DEFAULT_TTL,
+            None,
+        ),
+        ({ATTR_LANG: "es-419"}, {"lang": "es-419"}, DEFAULT_TTL, None),
+        ({ATTR_TIMESTAMP: "1970-01-01 00:00:00"}, {"timestamp": 0}, DEFAULT_TTL, None),
+        ({ATTR_TTL: {"days": 28}}, {}, 2419200, None),
+        ({ATTR_TTL: {"seconds": 0}}, {}, 0, None),
+        (
+            {ATTR_URGENCY: "high"},
+            {},
+            DEFAULT_TTL,
+            {"Urgency": "high"},
+        ),
+        (
+            {
+                ATTR_ACTIONS: [
+                    {
+                        ATTR_ACTION: "callback-event",
+                        ATTR_TITLE: "Callback Event",
+                        ATTR_ICON: "/static/icons/favicon-192x192.png",
+                    }
+                ]
+            },
+            {
+                "actions": [
+                    {
+                        "action": "callback-event",
+                        "title": "Callback Event",
+                        "icon": "/static/icons/favicon-192x192.png",
+                    }
+                ]
+            },
+            DEFAULT_TTL,
+            None,
+        ),
+        (
+            {ATTR_DATA: {"customKey": "customValue"}},
+            {"data": {"jwt": "JWT", "customKey": "customValue"}},
+            DEFAULT_TTL,
+            None,
+        ),
+    ],
+)
+@pytest.mark.usefixtures("mock_jwt", "mock_vapid", "mock_uuid")
+@pytest.mark.freeze_time("2009-02-13T23:31:30.000Z")
+async def test_html5_send_message(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    webpush_async: AsyncMock,
+    load_config: MagicMock,
+    service_data: dict[str, Any],
+    expected_payload: dict[str, Any],
+    expected_ttl: int,
+    expected_headers: dict[str, Any] | None,
+) -> None:
+    """Test sending a message via html5.send_message action."""
+    load_config.return_value = {"my-desktop": SUBSCRIPTION_1}
+
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    state = hass.states.get("notify.my_desktop")
+    assert state
+    assert state.state == STATE_UNKNOWN
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SEND_MESSAGE,
+        {ATTR_ENTITY_ID: "notify.my_desktop", ATTR_TITLE: "Hello", **service_data},
+        blocking=True,
+    )
+
+    state = hass.states.get("notify.my_desktop")
+    assert state
+    assert state.state == "2009-02-13T23:31:30+00:00"
+
+    webpush_async.assert_awaited_once()
+    assert webpush_async.await_args
+    _, payload, _, _ = webpush_async.await_args.args
+    assert json.loads(payload) == {
+        "title": "Hello",
+        "tag": "12345678-1234-5678-1234-567812345678",
+        "timestamp": 1234567890000,
+        "data": {"jwt": "JWT"},
+        **expected_payload,
+    }
+
+    assert webpush_async.await_args.kwargs["ttl"] == expected_ttl
+    assert webpush_async.await_args.kwargs["headers"] == expected_headers
+
+
+@pytest.mark.parametrize(
+    ("target", "issue_id"),
+    [
+        (["my-desktop"], "deprecated_notify_action_notify.html5_my_desktop"),
+        (None, "deprecated_notify_action_notify.html5"),
+        (["my-desktop", "my-phone"], "deprecated_notify_action_notify.html5"),
+    ],
+)
+@pytest.mark.usefixtures("mock_wp", "mock_jwt", "mock_vapid", "mock_uuid")
+async def test_deprecation_action_call(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    load_config: MagicMock,
+    issue_registry: ir.IssueRegistry,
+    target: list[str] | None,
+    issue_id: str,
+) -> None:
+    """Test deprecation action call."""
+    load_config.return_value = {
+        "my-desktop": SUBSCRIPTION_1,
+        "my-phone": SUBSCRIPTION_2,
+    }
+
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    await hass.services.async_call(
+        NOTIFY_DOMAIN,
+        DOMAIN,
+        {ATTR_MESSAGE: "Hello", ATTR_TARGET: target},
+        blocking=True,
+    )
+
+    assert issue_registry.async_get_issue(
+        domain=DOMAIN,
+        issue_id=issue_id,
+    )

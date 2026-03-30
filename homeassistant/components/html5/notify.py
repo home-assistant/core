@@ -47,7 +47,11 @@ from homeassistant.util.json import load_json_object
 
 from .const import (
     ATTR_ACTION,
+    ATTR_ACTIONS,
+    ATTR_REQUIRE_INTERACTION,
     ATTR_TAG,
+    ATTR_TIMESTAMP,
+    ATTR_TTL,
     ATTR_VAPID_EMAIL,
     ATTR_VAPID_PRV_KEY,
     ATTR_VAPID_PUB_KEY,
@@ -56,6 +60,7 @@ from .const import (
     SERVICE_DISMISS,
 )
 from .entity import HTML5Entity, Registration
+from .issue import deprecated_notify_action_call
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -69,13 +74,11 @@ ATTR_AUTH = "auth"
 ATTR_P256DH = "p256dh"
 ATTR_EXPIRATIONTIME = "expirationTime"
 
-ATTR_ACTIONS = "actions"
 ATTR_TYPE = "type"
 ATTR_URL = "url"
 ATTR_DISMISS = "dismiss"
 ATTR_PRIORITY = "priority"
 DEFAULT_PRIORITY = "normal"
-ATTR_TTL = "ttl"
 DEFAULT_TTL = 86400
 
 DEFAULT_BADGE = "/static/images/notification-badge.png"
@@ -465,6 +468,9 @@ class HTML5NotificationService(BaseNotificationService):
 
     async def async_send_message(self, message: str = "", **kwargs: Any) -> None:
         """Send a message to a user."""
+
+        deprecated_notify_action_call(self.hass, kwargs.get(ATTR_TARGET))
+
         tag = str(uuid.uuid4())
         payload: dict[str, Any] = {
             "badge": DEFAULT_BADGE,
@@ -605,32 +611,53 @@ class HTML5NotifyEntity(HTML5Entity, NotifyEntity):
     _key = "device"
 
     async def async_send_message(self, message: str, title: str | None = None) -> None:
-        """Send a message to a device."""
-        timestamp = int(time.time())
-        tag = str(uuid.uuid4())
+        """Send a message to a device via notify.send_message action."""
+        await self._webpush(
+            title=title or ATTR_TITLE_DEFAULT,
+            message=message,
+            badge=DEFAULT_BADGE,
+            icon=DEFAULT_ICON,
+        )
 
-        payload: dict[str, Any] = {
-            "badge": DEFAULT_BADGE,
-            "body": message,
-            "icon": DEFAULT_ICON,
-            ATTR_TAG: tag,
-            ATTR_TITLE: title or ATTR_TITLE_DEFAULT,
-            "timestamp": timestamp * 1000,
-            ATTR_DATA: {
-                ATTR_JWT: add_jwt(
-                    timestamp,
-                    self.target,
-                    tag,
-                    self.registration["subscription"]["keys"]["auth"],
-                )
-            },
-        }
+    async def send_push_notification(self, **kwargs: Any) -> None:
+        """Send a message to a device via html5.send_message action."""
+        await self._webpush(**kwargs)
+        self._async_record_notification()
+
+    async def _webpush(
+        self,
+        message: str | None = None,
+        timestamp: datetime | None = None,
+        ttl: timedelta | None = None,
+        urgency: str | None = None,
+        **kwargs: Any,
+    ) -> None:
+        """Shared internal helper to push messages."""
+        payload: dict[str, Any] = kwargs
+
+        if message is not None:
+            payload["body"] = message
+
+        payload.setdefault(ATTR_TAG, str(uuid.uuid4()))
+        ts = int(timestamp.timestamp()) if timestamp else int(time.time())
+        payload[ATTR_TIMESTAMP] = ts * 1000
+
+        if ATTR_REQUIRE_INTERACTION in payload:
+            payload["requireInteraction"] = payload.pop(ATTR_REQUIRE_INTERACTION)
+
+        payload.setdefault(ATTR_DATA, {})
+        payload[ATTR_DATA][ATTR_JWT] = add_jwt(
+            ts,
+            self.target,
+            payload[ATTR_TAG],
+            self.registration["subscription"]["keys"]["auth"],
+        )
 
         endpoint = urlparse(self.registration["subscription"]["endpoint"])
         vapid_claims = {
             "sub": f"mailto:{self.config_entry.data[ATTR_VAPID_EMAIL]}",
             "aud": f"{endpoint.scheme}://{endpoint.netloc}",
-            "exp": timestamp + (VAPID_CLAIM_VALID_HOURS * 60 * 60),
+            "exp": ts + (VAPID_CLAIM_VALID_HOURS * 60 * 60),
         }
 
         try:
@@ -639,6 +666,8 @@ class HTML5NotifyEntity(HTML5Entity, NotifyEntity):
                 json.dumps(payload),
                 self.config_entry.data[ATTR_VAPID_PRV_KEY],
                 vapid_claims,
+                ttl=int(ttl.total_seconds()) if ttl is not None else DEFAULT_TTL,
+                headers={"Urgency": urgency} if urgency else None,
                 aiohttp_session=self.session,
             )
             cast(ClientResponse, response).raise_for_status()
