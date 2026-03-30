@@ -13,7 +13,7 @@ from zeep.exceptions import Fault
 from homeassistant import config_entries
 from homeassistant.components.onvif import config_flow
 from homeassistant.components.onvif.const import CONF_SNAPSHOT_AUTH
-from homeassistant.components.onvif.event import EventManager
+from homeassistant.components.onvif.event_manager import EventManager
 from homeassistant.components.onvif.models import (
     Capabilities,
     DeviceInfo,
@@ -253,7 +253,7 @@ async def setup_onvif_integration(
                 return event_by_topic.get(topic)
 
             with patch(
-                "homeassistant.components.onvif.event.onvif_parsers"
+                "homeassistant.components.onvif.event_manager.onvif_parsers"
             ) as mock_parsers:
                 mock_parsers.parse = mock_parse
                 mock_parsers.errors.UnknownTopicError = type(
