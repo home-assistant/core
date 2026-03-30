@@ -7,6 +7,7 @@ from datetime import timedelta
 from http import HTTPStatus
 import re
 from typing import Any
+from unittest.mock import AsyncMock
 
 from aiohttp.test_utils import TestClient
 from freezegun import freeze_time
@@ -31,6 +32,7 @@ from homeassistant.util import dt as dt_util
 
 from .conftest import MockCalendarEntity, MockConfigEntry
 
+from tests.common import MockPlatform, mock_platform
 from tests.typing import ClientSessionGenerator, WebSocketGenerator
 
 
@@ -64,7 +66,6 @@ async def mock_setup_calendar_integration(
 
 
 @pytest.fixture(name="setup_calendar_config_entry_platform")
-# @pytest.fixture(name="setup_platform", autouse=True)
 async def mock_setup_config_entry_platform(
     hass: HomeAssistant,
     set_time_zone: None,
@@ -802,9 +803,6 @@ async def test_frontend_resources_registered_after_first_config_entry_setup(
 async def test_frontend_resources_registered_after_first_platform_setup(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
-    set_time_zone: None,
-    frozen_time: str | None,
-    mock_setup_platform_integration: None,
 ) -> None:
     """Test that frontend resources are registered after the first platform is set up."""
     await async_setup_component(hass, "http", {})
@@ -813,6 +811,11 @@ async def test_frontend_resources_registered_after_first_platform_setup(
     assert "frontend_panels" not in hass.data
     assert "websocket_api" not in hass.data
 
+    mock_platform(
+        hass,
+        f"test.{DOMAIN}",
+        MockPlatform(async_setup_platform=AsyncMock()),
+    )
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
     await _assert_http_api_responses(client, HTTPStatus.OK, HTTPStatus.BAD_REQUEST)
     assert set(hass.data["frontend_panels"]) == {"calendar"}

@@ -17,11 +17,7 @@ from homeassistant.components.calendar import (
 from homeassistant.config_entries import ConfigEntry, ConfigFlow
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import (
-    AddConfigEntryEntitiesCallback,
-    AddEntitiesCallback,
-)
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
 
 from tests.common import (
@@ -179,29 +175,6 @@ def mock_setup_config_entry_integration(
         hass,
         f"{TEST_DOMAIN}.{DOMAIN}",
         MockPlatform(async_setup_entry=async_setup_entry_platform),
-    )
-
-
-@pytest.fixture
-def mock_setup_platform_integration(
-    hass: HomeAssistant,
-    config_flow_fixture: None,
-    test_entities: list[CalendarEntity],
-) -> None:
-    """Fixture to set up a mock integration without config entry."""
-
-    async def async_setup_platform(
-        hass: HomeAssistant,
-        config: ConfigType,
-        async_add_entities: AddEntitiesCallback,
-        discovery_info: DiscoveryInfoType | None = None,
-    ) -> None:
-        pass
-
-    mock_platform(
-        hass,
-        f"{TEST_DOMAIN}.{DOMAIN}",
-        MockPlatform(async_setup_platform=async_setup_platform),
     )
 
 
