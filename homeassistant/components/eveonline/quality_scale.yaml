@@ -22,3 +22,55 @@ rules:
   test-before-configure: done
   test-before-setup: done
   unique-config-entry: done
+
+  # Silver
+  action-exceptions:
+    status: exempt
+    comment: Integration does not provide service actions.
+  docs-configuration-parameters:
+    status: exempt
+    comment: Integration has no configuration parameters beyond OAuth2 credentials.
+  docs-installation-parameters: done
+  entity-unavailable: done
+  integration-owner: done
+  log-when-unavailable: done
+  parallel-updates: done
+  test-coverage: done
+
+  # Gold
+  devices: done
+  diagnostics: todo
+  discovery:
+    status: exempt
+    comment: Eve Online is a cloud service — no local discovery possible.
+  discovery-update-info:
+    status: exempt
+    comment: Eve Online is a cloud service — no local discovery possible.
+  docs-data-update: todo
+  docs-examples: todo
+  docs-known-limitations: todo
+  docs-supported-devices: todo
+  docs-supported-functions: todo
+  docs-troubleshooting: todo
+  docs-use-cases: todo
+  dynamic-devices:
+    status: exempt
+    comment: Characters are added via config entries, not discovered dynamically.
+  entity-category: done
+  entity-device-class: done
+  entity-disabled-by-default: done
+  entity-translations: done
+  exception-translations: done
+  icon-translations: todo
+  reconfiguration-flow: todo
+  repair-issues:
+    status: exempt
+    comment: Integration does not raise repair issues.
+  stale-devices:
+    status: exempt
+    comment: Devices represent EVE characters tied to config entries — they are never stale.
+
+  # Platinum
+  async-dependency: done
+  inject-websession: done
+  strict-typing: todo
