@@ -216,3 +216,148 @@ async def test_reauth_flow_errors(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
+
+
+async def test_reconfigure_flow(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test successful reconfiguration flow."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_HOST: "10.0.0.1",
+            CONF_API_TOKEN: "new-api-token",
+            CONF_VERIFY_SSL: True,
+        },
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert mock_config_entry.data[CONF_HOST] == "10.0.0.1"
+    assert mock_config_entry.data[CONF_API_TOKEN] == "new-api-token"
+    assert mock_config_entry.data[CONF_VERIFY_SSL] is True
+
+
+async def test_reconfigure_flow_same_host_new_token(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test reconfiguration flow with same host and new API token."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_HOST: MOCK_HOST,
+            CONF_API_TOKEN: "new-api-token",
+            CONF_VERIFY_SSL: False,
+        },
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert mock_config_entry.data[CONF_HOST] == MOCK_HOST
+    assert mock_config_entry.data[CONF_API_TOKEN] == "new-api-token"
+
+
+async def test_reconfigure_flow_already_configured(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test reconfiguration flow aborts when host already configured."""
+    mock_config_entry.add_to_hass(hass)
+
+    other_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_HOST: "10.0.0.1",
+            CONF_API_TOKEN: "other-token",
+            CONF_VERIFY_SSL: False,
+        },
+    )
+    other_entry.add_to_hass(hass)
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_HOST: "10.0.0.1",
+            CONF_API_TOKEN: "new-api-token",
+            CONF_VERIFY_SSL: True,
+        },
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+
+@pytest.mark.parametrize(
+    ("exception", "error"),
+    [
+        (ApiConnectionError("Connection failed"), "cannot_connect"),
+        (ApiAuthError(), "invalid_auth"),
+        (RuntimeError("boom"), "unknown"),
+    ],
+)
+async def test_reconfigure_flow_errors(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    exception: Exception,
+    error: str,
+) -> None:
+    """Test reconfiguration flow errors and recovery."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+
+    mock_client.authenticate.side_effect = exception
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_HOST: "10.0.0.1",
+            CONF_API_TOKEN: "new-api-token",
+            CONF_VERIFY_SSL: True,
+        },
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": error}
+
+    mock_client.authenticate.side_effect = None
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_HOST: "10.0.0.1",
+            CONF_API_TOKEN: "new-api-token",
+            CONF_VERIFY_SSL: True,
+        },
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"

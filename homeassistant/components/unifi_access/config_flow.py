@@ -24,6 +24,29 @@ class UnifiAccessConfigFlow(ConfigFlow, domain=DOMAIN):
     VERSION = 1
     MINOR_VERSION = 1
 
+    async def _validate_input(self, user_input: dict[str, Any]) -> dict[str, str]:
+        """Validate user input and return errors dict."""
+        errors: dict[str, str] = {}
+        session = async_get_clientsession(
+            self.hass, verify_ssl=user_input[CONF_VERIFY_SSL]
+        )
+        client = UnifiAccessApiClient(
+            host=user_input[CONF_HOST],
+            api_token=user_input[CONF_API_TOKEN],
+            session=session,
+            verify_ssl=user_input[CONF_VERIFY_SSL],
+        )
+        try:
+            await client.authenticate()
+        except ApiAuthError:
+            errors["base"] = "invalid_auth"
+        except ApiConnectionError:
+            errors["base"] = "cannot_connect"
+        except Exception:
+            _LOGGER.exception("Unexpected exception")
+            errors["base"] = "unknown"
+        return errors
+
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -31,26 +54,9 @@ class UnifiAccessConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         if user_input is not None:
-            session = async_get_clientsession(
-                self.hass, verify_ssl=user_input[CONF_VERIFY_SSL]
-            )
-            client = UnifiAccessApiClient(
-                host=user_input[CONF_HOST],
-                api_token=user_input[CONF_API_TOKEN],
-                session=session,
-                verify_ssl=user_input[CONF_VERIFY_SSL],
-            )
-            try:
-                await client.authenticate()
-            except ApiAuthError:
-                errors["base"] = "invalid_auth"
-            except ApiConnectionError:
-                errors["base"] = "cannot_connect"
-            except Exception:
-                _LOGGER.exception("Unexpected exception")
-                errors["base"] = "unknown"
-            else:
-                self._async_abort_entries_match({CONF_HOST: user_input[CONF_HOST]})
+            self._async_abort_entries_match({CONF_HOST: user_input[CONF_HOST]})
+            errors = await self._validate_input(user_input)
+            if not errors:
                 return self.async_create_entry(
                     title="UniFi Access",
                     data=user_input,
@@ -64,6 +70,40 @@ class UnifiAccessConfigFlow(ConfigFlow, domain=DOMAIN):
                     vol.Required(CONF_API_TOKEN): str,
                     vol.Required(CONF_VERIFY_SSL, default=False): bool,
                 }
+            ),
+            errors=errors,
+        )
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration."""
+        reconfigure_entry = self._get_reconfigure_entry()
+        errors: dict[str, str] = {}
+
+        if user_input is not None:
+            self._async_abort_entries_match(
+                {CONF_HOST: user_input[CONF_HOST]},
+            )
+            errors = await self._validate_input(user_input)
+            if not errors:
+                return self.async_update_reload_and_abort(
+                    reconfigure_entry,
+                    data_updates=user_input,
+                )
+
+        suggested_values = user_input or dict(reconfigure_entry.data)
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=self.add_suggested_values_to_schema(
+                vol.Schema(
+                    {
+                        vol.Required(CONF_HOST): str,
+                        vol.Required(CONF_API_TOKEN): str,
+                        vol.Required(CONF_VERIFY_SSL): bool,
+                    }
+                ),
+                suggested_values,
             ),
             errors=errors,
         )
@@ -82,25 +122,13 @@ class UnifiAccessConfigFlow(ConfigFlow, domain=DOMAIN):
         reauth_entry = self._get_reauth_entry()
 
         if user_input is not None:
-            session = async_get_clientsession(
-                self.hass, verify_ssl=reauth_entry.data[CONF_VERIFY_SSL]
+            errors = await self._validate_input(
+                {
+                    **reauth_entry.data,
+                    CONF_API_TOKEN: user_input[CONF_API_TOKEN],
+                }
             )
-            client = UnifiAccessApiClient(
-                host=reauth_entry.data[CONF_HOST],
-                api_token=user_input[CONF_API_TOKEN],
-                session=session,
-                verify_ssl=reauth_entry.data[CONF_VERIFY_SSL],
-            )
-            try:
-                await client.authenticate()
-            except ApiAuthError:
-                errors["base"] = "invalid_auth"
-            except ApiConnectionError:
-                errors["base"] = "cannot_connect"
-            except Exception:
-                _LOGGER.exception("Unexpected exception")
-                errors["base"] = "unknown"
-            else:
+            if not errors:
                 return self.async_update_reload_and_abort(
                     reauth_entry,
                     data_updates={CONF_API_TOKEN: user_input[CONF_API_TOKEN]},
