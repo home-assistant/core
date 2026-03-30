@@ -125,12 +125,12 @@ async def mock_config_entry(hass: HomeAssistant) -> MockConfigEntry:
 
 
 @pytest.fixture
-def mock_setup_integration(
+def mock_setup_config_entry_integration(
     hass: HomeAssistant,
     config_flow_fixture: None,
     test_entities: list[CalendarEntity],
 ) -> None:
-    """Fixture to set up a mock integration."""
+    """Fixture to set up a mock integration with config entry."""
 
     async def async_setup_entry_init(
         hass: HomeAssistant, config_entry: ConfigEntry

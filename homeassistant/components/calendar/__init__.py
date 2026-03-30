@@ -36,6 +36,9 @@ from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.event import async_track_point_in_time
+from homeassistant.helpers.integration_platform import (
+    async_process_integration_platforms,
+)
 from homeassistant.helpers.template import DATE_STR_FORMAT
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import dt as dt_util
@@ -312,14 +315,32 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         _LOGGER, DOMAIN, hass, SCAN_INTERVAL
     )
 
-    hass.http.register_view(CalendarListView(component))
-    hass.http.register_view(CalendarEventView(component))
+    frontend_loaded = False
 
-    frontend.async_register_built_in_panel(hass, "calendar", "calendar", "mdi:calendar")
+    @callback
+    def async_platform_loaded(
+        hass: HomeAssistant, integration_domain: str, platform: Any
+    ) -> None:
+        """Register frontend resources for calendar."""
+        nonlocal frontend_loaded
 
-    websocket_api.async_register_command(hass, handle_calendar_event_create)
-    websocket_api.async_register_command(hass, handle_calendar_event_delete)
-    websocket_api.async_register_command(hass, handle_calendar_event_update)
+        if frontend_loaded:
+            return
+
+        frontend_loaded = True
+
+        hass.http.register_view(CalendarListView(component))
+        hass.http.register_view(CalendarEventView(component))
+
+        frontend.async_register_built_in_panel(
+            hass, "calendar", "calendar", "mdi:calendar"
+        )
+
+        websocket_api.async_register_command(hass, handle_calendar_event_create)
+        websocket_api.async_register_command(hass, handle_calendar_event_delete)
+        websocket_api.async_register_command(hass, handle_calendar_event_update)
+
+    await async_process_integration_platforms(hass, DOMAIN, async_platform_loaded)
 
     component.async_register_entity_service(
         CREATE_EVENT_SERVICE,

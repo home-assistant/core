@@ -279,7 +279,7 @@ def mock_test_entity(test_entities: list[MockCalendarEntity]) -> MockCalendarEnt
 @pytest.fixture(name="setup_platform", autouse=True)
 async def mock_setup_platform(
     hass: HomeAssistant,
-    mock_setup_integration: None,
+    mock_setup_config_entry_integration: None,
     config_entry: MockConfigEntry,
 ) -> None:
     """Fixture to setup platforms used in the test."""

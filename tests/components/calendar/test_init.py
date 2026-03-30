@@ -7,7 +7,9 @@ from datetime import timedelta
 from http import HTTPStatus
 import re
 from typing import Any
+from unittest.mock import AsyncMock
 
+from aiohttp.test_utils import TestClient
 from freezegun import freeze_time
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -20,14 +22,17 @@ from homeassistant.components.calendar import (
     CalendarEntity,
     CalendarEntityDescription,
 )
+from homeassistant.const import CONF_PLATFORM
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceNotSupported
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.typing import UNDEFINED
+from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
 from .conftest import MockCalendarEntity, MockConfigEntry
 
+from tests.common import MockPlatform, mock_platform
 from tests.typing import ClientSessionGenerator, WebSocketGenerator
 
 
@@ -50,12 +55,22 @@ def mock_set_frozen_time(frozen_time: str | None) -> Generator[None]:
             yield
 
 
-@pytest.fixture(name="setup_platform", autouse=True)
-async def mock_setup_platform(
+@pytest.fixture(name="setup_calendar_integration")
+async def mock_setup_calendar_integration(
     hass: HomeAssistant,
     set_time_zone: None,
     frozen_time: str | None,
-    mock_setup_integration: None,
+) -> None:
+    """Fixture to setup the calendar integration."""
+    await async_setup_component(hass, DOMAIN, {})
+
+
+@pytest.fixture(name="setup_calendar_config_entry_platform")
+async def mock_setup_config_entry_platform(
+    hass: HomeAssistant,
+    set_time_zone: None,
+    frozen_time: str | None,
+    mock_setup_config_entry_integration: None,
     config_entry: MockConfigEntry,
 ) -> None:
     """Fixture to setup platforms used in the test and fixtures are set up in the right order."""
@@ -63,6 +78,7 @@ async def mock_setup_platform(
     await hass.async_block_till_done()
 
 
+@pytest.mark.usefixtures("setup_calendar_config_entry_platform")
 async def test_events_http_api(
     hass: HomeAssistant, hass_client: ClientSessionGenerator
 ) -> None:
@@ -78,6 +94,7 @@ async def test_events_http_api(
     assert events[0]["summary"] == "Future Event"
 
 
+@pytest.mark.usefixtures("setup_calendar_config_entry_platform")
 async def test_events_http_api_missing_fields(
     hass: HomeAssistant, hass_client: ClientSessionGenerator
 ) -> None:
@@ -87,6 +104,7 @@ async def test_events_http_api_missing_fields(
     assert response.status == HTTPStatus.BAD_REQUEST
 
 
+@pytest.mark.usefixtures("setup_calendar_config_entry_platform")
 async def test_events_http_api_error(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
@@ -106,6 +124,7 @@ async def test_events_http_api_error(
     assert await response.json() == {"message": "Error reading events: Failure"}
 
 
+@pytest.mark.usefixtures("setup_calendar_config_entry_platform")
 async def test_events_http_api_dates_wrong_order(
     hass: HomeAssistant, hass_client: ClientSessionGenerator
 ) -> None:
@@ -119,6 +138,7 @@ async def test_events_http_api_dates_wrong_order(
     assert response.status == HTTPStatus.BAD_REQUEST
 
 
+@pytest.mark.usefixtures("setup_calendar_config_entry_platform")
 async def test_calendars_http_api(
     hass: HomeAssistant, hass_client: ClientSessionGenerator
 ) -> None:
@@ -134,6 +154,7 @@ async def test_calendars_http_api(
     ]
 
 
+@pytest.mark.usefixtures("setup_calendar_config_entry_platform")
 @pytest.mark.parametrize(
     ("payload", "code"),
     [
@@ -222,6 +243,7 @@ async def test_unsupported_websocket(
     assert resp["error"].get("code") == code
 
 
+@pytest.mark.usefixtures("setup_calendar_config_entry_platform")
 async def test_unsupported_create_event_service(hass: HomeAssistant) -> None:
     """Test unsupported service call."""
     with pytest.raises(
@@ -242,6 +264,7 @@ async def test_unsupported_create_event_service(hass: HomeAssistant) -> None:
         )
 
 
+@pytest.mark.usefixtures("setup_calendar_integration")
 @pytest.mark.parametrize(
     ("date_fields", "expected_error", "error_match"),
     [
@@ -417,6 +440,7 @@ async def test_create_event_service_invalid_params(
         )
 
 
+@pytest.mark.usefixtures("setup_calendar_config_entry_platform")
 @pytest.mark.parametrize(
     "frozen_time", ["2023-06-22 10:30:00+00:00"], ids=["frozen_time"]
 )
@@ -477,6 +501,7 @@ async def test_list_events_service(
     assert response == expected
 
 
+@pytest.mark.usefixtures("setup_calendar_config_entry_platform")
 @pytest.mark.parametrize(
     ("service"),
     [
@@ -516,6 +541,7 @@ async def test_list_events_service_duration(
     assert response == snapshot
 
 
+@pytest.mark.usefixtures("setup_calendar_integration")
 async def test_list_events_positive_duration(hass: HomeAssistant) -> None:
     """Test listing events requires a positive duration."""
     with pytest.raises(vol.Invalid, match="should be positive"):
@@ -531,6 +557,7 @@ async def test_list_events_positive_duration(hass: HomeAssistant) -> None:
         )
 
 
+@pytest.mark.usefixtures("setup_calendar_integration")
 async def test_list_events_exclusive_fields(hass: HomeAssistant) -> None:
     """Test listing events specifying fields that are exclusive."""
     end = dt_util.now() + timedelta(days=1)
@@ -549,6 +576,7 @@ async def test_list_events_exclusive_fields(hass: HomeAssistant) -> None:
         )
 
 
+@pytest.mark.usefixtures("setup_calendar_integration")
 async def test_list_events_missing_fields(hass: HomeAssistant) -> None:
     """Test listing events missing some required fields."""
     with pytest.raises(vol.Invalid, match="at least one of"):
@@ -563,6 +591,7 @@ async def test_list_events_missing_fields(hass: HomeAssistant) -> None:
         )
 
 
+@pytest.mark.usefixtures("setup_calendar_integration")
 @pytest.mark.parametrize(
     "frozen_time", ["2023-06-22 10:30:00+00:00"], ids=["frozen_time"]
 )
@@ -613,6 +642,7 @@ async def test_list_events_service_same_dates(
         )
 
 
+@pytest.mark.usefixtures("setup_calendar_config_entry_platform")
 async def test_calendar_initial_color_valid(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
@@ -628,6 +658,7 @@ async def test_calendar_initial_color_valid(
     assert entry.options.get(DOMAIN, {}).get("color") == "#FF0000"
 
 
+@pytest.mark.usefixtures("setup_calendar_config_entry_platform")
 @pytest.mark.parametrize(
     "invalid_initial_color",
     [
@@ -654,6 +685,7 @@ async def test_calendar_initial_color_invalid(
     assert entity.get_initial_entity_options() is None
 
 
+@pytest.mark.usefixtures("setup_calendar_config_entry_platform")
 async def test_calendar_initial_color_none(
     hass: HomeAssistant,
     test_entities: list[MockCalendarEntity],
@@ -664,6 +696,7 @@ async def test_calendar_initial_color_none(
     assert entity.get_initial_entity_options() is None
 
 
+@pytest.mark.usefixtures("setup_calendar_config_entry_platform")
 @pytest.mark.parametrize(
     ("description_color", "attr_color", "expected_color"),
     [
@@ -715,3 +748,79 @@ async def test_calendar_initial_color_precedence(
 
     entity = TestCalendarEntity(description_color, attr_color)
     assert entity.initial_color == expected_color
+
+
+async def test_services_registered_after_integration_setup(hass: HomeAssistant) -> None:
+    """Test that services are registered after integration setup."""
+    assert DOMAIN not in hass.services.async_services()
+    await async_setup_component(hass, DOMAIN, {})
+    assert set(hass.services.async_services()[DOMAIN]) == {"create_event", "get_events"}
+
+
+async def _assert_http_api_responses(
+    client: TestClient,
+    expected_status_calendar_list: HTTPStatus,
+    expected_status_calendar_event: HTTPStatus,
+) -> None:
+    """Assert that the HTTP API endpoints return the expected status."""
+    response = await client.get("/api/calendars")
+    assert response.status == expected_status_calendar_list
+
+    response = await client.get("/api/calendars/calendar.calendar_1")
+    assert response.status == expected_status_calendar_event
+
+
+async def test_frontend_resources_registered_after_first_config_entry_setup(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    set_time_zone: None,
+    frozen_time: str | None,
+    mock_setup_config_entry_integration: None,
+    config_entry: MockConfigEntry,
+) -> None:
+    """Test that frontend resources are registered after the first config entry is set up."""
+    await async_setup_component(hass, "http", {})
+    client = await hass_client()
+    await _assert_http_api_responses(client, HTTPStatus.NOT_FOUND, HTTPStatus.NOT_FOUND)
+    assert "frontend_panels" not in hass.data
+    assert "websocket_api" not in hass.data
+
+    await async_setup_component(hass, DOMAIN, {})
+    await _assert_http_api_responses(client, HTTPStatus.NOT_FOUND, HTTPStatus.NOT_FOUND)
+    assert "frontend_panels" not in hass.data
+    assert "websocket_api" not in hass.data
+
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await _assert_http_api_responses(client, HTTPStatus.OK, HTTPStatus.BAD_REQUEST)
+    assert set(hass.data["frontend_panels"]) == {"calendar"}
+    assert set(hass.data["websocket_api"]) == {
+        "calendar/event/create",
+        "calendar/event/delete",
+        "calendar/event/update",
+    }
+
+
+async def test_frontend_resources_registered_after_first_platform_setup(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+) -> None:
+    """Test that frontend resources are registered after the first platform is set up."""
+    await async_setup_component(hass, "http", {})
+    client = await hass_client()
+    await _assert_http_api_responses(client, HTTPStatus.NOT_FOUND, HTTPStatus.NOT_FOUND)
+    assert "frontend_panels" not in hass.data
+    assert "websocket_api" not in hass.data
+
+    mock_platform(
+        hass,
+        f"test.{DOMAIN}",
+        MockPlatform(async_setup_platform=AsyncMock()),
+    )
+    assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
+    await _assert_http_api_responses(client, HTTPStatus.OK, HTTPStatus.BAD_REQUEST)
+    assert set(hass.data["frontend_panels"]) == {"calendar"}
+    assert set(hass.data["websocket_api"]) == {
+        "calendar/event/create",
+        "calendar/event/delete",
+        "calendar/event/update",
+    }
