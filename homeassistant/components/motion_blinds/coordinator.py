@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import asyncio
-from dataclasses import dataclass
 from datetime import timedelta
 import logging
 
@@ -25,15 +24,7 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass
-class MotionBlindsData:
-    """Runtime data for Motion Blinds integration."""
-
-    gateway: MotionGateway
-    coordinator: DataUpdateCoordinatorMotionBlinds
-
-
-type MotionBlindsConfigEntry = ConfigEntry[MotionBlindsData]
+type MotionBlindsConfigEntry = ConfigEntry[DataUpdateCoordinatorMotionBlinds]
 
 
 class DataUpdateCoordinatorMotionBlinds(DataUpdateCoordinator):
@@ -58,7 +49,7 @@ class DataUpdateCoordinatorMotionBlinds(DataUpdateCoordinator):
         )
 
         self.api_lock = asyncio.Lock()
-        self._gateway = gateway
+        self.gateway = gateway
         self._wait_for_push = config_entry.options.get(
             CONF_WAIT_FOR_PUSH, DEFAULT_WAIT_FOR_PUSH
         )
@@ -66,7 +57,7 @@ class DataUpdateCoordinatorMotionBlinds(DataUpdateCoordinator):
     def update_gateway(self):
         """Fetch data from gateway."""
         try:
-            self._gateway.Update()
+            self.gateway.Update()
         except TimeoutError, ParseException:
             # let the error be logged and handled by the motionblinds library
             return {ATTR_AVAILABLE: False}
@@ -97,7 +88,7 @@ class DataUpdateCoordinatorMotionBlinds(DataUpdateCoordinator):
                 self.update_gateway
             )
 
-        for blind in self._gateway.device_list.values():
+        for blind in self.gateway.device_list.values():
             await asyncio.sleep(1.5)
             async with self.api_lock:
                 data[blind.mac] = await self.hass.async_add_executor_job(

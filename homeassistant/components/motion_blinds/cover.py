@@ -87,8 +87,8 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Motion Blind from a config entry."""
     entities: list[MotionBaseDevice] = []
-    motion_gateway = config_entry.runtime_data.gateway
-    coordinator = config_entry.runtime_data.coordinator
+    coordinator = config_entry.runtime_data
+    motion_gateway = coordinator.gateway
 
     for blind in motion_gateway.device_list.values():
         if blind.type in POSITION_DEVICE_MAP:

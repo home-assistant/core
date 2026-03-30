@@ -19,11 +19,7 @@ from .const import (
     KEY_UNSUB_STOP,
     PLATFORMS,
 )
-from .coordinator import (
-    DataUpdateCoordinatorMotionBlinds,
-    MotionBlindsConfigEntry,
-    MotionBlindsData,
-)
+from .coordinator import DataUpdateCoordinatorMotionBlinds, MotionBlindsConfigEntry
 from .gateway import ConnectMotionGateway
 
 _LOGGER = logging.getLogger(__name__)
@@ -102,10 +98,7 @@ async def async_setup_entry(
     # Fetch initial data so we have data when entities subscribe
     await coordinator.async_config_entry_first_refresh()
 
-    entry.runtime_data = MotionBlindsData(
-        gateway=motion_gateway,
-        coordinator=coordinator,
-    )
+    entry.runtime_data = coordinator
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
