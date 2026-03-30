@@ -32,7 +32,6 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.entity_component import DATA_INSTANCES
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.issue_registry import (
     IssueSeverity,
@@ -818,7 +817,6 @@ class ZWaveOpeningStateBinarySensor(ZWaveBaseEntity, BinarySensorEntity):
 
     async def _async_remove_and_rediscover(self, value: ZwaveValue) -> None:
         """Remove all sibling Opening state entities and trigger re-discovery."""
-        entity_component = self.hass.data[DATA_INSTANCES][BINARY_SENSOR_DOMAIN]
         ent_reg = er.async_get(self.hass)
 
         opening_state_entity_ids = [
@@ -830,7 +828,7 @@ class ZWaveOpeningStateBinarySensor(ZWaveBaseEntity, BinarySensorEntity):
         ]
 
         for entity_id in opening_state_entity_ids:
-            await entity_component.async_remove_entity(entity_id)
+            ent_reg.async_remove(entity_id)
 
         assert self.device_entry is not None
         controller_events = (
