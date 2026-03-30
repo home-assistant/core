@@ -86,7 +86,12 @@ class EnOceanCover(EnOceanEntity, CoverEntity):
         await super().async_added_to_hass()
         if self._supports_query:
             # Schedule the query in the background to avoid delaying HA startup.
-            self.hass.async_create_task(self._async_query_position_later())
+            task = self.hass.async_create_task(self._async_query_position_later())
+
+            def _cancel_query() -> None:
+                task.cancel()
+
+            self.async_on_remove(_cancel_query)
 
     async def _async_query_position_later(self) -> None:
         """Wait for the gateway to be ready, then query current position."""

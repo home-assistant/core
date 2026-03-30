@@ -4,6 +4,7 @@
       "invalid_dongle_path": "Invalid dongle path"
     },
     "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_dongle_path": "No valid dongle found for this path"
     },
     "flow_title": "{name}",

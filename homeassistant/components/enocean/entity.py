@@ -81,7 +81,9 @@ class EnOceanEntity(Entity):
             return None
 
         dt = spec.device_type
-        manufacturer = str(dt.manufacturer) if dt.manufacturer is not None else None
+        manufacturer = (
+            dt.manufacturer.display_name if dt.manufacturer is not None else None
+        )
 
         return DeviceInfo(
             identifiers={(DOMAIN, str(self.address))},

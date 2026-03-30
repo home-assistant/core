@@ -136,11 +136,13 @@ class EnOceanFlowHandler(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Propose a list of detected dongles."""
+        errors: dict[str, str] = {}
         if user_input is not None:
             if user_input[CONF_DEVICE] == self.MANUAL_PATH_VALUE:
                 return await self.async_step_manual()
             if await self.validate_enocean_conf(user_input):
                 return self.async_create_entry(title="EnOcean", data=user_input)
+            errors["base"] = "cannot_connect"
 
         devices = await self.hass.async_add_executor_job(_detect_usb_dongle)
         if len(devices) == 0:
@@ -149,6 +151,7 @@ class EnOceanFlowHandler(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="detect",
+            errors=errors,
             data_schema=vol.Schema(
                 {
                     vol.Required(CONF_DEVICE): selector.SelectSelector(
@@ -170,6 +173,7 @@ class EnOceanFlowHandler(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             if await self.validate_enocean_conf(user_input):
                 return self.async_create_entry(title="EnOcean", data=user_input)
+            errors["base"] = "cannot_connect"
 
         return self.async_show_form(
             step_id="manual",
@@ -364,9 +368,7 @@ class OptionsFlowHandler(OptionsFlow):
 
         select_device_to_edit_schema = vol.Schema(
             {
-                vol.Required(
-                    CONF_ENOCEAN_DEVICE_ID, default="none"
-                ): selector.SelectSelector(
+                vol.Required(CONF_ENOCEAN_DEVICE_ID): selector.SelectSelector(
                     selector.SelectSelectorConfig(options=device_list)
                 )
             }
@@ -401,7 +403,7 @@ class OptionsFlowHandler(OptionsFlow):
             device_id = user_input[CONF_ENOCEAN_DEVICE_ID]
 
             # sender id must be either empty or a valid EnOcean ID
-            sender_id_string = user_input[CONF_ENOCEAN_SENDER_ID].strip()
+            sender_id_string = user_input.get(CONF_ENOCEAN_SENDER_ID, "").strip()
             if sender_id_string != "":
                 try:
                     sender_id = Address(sender_id_string)
@@ -491,9 +493,7 @@ class OptionsFlowHandler(OptionsFlow):
 
         delete_device_schema = vol.Schema(
             {
-                vol.Required(
-                    CONF_ENOCEAN_DEVICE_ID, default="none"
-                ): selector.SelectSelector(
+                vol.Required(CONF_ENOCEAN_DEVICE_ID): selector.SelectSelector(
                     selector.SelectSelectorConfig(options=device_list)
                 ),
             }
