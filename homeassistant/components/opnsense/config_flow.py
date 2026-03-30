@@ -6,7 +6,7 @@ from collections.abc import Mapping, MutableMapping
 import logging
 import re
 from typing import Any
-from urllib.parse import ParseResult, urlparse
+from urllib.parse import urlparse
 
 from pyopnsense import diagnostics
 from pyopnsense.exceptions import APIException
@@ -31,12 +31,26 @@ _LOGGER = logging.getLogger(__name__)
 
 
 def _normalize_url(url: str) -> str:
-    """Normalize URL for unique id checks."""
-    parsed = urlparse(url)
-    path = parsed.path.rstrip("/")
-    if path == "/":
-        path = ""
-    return parsed._replace(netloc=parsed.netloc.lower(), path=path).geturl()
+    """Normalize and validate the configured OPNsense base URL."""
+    fixed_url = url.strip()
+    parsed = urlparse(fixed_url)
+
+    if not parsed.scheme and not parsed.netloc:
+        fixed_url = f"https://{fixed_url}"
+        parsed = urlparse(fixed_url)
+
+    if not parsed.netloc:
+        raise InvalidURL
+
+    # Keep behavior stable for unique IDs by stripping path/query/fragment
+    # and lowercasing netloc for canonical matching.
+    return parsed._replace(
+        netloc=parsed.netloc.lower(),
+        path="",
+        params="",
+        query="",
+        fragment="",
+    ).geturl()
 
 
 def _title_from_url(url: str) -> str:
@@ -101,28 +115,6 @@ def _build_user_schema(user_input: Mapping[str, Any] | None = None) -> vol.Schem
     )
 
 
-def _clean_and_parse_url(url: str) -> str:
-    """Normalize and validate the configured OPNsense base URL.
-
-    Args:
-        user_input: Mutable form payload containing `CONF_URL`.
-
-    """
-    fix_url: str = url.strip()
-    url_parts: ParseResult = urlparse(fix_url)
-
-    if not url_parts.scheme and not url_parts.netloc:
-        fix_url = "https://" + fix_url
-        url_parts = urlparse(fix_url)
-
-    if not url_parts.netloc:
-        raise InvalidURL
-
-    cleaned_url = f"{url_parts.scheme}://{url_parts.netloc}"
-    _LOGGER.debug("Cleaned URL: %s", cleaned_url)
-    return cleaned_url
-
-
 async def _async_validate_input(
     hass: HomeAssistant, user_input: Mapping[str, Any]
 ) -> dict[str, Any]:
@@ -130,7 +122,7 @@ async def _async_validate_input(
 
     data = dict(user_input)
 
-    data[CONF_URL] = _clean_and_parse_url(user_input[CONF_URL])
+    data[CONF_URL] = _normalize_url(user_input[CONF_URL])
 
     data[CONF_TRACKER_INTERFACES] = _normalize_tracker_interfaces(
         user_input.get(CONF_TRACKER_INTERFACES)

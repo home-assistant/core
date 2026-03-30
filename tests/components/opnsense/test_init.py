@@ -10,6 +10,7 @@ from requests import RequestException
 
 from homeassistant.components import opnsense
 from homeassistant.components.opnsense import CONF_API_SECRET, DOMAIN
+from homeassistant.components.opnsense.const import OPNSENSE_DATA
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_API_KEY, CONF_URL, CONF_VERIFY_SSL
 from homeassistant.core import HomeAssistant
@@ -109,3 +110,26 @@ async def test_setup_entry_invalid_tracker_interface(
     await hass.async_block_till_done()
 
     assert entry.state is ConfigEntryState.SETUP_ERROR
+
+
+async def test_setup_entry_happy_path_platform_forwarding(
+    hass: HomeAssistant, mocked_opnsense: mock.MagicMock
+) -> None:
+    """Test successful setup forwards the device tracker platform."""
+    entry = MockConfigEntry(domain=DOMAIN, data=ENTRY_CONFIG)
+    entry.add_to_hass(hass)
+
+    interface_client = mock.MagicMock()
+    interface_client.get_arp.return_value = []
+    mocked_opnsense.InterfaceClient.return_value = interface_client
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.LOADED
+    assert entry.runtime_data == {
+        opnsense.CONF_INTERFACE_CLIENT: interface_client,
+        opnsense.CONF_TRACKER_INTERFACES: [],
+    }
+    assert "opnsense.device_tracker" in hass.config.components
+    assert OPNSENSE_DATA not in hass.data

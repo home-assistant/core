@@ -15,6 +15,26 @@ from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.setup import async_setup_component
 
 
+@pytest.mark.parametrize(
+    ("raw_url", "normalized_url"),
+    [
+        ("router.local/api", "https://router.local"),
+        ("  HTTPS://Router.Local/  ", "https://router.local"),
+        ("https://router.local", "https://router.local"),
+        ("https://router.local:8443/api/v1?x=1#top", "https://router.local:8443"),
+    ],
+)
+def test_normalize_url_compatibility(raw_url: str, normalized_url: str) -> None:
+    """Normalize URL keeps previous canonical unique-id output."""
+    assert config_flow._normalize_url(raw_url) == normalized_url
+
+
+def test_normalize_url_invalid() -> None:
+    """Normalize URL raises when URL cannot produce a host."""
+    with pytest.raises(config_flow.InvalidURL):
+        config_flow._normalize_url("https:///api")
+
+
 async def test_async_step_user_create_entry(
     hass: HomeAssistant, monkeypatch: pytest.MonkeyPatch
 ) -> None:

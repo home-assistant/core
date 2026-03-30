@@ -5,15 +5,16 @@ from __future__ import annotations
 from collections.abc import Mapping
 from http import HTTPStatus
 import logging
-from typing import Any, cast
+from typing import Any
 
 from pyopnsense import diagnostics
 from pyopnsense.exceptions import APIException
 from requests import RequestException
 import voluptuous as vol
 
+from homeassistant.components.device_tracker import DOMAIN as DEVICE_TRACKER_DOMAIN
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
-from homeassistant.const import CONF_API_KEY, CONF_URL, CONF_VERIFY_SSL, Platform
+from homeassistant.const import CONF_API_KEY, CONF_URL, CONF_VERIFY_SSL
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.exceptions import (
@@ -21,7 +22,11 @@ from homeassistant.exceptions import (
     ConfigEntryError,
     ConfigEntryNotReady,
 )
-from homeassistant.helpers import config_validation as cv, issue_registry as ir
+from homeassistant.helpers import (
+    config_validation as cv,
+    discovery,
+    issue_registry as ir,
+)
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
@@ -32,7 +37,6 @@ from .const import (
     DEFAULT_VERIFY_SSL,
     DOMAIN,
     INTEGRATION_TITLE,
-    OPNSENSE_DATA,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -55,26 +59,36 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-def _entry_storage(hass: HomeAssistant) -> dict[str, dict[str, Any]]:
-    """Return integration storage mapping keyed by config entry id."""
-    return cast(dict[str, dict[str, Any]], hass.data.setdefault(OPNSENSE_DATA, {}))
-
-
 async def _async_import_from_yaml(
     hass: HomeAssistant, yaml_config: Mapping[str, Any]
 ) -> None:
     """Import YAML config into a config entry and raise a deprecation issue."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_IMPORT},
-        data={
-            CONF_URL: yaml_config[CONF_URL],
-            CONF_API_KEY: yaml_config[CONF_API_KEY],
-            CONF_API_SECRET: yaml_config[CONF_API_SECRET],
-            CONF_VERIFY_SSL: yaml_config.get(CONF_VERIFY_SSL, DEFAULT_VERIFY_SSL),
-            CONF_TRACKER_INTERFACES: list(yaml_config.get(CONF_TRACKER_INTERFACES, [])),
-        },
-    )
+    try:
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_IMPORT},
+            data={
+                CONF_URL: yaml_config[CONF_URL],
+                CONF_API_KEY: yaml_config[CONF_API_KEY],
+                CONF_API_SECRET: yaml_config[CONF_API_SECRET],
+                CONF_VERIFY_SSL: yaml_config.get(CONF_VERIFY_SSL, DEFAULT_VERIFY_SSL),
+                CONF_TRACKER_INTERFACES: list(
+                    yaml_config.get(CONF_TRACKER_INTERFACES, [])
+                ),
+            },
+        )
+    except Exception:
+        _LOGGER.exception("Unexpected exception while importing OPNsense YAML config")
+        ir.async_create_issue(
+            hass,
+            DOMAIN,
+            f"yaml_import_issue_{DOMAIN}",
+            is_fixable=False,
+            issue_domain=DOMAIN,
+            severity=ir.IssueSeverity.ERROR,
+            translation_key="deprecated_yaml_import_issue_error",
+        )
+        return
 
     result_type = result.get("type")
     if result_type == FlowResultType.ABORT:
@@ -180,15 +194,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         CONF_INTERFACE_CLIENT: interfaces_client,
         CONF_TRACKER_INTERFACES: list(tracker_interfaces),
     }
-
-    await hass.config_entries.async_forward_entry_setups(
-        entry, [Platform.DEVICE_TRACKER]
+    await discovery.async_load_platform(
+        hass,
+        DEVICE_TRACKER_DOMAIN,
+        "opnsense",
+        {"entry_id": entry.entry_id},
+        {},
     )
     return True
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload an OPNsense config entry."""
-    if OPNSENSE_DATA in hass.data:
-        hass.data[OPNSENSE_DATA].pop(entry.entry_id, None)
+    entry.runtime_data = None
     return True
