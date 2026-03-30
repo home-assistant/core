@@ -17,6 +17,7 @@ from homeassistant.components.media_source import (
     PlayMedia,
     Unresolvable,
 )
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
 
@@ -123,7 +124,7 @@ class MotionEyeMediaSource(MediaSource):
     def _get_config_or_raise(self, config_id: str) -> MotionEyeConfigEntry:
         """Get a config entry from a URL."""
         entry = self.hass.config_entries.async_get_entry(config_id)
-        if not entry:
+        if not entry or entry.state != ConfigEntryState.LOADED:
             raise MediaSourceError(f"Unable to find config entry with id: {config_id}")
         return entry
 
