@@ -39,7 +39,7 @@ def setup_platform(
     add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
-    """Set up the Panasonic Blu-ray integration."""
+    """Set up the Panasonic Blu-ray media player platform."""
     conf = discovery_info or config
 
     # Register configured device with Home Assistant.
