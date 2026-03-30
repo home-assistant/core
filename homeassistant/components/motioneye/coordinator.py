@@ -19,8 +19,6 @@ _LOGGER = logging.getLogger(__name__)
 class MotionEyeUpdateCoordinator(DataUpdateCoordinator[dict[str, Any] | None]):
     """Coordinator for motionEye data."""
 
-    config_entry: ConfigEntry
-
     def __init__(
         self, hass: HomeAssistant, entry: ConfigEntry, client: MotionEyeClient
     ) -> None:
@@ -39,3 +37,6 @@ class MotionEyeUpdateCoordinator(DataUpdateCoordinator[dict[str, Any] | None]):
             return await self.client.async_get_cameras()
         except MotionEyeClientError as exc:
             raise UpdateFailed("Error communicating with API") from exc
+
+
+type MotionEyeConfigEntry = ConfigEntry[MotionEyeUpdateCoordinator]

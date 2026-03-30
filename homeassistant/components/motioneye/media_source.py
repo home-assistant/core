@@ -23,6 +23,7 @@ from homeassistant.helpers import device_registry as dr
 
 from . import get_media_url, split_motioneye_device_identifier
 from .const import DOMAIN
+from .coordinator import MotionEyeConfigEntry
 
 MIME_TYPE_MAP = {
     "movies": "video/mp4",
@@ -73,8 +74,11 @@ class MotionEyeMediaSource(MediaSource):
         device = self._get_device_or_raise(device_id)
         self._verify_kind_or_raise(kind)
 
+        entry: MotionEyeConfigEntry = self.hass.config_entries.async_get_entry(
+            config.entry_id
+        )  # type: ignore[assignment]
         url = get_media_url(
-            self.hass.data[DOMAIN][config.entry_id].client,
+            entry.runtime_data.client,
             self._get_camera_id_or_raise(config, device),
             self._get_path_or_raise(path),
             kind == "images",
@@ -276,7 +280,10 @@ class MotionEyeMediaSource(MediaSource):
 
         base.children = []
 
-        client = self.hass.data[DOMAIN][config.entry_id].client
+        entry: MotionEyeConfigEntry = self.hass.config_entries.async_get_entry(
+            config.entry_id
+        )  # type: ignore[assignment]
+        client = entry.runtime_data.client
         camera_id = self._get_camera_id_or_raise(config, device)
 
         if kind == "movies":
@@ -286,7 +293,7 @@ class MotionEyeMediaSource(MediaSource):
 
         sub_dirs: set[str] = set()
         parts = parsed_path.parts
-        media_list = resp.get(KEY_MEDIA_LIST, [])
+        media_list = resp.get(KEY_MEDIA_LIST, []) if resp else []
 
         def get_media_sort_key(media: dict) -> str:
             """Get media sort key."""
