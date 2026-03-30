@@ -627,7 +627,7 @@ class HTML5NotifyEntity(HTML5Entity, NotifyEntity):
         await self._webpush(**kwargs)
         self._async_record_notification()
 
-    async def dismiss_notification(self, tag: str | None = "") -> None:
+    async def dismiss_notification(self, tag: str = "") -> None:
         """Dismiss a message via html5.dismiss_message action."""
         await self._webpush(dismiss=True, tag=tag)
         self._async_record_notification()
