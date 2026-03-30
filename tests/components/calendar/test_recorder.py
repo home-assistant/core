@@ -19,7 +19,7 @@ async def mock_setup_dependencies(
     recorder_mock: Recorder,
     hass: HomeAssistant,
     set_time_zone: None,
-    mock_setup_integration: None,
+    mock_setup_config_entry_integration: None,
     config_entry: MockConfigEntry,
 ) -> None:
     """Fixture that ensures the recorder is setup in the right order."""

@@ -37,7 +37,7 @@ from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.event import async_track_point_in_time
 from homeassistant.helpers.template import DATE_STR_FORMAT
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import dt as dt_util
 from homeassistant.util.json import JsonValueType
 
@@ -308,18 +308,9 @@ SERVICE_GET_EVENTS_SCHEMA: Final = vol.All(
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Track states and offer events for calendars."""
-    component = hass.data[DATA_COMPONENT] = EntityComponent[CalendarEntity](
+    component = hass.data[DATA_COMPONENT] = CalendarEntityComponent(
         _LOGGER, DOMAIN, hass, SCAN_INTERVAL
     )
-
-    hass.http.register_view(CalendarListView(component))
-    hass.http.register_view(CalendarEventView(component))
-
-    frontend.async_register_built_in_panel(hass, "calendar", "calendar", "mdi:calendar")
-
-    websocket_api.async_register_command(hass, handle_calendar_event_create)
-    websocket_api.async_register_command(hass, handle_calendar_event_delete)
-    websocket_api.async_register_command(hass, handle_calendar_event_update)
 
     component.async_register_entity_service(
         CREATE_EVENT_SERVICE,
@@ -665,6 +656,57 @@ class CalendarEntity(Entity):
     ) -> None:
         """Delete an event on the calendar."""
         raise NotImplementedError
+
+
+class CalendarEntityComponent(EntityComponent[CalendarEntity]):
+    """Calendar entity component.
+
+    Sets up frontend resources and websocket API when the first platform is added.
+    """
+
+    async def async_setup_entry(self, config_entry: ConfigEntry) -> bool:
+        """Set up a config entry."""
+        num_platforms_before = len(self._platforms)
+
+        result = await super().async_setup_entry(config_entry)
+
+        # There will always be at least one platform, the calendar platform itself.
+        if num_platforms_before == 1 and len(self._platforms) == 2:
+            # First calendar platform was added, set up frontend resources
+            self._register_frontend_resources()
+
+        return result
+
+    async def async_setup_platform(
+        self,
+        platform_type: str,
+        platform_config: ConfigType,
+        discovery_info: DiscoveryInfoType | None = None,
+    ) -> None:
+        """Set up a platform for this component."""
+        num_platforms_before = len(self._platforms)
+
+        await super().async_setup_platform(
+            platform_type, platform_config, discovery_info
+        )
+
+        # There will always be at least one platform, the calendar platform itself.
+        if num_platforms_before == 1 and len(self._platforms) == 2:
+            # First calendar platform was added, set up frontend resources
+            self._register_frontend_resources()
+
+    def _register_frontend_resources(self) -> None:
+        """Register frontend resources for calendar."""
+        self.hass.http.register_view(CalendarListView(self))
+        self.hass.http.register_view(CalendarEventView(self))
+
+        frontend.async_register_built_in_panel(
+            self.hass, "calendar", "calendar", "mdi:calendar"
+        )
+
+        websocket_api.async_register_command(self.hass, handle_calendar_event_create)
+        websocket_api.async_register_command(self.hass, handle_calendar_event_delete)
+        websocket_api.async_register_command(self.hass, handle_calendar_event_update)
 
 
 class CalendarEventView(http.HomeAssistantView):
