@@ -1,5 +1,7 @@
 """Test the Fing integration init."""
 
+from unittest.mock import MagicMock
+
 import httpx
 import pytest
 
@@ -36,14 +38,16 @@ async def test_setup_entry_auth_failed(
     mock_config_entry: MockConfigEntry,
     mocked_fing_agent: AsyncMock,
 ) -> None:
-    """Test that HTTP 401 transitions the entry to auth_failed state."""
+    """Test that HTTP 401 results in setup error and starts reauth."""
     mocked_fing_agent.get_devices.side_effect = httpx.HTTPStatusError(
         "HTTP status error - 401", request=None, response=httpx.Response(401)
     )
+    mock_config_entry.async_start_reauth = MagicMock()
 
     entry = await init_integration(hass, mock_config_entry, mocked_fing_agent)
 
     assert entry.state is ConfigEntryState.SETUP_ERROR
+    mock_config_entry.async_start_reauth.assert_called_once_with(hass)
 
 
 @pytest.mark.parametrize("api_type", ["new"])
