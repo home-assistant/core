@@ -30,7 +30,6 @@ from homeassistant.const import (
     PERCENTAGE,
     UnitOfIrradiance,
     UnitOfLength,
-    UnitOfPrecipitationDepth,
     UnitOfPressure,
     UnitOfSpeed,
     UnitOfTemperature,

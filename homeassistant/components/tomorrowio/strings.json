@@ -22,6 +22,9 @@
   },
   "entity": {
     "sensor": {
+      "altimeter_setting": {
+        "name": "Altimeter setting"
+      },
       "china_mep_air_quality_index": {
         "name": "China MEP air quality index"
       },
@@ -65,6 +68,9 @@
       "fire_index": {
         "name": "Fire index"
       },
+      "freezing_rain_intensity": {
+        "name": "Freezing rain intensity"
+      },
       "grass_pollen_index": {
         "name": "Grass pollen index",
         "state": {
@@ -87,6 +93,9 @@
           "very_unhealthy": "Very unhealthy"
         }
       },
+      "humidity": {
+        "name": "Humidity"
+      },
       "pollen_index": {
         "name": "Tree pollen index",
         "state": {
@@ -98,6 +107,12 @@
           "very_low": "[%key:common::state::very_low%]"
         }
       },
+      "precipitation_intensity": {
+        "name": "Precipitation intensity"
+      },
+      "precipitation_probability": {
+        "name": "Precipitation probability"
+      },
       "precipitation_type": {
         "name": "Precipitation type",
         "state": {
@@ -107,6 +122,9 @@
           "rain": "Rain",
           "snow": "Snow"
         }
+      },
+      "pressure_sea_level": {
+        "name": "Pressure (sea level)"
       },
       "primary_pollutant": {
         "name": "US EPA primary pollutant",
@@ -118,6 +136,18 @@
           "pm25": "[%key:component::sensor::entity_component::pm25::name%]",
           "so2": "[%key:component::sensor::entity_component::sulphur_dioxide::name%]"
         }
+      },
+      "rain_intensity": {
+        "name": "Rain intensity"
+      },
+      "sleet_intensity": {
+        "name": "Sleet intensity"
+      },
+      "snow_intensity": {
+        "name": "Snow intensity"
+      },
+      "temperature": {
+        "name": "Temperature"
       },
       "us_epa_air_quality_index": {
         "name": "US EPA air quality index"
@@ -135,6 +165,9 @@
           "very_high": "[%key:common::state::very_high%]"
         }
       },
+      "visibility": {
+        "name": "Visibility"
+      },
       "weed_pollen_index": {
         "name": "Weed pollen index",
         "state": {
@@ -146,47 +179,14 @@
           "very_low": "[%key:common::state::very_low%]"
         }
       },
-      "wind_gust": {
-        "name": "Wind gust"
-      },
-      "rain_intensity": {
-        "name": "Rain intensity"
-      },
-      "snow_intensity": {
-        "name": "Snow intensity"
-      },
-      "sleet_intensity": {
-        "name": "Sleet intensity"
-      },
-      "freezing_rain_intensity": {
-        "name": "Freezing rain intensity"
-      },
-      "precipitation_intensity": {
-        "name": "Precipitation intensity"
-      },
-      "precipitation_probability": {
-        "name": "Precipitation probability"
-      },
-      "temperature": {
-        "name": "Temperature"
-      },
-      "humidity": {
-        "name": "Humidity"
-      },
-      "pressure_sea_level": {
-        "name": "Pressure (sea level)"
-      },
-      "wind_speed": {
-        "name": "Wind speed"
-      },
       "wind_direction": {
         "name": "Wind direction"
       },
-      "visibility": {
-        "name": "Visibility"
+      "wind_gust": {
+        "name": "Wind gust"
       },
-      "altimeter_setting": {
-        "name": "Altimeter setting"
+      "wind_speed": {
+        "name": "Wind speed"
       }
     }
   },
