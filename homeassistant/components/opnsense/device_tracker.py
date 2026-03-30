@@ -1,12 +1,17 @@
 """Device tracker support for OPNsense routers."""
 
+from collections.abc import Mapping
 from typing import Any, NewType
 
 from pyopnsense import diagnostics
 
 from homeassistant.components.device_tracker import DeviceScanner
+from homeassistant.components.device_tracker.legacy import (
+    AsyncSeeCallback,
+    async_setup_scanner_platform,
+)
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import CONF_INTERFACE_CLIENT, CONF_TRACKER_INTERFACES, DOMAIN
 
@@ -14,25 +19,51 @@ DeviceDetails = NewType("DeviceDetails", dict[str, Any])
 DeviceDetailsByMAC = NewType("DeviceDetailsByMAC", dict[str, DeviceDetails])
 
 
-async def async_get_scanner(
-    hass: HomeAssistant, config: ConfigType
-) -> DeviceScanner | None:
-    """Configure the OPNsense device_tracker."""
-    runtime_data = next(
-        (
-            entry.runtime_data
-            for entry in hass.config_entries.async_entries(DOMAIN)
-            if hasattr(entry, "runtime_data")
-        ),
-        None,
-    )
-    if runtime_data is None:
-        return None
+def _resolve_runtime_data(
+    hass: HomeAssistant, discovery_info: DiscoveryInfoType | None
+) -> dict[str, Any] | None:
+    """Resolve runtime data for a specific config entry when available."""
+    if isinstance(discovery_info, Mapping) and isinstance(
+        discovery_info.get("entry_id"), str
+    ):
+        if (
+            entry := hass.config_entries.async_get_entry(discovery_info["entry_id"])
+        ) is not None:
+            runtime_data = getattr(entry, "runtime_data", None)
+            if isinstance(runtime_data, dict):
+                return runtime_data
 
-    return OPNsenseDeviceScanner(
-        runtime_data[CONF_INTERFACE_CLIENT],
-        runtime_data[CONF_TRACKER_INTERFACES],
+    # Backward compatibility for legacy setup paths without entry_id.
+    for entry in hass.config_entries.async_entries(DOMAIN):
+        runtime_data = getattr(entry, "runtime_data", None)
+        if isinstance(runtime_data, dict):
+            return runtime_data
+
+    return None
+
+
+async def async_setup_scanner(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_see: AsyncSeeCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> bool:
+    """Set up OPNsense scanner from discovered config entry."""
+    runtime_data = _resolve_runtime_data(hass, discovery_info)
+    if runtime_data is None:
+        return False
+
+    async_setup_scanner_platform(
+        hass,
+        config,
+        OPNsenseDeviceScanner(
+            runtime_data[CONF_INTERFACE_CLIENT],
+            runtime_data[CONF_TRACKER_INTERFACES],
+        ),
+        async_see,
+        DOMAIN,
     )
+    return True
 
 
 class OPNsenseDeviceScanner(DeviceScanner):

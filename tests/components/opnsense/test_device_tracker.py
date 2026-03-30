@@ -2,6 +2,8 @@
 
 from unittest import mock
 
+import pytest
+
 from homeassistant.components.opnsense.const import (
     CONF_INTERFACE_CLIENT,
     CONF_TRACKER_INTERFACES,
@@ -9,7 +11,7 @@ from homeassistant.components.opnsense.const import (
 )
 from homeassistant.components.opnsense.device_tracker import (
     OPNsenseDeviceScanner,
-    async_get_scanner,
+    async_setup_scanner,
 )
 from homeassistant.core import HomeAssistant
 
@@ -49,27 +51,48 @@ def test_get_scanner() -> None:
     assert scanner.get_extra_attributes("ff:ff:ff:ff:ff:fd") == {}
 
 
-async def test_async_get_scanner_no_runtime_data(
+async def test_async_setup_scanner_no_runtime_data(
     hass: HomeAssistant,
 ) -> None:
-    """async_get_scanner returns None when no runtime_data exists."""
-    scanner = await async_get_scanner(hass, {})
-    assert scanner is None
+    """async_setup_scanner returns False when no runtime_data exists."""
+    assert not await async_setup_scanner(hass, {}, mock.AsyncMock())
 
 
-async def test_async_get_scanner_with_runtime_data(hass: HomeAssistant) -> None:
-    """async_get_scanner uses runtime_data from loaded OPNsense entry."""
-    interface_client = mock.MagicMock()
-    interface_client.get_arp.return_value = []
+async def test_async_setup_scanner_uses_discovery_entry_id(
+    hass: HomeAssistant, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """async_setup_scanner uses runtime_data from matching discovery entry_id."""
+    first_client = mock.MagicMock()
+    second_client = mock.MagicMock()
 
-    entry = MockConfigEntry(domain=DOMAIN, data={})
-    entry.runtime_data = {
-        CONF_INTERFACE_CLIENT: interface_client,
-        CONF_TRACKER_INTERFACES: [],
+    first_entry = MockConfigEntry(domain=DOMAIN, data={})
+    first_entry.runtime_data = {
+        CONF_INTERFACE_CLIENT: first_client,
+        CONF_TRACKER_INTERFACES: ["FIRST"],
     }
-    entry.add_to_hass(hass)
+    first_entry.add_to_hass(hass)
 
-    scanner = await async_get_scanner(hass, {})
+    second_entry = MockConfigEntry(domain=DOMAIN, data={})
+    second_entry.runtime_data = {
+        CONF_INTERFACE_CLIENT: second_client,
+        CONF_TRACKER_INTERFACES: ["SECOND"],
+    }
+    second_entry.add_to_hass(hass)
 
-    assert scanner is not None
-    assert scanner.scan_devices() == []
+    setup_scanner_platform = mock.MagicMock()
+    monkeypatch.setattr(
+        "homeassistant.components.opnsense.device_tracker.async_setup_scanner_platform",
+        setup_scanner_platform,
+    )
+
+    assert await async_setup_scanner(
+        hass,
+        {},
+        mock.AsyncMock(),
+        {"entry_id": second_entry.entry_id},
+    )
+
+    scanner = setup_scanner_platform.call_args.args[2]
+    assert isinstance(scanner, OPNsenseDeviceScanner)
+    assert scanner.client is second_client
+    assert scanner.interfaces == ["SECOND"]

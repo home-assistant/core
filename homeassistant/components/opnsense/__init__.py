@@ -215,8 +215,4 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload an OPNsense config entry."""
     entry.runtime_data = None
-    _LOGGER.debug(
-        "OPNsense legacy device_tracker platform cannot be cleanly unloaded; "
-        "reload or removal will require a restart to fully take effect"
-    )
-    return False
+    return True

@@ -87,6 +87,37 @@ async def test_async_step_user_create_entry(
     assert result["data"][config_flow.CONF_TRACKER_INTERFACES] == ["LAN", "OPT1"]
 
 
+async def test_async_step_user_create_entry_scheme_less_url(
+    hass: HomeAssistant, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """User step accepts scheme-less URL and creates an entry."""
+    validate_input = AsyncMock(
+        return_value={
+            CONF_URL: "https://router.local",
+            CONF_API_KEY: "key",
+            config_flow.CONF_API_SECRET: "secret",
+            CONF_VERIFY_SSL: False,
+            config_flow.CONF_TRACKER_INTERFACES: [],
+        }
+    )
+    monkeypatch.setattr(config_flow, "_async_validate_input", validate_input)
+
+    result = await hass.config_entries.flow.async_init(
+        config_flow.DOMAIN,
+        context={"source": SOURCE_USER},
+        data={
+            CONF_URL: "router.local/api",
+            CONF_API_KEY: "key",
+            config_flow.CONF_API_SECRET: "secret",
+            CONF_VERIFY_SSL: False,
+            config_flow.CONF_TRACKER_INTERFACES: "",
+        },
+    )
+
+    assert result["type"] == FlowResultType.CREATE_ENTRY
+    validate_input.assert_called_once()
+
+
 async def test_async_validate_input_normalizes_url_and_validates_interfaces(
     hass: HomeAssistant, monkeypatch: pytest.MonkeyPatch
 ) -> None:

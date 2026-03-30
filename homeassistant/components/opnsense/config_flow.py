@@ -97,7 +97,9 @@ def _build_user_schema(user_input: Mapping[str, Any] | None = None) -> vol.Schem
 
     return vol.Schema(
         {
-            vol.Required(CONF_URL, default=user_input.get(CONF_URL, "")): cv.url,
+            # Allow scheme-less host input; _normalize_url will validate and
+            # canonicalize it (including inferring https:// when missing).
+            vol.Required(CONF_URL, default=user_input.get(CONF_URL, "")): cv.string,
             vol.Required(
                 CONF_API_KEY, default=user_input.get(CONF_API_KEY, "")
             ): cv.string,

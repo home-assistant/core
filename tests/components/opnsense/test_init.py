@@ -212,3 +212,24 @@ async def test_setup_entry_happy_path_platform_forwarding(
     }
     assert "opnsense.device_tracker" in hass.config.components
     assert OPNSENSE_DATA not in hass.data
+
+
+async def test_unload_entry_clears_runtime_data(
+    hass: HomeAssistant, mocked_opnsense: mock.MagicMock
+) -> None:
+    """Unload clears runtime_data and reports success for reload flow."""
+    entry = MockConfigEntry(domain=DOMAIN, data=ENTRY_CONFIG)
+    entry.add_to_hass(hass)
+
+    interface_client = mock.MagicMock()
+    interface_client.get_arp.return_value = []
+    mocked_opnsense.InterfaceClient.return_value = interface_client
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+    assert entry.state is ConfigEntryState.LOADED
+    assert entry.runtime_data
+
+    assert await hass.config_entries.async_unload(entry.entry_id)
+    assert entry.state is ConfigEntryState.NOT_LOADED
+    assert not hasattr(entry, "runtime_data")
