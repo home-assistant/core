@@ -1,0 +1,71 @@
+{
+  "common": {
+    "condition_behavior_description": "How the state should match on the targeted entities.",
+    "condition_behavior_name": "Behavior",
+    "condition_threshold_description": "What to test for and threshold values.",
+    "condition_threshold_name": "Threshold configuration",
+    "trigger_behavior_description": "The behavior of the targeted entities to trigger on.",
+    "trigger_behavior_name": "Behavior",
+    "trigger_threshold_changed_description": "Which changes to trigger on and threshold values.",
+    "trigger_threshold_crossed_description": "Which threshold crossing to trigger on and threshold values.",
+    "trigger_threshold_name": "Threshold configuration"
+  },
+  "conditions": {
+    "is_value": {
+      "description": "Tests if a relative humidity value is above a threshold, below a threshold, or in a range of values.",
+      "fields": {
+        "behavior": {
+          "description": "[%key:component::humidity::common::condition_behavior_description%]",
+          "name": "[%key:component::humidity::common::condition_behavior_name%]"
+        },
+        "threshold": {
+          "description": "[%key:component::humidity::common::condition_threshold_description%]",
+          "name": "[%key:component::humidity::common::condition_threshold_name%]"
+        }
+      },
+      "name": "Relative humidity"
+    }
+  },
+  "selector": {
+    "condition_behavior": {
+      "options": {
+        "all": "All",
+        "any": "Any"
+      }
+    },
+    "trigger_behavior": {
+      "options": {
+        "any": "Any",
+        "first": "First",
+        "last": "Last"
+      }
+    }
+  },
+  "title": "Humidity",
+  "triggers": {
+    "changed": {
+      "description": "Triggers after one or more relative humidity values change.",
+      "fields": {
+        "threshold": {
+          "description": "[%key:component::humidity::common::trigger_threshold_changed_description%]",
+          "name": "[%key:component::humidity::common::trigger_threshold_name%]"
+        }
+      },
+      "name": "Relative humidity changed"
+    },
+    "crossed_threshold": {
+      "description": "Triggers after one or more relative humidity values cross a threshold.",
+      "fields": {
+        "behavior": {
+          "description": "[%key:component::humidity::common::trigger_behavior_description%]",
+          "name": "[%key:component::humidity::common::trigger_behavior_name%]"
+        },
+        "threshold": {
+          "description": "[%key:component::humidity::common::trigger_threshold_crossed_description%]",
+          "name": "[%key:component::humidity::common::trigger_threshold_name%]"
+        }
+      },
+      "name": "Relative humidity crossed threshold"
+    }
+  }
+}

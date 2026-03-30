@@ -1535,6 +1535,7 @@ async def test_entity_info_added_to_entity_registry(
         entity_id="test_domain.best_name",
         unique_id="default",
         platform="test_domain",
+        aliases=[er.COMPUTED_NAME],
         capabilities={"max": 100},
         config_entry_id=None,
         config_subentry_id=None,
@@ -2147,8 +2148,8 @@ class SlowEntity(MockEntity):
 @pytest.mark.parametrize(
     ("has_entity_name", "entity_name", "expected_entity_id"),
     [
-        (False, "Entity Blu", "test_domain.entity_blu"),
-        (False, None, "test_domain.test_qwer"),  # Set to <platform>_<unique_id>
+        (False, "Entity Blu", "test_domain.device_bla_entity_blu"),
+        (False, None, "test_domain.device_bla"),
         (True, "Entity Blu", "test_domain.device_bla_entity_blu"),
         (True, None, "test_domain.device_bla"),
     ],
@@ -2203,7 +2204,7 @@ async def test_entity_name_influences_entity_id(
 @pytest.mark.parametrize(
     ("language", "has_entity_name", "expected_entity_id"),
     [
-        ("en", False, "test_domain.test_qwer"),  # Set to <platform>_<unique_id>
+        ("en", False, "test_domain.device_bla"),
         ("en", True, "test_domain.device_bla_english_name"),
         ("sv", True, "test_domain.device_bla_swedish_name"),
         # Chinese uses english for entity_id
@@ -2283,13 +2284,8 @@ async def test_translated_entity_name_influences_entity_id(
 @pytest.mark.parametrize(
     ("language", "has_entity_name", "device_class", "expected_entity_id"),
     [
-        ("en", False, None, "test_domain.test_qwer"),  # Set to <platform>_<unique_id>
-        (
-            "en",
-            False,
-            "test_class",
-            "test_domain.test_qwer",
-        ),  # Set to <platform>_<unique_id>
+        ("en", False, None, "test_domain.device_bla"),
+        ("en", False, "test_class", "test_domain.device_bla"),
         ("en", True, "test_class", "test_domain.device_bla_english_cls"),
         ("sv", True, "test_class", "test_domain.device_bla_swedish_cls"),
         # Chinese uses english for entity_id

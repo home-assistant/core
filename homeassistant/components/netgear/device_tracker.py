@@ -11,7 +11,6 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from .const import DEVICE_ICONS
 from .coordinator import NetgearConfigEntry, NetgearTrackerCoordinator
 from .entity import NetgearDeviceEntity
-from .router import NetgearRouter
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -38,9 +37,7 @@ async def async_setup_entry(
             if mac in tracked:
                 continue
 
-            new_entities.append(
-                NetgearScannerEntity(coordinator_tracker, router, device)
-            )
+            new_entities.append(NetgearScannerEntity(coordinator_tracker, device))
             tracked.add(mac)
 
         async_add_entities(new_entities)
@@ -59,11 +56,10 @@ class NetgearScannerEntity(NetgearDeviceEntity, ScannerEntity):
     def __init__(
         self,
         coordinator: NetgearTrackerCoordinator,
-        router: NetgearRouter,
         device: dict,
     ) -> None:
         """Initialize a Netgear device."""
-        super().__init__(coordinator, router, device)
+        super().__init__(coordinator, device)
         self._hostname = self.get_hostname()
         self._icon = DEVICE_ICONS.get(device["device_type"], "mdi:help-network")
         self._attr_name = self._device_name

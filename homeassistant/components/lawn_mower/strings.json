@@ -86,16 +86,16 @@
   },
   "services": {
     "dock": {
-      "description": "Stops the mowing task and returns to the dock.",
-      "name": "Return to dock"
+      "description": "Returns a lawn mower to its dock.",
+      "name": "Return lawn mower to dock"
     },
     "pause": {
-      "description": "Pauses the mowing task.",
-      "name": "Pause"
+      "description": "Pauses a lawn mower's current task.",
+      "name": "Pause lawn mower"
     },
     "start_mowing": {
-      "description": "Starts the mowing task.",
-      "name": "Start mowing"
+      "description": "Starts a lawn mower's mowing task.",
+      "name": "Start lawn mower"
     }
   },
   "title": "Lawn mower",
@@ -139,6 +139,16 @@
         }
       },
       "name": "Lawn mower started mowing"
+    },
+    "started_returning": {
+      "description": "Triggers after one or more lawn mowers start returning to dock.",
+      "fields": {
+        "behavior": {
+          "description": "[%key:component::lawn_mower::common::trigger_behavior_description%]",
+          "name": "[%key:component::lawn_mower::common::trigger_behavior_name%]"
+        }
+      },
+      "name": "Lawn mower started returning to dock"
     }
   }
 }

@@ -122,7 +122,7 @@
           "name": "Code"
         }
       },
-      "name": "Lock"
+      "name": "Lock lock"
     },
     "open": {
       "description": "Opens a lock.",
@@ -132,7 +132,7 @@
           "name": "[%key:component::lock::services::lock::fields::code::name%]"
         }
       },
-      "name": "[%key:common::action::open%]"
+      "name": "Open lock"
     },
     "unlock": {
       "description": "Unlocks a lock.",
@@ -142,7 +142,7 @@
           "name": "[%key:component::lock::services::lock::fields::code::name%]"
         }
       },
-      "name": "Unlock"
+      "name": "Unlock lock"
     }
   },
   "title": "Lock",
