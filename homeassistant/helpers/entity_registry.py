@@ -459,6 +459,27 @@ class RegistryEntry:
 
 
 @callback
+def async_get_unprefixed_name(hass: HomeAssistant, entry: RegistryEntry) -> str:
+    """Get the entity name with device name prefix stripped, if applicable."""
+    name = entry.name
+    if name is not None:
+        if (
+            entry.device_id is not None
+            and (device := dr.async_get(hass).async_get(entry.device_id)) is not None
+        ):
+            device_name = device.name_by_user or device.name
+            unprefixed_name = _async_strip_prefix_from_entity_name(name, device_name)
+            if unprefixed_name is not None:
+                return unprefixed_name
+        return name
+
+    if entry.original_name_unprefixed is not None:
+        return entry.original_name_unprefixed
+
+    return entry.original_name or ""
+
+
+@callback
 def _async_get_full_entity_name(
     hass: HomeAssistant,
     *,
