@@ -134,4 +134,7 @@ async def test_play_rtttl_service_error(
 
     assert exc_info.value.translation_domain == DOMAIN
     assert exc_info.value.translation_key == "play_tone_failed"
-    assert exc_info.value.translation_placeholders == {"error": "API fail"}
+    assert exc_info.value.translation_placeholders == {
+        "device_name": mock_config_entry.title,
+        "error": "API fail",
+    }
