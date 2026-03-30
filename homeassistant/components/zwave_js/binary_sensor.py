@@ -17,6 +17,7 @@ from zwave_js_server.const.command_class.notification import (
     SmokeAlarmNotificationEvent,
 )
 from zwave_js_server.model.driver import Driver
+from zwave_js_server.model.value import Value as ZwaveValue
 
 from homeassistant.components.automation import automations_with_entity
 from homeassistant.components.binary_sensor import (
@@ -31,6 +32,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity_component import DATA_INSTANCES
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.issue_registry import (
     IssueSeverity,
@@ -787,6 +789,7 @@ class ZWaveOpeningStateBinarySensor(ZWaveBaseEntity, BinarySensorEntity):
     """Representation of a binary sensor derived from Opening state."""
 
     entity_description: OpeningStateZWaveJSEntityDescription
+    _known_states: set[str]
 
     def __init__(
         self,
@@ -797,6 +800,7 @@ class ZWaveOpeningStateBinarySensor(ZWaveBaseEntity, BinarySensorEntity):
         """Initialize an Opening state binary sensor entity."""
         super().__init__(config_entry, driver, info)
         self._known_states = set(info.primary_value.metadata.states or ())
+        self._opening_state_base_unique_id = self._attr_unique_id
         self._attr_unique_id = (
             f"{self._attr_unique_id}.{self.entity_description.state_key}"
         )
@@ -804,7 +808,43 @@ class ZWaveOpeningStateBinarySensor(ZWaveBaseEntity, BinarySensorEntity):
     @callback
     def should_rediscover_on_metadata_update(self) -> bool:
         """Check if metadata states have changed."""
-        return set(self.info.primary_value.metadata.states or ()) != self._known_states
+        return (
+            # Open and Tilt entities share the same underlying Opening state value.
+            # Let the Open entity own rediscovery so it can remove any siblings
+            # first and rediscover the shared value exactly once.
+            set(self.info.primary_value.metadata.states or ()) != self._known_states
+            and self.entity_description.state_key == OpeningState.OPEN
+        )
+
+    async def _async_remove_and_rediscover(self, value: ZwaveValue) -> None:
+        """Remove all sibling Opening state entities and trigger re-discovery."""
+        entity_component = self.hass.data[DATA_INSTANCES][BINARY_SENSOR_DOMAIN]
+        ent_reg = er.async_get(self.hass)
+
+        opening_state_entity_ids = [
+            entry.entity_id
+            for entry in ent_reg.entities.values()
+            if entry.domain == BINARY_SENSOR_DOMAIN
+            and entry.platform == DOMAIN
+            and entry.unique_id.startswith(f"{self._opening_state_base_unique_id}.")
+        ]
+
+        for entity_id in opening_state_entity_ids:
+            await entity_component.async_remove_entity(entity_id)
+
+        assert self.device_entry is not None
+        controller_events = (
+            self.config_entry.runtime_data.driver_events.controller_events
+        )
+
+        controller_events.discovered_value_ids[self.device_entry.id].discard(
+            value.value_id
+        )
+        node_events = controller_events.node_events
+        value_updates_disc_info = node_events.value_updates_disc_info[
+            value.node.node_id
+        ]
+        node_events.async_on_value_added(value_updates_disc_info, value)
 
     @property
     def is_on(self) -> bool | None:
