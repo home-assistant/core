@@ -337,7 +337,7 @@ async def test_camera_last_recording_image(
     await hass.async_block_till_done(wait_background_tasks=True)
     # history updated so image available
     front_camera_mock.async_history.assert_called_once()
-    # front_camera_mock.async_recording_url.assert_called_once() #removed per copilot reccomendation 2026-03-30
+    # front_camera_mock.async_recording_url.assert_called_once() #removed per copilot 2026-03-30
 
     with patch(
         "homeassistant.components.ring.camera.ffmpeg.async_get_image",
