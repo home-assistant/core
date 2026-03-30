@@ -14,7 +14,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er, issue_registry as ir, selector
 
-from . import create_image_gen_call_item, create_message_item
+from . import create_image_gen_call_item, create_message_item, create_reasoning_item
 
 from tests.common import MockConfigEntry
 
@@ -247,8 +247,15 @@ async def test_generate_image(
 
     # Mock the OpenAI response stream
     mock_create_stream.return_value = [
-        create_image_gen_call_item(id="ig_A", output_index=0),
-        create_message_item(id="msg_A", text="", output_index=1),
+        (
+            *create_reasoning_item(
+                id="rs_A",
+                output_index=0,
+                reasoning_summary=[["The user asks me to generate an image"]],
+            ),
+            *create_image_gen_call_item(id="ig_A", output_index=1),
+            *create_message_item(id="msg_A", text="", output_index=2),
+        )
     ]
 
     with patch.object(
