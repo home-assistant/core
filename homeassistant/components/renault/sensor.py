@@ -157,14 +157,9 @@ def _get_charging_settings_attributes(entity: RenaultSensor[T]) -> Mapping[str, 
     """Return the charging_settings attributes."""
     data = cast(KamereonVehicleChargingSettingsData, entity.coordinator.data)
     schedules = data.schedules if data else None
-    schedules_fmt: list[dict[str, Any]] = []
-    if schedules:
-        for schedule in schedules:
-            # If only using one append line RUFF complaints!?!
-            if len(schedules_fmt) == 0:
-                schedules_fmt.append(schedule.for_json())
-            else:
-                schedules_fmt.append(schedule.for_json())
+    schedules_fmt: list[dict[str, Any]] = (
+        [schedule.for_json() for schedule in schedules] if schedules else []
+    )
     dateTime = data.dateTime if data else None
     startDateTime = data.startDateTime if data else None
     delay = data.delay if data else None
