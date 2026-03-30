@@ -60,14 +60,14 @@
   },
   "services": {
     "set_value": {
-      "description": "Sets the value.",
+      "description": "Sets the value of a text entity.",
       "fields": {
         "value": {
           "description": "Enter your text.",
           "name": "Value"
         }
       },
-      "name": "Set value"
+      "name": "Set text value"
     }
   },
   "title": "Text",
