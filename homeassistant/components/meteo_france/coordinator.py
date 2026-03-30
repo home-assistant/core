@@ -1,5 +1,8 @@
 """Support for Meteo-France weather data."""
 
+from __future__ import annotations
+
+from dataclasses import dataclass
 from datetime import timedelta
 import logging
 
@@ -12,6 +15,18 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
+
+type MeteoFranceConfigEntry = ConfigEntry[MeteoFranceData]
+
+
+@dataclass
+class MeteoFranceData:
+    """Data for the Meteo-France integration."""
+
+    forecast_coordinator: MeteoFranceForecastUpdateCoordinator
+    rain_coordinator: MeteoFranceRainUpdateCoordinator | None
+    alert_coordinator: MeteoFranceAlertUpdateCoordinator | None
+
 
 SCAN_INTERVAL_RAIN = timedelta(minutes=5)
 SCAN_INTERVAL = timedelta(minutes=15)
