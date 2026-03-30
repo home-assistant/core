@@ -8,6 +8,7 @@ import pytest
 
 from homeassistant.components.remote import (
     ATTR_COMMAND,
+    ATTR_DELAY_SECS,
     DOMAIN as REMOTE_DOMAIN,
     SERVICE_SEND_COMMAND,
 )
@@ -148,7 +149,11 @@ async def test_send_command_tv_valid(
         await hass.services.async_call(
             REMOTE_DOMAIN,
             SERVICE_SEND_COMMAND,
-            {ATTR_ENTITY_ID: REMOTE_ENTITY_ID, ATTR_COMMAND: [command]},
+            {
+                ATTR_ENTITY_ID: REMOTE_ENTITY_ID,
+                ATTR_COMMAND: [command],
+                ATTR_DELAY_SECS: 0,
+            },
             blocking=True,
         )
         mock_remote.assert_called_once_with(expected_key, log_api_exception=False)
@@ -163,7 +168,11 @@ async def test_send_command_tv_invalid(hass: HomeAssistant, command: str) -> Non
         await hass.services.async_call(
             REMOTE_DOMAIN,
             SERVICE_SEND_COMMAND,
-            {ATTR_ENTITY_ID: REMOTE_ENTITY_ID, ATTR_COMMAND: [command]},
+            {
+                ATTR_ENTITY_ID: REMOTE_ENTITY_ID,
+                ATTR_COMMAND: [command],
+                ATTR_DELAY_SECS: 0,
+            },
             blocking=True,
         )
 
@@ -196,7 +205,11 @@ async def test_send_command_speaker_valid(
         await hass.services.async_call(
             REMOTE_DOMAIN,
             SERVICE_SEND_COMMAND,
-            {ATTR_ENTITY_ID: REMOTE_ENTITY_ID, ATTR_COMMAND: [command]},
+            {
+                ATTR_ENTITY_ID: REMOTE_ENTITY_ID,
+                ATTR_COMMAND: [command],
+                ATTR_DELAY_SECS: 0,
+            },
             blocking=True,
         )
         mock_remote.assert_called_once_with(expected_key, log_api_exception=False)
@@ -221,7 +234,11 @@ async def test_send_command_speaker_invalid(hass: HomeAssistant, command: str) -
         await hass.services.async_call(
             REMOTE_DOMAIN,
             SERVICE_SEND_COMMAND,
-            {ATTR_ENTITY_ID: REMOTE_ENTITY_ID, ATTR_COMMAND: [command]},
+            {
+                ATTR_ENTITY_ID: REMOTE_ENTITY_ID,
+                ATTR_COMMAND: [command],
+                ATTR_DELAY_SECS: 0,
+            },
             blocking=True,
         )
 
@@ -239,6 +256,7 @@ async def test_send_command_multiple(hass: HomeAssistant) -> None:
             {
                 ATTR_ENTITY_ID: REMOTE_ENTITY_ID,
                 ATTR_COMMAND: ["UP", "OK"],
+                ATTR_DELAY_SECS: 0,
             },
             blocking=True,
         )
@@ -263,6 +281,7 @@ async def test_send_command_invalid_skips_valid(hass: HomeAssistant) -> None:
             {
                 ATTR_ENTITY_ID: REMOTE_ENTITY_ID,
                 ATTR_COMMAND: ["UP", "INVALID_KEY"],
+                ATTR_DELAY_SECS: 0,
             },
             blocking=True,
         )
