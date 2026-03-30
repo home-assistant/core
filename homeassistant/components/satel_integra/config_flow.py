@@ -165,7 +165,7 @@ class SatelConfigFlow(ConfigFlow, domain=DOMAIN):
             self._async_abort_entries_match({CONF_HOST: user_input[CONF_HOST]})
 
             if (
-                reconfigure_entry.state != ConfigEntryState.LOADED
+                reconfigure_entry.state is not ConfigEntryState.LOADED
                 or reconfigure_entry.data != user_input
             ):
                 if not await self.test_connection(
