@@ -5,6 +5,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 from homeassistant.components.tis_control import async_setup_entry, async_unload_entry
+from homeassistant.components.tis_control.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 
@@ -71,7 +72,7 @@ async def test_async_setup_entry_event_listener(
 
     mock_tis_api.consume_events.side_effect = _mock_event_generator
 
-    event_type = "tis_device_test_device"
+    event_type = f"{DOMAIN}_event"
     captured_events = async_capture_events(hass, event_type)
 
     with patch.object(hass.config_entries, "async_forward_entry_setups"):
