@@ -932,7 +932,7 @@ DISCOVERY_SCHEMAS: list[NewZWaveDiscoverySchema] = [
         allow_multi=True,
         entity_description=OpeningStateZWaveJSEntityDescription(
             key="access_control_opening_state_tilted",
-            name="Tilted",
+            name="Tilt",
             state_key=OpeningState.TILTED,
             parse_opening_state=_opening_state_is_tilted,
         ),

@@ -469,7 +469,7 @@ async def test_opening_state_creates_open_binary_sensor(
     assert open_state.state == STATE_OFF
     assert open_state.attributes[ATTR_DEVICE_CLASS] == BinarySensorDeviceClass.DOOR
 
-    assert hass.states.get("binary_sensor.ehandle_connectsense_tilted") is None
+    assert hass.states.get("binary_sensor.ehandle_connectsense_tilt") is None
 
 
 async def test_opening_state_disables_legacy_window_door_notification_sensors(
@@ -528,7 +528,7 @@ async def test_opening_state_binary_sensors_with_tilted(
     client,
     hoppe_ehandle_connectsense_state,
 ) -> None:
-    """Test Opening state creates Open and Tilted binary sensors when supported."""
+    """Test Opening state creates Open and Tilt binary sensors when supported."""
     node = Node(
         client,
         _set_opening_state_metadata_states(
@@ -544,7 +544,7 @@ async def test_opening_state_binary_sensors_with_tilted(
     await hass.async_block_till_done()
 
     open_entity_id = "binary_sensor.ehandle_connectsense"
-    tilted_entity_id = "binary_sensor.ehandle_connectsense_tilted"
+    tilted_entity_id = "binary_sensor.ehandle_connectsense_tilt"
 
     open_state = hass.states.get(open_entity_id)
     tilted_state = hass.states.get(tilted_entity_id)
@@ -613,7 +613,7 @@ async def test_opening_state_tilted_appears_and_disappears_via_metadata_update(
     client,
     hoppe_ehandle_connectsense_state,
 ) -> None:
-    """Test tilted binary sensor is added and removed on metadata changes."""
+    """Test tilt binary sensor is added and removed on metadata changes."""
     node = Node(client, hoppe_ehandle_connectsense_state)
     client.driver.controller.nodes[node.node_id] = node
 
@@ -623,7 +623,7 @@ async def test_opening_state_tilted_appears_and_disappears_via_metadata_update(
     await hass.async_block_till_done()
 
     open_entity_id = "binary_sensor.ehandle_connectsense"
-    tilted_entity_id = "binary_sensor.ehandle_connectsense_tilted"
+    tilted_entity_id = "binary_sensor.ehandle_connectsense_tilt"
 
     assert hass.states.get(open_entity_id) is not None
     assert hass.states.get(tilted_entity_id) is None
@@ -1333,7 +1333,7 @@ async def test_legacy_door_tilt_state_repair_issue(
     )
     assert (
         issue.translation_placeholders["replacement_entity_id"]
-        == "binary_sensor.ehandle_connectsense_tilted"
+        == "binary_sensor.ehandle_connectsense_tilt"
     )
     assert "test" in issue.translation_placeholders["items"]
 
