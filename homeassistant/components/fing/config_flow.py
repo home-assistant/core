@@ -83,7 +83,11 @@ class FingConfigFlow(ConfigFlow, domain=DOMAIN):
                         upnp_available = True
                         agent_name = agent_info_response.agent_id
                         await self.async_set_unique_id(agent_info_response.agent_id)
-                        self._abort_if_unique_id_configured()
+                    else:
+                        await self.async_set_unique_id(
+                            f"{user_input[CONF_IP_ADDRESS]}:{user_input[CONF_PORT]}"
+                        )
+                    self._abort_if_unique_id_configured()
 
                     data = {
                         CONF_IP_ADDRESS: user_input[CONF_IP_ADDRESS],
