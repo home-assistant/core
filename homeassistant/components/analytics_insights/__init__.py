@@ -5,6 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from python_homeassistant_analytics import (
+    Environment,
     HomeassistantAnalyticsClient,
     HomeassistantAnalyticsConnectionError,
 )
@@ -38,7 +39,7 @@ async def async_setup_entry(
     client = HomeassistantAnalyticsClient(session=async_get_clientsession(hass))
 
     try:
-        integrations = await client.get_integrations()
+        integrations = await client.get_integrations(Environment.NEXT)
     except HomeassistantAnalyticsConnectionError as ex:
         raise ConfigEntryNotReady("Could not fetch integration list") from ex
 
