@@ -25,31 +25,6 @@ from .coordinator import VizioConfigEntry, VizioDeviceCoordinator
 
 PARALLEL_UPDATES = 0
 
-# Aliases keyed by actual pyvizio key name, values are human-friendly/HA-standard names.
-# Inverted at module level into _ALIAS_LOOKUP for O(1) resolution.
-REMOTE_KEY_ALIASES: dict[str, list[str]] = {
-    "CC_TOGGLE": ["closed_captions", "cc"],
-    "CH_DOWN": ["channel_down"],
-    "CH_PREV": ["previous_channel"],
-    "CH_UP": ["channel_up"],
-    "INPUT_NEXT": ["next_input"],
-    "MUTE_TOGGLE": ["mute"],
-    "OK": ["enter", "select"],
-    "PIC_MODE": ["picture_mode"],
-    "PIC_SIZE": ["picture_size"],
-    "POW_OFF": ["off", "power_off"],
-    "POW_ON": ["on", "power_on"],
-    "POW_TOGGLE": ["power_toggle"],
-    "SEEK_BACK": ["reverse", "rewind"],
-    "SEEK_FWD": ["forward", "fast_forward", "ff"],
-    "VOL_DOWN": ["volume_down"],
-    "VOL_UP": ["volume_up"],
-}
-
-_ALIAS_LOOKUP: dict[str, str] = {
-    alias: key for key, aliases in REMOTE_KEY_ALIASES.items() for alias in aliases
-}
-
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -77,9 +52,6 @@ class VizioRemote(CoordinatorEntity[VizioDeviceCoordinator], RemoteEntity):
         self._device = coordinator.device
         valid_keys = set(self._device.get_remote_keys_list())
         self._command_map: dict[str, str] = {key: key for key in valid_keys}
-        for alias, target in _ALIAS_LOOKUP.items():
-            if target in valid_keys:
-                self._command_map[alias.upper()] = target
 
     @property
     def is_on(self) -> bool:

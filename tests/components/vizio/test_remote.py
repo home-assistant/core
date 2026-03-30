@@ -134,30 +134,6 @@ async def test_turn_on_off(hass: HomeAssistant, service: str, mock_method: str) 
         ("UP", "UP"),
         ("VOL_DOWN", "VOL_DOWN"),
         ("VOL_UP", "VOL_UP"),
-        # Aliases
-        ("closed_captions", "CC_TOGGLE"),
-        ("cc", "CC_TOGGLE"),
-        ("channel_down", "CH_DOWN"),
-        ("previous_channel", "CH_PREV"),
-        ("channel_up", "CH_UP"),
-        ("next_input", "INPUT_NEXT"),
-        ("mute", "MUTE_TOGGLE"),
-        ("enter", "OK"),
-        ("select", "OK"),
-        ("picture_mode", "PIC_MODE"),
-        ("picture_size", "PIC_SIZE"),
-        ("off", "POW_OFF"),
-        ("power_off", "POW_OFF"),
-        ("on", "POW_ON"),
-        ("power_on", "POW_ON"),
-        ("power_toggle", "POW_TOGGLE"),
-        ("reverse", "SEEK_BACK"),
-        ("rewind", "SEEK_BACK"),
-        ("forward", "SEEK_FWD"),
-        ("fast_forward", "SEEK_FWD"),
-        ("ff", "SEEK_FWD"),
-        ("volume_down", "VOL_DOWN"),
-        ("volume_up", "VOL_UP"),
     ],
 )
 @pytest.mark.usefixtures("vizio_connect", "vizio_update")
@@ -206,15 +182,6 @@ async def test_send_command_tv_invalid(hass: HomeAssistant, command: str) -> Non
         ("POW_TOGGLE", "POW_TOGGLE"),
         ("vol_down", "VOL_DOWN"),
         ("VOL_UP", "VOL_UP"),
-        # Aliases (only those whose target is a speaker key)
-        ("mute", "MUTE_TOGGLE"),
-        ("off", "POW_OFF"),
-        ("power_off", "POW_OFF"),
-        ("on", "POW_ON"),
-        ("power_on", "POW_ON"),
-        ("power_toggle", "POW_TOGGLE"),
-        ("volume_down", "VOL_DOWN"),
-        ("volume_up", "VOL_UP"),
     ],
 )
 @pytest.mark.usefixtures("vizio_connect", "vizio_update")
@@ -242,10 +209,6 @@ async def test_send_command_speaker_valid(
         "MENU",
         "CH_UP",
         "INPUT_NEXT",
-        # TV-only aliases
-        "channel_up",
-        "enter",
-        "next_input",
         # Completely invalid
         "INVALID_KEY",
     ],
