@@ -2316,11 +2316,10 @@ async def test_mqtt_integration_level_imports(attr: str) -> None:
     "hass_config", [{mqtt.DOMAIN: {"sensor": {"state_topic": "test-topic"}}}]
 )
 async def test_yaml_config_without_entry(
-    hass: HomeAssistant, hass_config: ConfigType
+    hass: HomeAssistant, hass_config: ConfigType, issue_registry: ir.IssueRegistry
 ) -> None:
     """Test a repair issue is created for YAML setup without an active config entry."""
     await async_setup_component(hass, mqtt.DOMAIN, hass_config)
-    issue_registry = ir.async_get(hass)
     issue = issue_registry.async_get_issue(
         mqtt.DOMAIN, "yaml_setup_without_active_setup"
     )
@@ -2338,10 +2337,10 @@ async def test_yaml_config_with_active_mqtt_config_entry(
     hass: HomeAssistant,
     hass_config: ConfigType,
     mqtt_mock_entry: MqttMockHAClientGenerator,
+    issue_registry: ir.IssueRegistry,
 ) -> None:
     """Test no repair issue is created for YAML setup with an active config entry."""
     await mqtt_mock_entry()
-    issue_registry = ir.async_get(hass)
     issue = issue_registry.async_get_issue(
         mqtt.DOMAIN, "yaml_setup_without_active_setup"
     )
