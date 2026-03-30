@@ -44,7 +44,7 @@ send_message:
         text:
           type: url
       example: /static/images/image.jpg
-    tag:
+    tag: &tag
       required: false
       selector:
         text:
@@ -142,3 +142,10 @@ send_message:
       selector:
         object:
       example: "{'customKey': 'customValue'}"
+dismiss_message:
+  target:
+    entity:
+      domain: notify
+      integration: html5
+  fields:
+    tag: *tag
