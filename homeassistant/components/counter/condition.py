@@ -6,7 +6,7 @@ from homeassistant.helpers.condition import Condition, make_entity_numerical_con
 DOMAIN = "counter"
 
 CONDITIONS: dict[str, type[Condition]] = {
-    "is_value": make_entity_numerical_condition(DOMAIN, None),
+    "is_value": make_entity_numerical_condition(DOMAIN),
 }
 
 
