@@ -6,7 +6,7 @@ import json
 from typing import Any
 
 from .brand import validate as validate_brands
-from .model import Brand, Config, Integration
+from .model import Brand, Config, Integration, IntegrationType
 from .serializer import format_python_namespace
 
 UNIQUE_ID_IGNORE = {"huawei_lte", "mqtt", "adguard"}
@@ -75,7 +75,7 @@ def _generate_and_validate(integrations: dict[str, Integration], config: Config)
 
         _validate_integration(config, integration)
 
-        if integration.integration_type == "helper":
+        if integration.integration_type == IntegrationType.HELPER:
             domains["helper"].append(domain)
         else:
             domains["integration"].append(domain)
@@ -94,8 +94,8 @@ def _populate_brand_integrations(
     for domain in sub_integrations:
         integration = integrations.get(domain)
         if not integration or integration.integration_type in (
-            "entity",
-            "system",
+            IntegrationType.ENTITY,
+            IntegrationType.SYSTEM,
         ):
             continue
         metadata: dict[str, Any] = {
@@ -170,7 +170,10 @@ def _generate_integrations(
             result["integration"][domain] = metadata
         else:  # integration
             integration = integrations[domain]
-            if integration.integration_type in ("entity", "system"):
+            if integration.integration_type in (
+                IntegrationType.ENTITY,
+                IntegrationType.SYSTEM,
+            ):
                 continue
 
             if integration.translated_name:
@@ -180,7 +183,7 @@ def _generate_integrations(
 
             metadata["integration_type"] = integration.integration_type
 
-            if integration.integration_type == "virtual":
+            if integration.integration_type == IntegrationType.VIRTUAL:
                 if integration.supported_by:
                     metadata["supported_by"] = integration.supported_by
                 if integration.iot_standards:
@@ -195,7 +198,7 @@ def _generate_integrations(
                 ):
                     metadata["single_config_entry"] = single_config_entry
 
-            if integration.integration_type == "helper":
+            if integration.integration_type == IntegrationType.HELPER:
                 result["helper"][domain] = metadata
             else:
                 result["integration"][domain] = metadata

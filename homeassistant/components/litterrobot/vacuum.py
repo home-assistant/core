@@ -19,7 +19,9 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
 
 from .coordinator import LitterRobotConfigEntry
-from .entity import LitterRobotEntity
+from .entity import LitterRobotEntity, whisker_command
+
+PARALLEL_UPDATES = 1
 
 LITTER_BOX_STATUS_STATE_MAP = {
     LitterBoxStatus.CLEAN_CYCLE: VacuumActivity.CLEANING,
@@ -46,12 +48,24 @@ async def async_setup_entry(
 ) -> None:
     """Set up Litter-Robot cleaner using config entry."""
     coordinator = entry.runtime_data
-    async_add_entities(
-        LitterRobotCleaner(
-            robot=robot, coordinator=coordinator, description=LITTER_BOX_ENTITY
-        )
-        for robot in coordinator.litter_robots()
-    )
+    known_robots: set[str] = set()
+
+    def _check_robots() -> None:
+        all_robots = list(coordinator.litter_robots())
+        current_robots = {robot.serial for robot in all_robots}
+        new_robots = current_robots - known_robots
+        if new_robots:
+            known_robots.update(new_robots)
+            async_add_entities(
+                LitterRobotCleaner(
+                    robot=robot, coordinator=coordinator, description=LITTER_BOX_ENTITY
+                )
+                for robot in all_robots
+                if robot.serial in new_robots
+            )
+
+    _check_robots()
+    entry.async_on_unload(coordinator.async_add_listener(_check_robots))
 
 
 class LitterRobotCleaner(LitterRobotEntity[LitterRobot], StateVacuumEntity):
@@ -66,15 +80,18 @@ class LitterRobotCleaner(LitterRobotEntity[LitterRobot], StateVacuumEntity):
         """Return the state of the cleaner."""
         return LITTER_BOX_STATUS_STATE_MAP.get(self.robot.status, VacuumActivity.ERROR)
 
+    @whisker_command
     async def async_start(self) -> None:
         """Start a clean cycle."""
         await self.robot.set_power_status(True)
         await self.robot.start_cleaning()
 
+    @whisker_command
     async def async_stop(self, **kwargs: Any) -> None:
         """Stop the vacuum cleaner."""
         await self.robot.set_power_status(False)
 
+    @whisker_command
     async def async_set_sleep_mode(
         self, enabled: bool, start_time: str | None = None
     ) -> None:
