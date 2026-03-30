@@ -25,6 +25,8 @@ ADMIN_SERVICES = {
     SERVICE_SUSPEND_INTEGRATION,
 }
 
+SMS_EVENT_SIGNAL = f"{DOMAIN}_sms_event"
+
 KEY_DEVICE_BASIC_INFORMATION = "device_basic_information"
 KEY_DEVICE_INFORMATION = "device_information"
 KEY_DEVICE_SIGNAL = "device_signal"
@@ -37,6 +39,7 @@ KEY_MONITORING_TRAFFIC_STATISTICS = "monitoring_traffic_statistics"
 KEY_NET_CURRENT_PLMN = "net_current_plmn"
 KEY_NET_NET_MODE = "net_net_mode"
 KEY_SMS_SMS_COUNT = "sms_sms_count"
+KEY_SMS_SMS_LIST = "sms_sms_list"
 KEY_WLAN_HOST_LIST = "wlan_host_list"
 KEY_WLAN_WIFI_FEATURE_SWITCH = "wlan_wifi_feature_switch"
 KEY_WLAN_WIFI_GUEST_NETWORK_SWITCH = "wlan_wifi_guest_network_switch"
@@ -71,7 +74,7 @@ ALL_KEYS = (
     | DEVICE_TRACKER_KEYS
     | SENSOR_KEYS
     | SWITCH_KEYS
-    | {KEY_DEVICE_BASIC_INFORMATION}
+    | {KEY_DEVICE_BASIC_INFORMATION, KEY_SMS_SMS_LIST}
 )
 
 BUTTON_KEY_CLEAR_TRAFFIC_STATISTICS = "clear_traffic_statistics"

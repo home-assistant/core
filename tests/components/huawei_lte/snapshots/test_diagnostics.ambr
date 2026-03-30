@@ -159,6 +159,35 @@
         'SimUnread': '0',
         'SimUsed': '0',
       }),
+      'sms_sms_list': dict({
+        'Count': '2',
+        'Messages': dict({
+          'Message': list([
+            dict({
+              'Content': '**REDACTED**',
+              'Date': '2026-03-29 10:00:00',
+              'Index': '40001',
+              'Phone': '**REDACTED**',
+              'Priority': '0',
+              'SaveType': '4',
+              'Sca': None,
+              'SmsType': '1',
+              'Smstat': '0',
+            }),
+            dict({
+              'Content': '**REDACTED**',
+              'Date': '2026-03-29 09:00:00',
+              'Index': '40002',
+              'Phone': '**REDACTED**',
+              'Priority': '0',
+              'SaveType': '4',
+              'Sca': None,
+              'SmsType': '1',
+              'Smstat': '1',
+            }),
+          ]),
+        }),
+      }),
       'wlan_wifi_feature_switch': dict({
         'acmode_enable': '1',
         'chinesessid_enable': '0',

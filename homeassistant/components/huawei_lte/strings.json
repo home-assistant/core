@@ -73,6 +73,18 @@
         "name": "Clear traffic statistics"
       }
     },
+    "event": {
+      "sms_received": {
+        "name": "SMS received",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "sms_received": "SMS received"
+            }
+          }
+        }
+      }
+    },
     "select": {
       "preferred_network_mode": {
         "name": "Preferred network mode",
@@ -156,6 +168,9 @@
       },
       "lac": {
         "name": "LAC"
+      },
+      "last_sms": {
+        "name": "Last SMS"
       },
       "lte_downlink_frequency": {
         "name": "LTE downlink frequency"
