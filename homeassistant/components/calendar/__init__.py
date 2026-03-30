@@ -664,15 +664,13 @@ class CalendarEntityComponent(EntityComponent[CalendarEntity]):
     Sets up frontend resources and websocket API when the first platform is added.
     """
 
+    _frontend_loaded: bool = False
+
     async def async_setup_entry(self, config_entry: ConfigEntry) -> bool:
         """Set up a config entry."""
-        num_platforms_before = len(self._platforms)
-
         result = await super().async_setup_entry(config_entry)
 
-        # There will always be at least one platform, the calendar platform itself.
-        if num_platforms_before == 1 and len(self._platforms) == 2:
-            # First calendar platform was added, set up frontend resources
+        if not self._frontend_loaded:
             self._register_frontend_resources()
 
         return result
@@ -684,19 +682,16 @@ class CalendarEntityComponent(EntityComponent[CalendarEntity]):
         discovery_info: DiscoveryInfoType | None = None,
     ) -> None:
         """Set up a platform for this component."""
-        num_platforms_before = len(self._platforms)
-
         await super().async_setup_platform(
             platform_type, platform_config, discovery_info
         )
 
-        # There will always be at least one platform, the calendar platform itself.
-        if num_platforms_before == 1 and len(self._platforms) == 2:
-            # First calendar platform was added, set up frontend resources
+        if not self._frontend_loaded:
             self._register_frontend_resources()
 
     def _register_frontend_resources(self) -> None:
         """Register frontend resources for calendar."""
+        self._frontend_loaded = True
         self.hass.http.register_view(CalendarListView(self))
         self.hass.http.register_view(CalendarEventView(self))
 
