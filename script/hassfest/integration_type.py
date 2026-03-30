@@ -55,7 +55,6 @@ MISSING_INTEGRATION_TYPE = {
     "ness_alarm",
     "nmap_tracker",
     "otp",
-    "orvibo",
     "profiler",
     "proximity",
     "rhasspy",
