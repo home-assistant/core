@@ -381,6 +381,23 @@
       }
     }
   },
+  "exceptions": {
+    "router_suspended": {
+      "message": "Router is suspended. Resume it before using SMS services."
+    },
+    "router_unavailable": {
+      "message": "Router with entry ID {entry_id} is not available."
+    },
+    "sms_delete_failed": {
+      "message": "Failed to delete SMS message {index}."
+    },
+    "sms_list_failed": {
+      "message": "Failed to fetch SMS list from the router."
+    },
+    "sms_mark_read_failed": {
+      "message": "Failed to mark SMS message {index} as read."
+    }
+  },
   "options": {
     "step": {
       "init": {
@@ -400,6 +417,52 @@
     }
   },
   "services": {
+    "delete_sms": {
+      "description": "Deletes an SMS message by its index.",
+      "fields": {
+        "config_entry_id": {
+          "description": "The config entry of the router to use.",
+          "name": "Config entry"
+        },
+        "index": {
+          "description": "The numeric ID of the SMS message as returned by the get_sms_list service.",
+          "name": "Message index"
+        }
+      },
+      "name": "Delete SMS"
+    },
+    "get_sms_list": {
+      "description": "Fetches a list of SMS messages from the router inbox.",
+      "fields": {
+        "config_entry_id": {
+          "description": "The config entry of the router to use.",
+          "name": "Config entry"
+        },
+        "count": {
+          "description": "Number of messages per page.",
+          "name": "Count"
+        },
+        "page": {
+          "description": "Page number to fetch (starting from 1).",
+          "name": "Page"
+        }
+      },
+      "name": "Get SMS list"
+    },
+    "mark_sms_read": {
+      "description": "Marks an SMS message as read by its index.",
+      "fields": {
+        "config_entry_id": {
+          "description": "The config entry of the router to use.",
+          "name": "Config entry"
+        },
+        "index": {
+          "description": "The numeric ID of the SMS message as returned by the get_sms_list service.",
+          "name": "Message index"
+        }
+      },
+      "name": "Mark SMS as read"
+    },
     "resume_integration": {
       "description": "Resumes suspended integration.",
       "fields": {

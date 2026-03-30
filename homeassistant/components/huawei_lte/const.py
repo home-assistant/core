@@ -25,6 +25,10 @@ ADMIN_SERVICES = {
     SERVICE_SUSPEND_INTEGRATION,
 }
 
+SERVICE_DELETE_SMS = "delete_sms"
+SERVICE_GET_SMS_LIST = "get_sms_list"
+SERVICE_MARK_SMS_READ = "mark_sms_read"
+
 KEY_DEVICE_BASIC_INFORMATION = "device_basic_information"
 KEY_DEVICE_INFORMATION = "device_information"
 KEY_DEVICE_SIGNAL = "device_signal"

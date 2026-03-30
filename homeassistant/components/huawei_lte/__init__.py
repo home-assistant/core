@@ -13,6 +13,7 @@ from xml.parsers.expat import ExpatError
 
 from huawei_lte_api.Client import Client
 from huawei_lte_api.Connection import Connection
+from huawei_lte_api.enums.sms import BoxTypeEnum, SortTypeEnum
 from huawei_lte_api.exceptions import (
     LoginErrorInvalidCredentialsException,
     ResponseErrorException,
@@ -38,8 +39,13 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
     Platform,
 )
-from homeassistant.core import HomeAssistant, ServiceCall
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.core import HomeAssistant, ServiceCall, SupportsResponse
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    ConfigEntryNotReady,
+    HomeAssistantError,
+    ServiceValidationError,
+)
 from homeassistant.helpers import (
     config_validation as cv,
     device_registry as dr,
@@ -78,6 +84,9 @@ from .const import (
     KEY_WLAN_HOST_LIST,
     KEY_WLAN_WIFI_FEATURE_SWITCH,
     KEY_WLAN_WIFI_GUEST_NETWORK_SWITCH,
+    SERVICE_DELETE_SMS,
+    SERVICE_GET_SMS_LIST,
+    SERVICE_MARK_SMS_READ,
     SERVICE_RESUME_INTEGRATION,
     SERVICE_SUSPEND_INTEGRATION,
     UPDATE_SIGNAL,
@@ -91,6 +100,54 @@ SCAN_INTERVAL = timedelta(seconds=30)
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 SERVICE_SCHEMA = vol.Schema({vol.Optional(CONF_URL): cv.url})
+
+SERVICE_SCHEMA_SMS_LIST = vol.Schema(
+    {
+        vol.Required(ATTR_CONFIG_ENTRY_ID): cv.string,
+        vol.Optional("page", default=1): vol.All(
+            vol.Coerce(int), vol.Range(min=1, max=100)
+        ),
+        vol.Optional("count", default=20): vol.All(
+            vol.Coerce(int), vol.Range(min=1, max=50)
+        ),
+    }
+)
+
+SERVICE_SCHEMA_SMS_INDEX = vol.Schema(
+    {
+        vol.Required(ATTR_CONFIG_ENTRY_ID): cv.string,
+        vol.Required("index"): vol.All(vol.Coerce(int), vol.Range(min=0)),
+    }
+)
+
+
+def _safe_int(value: Any, default: int = 0) -> int:
+    """Safely convert a value to int."""
+    try:
+        return int(value)
+    except Exception:  # noqa: BLE001
+        return default
+
+
+def parse_sms_list(data: dict[str, Any]) -> list[dict[str, Any]]:
+    """Parse SMS list response into a list of message dicts."""
+    messages_container = data.get("Messages")
+    if not messages_container:
+        return []
+    messages_raw = messages_container.get("Message", [])
+    if isinstance(messages_raw, dict):
+        messages_raw = [messages_raw]
+    return [
+        {
+            "index": _safe_int(msg.get("Index"), 0),
+            "phone": msg.get("Phone", ""),
+            "content": msg.get("Content", ""),
+            "date": msg.get("Date", ""),
+            "read": _safe_int(msg.get("Smstat"), 0) == 1,
+        }
+        for msg in messages_raw
+    ]
+
 
 PLATFORMS = [
     Platform.BINARY_SENSOR,
@@ -452,6 +509,20 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
     return True
 
 
+def _get_router_from_service(hass: HomeAssistant, service: ServiceCall) -> Router:
+    """Get router from service call data."""
+    routers: dict[str, Router] = hass.data[DOMAIN].routers
+    entry_id: str = service.data[ATTR_CONFIG_ENTRY_ID]
+    router = routers.get(entry_id)
+    if not router:
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="router_unavailable",
+            translation_placeholders={"entry_id": entry_id},
+        )
+    return router
+
+
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up Huawei LTE component."""
 
@@ -504,6 +575,86 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             service_handler,
             schema=SERVICE_SCHEMA,
         )
+
+    def _get_router(service: ServiceCall) -> Router:
+        router = _get_router_from_service(hass, service)
+        if router.suspended:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="router_suspended",
+            )
+        return router
+
+    async def handle_get_sms_list(service: ServiceCall) -> dict[str, Any]:
+        """Handle get_sms_list service call."""
+        router = _get_router(service)
+        try:
+            response = await hass.async_add_executor_job(
+                router.client.sms.get_sms_list,
+                service.data["page"],
+                BoxTypeEnum.LOCAL_INBOX,
+                service.data["count"],
+                SortTypeEnum.DATE,
+                False,
+                True,
+            )
+        except (ResponseErrorException, ResponseErrorLoginRequiredException) as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="sms_list_failed",
+            ) from err
+        return {"messages": parse_sms_list(response)}
+
+    async def handle_delete_sms(service: ServiceCall) -> None:
+        """Handle delete_sms service call."""
+        router = _get_router(service)
+        try:
+            await hass.async_add_executor_job(
+                router.client.sms.delete_sms, service.data["index"]
+            )
+        except (ResponseErrorException, ResponseErrorLoginRequiredException) as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="sms_delete_failed",
+                translation_placeholders={"index": str(service.data["index"])},
+            ) from err
+
+    async def handle_mark_sms_read(service: ServiceCall) -> None:
+        """Handle mark_sms_read service call."""
+        router = _get_router(service)
+        try:
+            await hass.async_add_executor_job(
+                router.client.sms.set_read, service.data["index"]
+            )
+        except (ResponseErrorException, ResponseErrorLoginRequiredException) as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="sms_mark_read_failed",
+                translation_placeholders={"index": str(service.data["index"])},
+            ) from err
+
+    async_register_admin_service(
+        hass,
+        DOMAIN,
+        SERVICE_GET_SMS_LIST,
+        handle_get_sms_list,
+        schema=SERVICE_SCHEMA_SMS_LIST,
+        supports_response=SupportsResponse.ONLY,
+    )
+    async_register_admin_service(
+        hass,
+        DOMAIN,
+        SERVICE_DELETE_SMS,
+        handle_delete_sms,
+        schema=SERVICE_SCHEMA_SMS_INDEX,
+    )
+    async_register_admin_service(
+        hass,
+        DOMAIN,
+        SERVICE_MARK_SMS_READ,
+        handle_mark_sms_read,
+        schema=SERVICE_SCHEMA_SMS_INDEX,
+    )
 
     return True
 

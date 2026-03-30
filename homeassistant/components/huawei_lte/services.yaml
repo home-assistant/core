@@ -11,3 +11,53 @@ suspend_integration:
       example: http://192.168.100.1/
       selector:
         text:
+
+get_sms_list:
+  fields:
+    config_entry_id:
+      required: true
+      selector:
+        config_entry:
+          integration: huawei_lte
+    page:
+      default: 1
+      selector:
+        number:
+          min: 1
+          max: 100
+          mode: box
+    count:
+      default: 20
+      selector:
+        number:
+          min: 1
+          max: 50
+          mode: box
+
+delete_sms:
+  fields:
+    config_entry_id:
+      required: true
+      selector:
+        config_entry:
+          integration: huawei_lte
+    index:
+      required: true
+      selector:
+        number:
+          min: 0
+          mode: box
+
+mark_sms_read:
+  fields:
+    config_entry_id:
+      required: true
+      selector:
+        config_entry:
+          integration: huawei_lte
+    index:
+      required: true
+      selector:
+        number:
+          min: 0
+          mode: box
