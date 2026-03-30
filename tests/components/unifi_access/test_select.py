@@ -26,8 +26,15 @@ from . import setup_integration
 
 from tests.common import MockConfigEntry, snapshot_platform
 
-FRONT_DOOR_LOCK_RULE_SELECT_ENTITY = "select.front_door_lock_rule"
-BACK_DOOR_LOCK_RULE_SELECT_ENTITY = "select.back_door_lock_rule"
+FRONT_DOOR_LOCK_RULE_SELECT_UNIQUE_ID = "door-001-lock_rule_select"
+BACK_DOOR_LOCK_RULE_SELECT_UNIQUE_ID = "door-002-lock_rule_select"
+
+
+def _select_entity_id(entity_registry: er.EntityRegistry, unique_id: str) -> str:
+    """Return the entity ID for a select entity."""
+    entity_id = entity_registry.async_get_entity_id("select", "unifi_access", unique_id)
+    assert entity_id is not None
+    return entity_id
 
 
 @pytest.fixture(autouse=True)
@@ -59,12 +66,15 @@ async def test_select_current_option_no_rule(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_client: MagicMock,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test select reflects unknown state when no lock rule is active."""
     mock_client.get_door_lock_rule = AsyncMock(return_value=DoorLockRuleStatus())
     await setup_integration(hass, mock_config_entry)
 
-    state = hass.states.get(FRONT_DOOR_LOCK_RULE_SELECT_ENTITY)
+    state = hass.states.get(
+        _select_entity_id(entity_registry, FRONT_DOOR_LOCK_RULE_SELECT_UNIQUE_ID)
+    )
     assert state is not None
     assert state.state == STATE_UNKNOWN
 
@@ -73,6 +83,7 @@ async def test_select_current_option_active_rule(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_client: MagicMock,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test select reflects the current lock rule type."""
     mock_client.get_door_lock_rule = AsyncMock(
@@ -80,7 +91,9 @@ async def test_select_current_option_active_rule(
     )
     await setup_integration(hass, mock_config_entry)
 
-    state = hass.states.get(FRONT_DOOR_LOCK_RULE_SELECT_ENTITY)
+    state = hass.states.get(
+        _select_entity_id(entity_registry, FRONT_DOOR_LOCK_RULE_SELECT_UNIQUE_ID)
+    )
     assert state is not None
     assert state.state == "keep_lock"
 
@@ -89,6 +102,7 @@ async def test_select_option_calls_api(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_client: MagicMock,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test selecting an option calls set_door_lock_rule on the client."""
     mock_client.get_door_lock_rule = AsyncMock(return_value=DoorLockRuleStatus())
@@ -97,7 +111,12 @@ async def test_select_option_calls_api(
     await hass.services.async_call(
         Platform.SELECT,
         "select_option",
-        {"entity_id": FRONT_DOOR_LOCK_RULE_SELECT_ENTITY, "option": "keep_lock"},
+        {
+            "entity_id": _select_entity_id(
+                entity_registry, FRONT_DOOR_LOCK_RULE_SELECT_UNIQUE_ID
+            ),
+            "option": "keep_lock",
+        },
         blocking=True,
     )
 
@@ -110,6 +129,7 @@ async def test_select_schedule_option_does_not_call_api(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_client: MagicMock,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test selecting schedule does not call the API."""
     mock_client.get_door_lock_rule = AsyncMock(
@@ -120,7 +140,12 @@ async def test_select_schedule_option_does_not_call_api(
     await hass.services.async_call(
         Platform.SELECT,
         "select_option",
-        {"entity_id": FRONT_DOOR_LOCK_RULE_SELECT_ENTITY, "option": "schedule"},
+        {
+            "entity_id": _select_entity_id(
+                entity_registry, FRONT_DOOR_LOCK_RULE_SELECT_UNIQUE_ID
+            ),
+            "option": "schedule",
+        },
         blocking=True,
     )
 
@@ -131,18 +156,25 @@ async def test_select_not_created_when_lock_rules_unsupported(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_client: MagicMock,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test that select entities are not created when lock rules are unsupported."""
     mock_client.get_door_lock_rule = AsyncMock(side_effect=ApiNotFoundError())
     await setup_integration(hass, mock_config_entry)
 
-    assert hass.states.get(FRONT_DOOR_LOCK_RULE_SELECT_ENTITY) is None
+    assert (
+        entity_registry.async_get_entity_id(
+            "select", "unifi_access", FRONT_DOOR_LOCK_RULE_SELECT_UNIQUE_ID
+        )
+        is None
+    )
 
 
 async def test_select_lock_early_option_shown_for_schedule_rule(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_client: MagicMock,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test lock_early appears in options when a schedule rule is active."""
     mock_client.get_door_lock_rule = AsyncMock(
@@ -150,7 +182,9 @@ async def test_select_lock_early_option_shown_for_schedule_rule(
     )
     await setup_integration(hass, mock_config_entry)
 
-    state = hass.states.get(FRONT_DOOR_LOCK_RULE_SELECT_ENTITY)
+    state = hass.states.get(
+        _select_entity_id(entity_registry, FRONT_DOOR_LOCK_RULE_SELECT_UNIQUE_ID)
+    )
     assert state is not None
     assert state.state == "schedule"
     assert "schedule" in state.attributes["options"]
@@ -161,6 +195,7 @@ async def test_select_lock_early_option_hidden_for_non_schedule_rule(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_client: MagicMock,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test lock_early is absent from options when no schedule rule is active."""
     mock_client.get_door_lock_rule = AsyncMock(
@@ -168,7 +203,9 @@ async def test_select_lock_early_option_hidden_for_non_schedule_rule(
     )
     await setup_integration(hass, mock_config_entry)
 
-    state = hass.states.get(FRONT_DOOR_LOCK_RULE_SELECT_ENTITY)
+    state = hass.states.get(
+        _select_entity_id(entity_registry, FRONT_DOOR_LOCK_RULE_SELECT_UNIQUE_ID)
+    )
     assert state is not None
     assert "lock_early" not in state.attributes["options"]
 
@@ -177,6 +214,7 @@ async def test_select_created_for_supported_doors_only(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_client: MagicMock,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test select entities are created only for doors that support lock rules."""
 
@@ -191,14 +229,25 @@ async def test_select_created_for_supported_doors_only(
 
     await setup_integration(hass, mock_config_entry)
 
-    assert hass.states.get(FRONT_DOOR_LOCK_RULE_SELECT_ENTITY) is not None
-    assert hass.states.get(BACK_DOOR_LOCK_RULE_SELECT_ENTITY) is None
+    assert (
+        hass.states.get(
+            _select_entity_id(entity_registry, FRONT_DOOR_LOCK_RULE_SELECT_UNIQUE_ID)
+        )
+        is not None
+    )
+    assert (
+        entity_registry.async_get_entity_id(
+            "select", "unifi_access", BACK_DOOR_LOCK_RULE_SELECT_UNIQUE_ID
+        )
+        is None
+    )
 
 
 async def test_select_placeholder_created_for_transient_error_doors(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_client: MagicMock,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test select placeholders are created for doors with transient fetch errors."""
 
@@ -211,15 +260,24 @@ async def test_select_placeholder_created_for_transient_error_doors(
 
     await setup_integration(hass, mock_config_entry)
 
-    assert hass.states.get(FRONT_DOOR_LOCK_RULE_SELECT_ENTITY) is not None
-    assert hass.states.get(FRONT_DOOR_LOCK_RULE_SELECT_ENTITY).state == STATE_UNKNOWN
-    assert hass.states.get(BACK_DOOR_LOCK_RULE_SELECT_ENTITY) is None
+    front_entity_id = _select_entity_id(
+        entity_registry, FRONT_DOOR_LOCK_RULE_SELECT_UNIQUE_ID
+    )
+    assert hass.states.get(front_entity_id) is not None
+    assert hass.states.get(front_entity_id).state == STATE_UNKNOWN
+    assert (
+        entity_registry.async_get_entity_id(
+            "select", "unifi_access", BACK_DOOR_LOCK_RULE_SELECT_UNIQUE_ID
+        )
+        is None
+    )
 
 
 async def test_select_option_raises_on_api_error(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_client: MagicMock,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test HomeAssistantError is raised when set_door_lock_rule fails."""
     mock_client.get_door_lock_rule = AsyncMock(return_value=DoorLockRuleStatus())
@@ -234,7 +292,9 @@ async def test_select_option_raises_on_api_error(
             Platform.SELECT,
             "select_option",
             {
-                "entity_id": FRONT_DOOR_LOCK_RULE_SELECT_ENTITY,
+                "entity_id": _select_entity_id(
+                    entity_registry, FRONT_DOOR_LOCK_RULE_SELECT_UNIQUE_ID
+                ),
                 "option": "keep_lock",
             },
             blocking=True,
