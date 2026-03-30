@@ -7,7 +7,6 @@ from unittest.mock import AsyncMock, MagicMock, patch
 from threema.gateway import GatewayError
 from threema.gateway.exception import GatewayServerError
 
-from homeassistant.components.threema.client import ThreemaAuthError
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
@@ -61,9 +60,14 @@ async def test_setup_entry_auth_error(
     mock_config_entry.add_to_hass(hass)
 
     with patch(
-        "homeassistant.components.threema.ThreemaAPIClient.validate_credentials",
-        side_effect=ThreemaAuthError("Invalid credentials"),
-    ):
+        "homeassistant.components.threema.client.Connection", autospec=True
+    ) as connection_class:
+        connection = MagicMock()
+        connection.__aenter__ = AsyncMock(return_value=connection)
+        connection.__aexit__ = AsyncMock(return_value=None)
+        connection.get_credits = AsyncMock(side_effect=GatewayServerError(status=401))
+        connection_class.return_value = connection
+
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
 

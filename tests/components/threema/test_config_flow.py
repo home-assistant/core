@@ -316,6 +316,31 @@ async def test_credentials_invalid_auth(hass: HomeAssistant) -> None:
     assert result["errors"] == {"base": "invalid_auth"}
 
 
+async def test_credentials_unknown_error(hass: HomeAssistant) -> None:
+    """Test credentials step with unexpected error."""
+    with patch(
+        "homeassistant.components.threema.config_flow.ThreemaAPIClient.validate_credentials",
+        side_effect=RuntimeError("Unexpected"),
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={"setup_type": "add_gateway"},
+        )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={
+                CONF_GATEWAY_ID: MOCK_GATEWAY_ID,
+                CONF_API_SECRET: MOCK_API_SECRET,
+            },
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "unknown"}
+
+
 async def test_reauth_flow_invalid_auth(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
@@ -416,6 +441,51 @@ async def test_reauth_flow_cannot_connect(
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "cannot_connect"}
+
+
+async def test_reauth_flow_unknown_error(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test reauth flow with unexpected error."""
+    mock_config_entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.threema.config_flow.ThreemaAPIClient.validate_credentials",
+        side_effect=RuntimeError("Unexpected"),
+    ):
+        result = await mock_config_entry.start_reauth_flow(hass)
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={
+                CONF_API_SECRET: "new_secret",
+            },
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "unknown"}
+
+
+async def test_reauth_flow_updates_private_key(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_connection: MagicMock,
+) -> None:
+    """Test reauth flow updates private key when provided."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await mock_config_entry.start_reauth_flow(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_API_SECRET: "new_secret",
+            CONF_PRIVATE_KEY: "private:newkey123",
+        },
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    assert mock_config_entry.data[CONF_PRIVATE_KEY] == "private:newkey123"
 
 
 async def test_subentry_add_recipient(
