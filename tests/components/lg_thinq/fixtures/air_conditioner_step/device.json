@@ -1,0 +1,9 @@
+{
+  "deviceId": "MW2-A3F84FBB-469E-4E68-810B-55C3C8A4AB69",
+  "deviceInfo": {
+    "deviceType": "DEVICE_AIR_CONDITIONER",
+    "modelName": "RAC_056905_WW",
+    "alias": "Test step air conditioner",
+    "reportable": true
+  }
+}

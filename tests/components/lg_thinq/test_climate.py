@@ -16,7 +16,7 @@ from tests.common import MockConfigEntry, snapshot_platform
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
-@pytest.mark.parametrize("device_fixture", ["air_conditioner"])
+@pytest.mark.parametrize("device_fixture", ["air_conditioner", "air_conditioner_step"])
 async def test_climate_entities(
     hass: HomeAssistant,
     snapshot: SnapshotAssertion,
