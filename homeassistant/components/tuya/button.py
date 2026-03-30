@@ -2,6 +2,10 @@
 
 from __future__ import annotations
 
+from tuya_device_handlers.definition.button import (
+    TuyaButtonDefinition,
+    get_default_definition,
+)
 from tuya_sharing import CustomerDevice, Manager
 
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
@@ -13,7 +17,6 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from . import TuyaConfigEntry
 from .const import TUYA_DISCOVERY_NEW, DeviceCategory, DPCode
 from .entity import TuyaEntity
-from .models import DPCodeBooleanWrapper
 
 BUTTONS: dict[DeviceCategory, tuple[ButtonEntityDescription, ...]] = {
     DeviceCategory.HXD: (
@@ -81,13 +84,9 @@ async def async_setup_entry(
             device = manager.device_map[device_id]
             if descriptions := BUTTONS.get(device.category):
                 entities.extend(
-                    TuyaButtonEntity(device, manager, description, dpcode_wrapper)
+                    TuyaButtonEntity(device, manager, description, definition)
                     for description in descriptions
-                    if (
-                        dpcode_wrapper := DPCodeBooleanWrapper.find_dpcode(
-                            device, description.key, prefer_function=True
-                        )
-                    )
+                    if (definition := get_default_definition(device, description.key))
                 )
 
         async_add_entities(entities)
@@ -107,13 +106,11 @@ class TuyaButtonEntity(TuyaEntity, ButtonEntity):
         device: CustomerDevice,
         device_manager: Manager,
         description: ButtonEntityDescription,
-        dpcode_wrapper: DPCodeBooleanWrapper,
+        definition: TuyaButtonDefinition,
     ) -> None:
         """Init Tuya button."""
-        super().__init__(device, device_manager)
-        self.entity_description = description
-        self._attr_unique_id = f"{super().unique_id}{description.key}"
-        self._dpcode_wrapper = dpcode_wrapper
+        super().__init__(device, device_manager, description)
+        self._dpcode_wrapper = definition.button_wrapper
 
     async def async_press(self) -> None:
         """Press the button."""

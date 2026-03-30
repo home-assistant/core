@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_entities[sensor.test_roomba_average_mission_time-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -20,6 +21,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Average mission time',
     'options': dict({
     }),
     'original_device_class': None,
@@ -50,8 +52,9 @@
 # ---
 # name: test_entities[sensor.test_roomba_battery-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -69,6 +72,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
@@ -100,8 +104,9 @@
 # ---
 # name: test_entities[sensor.test_roomba_battery_cycles-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -121,6 +126,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery cycles',
     'options': dict({
     }),
     'original_device_class': None,
@@ -151,8 +157,9 @@
 # ---
 # name: test_entities[sensor.test_roomba_canceled_missions-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -172,6 +179,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Canceled missions',
     'options': dict({
     }),
     'original_device_class': None,
@@ -203,8 +211,9 @@
 # ---
 # name: test_entities[sensor.test_roomba_dock_tank_level-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -222,6 +231,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Dock tank level',
     'options': dict({
     }),
     'original_device_class': None,
@@ -252,8 +262,9 @@
 # ---
 # name: test_entities[sensor.test_roomba_failed_missions-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -273,6 +284,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Failed missions',
     'options': dict({
     }),
     'original_device_class': None,
@@ -304,8 +316,9 @@
 # ---
 # name: test_entities[sensor.test_roomba_last_mission_start_time-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -323,6 +336,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Last mission start time',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -353,8 +367,9 @@
 # ---
 # name: test_entities[sensor.test_roomba_scrubs-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -374,6 +389,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Scrubs',
     'options': dict({
     }),
     'original_device_class': None,
@@ -405,8 +421,9 @@
 # ---
 # name: test_entities[sensor.test_roomba_successful_missions-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -426,6 +443,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Successful missions',
     'options': dict({
     }),
     'original_device_class': None,
@@ -457,8 +475,9 @@
 # ---
 # name: test_entities[sensor.test_roomba_tank_level-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -476,6 +495,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Tank level',
     'options': dict({
     }),
     'original_device_class': None,
@@ -506,8 +526,9 @@
 # ---
 # name: test_entities[sensor.test_roomba_total_cleaned_area-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -525,6 +546,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Total cleaned area',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -558,8 +580,9 @@
 # ---
 # name: test_entities[sensor.test_roomba_total_cleaning_time-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -577,6 +600,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Total cleaning time',
     'options': dict({
     }),
     'original_device_class': None,
@@ -607,8 +631,9 @@
 # ---
 # name: test_entities[sensor.test_roomba_total_missions-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -628,6 +653,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Total missions',
     'options': dict({
     }),
     'original_device_class': None,

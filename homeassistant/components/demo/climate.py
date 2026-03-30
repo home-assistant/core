@@ -67,6 +67,7 @@ async def async_setup_entry(
                 target_temp_high=None,
                 target_temp_low=None,
                 hvac_modes=[cls for cls in HVACMode if cls != HVACMode.HEAT_COOL],
+                target_humidity_step=5,
             ),
             DemoClimate(
                 unique_id="climate_3",
@@ -118,6 +119,7 @@ class DemoClimate(ClimateEntity):
         target_temp_low: float | None,
         hvac_modes: list[HVACMode],
         preset_modes: list[str] | None = None,
+        target_humidity_step: int | None = None,
     ) -> None:
         """Initialize the climate device."""
         self._unique_id = unique_id
@@ -163,6 +165,7 @@ class DemoClimate(ClimateEntity):
             identifiers={(DOMAIN, unique_id)},
             name=device_name,
         )
+        self._attr_target_humidity_step = target_humidity_step
 
     @property
     def unique_id(self) -> str:

@@ -2,6 +2,10 @@
 
 from __future__ import annotations
 
+from tuya_device_handlers.definition.camera import (
+    TuyaCameraDefinition,
+    get_default_definition,
+)
 from tuya_sharing import CustomerDevice, Manager
 
 from homeassistant.components import ffmpeg
@@ -11,9 +15,8 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import TuyaConfigEntry
-from .const import TUYA_DISCOVERY_NEW, DeviceCategory, DPCode
+from .const import TUYA_DISCOVERY_NEW, DeviceCategory
 from .entity import TuyaEntity
-from .models import DPCodeBooleanWrapper
 
 CAMERAS: tuple[DeviceCategory, ...] = (
     DeviceCategory.DGHSXJ,
@@ -37,16 +40,7 @@ async def async_setup_entry(
             device = manager.device_map[device_id]
             if device.category in CAMERAS:
                 entities.append(
-                    TuyaCameraEntity(
-                        device,
-                        manager,
-                        motion_detection_switch=DPCodeBooleanWrapper.find_dpcode(
-                            device, DPCode.MOTION_SWITCH, prefer_function=True
-                        ),
-                        recording_status=DPCodeBooleanWrapper.find_dpcode(
-                            device, DPCode.RECORD_SWITCH
-                        ),
-                    )
+                    TuyaCameraEntity(device, manager, get_default_definition(device))
                 )
 
         async_add_entities(entities)
@@ -69,16 +63,14 @@ class TuyaCameraEntity(TuyaEntity, CameraEntity):
         self,
         device: CustomerDevice,
         device_manager: Manager,
-        *,
-        motion_detection_switch: DPCodeBooleanWrapper | None = None,
-        recording_status: DPCodeBooleanWrapper | None = None,
+        definition: TuyaCameraDefinition,
     ) -> None:
         """Init Tuya Camera."""
         super().__init__(device, device_manager)
         CameraEntity.__init__(self)
         self._attr_model = device.product_name
-        self._motion_detection_switch = motion_detection_switch
-        self._recording_status = recording_status
+        self._motion_detection_switch = definition.motion_detection_switch
+        self._recording_status = definition.recording_status
 
     @property
     def is_recording(self) -> bool:

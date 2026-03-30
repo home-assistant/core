@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+from typing import Any
 
 import voluptuous as vol
 
@@ -15,6 +16,7 @@ from homeassistant.components.notify import (
     BaseNotificationService,
 )
 from homeassistant.components.telegram_bot import (
+    ATTR_CHAT_ID,
     ATTR_DISABLE_NOTIF,
     ATTR_DISABLE_WEB_PREV,
     ATTR_MESSAGE_TAG,
@@ -57,7 +59,7 @@ async def async_get_service(
         hass,
         DOMAIN,
         "migrate_notify",
-        breaks_in_ha_version="2026.5.0",
+        breaks_in_ha_version="2026.8.0",
         is_fixable=False,
         translation_key="migrate_notify",
         severity=ir.IssueSeverity.WARNING,
@@ -77,13 +79,9 @@ class TelegramNotificationService(BaseNotificationService):
         self._chat_id = chat_id
         self.hass = hass
 
-    def send_message(self, message="", **kwargs):
+    def send_message(self, message: str = "", **kwargs: Any) -> None:
         """Send a message to a user."""
-        service_data = {ATTR_TARGET: kwargs.get(ATTR_TARGET, self._chat_id)}
-        if ATTR_TITLE in kwargs:
-            service_data.update({ATTR_TITLE: kwargs.get(ATTR_TITLE)})
-        if message:
-            service_data.update({ATTR_MESSAGE: message})
+        service_data = {ATTR_CHAT_ID: kwargs.get(ATTR_TARGET, self._chat_id)}
         data = kwargs.get(ATTR_DATA)
 
         # Set message tag
@@ -130,7 +128,7 @@ class TelegramNotificationService(BaseNotificationService):
                 self.hass.services.call(
                     TELEGRAM_BOT_DOMAIN, "send_photo", service_data=service_data
                 )
-            return None
+            return
         if data is not None and ATTR_VIDEO in data:
             videos = data.get(ATTR_VIDEO)
             videos = videos if isinstance(videos, list) else [videos]
@@ -139,7 +137,7 @@ class TelegramNotificationService(BaseNotificationService):
                 self.hass.services.call(
                     TELEGRAM_BOT_DOMAIN, "send_video", service_data=service_data
                 )
-            return None
+            return
         if data is not None and ATTR_VOICE in data:
             voices = data.get(ATTR_VOICE)
             voices = voices if isinstance(voices, list) else [voices]
@@ -148,24 +146,32 @@ class TelegramNotificationService(BaseNotificationService):
                 self.hass.services.call(
                     TELEGRAM_BOT_DOMAIN, "send_voice", service_data=service_data
                 )
-            return None
+            return
         if data is not None and ATTR_LOCATION in data:
             service_data.update(data.get(ATTR_LOCATION))
-            return self.hass.services.call(
+            self.hass.services.call(
                 TELEGRAM_BOT_DOMAIN, "send_location", service_data=service_data
             )
+            return
         if data is not None and ATTR_DOCUMENT in data:
             service_data.update(data.get(ATTR_DOCUMENT))
-            return self.hass.services.call(
+            self.hass.services.call(
                 TELEGRAM_BOT_DOMAIN, "send_document", service_data=service_data
             )
+            return
 
         # Send message
+
+        if ATTR_TITLE in kwargs:
+            service_data.update({ATTR_TITLE: kwargs.get(ATTR_TITLE)})
+        if message:
+            service_data.update({ATTR_MESSAGE: message})
+
         _LOGGER.debug(
             "TELEGRAM NOTIFIER calling %s.send_message with %s",
             TELEGRAM_BOT_DOMAIN,
             service_data,
         )
-        return self.hass.services.call(
+        self.hass.services.call(
             TELEGRAM_BOT_DOMAIN, "send_message", service_data=service_data
         )

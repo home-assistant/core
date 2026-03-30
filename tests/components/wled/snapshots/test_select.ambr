@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_snapshots[select.wled_rgb_light_color_palette-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -94,6 +95,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Color palette',
     'options': dict({
     }),
     'original_device_class': None,
@@ -196,8 +198,9 @@
 # ---
 # name: test_snapshots[select.wled_rgb_light_live_override-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -221,6 +224,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Live override',
     'options': dict({
     }),
     'original_device_class': None,
@@ -255,8 +259,9 @@
 # ---
 # name: test_snapshots[select.wled_rgb_light_playlist-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -277,6 +282,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Playlist',
     'options': dict({
     }),
     'original_device_class': None,
@@ -308,8 +314,9 @@
 # ---
 # name: test_snapshots[select.wled_rgb_light_preset-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -330,6 +337,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Preset',
     'options': dict({
     }),
     'original_device_class': None,
@@ -361,8 +369,9 @@
 # ---
 # name: test_snapshots[select.wled_rgb_light_segment_1_color_palette-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -454,6 +463,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Segment 1 color palette',
     'options': dict({
     }),
     'original_device_class': None,

@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_sensors[sensor.dyad_pro_battery-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -20,6 +21,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
@@ -51,8 +53,9 @@
 # ---
 # name: test_sensors[sensor.dyad_pro_error-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -91,6 +94,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Error',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -141,8 +145,9 @@
 # ---
 # name: test_sensors[sensor.dyad_pro_filter_time_left-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -160,6 +165,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Filter time left',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -197,8 +203,9 @@
 # ---
 # name: test_sensors[sensor.dyad_pro_roller_left-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -216,6 +223,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Roller left',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -253,8 +261,9 @@
 # ---
 # name: test_sensors[sensor.dyad_pro_status-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -292,6 +301,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Status',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -341,8 +351,9 @@
 # ---
 # name: test_sensors[sensor.dyad_pro_total_cleaning_time-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -360,6 +371,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Total cleaning time',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -395,10 +407,63 @@
     'state': '3.55',
   })
 # ---
+# name: test_sensors[sensor.roborock_q7_battery-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.roborock_q7_battery',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Battery',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
+    'original_icon': None,
+    'original_name': 'Battery',
+    'platform': 'roborock',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'battery_q7_duid',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_sensors[sensor.roborock_q7_battery-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'battery',
+      'friendly_name': 'Roborock Q7 Battery',
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.roborock_q7_battery',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '100',
+  })
+# ---
 # name: test_sensors[sensor.roborock_q7_filter_time_left-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -416,6 +481,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Filter time left',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -453,8 +519,9 @@
 # ---
 # name: test_sensors[sensor.roborock_q7_main_brush_time_left-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -472,6 +539,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Main brush time left',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -509,8 +577,9 @@
 # ---
 # name: test_sensors[sensor.roborock_q7_mop_life_time_left-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -528,6 +597,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Mop life time left',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -565,8 +635,9 @@
 # ---
 # name: test_sensors[sensor.roborock_q7_sensor_time_left-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -584,6 +655,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Sensor time left',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -621,8 +693,9 @@
 # ---
 # name: test_sensors[sensor.roborock_q7_side_brush_time_left-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -640,6 +713,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Side brush time left',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -677,8 +751,9 @@
 # ---
 # name: test_sensors[sensor.roborock_q7_status-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -710,6 +785,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Status',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -751,66 +827,11 @@
     'state': 'sweep_moping',
   })
 # ---
-# name: test_sensors[sensor.roborock_q7_total_cleaning_time-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.roborock_q7_total_cleaning_time',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 2,
-      }),
-      'sensor.private': dict({
-        'suggested_unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
-    'original_icon': None,
-    'original_name': 'Total cleaning time',
-    'platform': 'roborock',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'total_cleaning_time',
-    'unique_id': 'total_cleaning_time_q7_duid',
-    'unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
-  })
-# ---
-# name: test_sensors[sensor.roborock_q7_total_cleaning_time-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'duration',
-      'friendly_name': 'Roborock Q7 Total cleaning time',
-      'unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.roborock_q7_total_cleaning_time',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '50.0',
-  })
-# ---
 # name: test_sensors[sensor.roborock_s7_2_battery-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -828,6 +849,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
@@ -859,8 +881,9 @@
 # ---
 # name: test_sensors[sensor.roborock_s7_2_cleaning_area-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -878,6 +901,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Cleaning area',
     'options': dict({
     }),
     'original_device_class': None,
@@ -908,8 +932,9 @@
 # ---
 # name: test_sensors[sensor.roborock_s7_2_cleaning_time-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -927,6 +952,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Cleaning time',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -964,8 +990,9 @@
 # ---
 # name: test_sensors[sensor.roborock_s7_2_current_room-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -989,6 +1016,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Current room',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -1024,8 +1052,9 @@
 # ---
 # name: test_sensors[sensor.roborock_s7_2_dock_dock_error-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -1054,6 +1083,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Dock error',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -1094,8 +1124,9 @@
 # ---
 # name: test_sensors[sensor.roborock_s7_2_dock_maintenance_brush_time_left-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1113,6 +1144,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Maintenance brush time left',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1147,8 +1179,9 @@
 # ---
 # name: test_sensors[sensor.roborock_s7_2_dock_strainer_time_left-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1166,6 +1199,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Strainer time left',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1200,8 +1234,9 @@
 # ---
 # name: test_sensors[sensor.roborock_s7_2_filter_time_left-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1219,6 +1254,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Filter time left',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1256,8 +1292,9 @@
 # ---
 # name: test_sensors[sensor.roborock_s7_2_last_clean_begin-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1275,6 +1312,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Last clean begin',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -1305,8 +1343,9 @@
 # ---
 # name: test_sensors[sensor.roborock_s7_2_last_clean_end-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1324,6 +1363,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Last clean end',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -1354,8 +1394,9 @@
 # ---
 # name: test_sensors[sensor.roborock_s7_2_main_brush_time_left-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1373,6 +1414,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Main brush time left',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1410,8 +1452,9 @@
 # ---
 # name: test_sensors[sensor.roborock_s7_2_sensor_time_left-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1429,6 +1472,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Sensor time left',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1466,8 +1510,9 @@
 # ---
 # name: test_sensors[sensor.roborock_s7_2_side_brush_time_left-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1485,6 +1530,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Side brush time left',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1522,8 +1568,9 @@
 # ---
 # name: test_sensors[sensor.roborock_s7_2_status-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -1587,6 +1634,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Status',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -1662,8 +1710,9 @@
 # ---
 # name: test_sensors[sensor.roborock_s7_2_total_cleaning_area-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1681,6 +1730,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Total cleaning area',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1711,8 +1761,9 @@
 # ---
 # name: test_sensors[sensor.roborock_s7_2_total_cleaning_count-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -1732,6 +1783,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Total cleaning count',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1762,8 +1814,9 @@
 # ---
 # name: test_sensors[sensor.roborock_s7_2_total_cleaning_time-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1781,6 +1834,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Total cleaning time',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1818,8 +1872,9 @@
 # ---
 # name: test_sensors[sensor.roborock_s7_2_vacuum_error-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -1893,6 +1948,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Vacuum error',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -1978,8 +2034,9 @@
 # ---
 # name: test_sensors[sensor.roborock_s7_maxv_battery-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1997,6 +2054,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
@@ -2028,8 +2086,9 @@
 # ---
 # name: test_sensors[sensor.roborock_s7_maxv_cleaning_area-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2047,6 +2106,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Cleaning area',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2077,8 +2137,9 @@
 # ---
 # name: test_sensors[sensor.roborock_s7_maxv_cleaning_time-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2096,6 +2157,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Cleaning time',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -2133,8 +2195,9 @@
 # ---
 # name: test_sensors[sensor.roborock_s7_maxv_current_room-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -2158,6 +2221,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Current room',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -2193,8 +2257,9 @@
 # ---
 # name: test_sensors[sensor.roborock_s7_maxv_dock_dock_error-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -2223,6 +2288,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Dock error',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -2263,8 +2329,9 @@
 # ---
 # name: test_sensors[sensor.roborock_s7_maxv_dock_maintenance_brush_time_left-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2282,6 +2349,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Maintenance brush time left',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -2316,8 +2384,9 @@
 # ---
 # name: test_sensors[sensor.roborock_s7_maxv_dock_strainer_time_left-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2335,6 +2404,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Strainer time left',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -2369,8 +2439,9 @@
 # ---
 # name: test_sensors[sensor.roborock_s7_maxv_filter_time_left-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2388,6 +2459,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Filter time left',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -2425,8 +2497,9 @@
 # ---
 # name: test_sensors[sensor.roborock_s7_maxv_last_clean_begin-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2444,6 +2517,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Last clean begin',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -2474,8 +2548,9 @@
 # ---
 # name: test_sensors[sensor.roborock_s7_maxv_last_clean_end-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2493,6 +2568,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Last clean end',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -2523,8 +2599,9 @@
 # ---
 # name: test_sensors[sensor.roborock_s7_maxv_main_brush_time_left-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2542,6 +2619,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Main brush time left',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -2579,8 +2657,9 @@
 # ---
 # name: test_sensors[sensor.roborock_s7_maxv_sensor_time_left-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2598,6 +2677,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Sensor time left',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -2635,8 +2715,9 @@
 # ---
 # name: test_sensors[sensor.roborock_s7_maxv_side_brush_time_left-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2654,6 +2735,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Side brush time left',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -2691,8 +2773,9 @@
 # ---
 # name: test_sensors[sensor.roborock_s7_maxv_status-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -2756,6 +2839,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Status',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -2831,8 +2915,9 @@
 # ---
 # name: test_sensors[sensor.roborock_s7_maxv_total_cleaning_area-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2850,6 +2935,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Total cleaning area',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2880,8 +2966,9 @@
 # ---
 # name: test_sensors[sensor.roborock_s7_maxv_total_cleaning_count-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -2901,6 +2988,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Total cleaning count',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2931,8 +3019,9 @@
 # ---
 # name: test_sensors[sensor.roborock_s7_maxv_total_cleaning_time-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2950,6 +3039,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Total cleaning time',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -2987,8 +3077,9 @@
 # ---
 # name: test_sensors[sensor.roborock_s7_maxv_vacuum_error-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -3062,6 +3153,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Vacuum error',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -3147,8 +3239,9 @@
 # ---
 # name: test_sensors[sensor.zeo_one_countdown-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -3166,6 +3259,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Countdown',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -3200,8 +3294,9 @@
 # ---
 # name: test_sensors[sensor.zeo_one_error-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -3240,6 +3335,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Error',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -3290,8 +3386,9 @@
 # ---
 # name: test_sensors[sensor.zeo_one_state-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -3305,6 +3402,8 @@
         'cooling',
         'under_delay_start',
         'done',
+        'aftercare',
+        'waiting_for_aftercare',
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -3322,6 +3421,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'State',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -3352,6 +3452,8 @@
         'cooling',
         'under_delay_start',
         'done',
+        'aftercare',
+        'waiting_for_aftercare',
       ]),
     }),
     'context': <ANY>,
@@ -3362,10 +3464,61 @@
     'state': 'drying',
   })
 # ---
+# name: test_sensors[sensor.zeo_one_times_after_clean-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.zeo_one_times_after_clean',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Times after clean',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Times after clean',
+    'platform': 'roborock',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'times_after_clean',
+    'unique_id': 'times_after_clean_zeo_duid',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.zeo_one_times_after_clean-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Zeo One Times after clean',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.zeo_one_times_after_clean',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '5',
+  })
+# ---
 # name: test_sensors[sensor.zeo_one_washing_left-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -3383,6 +3536,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Washing left',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,

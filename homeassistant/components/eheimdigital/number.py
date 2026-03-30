@@ -6,7 +6,9 @@ from typing import Any, override
 
 from eheimdigital.classic_vario import EheimDigitalClassicVario
 from eheimdigital.device import EheimDigitalDevice
+from eheimdigital.filter import EheimDigitalFilter
 from eheimdigital.heater import EheimDigitalHeater
+from eheimdigital.reeflex import EheimDigitalReeflexUV
 from eheimdigital.types import HeaterUnit
 
 from homeassistant.components.number import (
@@ -21,6 +23,7 @@ from homeassistant.const import (
     PRECISION_WHOLE,
     EntityCategory,
     UnitOfTemperature,
+    UnitOfTime,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -40,6 +43,75 @@ class EheimDigitalNumberDescription[_DeviceT: EheimDigitalDevice](
     value_fn: Callable[[_DeviceT], float | None]
     set_value_fn: Callable[[_DeviceT, float], Awaitable[None]]
     uom_fn: Callable[[_DeviceT], str] | None = None
+
+
+REEFLEX_DESCRIPTIONS: tuple[
+    EheimDigitalNumberDescription[EheimDigitalReeflexUV], ...
+] = (
+    EheimDigitalNumberDescription[EheimDigitalReeflexUV](
+        key="daily_burn_time",
+        translation_key="daily_burn_time",
+        entity_category=EntityCategory.CONFIG,
+        native_step=PRECISION_WHOLE,
+        native_unit_of_measurement=UnitOfTime.MINUTES,
+        device_class=NumberDeviceClass.DURATION,
+        native_min_value=0,
+        native_max_value=1440,
+        value_fn=lambda device: device.daily_burn_time,
+        set_value_fn=lambda device, value: device.set_daily_burn_time(int(value)),
+    ),
+    EheimDigitalNumberDescription[EheimDigitalReeflexUV](
+        key="booster_time",
+        translation_key="booster_time",
+        entity_category=EntityCategory.CONFIG,
+        native_step=PRECISION_WHOLE,
+        native_unit_of_measurement=UnitOfTime.MINUTES,
+        device_class=NumberDeviceClass.DURATION,
+        native_min_value=0,
+        native_max_value=20160,
+        value_fn=lambda device: device.booster_time,
+        set_value_fn=lambda device, value: device.set_booster_time(int(value)),
+    ),
+    EheimDigitalNumberDescription[EheimDigitalReeflexUV](
+        key="pause_time",
+        translation_key="pause_time",
+        entity_category=EntityCategory.CONFIG,
+        native_step=PRECISION_WHOLE,
+        native_unit_of_measurement=UnitOfTime.MINUTES,
+        device_class=NumberDeviceClass.DURATION,
+        native_min_value=0,
+        native_max_value=20160,
+        value_fn=lambda device: device.pause_time,
+        set_value_fn=lambda device, value: device.set_pause_time(int(value)),
+    ),
+)
+
+FILTER_DESCRIPTIONS: tuple[EheimDigitalNumberDescription[EheimDigitalFilter], ...] = (
+    EheimDigitalNumberDescription[EheimDigitalFilter](
+        key="high_pulse_time",
+        translation_key="high_pulse_time",
+        entity_category=EntityCategory.CONFIG,
+        native_step=PRECISION_WHOLE,
+        native_unit_of_measurement=UnitOfTime.SECONDS,
+        device_class=NumberDeviceClass.DURATION,
+        native_min_value=5,
+        native_max_value=200000,
+        value_fn=lambda device: device.high_pulse_time,
+        set_value_fn=lambda device, value: device.set_high_pulse_time(int(value)),
+    ),
+    EheimDigitalNumberDescription[EheimDigitalFilter](
+        key="low_pulse_time",
+        translation_key="low_pulse_time",
+        entity_category=EntityCategory.CONFIG,
+        native_step=PRECISION_WHOLE,
+        native_unit_of_measurement=UnitOfTime.SECONDS,
+        device_class=NumberDeviceClass.DURATION,
+        native_min_value=5,
+        native_max_value=200000,
+        value_fn=lambda device: device.low_pulse_time,
+        set_value_fn=lambda device, value: device.set_low_pulse_time(int(value)),
+    ),
+)
 
 
 CLASSICVARIO_DESCRIPTIONS: tuple[
@@ -145,12 +217,26 @@ async def async_setup_entry(
                     )
                     for description in CLASSICVARIO_DESCRIPTIONS
                 )
+            if isinstance(device, EheimDigitalFilter):
+                entities.extend(
+                    EheimDigitalNumber[EheimDigitalFilter](
+                        coordinator, device, description
+                    )
+                    for description in FILTER_DESCRIPTIONS
+                )
             if isinstance(device, EheimDigitalHeater):
                 entities.extend(
                     EheimDigitalNumber[EheimDigitalHeater](
                         coordinator, device, description
                     )
                     for description in HEATER_DESCRIPTIONS
+                )
+            if isinstance(device, EheimDigitalReeflexUV):
+                entities.extend(
+                    EheimDigitalNumber[EheimDigitalReeflexUV](
+                        coordinator, device, description
+                    )
+                    for description in REEFLEX_DESCRIPTIONS
                 )
             entities.extend(
                 EheimDigitalNumber[EheimDigitalDevice](coordinator, device, description)

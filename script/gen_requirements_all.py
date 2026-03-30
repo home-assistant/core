@@ -79,9 +79,9 @@ httplib2>=0.19.0
 # gRPC is an implicit dependency that we want to make explicit so we manage
 # upgrades intentionally. It is a large package to build from source and we
 # want to ensure we have wheels built.
-grpcio==1.75.1
-grpcio-status==1.75.1
-grpcio-reflection==1.75.1
+grpcio==1.78.0
+grpcio-status==1.78.0
+grpcio-reflection==1.78.0
 
 # This is a old unmaintained library and is replaced with pycryptodome
 pycrypto==1000000000.0.0
@@ -212,11 +212,28 @@ num2words==0.5.14
 # This ensures all use the same version
 pymodbus==3.11.2
 
-# Some packages don't support gql 4.0.0 yet
-gql<4.0.0
-
 # Pin pytest-rerunfailures to prevent accidental breaks
 pytest-rerunfailures==16.0.1
+
+# Fixes detected blocking call to load_default_certs https://github.com/home-assistant/core/issues/157475
+aiomqtt>=2.5.0
+
+# auth0-python v5.0 is a major rewrite with breaking changes
+# used by sharkiq==1.5.0
+# https://github.com/auth0/auth0-python/releases/tag/5.0.0
+auth0-python<5.0
+
+# Setuptools >=82.0.0 doesn't contain pkg_resources anymore
+setuptools<82.0.0
+
+# Pin dependencies with '.pth' files to exact versions, only update manually!
+# https://github.com/Azure/azure-kusto-python/ -> '.pth' files removed with >=5.0.5
+# https://github.com/xolox/python-coloredlogs -> unmaintained
+# https://github.com/pypa/setuptools
+azure-kusto-data==4.5.1
+azure-kusto-ingest==4.5.1
+coloredlogs==15.0.1
+setuptools==81.0.0
 """
 
 GENERATED_MESSAGE = (

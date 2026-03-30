@@ -50,7 +50,6 @@ from . import (
 from .client import CloudClient
 from .const import (
     CONF_ACCOUNT_LINK_SERVER,
-    CONF_ACCOUNTS_SERVER,
     CONF_ACME_SERVER,
     CONF_ALEXA,
     CONF_ALIASES,
@@ -138,7 +137,6 @@ _BASE_CONFIG_SCHEMA = vol.Schema(
         vol.Optional(CONF_ALEXA): ALEXA_SCHEMA,
         vol.Optional(CONF_GOOGLE_ACTIONS): GACTIONS_SCHEMA,
         vol.Optional(CONF_ACCOUNT_LINK_SERVER): str,
-        vol.Optional(CONF_ACCOUNTS_SERVER): str,
         vol.Optional(CONF_ACME_SERVER): str,
         vol.Optional(CONF_API_SERVER): str,
         vol.Optional(CONF_RELAYER_SERVER): str,

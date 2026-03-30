@@ -25,7 +25,13 @@ from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from .const import CONF_SERIAL_NUMBER, DOMAIN, MANUFACTURER
 from .types import DaliCenterConfigEntry, DaliCenterData
 
-_PLATFORMS: list[Platform] = [Platform.LIGHT, Platform.SCENE]
+_PLATFORMS: list[Platform] = [
+    Platform.BINARY_SENSOR,
+    Platform.BUTTON,
+    Platform.LIGHT,
+    Platform.SCENE,
+    Platform.SENSOR,
+]
 _LOGGER = logging.getLogger(__name__)
 
 

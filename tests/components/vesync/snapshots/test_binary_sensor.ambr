@@ -147,6 +147,80 @@
   list([
   ])
 # ---
+# name: test_sensor_state[CS158-AF Air Fryer Cooking][devices]
+  list([
+    DeviceRegistryEntrySnapshot({
+      'area_id': None,
+      'config_entries': <ANY>,
+      'config_entries_subentries': <ANY>,
+      'configuration_url': None,
+      'connections': set({
+      }),
+      'disabled_by': None,
+      'entry_type': None,
+      'hw_version': None,
+      'id': <ANY>,
+      'identifiers': set({
+        tuple(
+          'vesync',
+          'CS158Cooking',
+        ),
+      }),
+      'labels': set({
+      }),
+      'manufacturer': 'VeSync',
+      'model': 'CS158-AF',
+      'model_id': None,
+      'name': 'CS158-AF Air Fryer Cooking',
+      'name_by_user': None,
+      'primary_config_entry': <ANY>,
+      'serial_number': None,
+      'sw_version': None,
+      'via_device_id': None,
+    }),
+  ])
+# ---
+# name: test_sensor_state[CS158-AF Air Fryer Cooking][entities]
+  list([
+  ])
+# ---
+# name: test_sensor_state[CS158-AF Air Fryer Standby][devices]
+  list([
+    DeviceRegistryEntrySnapshot({
+      'area_id': None,
+      'config_entries': <ANY>,
+      'config_entries_subentries': <ANY>,
+      'configuration_url': None,
+      'connections': set({
+      }),
+      'disabled_by': None,
+      'entry_type': None,
+      'hw_version': None,
+      'id': <ANY>,
+      'identifiers': set({
+        tuple(
+          'vesync',
+          'CS158Standby',
+        ),
+      }),
+      'labels': set({
+      }),
+      'manufacturer': 'VeSync',
+      'model': 'CS158-AF',
+      'model_id': None,
+      'name': 'CS158-AF Air Fryer Standby',
+      'name_by_user': None,
+      'primary_config_entry': <ANY>,
+      'serial_number': None,
+      'sw_version': None,
+      'via_device_id': None,
+    }),
+  ])
+# ---
+# name: test_sensor_state[CS158-AF Air Fryer Standby][entities]
+  list([
+  ])
+# ---
 # name: test_sensor_state[Dimmable Light][devices]
   list([
     DeviceRegistryEntrySnapshot({
@@ -285,8 +359,9 @@
 # name: test_sensor_state[Humidifier 200s][entities]
   list([
     EntityRegistryEntrySnapshot({
-      'aliases': set({
-      }),
+      'aliases': list([
+        None,
+      ]),
       'area_id': None,
       'capabilities': None,
       'config_entry_id': <ANY>,
@@ -304,6 +379,7 @@
       'labels': set({
       }),
       'name': None,
+      'object_id_base': 'Low water',
       'options': dict({
       }),
       'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -318,8 +394,9 @@
       'unit_of_measurement': None,
     }),
     EntityRegistryEntrySnapshot({
-      'aliases': set({
-      }),
+      'aliases': list([
+        None,
+      ]),
       'area_id': None,
       'capabilities': None,
       'config_entry_id': <ANY>,
@@ -337,6 +414,7 @@
       'labels': set({
       }),
       'name': None,
+      'object_id_base': 'Water tank lifted',
       'options': dict({
       }),
       'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -416,8 +494,9 @@
 # name: test_sensor_state[Humidifier 6000s][entities]
   list([
     EntityRegistryEntrySnapshot({
-      'aliases': set({
-      }),
+      'aliases': list([
+        None,
+      ]),
       'area_id': None,
       'capabilities': None,
       'config_entry_id': <ANY>,
@@ -435,6 +514,7 @@
       'labels': set({
       }),
       'name': None,
+      'object_id_base': 'Low water',
       'options': dict({
       }),
       'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -449,8 +529,9 @@
       'unit_of_measurement': None,
     }),
     EntityRegistryEntrySnapshot({
-      'aliases': set({
-      }),
+      'aliases': list([
+        None,
+      ]),
       'area_id': None,
       'capabilities': None,
       'config_entry_id': <ANY>,
@@ -468,6 +549,7 @@
       'labels': set({
       }),
       'name': None,
+      'object_id_base': 'Water tank lifted',
       'options': dict({
       }),
       'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -547,8 +629,9 @@
 # name: test_sensor_state[Humidifier 600S][entities]
   list([
     EntityRegistryEntrySnapshot({
-      'aliases': set({
-      }),
+      'aliases': list([
+        None,
+      ]),
       'area_id': None,
       'capabilities': None,
       'config_entry_id': <ANY>,
@@ -566,6 +649,7 @@
       'labels': set({
       }),
       'name': None,
+      'object_id_base': 'Low water',
       'options': dict({
       }),
       'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -580,8 +664,9 @@
       'unit_of_measurement': None,
     }),
     EntityRegistryEntrySnapshot({
-      'aliases': set({
-      }),
+      'aliases': list([
+        None,
+      ]),
       'area_id': None,
       'capabilities': None,
       'config_entry_id': <ANY>,
@@ -599,6 +684,7 @@
       'labels': set({
       }),
       'name': None,
+      'object_id_base': 'Water tank lifted',
       'options': dict({
       }),
       'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,

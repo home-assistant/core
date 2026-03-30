@@ -241,8 +241,9 @@
 # ---
 # name: test_sensor[sensor.myups_alarm_delay-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -260,6 +261,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Alarm delay',
     'options': dict({
     }),
     'original_device_class': None,
@@ -290,8 +292,9 @@
 # ---
 # name: test_sensor[sensor.myups_battery-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -311,6 +314,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
@@ -343,8 +347,9 @@
 # ---
 # name: test_sensor[sensor.myups_battery_nominal_voltage-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -362,6 +367,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery nominal voltage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -396,8 +402,9 @@
 # ---
 # name: test_sensor[sensor.myups_battery_replaced-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -415,6 +422,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery replaced',
     'options': dict({
     }),
     'original_device_class': None,
@@ -444,8 +452,9 @@
 # ---
 # name: test_sensor[sensor.myups_battery_shutdown-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -463,6 +472,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery shutdown',
     'options': dict({
     }),
     'original_device_class': None,
@@ -493,8 +503,9 @@
 # ---
 # name: test_sensor[sensor.myups_battery_timeout-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -512,6 +523,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery timeout',
     'options': dict({
     }),
     'original_device_class': None,
@@ -542,8 +554,9 @@
 # ---
 # name: test_sensor[sensor.myups_battery_voltage-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -563,6 +576,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery voltage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -598,8 +612,9 @@
 # ---
 # name: test_sensor[sensor.myups_cable_type-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -617,6 +632,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Cable type',
     'options': dict({
     }),
     'original_device_class': None,
@@ -646,8 +662,9 @@
 # ---
 # name: test_sensor[sensor.myups_daemon_version-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -665,6 +682,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Daemon version',
     'options': dict({
     }),
     'original_device_class': None,
@@ -694,8 +712,9 @@
 # ---
 # name: test_sensor[sensor.myups_date_and_time-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -713,6 +732,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Date and time',
     'options': dict({
     }),
     'original_device_class': None,
@@ -737,13 +757,14 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '1970-01-01 00:00:00 0000',
+    'state': '1970-01-01 00:00:00 +0000',
   })
 # ---
 # name: test_sensor[sensor.myups_driver-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -761,6 +782,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Driver',
     'options': dict({
     }),
     'original_device_class': None,
@@ -790,8 +812,9 @@
 # ---
 # name: test_sensor[sensor.myups_firmware_version-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -809,6 +832,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Firmware version',
     'options': dict({
     }),
     'original_device_class': None,
@@ -838,8 +862,9 @@
 # ---
 # name: test_sensor[sensor.myups_input_voltage-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -859,6 +884,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Input voltage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -894,8 +920,9 @@
 # ---
 # name: test_sensor[sensor.myups_internal_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -915,6 +942,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Internal temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -950,8 +978,9 @@
 # ---
 # name: test_sensor[sensor.myups_last_self_test-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -969,9 +998,10 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Last self-test',
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': None,
     'original_name': 'Last self-test',
     'platform': 'apcupsd',
@@ -986,6 +1016,7 @@
 # name: test_sensor[sensor.myups_last_self_test-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'device_class': 'timestamp',
       'friendly_name': 'MyUPS Last self-test',
     }),
     'context': <ANY>,
@@ -993,13 +1024,14 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '1970-01-01 00:00:00 0000',
+    'state': '1970-01-01T00:00:00+00:00',
   })
 # ---
 # name: test_sensor[sensor.myups_last_transfer-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1017,6 +1049,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Last transfer',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1046,8 +1079,9 @@
 # ---
 # name: test_sensor[sensor.myups_load-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1067,6 +1101,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Load',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1096,10 +1131,62 @@
     'state': '14.0',
   })
 # ---
+# name: test_sensor[sensor.myups_master_update-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.myups_master_update',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Master update',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'Master update',
+    'platform': 'apcupsd',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'master_update',
+    'unique_id': 'XXXXXXXXXXXX_masterupd',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[sensor.myups_master_update-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'timestamp',
+      'friendly_name': 'MyUPS Master update',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.myups_master_update',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '1970-01-01T00:00:00+00:00',
+  })
+# ---
 # name: test_sensor[sensor.myups_mode-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1117,6 +1204,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Mode',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1146,8 +1234,9 @@
 # ---
 # name: test_sensor[sensor.myups_model-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1165,6 +1254,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Model',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1194,8 +1284,9 @@
 # ---
 # name: test_sensor[sensor.myups_model_2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1213,6 +1304,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Model',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1242,8 +1334,9 @@
 # ---
 # name: test_sensor[sensor.myups_name-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1261,6 +1354,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Name',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1290,8 +1384,9 @@
 # ---
 # name: test_sensor[sensor.myups_nominal_apparent_power-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1309,6 +1404,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Nominal apparent power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -1343,8 +1439,9 @@
 # ---
 # name: test_sensor[sensor.myups_nominal_input_voltage-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1362,6 +1459,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Nominal input voltage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -1396,8 +1494,9 @@
 # ---
 # name: test_sensor[sensor.myups_nominal_output_power-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1415,6 +1514,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Nominal output power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -1449,8 +1549,9 @@
 # ---
 # name: test_sensor[sensor.myups_output_current-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1470,6 +1571,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Output current',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1505,8 +1607,9 @@
 # ---
 # name: test_sensor[sensor.myups_self_test_interval-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1524,6 +1627,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Self-test interval',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1554,8 +1658,9 @@
 # ---
 # name: test_sensor[sensor.myups_self_test_result-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1573,6 +1678,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Self-test result',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1602,8 +1708,9 @@
 # ---
 # name: test_sensor[sensor.myups_sensitivity-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1621,6 +1728,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Sensitivity',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1650,8 +1758,9 @@
 # ---
 # name: test_sensor[sensor.myups_serial_number-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1669,6 +1778,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Serial number',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1698,8 +1808,9 @@
 # ---
 # name: test_sensor[sensor.myups_shutdown_time-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1717,6 +1828,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Shutdown time',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1745,10 +1857,62 @@
     'state': '3',
   })
 # ---
+# name: test_sensor[sensor.myups_startup_time-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.myups_startup_time',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Startup time',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'Startup time',
+    'platform': 'apcupsd',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'startup_time',
+    'unique_id': 'XXXXXXXXXXXX_starttime',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[sensor.myups_startup_time-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'timestamp',
+      'friendly_name': 'MyUPS Startup time',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.myups_startup_time',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2005-12-31T19:00:00+00:00',
+  })
+# ---
 # name: test_sensor[sensor.myups_status-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1766,6 +1930,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Status',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1795,8 +1960,9 @@
 # ---
 # name: test_sensor[sensor.myups_status_data-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1814,6 +1980,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Status data',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1843,8 +2010,9 @@
 # ---
 # name: test_sensor[sensor.myups_status_date-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1862,6 +2030,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Status date',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1886,13 +2055,14 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '1970-01-01 00:00:00 0000',
+    'state': '1970-01-01 00:00:00 +0000',
   })
 # ---
 # name: test_sensor[sensor.myups_status_flag-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1910,6 +2080,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Status flag',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1939,8 +2110,9 @@
 # ---
 # name: test_sensor[sensor.myups_time_left-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1960,6 +2132,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Time left',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1995,8 +2168,9 @@
 # ---
 # name: test_sensor[sensor.myups_time_on_battery-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -2016,6 +2190,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Time on battery',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -2051,8 +2226,9 @@
 # ---
 # name: test_sensor[sensor.myups_total_time_on_battery-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -2072,6 +2248,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Total time on battery',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -2107,8 +2284,9 @@
 # ---
 # name: test_sensor[sensor.myups_transfer_count-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -2128,6 +2306,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Transfer count',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2158,8 +2337,9 @@
 # ---
 # name: test_sensor[sensor.myups_transfer_from_battery-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2177,9 +2357,10 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Transfer from battery',
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': None,
     'original_name': 'Transfer from battery',
     'platform': 'apcupsd',
@@ -2194,6 +2375,7 @@
 # name: test_sensor[sensor.myups_transfer_from_battery-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'device_class': 'timestamp',
       'friendly_name': 'MyUPS Transfer from battery',
     }),
     'context': <ANY>,
@@ -2201,13 +2383,14 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '1970-01-01 00:00:00 0000',
+    'state': '1970-01-01T00:00:00+00:00',
   })
 # ---
 # name: test_sensor[sensor.myups_transfer_high-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2225,6 +2408,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Transfer high',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -2259,8 +2443,9 @@
 # ---
 # name: test_sensor[sensor.myups_transfer_low-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2278,6 +2463,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Transfer low',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -2312,8 +2498,9 @@
 # ---
 # name: test_sensor[sensor.myups_transfer_to_battery-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2331,9 +2518,10 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Transfer to battery',
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': None,
     'original_name': 'Transfer to battery',
     'platform': 'apcupsd',
@@ -2348,6 +2536,7 @@
 # name: test_sensor[sensor.myups_transfer_to_battery-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'device_class': 'timestamp',
       'friendly_name': 'MyUPS Transfer to battery',
     }),
     'context': <ANY>,
@@ -2355,6 +2544,6 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '1970-01-01 00:00:00 0000',
+    'state': '1970-01-01T00:00:00+00:00',
   })
 # ---

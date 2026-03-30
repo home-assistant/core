@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_states[binary_sensor.front_door_ding-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -20,6 +21,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Ding',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.OCCUPANCY: 'occupancy'>,
@@ -27,7 +29,7 @@
     'original_name': 'Ding',
     'platform': 'ring',
     'previous_unique_id': None,
-    'suggested_object_id': 'front_door_ding',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'ding',
     'unique_id': '987654-ding',
@@ -51,8 +53,9 @@
 # ---
 # name: test_states[binary_sensor.front_door_motion-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -70,6 +73,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Motion',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.MOTION: 'motion'>,
@@ -77,7 +81,7 @@
     'original_name': 'Motion',
     'platform': 'ring',
     'previous_unique_id': None,
-    'suggested_object_id': 'front_door_motion',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '987654-motion',
@@ -101,8 +105,9 @@
 # ---
 # name: test_states[binary_sensor.front_motion-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -120,6 +125,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Motion',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.MOTION: 'motion'>,
@@ -127,7 +133,7 @@
     'original_name': 'Motion',
     'platform': 'ring',
     'previous_unique_id': None,
-    'suggested_object_id': 'front_motion',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '765432-motion',
@@ -151,8 +157,9 @@
 # ---
 # name: test_states[binary_sensor.ingress_ding-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -170,6 +177,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Ding',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.OCCUPANCY: 'occupancy'>,
@@ -177,7 +185,7 @@
     'original_name': 'Ding',
     'platform': 'ring',
     'previous_unique_id': None,
-    'suggested_object_id': 'ingress_ding',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'ding',
     'unique_id': '185036587-ding',
@@ -201,8 +209,9 @@
 # ---
 # name: test_states[binary_sensor.internal_motion-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -220,6 +229,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Motion',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.MOTION: 'motion'>,
@@ -227,7 +237,7 @@
     'original_name': 'Motion',
     'platform': 'ring',
     'previous_unique_id': None,
-    'suggested_object_id': 'internal_motion',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '345678-motion',

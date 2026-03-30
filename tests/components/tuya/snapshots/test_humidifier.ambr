@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_platform_setup_and_discovery[humidifier.arida_stavern-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max_humidity': 100,
@@ -23,6 +24,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': <HumidifierDeviceClass.DEHUMIDIFIER: 'dehumidifier'>,
@@ -57,8 +59,9 @@
 # ---
 # name: test_platform_setup_and_discovery[humidifier.dehumidifer-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max_humidity': 80,
@@ -79,6 +82,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': <HumidifierDeviceClass.DEHUMIDIFIER: 'dehumidifier'>,
@@ -112,8 +116,9 @@
 # ---
 # name: test_platform_setup_and_discovery[humidifier.dehumidifier-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max_humidity': 70,
@@ -134,6 +139,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': <HumidifierDeviceClass.DEHUMIDIFIER: 'dehumidifier'>,
@@ -169,8 +175,9 @@
 # ---
 # name: test_platform_setup_and_discovery[humidifier.deshumidificateur_silencieux_omnidry_20l_avec_mode_linge-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max_humidity': 80,
@@ -191,6 +198,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': <HumidifierDeviceClass.DEHUMIDIFIER: 'dehumidifier'>,
@@ -226,8 +234,9 @@
 # ---
 # name: test_platform_setup_and_discovery[humidifier.klarta_humea-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max_humidity': 100,
@@ -248,6 +257,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': <HumidifierDeviceClass.HUMIDIFIER: 'humidifier'>,
@@ -281,8 +291,9 @@
 # ---
 # name: test_platform_setup_and_discovery[humidifier.living_room_dehumidifier-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max_humidity': 80,
@@ -303,6 +314,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': <HumidifierDeviceClass.DEHUMIDIFIER: 'dehumidifier'>,

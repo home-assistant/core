@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_blu_trv_number_entity[number.trv_name_external_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 50,
@@ -25,6 +26,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'External temperature',
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
@@ -60,8 +62,9 @@
 # ---
 # name: test_blu_trv_number_entity[number.trv_name_valve_position-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 100,
@@ -84,6 +87,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Valve position',
     'options': dict({
     }),
     'original_device_class': None,
@@ -118,8 +122,9 @@
 # ---
 # name: test_cury_number_entity[number.test_name_left_slot_intensity-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 100,
@@ -142,6 +147,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Left slot intensity',
     'options': dict({
     }),
     'original_device_class': None,
@@ -176,8 +182,9 @@
 # ---
 # name: test_cury_number_entity[number.test_name_right_slot_intensity-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 100,
@@ -200,6 +207,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Right slot intensity',
     'options': dict({
     }),
     'original_device_class': None,

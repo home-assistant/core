@@ -4,6 +4,14 @@ from __future__ import annotations
 
 from typing import Any
 
+from tuya_device_handlers.definition.vacuum import (
+    TuyaVacuumDefinition,
+    get_default_definition,
+)
+from tuya_device_handlers.helpers.homeassistant import (
+    TuyaVacuumAction,
+    TuyaVacuumActivity,
+)
 from tuya_sharing import CustomerDevice, Manager
 
 from homeassistant.components.vacuum import (
@@ -16,35 +24,16 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import TuyaConfigEntry
-from .const import TUYA_DISCOVERY_NEW, DeviceCategory, DPCode
+from .const import TUYA_DISCOVERY_NEW, DeviceCategory
 from .entity import TuyaEntity
-from .models import DPCodeBooleanWrapper, DPCodeEnumWrapper
 
-TUYA_MODE_RETURN_HOME = "chargego"
-TUYA_STATUS_TO_HA = {
-    "charge_done": VacuumActivity.DOCKED,
-    "chargecompleted": VacuumActivity.DOCKED,
-    "chargego": VacuumActivity.DOCKED,
-    "charging": VacuumActivity.DOCKED,
-    "cleaning": VacuumActivity.CLEANING,
-    "docking": VacuumActivity.RETURNING,
-    "goto_charge": VacuumActivity.RETURNING,
-    "goto_pos": VacuumActivity.CLEANING,
-    "mop_clean": VacuumActivity.CLEANING,
-    "part_clean": VacuumActivity.CLEANING,
-    "paused": VacuumActivity.PAUSED,
-    "pick_zone_clean": VacuumActivity.CLEANING,
-    "pos_arrived": VacuumActivity.CLEANING,
-    "pos_unarrive": VacuumActivity.CLEANING,
-    "random": VacuumActivity.CLEANING,
-    "sleep": VacuumActivity.IDLE,
-    "smart_clean": VacuumActivity.CLEANING,
-    "smart": VacuumActivity.CLEANING,
-    "spot_clean": VacuumActivity.CLEANING,
-    "standby": VacuumActivity.IDLE,
-    "wall_clean": VacuumActivity.CLEANING,
-    "wall_follow": VacuumActivity.CLEANING,
-    "zone_clean": VacuumActivity.CLEANING,
+_TUYA_TO_HA_ACTIVITY_MAPPINGS = {
+    TuyaVacuumActivity.CLEANING: VacuumActivity.CLEANING,
+    TuyaVacuumActivity.DOCKED: VacuumActivity.DOCKED,
+    TuyaVacuumActivity.IDLE: VacuumActivity.IDLE,
+    TuyaVacuumActivity.PAUSED: VacuumActivity.PAUSED,
+    TuyaVacuumActivity.RETURNING: VacuumActivity.RETURNING,
+    TuyaVacuumActivity.ERROR: VacuumActivity.ERROR,
 }
 
 
@@ -64,31 +53,7 @@ async def async_setup_entry(
             device = manager.device_map[device_id]
             if device.category == DeviceCategory.SD:
                 entities.append(
-                    TuyaVacuumEntity(
-                        device,
-                        manager,
-                        charge_wrapper=DPCodeBooleanWrapper.find_dpcode(
-                            device, DPCode.SWITCH_CHARGE, prefer_function=True
-                        ),
-                        fan_speed_wrapper=DPCodeEnumWrapper.find_dpcode(
-                            device, DPCode.SUCTION, prefer_function=True
-                        ),
-                        locate_wrapper=DPCodeBooleanWrapper.find_dpcode(
-                            device, DPCode.SEEK, prefer_function=True
-                        ),
-                        mode_wrapper=DPCodeEnumWrapper.find_dpcode(
-                            device, DPCode.MODE, prefer_function=True
-                        ),
-                        pause_wrapper=DPCodeBooleanWrapper.find_dpcode(
-                            device, DPCode.PAUSE
-                        ),
-                        status_wrapper=DPCodeEnumWrapper.find_dpcode(
-                            device, DPCode.STATUS
-                        ),
-                        switch_wrapper=DPCodeBooleanWrapper.find_dpcode(
-                            device, DPCode.POWER_GO, prefer_function=True
-                        ),
-                    )
+                    TuyaVacuumEntity(device, manager, get_default_definition(device))
                 )
         async_add_entities(entities)
 
@@ -108,47 +73,34 @@ class TuyaVacuumEntity(TuyaEntity, StateVacuumEntity):
         self,
         device: CustomerDevice,
         device_manager: Manager,
-        *,
-        charge_wrapper: DPCodeBooleanWrapper | None,
-        fan_speed_wrapper: DPCodeEnumWrapper | None,
-        locate_wrapper: DPCodeBooleanWrapper | None,
-        mode_wrapper: DPCodeEnumWrapper | None,
-        pause_wrapper: DPCodeBooleanWrapper | None,
-        status_wrapper: DPCodeEnumWrapper | None,
-        switch_wrapper: DPCodeBooleanWrapper | None,
+        definition: TuyaVacuumDefinition,
     ) -> None:
         """Init Tuya vacuum."""
         super().__init__(device, device_manager)
-        self._charge_wrapper = charge_wrapper
-        self._fan_speed_wrapper = fan_speed_wrapper
-        self._locate_wrapper = locate_wrapper
-        self._mode_wrapper = mode_wrapper
-        self._pause_wrapper = pause_wrapper
-        self._status_wrapper = status_wrapper
-        self._switch_wrapper = switch_wrapper
+        self._action_wrapper = definition.action_wrapper
+        self._activity_wrapper = definition.activity_wrapper
+        self._fan_speed_wrapper = definition.fan_speed_wrapper
 
         self._attr_fan_speed_list = []
         self._attr_supported_features = VacuumEntityFeature.SEND_COMMAND
-        if status_wrapper or pause_wrapper:
+
+        if definition.action_wrapper:
+            if TuyaVacuumAction.PAUSE in definition.action_wrapper.options:
+                self._attr_supported_features |= VacuumEntityFeature.PAUSE
+            if TuyaVacuumAction.RETURN_TO_BASE in definition.action_wrapper.options:
+                self._attr_supported_features |= VacuumEntityFeature.RETURN_HOME
+            if TuyaVacuumAction.LOCATE in definition.action_wrapper.options:
+                self._attr_supported_features |= VacuumEntityFeature.LOCATE
+            if TuyaVacuumAction.START in definition.action_wrapper.options:
+                self._attr_supported_features |= VacuumEntityFeature.START
+            if TuyaVacuumAction.STOP in definition.action_wrapper.options:
+                self._attr_supported_features |= VacuumEntityFeature.STOP
+
+        if definition.activity_wrapper:
             self._attr_supported_features |= VacuumEntityFeature.STATE
-        if pause_wrapper:
-            self._attr_supported_features |= VacuumEntityFeature.PAUSE
 
-        if charge_wrapper or (
-            mode_wrapper and TUYA_MODE_RETURN_HOME in mode_wrapper.options
-        ):
-            self._attr_supported_features |= VacuumEntityFeature.RETURN_HOME
-
-        if locate_wrapper:
-            self._attr_supported_features |= VacuumEntityFeature.LOCATE
-
-        if switch_wrapper:
-            self._attr_supported_features |= (
-                VacuumEntityFeature.STOP | VacuumEntityFeature.START
-            )
-
-        if fan_speed_wrapper:
-            self._attr_fan_speed_list = fan_speed_wrapper.options
+        if definition.fan_speed_wrapper:
+            self._attr_fan_speed_list = definition.fan_speed_wrapper.options
             self._attr_supported_features |= VacuumEntityFeature.FAN_SPEED
 
     @property
@@ -159,37 +111,38 @@ class TuyaVacuumEntity(TuyaEntity, StateVacuumEntity):
     @property
     def activity(self) -> VacuumActivity | None:
         """Return Tuya vacuum device state."""
-        if (status := self._read_wrapper(self._status_wrapper)) is not None:
-            return TUYA_STATUS_TO_HA.get(status)
-
-        if self._read_wrapper(self._pause_wrapper):
-            return VacuumActivity.PAUSED
-        return None
+        tuya_value = self._read_wrapper(self._activity_wrapper)
+        return _TUYA_TO_HA_ACTIVITY_MAPPINGS.get(tuya_value) if tuya_value else None
 
     async def async_start(self, **kwargs: Any) -> None:
         """Start the device."""
-        await self._async_send_wrapper_updates(self._switch_wrapper, True)
+        await self._async_send_wrapper_updates(
+            self._action_wrapper, TuyaVacuumAction.START
+        )
 
     async def async_stop(self, **kwargs: Any) -> None:
         """Stop the device."""
-        await self._async_send_wrapper_updates(self._switch_wrapper, False)
+        await self._async_send_wrapper_updates(
+            self._action_wrapper, TuyaVacuumAction.STOP
+        )
 
     async def async_pause(self, **kwargs: Any) -> None:
         """Pause the device."""
-        await self.async_stop(**kwargs)
+        await self._async_send_wrapper_updates(
+            self._action_wrapper, TuyaVacuumAction.PAUSE
+        )
 
     async def async_return_to_base(self, **kwargs: Any) -> None:
         """Return device to dock."""
-        if self._charge_wrapper:
-            await self._async_send_wrapper_updates(self._charge_wrapper, True)
-        else:
-            await self._async_send_wrapper_updates(
-                self._mode_wrapper, TUYA_MODE_RETURN_HOME
-            )
+        await self._async_send_wrapper_updates(
+            self._action_wrapper, TuyaVacuumAction.RETURN_TO_BASE
+        )
 
     async def async_locate(self, **kwargs: Any) -> None:
         """Locate the device."""
-        await self._async_send_wrapper_updates(self._locate_wrapper, True)
+        await self._async_send_wrapper_updates(
+            self._action_wrapper, TuyaVacuumAction.LOCATE
+        )
 
     async def async_set_fan_speed(self, fan_speed: str, **kwargs: Any) -> None:
         """Set fan speed."""

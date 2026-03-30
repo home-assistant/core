@@ -50,13 +50,9 @@ class DaliCenterLight(DaliDeviceEntity, LightEntity):
     """Representation of a Sunricher DALI Light."""
 
     _attr_name = None
-    _attr_is_on: bool | None = None
-    _attr_brightness: int | None = None
+    _attr_min_color_temp_kelvin = 1000
+    _attr_max_color_temp_kelvin = 8000
     _white_level: int | None = None
-    _attr_color_mode: ColorMode | str | None = None
-    _attr_color_temp_kelvin: int | None = None
-    _attr_hs_color: tuple[float, float] | None = None
-    _attr_rgbw_color: tuple[int, int, int, int] | None = None
 
     def __init__(self, light: Device) -> None:
         """Initialize the light entity."""
@@ -69,8 +65,6 @@ class DaliCenterLight(DaliDeviceEntity, LightEntity):
             model=light.model,
             via_device=(DOMAIN, light.gw_sn),
         )
-        self._attr_min_color_temp_kelvin = 1000
-        self._attr_max_color_temp_kelvin = 8000
 
         self._determine_features()
 

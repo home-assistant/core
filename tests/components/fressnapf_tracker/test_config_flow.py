@@ -50,7 +50,7 @@ async def test_user_flow_success(
     # Submit SMS code
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {CONF_SMS_CODE: 123456},
+        {CONF_SMS_CODE: "0123456"},
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
@@ -107,7 +107,7 @@ async def test_user_flow_request_sms_code_errors(
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {CONF_SMS_CODE: 123456},
+        {CONF_SMS_CODE: "0123456"},
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
@@ -142,7 +142,7 @@ async def test_user_flow_verify_phone_number_errors(
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {CONF_SMS_CODE: 999999},
+        {CONF_SMS_CODE: "999999"},
     )
 
     assert result["type"] is FlowResultType.FORM
@@ -153,7 +153,7 @@ async def test_user_flow_verify_phone_number_errors(
     mock_auth_client.verify_phone_number.side_effect = None
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {CONF_SMS_CODE: 123456},
+        {CONF_SMS_CODE: "0123456"},
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
@@ -216,7 +216,9 @@ async def test_user_flow_duplicate_phone_number(
         ),
     ],
 )
-@pytest.mark.usefixtures("mock_api_client", "mock_auth_client")
+@pytest.mark.usefixtures(
+    "mock_api_client_init", "mock_api_client_coordinator", "mock_auth_client"
+)
 async def test_reauth_reconfigure_flow(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
@@ -246,7 +248,7 @@ async def test_reauth_reconfigure_flow(
     # Submit SMS code
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {CONF_SMS_CODE: 123456},
+        {CONF_SMS_CODE: "0123456"},
     )
 
     assert result["type"] is FlowResultType.ABORT
@@ -270,7 +272,7 @@ async def test_reauth_reconfigure_flow(
         ),
     ],
 )
-@pytest.mark.usefixtures("mock_api_client")
+@pytest.mark.usefixtures("mock_api_client_init", "mock_api_client_coordinator")
 async def test_reauth_reconfigure_flow_invalid_phone_number(
     hass: HomeAssistant,
     mock_auth_client: MagicMock,
@@ -311,7 +313,7 @@ async def test_reauth_reconfigure_flow_invalid_phone_number(
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {CONF_SMS_CODE: 123456},
+        {CONF_SMS_CODE: "0123456"},
     )
 
     assert result["type"] is FlowResultType.ABORT
@@ -333,7 +335,7 @@ async def test_reauth_reconfigure_flow_invalid_phone_number(
         ),
     ],
 )
-@pytest.mark.usefixtures("mock_api_client")
+@pytest.mark.usefixtures("mock_api_client_init", "mock_api_client_coordinator")
 async def test_reauth_reconfigure_flow_invalid_sms_code(
     hass: HomeAssistant,
     mock_auth_client: MagicMock,
@@ -358,7 +360,7 @@ async def test_reauth_reconfigure_flow_invalid_sms_code(
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {CONF_SMS_CODE: 999999},
+        {CONF_SMS_CODE: "999999"},
     )
 
     assert result["type"] is FlowResultType.FORM
@@ -369,7 +371,7 @@ async def test_reauth_reconfigure_flow_invalid_sms_code(
     mock_auth_client.verify_phone_number.side_effect = None
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {CONF_SMS_CODE: 123456},
+        {CONF_SMS_CODE: "0123456"},
     )
 
     assert result["type"] is FlowResultType.ABORT
@@ -393,7 +395,7 @@ async def test_reauth_reconfigure_flow_invalid_sms_code(
         ),
     ],
 )
-@pytest.mark.usefixtures("mock_api_client")
+@pytest.mark.usefixtures("mock_api_client_init", "mock_api_client_coordinator")
 async def test_reauth_reconfigure_flow_invalid_user_id(
     hass: HomeAssistant,
     mock_auth_client: MagicMock,
@@ -436,7 +438,7 @@ async def test_reauth_reconfigure_flow_invalid_user_id(
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {CONF_SMS_CODE: 123456},
+        {CONF_SMS_CODE: "0123456"},
     )
 
     assert result["type"] is FlowResultType.ABORT

@@ -1,0 +1,119 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
+      "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
+      "authorize_url_timeout": "[%key:common::config_flow::abort::oauth2_authorize_url_timeout%]",
+      "connection_error": "[%key:component::onedrive::config::abort::connection_error%]",
+      "missing_configuration": "[%key:common::config_flow::abort::oauth2_missing_configuration%]",
+      "no_url_available": "[%key:common::config_flow::abort::oauth2_no_url_available%]",
+      "oauth_error": "[%key:common::config_flow::abort::oauth2_error%]",
+      "oauth_failed": "[%key:common::config_flow::abort::oauth2_failed%]",
+      "oauth_implementation_unavailable": "[%key:common::config_flow::abort::oauth2_implementation_unavailable%]",
+      "oauth_timeout": "[%key:common::config_flow::abort::oauth2_timeout%]",
+      "oauth_unauthorized": "[%key:common::config_flow::abort::oauth2_unauthorized%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]",
+      "user_rejected_authorize": "[%key:common::config_flow::abort::oauth2_user_rejected_authorize%]",
+      "wrong_drive": "[%key:component::onedrive::config::abort::wrong_drive%]"
+    },
+    "create_entry": {
+      "default": "[%key:common::config_flow::create_entry::authenticated%]"
+    },
+    "error": {
+      "folder_creation_error": "[%key:component::onedrive::config::error::folder_creation_error%]"
+    },
+    "step": {
+      "pick_implementation": {
+        "data": {
+          "implementation": "[%key:common::config_flow::data::implementation%]"
+        },
+        "data_description": {
+          "implementation": "[%key:common::config_flow::description::implementation%]"
+        },
+        "title": "[%key:common::config_flow::title::oauth2_pick_implementation%]"
+      },
+      "pick_tenant": {
+        "data": {
+          "tenant_id": "Tenant ID"
+        },
+        "data_description": {
+          "tenant_id": "The directory (tenant) ID from the Microsoft Entra admin center."
+        },
+        "description": "To set up OneDrive for Business, you need to create an app registration in the [Microsoft Entra admin center]({entra_url}) and set the redirect URI to `{redirect_url}`. In this step, enter the ID of the tenant where you created the app registration. In the next step, you will be asked to provide the client ID and client secret of the app registration.",
+        "title": "Select tenant"
+      },
+      "reauth_confirm": {
+        "description": "The OneDrive for Business integration needs to re-authenticate your account",
+        "title": "[%key:common::config_flow::title::reauth%]"
+      },
+      "reconfigure_folder": {
+        "data": {
+          "folder_path": "[%key:component::onedrive_for_business::config::step::select_folder::data::folder_path%]"
+        },
+        "data_description": {
+          "folder_path": "[%key:component::onedrive_for_business::config::step::select_folder::data_description::folder_path%]"
+        },
+        "description": "[%key:component::onedrive_for_business::config::step::select_folder::description%]",
+        "title": "[%key:component::onedrive_for_business::config::step::select_folder::title%]"
+      },
+      "select_folder": {
+        "data": {
+          "folder_path": "Folder path"
+        },
+        "data_description": {
+          "folder_path": "Path to the backup folder"
+        },
+        "description": "Path of folder which will be used to create a folder to store backups. If the folder does not exist, it will be created inside your OneDrive root directory.",
+        "title": "Define backup location"
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "drive_state": {
+        "name": "[%key:component::onedrive::entity::sensor::drive_state::name%]",
+        "state": {
+          "critical": "[%key:component::onedrive::entity::sensor::drive_state::state::critical%]",
+          "exceeded": "[%key:component::onedrive::entity::sensor::drive_state::state::exceeded%]",
+          "nearing": "[%key:component::onedrive::entity::sensor::drive_state::state::nearing%]",
+          "normal": "[%key:common::state::normal%]"
+        }
+      },
+      "remaining_size": {
+        "name": "[%key:component::onedrive::entity::sensor::remaining_size::name%]"
+      },
+      "total_size": {
+        "name": "[%key:component::onedrive::entity::sensor::total_size::name%]"
+      },
+      "used_size": {
+        "name": "[%key:component::onedrive::entity::sensor::used_size::name%]"
+      }
+    }
+  },
+  "exceptions": {
+    "authentication_failed": {
+      "message": "[%key:component::onedrive::exceptions::authentication_failed::message%]"
+    },
+    "failed_to_get_folder": {
+      "message": "[%key:component::onedrive::exceptions::failed_to_get_folder::message%]"
+    },
+    "oauth2_implementation_unavailable": {
+      "message": "[%key:common::exceptions::oauth2_implementation_unavailable::message%]"
+    },
+    "update_failed": {
+      "message": "[%key:component::onedrive::exceptions::update_failed::message%]"
+    }
+  },
+  "issues": {
+    "drive_almost_full": {
+      "description": "[%key:component::onedrive::issues::drive_almost_full::description%]",
+      "title": "[%key:component::onedrive::issues::drive_almost_full::title%]"
+    },
+    "drive_full": {
+      "description": "[%key:component::onedrive::issues::drive_full::description%]",
+      "title": "[%key:component::onedrive::issues::drive_full::title%]"
+    }
+  }
+}

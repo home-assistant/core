@@ -65,10 +65,10 @@ class FritzGuestWifiQRImage(FritzBoxBaseEntity, ImageEntity):
         super().__init__(avm_wrapper, device_friendly_name)
         ImageEntity.__init__(self, hass)
 
-    async def _fetch_image(self) -> bytes:
+    def _fetch_image(self) -> bytes:
         """Fetch the QR code from the Fritz!Box."""
-        qr_stream: BytesIO = await self.hass.async_add_executor_job(
-            self._avm_wrapper.fritz_guest_wifi.get_wifi_qr_code, "png"
+        qr_stream: BytesIO = self._avm_wrapper.fritz_guest_wifi.get_wifi_qr_code(
+            "png", border=2
         )
         qr_bytes = qr_stream.getvalue()
         _LOGGER.debug("fetched %s bytes", len(qr_bytes))
@@ -77,13 +77,15 @@ class FritzGuestWifiQRImage(FritzBoxBaseEntity, ImageEntity):
 
     async def async_added_to_hass(self) -> None:
         """Fetch and set initial data and state."""
-        self._current_qr_bytes = await self._fetch_image()
+        self._current_qr_bytes = await self.hass.async_add_executor_job(
+            self._fetch_image
+        )
         self._attr_image_last_updated = dt_util.utcnow()
 
     async def async_update(self) -> None:
         """Update the image entity data."""
         try:
-            qr_bytes = await self._fetch_image()
+            qr_bytes = await self.hass.async_add_executor_job(self._fetch_image)
         except RequestException:
             self._current_qr_bytes = None
             self._attr_image_last_updated = None

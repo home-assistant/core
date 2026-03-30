@@ -23,6 +23,7 @@ from tests.common import MockConfigEntry, snapshot_platform
 ENTITY_ID = "switch.device_name_electric_heater"
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_switches(
     hass: HomeAssistant,
     snapshot: SnapshotAssertion,

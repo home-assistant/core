@@ -1,4 +1,26 @@
 {
+  "conditions": {
+    "is_closed": {
+      "description": "Tests if one or more valves are closed.",
+      "fields": {
+        "behavior": {
+          "description": "Whether the condition should pass when any or all targeted entities match.",
+          "name": "Behavior"
+        }
+      },
+      "name": "Valve is closed"
+    },
+    "is_open": {
+      "description": "Tests if one or more valves are open.",
+      "fields": {
+        "behavior": {
+          "description": "Whether the condition should pass when any or all targeted entities match.",
+          "name": "Behavior"
+        }
+      },
+      "name": "Valve is open"
+    }
+  },
   "entity_component": {
     "_": {
       "name": "[%key:component::valve::title%]",
@@ -22,14 +44,22 @@
       "name": "Water"
     }
   },
+  "selector": {
+    "condition_behavior": {
+      "options": {
+        "all": "All",
+        "any": "Any"
+      }
+    }
+  },
   "services": {
     "close_valve": {
       "description": "Closes a valve.",
-      "name": "[%key:common::action::close%]"
+      "name": "Close valve"
     },
     "open_valve": {
       "description": "Opens a valve.",
-      "name": "[%key:common::action::open%]"
+      "name": "Open valve"
     },
     "set_valve_position": {
       "description": "Moves a valve to a specific position.",
@@ -39,15 +69,15 @@
           "name": "Position"
         }
       },
-      "name": "Set position"
+      "name": "Set valve position"
     },
     "stop_valve": {
-      "description": "Stops the valve movement.",
-      "name": "[%key:common::action::stop%]"
+      "description": "Stops a valve.",
+      "name": "Stop valve"
     },
     "toggle": {
       "description": "Toggles a valve open/closed.",
-      "name": "[%key:common::action::toggle%]"
+      "name": "Toggle valve"
     }
   },
   "title": "Valve"

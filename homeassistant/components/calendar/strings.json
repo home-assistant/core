@@ -1,4 +1,20 @@
 {
+  "common": {
+    "condition_behavior_description": "How the state should match on the targeted calendars.",
+    "condition_behavior_name": "Behavior"
+  },
+  "conditions": {
+    "is_event_active": {
+      "description": "Tests if one or more calendars have an active event.",
+      "fields": {
+        "behavior": {
+          "description": "[%key:component::calendar::common::condition_behavior_description%]",
+          "name": "[%key:component::calendar::common::condition_behavior_name%]"
+        }
+      },
+      "name": "Calendar event is active"
+    }
+  },
   "entity_component": {
     "_": {
       "name": "[%key:component::calendar::title%]",
@@ -45,6 +61,20 @@
       "title": "Detected use of deprecated action calendar.list_events"
     }
   },
+  "selector": {
+    "condition_behavior": {
+      "options": {
+        "all": "All",
+        "any": "Any"
+      }
+    },
+    "trigger_offset_type": {
+      "options": {
+        "after": "After",
+        "before": "Before"
+      }
+    }
+  },
   "services": {
     "create_event": {
       "description": "Adds a new calendar event.",
@@ -82,7 +112,7 @@
           "name": "Summary"
         }
       },
-      "name": "Create event"
+      "name": "Create calendar event"
     },
     "get_events": {
       "description": "Retrieves events on a calendar within a time range.",
@@ -100,8 +130,38 @@
           "name": "Start time"
         }
       },
-      "name": "Get events"
+      "name": "Get calendar events"
     }
   },
-  "title": "Calendar"
+  "title": "Calendar",
+  "triggers": {
+    "event_ended": {
+      "description": "Triggers when a calendar event ends.",
+      "fields": {
+        "offset": {
+          "description": "Offset from the end of the event.",
+          "name": "Offset"
+        },
+        "offset_type": {
+          "description": "Whether to trigger before or after the end of the event, if an offset is defined.",
+          "name": "Offset type"
+        }
+      },
+      "name": "Calendar event ended"
+    },
+    "event_started": {
+      "description": "Triggers when a calendar event starts.",
+      "fields": {
+        "offset": {
+          "description": "Offset from the start of the event.",
+          "name": "Offset"
+        },
+        "offset_type": {
+          "description": "Whether to trigger before or after the start of the event, if an offset is defined.",
+          "name": "Offset type"
+        }
+      },
+      "name": "Calendar event started"
+    }
+  }
 }

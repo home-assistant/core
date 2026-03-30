@@ -807,6 +807,37 @@ def test_if_state_exists(hass: HomeAssistant) -> None:
     assert result == "exists"
 
 
+def test_entity_name(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test entity_name method."""
+    assert render(hass, "{{ entity_name('sensor.fake') }}") is None
+
+    entry = entity_registry.async_get_or_create(
+        "sensor", "test", "unique_1", original_name="Registry Sensor"
+    )
+    assert render(hass, f"{{{{ entity_name('{entry.entity_id}') }}}}") == (
+        "Registry Sensor"
+    )
+    assert render(hass, f"{{{{ '{entry.entity_id}' | entity_name }}}}") == (
+        "Registry Sensor"
+    )
+
+    entity_registry.async_update_entity(entry.entity_id, name="My Custom Sensor")
+    assert render(hass, f"{{{{ entity_name('{entry.entity_id}') }}}}") == (
+        "My Custom Sensor"
+    )
+
+    # Falls back to state for entities not in the registry
+    hass.states.async_set(
+        "light.no_unique_id", "on", {"friendly_name": "No Unique ID Light"}
+    )
+    assert render(hass, "{{ entity_name('light.no_unique_id') }}") == (
+        "No Unique ID Light"
+    )
+
+
 def test_is_hidden_entity(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
@@ -1041,6 +1072,136 @@ async def test_state_translated(
 
     result = render(hass, '{{ state_translated("domain.is_unknown") }}')
     assert result == "unknown"
+
+
+async def test_state_attr_translated(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
+    """Test state_attr_translated method."""
+    await translation._async_get_translations_cache(hass).async_load("en", set())
+
+    hass.states.async_set(
+        "climate.living_room",
+        "heat",
+        attributes={"fan_mode": "auto", "hvac_action": "heating"},
+    )
+    hass.states.async_set(
+        "switch.test",
+        "on",
+        attributes={"some_attr": "some_value", "numeric_attr": 42, "bool_attr": True},
+    )
+
+    result = render(
+        hass,
+        '{{ state_attr_translated("switch.test", "some_attr") }}',
+    )
+    assert result == "some_value"
+
+    # Non-string attributes should be returned as-is without type conversion
+    result = render(
+        hass,
+        '{{ state_attr_translated("switch.test", "numeric_attr") }}',
+    )
+    assert result == 42
+    assert isinstance(result, int)
+
+    result = render(
+        hass,
+        '{{ state_attr_translated("switch.test", "bool_attr") }}',
+    )
+    assert result is True
+
+    result = render(
+        hass,
+        '{{ state_attr_translated("climate.non_existent", "fan_mode") }}',
+    )
+    assert result is None
+
+    with pytest.raises(TemplateError):
+        render(hass, '{{ state_attr_translated("-invalid", "fan_mode") }}')
+
+    result = render(
+        hass,
+        '{{ state_attr_translated("climate.living_room", "non_existent") }}',
+    )
+    assert result is None
+
+
+@pytest.mark.parametrize(
+    (
+        "entity_id",
+        "attribute",
+        "translations",
+        "expected_result",
+    ),
+    [
+        (
+            "climate.test_platform_5678",
+            "fan_mode",
+            {
+                "component.test_platform.entity.climate.my_climate.state_attributes.fan_mode.state.auto": "Platform Automatic",
+            },
+            "Platform Automatic",
+        ),
+        (
+            "climate.living_room",
+            "fan_mode",
+            {
+                "component.climate.entity_component._.state_attributes.fan_mode.state.auto": "Automatic",
+            },
+            "Automatic",
+        ),
+        (
+            "climate.living_room",
+            "hvac_action",
+            {
+                "component.climate.entity_component._.state_attributes.hvac_action.state.heating": "Heating",
+            },
+            "Heating",
+        ),
+    ],
+)
+async def test_state_attr_translated_translation_lookups(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    entity_id: str,
+    attribute: str,
+    translations: dict[str, str],
+    expected_result: str,
+) -> None:
+    """Test state_attr_translated translation lookups."""
+    await translation._async_get_translations_cache(hass).async_load("en", set())
+
+    hass.states.async_set(
+        "climate.living_room",
+        "heat",
+        attributes={"fan_mode": "auto", "hvac_action": "heating"},
+    )
+
+    config_entry = MockConfigEntry(domain="climate")
+    config_entry.add_to_hass(hass)
+    entity_registry.async_get_or_create(
+        "climate",
+        "test_platform",
+        "5678",
+        config_entry=config_entry,
+        translation_key="my_climate",
+    )
+    hass.states.async_set(
+        "climate.test_platform_5678",
+        "heat",
+        attributes={"fan_mode": "auto"},
+    )
+
+    with patch(
+        "homeassistant.helpers.translation.async_get_cached_translations",
+        return_value=translations,
+    ):
+        result = render(
+            hass,
+            f'{{{{ state_attr_translated("{entity_id}", "{attribute}") }}}}',
+        )
+        assert result == expected_result
 
 
 def test_has_value(hass: HomeAssistant) -> None:
@@ -1721,6 +1882,7 @@ async def test_config_entry_attr(hass: HomeAssistant) -> None:
         "title": "mock title",
         "source": config_entries.SOURCE_BLUETOOTH,
         "disabled_by": config_entries.ConfigEntryDisabler.USER,
+        "pref_disable_polling": True,
     }
     config_entry = MockConfigEntry(**info)
     config_entry.add_to_hass(hass)

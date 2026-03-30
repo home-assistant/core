@@ -1,4 +1,24 @@
 {
+  "conditions": {
+    "is_drying": {
+      "condition": "mdi:arrow-down-bold"
+    },
+    "is_humidifying": {
+      "condition": "mdi:arrow-up-bold"
+    },
+    "is_mode": {
+      "condition": "mdi:air-humidifier"
+    },
+    "is_off": {
+      "condition": "mdi:air-humidifier-off"
+    },
+    "is_on": {
+      "condition": "mdi:air-humidifier"
+    },
+    "is_target_humidity": {
+      "condition": "mdi:water-percent"
+    }
+  },
   "entity_component": {
     "_": {
       "default": "mdi:air-humidifier",
@@ -50,11 +70,8 @@
     }
   },
   "triggers": {
-    "current_humidity_changed": {
-      "trigger": "mdi:water-percent"
-    },
-    "current_humidity_crossed_threshold": {
-      "trigger": "mdi:water-percent"
+    "mode_changed": {
+      "trigger": "mdi:air-humidifier"
     },
     "started_drying": {
       "trigger": "mdi:arrow-down-bold"
@@ -66,7 +83,7 @@
       "trigger": "mdi:air-humidifier-off"
     },
     "turned_on": {
-      "trigger": "mdi:air-humidifier-on"
+      "trigger": "mdi:air-humidifier"
     }
   }
 }

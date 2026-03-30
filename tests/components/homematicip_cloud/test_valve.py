@@ -1,7 +1,10 @@
 """Test HomematicIP Cloud valve entities."""
 
-from homeassistant.components.valve import SERVICE_OPEN_VALVE, ValveState
-from homeassistant.const import Platform
+from homeassistant.components.valve import (
+    DOMAIN as VALVE_DOMAIN,
+    SERVICE_OPEN_VALVE,
+    ValveState,
+)
 from homeassistant.core import HomeAssistant
 
 from .helper import HomeFactory, async_manipulate_test_data, get_and_check_entity_basics
@@ -12,7 +15,7 @@ async def test_watering_valve(
 ) -> None:
     """Test HomematicIP watering valve."""
     entity_id = "valve.bewaesserungsaktor_watering"
-    entity_name = "Bewaesserungsaktor watering"
+    entity_name = "Bewaesserungsaktor Watering"
     device_model = "ELV-SH-WSM"
     mock_hap = await default_mock_hap_factory.async_get_mock_hap(
         test_devices=["Bewaesserungsaktor"]
@@ -25,7 +28,7 @@ async def test_watering_valve(
     assert ha_state.state == ValveState.CLOSED
 
     await hass.services.async_call(
-        Platform.VALVE, SERVICE_OPEN_VALVE, {"entity_id": entity_id}, blocking=True
+        VALVE_DOMAIN, SERVICE_OPEN_VALVE, {"entity_id": entity_id}, blocking=True
     )
 
     await async_manipulate_test_data(

@@ -1,0 +1,15 @@
+{
+  "entity": {
+    "sensor": {
+      "actual_compressor_speed": {
+        "default": "mdi:speedometer"
+      },
+      "airflow_current_speed": {
+        "default": "mdi:fan"
+      },
+      "mode": {
+        "default": "mdi:gauge"
+      }
+    }
+  }
+}

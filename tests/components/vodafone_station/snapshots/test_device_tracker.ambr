@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_all_entities[device_tracker.landevice1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -20,6 +21,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'LanDevice1',
     'options': dict({
     }),
     'original_device_class': None,
@@ -53,8 +55,9 @@
 # ---
 # name: test_all_entities[device_tracker.wifidevice0-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -72,6 +75,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'WifiDevice0',
     'options': dict({
     }),
     'original_device_class': None,

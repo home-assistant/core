@@ -45,12 +45,12 @@ rules:
   discovery-update-info: done
   discovery: done
   docs-data-update: done
-  docs-examples: todo
+  docs-examples: done
   docs-known-limitations: done
   docs-supported-devices: done
   docs-supported-functions: done
   docs-troubleshooting: done
-  docs-use-cases: todo
+  docs-use-cases: done
   dynamic-devices:
     status: exempt
     comment: This integration does not support dynamic device discovery, as each config entry represents a single PoolDose device with all available entities.
@@ -71,4 +71,4 @@ rules:
   # Platinum
   async-dependency: done
   inject-websession: done
-  strict-typing: todo
+  strict-typing: done

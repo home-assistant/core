@@ -72,19 +72,19 @@ async def test_player_alarm_sensors_device_class(
     """Test player alarm binary sensors have correct device class."""
 
     # Test alarm upcoming sensor device class
-    upcoming_state = hass.states.get("binary_sensor.none_alarm_upcoming")
+    upcoming_state = hass.states.get("binary_sensor.alarm_upcoming")
     assert upcoming_state is not None
     assert upcoming_state.attributes.get("device_class") is None
 
     # Test alarm active sensor device class
-    active_state = hass.states.get("binary_sensor.none_alarm_active")
+    active_state = hass.states.get("binary_sensor.alarm_active")
     assert active_state is not None
     assert (
         active_state.attributes.get("device_class") == BinarySensorDeviceClass.RUNNING
     )
 
     # Test alarm snooze sensor device class
-    snooze_state = hass.states.get("binary_sensor.none_alarm_snoozed")
+    snooze_state = hass.states.get("binary_sensor.alarm_snoozed")
     assert snooze_state is not None
     assert (
         snooze_state.attributes.get("device_class") == BinarySensorDeviceClass.RUNNING
@@ -101,17 +101,17 @@ async def test_player_alarm_sensors_state(
     player = mock_player
 
     # Test alarm upcoming sensor
-    upcoming_state = hass.states.get("binary_sensor.none_alarm_upcoming")
+    upcoming_state = hass.states.get("binary_sensor.alarm_upcoming")
     assert upcoming_state is not None
     assert upcoming_state.state == STATE_ON
 
     # Test alarm active sensor
-    active_state = hass.states.get("binary_sensor.none_alarm_active")
+    active_state = hass.states.get("binary_sensor.alarm_active")
     assert active_state is not None
     assert active_state.state == STATE_OFF
 
     # Test alarm snooze sensor
-    snooze_state = hass.states.get("binary_sensor.none_alarm_snoozed")
+    snooze_state = hass.states.get("binary_sensor.alarm_snoozed")
     assert snooze_state is not None
     assert snooze_state.state == STATE_OFF
 
@@ -123,10 +123,10 @@ async def test_player_alarm_sensors_state(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    upcoming_state = hass.states.get("binary_sensor.none_alarm_upcoming")
+    upcoming_state = hass.states.get("binary_sensor.alarm_upcoming")
     assert upcoming_state is not None
     assert upcoming_state.state == STATE_OFF
 
-    active_state = hass.states.get("binary_sensor.none_alarm_active")
+    active_state = hass.states.get("binary_sensor.alarm_active")
     assert active_state is not None
     assert active_state.state == STATE_ON

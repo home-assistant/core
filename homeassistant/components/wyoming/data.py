@@ -126,7 +126,7 @@ async def load_wyoming_info(
 
                 if wyoming_info is not None:
                     break  # for
-        except (TimeoutError, OSError, WyomingError):
+        except TimeoutError, OSError, WyomingError:
             # Sleep and try again
             await asyncio.sleep(retry_wait)
 

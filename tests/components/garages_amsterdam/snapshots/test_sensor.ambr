@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_all_sensors[sensor.ijdok_long_parking_capacity-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -20,6 +21,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Long parking capacity',
     'options': dict({
     }),
     'original_device_class': None,
@@ -51,8 +53,9 @@
 # ---
 # name: test_all_sensors[sensor.ijdok_long_parking_free_space-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -72,6 +75,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Long parking free space',
     'options': dict({
     }),
     'original_device_class': None,
@@ -104,8 +108,9 @@
 # ---
 # name: test_all_sensors[sensor.ijdok_short_parking_capacity-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -123,6 +128,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Short parking capacity',
     'options': dict({
     }),
     'original_device_class': None,
@@ -154,8 +160,9 @@
 # ---
 # name: test_all_sensors[sensor.ijdok_short_parking_free_space-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -175,6 +182,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Short parking free space',
     'options': dict({
     }),
     'original_device_class': None,
