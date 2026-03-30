@@ -9,8 +9,7 @@ from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import MotionBlindsConfigEntry
-from .coordinator import DataUpdateCoordinatorMotionBlinds
+from .coordinator import DataUpdateCoordinatorMotionBlinds, MotionBlindsConfigEntry
 from .entity import MotionCoordinatorEntity
 
 

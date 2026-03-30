@@ -18,7 +18,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import MotionBlindsConfigEntry
+from .coordinator import MotionBlindsConfigEntry
 from .entity import MotionCoordinatorEntity
 
 ATTR_BATTERY_VOLTAGE = "battery_voltage"

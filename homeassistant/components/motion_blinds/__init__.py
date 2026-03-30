@@ -1,14 +1,11 @@
 """The motion_blinds component."""
 
 import asyncio
-from dataclasses import dataclass
 import logging
 from typing import TYPE_CHECKING
 
 from motionblinds import AsyncMotionMulticast
-from motionblinds.motion_blinds import MotionGateway
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY, CONF_HOST, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
@@ -27,19 +24,12 @@ from .const import (
     KEY_UNSUB_STOP,
     PLATFORMS,
 )
-from .coordinator import DataUpdateCoordinatorMotionBlinds
+from .coordinator import (
+    DataUpdateCoordinatorMotionBlinds,
+    MotionBlindsConfigEntry,
+    MotionBlindsData,
+)
 from .gateway import ConnectMotionGateway
-
-
-@dataclass
-class MotionBlindsData:
-    """Runtime data for Motion Blinds integration."""
-
-    gateway: MotionGateway
-    coordinator: DataUpdateCoordinatorMotionBlinds
-
-
-type MotionBlindsConfigEntry = ConfigEntry[MotionBlindsData]
 
 _LOGGER = logging.getLogger(__name__)
 

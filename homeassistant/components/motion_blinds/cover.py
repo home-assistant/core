@@ -20,7 +20,6 @@ from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import VolDictType
 
-from . import MotionBlindsConfigEntry
 from .const import (
     ATTR_ABSOLUTE_POSITION,
     ATTR_AVAILABLE,
@@ -29,6 +28,7 @@ from .const import (
     SERVICE_SET_ABSOLUTE_POSITION,
     UPDATE_DELAY_STOP,
 )
+from .coordinator import MotionBlindsConfigEntry
 from .entity import MotionCoordinatorEntity
 
 _LOGGER = logging.getLogger(__name__)

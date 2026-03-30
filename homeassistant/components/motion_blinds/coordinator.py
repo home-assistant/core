@@ -1,11 +1,15 @@
 """DataUpdateCoordinator for Motionblinds integration."""
 
+from __future__ import annotations
+
 import asyncio
+from dataclasses import dataclass
 from datetime import timedelta
 import logging
 from typing import Any
 
 from motionblinds import DEVICE_TYPES_WIFI, ParseException
+from motionblinds.motion_blinds import MotionGateway
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -21,6 +25,17 @@ from .const import (
 )
 
 _LOGGER = logging.getLogger(__name__)
+
+
+@dataclass
+class MotionBlindsData:
+    """Runtime data for Motion Blinds integration."""
+
+    gateway: MotionGateway
+    coordinator: DataUpdateCoordinatorMotionBlinds
+
+
+type MotionBlindsConfigEntry = ConfigEntry[MotionBlindsData]
 
 
 class DataUpdateCoordinatorMotionBlinds(DataUpdateCoordinator):
