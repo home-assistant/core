@@ -8,7 +8,7 @@ import json
 import logging
 from typing import Any
 
-from homeassistant.config_entries import SOURCE_RECONFIGURE, ConfigFlowResult
+from homeassistant.config_entries import ConfigFlowResult
 from homeassistant.helpers.config_entry_oauth2_flow import AbstractOAuth2FlowHandler
 
 from .const import CONF_CHARACTER_ID, CONF_CHARACTER_NAME, DOMAIN, SCOPES
@@ -51,19 +51,6 @@ class OAuth2FlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
         character_name = character_info[CONF_CHARACTER_NAME]
 
         await self.async_set_unique_id(str(character_id))
-
-        if self.source == SOURCE_RECONFIGURE:
-            self._abort_if_unique_id_mismatch(reason="reconfigure_account_mismatch")
-            return self.async_update_reload_and_abort(
-                self._get_reconfigure_entry(),
-                title=character_name,
-                data={
-                    **data,
-                    CONF_CHARACTER_ID: character_id,
-                    CONF_CHARACTER_NAME: character_name,
-                },
-            )
-
         self._abort_if_unique_id_configured()
 
         data[CONF_CHARACTER_ID] = character_id
@@ -73,12 +60,6 @@ class OAuth2FlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
             title=character_name,
             data=data,
         )
-
-    async def async_step_reconfigure(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Handle reconfiguration."""
-        return await self.async_step_user()
 
 
 def _decode_eve_jwt(token: str) -> dict[str, Any]:

@@ -8,9 +8,7 @@
       "oauth_error": "[%key:common::config_flow::abort::oauth2_error%]",
       "oauth_failed": "[%key:common::config_flow::abort::oauth2_failed%]",
       "oauth_timeout": "[%key:common::config_flow::abort::oauth2_timeout%]",
-      "oauth_unauthorized": "[%key:common::config_flow::abort::oauth2_unauthorized%]",
-      "reconfigure_account_mismatch": "The authenticated character does not match the character being reconfigured.",
-      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
+      "oauth_unauthorized": "[%key:common::config_flow::abort::oauth2_unauthorized%]"
     },
     "step": {
       "pick_implementation": {
