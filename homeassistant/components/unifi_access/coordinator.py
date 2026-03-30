@@ -15,7 +15,9 @@ from unifi_access_api import (
     ApiNotFoundError,
     Door,
     DoorLockRelayStatus,
+    DoorLockRule,
     DoorLockRuleStatus,
+    DoorLockRuleType,
     EmergencyStatus,
     UnifiAccessApiClient,
     WsMessageHandler,
@@ -40,6 +42,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
+DEFAULT_LOCK_RULE_INTERVAL = 10
 
 type UnifiAccessConfigEntry = ConfigEntry[UnifiAccessCoordinator]
 
@@ -101,6 +104,34 @@ class UnifiAccessCoordinator(DataUpdateCoordinator[UnifiAccessData]):
 
         self._event_listeners.append(event_callback)
         return _unsubscribe
+
+    async def async_set_lock_rule(self, door_id: str, rule_type: str) -> None:
+        """Set a temporary lock rule for a door."""
+        if not rule_type:
+            return
+        lock_rule_type = DoorLockRuleType(rule_type)
+        rule = DoorLockRule(type=lock_rule_type, interval=DEFAULT_LOCK_RULE_INTERVAL)
+        await self.client.set_door_lock_rule(door_id, rule)
+        if self.data is None or door_id not in self.data.doors:
+            return
+        new_status = DoorLockRuleStatus(
+            type=DoorLockRuleType.NONE
+            if lock_rule_type == DoorLockRuleType.RESET
+            else lock_rule_type
+        )
+        updated_data = replace(
+            self.data,
+            door_lock_rules={
+                **self.data.door_lock_rules,
+                door_id: new_status,
+            },
+        )
+        if self.last_update_success:
+            self.async_set_updated_data(updated_data)
+        else:
+            # Preserve coordinator error state while updating cached data
+            self.data = updated_data
+            self.async_update_listeners()
 
     async def _async_setup(self) -> None:
         """Set up the WebSocket connection for push updates."""
@@ -302,7 +333,7 @@ class UnifiAccessCoordinator(DataUpdateCoordinator[UnifiAccessData]):
     async def _handle_setting_update(self, msg: WebsocketMessage) -> None:
         """Handle settings update messages (evacuation/lockdown)."""
         if self.data is None:
-            return
+            return  # type: ignore[unreachable]
         update = cast(SettingUpdate, msg)
         self.async_set_updated_data(
             replace(

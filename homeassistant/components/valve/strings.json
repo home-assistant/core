@@ -1,4 +1,30 @@
 {
+  "common": {
+    "trigger_behavior_description": "The behavior of the targeted valves to trigger on.",
+    "trigger_behavior_name": "Behavior"
+  },
+  "conditions": {
+    "is_closed": {
+      "description": "Tests if one or more valves are closed.",
+      "fields": {
+        "behavior": {
+          "description": "Whether the condition should pass when any or all targeted entities match.",
+          "name": "Behavior"
+        }
+      },
+      "name": "Valve is closed"
+    },
+    "is_open": {
+      "description": "Tests if one or more valves are open.",
+      "fields": {
+        "behavior": {
+          "description": "Whether the condition should pass when any or all targeted entities match.",
+          "name": "Behavior"
+        }
+      },
+      "name": "Valve is open"
+    }
+  },
   "entity_component": {
     "_": {
       "name": "[%key:component::valve::title%]",
@@ -20,6 +46,21 @@
     },
     "water": {
       "name": "Water"
+    }
+  },
+  "selector": {
+    "condition_behavior": {
+      "options": {
+        "all": "All",
+        "any": "Any"
+      }
+    },
+    "trigger_behavior": {
+      "options": {
+        "any": "Any",
+        "first": "First",
+        "last": "Last"
+      }
     }
   },
   "services": {
@@ -50,5 +91,27 @@
       "name": "Toggle valve"
     }
   },
-  "title": "Valve"
+  "title": "Valve",
+  "triggers": {
+    "closed": {
+      "description": "Triggers after one or more valves close.",
+      "fields": {
+        "behavior": {
+          "description": "[%key:component::valve::common::trigger_behavior_description%]",
+          "name": "[%key:component::valve::common::trigger_behavior_name%]"
+        }
+      },
+      "name": "Valve closed"
+    },
+    "opened": {
+      "description": "Triggers after one or more valves open.",
+      "fields": {
+        "behavior": {
+          "description": "[%key:component::valve::common::trigger_behavior_description%]",
+          "name": "[%key:component::valve::common::trigger_behavior_name%]"
+        }
+      },
+      "name": "Valve opened"
+    }
+  }
 }
