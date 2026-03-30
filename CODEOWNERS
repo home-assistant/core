@@ -741,8 +741,8 @@ build.json @home-assistant/supervisor
 /tests/components/honeywell/ @rdfurman @mkmer
 /homeassistant/components/hr_energy_qube/ @MattieGit
 /tests/components/hr_energy_qube/ @MattieGit
-/homeassistant/components/html5/ @alexyao2015
-/tests/components/html5/ @alexyao2015
+/homeassistant/components/html5/ @alexyao2015 @tr4nt0r
+/tests/components/html5/ @alexyao2015 @tr4nt0r
 /homeassistant/components/http/ @home-assistant/core
 /tests/components/http/ @home-assistant/core
 /homeassistant/components/huawei_lte/ @scop @fphammerle
@@ -1228,8 +1228,8 @@ build.json @home-assistant/supervisor
 /tests/components/onewire/ @garbled1 @epenet
 /homeassistant/components/onkyo/ @arturpragacz @eclair4151
 /tests/components/onkyo/ @arturpragacz @eclair4151
-/homeassistant/components/onvif/ @hunterjm @jterrace
-/tests/components/onvif/ @hunterjm @jterrace
+/homeassistant/components/onvif/ @jterrace
+/tests/components/onvif/ @jterrace
 /homeassistant/components/open_meteo/ @frenck
 /tests/components/open_meteo/ @frenck
 /homeassistant/components/open_router/ @joostlek

@@ -45,5 +45,13 @@
         "name": "[%key:component::sensor::entity_component::humidity::name%]"
       }
     }
+  },
+  "exceptions": {
+    "auth_failed": {
+      "message": "Could not log in to Huum with the given credentials."
+    },
+    "unable_to_turn_on": {
+      "message": "Unable to turn on the sauna."
+    }
   }
 }
