@@ -53,7 +53,6 @@ async def setup_mock_switch(
         mock_switch_wrapper.register_callback = MagicMock()
 
         # Add and initialize the integration
-        mock_config_entry.add_to_hass(hass)
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
 
@@ -78,7 +77,6 @@ async def test_setup_no_switches(
     """Test setup when no switches are discovered."""
     mock_tis_api.get_entities.return_value = []
 
-    mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
@@ -191,7 +189,6 @@ async def test_setup_switch_no_name(
         mock_switch_wrapper.request_update = AsyncMock()
         mock_switch_wrapper.register_callback = MagicMock()
 
-        mock_config_entry.add_to_hass(hass)
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
 
@@ -270,7 +267,6 @@ async def test_invalid_channel_data(
         mock_switch_wrapper.request_update = AsyncMock()
         mock_switch_wrapper.register_callback = MagicMock()
 
-        mock_config_entry.add_to_hass(hass)
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
 
