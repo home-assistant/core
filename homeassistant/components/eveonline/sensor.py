@@ -16,7 +16,6 @@ from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN
 from .coordinator import EveOnlineConfigEntry, EveOnlineCoordinator, EveOnlineData
 from .entity import EveOnlineCharacterEntity, EveOnlineServerEntity
 
@@ -28,7 +27,6 @@ class EveOnlineSensorDescription(SensorEntityDescription):
     """Describe an Eve Online sensor."""
 
     value_fn: Callable[[EveOnlineData], str | int | float | datetime | None]
-    available_fn: Callable[[EveOnlineData], bool] = lambda _: True
 
 
 SERVER_SENSORS: tuple[EveOnlineSensorDescription, ...] = (
@@ -59,7 +57,6 @@ CHARACTER_SENSORS: tuple[EveOnlineSensorDescription, ...] = (
             if data.location
             else None
         ),
-        available_fn=lambda data: data.location is not None,
     ),
     EveOnlineSensorDescription(
         key="ship",
@@ -69,7 +66,6 @@ CHARACTER_SENSORS: tuple[EveOnlineSensorDescription, ...] = (
             if data.ship
             else None
         ),
-        available_fn=lambda data: data.ship is not None,
     ),
     EveOnlineSensorDescription(
         key="wallet_balance",
@@ -79,14 +75,12 @@ CHARACTER_SENSORS: tuple[EveOnlineSensorDescription, ...] = (
         value_fn=lambda data: (
             round(data.wallet_balance.balance, 2) if data.wallet_balance else None
         ),
-        available_fn=lambda data: data.wallet_balance is not None,
     ),
     EveOnlineSensorDescription(
         key="total_sp",
         translation_key="total_sp",
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda data: data.skills.total_sp if data.skills else None,
-        available_fn=lambda data: data.skills is not None,
     ),
     EveOnlineSensorDescription(
         key="unallocated_sp",
@@ -94,7 +88,6 @@ CHARACTER_SENSORS: tuple[EveOnlineSensorDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         entity_registry_enabled_default=False,
         value_fn=lambda data: data.skills.unallocated_sp if data.skills else None,
-        available_fn=lambda data: data.skills is not None,
     ),
     EveOnlineSensorDescription(
         key="skill_queue_count",
@@ -132,7 +125,6 @@ CHARACTER_SENSORS: tuple[EveOnlineSensorDescription, ...] = (
         value_fn=lambda data: (
             data.mail_labels.total_unread_count if data.mail_labels else None
         ),
-        available_fn=lambda data: data.mail_labels is not None,
     ),
     EveOnlineSensorDescription(
         key="industry_jobs",
@@ -172,7 +164,6 @@ CHARACTER_SENSORS: tuple[EveOnlineSensorDescription, ...] = (
             if data.jump_fatigue and data.jump_fatigue.jump_fatigue_expire_date
             else None
         ),
-        available_fn=lambda data: data.jump_fatigue is not None,
     ),
 )
 
@@ -184,18 +175,10 @@ async def async_setup_entry(
 ) -> None:
     """Set up Eve Online sensors from a config entry."""
     coordinator = entry.runtime_data
-    entities: list[EveOnlineSensor] = []
-
-    # Only create shared Tranquility server entities once across all entries.
-    # Track the owning entry in hass.data so ownership can transfer on unload.
-    domain_data = hass.data.setdefault(DOMAIN, {})
-    if "server_sensor_entry" not in domain_data:
-        domain_data["server_sensor_entry"] = entry.entry_id
-        entities.extend(
-            EveOnlineServerSensor(coordinator, description)
-            for description in SERVER_SENSORS
-        )
-
+    entities: list[EveOnlineSensor] = [
+        EveOnlineServerSensor(coordinator, description)
+        for description in SERVER_SENSORS
+    ]
     entities.extend(
         EveOnlineCharacterSensor(coordinator, description)
         for description in CHARACTER_SENSORS
@@ -239,10 +222,3 @@ class EveOnlineCharacterSensor(EveOnlineCharacterEntity, EveOnlineSensor):
         """Initialize the sensor."""
         super().__init__(coordinator, description.key)
         self.entity_description = description
-
-    @property
-    def available(self) -> bool:
-        """Return True if entity is available."""
-        return super().available and self.entity_description.available_fn(
-            self.coordinator.data
-        )

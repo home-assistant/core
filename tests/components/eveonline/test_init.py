@@ -134,10 +134,10 @@ async def test_coordinator_optional_endpoint_error(
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
 
-    # Optional endpoints should return None, sensor should be unavailable
+    # Optional endpoints should return None, sensor value is unknown
     state = hass.states.get("sensor.test_capsuleer_wallet_balance")
     assert state is not None
-    assert state.state == "unavailable"
+    assert state.state == "unknown"
 
 
 async def test_coordinator_optional_endpoint_network_error(
@@ -159,7 +159,7 @@ async def test_coordinator_optional_endpoint_network_error(
 
     state = hass.states.get("sensor.test_capsuleer_wallet_balance")
     assert state is not None
-    assert state.state == "unavailable"
+    assert state.state == "unknown"
 
 
 async def test_coordinator_auth_error_on_optional_endpoint(
@@ -186,7 +186,7 @@ async def test_coordinator_auth_error_on_optional_endpoint(
 
     state = hass.states.get("sensor.test_capsuleer_wallet_balance")
     assert state is not None
-    assert state.state == "unavailable"
+    assert state.state == "unknown"
 
 
 async def test_coordinator_list_endpoint_error(
