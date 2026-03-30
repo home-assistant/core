@@ -15,6 +15,7 @@ import probatio
 
 from homeassistant.config_entries import (
     SOURCE_REAUTH,
+    SOURCE_RECONFIGURE,
     ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
@@ -118,17 +119,17 @@ class LibreHardwareMonitorConfigFlow(ConfigFlow, domain=DOMAIN):
         """Confirm (re)authentication dialog."""
         errors: dict[str, str] = {}
 
-        # we use this step both for initial auth and for re-auth
+        # we use this step both for initial auth and for re-auth / re-config
         reauth_entry: ConfigEntry | None = None
         if self.source == SOURCE_REAUTH:
             reauth_entry = self._get_reauth_entry()
+            self._host = reauth_entry.data[CONF_HOST]
+            self._port = reauth_entry.data[CONF_PORT]
+        elif self.source == SOURCE_RECONFIGURE:
+            reauth_entry = self._get_reconfigure_entry()
 
         if user_input:
-            data = {
-                CONF_HOST: reauth_entry.data[CONF_HOST] if reauth_entry else self._host,
-                CONF_PORT: reauth_entry.data[CONF_PORT] if reauth_entry else self._port,
-                **user_input,
-            }
+            data = {CONF_HOST: self._host, CONF_PORT: self._port, **user_input}
             try:
                 lhm_data = await _validate_connection(data)
             except LibreHardwareMonitorConnectionError as exception:
@@ -141,10 +142,10 @@ class LibreHardwareMonitorConfigFlow(ConfigFlow, domain=DOMAIN):
             else:
                 if lhm_data.is_deprecated_version:
                     errors["base"] = "deprecated_version"
-                elif self.source == SOURCE_REAUTH:
+                elif self.source in (SOURCE_REAUTH, SOURCE_RECONFIGURE):
                     return self.async_update_reload_and_abort(
                         entry=reauth_entry,  # type: ignore[arg-type]
-                        data_updates=user_input,
+                        data_updates=data,
                     )
                 else:
                     # the initial connection was unauthorized,
@@ -165,6 +166,43 @@ class LibreHardwareMonitorConfigFlow(ConfigFlow, domain=DOMAIN):
                     if reauth_entry is not None
                     else None
                 },
+            ),
+            errors=errors,
+        )
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration of the integration."""
+        errors: dict[str, str] = {}
+        reconfig_entry = self._get_reconfigure_entry()
+
+        if user_input:
+            try:
+                lhm_data = await _validate_connection(user_input)
+            except LibreHardwareMonitorConnectionError as exception:
+                _LOGGER.error(exception)
+                errors["base"] = "cannot_connect"
+            except LibreHardwareMonitorUnauthorizedError:
+                self._host = user_input[CONF_HOST]
+                self._port = user_input[CONF_PORT]
+                return await self.async_step_reauth_confirm()
+            except LibreHardwareMonitorNoDevicesError:
+                errors["base"] = "no_devices"
+            else:
+                if lhm_data.is_deprecated_version:
+                    errors["base"] = "deprecated_version"
+                else:
+                    return self.async_update_reload_and_abort(
+                        reconfig_entry,
+                        data_updates=user_input,
+                    )
+
+        suggested_values = user_input or reconfig_entry.data
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=self.add_suggested_values_to_schema(
+                CONFIG_SCHEMA, suggested_values
             ),
             errors=errors,
         )

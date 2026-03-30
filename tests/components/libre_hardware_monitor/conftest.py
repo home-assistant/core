@@ -29,6 +29,8 @@ REAUTH_INPUT = {
     CONF_PASSWORD: "new-password",
 }
 
+RECONFIGURE_INPUT = {CONF_HOST: "192.168.0.21", CONF_PORT: 8086}
+
 
 @pytest.fixture
 def mock_setup_entry() -> Generator[AsyncMock]:

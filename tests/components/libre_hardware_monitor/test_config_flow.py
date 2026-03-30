@@ -16,7 +16,13 @@ from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from .conftest import AUTH_INPUT, REAUTH_INPUT, VALID_CONFIG, VALID_CONFIG_WITH_AUTH
+from .conftest import (
+    AUTH_INPUT,
+    REAUTH_INPUT,
+    RECONFIGURE_INPUT,
+    VALID_CONFIG,
+    VALID_CONFIG_WITH_AUTH,
+)
 
 from tests.common import MockConfigEntry
 
@@ -333,3 +339,120 @@ async def test_reauth_deprecated_version_is_rejected(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
+
+
+async def test_reconfigure(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_lhm_client: AsyncMock,
+) -> None:
+    """Test reconfiguring host and port."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], RECONFIGURE_INPUT
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert mock_config_entry.data == RECONFIGURE_INPUT
+    assert len(hass.config_entries.async_entries()) == 1
+
+
+async def test_reconfigure_with_auth(
+    hass: HomeAssistant,
+    mock_auth_config_entry: MockConfigEntry,
+    mock_lhm_client: AsyncMock,
+) -> None:
+    """Test reconfiguring to a server which requires authentication."""
+    mock_auth_config_entry.add_to_hass(hass)
+
+    result = await mock_auth_config_entry.start_reconfigure_flow(hass)
+
+    mock_lhm_client.get_data.side_effect = LibreHardwareMonitorUnauthorizedError()
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], RECONFIGURE_INPUT
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], REAUTH_INPUT
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "invalid_auth"}
+
+    mock_lhm_client.get_data.side_effect = None
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], REAUTH_INPUT
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert mock_auth_config_entry.data == {**RECONFIGURE_INPUT, **REAUTH_INPUT}
+
+
+@pytest.mark.parametrize(
+    ("side_effect", "error_text"),
+    [
+        (LibreHardwareMonitorConnectionError, "cannot_connect"),
+        (LibreHardwareMonitorNoDevicesError, "no_devices"),
+    ],
+)
+async def test_reconfigure_errors(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_lhm_client: AsyncMock,
+    side_effect: Exception,
+    error_text: str,
+) -> None:
+    """Test reconfigure flow errors and recovery."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+
+    mock_lhm_client.get_data.side_effect = side_effect
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], RECONFIGURE_INPUT
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+    assert result["errors"] == {"base": error_text}
+    assert mock_config_entry.data == VALID_CONFIG
+
+    mock_lhm_client.get_data.side_effect = None
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], RECONFIGURE_INPUT
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert mock_config_entry.data == RECONFIGURE_INPUT
+
+
+@pytest.mark.usefixtures("mock_deprecated_lhm_client")
+async def test_reconfigure_deprecated_version_is_rejected(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test that reconfigure does not complete for a deprecated LHM version."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], RECONFIGURE_INPUT
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+    assert result["errors"] == {"base": "deprecated_version"}
+    assert mock_config_entry.data == VALID_CONFIG
