@@ -2,7 +2,6 @@
 
 from collections.abc import Awaitable, Callable
 import json
-import logging
 import re
 from typing import Any
 
@@ -50,8 +49,6 @@ from .const import (
     SupervisorEntityModel,
 )
 from .coordinator import HassioDataUpdateCoordinator, get_addons_info
-
-_LOGGER = logging.getLogger(__name__)
 
 SERVICE_ADDON_START = "addon_start"
 SERVICE_ADDON_STOP = "addon_stop"
