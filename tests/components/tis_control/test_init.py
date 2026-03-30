@@ -116,7 +116,6 @@ async def test_async_setup_entry_event_listener_exception(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test that the background task handles exceptions when processing events."""
-    # Yield an event missing 'device_id' to raise a KeyError.
     fake_event = {"value": 1}
 
     async def _mock_event_generator():
@@ -124,7 +123,14 @@ async def test_async_setup_entry_event_listener_exception(
 
     mock_tis_api.consume_events.side_effect = _mock_event_generator
 
-    with patch.object(hass.config_entries, "async_forward_entry_setups"):
+    # Patch async_fire to raise an exception when called
+    with (
+        patch.object(hass.config_entries, "async_forward_entry_setups"),
+        patch(
+            "homeassistant.core.EventBus.async_fire",
+            side_effect=Exception("Simulated bus error"),
+        ),
+    ):
         await async_setup_entry(hass, mock_config_entry)
         await hass.async_block_till_done(wait_background_tasks=True)
 
