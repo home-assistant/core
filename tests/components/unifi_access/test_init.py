@@ -378,8 +378,12 @@ async def test_new_door_entities_created_on_refresh(
         _make_door("door-003", "Garage Door"),
     ]
 
-    coordinator = init_integration.runtime_data
-    await coordinator.async_refresh()
+    # Trigger natural refresh via WebSocket reconnect
+    on_disconnect = mock_client.start_websocket.call_args[1]["on_disconnect"]
+    on_connect = mock_client.start_websocket.call_args[1]["on_connect"]
+    on_disconnect()
+    await hass.async_block_till_done()
+    on_connect()
     await hass.async_block_till_done()
 
     # Entities for the new door should now exist
