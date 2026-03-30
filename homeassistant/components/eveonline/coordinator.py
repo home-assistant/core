@@ -19,7 +19,6 @@ from eveonline.models import (
     JumpFatigue,
     MailLabelsSummary,
     MarketOrder,
-    ServerStatus,
     SkillQueueEntry,
     WalletBalance,
 )
@@ -37,9 +36,8 @@ DEFAULT_SCAN_INTERVAL = 60
 
 @dataclass
 class EveOnlineData:
-    """Combined server and character data."""
+    """Eve Online character data."""
 
-    server_status: ServerStatus
     character_id: int
     character_name: str
     character_online: CharacterOnlineStatus | None = None
@@ -86,7 +84,7 @@ class EveOnlineCoordinator(DataUpdateCoordinator[EveOnlineData]):
     async def _async_update_data(self) -> EveOnlineData:
         """Fetch server status and character data from ESI."""
         try:
-            server_status = await self.client.async_get_server_status()
+            await self.client.async_get_server_status()
         except (EveOnlineError, aiohttp.ClientError) as err:
             raise UpdateFailed(
                 translation_domain=DOMAIN,
@@ -130,7 +128,6 @@ class EveOnlineCoordinator(DataUpdateCoordinator[EveOnlineData]):
         )
 
         return EveOnlineData(
-            server_status=server_status,
             character_id=self.character_id,
             character_name=self.character_name,
             character_online=character_online,

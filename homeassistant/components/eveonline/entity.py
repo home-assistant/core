@@ -15,28 +15,6 @@ class EveOnlineEntity(CoordinatorEntity[EveOnlineCoordinator]):
     _attr_has_entity_name = True
 
 
-class EveOnlineServerEntity(EveOnlineEntity):
-    """Base class for Eve Online server (Tranquility) entities."""
-
-    def __init__(
-        self,
-        coordinator: EveOnlineCoordinator,
-        key: str,
-    ) -> None:
-        """Initialize server entity."""
-        super().__init__(coordinator)
-        self._attr_unique_id = key
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, "tranquility")},
-            name="Eve Online (Tranquility)",
-            manufacturer="CCP Games",
-            model="ESI API",
-            sw_version=coordinator.data.server_status.server_version,
-            entry_type=DeviceEntryType.SERVICE,
-            configuration_url="https://esi.evetech.net/ui/",
-        )
-
-
 class EveOnlineCharacterEntity(EveOnlineEntity):
     """Base class for Eve Online character entities."""
 
@@ -54,7 +32,6 @@ class EveOnlineCharacterEntity(EveOnlineEntity):
             manufacturer="CCP Games",
             model="Eve Online Character",
             entry_type=DeviceEntryType.SERVICE,
-            via_device=(DOMAIN, "tranquility"),
             configuration_url=(
                 f"https://evewho.com/character/{coordinator.character_id}"
             ),

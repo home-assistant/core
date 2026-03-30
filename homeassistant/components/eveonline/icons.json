@@ -22,15 +22,6 @@
       "next_industry_finish": {
         "default": "mdi:clock-end"
       },
-      "players_online": {
-        "default": "mdi:account-group"
-      },
-      "sell_orders": {
-        "default": "mdi:cart-arrow-up"
-      },
-      "server_version": {
-        "default": "mdi:information-outline"
-      },
       "ship": {
         "default": "mdi:rocket-launch"
       },

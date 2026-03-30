@@ -12,12 +12,11 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import EveOnlineConfigEntry, EveOnlineCoordinator, EveOnlineData
-from .entity import EveOnlineCharacterEntity, EveOnlineServerEntity
+from .entity import EveOnlineCharacterEntity
 
 PARALLEL_UPDATES = 0
 
@@ -28,22 +27,6 @@ class EveOnlineSensorDescription(SensorEntityDescription):
 
     value_fn: Callable[[EveOnlineData], str | int | float | datetime | None]
 
-
-SERVER_SENSORS: tuple[EveOnlineSensorDescription, ...] = (
-    EveOnlineSensorDescription(
-        key="players_online",
-        translation_key="players_online",
-        state_class=SensorStateClass.MEASUREMENT,
-        value_fn=lambda data: data.server_status.players,
-    ),
-    EveOnlineSensorDescription(
-        key="server_version",
-        translation_key="server_version",
-        entity_category=EntityCategory.DIAGNOSTIC,
-        entity_registry_enabled_default=False,
-        value_fn=lambda data: data.server_status.server_version,
-    ),
-)
 
 CHARACTER_SENSORS: tuple[EveOnlineSensorDescription, ...] = (
     EveOnlineSensorDescription(
@@ -175,15 +158,10 @@ async def async_setup_entry(
 ) -> None:
     """Set up Eve Online sensors from a config entry."""
     coordinator = entry.runtime_data
-    entities: list[EveOnlineSensor] = [
-        EveOnlineServerSensor(coordinator, description)
-        for description in SERVER_SENSORS
-    ]
-    entities.extend(
+    async_add_entities(
         EveOnlineCharacterSensor(coordinator, description)
         for description in CHARACTER_SENSORS
     )
-    async_add_entities(entities)
 
 
 class EveOnlineSensor(SensorEntity):
@@ -196,19 +174,6 @@ class EveOnlineSensor(SensorEntity):
     def native_value(self) -> str | int | float | datetime | None:
         """Return the sensor value."""
         return self.entity_description.value_fn(self.coordinator.data)
-
-
-class EveOnlineServerSensor(EveOnlineServerEntity, EveOnlineSensor):
-    """Eve Online server sensor (shared Tranquility device)."""
-
-    def __init__(
-        self,
-        coordinator: EveOnlineCoordinator,
-        description: EveOnlineSensorDescription,
-    ) -> None:
-        """Initialize the sensor."""
-        super().__init__(coordinator, description.key)
-        self.entity_description = description
 
 
 class EveOnlineCharacterSensor(EveOnlineCharacterEntity, EveOnlineSensor):

@@ -23,24 +23,6 @@ async def _setup_integration(
     assert mock_config_entry.state is ConfigEntryState.LOADED
 
 
-async def test_server_sensors(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_eveonline_client: AsyncMock,
-    setup_credentials: None,
-) -> None:
-    """Test that server sensors are created with correct values."""
-    mock_eveonline_client.async_get_server_status.return_value = mock_server_status(
-        players=31250
-    )
-
-    await _setup_integration(hass, mock_config_entry)
-
-    state = hass.states.get("sensor.eve_online_tranquility_players_online")
-    assert state is not None
-    assert state.state == "31250"
-
-
 async def test_character_wallet_sensor(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,

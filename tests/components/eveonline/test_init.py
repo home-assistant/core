@@ -155,7 +155,7 @@ async def test_coordinator_auth_error_on_optional_endpoint(
 
     Without a reauth flow, auth errors on optional endpoints are treated
     like any other error: the data is set to None and the sensor becomes
-    unavailable.
+    unknown.
     """
     mock_eveonline_client.async_get_server_status.return_value = mock_server_status()
     mock_eveonline_client.async_get_wallet_balance.side_effect = EveOnlineError(

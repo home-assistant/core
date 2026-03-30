@@ -41,17 +41,6 @@
       "next_industry_finish": {
         "name": "Next industry finish"
       },
-      "players_online": {
-        "name": "Players online",
-        "unit_of_measurement": "players"
-      },
-      "sell_orders": {
-        "name": "Sell orders",
-        "unit_of_measurement": "orders"
-      },
-      "server_version": {
-        "name": "Server version"
-      },
       "ship": {
         "name": "Ship"
       },
