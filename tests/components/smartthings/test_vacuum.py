@@ -9,9 +9,11 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.smartthings import MAIN
 from homeassistant.components.vacuum import (
+    ATTR_FAN_SPEED,
     DOMAIN as VACUUM_DOMAIN,
     SERVICE_PAUSE,
     SERVICE_RETURN_TO_BASE,
+    SERVICE_SET_FAN_SPEED,
     SERVICE_START,
     VacuumActivity,
 )
@@ -68,7 +70,7 @@ async def test_vacuum_actions(
         blocking=True,
     )
     devices.execute_device_command.assert_called_once_with(
-        "05accb39-2017-c98b-a5ab-04a81f4d3d9a",
+        "01b28624-5907-c8bc-0325-8ad23f03a637",
         Capability.SAMSUNG_CE_ROBOT_CLEANER_OPERATING_STATE,
         command,
         MAIN,
@@ -89,7 +91,7 @@ async def test_state_update(
     await trigger_update(
         hass,
         devices,
-        "05accb39-2017-c98b-a5ab-04a81f4d3d9a",
+        "01b28624-5907-c8bc-0325-8ad23f03a637",
         Capability.SAMSUNG_CE_ROBOT_CLEANER_OPERATING_STATE,
         Attribute.OPERATING_STATE,
         "error",
@@ -110,13 +112,13 @@ async def test_availability(
     assert hass.states.get("vacuum.robot_vacuum").state == VacuumActivity.DOCKED
 
     await trigger_health_update(
-        hass, devices, "05accb39-2017-c98b-a5ab-04a81f4d3d9a", HealthStatus.OFFLINE
+        hass, devices, "01b28624-5907-c8bc-0325-8ad23f03a637", HealthStatus.OFFLINE
     )
 
     assert hass.states.get("vacuum.robot_vacuum").state == STATE_UNAVAILABLE
 
     await trigger_health_update(
-        hass, devices, "05accb39-2017-c98b-a5ab-04a81f4d3d9a", HealthStatus.ONLINE
+        hass, devices, "01b28624-5907-c8bc-0325-8ad23f03a637", HealthStatus.ONLINE
     )
 
     assert hass.states.get("vacuum.robot_vacuum").state == VacuumActivity.DOCKED
@@ -131,3 +133,52 @@ async def test_availability_at_start(
     """Test unavailable at boot."""
     await setup_integration(hass, mock_config_entry)
     assert hass.states.get("vacuum.robot_vacuum").state == STATE_UNAVAILABLE
+
+
+@pytest.mark.parametrize("device_fixture", ["da_rvc_map_01011"])
+async def test_fan_speed_update(
+    hass: HomeAssistant,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test fan speed state update."""
+    await setup_integration(hass, mock_config_entry)
+
+    assert (
+        hass.states.get("vacuum.robot_vacuum").attributes[ATTR_FAN_SPEED] == "maximum"
+    )
+
+    await trigger_update(
+        hass,
+        devices,
+        "01b28624-5907-c8bc-0325-8ad23f03a637",
+        Capability.ROBOT_CLEANER_TURBO_MODE,
+        Attribute.ROBOT_CLEANER_TURBO_MODE,
+        "extraSilence",
+    )
+
+    assert hass.states.get("vacuum.robot_vacuum").attributes[ATTR_FAN_SPEED] == "quiet"
+
+
+@pytest.mark.parametrize("device_fixture", ["da_rvc_map_01011"])
+async def test_vacuum_set_fan_speed(
+    hass: HomeAssistant,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test setting fan speed."""
+    await setup_integration(hass, mock_config_entry)
+
+    await hass.services.async_call(
+        VACUUM_DOMAIN,
+        SERVICE_SET_FAN_SPEED,
+        {ATTR_ENTITY_ID: "vacuum.robot_vacuum", ATTR_FAN_SPEED: "normal"},
+        blocking=True,
+    )
+    devices.execute_device_command.assert_called_once_with(
+        "01b28624-5907-c8bc-0325-8ad23f03a637",
+        Capability.ROBOT_CLEANER_TURBO_MODE,
+        Command.SET_ROBOT_CLEANER_TURBO_MODE,
+        MAIN,
+        "silence",
+    )

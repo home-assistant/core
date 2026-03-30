@@ -4,6 +4,7 @@
   "codeowners": ["@mdz"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/smarttub",
+  "integration_type": "hub",
   "iot_class": "cloud_polling",
   "loggers": ["smarttub"],
   "requirements": ["python-smarttub==0.0.47"]

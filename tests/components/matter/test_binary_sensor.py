@@ -120,6 +120,29 @@ async def test_battery_sensor(
 
 
 @pytest.mark.parametrize("node_fixture", ["mock_door_lock"])
+async def test_actuator_sensor(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test actuator enabled sensor."""
+    entity_id = "binary_sensor.mock_door_lock_actuator"
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == "on"
+
+    set_node_attribute(matter_node, 1, 257, 2, False)
+    await trigger_subscription_callback(
+        hass, matter_client, data=(matter_node.node_id, "1/257/2", False)
+    )
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == "off"
+
+
+@pytest.mark.parametrize("node_fixture", ["mock_door_lock"])
 async def test_optional_sensor_from_featuremap(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,

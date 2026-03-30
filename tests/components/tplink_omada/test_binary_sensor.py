@@ -18,7 +18,7 @@ from tests.common import (
     Generator,
     MockConfigEntry,
     async_fire_time_changed,
-    load_json_array_fixture,
+    async_load_json_array_fixture,
     snapshot_platform,
 )
 
@@ -51,7 +51,7 @@ async def test_no_gateway_creates_no_port_sensors(
 ) -> None:
     """Test that if there is no gateway, no gateway port sensors are created."""
 
-    _remove_test_device(mock_omada_site_client, 0)
+    await _remove_test_device(hass, mock_omada_site_client, 0)
 
     mock_config_entry.add_to_hass(hass)
 
@@ -70,7 +70,8 @@ async def test_disconnected_device_sensor_not_registered(
 ) -> None:
     """Test that if the gateway is not connected to the controller, gateway entities are not created."""
 
-    _set_test_device_status(
+    await _set_test_device_status(
+        hass,
         mock_omada_site_client,
         0,
         DeviceStatus.DISCONNECTED.value,
@@ -87,7 +88,8 @@ async def test_disconnected_device_sensor_not_registered(
     assert entity is None
 
     # "Connect" the gateway
-    _set_test_device_status(
+    await _set_test_device_status(
+        hass,
         mock_omada_site_client,
         0,
         DeviceStatus.CONNECTED.value,
@@ -105,13 +107,14 @@ async def test_disconnected_device_sensor_not_registered(
     mock_omada_site_client.get_gateway.assert_called_once_with("AA-BB-CC-DD-EE-FF")
 
 
-def _set_test_device_status(
+async def _set_test_device_status(
+    hass: HomeAssistant,
     mock_omada_site_client: MagicMock,
     dev_index: int,
     status: int,
     status_category: int,
 ) -> None:
-    devices_data = load_json_array_fixture("devices.json", DOMAIN)
+    devices_data = await async_load_json_array_fixture(hass, "devices.json", DOMAIN)
     devices_data[dev_index]["status"] = status
     devices_data[dev_index]["statusCategory"] = status_category
     devices = [OmadaListDevice(d) for d in devices_data]
@@ -120,11 +123,12 @@ def _set_test_device_status(
     mock_omada_site_client.get_devices.return_value = devices
 
 
-def _remove_test_device(
+async def _remove_test_device(
+    hass: HomeAssistant,
     mock_omada_site_client: MagicMock,
     dev_index: int,
 ) -> None:
-    devices_data = load_json_array_fixture("devices.json", DOMAIN)
+    devices_data = await async_load_json_array_fixture(hass, "devices.json", DOMAIN)
     del devices_data[dev_index]
     devices = [OmadaListDevice(d) for d in devices_data]
 

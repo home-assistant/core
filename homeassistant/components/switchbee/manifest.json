@@ -4,6 +4,7 @@
   "codeowners": ["@jafar-atili"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/switchbee",
+  "integration_type": "hub",
   "iot_class": "local_push",
   "requirements": ["pyswitchbee==1.8.3"]
 }

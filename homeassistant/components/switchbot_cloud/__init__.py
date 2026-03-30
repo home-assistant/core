@@ -33,6 +33,7 @@ PLATFORMS: list[Platform] = [
     Platform.COVER,
     Platform.FAN,
     Platform.HUMIDIFIER,
+    Platform.IMAGE,
     Platform.LIGHT,
     Platform.LOCK,
     Platform.SENSOR,
@@ -62,6 +63,7 @@ class SwitchbotDevices:
     fans: list[tuple[Device, SwitchBotCoordinator]] = field(default_factory=list)
     lights: list[tuple[Device, SwitchBotCoordinator]] = field(default_factory=list)
     humidifiers: list[tuple[Device, SwitchBotCoordinator]] = field(default_factory=list)
+    images: list[tuple[Device, SwitchBotCoordinator]] = field(default_factory=list)
 
 
 @dataclass
@@ -188,6 +190,8 @@ async def make_device_data(
         "Smart Lock Vision",
         "Smart Lock Vision Pro",
         "Smart Lock Pro Wifi",
+        "Lock Vision",
+        "Lock Vision Pro",
     ]:
         coordinator = await coordinator_for_device(
             hass, entry, api, device, coordinators_by_id
@@ -243,13 +247,18 @@ async def make_device_data(
 
     if isinstance(device, Device) and device.device_type in [
         "Battery Circulator Fan",
-        "Circulator Fan",
+        "Standing Fan",
     ]:
         coordinator = await coordinator_for_device(
             hass, entry, api, device, coordinators_by_id
         )
         devices_data.fans.append((device, coordinator))
         devices_data.sensors.append((device, coordinator))
+    if isinstance(device, Device) and device.device_type == "Circulator Fan":
+        coordinator = await coordinator_for_device(
+            hass, entry, api, device, coordinators_by_id
+        )
+        devices_data.fans.append((device, coordinator))
     if isinstance(device, Device) and device.device_type in [
         "Curtain",
         "Curtain3",
@@ -305,6 +314,18 @@ async def make_device_data(
             hass, entry, api, device, coordinators_by_id
         )
         devices_data.binary_sensors.append((device, coordinator))
+        devices_data.sensors.append((device, coordinator))
+    if isinstance(device, Device) and device.device_type == "AI Art Frame":
+        coordinator = await coordinator_for_device(
+            hass, entry, api, device, coordinators_by_id
+        )
+        devices_data.buttons.append((device, coordinator))
+        devices_data.sensors.append((device, coordinator))
+        devices_data.images.append((device, coordinator))
+    if isinstance(device, Device) and device.device_type == "WeatherStation":
+        coordinator = await coordinator_for_device(
+            hass, entry, api, device, coordinators_by_id
+        )
         devices_data.sensors.append((device, coordinator))
 
 

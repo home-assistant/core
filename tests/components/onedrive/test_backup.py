@@ -157,6 +157,31 @@ async def test_agents_get_backup(
     }
 
 
+async def test_agents_get_backup_missing_file(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    mock_config_entry: MockConfigEntry,
+    mock_onedrive_client: MagicMock,
+    mock_metadata_file: File,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test what happens when only metadata exists."""
+    mock_onedrive_client.list_drive_items.return_value = [mock_metadata_file]
+
+    backup_id = BACKUP_METADATA["backup_id"]
+    client = await hass_ws_client(hass)
+    await client.send_json_auto_id({"type": "backup/details", "backup_id": backup_id})
+    response = await client.receive_json()
+
+    assert response["success"]
+    assert response["result"]["agent_errors"] == {}
+    assert response["result"]["backup"] is None
+    assert (
+        "Backup file 23e64aec.tar not found for metadata 23e64aec.metadata.json"
+        in caplog.text
+    )
+
+
 async def test_agents_delete(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
@@ -209,6 +234,10 @@ async def test_agents_upload(
     assert resp.status == 201
     assert f"Uploading backup {test_backup.backup_id}" in caplog.text
     mock_large_file_upload_client.assert_called_once()
+    assert (
+        mock_large_file_upload_client.call_args.kwargs.get("progress_callback")
+        is not None
+    )
     # upload_file should be called for the metadata file
     mock_onedrive_client.upload_file.assert_called_once()
     # update_drive_item should not be called (no description updates)
@@ -247,6 +276,10 @@ async def test_agents_upload_corrupt_upload(
     assert resp.status == 201
     assert f"Uploading backup {test_backup.backup_id}" in caplog.text
     mock_large_file_upload_client.assert_called_once()
+    assert (
+        mock_large_file_upload_client.call_args.kwargs.get("progress_callback")
+        is not None
+    )
     assert mock_onedrive_client.update_drive_item.call_count == 0
     assert "Hash validation failed, backup file might be corrupt" in caplog.text
 
@@ -283,6 +316,10 @@ async def test_agents_upload_metadata_upload_failed(
     assert resp.status == 201
     assert f"Uploading backup {test_backup.backup_id}" in caplog.text
     mock_large_file_upload_client.assert_called_once()
+    assert (
+        mock_large_file_upload_client.call_args.kwargs.get("progress_callback")
+        is not None
+    )
     mock_onedrive_client.delete_drive_item.assert_called_once()
     assert mock_onedrive_client.update_drive_item.call_count == 0
 

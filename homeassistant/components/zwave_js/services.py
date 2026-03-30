@@ -11,6 +11,11 @@ from typing import Any
 import voluptuous as vol
 from zwave_js_server.client import Client as ZwaveClient
 from zwave_js_server.const import SET_VALUE_SUCCESS, CommandClass, CommandStatus
+from zwave_js_server.const.command_class.lock import (
+    ATTR_CODE_SLOT,
+    ATTR_USERCODE,
+    OperationType,
+)
 from zwave_js_server.const.command_class.notification import NotificationType
 from zwave_js_server.exceptions import FailedZWaveCommand, SetValueFailed
 from zwave_js_server.model.endpoint import Endpoint
@@ -26,8 +31,9 @@ from zwave_js_server.util.node import (
     async_set_config_parameter,
 )
 
+from homeassistant.components.lock import DOMAIN as LOCK_DOMAIN
 from homeassistant.const import ATTR_AREA_ID, ATTR_DEVICE_ID, ATTR_ENTITY_ID
-from homeassistant.core import HomeAssistant, ServiceCall, callback
+from homeassistant.core import HomeAssistant, ServiceCall, SupportsResponse, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import (
     config_validation as cv,
@@ -36,6 +42,7 @@ from homeassistant.helpers import (
 )
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.group import expand_entity_ids
+from homeassistant.helpers.service import async_register_platform_entity_service
 
 from . import const
 from .config_validation import BITMASK_SCHEMA, VALUE_SCHEMA
@@ -50,6 +57,8 @@ from .helpers import (
 _LOGGER = logging.getLogger(__name__)
 
 type _NodeOrEndpointType = ZwaveNode | Endpoint
+
+UNIT16_SCHEMA = vol.All(vol.Coerce(int), vol.Range(min=0, max=65535))
 
 TARGET_VALIDATORS = {
     vol.Optional(ATTR_AREA_ID): vol.All(cv.ensure_list, [cv.string]),
@@ -477,6 +486,62 @@ class ZWaveServices:
                     has_at_least_one_node,
                 ),
             ),
+        )
+
+        async_register_platform_entity_service(
+            self._hass,
+            const.DOMAIN,
+            const.SERVICE_GET_LOCK_USERCODE,
+            entity_domain=LOCK_DOMAIN,
+            schema={
+                vol.Optional(ATTR_CODE_SLOT): vol.Coerce(int),
+            },
+            func="async_get_lock_usercode",
+            supports_response=SupportsResponse.ONLY,
+        )
+
+        async_register_platform_entity_service(
+            self._hass,
+            const.DOMAIN,
+            const.SERVICE_SET_LOCK_USERCODE,
+            entity_domain=LOCK_DOMAIN,
+            schema={
+                vol.Required(ATTR_CODE_SLOT): vol.Coerce(int),
+                vol.Required(ATTR_USERCODE): cv.string,
+            },
+            func="async_set_lock_usercode",
+        )
+
+        async_register_platform_entity_service(
+            self._hass,
+            const.DOMAIN,
+            const.SERVICE_CLEAR_LOCK_USERCODE,
+            entity_domain=LOCK_DOMAIN,
+            schema={
+                vol.Required(ATTR_CODE_SLOT): vol.Coerce(int),
+            },
+            func="async_clear_lock_usercode",
+        )
+
+        async_register_platform_entity_service(
+            self._hass,
+            const.DOMAIN,
+            const.SERVICE_SET_LOCK_CONFIGURATION,
+            entity_domain=LOCK_DOMAIN,
+            schema={
+                vol.Required(const.ATTR_OPERATION_TYPE): vol.All(
+                    cv.string,
+                    vol.Upper,
+                    vol.In(["TIMED", "CONSTANT"]),
+                    lambda x: OperationType[x],
+                ),
+                vol.Optional(const.ATTR_LOCK_TIMEOUT): UNIT16_SCHEMA,
+                vol.Optional(const.ATTR_AUTO_RELOCK_TIME): UNIT16_SCHEMA,
+                vol.Optional(const.ATTR_HOLD_AND_RELEASE_TIME): UNIT16_SCHEMA,
+                vol.Optional(const.ATTR_TWIST_ASSIST): vol.Coerce(bool),
+                vol.Optional(const.ATTR_BLOCK_TO_BLOCK): vol.Coerce(bool),
+            },
+            func="async_set_lock_configuration",
         )
 
     async def async_set_config_parameter(self, service: ServiceCall) -> None:

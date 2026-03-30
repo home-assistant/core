@@ -5,6 +5,7 @@ from __future__ import annotations
 from asyncio import Future
 from collections.abc import Generator
 from pathlib import Path
+import shutil
 from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 import pytest
@@ -13,9 +14,29 @@ from homeassistant.components.backup import DOMAIN
 from homeassistant.components.backup.manager import NewBackup, WrittenBackup
 from homeassistant.core import HomeAssistant
 
-from .common import TEST_BACKUP_PATH_ABC123, TEST_BACKUP_PATH_DEF456
-
 from tests.common import get_fixture_path
+
+
+@pytest.fixture
+def available_backups() -> list[Path]:
+    """Fixture to provide available backup files."""
+    return []
+
+
+@pytest.fixture
+def hass_config_dir(tmp_path: Path, available_backups: list[Path]) -> str:
+    """Fixture to create a temporary config directory, populated with test files."""
+    shutil.copytree(
+        get_fixture_path("config_dir_contents", DOMAIN),
+        tmp_path,
+        symlinks=True,
+        dirs_exist_ok=True,
+    )
+    for backup in available_backups:
+        (get_fixture_path("test_backups", DOMAIN) / backup).copy_into(
+            tmp_path / "backups"
+        )
+    return tmp_path.as_posix()
 
 
 @pytest.fixture(name="instance_id", autouse=True)
@@ -38,74 +59,6 @@ def mocked_json_bytes_fixture() -> Generator[Mock]:
         yield mocked_json_bytes
 
 
-@pytest.fixture(name="mocked_tarfile")
-def mocked_tarfile_fixture() -> Generator[Mock]:
-    """Mock tarfile."""
-    with patch(
-        "homeassistant.components.backup.manager.SecureTarFile"
-    ) as mocked_tarfile:
-        yield mocked_tarfile
-
-
-@pytest.fixture(name="path_glob")
-def path_glob_fixture(hass: HomeAssistant) -> Generator[MagicMock]:
-    """Mock path glob."""
-    with patch(
-        "pathlib.Path.glob",
-        return_value=[
-            Path(hass.config.path()) / "backups" / TEST_BACKUP_PATH_ABC123,
-            Path(hass.config.path()) / "backups" / TEST_BACKUP_PATH_DEF456,
-        ],
-    ) as path_glob:
-        yield path_glob
-
-
-CONFIG_DIR = {
-    "tests/testing_config": [
-        Path("test.txt"),
-        Path(".DS_Store"),
-        Path(".storage"),
-        Path("another_subdir"),
-        Path("backups"),
-        Path("tmp_backups"),
-        Path("tts"),
-        Path("home-assistant_v2.db"),
-    ],
-    "/backups": [
-        Path("backups/backup.tar"),
-        Path("backups/not_backup"),
-    ],
-    "/another_subdir": [
-        Path("another_subdir/.DS_Store"),
-        Path("another_subdir/backups"),
-        Path("another_subdir/tts"),
-    ],
-    "another_subdir/backups": [
-        Path("another_subdir/backups/backup.tar"),
-        Path("another_subdir/backups/not_backup"),
-    ],
-    "another_subdir/tts": [
-        Path("another_subdir/tts/voice.mp3"),
-    ],
-    "/tmp_backups": [  # noqa: S108
-        Path("tmp_backups/forgotten_backup.tar"),
-        Path("tmp_backups/not_backup"),
-    ],
-    "/tts": [
-        Path("tts/voice.mp3"),
-    ],
-}
-CONFIG_DIR_DIRS = {
-    Path(".storage"),
-    Path("another_subdir"),
-    Path("another_subdir/backups"),
-    Path("another_subdir/tts"),
-    Path("backups"),
-    Path("tmp_backups"),
-    Path("tts"),
-}
-
-
 @pytest.fixture(name="create_backup")
 def mock_create_backup() -> Generator[AsyncMock]:
     """Mock manager create backup."""
@@ -125,43 +78,15 @@ def mock_create_backup() -> Generator[AsyncMock]:
         yield mock_create_backup
 
 
-@pytest.fixture(name="mock_backup_generation")
-def mock_backup_generation_fixture(
-    hass: HomeAssistant, mocked_json_bytes: Mock, mocked_tarfile: Mock
-) -> Generator[None]:
-    """Mock backup generator."""
+@pytest.fixture(name="mock_ha_version")
+def mock_ha_version_fixture(hass: HomeAssistant) -> Generator[None]:
+    """Mock HA version.
 
-    with (
-        patch(
-            "pathlib.Path.iterdir",
-            lambda x: CONFIG_DIR.get(f"{x.parent.name}/{x.name}", []),
-        ),
-        patch("pathlib.Path.stat", return_value=MagicMock(st_size=123)),
-        patch("pathlib.Path.is_file", lambda x: x not in CONFIG_DIR_DIRS),
-        patch("pathlib.Path.is_dir", lambda x: x in CONFIG_DIR_DIRS),
-        patch(
-            "pathlib.Path.exists",
-            lambda x: (
-                x
-                not in (
-                    Path(hass.config.path("backups")),
-                    Path(hass.config.path("tmp_backups")),
-                )
-            ),
-        ),
-        patch(
-            "pathlib.Path.is_symlink",
-            lambda _: False,
-        ),
-        patch(
-            "pathlib.Path.mkdir",
-            MagicMock(),
-        ),
-        patch(
-            "homeassistant.components.backup.manager.HAVERSION",
-            "2025.1.0",
-        ),
-    ):
+    The HA version is included in backup metadata. We mock it for the benefit
+    of tests that check the exact content of the metadata.
+    """
+
+    with patch("homeassistant.components.backup.manager.HAVERSION", "2025.1.0"):
         yield
 
 

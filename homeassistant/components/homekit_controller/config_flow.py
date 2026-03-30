@@ -460,6 +460,12 @@ class HomekitControllerFlowHandler(ConfigFlow, domain=DOMAIN):
             except aiohomekit.AccessoryNotFoundError:
                 # Can no longer find the device on the network
                 return self.async_abort(reason="accessory_not_found_error")
+            except aiohomekit.AccessoryDisconnectedError as err:
+                # The accessory has disconnected from the network
+                return self.async_abort(
+                    reason="accessory_disconnected_error",
+                    description_placeholders={"error": str(err)},
+                )
             except InsecureSetupCode:
                 errors["pairing_code"] = "insecure_setup_code"
             except Exception as err:
@@ -490,6 +496,12 @@ class HomekitControllerFlowHandler(ConfigFlow, domain=DOMAIN):
             except aiohomekit.AccessoryNotFoundError:
                 # Can no longer find the device on the network
                 return self.async_abort(reason="accessory_not_found_error")
+            except aiohomekit.AccessoryDisconnectedError as err:
+                # The accessory has disconnected from the network
+                return self.async_abort(
+                    reason="accessory_disconnected_error",
+                    description_placeholders={"error": str(err)},
+                )
             except IndexError:
                 # TLV error, usually not in pairing mode
                 _LOGGER.exception("Pairing communication failed")
