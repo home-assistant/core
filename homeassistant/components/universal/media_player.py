@@ -154,7 +154,6 @@ class UniversalMediaPlayer(MediaPlayerEntity):
     """Representation of an universal media player."""
 
     _attr_should_poll = False
-    _attr_media_image_remotely_accessible = True
 
     def __init__(
         self,
@@ -369,14 +368,12 @@ class UniversalMediaPlayer(MediaPlayerEntity):
         return self._override_or_child_attr(ATTR_ENTITY_PICTURE)
 
     @property
-    def entity_picture(self):
-        """Return image of the media playing.
-
-        The universal media player doesn't use the parent class logic, since
-        the url is coming from child entity pictures which have already been
-        sent through the API proxy.
-        """
-        return self.media_image_url
+    def media_image_remotely_accessible(self) -> bool:
+        """If the image url is remotely accessible."""
+        active_child = self._child_state
+        if active_child is None:
+            return False
+        return active_child.attributes.get("media_image_remotely_accessible", False)
 
     @property
     def media_title(self):
