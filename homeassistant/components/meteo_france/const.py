@@ -23,9 +23,6 @@ from homeassistant.const import Platform
 
 DOMAIN = "meteo_france"
 PLATFORMS = [Platform.SENSOR, Platform.WEATHER]
-COORDINATOR_FORECAST = "coordinator_forecast"
-COORDINATOR_RAIN = "coordinator_rain"
-COORDINATOR_ALERT = "coordinator_alert"
 ATTRIBUTION = "Data provided by Météo-France"
 MODEL = "Météo-France mobile API"
 MANUFACTURER = "Météo-France"

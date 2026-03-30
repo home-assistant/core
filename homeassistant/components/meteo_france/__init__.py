@@ -6,19 +6,14 @@ from meteofrance_api.client import MeteoFranceClient
 from meteofrance_api.helpers import is_valid_warning_department
 from requests import RequestException
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 
-from .const import (
-    COORDINATOR_ALERT,
-    COORDINATOR_FORECAST,
-    COORDINATOR_RAIN,
-    DOMAIN,
-    PLATFORMS,
-)
+from .const import DOMAIN, PLATFORMS
 from .coordinator import (
     MeteoFranceAlertUpdateCoordinator,
+    MeteoFranceConfigEntry,
+    MeteoFranceData,
     MeteoFranceForecastUpdateCoordinator,
     MeteoFranceRainUpdateCoordinator,
 )
@@ -26,7 +21,7 @@ from .coordinator import (
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: MeteoFranceConfigEntry) -> bool:
     """Set up a Meteo-France account from a config entry."""
     hass.data.setdefault(DOMAIN, {})
 
@@ -91,25 +86,27 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     entry.async_on_unload(entry.add_update_listener(_async_update_listener))
 
-    hass.data[DOMAIN][entry.entry_id] = {
-        COORDINATOR_FORECAST: coordinator_forecast,
-    }
-    if coordinator_rain and coordinator_rain.last_update_success:
-        hass.data[DOMAIN][entry.entry_id][COORDINATOR_RAIN] = coordinator_rain
-    if coordinator_alert and coordinator_alert.last_update_success:
-        hass.data[DOMAIN][entry.entry_id][COORDINATOR_ALERT] = coordinator_alert
+    if coordinator_rain and not coordinator_rain.last_update_success:
+        coordinator_rain = None
+    if coordinator_alert and not coordinator_alert.last_update_success:
+        coordinator_alert = None
+    entry.runtime_data = MeteoFranceData(
+        forecast_coordinator=coordinator_forecast,
+        rain_coordinator=coordinator_rain,
+        alert_coordinator=coordinator_alert,
+    )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(
+    hass: HomeAssistant, entry: MeteoFranceConfigEntry
+) -> bool:
     """Unload a config entry."""
-    if hass.data[DOMAIN][entry.entry_id][COORDINATOR_ALERT]:
-        department = hass.data[DOMAIN][entry.entry_id][
-            COORDINATOR_FORECAST
-        ].data.position.get("dept")
+    if entry.runtime_data.alert_coordinator:
+        department = entry.runtime_data.forecast_coordinator.data.position.get("dept")
         hass.data[DOMAIN][department] = False
         _LOGGER.debug(
             (
@@ -121,13 +118,14 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
-        hass.data[DOMAIN].pop(entry.entry_id)
         if not hass.data[DOMAIN]:
             hass.data.pop(DOMAIN)
 
     return unload_ok
 
 
-async def _async_update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
+async def _async_update_listener(
+    hass: HomeAssistant, entry: MeteoFranceConfigEntry
+) -> None:
     """Handle options update."""
     await hass.config_entries.async_reload(entry.entry_id)
