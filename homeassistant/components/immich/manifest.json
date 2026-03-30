@@ -9,5 +9,5 @@
   "iot_class": "local_polling",
   "loggers": ["immichpy"],
   "quality_scale": "platinum",
-  "requirements": ["immichpy==4.0.3"]
+  "requirements": ["immichpy==1.6.5"]
 }

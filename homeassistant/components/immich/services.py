@@ -1,6 +1,6 @@
 """Services for the Immich integration."""
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 import logging
 from pathlib import Path
 
@@ -56,7 +56,9 @@ async def _async_upload_file(service_call: ServiceCall) -> None:
 
     if target_album := service_call.data.get(CONF_ALBUM_ID):
         try:
-            await coordinator.api.albums.get_album_info(id=target_album, without_assets=True)
+            await coordinator.api.albums.get_album_info(
+                id=target_album, without_assets=True
+            )
         except ApiException as ex:
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
@@ -67,8 +69,8 @@ async def _async_upload_file(service_call: ServiceCall) -> None:
     try:
         filepath = Path(media.path)
         stats = filepath.stat()
-        file_created_at = datetime.fromtimestamp(stats.st_ctime, tz=timezone.utc)
-        file_modified_at = datetime.fromtimestamp(stats.st_mtime, tz=timezone.utc)
+        file_created_at = datetime.fromtimestamp(stats.st_ctime, tz=UTC)
+        file_modified_at = datetime.fromtimestamp(stats.st_mtime, tz=UTC)
         device_asset_id = f"{filepath.name}-{stats.st_size}"
 
         upload_result = await coordinator.api.assets.upload_asset(

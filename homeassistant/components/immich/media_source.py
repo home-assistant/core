@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from logging import getLogger
-from typing import cast
 from uuid import UUID
 
 from aiohttp.web import HTTPNotFound, Request, Response, StreamResponse
@@ -30,6 +29,7 @@ from .const import DOMAIN
 from .coordinator import ImmichConfigEntry
 
 LOGGER = getLogger(__name__)
+
 
 async def async_get_media_source(hass: HomeAssistant) -> MediaSource:
     """Set up Immich media source."""
@@ -370,4 +370,6 @@ class ImmichMediaView(HomeAssistantView):
                 )
         except ApiException as exc:
             raise HTTPNotFound from exc
-        return Response(body=bytes(image), content_type=f"{mime_type_base}/{mime_type_format}")
+        return Response(
+            body=bytes(image), content_type=f"{mime_type_base}/{mime_type_format}"
+        )

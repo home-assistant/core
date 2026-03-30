@@ -71,7 +71,9 @@ class ImmichDataUpdateCoordinator(DataUpdateCoordinator[ImmichData]):
         self.api = AsyncClient(
             api_key=config_entry.data[CONF_API_KEY],
             base_url=f"{base_url}/api",
-            http_client=async_get_clientsession(hass, config_entry.data[CONF_VERIFY_SSL]),
+            http_client=async_get_clientsession(
+                hass, config_entry.data[CONF_VERIFY_SSL]
+            ),
         )
         self.is_admin = False
         self.configuration_url = base_url
@@ -106,9 +108,7 @@ class ImmichDataUpdateCoordinator(DataUpdateCoordinator[ImmichData]):
             server_about = await self.api.server.get_about_info()
             server_storage = await self.api.server.get_storage()
             server_usage = (
-                await self.api.server.get_server_statistics()
-                if self.is_admin
-                else None
+                await self.api.server.get_server_statistics() if self.is_admin else None
             )
             server_version_check = (
                 await self.api.server.get_version_check()
