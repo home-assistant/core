@@ -140,6 +140,7 @@ MQTT_ATTRIBUTES_BLOCKED = {
     "entity_registry_enabled_default",
     "extra_state_attributes",
     "force_update",
+    "group_entities",
     "icon",
     "friendly_name",
     "should_poll",
