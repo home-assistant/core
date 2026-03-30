@@ -27,6 +27,15 @@
     "multiple_integration_config_errors": {
       "message": "Failed to process config for integration {domain} due to multiple ({errors}) errors. Check the logs for more information."
     },
+    "oauth2_helper_reauth_required": {
+      "message": "Credentials are invalid, re-authentication required"
+    },
+    "oauth2_helper_refresh_failed": {
+      "message": "OAuth2 token refresh failed for {domain}"
+    },
+    "oauth2_helper_refresh_transient": {
+      "message": "Temporary error refreshing credentials for {domain}, try again later"
+    },
     "platform_component_load_err": {
       "message": "Platform error: {domain} - {error}."
     },
@@ -199,11 +208,11 @@
   "services": {
     "check_config": {
       "description": "Checks the Home Assistant YAML-configuration files for errors. Errors will be shown in the Home Assistant logs.",
-      "name": "Check configuration"
+      "name": "Check Home Assistant configuration"
     },
     "reload_all": {
       "description": "Reloads all YAML configuration that can be reloaded without restarting Home Assistant.",
-      "name": "Reload all"
+      "name": "Reload all Home Assistant configuration"
     },
     "reload_config_entry": {
       "description": "Reloads the specified config entry.",
@@ -231,7 +240,7 @@
           "name": "Safe mode"
         }
       },
-      "name": "[%key:common::action::restart%]"
+      "name": "Restart Home Assistant"
     },
     "save_persistent_states": {
       "description": "Saves the persistent states immediately. Maintains the normal periodic saving interval.",
@@ -253,11 +262,11 @@
           "name": "[%key:common::config_flow::data::longitude%]"
         }
       },
-      "name": "Set location"
+      "name": "Set Home Assistant location"
     },
     "stop": {
       "description": "Stops Home Assistant.",
-      "name": "[%key:common::action::stop%]"
+      "name": "Stop Home Assistant"
     },
     "toggle": {
       "description": "Generic action to toggle devices on/off under any domain.",

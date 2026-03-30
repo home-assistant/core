@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_state_entity_device_snapshots[device_tracker.fluffy-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,

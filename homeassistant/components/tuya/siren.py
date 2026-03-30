@@ -4,6 +4,10 @@ from __future__ import annotations
 
 from typing import Any
 
+from tuya_device_handlers.definition.siren import (
+    TuyaSirenDefinition,
+    get_default_definition,
+)
 from tuya_sharing import CustomerDevice, Manager
 
 from homeassistant.components.siren import (
@@ -19,7 +23,6 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from . import TuyaConfigEntry
 from .const import TUYA_DISCOVERY_NEW, DeviceCategory, DPCode
 from .entity import TuyaEntity
-from .models import DeviceWrapper, DPCodeBooleanWrapper
 
 SIRENS: dict[DeviceCategory, tuple[SirenEntityDescription, ...]] = {
     DeviceCategory.CO2BJ: (
@@ -65,13 +68,9 @@ async def async_setup_entry(
             device = manager.device_map[device_id]
             if descriptions := SIRENS.get(device.category):
                 entities.extend(
-                    TuyaSirenEntity(device, manager, description, dpcode_wrapper)
+                    TuyaSirenEntity(device, manager, description, definition)
                     for description in descriptions
-                    if (
-                        dpcode_wrapper := DPCodeBooleanWrapper.find_dpcode(
-                            device, description.key, prefer_function=True
-                        )
-                    )
+                    if (definition := get_default_definition(device, description.key))
                 )
 
         async_add_entities(entities)
@@ -94,30 +93,30 @@ class TuyaSirenEntity(TuyaEntity, SirenEntity):
         device: CustomerDevice,
         device_manager: Manager,
         description: SirenEntityDescription,
-        dpcode_wrapper: DeviceWrapper[bool],
+        definition: TuyaSirenDefinition,
     ) -> None:
         """Init Tuya Siren."""
-        super().__init__(device, device_manager)
-        self.entity_description = description
-        self._attr_unique_id = f"{super().unique_id}{description.key}"
-        self._dpcode_wrapper = dpcode_wrapper
+        super().__init__(device, device_manager, description)
+        self._dpcode_wrapper = definition.siren_wrapper
 
     @property
     def is_on(self) -> bool | None:
         """Return true if siren is on."""
         return self._read_wrapper(self._dpcode_wrapper)
 
-    async def _handle_state_update(
+    async def _process_device_update(
         self,
-        updated_status_properties: list[str] | None,
+        updated_status_properties: list[str],
         dp_timestamps: dict[str, int] | None,
-    ) -> None:
-        """Handle state update, only if this entity's dpcode was actually updated."""
-        if self._dpcode_wrapper.skip_update(
+    ) -> bool:
+        """Called when Tuya device sends an update with updated properties.
+
+        Returns True if the Home Assistant state should be written,
+        or False if the state write should be skipped.
+        """
+        return not self._dpcode_wrapper.skip_update(
             self.device, updated_status_properties, dp_timestamps
-        ):
-            return
-        self.async_write_ha_state()
+        )
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the siren on."""

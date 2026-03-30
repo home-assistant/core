@@ -62,9 +62,7 @@ class OppleLight(LightEntity):
 
         self._device = OppleLightDevice(host)
 
-        self._name = name
-        self._is_on = None
-        self._brightness = None
+        self._attr_name = name
 
     @property
     def available(self) -> bool:
@@ -75,21 +73,6 @@ class OppleLight(LightEntity):
     def unique_id(self):
         """Return unique ID for light."""
         return self._device.mac
-
-    @property
-    def name(self):
-        """Return the display name of this light."""
-        return self._name
-
-    @property
-    def is_on(self):
-        """Return true if light is on."""
-        return self._is_on
-
-    @property
-    def brightness(self):
-        """Return the brightness of the light."""
-        return self._brightness
 
     def turn_on(self, **kwargs: Any) -> None:
         """Instruct the light to turn on."""
@@ -118,8 +101,8 @@ class OppleLight(LightEntity):
 
         if (
             prev_available == self.available
-            and self._is_on == self._device.power_on
-            and self._brightness == self._device.brightness
+            and self._attr_is_on == self._device.power_on
+            and self._attr_brightness == self._device.brightness
             and self._attr_color_temp_kelvin == self._device.color_temperature
         ):
             return
@@ -128,8 +111,8 @@ class OppleLight(LightEntity):
             _LOGGER.debug("Light %s is offline", self._device.ip)
             return
 
-        self._is_on = self._device.power_on
-        self._brightness = self._device.brightness
+        self._attr_is_on = self._device.power_on
+        self._attr_brightness = self._device.brightness
         self._attr_color_temp_kelvin = self._device.color_temperature
 
         if not self.is_on:
@@ -138,6 +121,6 @@ class OppleLight(LightEntity):
             _LOGGER.debug(
                 "Update light %s success: power on brightness %s color temperature %s",
                 self._device.ip,
-                self._brightness,
+                self._attr_brightness,
                 self._attr_color_temp_kelvin,
             )

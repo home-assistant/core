@@ -69,16 +69,18 @@ from .const import (
     ATTR_IS_BIG,
     ATTR_KEYBOARD,
     ATTR_KEYBOARD_INLINE,
+    ATTR_MEDIA,
     ATTR_MEDIA_TYPE,
     ATTR_MESSAGE,
+    ATTR_MESSAGE_ID,
     ATTR_MESSAGE_TAG,
     ATTR_MESSAGE_THREAD_ID,
-    ATTR_MESSAGEID,
     ATTR_ONE_TIME_KEYBOARD,
     ATTR_OPEN_PERIOD,
     ATTR_OPTIONS,
     ATTR_PARSER,
     ATTR_PASSWORD,
+    ATTR_PROTECT_CONTENT,
     ATTR_QUESTION,
     ATTR_REACTION,
     ATTR_REPLY_TO_MSGID,
@@ -125,6 +127,7 @@ from .const import (
     SERVICE_SEND_CHAT_ACTION,
     SERVICE_SEND_DOCUMENT,
     SERVICE_SEND_LOCATION,
+    SERVICE_SEND_MEDIA_GROUP,
     SERVICE_SEND_MESSAGE,
     SERVICE_SEND_PHOTO,
     SERVICE_SEND_POLL,
@@ -219,6 +222,43 @@ SERVICE_SCHEMA_SEND_FILE = vol.All(
     SERVICE_SCHEMA_BASE_SEND_FILE,
 )
 
+SERVICE_SCHEMA_SEND_MEDIA_GROUP = vol.Schema(
+    {
+        vol.Optional(ATTR_ENTITY_ID): vol.All(cv.ensure_list, [cv.string]),
+        vol.Optional(CONF_CONFIG_ENTRY_ID): cv.string,
+        vol.Optional(ATTR_CHAT_ID): vol.All(cv.ensure_list, [vol.Coerce(int)]),
+        vol.Required(ATTR_MEDIA): vol.All(
+            cv.ensure_list,
+            [
+                vol.Schema(
+                    {
+                        vol.Required(ATTR_MEDIA_TYPE): vol.In(
+                            (
+                                str(InputMediaType.AUDIO),
+                                str(InputMediaType.VIDEO),
+                                str(InputMediaType.DOCUMENT),
+                                str(InputMediaType.PHOTO),
+                            )
+                        ),
+                        vol.Optional(ATTR_URL): cv.string,
+                        vol.Optional(ATTR_FILE): cv.string,
+                        vol.Optional(ATTR_CAPTION): cv.string,
+                        vol.Optional(ATTR_USERNAME): cv.string,
+                        vol.Optional(ATTR_PASSWORD): cv.string,
+                        vol.Optional(ATTR_AUTHENTICATION): cv.string,
+                        vol.Optional(ATTR_VERIFY_SSL, default=True): cv.boolean,
+                    }
+                )
+            ],
+            vol.Length(min=2, max=10),
+        ),
+        vol.Optional(ATTR_PARSER): ATTR_PARSER_SCHEMA,
+        vol.Optional(ATTR_DISABLE_NOTIF): cv.boolean,
+        vol.Optional(ATTR_PROTECT_CONTENT): cv.boolean,
+        vol.Optional(ATTR_REPLY_TO_MSGID): vol.Coerce(int),
+        vol.Optional(ATTR_MESSAGE_THREAD_ID): vol.Coerce(int),
+    }
+)
 
 SERVICE_SCHEMA_SEND_STICKER = vol.All(
     cv.deprecated(ATTR_TIMEOUT),
@@ -264,7 +304,7 @@ SERVICE_SCHEMA_EDIT_MESSAGE = vol.All(
             vol.Optional(CONF_CONFIG_ENTRY_ID): cv.string,
             vol.Optional(ATTR_TITLE): cv.string,
             vol.Required(ATTR_MESSAGE): cv.string,
-            vol.Required(ATTR_MESSAGEID): vol.Any(
+            vol.Required(ATTR_MESSAGE_ID): vol.Any(
                 cv.positive_int, vol.All(cv.string, "last")
             ),
             vol.Optional(ATTR_CHAT_ID): vol.Coerce(int),
@@ -281,7 +321,7 @@ SERVICE_SCHEMA_EDIT_MESSAGE_MEDIA = vol.All(
         {
             vol.Optional(ATTR_ENTITY_ID): vol.All(cv.ensure_list, [cv.string]),
             vol.Optional(CONF_CONFIG_ENTRY_ID): cv.string,
-            vol.Required(ATTR_MESSAGEID): vol.Any(
+            vol.Required(ATTR_MESSAGE_ID): vol.Any(
                 cv.positive_int, vol.All(cv.string, "last")
             ),
             vol.Optional(ATTR_CHAT_ID): vol.Coerce(int),
@@ -311,7 +351,7 @@ SERVICE_SCHEMA_EDIT_CAPTION = vol.Schema(
     {
         vol.Optional(ATTR_ENTITY_ID): vol.All(cv.ensure_list, [cv.string]),
         vol.Optional(CONF_CONFIG_ENTRY_ID): cv.string,
-        vol.Required(ATTR_MESSAGEID): vol.Any(
+        vol.Required(ATTR_MESSAGE_ID): vol.Any(
             cv.positive_int, vol.All(cv.string, "last")
         ),
         vol.Optional(ATTR_CHAT_ID): vol.Coerce(int),
@@ -325,7 +365,7 @@ SERVICE_SCHEMA_EDIT_REPLYMARKUP = vol.Schema(
     {
         vol.Optional(ATTR_ENTITY_ID): vol.All(cv.ensure_list, [cv.string]),
         vol.Optional(CONF_CONFIG_ENTRY_ID): cv.string,
-        vol.Required(ATTR_MESSAGEID): vol.Any(
+        vol.Required(ATTR_MESSAGE_ID): vol.Any(
             cv.positive_int, vol.All(cv.string, "last")
         ),
         vol.Optional(ATTR_CHAT_ID): vol.Coerce(int),
@@ -347,7 +387,7 @@ SERVICE_SCHEMA_DELETE_MESSAGE = vol.Schema(
         vol.Optional(ATTR_ENTITY_ID): vol.All(cv.ensure_list, [cv.string]),
         vol.Optional(CONF_CONFIG_ENTRY_ID): cv.string,
         vol.Optional(ATTR_CHAT_ID): vol.Coerce(int),
-        vol.Required(ATTR_MESSAGEID): vol.Any(
+        vol.Required(ATTR_MESSAGE_ID): vol.Any(
             cv.positive_int, vol.All(cv.string, "last")
         ),
     }
@@ -364,7 +404,7 @@ SERVICE_SCHEMA_LEAVE_CHAT = vol.Schema(
 SERVICE_SCHEMA_SET_MESSAGE_REACTION = vol.Schema(
     {
         vol.Optional(CONF_CONFIG_ENTRY_ID): cv.string,
-        vol.Required(ATTR_MESSAGEID): vol.Any(
+        vol.Required(ATTR_MESSAGE_ID): vol.Any(
             cv.positive_int, vol.All(cv.string, "last")
         ),
         vol.Optional(ATTR_CHAT_ID): vol.Coerce(int),
@@ -386,6 +426,7 @@ SERVICE_MAP: dict[str, VolSchemaType] = {
     SERVICE_SEND_MESSAGE: SERVICE_SCHEMA_SEND_MESSAGE,
     SERVICE_SEND_CHAT_ACTION: SERVICE_SCHEMA_SEND_CHAT_ACTION,
     SERVICE_SEND_PHOTO: SERVICE_SCHEMA_SEND_FILE,
+    SERVICE_SEND_MEDIA_GROUP: SERVICE_SCHEMA_SEND_MEDIA_GROUP,
     SERVICE_SEND_STICKER: SERVICE_SCHEMA_SEND_STICKER,
     SERVICE_SEND_ANIMATION: SERVICE_SCHEMA_SEND_FILE,
     SERVICE_SEND_VIDEO: SERVICE_SCHEMA_SEND_FILE,
@@ -434,6 +475,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             SERVICE_SEND_MESSAGE,
             SERVICE_SEND_CHAT_ACTION,
             SERVICE_SEND_PHOTO,
+            SERVICE_SEND_MEDIA_GROUP,
             SERVICE_SEND_ANIMATION,
             SERVICE_SEND_VIDEO,
             SERVICE_SEND_VOICE,
@@ -468,7 +510,7 @@ async def _async_send_telegram_message(service: ServiceCall) -> ServiceResponse:
     targets = _build_targets(service)
 
     service_responses: JsonValueType = []
-    errors: list[tuple[HomeAssistantError, str]] = []
+    errors: list[tuple[Exception, str]] = []
 
     # invoke the service for each target
     for target_config_entry, target_chat_id, target_notify_entity_id in targets:
@@ -485,7 +527,7 @@ async def _async_send_telegram_message(service: ServiceCall) -> ServiceResponse:
                 for chat_id, message_id in service_response.items():
                     formatted_response = {
                         ATTR_CHAT_ID: int(chat_id),
-                        ATTR_MESSAGEID: message_id,
+                        ATTR_MESSAGE_ID: message_id,
                     }
 
                     if target_notify_entity_id:
@@ -495,12 +537,18 @@ async def _async_send_telegram_message(service: ServiceCall) -> ServiceResponse:
 
                 assert isinstance(service_responses, list)
                 service_responses.extend(formatted_responses)
-        except HomeAssistantError as ex:
+        except (HomeAssistantError, TelegramError) as ex:
             target = target_notify_entity_id or str(target_chat_id)
             errors.append((ex, target))
 
     if len(errors) == 1:
-        raise errors[0][0]
+        if isinstance(errors[0][0], HomeAssistantError):
+            raise errors[0][0]
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="action_failed",
+            translation_placeholders={"error": str(errors[0][0])},
+        ) from errors[0][0]
 
     if len(errors) > 1:
         error_messages: list[str] = []
@@ -533,6 +581,10 @@ async def _call_service(
     messages: dict[str, JsonValueType] | None = None
     if service_name == SERVICE_SEND_MESSAGE:
         messages = await notify_service.send_message(context=service.context, **kwargs)
+    elif service_name == SERVICE_SEND_MEDIA_GROUP:
+        messages = await notify_service.send_media_group(
+            context=service.context, **kwargs
+        )
     elif service_name == SERVICE_SEND_CHAT_ACTION:
         messages = await notify_service.send_chat_action(
             context=service.context, **kwargs

@@ -19,8 +19,9 @@
 # ---
 # name: test_bbw_dose_mode[Linea Mini].1
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -79,8 +80,9 @@
 # ---
 # name: test_pre_brew_infusion_select[GS3 AV].1
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -139,8 +141,9 @@
 # ---
 # name: test_pre_brew_infusion_select[Linea Micra].1
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -199,8 +202,9 @@
 # ---
 # name: test_pre_brew_infusion_select[Linea Mini].1
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -258,8 +262,9 @@
 # ---
 # name: test_smart_standby_mode.1
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -317,8 +322,9 @@
 # ---
 # name: test_steam_boiler_level[Linea Micra].1
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
