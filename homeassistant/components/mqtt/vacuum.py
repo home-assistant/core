@@ -259,10 +259,6 @@ class MqttStateVacuum(MqttEntity, StateVacuumEntity):
             config.get(CONF_CLEAN_SEGMENTS_COMMAND_TEMPLATE),
             entity=self,
         ).async_render
-        if self._clean_segments_command_topic is None:
-            # Clear any previously configured clean-segments handling when the
-            # option is absent in the new config after a discovery update.
-            self._attr_supported_features &= ~VacuumEntityFeature.CLEAN_AREA
 
         self._attr_fan_speed_list = config[CONF_FAN_SPEED_LIST]
         self._command_topic = config.get(CONF_COMMAND_TOPIC)
