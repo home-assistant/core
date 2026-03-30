@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import typing
+
 from homeassistant.components.update import UpdateEntity
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -41,13 +43,15 @@ class ImmichUpdateEntity(ImmichEntity, UpdateEntity):
     @property
     def installed_version(self) -> str:
         """Current installed immich server version."""
-        return self.coordinator.data.server_about.version
+        return typing.cast(str, self.coordinator.data.server_about.version)
 
     @property
     def latest_version(self) -> str | None:
         """Available new immich server version."""
         assert self.coordinator.data.server_version_check
-        return self.coordinator.data.server_version_check.release_version
+        return typing.cast(
+            str | None, self.coordinator.data.server_version_check.release_version
+        )
 
     @property
     def release_url(self) -> str | None:
