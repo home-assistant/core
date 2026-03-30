@@ -41,6 +41,10 @@
       "next_industry_finish": {
         "name": "Next industry finish"
       },
+      "sell_orders": {
+        "name": "Sell orders",
+        "unit_of_measurement": "orders"
+      },
       "ship": {
         "name": "Ship"
       },

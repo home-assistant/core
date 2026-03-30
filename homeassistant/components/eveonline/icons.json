@@ -22,6 +22,9 @@
       "next_industry_finish": {
         "default": "mdi:clock-end"
       },
+      "sell_orders": {
+        "default": "mdi:cart-arrow-up"
+      },
       "ship": {
         "default": "mdi:rocket-launch"
       },
