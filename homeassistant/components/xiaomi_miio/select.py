@@ -301,11 +301,15 @@ class XiaomiGenericSelector(XiaomiSelector):
     ) -> None:
         """Initialize the generic Xiaomi attribute selector."""
         super().__init__(device, entry, unique_id, coordinator, description)
-        self._current_attr = enum_class(
-            self._extract_value_from_attribute(
-                self.coordinator.data, self.entity_description.attr_name
+        self._current_attr = None
+        if (
+            attr := self._resolve_enum_attribute(
+                self._extract_value_from_attribute(
+                    self.coordinator.data, self.entity_description.attr_name
+                )
             )
-        )
+        ) is not None:
+            self._current_attr = attr
 
         if description.options_map:
             self._options_map = {}
@@ -316,19 +320,24 @@ class XiaomiGenericSelector(XiaomiSelector):
         self._reverse_map = {val: key for key, val in self._options_map.items()}
         self._enum_class = enum_class
 
-    @callback
-    def _handle_coordinator_update(self):
-        """Fetch state from the device."""
+    def _resolve_enum_attribute(self, value: Any) -> Any | None:
+        """Convert a raw coordinator value to an enum member."""
         try:
-            value = self._extract_value_from_attribute(
-                self.coordinator.data, self.entity_description.attr_name
-            )
-            attr = self._enum_class(value)
-        except ValueError:  # if the value does not exist in
+            return self._enum_class(value)
+        except ValueError:
             _LOGGER.debug(
                 "Value '%s' does not exist in enum %s", value, self._enum_class
             )
-            attr = None
+            return None
+
+    @callback
+    def _handle_coordinator_update(self):
+        """Fetch state from the device."""
+        attr = self._resolve_enum_attribute(
+            self._extract_value_from_attribute(
+                self.coordinator.data, self.entity_description.attr_name
+            )
+        )
 
         if attr is not None:
             self._current_attr = attr

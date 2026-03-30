@@ -207,6 +207,18 @@ async def test_pet_fountain_controls(
     mock_pet_fountain.reset_filter_life.assert_called_once_with()
 
 
+async def test_pet_fountain_mode_unknown_on_first_refresh(
+    hass: HomeAssistant,
+    mock_pet_fountain: MagicMock,
+) -> None:
+    """Test entity setup when the initial mode value is unavailable."""
+    mock_pet_fountain.status.return_value.mode = None
+
+    await setup_component(hass, "test_pet_fountain")
+
+    assert hass.states.get("select.test_pet_fountain_water_mode").state == "unknown"
+
+
 async def setup_component(hass: HomeAssistant, entry_title: str) -> str:
     """Set up the pet fountain component."""
     config_entry = MockConfigEntry(
