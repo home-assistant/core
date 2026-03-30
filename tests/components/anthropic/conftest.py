@@ -215,7 +215,11 @@ def mock_create_stream() -> Generator[AsyncMock]:
                 isinstance(event, RawContentBlockStartEvent)
                 and isinstance(event.content_block, ServerToolUseBlock)
                 and event.content_block.name
-                in ["bash_code_execution", "text_editor_code_execution"]
+                in [
+                    "code_execution",
+                    "bash_code_execution",
+                    "text_editor_code_execution",
+                ]
             ):
                 container = Container(
                     id=kwargs.get("container_id", "container_1234567890ABCDEFGHIJKLMN"),
