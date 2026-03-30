@@ -604,7 +604,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         "maintenance",
         sidebar_icon="mdi:wrench",
         sidebar_title="maintenance",
-        show_in_sidebar=True,
+        show_in_sidebar=False,
     )
 
     async_register_built_in_panel(hass, "profile")
