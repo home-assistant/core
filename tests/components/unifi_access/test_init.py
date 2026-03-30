@@ -373,7 +373,12 @@ async def test_stale_device_removed_on_refresh(
         door for door in mock_client.get_doors.return_value if door.id != "door-002"
     ]
 
-    await init_integration.runtime_data.async_refresh()
+    # Trigger natural refresh via WebSocket reconnect
+    on_disconnect = mock_client.start_websocket.call_args[1]["on_disconnect"]
+    on_connect = mock_client.start_websocket.call_args[1]["on_connect"]
+    on_disconnect()
+    await hass.async_block_till_done()
+    on_connect()
     await hass.async_block_till_done()
 
     # door-001 still exists, door-002 was removed
