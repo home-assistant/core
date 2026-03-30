@@ -379,3 +379,28 @@ async def test_stale_device_removed_on_refresh(
     # door-001 still exists, door-002 was removed
     assert device_registry.async_get_device(identifiers={(DOMAIN, "door-001")})
     assert not device_registry.async_get_device(identifiers={(DOMAIN, "door-002")})
+
+
+async def test_stale_device_removed_on_startup(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    mock_config_entry: MockConfigEntry,
+    mock_client: MagicMock,
+) -> None:
+    """Test stale devices present before setup are removed on initial refresh."""
+    mock_config_entry.add_to_hass(hass)
+
+    # Create a stale door device that no longer exists on the hub
+    device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id,
+        identifiers={(DOMAIN, "door-003")},
+    )
+    assert device_registry.async_get_device(identifiers={(DOMAIN, "door-003")})
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    # Valid doors from the hub should exist, stale device should be removed
+    assert device_registry.async_get_device(identifiers={(DOMAIN, "door-001")})
+    assert device_registry.async_get_device(identifiers={(DOMAIN, "door-002")})
+    assert not device_registry.async_get_device(identifiers={(DOMAIN, "door-003")})

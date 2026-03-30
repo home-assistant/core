@@ -92,7 +92,6 @@ class UnifiAccessCoordinator(DataUpdateCoordinator[UnifiAccessData]):
         )
         self.client = client
         self._event_listeners: list[Callable[[DoorEvent], None]] = []
-        self._previous_doors: set[str] = set()
 
     @callback
     def async_subscribe_door_events(
@@ -196,10 +195,8 @@ class UnifiAccessCoordinator(DataUpdateCoordinator[UnifiAccessData]):
 
         supports_lock_rules = bool(door_lock_rules) or bool(unconfirmed_lock_rule_doors)
 
-        current_doors = {door.id for door in doors}
-        if stale_doors := self._previous_doors - current_doors:
-            self._remove_stale_devices(stale_doors)
-        self._previous_doors = current_doors
+        current_ids = {door.id for door in doors} | {self.config_entry.entry_id}
+        self._remove_stale_devices(current_ids)
 
         return UnifiAccessData(
             doors={door.id: door for door in doors},
@@ -229,16 +226,21 @@ class UnifiAccessCoordinator(DataUpdateCoordinator[UnifiAccessData]):
             return None
 
     @callback
-    def _remove_stale_devices(self, stale_doors: set[str]) -> None:
+    def _remove_stale_devices(self, current_ids: set[str]) -> None:
         """Remove devices for doors that no longer exist on the hub."""
         device_registry = dr.async_get(self.hass)
-        for door_id in stale_doors:
-            device = device_registry.async_get_device(identifiers={(DOMAIN, door_id)})
-            if device:
-                device_registry.async_update_device(
-                    device_id=device.id,
-                    remove_config_entry_id=self.config_entry.entry_id,
-                )
+        for device in dr.async_entries_for_config_entry(
+            device_registry, self.config_entry.entry_id
+        ):
+            if any(
+                identifier[0] == DOMAIN and identifier[1] in current_ids
+                for identifier in device.identifiers
+            ):
+                continue
+            device_registry.async_update_device(
+                device_id=device.id,
+                remove_config_entry_id=self.config_entry.entry_id,
+            )
 
     def _on_ws_connect(self) -> None:
         """Handle WebSocket connection established."""
