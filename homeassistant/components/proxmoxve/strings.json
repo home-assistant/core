@@ -364,5 +364,41 @@
         "pve": "Proxmox user - Proxmox VE authentication server"
       }
     }
+  },
+  "services": {
+    "vm_command_wait": {
+      "name": "Run command and wait",
+      "description": "Run a VM or container power command and wait for the Proxmox task to finish.",
+      "fields": {
+        "node": {
+          "name": "Node",
+          "description": "The Proxmox node hosting the VM or container."
+        },
+        "vmid": {
+          "name": "VM ID",
+          "description": "The numeric VM or container ID."
+        },
+        "command": {
+          "name": "Command",
+          "description": "The power command to execute."
+        },
+        "resource_type": {
+          "name": "Resource type",
+          "description": "Whether the target is a QEMU virtual machine or an LXC container."
+        },
+        "entry_id": {
+          "name": "Config entry ID",
+          "description": "The Proxmox VE config entry to use when the same node exists in multiple entries."
+        },
+        "timeout": {
+          "name": "Timeout",
+          "description": "How long to wait for the Proxmox task to complete."
+        },
+        "poll_interval": {
+          "name": "Poll interval",
+          "description": "How often to poll the Proxmox task status while waiting."
+        }
+      }
+    }
   }
 }
