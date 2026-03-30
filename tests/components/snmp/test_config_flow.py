@@ -192,7 +192,7 @@ async def test_import_flow_already_configured(hass: HomeAssistant) -> None:
     """Test YAML import flow aborts if already configured."""
     MockConfigEntry(
         domain=DOMAIN,
-        unique_id="192.168.1.1_1.3.6.1.4.1.2021.10.1.3.1",
+        unique_id="192.168.1.1_161_1.3.6.1.4.1.2021.10.1.3.1",
         data={
             "host": "192.168.1.1",
             "baseoid": "1.3.6.1.4.1.2021.10.1.3.1",
@@ -216,7 +216,7 @@ async def test_user_flow_already_configured(hass: HomeAssistant) -> None:
     """Test user flow aborts if already configured."""
     MockConfigEntry(
         domain=DOMAIN,
-        unique_id="192.168.1.1_1.3.6.1.4.1.2021.10.1.3.1",
+        unique_id="192.168.1.1_161_1.3.6.1.4.1.2021.10.1.3.1",
         data={
             "host": "192.168.1.1",
             "baseoid": "1.3.6.1.4.1.2021.10.1.3.1",
@@ -234,6 +234,14 @@ async def test_user_flow_already_configured(hass: HomeAssistant) -> None:
             "baseoid": "1.3.6.1.4.1.2021.10.1.3.1",
             "version": "1",
         },
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "v1_v2c"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {"community": "public"},
     )
 
     assert result["type"] is FlowResultType.ABORT
@@ -646,3 +654,24 @@ async def test_user_flow_v3_cannot_connect(hass: HomeAssistant) -> None:
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "cannot_connect"}
+
+
+async def test_import_flow_with_port_and_context_name(hass: HomeAssistant) -> None:
+    """Test import flow unique_id includes port and context_name."""
+    with patch("homeassistant.components.snmp.async_setup_entry", return_value=True):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_IMPORT},
+            data={
+                "host": "192.168.1.1",
+                "port": 1161,
+                "baseoid": "1.3.6.1.4.1.2021.10.1.3.1",
+                "community": "public",
+                "context_name": "vlan100",
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    entry = result["result"]
+    assert entry.unique_id == "192.168.1.1_1161_1.3.6.1.4.1.2021.10.1.3.1_vlan100"

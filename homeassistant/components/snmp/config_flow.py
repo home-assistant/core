@@ -151,10 +151,6 @@ class SnmpConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["baseoid"] = "invalid_oid"
             else:
                 self._user_data = user_input
-                await self.async_set_unique_id(
-                    f"{user_input[CONF_HOST]}_{user_input[CONF_BASEOID]}"
-                )
-                self._abort_if_unique_id_configured()
 
                 if user_input[CONF_VERSION] == "3":
                     return await self.async_step_v3()
@@ -177,20 +173,10 @@ class SnmpConfigFlow(ConfigFlow, domain=DOMAIN):
         description_placeholders: dict[str, str] = {}
         if user_input is not None:
             data = {**self._user_data, **user_input}
-            try:
-                await validate_input(self.hass, data)
-            except CannotConnect as err:
-                errors["base"] = "cannot_connect"
-                description_placeholders["error"] = str(err)
-            except InvalidAuth as err:
-                errors["base"] = "invalid_auth"
-                description_placeholders["error"] = str(err)
-            except PySnmpError as err:
-                _LOGGER.warning("Unexpected SNMP error during validation: %s", err)
-                errors["base"] = "cannot_connect"
-                description_placeholders["error"] = str(err)
-            else:
-                return self.async_create_entry(title=data[CONF_HOST], data=data)
+            if result := await self._async_validate_and_create_entry(
+                data, errors, description_placeholders
+            ):
+                return result
 
         return self.async_show_form(
             step_id="v1_v2c",
@@ -213,20 +199,10 @@ class SnmpConfigFlow(ConfigFlow, domain=DOMAIN):
 
             if not errors:
                 data = {**self._user_data, **user_input}
-                try:
-                    await validate_input(self.hass, data)
-                except CannotConnect as err:
-                    errors["base"] = "cannot_connect"
-                    description_placeholders["error"] = str(err)
-                except InvalidAuth as err:
-                    errors["base"] = "invalid_auth"
-                    description_placeholders["error"] = str(err)
-                except PySnmpError as err:
-                    _LOGGER.warning("Unexpected SNMP error during validation: %s", err)
-                    errors["base"] = "cannot_connect"
-                    description_placeholders["error"] = str(err)
-                else:
-                    return self.async_create_entry(title=data[CONF_HOST], data=data)
+                if result := await self._async_validate_and_create_entry(
+                    data, errors, description_placeholders
+                ):
+                    return result
 
         return self.async_show_form(
             step_id="v3",
@@ -239,10 +215,7 @@ class SnmpConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_import(self, user_input: dict[str, Any]) -> ConfigFlowResult:
         """Handle import from the old YAML configuration file."""
-        await self.async_set_unique_id(
-            f"{user_input[CONF_HOST]}_{user_input[CONF_BASEOID]}"
-        )
-        self._abort_if_unique_id_configured()
+        await self._async_check_unique_id(user_input)
 
         # Filter to only include keys that are relevant to SNMP config entries.
         # The legacy platform schema adds extra keys (platform, consider_home,
@@ -265,6 +238,40 @@ class SnmpConfigFlow(ConfigFlow, domain=DOMAIN):
         clean_data[CONF_IMPORTED_BY] = "device_tracker"
 
         return self.async_create_entry(title=clean_data[CONF_HOST], data=clean_data)
+
+    async def _async_check_unique_id(self, user_input: dict[str, Any]) -> None:
+        """Set the unique ID and abort if already configured."""
+        port = user_input.get(CONF_PORT, DEFAULT_PORT)
+        context_name = user_input.get(CONF_CONTEXT_NAME)
+        unique_id = f"{user_input[CONF_HOST]}_{port}_{user_input[CONF_BASEOID]}"
+        if context_name:
+            unique_id = f"{unique_id}_{context_name}"
+        await self.async_set_unique_id(unique_id)
+        self._abort_if_unique_id_configured()
+
+    async def _async_validate_and_create_entry(
+        self,
+        data: dict[str, Any],
+        errors: dict[str, str],
+        description_placeholders: dict[str, str],
+    ) -> ConfigFlowResult | None:
+        """Validate input and create entry."""
+        await self._async_check_unique_id(data)
+        try:
+            await validate_input(self.hass, data)
+        except CannotConnect as err:
+            errors["base"] = "cannot_connect"
+            description_placeholders["error"] = str(err)
+        except InvalidAuth as err:
+            errors["base"] = "invalid_auth"
+            description_placeholders["error"] = str(err)
+        except PySnmpError as err:
+            _LOGGER.warning("Unexpected SNMP error during validation: %s", err)
+            errors["base"] = "cannot_connect"
+            description_placeholders["error"] = str(err)
+        else:
+            return self.async_create_entry(title=data[CONF_HOST], data=data)
+        return None
 
 
 class CannotConnect(Exception):
