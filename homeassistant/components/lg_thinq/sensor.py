@@ -522,6 +522,7 @@ DEVICE_TYPE_SENSOR_MAP: dict[DeviceType, tuple[SensorEntityDescription, ...]] = 
         REFRIGERATION_SENSOR_DESC[ThinQProperty.FRESH_AIR_FILTER],
         SensorEntityDescription(
             key=ThinQProperty.TARGET_TEMPERATURE,
+            device_class=SensorDeviceClass.ENUM,
             translation_key=ThinQProperty.TARGET_TEMPERATURE,
         ),
     ),
@@ -761,20 +762,28 @@ class ThinQSensorEntity(ThinQEntity, SensorEntity):
                 )
         self._attr_native_value = value
 
-        if isinstance(self.native_value, str):
-            # non-numeric value
-            self._attr_native_unit_of_measurement = None
-        elif (data_unit := self._get_unit_of_measurement(self.data.unit)) is not None:
-            # data has its own unit C or F
-            self._attr_native_unit_of_measurement = data_unit
-        else:
-            # entity_description
-            self._attr_native_unit_of_measurement = (
-                self.entity_description.native_unit_of_measurement
-            )
+        if self.native_value is not None:
+            if isinstance(self.native_value, str):
+                # clear unit_of_measurement for non-numeric value
+                self._attr_native_unit_of_measurement = None
+            else:
+                # clear device_class for numeric value has ENUM
+                if self.entity_description.device_class == SensorDeviceClass.ENUM:
+                    self._attr_device_class = None
+
+                if (
+                    data_unit := self._get_unit_of_measurement(self.data.unit)
+                ) is not None:
+                    # data has its own unit C or F
+                    self._attr_native_unit_of_measurement = data_unit
+                else:
+                    # entity_description
+                    self._attr_native_unit_of_measurement = (
+                        self.entity_description.native_unit_of_measurement
+                    )
 
         _LOGGER.debug(
-            "[%s:%s] update status: %s -> %s, options:%s, unit:%s, type:%s",
+            "[%s:%s] update status: %s -> %s, options:%s, unit:%s, type:%s, device_class:%s",
             self.coordinator.device_name,
             self.property_id,
             self.data.value,
@@ -782,6 +791,7 @@ class ThinQSensorEntity(ThinQEntity, SensorEntity):
             self.options,
             self.native_unit_of_measurement,
             type(self.native_value),
+            self.device_class,
         )
 
     def _get_duration(self, data: time, unit: str | None) -> float | None:

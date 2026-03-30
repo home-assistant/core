@@ -804,7 +804,7 @@
     'object_id_base': 'middle temperature',
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'middle temperature',
     'platform': 'lg_thinq',
@@ -819,6 +819,7 @@
 # name: test_sensor_entities[kimchi_refrigerator][sensor.test_kimchi_refrigerator_middle_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'device_class': 'enum',
       'friendly_name': 'Test kimchi refrigerator middle temperature',
     }),
     'context': <ANY>,
