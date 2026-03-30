@@ -51,7 +51,7 @@ rules:
   docs-supported-functions: done
   docs-troubleshooting: done
   docs-use-cases: done
-  dynamic-devices: todo
+  dynamic-devices: done
   entity-category: done
   entity-device-class: done
   entity-disabled-by-default:
@@ -64,7 +64,7 @@ rules:
   repair-issues:
     status: exempt
     comment: Integration raises ConfigEntryAuthFailed and relies on Home Assistant core to surface reauth/repair issues, no custom repairs are defined.
-  stale-devices: todo
+  stale-devices: done
 
   # Platinum
   async-dependency: done
