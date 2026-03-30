@@ -963,7 +963,7 @@ feedparser==6.0.12
 file-read-backwards==2.0.0
 
 # homeassistant.components.fing
-fing_agent_api==1.0.3
+fing_agent_api==1.1.0
 
 # homeassistant.components.fints
 fints==3.1.0
@@ -2001,7 +2001,7 @@ pybravia==0.4.1
 pycarwings2==2.14
 
 # homeassistant.components.casper_glow
-pycasperglow==1.1.0
+pycasperglow==1.2.0
 
 # homeassistant.components.cloudflare
 pycfdns==3.0.0
@@ -3280,7 +3280,7 @@ waterfurnace==1.6.2
 watergate-local-api==2025.1.0
 
 # homeassistant.components.weatherflow_cloud
-weatherflow4py==1.4.1
+weatherflow4py==1.5.2
 
 # homeassistant.components.cisco_webex_teams
 webexpythonsdk==2.0.1
