@@ -87,9 +87,9 @@ class EagleSensor(CoordinatorEntity[EagleDataCoordinator], SensorEntity):
         )
         model = coordinator.model.replace("-", "_").lower()
         hw = (
-            f"_{coordinator.hardware_address.lower()}_"
+            f"_{coordinator.hardware_address.replace('-', '').lower()}_"
             if coordinator.hardware_address
-            else ""
+            else "_"
         )
         # Derive a short slug from the entity description key, if translation_key is not set.
         slug = (
