@@ -9,7 +9,6 @@ from motionblinds import MotionDiscovery, MotionGateway
 import voluptuous as vol
 
 from homeassistant.config_entries import (
-    ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
     OptionsFlowWithReload,
@@ -27,6 +26,7 @@ from .const import (
     DEFAULT_WAIT_FOR_PUSH,
     DOMAIN,
 )
+from .coordinator import MotionBlindsConfigEntry
 from .gateway import ConnectMotionGateway
 
 _LOGGER = logging.getLogger(__name__)
@@ -79,7 +79,7 @@ class MotionBlindsFlowHandler(ConfigFlow, domain=DOMAIN):
     @staticmethod
     @callback
     def async_get_options_flow(
-        config_entry: ConfigEntry,
+        config_entry: MotionBlindsConfigEntry,
     ) -> OptionsFlowHandler:
         """Get the options flow."""
         return OptionsFlowHandler()
