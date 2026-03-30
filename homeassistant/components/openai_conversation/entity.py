@@ -346,7 +346,9 @@ async def _transform_stream(  # noqa: C901 - This is complex, but better to have
                             id=event.item.id,
                             tool_name="web_search_call",
                             tool_args={
-                                "action": event.item.action.to_dict(),
+                                "action": event.item.action.to_dict()
+                                if event.item.action
+                                else None,
                             },
                             external=True,
                         )
@@ -360,6 +362,10 @@ async def _transform_stream(  # noqa: C901 - This is complex, but better to have
                 }
                 last_role = "tool_result"
             elif isinstance(event.item, ImageGenerationCall):
+                if last_summary_index is not None:
+                    yield {"role": "assistant"}
+                    last_role = "assistant"
+                    last_summary_index = None
                 yield {"native": event.item}
                 last_summary_index = -1  # Trigger new assistant message on next turn
         elif isinstance(event, ResponseTextDeltaEvent):
