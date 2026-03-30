@@ -605,7 +605,9 @@ class ZWaveLegacyDoorStateBinarySensor(ZWaveBaseEntity, BinarySensorEntity):
     ) -> None:
         """Initialize a legacy Door state binary sensor entity."""
         super().__init__(config_entry, driver, info)
-        opening_state_value = get_opening_state_notification_value(self.info.node)
+        opening_state_value = get_opening_state_notification_value(
+            self.info.node, self.info.primary_value.endpoint
+        )
         assert opening_state_value is not None  # guaranteed by required_values schema
         self._opening_state_value_id = opening_state_value.value_id
         self.watched_value_ids.add(opening_state_value.value_id)

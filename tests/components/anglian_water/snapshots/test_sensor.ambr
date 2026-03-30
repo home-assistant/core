@@ -47,7 +47,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '2024-06-01T14:00:00+00:00',
+    'state': '2024-06-01T13:00:00+00:00',
   })
 # ---
 # name: test_sensor[sensor.testsn_latest_reading-entry]

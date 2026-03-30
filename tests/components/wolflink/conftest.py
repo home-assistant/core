@@ -71,7 +71,7 @@ def mock_wolflink() -> Generator[MagicMock]:
 
         wolflink.fetch_parameters.return_value = [
             EnergyParameter(
-                6002800000, "Energy Parameter", "Heating", 6005200000, 2000
+                6002800000, "Energy Parameter", "Heating", 6005200000, 2000, True
             ),
             ListItemParameter(
                 8002800000,
@@ -80,22 +80,35 @@ def mock_wolflink() -> Generator[MagicMock]:
                 [ListItem("0", "Aus"), ListItem("1", "Ein")],
                 8005200000,
                 3001,
+                True,
             ),
-            PowerParameter(5002800000, "Power Parameter", "Heating", 5005200000, 1000),
-            Pressure(4002800000, "Pressure Parameter", "Heating", 4005200000, 1000),
-            Temperature(3002800000, "Temperature Parameter", "Solar", 3005200000, 1000),
+            PowerParameter(
+                5002800000, "Power Parameter", "Heating", 5005200000, 1000, True
+            ),
+            Pressure(
+                4002800000, "Pressure Parameter", "Heating", 4005200000, 1000, True
+            ),
+            Temperature(
+                3002800000, "Temperature Parameter", "Solar", 3005200000, 1000, True
+            ),
             PercentageParameter(
-                2002800000, "Percentage Parameter", "Solar", 2005200000, 1000
+                2002800000, "Percentage Parameter", "Solar", 2005200000, 1000, True
             ),
-            HoursParameter(7002800000, "Hours Parameter", "Heating", 7005200000, 1000),
-            SimpleParameter(1002800000, "Simple Parameter", "DHW", 1005200000, 1000),
+            HoursParameter(
+                7002800000, "Hours Parameter", "Heating", 7005200000, 1000, True
+            ),
+            SimpleParameter(
+                1002800000, "Simple Parameter", "DHW", 1005200000, 1000, True
+            ),
             FrequencyParameter(
-                9002800000, "Frequency Parameter", "Heating", 9005200000, 1000
+                9002800000, "Frequency Parameter", "Heating", 9005200000, 1000, True
             ),
-            RPMParameter(1000280001, "RPM Parameter", "Heating", 10005200000, 7000),
-            FlowParameter(1100280001, "Flow Parameter", "Heating", 11005200000, 8000),
-            HoursParameter(7002800000, "Hours Parameter", "Heating", 7005200000, 1000),
-            SimpleParameter(1002800000, "Simple Parameter", "DHW", 1005200000, 1000),
+            RPMParameter(
+                1000280001, "RPM Parameter", "Heating", 10005200000, 7000, True
+            ),
+            FlowParameter(
+                1100280001, "Flow Parameter", "Heating", 11005200000, 8000, True
+            ),
         ]
 
         wolflink.fetch_value.return_value = [
