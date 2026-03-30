@@ -72,9 +72,9 @@ rules:
   reconfiguration-flow:
     status: exempt
     comment: >
-      All configuration parameters are auto-discovered during setup with no
-      user input. IP address updates are handled automatically via DHCP
-      discovery.
+      Gateway selection requires user interaction during the initial config
+      flow, but connection parameters are auto-discovered and host/IP updates
+      are handled automatically via DHCP.
   repair-issues:
     status: exempt
     comment: >
