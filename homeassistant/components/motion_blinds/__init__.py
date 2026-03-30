@@ -2,7 +2,6 @@
 
 import asyncio
 import logging
-from typing import TYPE_CHECKING
 
 from motionblinds import AsyncMotionMulticast
 
@@ -13,12 +12,8 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from .const import (
     CONF_BLIND_TYPE_LIST,
     CONF_INTERFACE,
-    CONF_WAIT_FOR_PUSH,
     DEFAULT_INTERFACE,
-    DEFAULT_WAIT_FOR_PUSH,
     DOMAIN,
-    KEY_API_LOCK,
-    KEY_GATEWAY,
     KEY_MULTICAST_LISTENER,
     KEY_SETUP_LOCK,
     KEY_UNSUB_STOP,
@@ -43,7 +38,6 @@ async def async_setup_entry(
     host = entry.data[CONF_HOST]
     key = entry.data[CONF_API_KEY]
     multicast_interface = entry.data.get(CONF_INTERFACE, DEFAULT_INTERFACE)
-    wait_for_push = entry.options.get(CONF_WAIT_FOR_PUSH, DEFAULT_WAIT_FOR_PUSH)
     blind_type_list = entry.data.get(CONF_BLIND_TYPE_LIST)
 
     # Create multicast Listener
@@ -92,15 +86,9 @@ async def async_setup_entry(
     ):
         raise ConfigEntryNotReady
     motion_gateway = connect_gateway_class.gateway_device
-    api_lock = asyncio.Lock()
-    coordinator_info = {
-        KEY_GATEWAY: motion_gateway,
-        KEY_API_LOCK: api_lock,
-        CONF_WAIT_FOR_PUSH: wait_for_push,
-    }
 
     coordinator = DataUpdateCoordinatorMotionBlinds(
-        hass, entry, _LOGGER, coordinator_info
+        hass, entry, _LOGGER, motion_gateway
     )
 
     # store blind type list for next time
@@ -118,9 +106,6 @@ async def async_setup_entry(
         gateway=motion_gateway,
         coordinator=coordinator,
     )
-
-    if TYPE_CHECKING:
-        assert entry.unique_id is not None
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 

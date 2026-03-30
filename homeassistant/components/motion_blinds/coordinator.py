@@ -6,7 +6,6 @@ import asyncio
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
-from typing import Any
 
 from motionblinds import DEVICE_TYPES_WIFI, ParseException
 from motionblinds.motion_blinds import MotionGateway
@@ -18,7 +17,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from .const import (
     ATTR_AVAILABLE,
     CONF_WAIT_FOR_PUSH,
-    KEY_API_LOCK,
+    DEFAULT_WAIT_FOR_PUSH,
     KEY_GATEWAY,
     UPDATE_INTERVAL,
     UPDATE_INTERVAL_FAST,
@@ -48,7 +47,7 @@ class DataUpdateCoordinatorMotionBlinds(DataUpdateCoordinator):
         hass: HomeAssistant,
         config_entry: ConfigEntry,
         logger: logging.Logger,
-        coordinator_info: dict[str, Any],
+        gateway: MotionGateway,
     ) -> None:
         """Initialize global data updater."""
         super().__init__(
@@ -59,9 +58,11 @@ class DataUpdateCoordinatorMotionBlinds(DataUpdateCoordinator):
             update_interval=timedelta(seconds=UPDATE_INTERVAL),
         )
 
-        self.api_lock = coordinator_info[KEY_API_LOCK]
-        self._gateway = coordinator_info[KEY_GATEWAY]
-        self._wait_for_push = coordinator_info[CONF_WAIT_FOR_PUSH]
+        self.api_lock = asyncio.Lock()
+        self._gateway = gateway
+        self._wait_for_push = config_entry.options.get(
+            CONF_WAIT_FOR_PUSH, DEFAULT_WAIT_FOR_PUSH
+        )
 
     def update_gateway(self):
         """Fetch data from gateway."""
