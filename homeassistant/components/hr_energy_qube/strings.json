@@ -21,26 +21,41 @@
   },
   "entity": {
     "binary_sensor": {
-      "al_dewpoint_active": {
-        "name": "Alarm: Dewpoint"
-      },
-      "al_maxtime_antileg_active": {
+      "alarm_antilegionella_timeout": {
         "name": "Alarm: Anti-legionella timeout"
       },
-      "al_maxtime_dhw_active": {
-        "name": "Alarm: DHW timeout"
+      "alarm_central_heating": {
+        "name": "Alarm: Central heating"
       },
-      "al_underfloorsafety_active": {
-        "name": "Alarm: Supply too hot"
-      },
-      "alarmmng_al_pwrplus": {
+      "alarm_compressor": {
         "name": "Alarm: Compressor"
       },
-      "alarmmng_al_workinghour": {
-        "name": "Alarm: Working hours"
+      "alarm_cooling": {
+        "name": "Alarm: Cooling"
       },
-      "alrm_flw": {
+      "alarm_dewpoint": {
+        "name": "Alarm: Dewpoint"
+      },
+      "alarm_dhw_timeout": {
+        "name": "Alarm: DHW timeout"
+      },
+      "alarm_flow": {
         "name": "Alarm: Flow"
+      },
+      "alarm_global": {
+        "name": "Alarm: Global"
+      },
+      "alarm_heating": {
+        "name": "Alarm: Heating"
+      },
+      "alarm_source": {
+        "name": "Alarm: Source"
+      },
+      "alarm_supply_too_hot": {
+        "name": "Alarm: Supply too hot"
+      },
+      "alarm_working_hours": {
+        "name": "Alarm: Working hours"
       },
       "bms_demand": {
         "name": "Heat demand"
@@ -51,14 +66,14 @@
       "bufferprb_en": {
         "name": "Buffer sensor enabled"
       },
-      "coolingalrms": {
-        "name": "Alarm: Cooling"
-      },
       "daynightmode": {
         "name": "Day mode"
       },
       "dewpoint": {
         "name": "Dewpoint"
+      },
+      "dhwpid_en": {
+        "name": "DHW controller enabled"
       },
       "dout_bufferpmp_val": {
         "name": "Buffer pump"
@@ -87,15 +102,6 @@
       "dout_usrpmp_val": {
         "name": "User pump"
       },
-      "en_dhwpid": {
-        "name": "DHW controller enabled"
-      },
-      "glbal": {
-        "name": "Alarm: Global"
-      },
-      "heatingalrms": {
-        "name": "Alarm: Heating"
-      },
       "id_demand": {
         "name": "External demand"
       },
@@ -120,17 +126,11 @@
       "srcflw": {
         "name": "Source flow"
       },
-      "srsalrm": {
-        "name": "Alarm: Source"
-      },
       "surplus_pv": {
         "name": "PV surplus"
       },
       "thermostatdemand": {
         "name": "Thermostat demand"
-      },
-      "usralrms": {
-        "name": "Alarm: Central heating"
       }
     },
     "sensor": {

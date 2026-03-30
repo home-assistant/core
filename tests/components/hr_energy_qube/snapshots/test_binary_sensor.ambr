@@ -31,8 +31,8 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'al_maxtime_antileg_active',
-    'unique_id': '01JQUBEHEATPUMP00000000000-al_maxtime_antileg_active',
+    'translation_key': 'alarm_antilegionella_timeout',
+    'unique_id': '01JQUBEHEATPUMP00000000000-alarm_antilegionella_timeout',
     'unit_of_measurement': None,
   })
 # ---
@@ -82,8 +82,8 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'usralrms',
-    'unique_id': '01JQUBEHEATPUMP00000000000-usralrms',
+    'translation_key': 'alarm_central_heating',
+    'unique_id': '01JQUBEHEATPUMP00000000000-alarm_central_heating',
     'unit_of_measurement': None,
   })
 # ---
@@ -133,8 +133,8 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'alarmmng_al_pwrplus',
-    'unique_id': '01JQUBEHEATPUMP00000000000-alarmmng_al_pwrplus',
+    'translation_key': 'alarm_compressor',
+    'unique_id': '01JQUBEHEATPUMP00000000000-alarm_compressor',
     'unit_of_measurement': None,
   })
 # ---
@@ -184,8 +184,8 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'coolingalrms',
-    'unique_id': '01JQUBEHEATPUMP00000000000-coolingalrms',
+    'translation_key': 'alarm_cooling',
+    'unique_id': '01JQUBEHEATPUMP00000000000-alarm_cooling',
     'unit_of_measurement': None,
   })
 # ---
@@ -235,8 +235,8 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'al_dewpoint_active',
-    'unique_id': '01JQUBEHEATPUMP00000000000-al_dewpoint_active',
+    'translation_key': 'alarm_dewpoint',
+    'unique_id': '01JQUBEHEATPUMP00000000000-alarm_dewpoint',
     'unit_of_measurement': None,
   })
 # ---
@@ -286,8 +286,8 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'al_maxtime_dhw_active',
-    'unique_id': '01JQUBEHEATPUMP00000000000-al_maxtime_dhw_active',
+    'translation_key': 'alarm_dhw_timeout',
+    'unique_id': '01JQUBEHEATPUMP00000000000-alarm_dhw_timeout',
     'unit_of_measurement': None,
   })
 # ---
@@ -337,8 +337,8 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'alrm_flw',
-    'unique_id': '01JQUBEHEATPUMP00000000000-alrm_flw',
+    'translation_key': 'alarm_flow',
+    'unique_id': '01JQUBEHEATPUMP00000000000-alarm_flow',
     'unit_of_measurement': None,
   })
 # ---
@@ -388,8 +388,8 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'glbal',
-    'unique_id': '01JQUBEHEATPUMP00000000000-glbal',
+    'translation_key': 'alarm_global',
+    'unique_id': '01JQUBEHEATPUMP00000000000-alarm_global',
     'unit_of_measurement': None,
   })
 # ---
@@ -439,8 +439,8 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'heatingalrms',
-    'unique_id': '01JQUBEHEATPUMP00000000000-heatingalrms',
+    'translation_key': 'alarm_heating',
+    'unique_id': '01JQUBEHEATPUMP00000000000-alarm_heating',
     'unit_of_measurement': None,
   })
 # ---
@@ -490,8 +490,8 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'srsalrm',
-    'unique_id': '01JQUBEHEATPUMP00000000000-srsalrm',
+    'translation_key': 'alarm_source',
+    'unique_id': '01JQUBEHEATPUMP00000000000-alarm_source',
     'unit_of_measurement': None,
   })
 # ---
@@ -541,8 +541,8 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'al_underfloorsafety_active',
-    'unique_id': '01JQUBEHEATPUMP00000000000-al_underfloorsafety_active',
+    'translation_key': 'alarm_supply_too_hot',
+    'unique_id': '01JQUBEHEATPUMP00000000000-alarm_supply_too_hot',
     'unit_of_measurement': None,
   })
 # ---
@@ -592,8 +592,8 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'alarmmng_al_workinghour',
-    'unique_id': '01JQUBEHEATPUMP00000000000-alarmmng_al_workinghour',
+    'translation_key': 'alarm_working_hours',
+    'unique_id': '01JQUBEHEATPUMP00000000000-alarm_working_hours',
     'unit_of_measurement': None,
   })
 # ---
@@ -993,8 +993,8 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'en_dhwpid',
-    'unique_id': '01JQUBEHEATPUMP00000000000-en_dhwpid',
+    'translation_key': 'dhwpid_en',
+    'unique_id': '01JQUBEHEATPUMP00000000000-dhwpid_en',
     'unit_of_measurement': None,
   })
 # ---
