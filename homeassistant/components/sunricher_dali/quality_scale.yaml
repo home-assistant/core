@@ -64,11 +64,24 @@ rules:
   entity-disabled-by-default: todo
   entity-translations: done
   exception-translations: todo
-  icon-translations: todo
-  reconfiguration-flow: todo
-  repair-issues: todo
-  stale-devices: todo
-
+  icon-translations:
+    status: exempt
+    comment: >
+      All entities use standard device classes that provide appropriate default
+      icons. No custom icons are needed.
+  reconfiguration-flow:
+    status: exempt
+    comment: >
+      All configuration parameters are auto-discovered during setup with no
+      user input. IP address updates are handled automatically via DHCP
+      discovery.
+  repair-issues:
+    status: exempt
+    comment: >
+      No actionable repair scenarios identified. Connection failures use
+      ConfigEntryNotReady, device unavailability uses the entity availability
+      system, and credentials are obtained automatically during discovery.
+  stale-devices: done
   # Platinum
   async-dependency: todo
   inject-websession: todo
