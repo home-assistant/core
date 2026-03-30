@@ -1,6 +1,6 @@
 """Support for EnOcean devices."""
 
-from enocean_async import DEVICE_TYPES, EURID, Gateway
+from enocean_async import DEVICE_TYPES, EURID, Gateway, Observable, Observation
 from enocean_async.address import BaseAddress
 
 from homeassistant.config_entries import ConfigEntry
@@ -120,22 +120,9 @@ async def async_setup_entry(
 
     config_entry.runtime_data = gateway
     config_entry.async_on_unload(config_entry.add_update_listener(async_reload_entry))
-    async_cleanup_device_registry(hass=hass, entry=config_entry)
+    async_cleanup_device_registry(hass=hass, entry=config_entry, gateway=gateway)
 
-    version_info = gateway.version_info
-    if version_info is None:
-        raise ConfigEntryNotReady("EnOcean gateway did not respond to version query")
-
-    device_registry = dr.async_get(hass)
-    device_registry.async_get_or_create(
-        config_entry_id=config_entry.entry_id,
-        identifiers={(DOMAIN, str(version_info.eurid))},
-        manufacturer="EnOcean",
-        name="EnOcean Gateway",
-        model=version_info.app_description,
-        serial_number=str(version_info.eurid),
-        sw_version=version_info.app_version.version_string,
-    )
+    _async_update_gateway_device(hass, config_entry, gateway)
 
     # Add devices to the gateway so it can decode their telegrams.
     base_id = gateway.base_id
@@ -157,18 +144,43 @@ async def async_setup_entry(
                 ex,
             )
 
-    gateway.add_observation_callback(
-        lambda obs: async_dispatcher_send(hass, SIGNAL_OBSERVATION, obs)
-    )
+    def _on_observation(obs: Observation) -> None:
+        if Observable.CONNECTION_STATUS in obs.values:
+            _async_update_gateway_device(hass, config_entry, gateway)
+        async_dispatcher_send(hass, SIGNAL_OBSERVATION, obs)
+
+    gateway.add_observation_callback(_on_observation)
 
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
     return True
 
 
 @callback
+def _async_update_gateway_device(
+    hass: HomeAssistant,
+    entry: EnOceanConfigEntry,
+    gateway: Gateway,
+) -> None:
+    """Create or refresh the gateway device registry entry."""
+    version_info = gateway.version_info
+    if version_info is None:
+        return
+    dr.async_get(hass).async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers={(DOMAIN, str(version_info.eurid))},
+        manufacturer="EnOcean",
+        name="EnOcean Gateway",
+        model=version_info.app_description,
+        serial_number=str(version_info.eurid),
+        sw_version=version_info.app_version.version_string,
+    )
+
+
+@callback
 def async_cleanup_device_registry(
     hass: HomeAssistant,
     entry: EnOceanConfigEntry,
+    gateway: Gateway,
 ) -> None:
     """Remove entries from device registry if device is removed."""
     device_registry = dr.async_get(hass)
@@ -177,15 +189,21 @@ def async_cleanup_device_registry(
         config_entry_id=entry.entry_id,
     )
 
+    gateway_eurid = str(gateway.eurid).upper() if gateway.eurid else None
     device_ids = [
-        dev["id"].upper() for dev in entry.options.get(CONF_ENOCEAN_DEVICES, [])
+        dev[CONF_ENOCEAN_DEVICE_ID].upper()
+        for dev in entry.options.get(CONF_ENOCEAN_DEVICES, [])
     ]
 
     for hass_device in hass_devices:
         for item in hass_device.identifiers:
             domain = item[0]
             device_id = (str(item[1]).split("-", maxsplit=1)[0]).upper()
-            if domain == DOMAIN and device_id not in device_ids:
+            if (
+                domain == DOMAIN
+                and device_id not in device_ids
+                and device_id != gateway_eurid
+            ):
                 LOGGER.debug(
                     "Removing Home Assistant device %s and associated entities for unconfigured EnOcean device %s",
                     hass_device.id,

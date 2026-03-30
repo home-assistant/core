@@ -224,6 +224,9 @@
     }
   },
   "options": {
+    "abort": {
+      "device_not_found": "The selected device could not be found in the configuration."
+    },
     "error": {
       "device_already_configured": "An EnOcean device with this device ID is already configured. Duplicate entries are not possible.",
       "device_name_empty": "Device name is empty.",

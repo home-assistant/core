@@ -181,6 +181,7 @@ class EnOceanFlowHandler(ConfigFlow, domain=DOMAIN):
         """Return True if the user_input contains a valid dongle path."""
         dongle_path = user_input[CONF_DEVICE]
 
+        gateway: Gateway | None = None
         try:
             # Starting the gateway will raise an exception if it can't connect
             gateway = Gateway(port=dongle_path)
@@ -189,7 +190,8 @@ class EnOceanFlowHandler(ConfigFlow, domain=DOMAIN):
             LOGGER.warning("Dongle path %s is invalid: %s", dongle_path, str(exception))
             return False
         finally:
-            gateway.stop()
+            if gateway:
+                gateway.stop()
 
         return True
 
@@ -480,6 +482,8 @@ class OptionsFlowHandler(OptionsFlow):
                     device = dev
                     break
 
+            if device is None:
+                return self.async_abort(reason="device_not_found")
             devices.remove(device)
             return self.async_create_entry(
                 title="", data={CONF_ENOCEAN_DEVICES: devices}
