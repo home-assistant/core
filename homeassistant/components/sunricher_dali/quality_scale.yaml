@@ -67,20 +67,17 @@ rules:
   icon-translations:
     status: exempt
     comment: >
-      All entities use standard device classes that provide appropriate default
-      icons. No custom icons are needed.
+      No entities define custom icons (no icon/_attr_icon); icons are provided
+      by the entity platforms via their defaults and device classes where
+      applicable.
   reconfiguration-flow:
     status: exempt
     comment: >
-      Gateway selection requires user interaction during the initial config
-      flow, but connection parameters are auto-discovered and host/IP updates
-      are handled automatically via DHCP.
-  repair-issues:
-    status: exempt
-    comment: >
-      No actionable repair scenarios identified. Connection failures use
-      ConfigEntryNotReady, device unavailability uses the entity availability
-      system, and credentials are obtained automatically during discovery.
+      All configuration parameters (host, port, credentials) are obtained
+      automatically via the discovery protocol requiring a physical button
+      press. Users cannot manually enter or change any of these values.
+      IP address updates are handled automatically via DHCP discovery.
+  repair-issues: todo
   stale-devices: done
   # Platinum
   async-dependency: todo
