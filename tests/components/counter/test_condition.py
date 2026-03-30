@@ -55,6 +55,30 @@ async def test_counter_condition_gated_by_labs_flag(
             target_states=["0", "10", "19"],
             other_states=["20", "50", "100"],
         ),
+        *parametrize_condition_states_any(
+            condition="counter.is_value",
+            condition_options={
+                "threshold": {
+                    "type": "between",
+                    "value_min": {"number": 10},
+                    "value_max": {"number": 30},
+                },
+            },
+            target_states=["11", "20", "29"],
+            other_states=["0", "10", "30", "100"],
+        ),
+        *parametrize_condition_states_any(
+            condition="counter.is_value",
+            condition_options={
+                "threshold": {
+                    "type": "outside",
+                    "value_min": {"number": 10},
+                    "value_max": {"number": 30},
+                },
+            },
+            target_states=["0", "10", "30", "100"],
+            other_states=["11", "20", "29"],
+        ),
     ],
 )
 async def test_counter_is_value_condition_behavior_any(
@@ -103,6 +127,30 @@ async def test_counter_is_value_condition_behavior_any(
             },
             target_states=["0", "10", "19"],
             other_states=["20", "50", "100"],
+        ),
+        *parametrize_condition_states_all(
+            condition="counter.is_value",
+            condition_options={
+                "threshold": {
+                    "type": "between",
+                    "value_min": {"number": 10},
+                    "value_max": {"number": 30},
+                },
+            },
+            target_states=["11", "20", "29"],
+            other_states=["0", "10", "30", "100"],
+        ),
+        *parametrize_condition_states_all(
+            condition="counter.is_value",
+            condition_options={
+                "threshold": {
+                    "type": "outside",
+                    "value_min": {"number": 10},
+                    "value_max": {"number": 30},
+                },
+            },
+            target_states=["0", "10", "30", "100"],
+            other_states=["11", "20", "29"],
         ),
     ],
 )
