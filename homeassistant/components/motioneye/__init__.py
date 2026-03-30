@@ -45,6 +45,7 @@ from homeassistant.components.webhook import (
     async_register as webhook_register,
     async_unregister as webhook_unregister,
 )
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_DEVICE_ID, ATTR_NAME, CONF_URL, CONF_WEBHOOK_ID
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
@@ -435,10 +436,11 @@ def _get_media_event_data(
     event_file_type: int,
 ) -> dict[str, str]:
     config_entry_id = next(iter(device.config_entries), None)
-    if not config_entry_id:
-        return {}
-    entry = hass.config_entries.async_get_entry(config_entry_id)
-    if not entry or not hasattr(entry, "runtime_data"):
+    if (
+        not config_entry_id
+        or not (entry := hass.config_entries.async_get_entry(config_entry_id))
+        or entry.state != ConfigEntryState.LOADED
+    ):
         return {}
 
     coordinator: MotionEyeUpdateCoordinator = entry.runtime_data
