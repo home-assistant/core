@@ -20,7 +20,6 @@ from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     STATE_OFF,
     STATE_ON,
-    STATE_UNAVAILABLE,
     STATE_UNKNOWN,
     EntityCategory,
     Platform,
@@ -706,9 +705,7 @@ async def test_opening_state_tilted_appears_and_disappears_via_metadata_update(
     await hass.async_block_till_done()
 
     assert hass.states.get(open_entity_id) is not None
-    tilted_state = hass.states.get(tilted_entity_id)
-    assert tilted_state is not None
-    assert tilted_state.state == STATE_UNAVAILABLE
+    assert hass.states.get(tilted_entity_id) is None
 
 
 async def test_reenabled_legacy_door_state_entity_follows_opening_state(
