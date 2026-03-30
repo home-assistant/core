@@ -117,8 +117,6 @@ async def async_setup_entry(
 
     @callback
     def _check_devices() -> None:
-        if not coordinator.data:
-            return
         current = set(coordinator.data)
         removed_ids = known_devices - current
         if removed_ids:

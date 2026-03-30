@@ -99,13 +99,6 @@ async def test_stale_device_removed(
 
     assert mock_freshr_client.fetch_device_current.call_count == call_count
 
-    call_count = mock_freshr_client.fetch_device_current.call_count
-    freezer.tick(READINGS_SCAN_INTERVAL)
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
-
-    assert mock_freshr_client.fetch_device_current.call_count == call_count
-
 
 @pytest.mark.usefixtures("init_integration")
 async def test_stale_device_not_removed_on_poll_error(

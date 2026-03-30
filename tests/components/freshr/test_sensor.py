@@ -122,9 +122,7 @@ async def test_device_reappears_after_removal(
         "sensor", DOMAIN, f"{DEVICE_ID}_t1"
     )
     assert t1_entity_id
-    state = hass.states.get(t1_entity_id)
-    assert state is not None
-    assert state.state != "unavailable"
+    assert hass.states.get(t1_entity_id).state != "unavailable"
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default", "init_integration")
@@ -154,6 +152,4 @@ async def test_dynamic_device_added(
     )
     assert t1_entity_id
     assert entity_registry.async_get_entity_id("sensor", DOMAIN, f"{DEVICE_ID_2}_co2")
-    state = hass.states.get(t1_entity_id)
-    assert state is not None
-    assert state.state != "unavailable"
+    assert hass.states.get(t1_entity_id).state != "unavailable"
