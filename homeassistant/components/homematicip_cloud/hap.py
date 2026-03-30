@@ -196,6 +196,8 @@ class HomematicipHAP:
         self._get_state_task.add_done_callback(self.get_state_finished)
         self._ws_connection_closed.clear()
 
+    _WS_WAIT_TIMEOUT = 300  # seconds before giving up waiting for WS reconnect
+
     async def _try_get_state(self) -> None:
         """Call get_state in a loop until no error occurs, using exponential backoff on error."""
 
@@ -203,7 +205,6 @@ class HomematicipHAP:
         # If the WS never reconnects, proceed anyway — get_state will fail and retry.
         _LOGGER.debug("Waiting for WebSocket connection before get_state")
         ws_wait_elapsed = 0
-        ws_wait_timeout = 300  # 5 minutes max wait
         while not self.home.websocket_is_connected():
             await asyncio.sleep(2)
             ws_wait_elapsed += 2
@@ -211,12 +212,12 @@ class HomematicipHAP:
                 _LOGGER.debug(
                     "Still waiting for WebSocket connection (%ds elapsed, timeout=%ds)",
                     ws_wait_elapsed,
-                    ws_wait_timeout,
+                    self._WS_WAIT_TIMEOUT,
                 )
-            if ws_wait_elapsed >= ws_wait_timeout:
+            if ws_wait_elapsed >= self._WS_WAIT_TIMEOUT:
                 _LOGGER.warning(
                     "WebSocket did not reconnect within %ds — proceeding with get_state anyway",
-                    ws_wait_timeout,
+                    self._WS_WAIT_TIMEOUT,
                 )
                 break
         _LOGGER.debug(

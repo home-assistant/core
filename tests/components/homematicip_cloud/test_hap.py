@@ -371,7 +371,7 @@ async def test_async_connect(
 
 
 async def test_start_get_state_task_cancels_existing(
-    hass: HomeAssistant, hmip_config_entry: MockConfigEntry, simple_mock_home
+    hass: HomeAssistant, hmip_config_entry: MockConfigEntry
 ) -> None:
     """Test _start_get_state_task cancels an in-flight task before starting a new one."""
     hass.config.components.add(DOMAIN)
@@ -500,44 +500,23 @@ async def test_try_get_state_auth_error_triggers_reauth(
 async def test_try_get_state_ws_timeout_proceeds_to_get_state() -> None:
     """Test _try_get_state proceeds to get_state after WS wait timeout.
 
-    If the WebSocket never reconnects within ws_wait_timeout seconds, the task
+    If the WebSocket never reconnects within _WS_WAIT_TIMEOUT seconds, the task
     should emit a warning and proceed to attempt get_state rather than waiting
     indefinitely.
     """
     hap = HomematicipHAP(MagicMock(), MagicMock())
     hap.home = MagicMock()
-    # WS never connects
     hap.home.websocket_is_connected = Mock(return_value=False)
     hap.get_state = AsyncMock()
 
-    sleep_calls: list[float] = []
-
-    async def fake_sleep(seconds: float) -> None:
-        sleep_calls.append(seconds)
-        # After enough 2s sleeps to exceed ws_wait_timeout (300s), flip the
-        # side_effect so the while loop terminates via timeout, not WS connect.
-        if sum(sleep_calls) >= 300:
-            hap.home.websocket_is_connected = Mock(return_value=False)
-
     with (
-        patch("asyncio.sleep", side_effect=fake_sleep),
+        patch("asyncio.sleep", new=AsyncMock()),
+        patch.object(type(hap), "_WS_WAIT_TIMEOUT", 0),
         patch(
             "homeassistant.components.homematicip_cloud.hap._LOGGER"
         ) as mock_logger,
     ):
-        # Override ws_wait_timeout to a small value to keep the test fast
-        with patch.object(
-            type(hap),
-            "_try_get_state",
-            wraps=hap._try_get_state,
-        ):
-            # Patch the constant directly via the coroutine's local scope isn't
-            # possible, so we patch websocket_is_connected to cycle through
-            # enough False returns to exceed the timeout.
-            hap.home.websocket_is_connected = Mock(
-                side_effect=[False] * 151 + [False]
-            )
-            await hap._try_get_state()
+        await hap._try_get_state()
 
     # Warning should have been logged
     warning_calls = [
