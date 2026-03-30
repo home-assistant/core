@@ -30,7 +30,6 @@ from homeassistant.components.mjpeg import (
     CONF_STILL_IMAGE_URL,
     MjpegCamera,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_AUTHENTICATION,
     CONF_NAME,
@@ -50,14 +49,13 @@ from .const import (
     CONF_STREAM_URL_TEMPLATE,
     CONF_SURVEILLANCE_PASSWORD,
     CONF_SURVEILLANCE_USERNAME,
-    DOMAIN,
     MOTIONEYE_MANUFACTURER,
     SERVICE_ACTION,
     SERVICE_SET_TEXT_OVERLAY,
     SERVICE_SNAPSHOT,
     TYPE_MOTIONEYE_MJPEG_CAMERA,
 )
-from .coordinator import MotionEyeUpdateCoordinator
+from .coordinator import MotionEyeConfigEntry, MotionEyeUpdateCoordinator
 from .entity import MotionEyeEntity
 
 PLATFORMS = [Platform.CAMERA]
@@ -92,11 +90,11 @@ SCHEMA_SERVICE_SET_TEXT = vol.Schema(
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: MotionEyeConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up motionEye from a config entry."""
-    coordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
 
     @callback
     def camera_add(camera: dict[str, Any]) -> None:
