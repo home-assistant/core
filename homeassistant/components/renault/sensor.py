@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from datetime import datetime
 from typing import TYPE_CHECKING, Any, Generic, cast
@@ -58,6 +58,7 @@ class RenaultSensorEntityDescription(
     condition_lambda: Callable[[RenaultVehicleProxy], bool] | None = None
     requires_fuel: bool = False
     value_lambda: Callable[[RenaultSensor[T]], StateType | datetime] | None = None
+    attributes_lambda: Callable[[RenaultSensor[T]], Mapping[str, Any]] | None = None
 
 
 async def async_setup_entry(
@@ -66,6 +67,15 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Renault entities from config entry."""
+    # Do not store these attributes in the HA DB
+    _entity_component_unrecorded_attributes = frozenset(
+        {
+            "schedules",
+            "startDateTime",
+            "dateTime",
+            "delay",
+        }
+    )
     entities: list[RenaultSensor[Any]] = [
         description.entity_class(vehicle, description)
         for vehicle in config_entry.runtime_data.vehicles.values()
@@ -95,6 +105,13 @@ class RenaultSensor(RenaultDataEntity[T], SensorEntity):
         if self.entity_description.value_lambda is None:
             return self.data
         return self.entity_description.value_lambda(self)
+
+    @property
+    def extra_state_attributes(self) -> Mapping[str, Any] | None:
+        """Return the attributes of this entity."""
+        if self.entity_description.attributes_lambda:
+            return self.entity_description.attributes_lambda(self)
+        return None
 
 
 def _get_charging_power(entity: RenaultSensor[T]) -> StateType:
@@ -134,6 +151,29 @@ def _get_charging_settings_mode_formatted(entity: RenaultSensor[T]) -> str | Non
     data = cast(KamereonVehicleChargingSettingsData, entity.coordinator.data)
     charging_mode = data.mode if data else None
     return charging_mode.lower() if charging_mode else None
+
+
+def _get_charging_settings_attributes(entity: RenaultSensor[T]) -> Mapping[str, Any]:
+    """Return the charging_settings attributes."""
+    data = cast(KamereonVehicleChargingSettingsData, entity.coordinator.data)
+    schedules = data.schedules if data else None
+    schedules_fmt: list[dict[str, Any]] = []
+    if schedules:
+        for schedule in schedules:
+            # If only using one append line RUFF complaints!?!
+            if len(schedules_fmt) == 0:
+                schedules_fmt.append(schedule.for_json())
+            else:
+                schedules_fmt.append(schedule.for_json())
+    dateTime = data.dateTime if data else None
+    startDateTime = data.startDateTime if data else None
+    delay = data.delay if data else None
+    return {
+        "schedules": schedules_fmt,
+        "dateTime": dateTime,
+        "startDateTime": startDateTime,
+        "delay": delay,
+    }
 
 
 SENSOR_TYPES: tuple[RenaultSensorEntityDescription[Any], ...] = (
@@ -360,6 +400,7 @@ SENSOR_TYPES: tuple[RenaultSensorEntityDescription[Any], ...] = (
             "scheduled",
         ],
         value_lambda=_get_charging_settings_mode_formatted,
+        attributes_lambda=_get_charging_settings_attributes,
     ),
     RenaultSensorEntityDescription(
         key="front_left_pressure",
