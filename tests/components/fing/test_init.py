@@ -32,7 +32,6 @@ async def test_setup_entry_new_api(
         assert entry.state is ConfigEntryState.SETUP_ERROR
 
 
-@pytest.mark.parametrize("api_type", ["new"])
 async def test_setup_entry_auth_failed(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
@@ -50,7 +49,6 @@ async def test_setup_entry_auth_failed(
     mock_config_entry.async_start_reauth.assert_called_once_with(hass)
 
 
-@pytest.mark.parametrize("api_type", ["new"])
 async def test_unload_entry(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
