@@ -86,13 +86,17 @@ class EagleSensor(CoordinatorEntity[EagleDataCoordinator], SensorEntity):
             name=coordinator.model,
         )
         model = coordinator.model.replace("-", "_").lower()
-        hw = coordinator.hardware_address.lower()
+        hw = (
+            f"_{coordinator.hardware_address.lower()}_"
+            if coordinator.hardware_address
+            else ""
+        )
         # Derive a short slug from the entity description key, if translation_key is not set.
         slug = (
             entity_description.translation_key
             or entity_description.key.split(":")[-1].lower()
         )
-        self.entity_id = f"sensor.{model}_{hw}_{slug}"
+        self.entity_id = f"sensor.{model}{hw}{slug}"
 
     @property
     def available(self) -> bool:
