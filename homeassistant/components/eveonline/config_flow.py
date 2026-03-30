@@ -11,7 +11,7 @@ from typing import Any
 from homeassistant.config_entries import SOURCE_RECONFIGURE, ConfigFlowResult
 from homeassistant.helpers.config_entry_oauth2_flow import AbstractOAuth2FlowHandler
 
-from .const import DOMAIN, SCOPES
+from .const import CONF_CHARACTER_ID, CONF_CHARACTER_NAME, DOMAIN, SCOPES
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -47,8 +47,8 @@ class OAuth2FlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
         except ValueError, KeyError, binascii.Error:
             return self.async_abort(reason="oauth_error")
 
-        character_id = character_info["character_id"]
-        character_name = character_info["character_name"]
+        character_id = character_info[CONF_CHARACTER_ID]
+        character_name = character_info[CONF_CHARACTER_NAME]
 
         await self.async_set_unique_id(str(character_id))
 
@@ -59,15 +59,15 @@ class OAuth2FlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
                 title=character_name,
                 data={
                     **data,
-                    "character_id": character_id,
-                    "character_name": character_name,
+                    CONF_CHARACTER_ID: character_id,
+                    CONF_CHARACTER_NAME: character_name,
                 },
             )
 
         self._abort_if_unique_id_configured()
 
-        data["character_id"] = character_id
-        data["character_name"] = character_name
+        data[CONF_CHARACTER_ID] = character_id
+        data[CONF_CHARACTER_NAME] = character_name
 
         return self.async_create_entry(
             title=character_name,
@@ -116,6 +116,6 @@ def _decode_eve_jwt(token: str) -> dict[str, Any]:
         raise ValueError(msg) from err
 
     return {
-        "character_id": character_id,
-        "character_name": decoded.get("name", "Unknown"),
+        CONF_CHARACTER_ID: character_id,
+        CONF_CHARACTER_NAME: decoded.get("name", "Unknown"),
     }

@@ -16,7 +16,7 @@ from homeassistant.helpers.config_entry_oauth2_flow import (
 )
 
 from .api import AsyncConfigEntryAuth
-from .const import DOMAIN
+from .const import CONF_CHARACTER_ID, CONF_CHARACTER_NAME, DOMAIN
 from .coordinator import EveOnlineConfigEntry, EveOnlineCoordinator
 
 PLATFORMS: list[Platform] = [Platform.SENSOR]
@@ -37,8 +37,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: EveOnlineConfigEntry) ->
     auth = AsyncConfigEntryAuth(aiohttp_client.async_get_clientsession(hass), session)
     client = EveOnlineClient(auth=auth)
 
-    character_id: int = entry.data["character_id"]
-    character_name: str = entry.data["character_name"]
+    character_id: int = entry.data[CONF_CHARACTER_ID]
+    character_name: str = entry.data[CONF_CHARACTER_NAME]
 
     coordinator = EveOnlineCoordinator(
         hass, entry, client, character_id, character_name
