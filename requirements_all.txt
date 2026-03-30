@@ -293,9 +293,6 @@ aiohue==4.8.0
 # homeassistant.components.imap
 aioimaplib==2.0.1
 
-# homeassistant.components.immich
-aioimmich==0.12.1
-
 # homeassistant.components.apache_kafka
 aiokafka==0.10.0
 
@@ -1308,6 +1305,9 @@ imeon_inverter_api==0.4.0
 
 # homeassistant.components.imgw_pib
 imgw_pib==2.0.2
+
+# homeassistant.components.immich
+immichpy==1.6.5
 
 # homeassistant.components.incomfort
 incomfort-client==0.6.12
