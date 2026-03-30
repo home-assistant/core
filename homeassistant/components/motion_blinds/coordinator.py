@@ -7,8 +7,7 @@ from dataclasses import dataclass
 from datetime import timedelta
 import logging
 
-from motionblinds import DEVICE_TYPES_WIFI, ParseException
-from motionblinds.motion_blinds import MotionGateway
+from motionblinds import DEVICE_TYPES_WIFI, MotionGateway, ParseException
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
