@@ -461,7 +461,7 @@ async def async_setup_entry(
     )
 
     device_registry = dr.async_get(hass)
-    data_handler = entry.runtime_data.data_handler
+    data_handler = entry.runtime_data
 
     async def add_public_entities(update: bool = True) -> None:
         """Retrieve Netatmo public weather entities."""

@@ -26,7 +26,6 @@ from homeassistant.helpers.dispatcher import (
 )
 from homeassistant.helpers.event import async_track_time_interval
 
-from .api import AsyncConfigEntryNetatmoAuth
 from .const import (
     CAMERA_CONNECTION_WEBHOOKS,
     DATA_PERSONS,
@@ -89,6 +88,8 @@ DEFAULT_INTERVALS = {
 }
 SCAN_INTERVAL = 60
 
+type NetatmoConfigEntry = ConfigEntry[NetatmoDataHandler]
+
 
 @dataclass
 class NetatmoDevice:
@@ -141,13 +142,13 @@ class NetatmoDataHandler:
     def __init__(
         self,
         hass: HomeAssistant,
-        config_entry: ConfigEntry,
+        config_entry: NetatmoConfigEntry,
         auth: pyatmo.AbstractAsyncAuth,
     ) -> None:
         """Initialize self."""
         self.hass = hass
         self.config_entry = config_entry
-        self._auth = auth
+        self.auth = auth
         self.publisher: dict[str, NetatmoPublisher] = {}
         self._queue: deque = deque()
         self._webhook: bool = False
@@ -176,7 +177,7 @@ class NetatmoDataHandler:
             )
         )
 
-        self.account = pyatmo.AsyncAccount(self._auth)
+        self.account = pyatmo.AsyncAccount(self.auth)
 
         await self.subscribe(ACCOUNT, ACCOUNT, None)
 
@@ -471,14 +472,3 @@ class NetatmoDataHandler:
                     signal_home,
                 ),
             )
-
-
-type NetatmoConfigEntry = ConfigEntry[NetatmoData]
-
-
-@dataclass
-class NetatmoData:
-    """Netatmo runtime data stored in config entry."""
-
-    auth: AsyncConfigEntryNetatmoAuth
-    data_handler: NetatmoDataHandler

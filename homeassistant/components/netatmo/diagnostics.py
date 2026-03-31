@@ -7,7 +7,7 @@ from typing import Any
 from homeassistant.components.diagnostics import async_redact_data
 from homeassistant.core import HomeAssistant
 
-from .data_handler import ACCOUNT, NetatmoConfigEntry, NetatmoDataHandler
+from .data_handler import ACCOUNT, NetatmoConfigEntry
 
 TO_REDACT = {
     "access_token",
@@ -33,7 +33,7 @@ async def async_get_config_entry_diagnostics(
     hass: HomeAssistant, config_entry: NetatmoConfigEntry
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
-    data_handler: NetatmoDataHandler = config_entry.runtime_data.data_handler
+    data_handler = config_entry.runtime_data
 
     return {
         "info": async_redact_data(

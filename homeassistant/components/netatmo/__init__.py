@@ -49,7 +49,7 @@ from .const import (
     WEBHOOK_DEACTIVATION,
     WEBHOOK_PUSH_TYPE,
 )
-from .data_handler import NetatmoConfigEntry, NetatmoData, NetatmoDataHandler
+from .data_handler import NetatmoConfigEntry, NetatmoDataHandler
 from .webhook import async_handle_webhook
 
 _LOGGER = logging.getLogger(__name__)
@@ -108,7 +108,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: NetatmoConfigEntry) -> b
     )
 
     data_handler = NetatmoDataHandler(hass, entry, auth)
-    entry.runtime_data = NetatmoData(auth=auth, data_handler=data_handler)
+    entry.runtime_data = data_handler
     await data_handler.async_setup()
 
     async def unregister_webhook(
@@ -244,7 +244,7 @@ async def async_remove_config_entry_device(
     hass: HomeAssistant, config_entry: NetatmoConfigEntry, device_entry: DeviceEntry
 ) -> bool:
     """Remove a config entry from a device."""
-    data = config_entry.runtime_data.data_handler
+    data = config_entry.runtime_data
     modules = [m for h in data.account.homes.values() for m in h.modules]
     rooms = [r for h in data.account.homes.values() for r in h.rooms]
 
