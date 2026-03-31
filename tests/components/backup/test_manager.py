@@ -2013,6 +2013,61 @@ async def test_receive_backup(
     assert unlink_mock.call_count == temp_file_unlink_call_count
 
 
+@pytest.mark.parametrize(
+    ("suggested_filename", "expected_filename"),
+    [
+        ("backup.tar", "backup.tar"),
+        ("../traversal.tar", "traversal.tar"),
+        ("../../etc/passwd", "passwd"),
+        ("subdir/backup.tar", "backup.tar"),
+    ],
+)
+async def test_receive_backup_path_traversal(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    suggested_filename: str,
+    expected_filename: str,
+) -> None:
+    """Test path traversal in suggested filename is prevented."""
+    await setup_backup_integration(hass)
+    client = await hass_client()
+
+    upload_data = "test"
+    open_mock = mock_open(read_data=upload_data.encode(encoding="utf-8"))
+    expected_path = Path(hass.config.path("tmp_backups"), expected_filename)
+    opened_paths: list[Path] = []
+
+    def track_open(self: Path, *args: Any, **kwargs: Any) -> Any:
+        opened_paths.append(self)
+        return open_mock(self, *args, **kwargs)
+
+    with (
+        patch("pathlib.Path.open", track_open),
+        patch("homeassistant.components.backup.manager.make_backup_dir"),
+        patch("shutil.move"),
+        patch(
+            "homeassistant.components.backup.manager.read_backup",
+            return_value=TEST_BACKUP_ABC123,
+        ) as read_backup_mock,
+        patch("pathlib.Path.unlink"),
+    ):
+        upload_file = StringIO(upload_data)
+        upload_file.name = suggested_filename
+        resp = await client.post(
+            "/api/backup/upload?agent_id=backup.local",
+            data={"file": upload_file},
+        )
+        await hass.async_block_till_done()
+
+    assert resp.status == 201
+    # Verify the file was opened in the temp backup dir with the safe filename
+    tmp_backup_dir = Path(hass.config.path("tmp_backups"))
+    backup_opens = [p for p in opened_paths if p.parent == tmp_backup_dir]
+    assert backup_opens[0] == expected_path
+    # read_backup is called with the temp_file path; verify it's sanitized
+    read_backup_mock.assert_called_once_with(expected_path)
+
+
 async def test_receive_backup_busy_manager(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
