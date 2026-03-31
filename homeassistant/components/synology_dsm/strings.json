@@ -78,7 +78,7 @@
     },
     "button": {
       "shutdown": {
-        "name": "Shutdown"
+        "name": "Shut down"
       }
     },
     "sensor": {
@@ -248,14 +248,14 @@
       "name": "Reboot"
     },
     "shutdown": {
-      "description": "Shutdowns the NAS. This action is deprecated and will be removed in future release. Please use the corresponding button entity.",
+      "description": "Shuts down the NAS. This action is deprecated and will be removed in a future release. Please use the corresponding button entity.",
       "fields": {
         "serial": {
-          "description": "Serial of the NAS to shutdown; required when multiple NAS are configured.",
+          "description": "Serial of the NAS to shut down; required when multiple NAS are configured.",
           "name": "[%key:component::synology_dsm::services::reboot::fields::serial::name%]"
         }
       },
-      "name": "Shutdown"
+      "name": "Shut down"
     }
   }
 }
