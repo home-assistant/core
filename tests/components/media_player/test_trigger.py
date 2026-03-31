@@ -5,6 +5,7 @@ from typing import Any
 import pytest
 
 from homeassistant.components.media_player import MediaPlayerState
+from homeassistant.components.media_player.const import ATTR_LAST_NON_BUFFERING_STATE
 from homeassistant.core import HomeAssistant
 
 from tests.components.common import (
@@ -19,10 +20,85 @@ from tests.components.common import (
 )
 
 
+def _mp_state(state: str, last_non_buffering: str) -> tuple[str, dict[str, str]]:
+    """Create a media player state tuple with last_non_buffering_state attribute."""
+    return (state, {ATTR_LAST_NON_BUFFERING_STATE: last_non_buffering})
+
+
 @pytest.fixture
 async def target_media_players(hass: HomeAssistant) -> dict[str, list[str]]:
     """Create multiple media player entities associated with different targets."""
     return await target_entities(hass, "media_player")
+
+
+STATE_TRIGGER_PARAMETRIZATIONS = [
+    *parametrize_trigger_states(
+        trigger="media_player.paused_playing",
+        target_states=[
+            _mp_state(MediaPlayerState.PAUSED, MediaPlayerState.PAUSED),
+        ],
+        other_states=[
+            _mp_state(MediaPlayerState.PLAYING, MediaPlayerState.PLAYING),
+            # Buffering with last_non_buffering_state=playing is still
+            # "playing" from the trigger's perspective
+            _mp_state(MediaPlayerState.BUFFERING, MediaPlayerState.PLAYING),
+        ],
+    ),
+    *parametrize_trigger_states(
+        trigger="media_player.started_playing",
+        target_states=[
+            _mp_state(MediaPlayerState.PLAYING, MediaPlayerState.PLAYING),
+        ],
+        other_states=[
+            _mp_state(MediaPlayerState.IDLE, MediaPlayerState.IDLE),
+            _mp_state(MediaPlayerState.OFF, MediaPlayerState.OFF),
+            _mp_state(MediaPlayerState.ON, MediaPlayerState.ON),
+            _mp_state(MediaPlayerState.PAUSED, MediaPlayerState.PAUSED),
+            # Buffering with last_non_buffering_state=paused is still
+            # "paused" from the trigger's perspective
+            _mp_state(MediaPlayerState.BUFFERING, MediaPlayerState.PAUSED),
+        ],
+    ),
+    *parametrize_trigger_states(
+        trigger="media_player.stopped_playing",
+        target_states=[
+            MediaPlayerState.IDLE,
+            MediaPlayerState.OFF,
+            MediaPlayerState.ON,
+        ],
+        other_states=[
+            MediaPlayerState.BUFFERING,
+            MediaPlayerState.PAUSED,
+            MediaPlayerState.PLAYING,
+        ],
+    ),
+    *parametrize_trigger_states(
+        trigger="media_player.turned_off",
+        target_states=[
+            MediaPlayerState.OFF,
+        ],
+        other_states=[
+            MediaPlayerState.BUFFERING,
+            MediaPlayerState.IDLE,
+            MediaPlayerState.ON,
+            MediaPlayerState.PAUSED,
+            MediaPlayerState.PLAYING,
+        ],
+    ),
+    *parametrize_trigger_states(
+        trigger="media_player.turned_on",
+        target_states=[
+            MediaPlayerState.BUFFERING,
+            MediaPlayerState.IDLE,
+            MediaPlayerState.ON,
+            MediaPlayerState.PAUSED,
+            MediaPlayerState.PLAYING,
+        ],
+        other_states=[
+            MediaPlayerState.OFF,
+        ],
+    ),
+]
 
 
 @pytest.mark.parametrize(
@@ -44,69 +120,7 @@ async def test_media_player_triggers_gated_by_labs_flag(
     parametrize_target_entities("media_player"),
 )
 @pytest.mark.parametrize(
-    ("trigger", "trigger_options", "states"),
-    [
-        *parametrize_trigger_states(
-            trigger="media_player.paused_playing",
-            target_states=[
-                MediaPlayerState.PAUSED,
-            ],
-            other_states=[
-                MediaPlayerState.PLAYING,
-            ],
-        ),
-        *parametrize_trigger_states(
-            trigger="media_player.started_playing",
-            target_states=[
-                MediaPlayerState.PLAYING,
-            ],
-            other_states=[
-                MediaPlayerState.IDLE,
-                MediaPlayerState.OFF,
-                MediaPlayerState.ON,
-                MediaPlayerState.PAUSED,
-            ],
-        ),
-        *parametrize_trigger_states(
-            trigger="media_player.stopped_playing",
-            target_states=[
-                MediaPlayerState.IDLE,
-                MediaPlayerState.OFF,
-                MediaPlayerState.ON,
-            ],
-            other_states=[
-                MediaPlayerState.BUFFERING,
-                MediaPlayerState.PAUSED,
-                MediaPlayerState.PLAYING,
-            ],
-        ),
-        *parametrize_trigger_states(
-            trigger="media_player.turned_off",
-            target_states=[
-                MediaPlayerState.OFF,
-            ],
-            other_states=[
-                MediaPlayerState.BUFFERING,
-                MediaPlayerState.IDLE,
-                MediaPlayerState.ON,
-                MediaPlayerState.PAUSED,
-                MediaPlayerState.PLAYING,
-            ],
-        ),
-        *parametrize_trigger_states(
-            trigger="media_player.turned_on",
-            target_states=[
-                MediaPlayerState.BUFFERING,
-                MediaPlayerState.IDLE,
-                MediaPlayerState.ON,
-                MediaPlayerState.PAUSED,
-                MediaPlayerState.PLAYING,
-            ],
-            other_states=[
-                MediaPlayerState.OFF,
-            ],
-        ),
-    ],
+    ("trigger", "trigger_options", "states"), STATE_TRIGGER_PARAMETRIZATIONS
 )
 async def test_media_player_state_trigger_behavior_any(
     hass: HomeAssistant,
@@ -137,22 +151,7 @@ async def test_media_player_state_trigger_behavior_any(
     parametrize_target_entities("media_player"),
 )
 @pytest.mark.parametrize(
-    ("trigger", "trigger_options", "states"),
-    [
-        *parametrize_trigger_states(
-            trigger="media_player.stopped_playing",
-            target_states=[
-                MediaPlayerState.IDLE,
-                MediaPlayerState.OFF,
-                MediaPlayerState.ON,
-            ],
-            other_states=[
-                MediaPlayerState.BUFFERING,
-                MediaPlayerState.PAUSED,
-                MediaPlayerState.PLAYING,
-            ],
-        ),
-    ],
+    ("trigger", "trigger_options", "states"), STATE_TRIGGER_PARAMETRIZATIONS
 )
 async def test_media_player_state_trigger_behavior_first(
     hass: HomeAssistant,
@@ -183,22 +182,7 @@ async def test_media_player_state_trigger_behavior_first(
     parametrize_target_entities("media_player"),
 )
 @pytest.mark.parametrize(
-    ("trigger", "trigger_options", "states"),
-    [
-        *parametrize_trigger_states(
-            trigger="media_player.stopped_playing",
-            target_states=[
-                MediaPlayerState.IDLE,
-                MediaPlayerState.OFF,
-                MediaPlayerState.ON,
-            ],
-            other_states=[
-                MediaPlayerState.BUFFERING,
-                MediaPlayerState.PAUSED,
-                MediaPlayerState.PLAYING,
-            ],
-        ),
-    ],
+    ("trigger", "trigger_options", "states"), STATE_TRIGGER_PARAMETRIZATIONS
 )
 async def test_media_player_state_trigger_behavior_last(
     hass: HomeAssistant,
