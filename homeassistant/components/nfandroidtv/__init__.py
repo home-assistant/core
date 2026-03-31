@@ -1,7 +1,7 @@
 """The NFAndroidTV integration."""
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, Platform
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, discovery
 from homeassistant.helpers.typing import ConfigType
@@ -22,8 +22,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up NFAndroidTV from a config entry."""
-    hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN][entry.entry_id] = entry.data[CONF_HOST]
 
     hass.async_create_task(
         discovery.async_load_platform(
