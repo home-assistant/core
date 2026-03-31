@@ -73,31 +73,45 @@ class LaCrosseUpdateCoordinator(DataUpdateCoordinator[list[Sensor]]):
             except HTTPError as error:
                 raise UpdateFailed from error
 
-        try:
-            # Fetch last hour of data
-            for sensor in self.devices:
+        # Fetch last hour of data
+        for sensor in self.devices:
+            try:
                 data = await self.api.get_sensor_status(
                     sensor=sensor,
                     tz=self.hass.config.time_zone,
                 )
-                _LOGGER.debug("Got data: %s", data)
+            except HTTPError as error:
+                error_data = error.args[1] if len(error.args) > 1 else None
+                if (
+                    isinstance(error_data, dict)
+                    and error_data.get("error") == "no_readings"
+                ):
+                    sensor.data = None
+                    _LOGGER.debug("No readings for %s", sensor.name)
+                    continue
+                raise UpdateFailed(
+                    translation_domain=DOMAIN, translation_key="update_error"
+                ) from error
 
-                if data_error := data.get("error"):
-                    if data_error == "no_readings":
-                        sensor.data = None
-                        _LOGGER.debug("No readings for %s", sensor.name)
-                        continue
-                    _LOGGER.debug("Error: %s", data_error)
-                    raise UpdateFailed(
-                        translation_domain=DOMAIN, translation_key="update_error"
-                    )
+            _LOGGER.debug("Got data: %s", data)
 
-                sensor.data = data["data"]["current"]
+            if data_error := data.get("error"):
+                if data_error == "no_readings":
+                    sensor.data = None
+                    _LOGGER.debug("No readings for %s", sensor.name)
+                    continue
+                _LOGGER.debug("Error: %s", data_error)
+                raise UpdateFailed(
+                    translation_domain=DOMAIN, translation_key="update_error"
+                )
 
-        except HTTPError as error:
-            raise UpdateFailed(
-                translation_domain=DOMAIN, translation_key="update_error"
-            ) from error
+            current_data = data.get("data", {}).get("current")
+            if current_data is None:
+                sensor.data = None
+                _LOGGER.debug("No current data payload for %s", sensor.name)
+                continue
+
+            sensor.data = current_data
 
         # Verify that we have permission to read the sensors
         for sensor in self.devices:

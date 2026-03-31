@@ -985,6 +985,13 @@ class ZWaveListSensor(ZwaveSensor):
             self._attr_device_class = SensorDeviceClass.ENUM
             self._attr_options = list(info.primary_value.metadata.states.values())
 
+    @callback
+    def should_rediscover_on_metadata_update(self) -> bool:
+        """Check if metadata states have changed."""
+        return list(self.info.primary_value.metadata.states.values()) != (
+            self._attr_options or []
+        )
+
     @property
     def extra_state_attributes(self) -> dict[str, str] | None:
         """Return the device specific state attributes."""

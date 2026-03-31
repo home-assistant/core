@@ -45,6 +45,13 @@
       }
     }
   },
+  "entity": {
+    "binary_sensor": {
+      "warning": {
+        "name": "Warning: {region_name} {slot_id}"
+      }
+    }
+  },
   "options": {
     "abort": {
       "no_fetch": "[%key:component::nina::config::abort::no_fetch%]",
