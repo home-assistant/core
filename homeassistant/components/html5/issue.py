@@ -27,7 +27,11 @@ def deprecated_notify_action_call(
         is_fixable=False,
         severity=IssueSeverity.WARNING,
         translation_key="deprecated_notify_action",
-        translation_placeholders={"action": action},
+        translation_placeholders={
+            "action": action,
+            "new_action_1": "notify.send_message",
+            "new_action_2": "html5.send_message",
+        },
     )
 
 
