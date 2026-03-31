@@ -3,10 +3,12 @@
 from unittest.mock import MagicMock, patch
 
 import pytest
-from spotifyaio import SpotifyConnectionError
+from spotifyaio import SpotifyConnectionError, SpotifyForbiddenError
 
+from homeassistant.components.spotify.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.config_entry_oauth2_flow import (
     ImplementationUnavailableError,
 )
@@ -51,6 +53,26 @@ async def test_setup_with_required_calls_failing(
     mock_config_entry.add_to_hass(hass)
 
     assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
+
+
+@pytest.mark.usefixtures("setup_credentials")
+async def test_setup_free_account_is_failing(
+    hass: HomeAssistant,
+    mock_spotify: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test the Spotify setup with a free account is failing."""
+    mock_spotify.return_value.get_current_user.side_effect = SpotifyForbiddenError(
+        "Check settings on developer.spotify.com/dashboard, the user may not be registered."
+    )
+    mock_config_entry.add_to_hass(hass)
+
+    assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    issue = issue_registry.issues.get(
+        (DOMAIN, f"user_not_premium_{mock_config_entry.unique_id}")
+    )
+    assert issue, "Repair issue not created"
 
 
 @pytest.mark.usefixtures("setup_credentials")

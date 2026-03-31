@@ -65,6 +65,8 @@ def mock_egauge_client() -> Generator[MagicMock]:
             "Temp": RegisterInfo(
                 name="Temp", type=RegisterType.TEMPERATURE, idx=2, did=None
             ),
+            "L1": RegisterInfo(name="L1", type=RegisterType.VOLTAGE, idx=3, did=None),
+            "S1": RegisterInfo(name="S1", type=RegisterType.CURRENT, idx=4, did=None),
         }
 
         # Dynamic measurements
@@ -72,11 +74,15 @@ def mock_egauge_client() -> Generator[MagicMock]:
             "Grid": 1500.0,
             "Solar": -2500.0,
             "Temp": 45.0,
+            "L1": 123.4,
+            "S1": 1.2,
         }
         client.get_current_counters.return_value = {
             "Grid": 450000000.0,  # 125 kWh in Ws
             "Solar": 315000000.0,  # 87.5 kWh in Ws
             "Temp": 0.0,
+            "L1": 12345678.0,
+            "S1": 12345.0,
         }
 
         yield client

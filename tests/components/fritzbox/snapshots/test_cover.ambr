@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_setup[cover.fake_name-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -41,6 +42,7 @@
       'current_position': 100,
       'device_class': 'blind',
       'friendly_name': 'fake_name',
+      'is_closed': False,
       'supported_features': <CoverEntityFeature: 15>,
     }),
     'context': <ANY>,

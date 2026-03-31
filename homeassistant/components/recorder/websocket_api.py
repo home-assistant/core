@@ -198,7 +198,7 @@ def _ws_get_statistics_during_period(
     start_time: dt,
     end_time: dt | None,
     statistic_ids: set[str] | None,
-    period: Literal["5minute", "day", "hour", "week", "month"],
+    period: Literal["5minute", "day", "hour", "week", "month", "year"],
     units: dict[str, str],
     types: set[Literal["change", "last_reset", "max", "mean", "min", "state", "sum"]],
 ) -> bytes:
@@ -267,7 +267,9 @@ async def ws_handle_get_statistics_during_period(
         vol.Required("start_time"): str,
         vol.Optional("end_time"): str,
         vol.Required("statistic_ids"): vol.All([str], vol.Length(min=1)),
-        vol.Required("period"): vol.Any("5minute", "hour", "day", "week", "month"),
+        vol.Required("period"): vol.Any(
+            "5minute", "hour", "day", "week", "month", "year"
+        ),
         vol.Optional("units"): UNIT_SCHEMA,
         vol.Optional("types"): vol.All(
             [vol.Any("change", "last_reset", "max", "mean", "min", "state", "sum")],

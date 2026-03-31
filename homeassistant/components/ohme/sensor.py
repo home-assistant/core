@@ -89,8 +89,9 @@ SENSORS = [
     OhmeSensorDescription(
         key="slot_list",
         translation_key="slot_list",
-        value_fn=lambda client: ", ".join(str(x) for x in client.slots)
-        or STATE_UNKNOWN,
+        value_fn=lambda client: (
+            ", ".join(str(x) for x in client.slots) or STATE_UNKNOWN
+        ),
     ),
 ]
 

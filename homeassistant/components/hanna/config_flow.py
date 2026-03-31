@@ -42,7 +42,7 @@ class HannaConfigFlow(ConfigFlow, domain=DOMAIN):
                     user_input[CONF_EMAIL],
                     user_input[CONF_PASSWORD],
                 )
-            except (Timeout, RequestsConnectionError):
+            except Timeout, RequestsConnectionError:
                 errors["base"] = "cannot_connect"
             except AuthenticationError:
                 errors["base"] = "invalid_auth"

@@ -13,6 +13,7 @@ from fritzconnection.core.exceptions import (
     FritzSecurityError,
     FritzServiceError,
 )
+from requests.exceptions import ConnectionError
 
 from homeassistant.const import Platform
 
@@ -26,6 +27,7 @@ class MeshRoles(StrEnum):
 
 
 DOMAIN = "fritz"
+SCAN_INTERVAL = 30
 
 PLATFORMS = [
     Platform.BINARY_SENSOR,
@@ -67,6 +69,7 @@ BUTTON_TYPE_WOL = "WakeOnLan"
 UPTIME_DEVIATION = 5
 
 FRITZ_EXCEPTIONS = (
+    ConnectionError,
     FritzActionError,
     FritzActionFailedError,
     FritzConnectionException,

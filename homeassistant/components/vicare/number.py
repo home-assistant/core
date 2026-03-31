@@ -13,12 +13,7 @@ from PyViCare.PyViCareDeviceConfig import PyViCareDeviceConfig
 from PyViCare.PyViCareHeatingDevice import (
     HeatingDeviceWithComponent as PyViCareHeatingDeviceComponent,
 )
-from PyViCare.PyViCareUtils import (
-    PyViCareInvalidDataError,
-    PyViCareNotSupportedFeatureError,
-    PyViCareRateLimitError,
-)
-from requests.exceptions import ConnectionError as RequestConnectionError
+from PyViCare.PyViCareUtils import PyViCareNotSupportedFeatureError
 
 from homeassistant.components.number import (
     NumberDeviceClass,
@@ -109,7 +104,9 @@ DEVICE_ENTITY_DESCRIPTIONS: tuple[ViCareNumberEntityDescription, ...] = (
         ),
         min_value_getter=lambda api: api.getDomesticHotWaterHysteresisSwitchOffMin(),
         max_value_getter=lambda api: api.getDomesticHotWaterHysteresisSwitchOffMax(),
-        stepping_getter=lambda api: api.getDomesticHotWaterHysteresisSwitchOffStepping(),
+        stepping_getter=lambda api: (
+            api.getDomesticHotWaterHysteresisSwitchOffStepping()
+        ),
     ),
 )
 
@@ -123,8 +120,8 @@ CIRCUIT_ENTITY_DESCRIPTIONS: tuple[ViCareNumberEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         mode=NumberMode.BOX,
         value_getter=lambda api: api.getHeatingCurveShift(),
-        value_setter=lambda api, shift: (
-            api.setHeatingCurve(shift, api.getHeatingCurveSlope())
+        value_setter=lambda api, shift: api.setHeatingCurve(
+            shift, api.getHeatingCurveSlope()
         ),
         min_value_getter=lambda api: api.getHeatingCurveShiftMin(),
         max_value_getter=lambda api: api.getHeatingCurveShiftMax(),
@@ -139,8 +136,8 @@ CIRCUIT_ENTITY_DESCRIPTIONS: tuple[ViCareNumberEntityDescription, ...] = (
         entity_category=EntityCategory.CONFIG,
         mode=NumberMode.BOX,
         value_getter=lambda api: api.getHeatingCurveSlope(),
-        value_setter=lambda api, slope: (
-            api.setHeatingCurve(api.getHeatingCurveShift(), slope)
+        value_setter=lambda api, slope: api.setHeatingCurve(
+            api.getHeatingCurveShift(), slope
         ),
         min_value_getter=lambda api: api.getHeatingCurveSlopeMin(),
         max_value_getter=lambda api: api.getHeatingCurveSlopeMax(),
@@ -433,34 +430,23 @@ class ViCareNumber(ViCareEntity, NumberEntity):
 
     def update(self) -> None:
         """Update state of number."""
-        try:
-            with suppress(PyViCareNotSupportedFeatureError):
-                self._attr_native_value = self.entity_description.value_getter(
-                    self._api
-                )
+        with self.vicare_api_handler(), suppress(PyViCareNotSupportedFeatureError):
+            self._attr_native_value = self.entity_description.value_getter(self._api)
 
-                if min_value := _get_value(
-                    self.entity_description.min_value_getter, self._api
-                ):
-                    self._attr_native_min_value = min_value
+            if min_value := _get_value(
+                self.entity_description.min_value_getter, self._api
+            ):
+                self._attr_native_min_value = min_value
 
-                if max_value := _get_value(
-                    self.entity_description.max_value_getter, self._api
-                ):
-                    self._attr_native_max_value = max_value
+            if max_value := _get_value(
+                self.entity_description.max_value_getter, self._api
+            ):
+                self._attr_native_max_value = max_value
 
-                if stepping_value := _get_value(
-                    self.entity_description.stepping_getter, self._api
-                ):
-                    self._attr_native_step = stepping_value
-        except RequestConnectionError:
-            _LOGGER.error("Unable to retrieve data from ViCare server")
-        except ValueError:
-            _LOGGER.error("Unable to decode data from ViCare server")
-        except PyViCareRateLimitError as limit_exception:
-            _LOGGER.error("Vicare API rate limit exceeded: %s", limit_exception)
-        except PyViCareInvalidDataError as invalid_data_exception:
-            _LOGGER.error("Invalid data from Vicare server: %s", invalid_data_exception)
+            if stepping_value := _get_value(
+                self.entity_description.stepping_getter, self._api
+            ):
+                self._attr_native_step = stepping_value
 
 
 def _get_value(

@@ -20,7 +20,9 @@ async def test_setup(
 
     assert len(entity_registry.entities) == 1
 
-    entry = entity_registry.async_get(f"switch.sleepnumber_{BED_NAME_LOWER}_pause_mode")
+    entry = entity_registry.async_get(
+        f"switch.{BED_NAME_LOWER}_sleepnumber_{BED_NAME_LOWER}_pause_mode"
+    )
     assert entry
     assert entry.original_name == f"SleepNumber {BED_NAME} Pause Mode"
     assert entry.unique_id == f"{BED_ID}-pause-mode"
@@ -33,7 +35,9 @@ async def test_switch_set_states(hass: HomeAssistant, mock_asyncsleepiq) -> None
     await hass.services.async_call(
         SWITCH_DOMAIN,
         "turn_off",
-        {ATTR_ENTITY_ID: f"switch.sleepnumber_{BED_NAME_LOWER}_pause_mode"},
+        {
+            ATTR_ENTITY_ID: f"switch.{BED_NAME_LOWER}_sleepnumber_{BED_NAME_LOWER}_pause_mode"
+        },
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -42,7 +46,9 @@ async def test_switch_set_states(hass: HomeAssistant, mock_asyncsleepiq) -> None
     await hass.services.async_call(
         SWITCH_DOMAIN,
         "turn_on",
-        {ATTR_ENTITY_ID: f"switch.sleepnumber_{BED_NAME_LOWER}_pause_mode"},
+        {
+            ATTR_ENTITY_ID: f"switch.{BED_NAME_LOWER}_sleepnumber_{BED_NAME_LOWER}_pause_mode"
+        },
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -54,7 +60,9 @@ async def test_switch_get_states(hass: HomeAssistant, mock_asyncsleepiq) -> None
     await setup_platform(hass, SWITCH_DOMAIN)
 
     assert (
-        hass.states.get(f"switch.sleepnumber_{BED_NAME_LOWER}_pause_mode").state
+        hass.states.get(
+            f"switch.{BED_NAME_LOWER}_sleepnumber_{BED_NAME_LOWER}_pause_mode"
+        ).state
         == STATE_OFF
     )
     mock_asyncsleepiq.beds[BED_ID].paused = True
@@ -63,6 +71,8 @@ async def test_switch_get_states(hass: HomeAssistant, mock_asyncsleepiq) -> None
     await hass.async_block_till_done(wait_background_tasks=True)
 
     assert (
-        hass.states.get(f"switch.sleepnumber_{BED_NAME_LOWER}_pause_mode").state
+        hass.states.get(
+            f"switch.{BED_NAME_LOWER}_sleepnumber_{BED_NAME_LOWER}_pause_mode"
+        ).state
         == STATE_ON
     )

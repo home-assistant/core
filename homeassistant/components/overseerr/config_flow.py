@@ -69,7 +69,7 @@ class OverseerrConfigFlow(ConfigFlow, domain=DOMAIN):
                 else:
                     if self.source == SOURCE_USER:
                         return self.async_create_entry(
-                            title="Overseerr",
+                            title="Seerr",
                             data={
                                 CONF_HOST: host,
                                 CONF_PORT: port,
