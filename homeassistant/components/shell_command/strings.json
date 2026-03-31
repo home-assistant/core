@@ -9,7 +9,7 @@
   },
   "issues": {
     "reserved_reload_name": {
-      "description": "The shell_command name /'{name}/' is now reserved for the reload service and cannot be used for user-defined commands. Please rename or remove this entry from your configuration.",
+      "description": "The shell_command name {name} is now reserved for the reload service and cannot be used for user-defined commands. Please rename or remove this entry from your configuration.",
       "title": "Reserved shell_command name: {name}"
     }
   },
