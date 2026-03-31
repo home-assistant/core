@@ -70,7 +70,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: OlarmConfigEntry) -> boo
         session.token["access_token"], session.token["expires_at"]
     )
 
-    # setup coordinator
     coordinator = OlarmDataUpdateCoordinator(
         hass,
         entry,
@@ -94,13 +93,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: OlarmConfigEntry) -> boo
     except (MqttTimeoutError, MqttConnectError) as err:
         raise ConfigEntryNotReady(f"Failed to connect to Olarm MQTT: {err}") from err
 
-    # Set runtime data
     entry.runtime_data = OlarmData(
         coordinator=coordinator,
         mqtt_client=mqtt_client,
     )
 
-    # setup platforms
     await hass.config_entries.async_forward_entry_setups(entry, _PLATFORMS)
 
     return True
