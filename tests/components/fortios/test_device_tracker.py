@@ -50,8 +50,8 @@ def _make_api_mock(device: dict | None = None) -> AsyncMock:
                     "cpu": [{"current": 10}],
                     "mem": [{"current": 50}],
                     "session": [{"current": 100}],
-                    "setuprate": [{"current": 100}],
                     "session6": [{"current": 100}],
+                    "setuprate": [{"current": 100}],
                     "setuprate6": [{"current": 100}],
                 }
             }
