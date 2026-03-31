@@ -17,16 +17,8 @@ from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_API_KEY, CONF_URL, CONF_VERIFY_SSL
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-from homeassistant.exceptions import (
-    ConfigEntryAuthFailed,
-    ConfigEntryError,
-    ConfigEntryNotReady,
-)
-from homeassistant.helpers import (
-    config_validation as cv,
-    discovery,
-    issue_registry as ir,
-)
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryError, ConfigEntryNotReady
+from homeassistant.helpers import config_validation as cv, discovery, issue_registry as ir
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
@@ -34,9 +26,9 @@ from .const import (
     CONF_API_SECRET,
     CONF_INTERFACE_CLIENT,
     CONF_TRACKER_INTERFACES,
-    DEFAULT_VERIFY_SSL,
     DOMAIN,
     INTEGRATION_TITLE,
+    YAML_IMPORT_DEFAULT_VERIFY_SSL,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -53,7 +45,7 @@ CONFIG_SCHEMA = vol.Schema(
                 vol.Required(CONF_URL): cv.url,
                 vol.Required(CONF_API_KEY): cv.string,
                 vol.Required(CONF_API_SECRET): cv.string,
-                vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): cv.boolean,
+                vol.Optional(CONF_VERIFY_SSL, default=YAML_IMPORT_DEFAULT_VERIFY_SSL): cv.boolean,
                 vol.Optional(CONF_TRACKER_INTERFACES, default=[]): vol.All(
                     cv.ensure_list, [cv.string]
                 ),
@@ -64,9 +56,7 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-async def _async_import_from_yaml(
-    hass: HomeAssistant, yaml_config: Mapping[str, Any]
-) -> None:
+async def _async_import_from_yaml(hass: HomeAssistant, yaml_config: Mapping[str, Any]) -> None:
     """Import YAML config into a config entry and raise a deprecation issue."""
     try:
         result = await hass.config_entries.flow.async_init(
@@ -76,10 +66,9 @@ async def _async_import_from_yaml(
                 CONF_URL: yaml_config[CONF_URL],
                 CONF_API_KEY: yaml_config[CONF_API_KEY],
                 CONF_API_SECRET: yaml_config[CONF_API_SECRET],
-                CONF_VERIFY_SSL: yaml_config.get(CONF_VERIFY_SSL, DEFAULT_VERIFY_SSL),
-                CONF_TRACKER_INTERFACES: list(
-                    yaml_config.get(CONF_TRACKER_INTERFACES, [])
-                ),
+                # Keep the legacy functionality where SSL default is False.
+                CONF_VERIFY_SSL: yaml_config.get(CONF_VERIFY_SSL, YAML_IMPORT_DEFAULT_VERIFY_SSL),
+                CONF_TRACKER_INTERFACES: list(yaml_config.get(CONF_TRACKER_INTERFACES, [])),
             },
         )
     except Exception:
@@ -164,9 +153,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 f"Failure while connecting to OPNsense API endpoint: {err}"
             ) from err
         except RequestException as err:
-            raise ConfigEntryNotReady(
-                "Failure while connecting to OPNsense API endpoint"
-            ) from err
+            raise ConfigEntryNotReady("Failure while connecting to OPNsense API endpoint") from err
 
         if tracker_interfaces:
             netinsight_client = diagnostics.NetworkInsightClient(
