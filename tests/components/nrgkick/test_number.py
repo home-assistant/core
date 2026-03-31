@@ -5,6 +5,7 @@ from __future__ import annotations
 from datetime import timedelta
 from unittest.mock import AsyncMock
 
+from freezegun.api import FrozenDateTimeFactory
 from nrgkick_api import NRGkickCommandRejectedError
 from nrgkick_api.const import (
     CONTROL_KEY_CURRENT_SET,
@@ -14,6 +15,7 @@ from nrgkick_api.const import (
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.components.nrgkick.const import DEFAULT_SCAN_INTERVAL
 from homeassistant.components.number import (
     ATTR_VALUE,
     DOMAIN as NUMBER_DOMAIN,
@@ -23,11 +25,12 @@ from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
-from homeassistant.util import dt as dt_util
 
 from . import setup_integration
 
 from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
+
+SCAN_INTERVAL = timedelta(seconds=DEFAULT_SCAN_INTERVAL)
 
 pytestmark = pytest.mark.usefixtures("entity_registry_enabled_by_default")
 
@@ -136,6 +139,7 @@ async def test_phase_count_filters_transient_zero_on_poll(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_nrgkick_api: AsyncMock,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test that a transient phase count of 0 from a poll is filtered.
 
@@ -153,7 +157,8 @@ async def test_phase_count_filters_transient_zero_on_poll(
     control_data = mock_nrgkick_api.get_control.return_value.copy()
     control_data[CONTROL_KEY_PHASE_COUNT] = 0
     mock_nrgkick_api.get_control.return_value = control_data
-    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=30))
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     # The transient 0 must not surface; state stays at the previous value.
@@ -164,7 +169,8 @@ async def test_phase_count_filters_transient_zero_on_poll(
     control_data = mock_nrgkick_api.get_control.return_value.copy()
     control_data[CONTROL_KEY_PHASE_COUNT] = 1
     mock_nrgkick_api.get_control.return_value = control_data
-    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=60))
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     assert (state := hass.states.get(entity_id))
@@ -175,6 +181,7 @@ async def test_phase_count_filters_transient_zero_on_service_call(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_nrgkick_api: AsyncMock,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test that a service call keeps the cached value when refreshing returns 0.
 
@@ -210,7 +217,8 @@ async def test_phase_count_filters_transient_zero_on_service_call(
     control_data = mock_nrgkick_api.get_control.return_value.copy()
     control_data[CONTROL_KEY_PHASE_COUNT] = 1
     mock_nrgkick_api.get_control.return_value = control_data
-    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=30))
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     assert (state := hass.states.get(entity_id))
