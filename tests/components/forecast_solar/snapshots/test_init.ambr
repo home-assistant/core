@@ -1,9 +1,7 @@
 # serializer version: 1
-# name: test_migration
+# name: test_migration_v1_to_v3
   ConfigEntrySnapshot({
     'data': dict({
-      'latitude': 52.42,
-      'longitude': 4.42,
     }),
     'disabled_by': None,
     'discovery_keys': dict({
@@ -18,6 +16,8 @@
       'damping_morning': 0.5,
       'declination': 30,
       'inverter_size': 2000,
+      'latitude': 52.42,
+      'longitude': 4.42,
       'modules_power': 5100,
     }),
     'pref_disable_new_entities': False,
@@ -26,7 +26,67 @@
     'subentries': list([
     ]),
     'title': 'Green House',
-    'unique_id': 'unique',
-    'version': 2,
+    'unique_id': 'unique_v1',
+    'version': 3,
+  })
+# ---
+# name: test_migration_v2_to_v3_home_location_backfilled
+  ConfigEntrySnapshot({
+    'data': dict({
+    }),
+    'disabled_by': None,
+    'discovery_keys': dict({
+    }),
+    'domain': 'forecast_solar',
+    'entry_id': <ANY>,
+    'minor_version': 1,
+    'options': dict({
+      'azimuth': 180,
+      'damping_evening': 0.0,
+      'damping_morning': 0.0,
+      'declination': 30,
+      'latitude': 48.85,
+      'longitude': 2.35,
+      'modules_power': 4000,
+    }),
+    'pref_disable_new_entities': False,
+    'pref_disable_polling': False,
+    'source': 'user',
+    'subentries': list([
+    ]),
+    'title': 'Roof South',
+    'unique_id': 'unique_v2_home',
+    'version': 3,
+  })
+# ---
+# name: test_migration_v2_to_v3_with_manual_location
+  ConfigEntrySnapshot({
+    'data': dict({
+    }),
+    'disabled_by': None,
+    'discovery_keys': dict({
+    }),
+    'domain': 'forecast_solar',
+    'entry_id': <ANY>,
+    'minor_version': 1,
+    'options': dict({
+      'api_key': 'abcdef12345',
+      'azimuth': 190,
+      'damping_evening': 0.5,
+      'damping_morning': 0.5,
+      'declination': 30,
+      'inverter_size': 2000,
+      'latitude': 52.42,
+      'longitude': 4.42,
+      'modules_power': 5100,
+    }),
+    'pref_disable_new_entities': False,
+    'pref_disable_polling': False,
+    'source': 'user',
+    'subentries': list([
+    ]),
+    'title': 'Garage East',
+    'unique_id': 'unique_v2_manual',
+    'version': 3,
   })
 # ---

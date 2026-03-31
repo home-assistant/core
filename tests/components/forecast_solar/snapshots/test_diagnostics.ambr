@@ -27,8 +27,6 @@
     }),
     'entry': dict({
       'data': dict({
-        'latitude': '**REDACTED**',
-        'longitude': '**REDACTED**',
       }),
       'options': dict({
         'api_key': '**REDACTED**',
@@ -37,6 +35,8 @@
         'damping_morning': 0.5,
         'declination': 30,
         'inverter_size': 2000,
+        'latitude': '**REDACTED**',
+        'longitude': '**REDACTED**',
         'modules_power': 5100,
       }),
       'title': 'Green House',
