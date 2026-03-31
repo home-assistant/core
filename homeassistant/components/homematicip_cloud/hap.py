@@ -139,11 +139,21 @@ class HomematicipHAP:
             return False
 
         _LOGGER.debug(
-            "Connected to HomematicIP with HAP %s", self.config_entry.unique_id
+            "Connected to HomematicIP with HAP %s — %d devices loaded",
+            self.config_entry.unique_id,
+            len(list(self.home.devices)),
         )
 
         await self.hass.config_entries.async_forward_entry_setups(
             self.config_entry, PLATFORMS
+        )
+
+        devices = list(self.home.devices)
+        listeners_total = sum(len(getattr(d, "_on_update", [])) for d in devices)
+        _LOGGER.debug(
+            "async_setup complete — %d devices, %d total listeners registered",
+            len(devices),
+            listeners_total,
         )
 
         return True
@@ -300,14 +310,23 @@ class HomematicipHAP:
 
     def set_all_to_unavailable(self) -> None:
         """Set all devices to unavailable and tell Home Assistant."""
-        for device in self.home.devices:
+        devices = list(self.home.devices)
+        _LOGGER.debug("set_all_to_unavailable: marking %d devices unreachable", len(devices))
+        for device in devices:
             device.unreach = True
         self.update_all()
 
     def update_all(self) -> None:
         """Signal all devices to update their state."""
         devices = list(self.home.devices)
-        _LOGGER.debug("update_all: firing update events for %d devices", len(devices))
+        listeners_total = sum(len(getattr(d, "_on_update", [])) for d in devices)
+        orphaned = sum(1 for d in devices if not getattr(d, "_on_update", []))
+        _LOGGER.debug(
+            "update_all: %d devices, %d total listeners, %d orphaned (no listeners)",
+            len(devices),
+            listeners_total,
+            orphaned,
+        )
         for device in devices:
             device.fire_update_event()
 
