@@ -82,6 +82,14 @@
       }
     }
   },
+  "exceptions": {
+    "api_key_required": {
+      "message": "An API key is required when more than one plane is configured"
+    },
+    "no_plane": {
+      "message": "No plane configured, cannot set up Forecast.Solar"
+    }
+  },
   "options": {
     "error": {
       "api_key_required": "An API key is required to add more than one plane. You can configure it in the integration options.",

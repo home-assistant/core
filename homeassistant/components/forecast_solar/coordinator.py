@@ -32,6 +32,7 @@ class ForecastSolarDataUpdateCoordinator(DataUpdateCoordinator[Estimate]):
     """The Forecast.Solar Data Update Coordinator."""
 
     config_entry: ForecastSolarConfigEntry
+    forecast: ForecastSolar
 
     def __init__(self, hass: HomeAssistant, entry: ForecastSolarConfigEntry) -> None:
         """Initialize the Forecast.Solar coordinator."""
@@ -52,38 +53,32 @@ class ForecastSolarDataUpdateCoordinator(DataUpdateCoordinator[Estimate]):
             if subentry.subentry_type == SUBENTRY_TYPE_PLANE
         ]
 
-        self.forecast: ForecastSolar | None = None
-        if plane_subentries and (len(plane_subentries) == 1 or api_key is not None):
-            # The first plane subentry is the main plane
-            main_plane = plane_subentries[0]
+        # The first plane subentry is the main plane
+        main_plane = plane_subentries[0]
 
-            # Additional planes
-            planes: list[Plane] = [
-                Plane(
-                    declination=subentry.data[CONF_DECLINATION],
-                    azimuth=(subentry.data[CONF_AZIMUTH] - 180),
-                    kwp=(subentry.data[CONF_MODULES_POWER] / 1000),
-                )
-                for subentry in plane_subentries[1:]
-            ]
-
-            self.forecast = ForecastSolar(
-                api_key=api_key,
-                session=async_get_clientsession(hass),
-                latitude=entry.data[CONF_LATITUDE],
-                longitude=entry.data[CONF_LONGITUDE],
-                declination=main_plane.data[CONF_DECLINATION],
-                azimuth=(main_plane.data[CONF_AZIMUTH] - 180),
-                kwp=(main_plane.data[CONF_MODULES_POWER] / 1000),
-                damping_morning=entry.options.get(
-                    CONF_DAMPING_MORNING, DEFAULT_DAMPING
-                ),
-                damping_evening=entry.options.get(
-                    CONF_DAMPING_EVENING, DEFAULT_DAMPING
-                ),
-                inverter=inverter_size,
-                planes=planes,
+        # Additional planes
+        planes: list[Plane] = [
+            Plane(
+                declination=subentry.data[CONF_DECLINATION],
+                azimuth=(subentry.data[CONF_AZIMUTH] - 180),
+                kwp=(subentry.data[CONF_MODULES_POWER] / 1000),
             )
+            for subentry in plane_subentries[1:]
+        ]
+
+        self.forecast = ForecastSolar(
+            api_key=api_key,
+            session=async_get_clientsession(hass),
+            latitude=entry.data[CONF_LATITUDE],
+            longitude=entry.data[CONF_LONGITUDE],
+            declination=main_plane.data[CONF_DECLINATION],
+            azimuth=(main_plane.data[CONF_AZIMUTH] - 180),
+            kwp=(main_plane.data[CONF_MODULES_POWER] / 1000),
+            damping_morning=entry.options.get(CONF_DAMPING_MORNING, DEFAULT_DAMPING),
+            damping_evening=entry.options.get(CONF_DAMPING_EVENING, DEFAULT_DAMPING),
+            inverter=inverter_size,
+            planes=planes,
+        )
 
         # Free account have a resolution of 1 hour, using that as the default
         # update interval. Using a higher value for accounts with an API key.
@@ -101,23 +96,7 @@ class ForecastSolarDataUpdateCoordinator(DataUpdateCoordinator[Estimate]):
 
     async def _async_update_data(self) -> Estimate:
         """Fetch Forecast.Solar estimates."""
-        if not any(
-            subentry.subentry_type == SUBENTRY_TYPE_PLANE
-            for subentry in self.config_entry.subentries.values()
-        ):
-            raise UpdateFailed("No plane configured, cannot set up Forecast.Solar")
-
-        if len(self.config_entry.subentries) > 1 and not self.config_entry.options.get(
-            CONF_API_KEY
-        ):
-            raise UpdateFailed(
-                "An API key is required when more than one plane is configured"
-            )
-
-        if (forecast := self.forecast) is None:
-            raise UpdateFailed("Forecast client not initialized")
-
         try:
-            return await forecast.estimate()
+            return await self.forecast.estimate()
         except ForecastSolarConnectionError as error:
             raise UpdateFailed(error) from error
