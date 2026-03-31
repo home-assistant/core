@@ -33,19 +33,6 @@ def platforms() -> list[Platform]:
 ENERGY_ENTITY_ID = "sensor.dimmer_0000_02_energy"
 
 
-@pytest.fixture
-async def enable_energy_sensor(
-    hass: HomeAssistant,
-    entity_registry: er.EntityRegistry,
-    mock_config_entry: MockConfigEntry,
-    init_integration: MockConfigEntry,
-) -> None:
-    """Enable the energy sensor entity which is disabled by default."""
-    entity_registry.async_update_entity(ENERGY_ENTITY_ID, disabled_by=None)
-    await hass.config_entries.async_reload(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-
 @pytest.mark.usefixtures("init_integration")
 async def test_setup_entry(
     hass: HomeAssistant,
@@ -54,17 +41,6 @@ async def test_setup_entry(
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test that async_setup_entry correctly creates sensor entities."""
-    # Enable disabled-by-default entities for snapshot testing
-    for entity_entry in er.async_entries_for_config_entry(
-        entity_registry, mock_config_entry.entry_id
-    ):
-        if entity_entry.disabled_by is not None:
-            entity_registry.async_update_entity(
-                entity_entry.entity_id, disabled_by=None
-            )
-    await hass.config_entries.async_reload(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
     entity_entries = er.async_entries_for_config_entry(
@@ -163,7 +139,7 @@ async def test_availability(
     assert state.state != STATE_UNAVAILABLE
 
 
-@pytest.mark.usefixtures("enable_energy_sensor")
+@pytest.mark.usefixtures("init_integration")
 async def test_energy_callback(
     hass: HomeAssistant,
     mock_light_device: MagicMock,
@@ -188,7 +164,7 @@ async def test_energy_callback(
     assert float(state.state) == 200.0
 
 
-@pytest.mark.usefixtures("enable_energy_sensor")
+@pytest.mark.usefixtures("init_integration")
 async def test_energy_initial_state(
     hass: HomeAssistant,
 ) -> None:
@@ -198,7 +174,7 @@ async def test_energy_initial_state(
     assert state.state == STATE_UNKNOWN
 
 
-@pytest.mark.usefixtures("enable_energy_sensor")
+@pytest.mark.usefixtures("init_integration")
 async def test_energy_availability(
     hass: HomeAssistant,
     mock_light_device: MagicMock,

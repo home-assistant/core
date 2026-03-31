@@ -36,19 +36,6 @@ def platforms() -> list[Platform]:
     return [Platform.BINARY_SENSOR]
 
 
-@pytest.fixture
-async def enable_motion_sensor(
-    hass: HomeAssistant,
-    entity_registry: er.EntityRegistry,
-    mock_config_entry: MockConfigEntry,
-    init_integration: MockConfigEntry,
-) -> None:
-    """Enable the motion sensor entity which is disabled by default."""
-    entity_registry.async_update_entity(TEST_MOTION_ENTITY_ID, disabled_by=None)
-    await hass.config_entries.async_reload(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-
 @pytest.mark.usefixtures("init_integration")
 async def test_setup_entry(
     hass: HomeAssistant,
@@ -57,17 +44,6 @@ async def test_setup_entry(
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test that async_setup_entry correctly creates binary sensor entities."""
-    # Enable disabled-by-default entities for snapshot testing
-    for entity_entry in er.async_entries_for_config_entry(
-        entity_registry, mock_config_entry.entry_id
-    ):
-        if entity_entry.disabled_by is not None:
-            entity_registry.async_update_entity(
-                entity_entry.entity_id, disabled_by=None
-            )
-    await hass.config_entries.async_reload(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
     entity_entries = er.async_entries_for_config_entry(
@@ -221,7 +197,7 @@ async def test_occupancy_sensor_availability(
 # MotionSensor tests
 
 
-@pytest.mark.usefixtures("enable_motion_sensor")
+@pytest.mark.usefixtures("init_integration")
 async def test_motion_sensor_initial_state(
     hass: HomeAssistant,
 ) -> None:
@@ -231,7 +207,7 @@ async def test_motion_sensor_initial_state(
     assert state.state == STATE_UNKNOWN
 
 
-@pytest.mark.usefixtures("enable_motion_sensor")
+@pytest.mark.usefixtures("init_integration")
 async def test_motion_sensor_on_motion(
     hass: HomeAssistant,
     mock_motion_sensor_device: MagicMock,
@@ -249,7 +225,7 @@ async def test_motion_sensor_on_motion(
     assert state.state == STATE_ON
 
 
-@pytest.mark.usefixtures("enable_motion_sensor")
+@pytest.mark.usefixtures("init_integration")
 async def test_motion_sensor_off_no_motion(
     hass: HomeAssistant,
     mock_motion_sensor_device: MagicMock,
@@ -273,7 +249,7 @@ async def test_motion_sensor_off_no_motion(
     assert state.state == STATE_OFF
 
 
-@pytest.mark.usefixtures("enable_motion_sensor")
+@pytest.mark.usefixtures("init_integration")
 async def test_motion_sensor_ignores_occupancy_events(
     hass: HomeAssistant,
     mock_motion_sensor_device: MagicMock,

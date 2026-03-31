@@ -51,7 +51,6 @@ class SunricherDaliMotionSensor(DaliDeviceEntity, BinarySensorEntity):
     """Instantaneous motion detection sensor."""
 
     _attr_device_class = BinarySensorDeviceClass.MOTION
-    _attr_entity_registry_enabled_default = False
 
     def __init__(self, device: Device) -> None:
         """Initialize the motion sensor."""

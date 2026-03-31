@@ -1,6 +1,6 @@
 """Common fixtures for the Sunricher DALI tests."""
 
-from collections.abc import AsyncGenerator, Generator
+from collections.abc import Generator
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -94,14 +94,15 @@ async def init_integration(
     mock_gateway: MagicMock,
     mock_devices: list[MagicMock],
     platforms: list[Platform],
-) -> AsyncGenerator[MockConfigEntry]:
+) -> MockConfigEntry:
     """Set up the integration for testing."""
     mock_config_entry.add_to_hass(hass)
 
     with patch("homeassistant.components.sunricher_dali._PLATFORMS", platforms):
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
-        yield mock_config_entry
+
+    return mock_config_entry
 
 
 @pytest.fixture
