@@ -12,6 +12,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 
+from .const import CONF_VDOM
 from .coordinator import FortiOSDataUpdateCoordinator
 from .firewall import FortiOSAPI
 
@@ -30,7 +31,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: FortiOSConfigEntry) -> b
         entry.data[CONF_HOST],
         entry.data[CONF_PORT],
         entry.data[CONF_TOKEN],
-        entry.data["vdom"],
+        entry.data[CONF_VDOM],
         entry.data[CONF_VERIFY_SSL],
     )
 
