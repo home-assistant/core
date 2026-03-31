@@ -151,11 +151,10 @@ async def test_setup_creates_energy_coordinator(
     await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
-
-    device_data = mock_config_entry.runtime_data["TEST_GWID_12345"]
-    assert device_data.realtime is not None
-    assert device_data.energy is not None
-    assert device_data.energy.gwid == "TEST_GWID_12345"
+    assert mock_waterfurnace_client.login.call_count == 3
+    assert mock_waterfurnace_client.read_with_retry.call_count == 1
+    assert mock_waterfurnace_client.get_energy_data.call_count == 1
+    assert "TEST_GWID_12345" in mock_config_entry.runtime_data
 
 
 async def test_setup_multi_device_energy_coordinators(
