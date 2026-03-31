@@ -18,7 +18,7 @@ from homeassistant.helpers import entity_registry as er
 from .const import (
     CONF_REFRESH_TOKEN,
     CONF_USER_UUID,
-    DOMAIN,
+    DOMAIN as DOMAIN,
     LOGGER,
     SENSOR_BATTERY,
     SENSOR_DOOR,
@@ -33,6 +33,8 @@ from .const import (
 )
 from .coordinator import NotionDataUpdateCoordinator
 from .util import async_get_client_with_credentials, async_get_client_with_refresh_token
+
+type NotionConfigEntry = ConfigEntry[NotionDataUpdateCoordinator]
 
 PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR]
 
@@ -67,7 +69,7 @@ def is_uuid(value: str) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: NotionConfigEntry) -> bool:
     """Set up Notion as a config entry."""
     entry_updates: dict[str, Any] = {"data": {**entry.data}}
 
@@ -119,8 +121,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     coordinator = NotionDataUpdateCoordinator(hass, entry=entry, client=client)
 
     await coordinator.async_config_entry_first_refresh()
-    hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN][entry.entry_id] = coordinator
+    entry.runtime_data = coordinator
 
     @callback
     def async_migrate_entity_entry(entry: er.RegistryEntry) -> dict[str, Any] | None:
@@ -157,10 +158,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: NotionConfigEntry) -> bool:
     """Unload a Notion config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-    if unload_ok:
-        hass.data[DOMAIN].pop(entry.entry_id)
-
-    return unload_ok
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
