@@ -2,37 +2,19 @@
 
 from __future__ import annotations
 
-from contextlib import AsyncExitStack
 import logging
 
-from aiohttp import CookieJar
-from tesla_powerwall import (
-    AccessDeniedError,
-    ApiError,
-    MissingAttributeError,
-    Powerwall,
-    PowerwallUnreachableError,
-)
-from yarl import URL
+import pypowerwall
 
-from homeassistant.components import persistent_notification
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_IP_ADDRESS, CONF_PASSWORD, Platform
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
-from homeassistant.helpers import device_registry as dr, entity_registry as er
-from homeassistant.helpers.aiohttp_client import async_create_clientsession
 from homeassistant.helpers.update_coordinator import UpdateFailed
-from homeassistant.util.network import is_ip_address
 
-from .const import (
-    AUTH_COOKIE_KEY,
-    CONFIG_ENTRY_COOKIE,
-    DOMAIN,
-    POWERWALL_API_CHANGED,
-    POWERWALL_COORDINATOR,
-)
+from .const import POWERWALL_COORDINATOR
 from .coordinator import (
+    MeterData,
     PowerwallBaseInfo,
     PowerwallConfigEntry,
     PowerwallData,
@@ -40,302 +22,164 @@ from .coordinator import (
     PowerwallUpdateCoordinator,
 )
 
-PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR, Platform.SWITCH]
+PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR]
 
 _LOGGER = logging.getLogger(__name__)
 
-API_CHANGED_ERROR_BODY = (
-    "It seems like your powerwall uses an unsupported version. "
-    "Please update the software of your powerwall or if it is "
-    "already the newest consider reporting this issue.\nSee logs for more information"
-)
-API_CHANGED_TITLE = "Unknown powerwall software version"
+
+def _parse_meter(data: dict) -> MeterData:
+    """Parse meter data from API response."""
+    return MeterData(
+        instant_power=data.get("instant_power", 0),
+        energy_exported=data.get("energy_exported", 0),
+        energy_imported=data.get("energy_imported", 0),
+        instant_average_voltage=data.get("instant_average_voltage", 0),
+        instant_total_current=data.get("instant_total_current", 0),
+        frequency=data.get("frequency", 0),
+    )
 
 
 class PowerwallDataManager:
-    """Class to manager powerwall data and relogin on failure."""
+    """Class to manage powerwall data and handle updates."""
 
     def __init__(
         self,
         hass: HomeAssistant,
-        power_wall: Powerwall,
-        cookie_jar: CookieJar,
+        power_wall: pypowerwall.Powerwall,
         entry: PowerwallConfigEntry,
-        ip_address: str,
-        password: str | None,
-        runtime_data: PowerwallRuntimeData,
+        base_info: PowerwallBaseInfo,
     ) -> None:
-        """Init the data manager."""
+        """Initialize the data manager."""
         self.hass = hass
-        self.ip_address = ip_address
-        self.password = password
-        self.runtime_data = runtime_data
         self.power_wall = power_wall
-        self.cookie_jar = cookie_jar
         self.entry = entry
-
-    @property
-    def api_changed(self) -> int:
-        """Return true if the api has changed out from under us."""
-        return self.runtime_data[POWERWALL_API_CHANGED]
-
-    async def _recreate_powerwall_login(self) -> None:
-        """Recreate the login on auth failure."""
-        if self.power_wall.is_authenticated():
-            await self.power_wall.logout()
-        # Always use the password when recreating the login
-        await self.power_wall.login(self.password or "")
-        self.save_auth_cookie()
+        self.base_info = base_info
 
     async def async_update_data(self) -> PowerwallData:
-        """Fetch data from API endpoint."""
-        # Check if we had an error before
-        _LOGGER.debug("Checking if update failed")
-        if self.api_changed:
-            raise UpdateFailed("The powerwall api has changed")
-        return await self._update_data()
+        """Fetch data from the Powerwall."""
+        try:
+            return await self.hass.async_add_executor_job(self._fetch_data)
+        except Exception as err:
+            _LOGGER.error("Error fetching powerwall data: %s", err)
+            raise UpdateFailed(f"Error fetching data: {err}") from err
 
-    async def _update_data(self) -> PowerwallData:
-        """Fetch data from API endpoint."""
-        _LOGGER.debug("Updating data")
-        for attempt in range(2):
-            try:
-                if attempt == 1:
-                    await self._recreate_powerwall_login()
-                data = await _fetch_powerwall_data(self.power_wall)
-            except (TimeoutError, PowerwallUnreachableError) as err:
-                raise UpdateFailed("Unable to fetch data from powerwall") from err
-            except MissingAttributeError as err:
-                _LOGGER.error("The powerwall api has changed: %s", str(err))
-                # The error might include some important information
-                # about what exactly changed.
-                persistent_notification.create(
-                    self.hass, API_CHANGED_ERROR_BODY, API_CHANGED_TITLE
-                )
-                self.runtime_data[POWERWALL_API_CHANGED] = True
-                raise UpdateFailed("The powerwall api has changed") from err
-            except AccessDeniedError as err:
-                if attempt == 1:
-                    # failed to authenticate => the credentials must be wrong
-                    raise ConfigEntryAuthFailed from err
-                if self.password is None:
-                    raise ConfigEntryAuthFailed from err
-                _LOGGER.debug("Access denied, trying to reauthenticate")
-                # there is still an attempt left to authenticate,
-                # so we continue in the loop
-            except ApiError as err:
-                raise UpdateFailed(f"Updated failed due to {err}, will retry") from err
-            else:
-                return data
-        raise RuntimeError("unreachable")
+    def _fetch_data(self) -> PowerwallData:
+        """Fetch data from the Powerwall (sync)."""
+        # Get meter data
+        meters = self.power_wall.poll("/api/meters/aggregates") or {}
+        grid_data = self.power_wall.poll("/api/system_status/grid_status") or {}
 
-    @callback
-    def save_auth_cookie(self) -> None:
-        """Save the auth cookie."""
-        for cookie in self.cookie_jar:
-            if cookie.key == AUTH_COOKIE_KEY:
-                self.hass.config_entries.async_update_entry(
-                    self.entry,
-                    data={**self.entry.data, CONFIG_ENTRY_COOKIE: cookie.value},
-                )
-                _LOGGER.debug("Saved auth cookie")
-                break
+        # Get battery level
+        charge = self.power_wall.level() or 0
+
+        # Get grid status
+        grid_status = self.power_wall.grid_status() or "DOWN"
+
+        # Get grid services active
+        grid_services_active = grid_data.get("grid_services_active", False)
+
+        # Parse meter data
+        site_data = meters.get("site", {})
+        battery_data = meters.get("battery", {})
+        load_data = meters.get("load", {})
+        solar_data = meters.get("solar")
+
+        return PowerwallData(
+            charge=charge,
+            grid_status=grid_status,
+            grid_services_active=grid_services_active,
+            site=_parse_meter(site_data),
+            battery=_parse_meter(battery_data),
+            load=_parse_meter(load_data),
+            solar=_parse_meter(solar_data) if solar_data else None,
+        )
+
+
+def _fetch_base_info(power_wall: pypowerwall.Powerwall, host: str) -> PowerwallBaseInfo:
+    """Fetch base info, detecting PW2 vs PW3."""
+    # Try PW2-specific endpoints
+    site_name = power_wall.site_name()
+    version = power_wall.version()
+
+    if site_name is None and version is None:
+        # PW3: Limited API - use IP as unique ID
+        return PowerwallBaseInfo(
+            unique_id=host,
+            site_name=None,
+            version=None,
+            device_type="Powerwall 3",
+            url=f"https://{host}",
+            is_powerwall3=True,
+        )
+
+    # PW2: Full API available
+    return PowerwallBaseInfo(
+        unique_id=host,  # Use IP for consistency
+        site_name=site_name,
+        version=version,
+        device_type="Powerwall 2",
+        url=f"https://{host}",
+        is_powerwall3=False,
+    )
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: PowerwallConfigEntry) -> bool:
     """Set up Tesla Powerwall from a config entry."""
     ip_address: str = entry.data[CONF_IP_ADDRESS]
-
     password: str | None = entry.data.get(CONF_PASSWORD)
 
-    cookie_jar: CookieJar = CookieJar(unsafe=True)
-    use_auth_cookie: bool = False
-    # Try to reuse the auth cookie
-    auth_cookie_value: str | None = entry.data.get(CONFIG_ENTRY_COOKIE)
-    if auth_cookie_value:
-        cookie_jar.update_cookies(
-            {AUTH_COOKIE_KEY: auth_cookie_value},
-            URL(f"http://{ip_address}"),
+    try:
+        # Create pypowerwall instance (sync library, run in executor)
+        power_wall = await hass.async_add_executor_job(
+            _create_powerwall, ip_address, password or ""
         )
-        _LOGGER.debug("Using existing auth cookie")
-        use_auth_cookie = True
+    except Exception as err:
+        _LOGGER.error("Failed to connect to Powerwall at %s: %s", ip_address, err)
+        raise ConfigEntryNotReady(f"Cannot connect to {ip_address}") from err
 
-    http_session = async_create_clientsession(
-        hass, verify_ssl=False, cookie_jar=cookie_jar
+    # Test connection by getting battery level
+    try:
+        level = await hass.async_add_executor_job(power_wall.level)
+    except Exception as err:
+        _LOGGER.error("Failed to authenticate with Powerwall: %s", err)
+        raise ConfigEntryAuthFailed("Authentication failed") from err
+
+    if level is None:
+        raise ConfigEntryNotReady("Unable to get battery level")
+
+    # Fetch base info
+    base_info = await hass.async_add_executor_job(
+        _fetch_base_info, power_wall, ip_address
     )
 
-    async with AsyncExitStack() as stack:
-        power_wall = Powerwall(ip_address, http_session=http_session, verify_ssl=False)
-        stack.push_async_callback(power_wall.close)
+    # Create runtime data
+    runtime_data: PowerwallRuntimeData = {
+        "coordinator": None,
+        "api_instance": power_wall,
+        "base_info": base_info,
+    }
 
-        for tries in range(2):
-            try:
-                base_info = await _login_and_fetch_base_info(
-                    power_wall, ip_address, password, use_auth_cookie
-                )
-
-                # Cancel closing power_wall on success
-                stack.pop_all()
-                break
-            except (TimeoutError, PowerwallUnreachableError) as err:
-                raise ConfigEntryNotReady from err
-            except MissingAttributeError as err:
-                # The error might include some important information about what exactly changed.
-                _LOGGER.error("The powerwall api has changed: %s", str(err))
-                persistent_notification.async_create(
-                    hass, API_CHANGED_ERROR_BODY, API_CHANGED_TITLE
-                )
-                return False
-            except AccessDeniedError as err:
-                if use_auth_cookie and tries == 0:
-                    _LOGGER.debug(
-                        "Authentication failed with cookie, retrying with password"
-                    )
-                    use_auth_cookie = False
-                    continue
-                _LOGGER.debug("Authentication failed", exc_info=err)
-                raise ConfigEntryAuthFailed from err
-            except ApiError as err:
-                raise ConfigEntryNotReady from err
-
-    gateway_din = base_info.gateway_din
-    if entry.unique_id is not None and is_ip_address(entry.unique_id):
-        hass.config_entries.async_update_entry(entry, unique_id=gateway_din)
-
-    runtime_data = PowerwallRuntimeData(
-        api_changed=False,
-        base_info=base_info,
-        coordinator=None,
-        api_instance=power_wall,
-    )
-
-    manager = PowerwallDataManager(
-        hass,
-        power_wall,
-        cookie_jar,
-        entry,
-        ip_address,
-        password,
-        runtime_data,
-    )
-    manager.save_auth_cookie()
-
+    # Create data manager and coordinator
+    manager = PowerwallDataManager(hass, power_wall, entry, base_info)
     coordinator = PowerwallUpdateCoordinator(hass, entry, manager)
 
     await coordinator.async_config_entry_first_refresh()
 
     runtime_data[POWERWALL_COORDINATOR] = coordinator
-
     entry.runtime_data = runtime_data
-
-    await async_migrate_entity_unique_ids(hass, entry, base_info)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 
 
-async def async_migrate_entity_unique_ids(
-    hass: HomeAssistant, entry: PowerwallConfigEntry, base_info: PowerwallBaseInfo
-) -> None:
-    """Migrate old entity unique ids to use gateway_din."""
-    old_base_unique_id = "_".join(base_info.serial_numbers)
-    new_base_unique_id = base_info.gateway_din
-
-    dev_reg = dr.async_get(hass)
-    if device := dev_reg.async_get_device(identifiers={(DOMAIN, old_base_unique_id)}):
-        dev_reg.async_update_device(
-            device.id, new_identifiers={(DOMAIN, new_base_unique_id)}
-        )
-
-    ent_reg = er.async_get(hass)
-    for ent_entry in er.async_entries_for_config_entry(ent_reg, entry.entry_id):
-        current_unique_id = ent_entry.unique_id
-        if current_unique_id.startswith(old_base_unique_id):
-            unique_id_postfix = current_unique_id.removeprefix(old_base_unique_id)
-            new_unique_id = f"{new_base_unique_id}{unique_id_postfix}"
-            ent_reg.async_update_entity(
-                ent_entry.entity_id, new_unique_id=new_unique_id
-            )
-
-
-async def _login_and_fetch_base_info(
-    power_wall: Powerwall, host: str, password: str | None, use_auth_cookie: bool
-) -> PowerwallBaseInfo:
-    """Login to the powerwall and fetch the base info."""
-    # Login step is skipped if password is None or if we are using the auth cookie
-    if not (password is None or use_auth_cookie):
-        await power_wall.login(password)
-    return await _call_base_info(power_wall, host)
-
-
-async def _call_base_info(power_wall: Powerwall, host: str) -> PowerwallBaseInfo:
-    """Return PowerwallBaseInfo for the device."""
-    # We await each call individually since the powerwall
-    # supports http keep-alive and we want to reuse the connection
-    # as its faster than establishing a new connection when
-    # run concurrently.
-    gateway_din = await power_wall.get_gateway_din()
-    site_info = await power_wall.get_site_info()
-    status = await power_wall.get_status()
-    device_type = await power_wall.get_device_type()
-    serial_numbers = await power_wall.get_serial_numbers()
-    batteries = await power_wall.get_batteries()
-    # Serial numbers MUST be sorted to ensure the unique_id is always the same
-    # for backwards compatibility.
-    return PowerwallBaseInfo(
-        gateway_din=gateway_din,
-        site_info=site_info,
-        status=status,
-        device_type=device_type,
-        serial_numbers=sorted(serial_numbers),
-        url=f"https://{host}",
-        batteries={battery.serial_number: battery for battery in batteries},
-    )
-
-
-async def get_backup_reserve_percentage(power_wall: Powerwall) -> float | None:
-    """Return the backup reserve percentage."""
-    try:
-        return await power_wall.get_backup_reserve_percentage()
-    except MissingAttributeError:
-        return None
-
-
-async def _fetch_powerwall_data(power_wall: Powerwall) -> PowerwallData:
-    """Process and update powerwall data."""
-    # We await each call individually since the powerwall
-    # supports http keep-alive and we want to reuse the connection
-    # as its faster than establishing a new connection when
-    # run concurrently.
-    backup_reserve = await get_backup_reserve_percentage(power_wall)
-    charge = await power_wall.get_charge()
-    site_master = await power_wall.get_sitemaster()
-    meters = await power_wall.get_meters()
-    grid_services_active = await power_wall.is_grid_services_active()
-    grid_status = await power_wall.get_grid_status()
-    batteries = await power_wall.get_batteries()
-    return PowerwallData(
-        charge=charge,
-        site_master=site_master,
-        meters=meters,
-        grid_services_active=grid_services_active,
-        grid_status=grid_status,
-        backup_reserve=backup_reserve,
-        batteries={battery.serial_number: battery for battery in batteries},
-    )
-
-
-@callback
-def async_last_update_was_successful(
-    hass: HomeAssistant, entry: PowerwallConfigEntry
-) -> bool:
-    """Return True if the last update was successful."""
-    return bool(
-        hasattr(entry, "runtime_data")
-        and (runtime_data := entry.runtime_data)
-        and (coordinator := runtime_data.get(POWERWALL_COORDINATOR))
-        and coordinator.last_update_success
+def _create_powerwall(ip_address: str, password: str) -> pypowerwall.Powerwall:
+    """Create a pypowerwall instance."""
+    return pypowerwall.Powerwall(
+        host=ip_address,
+        password=password,
+        email="homeassistant@local",  # Required but unused for local auth
+        timezone="UTC",
     )
 
 
