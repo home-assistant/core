@@ -28,16 +28,34 @@
   "entity": {
     "sensor": {
       "appliance_state": {
-        "name": "Appliance state"
+        "name": "Appliance state",
+        "state": {
+          "alarm": "Alarm",
+          "delayed_start": "Delayed start",
+          "end_of_cycle": "Cycle ended",
+          "idle": "Idle",
+          "off": "Off",
+          "paused": "Paused",
+          "ready_to_start": "Ready to start",
+          "running": "Runing"
+        }
       },
       "display_temperature": {
         "name": "Current temperature"
       },
       "door_state": {
-        "name": "Door state"
+        "name": "Door state",
+        "state": {
+          "closed": "Closed",
+          "open": "Open"
+        }
       },
       "food_probe_state": {
-        "name": "Food probe state"
+        "name": "Food probe state",
+        "state": {
+          "inserted": "Inserted",
+          "not_inserted": "Not inserted"
+        }
       },
       "food_probe_temperature": {
         "name": "Food probe temperature"

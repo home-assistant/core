@@ -28,13 +28,14 @@ from homeassistant.components.sensor import (
     SensorStateClass,
     StateType,
 )
-from homeassistant.const import UnitOfTemperature
+from homeassistant.const import Platform, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import ElectroluxConfigEntry, ElectroluxDataUpdateCoordinator
 from .entity import ElectroluxBaseEntity
 from .entity_helper import async_setup_entities_helper
+from .known_values import UNKNOWN, is_known_value, map_to_known_value
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -177,13 +178,29 @@ class ElectroluxSensor(ElectroluxBaseEntity[ApplianceData], SensorEntity):
         """Initialize the sensor."""
         super().__init__(appliance_data, coordinator)
 
-        if description.options is None and description.feature_name is not None:
+        if (
+            description.options is None
+            and description.feature_name is not None
+            and description.translation_key is not None
+        ):
             options = appliance_data.get_feature_state_string_options(
                 description.feature_name
             )
-            snake_case_options = [_convert_to_snake_case(option) for option in options]
-            if len(snake_case_options) > 0:
+            snake_case_options = [
+                _convert_to_snake_case(option)
+                for option in options
+                if is_known_value(
+                    Platform.SENSOR,
+                    description.translation_key,
+                    _convert_to_snake_case(option),
+                )
+            ]
+            snake_case_options.append(UNKNOWN)
+            if len(snake_case_options) > 1:
                 self._attr_options = snake_case_options
+
+        if description.options is not None:
+            description.options.append(UNKNOWN)
 
         self.entity_description = description
         self._attr_unique_id = (
@@ -198,6 +215,13 @@ class ElectroluxSensor(ElectroluxBaseEntity[ApplianceData], SensorEntity):
         new_value = self._get_value()
         if isinstance(new_value, str):
             new_value = _convert_to_snake_case(new_value)
+            if self.translation_key:
+                new_value = map_to_known_value(
+                    self.coordinator.hass,
+                    Platform.SENSOR,
+                    self.translation_key,
+                    new_value,
+                )
 
         if self._attr_native_value != new_value:
             self._attr_native_value = new_value
