@@ -54,7 +54,10 @@ class OlarmFlowClientMQTT:
         status: Literal["connecting", "connected", "disconnected", "reconnecting"],
         info: dict[str, Any],
     ) -> None:
-        """Thread-safe callback for MQTT connection status changes."""
+        """Thread-safe callback for MQTT connection status changes.
+
+        Called from the MQTT client's worker thread.
+        """
 
         if status == "connecting":
             _LOGGER.debug("MQTT connecting to Olarm service")
