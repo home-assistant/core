@@ -193,15 +193,9 @@ class OlarmBinarySensor(OlarmEntity, BinarySensorEntity):
 
         device_state = self.coordinator.data.device_state
 
-        # Store the previous state to check if it changed
-        previous_state = self._attr_is_on
-
-        # compute state using description
         if device_state is not None:
             self._attr_is_on = self.entity_description.value_fn(
                 device_state, self.sensor_index
             )
 
-        # Only schedule state update if the state actually changed
-        if self._attr_is_on != previous_state:
-            self.async_write_ha_state()
+        self.async_write_ha_state()
