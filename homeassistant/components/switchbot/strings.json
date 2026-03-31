@@ -326,6 +326,12 @@
             }
           }
         }
+      },
+      "child_lock": {
+        "name": "Child lock"
+      },
+      "wireless_charging": {
+        "name": "Wireless charging"
       }
     },
     "vacuum": {
