@@ -23,6 +23,7 @@ from unittest.mock import (
     patch,
 )
 
+from aiohttp import FormData
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from securetar import SecureTarArchive, SecureTarFile
@@ -2055,11 +2056,16 @@ async def test_receive_backup_path_traversal(
         ) as read_backup_mock,
         patch("pathlib.Path.unlink"),
     ):
-        upload_file = StringIO(upload_data)
-        upload_file.name = suggested_filename
+        data = FormData(quote_fields=False)
+        data.add_field(
+            "file",
+            upload_data,
+            filename=suggested_filename,
+            content_type="application/octet-stream",
+        )
         resp = await client.post(
             "/api/backup/upload?agent_id=backup.local",
-            data={"file": upload_file},
+            data=data,
         )
         await hass.async_block_till_done()
 
