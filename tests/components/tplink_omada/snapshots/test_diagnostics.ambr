@@ -207,7 +207,7 @@
         'name': 'Test Router',
         'needUpgrade': False,
         'networkComptent': 1,
-        'omadacId': 'XXXXX',
+        'omadacId': '**REDACTED**',
         'poeRemain': 105.699997,
         'poeRemainPercent': 96.090904,
         'poeSettings': list([
@@ -1227,7 +1227,7 @@
         ]),
         'showModel': 'ER7212PC v1.0',
         'site': 'Test',
-        'sn': 'XXXX',
+        'sn': '**REDACTED**',
         'snmpSeting': dict({
           'contact': '',
           'location': '',

@@ -7,7 +7,7 @@ from typing import Any
 
 from homeassistant.components.diagnostics import async_redact_data
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import format_mac
 
 from . import OmadaConfigEntry
@@ -30,10 +30,11 @@ RUNTIME_TO_REDACT = {
     "sndDns",
     "sndDns2",
     "ssid",
+    "sn",
+    "omadacId",
 }
 
 
-@callback
 def _build_identifier_replacements(mac_values: set[str]) -> dict[str, str]:
     """Build deterministic replacement values for network identifiers."""
     replacements: dict[str, str] = {}
@@ -51,7 +52,6 @@ def _build_identifier_replacements(mac_values: set[str]) -> dict[str, str]:
     return replacements
 
 
-@callback
 def _replace_identifiers(data: Any, to_replace: Mapping[str, str]) -> Any:
     """Replace network identifiers in nested diagnostics payloads."""
     if isinstance(data, Mapping):
@@ -62,16 +62,12 @@ def _replace_identifiers(data: Any, to_replace: Mapping[str, str]) -> Any:
     if isinstance(data, list):
         return [_replace_identifiers(item, to_replace) for item in data]
 
-    if isinstance(data, tuple):
-        return tuple(_replace_identifiers(item, to_replace) for item in data)
-
     if isinstance(data, str):
         return to_replace.get(data, data)
 
     return data
 
 
-@callback
 def _redact_runtime_record(
     raw_data: Mapping[str, Any], replacements: Mapping[str, str]
 ) -> dict[str, Any]:

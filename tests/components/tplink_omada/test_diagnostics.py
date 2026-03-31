@@ -8,9 +8,8 @@ from syrupy.assertion import SnapshotAssertion
 from syrupy.filters import props
 from tplink_omada_client.clients import OmadaWirelessClient
 
+from homeassistant.components.tplink_omada.const import DOMAIN
 from homeassistant.core import HomeAssistant
-
-from .conftest import DOMAIN
 
 from tests.common import MockConfigEntry, async_load_fixture
 from tests.components.diagnostics import get_diagnostics_for_config_entry
@@ -58,3 +57,35 @@ async def test_entry_diagnostics(
     assert "140.100.128.10" not in payload
 
     assert result == snapshot(exclude=props("entry_id", "created_at", "modified_at"))
+
+
+async def test_entry_diagnostics_no_gateway(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    init_integration: MockConfigEntry,
+) -> None:
+    """Test diagnostics when no gateway coordinator is present."""
+    controller = init_integration.runtime_data
+    controller._gateway_coordinator = None
+
+    result = await get_diagnostics_for_config_entry(hass, hass_client, init_integration)
+
+    assert result["runtime"]["gateway"] is None
+
+
+async def test_entry_diagnostics_empty_data(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    init_integration: MockConfigEntry,
+) -> None:
+    """Test diagnostics with empty devices and clients and no gateway."""
+    controller = init_integration.runtime_data
+    controller.devices_coordinator.data = {}
+    controller.clients_coordinator.data = {}
+    controller._gateway_coordinator = None
+
+    result = await get_diagnostics_for_config_entry(hass, hass_client, init_integration)
+
+    assert result["runtime"]["devices"] == {}
+    assert result["runtime"]["clients"] == {}
+    assert result["runtime"]["gateway"] is None
