@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+from pathlib import Path
 from typing import Any, NamedTuple
 
 from tuya_device_handlers.devices import register_tuya_quirks
@@ -108,7 +109,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: TuyaConfigEntry) -> bool
             model_id=device.product_id,
         )
 
-    await hass.async_add_executor_job(register_tuya_quirks, "/config/tuya_quirks/")
+    await hass.async_add_executor_job(
+        register_tuya_quirks, str(Path(hass.config.config_dir, "tuya_quirks"))
+    )
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     # If the device does not register any entities, the device does not need to subscribe
     # So the subscription is here
