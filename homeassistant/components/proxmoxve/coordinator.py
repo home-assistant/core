@@ -229,9 +229,7 @@ class ProxmoxCoordinator(DataUpdateCoordinator[dict[str, ProxmoxNodeData]]):
                     new_ctid_map[ctid] = node_name
         self.ctid_node_map = new_ctid_map
 
-    def async_set_updated_data(
-        self, data: dict[str, ProxmoxNodeData]
-    ) -> None:
+    def async_set_updated_data(self, data: dict[str, ProxmoxNodeData]) -> None:
         """Update data, track new nodes/VMs and rebuild ID-to-node maps."""
         self._async_add_remove_nodes(data)
         self._build_id_node_maps(data)

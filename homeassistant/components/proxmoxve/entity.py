@@ -211,9 +211,7 @@ class ProxmoxContainerEntity(ProxmoxCoordinatorEntity):
         """Resolve current node from coordinator's centralized map."""
         node = self.coordinator.ctid_node_map.get(self.device_id)
         if node is None:
-            raise RuntimeError(
-                f"Container {self.device_id} not found on any node"
-            )
+            raise RuntimeError(f"Container {self.device_id} not found on any node")
         return node
 
     @property
