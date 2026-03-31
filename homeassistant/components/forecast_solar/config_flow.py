@@ -266,8 +266,9 @@ class PlaneSubentryFlowHandler(ConfigSubentryFlow):
         subentry = self._get_reconfigure_subentry()
 
         if user_input is not None:
-            return self.async_update_and_abort(
-                self._get_entry(),
+            entry = self._get_entry()
+            if self._async_update(
+                entry,
                 subentry,
                 data={
                     CONF_DECLINATION: user_input[CONF_DECLINATION],
@@ -275,7 +276,11 @@ class PlaneSubentryFlowHandler(ConfigSubentryFlow):
                     CONF_MODULES_POWER: user_input[CONF_MODULES_POWER],
                 },
                 title=f"{user_input[CONF_DECLINATION]}° / {user_input[CONF_AZIMUTH]}° / {user_input[CONF_MODULES_POWER]}W",
-            )
+            ):
+                if not entry.update_listeners:
+                    self.hass.config_entries.async_schedule_reload(entry.entry_id)
+
+            return self.async_abort(reason="reconfigure_successful")
 
         return self.async_show_form(
             step_id="reconfigure",
