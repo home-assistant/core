@@ -208,7 +208,7 @@ def mock_subscriber_refresh() -> YieldFixture[None]:
     """Fixture for mocking subscriber refresh."""
     with patch(
         "homeassistant.components.nest.api.GoogleNestSubscriber._async_run_refresh",
-        return_value=AsyncMock(),
+        new=AsyncMock(),
     ):
         yield
 
