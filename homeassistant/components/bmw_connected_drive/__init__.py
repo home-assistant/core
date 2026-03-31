@@ -9,7 +9,7 @@ from homeassistant.helpers import issue_registry as ir
 DOMAIN = "bmw_connected_drive"
 
 
-async def async_setup_entry(hass: HomeAssistant, _: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up BMW Connected Drive from a config entry."""
     ir.async_create_issue(
         hass,
