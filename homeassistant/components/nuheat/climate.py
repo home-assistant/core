@@ -25,9 +25,8 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import NuHeatConfigEntry
 from .const import DOMAIN, MANUFACTURER, NUHEAT_API_STATE_SHIFT_DELAY
-from .coordinator import NuHeatCoordinator
+from .coordinator import NuHeatConfigEntry, NuHeatCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -59,11 +58,11 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the NuHeat thermostat(s)."""
-    thermostat = config_entry.runtime_data.thermostat
-    coordinator = config_entry.runtime_data.coordinator
+    coordinator = config_entry.runtime_data
 
     temperature_unit = hass.config.units.temperature_unit
-    entity = NuHeatThermostat(coordinator, thermostat, temperature_unit)
+
+    entity = NuHeatThermostat(coordinator, coordinator.thermostat, temperature_unit)
 
     # No longer need a service as set_hvac_mode to auto does this
     # since climate 1.0 has been implemented

@@ -1,32 +1,19 @@
 """Support for NuHeat thermostats."""
 
-from dataclasses import dataclass
 from http import HTTPStatus
 import logging
 
 import nuheat
 import requests
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 
 from .const import CONF_SERIAL_NUMBER, PLATFORMS
-from .coordinator import NuHeatCoordinator
+from .coordinator import NuHeatConfigEntry, NuHeatCoordinator
 
 _LOGGER = logging.getLogger(__name__)
-
-
-@dataclass
-class NuHeatData:
-    """NuHeat runtime data."""
-
-    thermostat: nuheat.NuHeatThermostat
-    coordinator: NuHeatCoordinator
-
-
-type NuHeatConfigEntry = ConfigEntry[NuHeatData]
 
 
 def _get_thermostat(api: nuheat.NuHeat, serial_number: str) -> nuheat.NuHeatThermostat:
@@ -64,9 +51,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: NuHeatConfigEntry) -> bo
         _LOGGER.error("Failed to login to nuheat: %s", ex)
         return False
 
-    coordinator = NuHeatCoordinator(hass, entry, thermostat)
-
-    entry.runtime_data = NuHeatData(thermostat=thermostat, coordinator=coordinator)
+    entry.runtime_data = NuHeatCoordinator(hass, entry, thermostat)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
