@@ -2,8 +2,11 @@
 
 import pytest
 
-from homeassistant.components.number import DOMAIN, SERVICE_SET_VALUE, intent as number_intent
-from homeassistant.const import STATE_UNKNOWN
+from homeassistant.components.number import (
+    DOMAIN,
+    SERVICE_SET_VALUE,
+    intent as number_intent,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import intent
 

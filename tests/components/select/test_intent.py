@@ -42,9 +42,7 @@ async def test_select_option_invalid(hass: HomeAssistant) -> None:
     await select_intent.async_setup_intents(hass)
 
     entity_id = f"{DOMAIN}.test_select"
-    hass.states.async_set(
-        entity_id, "option1", {ATTR_OPTIONS: ["option1", "option2"]}
-    )
+    hass.states.async_set(entity_id, "option1", {ATTR_OPTIONS: ["option1", "option2"]})
 
     with pytest.raises(intent.IntentHandleError) as exc_info:
         await intent.async_handle(

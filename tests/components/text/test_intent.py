@@ -2,7 +2,11 @@
 
 import pytest
 
-from homeassistant.components.text import DOMAIN, SERVICE_SET_VALUE, intent as text_intent
+from homeassistant.components.text import (
+    DOMAIN,
+    SERVICE_SET_VALUE,
+    intent as text_intent,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import intent
 

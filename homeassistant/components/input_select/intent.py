@@ -2,7 +2,11 @@
 
 from __future__ import annotations
 
-from homeassistant.components.select import ATTR_OPTION, ATTR_OPTIONS, SERVICE_SELECT_OPTION
+from homeassistant.components.select import (
+    ATTR_OPTION,
+    ATTR_OPTIONS,
+    SERVICE_SELECT_OPTION,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, intent
 

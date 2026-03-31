@@ -15,9 +15,7 @@ async def test_select_option(hass: HomeAssistant) -> None:
     await input_select_intent.async_setup_intents(hass)
 
     entity_id = f"{DOMAIN}.test_input_select"
-    hass.states.async_set(
-        entity_id, "red", {ATTR_OPTIONS: ["red", "green", "blue"]}
-    )
+    hass.states.async_set(entity_id, "red", {ATTR_OPTIONS: ["red", "green", "blue"]})
     calls = async_mock_service(hass, DOMAIN, SERVICE_SELECT_OPTION)
 
     response = await intent.async_handle(
@@ -38,9 +36,7 @@ async def test_select_option_invalid(hass: HomeAssistant) -> None:
     await input_select_intent.async_setup_intents(hass)
 
     entity_id = f"{DOMAIN}.test_input_select"
-    hass.states.async_set(
-        entity_id, "red", {ATTR_OPTIONS: ["red", "green", "blue"]}
-    )
+    hass.states.async_set(entity_id, "red", {ATTR_OPTIONS: ["red", "green", "blue"]})
 
     with pytest.raises(intent.IntentHandleError) as exc_info:
         await intent.async_handle(
