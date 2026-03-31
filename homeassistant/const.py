@@ -665,7 +665,6 @@ class UnitOfVolumeFlowRate(StrEnum):
     MILLILITERS_PER_SECOND = "mL/s"
 
 
-# Area units
 class UnitOfArea(StrEnum):
     """Area units."""
 
@@ -694,7 +693,6 @@ class UnitOfMass(StrEnum):
     STONES = "st"
 
 
-# Conductivity units
 class UnitOfConductivity(StrEnum):
     """Conductivity units."""
 
@@ -721,7 +719,6 @@ class UnitOfIrradiance(StrEnum):
     BTUS_PER_HOUR_SQUARE_FOOT = "BTU/(h⋅ft²)"
 
 
-# Volumetric flux units
 class UnitOfVolumetricFlux(StrEnum):
     """Volumetric flux, commonly used for precipitation intensity.
 
@@ -742,7 +739,6 @@ class UnitOfVolumetricFlux(StrEnum):
     """Derived from mm³/(mm²⋅h)"""
 
 
-# Precipitation depth units
 class UnitOfPrecipitationDepth(StrEnum):
     """Precipitation depth.
 
