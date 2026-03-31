@@ -39,6 +39,8 @@ from .const import (
     TRACKER_SCAN_INTERVAL,
 )
 
+type NmapTrackerConfigEntry = ConfigEntry[NmapDeviceScanner]
+
 # Some version of nmap will fail with 'Assertion failed: htn.toclock_running == true (Target.cc: stopTimeOutClock: 503)\n'
 NMAP_TRANSIENT_FAILURE: Final = "Assertion failed: htn.toclock_running == true"
 MAX_SCAN_ATTEMPTS: Final = 16
@@ -85,23 +87,25 @@ class NmapTrackedDevices:
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: NmapTrackerConfigEntry) -> bool:
     """Set up Nmap Tracker from a config entry."""
     domain_data = hass.data.setdefault(DOMAIN, {})
     devices = domain_data.setdefault(NMAP_TRACKED_DEVICES, NmapTrackedDevices())
-    scanner = domain_data[entry.entry_id] = NmapDeviceScanner(hass, entry, devices)
+    scanner = NmapDeviceScanner(hass, entry, devices)
     await scanner.async_setup()
+    entry.runtime_data = scanner
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(
+    hass: HomeAssistant, entry: NmapTrackerConfigEntry
+) -> bool:
     """Unload a config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
     if unload_ok:
         _async_untrack_devices(hass, entry)
-        hass.data[DOMAIN].pop(entry.entry_id)
 
     return unload_ok
 
