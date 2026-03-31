@@ -6,7 +6,7 @@
   },
   "services": {
     "set_value": {
-      "description": "Sets the value of a time.",
+      "description": "Sets the value of a time entity.",
       "fields": {
         "time": {
           "description": "The time to set.",
