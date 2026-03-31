@@ -64,7 +64,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: TISConfigEntry) -> bool:
         await tis_api.scan_devices()
     except (ConnectionError, OSError) as e:
         _LOGGER.error(
-            "Connection error occurred while scanning the network for devices %d: %s",
+            "Connection error occurred while scanning for devices on port %d: %s",
             entry.data[CONF_PORT],
             e,
         )
