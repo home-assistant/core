@@ -52,7 +52,6 @@ class SonosAlarms(SonosHouseholdCoordinator):
         for alarm_id, alarm in self.alarms.alarms.items():
             if alarm_id in self.created_alarm_ids:
                 continue
-            # If the speaker isn't created yet we may have a race condition.
             speaker = self.config_entry.runtime_data.discovered.get(alarm.zone.uid)
             if speaker:
                 async_dispatcher_send(
@@ -87,7 +86,7 @@ class SonosAlarms(SonosHouseholdCoordinator):
 
         if (
             self.last_processed_event_id
-            and self.alarms.last_id < self.last_processed_event_id
+            and self.alarms.last_id <= self.last_processed_event_id
         ):
             # Skip updates already processed
             return False
