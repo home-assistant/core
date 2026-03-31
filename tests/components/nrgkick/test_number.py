@@ -132,15 +132,15 @@ async def test_set_phase_count(
     mock_nrgkick_api.set_phase_count.assert_awaited_once_with(1)
 
 
-async def test_phase_count_ignores_transient_zero(
+async def test_phase_count_filters_transient_zero_on_poll(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_nrgkick_api: AsyncMock,
 ) -> None:
-    """Test that a transient phase count of 0 is ignored.
+    """Test that a transient phase count of 0 from a poll is filtered.
 
     During a phase-count switch the device briefly reports 0 phases.
-    The entity should keep the optimistic value instead of exposing 0.
+    A coordinator refresh must not expose the transient value.
     """
     await setup_integration(hass, mock_config_entry, platforms=[Platform.NUMBER])
 
@@ -149,15 +149,50 @@ async def test_phase_count_ignores_transient_zero(
     assert (state := hass.states.get(entity_id))
     assert state.state == "3"
 
-    # Simulate the device returning 0 during the phase switch triggered by
-    # the service call below.
+    # Device briefly reports 0 during a phase switch.
     control_data = mock_nrgkick_api.get_control.return_value.copy()
     control_data[CONTROL_KEY_PHASE_COUNT] = 0
     mock_nrgkick_api.get_control.return_value = control_data
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=30))
+    await hass.async_block_till_done()
 
-    # State is unchanged until the service call triggers a refresh.
+    # The transient 0 must not surface; state stays at the previous value.
     assert (state := hass.states.get(entity_id))
     assert state.state == "3"
+
+    # Once the device settles it reports the real phase count.
+    control_data = mock_nrgkick_api.get_control.return_value.copy()
+    control_data[CONTROL_KEY_PHASE_COUNT] = 1
+    mock_nrgkick_api.get_control.return_value = control_data
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=60))
+    await hass.async_block_till_done()
+
+    assert (state := hass.states.get(entity_id))
+    assert state.state == "1"
+
+
+async def test_phase_count_filters_transient_zero_on_service_call(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_nrgkick_api: AsyncMock,
+) -> None:
+    """Test that a service call keeps the cached value when refreshing returns 0.
+
+    When the user sets a new phase count, the immediate refresh triggered
+    by the service call may still see 0. The entity should keep the
+    requested value instead.
+    """
+    await setup_integration(hass, mock_config_entry, platforms=[Platform.NUMBER])
+
+    entity_id = "number.nrgkick_test_phase_count"
+
+    assert (state := hass.states.get(entity_id))
+    assert state.state == "3"
+
+    # The refresh triggered by the service call will see 0.
+    control_data = mock_nrgkick_api.get_control.return_value.copy()
+    control_data[CONTROL_KEY_PHASE_COUNT] = 0
+    mock_nrgkick_api.get_control.return_value = control_data
 
     await hass.services.async_call(
         NUMBER_DOMAIN,
@@ -167,7 +202,7 @@ async def test_phase_count_ignores_transient_zero(
     )
     mock_nrgkick_api.set_phase_count.assert_awaited_once_with(1)
 
-    # State must not show 0; the entity keeps the optimistic value.
+    # State must not show 0; the entity keeps the cached value.
     assert (state := hass.states.get(entity_id))
     assert state.state == "1"
 
