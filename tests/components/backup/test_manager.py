@@ -2021,6 +2021,9 @@ async def test_receive_backup(
         ("../traversal.tar", "traversal.tar"),
         ("../../etc/passwd", "passwd"),
         ("subdir/backup.tar", "backup.tar"),
+        (".", "backup.tar"),
+        ("..", "backup.tar"),
+        ("../..", "backup.tar"),
     ],
 )
 async def test_receive_backup_path_traversal(

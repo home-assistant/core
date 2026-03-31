@@ -1957,7 +1957,9 @@ class CoreBackupReaderWriter(BackupReaderWriter):
         suggested_filename: str,
     ) -> WrittenBackup:
         """Receive a backup."""
-        safe_filename = Path(suggested_filename).name or "backup.tar"
+        safe_filename = Path(suggested_filename).name
+        if not safe_filename or safe_filename == "..":
+            safe_filename = "backup.tar"
         temp_file = Path(self.temp_backup_dir, safe_filename)
 
         async_add_executor_job = self._hass.async_add_executor_job
