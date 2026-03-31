@@ -29,3 +29,22 @@ def deprecated_notify_action_call(
         translation_key="deprecated_notify_action",
         translation_placeholders={"action": action},
     )
+
+
+@callback
+def deprecated_dismiss_action_call(hass: HomeAssistant) -> None:
+    """Deprecated action call."""
+
+    async_create_issue(
+        hass,
+        DOMAIN,
+        "deprecated_dismiss_action",
+        breaks_in_ha_version="2026.11.0",
+        is_fixable=False,
+        severity=IssueSeverity.WARNING,
+        translation_key="deprecated_dismiss_action",
+        translation_placeholders={
+            "action": "html5.dismiss",
+            "new_action": "html5.dismiss_message",
+        },
+    )

@@ -60,7 +60,7 @@ from .const import (
     SERVICE_DISMISS,
 )
 from .entity import HTML5Entity, Registration
-from .issue import deprecated_notify_action_call
+from .issue import deprecated_dismiss_action_call, deprecated_notify_action_call
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -460,6 +460,9 @@ class HTML5NotificationService(BaseNotificationService):
 
         This method must be run in the event loop.
         """
+
+        deprecated_dismiss_action_call(self.hass)
+
         data: dict[str, Any] | None = kwargs.get(ATTR_DATA)
         tag: str = data.get(ATTR_TAG, "") if data else ""
         payload = {ATTR_TAG: tag, ATTR_DISMISS: True, ATTR_DATA: {}}
@@ -622,6 +625,11 @@ class HTML5NotifyEntity(HTML5Entity, NotifyEntity):
     async def send_push_notification(self, **kwargs: Any) -> None:
         """Send a message to a device via html5.send_message action."""
         await self._webpush(**kwargs)
+        self._async_record_notification()
+
+    async def dismiss_notification(self, tag: str = "") -> None:
+        """Dismiss a message via html5.dismiss_message action."""
+        await self._webpush(dismiss=True, tag=tag)
         self._async_record_notification()
 
     async def _webpush(

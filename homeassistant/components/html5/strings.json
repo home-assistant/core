@@ -49,6 +49,10 @@
     }
   },
   "issues": {
+    "deprecated_dismiss_action": {
+      "description": "The action `{action}` is deprecated and will be removed in a future release.\n\nPlease update your automations and scripts to use the notify entities with the `{new_action}` action instead.",
+      "title": "[%key:component::html5::issues::deprecated_notify_action::title%]"
+    },
     "deprecated_notify_action": {
       "description": "The action `{action}` is deprecated and will be removed in a future release.\n\nPlease update your automations and scripts to use the notify entities with the `notify.send_message` or `html5.send_message` actions instead.",
       "title": "Detected use of deprecated action {action}"
@@ -100,6 +104,16 @@
         }
       },
       "name": "Dismiss"
+    },
+    "dismiss_message": {
+      "description": "Dismisses one or more HTML5 notifications.",
+      "fields": {
+        "tag": {
+          "description": "The tag of the notifications to dismiss. If not specified, all notifications will be dismissed.",
+          "name": "Tag"
+        }
+      },
+      "name": "Dismiss message"
     },
     "send_message": {
       "description": "Sends a message via HTML5 Push Notifications",
