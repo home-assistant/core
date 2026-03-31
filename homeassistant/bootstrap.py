@@ -238,7 +238,7 @@ DEFAULT_INTEGRATIONS = {
     "timer",
     #
     # Base platforms:
-    *BASE_PLATFORMS,
+    *(BASE_PLATFORMS - {"calendar", "todo"}),
     #
     # Integrations providing triggers and conditions for base platforms:
     "air_quality",
