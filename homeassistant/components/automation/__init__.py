@@ -124,6 +124,7 @@ _EXPERIMENTAL_CONDITION_PLATFORMS = {
     "battery",
     "calendar",
     "climate",
+    "counter",
     "cover",
     "device_tracker",
     "door",
