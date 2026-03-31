@@ -103,6 +103,10 @@ class HomematicipGenericEntity(Entity):
         # Using channel_real_index ensures you reference the correct channel.
         self._channel_real_index: int | None = channel_real_index
 
+        if not feature_id:
+            raise ValueError(
+                f"feature_id must be a non-empty string, got {feature_id!r}"
+            )
         self._feature_id = feature_id
         self._is_multi_channel = is_multi_channel
         self.functional_channel = None

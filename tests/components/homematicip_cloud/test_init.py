@@ -3,7 +3,7 @@
 import ast
 from pathlib import Path
 from typing import Any
-from unittest.mock import AsyncMock, Mock, patch
+from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 from homematicip.exceptions.connection_exceptions import HmipConnectionError
 import pytest
@@ -16,6 +16,7 @@ from homeassistant.components.homematicip_cloud.const import (
     HMIPC_HAPID,
     HMIPC_NAME,
 )
+from homeassistant.components.homematicip_cloud.entity import HomematicipGenericEntity
 from homeassistant.components.homematicip_cloud.hap import HomematicipHAP
 from homeassistant.components.homematicip_cloud.migration import (
     UNIQUE_ID_MIGRATION_MAP,
@@ -571,3 +572,24 @@ async def test_unique_id_migration_round_trip(
     assert len(matched_classes) > 10, (
         f"Only matched {len(matched_classes)} classes: {sorted(matched_classes)}"
     )
+
+
+def test_entity_raises_on_empty_feature_id() -> None:
+    """Test that HomematicipGenericEntity raises ValueError for empty feature_id.
+
+    This verifies that feature_id is always explicitly set and cannot be
+    accidentally left empty, which would generate malformed unique IDs.
+    """
+    mock_hap = MagicMock()
+    mock_device = MagicMock()
+
+    with pytest.raises(ValueError, match="feature_id must be a non-empty string"):
+        HomematicipGenericEntity(
+            hap=mock_hap,
+            device=mock_device,
+            post="",
+            channel=1,
+            channel_real_index=1,
+            is_multi_channel=False,
+            feature_id="",
+        )
