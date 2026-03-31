@@ -9,8 +9,7 @@ from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import NZBGetConfigEntry
-from .coordinator import NZBGetDataUpdateCoordinator
+from .coordinator import NZBGetConfigEntry, NZBGetDataUpdateCoordinator
 from .entity import NZBGetEntity
 
 

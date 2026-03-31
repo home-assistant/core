@@ -16,8 +16,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.util.dt import utcnow
 
-from . import NZBGetConfigEntry
-from .coordinator import NZBGetDataUpdateCoordinator
+from .coordinator import NZBGetConfigEntry, NZBGetDataUpdateCoordinator
 from .entity import NZBGetEntity
 
 _LOGGER = logging.getLogger(__name__)
