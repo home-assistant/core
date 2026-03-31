@@ -490,6 +490,7 @@ def _async_get_full_entity_name(
     original_name: str | None,
     original_name_unprefixed: str | None | UndefinedType = UNDEFINED,
     overridden_name: str | None = None,
+    unprefix_name: bool = False,
     use_legacy_naming: bool = False,
 ) -> str:
     """Get full name for an entity.
@@ -521,6 +522,10 @@ def _async_get_full_entity_name(
                 if original_name_unprefixed is not None
                 else original_name
             )
+        elif unprefix_name:
+            unprefixed_name = _async_strip_prefix_from_entity_name(name, device_name)
+            if unprefixed_name is not None:
+                name = unprefixed_name
 
         if not name:
             name = device_name
@@ -1256,6 +1261,7 @@ class EntityRegistry(BaseRegistry):
             name=name,
             original_name=object_id_base,
             overridden_name=suggested_object_id,
+            unprefix_name=True,
         )
         return self.async_get_available_entity_id(
             domain,
