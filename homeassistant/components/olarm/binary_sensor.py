@@ -34,7 +34,7 @@ _LOGGER = logging.getLogger(__name__)
 class OlarmBinarySensorEntityDescription(BinarySensorEntityDescription):
     """Describes an Olarm binary sensor entity."""
 
-    value_fn: Callable[[OlarmDataUpdateCoordinator, int | None], bool]
+    value_fn: Callable[[dict, int | None], bool]
     name_fn: Callable[[int, str], str]
     unique_id_fn: Callable[[str, int], str]
 
@@ -43,30 +43,24 @@ class OlarmBinarySensorEntityDescription(BinarySensorEntityDescription):
 SENSOR_DESCRIPTIONS: dict[str, OlarmBinarySensorEntityDescription] = {
     "zone": OlarmBinarySensorEntityDescription(
         key="zone",
-        value_fn=lambda coord, index: (
-            coord.data is not None
-            and coord.data.device_state is not None
-            and coord.data.device_state.get("zones", [])[index] == "a"
+        value_fn=lambda device_state, index: (
+            device_state.get("zones", [])[index] == "a"
         ),
         name_fn=lambda index, label: f"Zone {index + 1:03} - {label}",
         unique_id_fn=lambda device_id, index: f"{device_id}.zone.{index}",
     ),
     "zone_bypass": OlarmBinarySensorEntityDescription(
         key="zone_bypass",
-        value_fn=lambda coord, index: (
-            coord.data is not None
-            and coord.data.device_state is not None
-            and coord.data.device_state.get("zones", [])[index] == "b"
+        value_fn=lambda device_state, index: (
+            device_state.get("zones", [])[index] == "b"
         ),
         name_fn=lambda index, label: f"Zone {index + 1:03} Bypass - {label}",
         unique_id_fn=lambda device_id, index: f"{device_id}.zone.bypass.{index}",
     ),
     "ac_power": OlarmBinarySensorEntityDescription(
         key="ac_power",
-        value_fn=lambda coord, _: (
-            coord.data is not None
-            and coord.data.device_state is not None
-            and coord.data.device_state.get("powerAC") == "ok"
+        value_fn=lambda device_state, _: (
+            device_state.get("powerAC") == "ok"
         ),
         name_fn=lambda index, label: f"{label}",
         unique_id_fn=lambda device_id, index: f"{device_id}.ac_power",
@@ -80,7 +74,6 @@ CLASS_MAP: dict[int, BinarySensorDeviceClass] = {
     21: BinarySensorDeviceClass.MOTION,
 }
 
-
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
@@ -88,10 +81,8 @@ async def async_setup_entry(
 ) -> None:
     """Add binary sensors for a config entry."""
 
-    # get coordinator
     coordinator = config_entry.runtime_data.coordinator
 
-    # load binary sensors
     sensors: list[OlarmBinarySensor] = []
     load_zone_sensors(coordinator, config_entry, sensors)
     load_ac_power_sensor(coordinator, config_entry, sensors)
@@ -132,16 +123,13 @@ def load_ac_power_sensor(
     sensors: list[OlarmBinarySensor],
 ) -> None:
     """Load AC power sensor."""
-    ac_power_state = (
-        "on" if coordinator.data.device_state.get("powerAC") == "ok" else "off"
-    )
     sensors.append(
         OlarmBinarySensor(
             coordinator,
             SENSOR_DESCRIPTIONS["ac_power"],
             config_entry.data["device_id"],
-            0,
-            ac_power_state,
+            -1,
+            coordinator.data.device_state.get("powerAC", ""),
             "AC Power",
             None,
         )
@@ -168,7 +156,6 @@ class OlarmBinarySensor(OlarmEntity, BinarySensorEntity):
         # Initialize base entity
         super().__init__(coordinator, device_id)
 
-        # store description
         self.entity_description = description
 
         # set attributes via description
@@ -200,7 +187,7 @@ class OlarmBinarySensor(OlarmEntity, BinarySensorEntity):
 
         # initialize state via description
         self._attr_is_on = self.entity_description.value_fn(
-            self.coordinator, self.sensor_index
+            self.coordinator.data.device_state, self.sensor_index
         )
 
     @callback
@@ -209,7 +196,6 @@ class OlarmBinarySensor(OlarmEntity, BinarySensorEntity):
         if not self.coordinator.data:
             return
 
-        # Extract the data from coordinator
         device_state = self.coordinator.data.device_state
 
         # Store the previous state to check if it changed
@@ -218,7 +204,7 @@ class OlarmBinarySensor(OlarmEntity, BinarySensorEntity):
         # compute state using description
         if device_state is not None:
             self._attr_is_on = self.entity_description.value_fn(
-                self.coordinator, self.sensor_index
+                device_state, self.sensor_index
             )
 
         # Only schedule state update if the state actually changed
