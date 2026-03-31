@@ -25,7 +25,7 @@ from .common import (
 def mock_get_state():
     """Mock get_state function."""
     with patch(
-        "homeassistant.components.tessie.coordinator.get_state",
+        "tesla_fleet_api.tessie.Vehicle.state",
         return_value=TEST_VEHICLE_STATE_ONLINE,
     ) as mock_get_state:
         yield mock_get_state
@@ -35,7 +35,7 @@ def mock_get_state():
 def mock_get_state_of_all_vehicles():
     """Mock get_state_of_all_vehicles function."""
     with patch(
-        "homeassistant.components.tessie.get_state_of_all_vehicles",
+        "tesla_fleet_api.tessie.Tessie.list_vehicles",
         return_value=TEST_STATE_OF_ALL_VEHICLES,
     ) as mock_get_state_of_all_vehicles:
         yield mock_get_state_of_all_vehicles
