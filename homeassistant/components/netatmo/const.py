@@ -57,6 +57,7 @@ NETATMO_CREATE_SENSOR = "netatmo_create_sensor"
 NETATMO_CREATE_SWITCH = "netatmo_create_switch"
 NETATMO_CREATE_WEATHER_BINARY_SENSOR = "netatmo_create_weather_binary_sensor"
 NETATMO_CREATE_WEATHER_SENSOR = "netatmo_create_weather_sensor"
+INTERNAL_SIGNAL_SCHEDULE_CHANGED = "netatmo_schedule_changed"
 
 CONF_AREA_NAME = "area_name"
 CONF_CLOUDHOOK_URL = "cloudhook_url"
