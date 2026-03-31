@@ -54,7 +54,7 @@ def async_get_scanner(hass: HomeAssistant) -> BleakScanner:
 
 @hass_callback
 def async_get_scanner_backend(hass: HomeAssistant) -> type[BaseBleakScanner]:
-    """Return a the type of our scanner wrapper.
+    """Return the type of our scanner wrapper.
 
     This is a wrapper type around our BaseBleakScanner singleton
     that allows multiple integrations to share the same scanner backend.
