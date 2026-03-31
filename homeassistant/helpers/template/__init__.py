@@ -1409,7 +1409,7 @@ def entity_name(hass: HomeAssistant, entity_id: str) -> str | None:
     """Get the name of an entity from its entity ID."""
     ent_reg = er.async_get(hass)
     if (entry := ent_reg.async_get(entity_id)) is not None:
-        return entry.name if entry.name is not None else entry.original_name
+        return er.async_get_unprefixed_name(hass, entry)
 
     # Fall back to state for entities without a unique_id (not in the registry)
     if (state := hass.states.get(entity_id)) is not None:
@@ -2027,8 +2027,7 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.filters["config_entry_id"] = self.globals["config_entry_id"]
 
         if limited:
-            # Only device_entities is available to limited templates, mark other
-            # functions and filters as unsupported.
+
             def unsupported(name: str) -> Callable[[], NoReturn]:
                 def warn_unsupported(*args: Any, **kwargs: Any) -> NoReturn:
                     raise TemplateError(
@@ -2038,8 +2037,6 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
                 return warn_unsupported
 
             hass_globals = [
-                "area_id",
-                "area_name",
                 "closest",
                 "distance",
                 "entity_name",
@@ -2054,12 +2051,14 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
                 "states",
             ]
             hass_filters = [
-                "area_id",
-                "area_name",
                 "closest",
                 "entity_name",
                 "expand",
                 "has_value",
+                "state_attr",
+                "state_attr_translated",
+                "state_translated",
+                "states",
             ]
             hass_tests = [
                 "has_value",
@@ -2072,7 +2071,7 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
             for filt in hass_filters:
                 self.filters[filt] = unsupported(filt)
             for test in hass_tests:
-                self.filters[test] = unsupported(test)
+                self.tests[test] = unsupported(test)
             return
 
         self.globals["closest"] = hassfunction(closest)

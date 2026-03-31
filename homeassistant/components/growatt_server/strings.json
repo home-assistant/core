@@ -579,7 +579,7 @@
       "message": "Growatt API error: {error}"
     },
     "device_not_configured": {
-      "message": "{device_type} device {serial_number} is not configured for services."
+      "message": "{device_type} device {serial_number} is not configured for actions."
     },
     "device_not_found": {
       "message": "Device {device_id} not found in the device registry."
@@ -591,22 +591,31 @@
       "message": "{batt_mode} is not a valid battery mode. Allowed values: {allowed_modes}."
     },
     "invalid_charge_power": {
-      "message": "charge_power must be between 0 and 100, got {value}."
+      "message": "'Charge power' must be between 0 and 100, got {value}."
     },
     "invalid_charge_stop_soc": {
-      "message": "charge_stop_soc must be between 0 and 100, got {value}."
+      "message": "'Charge stop SOC' must be between 0 and 100, got {value}."
     },
     "invalid_discharge_power": {
-      "message": "discharge_power must be between 0 and 100, got {value}."
+      "message": "'Discharge power' must be between 0 and 100, got {value}."
     },
     "invalid_discharge_stop_soc": {
-      "message": "discharge_stop_soc must be between 0 and 100, got {value}."
+      "message": "'Discharge stop SOC' must be between 0 and 100, got {value}."
     },
     "invalid_segment_id": {
-      "message": "segment_id must be between 1 and 9, got {segment_id}."
+      "message": "'Segment ID' must be between 1 and 9, got {segment_id}."
     },
-    "invalid_time_format": {
-      "message": "{field_name} must be in HH:MM or HH:MM:SS format."
+    "invalid_time_format_end_time": {
+      "message": "'End time' must be in HH:MM or HH:MM:SS format."
+    },
+    "invalid_time_format_period_end": {
+      "message": "'Period {period} end' must be in HH:MM or HH:MM:SS format."
+    },
+    "invalid_time_format_period_start": {
+      "message": "'Period {period} start' must be in HH:MM or HH:MM:SS format."
+    },
+    "invalid_time_format_start_time": {
+      "message": "'Start time' must be in HH:MM or HH:MM:SS format."
     },
     "no_devices_configured": {
       "message": "No {device_type} devices with token authentication are configured. Actions require {device_type} devices with V1 API access."
@@ -636,27 +645,27 @@
   },
   "services": {
     "read_ac_charge_times": {
-      "description": "Read AC charge time periods from an SPH device.",
+      "description": "Reads AC charge time periods from an SPH device.",
       "fields": {
         "device_id": {
-          "description": "The Growatt SPH device to read from.",
-          "name": "Device"
+          "description": "[%key:component::growatt_server::services::read_time_segments::fields::device_id::description%]",
+          "name": "[%key:component::growatt_server::services::read_time_segments::fields::device_id::name%]"
         }
       },
       "name": "Read AC charge times"
     },
     "read_ac_discharge_times": {
-      "description": "Read AC discharge time periods from an SPH device.",
+      "description": "Reads AC discharge time periods from an SPH device.",
       "fields": {
         "device_id": {
-          "description": "[%key:component::growatt_server::services::read_ac_charge_times::fields::device_id::description%]",
-          "name": "[%key:component::growatt_server::services::read_ac_charge_times::fields::device_id::name%]"
+          "description": "[%key:component::growatt_server::services::read_time_segments::fields::device_id::description%]",
+          "name": "[%key:component::growatt_server::services::read_time_segments::fields::device_id::name%]"
         }
       },
       "name": "Read AC discharge times"
     },
     "read_time_segments": {
-      "description": "Read all time segments from a supported inverter.",
+      "description": "Reads all time segments from a supported inverter.",
       "fields": {
         "device_id": {
           "description": "The Growatt device to perform the action on.",
@@ -666,7 +675,7 @@
       "name": "Read time segments"
     },
     "update_time_segment": {
-      "description": "Update a time segment for supported inverters.",
+      "description": "Updates a time segment for supported inverters.",
       "fields": {
         "batt_mode": {
           "description": "Battery operation mode for this time segment.",
@@ -696,7 +705,7 @@
       "name": "Update time segment"
     },
     "write_ac_charge_times": {
-      "description": "Write AC charge time periods to an SPH device.",
+      "description": "Writes AC charge time periods to an SPH device.",
       "fields": {
         "charge_power": {
           "description": "Charge power limit (%).",
@@ -707,8 +716,8 @@
           "name": "Charge stop SOC"
         },
         "device_id": {
-          "description": "[%key:component::growatt_server::services::read_ac_charge_times::fields::device_id::description%]",
-          "name": "[%key:component::growatt_server::services::read_ac_charge_times::fields::device_id::name%]"
+          "description": "[%key:component::growatt_server::services::read_time_segments::fields::device_id::description%]",
+          "name": "[%key:component::growatt_server::services::read_time_segments::fields::device_id::name%]"
         },
         "mains_enabled": {
           "description": "Enable AC (mains) charging.",
@@ -754,11 +763,11 @@
       "name": "Write AC charge times"
     },
     "write_ac_discharge_times": {
-      "description": "Write AC discharge time periods to an SPH device.",
+      "description": "Writes AC discharge time periods to an SPH device.",
       "fields": {
         "device_id": {
-          "description": "[%key:component::growatt_server::services::read_ac_charge_times::fields::device_id::description%]",
-          "name": "[%key:component::growatt_server::services::read_ac_charge_times::fields::device_id::name%]"
+          "description": "[%key:component::growatt_server::services::read_time_segments::fields::device_id::description%]",
+          "name": "[%key:component::growatt_server::services::read_time_segments::fields::device_id::name%]"
         },
         "discharge_power": {
           "description": "Discharge power limit (%).",

@@ -85,6 +85,9 @@
       "robot_cleaner_dust_bag": {
         "name": "Dust bag full"
       },
+      "stick_cleaner_dust_bag": {
+        "name": "[%key:component::smartthings::entity::binary_sensor::robot_cleaner_dust_bag::name%]"
+      },
       "stick_cleaner_status": {
         "name": "Stick cleaner in station"
       },
@@ -836,6 +839,22 @@
           "tested": "[%key:component::smartthings::entity::sensor::carbon_monoxide_detector::state::tested%]"
         }
       },
+      "stick_cleaner_dust_bag_usage": {
+        "name": "Dust bag cycles",
+        "unit_of_measurement": "cycles"
+      },
+      "stick_cleaner_dustbin_last_emptied": {
+        "name": "Last emptied"
+      },
+      "stick_cleaner_operating_state": {
+        "state": {
+          "emptying_dustbin": "Emptying dustbin",
+          "ready": "[%key:component::smartthings::entity::sensor::oven_machine_state::state::ready%]",
+          "using_vacuum": "Using vacuum",
+          "uv_cleaning": "UV cleaning",
+          "uv_paused": "UV paused"
+        }
+      },
       "thermostat_cooling_setpoint": {
         "name": "Cooling setpoint"
       },
@@ -964,6 +983,9 @@
       },
       "dry_plus": {
         "name": "Dry plus"
+      },
+      "empty_dustbin": {
+        "name": "Empty dustbin"
       },
       "heated_dry": {
         "name": "Heated dry"

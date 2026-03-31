@@ -59,17 +59,14 @@ rules:
     status: exempt
     comment: |
       No data updates.
-  docs-examples:
-    status: todo
-    comment: |
-      To give examples of how people use the integration
+  docs-examples: done
   docs-known-limitations: done
   docs-supported-devices:
     status: todo
     comment: |
       To write something about what models we support.
   docs-supported-functions: done
-  docs-troubleshooting: todo
+  docs-troubleshooting: done
   docs-use-cases: done
   dynamic-devices:
     status: exempt
@@ -88,7 +85,7 @@ rules:
     comment: |
       No entities disabled by default.
   entity-translations: todo
-  exception-translations: todo
+  exception-translations: done
   icon-translations: done
   reconfiguration-flow: done
   repair-issues: done

@@ -5,14 +5,12 @@ from typing import TYPE_CHECKING
 import voluptuous as vol
 
 from homeassistant.components.input_text import DOMAIN as INPUT_TEXT_DOMAIN
-from homeassistant.const import CONF_OPTIONS, CONF_TARGET
+from homeassistant.const import CONF_OPTIONS
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.automation import DomainSpec
 from homeassistant.helpers.condition import (
-    ATTR_BEHAVIOR,
-    BEHAVIOR_ALL,
-    BEHAVIOR_ANY,
+    ENTITY_STATE_CONDITION_SCHEMA_ANY_ALL,
     Condition,
     ConditionConfig,
     EntityConditionBase,
@@ -22,13 +20,9 @@ from .const import DOMAIN
 
 CONF_VALUE = "value"
 
-_TEXT_CONDITION_SCHEMA = vol.Schema(
+_TEXT_CONDITION_SCHEMA = ENTITY_STATE_CONDITION_SCHEMA_ANY_ALL.extend(
     {
-        vol.Required(CONF_TARGET): cv.TARGET_FIELDS,
         vol.Required(CONF_OPTIONS): {
-            vol.Required(ATTR_BEHAVIOR, default=BEHAVIOR_ANY): vol.In(
-                [BEHAVIOR_ANY, BEHAVIOR_ALL]
-            ),
             vol.Required(CONF_VALUE): cv.string,
         },
     }

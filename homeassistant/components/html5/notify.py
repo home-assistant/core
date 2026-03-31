@@ -8,7 +8,7 @@ from http import HTTPStatus
 import json
 import logging
 import time
-from typing import TYPE_CHECKING, Any, NotRequired, TypedDict, cast
+from typing import TYPE_CHECKING, Any, cast
 from urllib.parse import urlparse
 import uuid
 
@@ -38,7 +38,7 @@ from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
+from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.json import save_json
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
@@ -46,16 +46,23 @@ from homeassistant.util import ensure_unique_string
 from homeassistant.util.json import load_json_object
 
 from .const import (
+    ATTR_ACTION,
+    ATTR_ACTIONS,
+    ATTR_REQUIRE_INTERACTION,
+    ATTR_TAG,
+    ATTR_TIMESTAMP,
+    ATTR_TTL,
     ATTR_VAPID_EMAIL,
     ATTR_VAPID_PRV_KEY,
     ATTR_VAPID_PUB_KEY,
     DOMAIN,
+    REGISTRATIONS_FILE,
     SERVICE_DISMISS,
 )
+from .entity import HTML5Entity, Registration
+from .issue import deprecated_notify_action_call
 
 _LOGGER = logging.getLogger(__name__)
-
-REGISTRATIONS_FILE = "html5_push_registrations.conf"
 
 
 ATTR_SUBSCRIPTION = "subscription"
@@ -67,15 +74,11 @@ ATTR_AUTH = "auth"
 ATTR_P256DH = "p256dh"
 ATTR_EXPIRATIONTIME = "expirationTime"
 
-ATTR_TAG = "tag"
-ATTR_ACTION = "action"
-ATTR_ACTIONS = "actions"
 ATTR_TYPE = "type"
 ATTR_URL = "url"
 ATTR_DISMISS = "dismiss"
 ATTR_PRIORITY = "priority"
 DEFAULT_PRIORITY = "normal"
-ATTR_TTL = "ttl"
 DEFAULT_TTL = 86400
 
 DEFAULT_BADGE = "/static/images/notification-badge.png"
@@ -154,29 +157,6 @@ HTML5_SHOWNOTIFICATION_PARAMETERS = (
     "vibrate",
     "silent",
 )
-
-
-class Keys(TypedDict):
-    """Types for keys."""
-
-    p256dh: str
-    auth: str
-
-
-class Subscription(TypedDict):
-    """Types for subscription."""
-
-    endpoint: str
-    expirationTime: int | None
-    keys: Keys
-
-
-class Registration(TypedDict):
-    """Types for registration."""
-
-    subscription: Subscription
-    browser: str
-    name: NotRequired[str]
 
 
 async def async_get_service(
@@ -419,7 +399,15 @@ class HTML5PushCallbackView(HomeAssistantView):
             )
 
         event_name = f"{NOTIFY_CALLBACK_EVENT}.{event_payload[ATTR_TYPE]}"
-        request.app[KEY_HASS].bus.fire(event_name, event_payload)
+        hass = request.app[KEY_HASS]
+        hass.bus.fire(event_name, event_payload)
+        async_dispatcher_send(
+            hass,
+            DOMAIN,
+            event_payload[ATTR_TARGET],
+            event_payload[ATTR_TYPE],
+            event_payload,
+        )
         return self.json({"status": "ok", "event": event_payload[ATTR_TYPE]})
 
 
@@ -480,6 +468,9 @@ class HTML5NotificationService(BaseNotificationService):
 
     async def async_send_message(self, message: str = "", **kwargs: Any) -> None:
         """Send a message to a user."""
+
+        deprecated_notify_action_call(self.hass, kwargs.get(ATTR_TARGET))
+
         tag = str(uuid.uuid4())
         payload: dict[str, Any] = {
             "badge": DEFAULT_BADGE,
@@ -613,65 +604,60 @@ async def async_setup_entry(
     )
 
 
-class HTML5NotifyEntity(NotifyEntity):
+class HTML5NotifyEntity(HTML5Entity, NotifyEntity):
     """Representation of a notification entity."""
 
-    _attr_has_entity_name = True
-    _attr_name = None
-
     _attr_supported_features = NotifyEntityFeature.TITLE
-
-    def __init__(
-        self,
-        config_entry: ConfigEntry,
-        target: str,
-        registrations: dict[str, Registration],
-        session: ClientSession,
-        json_path: str,
-    ) -> None:
-        """Initialize the entity."""
-        self.config_entry = config_entry
-        self.target = target
-        self.registrations = registrations
-        self.registration = registrations[target]
-        self.session = session
-        self.json_path = json_path
-
-        self._attr_unique_id = f"{config_entry.entry_id}_{target}_device"
-        self._attr_device_info = DeviceInfo(
-            entry_type=DeviceEntryType.SERVICE,
-            name=target,
-            model=self.registration["browser"].capitalize(),
-            identifiers={(DOMAIN, f"{config_entry.entry_id}_{target}")},
-        )
+    _key = "device"
 
     async def async_send_message(self, message: str, title: str | None = None) -> None:
-        """Send a message to a device."""
-        timestamp = int(time.time())
-        tag = str(uuid.uuid4())
+        """Send a message to a device via notify.send_message action."""
+        await self._webpush(
+            title=title or ATTR_TITLE_DEFAULT,
+            message=message,
+            badge=DEFAULT_BADGE,
+            icon=DEFAULT_ICON,
+        )
 
-        payload: dict[str, Any] = {
-            "badge": DEFAULT_BADGE,
-            "body": message,
-            "icon": DEFAULT_ICON,
-            ATTR_TAG: tag,
-            ATTR_TITLE: title or ATTR_TITLE_DEFAULT,
-            "timestamp": timestamp * 1000,
-            ATTR_DATA: {
-                ATTR_JWT: add_jwt(
-                    timestamp,
-                    self.target,
-                    tag,
-                    self.registration["subscription"]["keys"]["auth"],
-                )
-            },
-        }
+    async def send_push_notification(self, **kwargs: Any) -> None:
+        """Send a message to a device via html5.send_message action."""
+        await self._webpush(**kwargs)
+        self._async_record_notification()
+
+    async def _webpush(
+        self,
+        message: str | None = None,
+        timestamp: datetime | None = None,
+        ttl: timedelta | None = None,
+        urgency: str | None = None,
+        **kwargs: Any,
+    ) -> None:
+        """Shared internal helper to push messages."""
+        payload: dict[str, Any] = kwargs
+
+        if message is not None:
+            payload["body"] = message
+
+        payload.setdefault(ATTR_TAG, str(uuid.uuid4()))
+        ts = int(timestamp.timestamp()) if timestamp else int(time.time())
+        payload[ATTR_TIMESTAMP] = ts * 1000
+
+        if ATTR_REQUIRE_INTERACTION in payload:
+            payload["requireInteraction"] = payload.pop(ATTR_REQUIRE_INTERACTION)
+
+        payload.setdefault(ATTR_DATA, {})
+        payload[ATTR_DATA][ATTR_JWT] = add_jwt(
+            ts,
+            self.target,
+            payload[ATTR_TAG],
+            self.registration["subscription"]["keys"]["auth"],
+        )
 
         endpoint = urlparse(self.registration["subscription"]["endpoint"])
         vapid_claims = {
             "sub": f"mailto:{self.config_entry.data[ATTR_VAPID_EMAIL]}",
             "aud": f"{endpoint.scheme}://{endpoint.netloc}",
-            "exp": timestamp + (VAPID_CLAIM_VALID_HOURS * 60 * 60),
+            "exp": ts + (VAPID_CLAIM_VALID_HOURS * 60 * 60),
         }
 
         try:
@@ -680,6 +666,8 @@ class HTML5NotifyEntity(NotifyEntity):
                 json.dumps(payload),
                 self.config_entry.data[ATTR_VAPID_PRV_KEY],
                 vapid_claims,
+                ttl=int(ttl.total_seconds()) if ttl is not None else DEFAULT_TTL,
+                headers={"Urgency": urgency} if urgency else None,
                 aiohttp_session=self.session,
             )
             cast(ClientResponse, response).raise_for_status()
@@ -714,8 +702,3 @@ class HTML5NotifyEntity(NotifyEntity):
                 translation_key="connection_error",
                 translation_placeholders={"target": self.target},
             ) from e
-
-    @property
-    def available(self) -> bool:
-        """Return True if entity is available."""
-        return super().available and self.target in self.registrations

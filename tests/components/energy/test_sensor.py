@@ -203,7 +203,7 @@ async def test_cost_sensor_price_entity_total_increasing(
     def _compile_statistics(_):
         with session_scope(hass=hass) as session:
             return compile_statistics(
-                hass, session, now, now + timedelta(seconds=1)
+                hass, session, now, now + timedelta(seconds=1), {}
             ).platform_stats
 
     energy_attributes = {
@@ -423,7 +423,7 @@ async def test_cost_sensor_price_entity_total(
     def _compile_statistics(_):
         with session_scope(hass=hass) as session:
             return compile_statistics(
-                hass, session, now, now + timedelta(seconds=0.17)
+                hass, session, now, now + timedelta(seconds=0.17), {}
             ).platform_stats
 
     energy_attributes = {
@@ -645,7 +645,7 @@ async def test_cost_sensor_price_entity_total_no_reset(
     def _compile_statistics(_):
         with session_scope(hass=hass) as session:
             return compile_statistics(
-                hass, session, now, now + timedelta(seconds=1)
+                hass, session, now, now + timedelta(seconds=1), {}
             ).platform_stats
 
     energy_attributes = {
