@@ -33,6 +33,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers.service_info.ssdp import SsdpServiceInfo
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
@@ -337,3 +338,50 @@ async def test_alarm_change_device(
     alarm_14 = entity_registry.async_get(entity_id)
     device = device_registry.async_get(alarm_14.device_id)
     assert device.name == soco_br.get_speaker_info()["zone_name"]
+
+
+async def test_alarm_setup(
+    hass: HomeAssistant,
+    async_setup_sonos,
+    soco,
+    alarm_clock,
+    alarm_clock_extended,
+    alarm_event,
+    entity_registry: er.EntityRegistry,
+    soco_factory: SoCoMockFactory,
+) -> None:
+    """Test for correct creation and deletion of alarms during runtime."""
+    one_alarm = copy(alarm_clock.ListAlarms.return_value)
+    alarm_list = one_alarm["CurrentAlarmList"]
+    alarm_list = alarm_list.replace("RINCON_test", "RINCON_test_10.10.10.2")
+    one_alarm["CurrentAlarmList"] = alarm_list
+    alarm_clock.ListAlarms.return_value = one_alarm
+
+    # Do not add the new speaker yet
+    await async_setup_sonos()
+
+    assert "switch.sonos_alarm_14" not in entity_registry.entities
+
+    # Now add the new speaker and simulate discovery
+    # Simulate SSDP discovery event for the new speaker
+    soco_bedroom = soco_factory.cache_mock(MockSoCo(), "10.10.10.2", "Bedroom")
+    manager = hass.data.get(DATA_SONOS_DISCOVERY_MANAGER)
+    ssdp_info = SsdpServiceInfo(
+        ssdp_location=f"http://{soco_bedroom.ip_address}/",
+        ssdp_st="urn:schemas-upnp-org:device:ZonePlayer:1",
+        ssdp_usn=f"uuid:{soco_bedroom.uid}_MR::urn:schemas-upnp-org:service:GroupRenderingControl:1",
+        upnp={"UDN": f"uuid:{soco_bedroom.uid}"},
+    )
+    # The signature for async_discovered_player is (source, info, discovered_ip, uid, boot_seqnum, model, mdns_name)
+    manager.async_discovered_player(
+        source="ssdp",
+        info=ssdp_info,
+        discovered_ip=soco_bedroom.ip_address,
+        uid=soco_bedroom.uid,
+        boot_seqnum=None,
+        model="Sonos One",
+        mdns_name=None,
+    )
+
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert "switch.sonos_alarm_14" in entity_registry.entities
