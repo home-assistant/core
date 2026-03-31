@@ -13,7 +13,7 @@ from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import NukiConfigEntry
+from .coordinator import NukiConfigEntry
 from .entity import NukiEntity
 
 

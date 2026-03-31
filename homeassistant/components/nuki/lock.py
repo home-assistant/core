@@ -16,8 +16,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import NukiConfigEntry
 from .const import ATTR_ENABLE, ATTR_UNLATCH, ERROR_STATES
+from .coordinator import NukiConfigEntry
 from .entity import NukiEntity
 from .helpers import CannotConnect
 

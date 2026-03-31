@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import asyncio
-from dataclasses import dataclass
 from http import HTTPStatus
 import logging
 
@@ -14,7 +13,6 @@ from requests.exceptions import RequestException
 
 from homeassistant import exceptions
 from homeassistant.components import webhook
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_HOST,
     CONF_PORT,
@@ -28,24 +26,12 @@ from homeassistant.helpers.network import NoURLAvailableError, get_url
 from homeassistant.helpers.update_coordinator import UpdateFailed
 
 from .const import CONF_ENCRYPT_TOKEN, DEFAULT_TIMEOUT, DOMAIN
-from .coordinator import NukiCoordinator
+from .coordinator import NukiConfigEntry, NukiCoordinator, NukiEntryData
 from .helpers import NukiWebhookException, parse_id
 
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS = [Platform.BINARY_SENSOR, Platform.LOCK, Platform.SENSOR]
-
-type NukiConfigEntry = ConfigEntry[NukiEntryData]
-
-
-@dataclass(slots=True)
-class NukiEntryData:
-    """Class to hold Nuki data."""
-
-    coordinator: NukiCoordinator
-    bridge: NukiBridge
-    locks: list[NukiLock]
-    openers: list[NukiOpener]
 
 
 def _get_bridge_devices(bridge: NukiBridge) -> tuple[list[NukiLock], list[NukiOpener]]:
