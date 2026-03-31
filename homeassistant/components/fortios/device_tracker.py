@@ -93,7 +93,7 @@ class FortiOSDeviceScanner(
             "hardware_type": device.get("hardware_type", ""),
             "hardware_version": device.get("hardware_version", ""),
             "hardware_family": device.get("hardware_family", ""),
-            "is_online": device.get("is_online", ""),
+            "is_online": device.get("is_online", False),
         }
         super()._handle_coordinator_update()
 
