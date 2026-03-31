@@ -5,6 +5,7 @@
       'friendly_name': 'player-name1111',
       'group_members': None,
       'is_volume_muted': False,
+      'last_non_buffering_state': <MediaPlayerState.PLAYING: 'playing'>,
       'master': False,
       'media_album_name': 'album',
       'media_artist': 'artist',

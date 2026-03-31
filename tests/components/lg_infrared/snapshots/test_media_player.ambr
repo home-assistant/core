@@ -43,6 +43,7 @@
       'assumed_state': True,
       'device_class': 'tv',
       'friendly_name': 'LG TV',
+      'last_non_buffering_state': <MediaPlayerState.ON: 'on'>,
       'supported_features': <MediaPlayerEntityFeature: 21945>,
     }),
     'context': <ANY>,
