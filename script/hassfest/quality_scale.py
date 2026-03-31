@@ -62,18 +62,14 @@ ALL_RULES = [
     Rule("unique-config-entry", ScaledQualityScaleTiers.BRONZE, unique_config_entry),
     # SILVER
     Rule("action-exceptions", ScaledQualityScaleTiers.SILVER),
-    Rule(
-        "config-entry-unloading", ScaledQualityScaleTiers.SILVER, config_entry_unloading
-    ),
+    Rule("config-entry-unloading", ScaledQualityScaleTiers.SILVER, config_entry_unloading),
     Rule("docs-configuration-parameters", ScaledQualityScaleTiers.SILVER),
     Rule("docs-installation-parameters", ScaledQualityScaleTiers.SILVER),
     Rule("entity-unavailable", ScaledQualityScaleTiers.SILVER),
     Rule("integration-owner", ScaledQualityScaleTiers.SILVER),
     Rule("log-when-unavailable", ScaledQualityScaleTiers.SILVER),
     Rule("parallel-updates", ScaledQualityScaleTiers.SILVER, parallel_updates),
-    Rule(
-        "reauthentication-flow", ScaledQualityScaleTiers.SILVER, reauthentication_flow
-    ),
+    Rule("reauthentication-flow", ScaledQualityScaleTiers.SILVER, reauthentication_flow),
     Rule("test-coverage", ScaledQualityScaleTiers.SILVER),
     # GOLD: [
     Rule("devices", ScaledQualityScaleTiers.GOLD),
@@ -104,8 +100,7 @@ ALL_RULES = [
 ]
 
 SCALE_RULES = {
-    tier: [rule.name for rule in ALL_RULES if rule.tier == tier]
-    for tier in ScaledQualityScaleTiers
+    tier: [rule.name for rule in ALL_RULES if rule.tier == tier] for tier in ScaledQualityScaleTiers
 }
 
 VALIDATORS = {rule.name: rule.validator for rule in ALL_RULES if rule.validator}
@@ -707,6 +702,7 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "opentherm_gw",
     "openuv",
     "openweathermap",
+    "opnsense",
     "opple",
     "oralb",
     "oru",
@@ -1695,6 +1691,7 @@ INTEGRATIONS_WITHOUT_SCALE = [
     "opentherm_gw",
     "openuv",
     "openweathermap",
+    "opnsense",
     "opple",
     "oralb",
     "oru",
@@ -2235,20 +2232,14 @@ def validate_iqs_file(config: Config, integration: Integration) -> None:
             " in script/hassfest/quality_scale.py",
         )
         return
-    if (
-        integration.domain in INTEGRATIONS_WITHOUT_SCALE
-        and declared_quality_scale is not None
-    ):
+    if integration.domain in INTEGRATIONS_WITHOUT_SCALE and declared_quality_scale is not None:
         integration.add_error(
             "quality_scale",
             "This integration is graded and should be removed from `INTEGRATIONS_WITHOUT_SCALE`"
             " in script/hassfest/quality_scale.py",
         )
         return
-    if (
-        integration.domain not in INTEGRATIONS_WITHOUT_SCALE
-        and declared_quality_scale is None
-    ):
+    if integration.domain not in INTEGRATIONS_WITHOUT_SCALE and declared_quality_scale is None:
         integration.add_error(
             "quality_scale",
             (
@@ -2269,9 +2260,7 @@ def validate_iqs_file(config: Config, integration: Integration) -> None:
     try:
         SCHEMA(data)
     except vol.Invalid as err:
-        integration.add_error(
-            "quality_scale", f"Invalid {name}: {humanize_error(data, err)}"
-        )
+        integration.add_error("quality_scale", f"Invalid {name}: {humanize_error(data, err)}")
 
     rules_done = set[str]()
     rules_met = set[str]()
@@ -2301,9 +2290,7 @@ def validate_iqs_file(config: Config, integration: Integration) -> None:
             break
         required_rules = set(SCALE_RULES[scale])
         if missing_rules := (required_rules - rules_met):
-            friendly_rule_str = "\n".join(
-                f"  {rule}: todo" for rule in sorted(missing_rules)
-            )
+            friendly_rule_str = "\n".join(f"  {rule}: todo" for rule in sorted(missing_rules))
             integration.add_error(
                 "quality_scale",
                 f"Quality scale tier {scale.name.lower()} requires quality scale rules to be met:\n{friendly_rule_str}",
