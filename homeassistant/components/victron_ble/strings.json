@@ -145,7 +145,7 @@
           "input_current": "Input overcurrent",
           "input_power": "Input overpower",
           "input_shutdown_current": "Input shutdown (current flow during off mode)",
-          "input_shutdown_failure": "PV input failed to shutdown",
+          "input_shutdown_failure": "PV input shutdown failed",
           "input_shutdown_voltage": "Input shutdown (battery overvoltage)",
           "input_voltage": "Input overvoltage",
           "internal_dc_voltage": "Internal DC voltage error",
