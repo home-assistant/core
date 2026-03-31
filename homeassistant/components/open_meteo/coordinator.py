@@ -66,7 +66,7 @@ class OpenMeteoDataUpdateCoordinator(DataUpdateCoordinator[Forecast]):
                 ],
                 precipitation_unit=PrecipitationUnit.MILLIMETERS,
                 temperature_unit=TemperatureUnit.CELSIUS,
-                timezone="UTC",
+                timezone="auto",
                 wind_speed_unit=WindSpeedUnit.KILOMETERS_PER_HOUR,
             )
         except OpenMeteoError as err:

@@ -13,6 +13,22 @@ from homeassistant.core import HomeAssistant
 from tests.common import MockConfigEntry
 
 
+async def test_forecast_called_with_auto_timezone(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_open_meteo: MagicMock,
+) -> None:
+    """Test that the forecast API is called with timezone='auto'."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert mock_open_meteo.forecast.call_count == 1
+    call_kwargs = mock_open_meteo.forecast.call_args.kwargs
+    assert call_kwargs["timezone"] == "auto"
+
+
 async def test_load_unload_config_entry(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
