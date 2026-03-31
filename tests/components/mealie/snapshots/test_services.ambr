@@ -18,9 +18,9 @@
           'prep_time': None,
           'rating': None,
           'recipe_id': 'e82f5449-c33b-437c-b712-337587199264',
-          'recipe_servings': None,
-          'recipe_yield': None,
-          'recipe_yield_quantity': None,
+          'recipe_servings': 4.0,
+          'recipe_yield': '4 servings',
+          'recipe_yield_quantity': 4.0,
           'slug': 'tu6y',
           'tags': list([
           ]),
@@ -91,7 +91,7 @@
           'rating': None,
           'recipe_id': '98845807-9365-41fd-acd1-35630b468c27',
           'recipe_servings': None,
-          'recipe_yield': '',
+          'recipe_yield': None,
           'recipe_yield_quantity': None,
           'slug': 'sweet-potatoes',
           'tags': list([
@@ -1647,9 +1647,9 @@
           'prep_time': None,
           'rating': None,
           'recipe_id': 'e82f5449-c33b-437c-b712-337587199264',
-          'recipe_servings': None,
-          'recipe_yield': None,
-          'recipe_yield_quantity': None,
+          'recipe_servings': 4.0,
+          'recipe_yield': '4 servings',
+          'recipe_yield_quantity': 4.0,
           'slug': 'tu6y',
           'tags': list([
           ]),
@@ -1720,7 +1720,7 @@
           'rating': None,
           'recipe_id': '98845807-9365-41fd-acd1-35630b468c27',
           'recipe_servings': None,
-          'recipe_yield': '',
+          'recipe_yield': None,
           'recipe_yield_quantity': None,
           'slug': 'sweet-potatoes',
           'tags': list([
