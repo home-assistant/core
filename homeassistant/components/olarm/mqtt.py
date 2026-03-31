@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import functools
 import logging
 from typing import Any, Literal
 
@@ -64,8 +65,11 @@ class OlarmFlowClientMQTT:
         elif status == "connected":
             _LOGGER.debug("MQTT connected to Olarm service")
             # Clear any disconnection repair issues
-            ir.async_delete_issue(
-                self._hass, DOMAIN, f"mqtt_disconnected_{self.device_id}"
+            self._hass.loop.call_soon_threadsafe(
+                ir.async_delete_issue,
+                self._hass,
+                DOMAIN,
+                f"mqtt_disconnected_{self.device_id}",
             )
         elif status == "disconnected":
             reason = info.get("reason", "Unknown reason")
@@ -75,14 +79,17 @@ class OlarmFlowClientMQTT:
                 self._coordinator.async_ensure_token_valid(), self._hass.loop
             )
             # Create repair issue for disconnection
-            ir.async_create_issue(
-                self._hass,
-                DOMAIN,
-                f"mqtt_disconnected_{self.device_id}",
-                is_fixable=False,
-                severity=ir.IssueSeverity.ERROR,
-                translation_key="mqtt_disconnected",
-                translation_placeholders={"reason": reason},
+            self._hass.loop.call_soon_threadsafe(
+                functools.partial(
+                    ir.async_create_issue,
+                    self._hass,
+                    DOMAIN,
+                    f"mqtt_disconnected_{self.device_id}",
+                    is_fixable=False,
+                    severity=ir.IssueSeverity.ERROR,
+                    translation_key="mqtt_disconnected",
+                    translation_placeholders={"reason": reason},
+                )
             )
         elif status == "reconnecting":
             reason = info.get("reason", "Unknown reason")
