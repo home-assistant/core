@@ -46,6 +46,7 @@
         'media_player.zone_a',
       ]),
       'is_volume_muted': False,
+      'last_non_buffering_state': <MediaPlayerState.IDLE: 'idle'>,
       'media_content_type': <MediaType.MUSIC: 'music'>,
       'repeat': <RepeatMode.OFF: 'off'>,
       'shuffle': False,
