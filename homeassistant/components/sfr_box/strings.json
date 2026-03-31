@@ -53,8 +53,8 @@
       "voip_hook_status": {
         "name": "VoIP phone hook status",
         "state": {
-          "off": "Onhook",
-          "on": "Offhook"
+          "off": "On-hook",
+          "on": "Off-hook"
         }
       },
       "voip_status": {
@@ -129,9 +129,9 @@
       "voip_infra": {
         "name": "VoIP infrastructure",
         "state": {
-          "adsl": "ADSL",
-          "ftth": "FTTH",
-          "gprs": "GPRS"
+          "adsl": "[%key:component::sfr_box::entity::sensor::net_infra::state::adsl%]",
+          "ftth": "[%key:component::sfr_box::entity::sensor::net_infra::state::ftth%]",
+          "gprs": "[%key:component::sfr_box::entity::sensor::net_infra::state::gprs%]"
         }
       },
       "wan_mode": {
