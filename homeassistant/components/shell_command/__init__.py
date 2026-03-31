@@ -174,7 +174,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 DOMAIN,
                 f"reserved_{SERVICE_RELOAD}",
                 is_fixable=False,
-                is_persistent=True,
                 severity=ir.IssueSeverity.ERROR,
                 translation_key="reserved_reload_name",
                 translation_placeholders={"name": name},
@@ -206,6 +205,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             if svc != SERVICE_RELOAD:
                 hass.services.async_remove(DOMAIN, svc)
         cache.clear()
+        ir.async_delete_issue(hass, DOMAIN, f"reserved_{SERVICE_RELOAD}")
         for name, command in new_conf.items():
             if name == SERVICE_RELOAD:
                 ir.async_create_issue(
@@ -213,7 +213,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                     DOMAIN,
                     f"reserved_{SERVICE_RELOAD}",
                     is_fixable=False,
-                    is_persistent=True,
                     severity=ir.IssueSeverity.ERROR,
                     translation_key="reserved_reload_name",
                     translation_placeholders={"name": name},
