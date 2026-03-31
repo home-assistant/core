@@ -2030,6 +2030,10 @@ async def test_receive_backup_path_traversal(
 ) -> None:
     """Test path traversal in suggested filename is prevented."""
     await setup_backup_integration(hass)
+    # Make sure we wait for Platform.EVENT and Platform.SENSOR to be fully processed,
+    # to avoid interference with the Path.open patching below which is used to verify
+    # that the file is written to the expected location.
+    await hass.async_block_till_done(True)
     client = await hass_client()
 
     upload_data = "test"
@@ -2060,10 +2064,8 @@ async def test_receive_backup_path_traversal(
         await hass.async_block_till_done()
 
     assert resp.status == 201
-    # Verify the file was opened in the temp backup dir with the safe filename
-    tmp_backup_dir = Path(hass.config.path("tmp_backups"))
-    backup_opens = [p for p in opened_paths if p.parent == tmp_backup_dir]
-    assert backup_opens[0] == expected_path
+    # Verify all file opens went to the expected safe path
+    assert opened_paths == [expected_path]
     # read_backup is called with the temp_file path; verify it's sanitized
     read_backup_mock.assert_called_once_with(expected_path)
 
