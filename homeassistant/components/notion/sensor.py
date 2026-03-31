@@ -14,8 +14,8 @@ from homeassistant.const import UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import NotionConfigEntry
 from .const import SENSOR_MOLD, SENSOR_TEMPERATURE
+from .coordinator import NotionConfigEntry
 from .entity import NotionEntity, NotionEntityDescription
 
 

@@ -9,7 +9,6 @@ from uuid import UUID
 from aionotion.errors import InvalidCredentialsError, NotionError
 from aionotion.listener.models import ListenerKind
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
@@ -18,7 +17,6 @@ from homeassistant.helpers import entity_registry as er
 from .const import (
     CONF_REFRESH_TOKEN,
     CONF_USER_UUID,
-    DOMAIN as DOMAIN,
     LOGGER,
     SENSOR_BATTERY,
     SENSOR_DOOR,
@@ -31,10 +29,8 @@ from .const import (
     SENSOR_TEMPERATURE,
     SENSOR_WINDOW_HINGED,
 )
-from .coordinator import NotionDataUpdateCoordinator
+from .coordinator import NotionConfigEntry, NotionDataUpdateCoordinator
 from .util import async_get_client_with_credentials, async_get_client_with_refresh_token
-
-type NotionConfigEntry = ConfigEntry[NotionDataUpdateCoordinator]
 
 PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR]
 

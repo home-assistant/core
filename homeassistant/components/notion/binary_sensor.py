@@ -16,7 +16,6 @@ from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import NotionConfigEntry
 from .const import (
     LOGGER,
     SENSOR_BATTERY,
@@ -29,6 +28,7 @@ from .const import (
     SENSOR_SMOKE_CO,
     SENSOR_WINDOW_HINGED,
 )
+from .coordinator import NotionConfigEntry
 from .entity import NotionEntity, NotionEntityDescription
 
 
