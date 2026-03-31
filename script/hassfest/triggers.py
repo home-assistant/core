@@ -245,7 +245,7 @@ def validate_triggers(config: Config, integration: Integration) -> None:  # noqa
                     f"Trigger {trigger_name} has no description {error_msg_suffix}",
                 )
 
-        # The same check is done for the each of the fields of the condition schema,
+        # The same check is done for each of the fields of the trigger schema,
         # except that we don't enforce that fields have a description.
         for field_name, field_schema in trigger_schema.get("fields", {}).items():
             if "fields" in field_schema:
