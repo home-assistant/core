@@ -40,9 +40,8 @@ from .const import (
     SERVICE_SET_PERSONS_HOME,
     WEBHOOK_PUSH_TYPE,
 )
-from .data_handler import EVENT, HOME, SIGNAL_NAME, NetatmoDevice
+from .data_handler import EVENT, HOME, SIGNAL_NAME, NetatmoConfigEntry, NetatmoDevice
 from .entity import NetatmoModuleEntity
-from .types import NetatmoConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 

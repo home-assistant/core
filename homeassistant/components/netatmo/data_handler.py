@@ -26,6 +26,7 @@ from homeassistant.helpers.dispatcher import (
 )
 from homeassistant.helpers.event import async_track_time_interval
 
+from .api import AsyncConfigEntryNetatmoAuth
 from .const import (
     CAMERA_CONNECTION_WEBHOOKS,
     DATA_PERSONS,
@@ -470,3 +471,14 @@ class NetatmoDataHandler:
                     signal_home,
                 ),
             )
+
+
+type NetatmoConfigEntry = ConfigEntry[NetatmoData]
+
+
+@dataclass
+class NetatmoData:
+    """Netatmo runtime data stored in config entry."""
+
+    auth: AsyncConfigEntryNetatmoAuth
+    data_handler: NetatmoDataHandler

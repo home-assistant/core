@@ -21,9 +21,8 @@ from .const import (
     NETATMO_CREATE_CAMERA_LIGHT,
     NETATMO_CREATE_LIGHT,
 )
-from .data_handler import HOME, SIGNAL_NAME, NetatmoDevice
+from .data_handler import HOME, SIGNAL_NAME, NetatmoConfigEntry, NetatmoDevice
 from .entity import NetatmoModuleEntity
-from .types import NetatmoConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 

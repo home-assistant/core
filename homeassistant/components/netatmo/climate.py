@@ -53,9 +53,8 @@ from .const import (
     SERVICE_SET_TEMPERATURE_WITH_END_DATETIME,
     SERVICE_SET_TEMPERATURE_WITH_TIME_PERIOD,
 )
-from .data_handler import HOME, SIGNAL_NAME, NetatmoRoom
+from .data_handler import HOME, SIGNAL_NAME, NetatmoConfigEntry, NetatmoRoom
 from .entity import NetatmoRoomEntity
-from .types import NetatmoConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 

@@ -7,8 +7,7 @@ from typing import Any
 from homeassistant.components.diagnostics import async_redact_data
 from homeassistant.core import HomeAssistant
 
-from .data_handler import ACCOUNT, NetatmoDataHandler
-from .types import NetatmoConfigEntry
+from .data_handler import ACCOUNT, NetatmoConfigEntry, NetatmoDataHandler
 
 TO_REDACT = {
     "access_token",

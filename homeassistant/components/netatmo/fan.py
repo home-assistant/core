@@ -13,9 +13,8 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import CONF_URL_CONTROL, NETATMO_CREATE_FAN
-from .data_handler import HOME, SIGNAL_NAME, NetatmoDevice
+from .data_handler import HOME, SIGNAL_NAME, NetatmoConfigEntry, NetatmoDevice
 from .entity import NetatmoModuleEntity
-from .types import NetatmoConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 

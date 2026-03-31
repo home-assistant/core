@@ -51,7 +51,14 @@ from .const import (
     NETATMO_CREATE_WEATHER_SENSOR,
     SIGNAL_NAME,
 )
-from .data_handler import HOME, PUBLIC, NetatmoDataHandler, NetatmoDevice, NetatmoRoom
+from .data_handler import (
+    HOME,
+    PUBLIC,
+    NetatmoConfigEntry,
+    NetatmoDataHandler,
+    NetatmoDevice,
+    NetatmoRoom,
+)
 from .entity import (
     NetatmoBaseEntity,
     NetatmoModuleEntity,
@@ -59,7 +66,6 @@ from .entity import (
     NetatmoWeatherModuleEntity,
 )
 from .helper import NetatmoArea
-from .types import NetatmoConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 

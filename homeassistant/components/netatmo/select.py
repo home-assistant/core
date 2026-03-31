@@ -18,9 +18,8 @@ from .const import (
     MANUFACTURER,
     NETATMO_CREATE_SELECT,
 )
-from .data_handler import HOME, SIGNAL_NAME, NetatmoHome
+from .data_handler import HOME, SIGNAL_NAME, NetatmoConfigEntry, NetatmoHome
 from .entity import NetatmoBaseEntity
-from .types import NetatmoConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
