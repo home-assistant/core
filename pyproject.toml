@@ -28,7 +28,7 @@ dependencies = [
   # module level in `bootstrap.py` and its requirements thus need to be in
   # requirements.txt to ensure they are always installed
   "aiogithubapi==26.0.0",
-  "aiohttp==3.13.4",
+  "aiohttp==3.13.5",
   "aiohttp_cors==0.8.1",
   "aiohttp-fast-zlib==0.3.0",
   "aiohttp-asyncmdnsresolver==0.1.1",
