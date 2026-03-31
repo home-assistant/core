@@ -10,7 +10,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .api import ElectroluxApiClient
 from .const import NEW_APPLIANCE
 from .coordinator import ElectroluxConfigEntry, ElectroluxDataUpdateCoordinator
 from .entity import ElectroluxBaseEntity
@@ -28,12 +27,7 @@ async def async_setup_entities_helper(
     """Provide async_setup_entry helper."""
 
     data = entry.runtime_data
-    client: ElectroluxApiClient = data.client
     appliances: list[ApplianceData] = data.appliances
-
-    if appliances is None:
-        appliances = await client.fetch_appliance_data()
-        data.appliances = appliances
 
     entities: list[ElectroluxBaseEntity] = []
     coordinators = data.coordinators

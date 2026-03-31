@@ -3,7 +3,9 @@
 from abc import abstractmethod
 import logging
 
-from electrolux_group_developer_sdk.client.appliance_client import ApplianceData
+from electrolux_group_developer_sdk.client.appliances.appliance_data import (
+    ApplianceData,
+)
 
 from homeassistant.core import callback
 from homeassistant.helpers.device_registry import DeviceInfo

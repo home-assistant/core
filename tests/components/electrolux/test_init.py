@@ -18,9 +18,11 @@ from . import (
     APPLIANCE_FIXTURES,
     get_fixture_name,
     load_appliance,
+    load_appliance_details,
     load_appliance_state,
     setup_integration,
 )
+from .conftest import appliance_data_factory
 
 from tests.common import MockConfigEntry
 
@@ -84,3 +86,66 @@ async def test_all_appliances(
 
         assert device is not None
         assert device == snapshot(name=get_fixture_name(appliance_id))
+
+
+async def test_check_for_new_devices(
+    hass: HomeAssistant,
+    mock_appliance_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test that check_for_new_devices adds and removes devices correctly."""
+    old_appliance_fixture = "fenix_oven"
+    old_appliance_id = "900412569_00:43319382-443E0748CCD4"
+
+    new_appliance_fixture = "pux_oven"
+    new_appliance_id = "949288049_00:11112225-443E076A37D6"
+
+    def set_appliance_fixture_mock(appliance_fixture: str):
+
+        appliance = load_appliance(appliance_fixture)
+        details = load_appliance_details(appliance_fixture)
+        state = load_appliance_state(appliance_fixture)
+
+        appliance_data = appliance_data_factory(
+            appliance=appliance,
+            details=details,
+            state=state,
+        )
+
+        mock_appliance_client.get_appliance_data.return_value = [appliance_data]
+
+    set_appliance_fixture_mock(old_appliance_fixture)
+
+    await setup_integration(hass, mock_config_entry)
+
+    appliance_list: list[
+        ApplianceData
+    ] = await mock_appliance_client.get_appliance_data()
+    assert len(appliance_list) == 1
+    assert old_appliance_id == appliance_list[0].appliance.applianceId
+    assert get_fixture_name(old_appliance_id) == old_appliance_fixture
+
+    assert device_registry.async_get_device({(DOMAIN, old_appliance_id)}) is not None
+    assert device_registry.async_get_device({(DOMAIN, new_appliance_id)}) is None
+
+    set_appliance_fixture_mock(new_appliance_fixture)
+
+    args = mock_appliance_client.start_event_stream.call_args.args
+    assert args is not None and len(args) > 0, (
+        "start_event_stream method called without any callbacks specified"
+    )
+
+    callback_list = args[0]
+    for callback in callback_list:
+        await callback()
+
+    appliance_list: list[
+        ApplianceData
+    ] = await mock_appliance_client.get_appliance_data()
+    assert len(appliance_list) == 1
+    assert new_appliance_id == appliance_list[0].appliance.applianceId
+    assert get_fixture_name(new_appliance_id) == new_appliance_fixture
+
+    assert device_registry.async_get_device({(DOMAIN, old_appliance_id)}) is None
+    assert device_registry.async_get_device({(DOMAIN, new_appliance_id)}) is not None

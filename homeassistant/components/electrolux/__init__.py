@@ -16,7 +16,7 @@ from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
-from .api import ElectroluxApiClient
+from .api import fetch_appliance_data
 from .const import CONF_REFRESH_TOKEN, DOMAIN, NEW_APPLIANCE, USER_AGENT
 from .coordinator import (
     ElectroluxConfigEntry,
@@ -34,30 +34,18 @@ PLATFORMS = [
 async def async_setup_entry(hass: HomeAssistant, entry: ElectroluxConfigEntry) -> bool:
     """Set up Electrolux integration entry."""
 
-    def save_tokens(new_access: str, new_refresh: str, api_key: str) -> None:
-        hass.config_entries.async_update_entry(
-            entry,
-            data={
-                **entry.data,
-                CONF_API_KEY: api_key,
-                CONF_ACCESS_TOKEN: new_access,
-                CONF_REFRESH_TOKEN: new_refresh,
-            },
-        )
-
-    token_manager = ElectroluxTokenManager(hass, entry, save_tokens)
-    appliance_client = ApplianceClient(
+    token_manager = create_token_manager(hass, entry)
+    client = ApplianceClient(
         token_manager=token_manager, external_user_agent=USER_AGENT
     )
 
     # Check during integration initialization if we are able to set it up correctly
     try:
-        await appliance_client.test_connection()
+        await client.test_connection()
     except FailedConnectionException as e:
         raise ConfigEntryAuthFailed("Connection with client failed.") from e
 
-    client = ElectroluxApiClient(appliance_client)
-    appliances = await client.fetch_appliance_data()
+    appliances = await fetch_appliance_data(client)
 
     coordinators: dict[str, ElectroluxDataUpdateCoordinator] = {}
     on_livestream_opening_callback_list: list[Callable[[], Awaitable[None]]] = []
@@ -87,7 +75,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ElectroluxConfigEntry) -
 
     sse_task = entry.async_create_background_task(
         hass,
-        appliance_client.start_event_stream(on_livestream_opening_callback_list),
+        client.start_event_stream(on_livestream_opening_callback_list),
         "electrolux event listener",
     )
 
@@ -126,29 +114,36 @@ async def async_unload_entry(hass: HomeAssistant, entry: ElectroluxConfigEntry) 
     return True
 
 
-class ElectroluxTokenManager(TokenManager):
-    """Token Manager for Electrolux integration."""
+def create_token_manager(
+    hass: HomeAssistant,
+    entry: ElectroluxConfigEntry,
+) -> TokenManager:
+    """Create a token manager for the Electrolux integration."""
 
-    def __init__(
-        self,
-        hass: HomeAssistant,
-        entry: ElectroluxConfigEntry,
-        on_token_update: Callable[[str, str, str], None],
-    ) -> None:
-        """Initialize Token Manager."""
-        self._hass = hass
-        self._entry = entry
-        api_key = entry.data.get(CONF_API_KEY)
-        refresh_token = entry.data.get(CONF_REFRESH_TOKEN)
-        access_token = entry.data.get(CONF_ACCESS_TOKEN)
-        if access_token and refresh_token and api_key:
-            super().__init__(access_token, refresh_token, api_key, on_token_update)
+    def save_tokens(new_access: str, new_refresh: str, new_api_key: str) -> None:
+        hass.config_entries.async_update_entry(
+            entry,
+            data={
+                **entry.data,
+                CONF_API_KEY: new_api_key,
+                CONF_ACCESS_TOKEN: new_access,
+                CONF_REFRESH_TOKEN: new_refresh,
+            },
+        )
+
+    api_key = entry.data.get(CONF_API_KEY)
+    refresh_token = entry.data.get(CONF_REFRESH_TOKEN)
+    access_token = entry.data.get(CONF_ACCESS_TOKEN)
+
+    if access_token and refresh_token and api_key:
+        return TokenManager(access_token, refresh_token, api_key, save_tokens)
+    raise ConfigEntryAuthFailed
 
 
 async def _check_for_new_devices(
     hass: HomeAssistant,
     entry: ElectroluxConfigEntry,
-    client: ElectroluxApiClient,
+    client: ApplianceClient,
     on_livestream_opening_callback_list: list[Callable[[], Awaitable[None]]],
 ) -> None:
     """Fetch appliances from API and trigger discovery for any new ones."""
@@ -157,7 +152,7 @@ async def _check_for_new_devices(
 
     data = entry.runtime_data
     coordinators = data.coordinators
-    appliances = await client.fetch_appliance_data()
+    appliances = await fetch_appliance_data(client)
 
     existing_ids = set(coordinators.keys())
 

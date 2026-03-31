@@ -6,6 +6,7 @@ from asyncio import Task
 from dataclasses import dataclass
 import logging
 
+from electrolux_group_developer_sdk.client.appliance_client import ApplianceClient
 from electrolux_group_developer_sdk.client.appliances.appliance_data import (
     ApplianceData,
 )
@@ -18,7 +19,6 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .api import ElectroluxApiClient
 from .const import DOMAIN
 
 _LOGGER: logging.Logger = logging.getLogger(__name__)
@@ -28,7 +28,7 @@ _LOGGER: logging.Logger = logging.getLogger(__name__)
 class ElectroluxData:
     """Electrolux data type."""
 
-    client: ElectroluxApiClient
+    client: ApplianceClient
     appliances: list[ApplianceData]
     coordinators: dict[str, ElectroluxDataUpdateCoordinator]
     sse_task: Task
@@ -44,7 +44,7 @@ class ElectroluxDataUpdateCoordinator(DataUpdateCoordinator[ApplianceState]):
         self,
         hass: HomeAssistant,
         config_entry: ElectroluxConfigEntry,
-        client: ElectroluxApiClient,
+        client: ApplianceClient,
         appliance_id: str,
     ) -> None:
         """Initialize."""
@@ -62,9 +62,7 @@ class ElectroluxDataUpdateCoordinator(DataUpdateCoordinator[ApplianceState]):
     async def _async_update_data(self) -> ApplianceState:
         """Return the current appliance state (SSE keeps it updated)."""
         try:
-            appliance_state = await self.client.fetch_appliance_state(
-                self._appliance_id
-            )
+            appliance_state = await self.client.get_appliance_state(self._appliance_id)
         except ValueError as exception:
             raise UpdateFailed(exception) from exception
         except ApplianceClientException as exception:
