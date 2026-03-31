@@ -1,6 +1,6 @@
 {
   "common": {
-    "condition_behavior_name": "Test true when"
+    "condition_behavior_name": "Condition passes if"
   },
   "conditions": {
     "is_event_active": {

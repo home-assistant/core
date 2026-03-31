@@ -7,10 +7,10 @@
       "description": "Tests the value of one or more counters.",
       "fields": {
         "behavior": {
-          "name": "Behavior"
+          "name": "Condition passes if"
         },
         "threshold": {
-          "name": "Threshold"
+          "name": "Threshold type"
         }
       },
       "name": "Counter value"

@@ -1,5 +1,6 @@
 {
   "common": {
+    "condition_behavior_name": "Condition passes if",
     "trigger_behavior_name": "Trigger when"
   },
   "conditions": {
@@ -7,7 +8,7 @@
       "description": "Tests if one or more valves are closed.",
       "fields": {
         "behavior": {
-          "name": "Behavior"
+          "name": "[%key:component::valve::common::condition_behavior_name%]"
         }
       },
       "name": "Valve is closed"
@@ -16,7 +17,7 @@
       "description": "Tests if one or more valves are open.",
       "fields": {
         "behavior": {
-          "name": "Behavior"
+          "name": "[%key:component::valve::common::condition_behavior_name%]"
         }
       },
       "name": "Valve is open"

@@ -1,6 +1,6 @@
 {
   "common": {
-    "condition_behavior_name": "Test true when",
+    "condition_behavior_name": "Condition passes if",
     "condition_threshold_name": "Threshold type",
     "field_brightness_description": "Number indicating brightness, where 0 turns the light off, 1 is the minimum brightness, and 255 is the maximum brightness.",
     "field_brightness_name": "Brightness value",
