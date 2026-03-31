@@ -14,4 +14,8 @@ Platform exists as `homeassistant/components/<domain>/repairs.py`.
   - Exact steps to resolve (numbered list when multiple steps)
   - What to expect after following the steps
 - **Avoid Vague Instructions**: Don't just say "update firmware" - provide specific steps
+- **Severity Guidelines**:
+  - `CRITICAL`: Reserved for extreme scenarios only
+  - `ERROR`: Requires immediate user attention
+  - `WARNING`: Indicates future potential breakage
 - Only create issues for problems users can potentially resolve
