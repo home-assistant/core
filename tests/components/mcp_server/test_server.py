@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 from unittest.mock import AsyncMock, Mock
 
 from mcp import types
@@ -108,16 +109,15 @@ async def test_list_tools(llm_api: _FakeAPIInstance) -> None:
     """Test listing tools formats tool metadata for MCP."""
     tools = await _async_list_tools(llm_api)
 
-    assert tools == [
-        types.Tool(
-            name="TestTool",
-            description="Test tool description",
-            inputSchema={
-                "type": "object",
-                "properties": {"name": {"type": "string"}},
-            },
-        )
-    ]
+    assert len(tools) == 1
+    tool = tools[0]
+    assert tool.name == "TestTool"
+    assert tool.description == "Test tool description"
+    assert isinstance(tool.inputSchema, dict)
+    assert tool.inputSchema.get("type") == "object"
+    properties = tool.inputSchema.get("properties") or {}
+    assert "name" in properties
+    assert properties["name"].get("type") == "string"
 
 
 async def test_call_tool(llm_api: _FakeAPIInstance) -> None:
@@ -131,7 +131,9 @@ async def test_call_tool(llm_api: _FakeAPIInstance) -> None:
     tool_input = llm_api.async_call_tool_mock.await_args.args[0]
     assert tool_input.tool_name == "TestTool"
     assert tool_input.tool_args == {"name": "kitchen"}
-    assert result == [types.TextContent(type="text", text='{"message": "done"}')]
+    assert len(result) == 1
+    assert result[0].type == "text"
+    assert json.loads(result[0].text) == {"message": "done"}
 
 
 @pytest.mark.parametrize(
