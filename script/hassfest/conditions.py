@@ -231,8 +231,8 @@ def validate_conditions(config: Config, integration: Integration) -> None:  # no
                     f"Condition {condition_name} has no description {error_msg_suffix}",
                 )
 
-        # The same check is done for the description in each of the fields of the
-        # condition schema.
+        # The same check is done for each of the fields of the condition schema,
+        # except that we don't enforce that fields have a description.
         for field_name, field_schema in condition_schema.get("fields", {}).items():
             if "fields" in field_schema:
                 # This is a section
@@ -246,20 +246,6 @@ def validate_conditions(config: Config, integration: Integration) -> None:  # no
                         (
                             f"Condition {condition_name} has a field {field_name} with no "
                             f"name {error_msg_suffix}"
-                        ),
-                    )
-
-            if "description" not in field_schema and integration.core:
-                try:
-                    strings["conditions"][condition_name]["fields"][field_name][
-                        "description"
-                    ]
-                except KeyError:
-                    integration.add_error(
-                        "conditions",
-                        (
-                            f"Condition {condition_name} has a field {field_name} with no "
-                            f"description {error_msg_suffix}"
                         ),
                     )
 
