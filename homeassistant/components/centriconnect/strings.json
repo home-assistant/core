@@ -1,0 +1,84 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "device_id": "Device ID",
+          "password": "Device Authentication Code",
+          "username": "User ID"
+        },
+        "data_description": {
+          "device_id": "Your CentriConnect/MyPropane device ID",
+          "password": "Your CentriConnect/MyPropane device authentication code",
+          "username": "Your CentriConnect/MyPropane user ID"
+        },
+        "description": "Enter your CentriConnect/MyPropane device credentials."
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "alert_status": {
+        "name": "Alert status",
+        "state": {
+          "critical_level": "Critical Level",
+          "low_level": "Low Level",
+          "no_alert": "No Alert"
+        }
+      },
+      "altitude": {
+        "name": "Altitude"
+      },
+      "battery_level": {
+        "name": "Battery level"
+      },
+      "battery_voltage": {
+        "name": "Battery voltage"
+      },
+      "device_temperature": {
+        "name": "Device temperature"
+      },
+      "last_post_time": {
+        "name": "Last post time"
+      },
+      "latitude": {
+        "name": "[%key:common::config_flow::data::latitude%]"
+      },
+      "longitude": {
+        "name": "[%key:common::config_flow::data::longitude%]"
+      },
+      "lte_signal_level": {
+        "name": "LTE signal level"
+      },
+      "lte_signal_strength": {
+        "name": "LTE signal strength"
+      },
+      "next_post_time": {
+        "name": "Next post time"
+      },
+      "solar_level": {
+        "name": "Solar level"
+      },
+      "solar_voltage": {
+        "name": "Solar voltage"
+      },
+      "tank_level": {
+        "name": "Tank level"
+      },
+      "tank_remaining_volume": {
+        "name": "Tank remaining volume"
+      },
+      "tank_size": {
+        "name": "Tank size"
+      }
+    }
+  }
+}

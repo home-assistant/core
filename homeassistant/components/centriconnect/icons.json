@@ -1,0 +1,84 @@
+{
+  "entity": {
+    "sensor": {
+      "alert_status": {
+        "default": "mdi:alert-circle-outline",
+        "state": {
+          "critical_level": "mdi:alert-circle",
+          "low_level": "mdi:alert-circle-outline",
+          "no_alert": "mdi:check-circle-outline"
+        }
+      },
+      "altitude": {
+        "default": "mdi:altimeter"
+      },
+      "battery_level": {
+        "default": "mdi:battery-unknown",
+        "range": {
+          "0": "mdi:battery-outline",
+          "10": "mdi:battery-10",
+          "20": "mdi:battery-20",
+          "30": "mdi:battery-30",
+          "40": "mdi:battery-40",
+          "50": "mdi:battery-50",
+          "60": "mdi:battery-60",
+          "70": "mdi:battery-70",
+          "80": "mdi:battery-80",
+          "90": "mdi:battery-90",
+          "100": "mdi:battery"
+        }
+      },
+      "battery_voltage": {
+        "default": "mdi:car-battery"
+      },
+      "device_temperature": {
+        "default": "mdi:thermometer"
+      },
+      "last_post_time": {
+        "default": "mdi:clock-end"
+      },
+      "latitude": {
+        "default": "mdi:latitude"
+      },
+      "longitude": {
+        "default": "mdi:longitude"
+      },
+      "lte_signal_level": {
+        "default": "mdi:signal",
+        "range": {
+          "0": "mdi:signal-cellular-outline",
+          "25": "mdi:signal-cellular-1",
+          "50": "mdi:signal-cellular-2",
+          "75": "mdi:signal-cellular-3"
+        }
+      },
+      "lte_signal_strength": {
+        "default": "mdi:signal-variant"
+      },
+      "next_post_time": {
+        "default": "mdi:clock-start"
+      },
+      "solar_level": {
+        "default": "mdi:sun-wireless"
+      },
+      "solar_voltage": {
+        "default": "mdi:solar-power"
+      },
+      "tank_level": {
+        "default": "mdi:gauge",
+        "range": {
+          "0": "mdi:gauge-empty",
+          "25": "mdi:gauge-low",
+          "50": "mdi:gauge",
+          "75": "mdi:gauge-full"
+        }
+      },
+      "tank_remaining_volume": {
+        "default": "mdi:storage-tank-outline"
+      },
+      "tank_size": {
+        "default": "mdi:storage-tank"
+      }
+    }
+  }
+}
