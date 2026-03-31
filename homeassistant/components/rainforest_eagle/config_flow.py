@@ -5,7 +5,6 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from aioeagle import ElectricMeter
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
@@ -36,8 +35,6 @@ class RainforestEagleConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Rainforest Eagle."""
 
     VERSION = 1
-    _meters: list[ElectricMeter] | None = None
-    _user_input: dict[str, Any] | None = None
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
