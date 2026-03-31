@@ -1,5 +1,6 @@
 """Support for NuHeat thermostats."""
 
+from dataclasses import dataclass
 from http import HTTPStatus
 import logging
 
@@ -11,10 +12,21 @@ from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 
-from .const import CONF_SERIAL_NUMBER, DOMAIN, PLATFORMS
+from .const import CONF_SERIAL_NUMBER, PLATFORMS
 from .coordinator import NuHeatCoordinator
 
 _LOGGER = logging.getLogger(__name__)
+
+
+@dataclass
+class NuHeatData:
+    """NuHeat runtime data."""
+
+    thermostat: nuheat.NuHeatThermostat
+    coordinator: NuHeatCoordinator
+
+
+type NuHeatConfigEntry = ConfigEntry[NuHeatData]
 
 
 def _get_thermostat(api: nuheat.NuHeat, serial_number: str) -> nuheat.NuHeatThermostat:
@@ -23,7 +35,7 @@ def _get_thermostat(api: nuheat.NuHeat, serial_number: str) -> nuheat.NuHeatTher
     return api.get_thermostat(serial_number)
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: NuHeatConfigEntry) -> bool:
     """Set up NuHeat from a config entry."""
 
     conf = entry.data
@@ -54,18 +66,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     coordinator = NuHeatCoordinator(hass, entry, thermostat)
 
-    hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN][entry.entry_id] = (thermostat, coordinator)
+    entry.runtime_data = NuHeatData(thermostat=thermostat, coordinator=coordinator)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: NuHeatConfigEntry) -> bool:
     """Unload a config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-    if unload_ok:
-        hass.data[DOMAIN].pop(entry.entry_id)
-
-    return unload_ok
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)

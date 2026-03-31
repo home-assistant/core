@@ -18,7 +18,6 @@ from homeassistant.components.climate import (
     HVACAction,
     HVACMode,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import event as event_helper
@@ -26,6 +25,7 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
+from . import NuHeatConfigEntry
 from .const import DOMAIN, MANUFACTURER, NUHEAT_API_STATE_SHIFT_DELAY
 from .coordinator import NuHeatCoordinator
 
@@ -55,11 +55,12 @@ SCHEDULE_MODE_TO_PRESET_MODE_MAP = {
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: NuHeatConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the NuHeat thermostat(s)."""
-    thermostat, coordinator = hass.data[DOMAIN][config_entry.entry_id]
+    thermostat = config_entry.runtime_data.thermostat
+    coordinator = config_entry.runtime_data.coordinator
 
     temperature_unit = hass.config.units.temperature_unit
     entity = NuHeatThermostat(coordinator, thermostat, temperature_unit)
