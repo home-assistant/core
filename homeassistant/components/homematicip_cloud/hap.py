@@ -1,4 +1,5 @@
 """Access point for the HomematicIP Cloud component."""
+# Debug build: lackas/hmip-reconnect-fix v5 (2026-03-31)
 
 from __future__ import annotations
 
@@ -122,6 +123,7 @@ class HomematicipHAP:
 
     async def async_setup(self, tries: int = 0) -> bool:
         """Initialize connection."""
+        _LOGGER.debug("HomematicIP Cloud HAP starting — debug build: lackas/hmip-reconnect-fix v5 (2026-03-31)")
         try:
             self.home = await self.get_hap(
                 self.hass,
@@ -257,12 +259,28 @@ class HomematicipHAP:
 
     async def get_state(self) -> None:
         """Update HMIP state and tell Home Assistant."""
+        devices_before = list(self.home.devices)
+        sample_id_before = id(devices_before[0]) if devices_before else None
+        _LOGGER.debug(
+            "get_state: before get_current_state_async — %d devices, sample_id=%s",
+            len(devices_before),
+            sample_id_before,
+        )
         await self.home.get_current_state_async()
+        devices_after = list(self.home.devices)
+        sample_id_after = id(devices_after[0]) if devices_after else None
+        _LOGGER.debug(
+            "get_state: after get_current_state_async — %d devices, sample_id=%s, instances_replaced=%s",
+            len(devices_after),
+            sample_id_after,
+            sample_id_before != sample_id_after,
+        )
         # Reset unreach flag on all devices so entities become available again.
         # set_all_to_unavailable() sets unreach=True on disconnect; get_current_state
         # only clears it for devices whose state actually changed. Force-clear all.
-        for device in self.home.devices:
+        for device in devices_after:
             device.unreach = False
+        _LOGGER.debug("get_state: calling update_all() on %d devices", len(devices_after))
         self.update_all()
 
     def get_state_finished(self, future) -> None:
@@ -288,7 +306,9 @@ class HomematicipHAP:
 
     def update_all(self) -> None:
         """Signal all devices to update their state."""
-        for device in self.home.devices:
+        devices = list(self.home.devices)
+        _LOGGER.debug("update_all: firing update events for %d devices", len(devices))
+        for device in devices:
             device.fire_update_event()
 
     async def async_connect(self, home: AsyncHome) -> None:
