@@ -1,7 +1,0 @@
-{
-  "services": {
-    "speedtest": {
-      "service": "mdi:speedometer"
-    }
-  }
-}

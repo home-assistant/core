@@ -1,1 +1,0 @@
-"""LINAK virtual integration."""

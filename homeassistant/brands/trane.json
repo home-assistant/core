@@ -1,5 +1,0 @@
-{
-  "domain": "trane",
-  "name": "Trane",
-  "integrations": ["nexia", "trane"]
-}

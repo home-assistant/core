@@ -1,7 +1,0 @@
-{
-  "services": {
-    "get_prices": {
-      "service": "mdi:cash"
-    }
-  }
-}

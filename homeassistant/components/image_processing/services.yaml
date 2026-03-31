@@ -1,6 +1,0 @@
-# Describes the format for available image processing services
-
-scan:
-  target:
-    entity:
-      domain: image_processing

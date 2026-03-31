@@ -1,7 +1,0 @@
-{
-  "services": {
-    "write_data_by_name": {
-      "service": "mdi:pencil"
-    }
-  }
-}

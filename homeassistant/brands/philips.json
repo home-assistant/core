@@ -1,5 +1,0 @@
-{
-  "domain": "philips",
-  "name": "Philips",
-  "integrations": ["dynalite", "hue", "hue_ble", "philips_js"]
-}

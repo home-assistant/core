@@ -1,1 +1,0 @@
-"""Virtual integration: Hexaom Hexaconnect."""

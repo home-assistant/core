@@ -1,9 +1,0 @@
-{
-  "entity": {
-    "sensor": {
-      "gravity": {
-        "default": "mdi:water"
-      }
-    }
-  }
-}

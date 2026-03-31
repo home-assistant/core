@@ -1,5 +1,0 @@
-{
-  "domain": "husqvarna",
-  "name": "Husqvarna",
-  "integrations": ["husqvarna_automower", "husqvarna_automower_ble"]
-}

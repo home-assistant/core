@@ -1,1 +1,0 @@
-"""Bauknecht virtual integration."""

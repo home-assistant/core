@@ -1,7 +1,0 @@
-{
-  "services": {
-    "checkin": {
-      "service": "mdi:map-marker"
-    }
-  }
-}

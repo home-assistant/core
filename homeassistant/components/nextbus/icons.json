@@ -1,9 +1,0 @@
-{
-  "entity": {
-    "sensor": {
-      "nextbus": {
-        "default": "mdi:bus"
-      }
-    }
-  }
-}

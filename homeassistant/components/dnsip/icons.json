@@ -1,9 +1,0 @@
-{
-  "entity": {
-    "sensor": {
-      "dnsip": {
-        "default": "mdi:web"
-      }
-    }
-  }
-}

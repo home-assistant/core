@@ -1,5 +1,0 @@
-{
-  "domain": "bosch",
-  "name": "Bosch",
-  "integrations": ["bosch_alarm", "bosch_shc", "home_connect"]
-}

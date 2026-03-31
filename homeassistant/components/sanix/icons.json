@@ -1,9 +1,0 @@
-{
-  "entity": {
-    "sensor": {
-      "fill_perc": {
-        "default": "mdi:water-percent"
-      }
-    }
-  }
-}

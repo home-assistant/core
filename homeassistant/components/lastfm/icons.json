@@ -1,9 +1,0 @@
-{
-  "entity": {
-    "sensor": {
-      "lastfm": {
-        "default": "mdi:radio-fm"
-      }
-    }
-  }
-}

@@ -1,5 +1,0 @@
-{
-  "domain": "airthings",
-  "name": "Airthings",
-  "integrations": ["airthings", "airthings_ble"]
-}

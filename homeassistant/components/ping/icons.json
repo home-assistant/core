@@ -1,9 +1,0 @@
-{
-  "entity": {
-    "sensor": {
-      "loss": {
-        "default": "mdi:alert-circle-outline"
-      }
-    }
-  }
-}

@@ -1,1 +1,0 @@
-"""Profilo virtual integration."""

@@ -1,5 +1,0 @@
-{
-  "domain": "powerfox",
-  "name": "Powerfox",
-  "integrations": ["powerfox", "powerfox_local"]
-}

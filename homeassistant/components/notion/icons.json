@@ -1,9 +1,0 @@
-{
-  "entity": {
-    "sensor": {
-      "mold_risk": {
-        "default": "mdi:liquid-spot"
-      }
-    }
-  }
-}

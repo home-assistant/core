@@ -1,6 +1,0 @@
-{
-  "domain": "nuki",
-  "name": "Nuki",
-  "integrations": ["nuki"],
-  "iot_standards": ["matter"]
-}

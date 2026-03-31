@@ -1,1 +1,0 @@
-"""Speech to text tests."""

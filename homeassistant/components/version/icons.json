@@ -1,9 +1,0 @@
-{
-  "entity": {
-    "sensor": {
-      "version": {
-        "default": "mdi:package-up"
-      }
-    }
-  }
-}

@@ -1,4 +1,0 @@
-test:
-  - element: "X"
-  - element: "Y"
-  unexpected: "Z"

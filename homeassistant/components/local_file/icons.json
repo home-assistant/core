@@ -1,7 +1,0 @@
-{
-  "services": {
-    "update_file_path": {
-      "service": "mdi:cog"
-    }
-  }
-}

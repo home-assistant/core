@@ -1,9 +1,0 @@
-{
-  "entity": {
-    "sensor": {
-      "pressure_trend": {
-        "default": "mdi:gauge"
-      }
-    }
-  }
-}

@@ -1,9 +1,0 @@
-{
-  "entity": {
-    "media_player": {
-      "spotify": {
-        "default": "mdi:spotify"
-      }
-    }
-  }
-}

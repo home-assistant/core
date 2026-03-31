@@ -1,9 +1,0 @@
-{
-  "entity": {
-    "sensor": {
-      "heart_rate": {
-        "default": "mdi:heart-pulse"
-      }
-    }
-  }
-}

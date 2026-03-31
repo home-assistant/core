@@ -1,5 +1,0 @@
-{
-  "domain": "hikvision",
-  "name": "Hikvision",
-  "integrations": ["hikvision", "hikvisioncam"]
-}

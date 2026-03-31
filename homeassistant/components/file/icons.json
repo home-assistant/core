@@ -1,7 +1,0 @@
-{
-  "services": {
-    "read_file": {
-      "service": "mdi:file"
-    }
-  }
-}

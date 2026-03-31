@@ -1,5 +1,0 @@
-identify:
-  target:
-    entity:
-      integration: elgato
-      domain: light

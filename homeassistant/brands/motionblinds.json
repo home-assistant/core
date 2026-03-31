@@ -1,6 +1,0 @@
-{
-  "domain": "motionblinds",
-  "name": "Motionblinds",
-  "integrations": ["motion_blinds", "motionblinds_ble"],
-  "iot_standards": ["matter"]
-}

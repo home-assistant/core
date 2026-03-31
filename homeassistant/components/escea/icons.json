@@ -1,9 +1,0 @@
-{
-  "entity": {
-    "climate": {
-      "fireplace": {
-        "default": "mdi:fire"
-      }
-    }
-  }
-}

@@ -1,5 +1,0 @@
-{
-  "domain": "honeywell",
-  "name": "Honeywell",
-  "integrations": ["lyric", "evohome", "honeywell"]
-}

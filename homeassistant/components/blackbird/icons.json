@@ -1,7 +1,0 @@
-{
-  "services": {
-    "set_all_zones": {
-      "service": "mdi:home-sound-in"
-    }
-  }
-}

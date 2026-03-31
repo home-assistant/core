@@ -1,6 +1,0 @@
-{
-  "domain": "smart_home",
-  "name": "Smart Home",
-  "integration_type": "virtual",
-  "supported_by": "motion_blinds"
-}

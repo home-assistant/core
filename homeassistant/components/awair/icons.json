@@ -1,9 +1,0 @@
-{
-  "entity": {
-    "sensor": {
-      "score": {
-        "default": "mdi:blur"
-      }
-    }
-  }
-}

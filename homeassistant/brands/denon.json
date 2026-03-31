@@ -1,5 +1,0 @@
-{
-  "domain": "denon",
-  "name": "Denon",
-  "integrations": ["denon", "denonavr", "heos"]
-}

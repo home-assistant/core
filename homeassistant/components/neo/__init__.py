@@ -1,1 +1,0 @@
-"""Neo virtual integration."""

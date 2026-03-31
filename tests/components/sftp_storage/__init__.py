@@ -1,1 +1,0 @@
-"""Tests SFTP Storage integration."""

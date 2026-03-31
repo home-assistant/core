@@ -1,7 +1,0 @@
-{
-  "services": {
-    "set_away_mode": {
-      "service": "mdi:home"
-    }
-  }
-}

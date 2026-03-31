@@ -1,5 +1,0 @@
-raw_get_positions:
-  target:
-    entity:
-      domain: vacuum
-      integration: ecovacs

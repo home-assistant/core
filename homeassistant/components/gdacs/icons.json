@@ -1,9 +1,0 @@
-{
-  "entity": {
-    "sensor": {
-      "alerts": {
-        "default": "mdi:alert"
-      }
-    }
-  }
-}

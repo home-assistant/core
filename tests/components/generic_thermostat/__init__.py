@@ -1,1 +1,0 @@
-"""generic_thermostat tests."""

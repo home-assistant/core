@@ -1,5 +1,0 @@
-{
-  "domain": "ruuvi",
-  "name": "Ruuvi",
-  "integrations": ["ruuvi_gateway", "ruuvitag_ble"]
-}

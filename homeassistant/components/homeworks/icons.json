@@ -1,7 +1,0 @@
-{
-  "services": {
-    "send_command": {
-      "service": "mdi:console"
-    }
-  }
-}

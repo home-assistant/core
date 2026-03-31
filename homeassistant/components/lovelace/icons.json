@@ -1,7 +1,0 @@
-{
-  "services": {
-    "reload_resources": {
-      "service": "mdi:reload"
-    }
-  }
-}

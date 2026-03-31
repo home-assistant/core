@@ -1,5 +1,0 @@
-{
-  "domain": "elgato",
-  "name": "Elgato",
-  "integrations": ["avea", "elgato"]
-}

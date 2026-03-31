@@ -1,6 +1,0 @@
-{
-  "domain": "shelly",
-  "name": "shelly",
-  "integrations": ["shelly"],
-  "iot_standards": ["zwave"]
-}

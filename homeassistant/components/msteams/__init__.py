@@ -1,1 +1,0 @@
-"""The Microsoft Teams component."""

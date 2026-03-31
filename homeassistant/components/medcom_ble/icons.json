@@ -1,9 +1,0 @@
-{
-  "entity": {
-    "sensor": {
-      "cpm": {
-        "default": "mdi:radioactive"
-      }
-    }
-  }
-}

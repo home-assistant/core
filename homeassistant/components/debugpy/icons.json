@@ -1,7 +1,0 @@
-{
-  "services": {
-    "start": {
-      "service": "mdi:play"
-    }
-  }
-}

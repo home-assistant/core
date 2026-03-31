@@ -1,5 +1,0 @@
-{
-  "domain": "tilt",
-  "name": "Tilt",
-  "integrations": ["tilt_ble", "tilt_pi"]
-}

@@ -1,3 +1,0 @@
-{
-  "success": true
-}

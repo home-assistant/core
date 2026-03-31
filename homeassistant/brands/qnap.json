@@ -1,5 +1,0 @@
-{
-  "domain": "qnap",
-  "name": "QNAP",
-  "integrations": ["qnap", "qnap_qsw"]
-}

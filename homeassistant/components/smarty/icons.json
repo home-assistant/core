@@ -1,9 +1,0 @@
-{
-  "entity": {
-    "fan": {
-      "fan": {
-        "default": "mdi:air-conditioner"
-      }
-    }
-  }
-}

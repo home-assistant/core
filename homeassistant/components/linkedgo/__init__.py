@@ -1,1 +1,0 @@
-"""LinkedGo virtual integration."""

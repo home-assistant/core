@@ -1,7 +1,0 @@
-{
-  "services": {
-    "new_task": {
-      "service": "mdi:checkbox-marked-circle-plus-outline"
-    }
-  }
-}

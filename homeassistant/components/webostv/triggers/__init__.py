@@ -1,1 +1,0 @@
-"""LG webOS TV triggers."""

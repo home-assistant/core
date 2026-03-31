@@ -1,9 +1,0 @@
-{
-  "entity": {
-    "event": {
-      "latest_feed": {
-        "default": "mdi:rss"
-      }
-    }
-  }
-}

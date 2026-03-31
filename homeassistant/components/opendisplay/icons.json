@@ -1,7 +1,0 @@
-{
-  "services": {
-    "upload_image": {
-      "service": "mdi:image-move"
-    }
-  }
-}

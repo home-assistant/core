@@ -1,1 +1,0 @@
-"""FrankEver virtual integration."""

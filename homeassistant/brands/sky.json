@@ -1,5 +1,0 @@
-{
-  "domain": "sky",
-  "name": "Sky",
-  "integrations": ["sky_hub", "sky_remote"]
-}

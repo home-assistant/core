@@ -1,7 +1,0 @@
-{
-  "exceptions": {
-    "invalid_code": {
-      "message": "Invalid alarm code provided"
-    }
-  }
-}

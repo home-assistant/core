@@ -1,5 +1,0 @@
-{
-  "domain": "geonet",
-  "name": "GeoNet",
-  "integrations": ["geonetnz_quakes", "geonetnz_volcano"]
-}
