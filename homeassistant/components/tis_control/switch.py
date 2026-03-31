@@ -109,9 +109,7 @@ async def async_setup_entry(
 class TISSwitch(SwitchEntity):
     """Represents a TIS switch entity in Home Assistant."""
 
-    # Standardizing naming and translations.
-    _attr_has_entity_name = True
-    _attr_translation_key = "tis_switch"
+    _attr_has_entity_name = False
 
     def __init__(self, device_api: TISAPISwitch) -> None:
         """Initialize the switch entity."""

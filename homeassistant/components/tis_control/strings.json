@@ -6,7 +6,7 @@
       "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
     },
     "error": {
-      "cannot_connect": "Failed to connect"
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
     },
     "step": {
       "confirm": {
@@ -21,13 +21,6 @@
         },
         "description": "Please enter the port number for your TIS Control bridge.",
         "title": "TIS Control Bridge"
-      }
-    }
-  },
-  "entity": {
-    "switch": {
-      "tis_switch": {
-        "name": "Switch"
       }
     }
   }
