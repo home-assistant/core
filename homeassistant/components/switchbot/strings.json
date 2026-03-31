@@ -102,6 +102,9 @@
       }
     },
     "button": {
+      "light_sensitive": {
+        "name": "Light sensitive"
+      },
       "next_image": {
         "name": "Next image"
       },

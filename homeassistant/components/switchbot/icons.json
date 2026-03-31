@@ -1,5 +1,10 @@
 {
   "entity": {
+    "button": {
+      "light_sensitive": {
+        "default": "mdi:brightness-auto"
+      }
+    },
     "climate": {
       "climate": {
         "state_attributes": {

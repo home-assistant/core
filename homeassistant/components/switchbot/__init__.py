@@ -35,7 +35,6 @@ from .const import (
     DOMAIN,
     ENCRYPTED_MODELS,
     HASS_SENSOR_TYPE_TO_SWITCHBOT_MODEL,
-    NON_CONNECTABLE_SUPPORTED_MODEL_TYPES,
     SupportedModels,
 )
 from .coordinator import SwitchbotConfigEntry, SwitchbotDataUpdateCoordinator
@@ -110,10 +109,26 @@ PLATFORMS_BY_TYPE = {
         Platform.LOCK,
         Platform.SENSOR,
     ],
-    SupportedModels.AIR_PURIFIER_JP.value: [Platform.FAN, Platform.SENSOR],
-    SupportedModels.AIR_PURIFIER_US.value: [Platform.FAN, Platform.SENSOR],
-    SupportedModels.AIR_PURIFIER_TABLE_JP.value: [Platform.FAN, Platform.SENSOR],
-    SupportedModels.AIR_PURIFIER_TABLE_US.value: [Platform.FAN, Platform.SENSOR],
+    SupportedModels.AIR_PURIFIER_JP.value: [
+        Platform.FAN,
+        Platform.SENSOR,
+        Platform.BUTTON,
+    ],
+    SupportedModels.AIR_PURIFIER_US.value: [
+        Platform.FAN,
+        Platform.SENSOR,
+        Platform.BUTTON,
+    ],
+    SupportedModels.AIR_PURIFIER_TABLE_JP.value: [
+        Platform.FAN,
+        Platform.SENSOR,
+        Platform.BUTTON,
+    ],
+    SupportedModels.AIR_PURIFIER_TABLE_US.value: [
+        Platform.FAN,
+        Platform.SENSOR,
+        Platform.BUTTON,
+    ],
     SupportedModels.EVAPORATIVE_HUMIDIFIER.value: [
         Platform.HUMIDIFIER,
         Platform.SENSOR,
@@ -265,10 +280,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: SwitchbotConfigEntry) ->
     sensor_type: str = entry.data[CONF_SENSOR_TYPE]
     switchbot_model = HASS_SENSOR_TYPE_TO_SWITCHBOT_MODEL[sensor_type]
     # connectable means we can make connections to the device
-    connectable = (
-        switchbot_model in CONNECTABLE_SUPPORTED_MODEL_TYPES
-        and switchbot_model not in NON_CONNECTABLE_SUPPORTED_MODEL_TYPES
-    )
+    connectable = switchbot_model in CONNECTABLE_SUPPORTED_MODEL_TYPES
     address: str = entry.data[CONF_ADDRESS]
 
     await switchbot.close_stale_connections_by_address(address)
