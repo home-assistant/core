@@ -2981,7 +2981,7 @@ solaredge-local==0.2.3
 solaredge-web==0.0.1
 
 # homeassistant.components.solarlog
-solarlog_cli==0.7.0
+solarlog_cli==0.7.1
 
 # homeassistant.components.solarman
 solarman-opendata==0.0.3
