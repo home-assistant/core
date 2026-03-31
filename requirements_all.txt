@@ -1028,7 +1028,7 @@ fritzconnection[qr]==1.15.1
 fyta_cli==0.7.2
 
 # homeassistant.components.google_translate
-gTTS==2.5.3
+gTTS==2.5.4
 
 # homeassistant.components.gardena_bluetooth
 # homeassistant.components.husqvarna_automower_ble
