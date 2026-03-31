@@ -179,6 +179,7 @@ async def test_reconfigure_success(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
     assert mock_config_entry.data[CONF_PASSWORD] == "new-pass"
+    assert mock_config_entry.data[CONF_USERNAME] == "test-user"
 
 
 @pytest.mark.parametrize(
@@ -217,6 +218,7 @@ async def test_reconfigure_error(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
     assert mock_config_entry.data[CONF_PASSWORD] == "new-pass"
+    assert mock_config_entry.data[CONF_USERNAME] == "test-user"
 
 
 @pytest.mark.usefixtures("mock_freshr_client")
