@@ -386,7 +386,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "foobot",
     "forecast_solar",
     "forked_daapd",
-    "fortios",
     "foscam",
     "foursquare",
     "free_mobile",

@@ -251,6 +251,10 @@ DHCP: Final[list[dict[str, str | bool]]] = [
         "macaddress": "C82E47*",
     },
     {
+        "domain": "fortios",
+        "macaddress": "00090F*",
+    },
+    {
         "domain": "fronius",
         "macaddress": "0003AC*",
     },
