@@ -27,7 +27,6 @@ from homeassistant.helpers.dispatcher import (
 from homeassistant.helpers.event import async_track_time_interval
 
 from .const import (
-    AUTH,
     CAMERA_CONNECTION_WEBHOOKS,
     DATA_PERSONS,
     DATA_SCHEDULES,
@@ -138,11 +137,16 @@ class NetatmoDataHandler:
     account: pyatmo.AsyncAccount
     _interval_factor: int
 
-    def __init__(self, hass: HomeAssistant, config_entry: ConfigEntry) -> None:
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        config_entry: ConfigEntry,
+        auth: pyatmo.AbstractAsyncAuth,
+    ) -> None:
         """Initialize self."""
         self.hass = hass
         self.config_entry = config_entry
-        self._auth = hass.data[DOMAIN][config_entry.entry_id][AUTH]
+        self._auth = auth
         self.publisher: dict[str, NetatmoPublisher] = {}
         self._queue: deque = deque()
         self._webhook: bool = False

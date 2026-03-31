@@ -16,7 +16,6 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_LATITUDE,
     ATTR_LONGITUDE,
@@ -45,7 +44,6 @@ from .const import (
     CONF_URL_ENERGY,
     CONF_URL_PUBLIC_WEATHER,
     CONF_WEATHER_AREAS,
-    DATA_HANDLER,
     DOMAIN,
     NETATMO_CREATE_BATTERY,
     NETATMO_CREATE_ROOM_SENSOR,
@@ -61,6 +59,7 @@ from .entity import (
     NetatmoWeatherModuleEntity,
 )
 from .helper import NetatmoArea
+from .types import NetatmoConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -390,7 +389,7 @@ BATTERY_SENSOR_DESCRIPTION = NetatmoSensorEntityDescription(
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: NetatmoConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Netatmo sensor platform."""
@@ -456,7 +455,7 @@ async def async_setup_entry(
     )
 
     device_registry = dr.async_get(hass)
-    data_handler = hass.data[DOMAIN][entry.entry_id][DATA_HANDLER]
+    data_handler = entry.runtime_data.data_handler
 
     async def add_public_entities(update: bool = True) -> None:
         """Retrieve Netatmo public weather entities."""

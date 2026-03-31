@@ -11,7 +11,6 @@ from pyatmo.event import Event as NaEvent
 import voluptuous as vol
 
 from homeassistant.components.camera import Camera, CameraEntityFeature
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, entity_platform
@@ -43,6 +42,7 @@ from .const import (
 )
 from .data_handler import EVENT, HOME, SIGNAL_NAME, NetatmoDevice
 from .entity import NetatmoModuleEntity
+from .types import NetatmoConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -51,7 +51,7 @@ DEFAULT_QUALITY = "high"
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: NetatmoConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Netatmo camera platform."""
