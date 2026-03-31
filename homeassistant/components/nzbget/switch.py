@@ -18,7 +18,7 @@ async def async_setup_entry(
     entry: NZBGetConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up NZBGet sensor based on a config entry."""
+    """Set up NZBGet switch based on a config entry."""
     coordinator = entry.runtime_data
 
     switches = [
