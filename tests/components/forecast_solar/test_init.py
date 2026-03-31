@@ -215,6 +215,7 @@ async def test_setup_entry_multiple_planes_no_api_key(
 
 async def test_coordinator_multi_plane_initialization(
     hass: HomeAssistant,
+    mock_forecast_solar: MagicMock,
 ) -> None:
     """Test the Forecast.Solar coordinator multi-plane initialization."""
     options = {
@@ -264,7 +265,7 @@ async def test_coordinator_multi_plane_initialization(
 
     with patch(
         "homeassistant.components.forecast_solar.coordinator.ForecastSolar",
-        autospec=True,
+        return_value=mock_forecast_solar,
     ) as forecast_solar_mock:
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
