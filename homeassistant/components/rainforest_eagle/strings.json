@@ -6,16 +6,10 @@
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "no_meters_connected": "No meters are currently connected. Ensure your meter is connected and try again.",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "step": {
-      "meter_select": {
-        "data": {
-          "hardware_address": "Meter"
-        },
-        "description": "This gateway has connected to {meter_count} different smart meters in its lifetime, each with a unique hardware address and none currently connected. Please select the hardware address corresponding to the meter you want to monitor.",
-        "title": "Select meter"
-      },
       "user": {
         "data": {
           "cloud_id": "Cloud ID",

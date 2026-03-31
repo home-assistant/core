@@ -69,66 +69,31 @@ class RainforestEagleConfigFlow(ConfigFlow, domain=DOMAIN):
             user_input[CONF_TYPE] = eagle_type
 
             if meters:
-                # If there are meters, the process depends on how many there are and if any have a 'Connected' status
-                if len(meters) == 1:
-                    # If there is only one meter, just use it and create the entry
-                    user_input[CONF_HARDWARE_ADDRESS] = meters[0].hardware_address
+                # If there are meters, use the first one with a connection status of "Connected", or show an error if none are connected.
+                selected_meter = next(
+                    (
+                        m
+                        for m in meters
+                        if getattr(m, "connection_status", None) == "Connected"
+                    ),
+                    None,
+                )
+                if selected_meter:
+                    # If a connected meter was found, use that and create the entry
+                    user_input[CONF_HARDWARE_ADDRESS] = selected_meter.hardware_address
+
                 else:
-                    # If there are multiple meters, look for the first one with a 'Connected' status
-                    selected_meter = None
-                    for meter in meters:
-                        if getattr(meter, "connection_status", None) == "Connected":
-                            selected_meter = meter
-                            break
-
-                    if selected_meter:
-                        # If a connected meter was found, use that and create the entry
-                        user_input[CONF_HARDWARE_ADDRESS] = (
-                            selected_meter.hardware_address
-                        )
-
-                    else:
-                        # If there was more than one meter, but none have a 'Connected' status, then let the user choose
-                        self._meters = meters
-                        self._user_input = user_input
-                        return await self.async_step_meter_select()
+                    # If a connected meter was not found, show an error
+                    errors["base"] = "no_meters_connected"
             else:
-                # If there are no meters, set to None
+                # If there are no meters, set to None (expected for EAGLE-100)
                 user_input[CONF_HARDWARE_ADDRESS] = None
 
-            return self.async_create_entry(
-                title=user_input[CONF_CLOUD_ID], data=user_input
-            )
+            if not errors:
+                return self.async_create_entry(
+                    title=user_input[CONF_CLOUD_ID], data=user_input
+                )
 
         return self.async_show_form(
             step_id="user", data_schema=create_schema(user_input), errors=errors
-        )
-
-    async def async_step_meter_select(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Handle meter selection step."""
-        if user_input is None:
-            # Create a list of meter choices
-            assert self._meters is not None
-            meter_choices = {
-                meter.hardware_address: f"Meter #{i + 1}: ({meter.connection_status}) hardware address {meter.hardware_address}"
-                for i, meter in enumerate(self._meters)
-            }
-
-            return self.async_show_form(
-                step_id="meter_select",
-                data_schema=vol.Schema(
-                    {
-                        vol.Required(CONF_HARDWARE_ADDRESS): vol.In(meter_choices),
-                    }
-                ),
-                description_placeholders={"meter_count": str(len(self._meters))},
-            )
-
-        # Add the selected meter to the stored user input
-        assert self._user_input is not None
-        self._user_input[CONF_HARDWARE_ADDRESS] = user_input[CONF_HARDWARE_ADDRESS]
-        return self.async_create_entry(
-            title=self._user_input[CONF_CLOUD_ID], data=self._user_input
         )
