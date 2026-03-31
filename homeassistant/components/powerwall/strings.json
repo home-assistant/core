@@ -29,23 +29,17 @@
   },
   "entity": {
     "binary_sensor": {
-      "grid_connected": {
-        "name": "Grid connected"
-      },
       "battery_charging": {
         "name": "Battery charging"
+      },
+      "grid_connected": {
+        "name": "Grid connected"
       },
       "grid_services_active": {
         "name": "Grid services active"
       }
     },
     "sensor": {
-      "battery_level": {
-        "name": "Battery level"
-      },
-      "battery_power": {
-        "name": "Battery power"
-      },
       "battery_energy_exported": {
         "name": "Battery energy exported"
       },
@@ -55,20 +49,14 @@
       "battery_frequency": {
         "name": "Battery frequency"
       },
-      "solar_power": {
-        "name": "Solar power"
+      "battery_level": {
+        "name": "Battery level"
       },
-      "solar_energy": {
-        "name": "Solar energy"
+      "battery_power": {
+        "name": "Battery power"
       },
-      "load_power": {
-        "name": "Load power"
-      },
-      "load_energy": {
-        "name": "Load energy"
-      },
-      "grid_power": {
-        "name": "Grid power"
+      "grid_current": {
+        "name": "Grid current"
       },
       "grid_energy_exported": {
         "name": "Grid energy exported"
@@ -76,17 +64,29 @@
       "grid_energy_imported": {
         "name": "Grid energy imported"
       },
-      "grid_voltage": {
-        "name": "Grid voltage"
-      },
-      "grid_current": {
-        "name": "Grid current"
-      },
       "grid_frequency": {
         "name": "Grid frequency"
       },
+      "grid_power": {
+        "name": "Grid power"
+      },
       "grid_status": {
         "name": "Grid status"
+      },
+      "grid_voltage": {
+        "name": "Grid voltage"
+      },
+      "load_energy": {
+        "name": "Load energy"
+      },
+      "load_power": {
+        "name": "Load power"
+      },
+      "solar_energy": {
+        "name": "Solar energy"
+      },
+      "solar_power": {
+        "name": "Solar power"
       }
     }
   }
