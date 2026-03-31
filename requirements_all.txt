@@ -1410,7 +1410,7 @@ ld2410-ble==0.1.1
 leaone-ble==0.3.0
 
 # homeassistant.components.led_ble
-led-ble==1.1.7
+led-ble==1.1.8
 
 # homeassistant.components.lektrico
 lektricowifi==0.1
