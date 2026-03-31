@@ -1,14 +1,12 @@
 {
   "common": {
-    "condition_behavior_description": "The behavior of the targeted texts to check.",
-    "condition_behavior_name": "Behavior"
+    "condition_behavior_name": "Condition passes if"
   },
   "conditions": {
     "is_equal_to": {
       "description": "Tests if one or more texts are equal to a specified value.",
       "fields": {
         "behavior": {
-          "description": "[%key:component::text::common::condition_behavior_description%]",
           "name": "[%key:component::text::common::condition_behavior_name%]"
         },
         "value": {

@@ -1,16 +1,13 @@
 {
   "common": {
-    "condition_behavior_description": "How the state should match on the targeted windows.",
-    "condition_behavior_name": "Behavior",
-    "trigger_behavior_description": "The behavior of the targeted windows to trigger on.",
-    "trigger_behavior_name": "Behavior"
+    "condition_behavior_name": "Condition passes if",
+    "trigger_behavior_name": "Trigger when"
   },
   "conditions": {
     "is_closed": {
       "description": "Tests if one or more windows are closed.",
       "fields": {
         "behavior": {
-          "description": "[%key:component::window::common::condition_behavior_description%]",
           "name": "[%key:component::window::common::condition_behavior_name%]"
         }
       },
@@ -20,7 +17,6 @@
       "description": "Tests if one or more windows are open.",
       "fields": {
         "behavior": {
-          "description": "[%key:component::window::common::condition_behavior_description%]",
           "name": "[%key:component::window::common::condition_behavior_name%]"
         }
       },
@@ -48,7 +44,6 @@
       "description": "Triggers after one or more windows close.",
       "fields": {
         "behavior": {
-          "description": "[%key:component::window::common::trigger_behavior_description%]",
           "name": "[%key:component::window::common::trigger_behavior_name%]"
         }
       },
@@ -58,7 +53,6 @@
       "description": "Triggers after one or more windows open.",
       "fields": {
         "behavior": {
-          "description": "[%key:component::window::common::trigger_behavior_description%]",
           "name": "[%key:component::window::common::trigger_behavior_name%]"
         }
       },

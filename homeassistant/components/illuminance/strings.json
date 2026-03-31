@@ -1,21 +1,15 @@
 {
   "common": {
-    "condition_behavior_description": "How the state should match on the targeted entities.",
-    "condition_behavior_name": "Behavior",
-    "condition_threshold_description": "What to test for and threshold values.",
-    "condition_threshold_name": "Threshold configuration",
-    "trigger_behavior_description": "The behavior of the targeted entities to trigger on.",
-    "trigger_behavior_name": "Behavior",
-    "trigger_threshold_changed_description": "Which changes to trigger on and threshold values.",
-    "trigger_threshold_crossed_description": "Which threshold crossing to trigger on and threshold values.",
-    "trigger_threshold_name": "Threshold configuration"
+    "condition_behavior_name": "Condition passes if",
+    "condition_threshold_name": "Threshold type",
+    "trigger_behavior_name": "Trigger when",
+    "trigger_threshold_name": "Threshold type"
   },
   "conditions": {
     "is_detected": {
       "description": "Tests if light is currently detected.",
       "fields": {
         "behavior": {
-          "description": "[%key:component::illuminance::common::condition_behavior_description%]",
           "name": "[%key:component::illuminance::common::condition_behavior_name%]"
         }
       },
@@ -25,7 +19,6 @@
       "description": "Tests if light is currently not detected.",
       "fields": {
         "behavior": {
-          "description": "[%key:component::illuminance::common::condition_behavior_description%]",
           "name": "[%key:component::illuminance::common::condition_behavior_name%]"
         }
       },
@@ -35,11 +28,9 @@
       "description": "Tests the illuminance value.",
       "fields": {
         "behavior": {
-          "description": "[%key:component::illuminance::common::condition_behavior_description%]",
           "name": "[%key:component::illuminance::common::condition_behavior_name%]"
         },
         "threshold": {
-          "description": "[%key:component::illuminance::common::condition_threshold_description%]",
           "name": "[%key:component::illuminance::common::condition_threshold_name%]"
         }
       },
@@ -67,7 +58,6 @@
       "description": "Triggers after one or more illuminance values change.",
       "fields": {
         "threshold": {
-          "description": "[%key:component::illuminance::common::trigger_threshold_changed_description%]",
           "name": "[%key:component::illuminance::common::trigger_threshold_name%]"
         }
       },
@@ -77,7 +67,6 @@
       "description": "Triggers after one or more light sensors stop detecting light.",
       "fields": {
         "behavior": {
-          "description": "[%key:component::illuminance::common::trigger_behavior_description%]",
           "name": "[%key:component::illuminance::common::trigger_behavior_name%]"
         }
       },
@@ -87,11 +76,9 @@
       "description": "Triggers after one or more illuminance values cross a threshold.",
       "fields": {
         "behavior": {
-          "description": "[%key:component::illuminance::common::trigger_behavior_description%]",
           "name": "[%key:component::illuminance::common::trigger_behavior_name%]"
         },
         "threshold": {
-          "description": "[%key:component::illuminance::common::trigger_threshold_crossed_description%]",
           "name": "[%key:component::illuminance::common::trigger_threshold_name%]"
         }
       },
@@ -101,7 +88,6 @@
       "description": "Triggers after one or more light sensors start detecting light.",
       "fields": {
         "behavior": {
-          "description": "[%key:component::illuminance::common::trigger_behavior_description%]",
           "name": "[%key:component::illuminance::common::trigger_behavior_name%]"
         }
       },

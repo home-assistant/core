@@ -1,14 +1,12 @@
 {
   "common": {
-    "condition_behavior_description": "How the state should match on the targeted timers.",
-    "condition_behavior_name": "Behavior"
+    "condition_behavior_name": "Condition passes if"
   },
   "conditions": {
     "is_active": {
       "description": "Tests if one or more timers are active.",
       "fields": {
         "behavior": {
-          "description": "[%key:component::timer::common::condition_behavior_description%]",
           "name": "[%key:component::timer::common::condition_behavior_name%]"
         }
       },
@@ -18,7 +16,6 @@
       "description": "Tests if one or more timers are idle.",
       "fields": {
         "behavior": {
-          "description": "[%key:component::timer::common::condition_behavior_description%]",
           "name": "[%key:component::timer::common::condition_behavior_name%]"
         }
       },
@@ -28,7 +25,6 @@
       "description": "Tests if one or more timers are paused.",
       "fields": {
         "behavior": {
-          "description": "[%key:component::timer::common::condition_behavior_description%]",
           "name": "[%key:component::timer::common::condition_behavior_name%]"
         }
       },
