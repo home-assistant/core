@@ -15,6 +15,8 @@ from collections.abc import Callable
 from dataclasses import dataclass
 import logging
 
+from olarmflowclient import ZonesTypes
+
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
@@ -59,20 +61,19 @@ SENSOR_DESCRIPTIONS: dict[str, OlarmBinarySensorEntityDescription] = {
     ),
     "ac_power": OlarmBinarySensorEntityDescription(
         key="ac_power",
-        value_fn=lambda device_state, _: (
-            device_state.get("powerAC") == "ok"
-        ),
+        value_fn=lambda device_state, _: device_state.get("powerAC") == "ok",
         name_fn=lambda index, label: f"{label}",
         unique_id_fn=lambda device_id, index: f"{device_id}.ac_power",
     ),
 }
 
-CLASS_MAP: dict[int, BinarySensorDeviceClass] = {
-    10: BinarySensorDeviceClass.DOOR,
-    11: BinarySensorDeviceClass.WINDOW,
-    20: BinarySensorDeviceClass.MOTION,
-    21: BinarySensorDeviceClass.MOTION,
+CLASS_MAP: dict[ZonesTypes, BinarySensorDeviceClass] = {
+    ZonesTypes.DOOR: BinarySensorDeviceClass.DOOR,
+    ZonesTypes.WINDOW: BinarySensorDeviceClass.WINDOW,
+    ZonesTypes.MOTION_INDOOR: BinarySensorDeviceClass.MOTION,
+    ZonesTypes.MOTION_OUTDOOR: BinarySensorDeviceClass.MOTION,
 }
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -100,7 +101,7 @@ def load_zone_sensors(
     zones = coordinator.data.device_state.get("zones", [])
     labels = coordinator.data.device_profile.get("zonesLabels", [])
     types = coordinator.data.device_profile.get("zonesTypes", [])
-    for zone_index in enumerate(zones):
+    for zone_index, _ in enumerate(zones):
         zone_label = labels[zone_index] if zone_index < len(labels) else ""
         zone_class = types[zone_index] if zone_index < len(types) else 0
         sensors.extend(

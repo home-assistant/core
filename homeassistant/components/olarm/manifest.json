@@ -5,7 +5,8 @@
   "config_flow": true,
   "dependencies": ["application_credentials"],
   "documentation": "https://www.home-assistant.io/integrations/olarm",
+  "integration_type": "hub",
   "iot_class": "cloud_push",
   "quality_scale": "bronze",
-  "requirements": ["olarmflowclient==1.0.6"]
+  "requirements": ["olarmflowclient==1.0.7"]
 }
