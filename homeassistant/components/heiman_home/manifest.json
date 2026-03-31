@@ -1,0 +1,13 @@
+{
+  "domain": "heiman_home",
+  "name": "Heiman Home",
+  "codeowners": ["@haiman"],
+  "config_flow": true,
+  "dependencies": ["application_credentials"],
+  "documentation": "https://www.home-assistant.io/integrations/heiman_home",
+  "integration_type": "hub",
+  "iot_class": "cloud_polling",
+  "loggers": ["heimanconnect"],
+  "requirements": ["heiman-connect==1.0.2"],
+  "version": "1.0.0"
+}
