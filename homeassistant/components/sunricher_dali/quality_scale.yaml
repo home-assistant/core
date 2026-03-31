@@ -70,15 +70,9 @@ rules:
       No entities define custom icons (no icon/_attr_icon); icons are provided
       by the entity platforms via their defaults and device classes where
       applicable.
-  reconfiguration-flow:
-    status: exempt
-    comment: >
-      All configuration parameters (host, port, credentials) are obtained
-      automatically via the discovery protocol requiring a physical button
-      press. Users cannot manually enter or change any of these values.
-      IP address updates are handled automatically via DHCP discovery.
+  reconfiguration-flow: todo
   repair-issues: todo
-  stale-devices: done
+  stale-devices: todo
   # Platinum
   async-dependency: todo
   inject-websession: todo
