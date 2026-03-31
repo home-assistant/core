@@ -1455,7 +1455,7 @@ locationsharinglib==5.0.1
 lojack-api==0.7.2
 
 # homeassistant.components.london_underground
-london-tube-status==0.5
+london-tube-status==0.7
 
 # homeassistant.components.loqed
 loqedAPI==2.1.11
