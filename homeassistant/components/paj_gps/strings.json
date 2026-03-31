@@ -23,26 +23,5 @@
         "title": "PAJ GPS configuration"
       }
     }
-  },
-  "options": {
-    "error": {
-      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
-      "unknown": "[%key:common::config_flow::error::unknown%]"
-    },
-    "step": {
-      "init": {
-        "data": {
-          "email": "[%key:common::config_flow::data::email%]",
-          "password": "[%key:common::config_flow::data::password%]"
-        },
-        "data_description": {
-          "email": "Email used to log in to Finder Portal (finder-portal.com)",
-          "password": "Password used to log in to Finder Portal (finder-portal.com)"
-        },
-        "description": "Set credentials for your PAJ GPS account (finder-portal.com).",
-        "title": "PAJ GPS configuration"
-      }
-    }
   }
 }
