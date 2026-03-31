@@ -16,7 +16,6 @@ from tests.common import MockConfigEntry
 
 
 async def test_setup_auth_failure(
-    recorder_mock: Recorder,
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_waterfurnace_client: Mock,
@@ -81,7 +80,6 @@ async def test_migrate_unique_id(
 
 
 async def test_migrate_unique_id_auth_failure(
-    recorder_mock: Recorder,
     hass: HomeAssistant,
     mock_waterfurnace_client: Mock,
 ) -> None:
