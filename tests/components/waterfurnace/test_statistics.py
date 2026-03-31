@@ -22,6 +22,10 @@ from tests.components.recorder.common import async_wait_recording_done
 
 STATISTIC_ID = f"{DOMAIN}:test_gwid_12345_energy"
 
+# All time-sensitive tests are pinned to this instant.
+NOW = "2025-01-15 12:00:00+00:00"
+_NOW_DT = dt_util.as_utc(dt_util.parse_datetime(NOW))
+
 
 def _make_energy_data(readings: list[tuple[datetime, float]]) -> WFEnergyData:
     """Build a WFEnergyData from (timestamp, total_power_kwh) pairs."""
@@ -67,19 +71,16 @@ async def _trigger_energy_poll(
     await async_wait_recording_done(hass)
 
 
+@pytest.mark.freeze_time(NOW)
 async def test_poll_inserts_statistics(
     recorder_mock: Recorder,
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_waterfurnace_client: Mock,
-    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test that energy data is fetched and inserted as statistics."""
-    now = dt_util.utcnow().replace(minute=0, second=0, microsecond=0)
-    freezer.move_to(now)
-
-    t1 = now - timedelta(hours=2)
-    t2 = now - timedelta(hours=1)
+    t1 = _NOW_DT - timedelta(hours=2)
+    t2 = _NOW_DT - timedelta(hours=1)
 
     mock_waterfurnace_client.get_energy_data.side_effect = None
     mock_waterfurnace_client.get_energy_data.return_value = _make_energy_data(
@@ -99,19 +100,16 @@ async def test_poll_inserts_statistics(
     assert entries[1]["sum"] == pytest.approx(5.0)
 
 
+@pytest.mark.freeze_time(NOW)
 async def test_poll_skips_current_hour(
     recorder_mock: Recorder,
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_waterfurnace_client: Mock,
-    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test that readings from the current incomplete hour are skipped."""
-    now = dt_util.utcnow().replace(minute=0, second=0, microsecond=0)
-    freezer.move_to(now)
-
-    t_completed = now - timedelta(hours=1)
-    t_current = now
+    t_completed = _NOW_DT - timedelta(hours=1)
+    t_current = _NOW_DT
 
     mock_waterfurnace_client.get_energy_data.side_effect = None
     mock_waterfurnace_client.get_energy_data.return_value = _make_energy_data(
@@ -133,7 +131,6 @@ async def test_poll_empty_response(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_waterfurnace_client: Mock,
-    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test that empty energy data response is handled gracefully."""
     mock_waterfurnace_client.get_energy_data.side_effect = None
@@ -146,6 +143,7 @@ async def test_poll_empty_response(
     assert mock_config_entry.state is ConfigEntryState.LOADED
 
 
+@pytest.mark.freeze_time(NOW)
 async def test_subsequent_poll_resumes_sum(
     recorder_mock: Recorder,
     hass: HomeAssistant,
@@ -154,10 +152,7 @@ async def test_subsequent_poll_resumes_sum(
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test that subsequent polls correctly resume from the last recorded sum."""
-    now = dt_util.utcnow().replace(minute=0, second=0, microsecond=0)
-    freezer.move_to(now)
-
-    t1 = now - timedelta(hours=1)
+    t1 = _NOW_DT - timedelta(hours=1)
 
     mock_waterfurnace_client.get_energy_data.side_effect = None
     mock_waterfurnace_client.get_energy_data.return_value = _make_energy_data(
@@ -170,7 +165,7 @@ async def test_subsequent_poll_resumes_sum(
     await async_wait_recording_done(hass)
 
     # Advance time so t2 becomes a completed hour, then poll again
-    t2 = now
+    t2 = _NOW_DT
     mock_waterfurnace_client.get_energy_data.return_value = _make_energy_data(
         [(t2, 6.0)]
     )
@@ -187,7 +182,6 @@ async def test_no_data_error_handled_gracefully(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_waterfurnace_client: Mock,
-    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test that WFNoDataError does not prevent integration setup."""
     # Default conftest sets get_energy_data.side_effect = WFNoDataError
@@ -198,6 +192,7 @@ async def test_no_data_error_handled_gracefully(
     assert mock_config_entry.state is ConfigEntryState.LOADED
 
 
+@pytest.mark.freeze_time(NOW)
 async def test_login_credential_error_raises_update_failed(
     recorder_mock: Recorder,
     hass: HomeAssistant,
@@ -206,9 +201,6 @@ async def test_login_credential_error_raises_update_failed(
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test that WFCredentialError during energy login raises UpdateFailed."""
-    now = dt_util.utcnow().replace(minute=0, second=0, microsecond=0)
-    freezer.move_to(now)
-
     # First setup succeeds with no data
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
@@ -226,20 +218,18 @@ async def test_login_credential_error_raises_update_failed(
     assert device_data.energy.last_update_success is False
 
 
+@pytest.mark.freeze_time(NOW)
 async def test_timezone_conversion(
     recorder_mock: Recorder,
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_waterfurnace_client: Mock,
-    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test that energy data is correctly handled across time zones."""
     await hass.config.async_set_time_zone("America/New_York")
-    now = dt_util.utcnow().replace(minute=0, second=0, microsecond=0)
-    freezer.move_to(now)
 
-    t1 = now - timedelta(hours=2)
-    t2 = now - timedelta(hours=1)
+    t1 = _NOW_DT - timedelta(hours=2)
+    t2 = _NOW_DT - timedelta(hours=1)
 
     mock_waterfurnace_client.get_energy_data.side_effect = None
     mock_waterfurnace_client.get_energy_data.return_value = _make_energy_data(
