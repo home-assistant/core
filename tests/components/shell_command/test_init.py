@@ -294,6 +294,7 @@ async def test_reload_service(hass: HomeAssistant, hass_admin_user: MockUser) ->
     new_config = {shell_command.DOMAIN: {"reloaded_cmd": "echo reloaded"}}
     with patch(
         "homeassistant.components.shell_command.conf_util.async_hass_config_yaml",
+        new_callable=AsyncMock,
         return_value=new_config,
     ):
         await hass.services.async_call(
