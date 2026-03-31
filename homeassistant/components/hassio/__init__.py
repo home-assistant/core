@@ -3,14 +3,12 @@
 from __future__ import annotations
 
 import asyncio
-from contextlib import suppress
 from dataclasses import replace
 from datetime import datetime
 import logging
 import os
-import re
 import struct
-from typing import Any, NamedTuple, cast
+from typing import Any, cast
 
 from aiohasupervisor import SupervisorError
 from aiohasupervisor.models import (
@@ -41,35 +39,23 @@ from homeassistant.components.http import (
 )
 from homeassistant.config_entries import SOURCE_SYSTEM, ConfigEntry
 from homeassistant.const import (
-    ATTR_DEVICE_ID,
-    ATTR_NAME,
     EVENT_CORE_CONFIG_UPDATE,
     HASSIO_USER_NAME,
     SERVER_PORT,
     Platform,
 )
-from homeassistant.core import (
-    Event,
-    HassJob,
-    HomeAssistant,
-    ServiceCall,
-    async_get_hass_or_none,
-    callback,
-)
-from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
+from homeassistant.core import Event, HassJob, HomeAssistant, callback
 from homeassistant.helpers import (
     config_validation as cv,
     device_registry as dr,
     discovery_flow,
     issue_registry as ir,
-    selector,
 )
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.issue_registry import IssueSeverity
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.async_ import create_eager_task
-from homeassistant.util.dt import now
 
 # config_flow, diagnostics, system_health, and entity platforms are imported to
 # ensure other dependencies that wait for hassio are not waiting
@@ -92,19 +78,7 @@ from .auth import async_setup_auth_view
 from .config import HassioConfig
 from .const import (
     ADDONS_COORDINATOR,
-    ATTR_ADDON,
-    ATTR_ADDONS,
-    ATTR_APP,
-    ATTR_APPS,
-    ATTR_COMPRESSED,
-    ATTR_FOLDERS,
-    ATTR_HOMEASSISTANT,
-    ATTR_HOMEASSISTANT_EXCLUDE_DATABASE,
-    ATTR_INPUT,
-    ATTR_LOCATION,
-    ATTR_PASSWORD,
     ATTR_REPOSITORIES,
-    ATTR_SLUG,
     DATA_ADDONS_LIST,
     DATA_COMPONENT,
     DATA_CONFIG_STORE,
@@ -118,7 +92,6 @@ from .const import (
     DATA_SUPERVISOR_INFO,
     DOMAIN,
     HASSIO_UPDATE_INTERVAL,
-    SupervisorEntityModel,
 )
 from .coordinator import (
     HassioDataUpdateCoordinator,
@@ -136,15 +109,11 @@ from .coordinator import (
     get_supervisor_stats,
 )
 from .discovery import async_setup_discovery_view
-from .handler import (
-    HassIO,
-    HassioAPIError,
-    async_update_diagnostics,
-    get_supervisor_client,
-)
+from .handler import HassIO, async_update_diagnostics, get_supervisor_client
 from .http import HassIOView
 from .ingress import async_setup_ingress_view
 from .issues import SupervisorIssues
+from .services import async_setup_services
 from .websocket_api import async_load_websocket_api
 
 # Expose the future safe name now so integrations can use it
@@ -190,23 +159,6 @@ CONFIG_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
-SERVICE_ADDON_START = "addon_start"
-SERVICE_ADDON_STOP = "addon_stop"
-SERVICE_ADDON_RESTART = "addon_restart"
-SERVICE_ADDON_STDIN = "addon_stdin"
-SERVICE_APP_START = "app_start"
-SERVICE_APP_STOP = "app_stop"
-SERVICE_APP_RESTART = "app_restart"
-SERVICE_APP_STDIN = "app_stdin"
-SERVICE_HOST_SHUTDOWN = "host_shutdown"
-SERVICE_HOST_REBOOT = "host_reboot"
-SERVICE_BACKUP_FULL = "backup_full"
-SERVICE_BACKUP_PARTIAL = "backup_partial"
-SERVICE_RESTORE_FULL = "restore_full"
-SERVICE_RESTORE_PARTIAL = "restore_partial"
-SERVICE_MOUNT_RELOAD = "mount_reload"
-
-VALID_ADDON_SLUG = vol.Match(re.compile(r"^[-_.A-Za-z0-9]+$"))
 
 DEPRECATION_URL = (
     "https://www.home-assistant.io/blog/2025/05/22/"
@@ -214,147 +166,10 @@ DEPRECATION_URL = (
 )
 
 
-def valid_addon(value: Any) -> str:
-    """Validate value is a valid addon slug."""
-    value = VALID_ADDON_SLUG(value)
-    hass = async_get_hass_or_none()
-
-    if hass and (addons := get_addons_info(hass)) is not None and value not in addons:
-        raise vol.Invalid("Not a valid app slug")
-    return value
-
-
-SCHEMA_NO_DATA = vol.Schema({})
-
-SCHEMA_ADDON = vol.Schema({vol.Required(ATTR_ADDON): valid_addon})
-
-SCHEMA_ADDON_STDIN = SCHEMA_ADDON.extend(
-    {vol.Required(ATTR_INPUT): vol.Any(dict, cv.string)}
-)
-
-SCHEMA_APP = vol.Schema({vol.Required(ATTR_APP): valid_addon})
-
-SCHEMA_APP_STDIN = SCHEMA_APP.extend(
-    {vol.Required(ATTR_INPUT): vol.Any(dict, cv.string)}
-)
-
-SCHEMA_BACKUP_FULL = vol.Schema(
-    {
-        vol.Optional(
-            ATTR_NAME, default=lambda: now().strftime("%Y-%m-%d %H:%M:%S")
-        ): cv.string,
-        vol.Optional(ATTR_PASSWORD): cv.string,
-        vol.Optional(ATTR_COMPRESSED): cv.boolean,
-        vol.Optional(ATTR_LOCATION): vol.All(
-            cv.string, lambda v: None if v == "/backup" else v
-        ),
-        vol.Optional(ATTR_HOMEASSISTANT_EXCLUDE_DATABASE): cv.boolean,
-    }
-)
-
-SCHEMA_BACKUP_PARTIAL = SCHEMA_BACKUP_FULL.extend(
-    {
-        vol.Optional(ATTR_HOMEASSISTANT): cv.boolean,
-        vol.Optional(ATTR_FOLDERS): vol.All(cv.ensure_list, [cv.string]),
-        vol.Exclusive(ATTR_APPS, "apps_or_addons"): vol.All(
-            cv.ensure_list, [VALID_ADDON_SLUG]
-        ),
-        # Legacy "addons", "apps" is preferred
-        vol.Exclusive(ATTR_ADDONS, "apps_or_addons"): vol.All(
-            cv.ensure_list, [VALID_ADDON_SLUG]
-        ),
-    }
-)
-
-SCHEMA_RESTORE_FULL = vol.Schema(
-    {
-        vol.Required(ATTR_SLUG): cv.slug,
-        vol.Optional(ATTR_PASSWORD): cv.string,
-    }
-)
-
-SCHEMA_RESTORE_PARTIAL = SCHEMA_RESTORE_FULL.extend(
-    {
-        vol.Optional(ATTR_HOMEASSISTANT): cv.boolean,
-        vol.Optional(ATTR_FOLDERS): vol.All(cv.ensure_list, [cv.string]),
-        vol.Exclusive(ATTR_APPS, "apps_or_addons"): vol.All(
-            cv.ensure_list, [VALID_ADDON_SLUG]
-        ),
-        # Legacy "addons", "apps" is preferred
-        vol.Exclusive(ATTR_ADDONS, "apps_or_addons"): vol.All(
-            cv.ensure_list, [VALID_ADDON_SLUG]
-        ),
-    }
-)
-
-SCHEMA_MOUNT_RELOAD = vol.Schema(
-    {
-        vol.Required(ATTR_DEVICE_ID): selector.DeviceSelector(
-            selector.DeviceSelectorConfig(
-                filter=selector.DeviceFilterSelectorConfig(
-                    integration=DOMAIN,
-                    model=SupervisorEntityModel.MOUNT,
-                )
-            )
-        )
-    }
-)
-
-
 def _is_32_bit() -> bool:
     size = struct.calcsize("P")
     return size * 8 == 32
 
-
-class APIEndpointSettings(NamedTuple):
-    """Settings for API endpoint."""
-
-    command: str
-    schema: vol.Schema
-    timeout: int | None = 60
-    pass_data: bool = False
-
-
-MAP_SERVICE_API = {
-    # Legacy addon services
-    SERVICE_ADDON_START: APIEndpointSettings("/addons/{addon}/start", SCHEMA_ADDON),
-    SERVICE_ADDON_STOP: APIEndpointSettings("/addons/{addon}/stop", SCHEMA_ADDON),
-    SERVICE_ADDON_RESTART: APIEndpointSettings("/addons/{addon}/restart", SCHEMA_ADDON),
-    SERVICE_ADDON_STDIN: APIEndpointSettings(
-        "/addons/{addon}/stdin", SCHEMA_ADDON_STDIN
-    ),
-    # New app services
-    SERVICE_APP_START: APIEndpointSettings("/addons/{addon}/start", SCHEMA_APP),
-    SERVICE_APP_STOP: APIEndpointSettings("/addons/{addon}/stop", SCHEMA_APP),
-    SERVICE_APP_RESTART: APIEndpointSettings("/addons/{addon}/restart", SCHEMA_APP),
-    SERVICE_APP_STDIN: APIEndpointSettings("/addons/{addon}/stdin", SCHEMA_APP_STDIN),
-    SERVICE_HOST_SHUTDOWN: APIEndpointSettings("/host/shutdown", SCHEMA_NO_DATA),
-    SERVICE_HOST_REBOOT: APIEndpointSettings("/host/reboot", SCHEMA_NO_DATA),
-    SERVICE_BACKUP_FULL: APIEndpointSettings(
-        "/backups/new/full",
-        SCHEMA_BACKUP_FULL,
-        None,
-        True,
-    ),
-    SERVICE_BACKUP_PARTIAL: APIEndpointSettings(
-        "/backups/new/partial",
-        SCHEMA_BACKUP_PARTIAL,
-        None,
-        True,
-    ),
-    SERVICE_RESTORE_FULL: APIEndpointSettings(
-        "/backups/{slug}/restore/full",
-        SCHEMA_RESTORE_FULL,
-        None,
-        True,
-    ),
-    SERVICE_RESTORE_PARTIAL: APIEndpointSettings(
-        "/backups/{slug}/restore/partial",
-        SCHEMA_RESTORE_PARTIAL,
-        None,
-        True,
-    ),
-}
 
 HARDWARE_INTEGRATIONS = {
     "green": "homeassistant_green",
@@ -397,7 +212,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
 
     host = os.environ["SUPERVISOR"]
     websession = async_get_clientsession(hass)
-    hass.data[DATA_COMPONENT] = hassio = HassIO(hass.loop, websession, host)
+    hass.data[DATA_COMPONENT] = HassIO(hass.loop, websession, host)
     supervisor_client = get_supervisor_client(hass)
 
     try:
@@ -510,74 +325,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
     hass.data[DATA_KEY_SUPERVISOR_ISSUES] = issues = SupervisorIssues(hass)
     issues_task = hass.async_create_task(issues.setup(), eager_start=True)
 
-    async def async_service_handler(service: ServiceCall) -> None:
-        """Handle service calls for Hass.io."""
-        api_endpoint = MAP_SERVICE_API[service.service]
-
-        data = service.data.copy()
-        addon = data.pop(ATTR_APP, None) or data.pop(ATTR_ADDON, None)
-        slug = data.pop(ATTR_SLUG, None)
-
-        if addons := data.pop(ATTR_APPS, None) or data.pop(ATTR_ADDONS, None):
-            data[ATTR_ADDONS] = addons
-
-        payload = None
-
-        # Pass data to Hass.io API
-        if service.service in (SERVICE_ADDON_STDIN, SERVICE_APP_STDIN):
-            payload = data[ATTR_INPUT]
-        elif api_endpoint.pass_data:
-            payload = data
-
-        # Call API
-        # The exceptions are logged properly in hassio.send_command
-        with suppress(HassioAPIError):
-            await hassio.send_command(
-                api_endpoint.command.format(addon=addon, slug=slug),
-                payload=payload,
-                timeout=api_endpoint.timeout,
-            )
-
-    for service, settings in MAP_SERVICE_API.items():
-        hass.services.async_register(
-            DOMAIN, service, async_service_handler, schema=settings.schema
-        )
-
-    dev_reg = dr.async_get(hass)
-
-    async def async_mount_reload(service: ServiceCall) -> None:
-        """Handle service calls for Hass.io."""
-        coordinator: HassioDataUpdateCoordinator | None = None
-
-        if (device := dev_reg.async_get(service.data[ATTR_DEVICE_ID])) is None:
-            raise ServiceValidationError(
-                translation_domain=DOMAIN,
-                translation_key="mount_reload_unknown_device_id",
-            )
-
-        if (
-            device.name is None
-            or device.model != SupervisorEntityModel.MOUNT
-            or (coordinator := hass.data.get(ADDONS_COORDINATOR)) is None
-            or coordinator.entry_id not in device.config_entries
-        ):
-            raise ServiceValidationError(
-                translation_domain=DOMAIN,
-                translation_key="mount_reload_invalid_device",
-            )
-
-        try:
-            await supervisor_client.mounts.reload_mount(device.name)
-        except SupervisorError as error:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="mount_reload_error",
-                translation_placeholders={"name": device.name, "error": str(error)},
-            ) from error
-
-    hass.services.async_register(
-        DOMAIN, SERVICE_MOUNT_RELOAD, async_mount_reload, SCHEMA_MOUNT_RELOAD
-    )
+    # Register services
+    async_setup_services(hass, supervisor_client)
 
     async def update_info_data(_: datetime | None = None) -> None:
         """Update last available supervisor information."""
