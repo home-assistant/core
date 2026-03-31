@@ -30,6 +30,7 @@ class ChessConfigFlow(ConfigFlow, domain=DOMAIN):
             client = ChessComClient(session=session)
             try:
                 user = await client.get_player(user_input[CONF_USERNAME])
+                await client.get_player_stats(user_input[CONF_USERNAME])
             except NotFoundError:
                 errors["base"] = "player_not_found"
             except Exception:
