@@ -413,7 +413,7 @@ async def test_load_unload_entry(
             {
                 ATTR_SOURCE_TYPE: SourceType.GPS,
                 ATTR_GPS_ACCURACY: 0,
-                ATTR_IN_ZONES: ["zone.other_zone"],
+                ATTR_IN_ZONES: ["zone.other_zone", "zone.other_zone_larger"],
                 ATTR_LATITUDE: -50.0,
                 ATTR_LONGITUDE: -60.0,
             },
@@ -474,6 +474,11 @@ async def test_tracker_entity_state(
         "zone.other_zone",
         "0",
         {ATTR_LATITUDE: -50.0, ATTR_LONGITUDE: -60.0, ATTR_RADIUS: 300},
+    )
+    hass.states.async_set(
+        "zone.other_zone_larger",
+        "0",
+        {ATTR_LATITUDE: -50.0, ATTR_LONGITUDE: -60.0, ATTR_RADIUS: 500},
     )
     await hass.async_block_till_done()
     # Write state again to ensure the zone state is taken into account.

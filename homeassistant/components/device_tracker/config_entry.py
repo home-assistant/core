@@ -225,7 +225,7 @@ class TrackerEntity(
     _attr_source_type: SourceType = SourceType.GPS
 
     __active_zone: State | None = None
-    __active_zones: list[str] | None = None
+    __in_zones: list[str] | None = None
 
     @cached_property
     def should_poll(self) -> bool:
@@ -264,12 +264,12 @@ class TrackerEntity(
     def _async_write_ha_state(self) -> None:
         """Calculate active zones."""
         if self.latitude is not None and self.longitude is not None:
-            self.__active_zone, self.__active_zones = zone.async_active_zones(
+            self.__active_zone, self.__in_zones = zone.async_in_zones(
                 self.hass, self.latitude, self.longitude, self.location_accuracy
             )
         else:
             self.__active_zone = None
-            self.__active_zones = None
+            self.__in_zones = None
         super()._async_write_ha_state()
 
     @property
@@ -298,7 +298,7 @@ class TrackerEntity(
         attr.update(super().state_attributes)
 
         if self.latitude is not None and self.longitude is not None:
-            attr[ATTR_IN_ZONES] = self.__active_zones or []
+            attr[ATTR_IN_ZONES] = self.__in_zones or []
             attr[ATTR_LATITUDE] = self.latitude
             attr[ATTR_LONGITUDE] = self.longitude
             attr[ATTR_GPS_ACCURACY] = self.location_accuracy
