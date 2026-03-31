@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import asyncio
-from dataclasses import dataclass
 from http import HTTPStatus
 import logging
 
@@ -14,7 +13,6 @@ from requests.exceptions import RequestException
 
 from homeassistant import exceptions
 from homeassistant.components import webhook
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_HOST,
     CONF_PORT,
@@ -28,7 +26,7 @@ from homeassistant.helpers.network import NoURLAvailableError, get_url
 from homeassistant.helpers.update_coordinator import UpdateFailed
 
 from .const import CONF_ENCRYPT_TOKEN, DEFAULT_TIMEOUT, DOMAIN
-from .coordinator import NukiCoordinator
+from .coordinator import NukiConfigEntry, NukiCoordinator, NukiEntryData
 from .helpers import NukiWebhookException, parse_id
 
 _LOGGER = logging.getLogger(__name__)
@@ -36,22 +34,12 @@ _LOGGER = logging.getLogger(__name__)
 PLATFORMS = [Platform.BINARY_SENSOR, Platform.LOCK, Platform.SENSOR]
 
 
-@dataclass(slots=True)
-class NukiEntryData:
-    """Class to hold Nuki data."""
-
-    coordinator: NukiCoordinator
-    bridge: NukiBridge
-    locks: list[NukiLock]
-    openers: list[NukiOpener]
-
-
 def _get_bridge_devices(bridge: NukiBridge) -> tuple[list[NukiLock], list[NukiOpener]]:
     return bridge.locks, bridge.openers
 
 
 async def _create_webhook(
-    hass: HomeAssistant, entry: ConfigEntry, bridge: NukiBridge
+    hass: HomeAssistant, entry: NukiConfigEntry, bridge: NukiBridge
 ) -> None:
     # Create HomeAssistant webhook
     async def handle_webhook(
@@ -63,16 +51,14 @@ async def _create_webhook(
         except ValueError:
             return web.Response(status=HTTPStatus.BAD_REQUEST)
 
-        entry_data: NukiEntryData = hass.data[DOMAIN][entry.entry_id]
-        locks = entry_data.locks
-        openers = entry_data.openers
+        locks = entry.runtime_data.locks
+        openers = entry.runtime_data.openers
 
         devices = [x for x in locks + openers if x.nuki_id == data["nukiId"]]
         if len(devices) == 1:
             devices[0].update_from_callback(data)
 
-        coordinator = entry_data.coordinator
-        coordinator.async_set_updated_data(None)
+        entry.runtime_data.coordinator.async_set_updated_data(None)
 
         return web.Response(status=HTTPStatus.OK)
 
@@ -157,10 +143,8 @@ def _remove_webhook(bridge: NukiBridge, entry_id: str) -> None:
             bridge.callback_remove(item["id"])
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: NukiConfigEntry) -> bool:
     """Set up the Nuki entry."""
-
-    hass.data.setdefault(DOMAIN, {})
 
     # Migration of entry unique_id
     if isinstance(entry.unique_id, int):
@@ -225,7 +209,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
 
     coordinator = NukiCoordinator(hass, entry, bridge, locks, openers)
-    hass.data[DOMAIN][entry.entry_id] = NukiEntryData(
+    entry.runtime_data = NukiEntryData(
         coordinator=coordinator,
         bridge=bridge,
         locks=locks,
@@ -240,16 +224,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: NukiConfigEntry) -> bool:
     """Unload the Nuki entry."""
     webhook.async_unregister(hass, entry.entry_id)
-    entry_data: NukiEntryData = hass.data[DOMAIN][entry.entry_id]
 
     try:
         async with asyncio.timeout(10):
             await hass.async_add_executor_job(
                 _remove_webhook,
-                entry_data.bridge,
+                entry.runtime_data.bridge,
                 entry.entry_id,
             )
     except InvalidCredentialsException as err:
@@ -261,8 +244,4 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             f"Unable to remove callback. Error communicating with Bridge: {err}"
         ) from err
 
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-    if unload_ok:
-        hass.data[DOMAIN].pop(entry.entry_id)
-
-    return unload_ok
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)

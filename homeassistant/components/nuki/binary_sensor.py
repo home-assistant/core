@@ -9,23 +9,21 @@ from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import NukiEntryData
-from .const import DOMAIN
+from .coordinator import NukiConfigEntry
 from .entity import NukiEntity
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: NukiConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Nuki binary sensors."""
-    entry_data: NukiEntryData = hass.data[DOMAIN][entry.entry_id]
+    entry_data = entry.runtime_data
 
     entities: list[NukiEntity] = []
 
