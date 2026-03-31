@@ -17,13 +17,13 @@ from homeassistant.components.climate import (
     ClimateEntityFeature,
     HVACMode,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_NAME, PRECISION_TENTHS, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
 
+from . import NoboHubConfigEntry
 from .const import (
     ATTR_SERIAL,
     ATTR_TEMP_COMFORT_C,
@@ -45,13 +45,13 @@ MAX_TEMPERATURE = 30
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: NoboHubConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Nobø Ecohub platform from UI configuration."""
 
     # Setup connection with hub
-    hub: nobo = hass.data[DOMAIN][config_entry.entry_id]
+    hub = config_entry.runtime_data
 
     override_type = (
         nobo.API.OVERRIDE_TYPE_NOW
