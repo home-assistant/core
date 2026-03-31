@@ -22,6 +22,7 @@ from homeassistant.core import (
 from homeassistant.exceptions import HomeAssistantError, TemplateError
 from homeassistant.helpers import (
     config_validation as cv,
+    issue_registry as ir,
     service as service_helper,
     template,
 )
@@ -168,6 +169,16 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     for name, command in conf.items():
         if name == SERVICE_RELOAD:
+            ir.async_create_issue(
+                hass,
+                DOMAIN,
+                f"reserved_{SERVICE_RELOAD}",
+                is_fixable=False,
+                is_persistent=True,
+                severity=ir.IssueSeverity.ERROR,
+                translation_key="reserved_reload_name",
+                translation_placeholders={"name": name},
+            )
             _LOGGER.warning("Skipping shell_command entry '%s': name is reserved", name)
             continue
         hass.services.async_register(
@@ -197,6 +208,16 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         cache.clear()
         for name, command in new_conf.items():
             if name == SERVICE_RELOAD:
+                ir.async_create_issue(
+                    hass,
+                    DOMAIN,
+                    f"reserved_{SERVICE_RELOAD}",
+                    is_fixable=False,
+                    is_persistent=True,
+                    severity=ir.IssueSeverity.ERROR,
+                    translation_key="reserved_reload_name",
+                    translation_placeholders={"name": name},
+                )
                 _LOGGER.warning(
                     "Skipping shell_command entry '%s': name is reserved", name
                 )
