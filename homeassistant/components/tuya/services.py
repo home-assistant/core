@@ -70,7 +70,7 @@ def _get_tuya_device(
         )
 
     # Find the device in Tuya config entry
-    for entry in hass.config_entries.async_entries(DOMAIN):
+    for entry in hass.config_entries.async_loaded_entries(DOMAIN):
         manager = entry.runtime_data.manager
         if tuya_device_id in manager.device_map:
             return manager.device_map[tuya_device_id], manager
