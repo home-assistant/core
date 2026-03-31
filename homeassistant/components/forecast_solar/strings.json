@@ -84,6 +84,7 @@
   },
   "options": {
     "error": {
+      "api_key_required": "An API key is required to add more than one plane. You can configure it in the integration options.",
       "invalid_api_key": "[%key:common::config_flow::error::invalid_api_key%]"
     },
     "step": {
