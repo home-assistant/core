@@ -49,6 +49,6 @@ def mock_paj_gps_api() -> Generator[AsyncMock]:
         api.login.return_value = AuthResponse(
             userID=42, token="test_token", refresh_token="test_refresh"
         )
-        api.get_devices.return_value = {device_data["id"]: Device(**device_data)}
+        api.get_devices.return_value = [Device(**device_data)]
         api.get_all_last_positions.return_value = [TrackPoint(**trackpoint_data)]
         yield api

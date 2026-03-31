@@ -88,7 +88,10 @@ class PajGpsCoordinator(DataUpdateCoordinator[PajGpsData]):
         """Fetch device list and positions every UPDATE_INTERVAL seconds."""
         devices: dict[int, Device] = {}
         try:
-            devices = await self.api.get_devices()
+            device_list = await self.api.get_devices()
+            devices = {
+                device.id: device for device in device_list if device.id is not None
+            }
         except PajGpsApiError as exc:
             raise UpdateFailed(f"Failed to fetch device list: {exc}") from exc
 
