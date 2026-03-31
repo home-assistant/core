@@ -238,6 +238,8 @@ DEFAULT_INTEGRATIONS = {
     "timer",
     #
     # Base platforms:
+    # Note: Calendar and todo are not included to prevent them from registering
+    # their frontend panels when there are no calendar or todo integrations.
     *(BASE_PLATFORMS - {"calendar", "todo"}),
     #
     # Integrations providing triggers and conditions for base platforms:
