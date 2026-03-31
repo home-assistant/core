@@ -226,9 +226,13 @@ async def test_phase_count_filters_transient_zero_on_service_call(
     control_data = mock_nrgkick_api.get_control.return_value.copy()
     control_data[CONTROL_KEY_PHASE_COUNT] = 1
     mock_nrgkick_api.get_control.return_value = control_data
+    prior_call_count = mock_nrgkick_api.get_control.call_count
     freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
+
+    # Verify that a periodic refresh actually occurred.
+    assert mock_nrgkick_api.get_control.call_count > prior_call_count
 
     assert (state := hass.states.get(entity_id))
     assert state.state == "1"
