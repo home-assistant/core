@@ -1,6 +1,6 @@
 """Test the Tessie init."""
 
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 from tesla_fleet_api.exceptions import TeslaFleetError
 
@@ -21,7 +21,7 @@ async def test_load_unload(hass: HomeAssistant) -> None:
 
 
 async def test_auth_failure(
-    hass: HomeAssistant, mock_get_state_of_all_vehicles
+    hass: HomeAssistant, mock_get_state_of_all_vehicles: AsyncMock
 ) -> None:
     """Test init with an authentication error."""
 
@@ -31,17 +31,29 @@ async def test_auth_failure(
 
 
 async def test_unknown_failure(
-    hass: HomeAssistant, mock_get_state_of_all_vehicles
+    hass: HomeAssistant, mock_get_state_of_all_vehicles: AsyncMock
 ) -> None:
     """Test init with an client response error."""
 
     mock_get_state_of_all_vehicles.side_effect = ERROR_UNKNOWN
     entry = await setup_platform(hass)
     assert entry.state is ConfigEntryState.SETUP_ERROR
+    assert entry.reason == "Failed to connect"
+
+
+async def test_api_failure(
+    hass: HomeAssistant, mock_get_state_of_all_vehicles: AsyncMock
+) -> None:
+    """Test init with a fleet API error."""
+
+    mock_get_state_of_all_vehicles.side_effect = TeslaFleetError()
+    entry = await setup_platform(hass)
+    assert entry.state is ConfigEntryState.SETUP_ERROR
+    assert entry.reason == "Failed to connect"
 
 
 async def test_connection_failure(
-    hass: HomeAssistant, mock_get_state_of_all_vehicles
+    hass: HomeAssistant, mock_get_state_of_all_vehicles: AsyncMock
 ) -> None:
     """Test init with a network connection error."""
 
