@@ -1,5 +1,4 @@
 """Access point for the HomematicIP Cloud component."""
-# Debug build: lackas/hmip-reconnect-fix v5 (2026-03-31)
 
 from __future__ import annotations
 
@@ -123,7 +122,7 @@ class HomematicipHAP:
 
     async def async_setup(self, tries: int = 0) -> bool:
         """Initialize connection."""
-        _LOGGER.debug("HomematicIP Cloud HAP starting — debug build: lackas/hmip-reconnect-fix v5 (2026-03-31)")
+        _LOGGER.debug("HomematicIP Cloud HAP starting")
         try:
             self.home = await self.get_hap(
                 self.hass,
