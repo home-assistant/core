@@ -43,6 +43,7 @@ async def test_valid_port(
     # Ensure the setup function and connect were called.
     mock_setup_entry.assert_called_once()
     mock_tis_api.connect.assert_awaited_once()
+    mock_tis_api.disconnect.assert_called_once()
 
 
 async def test_connection_error(hass: HomeAssistant, mock_tis_api: MagicMock) -> None:
@@ -63,6 +64,7 @@ async def test_connection_error(hass: HomeAssistant, mock_tis_api: MagicMock) ->
     # The flow should show the form again with an error.
     assert result2["type"] == FlowResultType.FORM
     assert result2["errors"] == {"base": "cannot_connect"}
+    mock_tis_api.disconnect.assert_called_once()
 
 
 async def test_duplicate_entry(
@@ -96,6 +98,7 @@ async def test_duplicate_entry(
     # Verify that the second flow is aborted.
     assert result4["type"] == FlowResultType.ABORT
     assert result4["reason"] == "already_configured"
+    mock_tis_api.disconnect.assert_called_once()
 
 
 async def test_unexpected_exception(
@@ -118,3 +121,4 @@ async def test_unexpected_exception(
     # The flow should still show the form with the error because it returns False
     assert result2["type"] == FlowResultType.FORM
     assert result2["errors"] == {"base": "cannot_connect"}
+    mock_tis_api.disconnect.assert_called_once()

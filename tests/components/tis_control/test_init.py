@@ -92,6 +92,7 @@ async def test_async_unload_entry_success(
     with patch.object(hass.config_entries, "async_unload_platforms", return_value=True):
         result = await async_unload_entry(hass, mock_config_entry)
         assert result is True
+        mock_config_entry.runtime_data.tis_api.disconnect.assert_called_once()
 
 
 async def test_async_unload_entry_failure(
@@ -107,6 +108,7 @@ async def test_async_unload_entry_failure(
 
         assert result is False
         mock_unload_platforms.assert_called_once()
+        mock_config_entry.runtime_data.tis_api.disconnect.assert_not_called()
 
 
 async def test_async_setup_entry_event_listener_exception(
