@@ -67,15 +67,6 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Renault entities from config entry."""
-    # Do not store these attributes in the HA DB
-    _entity_component_unrecorded_attributes = frozenset(
-        {
-            "schedules",
-            "startDateTime",
-            "dateTime",
-            "delay",
-        }
-    )
     entities: list[RenaultSensor[Any]] = [
         description.entity_class(vehicle, description)
         for vehicle in config_entry.runtime_data.vehicles.values()
@@ -91,6 +82,15 @@ class RenaultSensor(RenaultDataEntity[T], SensorEntity):
     """Mixin for sensor specific attributes."""
 
     entity_description: RenaultSensorEntityDescription[T]
+    # Do not store these attributes in the HA DB
+    _unrecorded_attributes = frozenset(
+        {
+            "schedules",
+            "startDateTime",
+            "dateTime",
+            "delay",
+        }
+    )
 
     @property
     def data(self) -> StateType:
