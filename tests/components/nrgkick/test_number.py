@@ -153,6 +153,9 @@ async def test_phase_count_filters_transient_zero_on_poll(
     assert (state := hass.states.get(entity_id))
     assert state.state == "3"
 
+    # One refresh happened during setup.
+    assert mock_nrgkick_api.get_control.call_count == 1
+
     # Device briefly reports 0 during a phase switch.
     control_data = mock_nrgkick_api.get_control.return_value.copy()
     control_data[CONTROL_KEY_PHASE_COUNT] = 0
@@ -160,6 +163,9 @@ async def test_phase_count_filters_transient_zero_on_poll(
     freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
+
+    # Verify the coordinator actually polled the device.
+    assert mock_nrgkick_api.get_control.call_count == 2
 
     # The transient 0 must not surface; state stays at the previous value.
     assert (state := hass.states.get(entity_id))
@@ -172,6 +178,9 @@ async def test_phase_count_filters_transient_zero_on_poll(
     freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
+
+    # Verify the coordinator polled again.
+    assert mock_nrgkick_api.get_control.call_count == 3
 
     assert (state := hass.states.get(entity_id))
     assert state.state == "1"
