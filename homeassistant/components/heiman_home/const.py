@@ -170,7 +170,7 @@ ENTITY_ICONS = {
         "humidity": "mdi:water-percent",
         "temperature": "mdi:thermometer",
         "SignalStrength": "mdi:signal",
-        "TimeZone":"mdi:clock-time-nine-outline",
+        "TimeZone": "mdi:clock-time-nine-outline",
     },
     # Switch 图标
     "switch": {
@@ -185,7 +185,5 @@ ENTITY_ICONS = {
         "Mute": "mdi:volume-mute",
     },
     # Select 图标
-    "select": {
-        "AlarmSoundOption": "mdi:volume-high"
-    },
+    "select": {"AlarmSoundOption": "mdi:volume-high"},
 }

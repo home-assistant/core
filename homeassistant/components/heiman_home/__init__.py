@@ -3,8 +3,8 @@
 from __future__ import annotations
 
 import logging
-import sys
 from pathlib import Path
+import sys
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -50,7 +50,6 @@ from .const import (
 )
 from .coordinator import HeimanDataUpdateCoordinator
 
-
 type HeimanConfigEntry = ConfigEntry[HeimanDataUpdateCoordinator]
 
 
@@ -59,7 +58,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: HeimanConfigEntry) -> bo
     # 检查配置中是否包含 token
     if CONF_TOKEN not in entry.data:
         raise ConfigEntryAuthFailed("Config entry missing token")
-    
+
     try:
         implementation = await async_get_config_entry_implementation(hass, entry)
     except ImplementationUnavailableError as err:
@@ -67,9 +66,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: HeimanConfigEntry) -> bo
             translation_domain=DOMAIN,
             translation_key="oauth2_implementation_unavailable",
         ) from err
-    
+
     session = OAuth2Session(hass, entry, implementation)
-    
+
     # 验证 token 有效性
     try:
         await session.async_ensure_token_valid()
@@ -77,20 +76,20 @@ async def async_setup_entry(hass: HomeAssistant, entry: HeimanConfigEntry) -> bo
         raise ConfigEntryAuthFailed from err
     except OAuth2TokenRequestError as err:
         raise ConfigEntryNotReady from err
-    
+
     # 创建 API 客户端
     api_client = HeimanApiClient(hass=hass, session=session)
-    
+
     # 测试 API 连接
     try:
         user_info = await api_client.async_get_user_info()
         _LOGGER.debug("Successfully authenticated as user: %s", user_info.email)
     except Exception as err:
         raise ConfigEntryNotReady(f"Failed to connect to Heiman API: {err}") from err
-    
+
     # 初始化设备管理
     device_management = DeviceManagement()
-    
+
     # 配置设备过滤
     filter_config = {
         "filter_mode": entry.data.get(CONF_DEVICE_FILTER_MODE, "exclude"),
@@ -104,22 +103,22 @@ async def async_setup_entry(hass: HomeAssistant, entry: HeimanConfigEntry) -> bo
         "device_filter_mode": entry.data.get(CONF_DEVICE_FILTER_MODE, "exclude"),
         "device_list": entry.data.get(CONF_DEVICE_LIST, []),
     }
-    
+
     # 配置区域同步
     area_sync_mode = entry.data.get(CONF_AREA_NAME_RULE, AREA_NAME_RULE_HOME_ROOM)
-    
+
     device_management.configure(
         filter_config=filter_config,
         area_sync_mode=area_sync_mode,
     )
-    
+
     # 存储设备管理到 hass.data
     if DOMAIN not in hass.data:
         hass.data[DOMAIN] = {}
     hass.data[DOMAIN][entry.entry_id] = {
         "device_management": device_management,
     }
-    
+
     # 创建数据协调器
     coordinator = HeimanDataUpdateCoordinator(
         hass=hass,
@@ -129,22 +128,22 @@ async def async_setup_entry(hass: HomeAssistant, entry: HeimanConfigEntry) -> bo
         device_management=device_management,
         oauth_session=session,  # Pass OAuth2 session for MQTT token retrieval
     )
-    
+
     # 首次更新数据
     await coordinator.async_config_entry_first_refresh()
-    
+
     # 初始化 MQTT 客户端（用于实时设备属性更新）
     await coordinator.async_init_mqtt_client()
-    
+
     # 存储协调器到 hass.data 和 runtime_data
     if DOMAIN not in hass.data:
         hass.data[DOMAIN] = {}
     hass.data[DOMAIN][entry.entry_id] = coordinator
     entry.runtime_data = coordinator
-    
+
     # 加载平台
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-    
+
     # 注册服务来读取设备属性
     async def handle_read_device_properties(call):
         """Handle read device properties service call."""
@@ -152,16 +151,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: HeimanConfigEntry) -> bo
         if not device_id:
             _LOGGER.error("Device ID is required for read_device_properties service")
             return
-        
+
         coordinator: HeimanDataUpdateCoordinator = entry.runtime_data
         await coordinator.async_read_device_properties(device_id)
-    
+
     hass.services.async_register(
         DOMAIN,
         SERVICE_READ_DEVICE_PROPERTIES,
         handle_read_device_properties,
     )
-    
+
     return True
 
 
@@ -177,7 +176,7 @@ async def async_migrate_entry(hass: HomeAssistant, entry: HeimanConfigEntry) -> 
         entry.version,
         entry.minor_version,
     )
-    
+
     # 未来可以在这里添加迁移逻辑
-    
+
     return True

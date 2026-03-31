@@ -6,19 +6,13 @@ from typing import Any
 
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlowResult
 from homeassistant.const import CONF_TOKEN
 from homeassistant.helpers.config_entry_oauth2_flow import AbstractOAuth2FlowHandler
+import homeassistant.helpers.config_validation as cv
 
 from .api import HeimanApiClient
-from .const import (
-    CONF_HOME_ID,
-    CONF_USER_ID,
-    DOMAIN,
-    REQUESTED_SCOPES,
-    SCOPES,
-)
+from .const import CONF_HOME_ID, CONF_USER_ID, DOMAIN, REQUESTED_SCOPES, SCOPES
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -62,7 +56,9 @@ class HeimanConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
             return self.async_abort(reason="missing_scopes")
 
         # 创建 API 客户端验证 token 并获取用户信息
-        api_client = HeimanApiClient(hass=self.hass, session=None, token_data=data[CONF_TOKEN])
+        api_client = HeimanApiClient(
+            hass=self.hass, session=None, token_data=data[CONF_TOKEN]
+        )
 
         try:
             user_info = await api_client.async_get_user_info()
@@ -92,7 +88,7 @@ class HeimanConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
         return await self.async_step_select_home()
 
     async def async_step_select_home(
-            self, user_input: dict[str, Any] | None = None
+        self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle home selection step with multi-select support."""
         if user_input is not None:
@@ -122,14 +118,20 @@ class HeimanConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
                 # 构建配置数据
                 config_data = {
                     **self._auth_info.auth_data,
-                    CONF_HOME_ID: selected_home_ids[0] if selected_home_ids else None,  # 主家庭 ID
+                    CONF_HOME_ID: selected_home_ids[0]
+                    if selected_home_ids
+                    else None,  # 主家庭 ID
                     "home_ids": selected_home_ids,  # 所有选中的家庭 ID
                     CONF_USER_ID: self._auth_info.user_info.user_id,
                 }
 
                 # Get title from user info (nickname or email)
                 user_info = self._auth_info.user_info
-                title = getattr(user_info, 'nickname', None) or getattr(user_info, 'email', None) or "Heiman Home"
+                title = (
+                    getattr(user_info, "nickname", None)
+                    or getattr(user_info, "email", None)
+                    or "Heiman Home"
+                )
 
                 return self.async_create_entry(
                     title=title,
@@ -144,7 +146,9 @@ class HeimanConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
                     self._get_reauth_entry(),
                     data_updates={
                         **self._auth_info.auth_data,
-                        CONF_HOME_ID: selected_home_ids[0] if selected_home_ids else None,
+                        CONF_HOME_ID: selected_home_ids[0]
+                        if selected_home_ids
+                        else None,
                         "home_ids": selected_home_ids,
                         CONF_USER_ID: self._auth_info.user_info.user_id,
                     },
@@ -184,21 +188,23 @@ class HeimanConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
             _LOGGER.debug("Home option: %s", display_text)
 
         default_homes = [home.home_id for home in homes if home.home_id]
-        
+
         return vol.Schema(
             {
-                vol.Required(CONF_HOME_ID, default=default_homes): cv.multi_select(home_options),
+                vol.Required(CONF_HOME_ID, default=default_homes): cv.multi_select(
+                    home_options
+                ),
             }
         )
 
     async def async_step_reauth(
-            self, entry_data: Mapping[str, Any]
+        self, entry_data: Mapping[str, Any]
     ) -> ConfigFlowResult:
         """Perform reauth upon migration of old entries."""
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(
-            self, user_input: dict[str, Any] | None = None
+        self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Confirm reauth dialog."""
         if user_input is None:
