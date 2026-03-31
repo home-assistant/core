@@ -238,29 +238,30 @@ class ADBDevice(AndroidTVEntity, MediaPlayerEntity):
                 await self.aftv.stop_app(self._app_name_to_id.get(source_, source_))
 
     @adb_decorator()
-    async def adb_command(self, command: str) -> None:
+    async def adb_command(self, command: str) -> dict[str, str | None] | None:
         """Send an ADB command to an Android / Fire TV device."""
         if key := KEYS.get(command):
             await self.aftv.adb_shell(f"input keyevent {key}")
-            return
+            return None
 
         if command == "GET_PROPERTIES":
-            self._attr_extra_state_attributes[ATTR_ADB_RESPONSE] = str(
-                await self.aftv.get_properties_dict()
-            )
+            adb_response = str(await self.aftv.get_properties_dict())
+            self._attr_extra_state_attributes[ATTR_ADB_RESPONSE] = adb_response
             self.async_write_ha_state()
-            return
+            return {ATTR_ADB_RESPONSE: adb_response}
 
         try:
             response = await self.aftv.adb_shell(command)
         except UnicodeDecodeError:
-            return
+            return None
 
         if isinstance(response, str) and response.strip():
-            self._attr_extra_state_attributes[ATTR_ADB_RESPONSE] = response.strip()
+            adb_response = response.strip()
+            self._attr_extra_state_attributes[ATTR_ADB_RESPONSE] = adb_response
             self.async_write_ha_state()
+            return {ATTR_ADB_RESPONSE: adb_response}
 
-        return
+        return None
 
     @adb_decorator()
     async def learn_sendevent(self) -> None:
