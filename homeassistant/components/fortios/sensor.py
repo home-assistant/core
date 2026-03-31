@@ -65,7 +65,7 @@ SENSORS: tuple[FortiOSSensorEntityDescription, ...] = (
         native_unit_of_measurement="sessions/s",
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda data: (
-            data.get("system_usage", {}).get("session", {}).get("setup_rate")
+            data.get("system_usage", {}).get("setuprate", {}).get("current")
         ),
     ),
 )
