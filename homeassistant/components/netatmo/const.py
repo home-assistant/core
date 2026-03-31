@@ -27,11 +27,9 @@ CONF_URL_WEATHER = "https://my.netatmo.com/app/weather"
 CONF_URL_CONTROL = "https://home.netatmo.com/control"
 CONF_URL_PUBLIC_WEATHER = "https://weathermap.netatmo.com/"
 
-AUTH = "netatmo_auth"
 CONF_PUBLIC = "public_sensor_config"
 CAMERA_DATA = "netatmo_camera"
 HOME_DATA = "netatmo_home_data"
-DATA_HANDLER = "netatmo_data_handler"
 SIGNAL_NAME = "signal_name"
 
 API_SCOPES_EXCLUDED_FROM_CLOUD = [
