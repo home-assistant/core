@@ -12,8 +12,6 @@ PLATFORMS = [Platform.NOTIFY]
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
-type NfAndroidTVConfigEntry = ConfigEntry[str]
-
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the NFAndroidTV component."""
@@ -22,9 +20,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: NfAndroidTVConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up NFAndroidTV from a config entry."""
-    entry.runtime_data = entry.data[CONF_HOST]
 
     hass.async_create_task(
         discovery.async_load_platform(
@@ -39,8 +36,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: NfAndroidTVConfigEntry) 
     return True
 
 
-async def async_unload_entry(
-    hass: HomeAssistant, entry: NfAndroidTVConfigEntry
-) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
