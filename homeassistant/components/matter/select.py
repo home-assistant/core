@@ -9,8 +9,6 @@ from typing import TYPE_CHECKING, cast
 from chip.clusters import Objects as clusters
 from chip.clusters.ClusterObjects import ClusterAttributeDescriptor, ClusterCommand
 from chip.clusters.Types import Nullable
-from matter_server.common.custom_clusters import HeimanCluster
-
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.config_entries import ConfigEntry
@@ -639,44 +637,6 @@ DISCOVERY_SCHEMAS = [
         ),
         vendor_id=(4619,),
         product_id=(4097,),
-    ),
-    MatterDiscoverySchema(
-        platform=Platform.SELECT,
-        entity_description=MatterSelectEntityDescription(
-            key="HeimanClusterServerLowPowerModeSelect",
-            entity_category=EntityCategory.CONFIG,
-            translation_key="low_power_mode",
-            options=["keepalive", "hibernation"],
-            device_to_ha={
-                0: "keepalive",
-                1: "hibernation",
-            }.get,
-            ha_to_device={
-                "keepalive": 0,
-                "hibernation": 1,
-            }.get,
-        ),
-        entity_class=MatterAttributeSelectEntity,
-        required_attributes=(HeimanCluster.Attributes.LowPowerMode,),
-    ),
-    MatterDiscoverySchema(
-        platform=Platform.SELECT,
-        entity_description=MatterSelectEntityDescription(
-            key="HeimanClusterServerSirenActiveModeSelect",
-            entity_category=EntityCategory.CONFIG,
-            translation_key="siren_active",
-            options=["inactive", "active"],
-            device_to_ha={
-                0: "inactive",
-                1: "active",
-            }.get,
-            ha_to_device={
-                "inactive": 0,
-                "active": 1,
-            }.get,
-        ),
-        entity_class=MatterAttributeSelectEntity,
-        required_attributes=(HeimanCluster.Attributes.SirenActive,),
     ),
     MatterDiscoverySchema(
         platform=Platform.SELECT,

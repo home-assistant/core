@@ -310,13 +310,6 @@
       "laundry_washer_spin_speed": {
         "name": "Spin speed"
       },
-      "low_power_mode": {
-        "name": "Power saving",
-        "state": {
-          "hibernation": "Hibernation",
-          "keepalive": "Keepalive"
-        }
-      },
       "mode": {
         "name": "Mode"
       },
@@ -338,13 +331,6 @@
           "high": "[%key:common::state::high%]",
           "low": "[%key:common::state::low%]",
           "standard": "Standard"
-        }
-      },
-      "siren_active": {
-        "name": "Siren",
-        "state": {
-          "active": "Active",
-          "inactive": "Inactive"
         }
       },
       "startup_on_off": {
