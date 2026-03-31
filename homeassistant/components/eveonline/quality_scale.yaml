@@ -49,7 +49,9 @@ rules:
   docs-data-update: done
   docs-examples: done
   docs-known-limitations: done
-  docs-supported-devices: done
+  docs-supported-devices:
+    status: exempt
+    comment: Eve Online is a cloud service and does not integrate physical devices.
   docs-supported-functions: done
   docs-troubleshooting: done
   docs-use-cases: done
