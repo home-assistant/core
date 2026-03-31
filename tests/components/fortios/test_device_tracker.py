@@ -51,6 +51,8 @@ def _make_api_mock(device: dict | None = None) -> AsyncMock:
                     "mem": [{"current": 50}],
                     "session": [{"current": 100}],
                     "setuprate": [{"current": 100}],
+                    "session6": [{"current": 100}],
+                    "setuprate6": [{"current": 100}],
                 }
             }
         # monitor/system/status
