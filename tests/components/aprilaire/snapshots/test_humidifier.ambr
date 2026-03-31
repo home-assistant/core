@@ -1,65 +1,5 @@
 # serializer version: 1
-# name: test_all_entities[humidifier.test_thermostat-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': dict({
-      'max_humidity': 50,
-      'min_humidity': 10,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'humidifier',
-    'entity_category': None,
-    'entity_id': 'humidifier.test_thermostat',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': None,
-    'options': dict({
-    }),
-    'original_device_class': <HumidifierDeviceClass.HUMIDIFIER: 'humidifier'>,
-    'original_icon': None,
-    'original_name': None,
-    'platform': 'aprilaire',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'humidifier',
-    'unique_id': 'aa:bb:cc:dd:ee:ff_humidifier',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_all_entities[humidifier.test_thermostat-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'action': <HumidifierAction.HUMIDIFYING: 'humidifying'>,
-      'current_humidity': 45,
-      'device_class': 'humidifier',
-      'friendly_name': 'Test Thermostat',
-      'humidity': 35,
-      'max_humidity': 50,
-      'min_humidity': 10,
-      'supported_features': <HumidifierEntityFeature: 0>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'humidifier.test_thermostat',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'on',
-  })
-# ---
-# name: test_all_entities[humidifier.test_thermostat_2-entry]
+# name: test_all_entities[humidifier.test_thermostat_dehumidifier-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -76,7 +16,7 @@
     'disabled_by': None,
     'domain': 'humidifier',
     'entity_category': None,
-    'entity_id': 'humidifier.test_thermostat_2',
+    'entity_id': 'humidifier.test_thermostat_dehumidifier',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -84,12 +24,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': None,
+    'object_id_base': 'Dehumidifier',
     'options': dict({
     }),
     'original_device_class': <HumidifierDeviceClass.DEHUMIDIFIER: 'dehumidifier'>,
     'original_icon': None,
-    'original_name': None,
+    'original_name': 'Dehumidifier',
     'platform': 'aprilaire',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -99,20 +39,80 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[humidifier.test_thermostat_2-state]
+# name: test_all_entities[humidifier.test_thermostat_dehumidifier-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'action': <HumidifierAction.DRYING: 'drying'>,
       'current_humidity': 45,
       'device_class': 'dehumidifier',
-      'friendly_name': 'Test Thermostat',
+      'friendly_name': 'Test Thermostat Dehumidifier',
       'humidity': 55,
       'max_humidity': 90,
       'min_humidity': 40,
       'supported_features': <HumidifierEntityFeature: 0>,
     }),
     'context': <ANY>,
-    'entity_id': 'humidifier.test_thermostat_2',
+    'entity_id': 'humidifier.test_thermostat_dehumidifier',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_all_entities[humidifier.test_thermostat_humidifier-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'max_humidity': 50,
+      'min_humidity': 10,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'humidifier',
+    'entity_category': None,
+    'entity_id': 'humidifier.test_thermostat_humidifier',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Humidifier',
+    'options': dict({
+    }),
+    'original_device_class': <HumidifierDeviceClass.HUMIDIFIER: 'humidifier'>,
+    'original_icon': None,
+    'original_name': 'Humidifier',
+    'platform': 'aprilaire',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'humidifier',
+    'unique_id': 'aa:bb:cc:dd:ee:ff_humidifier',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[humidifier.test_thermostat_humidifier-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'action': <HumidifierAction.HUMIDIFYING: 'humidifying'>,
+      'current_humidity': 45,
+      'device_class': 'humidifier',
+      'friendly_name': 'Test Thermostat Humidifier',
+      'humidity': 35,
+      'max_humidity': 50,
+      'min_humidity': 10,
+      'supported_features': <HumidifierEntityFeature: 0>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'humidifier.test_thermostat_humidifier',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

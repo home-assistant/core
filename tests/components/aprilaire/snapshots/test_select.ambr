@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_all_entities[select.test_thermostat-entry]
+# name: test_all_entities[select.test_thermostat_air_cleaning_event-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -19,7 +19,7 @@
     'disabled_by': None,
     'domain': 'select',
     'entity_category': None,
-    'entity_id': 'select.test_thermostat',
+    'entity_id': 'select.test_thermostat_air_cleaning_event',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -27,12 +27,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': None,
+    'object_id_base': 'Air cleaning event',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': None,
+    'original_name': 'Air cleaning event',
     'platform': 'aprilaire',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -42,10 +42,10 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[select.test_thermostat-state]
+# name: test_all_entities[select.test_thermostat_air_cleaning_event-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Thermostat',
+      'friendly_name': 'Test Thermostat Air cleaning event',
       'options': list([
         'off',
         'event_clean',
@@ -53,14 +53,14 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'select.test_thermostat',
+    'entity_id': 'select.test_thermostat_air_cleaning_event',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_all_entities[select.test_thermostat_2-entry]
+# name: test_all_entities[select.test_thermostat_air_cleaning_mode-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -80,7 +80,7 @@
     'disabled_by': None,
     'domain': 'select',
     'entity_category': None,
-    'entity_id': 'select.test_thermostat_2',
+    'entity_id': 'select.test_thermostat_air_cleaning_mode',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -88,12 +88,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': None,
+    'object_id_base': 'Air cleaning mode',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': None,
+    'original_name': 'Air cleaning mode',
     'platform': 'aprilaire',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -103,10 +103,10 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[select.test_thermostat_2-state]
+# name: test_all_entities[select.test_thermostat_air_cleaning_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Thermostat',
+      'friendly_name': 'Test Thermostat Air cleaning mode',
       'options': list([
         'off',
         'constant_clean',
@@ -114,14 +114,14 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'select.test_thermostat_2',
+    'entity_id': 'select.test_thermostat_air_cleaning_mode',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'constant_clean',
   })
 # ---
-# name: test_all_entities[select.test_thermostat_3-entry]
+# name: test_all_entities[select.test_thermostat_fresh_air_event-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -141,7 +141,7 @@
     'disabled_by': None,
     'domain': 'select',
     'entity_category': None,
-    'entity_id': 'select.test_thermostat_3',
+    'entity_id': 'select.test_thermostat_fresh_air_event',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -149,12 +149,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': None,
+    'object_id_base': 'Fresh air event',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': None,
+    'original_name': 'Fresh air event',
     'platform': 'aprilaire',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -164,10 +164,10 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[select.test_thermostat_3-state]
+# name: test_all_entities[select.test_thermostat_fresh_air_event-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Thermostat',
+      'friendly_name': 'Test Thermostat Fresh air event',
       'options': list([
         'off',
         '3hour',
@@ -175,14 +175,14 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'select.test_thermostat_3',
+    'entity_id': 'select.test_thermostat_fresh_air_event',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_all_entities[select.test_thermostat_4-entry]
+# name: test_all_entities[select.test_thermostat_fresh_air_mode-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -201,7 +201,7 @@
     'disabled_by': None,
     'domain': 'select',
     'entity_category': None,
-    'entity_id': 'select.test_thermostat_4',
+    'entity_id': 'select.test_thermostat_fresh_air_mode',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -209,12 +209,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': None,
+    'object_id_base': 'Fresh air mode',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': None,
+    'original_name': 'Fresh air mode',
     'platform': 'aprilaire',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -224,17 +224,17 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[select.test_thermostat_4-state]
+# name: test_all_entities[select.test_thermostat_fresh_air_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Thermostat',
+      'friendly_name': 'Test Thermostat Fresh air mode',
       'options': list([
         'off',
         'automatic',
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'select.test_thermostat_4',
+    'entity_id': 'select.test_thermostat_fresh_air_mode',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

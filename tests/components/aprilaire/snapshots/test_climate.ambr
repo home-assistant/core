@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_all_entities[climate.test_thermostat-entry]
+# name: test_all_entities[climate.test_thermostat_thermostat-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -35,7 +35,7 @@
     'disabled_by': None,
     'domain': 'climate',
     'entity_category': None,
-    'entity_id': 'climate.test_thermostat',
+    'entity_id': 'climate.test_thermostat_thermostat',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -43,12 +43,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': None,
+    'object_id_base': 'Thermostat',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': None,
+    'original_name': 'Thermostat',
     'platform': 'aprilaire',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -58,7 +58,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[climate.test_thermostat-state]
+# name: test_all_entities[climate.test_thermostat_thermostat-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'current_humidity': 45,
@@ -69,7 +69,7 @@
         'on',
         'Circulate',
       ]),
-      'friendly_name': 'Test Thermostat',
+      'friendly_name': 'Test Thermostat Thermostat',
       'humidity': 35,
       'hvac_action': <HVACAction.IDLE: 'idle'>,
       'hvac_modes': list([
@@ -94,7 +94,7 @@
       'target_temp_step': 0.5,
     }),
     'context': <ANY>,
-    'entity_id': 'climate.test_thermostat',
+    'entity_id': 'climate.test_thermostat_thermostat',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
