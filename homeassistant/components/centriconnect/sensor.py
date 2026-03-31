@@ -84,6 +84,7 @@ ENTITIES: tuple[CentriConnectSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.DISTANCE,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
+        suggested_display_precision=2,
         value_fn=lambda coord: coord.data.altitude,
     ),
     CentriConnectSensorEntityDescription(
@@ -109,6 +110,7 @@ ENTITIES: tuple[CentriConnectSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.VOLTAGE,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
+        suggested_display_precision=0,
         value_fn=lambda coord: coord.data.battery_voltage,
     ),
     CentriConnectSensorEntityDescription(
@@ -119,6 +121,7 @@ ENTITIES: tuple[CentriConnectSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.TEMPERATURE,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
+        suggested_display_precision=1,
         value_fn=lambda coord: coord.data.device_temperature,
     ),
     CentriConnectSensorEntityDescription(
@@ -203,6 +206,7 @@ ENTITIES: tuple[CentriConnectSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.VOLTAGE,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
+        suggested_display_precision=0,
         value_fn=lambda coord: coord.data.solar_voltage,
     ),
     CentriConnectSensorEntityDescription(
@@ -218,6 +222,7 @@ ENTITIES: tuple[CentriConnectSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfVolume.GALLONS,
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.VOLUME_STORAGE,
+        suggested_display_precision=2,
         value_fn=lambda coord: (
             coord.data.tank_level * 0.01 * coord.device_info.tank_size
             if (
@@ -233,6 +238,7 @@ ENTITIES: tuple[CentriConnectSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfVolume.LITERS,
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.VOLUME_STORAGE,
+        suggested_display_precision=2,
         value_fn=lambda coord: (
             coord.data.tank_level * 0.01 * coord.device_info.tank_size
             if (
@@ -248,6 +254,7 @@ ENTITIES: tuple[CentriConnectSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfVolume.GALLONS,
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.VOLUME_STORAGE,
+        suggested_display_precision=2,
         value_fn=lambda coord: (
             coord.device_info.tank_size
             if (coord.device_info.tank_size_unit == "Gallons")
@@ -260,6 +267,7 @@ ENTITIES: tuple[CentriConnectSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfVolume.LITERS,
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.VOLUME_STORAGE,
+        suggested_display_precision=2,
         value_fn=lambda coord: (
             coord.device_info.tank_size
             if (coord.device_info.tank_size_unit == "Liters")
