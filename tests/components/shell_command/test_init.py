@@ -304,7 +304,6 @@ async def test_reload_service(hass: HomeAssistant, hass_admin_user: MockUser) ->
             blocking=True,
             context=Context(user_id=hass_admin_user.id),
         )
-    await hass.async_block_till_done()
 
     assert not hass.services.has_service(shell_command.DOMAIN, "initial_cmd")
     assert hass.services.has_service(shell_command.DOMAIN, "reloaded_cmd")
