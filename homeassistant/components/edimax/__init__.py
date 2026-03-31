@@ -1,1 +1,1 @@
-"""The edimax component."""
+"""The Edimax integration."""
