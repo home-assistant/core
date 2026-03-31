@@ -32,7 +32,6 @@ from homeassistant.helpers import (
 from homeassistant.util.dt import now
 
 from .const import (
-    COORDINATOR,
     ATTR_ADDON,
     ATTR_ADDONS,
     ATTR_APP,
@@ -45,6 +44,7 @@ from .const import (
     ATTR_LOCATION,
     ATTR_PASSWORD,
     ATTR_SLUG,
+    COORDINATOR,
     DOMAIN,
     SupervisorEntityModel,
 )

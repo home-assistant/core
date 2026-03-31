@@ -969,15 +969,15 @@ async def test_coordinator_updates_stats_entities_enabled(
         # Initial refresh without stats
         supervisor_client.reload_updates.assert_not_called()
 
-        # Refresh with stats once we know which ones are needed
+        # Stats entities trigger refresh on the stats coordinator,
+        # which does not call reload_updates
         async_fire_time_changed(
             hass, dt_util.now() + timedelta(seconds=REQUEST_REFRESH_DELAY)
         )
         await hass.async_block_till_done()
 
-        supervisor_client.reload_updates.assert_called_once()
+        supervisor_client.reload_updates.assert_not_called()
 
-    supervisor_client.reload_updates.reset_mock()
     async_fire_time_changed(hass, dt_util.now() + timedelta(minutes=20))
     await hass.async_block_till_done()
     supervisor_client.reload_updates.assert_not_called()

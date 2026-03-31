@@ -35,7 +35,6 @@ from .const import (
     ATTR_SLUG,
     ATTR_URL,
     ATTR_VERSION,
-    CONTAINER_INFO,
     CONTAINER_STATS,
     CORE_CONTAINER,
     DATA_ADDONS_INFO,
@@ -60,6 +59,7 @@ from .const import (
     DATA_SUPERVISOR_STATS,
     DOMAIN,
     HASSIO_ADDON_UPDATE_INTERVAL,
+    HASSIO_STATS_UPDATE_INTERVAL,
     HASSIO_UPDATE_INTERVAL,
     REQUEST_REFRESH_DELAY,
     SUPERVISOR_CONTAINER,
@@ -319,6 +319,112 @@ def async_remove_devices_from_dev_reg(
             dev_reg.async_remove_device(dev.id)
 
 
+class HassioStatsDataUpdateCoordinator(DataUpdateCoordinator):
+    """Class to retrieve Hass.io container stats."""
+
+    config_entry: ConfigEntry
+
+    def __init__(self, hass: HomeAssistant, config_entry: ConfigEntry) -> None:
+        """Initialize coordinator."""
+        super().__init__(
+            hass,
+            _LOGGER,
+            config_entry=config_entry,
+            name=DOMAIN,
+            update_interval=HASSIO_STATS_UPDATE_INTERVAL,
+            request_refresh_debouncer=Debouncer(
+                hass, _LOGGER, cooldown=REQUEST_REFRESH_DELAY, immediate=False
+            ),
+        )
+        self.data: dict[str, Any] = {}
+        self.supervisor_client = get_supervisor_client(hass)
+        self._container_updates: defaultdict[str, dict[str, set[str]]] = defaultdict(
+            lambda: defaultdict(set)
+        )
+
+    async def _async_update_data(self) -> dict[str, Any]:
+        """Update stats data via library."""
+        try:
+            await self._fetch_stats()
+        except SupervisorError as err:
+            raise UpdateFailed(f"Error on Supervisor API: {err}") from err
+
+        new_data: dict[str, Any] = {}
+        new_data[DATA_KEY_CORE] = get_core_stats(self.hass)
+        new_data[DATA_KEY_SUPERVISOR] = get_supervisor_stats(self.hass)
+        new_data[DATA_KEY_ADDONS] = get_addons_stats(self.hass)
+        return new_data
+
+    async def _fetch_stats(self) -> None:
+        """Fetch container stats for subscribed entities."""
+        container_updates = self._container_updates
+        data = self.hass.data
+        client = self.supervisor_client
+
+        # Fetch core and supervisor stats
+        updates: dict[str, Awaitable] = {}
+        if CONTAINER_STATS in container_updates[CORE_CONTAINER]:
+            updates[DATA_CORE_STATS] = client.homeassistant.stats()
+        if CONTAINER_STATS in container_updates[SUPERVISOR_CONTAINER]:
+            updates[DATA_SUPERVISOR_STATS] = client.supervisor.stats()
+
+        if updates:
+            api_results: list[ResponseData] = await asyncio.gather(*updates.values())
+            for key, result in zip(updates, api_results, strict=True):
+                data[key] = result.to_dict()
+
+        # Fetch addon stats
+        addons_list = get_addons_list(self.hass) or []
+        started_addons = {
+            addon[ATTR_SLUG]
+            for addon in addons_list
+            if addon.get("state") in {AddonState.STARTED, AddonState.STARTUP}
+        }
+
+        addons_stats: dict[str, Any] = data.setdefault(DATA_ADDONS_STATS, {})
+
+        # Clean up cache for stopped/removed addons
+        for slug in addons_stats.keys() - started_addons:
+            del addons_stats[slug]
+
+        # Fetch stats for addons with subscribed entities
+        addon_stats_results = dict(
+            await asyncio.gather(
+                *[
+                    self._update_addon_stats(slug)
+                    for slug in started_addons
+                    if CONTAINER_STATS in container_updates[slug]
+                ]
+            )
+        )
+        addons_stats.update(addon_stats_results)
+
+    async def _update_addon_stats(self, slug: str) -> tuple[str, dict[str, Any] | None]:
+        """Update single addon stats."""
+        try:
+            stats = await self.supervisor_client.addons.addon_stats(slug)
+        except SupervisorError as err:
+            _LOGGER.warning("Could not fetch stats for %s: %s", slug, err)
+            return (slug, None)
+        return (slug, stats.to_dict())
+
+    @callback
+    def async_enable_container_updates(
+        self, slug: str, entity_id: str, types: set[str]
+    ) -> CALLBACK_TYPE:
+        """Enable stats updates for a container."""
+        enabled_updates = self._container_updates[slug]
+        for key in types:
+            enabled_updates[key].add(entity_id)
+
+        @callback
+        def _remove() -> None:
+            for key in types:
+                enabled_updates[key].remove(entity_id)
+
+        return _remove
+
+
 class HassioAddOnDataUpdateCoordinator(DataUpdateCoordinator):
     """Class to retrieve Hass.io Add-on status."""
 
@@ -335,19 +441,16 @@ class HassioAddOnDataUpdateCoordinator(DataUpdateCoordinator):
             name=DOMAIN,
             update_interval=HASSIO_ADDON_UPDATE_INTERVAL,
             # We don't want an immediate refresh since we want to avoid
-            # fetching the container stats right away and avoid hammering
-            # the Supervisor API on startup
+            # hammering the Supervisor API on startup
             request_refresh_debouncer=Debouncer(
                 hass, _LOGGER, cooldown=REQUEST_REFRESH_DELAY, immediate=False
             ),
         )
         self.hassio = hass.data[DATA_COMPONENT]
-        self.data = {}
+        self.data: dict[str, Any] = {}
         self.entry_id = config_entry.entry_id
         self.dev_reg = dev_reg
-        self._container_updates: defaultdict[str, dict[str, set[str]]] = defaultdict(
-            lambda: defaultdict(set)
-        )
+        self._addon_info_subscriptions: defaultdict[str, set[str]] = defaultdict(set)
         self.supervisor_client = get_supervisor_client(hass)
         self.jobs: SupervisorJobs = None  # type: ignore[assignment]
 
@@ -366,7 +469,6 @@ class HassioAddOnDataUpdateCoordinator(DataUpdateCoordinator):
 
         new_data: dict[str, Any] = {}
         addons_info = get_addons_info(self.hass) or {}
-        addons_stats = get_addons_stats(self.hass)
         store_data = get_store(self.hass)
         addons_list = get_addons_list(self.hass) or []
 
@@ -381,7 +483,6 @@ class HassioAddOnDataUpdateCoordinator(DataUpdateCoordinator):
         new_data[DATA_KEY_ADDONS] = {
             (slug := addon[ATTR_SLUG]): {
                 **addon,
-                **(addons_stats.get(slug) or {}),
                 ATTR_AUTO_UPDATE: (addons_info.get(slug) or {}).get(
                     ATTR_AUTO_UPDATE, False
                 ),
@@ -431,8 +532,6 @@ class HassioAddOnDataUpdateCoordinator(DataUpdateCoordinator):
 
     async def force_data_refresh(self, first_update: bool) -> None:
         """Force update of the addon info."""
-        container_updates = self._container_updates
-
         data = self.hass.data
         client = self.supervisor_client
 
@@ -445,67 +544,27 @@ class HassioAddOnDataUpdateCoordinator(DataUpdateCoordinator):
             data[DATA_SUPERVISOR_INFO]["addons"] = data[DATA_ADDONS_LIST]
 
         all_addons = {addon.slug for addon in installed_addons}
-        started_addons = {
-            addon.slug
-            for addon in installed_addons
-            if addon.state in {AddonState.STARTED, AddonState.STARTUP}
-        }
 
-        #
         # Update addon info if its the first update or
         # there is at least one entity that needs the data.
-        #
-        # When entities are added they call async_enable_container_updates
-        # to enable updates for the endpoints they need via
-        # async_added_to_hass. This ensures that we only update
-        # the data for the endpoints that are needed to avoid unnecessary
-        # API calls since otherwise we would fetch stats for all containers
-        # and throw them away.
-        #
-        for data_key, update_func, enabled_key, wanted_addons, needs_first_update in (
-            (
-                DATA_ADDONS_STATS,
-                self._update_addon_stats,
-                CONTAINER_STATS,
-                started_addons,
-                False,
-            ),
-            (
-                DATA_ADDONS_INFO,
-                self._update_addon_info,
-                CONTAINER_INFO,
-                all_addons,
-                True,
-            ),
-        ):
-            container_data: dict[str, Any] = data.setdefault(data_key, {})
+        addon_info: dict[str, Any] = data.setdefault(DATA_ADDONS_INFO, {})
 
-            # Clean up cache
-            for slug in container_data.keys() - wanted_addons:
-                del container_data[slug]
+        # Clean up cache
+        for slug in addon_info.keys() - all_addons:
+            del addon_info[slug]
 
-            # Update cache from API
-            container_data.update(
-                dict(
-                    await asyncio.gather(
-                        *[
-                            update_func(slug)
-                            for slug in wanted_addons
-                            if (first_update and needs_first_update)
-                            or enabled_key in container_updates[slug]
-                        ]
-                    )
+        # Update cache from API
+        addon_info.update(
+            dict(
+                await asyncio.gather(
+                    *[
+                        self._update_addon_info(slug)
+                        for slug in all_addons
+                        if (first_update) or self._addon_info_subscriptions.get(slug)
+                    ]
                 )
             )
-
-    async def _update_addon_stats(self, slug: str) -> tuple[str, dict[str, Any] | None]:
-        """Update single addon stats."""
-        try:
-            stats = await self.supervisor_client.addons.addon_stats(slug)
-        except SupervisorError as err:
-            _LOGGER.warning("Could not fetch stats for %s: %s", slug, err)
-            return (slug, None)
-        return (slug, stats.to_dict())
+        )
 
     async def _update_addon_info(self, slug: str) -> tuple[str, dict[str, Any] | None]:
         """Return the info for an addon."""
@@ -521,18 +580,15 @@ class HassioAddOnDataUpdateCoordinator(DataUpdateCoordinator):
         return (slug, info_dict)
 
     @callback
-    def async_enable_container_updates(
-        self, slug: str, entity_id: str, types: set[str]
+    def async_enable_addon_info_updates(
+        self, slug: str, entity_id: str
     ) -> CALLBACK_TYPE:
-        """Enable updates for an add-on."""
-        enabled_updates = self._container_updates[slug]
-        for key in types:
-            enabled_updates[key].add(entity_id)
+        """Enable info updates for an add-on."""
+        self._addon_info_subscriptions[slug].add(entity_id)
 
         @callback
         def _remove() -> None:
-            for key in types:
-                enabled_updates[key].remove(entity_id)
+            self._addon_info_subscriptions[slug].discard(entity_id)
 
         return _remove
 
@@ -591,20 +647,16 @@ class HassioDataUpdateCoordinator(DataUpdateCoordinator):
             name=DOMAIN,
             update_interval=HASSIO_UPDATE_INTERVAL,
             # We don't want an immediate refresh since we want to avoid
-            # fetching the container stats right away and avoid hammering
-            # the Supervisor API on startup
+            # hammering the Supervisor API on startup
             request_refresh_debouncer=Debouncer(
                 hass, _LOGGER, cooldown=REQUEST_REFRESH_DELAY, immediate=False
             ),
         )
         self.hassio = hass.data[DATA_COMPONENT]
-        self.data = {}
+        self.data: dict[str, Any] = {}
         self.entry_id = config_entry.entry_id
         self.dev_reg = dev_reg
         self.is_hass_os = (get_info(self.hass) or {}).get("hassos") is not None
-        self._container_updates: defaultdict[str, dict[str, set[str]]] = defaultdict(
-            lambda: defaultdict(set)
-        )
         self.supervisor_client = get_supervisor_client(hass)
         self.jobs = SupervisorJobs(hass)
 
@@ -624,14 +676,8 @@ class HassioDataUpdateCoordinator(DataUpdateCoordinator):
         if self.is_hass_os:
             new_data[DATA_KEY_OS] = get_os_info(self.hass)
 
-        new_data[DATA_KEY_CORE] = {
-            **(get_core_info(self.hass) or {}),
-            **get_core_stats(self.hass),
-        }
-        new_data[DATA_KEY_SUPERVISOR] = {
-            **supervisor_info,
-            **get_supervisor_stats(self.hass),
-        }
+        new_data[DATA_KEY_CORE] = get_core_info(self.hass) or {}
+        new_data[DATA_KEY_SUPERVISOR] = supervisor_info
         new_data[DATA_KEY_HOST] = get_host_info(self.hass) or {}
         new_data[DATA_KEY_MOUNTS] = {mount.name: mount for mount in mounts_info.mounts}
 
@@ -686,8 +732,6 @@ class HassioDataUpdateCoordinator(DataUpdateCoordinator):
 
     async def force_data_refresh(self, first_update: bool) -> None:
         """Force update of the main component info."""
-        container_updates = self._container_updates
-
         data = self.hass.data
         client = self.supervisor_client
 
@@ -698,10 +742,6 @@ class HassioDataUpdateCoordinator(DataUpdateCoordinator):
             DATA_OS_INFO: client.os.info(),
             DATA_STORE: client.store.info(),
         }
-        if CONTAINER_STATS in container_updates[CORE_CONTAINER]:
-            updates[DATA_CORE_STATS] = client.homeassistant.stats()
-        if CONTAINER_STATS in container_updates[SUPERVISOR_CONTAINER]:
-            updates[DATA_SUPERVISOR_STATS] = client.supervisor.stats()
 
         api_results: list[ResponseData] = await asyncio.gather(*updates.values())
         for key, result in zip(updates, api_results, strict=True):
@@ -713,22 +753,6 @@ class HassioDataUpdateCoordinator(DataUpdateCoordinator):
 
         # Refresh jobs data
         await self.jobs.refresh_data(first_update)
-
-    @callback
-    def async_enable_container_updates(
-        self, slug: str, entity_id: str, types: set[str]
-    ) -> CALLBACK_TYPE:
-        """Enable updates for an add-on."""
-        enabled_updates = self._container_updates[slug]
-        for key in types:
-            enabled_updates[key].add(entity_id)
-
-        @callback
-        def _remove() -> None:
-            for key in types:
-                enabled_updates[key].remove(entity_id)
-
-        return _remove
 
     async def _async_refresh(
         self,

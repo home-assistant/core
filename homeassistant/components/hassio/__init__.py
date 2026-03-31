@@ -93,10 +93,12 @@ from .const import (
     DATA_SUPERVISOR_INFO,
     DOMAIN,
     HASSIO_UPDATE_INTERVAL,
+    STATS_COORDINATOR,
 )
 from .coordinator import (
     HassioAddOnDataUpdateCoordinator,
     HassioDataUpdateCoordinator,
+    HassioStatsDataUpdateCoordinator,
     get_addons_info,
     get_addons_list,
     get_addons_stats,
@@ -474,6 +476,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     await addon_coordinator.async_config_entry_first_refresh()
     hass.data[ADDONS_COORDINATOR] = addon_coordinator
 
+    stats_coordinator = HassioStatsDataUpdateCoordinator(hass, entry)
+    await stats_coordinator.async_config_entry_first_refresh()
+    hass.data[STATS_COORDINATOR] = stats_coordinator
+
     def deprecated_setup_issue() -> None:
         os_info = get_os_info(hass)
         info = get_info(hass)
@@ -545,5 +551,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # Pop coordinators
     hass.data.pop(COORDINATOR, None)
     hass.data.pop(ADDONS_COORDINATOR, None)
+    hass.data.pop(STATS_COORDINATOR, None)
 
     return unload_ok
