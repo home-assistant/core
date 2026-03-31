@@ -151,7 +151,7 @@ class OpenMeteoWeatherEntity(
 
     @callback
     def _async_forecast_hourly(self) -> list[Forecast] | None:
-        """Return the daily forecast in native units."""
+        """Return the hourly forecast in native units."""
         if self.coordinator.data.hourly is None:
             return None
 
