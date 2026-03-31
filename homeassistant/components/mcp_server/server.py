@@ -117,17 +117,17 @@ async def create_server(
         # Backwards compatibility with old MCP Server config
         return await llm.async_get_api(hass, llm_api_id, llm_context)
 
-    @server.list_prompts()  # type: ignore[untyped-decorator]
+    @server.list_prompts()  # type: ignore[no-untyped-call,untyped-decorator]
     async def handle_list_prompts() -> list[types.Prompt]:
         return await _async_list_prompts(await get_api_instance())
 
-    @server.get_prompt()  # type: ignore[untyped-decorator]
+    @server.get_prompt()  # type: ignore[no-untyped-call,untyped-decorator]
     async def handle_get_prompt(
         name: str, arguments: dict[str, str] | None
     ) -> types.GetPromptResult:
         return await _async_get_prompt(await get_api_instance(), name, arguments)
 
-    @server.list_tools()  # type: ignore[untyped-decorator]
+    @server.list_tools()  # type: ignore[no-untyped-call,untyped-decorator]
     async def list_tools() -> list[types.Tool]:
         """List available tools."""
         return await _async_list_tools(await get_api_instance())
