@@ -1,16 +1,13 @@
 {
   "common": {
-    "condition_behavior_description": "How the state should match on the targeted occupancy sensors.",
-    "condition_behavior_name": "Behavior",
-    "trigger_behavior_description": "The behavior of the targeted occupancy sensors to trigger on.",
-    "trigger_behavior_name": "Behavior"
+    "condition_behavior_name": "Condition passes if",
+    "trigger_behavior_name": "Trigger when"
   },
   "conditions": {
     "is_detected": {
       "description": "Tests if one or more occupancy sensors are detecting occupancy.",
       "fields": {
         "behavior": {
-          "description": "[%key:component::occupancy::common::condition_behavior_description%]",
           "name": "[%key:component::occupancy::common::condition_behavior_name%]"
         }
       },
@@ -20,7 +17,6 @@
       "description": "Tests if one or more occupancy sensors are not detecting occupancy.",
       "fields": {
         "behavior": {
-          "description": "[%key:component::occupancy::common::condition_behavior_description%]",
           "name": "[%key:component::occupancy::common::condition_behavior_name%]"
         }
       },
@@ -48,7 +44,6 @@
       "description": "Triggers after one or more occupancy sensors stop detecting occupancy.",
       "fields": {
         "behavior": {
-          "description": "[%key:component::occupancy::common::trigger_behavior_description%]",
           "name": "[%key:component::occupancy::common::trigger_behavior_name%]"
         }
       },
@@ -58,7 +53,6 @@
       "description": "Triggers after one or more occupancy sensors start detecting occupancy.",
       "fields": {
         "behavior": {
-          "description": "[%key:component::occupancy::common::trigger_behavior_description%]",
           "name": "[%key:component::occupancy::common::trigger_behavior_name%]"
         }
       },

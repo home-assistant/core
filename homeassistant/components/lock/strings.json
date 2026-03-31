@@ -1,16 +1,13 @@
 {
   "common": {
-    "condition_behavior_description": "How the state should match on the targeted locks.",
-    "condition_behavior_name": "Behavior",
-    "trigger_behavior_description": "The behavior of the targeted locks to trigger on.",
-    "trigger_behavior_name": "Behavior"
+    "condition_behavior_name": "Condition passes if",
+    "trigger_behavior_name": "Trigger when"
   },
   "conditions": {
     "is_jammed": {
       "description": "Tests if one or more locks are jammed.",
       "fields": {
         "behavior": {
-          "description": "[%key:component::lock::common::condition_behavior_description%]",
           "name": "[%key:component::lock::common::condition_behavior_name%]"
         }
       },
@@ -20,7 +17,6 @@
       "description": "Tests if one or more locks are locked.",
       "fields": {
         "behavior": {
-          "description": "[%key:component::lock::common::condition_behavior_description%]",
           "name": "[%key:component::lock::common::condition_behavior_name%]"
         }
       },
@@ -30,7 +26,6 @@
       "description": "Tests if one or more locks are open.",
       "fields": {
         "behavior": {
-          "description": "[%key:component::lock::common::condition_behavior_description%]",
           "name": "[%key:component::lock::common::condition_behavior_name%]"
         }
       },
@@ -40,7 +35,6 @@
       "description": "Tests if one or more locks are unlocked.",
       "fields": {
         "behavior": {
-          "description": "[%key:component::lock::common::condition_behavior_description%]",
           "name": "[%key:component::lock::common::condition_behavior_name%]"
         }
       },
@@ -151,7 +145,6 @@
       "description": "Triggers after one or more locks jam.",
       "fields": {
         "behavior": {
-          "description": "[%key:component::lock::common::trigger_behavior_description%]",
           "name": "[%key:component::lock::common::trigger_behavior_name%]"
         }
       },
@@ -161,7 +154,6 @@
       "description": "Triggers after one or more locks lock.",
       "fields": {
         "behavior": {
-          "description": "[%key:component::lock::common::trigger_behavior_description%]",
           "name": "[%key:component::lock::common::trigger_behavior_name%]"
         }
       },
@@ -171,7 +163,6 @@
       "description": "Triggers after one or more locks open.",
       "fields": {
         "behavior": {
-          "description": "[%key:component::lock::common::trigger_behavior_description%]",
           "name": "[%key:component::lock::common::trigger_behavior_name%]"
         }
       },
@@ -181,7 +172,6 @@
       "description": "Triggers after one or more locks unlock.",
       "fields": {
         "behavior": {
-          "description": "[%key:component::lock::common::trigger_behavior_description%]",
           "name": "[%key:component::lock::common::trigger_behavior_name%]"
         }
       },

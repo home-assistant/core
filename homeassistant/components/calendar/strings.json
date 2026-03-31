@@ -1,14 +1,12 @@
 {
   "common": {
-    "condition_behavior_description": "How the state should match on the targeted calendars.",
-    "condition_behavior_name": "Behavior"
+    "condition_behavior_name": "Condition passes if"
   },
   "conditions": {
     "is_event_active": {
       "description": "Tests if one or more calendars have an active event.",
       "fields": {
         "behavior": {
-          "description": "[%key:component::calendar::common::condition_behavior_description%]",
           "name": "[%key:component::calendar::common::condition_behavior_name%]"
         }
       },

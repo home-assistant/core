@@ -1,16 +1,13 @@
 {
   "common": {
-    "condition_behavior_description": "How the state should match on the targeted doors.",
-    "condition_behavior_name": "Behavior",
-    "trigger_behavior_description": "The behavior of the targeted doors to trigger on.",
-    "trigger_behavior_name": "Behavior"
+    "condition_behavior_name": "Condition passes if",
+    "trigger_behavior_name": "Trigger when"
   },
   "conditions": {
     "is_closed": {
       "description": "Tests if one or more doors are closed.",
       "fields": {
         "behavior": {
-          "description": "[%key:component::door::common::condition_behavior_description%]",
           "name": "[%key:component::door::common::condition_behavior_name%]"
         }
       },
@@ -20,7 +17,6 @@
       "description": "Tests if one or more doors are open.",
       "fields": {
         "behavior": {
-          "description": "[%key:component::door::common::condition_behavior_description%]",
           "name": "[%key:component::door::common::condition_behavior_name%]"
         }
       },
@@ -48,7 +44,6 @@
       "description": "Triggers after one or more doors close.",
       "fields": {
         "behavior": {
-          "description": "[%key:component::door::common::trigger_behavior_description%]",
           "name": "[%key:component::door::common::trigger_behavior_name%]"
         }
       },
@@ -58,7 +53,6 @@
       "description": "Triggers after one or more doors open.",
       "fields": {
         "behavior": {
-          "description": "[%key:component::door::common::trigger_behavior_description%]",
           "name": "[%key:component::door::common::trigger_behavior_name%]"
         }
       },

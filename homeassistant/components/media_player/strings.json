@@ -1,16 +1,13 @@
 {
   "common": {
-    "condition_behavior_description": "How the state should match on the targeted media players.",
-    "condition_behavior_name": "Behavior",
-    "trigger_behavior_description": "The behavior of the targeted media players to trigger on.",
-    "trigger_behavior_name": "Behavior"
+    "condition_behavior_name": "Condition passes if",
+    "trigger_behavior_name": "Trigger when"
   },
   "conditions": {
     "is_not_playing": {
       "description": "Tests if one or more media players are not playing.",
       "fields": {
         "behavior": {
-          "description": "[%key:component::media_player::common::condition_behavior_description%]",
           "name": "[%key:component::media_player::common::condition_behavior_name%]"
         }
       },
@@ -20,7 +17,6 @@
       "description": "Tests if one or more media players are off.",
       "fields": {
         "behavior": {
-          "description": "[%key:component::media_player::common::condition_behavior_description%]",
           "name": "[%key:component::media_player::common::condition_behavior_name%]"
         }
       },
@@ -30,7 +26,6 @@
       "description": "Tests if one or more media players are on.",
       "fields": {
         "behavior": {
-          "description": "[%key:component::media_player::common::condition_behavior_description%]",
           "name": "[%key:component::media_player::common::condition_behavior_name%]"
         }
       },
@@ -40,7 +35,6 @@
       "description": "Tests if one or more media players are paused.",
       "fields": {
         "behavior": {
-          "description": "[%key:component::media_player::common::condition_behavior_description%]",
           "name": "[%key:component::media_player::common::condition_behavior_name%]"
         }
       },
@@ -50,7 +44,6 @@
       "description": "Tests if one or more media players are playing.",
       "fields": {
         "behavior": {
-          "description": "[%key:component::media_player::common::condition_behavior_description%]",
           "name": "[%key:component::media_player::common::condition_behavior_name%]"
         }
       },
@@ -444,7 +437,6 @@
       "description": "Triggers after one or more media players stop playing media.",
       "fields": {
         "behavior": {
-          "description": "[%key:component::media_player::common::trigger_behavior_description%]",
           "name": "[%key:component::media_player::common::trigger_behavior_name%]"
         }
       },
