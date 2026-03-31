@@ -70,6 +70,8 @@ async def test_immediate_works(hass: HomeAssistant) -> None:
     debouncer._execute_lock.release()
     assert debouncer._job.target == debouncer.function
 
+    debouncer.async_shutdown()
+
 
 async def test_immediate_works_with_schedule_call(hass: HomeAssistant) -> None:
     """Test immediate works with scheduled calls."""
@@ -128,6 +130,8 @@ async def test_immediate_works_with_schedule_call(hass: HomeAssistant) -> None:
     debouncer._execute_lock.release()
     assert debouncer._job.target == debouncer.function
 
+    debouncer.async_shutdown()
+
 
 async def test_immediate_works_with_callback_function(hass: HomeAssistant) -> None:
     """Test immediate works with callback function."""
@@ -147,7 +151,7 @@ async def test_immediate_works_with_callback_function(hass: HomeAssistant) -> No
     assert debouncer._execute_at_end_of_timer is False
     assert debouncer._job.target == debouncer.function
 
-    debouncer.async_cancel()
+    debouncer.async_shutdown()
 
 
 async def test_immediate_works_with_executor_function(hass: HomeAssistant) -> None:
@@ -168,7 +172,7 @@ async def test_immediate_works_with_executor_function(hass: HomeAssistant) -> No
     assert debouncer._execute_at_end_of_timer is False
     assert debouncer._job.target == debouncer.function
 
-    debouncer.async_cancel()
+    debouncer.async_shutdown()
 
 
 async def test_immediate_works_with_passed_callback_function_raises(
@@ -234,6 +238,8 @@ async def test_immediate_works_with_passed_callback_function_raises(
     debouncer._execute_lock.release()
     assert debouncer._job.target == debouncer.function
 
+    debouncer.async_shutdown()
+
 
 async def test_immediate_works_with_passed_coroutine_raises(
     hass: HomeAssistant,
@@ -297,6 +303,8 @@ async def test_immediate_works_with_passed_coroutine_raises(
     debouncer._execute_lock.release()
     assert debouncer._job.target == debouncer.function
 
+    debouncer.async_shutdown()
+
 
 async def test_not_immediate_works(hass: HomeAssistant) -> None:
     """Test immediate works."""
@@ -347,6 +355,8 @@ async def test_not_immediate_works(hass: HomeAssistant) -> None:
     assert debouncer._execute_at_end_of_timer is True
     debouncer._execute_lock.release()
     assert debouncer._job.target == debouncer.function
+
+    debouncer.async_shutdown()
 
 
 async def test_not_immediate_works_schedule_call(hass: HomeAssistant) -> None:
@@ -402,6 +412,8 @@ async def test_not_immediate_works_schedule_call(hass: HomeAssistant) -> None:
     assert debouncer._execute_at_end_of_timer is True
     debouncer._execute_lock.release()
     assert debouncer._job.target == debouncer.function
+
+    debouncer.async_shutdown()
 
 
 async def test_immediate_works_with_function_swapped(hass: HomeAssistant) -> None:
@@ -464,6 +476,8 @@ async def test_immediate_works_with_function_swapped(hass: HomeAssistant) -> Non
     assert debouncer._execute_at_end_of_timer is True
     debouncer._execute_lock.release()
     assert debouncer._job.target == debouncer.function
+
+    debouncer.async_shutdown()
 
 
 async def test_shutdown(hass: HomeAssistant, caplog: pytest.LogCaptureFixture) -> None:
