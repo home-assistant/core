@@ -103,23 +103,18 @@ class ForecastSolarDataUpdateCoordinator(DataUpdateCoordinator[Estimate]):
 
     async def _async_update_data(self) -> Estimate:
         """Fetch Forecast.Solar estimates."""
-        if not any(
-            subentry.subentry_type == SUBENTRY_TYPE_PLANE
-            for subentry in self.config_entry.subentries.values()
-        ):
-            raise UpdateFailed(
-                "No plane configured, cannot set up Forecast.Solar"
-            )
+        if (forecast := self.forecast) is None:
+            if not any(
+                subentry.subentry_type == SUBENTRY_TYPE_PLANE
+                for subentry in self.config_entry.subentries.values()
+            ):
+                raise UpdateFailed("No plane configured, cannot set up Forecast.Solar")
 
-        if (
-            len(self.config_entry.subentries) > 1
-            and not self.config_entry.options.get(CONF_API_KEY)
-        ):
             raise UpdateFailed(
                 "An API key is required when more than one plane is configured"
             )
 
         try:
-            return await self.forecast.estimate()
+            return await forecast.estimate()
         except ForecastSolarConnectionError as error:
             raise UpdateFailed(error) from error
