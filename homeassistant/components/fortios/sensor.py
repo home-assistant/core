@@ -25,6 +25,13 @@ from .coordinator import FortiOSDataUpdateCoordinator
 PARALLEL_UPDATES = 0
 
 
+def _sum_or_none(a: Any, b: Any) -> int | None:
+    """Return a + b, or None if both values are absent."""
+    if a is None and b is None:
+        return None
+    return (a or 0) + (b or 0)
+
+
 @dataclass(frozen=True, kw_only=True)
 class FortiOSSensorEntityDescription(SensorEntityDescription):
     """Class describing FortiOS sensor entities."""
@@ -55,17 +62,19 @@ SENSORS: tuple[FortiOSSensorEntityDescription, ...] = (
         key="sessions",
         translation_key="sessions",
         state_class=SensorStateClass.MEASUREMENT,
-        value_fn=lambda data: data.get("system_usage", {})
-        .get("session", {})
-        .get("current"),
+        value_fn=lambda data: _sum_or_none(
+            data.get("system_usage", {}).get("session", {}).get("current"),
+            data.get("system_usage", {}).get("session6", {}).get("current"),
+        ),
     ),
     FortiOSSensorEntityDescription(
         key="session_setup_rate",
         translation_key="session_setup_rate",
         native_unit_of_measurement="sessions/s",
         state_class=SensorStateClass.MEASUREMENT,
-        value_fn=lambda data: (
-            data.get("system_usage", {}).get("setuprate", {}).get("current")
+        value_fn=lambda data: _sum_or_none(
+            data.get("system_usage", {}).get("setuprate", {}).get("current"),
+            data.get("system_usage", {}).get("setuprate6", {}).get("current"),
         ),
     ),
 )

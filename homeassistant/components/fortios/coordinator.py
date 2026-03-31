@@ -69,11 +69,6 @@ class FortiOSDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             system_usage = await self.api.get("monitor/system/resource/usage")
             system_status = await self.api.get("monitor/system/status")
 
-            _LOGGER.debug(
-                "system/resource/usage results: %s", system_usage.get("results")
-            )
-            _LOGGER.debug("system/status response: %s", system_status)
-
             return {
                 "devices": self.devices,
                 "system_usage": _normalize_usage(system_usage.get("results", {})),

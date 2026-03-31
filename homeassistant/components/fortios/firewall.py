@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import logging
 from typing import Any
 
 from aiohttp import ClientTimeout
@@ -11,8 +10,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import REST_TIMEOUT
-
-_LOGGER = logging.getLogger(__name__)
 
 
 class FortiOSAPI:

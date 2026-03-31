@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from datetime import datetime
-import logging
 from typing import Any
 
 from homeassistant.components.device_tracker import ScannerEntity
@@ -15,8 +14,6 @@ from homeassistant.util import dt as dt_util
 from . import FortiOSConfigEntry
 from .const import DEFAULT_DEVICE_NAME, DEVICE_ICONS, FORTIOS_RESULTS_MASTER_MAC
 from .coordinator import FortiOSDataUpdateCoordinator
-
-_LOGGER = logging.getLogger(__name__)
 
 PARALLEL_UPDATES = 0
 
@@ -51,7 +48,6 @@ class FortiOSDeviceScanner(
 ):
     """Representation of a FortiOS connected entity."""
 
-    _attr_entity_registry_enabled_default = True
     _is_online: bool
 
     def __init__(
@@ -100,6 +96,11 @@ class FortiOSDeviceScanner(
             "is_online": device.get("is_online", ""),
         }
         super()._handle_coordinator_update()
+
+    @property
+    def entity_registry_enabled_default(self) -> bool:
+        """Return if entity is enabled by default."""
+        return True
 
     @property
     def mac_address(self) -> str:

@@ -6,7 +6,7 @@ rules:
   appropriate-polling: done
   brands: todo
   common-modules: done
-  config-flow-test-coverage: todo
+  config-flow-test-coverage: done
   config-flow: done
   dependency-transparency: done
   docs-actions:
@@ -35,8 +35,8 @@ rules:
   entity-unavailable: done
   integration-owner: done
   log-when-unavailable: todo
-  parallel-updates: todo
-  reauthentication-flow: todo
+  parallel-updates: done
+  reauthentication-flow: done
   test-coverage: todo
 
   # Gold
@@ -55,7 +55,7 @@ rules:
   entity-category: todo
   entity-device-class: todo
   entity-disabled-by-default: todo
-  entity-translations: todo
+  entity-translations: done
   exception-translations: todo
   icon-translations: todo
   reconfiguration-flow: done
