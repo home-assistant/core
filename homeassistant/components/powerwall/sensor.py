@@ -121,7 +121,6 @@ SENSOR_DESCRIPTIONS: list[PowerwallSensorEntityDescription] = [
     PowerwallSensorEntityDescription(
         key="battery_level",
         translation_key="battery_level",
-        name="Battery level",
         native_unit_of_measurement=PERCENTAGE,
         device_class=SensorDeviceClass.BATTERY,
         state_class=SensorStateClass.MEASUREMENT,
@@ -130,7 +129,6 @@ SENSOR_DESCRIPTIONS: list[PowerwallSensorEntityDescription] = [
     PowerwallSensorEntityDescription(
         key="battery_power",
         translation_key="battery_power",
-        name="Battery power",
         native_unit_of_measurement=UnitOfPower.WATT,
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
@@ -139,7 +137,6 @@ SENSOR_DESCRIPTIONS: list[PowerwallSensorEntityDescription] = [
     PowerwallSensorEntityDescription(
         key="battery_energy_exported",
         translation_key="battery_energy_exported",
-        name="Battery energy exported",
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
@@ -148,7 +145,6 @@ SENSOR_DESCRIPTIONS: list[PowerwallSensorEntityDescription] = [
     PowerwallSensorEntityDescription(
         key="battery_energy_imported",
         translation_key="battery_energy_imported",
-        name="Battery energy imported",
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
@@ -157,7 +153,6 @@ SENSOR_DESCRIPTIONS: list[PowerwallSensorEntityDescription] = [
     PowerwallSensorEntityDescription(
         key="battery_frequency",
         translation_key="battery_frequency",
-        name="Battery frequency",
         native_unit_of_measurement=UnitOfFrequency.HERTZ,
         device_class=SensorDeviceClass.FREQUENCY,
         state_class=SensorStateClass.MEASUREMENT,
@@ -168,7 +163,6 @@ SENSOR_DESCRIPTIONS: list[PowerwallSensorEntityDescription] = [
     PowerwallSensorEntityDescription(
         key="solar_power",
         translation_key="solar_power",
-        name="Solar power",
         native_unit_of_measurement=UnitOfPower.WATT,
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
@@ -177,7 +171,6 @@ SENSOR_DESCRIPTIONS: list[PowerwallSensorEntityDescription] = [
     PowerwallSensorEntityDescription(
         key="solar_energy",
         translation_key="solar_energy",
-        name="Solar energy",
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
@@ -187,7 +180,6 @@ SENSOR_DESCRIPTIONS: list[PowerwallSensorEntityDescription] = [
     PowerwallSensorEntityDescription(
         key="load_power",
         translation_key="load_power",
-        name="Load power",
         native_unit_of_measurement=UnitOfPower.WATT,
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
@@ -196,7 +188,6 @@ SENSOR_DESCRIPTIONS: list[PowerwallSensorEntityDescription] = [
     PowerwallSensorEntityDescription(
         key="load_energy",
         translation_key="load_energy",
-        name="Load energy",
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
@@ -206,7 +197,6 @@ SENSOR_DESCRIPTIONS: list[PowerwallSensorEntityDescription] = [
     PowerwallSensorEntityDescription(
         key="grid_power",
         translation_key="grid_power",
-        name="Grid power",
         native_unit_of_measurement=UnitOfPower.WATT,
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
@@ -215,7 +205,6 @@ SENSOR_DESCRIPTIONS: list[PowerwallSensorEntityDescription] = [
     PowerwallSensorEntityDescription(
         key="grid_energy_exported",
         translation_key="grid_energy_exported",
-        name="Grid energy exported",
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
@@ -224,7 +213,6 @@ SENSOR_DESCRIPTIONS: list[PowerwallSensorEntityDescription] = [
     PowerwallSensorEntityDescription(
         key="grid_energy_imported",
         translation_key="grid_energy_imported",
-        name="Grid energy imported",
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
@@ -233,7 +221,6 @@ SENSOR_DESCRIPTIONS: list[PowerwallSensorEntityDescription] = [
     PowerwallSensorEntityDescription(
         key="grid_voltage",
         translation_key="grid_voltage",
-        name="Grid voltage",
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         device_class=SensorDeviceClass.VOLTAGE,
         state_class=SensorStateClass.MEASUREMENT,
@@ -243,7 +230,6 @@ SENSOR_DESCRIPTIONS: list[PowerwallSensorEntityDescription] = [
     PowerwallSensorEntityDescription(
         key="grid_current",
         translation_key="grid_current",
-        name="Grid current",
         native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
         device_class=SensorDeviceClass.CURRENT,
         state_class=SensorStateClass.MEASUREMENT,
@@ -253,7 +239,6 @@ SENSOR_DESCRIPTIONS: list[PowerwallSensorEntityDescription] = [
     PowerwallSensorEntityDescription(
         key="grid_frequency",
         translation_key="grid_frequency",
-        name="Grid frequency",
         native_unit_of_measurement=UnitOfFrequency.HERTZ,
         device_class=SensorDeviceClass.FREQUENCY,
         state_class=SensorStateClass.MEASUREMENT,
@@ -264,7 +249,6 @@ SENSOR_DESCRIPTIONS: list[PowerwallSensorEntityDescription] = [
     PowerwallSensorEntityDescription(
         key="grid_status",
         translation_key="grid_status",
-        name="Grid status",
         value_fn=lambda data: data.grid_status,
     ),
 ]

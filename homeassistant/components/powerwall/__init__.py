@@ -66,14 +66,21 @@ class PowerwallDataManager:
     def _fetch_data(self) -> PowerwallData:
         """Fetch data from the Powerwall (sync)."""
         # Get meter data
-        meters = self.power_wall.poll("/api/meters/aggregates") or {}
+        meters = self.power_wall.poll("/api/meters/aggregates")
+        if meters is None:
+            raise UpdateFailed("Failed to fetch meter data")
+
         grid_data = self.power_wall.poll("/api/system_status/grid_status") or {}
 
         # Get battery level
-        charge = self.power_wall.level() or 0
+        charge = self.power_wall.level()
+        if charge is None:
+            raise UpdateFailed("Failed to fetch battery level")
 
         # Get grid status
-        grid_status = self.power_wall.grid_status() or "DOWN"
+        grid_status = self.power_wall.grid_status()
+        if grid_status is None:
+            raise UpdateFailed("Failed to fetch grid status")
 
         # Get grid services active
         grid_services_active = grid_data.get("grid_services_active", False)
