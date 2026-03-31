@@ -108,7 +108,7 @@ async def _async_setup_local_entry(hass: HomeAssistant, entry: ConfigEntry) -> b
 
         _LOGGER.error(
             "Error in Risco library",
-            exc_info=(type(error), error, error.__traceback__),
+            exc_info=error,
         )
         if isinstance(error, ConnectionResetError) and not hass.is_stopping:
             _LOGGER.debug("Disconnected from panel. Reloading integration")
