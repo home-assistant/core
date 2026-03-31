@@ -7,5 +7,5 @@
   "integration_type": "device",
   "iot_class": "local_polling",
   "loggers": ["pypowerwall"],
-  "requirements": ["pypowerwall>=0.14.10"]
+  "requirements": ["pypowerwall==0.14.10"]
 }
