@@ -193,9 +193,7 @@ async def test_number_restores_last_value(
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test number restores its last normalized value after reload."""
-    with patch(
-        "homeassistant.components.unifi_access.PLATFORMS", [Platform.NUMBER]
-    ):
+    with patch("homeassistant.components.unifi_access.PLATFORMS", [Platform.NUMBER]):
         await setup_integration(hass, mock_config_entry)
         entity_registry.async_update_entity(
             _number_entity_id(entity_registry, FRONT_DOOR_INTERVAL_UNIQUE_ID),

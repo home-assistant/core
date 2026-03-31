@@ -36,7 +36,7 @@ from unifi_access_api.models.websocket import (
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
-from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.exceptions import ConfigEntryAuthFailed, ServiceValidationError
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DEFAULT_LOCK_RULE_INTERVAL, DOMAIN
@@ -110,7 +110,13 @@ class UnifiAccessCoordinator(DataUpdateCoordinator[UnifiAccessData]):
         if not rule_type:
             return
         interval = self.lock_rule_intervals.get(door_id, DEFAULT_LOCK_RULE_INTERVAL)
-        lock_rule_type = DoorLockRuleType(rule_type)
+        try:
+            lock_rule_type = DoorLockRuleType(rule_type)
+        except ValueError as err:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="lock_rule_failed",
+            ) from err
         rule = DoorLockRule(type=lock_rule_type, interval=interval)
         await self.client.set_door_lock_rule(door_id, rule)
         if self.data is None or door_id not in self.data.doors:
