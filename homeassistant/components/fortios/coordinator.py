@@ -3,13 +3,19 @@
 from __future__ import annotations
 
 import logging
+import time
 from typing import Any
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DOMAIN, FORTIOS_RESULTS_MASTER_MAC, SCAN_INTERVAL
+from .const import (
+    DEVICE_QUERY_LOOKBACK_SECONDS,
+    DOMAIN,
+    FORTIOS_RESULTS_MASTER_MAC,
+    SCAN_INTERVAL,
+)
 from .firewall import FortiOSAPI
 
 _LOGGER = logging.getLogger(__name__)
@@ -59,7 +65,13 @@ class FortiOSDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     async def _async_update_data(self) -> dict[str, Any]:
         """Fetch data from FortiOS."""
         try:
-            fortios_devices = await self.api.get("monitor/user/device/query")
+            now = int(time.time())
+            fortios_devices = await self.api.get(
+                "monitor/user/device/query"
+                f"?query_type=unified_history&start=0&count=1000"
+                f"&query_id=0&cache_query=true&filter_logic=an"
+                f"&timestamp_from={now - DEVICE_QUERY_LOOKBACK_SECONDS}&timestamp_to={now}"
+            )
             for device in fortios_devices.get("results", []):
                 mac = device.get(FORTIOS_RESULTS_MASTER_MAC)
                 if not mac:
