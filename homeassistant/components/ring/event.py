@@ -86,6 +86,10 @@ class RingEvent(RingBaseEntity[RingListenCoordinator, RingDeviceT], EventEntity)
         super().__init__(device, coordinator)
         self.entity_description = description
         self._attr_unique_id = f"{device.id}-{description.key}"
+        # Override the coordinator context to use device_api_id (doorbot_id)
+        # so that _async_update_listeners correctly matches incoming Ring events,
+        # which are keyed by doorbot_id, not the local device.id.
+        self.coordinator_context = device.device_api_id
 
     @callback
     def _async_handle_event(self, event: str) -> None:
@@ -105,8 +109,18 @@ class RingEvent(RingBaseEntity[RingListenCoordinator, RingDeviceT], EventEntity)
 
     @property
     def available(self) -> bool:
-        """Return if entity is available."""
-        return self.coordinator.event_listener.started
+        """Return if entity is available.
+
+        The event listener starts asynchronously via async_create_task, so
+        event_listener.started may still be False while the start is in
+        progress. Treat the entity as available while there are registered
+        listeners (i.e. the start is pending or completed), so that entities
+        do not get permanently stuck as unavailable on integration load.
+        """
+        return (
+            self.coordinator.event_listener.started
+            or bool(self.coordinator._listeners)
+        )
 
     async def async_update(self) -> None:
         """All updates are passive."""
