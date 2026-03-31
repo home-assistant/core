@@ -33,7 +33,13 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import TemplateError
-from homeassistant.helpers import entity, entity_registry as er, template, translation
+from homeassistant.helpers import (
+    device_registry as dr,
+    entity,
+    entity_registry as er,
+    template,
+    translation,
+)
 from homeassistant.helpers.entity_platform import EntityPlatform
 from homeassistant.helpers.json import json_dumps
 from homeassistant.helpers.template.render_info import (
@@ -810,6 +816,7 @@ def test_if_state_exists(hass: HomeAssistant) -> None:
 def test_entity_name(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
 ) -> None:
     """Test entity_name method."""
     assert render(hass, "{{ entity_name('sensor.fake') }}") is None
@@ -835,6 +842,34 @@ def test_entity_name(
     )
     assert render(hass, "{{ entity_name('light.no_unique_id') }}") == (
         "No Unique ID Light"
+    )
+
+    config_entry = MockConfigEntry(domain="test")
+    config_entry.add_to_hass(hass)
+    device_entry = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+        name="My Device",
+    )
+    entry2 = entity_registry.async_get_or_create(
+        "sensor",
+        "test",
+        "unique_2",
+        config_entry=config_entry,
+        device_id=device_entry.id,
+        has_entity_name=True,
+        original_name="Temperature",
+    )
+    assert render(hass, f"{{{{ entity_name('{entry2.entity_id}') }}}}") == (
+        "Temperature"
+    )
+
+    # Strips device name prefix
+    entity_registry.async_update_entity(
+        entry2.entity_id, name="My Device Custom Sensor"
+    )
+    assert render(hass, f"{{{{ entity_name('{entry2.entity_id}') }}}}") == (
+        "Custom Sensor"
     )
 
 

@@ -1409,7 +1409,7 @@ def entity_name(hass: HomeAssistant, entity_id: str) -> str | None:
     """Get the name of an entity from its entity ID."""
     ent_reg = er.async_get(hass)
     if (entry := ent_reg.async_get(entity_id)) is not None:
-        return entry.name if entry.name is not None else entry.original_name
+        return er.async_get_unprefixed_name(hass, entry)
 
     # Fall back to state for entities without a unique_id (not in the registry)
     if (state := hass.states.get(entity_id)) is not None:
