@@ -13,7 +13,6 @@ from homeassistant.components.application_credentials import (
     async_import_client_credential,
 )
 from homeassistant.config_entries import ConfigFlowResult
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_entry_oauth2_flow
 
 from .const import DOMAIN, OAUTH2_CLIENT_ID, OAUTH2_CLIENT_SECRET
@@ -159,11 +158,3 @@ class OlarmOauth2FlowHandler(
 
         # If all are used, cycle back to 1
         return "1"
-
-
-class CannotConnect(HomeAssistantError):
-    """Error to indicate we cannot connect."""
-
-
-class InvalidAuth(HomeAssistantError):
-    """Error to indicate there is invalid auth."""
