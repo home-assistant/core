@@ -34,6 +34,7 @@ from homeassistant.core import (
 )
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, entity_registry as er
+from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.event import async_track_point_in_time
@@ -77,6 +78,7 @@ ENTITY_ID_FORMAT = DOMAIN + ".{}"
 PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA
 PLATFORM_SCHEMA_BASE = cv.PLATFORM_SCHEMA_BASE
 SCAN_INTERVAL = datetime.timedelta(seconds=60)
+EVENT_LISTENER_DEBOUNCE_COOLDOWN = 1.0  # seconds
 
 # Don't support rrules more often than daily
 VALID_FREQS = {"DAILY", "WEEKLY", "MONTHLY", "YEARLY"}
@@ -529,6 +531,7 @@ class CalendarEntity(Entity):
         ]
         | None
     ) = None
+    _event_listener_debouncer: Debouncer[None] | None = None
 
     _attr_initial_color: str | None
 
@@ -598,8 +601,9 @@ class CalendarEntity(Entity):
         """
         super()._async_write_ha_state()
 
-        # Notify websocket subscribers of event changes
-        self.async_update_event_listeners()
+        # Notify websocket subscribers of event changes (debounced)
+        if self._event_listeners and self._event_listener_debouncer:
+            self._event_listener_debouncer.async_schedule_call()
         if self._alarm_unsubs is None:
             self._alarm_unsubs = []
         _LOGGER.debug(
@@ -648,6 +652,9 @@ class CalendarEntity(Entity):
         for unsub in self._alarm_unsubs or ():
             unsub()
         self._alarm_unsubs = None
+        if self._event_listener_debouncer:
+            self._event_listener_debouncer.async_cancel()
+            self._event_listener_debouncer = None
 
     @final
     @callback
@@ -664,6 +671,15 @@ class CalendarEntity(Entity):
         if self._event_listeners is None:
             self._event_listeners = []
 
+        if self._event_listener_debouncer is None:
+            self._event_listener_debouncer = Debouncer(
+                self.hass,
+                _LOGGER,
+                cooldown=EVENT_LISTENER_DEBOUNCE_COOLDOWN,
+                immediate=True,
+                function=self.async_update_event_listeners,
+            )
+
         listener_data = (start_date, end_date, event_listener)
         self._event_listeners.append(listener_data)
 
@@ -671,6 +687,9 @@ class CalendarEntity(Entity):
         def unsubscribe() -> None:
             if self._event_listeners:
                 self._event_listeners.remove(listener_data)
+            if not self._event_listeners and self._event_listener_debouncer:
+                self._event_listener_debouncer.async_cancel()
+                self._event_listener_debouncer = None
 
         return unsubscribe
 

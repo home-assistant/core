@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 from collections.abc import Generator
 from datetime import timedelta
 from http import HTTPStatus
@@ -16,6 +17,7 @@ import voluptuous as vol
 from homeassistant.components.calendar import (
     CREATE_EVENT_SERVICE,
     DOMAIN,
+    EVENT_LISTENER_DEBOUNCE_COOLDOWN,
     SERVICE_GET_EVENTS,
     CalendarEntity,
     CalendarEntityDescription,
@@ -879,3 +881,70 @@ async def test_websocket_subscribe_invalid_timespan(
     assert not msg["success"]
     assert msg["error"]["code"] == "invalid_format"
     assert "Start must be before end" in msg["error"]["message"]
+
+
+async def test_websocket_subscribe_debounces_rapid_updates(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    test_entities: list[MockCalendarEntity],
+) -> None:
+    """Test that rapid state writes are debounced for event listeners."""
+    client = await hass_ws_client(hass)
+
+    start = dt_util.now()
+    end = start + timedelta(days=1)
+
+    await client.send_json_auto_id(
+        {
+            "type": "calendar/event/subscribe",
+            "entity_id": "calendar.calendar_1",
+            "start": start.isoformat(),
+            "end": end.isoformat(),
+        }
+    )
+    msg = await client.receive_json()
+    assert msg["success"]
+    subscription_id = msg["id"]
+
+    # Receive initial event list
+    msg = await client.receive_json()
+    assert msg["id"] == subscription_id
+
+    entity = test_entities[0]
+    entity.async_get_events.reset_mock()
+
+    # Rapidly write state multiple times
+    for i in range(5):
+        entity.create_event(
+            start=start + timedelta(hours=i + 2),
+            end=start + timedelta(hours=i + 3),
+            summary=f"Rapid Event {i}",
+        )
+        entity.async_write_ha_state()
+
+    await hass.async_block_till_done()
+
+    # The debouncer with immediate=True fires the first call immediately
+    # and coalesces the rest into one call after the cooldown.
+    # Without debouncing this would be 5 calls.
+    assert entity.async_get_events.call_count == 1
+
+    # Wait for debounce cooldown to fire the trailing call
+    await asyncio.sleep(EVENT_LISTENER_DEBOUNCE_COOLDOWN + 0.1)
+    await hass.async_block_till_done()
+
+    # Should be exactly 2 total: immediate + one coalesced trailing call
+    assert entity.async_get_events.call_count == 2
+
+    # Drain messages: immediate update + trailing debounced update
+    messages: list[dict] = []
+    while True:
+        msg = await client.receive_json()
+        assert msg["id"] == subscription_id
+        assert msg["type"] == "event"
+        messages.append(msg)
+        if len(msg["event"]["events"]) == 6:  # 1 original + 5 rapid
+            break
+
+    # The final message has all events
+    assert len(messages[-1]["event"]["events"]) == 6
