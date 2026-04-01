@@ -1,0 +1,141 @@
+{
+    "entity": {
+        "sensor": {
+            "photovoltaic": {
+                "default": "mdi:solar-power"
+            },
+            "consumption": {
+                "default": "mdi:home-lightning-bolt"
+            },
+            "grid": {
+                "default": "mdi:transmission-tower"
+            },
+            "production": {
+                "default": "mdi:lightning-bolt-circle"
+            },
+            "self_consumption": {
+                "default": "mdi:home-battery"
+            },
+            "self_supply": {
+                "default": "mdi:battery-charging-wireless"
+            },
+            "total_consumption": {
+                "default": "mdi:home-lightning-bolt"
+            },
+            "direct_consumption_household": {
+                "default": "mdi:home-lightning-bolt"
+            },
+            "direct_consumption_heat_pump": {
+                "default": "mdi:heat-pump"
+            },
+            "direct_consumption_ev": {
+                "default": "mdi:car-electric"
+            },
+            "direct_consumption_heater": {
+                "default": "mdi:radiator"
+            },
+            "direct_consumption_rate": {
+                "default": "mdi:percent"
+            },
+            "self_consumption_rate": {
+                "default": "mdi:percent"
+            },
+            "self_sufficiency_rate": {
+                "default": "mdi:home-circle"
+            },
+            "grid_meter_reading_positive": {
+                "default": "mdi:transmission-tower-import"
+            },
+            "grid_meter_reading_negative": {
+                "default": "mdi:transmission-tower-export"
+            },
+            "battery_state_of_charge": {
+                "default": "mdi:battery"
+            },
+            "battery_power": {
+                "default": "mdi:battery-charging"
+            },
+            "battery_capacity": {
+                "default": "mdi:battery-high"
+            },
+            "battery_remaining_charge": {
+                "default": "mdi:battery-medium"
+            },
+            "battery_charge": {
+                "default": "mdi:battery-arrow-up"
+            },
+            "battery_discharge": {
+                "default": "mdi:battery-arrow-down"
+            },
+            "ev_power": {
+                "default": "mdi:ev-station"
+            },
+            "ev_state_of_charge": {
+                "default": "mdi:car-battery"
+            },
+            "ev_current_l1": {
+                "default": "mdi:current-ac"
+            },
+            "ev_current_l2": {
+                "default": "mdi:current-ac"
+            },
+            "ev_current_l3": {
+                "default": "mdi:current-ac"
+            },
+            "ev_reading_total": {
+                "default": "mdi:ev-plug-type2"
+            },
+            "heatpump_power": {
+                "default": "mdi:heat-pump"
+            },
+            "heater_power": {
+                "default": "mdi:radiator"
+            },
+            "heater_temperature": {
+                "default": "mdi:thermometer"
+            },
+            "hist_photovoltaic": {
+                "default": "mdi:solar-power"
+            },
+            "hist_consumption": {
+                "default": "mdi:home-lightning-bolt"
+            },
+            "hist_production": {
+                "default": "mdi:lightning-bolt-circle"
+            },
+            "hist_feed_in": {
+                "default": "mdi:transmission-tower-export"
+            },
+            "hist_supply": {
+                "default": "mdi:transmission-tower-import"
+            },
+            "hist_self_consumption": {
+                "default": "mdi:home-battery"
+            },
+            "hist_self_supply": {
+                "default": "mdi:battery-charging-wireless"
+            },
+            "hist_total_consumption": {
+                "default": "mdi:home-lightning-bolt"
+            },
+            "hist_direct_consumption_household": {
+                "default": "mdi:home-lightning-bolt"
+            },
+            "hist_direct_consumption_heat_pump": {
+                "default": "mdi:heat-pump"
+            },
+            "hist_direct_consumption_ev": {
+                "default": "mdi:car-electric"
+            },
+            "hist_direct_consumption_heater": {
+                "default": "mdi:radiator"
+            },
+            "hist_self_consumption_rate": {
+                "default": "mdi:percent"
+            },
+            "hist_self_sufficiency_rate": {
+                "default": "mdi:home-circle"
+            }
+        }
+    }
+}
