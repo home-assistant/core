@@ -66,6 +66,13 @@ SENSOR_TYPES: tuple[NinaSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.TIMESTAMP,
         value_fn=lambda data: data.sent,
     ),
+    NinaSensorEntityDescription(
+        key=SENSOR_SUFFIXES[6],
+        translation_key="start",
+        entity_registry_enabled_default=False,
+        device_class=SensorDeviceClass.TIMESTAMP,
+        value_fn=lambda data: data.start,
+    ),
 )
 
 

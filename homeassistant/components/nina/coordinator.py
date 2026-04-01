@@ -42,7 +42,7 @@ class NinaWarningData:
     affected_areas: str
     more_info_url: str
     sent: datetime
-    start: str
+    start: datetime | None
     expires: str
     is_valid: bool
 
@@ -164,7 +164,7 @@ class NINADataUpdateCoordinator(
                     affected_areas_string,
                     raw_warn.web or "",
                     datetime.fromisoformat(raw_warn.sent),
-                    raw_warn.start or "",
+                    datetime.fromisoformat(raw_warn.start) if raw_warn.start else None,
                     raw_warn.expires or "",
                     raw_warn.is_valid,
                 )

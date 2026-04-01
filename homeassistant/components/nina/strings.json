@@ -75,6 +75,9 @@
           "moderate": "Moderate",
           "severe": "Severe"
         }
+      },
+      "start": {
+        "name": "Start {slot_id}"
       }
     }
   },

@@ -31,7 +31,7 @@
           'sender': '',
           'sent': '1999-08-07T10:59:00+02:00',
           'severity': 'Minor',
-          'start': '',
+          'start': None,
         }),
       ]),
     }),
