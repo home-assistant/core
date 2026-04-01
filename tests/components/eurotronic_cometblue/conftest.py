@@ -143,7 +143,8 @@ def mock_bluetooth(enable_bluetooth: None) -> Generator[None]:
 
 
 # Home Assistant related fixtures
-def create_mock_entry() -> MockConfigEntry:
+@pytest.fixture
+def mock_config_entry() -> MockConfigEntry:
     """Create config entry mock from data."""
     return MockConfigEntry(
         domain=DOMAIN,

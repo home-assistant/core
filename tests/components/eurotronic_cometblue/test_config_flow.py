@@ -16,8 +16,10 @@ from homeassistant.const import CONF_ADDRESS, CONF_PIN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from .conftest import FAKE_SERVICE_INFO, create_mock_entry
+from .conftest import FAKE_SERVICE_INFO
 from .const import FIXTURE_DEVICE_NAME, FIXTURE_MAC, FIXTURE_USER_INPUT
+
+from tests.common import MockConfigEntry
 
 
 async def test_user_step_no_devices(
@@ -78,11 +80,10 @@ async def test_user_step_discovered_devices(
 
 
 async def test_user_step_with_existing_device(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock
+    hass: HomeAssistant, mock_setup_entry: AsyncMock, mock_config_entry: MockConfigEntry
 ) -> None:
     """Test we properly handle device picking if entry exists."""
-    entry = create_mock_entry()
-    entry.add_to_hass(hass)
+    mock_config_entry.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
