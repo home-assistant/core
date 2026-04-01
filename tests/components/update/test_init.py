@@ -48,6 +48,8 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.setup import async_setup_component
 
+from .common import MockUpdateEntity
+
 from tests.common import (
     MockConfigEntry,
     MockEntityPlatform,
@@ -64,13 +66,9 @@ from tests.typing import WebSocketGenerator
 TEST_DOMAIN = "test"
 
 
-class MockUpdateEntity(UpdateEntity):
-    """Mock UpdateEntity to use in tests."""
-
-
 async def test_update(hass: HomeAssistant) -> None:
     """Test getting data from the mocked update entity."""
-    update = MockUpdateEntity()
+    update = UpdateEntity()
     update.hass = hass
     update.platform = MockEntityPlatform(hass)
 
@@ -795,6 +793,41 @@ async def test_release_notes_entity_does_not_support_release_notes(
     result = await client.receive_json()
     assert result["error"]["code"] == "not_supported"
     assert result["error"]["message"] == "Entity does not support release notes"
+
+
+async def test_release_notes_entity_unavailable(
+    hass: HomeAssistant,
+    mock_update_entities: list[MockUpdateEntity],
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test getting the release notes for entity that is unavailable."""
+    entity = MockUpdateEntity(
+        name="Update unavailable",
+        unique_id="unavailable",
+        installed_version="1.0.0",
+        latest_version="1.0.1",
+        available=False,
+        supported_features=UpdateEntityFeature.RELEASE_NOTES,
+    )
+
+    setup_test_component_platform(hass, DOMAIN, [entity])
+
+    assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
+    await hass.async_block_till_done()
+
+    client = await hass_ws_client(hass)
+    await hass.async_block_till_done()
+
+    await client.send_json(
+        {
+            "id": 1,
+            "type": "update/release_notes",
+            "entity_id": "update.update_unavailable",
+        }
+    )
+    result = await client.receive_json()
+    assert result["error"]["code"] == "home_assistant_error"
+    assert result["error"]["message"] == "Entity is not available"
 
 
 class MockFlow(ConfigFlow):

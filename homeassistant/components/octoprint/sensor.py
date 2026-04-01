@@ -12,14 +12,12 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import PERCENTAGE, UnitOfInformation, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import OctoprintDataUpdateCoordinator
-from .const import DOMAIN
+from .coordinator import OctoprintConfigEntry, OctoprintDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -35,13 +33,11 @@ def _is_printer_printing(printer: OctoprintPrinterInfo) -> bool:
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: OctoprintConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the available OctoPrint sensors."""
-    coordinator: OctoprintDataUpdateCoordinator = hass.data[DOMAIN][
-        config_entry.entry_id
-    ]["coordinator"]
+    coordinator = config_entry.runtime_data
     device_id = config_entry.unique_id
 
     assert device_id is not None
