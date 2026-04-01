@@ -20,31 +20,51 @@ Run these commands in parallel to analyze the changes:
 git branch --show-current
 git remote -v | grep push
 
+# Determine the best available dev reference
+if git rev-parse --verify --quiet upstream/dev >/dev/null; then
+  BASE_REF="upstream/dev"
+elif git rev-parse --verify --quiet origin/dev >/dev/null; then
+  BASE_REF="origin/dev"
+elif git rev-parse --verify --quiet dev >/dev/null; then
+  BASE_REF="dev"
+else
+  echo "Could not find upstream/dev, origin/dev, or local dev"
+  exit 1
+fi
+
+BASE_SHA="$(git merge-base "$BASE_REF" HEAD)"
+echo "BASE_REF=$BASE_REF"
+echo "BASE_SHA=$BASE_SHA"
+
 # Get commit info for this branch vs dev
-git log dev..HEAD --oneline
+git log "${BASE_SHA}..HEAD" --oneline
 
 # Check what files changed
-git diff dev..HEAD --name-only
+git diff "${BASE_SHA}..HEAD" --name-only
 
 # Check if test files were added/modified
-git diff dev..HEAD --name-only | grep -E "^tests/.*\.py$" || echo "NO_TESTS_CHANGED"
+git diff "${BASE_SHA}..HEAD" --name-only | grep -E "^tests/.*\.py$" || echo "NO_TESTS_CHANGED"
 
 # Check if manifest.json changed
-git diff dev..HEAD --name-only | grep "manifest.json" || echo "NO_MANIFEST_CHANGED"
+git diff "${BASE_SHA}..HEAD" --name-only | grep "manifest.json" || echo "NO_MANIFEST_CHANGED"
 ```
 
 From the file paths, extract the **integration domain** from `homeassistant/components/{integration}/` or `tests/components/{integration}/`.
 
 **Track results:**
+- `BASE_REF`: the dev reference used for comparison
+- `BASE_SHA`: the merge-base commit used for diff-based checks
 - `TESTS_CHANGED`: true if test files were added or modified
 - `MANIFEST_CHANGED`: true if manifest.json was modified
 
+**If no suitable dev reference is available, STOP and tell the user to fetch `upstream/dev`, `origin/dev`, or a local `dev` branch before continuing.**
+
 ## Step 2: Run Code Quality Checks
 
-Run `prek` to perform code quality checks (formatting, linting, hassfest, etc.) on the changed files:
+Run `prek` to perform code quality checks (formatting, linting, hassfest, etc.) on the files changed since `BASE_SHA`:
 
 ```bash
-prek run
+prek run --from-ref "$BASE_SHA" --to-ref HEAD
 ```
 
 **Track results:**
@@ -106,13 +126,14 @@ Check each item from the [development checklist](https://developers.home-assista
 | Item | How to verify |
 |------|---------------|
 | External libraries on PyPI | Check manifest.json requirements - all should be PyPI packages |
-| Dependencies in requirements_all.txt | Run `python -m script.gen_requirements_all` if `MANIFEST_CHANGED` is true |
+| Dependencies in requirements_all.txt | Only if dependency declarations changed (the `requirements` field in `manifest.json` or `requirements_all.txt`), run `python -m script.gen_requirements_all` |
 | Codeowners updated | If this is a new integration, ensure its `manifest.json` includes a `codeowners` field with one or more GitHub usernames |
 | No commented out code | Visually scan the diff for blocks of commented-out code |
 
 **Track results:**
 - `NO_COMMENTED_CODE`: true if no blocks of commented-out code found in the diff
-- `REQUIREMENTS_UPDATED`: true if `MANIFEST_CHANGED` is true and requirements_all.txt was regenerated successfully; not applicable if `MANIFEST_CHANGED` is false
+- `DEPENDENCIES_CHANGED`: true if the diff changes the `requirements` field in `manifest.json` or changes `requirements_all.txt`
+- `REQUIREMENTS_UPDATED`: true if `DEPENDENCIES_CHANGED` is true and requirements_all.txt was regenerated successfully; not applicable if `DEPENDENCIES_CHANGED` is false
 - `CHECKLIST_PASSED`: true if all items above pass
 
 ## Step 7: Determine Type of Change
@@ -150,7 +171,7 @@ Based on the verification steps above, determine checkbox states:
 | Tests have been added | Tick only if `TESTS_CHANGED` is true AND the changes exercise new or changed functionality (not only cosmetic test changes) |
 | Documentation added/updated | Tick if documentation PR created (or not applicable) |
 | Manifest file fields filled out | Tick if `PREK_PASSED` is true (or not applicable) |
-| Dependencies in requirements_all.txt | Tick only if `REQUIREMENTS_UPDATED` is true |
+| Dependencies in requirements_all.txt | Tick only if `DEPENDENCIES_CHANGED` is false, or if `DEPENDENCIES_CHANGED` is true and `REQUIREMENTS_UPDATED` is true |
 | Dependency changelog linked | Tick if dependency changelog linked in PR description (or not applicable) |
 | Any generated code has been carefully reviewed | Leave unchecked for the contributor to review and set manually |
 
