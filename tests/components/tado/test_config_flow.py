@@ -197,22 +197,6 @@ async def test_wait_for_login_exception(
     assert result["step_id"] == error
 
 
-async def test_wait_for_login_rate_limit_exception(
-    hass: HomeAssistant,
-    mock_tado_api: MagicMock,
-) -> None:
-    """Test that a rate limit exception in wait_for_login is handled properly."""
-    mock_tado_api.device_activation.side_effect = TadoRateLimitExceeded("rate limited")
-    mock_tado_api.rate_limit_info.return_value = {"remaining": "0"}
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}
-    )
-
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "api_rate_limit_reached"
-
-
 async def test_wait_for_login_rate_limit(
     hass: HomeAssistant,
     mock_tado_api: MagicMock,
