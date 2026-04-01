@@ -168,3 +168,38 @@ async def test_remove_device_blocked(
     assert device is not None
     with pytest.raises(HomeAssistantError, match=expected_error):
         await async_remove_config_entry_device(hass, entry, device)
+
+
+async def test_remove_device_allowed_offline_player(
+    hass: HomeAssistant,
+    setup_squeezebox: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test that removal is allowed for an offline player."""
+    entry = setup_squeezebox
+    player_id = TEST_MAC[0]
+    # Ensure the player coordinator exists and is marked offline/unavailable.
+    coordinator = entry.runtime_data.player_coordinators[player_id]
+    coordinator.available = False
+    device = device_registry.async_get_device(identifiers={(DOMAIN, player_id)})
+    assert device is not None
+    result = await async_remove_config_entry_device(hass, entry, device)
+    assert result is True
+
+
+async def test_remove_device_allowed_stale_player(
+    hass: HomeAssistant,
+    setup_squeezebox: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test that removal is allowed for a stale player without coordinator."""
+    entry = setup_squeezebox
+    stale_player_id = "stale_player"
+    # Create a device in the registry that has no matching coordinator.
+    assert stale_player_id not in entry.runtime_data.player_coordinators
+    device = device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers={(DOMAIN, stale_player_id)},
+    )
+    result = await async_remove_config_entry_device(hass, entry, device)
+    assert result is True
