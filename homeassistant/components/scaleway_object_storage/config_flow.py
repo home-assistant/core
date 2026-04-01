@@ -41,11 +41,6 @@ SECTION_CREDENTIALS_SCHEMA = vol.Schema(
     }
 )
 
-
-STEP_REAUTH_DATA_SCHEMA = vol.Schema(
-    {vol.Required(CONF_SECTION_CREDENTIALS): section(SECTION_CREDENTIALS_SCHEMA)}
-)
-
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_SECTION_CREDENTIALS): section(SECTION_CREDENTIALS_SCHEMA),
@@ -138,43 +133,6 @@ class ScalewayConfigFlow(ConfigFlow, domain=DOMAIN):
                 STEP_USER_DATA_SCHEMA, user_input
             ),
             description_placeholders=DOCS_PLACEHOLDERS,
-            errors=errors,
-        )
-
-    async def async_step_reauth(
-        self, entry_data: Mapping[str, Any]
-    ) -> ConfigFlowResult:
-        """Start a reauth flow."""
-        return await self.async_step_reauth_confirm()
-
-    async def async_step_reauth_confirm(
-        self,
-        user_input: Mapping[str, Any] | None = None,
-    ) -> ConfigFlowResult:
-        """Handle a reauth flow."""
-        errors: dict[str, str] = {}
-        entry = self._get_reauth_entry()
-
-        if user_input is not None:
-            # Our schema for reauth_data in this step is just the credentials section of the full config.
-            config = entry.data | user_input
-            if await self._test_connection(errors=errors, config=config):
-                return self.async_update_reload_and_abort(
-                    entry,
-                    data=config,
-                    reload_even_if_entry_is_unchanged=True,
-                )
-
-        return self.async_show_form(
-            step_id="reauth_confirm",
-            data_schema=self.add_suggested_values_to_schema(
-                STEP_REAUTH_DATA_SCHEMA,
-                user_input or entry.data,
-            ),
-            description_placeholders={
-                "bucket_name": entry.data[CONF_BUCKET],
-                **DOCS_PLACEHOLDERS,
-            },
             errors=errors,
         )
 

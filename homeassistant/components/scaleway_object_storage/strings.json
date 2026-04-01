@@ -2,7 +2,6 @@
   "config": {
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
       "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
     },
     "error": {
@@ -14,24 +13,6 @@
       "unsuccessful_response": "Received unsuccessful server response from Scaleway."
     },
     "step": {
-      "reauth_confirm": {
-        "data": {},
-        "description": "Your [Scaleway credentials]({api_key_docs}) for the `{bucket_name}` bucket are no longer valid. Please enter new, valid credentials.",
-        "sections": {
-          "credentials": {
-            "data": {
-              "access_key_id": "Access Key ID",
-              "secret_key": "Secret Key"
-            },
-            "data_description": {
-              "access_key_id": "Your API key's ID",
-              "secret_key": "The secret part of your API key"
-            },
-            "name": "Credentials"
-          }
-        },
-        "title": "Re-authenticate Scaleway Object Storage bucket"
-      },
       "reconfigure": {
         "data": {
           "bucket": "Bucket Name",

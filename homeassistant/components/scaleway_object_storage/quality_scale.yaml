@@ -55,7 +55,7 @@ rules:
     status: exempt
     comment: |
       The integration does not register entities or services.
-  reauthentication-flow: done
+  reauthentication-flow: todo
   test-coverage: done
 
   # Gold

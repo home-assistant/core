@@ -420,12 +420,6 @@ class ScalewayBackupAgent(BackupAgent):
                         )
                         backups.append(task)
 
-        except* exceptions.InvalidAuthException as e:
-            _LOGGER.debug(
-                "Encountered invalid auth exception during list operation, triggering reauth"
-            )
-            self._entry.async_start_reauth(self._hass)
-            raise next(helpers.unpack_exception_group(e)) from None
         except* exceptions.ScalewayException as e:
             # Each task could raise a ScalewayException.
             task_exceptions = list(helpers.unpack_exception_group(e))
