@@ -16,6 +16,7 @@ from tuya_sharing import CustomerDevice, Manager
 
 from homeassistant.components.vacuum import (
     StateVacuumEntity,
+    StateVacuumEntityDescription,
     VacuumActivity,
     VacuumEntityFeature,
 )
@@ -36,6 +37,10 @@ _TUYA_TO_HA_ACTIVITY_MAPPINGS = {
     TuyaVacuumActivity.ERROR: VacuumActivity.ERROR,
 }
 
+VACUUMS: dict[DeviceCategory, StateVacuumEntityDescription] = {
+    DeviceCategory.SD: StateVacuumEntityDescription(key=""),
+}
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -51,9 +56,11 @@ async def async_setup_entry(
         entities: list[TuyaVacuumEntity] = []
         for device_id in device_ids:
             device = manager.device_map[device_id]
-            if device.category == DeviceCategory.SD:
+            if description := VACUUMS.get(device.category):
                 entities.append(
-                    TuyaVacuumEntity(device, manager, get_default_definition(device))
+                    TuyaVacuumEntity(
+                        device, manager, description, get_default_definition(device)
+                    )
                 )
         async_add_entities(entities)
 
@@ -73,10 +80,11 @@ class TuyaVacuumEntity(TuyaEntity, StateVacuumEntity):
         self,
         device: CustomerDevice,
         device_manager: Manager,
+        description: StateVacuumEntityDescription,
         definition: TuyaVacuumDefinition,
     ) -> None:
         """Init Tuya vacuum."""
-        super().__init__(device, device_manager)
+        super().__init__(device, device_manager, description)
         self._action_wrapper = definition.action_wrapper
         self._activity_wrapper = definition.activity_wrapper
         self._fan_speed_wrapper = definition.fan_speed_wrapper
