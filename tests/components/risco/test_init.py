@@ -1,6 +1,7 @@
 """Tests for the Risco integration."""
 
-from typing import Any
+import logging
+from typing import Any, cast
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from pyrisco import OperationError
@@ -102,22 +103,24 @@ async def test_clock_operation_error_is_downgraded(
     two_zone_local: dict[int, Any],
     mock_error_handler: MagicMock,
     setup_risco_local: MockConfigEntry,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test CLOCK keep-alive operation errors warn without triggering reload."""
     callback = mock_error_handler.call_args.args[0]
     assert callback is not None
 
-    with (
-        patch.object(hass.config_entries, "async_reload") as reload_mock,
-        patch("homeassistant.components.risco._LOGGER") as logger_mock,
-    ):
-        await callback(OperationError("Timeout in command: CLOCK"))
+    local_data = hass.data[DOMAIN][setup_risco_local.entry_id]
+    disconnect_mock = cast(AsyncMock, local_data.system.disconnect)
 
-    reload_mock.assert_not_awaited()
-    logger_mock.error.assert_not_called()
-    logger_mock.warning.assert_called_once()
-    assert logger_mock.warning.call_args.args == (
-        "Risco keep-alive timeout for entry %s (host: %s)",
-        setup_risco_local.title,
-        setup_risco_local.data.get(CONF_HOST, "unknown"),
+    caplog.set_level(logging.WARNING, logger="homeassistant.components.risco")
+    await callback(OperationError("Timeout in command: CLOCK"))
+
+    disconnect_mock.assert_not_awaited()
+    assert "Error in Risco library" not in caplog.text
+
+    expected_warning = (
+        "Risco keep-alive timeout for entry "
+        f"{setup_risco_local.title} (host: "
+        f"{setup_risco_local.data.get(CONF_HOST, 'unknown')})"
     )
+    assert expected_warning in caplog.text
