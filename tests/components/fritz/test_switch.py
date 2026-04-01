@@ -290,6 +290,7 @@ async def test_switch_no_profile_entities_list(
     hass: HomeAssistant,
     fc_class_mock,
     fh_class_mock,
+    fs_class_mock,
 ) -> None:
     """Test Fritz!Tools switches with no profile entities."""
 
@@ -312,6 +313,7 @@ async def test_switch_no_mesh_wifi_uplink(
     hass: HomeAssistant,
     fc_class_mock,
     fh_class_mock,
+    fs_class_mock,
 ) -> None:
     """Test Fritz!Tools switches when no mesh WiFi uplink."""
 
@@ -330,6 +332,7 @@ async def test_switch_device_no_wan_access(
     hass: HomeAssistant,
     fc_class_mock,
     fh_class_mock,
+    fs_class_mock,
 ) -> None:
     """Test Fritz!Tools switches when device has no WAN access."""
 
@@ -351,6 +354,30 @@ async def test_switch_device_no_wan_access(
     assert state.state == STATE_UNAVAILABLE
 
 
+async def test_switch_device_no_ip_address(
+    hass: HomeAssistant,
+    fc_class_mock,
+    fh_class_mock,
+    fs_class_mock,
+) -> None:
+    """Test Fritz!Tools switches when device has no IP address."""
+
+    entity_id = "switch.printer_internet_access"
+
+    entry = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_DATA)
+    entry.add_to_hass(hass)
+
+    attributes = deepcopy(MOCK_HOST_ATTRIBUTES_DATA)
+    attributes[0]["IPAddress"] = ""
+
+    fh_class_mock.get_hosts_attributes = MagicMock(return_value=attributes)
+
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert hass.states.get(entity_id) is None
+
+
 @pytest.mark.parametrize(
     ("entity_id", "wrapper_method", "state_value"),
     [
@@ -369,12 +396,18 @@ async def test_switch_device_no_wan_access(
             "async_set_deflection_enable",
             STATE_ON,
         ),
+        (
+            "switch.mock_title_wi_fi_mywifi",
+            "async_set_wlan_configuration",
+            STATE_ON,
+        ),
     ],
 )
 async def test_switch_turn_on_off(
     hass: HomeAssistant,
     fc_class_mock,
     fh_class_mock,
+    fs_class_mock,
     entity_id: str,
     wrapper_method: str,
     state_value: str,

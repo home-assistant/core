@@ -497,6 +497,9 @@
     "external_reason_mow": {
       "message": "External reason is only allowed with override mode `park`"
     },
+    "oauth2_implementation_unavailable": {
+      "message": "[%key:common::exceptions::oauth2_implementation_unavailable::message%]"
+    },
     "work_area_not_existing": {
       "message": "The selected work area does not exist."
     },
@@ -517,7 +520,7 @@
       "description": "Lets the mower either mow or park for a given duration, overriding all schedules.",
       "fields": {
         "duration": {
-          "description": "Minimum: 1 minute, maximum: 42 days, seconds will be ignored.",
+          "description": "Minimum: 1 minute, maximum: 42 days.",
           "name": "Duration"
         },
         "external_reason": {

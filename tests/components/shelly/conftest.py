@@ -39,7 +39,11 @@ MOCK_SETTINGS = {
         "num_inputs": 3,
         "num_outputs": 2,
     },
-    "coiot": {"update_period": 15},
+    "coiot": {
+        "update_period": 15,
+        "enabled": True,
+        "peer": "10.10.10.10:5683",
+    },
     "fw": "20201124-092159/v1.9.0@57ac4ad8",
     "inputs": [
         {
@@ -789,10 +793,13 @@ async def mock_sleepy_rpc_device():
 
 @pytest.fixture
 def mock_setup_entry() -> Generator[AsyncMock]:
-    """Override async_setup_entry."""
-    with patch(
-        "homeassistant.components.shelly.async_setup_entry", return_value=True
-    ) as mock_setup_entry:
+    """Override async_setup_entry and async_unload_entry."""
+    with (
+        patch(
+            "homeassistant.components.shelly.async_setup_entry", return_value=True
+        ) as mock_setup_entry,
+        patch("homeassistant.components.shelly.async_unload_entry", return_value=True),
+    ):
         yield mock_setup_entry
 
 

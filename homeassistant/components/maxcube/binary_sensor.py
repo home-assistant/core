@@ -61,7 +61,7 @@ class MaxCubeShutter(MaxCubeBinarySensorBase):
         self._attr_unique_id = self._device.serial
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool:
         """Return true if the binary sensor is on/open."""
         return self._device.is_open
 
@@ -79,6 +79,6 @@ class MaxCubeBattery(MaxCubeBinarySensorBase):
         self._attr_unique_id = f"{self._device.serial}_battery"
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool:
         """Return true if the binary sensor is on/open."""
         return self._device.battery == 1

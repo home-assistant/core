@@ -171,7 +171,7 @@ class ElevenLabsSTTEntity(SpeechToTextEntity):
             _LOGGER.warning("No audio received in stream")
             return stt.SpeechResult(None, SpeechResultState.ERROR)
 
-        lang_display = lang_code if lang_code else "auto-detected"
+        lang_display = lang_code or "auto-detected"
 
         _LOGGER.debug(
             "Transcribing audio (%s), format: %s, size: %d bytes",

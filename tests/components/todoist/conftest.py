@@ -8,6 +8,7 @@ from unittest.mock import AsyncMock, patch
 import pytest
 from requests.exceptions import HTTPError
 from requests.models import Response
+from todoist_api_python.api_async import TodoistAPIAsync
 from todoist_api_python.models import Collaborator, Due, Label, Project, Section, Task
 
 from homeassistant.components.todoist import DOMAIN
@@ -126,7 +127,7 @@ def mock_tasks(due: Due) -> list[Task]:
 @pytest.fixture(name="api")
 def mock_api(tasks: list[Task]) -> AsyncMock:
     """Mock the api state."""
-    api = AsyncMock()
+    api = AsyncMock(spec=TodoistAPIAsync)
     api.get_projects.side_effect = make_api_response(
         [
             Project(

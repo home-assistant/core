@@ -78,7 +78,6 @@ async def test_switch_action(
 
     entity_id = entity_info["entity_id"]
 
-    # Turn on
     await hass.services.async_call(
         SWITCH_DOMAIN,
         service,
@@ -104,11 +103,15 @@ async def test_switch_state_update(
 
     entity_id = entity_info["entity_id"]
 
-    assert hass.states.get(entity_id).state == STATE_OFF
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == STATE_OFF
 
     mock_switch_property.get.return_value = True
 
     await update_property_listeners(mock_switch_property)
     await hass.async_block_till_done()
 
-    assert hass.states.get(entity_id).state == STATE_ON
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == STATE_ON

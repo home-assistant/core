@@ -3,7 +3,7 @@
 from collections.abc import Callable
 import logging
 from typing import Any
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock
 
 from adguardhome import AdGuardHomeError
 import pytest
@@ -14,9 +14,16 @@ from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from . import setup_integration
-
 from tests.common import MockConfigEntry, snapshot_platform
+
+
+@pytest.fixture
+def platforms() -> list[Platform]:
+    """Fixture to specify platforms to test."""
+    return [Platform.SWITCH]
+
+
+pytestmark = pytest.mark.usefixtures("init_integration")
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
@@ -24,13 +31,9 @@ async def test_switch(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     snapshot: SnapshotAssertion,
-    mock_adguard: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test the adguard switch platform."""
-    with patch("homeassistant.components.adguard.PLATFORMS", [Platform.SWITCH]):
-        await setup_integration(hass, mock_config_entry, mock_adguard)
-
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
@@ -103,15 +106,11 @@ async def test_switch(
 async def test_switch_actions(
     hass: HomeAssistant,
     mock_adguard: AsyncMock,
-    mock_config_entry: MockConfigEntry,
     switch_name: str,
     service: str,
     call_assertion: Callable[[AsyncMock], Any],
 ) -> None:
     """Test the adguard switch actions."""
-    with patch("homeassistant.components.adguard.PLATFORMS", [Platform.SWITCH]):
-        await setup_integration(hass, mock_config_entry, mock_adguard)
-
     await hass.services.async_call(
         "switch",
         service,
@@ -138,16 +137,12 @@ async def test_switch_actions(
 async def test_switch_action_failed(
     hass: HomeAssistant,
     mock_adguard: AsyncMock,
-    mock_config_entry: MockConfigEntry,
     caplog: pytest.LogCaptureFixture,
     service: str,
     expected_message: str,
 ) -> None:
     """Test the adguard switch actions."""
     caplog.set_level(logging.ERROR)
-
-    with patch("homeassistant.components.adguard.PLATFORMS", [Platform.SWITCH]):
-        await setup_integration(hass, mock_config_entry, mock_adguard)
 
     mock_adguard.enable_protection.side_effect = AdGuardHomeError("Boom")
     mock_adguard.disable_protection.side_effect = AdGuardHomeError("Boom")

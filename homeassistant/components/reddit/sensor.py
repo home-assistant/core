@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from datetime import timedelta
 import logging
+from typing import Any
 
 import praw
 import voluptuous as vol
@@ -98,8 +99,12 @@ def setup_platform(
 class RedditSensor(SensorEntity):
     """Representation of a Reddit sensor."""
 
+    _attr_icon = "mdi:reddit"
+
     def __init__(self, reddit, subreddit: str, limit: int, sort_by: str) -> None:
         """Initialize the Reddit sensor."""
+        self._attr_name = f"reddit_{subreddit}"
+        self._attr_native_value = 0
         self._reddit = reddit
         self._subreddit = subreddit
         self._limit = limit
@@ -108,28 +113,13 @@ class RedditSensor(SensorEntity):
         self._subreddit_data: list = []
 
     @property
-    def name(self):
-        """Return the name of the sensor."""
-        return f"reddit_{self._subreddit}"
-
-    @property
-    def native_value(self):
-        """Return the state of the sensor."""
-        return len(self._subreddit_data)
-
-    @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
         return {
             ATTR_SUBREDDIT: self._subreddit,
             ATTR_POSTS: self._subreddit_data,
             CONF_SORT_BY: self._sort_by,
         }
-
-    @property
-    def icon(self):
-        """Return the icon to use in the frontend."""
-        return "mdi:reddit"
 
     def update(self) -> None:
         """Update data from Reddit API."""
@@ -155,3 +145,5 @@ class RedditSensor(SensorEntity):
 
         except praw.exceptions.PRAWException as err:
             _LOGGER.error("Reddit error %s", err)
+
+        self._attr_native_value = len(self._subreddit_data)

@@ -52,7 +52,13 @@ async def test_block_config_entry_diagnostics(
             "model": MODEL_25,
             "sw_version": "some fw string",
         },
-        "device_settings": {"coiot": {"update_period": 15}},
+        "device_settings": {
+            "coiot": {
+                "update_period": 15,
+                "enabled": True,
+                "peer": "10.10.10.10:5683",
+            }
+        },
         "device_status": MOCK_STATUS_COAP,
         "last_error": "DeviceConnectionError()",
     }

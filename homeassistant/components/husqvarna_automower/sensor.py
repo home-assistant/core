@@ -175,9 +175,9 @@ MOWER_SENSOR_TYPES: tuple[AutomowerSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.ENUM,
         option_fn=lambda data: list(MowerModes),
         value_fn=(
-            lambda data: data.mower.mode
-            if data.mower.mode != MowerModes.UNKNOWN
-            else None
+            lambda data: (
+                data.mower.mode if data.mower.mode != MowerModes.UNKNOWN else None
+            )
         ),
     ),
     AutomowerSensorEntityDescription(

@@ -110,7 +110,7 @@ class TradfriLight(TradfriBaseEntity, LightEntity):
         return cast(bool, self._device_data.state)
 
     @property
-    def color_mode(self) -> ColorMode | None:
+    def color_mode(self) -> ColorMode:
         """Return the color mode of the light."""
         if self._fixed_color_mode:
             return self._fixed_color_mode

@@ -283,7 +283,10 @@ class IntegrationOnboardingView(_BaseOnboardingStepView):
     async def post(self, request: web.Request, data: dict[str, Any]) -> web.Response:
         """Handle token creation."""
         hass = request.app[KEY_HASS]
-        refresh_token_id = request[KEY_HASS_REFRESH_TOKEN_ID]
+        if not (refresh_token_id := request.get(KEY_HASS_REFRESH_TOKEN_ID)):
+            return self.json_message(
+                "Refresh token not available", HTTPStatus.FORBIDDEN
+            )
 
         async with self._lock:
             if self._async_is_done():

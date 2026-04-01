@@ -7,7 +7,13 @@ from collections.abc import Callable, Collection, Mapping
 import logging
 from typing import Any
 
-from homeassistant.const import ATTR_ASSUMED_STATE, ATTR_ENTITY_ID, STATE_OFF, STATE_ON
+from homeassistant.const import (
+    ATTR_ASSUMED_STATE,
+    ATTR_ENTITY_ID,
+    ATTR_GROUP_ENTITIES,
+    STATE_OFF,
+    STATE_ON,
+)
 from homeassistant.core import (
     CALLBACK_TYPE,
     Event,
@@ -35,7 +41,7 @@ _LOGGER = logging.getLogger(__name__)
 class GroupEntity(Entity):
     """Representation of a Group of entities."""
 
-    _unrecorded_attributes = frozenset({ATTR_ENTITY_ID})
+    _unrecorded_attributes = frozenset({ATTR_ENTITY_ID, ATTR_GROUP_ENTITIES})
 
     _attr_should_poll = False
     _entity_ids: list[str]

@@ -2,16 +2,11 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 import logging
 from typing import TYPE_CHECKING, Any
 
-import aiohttp
-from nrgkick_api import (
-    NRGkickAPI,
-    NRGkickAPIDisabledError,
-    NRGkickAuthenticationError,
-    NRGkickConnectionError,
-)
+from nrgkick_api import NRGkickAPI
 import voluptuous as vol
 import yarl
 
@@ -33,6 +28,7 @@ from .api import (
     NRGkickApiClientCommunicationError,
     NRGkickApiClientError,
     NRGkickApiClientInvalidResponseError,
+    async_api_call,
 )
 from .const import DOMAIN
 
@@ -96,15 +92,8 @@ async def validate_input(
         session=session,
     )
 
-    try:
-        await api.test_connection()
-        info = await api.get_info(["general"], raw=True)
-    except NRGkickAuthenticationError as err:
-        raise NRGkickApiClientAuthenticationError from err
-    except NRGkickAPIDisabledError as err:
-        raise NRGkickApiClientApiDisabledError from err
-    except (NRGkickConnectionError, TimeoutError, aiohttp.ClientError, OSError) as err:
-        raise NRGkickApiClientCommunicationError from err
+    await async_api_call(api.test_connection())
+    info = await async_api_call(api.get_info(["general"], raw=True))
 
     device_name = info.get("general", {}).get("device_name")
     if not device_name:
@@ -131,6 +120,56 @@ class NRGkickConfigFlow(ConfigFlow, domain=DOMAIN):
         self._discovered_name: str | None = None
         self._pending_host: str | None = None
 
+    async def _async_validate_host(
+        self,
+        host: str,
+        errors: dict[str, str],
+    ) -> tuple[dict[str, Any] | None, bool]:
+        """Validate host connection and populate errors dict on failure.
+
+        Returns (info, needs_auth). When needs_auth is True, the caller
+        should store the host and redirect to the appropriate auth step.
+        """
+        try:
+            return await validate_input(self.hass, host), False
+        except NRGkickApiClientApiDisabledError:
+            errors["base"] = "json_api_disabled"
+        except NRGkickApiClientAuthenticationError:
+            return None, True
+        except NRGkickApiClientInvalidResponseError:
+            errors["base"] = "invalid_response"
+        except NRGkickApiClientCommunicationError:
+            errors["base"] = "cannot_connect"
+        except NRGkickApiClientError:
+            _LOGGER.exception("Unexpected error")
+            errors["base"] = "unknown"
+        return None, False
+
+    async def _async_validate_credentials(
+        self,
+        host: str,
+        errors: dict[str, str],
+        username: str | None = None,
+        password: str | None = None,
+    ) -> dict[str, Any] | None:
+        """Validate credentials and populate errors dict on failure."""
+        try:
+            return await validate_input(
+                self.hass, host, username=username, password=password
+            )
+        except NRGkickApiClientApiDisabledError:
+            errors["base"] = "json_api_disabled"
+        except NRGkickApiClientAuthenticationError:
+            errors["base"] = "invalid_auth"
+        except NRGkickApiClientInvalidResponseError:
+            errors["base"] = "invalid_response"
+        except NRGkickApiClientCommunicationError:
+            errors["base"] = "cannot_connect"
+        except NRGkickApiClientError:
+            _LOGGER.exception("Unexpected error")
+            errors["base"] = "unknown"
+        return None
+
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -142,21 +181,11 @@ class NRGkickConfigFlow(ConfigFlow, domain=DOMAIN):
             except vol.Invalid:
                 errors["base"] = "cannot_connect"
             else:
-                try:
-                    info = await validate_input(self.hass, host)
-                except NRGkickApiClientApiDisabledError:
-                    errors["base"] = "json_api_disabled"
-                except NRGkickApiClientAuthenticationError:
+                info, needs_auth = await self._async_validate_host(host, errors)
+                if needs_auth:
                     self._pending_host = host
                     return await self.async_step_user_auth()
-                except NRGkickApiClientInvalidResponseError:
-                    errors["base"] = "invalid_response"
-                except NRGkickApiClientCommunicationError:
-                    errors["base"] = "cannot_connect"
-                except NRGkickApiClientError:
-                    _LOGGER.exception("Unexpected error")
-                    errors["base"] = "unknown"
-                else:
+                if info:
                     await self.async_set_unique_id(
                         info["serial"], raise_on_progress=False
                     )
@@ -181,33 +210,127 @@ class NRGkickConfigFlow(ConfigFlow, domain=DOMAIN):
             assert self._pending_host is not None
 
         if user_input is not None:
-            username = user_input.get(CONF_USERNAME)
-            password = user_input.get(CONF_PASSWORD)
-
-            try:
-                info = await validate_input(
-                    self.hass,
-                    self._pending_host,
-                    username=username,
-                    password=password,
-                )
-            except NRGkickApiClientApiDisabledError:
-                errors["base"] = "json_api_disabled"
-            except NRGkickApiClientAuthenticationError:
-                errors["base"] = "invalid_auth"
-            except NRGkickApiClientInvalidResponseError:
-                errors["base"] = "invalid_response"
-            except NRGkickApiClientCommunicationError:
-                errors["base"] = "cannot_connect"
-            except NRGkickApiClientError:
-                _LOGGER.exception("Unexpected error")
-                errors["base"] = "unknown"
-            else:
+            if info := await self._async_validate_credentials(
+                self._pending_host,
+                errors,
+                username=user_input.get(CONF_USERNAME),
+                password=user_input.get(CONF_PASSWORD),
+            ):
                 await self.async_set_unique_id(info["serial"], raise_on_progress=False)
                 self._abort_if_unique_id_configured()
                 return self.async_create_entry(
                     title=info["title"],
                     data={
+                        CONF_HOST: self._pending_host,
+                        CONF_USERNAME: user_input.get(CONF_USERNAME),
+                        CONF_PASSWORD: user_input.get(CONF_PASSWORD),
+                    },
+                )
+
+        return self.async_show_form(
+            step_id="user_auth",
+            data_schema=STEP_AUTH_DATA_SCHEMA,
+            errors=errors,
+            description_placeholders={
+                "device_ip": self._pending_host,
+            },
+        )
+
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
+        """Handle initiation of reauthentication."""
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reauthentication."""
+        errors: dict[str, str] = {}
+
+        if user_input is not None:
+            reauth_entry = self._get_reauth_entry()
+            if info := await self._async_validate_credentials(
+                reauth_entry.data[CONF_HOST],
+                errors,
+                username=user_input.get(CONF_USERNAME),
+                password=user_input.get(CONF_PASSWORD),
+            ):
+                await self.async_set_unique_id(info["serial"], raise_on_progress=False)
+                self._abort_if_unique_id_mismatch()
+                return self.async_update_reload_and_abort(
+                    reauth_entry,
+                    data_updates=user_input,
+                )
+
+        return self.async_show_form(
+            step_id="reauth_confirm",
+            data_schema=self.add_suggested_values_to_schema(
+                STEP_AUTH_DATA_SCHEMA,
+                self._get_reauth_entry().data,
+            ),
+            errors=errors,
+        )
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration of the integration."""
+        errors: dict[str, str] = {}
+        reconfigure_entry = self._get_reconfigure_entry()
+        if user_input is not None:
+            try:
+                host = _normalize_host(user_input[CONF_HOST])
+            except vol.Invalid:
+                errors["base"] = "cannot_connect"
+            else:
+                info, needs_auth = await self._async_validate_host(host, errors)
+                if needs_auth:
+                    self._pending_host = host
+                    return await self.async_step_reconfigure_auth()
+                if info:
+                    await self.async_set_unique_id(
+                        info["serial"], raise_on_progress=False
+                    )
+                    self._abort_if_unique_id_mismatch()
+                    return self.async_update_reload_and_abort(
+                        reconfigure_entry,
+                        data_updates={CONF_HOST: host},
+                    )
+
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=self.add_suggested_values_to_schema(
+                STEP_USER_DATA_SCHEMA,
+                reconfigure_entry.data,
+            ),
+            errors=errors,
+        )
+
+    async def async_step_reconfigure_auth(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration authentication step."""
+        errors: dict[str, str] = {}
+
+        if TYPE_CHECKING:
+            assert self._pending_host is not None
+
+        reconfigure_entry = self._get_reconfigure_entry()
+        if user_input is not None:
+            username = user_input.get(CONF_USERNAME)
+            password = user_input.get(CONF_PASSWORD)
+            if info := await self._async_validate_credentials(
+                self._pending_host,
+                errors,
+                username=username,
+                password=password,
+            ):
+                await self.async_set_unique_id(info["serial"], raise_on_progress=False)
+                self._abort_if_unique_id_mismatch()
+                return self.async_update_reload_and_abort(
+                    reconfigure_entry,
+                    data_updates={
                         CONF_HOST: self._pending_host,
                         CONF_USERNAME: username,
                         CONF_PASSWORD: password,
@@ -215,8 +338,11 @@ class NRGkickConfigFlow(ConfigFlow, domain=DOMAIN):
                 )
 
         return self.async_show_form(
-            step_id="user_auth",
-            data_schema=STEP_AUTH_DATA_SCHEMA,
+            step_id="reconfigure_auth",
+            data_schema=self.add_suggested_values_to_schema(
+                STEP_AUTH_DATA_SCHEMA,
+                reconfigure_entry.data,
+            ),
             errors=errors,
             description_placeholders={
                 "device_ip": self._pending_host,
@@ -247,8 +373,9 @@ class NRGkickConfigFlow(ConfigFlow, domain=DOMAIN):
         # Store discovery info for the confirmation step.
         self._discovered_host = discovery_info.host
         # Fallback: device_name -> model_type -> "NRGkick".
-        self._discovered_name = device_name or model_type or "NRGkick"
-        self.context["title_placeholders"] = {"name": self._discovered_name}
+        discovered_name = device_name or model_type or "NRGkick"
+        self._discovered_name = discovered_name
+        self.context["title_placeholders"] = {"name": discovered_name}
 
         # If JSON API is disabled, guide the user through enabling it.
         if json_api_enabled != "1":
@@ -286,21 +413,13 @@ class NRGkickConfigFlow(ConfigFlow, domain=DOMAIN):
             assert self._discovered_name is not None
 
         if user_input is not None:
-            try:
-                info = await validate_input(self.hass, self._discovered_host)
-            except NRGkickApiClientApiDisabledError:
-                errors["base"] = "json_api_disabled"
-            except NRGkickApiClientAuthenticationError:
+            info, needs_auth = await self._async_validate_host(
+                self._discovered_host, errors
+            )
+            if needs_auth:
                 self._pending_host = self._discovered_host
                 return await self.async_step_user_auth()
-            except NRGkickApiClientInvalidResponseError:
-                errors["base"] = "invalid_response"
-            except NRGkickApiClientCommunicationError:
-                errors["base"] = "cannot_connect"
-            except NRGkickApiClientError:
-                _LOGGER.exception("Unexpected error")
-                errors["base"] = "unknown"
-            else:
+            if info:
                 return self.async_create_entry(
                     title=info["title"], data={CONF_HOST: self._discovered_host}
                 )
