@@ -7,7 +7,7 @@ from dataclasses import dataclass
 
 from opendisplay import voltage_to_percent
 from opendisplay.models.advertisement import AdvertisementData
-from opendisplay.models.enums import PowerMode
+from opendisplay.models.enums import CapacityEstimator, PowerMode
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -49,6 +49,17 @@ _TEMPERATURE_DESCRIPTION = OpenDisplaySensorEntityDescription(
 
 _BATTERY_POWER_MODES = {PowerMode.BATTERY, PowerMode.SOLAR}
 
+_BATTERY_VOLTAGE_DESCRIPTION = OpenDisplaySensorEntityDescription(
+    key="battery_voltage",
+    translation_key="battery_voltage",
+    device_class=SensorDeviceClass.VOLTAGE,
+    native_unit_of_measurement=UnitOfElectricPotential.MILLIVOLT,
+    state_class=SensorStateClass.MEASUREMENT,
+    entity_category=EntityCategory.DIAGNOSTIC,
+    entity_registry_enabled_default=False,
+    value_fn=lambda adv: adv.battery_mv,
+)
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -61,18 +72,9 @@ async def async_setup_entry(
     descriptions: list[OpenDisplaySensorEntityDescription] = [_TEMPERATURE_DESCRIPTION]
 
     if power_config.power_mode_enum in _BATTERY_POWER_MODES:
-        capacity_estimator = power_config.capacity_estimator
+        capacity_estimator = power_config.capacity_estimator or CapacityEstimator.LI_ION
         descriptions += [
-            OpenDisplaySensorEntityDescription(
-                key="battery_voltage",
-                translation_key="battery_voltage",
-                device_class=SensorDeviceClass.VOLTAGE,
-                native_unit_of_measurement=UnitOfElectricPotential.MILLIVOLT,
-                state_class=SensorStateClass.MEASUREMENT,
-                entity_category=EntityCategory.DIAGNOSTIC,
-                entity_registry_enabled_default=False,
-                value_fn=lambda adv: adv.battery_mv,
-            ),
+            _BATTERY_VOLTAGE_DESCRIPTION,
             OpenDisplaySensorEntityDescription(
                 key="battery",
                 device_class=SensorDeviceClass.BATTERY,
