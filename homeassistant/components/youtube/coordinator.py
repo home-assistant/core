@@ -56,6 +56,7 @@ class YouTubeDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     ) -> None:
         """Initialize the YouTube data coordinator."""
         self._auth = auth
+        self._is_short_cache: dict[str, bool] = {}
         super().__init__(
             hass,
             LOGGER,
@@ -80,22 +81,8 @@ class YouTubeDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 LOGGER.debug(
                     "Fetched %d videos for channel %s", len(videos), channel.channel_id
                 )
-                # Detect Shorts concurrently to minimise latency.
-                is_short_results = await asyncio.gather(
-                    *[youtube.is_short(v.content_details.video_id) for v in videos],
-                    return_exceptions=True,
-                )
-                is_short_flags: list[bool] = []
-                for video, result in zip(videos, is_short_results, strict=False):
-                    if isinstance(result, Exception):
-                        LOGGER.warning(
-                            "Error determining if video %s is a Short; treating as non-Short: %s",
-                            video.content_details.video_id,
-                            result,
-                        )
-                        is_short_flags.append(False)
-                    else:
-                        is_short_flags.append(bool(result))
+                is_short_flags = await self._get_is_short_flags(youtube, videos)
+
                 latest_upload: dict[str, Any] | None = None
                 latest_short: dict[str, Any] | None = None
                 latest_video_non_short: dict[str, Any] | None = None
@@ -125,3 +112,25 @@ class YouTubeDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         except YouTubeBackendError as err:
             raise UpdateFailed("Couldn't connect to YouTube") from err
         return res
+
+    async def _get_is_short_flags(self, youtube: Any, videos: list[Any]) -> list[bool]:
+        """Return is_short flags for each video, using cache when available."""
+        uncached = [
+            v for v in videos if v.content_details.video_id not in self._is_short_cache
+        ]
+        if uncached:
+            results = await asyncio.gather(
+                *[youtube.is_short(v.content_details.video_id) for v in uncached],
+                return_exceptions=True,
+            )
+            for video, result in zip(uncached, results, strict=False):
+                if isinstance(result, Exception):
+                    LOGGER.warning(
+                        "Error determining if video %s is a Short; treating as non-Short: %s",
+                        video.content_details.video_id,
+                        result,
+                    )
+                    self._is_short_cache[video.content_details.video_id] = False
+                else:
+                    self._is_short_cache[video.content_details.video_id] = bool(result)
+        return [self._is_short_cache[v.content_details.video_id] for v in videos]
