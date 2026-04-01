@@ -108,8 +108,7 @@ class ListCompleteItemIntentHandler(ListBaseIntentHandler):
         matching_item = None
         for todo_item in target_list.todo_items or ():
             if (
-                item.casefold()
-                in (todo_item.uid, str(todo_item.summary or "").casefold())
+                (item == todo_item.uid or item.casefold() == (todo_item.summary or "").casefold())
                 and todo_item.status == TodoItemStatus.NEEDS_ACTION
             ):
                 matching_item = todo_item
