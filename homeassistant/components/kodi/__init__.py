@@ -1,4 +1,4 @@
-"""The Kodi intergration."""
+"""The Kodi integration."""
 
 from dataclasses import dataclass
 import logging
