@@ -62,6 +62,8 @@ _HA_TO_TUYA_TEMPERATURE = {
     UnitOfTemperature.FAHRENHEIT: TuyaUnitOfTemperature.FAHRENHEIT,
 }
 
+_FALLBACK_SWITH_ONLY_HVAC_MODE = HVACMode.HEAT_COOL
+
 
 @dataclass(frozen=True, kw_only=True)
 class TuyaClimateEntityDescription(ClimateEntityDescription):
@@ -110,7 +112,8 @@ def _get_quirk_entities(
             device,
             manager,
             TuyaClimateEntityDescription(
-                key=entity_quirk.key, switch_only_hvac_mode=HVACMode.HEAT_COOL
+                key=entity_quirk.key,
+                switch_only_hvac_mode=_FALLBACK_SWITH_ONLY_HVAC_MODE,
             ),
             definition,
         )
