@@ -298,7 +298,7 @@ async def test_remove_item_intent(
     """Test the remove item intent."""
     entity1 = MockTodoListEntity(
         [
-            TodoItem(summary="beer", uid="1", status=TodoItemStatus.NEEDS_ACTION),
+            TodoItem(summary="Beer", uid="1", status=TodoItemStatus.NEEDS_ACTION),
             TodoItem(summary="wine", uid="2", status=TodoItemStatus.NEEDS_ACTION),
             TodoItem(summary="beer", uid="3", status=TodoItemStatus.COMPLETED),
         ]
