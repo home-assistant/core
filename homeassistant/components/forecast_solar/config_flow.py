@@ -143,7 +143,9 @@ class ForecastSolarOptionFlowHandler(OptionsFlow):
     ) -> ConfigFlowResult:
         """Manage the options."""
         errors: dict[str, str] = {}
-        planes_count = len(self.config_entry.get_subentries_of_type(SUBENTRY_TYPE_PLANE))
+        planes_count = len(
+            self.config_entry.get_subentries_of_type(SUBENTRY_TYPE_PLANE)
+        )
 
         if user_input is not None:
             api_key = user_input.get(CONF_API_KEY)

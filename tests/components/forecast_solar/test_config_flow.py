@@ -328,7 +328,9 @@ async def test_subentry_flow_reconfigure_plane(
     await hass.async_block_till_done()
 
     # Get the existing plane subentry id
-    subentry_id = mock_config_entry.get_subentries_of_type(SUBENTRY_TYPE_PLANE)[0].subentry_id
+    subentry_id = mock_config_entry.get_subentries_of_type(SUBENTRY_TYPE_PLANE)[
+        0
+    ].subentry_id
 
     result = await hass.config_entries.subentries.async_init(
         (mock_config_entry.entry_id, SUBENTRY_TYPE_PLANE),
@@ -430,7 +432,9 @@ async def test_subentry_flow_reconfigure_plane_not_loaded(
     # Entry is not loaded, so it has no update listeners
 
     # Get the existing plane subentry id
-    subentry_id = mock_config_entry.get_subentries_of_type(SUBENTRY_TYPE_PLANE)[0].subentry_id
+    subentry_id = mock_config_entry.get_subentries_of_type(SUBENTRY_TYPE_PLANE)[
+        0
+    ].subentry_id
 
     result = await hass.config_entries.subentries.async_init(
         (mock_config_entry.entry_id, SUBENTRY_TYPE_PLANE),
