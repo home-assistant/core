@@ -329,15 +329,13 @@ class MideaLanConfigFlow(ConfigFlow, domain=DOMAIN):
             table = (
                 "Appliance code|Type|IP address|SN|Supported\n:--:|:--:|:--:|:--:|:--:"
             )
-            green = "YES"
-            red = "NO"
             for device_id, device in all_devices.items():
                 supported = device.get(CONF_TYPE) in self.supports
                 table += (
                     f"\n{device_id}|{f'{device.get(CONF_TYPE):02X}'}|"
                     f"{device.get(CONF_IP_ADDRESS)}|"
                     f"{device.get('sn')}|"
-                    f"{green if supported else red}"
+                    f"{'YES' if supported else 'NO'}"
                 )
         # no available device
         else:

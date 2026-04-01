@@ -58,6 +58,12 @@ TEMPERATURE_MIN = 16
 FAN_SILENT = "silent"
 FAN_FULL_SPEED = "full"
 
+FEATURES_TARGET_AND_POWER = (
+    ClimateEntityFeature.TARGET_TEMPERATURE
+    | ClimateEntityFeature.TURN_OFF
+    | ClimateEntityFeature.TURN_ON
+)
+
 type MideaClimateDevice = (
     MideaACDevice | MideaCCDevice | MideaCFDevice | MideaC3Device | MideaFBDevice
 )
@@ -198,19 +204,19 @@ class MideaClimate(MideaEntity, ClimateEntity):
     @property
     def preset_mode(self) -> str:
         """Midea Climate preset mode."""
-        if self._device.get_attribute("comfort_mode"):
-            mode = PRESET_COMFORT
-        elif self._device.get_attribute("eco_mode"):
-            mode = PRESET_ECO
-        elif self._device.get_attribute("boost_mode"):
-            mode = PRESET_BOOST
-        elif self._device.get_attribute("sleep_mode"):
-            mode = PRESET_SLEEP
-        elif self._device.get_attribute("frost_protect"):
-            mode = PRESET_AWAY
-        else:
-            mode = PRESET_NONE
-        return str(mode)
+        preset_priority = {
+            "comfort_mode": PRESET_COMFORT,
+            "eco_mode": PRESET_ECO,
+            "boost_mode": PRESET_BOOST,
+            "sleep_mode": PRESET_SLEEP,
+            "frost_protect": PRESET_AWAY,
+        }
+
+        for attr, preset in preset_priority.items():
+            if self._device.get_attribute(attr):
+                return str(preset)
+
+        return str(PRESET_NONE)
 
     @property
     def extra_state_attributes(self) -> Mapping[str, Any] | None:
@@ -256,28 +262,20 @@ class MideaClimate(MideaEntity, ClimateEntity):
 
     def set_preset_mode(self, preset_mode: str) -> None:
         """Midea Climate set preset mode."""
+        preset_to_attr = {
+            PRESET_AWAY: "frost_protect",
+            PRESET_COMFORT: "comfort_mode",
+            PRESET_SLEEP: "sleep_mode",
+            PRESET_ECO: "eco_mode",
+            PRESET_BOOST: "boost_mode",
+        }
+
         old_mode = self.preset_mode
         preset_mode = preset_mode.lower()
-        if preset_mode == PRESET_AWAY:
-            self._device.set_attribute(attr="frost_protect", value=True)
-        elif preset_mode == PRESET_COMFORT:
-            self._device.set_attribute(attr="comfort_mode", value=True)
-        elif preset_mode == PRESET_SLEEP:
-            self._device.set_attribute(attr="sleep_mode", value=True)
-        elif preset_mode == PRESET_ECO:
-            self._device.set_attribute(attr="eco_mode", value=True)
-        elif preset_mode == PRESET_BOOST:
-            self._device.set_attribute(attr="boost_mode", value=True)
-        elif old_mode == PRESET_AWAY:
-            self._device.set_attribute(attr="frost_protect", value=False)
-        elif old_mode == PRESET_COMFORT:
-            self._device.set_attribute(attr="comfort_mode", value=False)
-        elif old_mode == PRESET_SLEEP:
-            self._device.set_attribute(attr="sleep_mode", value=False)
-        elif old_mode == PRESET_ECO:
-            self._device.set_attribute(attr="eco_mode", value=False)
-        elif old_mode == PRESET_BOOST:
-            self._device.set_attribute(attr="boost_mode", value=False)
+        if new_attr := preset_to_attr.get(preset_mode):
+            self._device.set_attribute(attr=new_attr, value=True)
+        elif old_attr := preset_to_attr.get(old_mode):
+            self._device.set_attribute(attr=old_attr, value=False)
 
     def update_state(self, status: Any) -> None:
         """Midea Climate update state."""
@@ -295,6 +293,14 @@ class MideaACClimate(MideaClimate):
     """Midea AC Climate Entries."""
 
     _device: MideaACDevice
+
+    _fan_thresholds: ClassVar[tuple[tuple[int, str], ...]] = (
+        (FanSpeed.AUTO, FAN_AUTO),
+        (FanSpeed.FULL_SPEED, FAN_FULL_SPEED),
+        (FanSpeed.HIGH, FAN_HIGH),
+        (FanSpeed.MEDIUM, FAN_MEDIUM),
+        (FanSpeed.LOW, FAN_LOW),
+    )
 
     def __init__(
         self,
@@ -346,16 +352,9 @@ class MideaACClimate(MideaClimate):
     def fan_mode(self) -> str:
         """Midea AC Climate fan mode."""
         fan_speed = cast("int", self._device.get_attribute(ACAttributes.fan_speed))
-        if fan_speed > FanSpeed.AUTO:
-            return str(FAN_AUTO)
-        if fan_speed > FanSpeed.FULL_SPEED:
-            return str(FAN_FULL_SPEED)
-        if fan_speed > FanSpeed.HIGH:
-            return str(FAN_HIGH)
-        if fan_speed > FanSpeed.MEDIUM:
-            return str(FAN_MEDIUM)
-        if fan_speed > FanSpeed.LOW:
-            return str(FAN_LOW)
+        for threshold, mode in self._fan_thresholds:
+            if fan_speed > threshold:
+                return str(mode)
         return str(FAN_SILENT)
 
     @property
@@ -413,23 +412,16 @@ class MideaCCClimate(MideaClimate):
 
     _device: MideaCCDevice
 
-    def __init__(
-        self,
-        device: MideaCCDevice,
-        description: MideaClimateEntityDescription,
-    ) -> None:
-        """Midea CC Climate entity init."""
-        super().__init__(device, description)
-        self._attr_hvac_modes = [
-            HVACMode.OFF,
-            HVACMode.FAN_ONLY,
-            HVACMode.DRY,
-            HVACMode.HEAT,
-            HVACMode.COOL,
-            HVACMode.AUTO,
-        ]
-        self._attr_swing_modes = [SWING_OFF, SWING_ON]
-        self._attr_preset_modes = [PRESET_NONE, PRESET_SLEEP, PRESET_ECO]
+    _attr_hvac_modes = [
+        HVACMode.OFF,
+        HVACMode.FAN_ONLY,
+        HVACMode.DRY,
+        HVACMode.HEAT,
+        HVACMode.COOL,
+        HVACMode.AUTO,
+    ]
+    _attr_swing_modes = [SWING_OFF, SWING_ON]
+    _attr_preset_modes = [PRESET_NONE, PRESET_SLEEP, PRESET_ECO]
 
     @property
     def fan_modes(self) -> list[str] | None:
@@ -473,30 +465,18 @@ class MideaCFClimate(MideaClimate):
 
     _device: MideaCFDevice
 
+    _attr_hvac_modes = [
+        HVACMode.OFF,
+        HVACMode.AUTO,
+        HVACMode.COOL,
+        HVACMode.HEAT,
+    ]
     _attr_target_temperature_step: float | None = PRECISION_WHOLE
-
-    def __init__(
-        self,
-        device: MideaCFDevice,
-        description: MideaClimateEntityDescription,
-    ) -> None:
-        """Midea CF Climate entity init."""
-        super().__init__(device, description)
-        self._attr_hvac_modes = [
-            HVACMode.OFF,
-            HVACMode.AUTO,
-            HVACMode.COOL,
-            HVACMode.HEAT,
-        ]
 
     @property
     def supported_features(self) -> ClimateEntityFeature:
         """Midea CF Climate supported features."""
-        return (
-            ClimateEntityFeature.TARGET_TEMPERATURE
-            | ClimateEntityFeature.TURN_OFF
-            | ClimateEntityFeature.TURN_ON
-        )
+        return FEATURES_TARGET_AND_POWER
 
     @property
     def min_temp(self) -> float:
@@ -536,6 +516,12 @@ class MideaC3Climate(MideaClimate):
         C3Attributes.zone1_power,
         C3Attributes.zone2_power,
     ]
+    _attr_hvac_modes = [
+        HVACMode.OFF,
+        HVACMode.AUTO,
+        HVACMode.COOL,
+        HVACMode.HEAT,
+    ]
 
     def __init__(
         self,
@@ -546,12 +532,6 @@ class MideaC3Climate(MideaClimate):
         """Midea C3 Climate entity init."""
         super().__init__(device, description)
         self._zone = zone
-        self._attr_hvac_modes = [
-            HVACMode.OFF,
-            HVACMode.AUTO,
-            HVACMode.COOL,
-            HVACMode.HEAT,
-        ]
         self._power_attr = MideaC3Climate._powers[zone]
 
     def _temperature(self, minimum: bool) -> list[str]:
@@ -572,11 +552,7 @@ class MideaC3Climate(MideaClimate):
     @property
     def supported_features(self) -> ClimateEntityFeature:
         """Midea C3 Climate supported features."""
-        return (
-            ClimateEntityFeature.TARGET_TEMPERATURE
-            | ClimateEntityFeature.TURN_OFF
-            | ClimateEntityFeature.TURN_ON
-        )
+        return FEATURES_TARGET_AND_POWER
 
     @property
     def target_temperature_step(self) -> float:
@@ -686,6 +662,7 @@ class MideaFBClimate(MideaClimate):
 
     _device: MideaFBDevice
 
+    _attr_hvac_modes = [HVACMode.OFF, HVACMode.HEAT]
     _attr_max_temp: float = 35
     _attr_min_temp: float = 5
     _attr_target_temperature_high: float | None = 35
@@ -699,7 +676,6 @@ class MideaFBClimate(MideaClimate):
     ) -> None:
         """Midea FB Climate entity init."""
         super().__init__(device, description)
-        self._attr_hvac_modes = [HVACMode.OFF, HVACMode.HEAT]
         self._attr_preset_modes: list[str] = self._device.modes
 
     @property
