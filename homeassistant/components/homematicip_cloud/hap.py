@@ -1,5 +1,5 @@
 """Access point for the HomematicIP Cloud component."""
-# Debug build: lackas/hmip-reconnect-fix v6 (2026-03-31)
+# Debug build: lackas/hmip-reconnect-fix v7 (2026-04-01)
 
 from __future__ import annotations
 
@@ -123,7 +123,7 @@ class HomematicipHAP:
 
     async def async_setup(self, tries: int = 0) -> bool:
         """Initialize connection."""
-        _LOGGER.debug("HomematicIP Cloud HAP starting — debug build v6 (2026-03-31)")
+        _LOGGER.debug("HomematicIP Cloud HAP starting — debug build v7 (2026-04-01)")
         try:
             self.home = await self.get_hap(
                 self.hass,
@@ -156,7 +156,32 @@ class HomematicipHAP:
             listeners_total,
         )
 
+        # Start hourly entity state dump for debugging
+        self.hass.async_create_task(self._hourly_state_dump())
+
         return True
+
+    async def _hourly_state_dump(self) -> None:
+        """Log hmip entity availability every hour for debugging."""
+        while True:
+            await asyncio.sleep(3600)
+            try:
+                from homeassistant.const import STATE_UNAVAILABLE
+                all_states = self.hass.states.async_all()
+                hmip_states = [s for s in all_states if s.entity_id.startswith(f"{self.config_entry.domain}.")]
+                unavailable = [s.entity_id for s in hmip_states if s.state == STATE_UNAVAILABLE]
+                devices = list(self.home.devices)
+                orphaned = [d for d in devices if not getattr(d, "_on_update", [])]
+                _LOGGER.debug(
+                    "hourly dump: %d hmip entities, %d unavailable, %d orphaned devices | unavailable: %s | orphaned: %s",
+                    len(hmip_states),
+                    len(unavailable),
+                    len(orphaned),
+                    [e.split(".", 1)[1] for e in unavailable[:10]],
+                    [getattr(d, "label", "?") for d in orphaned],
+                )
+            except Exception:  # noqa: BLE001
+                _LOGGER.exception("hourly_state_dump failed")
 
     @callback
     def async_update(self, *args, **kwargs) -> None:
@@ -320,13 +345,20 @@ class HomematicipHAP:
         """Signal all devices to update their state."""
         devices = list(self.home.devices)
         listeners_total = sum(len(getattr(d, "_on_update", [])) for d in devices)
-        orphaned = sum(1 for d in devices if not getattr(d, "_on_update", []))
+        orphaned_devices = [d for d in devices if not getattr(d, "_on_update", [])]
         _LOGGER.debug(
             "update_all: %d devices, %d total listeners, %d orphaned (no listeners)",
             len(devices),
             listeners_total,
-            orphaned,
+            len(orphaned_devices),
         )
+        for device in orphaned_devices:
+            _LOGGER.warning(
+                "update_all: orphaned device (no HA listeners) — id=%s label=%r type=%s",
+                getattr(device, "id", "?"),
+                getattr(device, "label", "?"),
+                type(device).__name__,
+            )
         for device in devices:
             device.fire_update_event()
 
