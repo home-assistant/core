@@ -7745,7 +7745,7 @@ async def test_updating_non_added_subentry_raises(hass: HomeAssistant) -> None:
         hass.config_entries.async_update_subentry(entry, subentry, unique_id="new_id")
 
 
-async def test_subentries_for_type(hass: HomeAssistant) -> None:
+async def test_get_subentries_of_type(hass: HomeAssistant) -> None:
     """Test getting subentries by type."""
     entry = MockConfigEntry(
         domain="test",

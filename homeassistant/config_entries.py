@@ -626,7 +626,7 @@ class ConfigEntry[_DataT = Any]:
         return self._supported_subentry_types or {}
 
     def get_subentries_of_type(self, subentry_type: str) -> list[ConfigSubentry]:
-        """Return subentries for a subentry type."""
+        """Return subentries of a specified subentry type."""
         return [
             subentry
             for subentry in self.subentries.values()
