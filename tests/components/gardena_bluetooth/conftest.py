@@ -157,7 +157,7 @@ def enable_all_entities(entity_registry_enabled_by_default: None) -> None:
 
 @pytest.fixture
 def manufacturer_request_event() -> Generator[asyncio.Event]:
-    """Make sure all entities are enabled."""
+    """Track manufacturer data requests with an event."""
 
     event = asyncio.Event()
 
