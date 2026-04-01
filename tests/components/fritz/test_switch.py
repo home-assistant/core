@@ -506,7 +506,7 @@ async def test_migrate_to_new_unique_id(
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    entity_entry = entity_registry.async_get("switch.mock_title_wi_fi_guest")
+    entity_entry = entity_registry.async_get("switch.mock_title_wi_fi_mywifi")
     assert entity_entry
     assert entity_entry.unique_id == new_unique_id
 

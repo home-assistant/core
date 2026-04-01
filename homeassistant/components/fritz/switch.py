@@ -121,18 +121,14 @@ async def _migrate_to_new_unique_id(
         )
 
         if entity_id is not None:
-            new_entity_id = entity_id.replace(
-                old_unique_id_suffix, new_unique_id_suffix
-            )
             entity_registry.async_update_entity(
                 entity_id,
-                new_entity_id=new_entity_id,
                 new_unique_id=f"{avm_wrapper.unique_id}-{new_unique_id_suffix}",
             )
             _LOGGER.debug(
-                "Migrating Wi-FI switch [%s] unique_id and entity_id [%s]",
+                "Migrating Wi-FI switch unique_id from [%s] to [%s]",
                 f"{avm_wrapper.unique_id}-{old_unique_id_suffix}",
-                entity_id,
+                f"{avm_wrapper.unique_id}-{new_unique_id_suffix}",
             )
 
     _LOGGER.debug("Migration completed")
