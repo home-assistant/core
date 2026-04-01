@@ -7,13 +7,13 @@ from omnilogic import OmniLogicException
 import voluptuous as vol
 
 from homeassistant.components.switch import SwitchEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from . import OmniLogicConfigEntry
 from .common import check_guard
-from .const import COORDINATOR, DOMAIN, PUMP_TYPES
+from .const import PUMP_TYPES
 from .coordinator import OmniLogicUpdateCoordinator
 from .entity import OmniLogicEntity
 
@@ -23,14 +23,12 @@ OMNILOGIC_SWITCH_OFF = 7
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: OmniLogicConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the light platform."""
 
-    coordinator: OmniLogicUpdateCoordinator = hass.data[DOMAIN][entry.entry_id][
-        COORDINATOR
-    ]
+    coordinator = entry.runtime_data
     entities = []
 
     for item_id, item in coordinator.data.items():
