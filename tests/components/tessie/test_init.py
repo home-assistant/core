@@ -2,12 +2,17 @@
 
 from unittest.mock import AsyncMock, patch
 
-from tesla_fleet_api.exceptions import TeslaFleetError
+from tesla_fleet_api.exceptions import (
+    InvalidRequest,
+    InvalidToken,
+    ServiceUnavailable,
+    TeslaFleetError,
+)
 
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
-from .common import ERROR_AUTH, ERROR_CONNECTION, ERROR_UNKNOWN, setup_platform
+from .common import setup_platform
 
 
 async def test_load_unload(hass: HomeAssistant) -> None:
@@ -25,7 +30,7 @@ async def test_auth_failure(
 ) -> None:
     """Test init with an authentication error."""
 
-    mock_get_state_of_all_vehicles.side_effect = ERROR_AUTH
+    mock_get_state_of_all_vehicles.side_effect = InvalidToken()
     entry = await setup_platform(hass)
     assert entry.state is ConfigEntryState.SETUP_ERROR
 
@@ -33,31 +38,20 @@ async def test_auth_failure(
 async def test_unknown_failure(
     hass: HomeAssistant, mock_get_state_of_all_vehicles: AsyncMock
 ) -> None:
-    """Test init with an client response error."""
+    """Test init with a non-retryable fleet API error."""
 
-    mock_get_state_of_all_vehicles.side_effect = ERROR_UNKNOWN
+    mock_get_state_of_all_vehicles.side_effect = InvalidRequest()
     entry = await setup_platform(hass)
     assert entry.state is ConfigEntryState.SETUP_ERROR
     assert entry.reason == "Failed to connect"
 
 
-async def test_api_failure(
+async def test_retryable_api_failure(
     hass: HomeAssistant, mock_get_state_of_all_vehicles: AsyncMock
 ) -> None:
-    """Test init with a fleet API error."""
+    """Test init with a retryable fleet API error."""
 
-    mock_get_state_of_all_vehicles.side_effect = TeslaFleetError()
-    entry = await setup_platform(hass)
-    assert entry.state is ConfigEntryState.SETUP_ERROR
-    assert entry.reason == "Failed to connect"
-
-
-async def test_connection_failure(
-    hass: HomeAssistant, mock_get_state_of_all_vehicles: AsyncMock
-) -> None:
-    """Test init with a network connection error."""
-
-    mock_get_state_of_all_vehicles.side_effect = ERROR_CONNECTION
+    mock_get_state_of_all_vehicles.side_effect = ServiceUnavailable()
     entry = await setup_platform(hass)
     assert entry.state is ConfigEntryState.SETUP_RETRY
 

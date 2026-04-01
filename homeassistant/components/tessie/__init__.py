@@ -1,14 +1,17 @@
 """Tessie integration."""
 
 import asyncio
-from http import HTTPStatus
 import logging
 
-from aiohttp import ClientError, ClientResponseError
 from tesla_fleet_api.const import Scope
 from tesla_fleet_api.exceptions import (
     Forbidden,
+    GatewayTimeout,
+    InvalidResponse,
     InvalidToken,
+    MissingToken,
+    RateLimited,
+    ServiceUnavailable,
     SubscriptionRequired,
     TeslaFleetError,
 )
@@ -53,6 +56,13 @@ _LOGGER = logging.getLogger(__name__)
 
 type TessieConfigEntry = ConfigEntry[TessieData]
 
+RETRY_EXCEPTIONS = (
+    InvalidResponse,
+    RateLimited,
+    ServiceUnavailable,
+    GatewayTimeout,
+)
+
 
 async def async_setup_entry(hass: HomeAssistant, entry: TessieConfigEntry) -> bool:
     """Set up Tessie config."""
@@ -62,22 +72,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: TessieConfigEntry) -> bo
 
     try:
         state_of_all_vehicles = await tessie.list_vehicles(only_active=True)
-    except InvalidToken as e:
+    except (InvalidToken, MissingToken) as e:
         raise ConfigEntryAuthFailed from e
+    except RETRY_EXCEPTIONS as e:
+        raise ConfigEntryNotReady from e
     except TeslaFleetError as e:
         raise ConfigEntryError(
             translation_domain=DOMAIN,
             translation_key="cannot_connect",
         ) from e
-    except ClientResponseError as e:
-        if e.status == HTTPStatus.UNAUTHORIZED:
-            raise ConfigEntryAuthFailed from e
-        raise ConfigEntryError(
-            translation_domain=DOMAIN,
-            translation_key="cannot_connect",
-        ) from e
-    except ClientError as e:
-        raise ConfigEntryNotReady from e
 
     vehicles: list[TessieVehicleData] = []
     for vehicle in state_of_all_vehicles["results"]:
