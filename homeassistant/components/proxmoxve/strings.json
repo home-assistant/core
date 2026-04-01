@@ -141,7 +141,7 @@
         "name": "Reset"
       },
       "shutdown": {
-        "name": "Shutdown"
+        "name": "Shut down"
       },
       "snapshot_create": {
         "name": "Create snapshot"
