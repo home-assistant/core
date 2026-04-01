@@ -64,7 +64,7 @@ class OlarmOauth2FlowHandler(
         """Create an entry for the flow, or update existing entry."""
         errors: dict[str, str] = {}
 
-        # Extract oauth tokens to connect to use to connect to Olarm services
+        # Extract oauth tokens to authenticate to Olarm services
         self._oauth_data = data
         self._access_token = data["token"]["access_token"]
         self._refresh_token = data["token"]["refresh_token"]
