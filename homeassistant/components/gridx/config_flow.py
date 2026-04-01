@@ -3,13 +3,13 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-import json
 from importlib.resources import files
+import json
 from typing import Any
 
+from gridx_connector.async_connector import AsyncGridboxConnector
 import httpx
 import voluptuous as vol
-from gridx_connector import AsyncGridboxConnector
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
@@ -17,6 +17,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.httpx_client import create_async_httpx_client
 
 from .const import CONF_OEM, DOMAIN, LOGGER, SUPPORTED_OEMS
+
+UNEXPECTED_AUTH_ERRORS = (RuntimeError, TypeError, ValueError)
 
 
 def _load_oem_config(oem: str, username: str, password: str) -> dict[str, Any]:
@@ -85,12 +87,14 @@ class GridxConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "invalid_auth"
             except httpx.HTTPStatusError as err:
                 status = err.response.status_code if err.response else None
-                errors["base"] = "invalid_auth" if status in (401, 403) else "cannot_connect"
+                errors["base"] = (
+                    "invalid_auth" if status in (401, 403) else "cannot_connect"
+                )
             except httpx.HTTPError:
                 errors["base"] = "cannot_connect"
-            except (ConnectionError, TimeoutError, OSError):
+            except ConnectionError, TimeoutError, OSError:
                 errors["base"] = "cannot_connect"
-            except Exception:
+            except UNEXPECTED_AUTH_ERRORS:
                 LOGGER.exception("Unexpected error during GridX credential validation")
                 errors["base"] = "unknown"
             else:
@@ -142,12 +146,14 @@ class GridxConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "invalid_auth"
             except httpx.HTTPStatusError as err:
                 status = err.response.status_code if err.response else None
-                errors["base"] = "invalid_auth" if status in (401, 403) else "cannot_connect"
+                errors["base"] = (
+                    "invalid_auth" if status in (401, 403) else "cannot_connect"
+                )
             except httpx.HTTPError:
                 errors["base"] = "cannot_connect"
-            except (ConnectionError, TimeoutError, OSError):
+            except ConnectionError, TimeoutError, OSError:
                 errors["base"] = "cannot_connect"
-            except Exception:
+            except UNEXPECTED_AUTH_ERRORS:
                 LOGGER.exception("Unexpected error during GridX re-authentication")
                 errors["base"] = "unknown"
             else:
@@ -192,12 +198,14 @@ class GridxConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "invalid_auth"
             except httpx.HTTPStatusError as err:
                 status = err.response.status_code if err.response else None
-                errors["base"] = "invalid_auth" if status in (401, 403) else "cannot_connect"
+                errors["base"] = (
+                    "invalid_auth" if status in (401, 403) else "cannot_connect"
+                )
             except httpx.HTTPError:
                 errors["base"] = "cannot_connect"
-            except (ConnectionError, TimeoutError, OSError):
+            except ConnectionError, TimeoutError, OSError:
                 errors["base"] = "cannot_connect"
-            except Exception:
+            except UNEXPECTED_AUTH_ERRORS:
                 LOGGER.exception("Unexpected error during GridX reconfiguration")
                 errors["base"] = "unknown"
             else:

@@ -2,10 +2,10 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Any
+from typing import Any, Literal
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -28,7 +28,11 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN
-from .coordinator import GridxHistoricalCoordinator, GridxHistoricalData, GridxLiveCoordinator
+from .coordinator import (
+    GridxHistoricalCoordinator,
+    GridxHistoricalData,
+    GridxLiveCoordinator,
+)
 from .types import GridxConfigEntry
 
 PARALLEL_UPDATES = 0
@@ -38,8 +42,8 @@ PARALLEL_UPDATES = 0
 class GridxSensorEntityDescription(SensorEntityDescription):
     """Extends SensorEntityDescription with a value extractor function."""
 
-    value_fn: Callable[[dict[str, Any]], StateType | None]
-    coordinator_type: str = "live"  # "live" | "hist"
+    value_fn: Callable[[Mapping[str, Any]], StateType | None]
+    coordinator_type: Literal["live", "hist"] = "live"
 
 
 # ---------------------------------------------------------------------------
@@ -143,9 +147,11 @@ LIVE_BASE_DESCRIPTIONS: tuple[GridxSensorEntityDescription, ...] = (
         native_unit_of_measurement=PERCENTAGE,
         device_class=SensorDeviceClass.POWER_FACTOR,
         state_class=SensorStateClass.MEASUREMENT,
-        value_fn=lambda d: round(float(d["directConsumptionRate"]) * 100, 2)
-        if d.get("directConsumptionRate") is not None
-        else None,
+        value_fn=lambda d: (
+            round(float(d["directConsumptionRate"]) * 100, 2)
+            if d.get("directConsumptionRate") is not None
+            else None
+        ),
     ),
     GridxSensorEntityDescription(
         key="selfConsumptionRate",
@@ -153,9 +159,11 @@ LIVE_BASE_DESCRIPTIONS: tuple[GridxSensorEntityDescription, ...] = (
         native_unit_of_measurement=PERCENTAGE,
         device_class=SensorDeviceClass.POWER_FACTOR,
         state_class=SensorStateClass.MEASUREMENT,
-        value_fn=lambda d: round(float(d["selfConsumptionRate"]) * 100, 2)
-        if d.get("selfConsumptionRate") is not None
-        else None,
+        value_fn=lambda d: (
+            round(float(d["selfConsumptionRate"]) * 100, 2)
+            if d.get("selfConsumptionRate") is not None
+            else None
+        ),
     ),
     GridxSensorEntityDescription(
         key="selfSufficiencyRate",
@@ -163,9 +171,11 @@ LIVE_BASE_DESCRIPTIONS: tuple[GridxSensorEntityDescription, ...] = (
         native_unit_of_measurement=PERCENTAGE,
         device_class=SensorDeviceClass.POWER_FACTOR,
         state_class=SensorStateClass.MEASUREMENT,
-        value_fn=lambda d: round(float(d["selfSufficiencyRate"]) * 100, 2)
-        if d.get("selfSufficiencyRate") is not None
-        else None,
+        value_fn=lambda d: (
+            round(float(d["selfSufficiencyRate"]) * 100, 2)
+            if d.get("selfSufficiencyRate") is not None
+            else None
+        ),
     ),
     # Grid meter readings: API returns Ws (watt-seconds) — convert to Wh
     GridxSensorEntityDescription(
@@ -174,9 +184,11 @@ LIVE_BASE_DESCRIPTIONS: tuple[GridxSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
-        value_fn=lambda d: round(d["gridMeterReadingPositive"] / 3600, 2)
-        if d.get("gridMeterReadingPositive") is not None
-        else None,
+        value_fn=lambda d: (
+            round(d["gridMeterReadingPositive"] / 3600, 2)
+            if d.get("gridMeterReadingPositive") is not None
+            else None
+        ),
     ),
     GridxSensorEntityDescription(
         key="gridMeterReadingNegative",
@@ -184,9 +196,11 @@ LIVE_BASE_DESCRIPTIONS: tuple[GridxSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
-        value_fn=lambda d: round(d["gridMeterReadingNegative"] / 3600, 2)
-        if d.get("gridMeterReadingNegative") is not None
-        else None,
+        value_fn=lambda d: (
+            round(d["gridMeterReadingNegative"] / 3600, 2)
+            if d.get("gridMeterReadingNegative") is not None
+            else None
+        ),
     ),
 )
 
@@ -200,9 +214,11 @@ LIVE_BATTERY_DESCRIPTIONS: tuple[GridxSensorEntityDescription, ...] = (
         native_unit_of_measurement=PERCENTAGE,
         device_class=SensorDeviceClass.BATTERY,
         state_class=SensorStateClass.MEASUREMENT,
-        value_fn=lambda d: round(float(d["battery"]["stateOfCharge"]) * 100, 1)
-        if d.get("battery") and d["battery"].get("stateOfCharge") is not None
-        else None,
+        value_fn=lambda d: (
+            round(float(d["battery"]["stateOfCharge"]) * 100, 1)
+            if d.get("battery") and d["battery"].get("stateOfCharge") is not None
+            else None
+        ),
     ),
     GridxSensorEntityDescription(
         key="battery_power",
@@ -210,9 +226,7 @@ LIVE_BATTERY_DESCRIPTIONS: tuple[GridxSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfPower.WATT,
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
-        value_fn=lambda d: d["battery"].get("power")
-        if d.get("battery")
-        else None,
+        value_fn=lambda d: d["battery"].get("power") if d.get("battery") else None,
     ),
     GridxSensorEntityDescription(
         key="battery_capacity",
@@ -221,9 +235,7 @@ LIVE_BATTERY_DESCRIPTIONS: tuple[GridxSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.ENERGY_STORAGE,
         state_class=SensorStateClass.MEASUREMENT,
         entity_registry_enabled_default=False,
-        value_fn=lambda d: d["battery"].get("capacity")
-        if d.get("battery")
-        else None,
+        value_fn=lambda d: d["battery"].get("capacity") if d.get("battery") else None,
     ),
     GridxSensorEntityDescription(
         key="battery_remainingCharge",
@@ -231,9 +243,9 @@ LIVE_BATTERY_DESCRIPTIONS: tuple[GridxSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY_STORAGE,
         state_class=SensorStateClass.MEASUREMENT,
-        value_fn=lambda d: d["battery"].get("remainingCharge")
-        if d.get("battery")
-        else None,
+        value_fn=lambda d: (
+            d["battery"].get("remainingCharge") if d.get("battery") else None
+        ),
     ),
     GridxSensorEntityDescription(
         key="battery_charge",
@@ -242,9 +254,7 @@ LIVE_BATTERY_DESCRIPTIONS: tuple[GridxSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.ENERGY_STORAGE,
         state_class=SensorStateClass.MEASUREMENT,
         entity_registry_enabled_default=False,
-        value_fn=lambda d: d["battery"].get("charge")
-        if d.get("battery")
-        else None,
+        value_fn=lambda d: d["battery"].get("charge") if d.get("battery") else None,
     ),
     GridxSensorEntityDescription(
         key="battery_discharge",
@@ -253,9 +263,7 @@ LIVE_BATTERY_DESCRIPTIONS: tuple[GridxSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.ENERGY_STORAGE,
         state_class=SensorStateClass.MEASUREMENT,
         entity_registry_enabled_default=False,
-        value_fn=lambda d: d["battery"].get("discharge")
-        if d.get("battery")
-        else None,
+        value_fn=lambda d: d["battery"].get("discharge") if d.get("battery") else None,
     ),
 )
 
@@ -270,9 +278,9 @@ LIVE_EV_DESCRIPTIONS: tuple[GridxSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
         entity_registry_enabled_default=False,
-        value_fn=lambda d: d["evChargingStation"].get("power")
-        if d.get("evChargingStation")
-        else None,
+        value_fn=lambda d: (
+            d["evChargingStation"].get("power") if d.get("evChargingStation") else None
+        ),
     ),
     GridxSensorEntityDescription(
         key="ev_stateOfCharge",
@@ -281,9 +289,12 @@ LIVE_EV_DESCRIPTIONS: tuple[GridxSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.BATTERY,
         state_class=SensorStateClass.MEASUREMENT,
         entity_registry_enabled_default=False,
-        value_fn=lambda d: round(float(d["evChargingStation"]["stateOfCharge"]) * 100, 1)
-        if d.get("evChargingStation") and d["evChargingStation"].get("stateOfCharge") is not None
-        else None,
+        value_fn=lambda d: (
+            round(float(d["evChargingStation"]["stateOfCharge"]) * 100, 1)
+            if d.get("evChargingStation")
+            and d["evChargingStation"].get("stateOfCharge") is not None
+            else None
+        ),
     ),
     GridxSensorEntityDescription(
         key="ev_currentL1",
@@ -292,9 +303,11 @@ LIVE_EV_DESCRIPTIONS: tuple[GridxSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.CURRENT,
         state_class=SensorStateClass.MEASUREMENT,
         entity_registry_enabled_default=False,
-        value_fn=lambda d: d["evChargingStation"].get("currentL1")
-        if d.get("evChargingStation")
-        else None,
+        value_fn=lambda d: (
+            d["evChargingStation"].get("currentL1")
+            if d.get("evChargingStation")
+            else None
+        ),
     ),
     GridxSensorEntityDescription(
         key="ev_currentL2",
@@ -303,9 +316,11 @@ LIVE_EV_DESCRIPTIONS: tuple[GridxSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.CURRENT,
         state_class=SensorStateClass.MEASUREMENT,
         entity_registry_enabled_default=False,
-        value_fn=lambda d: d["evChargingStation"].get("currentL2")
-        if d.get("evChargingStation")
-        else None,
+        value_fn=lambda d: (
+            d["evChargingStation"].get("currentL2")
+            if d.get("evChargingStation")
+            else None
+        ),
     ),
     GridxSensorEntityDescription(
         key="ev_currentL3",
@@ -314,9 +329,11 @@ LIVE_EV_DESCRIPTIONS: tuple[GridxSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.CURRENT,
         state_class=SensorStateClass.MEASUREMENT,
         entity_registry_enabled_default=False,
-        value_fn=lambda d: d["evChargingStation"].get("currentL3")
-        if d.get("evChargingStation")
-        else None,
+        value_fn=lambda d: (
+            d["evChargingStation"].get("currentL3")
+            if d.get("evChargingStation")
+            else None
+        ),
     ),
     GridxSensorEntityDescription(
         key="ev_readingTotal",
@@ -325,9 +342,11 @@ LIVE_EV_DESCRIPTIONS: tuple[GridxSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
         entity_registry_enabled_default=False,
-        value_fn=lambda d: d["evChargingStation"].get("readingTotal")
-        if d.get("evChargingStation")
-        else None,
+        value_fn=lambda d: (
+            d["evChargingStation"].get("readingTotal")
+            if d.get("evChargingStation")
+            else None
+        ),
     ),
 )
 
@@ -492,9 +511,11 @@ HIST_BASE_DESCRIPTIONS: tuple[GridxSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.POWER_FACTOR,
         state_class=SensorStateClass.MEASUREMENT,
         coordinator_type="hist",
-        value_fn=lambda d: round(float(d["total"]["selfConsumptionRate"]) * 100, 2)
-        if d["total"].get("selfConsumptionRate") is not None
-        else None,
+        value_fn=lambda d: (
+            round(float(d["total"]["selfConsumptionRate"]) * 100, 2)
+            if d["total"].get("selfConsumptionRate") is not None
+            else None
+        ),
     ),
     GridxSensorEntityDescription(
         key="hist_selfSufficiencyRate",
@@ -503,9 +524,11 @@ HIST_BASE_DESCRIPTIONS: tuple[GridxSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.POWER_FACTOR,
         state_class=SensorStateClass.MEASUREMENT,
         coordinator_type="hist",
-        value_fn=lambda d: round(float(d["total"]["selfSufficiencyRate"]) * 100, 2)
-        if d["total"].get("selfSufficiencyRate") is not None
-        else None,
+        value_fn=lambda d: (
+            round(float(d["total"]["selfSufficiencyRate"]) * 100, 2)
+            if d["total"].get("selfSufficiencyRate") is not None
+            else None
+        ),
     ),
 )
 
@@ -528,38 +551,43 @@ async def async_setup_entry(
     live_coordinator = entry.runtime_data.live_coordinator
     hist_coordinator = entry.runtime_data.hist_coordinator
 
-    async_add_entities(
-        GridxSensorEntity(
-            description=desc,
-            entry=entry,
-            live_coordinator=live_coordinator,
-            hist_coordinator=hist_coordinator,
+    entities: list[SensorEntity] = []
+    for description in ALL_DESCRIPTIONS:
+        if description.coordinator_type == "hist":
+            entities.append(
+                GridxHistoricalSensorEntity(
+                    coordinator=hist_coordinator,
+                    description=description,
+                    entry=entry,
+                )
+            )
+            continue
+
+        entities.append(
+            GridxLiveSensorEntity(
+                coordinator=live_coordinator,
+                description=description,
+                entry=entry,
+            )
         )
-        for desc in ALL_DESCRIPTIONS
-    )
+
+    async_add_entities(entities)
 
 
-class GridxSensorEntity(CoordinatorEntity, SensorEntity):
-    """A sensor entity backed by a GridX coordinator."""
+class GridxLiveSensorEntity(CoordinatorEntity[GridxLiveCoordinator], SensorEntity):
+    """A GridX live sensor entity."""
 
-    entity_description: GridxSensorEntityDescription
     _attr_has_entity_name = True
 
     def __init__(
         self,
+        coordinator: GridxLiveCoordinator,
         description: GridxSensorEntityDescription,
         entry: GridxConfigEntry,
-        live_coordinator: GridxLiveCoordinator,
-        hist_coordinator: GridxHistoricalCoordinator,
     ) -> None:
-        """Initialise the sensor."""
-        coordinator = (
-            hist_coordinator if description.coordinator_type == "hist" else live_coordinator
-        )
+        """Initialize the live sensor."""
         super().__init__(coordinator)
-        self.entity_description = description
-        self._live_coordinator = live_coordinator
-        self._hist_coordinator = hist_coordinator
+        self.entity_description: GridxSensorEntityDescription = description
         self._attr_unique_id = f"{entry.entry_id}_{description.key}"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, entry.entry_id)},
@@ -569,24 +597,55 @@ class GridxSensorEntity(CoordinatorEntity, SensorEntity):
         )
 
     @property
-    def native_value(self) -> StateType:
+    def native_value(self) -> StateType | None:
         """Return the sensor value by calling the description's value_fn."""
         try:
             return self.entity_description.value_fn(self.coordinator.data)
-        except (KeyError, TypeError, ValueError):
+        except KeyError, TypeError, ValueError:
+            return None
+
+
+class GridxHistoricalSensorEntity(
+    CoordinatorEntity[GridxHistoricalCoordinator], SensorEntity
+):
+    """A GridX historical sensor entity."""
+
+    _attr_has_entity_name = True
+
+    def __init__(
+        self,
+        coordinator: GridxHistoricalCoordinator,
+        description: GridxSensorEntityDescription,
+        entry: GridxConfigEntry,
+    ) -> None:
+        """Initialize the historical sensor."""
+        super().__init__(coordinator)
+        self.entity_description: GridxSensorEntityDescription = description
+        self._attr_unique_id = f"{entry.entry_id}_{description.key}"
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, entry.entry_id)},
+            name="GridX GridBox",
+            manufacturer="gridX / Viessmann",
+            model="GridBox",
+        )
+
+    @property
+    def native_value(self) -> StateType | None:
+        """Return the sensor value by calling the description's value_fn."""
+        try:
+            return self.entity_description.value_fn(self.coordinator.data)
+        except KeyError, TypeError, ValueError:
             return None
 
     @property
     def last_reset(self) -> datetime | None:
         """Return last_reset for TOTAL state-class historical sensors."""
-        if self.entity_description.coordinator_type != "hist":
-            return None
         if self.entity_description.state_class != SensorStateClass.TOTAL:
             return None
-        data: GridxHistoricalData = self._hist_coordinator.data
+        data: GridxHistoricalData = self.coordinator.data
         if not data:
             return None
         try:
             return dt_util.parse_datetime(data["last_reset"])
-        except (KeyError, ValueError):
+        except KeyError, ValueError:
             return None

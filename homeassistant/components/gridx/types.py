@@ -10,7 +10,7 @@ from homeassistant.config_entries import ConfigEntry
 from .coordinator import GridxHistoricalCoordinator, GridxLiveCoordinator
 
 if TYPE_CHECKING:
-    from gridx_connector import AsyncGridboxConnector
+    from gridx_connector.async_connector import AsyncGridboxConnector
 
 type GridxConfigEntry = ConfigEntry[GridxData]
 

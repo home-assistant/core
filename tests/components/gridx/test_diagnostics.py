@@ -5,13 +5,15 @@ from unittest.mock import MagicMock
 import pytest
 
 from homeassistant.components.gridx.const import CONF_OEM, DOMAIN
-from homeassistant.components.gridx.diagnostics import async_get_config_entry_diagnostics
+from homeassistant.components.gridx.diagnostics import (
+    async_get_config_entry_diagnostics,
+)
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 
-from tests.common import MockConfigEntry
-
 from .conftest import MOCK_HIST_DATA, MOCK_LIVE_DATA, OEM, PASSWORD, USERNAME
+
+from tests.common import MockConfigEntry
 
 
 @pytest.fixture

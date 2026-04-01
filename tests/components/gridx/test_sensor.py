@@ -1,20 +1,23 @@
 """Tests for the GridX sensor platform."""
 
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
 import pytest
 
 from homeassistant.components.gridx.const import CONF_OEM, DOMAIN
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
+from homeassistant.helpers import entity_registry as er
 
 from .conftest import MOCK_HIST_DATA, MOCK_LIVE_DATA, OEM, PASSWORD, USERNAME
 
+from tests.common import MockConfigEntry
+
 
 @pytest.fixture
-async def setup_integration(hass: HomeAssistant, mock_gridx_connector: MagicMock):
+async def setup_integration(
+    hass: HomeAssistant, mock_gridx_connector: MagicMock
+) -> MockConfigEntry:
     """Load the GridX integration with mocked connector."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -31,40 +34,43 @@ async def setup_integration(hass: HomeAssistant, mock_gridx_connector: MagicMock
     return entry
 
 
-async def test_sensor_unique_ids(hass: HomeAssistant, setup_integration) -> None:
+async def test_sensor_unique_ids(
+    hass: HomeAssistant, setup_integration: MockConfigEntry
+) -> None:
     """All sensor entities must have a unique_id."""
-    from homeassistant.helpers import entity_registry as er
-
     entry = setup_integration
     entity_registry = er.async_get(hass)
     entities = [
-        e for e in entity_registry.entities.values() if e.config_entry_id == entry.entry_id
+        e
+        for e in entity_registry.entities.values()
+        if e.config_entry_id == entry.entry_id
     ]
     assert len(entities) > 0
     unique_ids = [e.unique_id for e in entities]
     assert len(unique_ids) == len(set(unique_ids)), "Duplicate unique_ids found"
 
 
-async def test_live_sensor_values(hass: HomeAssistant, setup_integration) -> None:
+async def test_live_sensor_values(
+    hass: HomeAssistant, setup_integration: MockConfigEntry
+) -> None:
     """Test that live sensor values match the mock data."""
     entry = setup_integration
-    state = hass.states.get(f"sensor.gridx_gridbox_pv_power")
     # Entity names depend on translation; check via unique_id pattern
-    from homeassistant.helpers import entity_registry as er
-
     registry = er.async_get(hass)
-    entity = registry.async_get_entity_id("sensor", DOMAIN, f"{entry.entry_id}_photovoltaic")
+    entity = registry.async_get_entity_id(
+        "sensor", DOMAIN, f"{entry.entry_id}_photovoltaic"
+    )
     assert entity is not None
     state = hass.states.get(entity)
     assert state is not None
     assert state.state == "1512"
 
 
-async def test_battery_sensor_present(hass: HomeAssistant, setup_integration) -> None:
+async def test_battery_sensor_present(
+    hass: HomeAssistant, setup_integration: MockConfigEntry
+) -> None:
     """Battery sensors should be available when battery data is present."""
     entry = setup_integration
-    from homeassistant.helpers import entity_registry as er
-
     registry = er.async_get(hass)
     entity = registry.async_get_entity_id(
         "sensor", DOMAIN, f"{entry.entry_id}_battery_stateOfCharge"
@@ -86,14 +92,16 @@ async def test_battery_sensor_none_without_battery(
 
     entry = MockConfigEntry(
         domain=DOMAIN,
-        data={CONF_USERNAME: "other@example.com", CONF_PASSWORD: PASSWORD, CONF_OEM: OEM},
+        data={
+            CONF_USERNAME: "other@example.com",
+            CONF_PASSWORD: PASSWORD,
+            CONF_OEM: OEM,
+        },
         title="other@example.com",
     )
     entry.add_to_hass(hass)
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
-
-    from homeassistant.helpers import entity_registry as er
 
     registry = er.async_get(hass)
     entity = registry.async_get_entity_id(
@@ -101,17 +109,16 @@ async def test_battery_sensor_none_without_battery(
     )
     assert entity is not None
     state = hass.states.get(entity)
+    assert state is not None
     # None value → unknown
     assert state.state == STATE_UNKNOWN
 
 
 async def test_grid_meter_ws_to_wh_conversion(
-    hass: HomeAssistant, setup_integration
+    hass: HomeAssistant, setup_integration: MockConfigEntry
 ) -> None:
-    """gridMeterReadingPositive is in Ws — must be divided by 3600 to get Wh."""
+    """GridMeterReadingPositive is in Ws and must be divided by 3600 to get Wh."""
     entry = setup_integration
-    from homeassistant.helpers import entity_registry as er
-
     registry = er.async_get(hass)
     entity = registry.async_get_entity_id(
         "sensor", DOMAIN, f"{entry.entry_id}_gridMeterReadingPositive"
