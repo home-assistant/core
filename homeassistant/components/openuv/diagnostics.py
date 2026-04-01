@@ -13,7 +13,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 
-from . import OpenUvConfigEntry
+from .coordinator import OpenUvConfigEntry
 
 CONF_COORDINATES = "coordinates"
 CONF_TITLE = "title"

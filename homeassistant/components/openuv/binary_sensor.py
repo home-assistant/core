@@ -8,8 +8,8 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util.dt import as_local
 
-from . import OpenUvConfigEntry
 from .const import DATA_PROTECTION_WINDOW, LOGGER, TYPE_PROTECTION_WINDOW
+from .coordinator import OpenUvConfigEntry
 from .entity import OpenUvEntity
 
 ATTR_PROTECTION_WINDOW_ENDING_TIME = "end_time"

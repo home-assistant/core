@@ -7,7 +7,6 @@ from typing import Any
 
 from pyopenuv import Client
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_API_KEY,
     CONF_BINARY_SENSORS,
@@ -29,11 +28,13 @@ from .const import (
     DEFAULT_TO_WINDOW,
     LOGGER,
 )
-from .coordinator import OpenUvCoordinator, OpenUvProtectionWindowCoordinator
+from .coordinator import (
+    OpenUvConfigEntry,
+    OpenUvCoordinator,
+    OpenUvProtectionWindowCoordinator,
+)
 
 PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR]
-
-type OpenUvConfigEntry = ConfigEntry[dict[str, OpenUvCoordinator]]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: OpenUvConfigEntry) -> bool:

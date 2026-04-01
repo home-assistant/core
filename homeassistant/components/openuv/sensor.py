@@ -17,7 +17,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util.dt import as_local, parse_datetime
 
-from . import OpenUvConfigEntry
 from .const import (
     DATA_UV,
     TYPE_CURRENT_OZONE_LEVEL,
@@ -31,6 +30,7 @@ from .const import (
     TYPE_SAFE_EXPOSURE_TIME_5,
     TYPE_SAFE_EXPOSURE_TIME_6,
 )
+from .coordinator import OpenUvConfigEntry
 from .entity import OpenUvEntity
 
 ATTR_MAX_UV_TIME = "time"
