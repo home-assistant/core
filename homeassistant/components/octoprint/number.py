@@ -40,8 +40,8 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the OctoPrint number entities."""
-    coordinator = config_entry.runtime_data.coordinator
-    client = config_entry.runtime_data.client
+    coordinator = config_entry.runtime_data
+    client = coordinator.octoprint
     device_id = config_entry.unique_id
 
     assert device_id is not None

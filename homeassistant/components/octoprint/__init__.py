@@ -9,7 +9,7 @@ import aiohttp
 from pyoctoprintapi import OctoprintClient
 import voluptuous as vol
 
-from homeassistant.config_entries import SOURCE_IMPORT
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntryState
 from homeassistant.const import (
     CONF_API_KEY,
     CONF_BINARY_SENSORS,
@@ -34,11 +34,7 @@ from homeassistant.util import slugify as util_slugify
 from homeassistant.util.ssl import get_default_context, get_default_no_verify_context
 
 from .const import CONF_BAUDRATE, DOMAIN, SERVICE_CONNECT
-from .coordinator import (
-    OctoprintConfigEntry,
-    OctoprintData,
-    OctoprintDataUpdateCoordinator,
-)
+from .coordinator import OctoprintConfigEntry, OctoprintDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -210,7 +206,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: OctoprintConfigEntry) ->
 
     await coordinator.async_config_entry_first_refresh()
 
-    entry.runtime_data = OctoprintData(coordinator=coordinator, client=client)
+    entry.runtime_data = coordinator
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
@@ -249,8 +245,8 @@ def async_get_client_for_service_call(
     if device_entry := device_registry.async_get(device_id):
         for entry_id in device_entry.config_entries:
             if entry := hass.config_entries.async_get_entry(entry_id):
-                if entry.domain == DOMAIN:
-                    return cast(OctoprintConfigEntry, entry).runtime_data.client
+                if entry.domain == DOMAIN and entry.state == ConfigEntryState.LOADED:
+                    return cast(OctoprintConfigEntry, entry).runtime_data.octoprint
 
     raise ServiceValidationError(
         translation_domain=DOMAIN,
