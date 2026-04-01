@@ -21,14 +21,14 @@ type OmniLogicConfigEntry = ConfigEntry[OmniLogicUpdateCoordinator]
 class OmniLogicUpdateCoordinator(DataUpdateCoordinator[dict[tuple, dict[str, Any]]]):
     """Class to manage fetching update data from single endpoint."""
 
-    config_entry: ConfigEntry
+    config_entry: OmniLogicConfigEntry
 
     def __init__(
         self,
         hass: HomeAssistant,
         api: OmniLogic,
         name: str,
-        config_entry: ConfigEntry,
+        config_entry: OmniLogicConfigEntry,
         polling_interval: int,
     ) -> None:
         """Initialize the global Omnilogic data updater."""
