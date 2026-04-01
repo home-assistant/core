@@ -44,14 +44,53 @@
   },
   "entity": {
     "binary_sensor": {
+      "alarm_cl_too_high": {
+        "name": "Chlorine too high"
+      },
+      "alarm_cl_too_high_orp": {
+        "name": "Chlorine too high (ORP)"
+      },
+      "alarm_cl_too_low_orp": {
+        "name": "Chlorine too low (ORP)"
+      },
       "alarm_ofa_cl": {
-        "name": "Chlorine tank level"
+        "name": "Chlorine overfeed"
+      },
+      "alarm_ofa_cl_alternative": {
+        "name": "Chlorine overfeed alternative"
       },
       "alarm_ofa_orp": {
         "name": "ORP overfeed"
       },
+      "alarm_ofa_orp_alternative": {
+        "name": "ORP overfeed alternative"
+      },
       "alarm_ofa_ph": {
         "name": "pH overfeed"
+      },
+      "alarm_ofa_ph_alternative": {
+        "name": "pH overfeed alternative"
+      },
+      "alarm_ph_too_high": {
+        "name": "pH too high"
+      },
+      "alarm_ph_too_low": {
+        "name": "pH too low"
+      },
+      "alarm_system_standby": {
+        "name": "System standby"
+      },
+      "alarm_water_too_cold": {
+        "name": "Water too cold"
+      },
+      "alarm_water_too_hot": {
+        "name": "Water too hot"
+      },
+      "circulation_pump_status": {
+        "name": "Circulation pump"
+      },
+      "flow_delay_status": {
+        "name": "Flow delay"
       },
       "flow_rate_alarm": {
         "name": "Flow rate"
@@ -62,25 +101,31 @@
       "ph_level_alarm": {
         "name": "pH tank level"
       },
+      "power_on_delay_status": {
+        "name": "Power-on delay"
+      },
       "pump_alarm": {
         "name": "Recirculation"
       },
       "relay_alarm": {
-        "name": "Alarm relay status"
+        "name": "Alarm relay"
       },
       "relay_aux1": {
-        "name": "Auxiliary relay 1 status"
+        "name": "Auxiliary relay 1"
       },
       "relay_aux2": {
-        "name": "Auxiliary relay 2 status"
+        "name": "Auxiliary relay 2"
       },
       "relay_aux3": {
-        "name": "Auxiliary relay 3 status"
+        "name": "Auxiliary relay 3"
       }
     },
     "number": {
       "cl_target": {
         "name": "Chlorine target"
+      },
+      "flow_delay_timer": {
+        "name": "Flow delay timer"
       },
       "ofa_cl_lower": {
         "name": "Chlorine overfeed alarm lower limit"
@@ -105,6 +150,18 @@
       },
       "ph_target": {
         "name": "pH target"
+      },
+      "power_on_delay_timer": {
+        "name": "Power-on delay timer"
+      },
+      "time_off_cl_dosing": {
+        "name": "Chlorine dosing off-time"
+      },
+      "time_off_orp_dosing": {
+        "name": "ORP dosing off-time"
+      },
+      "time_off_ph_dosing": {
+        "name": "pH dosing off-time"
       }
     },
     "select": {
@@ -174,6 +231,13 @@
           "low": "[%key:common::state::low%]"
         }
       },
+      "device_config": {
+        "name": "Device configuration",
+        "state": {
+          "ph_orp": "pH/ORP",
+          "ph_orp_chlorine": "pH/ORP/Chlorine"
+        }
+      },
       "flow_rate": {
         "name": "Flow rate"
       },
@@ -210,6 +274,7 @@
       "peristaltic_cl_dosing": {
         "name": "Chlorine peristaltic dosing",
         "state": {
+          "cycle": "Cycle",
           "off": "[%key:common::state::off%]",
           "on_off": "[%key:component::pooldose::entity::sensor::peristaltic_ph_dosing::state::on_off%]",
           "proportional": "[%key:component::pooldose::entity::sensor::peristaltic_ph_dosing::state::proportional%]",
@@ -254,6 +319,13 @@
         "state": {
           "acid": "pH-",
           "alcalyne": "pH+"
+        }
+      },
+      "temperature_unit": {
+        "name": "Temperature unit",
+        "state": {
+          "celsius": "Celsius",
+          "fahrenheit": "Fahrenheit"
         }
       },
       "water_meter_total_permanent": {

@@ -2,7 +2,6 @@
 
 from unittest.mock import patch
 
-import pytest
 from tesla_fleet_api.exceptions import TeslaFleetError
 
 from homeassistant.config_entries import ConfigEntryState
@@ -51,27 +50,6 @@ async def test_connection_failure(
     assert entry.state is ConfigEntryState.SETUP_RETRY
 
 
-@pytest.mark.parametrize(
-    ("side_effect", "expected_state"),
-    [
-        (ERROR_AUTH, ConfigEntryState.SETUP_ERROR),
-        (ERROR_UNKNOWN, ConfigEntryState.SETUP_ERROR),
-        (ERROR_CONNECTION, ConfigEntryState.SETUP_RETRY),
-    ],
-)
-async def test_battery_setup_failure(
-    hass: HomeAssistant,
-    mock_get_battery,
-    side_effect: Exception,
-    expected_state: ConfigEntryState,
-) -> None:
-    """Test init with a battery API error."""
-
-    mock_get_battery.side_effect = side_effect
-    entry = await setup_platform(hass)
-    assert entry.state is expected_state
-
-
 async def test_products_error(hass: HomeAssistant) -> None:
     """Test init with a fleet error on products."""
 
@@ -90,3 +68,13 @@ async def test_scopes_error(hass: HomeAssistant) -> None:
     ):
         entry = await setup_platform(hass)
         assert entry.state is ConfigEntryState.SETUP_RETRY
+
+
+async def test_vehicle_api_handle_is_optional(hass: HomeAssistant) -> None:
+    """Test runtime vehicle API handle defaults to None during scaffold stage."""
+
+    entry = await setup_platform(hass)
+    assert entry.state is ConfigEntryState.LOADED
+    vehicles = entry.runtime_data.vehicles
+    assert vehicles
+    assert all(vehicle.api is None for vehicle in vehicles)

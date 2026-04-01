@@ -140,6 +140,9 @@
       "pump_status": {
         "default": "mdi:pump"
       },
+      "radon_concentration": {
+        "default": "mdi:radioactive"
+      },
       "tank_percentage": {
         "default": "mdi:water-boiler"
       },

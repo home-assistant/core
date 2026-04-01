@@ -5,12 +5,11 @@ from __future__ import annotations
 from typing import Any
 
 from homeassistant.components.diagnostics import async_redact_data
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_EMAIL, CONF_UNIQUE_ID, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 
-from .const import CONF_REFRESH_TOKEN, CONF_USER_UUID, DOMAIN
-from .coordinator import NotionDataUpdateCoordinator
+from .const import CONF_REFRESH_TOKEN, CONF_USER_UUID
+from .coordinator import NotionConfigEntry
 
 CONF_DEVICE_KEY = "device_key"
 CONF_HARDWARE_ID = "hardware_id"
@@ -34,10 +33,10 @@ TO_REDACT = {
 
 
 async def async_get_config_entry_diagnostics(
-    hass: HomeAssistant, entry: ConfigEntry
+    hass: HomeAssistant, entry: NotionConfigEntry
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
-    coordinator: NotionDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
 
     return async_redact_data(
         {
