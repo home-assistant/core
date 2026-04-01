@@ -9,12 +9,18 @@ import requests
 from requests.exceptions import ConnectTimeout, SSLError
 
 from homeassistant.components.proxmoxve.const import (
+    AUTH_PAM,
+    CONF_AUTH_METHOD,
     CONF_CONTAINERS,
     CONF_NODE,
     CONF_NODES,
     CONF_REALM,
     CONF_VMS,
     DOMAIN,
+)
+from homeassistant.components.proxmoxve.coordinator import (
+    ProxmoxNodesNotFoundError,
+    ProxmoxPermissionsError,
 )
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
@@ -23,6 +29,8 @@ from homeassistant.const import (
     CONF_PORT,
     CONF_USERNAME,
     CONF_VERIFY_SSL,
+    STATE_OFF,
+    STATE_ON,
 )
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -31,7 +39,7 @@ from homeassistant.setup import async_setup_component
 
 from . import setup_integration
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_load_json_array_fixture
 
 
 async def test_config_import(
@@ -73,32 +81,70 @@ async def test_config_import(
 
 
 @pytest.mark.parametrize(
-    ("exception", "expected_state"),
+    ("exception", "expected_state", "target"),
     [
         (
             AuthenticationError("Invalid credentials"),
             ConfigEntryState.SETUP_ERROR,
+            "access.permissions.get",
         ),
         (
             SSLError("SSL handshake failed"),
             ConfigEntryState.SETUP_ERROR,
+            "access.permissions.get",
         ),
-        (ConnectTimeout("Connection timed out"), ConfigEntryState.SETUP_RETRY),
+        (
+            ConnectTimeout("Connection timed out"),
+            ConfigEntryState.SETUP_RETRY,
+            "access.permissions.get",
+        ),
+        (
+            ResourceException(403, "Forbidden", ""),
+            ConfigEntryState.SETUP_ERROR,
+            "access.permissions.get",
+        ),
         (
             ResourceException(500, "Internal Server Error", ""),
+            ConfigEntryState.SETUP_RETRY,
+            "access.permissions.get",
+        ),
+        (
+            ResourceException(403, "Forbidden", ""),
             ConfigEntryState.SETUP_ERROR,
+            "nodes.get",
+        ),
+        (
+            ResourceException(500, "Internal Server Error", ""),
+            ConfigEntryState.SETUP_RETRY,
+            "nodes.get",
         ),
         (
             requests.exceptions.ConnectionError("Connection refused"),
             ConfigEntryState.SETUP_ERROR,
+            "access.permissions.get",
+        ),
+        (
+            ProxmoxPermissionsError("Failed to retrieve permissions"),
+            ConfigEntryState.SETUP_ERROR,
+            "access.permissions.get",
+        ),
+        (
+            ProxmoxNodesNotFoundError("No nodes found"),
+            ConfigEntryState.SETUP_ERROR,
+            "nodes.get",
         ),
     ],
     ids=[
         "auth_error",
         "ssl_error",
         "connect_timeout",
-        "resource_exception",
+        "resource_exception_permissions_403",
+        "resource_exception_permissions_500",
+        "resource_exception_nodes_403",
+        "resource_exception_nodes_500",
         "connection_error",
+        "permissions_error",
+        "nodes_not_found",
     ],
 )
 async def test_setup_exceptions(
@@ -107,19 +153,24 @@ async def test_setup_exceptions(
     mock_config_entry: MockConfigEntry,
     exception: Exception,
     expected_state: ConfigEntryState,
+    target: str,
 ) -> None:
     """Test the _async_setup."""
-    mock_proxmox_client.nodes.get.side_effect = exception
+    attr_to_mock = mock_proxmox_client
+    for part in target.split("."):
+        attr_to_mock = getattr(attr_to_mock, part)
+    attr_to_mock.side_effect = exception
+
     await setup_integration(hass, mock_config_entry)
     assert mock_config_entry.state == expected_state
 
 
-async def test_migration_v1_to_v2(
+async def test_migration_v1_to_v3(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     device_registry: dr.DeviceRegistry,
 ) -> None:
-    """Test migration from version 1 to 2."""
+    """Test migration from version 1."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         version=1,
@@ -175,10 +226,122 @@ async def test_migration_v1_to_v2(
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    assert entry.version == 2
+    assert entry.version == 3
 
     vm_entity_after = entity_registry.async_get(vm_entity.entity_id)
     container_entity_after = entity_registry.async_get(container_entity.entity_id)
 
     assert vm_entity_after.unique_id == f"{entry.entry_id}_100_status"
     assert container_entity_after.unique_id == f"{entry.entry_id}_200_status"
+
+
+async def test_offline_node(
+    hass: HomeAssistant,
+    mock_proxmox_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test that an offline node doesn't cause the entire update to fail."""
+    mock_proxmox_client.nodes.get.return_value = mock_proxmox_client._all_nodes
+    await setup_integration(hass, mock_config_entry)
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+
+    state = hass.states.get("binary_sensor.pve1_status")
+    assert state.state == STATE_ON
+
+    state = hass.states.get("binary_sensor.pve3_status")
+    assert state.state == STATE_OFF
+
+
+async def test_migration_v2_to_v3(
+    hass: HomeAssistant,
+) -> None:
+    """Test migration from version 2 to 3."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        version=2,
+        unique_id="1",
+        data={
+            CONF_HOST: "http://test_host",
+            CONF_PORT: 8006,
+            CONF_REALM: "pam",
+            CONF_USERNAME: "test_user@pam",
+            CONF_PASSWORD: "test_password",
+            CONF_VERIFY_SSL: True,
+        },
+    )
+    entry.add_to_hass(hass)
+    assert entry.version == 2
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert entry.version == 3
+    assert entry.data[CONF_AUTH_METHOD] == AUTH_PAM
+    assert entry.data[CONF_REALM] == AUTH_PAM
+
+
+async def test_new_vm_creates_entity(
+    hass: HomeAssistant,
+    mock_proxmox_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test that a VM appearing after initial load gets an entity created."""
+    mock_proxmox_client._node_mock.qemu.get.return_value = []
+    await setup_integration(hass, mock_config_entry)
+    assert mock_config_entry.state == ConfigEntryState.LOADED
+
+    initial_count = len(
+        er.async_entries_for_config_entry(entity_registry, mock_config_entry.entry_id)
+    )
+
+    mock_proxmox_client._node_mock.qemu.get.return_value = (
+        await async_load_json_array_fixture(hass, "nodes/qemu.json", DOMAIN)
+    )
+
+    coordinator = mock_config_entry.runtime_data
+    await coordinator.async_refresh()
+    await hass.async_block_till_done()
+
+    assert (
+        len(
+            er.async_entries_for_config_entry(
+                entity_registry, mock_config_entry.entry_id
+            )
+        )
+        > initial_count
+    )
+
+
+async def test_new_container_creates_entity(
+    hass: HomeAssistant,
+    mock_proxmox_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test that a container appearing after initial load gets an entity created."""
+    mock_proxmox_client._node_mock.lxc.get.return_value = []
+    await setup_integration(hass, mock_config_entry)
+    assert mock_config_entry.state == ConfigEntryState.LOADED
+
+    initial_count = len(
+        er.async_entries_for_config_entry(entity_registry, mock_config_entry.entry_id)
+    )
+
+    mock_proxmox_client._node_mock.lxc.get.return_value = (
+        await async_load_json_array_fixture(hass, "nodes/lxc.json", DOMAIN)
+    )
+
+    coordinator = mock_config_entry.runtime_data
+    await coordinator.async_refresh()
+    await hass.async_block_till_done()
+
+    assert (
+        len(
+            er.async_entries_for_config_entry(
+                entity_registry, mock_config_entry.entry_id
+            )
+        )
+        > initial_count
+    )

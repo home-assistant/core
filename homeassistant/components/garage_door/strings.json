@@ -1,0 +1,62 @@
+{
+  "common": {
+    "condition_behavior_name": "Condition passes if",
+    "trigger_behavior_name": "Trigger when"
+  },
+  "conditions": {
+    "is_closed": {
+      "description": "Tests if one or more garage doors are closed.",
+      "fields": {
+        "behavior": {
+          "name": "[%key:component::garage_door::common::condition_behavior_name%]"
+        }
+      },
+      "name": "Garage door is closed"
+    },
+    "is_open": {
+      "description": "Tests if one or more garage doors are open.",
+      "fields": {
+        "behavior": {
+          "name": "[%key:component::garage_door::common::condition_behavior_name%]"
+        }
+      },
+      "name": "Garage door is open"
+    }
+  },
+  "selector": {
+    "condition_behavior": {
+      "options": {
+        "all": "All",
+        "any": "Any"
+      }
+    },
+    "trigger_behavior": {
+      "options": {
+        "any": "Any",
+        "first": "First",
+        "last": "Last"
+      }
+    }
+  },
+  "title": "Garage door",
+  "triggers": {
+    "closed": {
+      "description": "Triggers after one or more garage doors close.",
+      "fields": {
+        "behavior": {
+          "name": "[%key:component::garage_door::common::trigger_behavior_name%]"
+        }
+      },
+      "name": "Garage door closed"
+    },
+    "opened": {
+      "description": "Triggers after one or more garage doors open.",
+      "fields": {
+        "behavior": {
+          "name": "[%key:component::garage_door::common::trigger_behavior_name%]"
+        }
+      },
+      "name": "Garage door opened"
+    }
+  }
+}

@@ -162,6 +162,7 @@ async def test_services(
     assert mock_api.remote_play_media.mock_calls[0].args == (
         "SESSION-UUID",
         ["ITEM-UUID"],
+        "PlayNow",
     )
 
     await hass.services.async_call(
@@ -253,6 +254,72 @@ async def test_services(
     assert len(mock_api.remote_unmute.mock_calls) == 1
 
 
+async def test_services_enqueue(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    mock_jellyfin: MagicMock,
+    mock_api: MagicMock,
+) -> None:
+    """Test Jellyfin play_media enqueue mapping."""
+    state = hass.states.get("media_player.jellyfin_device")
+    assert state
+
+    cases = [
+        ("add", "PlayLast"),
+        ("next", "PlayNext"),
+        ("play", "PlayNow"),
+        ("replace", "PlayNow"),
+    ]
+
+    for enqueue_val, expected_command in cases:
+        mock_api.remote_play_media.reset_mock()
+        await hass.services.async_call(
+            MP_DOMAIN,
+            "play_media",
+            {
+                ATTR_ENTITY_ID: state.entity_id,
+                "media_content_type": "",
+                "media_content_id": "ITEM-UUID",
+                "enqueue": enqueue_val,
+            },
+            blocking=True,
+        )
+        assert len(mock_api.remote_play_media.mock_calls) == 1, (
+            f"failed for enqueue={enqueue_val}"
+        )
+        assert mock_api.remote_play_media.mock_calls[0].args == (
+            "SESSION-UUID",
+            ["ITEM-UUID"],
+            expected_command,
+        ), f"wrong command for enqueue={enqueue_val}"
+
+
+async def test_services_shuffle(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    mock_jellyfin: MagicMock,
+    mock_api: MagicMock,
+) -> None:
+    """Test Jellyfin play_media shuffle."""
+    state = hass.states.get("media_player.jellyfin_device")
+    assert state
+
+    await hass.services.async_call(
+        DOMAIN,
+        "play_media_shuffle",
+        {
+            ATTR_ENTITY_ID: state.entity_id,
+            "media_content_id": "ITEM-UUID",
+        },
+        blocking=True,
+    )
+    assert mock_api.remote_play_media.mock_calls[0].args == (
+        "SESSION-UUID",
+        ["ITEM-UUID"],
+        "PlayShuffle",
+    )
+
+
 async def test_browse_media(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
@@ -310,7 +377,7 @@ async def test_browse_media(
         "can_play": True,
         "can_expand": False,
         "can_search": False,
-        "thumbnail": "http://localhost/Items/c22fd826-17fc-44f4-9b04-1eb3e8fb9173/Images/Backdrop.jpg",
+        "thumbnail": "http://localhost/Items/21af9851-8e39-43a9-9c47-513d3b9e99fc/Images/Primary.jpg",
         "children_media_class": None,
     }
 
@@ -319,13 +386,71 @@ async def test_browse_media(
     assert response["result"]["title"] == "FOLDER"
     assert response["result"]["children"][0] == expected_child_item
 
+    # browse for series
+    await client.send_json(
+        {
+            "id": 3,
+            "type": "media_player/browse_media",
+            "entity_id": "media_player.jellyfin_device",
+            "media_content_type": "tvshow",
+            "media_content_id": "SERIES-UUID",
+        }
+    )
+
+    response = await client.receive_json()
+    expected_child_item = {
+        "title": "SEASON",
+        "media_class": MediaClass.SEASON.value,
+        "media_content_type": MediaType.SEASON.value,
+        "media_content_id": "SEASON-UUID",
+        "can_play": True,
+        "can_expand": True,
+        "can_search": False,
+        "thumbnail": "http://localhost/Items/c22fd826-17fc-44f4-9b04-1eb3e8fb9173/Images/Backdrop.jpg",
+        "children_media_class": None,
+    }
+
+    assert response["success"]
+    assert response["result"]["media_content_id"] == "SERIES-UUID"
+    assert response["result"]["title"] == "SERIES"
+    assert response["result"]["children"][0] == expected_child_item
+
+    # browse for season
+    await client.send_json(
+        {
+            "id": 4,
+            "type": "media_player/browse_media",
+            "entity_id": "media_player.jellyfin_device",
+            "media_content_type": "season",
+            "media_content_id": "SEASON-UUID",
+        }
+    )
+
+    response = await client.receive_json()
+    expected_child_item = {
+        "title": "EPISODE",
+        "media_class": MediaClass.EPISODE.value,
+        "media_content_type": MediaType.EPISODE.value,
+        "media_content_id": "EPISODE-UUID",
+        "can_play": True,
+        "can_expand": False,
+        "can_search": False,
+        "thumbnail": "http://localhost/Items/21af9851-8e39-43a9-9c47-513d3b9e99fc/Images/Primary.jpg",
+        "children_media_class": None,
+    }
+
+    assert response["success"]
+    assert response["result"]["media_content_id"] == "SEASON-UUID"
+    assert response["result"]["title"] == "SEASON"
+    assert response["result"]["children"][0] == expected_child_item
+
     # browse for collection without children
     mock_api.user_items.side_effect = None
     mock_api.user_items.return_value = {}
 
     await client.send_json(
         {
-            "id": 3,
+            "id": 5,
             "type": "media_player/browse_media",
             "entity_id": "media_player.jellyfin_device",
             "media_content_type": "collection",
@@ -336,10 +461,7 @@ async def test_browse_media(
     response = await client.receive_json()
     assert response["success"] is False
     assert response["error"]
-    assert (
-        response["error"]["message"]
-        == "Media not found: collection / COLLECTION-FOLDER-UUID"
-    )
+    assert response["error"]["message"] == "Media not found: COLLECTION-FOLDER-UUID"
 
     # browse for non-existent item
     mock_api.get_item.side_effect = None
@@ -347,7 +469,7 @@ async def test_browse_media(
 
     await client.send_json(
         {
-            "id": 4,
+            "id": 6,
             "type": "media_player/browse_media",
             "entity_id": "media_player.jellyfin_device",
             "media_content_type": "collection",
@@ -358,10 +480,7 @@ async def test_browse_media(
     response = await client.receive_json()
     assert response["success"] is False
     assert response["error"]
-    assert (
-        response["error"]["message"]
-        == "Media not found: collection / COLLECTION-UUID-404"
-    )
+    assert response["error"]["message"] == "Media not found: COLLECTION-UUID-404"
 
 
 async def test_search_media(
@@ -371,7 +490,7 @@ async def test_search_media(
     mock_jellyfin: MagicMock,
     mock_api: MagicMock,
 ) -> None:
-    """Test Jellyfin browse media."""
+    """Test Jellyfin search media."""
     client = await hass_ws_client()
 
     # browse root folder
@@ -454,6 +573,7 @@ async def test_supports_media_control_fallback(
     assert features & MediaPlayerEntityFeature.SEEK
     assert features & MediaPlayerEntityFeature.BROWSE_MEDIA
     assert features & MediaPlayerEntityFeature.PLAY_MEDIA
+    assert features & MediaPlayerEntityFeature.MEDIA_ENQUEUE
 
     # Should also have volume controls since it has VolumeSet, Mute, and Unmute
     assert features & MediaPlayerEntityFeature.VOLUME_SET
