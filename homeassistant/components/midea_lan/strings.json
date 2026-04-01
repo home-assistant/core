@@ -6,12 +6,52 @@
       "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
     },
     "error": {
+      "device_auth_failed": "Could not connect with the provided configuration",
+      "invalid_device_id_for_ip": "The device ID does not match the selected IP address",
       "invalid_device_ip": "Could not find a supported device at this IP address",
       "invalid_token": "Token and key must be valid hexadecimal strings",
+      "ip_address_mismatch": "The IP address does not match the discovered device",
       "login_failed": "Could not log in to the selected cloud server",
-      "no_devices": "No devices found"
+      "no_devices": "No devices found",
+      "preset_login_failed": "Could not log in with the preset account",
+      "protocol_mismatch": "The protocol does not match the discovered device",
+      "token_unavailable": "Could not get a valid token and key from the cloud"
     },
     "step": {
+      "auto": {
+        "data": {
+          "device": "Device"
+        },
+        "title": "Select a discovered device"
+      },
+      "cache": {
+        "data": {
+          "action": "Action"
+        },
+        "description": "Remove cached cloud login data.",
+        "title": "Remove login cache"
+      },
+      "discovery": {
+        "data": {
+          "ip_address": "IP address"
+        },
+        "data_description": {
+          "ip_address": "Enter auto to scan your network or enter a specific IP address"
+        },
+        "title": "Discover devices"
+      },
+      "list": {
+        "description": "{table}",
+        "title": "Discovered appliances"
+      },
+      "login": {
+        "data": {
+          "account": "Account",
+          "password": "Password",
+          "server": "Server"
+        },
+        "title": "Cloud login"
+      },
       "manually": {
         "data": {
           "device_id": "Device ID",
@@ -60,6 +100,19 @@
       },
       "climate_zone2": {
         "name": "Zone 2 Thermostat"
+      }
+    }
+  },
+  "options": {
+    "abort": {
+      "account_option": "Options are not available for this entry"
+    },
+    "step": {
+      "init": {
+        "data": {
+          "customize": "Customize"
+        },
+        "title": "Options"
       }
     }
   }

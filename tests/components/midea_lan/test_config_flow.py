@@ -1,8 +1,6 @@
 """Tests for the Midea LAN config flow."""
 
 from collections.abc import Generator
-from pathlib import Path
-from typing import Self
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from midealocal.const import DeviceType, ProtocolVersion
@@ -12,6 +10,7 @@ import pytest
 
 from homeassistant.components.midea_lan.config_flow import (
     DEFAULT_CLOUD,
+    INVALID_SERVER_ID,
     MideaLanConfigFlow,
     MideaLanOptionsFlowHandler,
 )
@@ -69,43 +68,20 @@ def mock_device_config_storage(monkeypatch: pytest.MonkeyPatch) -> dict[str, dic
     """Mock config-flow storage I/O in memory without creating files."""
     storage: dict[str, dict] = {}
 
-    def fake_save_json(path: str, data: dict) -> None:
-        storage[path] = data.copy()
+    async def fake_async_save(self, data: dict) -> None:
+        storage[self.key] = data.copy()
 
-    def fake_load_json(path: str, default: dict | None = None) -> dict:
-        if path in storage:
-            return storage[path]
-        return default if default is not None else {}
-
-    def fake_exists(self: Path) -> bool:
-        return str(self) in storage
-
-    class _FakeFile:
-        def __init__(self, name: str) -> None:
-            """Initialize fake file object."""
-            self.name = name
-
-        def __enter__(self) -> Self:
-            """Enter context manager."""
-            return self
-
-        def __exit__(self, *_args: object) -> bool:
-            """Exit context manager."""
-            return False
-
-    def fake_open(self: Path, encoding: str | None = None) -> _FakeFile:
-        return _FakeFile(str(self))
+    async def fake_async_load(self) -> dict | None:
+        return storage.get(self.key)
 
     monkeypatch.setattr(
-        "homeassistant.components.midea_lan.config_flow.save_json",
-        fake_save_json,
+        "homeassistant.components.midea_lan.config_flow.Store.async_save",
+        fake_async_save,
     )
     monkeypatch.setattr(
-        "homeassistant.components.midea_lan.config_flow.load_json",
-        fake_load_json,
+        "homeassistant.components.midea_lan.config_flow.Store.async_load",
+        fake_async_load,
     )
-    monkeypatch.setattr(Path, "exists", fake_exists)
-    monkeypatch.setattr(Path, "open", fake_open)
     return storage
 
 
@@ -160,6 +136,7 @@ async def test_manual_flow_success(hass: HomeAssistant) -> None:
         ) as mock_midea_device,
         patch(
             "homeassistant.components.midea_lan.config_flow.MideaLanConfigFlow._save_device_config",
+            new_callable=AsyncMock,
         ),
     ):
         mock_device = MagicMock()
@@ -230,8 +207,8 @@ async def test_manual_flow_duplicate_unique_id(hass: HomeAssistant) -> None:
     """Test manual flow aborts when device is already configured."""
     entry = MockConfigEntry(
         domain=DOMAIN,
-        unique_id=TEST_DEVICE_ID,
-        version=2,
+        unique_id=str(TEST_DEVICE_ID),
+        version=1,
         minor_version=1,
         data={CONF_DEVICE_ID: TEST_DEVICE_ID, CONF_IP_ADDRESS: TEST_IP_ADDRESS},
     )
@@ -247,6 +224,7 @@ async def test_manual_flow_duplicate_unique_id(hass: HomeAssistant) -> None:
         ) as mock_midea_device,
         patch(
             "homeassistant.components.midea_lan.config_flow.MideaLanConfigFlow._save_device_config",
+            new_callable=AsyncMock,
         ),
     ):
         mock_device = MagicMock()
@@ -271,7 +249,7 @@ async def test_manual_flow_duplicate_unique_id(hass: HomeAssistant) -> None:
     assert result["reason"] == "already_configured"
 
 
-def test_storage_helpers(
+async def test_storage_helpers(
     flow: MideaLanConfigFlow,
     mock_device_config_storage: dict[str, dict],
 ) -> None:
@@ -282,14 +260,14 @@ def test_storage_helpers(
         CONF_TYPE: TEST_TYPE,
     }
 
-    flow._save_device_config(data)
+    await flow._save_device_config(data)
 
-    loaded = flow._load_device_config(str(TEST_DEVICE_ID))
+    loaded = await flow._load_device_config(str(TEST_DEVICE_ID))
     assert loaded[CONF_DEVICE_ID] == TEST_DEVICE_ID
     assert loaded[CONF_NAME] == TEST_NAME
     assert len(mock_device_config_storage) == 1
 
-    assert flow._load_device_config("does_not_exist") == {}
+    assert await flow._load_device_config("does_not_exist") == {}
 
 
 def test_check_storage_device() -> None:
@@ -540,10 +518,6 @@ async def test_step_login_branches(flow: MideaLanConfigFlow) -> None:
             "homeassistant.components.midea_lan.config_flow.MideaCloud.get_cloud_servers",
             AsyncMock(return_value={1: "CN", 2: DEFAULT_CLOUD}),
         ),
-        patch(
-            "homeassistant.components.midea_lan.config_flow.MideaCloud.get_default_keys",
-            AsyncMock(return_value={99: {"token": "x", "key": "y"}}),
-        ),
     ):
         result = await flow.async_step_login()
     assert result["type"] is FlowResultType.FORM
@@ -554,15 +528,11 @@ async def test_step_login_branches(flow: MideaLanConfigFlow) -> None:
             "homeassistant.components.midea_lan.config_flow.MideaCloud.get_cloud_servers",
             AsyncMock(return_value={1: "CN", 2: DEFAULT_CLOUD}),
         ),
-        patch(
-            "homeassistant.components.midea_lan.config_flow.MideaCloud.get_default_keys",
-            AsyncMock(return_value={99: {"token": "x", "key": "y"}}),
-        ),
         patch.object(flow, "_check_cloud_login", AsyncMock(return_value=True)),
         patch.object(flow, "async_step_auto", AsyncMock(return_value={"auto": True})),
     ):
         result = await flow.async_step_login(
-            {CONF_SERVER: 99, CONF_ACCOUNT: "a", CONF_PASSWORD: "p"}
+            {CONF_SERVER: INVALID_SERVER_ID, CONF_ACCOUNT: "a", CONF_PASSWORD: "p"}
         )
     assert result == {"auto": True}
     assert flow.hass.data[DOMAIN]["login_mode"] == "preset"
@@ -571,10 +541,6 @@ async def test_step_login_branches(flow: MideaLanConfigFlow) -> None:
         patch(
             "homeassistant.components.midea_lan.config_flow.MideaCloud.get_cloud_servers",
             AsyncMock(return_value={1: "CN", 2: DEFAULT_CLOUD}),
-        ),
-        patch(
-            "homeassistant.components.midea_lan.config_flow.MideaCloud.get_default_keys",
-            AsyncMock(return_value={99: {"token": "x", "key": "y"}}),
         ),
         patch.object(flow, "_check_cloud_login", AsyncMock(return_value=False)),
     ):
@@ -799,7 +765,7 @@ async def test_manual_step_auth_failure(flow: MideaLanConfigFlow) -> None:
         result = await flow.async_step_manually(_manual_user_input())
 
     assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"base": "Device auth failed with input config"}
+    assert result["errors"] == {"base": "device_auth_failed"}
 
 
 async def test_manual_step_socket_exception(flow: MideaLanConfigFlow) -> None:
@@ -815,7 +781,7 @@ async def test_manual_step_socket_exception(flow: MideaLanConfigFlow) -> None:
         result = await flow.async_step_manually(_manual_user_input())
 
     assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"base": "Device auth failed with input config"}
+    assert result["errors"] == {"base": "device_auth_failed"}
 
 
 async def test_options_flow(flow: MideaLanConfigFlow) -> None:
@@ -837,9 +803,7 @@ async def test_options_flow(flow: MideaLanConfigFlow) -> None:
     )
     options_flow = MideaLanOptionsFlowHandler(entry)
 
-    create_result = await options_flow.async_step_init(
-        {CONF_IP_ADDRESS: TEST_IP_ADDRESS}
-    )
+    create_result = await options_flow.async_step_init({CONF_CUSTOMIZE: "x"})
     assert create_result["type"] is FlowResultType.CREATE_ENTRY
 
     form_result = await options_flow.async_step_init()

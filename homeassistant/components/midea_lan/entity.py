@@ -25,8 +25,7 @@ class MideaEntity(Entity):
         self._device = device
         self._device.register_update(self.update_state)
         self._entity_key = entity_key
-        self._unique_id = f"{DOMAIN}.{self._device.device_id}_{entity_key}"
-        self.entity_id = self._unique_id
+        self._unique_id = f"{self._device.device_id}_{entity_key}"
         self._device_name = self._device.name
 
     @property
@@ -65,7 +64,7 @@ class MideaEntity(Entity):
     def update_state(self, status: Any) -> None:
         """Update entity state."""
         if not self.hass:
-            _LOGGER.warning(
+            _LOGGER.debug(
                 "MideaEntity update_state for %s [%s] with status %s: HASS is None",
                 self.name,
                 type(self),
