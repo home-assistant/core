@@ -131,7 +131,7 @@ class SnapcastClientDevice(SnapcastCoordinatorEntity, MediaPlayerEntity):
         return f"{CLIENT_PREFIX}{host}_{id}"
 
     @property
-    def _current_group(self) -> Snapgroup:
+    def _current_group(self) -> Snapgroup | None:
         """Return the group the client is associated with."""
         return self._device.group
 
@@ -158,12 +158,17 @@ class SnapcastClientDevice(SnapcastCoordinatorEntity, MediaPlayerEntity):
     def state(self) -> MediaPlayerState | None:
         """Return the state of the player."""
         if self._device.connected:
-            if self.is_volume_muted or self._current_group.muted:
+            if (
+                self.is_volume_muted
+                or self._current_group is None
+                or self._current_group.muted
+            ):
                 return MediaPlayerState.IDLE
             try:
                 return STREAM_STATUS.get(self._current_group.stream_status)
             except KeyError:
                 pass
+
         return MediaPlayerState.OFF
 
     @property
@@ -182,15 +187,31 @@ class SnapcastClientDevice(SnapcastCoordinatorEntity, MediaPlayerEntity):
     @property
     def source(self) -> str | None:
         """Return the current input source."""
+        if self._current_group is None:
+            return None
+
         return self._current_group.stream
 
     @property
     def source_list(self) -> list[str]:
         """List of available input sources."""
+        if self._current_group is None:
+            return []
+
         return list(self._current_group.streams_by_name().keys())
 
     async def async_select_source(self, source: str) -> None:
         """Set input source."""
+        if self._current_group is None:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="select_source_no_group",
+                translation_placeholders={
+                    "entity_id": self.entity_id,
+                    "source": source,
+                },
+            )
+
         streams = self._current_group.streams_by_name()
         if source in streams:
             await self._current_group.set_stream(streams[source].identifier)
@@ -233,6 +254,9 @@ class SnapcastClientDevice(SnapcastCoordinatorEntity, MediaPlayerEntity):
     @property
     def group_members(self) -> list[str] | None:
         """List of player entities which are currently grouped together for synchronous playback."""
+        if self._current_group is None:
+            return None
+
         entity_registry = er.async_get(self.hass)
         return [
             entity_id
@@ -248,6 +272,15 @@ class SnapcastClientDevice(SnapcastCoordinatorEntity, MediaPlayerEntity):
 
     async def async_join_players(self, group_members: list[str]) -> None:
         """Add `group_members` to this client's current group."""
+        if self._current_group is None:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="join_players_no_group",
+                translation_placeholders={
+                    "entity_id": self.entity_id,
+                },
+            )
+
         # Get the client entity for each group member excluding self
         entity_registry = er.async_get(self.hass)
         clients = [
@@ -257,27 +290,52 @@ class SnapcastClientDevice(SnapcastCoordinatorEntity, MediaPlayerEntity):
             and entity.unique_id != self.unique_id
         ]
 
+        # Get unique ID prefix for this host
+        unique_id_prefix = self.get_unique_id(self.coordinator.host_id, "")
         for client in clients:
-            # Valid entity is a snapcast client
+            # Validate entity is a snapcast client
             if not client.unique_id.startswith(CLIENT_PREFIX):
                 raise ServiceValidationError(
                     f"Entity '{client.entity_id}' is not a Snapcast client device."
                 )
 
+            # Validate client belongs to the same server
+            if not client.unique_id.startswith(unique_id_prefix):
+                raise ServiceValidationError(
+                    f"Entity '{client.entity_id}' does not belong to the same Snapcast server."
+                )
+
             # Extract client ID and join it to the current group
-            identifier = client.unique_id.split("_")[-1]
-            await self._current_group.add_client(identifier)
+            identifier = client.unique_id.removeprefix(unique_id_prefix)
+            try:
+                await self._current_group.add_client(identifier)
+            except KeyError as e:
+                raise ServiceValidationError(
+                    f"Client with identifier '{identifier}' does not exist on the server."
+                ) from e
 
         self.async_write_ha_state()
 
     async def async_unjoin_player(self) -> None:
-        """Remove this client from it's current group."""
+        """Remove this client from its current group."""
+        if self._current_group is None:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="unjoin_no_group",
+                translation_placeholders={
+                    "entity_id": self.entity_id,
+                },
+            )
+
         await self._current_group.remove_client(self._device.identifier)
         self.async_write_ha_state()
 
     @property
     def metadata(self) -> Mapping[str, Any]:
         """Get metadata from the current stream."""
+        if self._current_group is None:
+            return {}
+
         try:
             if metadata := self.coordinator.server.stream(
                 self._current_group.stream
@@ -341,6 +399,9 @@ class SnapcastClientDevice(SnapcastCoordinatorEntity, MediaPlayerEntity):
     @property
     def media_position(self) -> int | None:
         """Position of current playing media in seconds."""
+        if self._current_group is None:
+            return None
+
         try:
             # Position is part of properties object, not metadata object
             if properties := self.coordinator.server.stream(

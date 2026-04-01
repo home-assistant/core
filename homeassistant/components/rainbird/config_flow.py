@@ -7,7 +7,7 @@ from collections.abc import Mapping
 import logging
 from typing import Any
 
-from pyrainbird.async_client import CreateController
+from pyrainbird.async_client import create_controller
 from pyrainbird.data import WifiParams
 from pyrainbird.exceptions import RainbirdApiException, RainbirdAuthException
 import voluptuous as vol
@@ -137,9 +137,9 @@ class RainbirdConfigFlowHandler(ConfigFlow, domain=DOMAIN):
         Raises a ConfigFlowError on failure.
         """
         clientsession = async_create_clientsession()
-        controller = CreateController(clientsession, host, password)
         try:
             async with asyncio.timeout(TIMEOUT_SECONDS):
+                controller = await create_controller(clientsession, host, password)
                 return await asyncio.gather(
                     controller.get_serial_number(),
                     controller.get_wifi_params(),

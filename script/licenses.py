@@ -181,7 +181,6 @@ EXCEPTIONS = {
     "PySwitchmate",  # https://github.com/Danielhiversen/pySwitchmate/pull/16
     "PyXiaomiGateway",  # https://github.com/Danielhiversen/PyXiaomiGateway/pull/201
     "chacha20poly1305",  # LGPL
-    "caio",  # Apache 2 https://github.com/mosquito/caio/?tab=Apache-2.0-1-ov-file#readme
     "commentjson",  # https://github.com/vaidik/commentjson/pull/55
     "commonregex",  # https://github.com/madisonmay/CommonRegex/blob/master/LICENSE
     "crownstone-cloud",  # https://github.com/crownstone/crownstone-lib-python-cloud/pull/5
@@ -189,7 +188,6 @@ EXCEPTIONS = {
     "crownstone-sse",  # https://github.com/crownstone/crownstone-lib-python-sse/pull/2
     "crownstone-uart",  # https://github.com/crownstone/crownstone-lib-python-uart/pull/12
     "eliqonline",  # https://github.com/molobrakos/eliqonline/pull/17
-    "enocean",  # https://github.com/kipe/enocean/pull/142
     "imutils",  # https://github.com/PyImageSearch/imutils/pull/292
     "iso4217",  # Public domain
     "kiwiki_client",  # https://github.com/c7h/kiwiki_client/pull/6

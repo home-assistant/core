@@ -23,15 +23,18 @@ from .const import DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 
+type NZBGetConfigEntry = ConfigEntry[NZBGetDataUpdateCoordinator]
+
+
 class NZBGetDataUpdateCoordinator(DataUpdateCoordinator):
     """Class to manage fetching NZBGet data."""
 
-    config_entry: ConfigEntry
+    config_entry: NZBGetConfigEntry
 
     def __init__(
         self,
         hass: HomeAssistant,
-        config_entry: ConfigEntry,
+        config_entry: NZBGetConfigEntry,
     ) -> None:
         """Initialize global NZBGet data updater."""
         self.nzbget = NZBGetAPI(

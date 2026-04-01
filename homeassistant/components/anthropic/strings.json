@@ -149,6 +149,47 @@
       }
     }
   },
+  "exceptions": {
+    "api_authentication_error": {
+      "message": "Authentication error with Anthropic API: {message}. Reauthentication required."
+    },
+    "api_error": {
+      "message": "Anthropic API error: {message}."
+    },
+    "api_refusal": {
+      "message": "Potential policy violation detected."
+    },
+    "json_parse_error": {
+      "message": "Error with Claude structured response."
+    },
+    "response_not_found": {
+      "message": "Last content in chat log is not an AssistantContent."
+    },
+    "subentry_not_found": {
+      "message": "Subentry not found."
+    },
+    "system_message_not_found": {
+      "message": "First message must be a system message."
+    },
+    "unexpected_chat_log_content": {
+      "message": "Unexpected content type in chat log: {type}."
+    },
+    "unexpected_stream_object": {
+      "message": "Expected a stream of messages."
+    },
+    "unknown_issue_id": {
+      "message": "Unknown issue ID."
+    },
+    "user_message_not_found": {
+      "message": "Last message must be a user message to add attachments."
+    },
+    "wrong_file_path": {
+      "message": "`{file_path}` does not exist."
+    },
+    "wrong_file_type": {
+      "message": "Only images and PDF are supported by the Anthropic API, `{file_path}` ({mime_type}) is not an image file or PDF."
+    }
+  },
   "issues": {
     "model_deprecated": {
       "fix_flow": {

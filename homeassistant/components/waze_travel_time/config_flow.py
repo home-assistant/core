@@ -119,7 +119,6 @@ def default_options(
     defaults = DEFAULT_OPTIONS.copy()
     if hass.config.units is US_CUSTOMARY_SYSTEM:
         defaults[CONF_UNITS] = IMPERIAL_UNITS
-    defaults[CONF_TIME_DELTA] = DEFAULT_TIME_DELTA
     return defaults
 
 
