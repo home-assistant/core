@@ -58,12 +58,3 @@ class PTDevicesEntity(CoordinatorEntity[PTDevicesCoordinator]):
     def device(self) -> dict[str, Any]:
         """Return the device data."""
         return self.coordinator.data[self._device_id]
-
-    @property
-    def available(self) -> bool:
-        """Return True if entity is available."""
-        return (
-            super().available
-            and self._device_id in self.coordinator.data
-            and self._sensor_key in self.device
-        )
