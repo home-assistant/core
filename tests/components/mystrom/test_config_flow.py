@@ -9,12 +9,19 @@ from homeassistant import config_entries
 from homeassistant.components.mystrom.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
 from .conftest import DEVICE_MAC
 
 from tests.common import MockConfigEntry
 
 pytestmark = pytest.mark.usefixtures("mock_setup_entry")
+
+DHCP_SERVICE_INFO = DhcpServiceInfo(
+    ip="1.2.3.4",
+    hostname="mystrom-switch-946498",
+    macaddress="083a8d946498",
+)
 
 
 async def test_form_combined(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
@@ -111,3 +118,47 @@ async def test_wong_answer_from_device(hass: HomeAssistant) -> None:
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "myStrom Device"
     assert result2["data"] == {"host": "1.1.1.1"}
+
+
+async def test_dhcp_discovery(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
+    """Test DHCP discovery shows a confirmation form and creates an entry."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_DHCP},
+        data=DHCP_SERVICE_INFO,
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "discovery_confirm"
+
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {},
+    )
+    await hass.async_block_till_done()
+
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
+    assert result2["title"] == "myStrom Device"
+    assert result2["data"] == {"host": DHCP_SERVICE_INFO.ip}
+
+
+async def test_dhcp_discovery_already_configured_updates_host(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+) -> None:
+    """Test DHCP discovery updates the host of an already-configured entry."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="08:3a:8d:94:64:98",
+        data={"host": "1.1.1.1"},
+        title="myStrom Device",
+    )
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_DHCP},
+        data=DHCP_SERVICE_INFO,
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert entry.data["host"] == DHCP_SERVICE_INFO.ip

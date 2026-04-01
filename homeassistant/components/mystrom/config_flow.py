@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import pymystrom
 from pymystrom.exceptions import MyStromConnectionError
@@ -11,6 +11,8 @@ import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_NAME
+from homeassistant.helpers.device_registry import format_mac
+from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
 from .const import DOMAIN
 
@@ -30,6 +32,8 @@ class MyStromConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for myStrom."""
 
     VERSION = 1
+
+    _host: str | None = None
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -51,3 +55,33 @@ class MyStromConfigFlow(ConfigFlow, domain=DOMAIN):
 
         schema = self.add_suggested_values_to_schema(STEP_USER_DATA_SCHEMA, user_input)
         return self.async_show_form(step_id="user", data_schema=schema, errors=errors)
+
+    async def async_step_dhcp(
+        self, discovery_info: DhcpServiceInfo
+    ) -> ConfigFlowResult:
+        """Handle DHCP discovery."""
+        mac_address = format_mac(discovery_info.macaddress)
+        await self.async_set_unique_id(mac_address)
+        self._abort_if_unique_id_configured(updates={CONF_HOST: discovery_info.ip})
+
+        self._host = discovery_info.ip
+        self.context["title_placeholders"] = {"host": discovery_info.ip}
+        return await self.async_step_discovery_confirm()
+
+    async def async_step_discovery_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle discovery confirmation."""
+        if user_input is not None:
+            return self.async_create_entry(
+                title=DEFAULT_NAME,
+                data={CONF_HOST: self._host},
+            )
+
+        self._set_confirm_only()
+        if TYPE_CHECKING:
+            assert self._host is not None
+        return self.async_show_form(
+            step_id="discovery_confirm",
+            description_placeholders={CONF_HOST: self._host},
+        )
