@@ -13,8 +13,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import OurGroceriesConfigEntry
-from .coordinator import OurGroceriesDataUpdateCoordinator
+from .coordinator import OurGroceriesConfigEntry, OurGroceriesDataUpdateCoordinator
 
 
 async def async_setup_entry(

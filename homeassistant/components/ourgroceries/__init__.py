@@ -6,16 +6,13 @@ from aiohttp import ClientError
 from ourgroceries import OurGroceries
 from ourgroceries.exceptions import InvalidLoginException
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 
-from .coordinator import OurGroceriesDataUpdateCoordinator
+from .coordinator import OurGroceriesConfigEntry, OurGroceriesDataUpdateCoordinator
 
 PLATFORMS: list[Platform] = [Platform.TODO]
-
-type OurGroceriesConfigEntry = ConfigEntry[OurGroceriesDataUpdateCoordinator]
 
 
 async def async_setup_entry(
