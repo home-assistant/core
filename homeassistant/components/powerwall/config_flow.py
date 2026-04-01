@@ -47,6 +47,8 @@ def _test_connection(ip_address: str, password: str) -> dict[str, str]:
     site_name = pw.site_name()
     title = site_name or f"Powerwall 3 ({ip_address})"
 
+    # Use IP as unique_id because Powerwall 3 does not expose a serial
+    # number, gateway DIN, or MAC address via its local API.
     return {"title": title, "unique_id": ip_address}
 
 
@@ -108,7 +110,11 @@ class PowerwallConfigFlow(ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
-                await self.async_set_unique_id(info["unique_id"])
+                # Only set unique_id if not already set by DHCP discovery
+                if not self.unique_id:
+                    # Use IP as unique_id because Powerwall 3 does not
+                    # expose a serial, gateway DIN, or MAC via its local API.
+                    await self.async_set_unique_id(info["unique_id"])
                 self._abort_if_unique_id_configured(
                     updates={CONF_IP_ADDRESS: user_input[CONF_IP_ADDRESS]}
                 )
