@@ -4,17 +4,14 @@ from __future__ import annotations
 
 import opengarage
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_VERIFY_SSL, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import CONF_DEVICE_KEY
-from .coordinator import OpenGarageDataUpdateCoordinator
+from .coordinator import OpenGarageConfigEntry, OpenGarageDataUpdateCoordinator
 
 PLATFORMS = [Platform.BINARY_SENSOR, Platform.BUTTON, Platform.COVER, Platform.SENSOR]
-
-type OpenGarageConfigEntry = ConfigEntry[OpenGarageDataUpdateCoordinator]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: OpenGarageConfigEntry) -> bool:

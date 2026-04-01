@@ -14,8 +14,7 @@ from homeassistant.components.cover import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import OpenGarageConfigEntry
-from .coordinator import OpenGarageDataUpdateCoordinator
+from .coordinator import OpenGarageConfigEntry, OpenGarageDataUpdateCoordinator
 from .entity import OpenGarageEntity
 
 _LOGGER = logging.getLogger(__name__)

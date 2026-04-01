@@ -21,7 +21,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import OpenGarageConfigEntry
+from .coordinator import OpenGarageConfigEntry
 from .entity import OpenGarageEntity
 
 _LOGGER = logging.getLogger(__name__)
