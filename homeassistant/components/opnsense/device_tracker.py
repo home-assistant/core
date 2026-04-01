@@ -57,7 +57,7 @@ class OPNsenseDeviceScanner(DeviceScanner):
 
         Return boolean if scanning successful.
         """
-        devices = await self.client.get_arp_table()
+        devices = await self.client.get_arp_table(True)
         self.last_results = self._get_mac_addrs(devices)
         return True
 

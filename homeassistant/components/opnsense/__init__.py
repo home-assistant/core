@@ -64,9 +64,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     if tracker_interfaces:
         # Verify that specified tracker interfaces are valid
-        for ifinfo in interfaces_resp.values():
-            intf_description = ifinfo.get("name", "")
-            if intf_description not in tracker_interfaces:
+        known_interfaces = [
+            ifinfo.get("name", "") for ifinfo in interfaces_resp.values()
+        ]
+        for intf_description in tracker_interfaces:
+            if intf_description not in known_interfaces:
                 _LOGGER.error(
                     "Specified OPNsense tracker interface %s is not found",
                     intf_description,
