@@ -15,9 +15,7 @@ from tests.common import MockConfigEntry
 
 
 async def test_user_flow_success(
-    hass: HomeAssistant,
-    mock_waterfurnace_client: Mock,
-    mock_setup_entry: AsyncMock,
+    hass: HomeAssistant, mock_waterfurnace_client: Mock, mock_setup_entry: AsyncMock
 ) -> None:
     """Test successful user flow."""
     result = await hass.config_entries.flow.async_init(
@@ -87,9 +85,7 @@ async def test_user_flow_exceptions(
 
 
 async def test_user_flow_no_devices(
-    hass: HomeAssistant,
-    mock_waterfurnace_client: Mock,
-    mock_setup_entry: AsyncMock,
+    hass: HomeAssistant, mock_waterfurnace_client: Mock, mock_setup_entry: AsyncMock
 ) -> None:
     """Test user flow with no devices."""
     mock_waterfurnace_client.devices = []
@@ -124,9 +120,7 @@ async def test_user_flow_no_devices(
 
 
 async def test_user_flow_account_id_none(
-    hass: HomeAssistant,
-    mock_waterfurnace_client: Mock,
-    mock_setup_entry: AsyncMock,
+    hass: HomeAssistant, mock_waterfurnace_client: Mock, mock_setup_entry: AsyncMock
 ) -> None:
     """Test user flow when account_id is None."""
     mock_waterfurnace_client.account_id = None
@@ -170,9 +164,7 @@ async def test_user_flow_already_configured(
 
 
 async def test_import_flow_success(
-    hass: HomeAssistant,
-    mock_waterfurnace_client: Mock,
-    mock_setup_entry: AsyncMock,
+    hass: HomeAssistant, mock_waterfurnace_client: Mock, mock_setup_entry: AsyncMock
 ) -> None:
     """Test successful import flow from YAML."""
     result = await hass.config_entries.flow.async_init(
