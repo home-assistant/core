@@ -51,7 +51,12 @@ def _get_quirk_entities(
     ) is None:
         return None
     return [
-        TuyaVacuumEntity(device, manager, definition)
+        TuyaVacuumEntity(
+            device,
+            manager,
+            StateVacuumEntityDescription(key=entity_quirk.key),
+            definition,
+        )
         for entity_quirk in entity_quirks
         if (definition := entity_quirk.definition_fn(device))
     ]
@@ -75,6 +80,8 @@ async def async_setup_entry(
                 entities.extend(quirk_entities)
                 continue
             if description := VACUUMS.get(device.category):
+                entities.append(
+                    TuyaVacuumEntity(
                         device, manager, description, get_default_definition(device)
                     )
                 )

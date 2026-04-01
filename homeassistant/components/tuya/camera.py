@@ -37,7 +37,12 @@ def _get_quirk_entities(
     ) is None:
         return None
     return [
-        TuyaCameraEntity(device, manager, definition)
+        TuyaCameraEntity(
+            device,
+            manager,
+            CameraEntityDescription(key=entity_quirk.key),
+            definition,
+        )
         for entity_quirk in entity_quirks
         if (definition := entity_quirk.definition_fn(device))
     ]

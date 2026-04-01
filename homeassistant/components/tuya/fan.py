@@ -53,7 +53,12 @@ def _get_quirk_entities(
     ) is None:
         return None
     return [
-        TuyaFanEntity(device, manager, definition)
+        TuyaFanEntity(
+            device,
+            manager,
+            FanEntityDescription(key=entity_quirk.key),
+            definition,
+        )
         for entity_quirk in entity_quirks
         if (definition := entity_quirk.definition_fn(device))
     ]
