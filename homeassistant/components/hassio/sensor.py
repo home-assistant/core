@@ -209,13 +209,19 @@ class HassioStatsSensor(HassioStatsEntity, SensorEntity):
     """Sensor to track container stats."""
 
     @property
-    def native_value(self) -> str:
+    def native_value(self) -> str | None:
         """Return native value of entity."""
         if self._data_key == DATA_KEY_ADDONS:
-            return self.coordinator.data[DATA_KEY_ADDONS][self._container_id][
-                self.entity_description.key
-            ]
-        return self.coordinator.data[self._data_key][self.entity_description.key]
+            if not (
+                stats := self.coordinator.data.get(DATA_KEY_ADDONS, {}).get(
+                    self._container_id
+                )
+            ):
+                return None
+            return stats.get(self.entity_description.key)
+        if not (data := self.coordinator.data.get(self._data_key)):
+            return None
+        return data.get(self.entity_description.key)
 
 
 class HassioOSSensor(HassioOSEntity, SensorEntity):
