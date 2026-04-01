@@ -28,8 +28,7 @@ async def async_setup_entry(
     entry: OpenUvConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    # Once we've successfully authenticated, we re-enable client request retries:
-    """Set up an OpenUV sensor based on a config entry."""
+    """Set up OpenUV binary sensors for a config entry."""
     coordinators = entry.runtime_data
 
     async_add_entities(
