@@ -7,6 +7,7 @@ import pytest
 
 from homeassistant import config_entries
 from homeassistant.components.mystrom.const import DOMAIN
+from homeassistant.config_entries import SOURCE_DHCP
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -129,21 +130,18 @@ async def test_dhcp_discovery(hass: HomeAssistant, mock_setup_entry: AsyncMock) 
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
-            context={"source": config_entries.SOURCE_DHCP},
+            context={"source": SOURCE_DHCP},
             data=DHCP_SERVICE_INFO,
         )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "discovery_confirm"
 
-    result2 = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {},
-    )
-    await hass.async_block_till_done()
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
 
-    assert result2["type"] is FlowResultType.CREATE_ENTRY
-    assert result2["title"] == "myStrom Device"
-    assert result2["data"] == {"host": DHCP_SERVICE_INFO.ip}
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "myStrom Device"
+    assert result["data"] == {"host": DHCP_SERVICE_INFO.ip}
+    assert result["result"].unique_id == "083A8D946498"
 
 
 async def test_dhcp_discovery_cannot_connect(hass: HomeAssistant) -> None:
@@ -154,7 +152,7 @@ async def test_dhcp_discovery_cannot_connect(hass: HomeAssistant) -> None:
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
-            context={"source": config_entries.SOURCE_DHCP},
+            context={"source": SOURCE_DHCP},
             data=DHCP_SERVICE_INFO,
         )
     assert result["type"] is FlowResultType.ABORT
@@ -176,7 +174,7 @@ async def test_dhcp_discovery_already_configured_updates_host(
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
-        context={"source": config_entries.SOURCE_DHCP},
+        context={"source": SOURCE_DHCP},
         data=DHCP_SERVICE_INFO,
     )
     assert result["type"] is FlowResultType.ABORT
