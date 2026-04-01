@@ -4,12 +4,13 @@ from __future__ import annotations
 
 from unittest.mock import AsyncMock, MagicMock
 
-from earn_e_p1 import EarnEP1Device
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
 
-from .conftest import DOMAIN, MOCK_HOST, MOCK_SERIAL
+from .conftest import DOMAIN, MOCK_SERIAL, trigger_callback
 
 from tests.common import MockConfigEntry
 
@@ -22,9 +23,6 @@ async def test_setup_entry_success(
     await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
-    assert mock_config_entry.runtime_data is not None
-    assert mock_config_entry.runtime_data.host == MOCK_HOST
-    assert mock_config_entry.runtime_data.serial == MOCK_SERIAL
     mock_listener.start.assert_awaited_once()
     mock_listener.register.assert_called_once()
 
@@ -49,7 +47,6 @@ async def test_unload_entry(
     await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
-    assert DOMAIN in hass.data
 
     await hass.config_entries.async_unload(mock_config_entry.entry_id)
     await hass.async_block_till_done()
@@ -57,32 +54,22 @@ async def test_unload_entry(
     assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
     mock_listener.unregister.assert_called()
     mock_listener.stop.assert_awaited()
-    assert DOMAIN not in hass.data
 
 
-async def test_coordinator_handle_update(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_listener: MagicMock
+async def test_device_info(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_listener: MagicMock,
+    device_registry: dr.DeviceRegistry,
+    snapshot: SnapshotAssertion,
 ) -> None:
-    """Test coordinator _handle_update processes device data."""
+    """Test device info is correctly populated."""
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    coordinator = mock_config_entry.runtime_data
-
-    # Get the callback that was registered with the listener
-    callback = mock_listener.register.call_args[0][1]
-
-    device = EarnEP1Device(
-        host=MOCK_HOST,
-        serial=MOCK_SERIAL,
-    )
-    device.model = "P1 Meter"
-    device.sw_version = "1.0.0"
-    device.data = {"power_delivered": 2.5, "voltage_l1": 230.0}
-
-    callback(device, {"raw": "data"})
+    trigger_callback(mock_listener)
     await hass.async_block_till_done()
 
-    assert coordinator.data == {"power_delivered": 2.5, "voltage_l1": 230.0}
-    assert coordinator.model == "P1 Meter"
-    assert coordinator.sw_version == "1.0.0"
+    device = device_registry.async_get_device(identifiers={(DOMAIN, MOCK_SERIAL)})
+    assert device is not None
+    assert device == snapshot
