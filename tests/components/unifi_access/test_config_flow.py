@@ -508,6 +508,34 @@ async def test_integration_discovery_updates_host(
     assert mock_config_entry.data[CONF_HOST] == "10.0.0.99"
 
 
+async def test_integration_discovery_adopts_manual_entry(
+    hass: HomeAssistant,
+) -> None:
+    """Test discovery sets unique_id on a manually created entry without one."""
+    manual_entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="UniFi Access",
+        data={
+            CONF_HOST: "10.0.0.5",
+            CONF_API_TOKEN: MOCK_API_TOKEN,
+            CONF_VERIFY_SSL: False,
+        },
+        unique_id=None,
+    )
+    manual_entry.add_to_hass(hass)
+
+    device = _make_discovered_device(source_ip="10.0.0.5")
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_INTEGRATION_DISCOVERY},
+        data=asdict(device),
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert manual_entry.unique_id == "B4FBE4AABBCC"
+
+
 async def test_integration_discovery_confirm_errors(
     hass: HomeAssistant,
     mock_setup_entry: AsyncMock,
