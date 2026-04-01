@@ -29,6 +29,16 @@ MOCK_API_TOKEN = "test-api-token-12345"
 MOCK_ENTRY_ID = "mock-unifi-access-entry-id"
 
 
+@pytest.fixture(autouse=True)
+def mock_discovery() -> Generator[AsyncMock]:
+    """Prevent real network discovery during tests."""
+    with patch(
+        "homeassistant.components.unifi_access.discovery.async_discover_devices",
+        return_value=[],
+    ) as mock_discover:
+        yield mock_discover
+
+
 @pytest.fixture
 def mock_config_entry() -> MockConfigEntry:
     """Return a mock config entry."""

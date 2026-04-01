@@ -12,17 +12,30 @@ import voluptuous as vol
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_API_TOKEN, CONF_HOST, CONF_VERIFY_SSL
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
+from homeassistant.helpers.service_info.ssdp import SsdpServiceInfo
+from homeassistant.helpers.typing import DiscoveryInfoType
 
 from .const import DOMAIN
+from .discovery import async_start_discovery
 
 _LOGGER = logging.getLogger(__name__)
+
+
+def _format_mac(mac: str) -> str:
+    """Format a MAC address to uppercase without separators."""
+    return mac.replace(":", "").replace("-", "").upper()
 
 
 class UnifiAccessConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for UniFi Access."""
 
     VERSION = 1
-    MINOR_VERSION = 1
+
+    def __init__(self) -> None:
+        """Init the config flow."""
+        super().__init__()
+        self._discovered_device: dict[str, Any] = {}
 
     async def _validate_input(self, user_input: dict[str, Any]) -> dict[str, str]:
         """Validate user input and return errors dict."""
@@ -46,6 +59,73 @@ class UnifiAccessConfigFlow(ConfigFlow, domain=DOMAIN):
             _LOGGER.exception("Unexpected exception")
             errors["base"] = "unknown"
         return errors
+
+    async def async_step_dhcp(
+        self, discovery_info: DhcpServiceInfo
+    ) -> ConfigFlowResult:
+        """Handle discovery via dhcp."""
+        _LOGGER.debug("Starting discovery via: %s", discovery_info)
+        return await self._async_discovery_handoff()
+
+    async def async_step_ssdp(
+        self, discovery_info: SsdpServiceInfo
+    ) -> ConfigFlowResult:
+        """Handle a discovered UniFi device."""
+        _LOGGER.debug("Starting discovery via: %s", discovery_info)
+        return await self._async_discovery_handoff()
+
+    async def _async_discovery_handoff(self) -> ConfigFlowResult:
+        """Ensure discovery is active."""
+        async_start_discovery(self.hass)
+        return self.async_abort(reason="discovery_started")
+
+    async def async_step_integration_discovery(
+        self, discovery_info: DiscoveryInfoType
+    ) -> ConfigFlowResult:
+        """Handle integration discovery."""
+        self._discovered_device = discovery_info
+        mac = _format_mac(discovery_info["hw_addr"])
+        await self.async_set_unique_id(mac)
+        source_ip = discovery_info["source_ip"]
+
+        self._abort_if_unique_id_configured(updates={CONF_HOST: source_ip})
+        self._async_abort_entries_match({CONF_HOST: source_ip})
+        return await self.async_step_discovery_confirm()
+
+    async def async_step_discovery_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Confirm discovery."""
+        errors: dict[str, str] = {}
+        discovery_info = self._discovered_device
+
+        if user_input is not None:
+            data = {**user_input, CONF_HOST: discovery_info["source_ip"]}
+            errors = await self._validate_input(data)
+            if not errors:
+                return self.async_create_entry(
+                    title="UniFi Access",
+                    data=data,
+                )
+
+        placeholders = {
+            "name": discovery_info.get("hostname")
+            or discovery_info.get("platform")
+            or "UniFi Console",
+            "ip_address": discovery_info["source_ip"],
+        }
+        self.context["title_placeholders"] = placeholders
+        return self.async_show_form(
+            step_id="discovery_confirm",
+            description_placeholders=placeholders,
+            data_schema=vol.Schema(
+                {
+                    vol.Required(CONF_API_TOKEN): str,
+                    vol.Required(CONF_VERIFY_SSL, default=False): bool,
+                }
+            ),
+            errors=errors,
+        )
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None

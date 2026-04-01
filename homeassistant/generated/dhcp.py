@@ -1319,6 +1319,46 @@ DHCP: Final[list[dict[str, str | bool]]] = [
         "hostname": "twinkly-*",
     },
     {
+        "domain": "unifi_access",
+        "macaddress": "B4FBE4*",
+    },
+    {
+        "domain": "unifi_access",
+        "macaddress": "802AA8*",
+    },
+    {
+        "domain": "unifi_access",
+        "macaddress": "F09FC2*",
+    },
+    {
+        "domain": "unifi_access",
+        "macaddress": "68D79A*",
+    },
+    {
+        "domain": "unifi_access",
+        "macaddress": "18E829*",
+    },
+    {
+        "domain": "unifi_access",
+        "macaddress": "245A4C*",
+    },
+    {
+        "domain": "unifi_access",
+        "macaddress": "784558*",
+    },
+    {
+        "domain": "unifi_access",
+        "macaddress": "E063DA*",
+    },
+    {
+        "domain": "unifi_access",
+        "macaddress": "265A4C*",
+    },
+    {
+        "domain": "unifi_access",
+        "macaddress": "74ACB9*",
+    },
+    {
         "domain": "unifiprotect",
         "macaddress": "B4FBE4*",
     },

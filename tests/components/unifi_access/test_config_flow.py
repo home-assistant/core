@@ -2,16 +2,29 @@
 
 from __future__ import annotations
 
-from unittest.mock import AsyncMock, MagicMock
+from dataclasses import asdict
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 from unifi_access_api import ApiAuthError, ApiConnectionError
+from unifi_discovery import UnifiDevice, UnifiService
 
 from homeassistant.components.unifi_access.const import DOMAIN
-from homeassistant.config_entries import SOURCE_USER
+from homeassistant.config_entries import (
+    SOURCE_DHCP,
+    SOURCE_INTEGRATION_DISCOVERY,
+    SOURCE_SSDP,
+    SOURCE_USER,
+)
 from homeassistant.const import CONF_API_TOKEN, CONF_HOST, CONF_VERIFY_SSL
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
+from homeassistant.helpers.service_info.ssdp import (
+    ATTR_UPNP_MANUFACTURER,
+    ATTR_UPNP_MODEL_DESCRIPTION,
+    SsdpServiceInfo,
+)
 
 from .conftest import MOCK_API_TOKEN, MOCK_HOST
 
@@ -361,3 +374,177 @@ async def test_reconfigure_flow_errors(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
+
+
+DHCP_DISCOVERY = DhcpServiceInfo(
+    ip="10.0.0.5",
+    hostname="UniFi-Dream-Machine",
+    macaddress="b4fbe4aabbcc",
+)
+
+SSDP_DISCOVERY = SsdpServiceInfo(
+    ssdp_usn="mock_usn",
+    ssdp_st="mock_st",
+    upnp={
+        ATTR_UPNP_MANUFACTURER: "Ubiquiti Networks",
+        ATTR_UPNP_MODEL_DESCRIPTION: "UniFi Dream Machine Pro",
+    },
+)
+
+
+def _make_discovered_device(
+    source_ip: str = "10.0.0.5",
+    hw_addr: str = "b4:fb:e4:aa:bb:cc",
+    hostname: str = "UniFi-Dream-Machine",
+    platform: str = "UDMPRO",
+) -> UnifiDevice:
+    """Create a mock UnifiDevice with Access enabled."""
+    device = UnifiDevice(
+        source_ip=source_ip,
+        hw_addr=hw_addr,
+        hostname=hostname,
+        platform=platform,
+    )
+    device.services[UnifiService.Access] = True
+    return device
+
+
+async def test_dhcp_discovery(
+    hass: HomeAssistant,
+) -> None:
+    """Test DHCP discovery triggers background discovery and aborts."""
+    with patch(
+        "homeassistant.components.unifi_access.config_flow.async_start_discovery"
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_DHCP}, data=DHCP_DISCOVERY
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "discovery_started"
+
+
+async def test_ssdp_discovery(
+    hass: HomeAssistant,
+) -> None:
+    """Test SSDP discovery triggers background discovery and aborts."""
+    with patch(
+        "homeassistant.components.unifi_access.config_flow.async_start_discovery"
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_SSDP}, data=SSDP_DISCOVERY
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "discovery_started"
+
+
+async def test_integration_discovery_new_device(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_client: MagicMock,
+) -> None:
+    """Test integration discovery shows confirm form for new device."""
+    device = _make_discovered_device()
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_INTEGRATION_DISCOVERY},
+        data=asdict(device),
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "discovery_confirm"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_API_TOKEN: MOCK_API_TOKEN,
+            CONF_VERIFY_SSL: False,
+        },
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "UniFi Access"
+    assert result["data"][CONF_HOST] == "10.0.0.5"
+    assert result["data"][CONF_API_TOKEN] == MOCK_API_TOKEN
+    assert result["data"][CONF_VERIFY_SSL] is False
+
+
+async def test_integration_discovery_already_configured(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test integration discovery aborts when host already configured."""
+    mock_config_entry.add_to_hass(hass)
+
+    device = _make_discovered_device(source_ip=MOCK_HOST)
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_INTEGRATION_DISCOVERY},
+        data=asdict(device),
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+
+async def test_integration_discovery_updates_host(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test integration discovery updates host when IP changes."""
+    mock_config_entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(mock_config_entry, unique_id="B4FBE4AABBCC")
+
+    device = _make_discovered_device(source_ip="10.0.0.99")
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_INTEGRATION_DISCOVERY},
+        data=asdict(device),
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert mock_config_entry.data[CONF_HOST] == "10.0.0.99"
+
+
+async def test_integration_discovery_confirm_errors(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_client: MagicMock,
+) -> None:
+    """Test integration discovery confirm handles auth errors."""
+    device = _make_discovered_device()
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_INTEGRATION_DISCOVERY},
+        data=asdict(device),
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "discovery_confirm"
+
+    mock_client.authenticate.side_effect = ApiAuthError()
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_API_TOKEN: "bad-token",
+            CONF_VERIFY_SSL: False,
+        },
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "invalid_auth"}
+
+    mock_client.authenticate.side_effect = None
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_API_TOKEN: MOCK_API_TOKEN,
+            CONF_VERIFY_SSL: False,
+        },
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY

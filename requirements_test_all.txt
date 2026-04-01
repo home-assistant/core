@@ -2698,8 +2698,9 @@ uiprotect==10.2.3
 # homeassistant.components.landisgyr_heat_meter
 ultraheat-api==0.5.7
 
+# homeassistant.components.unifi_access
 # homeassistant.components.unifiprotect
-unifi-discovery==1.2.0
+unifi-discovery==1.3.0
 
 # homeassistant.components.homeassistant_hardware
 universal-silabs-flasher==1.0.3

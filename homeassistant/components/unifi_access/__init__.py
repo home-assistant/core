@@ -7,9 +7,13 @@ from unifi_access_api import ApiAuthError, ApiConnectionError, UnifiAccessApiCli
 from homeassistant.const import CONF_API_TOKEN, CONF_HOST, CONF_VERIFY_SSL, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.typing import ConfigType
 
+from .const import DOMAIN
 from .coordinator import UnifiAccessConfigEntry, UnifiAccessCoordinator
+from .discovery import async_start_discovery
 
 PLATFORMS: list[Platform] = [
     Platform.BINARY_SENSOR,
@@ -20,6 +24,14 @@ PLATFORMS: list[Platform] = [
     Platform.SENSOR,
     Platform.SWITCH,
 ]
+
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
+
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up the UniFi Access integration."""
+    async_start_discovery(hass)
+    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: UnifiAccessConfigEntry) -> bool:
