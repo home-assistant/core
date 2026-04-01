@@ -53,6 +53,15 @@ def _select_entities_device_id_context_ids_sub_query(
             (States.last_updated_ts > start_day) & (States.last_updated_ts < end_day)
         )
         .where(States.metadata_id.in_(states_metadata_ids)),
+        # Also include parent context ids so that events from parent contexts
+        # (e.g., the user's service call that triggered a child context) are
+        # fetched as context-only rows for user attribution.
+        apply_entities_hints(select(States.context_parent_id_bin))
+        .filter(
+            (States.last_updated_ts > start_day) & (States.last_updated_ts < end_day)
+        )
+        .where(States.metadata_id.in_(states_metadata_ids))
+        .where(States.context_parent_id_bin.is_not(None)),
     ).subquery()
     return select(union.c.context_id_bin).group_by(union.c.context_id_bin)
 

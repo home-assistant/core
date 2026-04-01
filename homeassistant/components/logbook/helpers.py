@@ -11,7 +11,9 @@ from homeassistant.const import (
     ATTR_DEVICE_ID,
     ATTR_DOMAIN,
     ATTR_ENTITY_ID,
+    ATTR_SERVICE_DATA,
     ATTR_UNIT_OF_MEASUREMENT,
+    EVENT_CALL_SERVICE,
     EVENT_LOGBOOK_ENTRY,
     EVENT_STATE_CHANGED,
 )
@@ -99,15 +101,25 @@ def async_determine_event_types(
     if entity_ids:
         # We also allow entity_ids to be recorded via manual logbook entries.
         intrested_event_types.add(EVENT_LOGBOOK_ENTRY)
+    # Include EVENT_CALL_SERVICE so that service call context (including
+    # user attribution) is available for entity-specific streams.
+    intrested_event_types.add(EVENT_CALL_SERVICE)
 
     return tuple(intrested_event_types)
 
 
 @callback
 def extract_attr(source: Mapping[str, Any], attr: str) -> list[str]:
-    """Extract an attribute as a list or string."""
+    """Extract an attribute as a list or string.
+
+    For EVENT_CALL_SERVICE events, the entity_id is inside service_data,
+    not at the top level. Check service_data as a fallback.
+    """
     if (value := source.get(attr)) is None:
-        return []
+        if service_data := source.get(ATTR_SERVICE_DATA):
+            value = service_data.get(attr)
+        if value is None:
+            return []
     if isinstance(value, list):
         return value
     return str(value).split(",")

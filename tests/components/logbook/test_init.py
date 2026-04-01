@@ -47,7 +47,13 @@ from homeassistant.helpers.entityfilter import CONF_ENTITY_GLOBS
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
-from .common import MockRow, mock_humanify
+from .common import (
+    MockRow,
+    assert_thermostat_context_chain_events,
+    mock_humanify,
+    setup_thermostat_context_test_entities,
+    simulate_thermostat_context_chain,
+)
 
 from tests.common import MockConfigEntry, async_capture_events, mock_platform
 from tests.components.recorder.common import (
@@ -3002,3 +3008,150 @@ async def test_logbook_with_non_iterable_entity_filter(hass: HomeAssistant) -> N
         },
     )
     await hass.async_block_till_done()
+
+
+@pytest.mark.usefixtures("recorder_mock")
+async def test_logbook_user_id_from_parent_context(
+    hass: HomeAssistant, hass_client: ClientSessionGenerator
+) -> None:
+    """Test user attribution is inherited through the full context chain.
+
+    Simulates the generic_thermostat pattern:
+    1. User calls set_hvac_mode → parent context (has user_id)
+       - Climate state changes off → heat (parent context)
+    2. Thermostat calls homeassistant.turn_on → child context (no user_id)
+       - SERVICE_CALL event fired (child context)
+    3. Switch state changes off → on (child context)
+    4. Climate state updates again in response (child context)
+
+    All entries should have user_id attributed, either directly (step 1)
+    or inherited from the parent context (steps 2-4).
+    """
+    await asyncio.gather(
+        *[
+            async_setup_component(hass, comp, {})
+            for comp in ("homeassistant", "logbook")
+        ]
+    )
+
+    await async_recorder_block_till_done(hass)
+
+    setup_thermostat_context_test_entities(hass)
+    await hass.async_block_till_done()
+
+    parent_context, _ = simulate_thermostat_context_chain(hass)
+    await hass.async_block_till_done()
+
+    await async_wait_recording_done(hass)
+
+    client = await hass_client()
+
+    start = dt_util.utcnow().date()
+    start_date = datetime(start.year, start.month, start.day, tzinfo=dt_util.UTC)
+    end_time = start_date + timedelta(hours=24)
+
+    response = await client.get(
+        f"/api/logbook/{start_date.isoformat()}",
+        params={"end_time": end_time.isoformat()},
+    )
+    assert response.status == HTTPStatus.OK
+    json_dict = await response.json()
+
+    assert_thermostat_context_chain_events(json_dict, parent_context)
+
+
+@pytest.mark.usefixtures("recorder_mock")
+async def test_logbook_user_id_from_parent_context_state_changes_only(
+    hass: HomeAssistant, hass_client: ClientSessionGenerator
+) -> None:
+    """Test user attribution is inherited when only state changes are present.
+
+    Same chain as the full test but without the EVENT_CALL_SERVICE event.
+    This exercises the code path where context_lookup resolves the child
+    context to the state change row itself, and augment walks up to the
+    parent state change.
+    """
+    await asyncio.gather(
+        *[
+            async_setup_component(hass, comp, {})
+            for comp in ("homeassistant", "logbook")
+        ]
+    )
+
+    await async_recorder_block_till_done(hass)
+
+    # Set initial states so that subsequent changes are real state transitions
+    hass.states.async_set(
+        "climate.living_room",
+        "off",
+        {ATTR_FRIENDLY_NAME: "Living Room Thermostat"},
+    )
+    hass.states.async_set("switch.heater", STATE_OFF)
+    await hass.async_block_till_done()
+
+    # Parent context with user_id
+    parent_context = ha.Context(
+        id="01GTDGKBCH00GW0X476W5TVAAA",
+        user_id="b400facee45711eaa9308bfd3d19e474",
+    )
+
+    # Climate state change with the parent context
+    hass.states.async_set(
+        "climate.living_room",
+        "heat",
+        {ATTR_FRIENDLY_NAME: "Living Room Thermostat"},
+        context=parent_context,
+    )
+    await hass.async_block_till_done()
+
+    # Child context WITHOUT user_id, no service call event
+    child_context = ha.Context(
+        id="01GTDGKBCH00GW0X476W5TVDDD",
+        parent_id="01GTDGKBCH00GW0X476W5TVAAA",
+    )
+
+    # Switch state change with the child context
+    hass.states.async_set(
+        "switch.heater",
+        STATE_ON,
+        {ATTR_FRIENDLY_NAME: "Heater"},
+        context=child_context,
+    )
+    await hass.async_block_till_done()
+
+    # Climate updates again in response to switch state change
+    hass.states.async_set(
+        "climate.living_room",
+        "heat",
+        {ATTR_FRIENDLY_NAME: "Living Room Thermostat"},
+        context=child_context,
+    )
+    await hass.async_block_till_done()
+
+    await async_wait_recording_done(hass)
+
+    client = await hass_client()
+
+    start = dt_util.utcnow().date()
+    start_date = datetime(start.year, start.month, start.day, tzinfo=dt_util.UTC)
+    end_time = start_date + timedelta(hours=24)
+
+    response = await client.get(
+        f"/api/logbook/{start_date.isoformat()}",
+        params={"end_time": end_time.isoformat()},
+    )
+    assert response.status == HTTPStatus.OK
+    json_dict = await response.json()
+
+    # Switch state change should be attributed to the climate entity
+    # and inherit user_id from the parent context
+    heater_entries = [
+        entry for entry in json_dict if entry.get("entity_id") == "switch.heater"
+    ]
+    assert len(heater_entries) == 1
+
+    heater_entry = heater_entries[0]
+    assert heater_entry["context_entity_id"] == "climate.living_room"
+    assert heater_entry["context_entity_id_name"] == "Living Room Thermostat"
+    assert heater_entry["context_state"] == "heat"
+    assert heater_entry["context_user_id"] == "b400facee45711eaa9308bfd3d19e474"

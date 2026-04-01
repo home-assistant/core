@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable, Generator, Sequence
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime as dt
 import logging
 import time
@@ -99,6 +99,10 @@ class LogbookRun:
     include_entity_name: bool
     timestamp: bool
     memoize_new_contexts: bool = True
+    # Track context_id -> user_id for parent context user attribution.
+    # Persisted across batches so child context events can inherit user_id
+    # from a parent context whose SERVICE_CALL event arrived in an earlier batch.
+    context_user_ids: dict[bytes, bytes] = field(default_factory=dict)
 
 
 class EventProcessor:
@@ -220,11 +224,15 @@ def _humanify(
     context_id_bin: bytes
     data: dict[str, Any]
 
+    context_user_ids = logbook_run.context_user_ids
+
     # Process rows
     for row in rows:
         context_id_bin = row[CONTEXT_ID_BIN_POS]
         if memoize_new_contexts and context_id_bin not in context_lookup:
             context_lookup[context_id_bin] = row
+        if context_user_id_bin := row[CONTEXT_USER_ID_BIN_POS]:
+            context_user_ids.setdefault(context_id_bin, context_user_id_bin)
         if row[CONTEXT_ONLY_POS]:
             continue
         event_type = row[EVENT_TYPE_POS]
@@ -306,6 +314,18 @@ def _humanify(
             )
         ):
             context_augmenter.augment(data, context_row)
+
+        # If user attribution is still missing, check the parent context.
+        # This handles child contexts (e.g., generic_thermostat creating a new
+        # context for the switch service call with the original as parent).
+        if CONTEXT_USER_ID not in data and (
+            context_parent_id_bin := row[CONTEXT_PARENT_ID_BIN_POS]
+        ):
+            if (parent_user_id_bin := context_user_ids.get(context_parent_id_bin)) or (
+                (parent_row := get_context(context_parent_id_bin, row))
+                and (parent_user_id_bin := parent_row[CONTEXT_USER_ID_BIN_POS])
+            ):
+                data[CONTEXT_USER_ID] = bytes_to_uuid_hex_or_none(parent_user_id_bin)
 
         yield data
 
