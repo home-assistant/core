@@ -11,6 +11,7 @@ from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_IP_ADDRESS, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
 from .const import DOMAIN
 
@@ -70,6 +71,16 @@ class PowerwallConfigFlow(ConfigFlow, domain=DOMAIN):
         """Initialize the powerwall flow."""
         self.ip_address: str | None = None
         self.title: str | None = None
+
+    async def async_step_dhcp(
+        self, discovery_info: DhcpServiceInfo
+    ) -> ConfigFlowResult:
+        """Handle DHCP discovery."""
+        self.ip_address = discovery_info.ip
+        await self.async_set_unique_id(discovery_info.ip)
+        self._abort_if_unique_id_configured()
+        self.context["title_placeholders"] = {CONF_IP_ADDRESS: self.ip_address}
+        return await self.async_step_user()
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
