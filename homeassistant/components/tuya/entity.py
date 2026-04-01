@@ -24,7 +24,7 @@ class TuyaEntity(Entity):
         self,
         device: CustomerDevice,
         device_manager: Manager,
-        description: EntityDescription | None = None,
+        description: EntityDescription,
     ) -> None:
         """Init TuyaHaEntity."""
         self._attr_unique_id = f"tuya.{device.id}"
