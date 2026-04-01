@@ -2,13 +2,13 @@
 
 import logging
 
-from pyopnsense import diagnostics
-from pyopnsense.exceptions import APIException
+from aioopnsense import OPNsenseApiError, OPNsenseClient
 import voluptuous as vol
 
 from homeassistant.const import CONF_API_KEY, CONF_URL, CONF_VERIFY_SSL, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.discovery import load_platform
 from homeassistant.helpers.typing import ConfigType
 
@@ -40,7 +40,7 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-def setup(hass: HomeAssistant, config: ConfigType) -> bool:
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the opnsense component."""
 
     conf = config[DOMAIN]
@@ -50,21 +50,24 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     verify_ssl = conf[CONF_VERIFY_SSL]
     tracker_interfaces = conf[CONF_TRACKER_INTERFACES]
 
-    interfaces_client = diagnostics.InterfaceClient(
-        api_key, api_secret, url, verify_ssl, timeout=20
-    )
+    # interfaces_client = diagnostics.InterfaceClient(
+    #     api_key, api_secret, url, verify_ssl, timeout=20
+    # )
+    session = async_get_clientsession(hass, verify_ssl=verify_ssl)
+    client = OPNsenseClient(url, api_key, api_secret, session, verify_ssl)
     try:
-        interfaces_client.get_arp()
-    except APIException:
+        interfaces_resp = await client.get_interfaces()
+    except OPNsenseApiError:
         _LOGGER.exception("Failure while connecting to OPNsense API endpoint")
         return False
 
     if tracker_interfaces:
         # Verify that specified tracker interfaces are valid
-        netinsight_client = diagnostics.NetworkInsightClient(
-            api_key, api_secret, url, verify_ssl, timeout=20
-        )
-        interfaces = list(netinsight_client.get_interfaces().values())
+        # netinsight_client = diagnostics.NetworkInsightClient(
+        #     api_key, api_secret, url, verify_ssl, timeout=20
+        # )
+        # interfaces = list(netinsight_client.get_interfaces().values())
+        interfaces = list(interfaces_resp.values())
         for interface in tracker_interfaces:
             if interface not in interfaces:
                 _LOGGER.error(
@@ -73,7 +76,7 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 return False
 
     hass.data[OPNSENSE_DATA] = {
-        CONF_INTERFACE_CLIENT: interfaces_client,
+        CONF_INTERFACE_CLIENT: client,
         CONF_TRACKER_INTERFACES: tracker_interfaces,
     }
 

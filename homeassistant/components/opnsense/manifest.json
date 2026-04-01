@@ -5,7 +5,7 @@
   "documentation": "https://www.home-assistant.io/integrations/opnsense",
   "integration_type": "hub",
   "iot_class": "local_polling",
-  "loggers": ["pbr", "pyopnsense"],
+  "loggers": ["aioopnsense"],
   "quality_scale": "legacy",
-  "requirements": ["pyopnsense==0.4.0"]
+  "requirements": ["aioopnsense==0.1.0"]
 }

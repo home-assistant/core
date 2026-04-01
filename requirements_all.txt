@@ -350,6 +350,9 @@ aioonkyo==0.4.0
 # homeassistant.components.openexchangerates
 aioopenexchangerates==0.6.8
 
+# homeassistant.components.opnsense
+aioopnsense==0.1.0
+
 # homeassistant.components.nmap_tracker
 aiooui==0.1.9
 
@@ -2351,9 +2354,6 @@ pyopenuv==2023.02.0
 
 # homeassistant.components.openweathermap
 pyopenweathermap==0.2.2
-
-# homeassistant.components.opnsense
-pyopnsense==0.4.0
 
 # homeassistant.components.opple
 pyoppleio-legacy==1.0.8
