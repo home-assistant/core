@@ -88,7 +88,7 @@ async def async_setup_entry(
         ]
 
     async_add_entities(
-        OpenDisplaySensorEntity(coordinator, entry, description)
+        OpenDisplaySensorEntity(coordinator, description)
         for description in descriptions
     )
 

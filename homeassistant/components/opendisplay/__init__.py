@@ -86,10 +86,23 @@ async def async_setup_entry(hass: HomeAssistant, entry: OpenDisplayConfigEntry) 
     coordinator = OpenDisplayCoordinator(hass, address)
 
     manufacturer = device_config.manufacturer
+    display = device_config.displays[0]
+    color_scheme_enum = display.color_scheme_enum
+    color_scheme = (
+        str(color_scheme_enum)
+        if isinstance(color_scheme_enum, int)
+        else color_scheme_enum.name
+    )
+    size = (
+        f'{display.screen_diagonal_inches:.1f}"'
+        if display.screen_diagonal_inches is not None
+        else f"{display.pixel_width}x{display.pixel_height}"
+    )
     dr.async_get(hass).async_get_or_create(
         config_entry_id=entry.entry_id,
         connections={(CONNECTION_BLUETOOTH, address)},
         manufacturer=manufacturer.manufacturer_name,
+        model=f"{size} {color_scheme}",
         sw_version=f"{fw['major']}.{fw['minor']}",
         hw_version=(
             f"{manufacturer.board_type_name or manufacturer.board_type}"
