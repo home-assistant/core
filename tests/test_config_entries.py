@@ -7745,6 +7745,36 @@ async def test_updating_non_added_subentry_raises(hass: HomeAssistant) -> None:
         hass.config_entries.async_update_subentry(entry, subentry, unique_id="new_id")
 
 
+async def test_get_subentry_by_type(hass: HomeAssistant) -> None:
+    """Test getting subentry by type."""
+    entry = MockConfigEntry(
+        domain="test",
+        subentries_data=[
+            config_entries.ConfigSubentryData(
+                data={},
+                subentry_type="test",
+                title="Mock title",
+                unique_id="unique",
+            ),
+            config_entries.ConfigSubentryData(
+                data={},
+                subentry_type="test",
+                title="Mock title 2",
+                unique_id="very_very_unique",
+            ),
+            config_entries.ConfigSubentryData(
+                data={},
+                subentry_type="test_test",
+                title="Mock title 3",
+                unique_id="very_unique",
+            ),
+        ],
+    )
+
+    assert len(entry.subentries_for_type("test")) == 2
+    assert len(entry.subentries_for_type("test_test")) == 1
+
+
 async def test_reload_during_setup(hass: HomeAssistant) -> None:
     """Test reload during setup waits."""
     entry = MockConfigEntry(domain="comp", data={"value": "initial"})
