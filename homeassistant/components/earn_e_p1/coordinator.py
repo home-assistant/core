@@ -3,15 +3,17 @@
 from __future__ import annotations
 
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from earn_e_p1 import EarnEP1Device, EarnEP1Listener
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import DOMAIN
+
+if TYPE_CHECKING:
+    from . import EarnEP1ConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -22,7 +24,7 @@ class EarnEP1Coordinator(DataUpdateCoordinator[dict[str, Any]]):
     def __init__(
         self,
         hass: HomeAssistant,
-        entry: ConfigEntry,
+        entry: EarnEP1ConfigEntry,
         host: str,
         serial: str,
         listener: EarnEP1Listener,

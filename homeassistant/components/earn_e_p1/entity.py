@@ -21,4 +21,6 @@ class EarnEP1Entity(CoordinatorEntity[EarnEP1Coordinator]):
             identifiers={(DOMAIN, coordinator.identifier)},
             name="EARN-E P1 Meter",
             manufacturer="EARN-E",
+            model=coordinator.model,
+            sw_version=coordinator.sw_version,
         )
