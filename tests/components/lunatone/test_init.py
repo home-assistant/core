@@ -4,6 +4,7 @@ from unittest.mock import AsyncMock
 
 import aiohttp
 
+from homeassistant.components.lunatone.config_flow import LunatoneConfigFlow
 from homeassistant.components.lunatone.const import DOMAIN, MANUFACTURER
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_URL
@@ -165,9 +166,9 @@ async def test_config_entry_migration_successful(
     await hass.async_block_till_done()
 
     assert config_entry.state is ConfigEntryState.LOADED
-    assert config_entry.unique_id == mock_config_entry.unique_id
-    assert config_entry.version == mock_config_entry.version
-    assert config_entry.minor_version == mock_config_entry.minor_version
+    assert config_entry.unique_id == UUID.replace("-", "")
+    assert config_entry.version == LunatoneConfigFlow.VERSION
+    assert config_entry.minor_version == LunatoneConfigFlow.MINOR_VERSION
 
 
 async def test_config_entry_migration_failed(
