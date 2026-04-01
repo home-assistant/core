@@ -50,7 +50,7 @@ class OndiloIcoPoolsCoordinator(DataUpdateCoordinator[dict[str, OndiloIcoPoolDat
     config_entry: OndiloIcoConfigEntry
 
     def __init__(
-        self, hass: HomeAssistant, config_entry: ConfigEntry, api: OndiloClient
+        self, hass: HomeAssistant, config_entry: OndiloIcoConfigEntry, api: OndiloClient
     ) -> None:
         """Initialize."""
         super().__init__(
