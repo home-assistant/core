@@ -230,6 +230,7 @@ class SwitchBotCloudAirPurifierLight(SwitchBotCloudLight):
     _attr_translation_key = "air_purifier_light_control"
     _attr_supported_color_modes = {ColorMode.RGB}
     _attr_is_on = None
+    _attr_assumed_state = True
 
     async def _send_brightness_command(self, brightness: int) -> None:
         """Send a brightness command."""
