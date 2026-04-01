@@ -33,7 +33,7 @@ class OpenUvCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self,
         hass: HomeAssistant,
         *,
-        entry: ConfigEntry,
+        entry: OpenUvConfigEntry,
         name: str,
         latitude: str,
         longitude: str,
