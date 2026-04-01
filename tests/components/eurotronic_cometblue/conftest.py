@@ -12,6 +12,9 @@ from eurotronic_cometblue_ha import CometBlueBleakClient
 import pytest
 
 from homeassistant.components.bluetooth import BluetoothServiceInfoBleak
+from homeassistant.components.eurotronic_cometblue.const import DOMAIN
+from homeassistant.const import CONF_ADDRESS
+from homeassistant.helpers.device_registry import format_mac
 
 from .const import (
     FIXTURE_DEVICE_NAME,
@@ -19,8 +22,10 @@ from .const import (
     FIXTURE_MAC,
     FIXTURE_RSSI,
     FIXTURE_SERVICE_UUID,
+    FIXTURE_USER_INPUT,
 )
 
+from tests.common import MockConfigEntry
 from tests.components.bluetooth import generate_ble_device
 
 # CometBlue device specific mocks and fixtures
@@ -138,6 +143,18 @@ def mock_bluetooth(enable_bluetooth: None) -> Generator[None]:
 
 
 # Home Assistant related fixtures
+def create_mock_entry() -> MockConfigEntry:
+    """Create config entry mock from data."""
+    return MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_ADDRESS: FIXTURE_MAC,
+            **FIXTURE_USER_INPUT,
+        },
+        unique_id=format_mac(FIXTURE_MAC),
+    )
+
+
 @pytest.fixture
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Patch async setup entry to return True."""

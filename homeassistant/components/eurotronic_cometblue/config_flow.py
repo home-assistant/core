@@ -5,6 +5,7 @@ from __future__ import annotations
 import logging
 from typing import Any
 
+from bleak.exc import BleakError
 from eurotronic_cometblue_ha import AsyncCometBlue
 from eurotronic_cometblue_ha.const import SERVICE
 from habluetooth import BluetoothServiceInfoBleak
@@ -85,9 +86,12 @@ class CometBlueConfigFlow(ConfigFlow, domain=DOMAIN):
         except TimeoutError:
             LOGGER.debug("Connection to device timed out", exc_info=True)
             return {"base": "timeout_connect"}
-        except Exception:  # noqa: BLE001
+        except BleakError:
             LOGGER.debug("Failed to connect to device", exc_info=True)
             return {"base": "cannot_connect"}
+        except Exception:  # noqa: BLE001
+            LOGGER.debug("Unknown error", exc_info=True)
+            return {"base": "unknown"}
         return {}
 
     def _create_entry(

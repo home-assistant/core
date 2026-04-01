@@ -1,7 +1,7 @@
 """Test the eurotronic_cometblue config flow."""
 
 from copy import deepcopy
-from unittest import mock
+from unittest.mock import AsyncMock, patch
 
 from bleak.exc import BleakDeviceNotFoundError
 import pytest
@@ -15,19 +15,16 @@ from homeassistant.components.eurotronic_cometblue.const import DOMAIN
 from homeassistant.const import CONF_ADDRESS, CONF_PIN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-from homeassistant.helpers.device_registry import format_mac
 
-from .conftest import FAKE_SERVICE_INFO
+from .conftest import FAKE_SERVICE_INFO, create_mock_entry
 from .const import FIXTURE_DEVICE_NAME, FIXTURE_MAC, FIXTURE_USER_INPUT
-
-from tests.common import MockConfigEntry
 
 
 async def test_user_step_no_devices(
-    hass: HomeAssistant, mock_setup_entry: mock.AsyncMock
+    hass: HomeAssistant, mock_setup_entry: AsyncMock
 ) -> None:
     """Test we handle no devices found."""
-    with mock.patch(
+    with patch(
         "homeassistant.components.eurotronic_cometblue.config_flow.async_discovered_service_info",
         return_value=[],
     ):
@@ -43,7 +40,7 @@ async def test_user_step_no_devices(
 
 
 async def test_user_step_discovered_devices(
-    hass: HomeAssistant, mock_setup_entry: mock.AsyncMock, mock_service_info: None
+    hass: HomeAssistant, mock_setup_entry: AsyncMock, mock_service_info: None
 ) -> None:
     """Test we properly handle device picking."""
     result = await hass.config_entries.flow.async_init(
@@ -71,23 +68,20 @@ async def test_user_step_discovered_devices(
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["data"][CONF_PIN] == "000000"
-
+    assert result["result"].title == f"{FIXTURE_DEVICE_NAME} {FIXTURE_MAC}"
+    assert result["result"].unique_id == FIXTURE_MAC
+    assert result["result"].data == {
+        CONF_ADDRESS: FIXTURE_MAC,
+        CONF_PIN: FIXTURE_USER_INPUT[CONF_PIN],
+    }
     mock_setup_entry.assert_called_once()
 
 
 async def test_user_step_with_existing_device(
-    hass: HomeAssistant, mock_setup_entry: mock.AsyncMock
+    hass: HomeAssistant, mock_setup_entry: AsyncMock
 ) -> None:
     """Test we properly handle device picking if entry exists."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={
-            CONF_ADDRESS: FIXTURE_MAC,
-            **FIXTURE_USER_INPUT,
-        },
-        unique_id=format_mac(FIXTURE_MAC),
-    )
+    entry = create_mock_entry()
     entry.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
@@ -102,9 +96,7 @@ async def test_user_step_with_existing_device(
     assert mock_setup_entry.call_count == 0
 
 
-async def test_bluetooth_flow(
-    hass: HomeAssistant, mock_setup_entry: mock.AsyncMock
-) -> None:
+async def test_bluetooth_flow(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
     """Test we can handle a bluetooth discovery flow."""
 
     result = await hass.config_entries.flow.async_init(
@@ -117,39 +109,46 @@ async def test_bluetooth_flow(
         result["flow_id"],
         FIXTURE_USER_INPUT,
     )
-    await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == f"{FIXTURE_DEVICE_NAME} {FIXTURE_MAC}"
-    assert result["data"][CONF_PIN] == "000000"
-    assert result["context"]["unique_id"] == FIXTURE_MAC
+    assert result["result"].title == f"{FIXTURE_DEVICE_NAME} {FIXTURE_MAC}"
+    assert result["result"].unique_id == FIXTURE_MAC
+    assert result["result"].data == {
+        CONF_ADDRESS: FIXTURE_MAC,
+        CONF_PIN: FIXTURE_USER_INPUT[CONF_PIN],
+    }
     assert len(mock_setup_entry.mock_calls) == 1
 
 
 @pytest.mark.parametrize(
-    ("patch", "side_effect", "expected_error"),
+    ("patch_target", "side_effect", "expected_error"),
     [
         (
-            "eurotronic_cometblue_ha.AsyncCometBlue.get_battery_async",
+            "get_battery_async",
             TimeoutError(),
             {"base": "invalid_pin"},
         ),
         (
-            "eurotronic_cometblue_ha.AsyncCometBlue.connect_async",
+            "connect_async",
             TimeoutError(),
             {"base": "timeout_connect"},
         ),
         (
-            "eurotronic_cometblue_ha.AsyncCometBlue.connect_async",
+            "connect_async",
             BleakDeviceNotFoundError(FAKE_SERVICE_INFO.address),
             {"base": "cannot_connect"},
+        ),
+        (
+            "connect_async",
+            OSError("Something totally unexpected"),
+            {"base": "unknown"},
         ),
     ],
 )
 async def test_bluetooth_flow_errors(
     hass: HomeAssistant,
-    mock_setup_entry: mock.AsyncMock,
-    patch: str,
+    mock_setup_entry: AsyncMock,
+    patch_target: str,
     side_effect: Exception,
     expected_error: dict,
 ) -> None:
@@ -161,20 +160,37 @@ async def test_bluetooth_flow_errors(
         data=FAKE_SERVICE_INFO,
     )
 
-    with mock.patch(patch, side_effect=side_effect):
+    with patch(
+        f"homeassistant.components.eurotronic_cometblue.config_flow.AsyncCometBlue.{patch_target}",
+        side_effect=side_effect,
+    ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             FIXTURE_USER_INPUT,
         )
-        await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "bluetooth_confirm"
     assert result["errors"] == expected_error
 
+    # now retry without side effect, simulating a user correcting the issue (e.g. entering correct PIN)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        FIXTURE_USER_INPUT,
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].title == f"{FIXTURE_DEVICE_NAME} {FIXTURE_MAC}"
+    assert result["result"].unique_id == FIXTURE_MAC
+    assert result["result"].data == {
+        CONF_ADDRESS: FIXTURE_MAC,
+        CONF_PIN: FIXTURE_USER_INPUT[CONF_PIN],
+    }
+    assert len(mock_setup_entry.mock_calls) == 1
+
 
 async def test_bluetooth_flow_no_device(
-    hass: HomeAssistant, mock_setup_entry: mock.AsyncMock
+    hass: HomeAssistant, mock_setup_entry: AsyncMock
 ) -> None:
     """Test we can handle a bluetooth discovery flow."""
 
@@ -184,7 +200,7 @@ async def test_bluetooth_flow_no_device(
         data=FAKE_SERVICE_INFO,
     )
 
-    with mock.patch(
+    with patch(
         "homeassistant.components.eurotronic_cometblue.config_flow.async_ble_device_from_address",
         return_value=None,
     ):
@@ -192,7 +208,6 @@ async def test_bluetooth_flow_no_device(
             result["flow_id"],
             FIXTURE_USER_INPUT,
         )
-        await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "bluetooth_confirm"
