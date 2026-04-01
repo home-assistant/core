@@ -222,8 +222,8 @@ build.json @home-assistant/supervisor
 /homeassistant/components/binary_sensor/ @home-assistant/core
 /tests/components/binary_sensor/ @home-assistant/core
 /homeassistant/components/bizkaibus/ @UgaitzEtxebarria
-/homeassistant/components/blebox/ @bbx-a @swistakm
-/tests/components/blebox/ @bbx-a @swistakm
+/homeassistant/components/blebox/ @bbx-a @swistakm @bkobus-bbx
+/tests/components/blebox/ @bbx-a @swistakm @bkobus-bbx
 /homeassistant/components/blink/ @fronzbot
 /tests/components/blink/ @fronzbot
 /homeassistant/components/blue_current/ @gleeuwen @NickKoepr @jtodorova23
@@ -401,8 +401,6 @@ build.json @home-assistant/supervisor
 /tests/components/dremel_3d_printer/ @tkdrob
 /homeassistant/components/drop_connect/ @ChandlerSystems @pfrazer
 /tests/components/drop_connect/ @ChandlerSystems @pfrazer
-/homeassistant/components/dropbox/ @bdr99
-/tests/components/dropbox/ @bdr99
 /homeassistant/components/droplet/ @sarahseidman
 /tests/components/droplet/ @sarahseidman
 /homeassistant/components/dsmr/ @Robbie1221
