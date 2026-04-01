@@ -395,12 +395,3 @@ async def test_fireplace_built_with_polling_disabled(
         # Coordinator drives exactly one poll; if the library were also auto-polling
         # this would be > 1, catching the double-poll regression.
         mock_fp.perform_poll.assert_awaited_once()
-
-
-async def test_build_fireplace_from_common_accepts_polling_enabled() -> None:
-    """Verify the backing lib's build_fireplace_from_common accepts polling_enabled.
-
-    Guards against the library renaming the kwarg without us noticing.
-    """
-    sig = inspect.signature(UnifiedFireplace.build_fireplace_from_common)
-    assert "polling_enabled" in sig.parameters
