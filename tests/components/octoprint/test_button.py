@@ -6,6 +6,7 @@ from pyoctoprintapi import OctoprintPrinterInfo
 import pytest
 
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
+from homeassistant.components.octoprint import OctoprintDataUpdateCoordinator
 from homeassistant.components.octoprint.button import InvalidPrinterState
 from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
@@ -23,7 +24,7 @@ async def test_pause_job(
     hass: HomeAssistant, init_integration: MockConfigEntry
 ) -> None:
     """Test the pause job button."""
-    coordinator = init_integration.runtime_data.coordinator
+    coordinator: OctoprintDataUpdateCoordinator = init_integration.runtime_data
 
     # Test pausing the printer when it is printing
     with patch("pyoctoprintapi.OctoprintClient.pause_job") as pause_command:
@@ -80,7 +81,7 @@ async def test_resume_job(
     hass: HomeAssistant, init_integration: MockConfigEntry
 ) -> None:
     """Test the resume job button."""
-    coordinator = init_integration.runtime_data.coordinator
+    coordinator: OctoprintDataUpdateCoordinator = init_integration.runtime_data
 
     # Test resuming the printer when it is paused
     with patch("pyoctoprintapi.OctoprintClient.resume_job") as resume_command:
@@ -135,7 +136,7 @@ async def test_resume_job(
 
 async def test_stop_job(hass: HomeAssistant, init_integration: MockConfigEntry) -> None:
     """Test the stop job button."""
-    coordinator = init_integration.runtime_data.coordinator
+    coordinator: OctoprintDataUpdateCoordinator = init_integration.runtime_data
 
     # Test stopping the printer when it is paused
     with patch("pyoctoprintapi.OctoprintClient.cancel_job") as stop_command:
