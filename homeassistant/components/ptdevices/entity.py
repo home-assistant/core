@@ -41,13 +41,13 @@ class PTDevicesEntity(CoordinatorEntity[PTDevicesCoordinator]):
             # Device is missing; return minimal information
             return DeviceInfo(
                 identifiers={(DOMAIN, f"{self._user_id}_{self._device_id}")},
-                configuration_url=f"https://www.ptdevices.com/device/level/{self._device_id}",
+                configuration_url=f"https://www.ptdevices.com/device/level/{self.device['id']}",
                 manufacturer="ParemTech inc.",
             )
 
         return DeviceInfo(
             identifiers={(DOMAIN, f"{self._user_id}_{self._device_id}")},
-            configuration_url=f"https://www.ptdevices.com/device/level/{self._device_id}",
+            configuration_url=f"https://www.ptdevices.com/device/level/{self.device['id']}",
             manufacturer="ParemTech inc.",
             model=device["device_type"],
             sw_version=device["version"],
