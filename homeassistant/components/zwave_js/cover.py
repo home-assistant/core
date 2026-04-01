@@ -9,6 +9,7 @@ from zwave_js_server.const import (
     SET_VALUE_SUCCESS,
     TARGET_STATE_PROPERTY,
     TARGET_VALUE_PROPERTY,
+    CommandClass,
     SetValueStatus,
 )
 from zwave_js_server.const.command_class.barrier_operator import BarrierState
@@ -87,9 +88,8 @@ class CoverPositionMixin(ZWaveBaseEntity, CoverEntity):
     _current_position_value: ZwaveValue | None = None
     _target_position_value: ZwaveValue | None = None
     _stop_position_value: ZwaveValue | None = None
-    # Keep track of the target position for legacy devices
-    # that don't include the targetValue in their reports.
-    _commanded_target_position: int | None = None
+    # Remember whether the moving state can be tracked reliably for this device.
+    _moving_state_disabled: bool = False
 
     def _set_position_values(
         self,
@@ -159,16 +159,11 @@ class CoverPositionMixin(ZWaveBaseEntity, CoverEntity):
         if (current := self._current_position_value) is None or current.value is None:
             return
 
-        # Prefer the Z-Wave targetValue property when the device reports it.
-        # Legacy multilevel switches only report currentValue, so fall back to
-        # the target position we commanded when targetValue is not available.
-        target_val = (
-            t.value
-            if (t := self._target_position_value) is not None and t.value is not None
-            else self._commanded_target_position
-        )
-
-        if target_val is not None and current.value == target_val:
+        if (
+            (t := self._target_position_value) is not None
+            and t.value is not None
+            and current.value == t.value
+        ):
             self._attr_is_opening = False
             self._attr_is_closing = False
 
@@ -192,9 +187,10 @@ class CoverPositionMixin(ZWaveBaseEntity, CoverEntity):
             self._target_position_value, target_position
         )
         if (
+            self._moving_state_disabled
             # If the command is unsupervised, or the device reported that it started
             # working, we can assume the cover is moving in the desired direction.
-            result is None
+            or result is None
             or result.status
             not in (SetValueStatus.WORKING, SetValueStatus.SUCCESS_UNSUPERVISED)
             # If we don't know the current position, we don't know which direction
@@ -212,8 +208,6 @@ class CoverPositionMixin(ZWaveBaseEntity, CoverEntity):
             self._attr_is_closing = True
         else:
             return
-
-        self._commanded_target_position = target_position
 
         self.async_write_ha_state()
 
@@ -361,6 +355,17 @@ class ZWaveMultilevelSwitchCover(CoverPositionMixin):
                 or self.get_zwave_value(COVER_ON_PROPERTY)
             ),
         )
+
+        # Multilevel Switch CC v3 and earlier don't report targetValue,
+        # so we cannot determine when the cover stops moving,
+        # especially when the device is controlled physically.
+        # OPENING/CLOSING states must not be used for these devices,
+        # because they will become stale/incorrect.
+        if (
+            self.info.primary_value.command_class == CommandClass.SWITCH_MULTILEVEL
+            and self.info.primary_value.cc_version < 4
+        ):
+            self._moving_state_disabled = True
 
         # Entity class attributes
         self._attr_device_class = CoverDeviceClass.WINDOW

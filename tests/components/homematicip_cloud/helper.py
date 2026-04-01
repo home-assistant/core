@@ -109,7 +109,10 @@ class HomeFactory:
         self.hmip_config_entry = hmip_config_entry
 
     async def async_get_mock_hap(
-        self, test_devices=None, test_groups=None
+        self,
+        test_devices=None,
+        test_groups=None,
+        extra_devices: list[dict[str, Any]] | None = None,
     ) -> HomematicipHAP:
         """Create a mocked homematic access point."""
         home_name = self.hmip_config_entry.data["name"]
@@ -119,6 +122,7 @@ class HomeFactory:
                 home_name=home_name,
                 test_devices=test_devices,
                 test_groups=test_groups,
+                extra_devices=extra_devices,
             )
             .init_home()
             .get_async_home_mock()
@@ -156,7 +160,12 @@ class HomeTemplate(Home):
     _typeSecurityEventMap = TYPE_SECURITY_EVENT_MAP
 
     def __init__(
-        self, connection=None, home_name="", test_devices=None, test_groups=None
+        self,
+        connection=None,
+        home_name="",
+        test_devices=None,
+        test_groups=None,
+        extra_devices: list[dict[str, Any]] | None = None,
     ) -> None:
         """Init template with connection."""
         super().__init__(connection=connection)
@@ -166,8 +175,12 @@ class HomeTemplate(Home):
         self.init_json_state = None
         self.test_devices = test_devices
         self.test_groups = test_groups
+        self.extra_devices = extra_devices or []
 
     def _cleanup_json(self, json):
+        for extra_device in self.extra_devices:
+            json["devices"][extra_device["id"]] = extra_device
+
         if self.test_devices is not None:
             new_devices = {}
             for json_device in json["devices"].items():
