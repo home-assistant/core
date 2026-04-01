@@ -6,24 +6,12 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
-from homeassistant.components.labs import async_update_preview_feature
-from homeassistant.components.teslemetry.const import (
-    DOMAIN,
-    LABS_CHARGE_ON_SOLAR_FEATURE,
-)
 from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
-from homeassistant.setup import async_setup_component
 
-from . import assert_entities, reload_platform, setup_platform
+from . import assert_entities, setup_platform
 from .const import COMMAND_OK
-
-
-async def _async_enable_charge_on_solar_preview_feature(hass: HomeAssistant) -> None:
-    """Enable the Teslemetry charge-on-solar preview feature."""
-    assert await async_setup_component(hass, "labs", {})
-    await async_update_preview_feature(hass, DOMAIN, LABS_CHARGE_ON_SOLAR_FEATURE, True)
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
@@ -64,76 +52,3 @@ async def test_press(hass: HomeAssistant, name: str, func: str) -> None:
             blocking=True,
         )
         command.assert_called_once()
-
-
-async def test_charge_on_solar_buttons_disabled_by_default(
-    hass: HomeAssistant,
-) -> None:
-    """Test charge-on-solar buttons are disabled by default."""
-    await setup_platform(hass, [Platform.BUTTON])
-
-    assert hass.states.get("button.test_enable_charge_on_solar") is None
-    assert hass.states.get("button.test_disable_charge_on_solar") is None
-
-
-async def test_charge_on_solar_buttons_enabled_by_labs(
-    hass: HomeAssistant,
-) -> None:
-    """Test charge-on-solar buttons appear when Labs feature is enabled."""
-    await _async_enable_charge_on_solar_preview_feature(hass)
-    await setup_platform(hass, [Platform.BUTTON])
-
-    assert hass.states.get("button.test_enable_charge_on_solar") is not None
-    assert hass.states.get("button.test_disable_charge_on_solar") is not None
-
-
-@pytest.mark.parametrize(
-    ("entity_id", "enabled"),
-    [
-        ("button.test_enable_charge_on_solar", True),
-        ("button.test_disable_charge_on_solar", False),
-    ],
-)
-async def test_press_charge_on_solar_button(
-    hass: HomeAssistant,
-    entity_id: str,
-    enabled: bool,
-) -> None:
-    """Test pressing charge-on-solar buttons calls the expected API."""
-    await _async_enable_charge_on_solar_preview_feature(hass)
-    await setup_platform(hass, [Platform.BUTTON])
-
-    with patch(
-        "tesla_fleet_api.teslemetry.Vehicle.charge_on_solar",
-        return_value=COMMAND_OK,
-    ) as command:
-        await hass.services.async_call(
-            BUTTON_DOMAIN,
-            SERVICE_PRESS,
-            {ATTR_ENTITY_ID: [entity_id]},
-            blocking=True,
-        )
-        command.assert_called_once_with(enabled=enabled)
-
-
-async def test_disable_charge_on_solar_preview_removes_registry_entries(
-    hass: HomeAssistant,
-    entity_registry: er.EntityRegistry,
-) -> None:
-    """Test disabling preview removes charge-on-solar buttons from entity registry."""
-    await _async_enable_charge_on_solar_preview_feature(hass)
-    entry = await setup_platform(hass, [Platform.BUTTON])
-
-    assert entity_registry.async_get("button.test_enable_charge_on_solar") is not None
-    assert entity_registry.async_get("button.test_disable_charge_on_solar") is not None
-
-    with patch.object(hass.config_entries, "async_schedule_reload"):
-        await async_update_preview_feature(
-            hass, DOMAIN, LABS_CHARGE_ON_SOLAR_FEATURE, False
-        )
-        await hass.async_block_till_done()
-
-    await reload_platform(hass, entry, [Platform.BUTTON])
-
-    assert entity_registry.async_get("button.test_enable_charge_on_solar") is None
-    assert entity_registry.async_get("button.test_disable_charge_on_solar") is None

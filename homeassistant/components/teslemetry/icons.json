@@ -138,12 +138,6 @@
       "boombox": {
         "default": "mdi:volume-high"
       },
-      "disable_charge_on_solar": {
-        "default": "mdi:solar-power-variant-outline"
-      },
-      "enable_charge_on_solar": {
-        "default": "mdi:solar-power"
-      },
       "enable_keyless_driving": {
         "default": "mdi:car-key"
       },
@@ -757,6 +751,12 @@
       }
     },
     "switch": {
+      "charge_on_solar": {
+        "default": "mdi:solar-power",
+        "state": {
+          "off": "mdi:solar-power-variant-outline"
+        }
+      },
       "charge_state_charging_state": {
         "default": "mdi:ev-station"
       },
