@@ -48,7 +48,7 @@ def mock_delete_webhook():
 
 @pytest.fixture
 def mock_get_webook_configuration():
-    """Mock get_status."""
+    """Mock get_webook_configuration."""
     with patch.object(
         SwitchBotAPI, "get_webook_configuration"
     ) as mock_get_webook_configuration:
