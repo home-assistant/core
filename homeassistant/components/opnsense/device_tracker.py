@@ -2,7 +2,7 @@
 
 from typing import Any, NewType
 
-from aioopnsense import OPNsenseClient
+from aiopnsense import OPNsenseClient
 
 from homeassistant.components.device_tracker import DeviceScanner
 from homeassistant.core import HomeAssistant
