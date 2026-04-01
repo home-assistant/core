@@ -219,7 +219,6 @@ class SwitchBotAirPurifierEntity(SwitchBotCloudEntity, FanEntity):
         fan_gear = math.ceil(
             percentage_to_ranged_value(low_high_range=(1, 3), percentage=percentage)
         )
-        await asyncio.sleep(AFTER_COMMAND_REFRESH)
         if fan_gear == 0:
             await self.send_api_command(CommonCommands.OFF)
         else:
