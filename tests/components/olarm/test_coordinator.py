@@ -18,7 +18,7 @@ from tests.common import MockConfigEntry
 
 
 @pytest.fixture
-def mock_config_entry():
+def mock_config_entry() -> MockConfigEntry:
     """Create a mock config entry."""
     return MockConfigEntry(
         domain="olarm",
@@ -30,34 +30,41 @@ def mock_config_entry():
 
 
 @pytest.fixture
-def mock_oauth_session():
+def mock_oauth_session() -> AsyncMock:
     """Create a mock OAuth session."""
     return AsyncMock()
 
 
 @pytest.fixture
-def mock_olarm_client():
+def mock_olarm_client() -> AsyncMock:
     """Create a mock Olarm client."""
     return AsyncMock()
 
 
 @pytest.fixture
 def coordinator(
-    hass: HomeAssistant, mock_config_entry, mock_oauth_session, mock_olarm_client
-):
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_oauth_session: AsyncMock,
+    mock_olarm_client: AsyncMock,
+) -> OlarmDataUpdateCoordinator:
     """Create a coordinator instance."""
     return OlarmDataUpdateCoordinator(
         hass, mock_config_entry, mock_oauth_session, mock_olarm_client
     )
 
 
-async def test_coordinator_init(coordinator, mock_config_entry) -> None:
+async def test_coordinator_init(
+    coordinator: OlarmDataUpdateCoordinator, mock_config_entry: MockConfigEntry
+) -> None:
     """Test coordinator initialization."""
     assert coordinator.device_id == "test-device-id"
     assert coordinator.name == "olarm_test-device-id"
 
 
-async def test_coordinator_update_success(coordinator, mock_olarm_client) -> None:
+async def test_coordinator_update_success(
+    coordinator: OlarmDataUpdateCoordinator, mock_olarm_client: AsyncMock
+) -> None:
     """Test successful data update."""
     mock_olarm_client.get_device.return_value = MOCK_SYSTEM_RESPONSE
 
@@ -77,7 +84,9 @@ async def test_coordinator_update_success(coordinator, mock_olarm_client) -> Non
     mock_olarm_client.get_device.assert_called_once_with("test-device-id")
 
 
-async def test_coordinator_update_failure(coordinator, mock_olarm_client) -> None:
+async def test_coordinator_update_failure(
+    coordinator: OlarmDataUpdateCoordinator, mock_olarm_client: AsyncMock
+) -> None:
     """Test failed data update."""
     mock_olarm_client.get_device.side_effect = OlarmFlowClientApiError("API Error")
 
@@ -85,14 +94,14 @@ async def test_coordinator_update_failure(coordinator, mock_olarm_client) -> Non
         await coordinator._async_update_data()
 
 
-async def test_coordinator_update_from_mqtt(coordinator, mock_olarm_client) -> None:
+async def test_coordinator_update_from_mqtt(
+    coordinator: OlarmDataUpdateCoordinator, mock_olarm_client: AsyncMock
+) -> None:
     """Test updating data from MQTT."""
-    # First set initial data
     mock_olarm_client.get_device.return_value = MOCK_SYSTEM_RESPONSE
     data = await coordinator._async_update_data()
     coordinator.async_set_updated_data(data)
 
-    # Mock MQTT payload
     mqtt_payload = {
         "deviceState": {
             "zones": ["a", "c", "b"],
@@ -102,10 +111,8 @@ async def test_coordinator_update_from_mqtt(coordinator, mock_olarm_client) -> N
         "deviceIO": {},
     }
 
-    # Update from MQTT
     coordinator.async_update_from_mqtt(mqtt_payload)
 
-    # Verify data was updated
     assert coordinator.data.device_state == {
         "zones": ["a", "c", "b"],
         "powerAC": "ok",
@@ -114,17 +121,16 @@ async def test_coordinator_update_from_mqtt(coordinator, mock_olarm_client) -> N
     assert coordinator.data.device_io == {}
 
 
-async def test_coordinator_properties(coordinator, mock_olarm_client) -> None:
+async def test_coordinator_properties(
+    coordinator: OlarmDataUpdateCoordinator, mock_olarm_client: AsyncMock
+) -> None:
     """Test coordinator data access."""
-    # Test when no data
     assert coordinator.data is None
 
-    # Set some data
     mock_olarm_client.get_device.return_value = MOCK_SYSTEM_RESPONSE
     data = await coordinator._async_update_data()
     coordinator.async_set_updated_data(data)
 
-    # Test data access
     assert coordinator.data is not None
     assert coordinator.data.device_name == "Test System"
     assert coordinator.data.device_state == {
@@ -141,12 +147,12 @@ async def test_coordinator_properties(coordinator, mock_olarm_client) -> None:
     assert coordinator.data.device_profile_io == {}
 
 
-async def test_coordinator_mqtt_update_no_data(coordinator) -> None:
+async def test_coordinator_mqtt_update_no_data(
+    coordinator: OlarmDataUpdateCoordinator,
+) -> None:
     """Test MQTT update when coordinator has no data."""
-    # Should not crash when no data exists
     coordinator.async_update_from_mqtt({"deviceState": {"status": "armed"}})
 
-    # Data should still be None
     assert coordinator.data is None
 
 

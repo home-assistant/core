@@ -93,7 +93,7 @@ class OlarmDataUpdateCoordinator(DataUpdateCoordinator[OlarmDeviceData]):
             # Check if this is an invalid_grant error (status 400) that indicates expired/invalid refresh token
             if e.status == 400:
                 _LOGGER.error(
-                    "OAuth2 refresh token is invalid (status 400). Integration will remain in error state"
+                    "OAuth2 refresh token is invalid (status 400). Integration will remain in error state. "
                     "Please remove and re-add the integration to fix authentication"
                 )
                 raise ConfigEntryError(
