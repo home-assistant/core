@@ -65,13 +65,16 @@ async def test_reauth_trigger(
     """Test reauth is triggered after a refresh error during service call."""
     await setup_integration()
 
-    with patch(
-        TOKEN,
-        side_effect=OAuth2TokenRequestReauthError(
-            request_info=Mock(),
-            domain=DOMAIN,
+    with (
+        patch(
+            TOKEN,
+            side_effect=OAuth2TokenRequestReauthError(
+                request_info=Mock(),
+                domain=DOMAIN,
+            ),
         ),
-    ), pytest.raises(HomeAssistantError):
+        pytest.raises(HomeAssistantError),
+    ):
         await hass.services.async_call(
             DOMAIN,
             "set_vacation",
