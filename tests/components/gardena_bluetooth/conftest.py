@@ -5,6 +5,7 @@ from collections.abc import Callable, Coroutine, Generator
 from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
 
+import bleak
 from freezegun.api import FrozenDateTimeFactory
 from gardena_bluetooth.client import Client
 from gardena_bluetooth.const import DeviceInformation
@@ -73,6 +74,21 @@ async def scan_step(
         await hass.async_block_till_done()
 
     return delay
+
+
+@pytest.fixture(autouse=True)
+def correct_scanners_and_clients_in_library(enable_bluetooth: None) -> Generator[None]:
+    """Make sure the correct scanners and clients are used in the library.
+
+    This is needed since home assistant overrides the bleak scanner and client with wrappers,
+    but does so after enable_bluetooth fixture is applied, which causes the library to
+    use the wrong classes.
+    """
+    with (
+        patch("gardena_bluetooth.scan.BleakScanner", new=bleak.BleakScanner),
+        patch("gardena_bluetooth.client.BleakClient", new=bleak.BleakClient),
+    ):
+        yield
 
 
 @pytest.fixture(autouse=True)

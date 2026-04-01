@@ -20,7 +20,7 @@ from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_ADDRESS
 from homeassistant.data_entry_flow import AbortFlow
 
-from . import CallbackCleanHaBleakScannerWrapper, get_connection
+from . import get_connection
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
@@ -77,9 +77,7 @@ class GardenaBluetoothConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle the bluetooth discovery step."""
         _LOGGER.debug("Discovered device: %s", discovery_info)
-        data = await async_get_manufacturer_data(
-            {discovery_info.address}, backend=CallbackCleanHaBleakScannerWrapper
-        )
+        data = await async_get_manufacturer_data({discovery_info.address})
         product_type = data[discovery_info.address].product_type
         if product_type not in _SUPPORTED_PRODUCT_TYPES:
             return self.async_abort(reason="no_devices_found")
@@ -129,9 +127,7 @@ class GardenaBluetoothConfigFlow(ConfigFlow, domain=DOMAIN):
                 continue
             candidates.add(address)
 
-        data = await async_get_manufacturer_data(
-            candidates, backend=CallbackCleanHaBleakScannerWrapper
-        )
+        data = await async_get_manufacturer_data(candidates)
         for address, mfg_data in data.items():
             if mfg_data.product_type not in _SUPPORTED_PRODUCT_TYPES:
                 continue
