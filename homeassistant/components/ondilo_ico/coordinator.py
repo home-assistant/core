@@ -16,8 +16,8 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
 
-from . import DOMAIN
 from .api import OndiloClient
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
