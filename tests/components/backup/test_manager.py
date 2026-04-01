@@ -23,6 +23,7 @@ from unittest.mock import (
     patch,
 )
 
+from aiohttp import FormData
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from securetar import SecureTarArchive, SecureTarFile
@@ -2011,6 +2012,73 @@ async def test_receive_backup(
             backup_data += chunk
         assert backup_data == expected_backup_data
     assert unlink_mock.call_count == temp_file_unlink_call_count
+
+
+@pytest.mark.parametrize(
+    ("suggested_filename", "expected_filename"),
+    [
+        ("backup.tar", "backup.tar"),
+        ("../traversal.tar", "traversal.tar"),
+        ("../../etc/passwd", "passwd"),
+        ("subdir/backup.tar", "backup.tar"),
+        (".", "backup.tar"),
+        ("..", "backup.tar"),
+        ("../..", "backup.tar"),
+        ("..\\traversal.tar", "traversal.tar"),
+        ("C:\\fakepath\\backup.tar", "backup.tar"),
+    ],
+)
+async def test_receive_backup_path_traversal(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    suggested_filename: str,
+    expected_filename: str,
+) -> None:
+    """Test path traversal in suggested filename is prevented."""
+    await setup_backup_integration(hass)
+    # Make sure we wait for Platform.EVENT and Platform.SENSOR to be fully processed,
+    # to avoid interference with the Path.open patching below which is used to verify
+    # that the file is written to the expected location.
+    await hass.async_block_till_done(True)
+    client = await hass_client()
+
+    upload_data = "test"
+    open_mock = mock_open(read_data=upload_data.encode(encoding="utf-8"))
+    expected_path = Path(hass.config.path("tmp_backups"), expected_filename)
+    opened_paths: list[Path] = []
+
+    def track_open(self: Path, *args: Any, **kwargs: Any) -> Any:
+        opened_paths.append(self)
+        return open_mock(self, *args, **kwargs)
+
+    with (
+        patch("pathlib.Path.open", track_open),
+        patch("homeassistant.components.backup.manager.make_backup_dir"),
+        patch("shutil.move"),
+        patch(
+            "homeassistant.components.backup.manager.read_backup",
+            return_value=TEST_BACKUP_ABC123,
+        ) as read_backup_mock,
+        patch("pathlib.Path.unlink"),
+    ):
+        data = FormData(quote_fields=False)
+        data.add_field(
+            "file",
+            upload_data,
+            filename=suggested_filename,
+            content_type="application/octet-stream",
+        )
+        resp = await client.post(
+            "/api/backup/upload?agent_id=backup.local",
+            data=data,
+        )
+        await hass.async_block_till_done()
+
+    assert resp.status == 201
+    # Verify all file opens went to the expected safe path
+    assert opened_paths == [expected_path]
+    # read_backup is called with the temp_file path; verify it's sanitized
+    read_backup_mock.assert_called_once_with(expected_path)
 
 
 async def test_receive_backup_busy_manager(
