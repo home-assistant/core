@@ -1,0 +1,12 @@
+{
+  "domain": "bir",
+  "name": "BIR",
+  "codeowners": ["@sanderblom"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/bir",
+  "integration_type": "service",
+  "iot_class": "cloud_polling",
+  "loggers": ["pybirno"],
+  "quality_scale": "bronze",
+  "requirements": ["pybirno==0.2.0"]
+}
