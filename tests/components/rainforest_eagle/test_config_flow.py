@@ -48,7 +48,7 @@ async def test_form_multiple_meters_first_connected(hass: HomeAssistant) -> None
             return_value=True,
         ) as mock_setup_entry,
     ):
-        result2 = await hass.config_entries.flow.async_configure(
+        result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
                 CONF_CLOUD_ID: "abcdef",
@@ -59,15 +59,16 @@ async def test_form_multiple_meters_first_connected(hass: HomeAssistant) -> None
         await hass.async_block_till_done()
 
     # Should create the entry immediately with the first connected meter
-    assert result2["type"] is FlowResultType.CREATE_ENTRY
-    assert result2["title"] == "abcdef"
-    assert result2["data"] == {
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "abcdef"
+    assert result["data"] == {
         CONF_TYPE: TYPE_EAGLE_200,
         CONF_HOST: "192.168.1.55",
         CONF_CLOUD_ID: "abcdef",
         CONF_INSTALL_CODE: "123456",
         CONF_HARDWARE_ADDRESS: "meter-3",
     }
+    assert result["result"].unique_id == "abcdef"
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -93,7 +94,7 @@ async def test_form_multiple_meters_none_connected(hass: HomeAssistant) -> None:
         "homeassistant.components.rainforest_eagle.config_flow.async_get_type",
         return_value=(TYPE_EAGLE_200, [mock_meter_1, mock_meter_2]),
     ):
-        result2 = await hass.config_entries.flow.async_configure(
+        result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
                 CONF_CLOUD_ID: "abcdef",
@@ -101,11 +102,32 @@ async def test_form_multiple_meters_none_connected(hass: HomeAssistant) -> None:
                 CONF_HOST: "192.168.1.55",
             },
         )
-        await hass.async_block_till_done()
 
-    assert result2["type"] is FlowResultType.FORM
-    assert result2["step_id"] == "user"
-    assert result2["errors"] == {"base": "no_meters_connected"}
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {"base": "no_meters_connected"}
+
+    mock_meter_1.connection_status = "Connected"
+
+    with (
+        patch(
+            "homeassistant.components.rainforest_eagle.config_flow.async_get_type",
+            return_value=(TYPE_EAGLE_200, [mock_meter_1, mock_meter_2]),
+        ),
+        patch(
+            "homeassistant.components.rainforest_eagle.async_setup_entry",
+            return_value=True,
+        ),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_CLOUD_ID: "abcdef",
+                CONF_INSTALL_CODE: "123456",
+                CONF_HOST: "192.168.1.55",
+            },
+        )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_form_no_meters(hass: HomeAssistant) -> None:
