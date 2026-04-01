@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import shutil
 from typing import Any
 
 import voluptuous as vol
@@ -21,6 +22,9 @@ class PicoTTSConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle the initial step."""
+        if await self.hass.async_add_executor_job(shutil.which, "pico2wave") is None:
+            return self.async_abort(reason="binary_not_found")
+
         if user_input is None:
             return self.async_show_form(
                 step_id="user", data_schema=STEP_USER_DATA_SCHEMA

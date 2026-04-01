@@ -1,7 +1,11 @@
 {
+  "common": {
+    "binary_not_found": "pico2wave binary could not be found"
+  },
   "config": {
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
+      "binary_not_found": "[%key:component::picotts::common::binary_not_found%]"
     },
     "step": {
       "user": {
@@ -13,7 +17,7 @@
   },
   "exceptions": {
     "binary_not_found": {
-      "message": "pico2wave binary could not be found"
+      "message": "[%key:component::picotts::common::binary_not_found%]"
     },
     "file_read_error": {
       "message": "Error trying to read {filename}"
