@@ -72,6 +72,9 @@ async def test_already_tracked_devices(
     """Test that already tracked devices are skipped when signal fires again."""
     await setup_integration(hass, mock_config_entry)
 
+    # Capture the number of existing device_tracker entities before firing the signal
+    tracker_count_before = len(hass.states.async_all(Platform.DEVICE_TRACKER))
+
     coordinator = mock_config_entry.runtime_data
 
     # Fire signal_device_new again; all devices are already tracked so no new
@@ -79,3 +82,7 @@ async def test_already_tracked_devices(
     # is exercised.
     async_dispatcher_send(hass, coordinator.signal_device_new)
     await hass.async_block_till_done()
+
+    # Ensure no additional device_tracker entities were created
+    tracker_count_after = len(hass.states.async_all(Platform.DEVICE_TRACKER))
+    assert tracker_count_after == tracker_count_before
