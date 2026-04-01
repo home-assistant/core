@@ -5,25 +5,21 @@ from __future__ import annotations
 from typing import Any
 
 from homeassistant.components.switch import SwitchEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DATA_COORDINATOR, DOMAIN
-from .coordinator import NZBGetDataUpdateCoordinator
+from .coordinator import NZBGetConfigEntry, NZBGetDataUpdateCoordinator
 from .entity import NZBGetEntity
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: NZBGetConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up NZBGet sensor based on a config entry."""
-    coordinator: NZBGetDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id][
-        DATA_COORDINATOR
-    ]
+    """Set up NZBGet switch based on a config entry."""
+    coordinator = entry.runtime_data
 
     switches = [
         NZBGetDownloadSwitch(

@@ -202,22 +202,28 @@ async def _register_trigger_platform(
     from homeassistant.components import automation  # noqa: PLC0415
 
     new_triggers: set[str] = set()
+    triggers = hass.data[TRIGGERS]
 
     if hasattr(platform, "async_get_triggers"):
-        for trigger_key in await platform.async_get_triggers(hass):
+        all_triggers = await platform.async_get_triggers(hass)
+        for trigger_key in all_triggers:
             trigger_key = get_absolute_description_key(integration_domain, trigger_key)
-            hass.data[TRIGGERS][trigger_key] = integration_domain
-            new_triggers.add(trigger_key)
+            if trigger_key not in triggers:
+                triggers[trigger_key] = integration_domain
+                new_triggers.add(trigger_key)
         if not new_triggers:
-            _LOGGER.debug(
-                "Integration %s returned no triggers in async_get_triggers",
-                integration_domain,
-            )
+            if not all_triggers:
+                _LOGGER.debug(
+                    "Integration %s returned no triggers in async_get_triggers",
+                    integration_domain,
+                )
             return
     elif hasattr(platform, "async_validate_trigger_config") or hasattr(
         platform, "TRIGGER_SCHEMA"
     ):
-        hass.data[TRIGGERS][integration_domain] = integration_domain
+        if integration_domain in triggers:
+            return
+        triggers[integration_domain] = integration_domain
         new_triggers.add(integration_domain)
     else:
         _LOGGER.debug(
@@ -1184,11 +1190,16 @@ async def _async_get_trigger_platform(
     except IntegrationNotFound:
         raise vol.Invalid(f"Invalid trigger '{trigger_key}' specified") from None
     try:
-        return platform, await integration.async_get_platform("trigger")
+        platform_module = await integration.async_get_platform("trigger")
     except ImportError:
         raise vol.Invalid(
             f"Integration '{platform}' does not provide trigger support"
         ) from None
+
+    # Ensure triggers are registered so descriptions can be loaded
+    await _register_trigger_platform(hass, platform, platform_module)
+
+    return platform, platform_module
 
 
 async def async_validate_trigger_config(

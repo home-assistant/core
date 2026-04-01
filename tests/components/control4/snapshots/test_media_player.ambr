@@ -46,6 +46,7 @@
       'device_class': 'tv',
       'friendly_name': 'Living Room',
       'is_volume_muted': False,
+      'last_non_buffering_state': <MediaPlayerState.ON: 'on'>,
       'source_list': list([
         'TV',
       ]),

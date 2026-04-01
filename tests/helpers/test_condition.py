@@ -48,9 +48,11 @@ from homeassistant.helpers.condition import (
     ATTR_BEHAVIOR,
     BEHAVIOR_ALL,
     BEHAVIOR_ANY,
+    CONDITIONS,
     Condition,
     ConditionChecker,
     EntityNumericalConditionWithUnitBase,
+    _async_get_condition_platform,
     async_validate_condition_config,
     make_entity_numerical_condition,
     make_entity_numerical_condition_with_unit,
@@ -2274,6 +2276,57 @@ async def test_platform_backwards_compatibility_for_new_style_configs(
     }
     result = await async_validate_condition_config(hass, config_new_style)
     assert result == config_old_style
+
+
+async def test_get_condition_platform_registers_conditions(
+    hass: HomeAssistant,
+) -> None:
+    """Test _async_get_condition_platform registers conditions and notifies subscribers."""
+
+    class MockCondition(Condition):
+        """Mock condition."""
+
+        @classmethod
+        async def async_validate_config(
+            cls, hass: HomeAssistant, config: ConfigType
+        ) -> ConfigType:
+            return config
+
+        async def async_get_checker(self) -> ConditionChecker:
+            return lambda **kwargs: True
+
+    async def async_get_conditions(
+        hass: HomeAssistant,
+    ) -> dict[str, type[Condition]]:
+        return {"cond_a": MockCondition, "cond_b": MockCondition}
+
+    mock_integration(hass, MockModule("test"))
+    mock_platform(
+        hass, "test.condition", Mock(async_get_conditions=async_get_conditions)
+    )
+
+    subscriber_events: list[set[str]] = []
+
+    async def subscriber(new_conditions: set[str]) -> None:
+        subscriber_events.append(new_conditions)
+
+    condition.async_subscribe_platform_events(hass, subscriber)
+
+    assert "test.cond_a" not in hass.data[CONDITIONS]
+    assert "test.cond_b" not in hass.data[CONDITIONS]
+
+    # First call registers all conditions from the platform and notifies subscribers
+    await _async_get_condition_platform(hass, "test.cond_a")
+
+    assert hass.data[CONDITIONS]["test.cond_a"] == "test"
+    assert hass.data[CONDITIONS]["test.cond_b"] == "test"
+    assert len(subscriber_events) == 1
+    assert subscriber_events[0] == {"test.cond_a", "test.cond_b"}
+
+    # Subsequent calls are idempotent — no re-registration or re-notification
+    await _async_get_condition_platform(hass, "test.cond_a")
+    await _async_get_condition_platform(hass, "test.cond_b")
+    assert len(subscriber_events) == 1
 
 
 @pytest.mark.parametrize("enabled_value", [True, "{{ 1 == 1 }}"])
