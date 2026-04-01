@@ -2,6 +2,7 @@
 
 import logging
 
+from aiohttp import ClientConnectorDNSError, ClientConnectorError, ClientError
 from aiopnsense import OPNsenseClient
 import voluptuous as vol
 
@@ -58,8 +59,14 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         if tracker_interfaces:
             interfaces_resp = await client.get_interfaces()
         await client.get_arp_table()
-    except Exception:
-        _LOGGER.exception("Failure while connecting to OPNsense API endpoint")
+    except (
+        ClientConnectorDNSError,
+        ClientConnectorError,
+        ClientError,
+    ) as err:
+        _LOGGER.exception(
+            "Failure while connecting to OPNsense API endpoint", exc_info=err
+        )
         return False
 
     if tracker_interfaces:
