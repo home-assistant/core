@@ -62,8 +62,6 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> tuple[str
     # Ensure the user_name and user_id exist
     user_name = first_device.get("user_name")
     user_id = first_device.get("user_id")
-    if user_name is None or user_id is None:
-        raise MalformedResponse
 
     title: str = str(user_name)
     unique_id: str = str(user_id)
@@ -101,8 +99,6 @@ class PTDevicesConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "invalid_access_token"
             except NoDevicesFound:
                 errors["base"] = "no_devices_found"
-            except MalformedResponse:
-                errors["base"] = "malformed_response"
             except Exception:
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
