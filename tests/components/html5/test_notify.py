@@ -28,8 +28,10 @@ from homeassistant.components.html5.const import (
     ATTR_TTL,
     ATTR_URGENCY,
     ATTR_VIBRATE,
+    SERVICE_DISMISS,
 )
-from homeassistant.components.html5.notify import ATTR_ACTION, DEFAULT_TTL
+from homeassistant.components.html5.notify import ATTR_ACTION, ATTR_DISMISS, DEFAULT_TTL
+from homeassistant.components.html5.services import SERVICE_DISMISS_MESSAGE
 from homeassistant.components.notify import (
     ATTR_DATA,
     ATTR_MESSAGE,
@@ -1114,11 +1116,32 @@ async def test_html5_send_message(
 
 
 @pytest.mark.parametrize(
-    ("target", "issue_id"),
+    ("domain", "service", "service_data", "issue_id"),
     [
-        (["my-desktop"], "deprecated_notify_action_notify.html5_my_desktop"),
-        (None, "deprecated_notify_action_notify.html5"),
-        (["my-desktop", "my-phone"], "deprecated_notify_action_notify.html5"),
+        (
+            NOTIFY_DOMAIN,
+            "html5_my_desktop",
+            {ATTR_MESSAGE: "Hello", ATTR_TARGET: ["my-desktop"]},
+            "deprecated_notify_action_notify.html5_my_desktop",
+        ),
+        (
+            NOTIFY_DOMAIN,
+            DOMAIN,
+            {ATTR_MESSAGE: "Hello"},
+            "deprecated_notify_action_notify.html5",
+        ),
+        (
+            NOTIFY_DOMAIN,
+            DOMAIN,
+            {ATTR_MESSAGE: "Hello", ATTR_TARGET: ["my-desktop", "my-phone"]},
+            "deprecated_notify_action_notify.html5",
+        ),
+        (
+            DOMAIN,
+            SERVICE_DISMISS,
+            {},
+            "deprecated_dismiss_action",
+        ),
     ],
 )
 @pytest.mark.usefixtures("mock_wp", "mock_jwt", "mock_vapid", "mock_uuid")
@@ -1127,7 +1150,9 @@ async def test_deprecation_action_call(
     config_entry: MockConfigEntry,
     load_config: MagicMock,
     issue_registry: ir.IssueRegistry,
-    target: list[str] | None,
+    domain: str,
+    service: str,
+    service_data: dict[str, Any] | None,
     issue_id: str,
 ) -> None:
     """Test deprecation action call."""
@@ -1143,9 +1168,9 @@ async def test_deprecation_action_call(
     assert config_entry.state is ConfigEntryState.LOADED
 
     await hass.services.async_call(
-        NOTIFY_DOMAIN,
-        DOMAIN,
-        {ATTR_MESSAGE: "Hello", ATTR_TARGET: target},
+        domain,
+        service,
+        service_data,
         blocking=True,
     )
 
@@ -1153,3 +1178,55 @@ async def test_deprecation_action_call(
         domain=DOMAIN,
         issue_id=issue_id,
     )
+
+
+@pytest.mark.parametrize(
+    ("service_data", "expected_payload"),
+    [
+        (
+            {ATTR_TAG: "message-group-1"},
+            {ATTR_DISMISS: True, ATTR_TAG: "message-group-1"},
+        ),
+        (
+            {},
+            {ATTR_DISMISS: True, ATTR_TAG: ""},
+        ),
+    ],
+)
+@pytest.mark.usefixtures("mock_jwt", "mock_vapid", "mock_uuid")
+@pytest.mark.freeze_time("2009-02-13T23:31:30.000Z")
+async def test_html5_dismiss_message(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    webpush_async: AsyncMock,
+    load_config: MagicMock,
+    service_data: dict[str, Any],
+    expected_payload: dict[str, Any],
+) -> None:
+    """Test dismissing a message via html5.dismiss_message action."""
+    load_config.return_value = {"my-desktop": SUBSCRIPTION_1}
+
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_DISMISS_MESSAGE,
+        {
+            ATTR_ENTITY_ID: "notify.my_desktop",
+            **service_data,
+        },
+        blocking=True,
+    )
+
+    webpush_async.assert_awaited_once()
+    assert webpush_async.await_args
+    _, payload, _, _ = webpush_async.await_args.args
+    assert json.loads(payload) == {
+        "timestamp": 1234567890000,
+        "data": {"jwt": "JWT"},
+        **expected_payload,
+    }
