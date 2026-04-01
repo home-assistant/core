@@ -101,6 +101,6 @@ class SonosAlarms(SonosHouseholdCoordinator):
         return True
 
     @soco_error()
-    def update_skipped(self, soco: SoCo) -> None:
-        """Update cache of known alarms and return if cache has changed."""
+    def process_added_speaker(self, soco: SoCo) -> None:
+        """Update any skipped alarms when speaker is added."""
         self.alarms.update_skipped(soco)

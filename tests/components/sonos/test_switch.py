@@ -34,7 +34,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
-from homeassistant.helpers.service_info.ssdp import SsdpServiceInfo
+from homeassistant.helpers.service_info.ssdp import ATTR_UPNP_UDN, SsdpServiceInfo
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
@@ -341,46 +341,37 @@ async def test_alarm_change_device(
     assert device.name == soco_br.get_speaker_info()["zone_name"]
 
 
-async def test_alarm_setup(
+async def test_alarm_setup_on_dead_device(
     hass: HomeAssistant,
     async_setup_sonos,
-    soco,
     alarm_clock,
-    alarm_clock_extended,
-    alarm_event,
     entity_registry: er.EntityRegistry,
     soco_factory: SoCoMockFactory,
     discover,
 ) -> None:
-    """Test for correct creation and deletion of alarms during runtime."""
+    """Test for creation of alarm on a speaker that is discovered after the alarm cache is updated."""
 
-    def capture_callback(*args, **kwargs):
-        # args[1] is the callback function
-        capture_callback.callback = args[1]
-
+    soco_bedroom = soco_factory.cache_mock(MockSoCo(), "10.10.10.2", "Bedroom")
     one_alarm = copy(alarm_clock.ListAlarms.return_value)
-    alarm_list = one_alarm["CurrentAlarmList"]
-    alarm_list = alarm_list.replace("RINCON_test", "RINCON_test_10.10.10.2")
-    one_alarm["CurrentAlarmList"] = alarm_list
+    one_alarm["CurrentAlarmList"] = one_alarm["CurrentAlarmList"].replace(
+        "RINCON_test", soco_bedroom.uid
+    )
     alarm_clock.ListAlarms.return_value = one_alarm
-
-    # Do not add the new speaker yet
     await async_setup_sonos()
 
+    # Switch should not be created since the speaker isn't discovered yet
     assert "switch.sonos_alarm_14" not in entity_registry.entities
 
-    # Now add the new speaker and simulate discovery
-    # Simulate SSDP discovery event for the new speaker
-    soco_bedroom = soco_factory.cache_mock(MockSoCo(), "10.10.10.2", "Bedroom")
-    ssdp_info = SsdpServiceInfo(
-        ssdp_location=f"http://{soco_bedroom.ip_address}/",
-        ssdp_st="urn:schemas-upnp-org:device:ZonePlayer:1",
-        ssdp_usn=f"uuid:{soco_bedroom.uid}_MR::urn:schemas-upnp-org:service:GroupRenderingControl:1",
-        upnp={"UDN": f"uuid:{soco_bedroom.uid}"},
+    # Simulate discovery of the bedroom speaker
+    discover.call_args.args[1](
+        SsdpServiceInfo(
+            ssdp_location=f"http://{soco_bedroom.ip_address}/",
+            ssdp_st="urn:schemas-upnp-org:device:ZonePlayer:1",
+            ssdp_usn=f"uuid:{soco_bedroom.uid}_MR::urn:schemas-upnp-org:service:GroupRenderingControl:1",
+            upnp={ATTR_UPNP_UDN: f"uuid:{soco_bedroom.uid}"},
+        ),
+        SsdpChange.ALIVE,
     )
-
-    # Get the callback from the discover fixture mock's recorded call args
-    discover.call_args.args[1](ssdp_info, SsdpChange.ALIVE)
-
     await hass.async_block_till_done(wait_background_tasks=True)
+
     assert "switch.sonos_alarm_14" in entity_registry.entities
