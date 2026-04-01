@@ -97,7 +97,11 @@ SENSOR_DESCRIPTIONS: tuple[PTDevicesSensorEntityDescription, ...] = (
         translation_key=PTDevicesSensors.DEVICE_STATUS,
         device_class=SensorDeviceClass.ENUM,
         options=[member.value for member in PTDevicesStatusStates],
-        value_fn=lambda data: cast(str, data.get(PTDevicesSensors.DEVICE_STATUS)),
+        value_fn=lambda data: (
+            cast(str, data.get(PTDevicesSensors.DEVICE_STATUS))
+            if cast(str, data.get(PTDevicesSensors.DEVICE_STATUS)) != "unknown"
+            else None
+        ),
     ),
     # Wifi signal strength (%)
     PTDevicesSensorEntityDescription(
