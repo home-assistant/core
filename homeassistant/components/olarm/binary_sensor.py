@@ -36,7 +36,7 @@ _LOGGER = logging.getLogger(__name__)
 class OlarmBinarySensorEntityDescription(BinarySensorEntityDescription):
     """Describes an Olarm binary sensor entity."""
 
-    value_fn: Callable[[dict, int | None], bool]
+    value_fn: Callable[[dict, int], bool]
     name_fn: Callable[[int, str], str]
     unique_id_fn: Callable[[str, int], str]
 
@@ -46,7 +46,8 @@ SENSOR_DESCRIPTIONS: dict[str, OlarmBinarySensorEntityDescription] = {
     "zone": OlarmBinarySensorEntityDescription(
         key="zone",
         value_fn=lambda device_state, index: (
-            device_state.get("zones", [])[index] == "a"
+            index < len(device_state.get("zones") or [])
+            and (device_state.get("zones") or [])[index] == "a"
         ),
         name_fn=lambda index, label: f"Zone {index + 1:03} - {label}",
         unique_id_fn=lambda device_id, index: f"{device_id}.zone.{index}",
@@ -54,13 +55,15 @@ SENSOR_DESCRIPTIONS: dict[str, OlarmBinarySensorEntityDescription] = {
     "zone_bypass": OlarmBinarySensorEntityDescription(
         key="zone_bypass",
         value_fn=lambda device_state, index: (
-            device_state.get("zones", [])[index] == "b"
+            index < len(device_state.get("zones") or [])
+            and (device_state.get("zones") or [])[index] == "b"
         ),
         name_fn=lambda index, label: f"Zone {index + 1:03} Bypass - {label}",
         unique_id_fn=lambda device_id, index: f"{device_id}.zone.bypass.{index}",
     ),
     "ac_power": OlarmBinarySensorEntityDescription(
         key="ac_power",
+        device_class=BinarySensorDeviceClass.POWER,
         value_fn=lambda device_state, _: device_state.get("powerAC") == "ok",
         name_fn=lambda index, label: f"{label}",
         unique_id_fn=lambda device_id, index: f"{device_id}.ac_power",
