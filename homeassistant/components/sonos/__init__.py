@@ -417,8 +417,7 @@ class SonosDiscoveryManager:
                     )
                     new_coordinator.setup(soco)
                     c_dict[soco.household_id] = new_coordinator
-                else:
-                    c_dict[soco.household_id].process_added_speaker(soco)
+                c_dict[soco.household_id].add_speaker(soco)
             speaker.setup(self.entry)
         except (OSError, SoCoException, Timeout) as ex:
             _LOGGER.warning("Failed to add SonosSpeaker using %s: %s", soco, ex)

@@ -86,5 +86,5 @@ class SonosHouseholdCoordinator:
         """Update the cache of the household-level feature and return if cache has changed."""
         raise NotImplementedError
 
-    def process_added_speaker(self, soco: SoCo) -> None:
+    def add_speaker(self, soco: SoCo) -> None:
         """Additional processing when a speaker is added if needed."""
