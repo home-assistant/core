@@ -26,7 +26,7 @@ class LunatoneConfigFlow(ConfigFlow, domain=DOMAIN):
     """Lunatone config flow."""
 
     VERSION = 2
-    MINOR_VERSION = 0
+    MINOR_VERSION = 1
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
