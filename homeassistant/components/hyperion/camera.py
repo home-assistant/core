@@ -1,4 +1,4 @@
-"""Switch platform for Hyperion."""
+"""Camera platform for Hyperion."""
 
 from __future__ import annotations
 
