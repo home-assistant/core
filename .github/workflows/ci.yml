@@ -35,5 +35,8 @@ jobs:
       - name: Verify lockfile
         run: uv lock --check
 
+      - name: Run repo tests
+        run: ./script/test-api -q
+
       - name: Run compatibility tests
         run: ./script/test-core -q

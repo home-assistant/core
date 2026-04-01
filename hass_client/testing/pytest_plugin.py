@@ -198,19 +198,16 @@ def _build_exception_message_fallback(original, strings_resolver: _StringsResolv
 
 def pytest_configure() -> None:
     """Patch the core test fixture to use RemoteHomeAssistant."""
-    try:
-        import homeassistant.components.ffmpeg as ffmpeg_component
-        import homeassistant
-        import homeassistant.core as ha_core
-        import homeassistant.helpers.entity_platform as entity_platform_helper
-        import homeassistant.exceptions as ha_exceptions
-        import homeassistant.loader as ha_loader
-        import homeassistant.helpers.translation as translation_helper
-        from homeassistant.util.async_ import cancelling
-        import tests.common as tests_common
-        import tests.conftest as tests_conftest
-    except ImportError:
-        return
+    import tests.conftest as tests_conftest
+    import tests.common as tests_common
+    import homeassistant.components.ffmpeg as ffmpeg_component
+    import homeassistant
+    import homeassistant.core as ha_core
+    import homeassistant.helpers.entity_platform as entity_platform_helper
+    import homeassistant.exceptions as ha_exceptions
+    import homeassistant.loader as ha_loader
+    import homeassistant.helpers.translation as translation_helper
+    from homeassistant.util.async_ import cancelling
 
     if getattr(tests_common, "_hass_client_patched", False):
         return

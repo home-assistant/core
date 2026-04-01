@@ -3,7 +3,6 @@ set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 CORE_DIR="$ROOT/core"
-CORE_BRANCH="${HASS_CLIENT_CORE_BRANCH:-dev}"
 
 if [[ ! -d "$CORE_DIR/.git" ]]; then
   exec "$ROOT/script/setup"
@@ -15,9 +14,14 @@ if [[ -n "$(git -C "$CORE_DIR" status --porcelain)" ]]; then
 fi
 
 CURRENT_BRANCH="$(git -C "$CORE_DIR" branch --show-current)"
-if [[ "$CURRENT_BRANCH" != "$CORE_BRANCH" ]]; then
-  echo "error: $CORE_DIR is on branch '$CURRENT_BRANCH', expected '$CORE_BRANCH'" >&2
+if [[ -z "$CURRENT_BRANCH" ]]; then
+  echo "error: $CORE_DIR is in detached HEAD state; check out a branch first" >&2
   exit 1
 fi
 
-git -C "$CORE_DIR" pull --ff-only origin "$CORE_BRANCH"
+if ! git -C "$CORE_DIR" rev-parse --abbrev-ref --symbolic-full-name '@{u}' >/dev/null 2>&1; then
+  echo "error: $CORE_DIR branch '$CURRENT_BRANCH' has no upstream; configure one first" >&2
+  exit 1
+fi
+
+git -C "$CORE_DIR" pull --ff-only

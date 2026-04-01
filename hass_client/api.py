@@ -3,11 +3,11 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Awaitable, Callable
+from collections.abc import Awaitable, Callable, Mapping
 import logging
 import os
 from ssl import SSLContext
-from typing import Any
+from typing import Any, cast
 
 import aiohttp
 from aiohttp import (
@@ -36,6 +36,152 @@ MATCH_ALL = "*"
 SubscriptionCallback = Callable[[dict[str, Any]], Awaitable[None] | None]
 
 
+def _normalize_translation_placeholders(
+    placeholders: Any,
+) -> dict[str, str] | None:
+    """Normalize websocket translation placeholders into Home Assistant format."""
+    if not isinstance(placeholders, Mapping):
+        return None
+    return {str(key): str(value) for key, value in placeholders.items()}
+
+
+def _build_failed_command(
+    message: str,
+    *,
+    command: str | None,
+    code: str | None,
+    translation_domain: str | None,
+    translation_key: str | None,
+    translation_placeholders: dict[str, str] | None,
+) -> FailedCommand:
+    """Build the generic websocket command failure."""
+    return FailedCommand(
+        message,
+        command=command,
+        code=code,
+        translation_domain=translation_domain,
+        translation_key=translation_key,
+        translation_placeholders=translation_placeholders,
+    )
+
+
+def _build_homeassistant_error(
+    exception_type,
+    message: str,
+    *,
+    translation_domain: str | None,
+    translation_key: str | None,
+    translation_placeholders: dict[str, str] | None,
+):
+    """Build a Home Assistant exception from websocket translation metadata."""
+    if translation_domain and translation_key:
+        return exception_type(
+            translation_domain=translation_domain,
+            translation_key=translation_key,
+            translation_placeholders=translation_placeholders,
+        )
+    return exception_type(message)
+
+
+def _translate_command_error(
+    command_message: Mapping[str, Any] | None,
+    error: Mapping[str, Any],
+) -> Exception:
+    """Translate websocket command errors into Home Assistant exceptions when possible."""
+    command = command_message.get("type") if command_message else None
+    message = str(error.get("message", "Command failed"))
+    code = error.get("code")
+    code = str(code) if code is not None else None
+    translation_domain = error.get("translation_domain")
+    translation_domain = (
+        str(translation_domain) if translation_domain is not None else None
+    )
+    translation_key = error.get("translation_key")
+    translation_key = str(translation_key) if translation_key is not None else None
+    translation_placeholders = _normalize_translation_placeholders(
+        error.get("translation_placeholders")
+    )
+
+    try:
+        import voluptuous as vol
+
+        from homeassistant.components.websocket_api import const as websocket_api_const
+        from homeassistant.exceptions import (
+            HomeAssistantError,
+            ServiceNotFound,
+            ServiceValidationError,
+            TemplateError,
+            Unauthorized,
+        )
+    except ImportError:
+        return _build_failed_command(
+            message,
+            command=command,
+            code=code,
+            translation_domain=translation_domain,
+            translation_key=translation_key,
+            translation_placeholders=translation_placeholders,
+        )
+
+    if command == "call_service":
+        if (
+            code == websocket_api_const.ERR_NOT_FOUND
+            and translation_key == "service_not_found"
+        ):
+            domain = translation_placeholders.get("domain") if translation_placeholders else None
+            service = (
+                translation_placeholders.get("service")
+                if translation_placeholders
+                else None
+            )
+            if domain is None and command_message is not None:
+                raw_domain = command_message.get("domain")
+                if isinstance(raw_domain, str):
+                    domain = raw_domain
+            if service is None and command_message is not None:
+                raw_service = command_message.get("service")
+                if isinstance(raw_service, str):
+                    service = raw_service
+            if domain is not None and service is not None:
+                return ServiceNotFound(domain, service)
+
+        if code == websocket_api_const.ERR_INVALID_FORMAT:
+            return vol.Invalid(message)
+
+        if code == websocket_api_const.ERR_SERVICE_VALIDATION_ERROR:
+            return _build_homeassistant_error(
+                ServiceValidationError,
+                message,
+                translation_domain=translation_domain,
+                translation_key=translation_key,
+                translation_placeholders=translation_placeholders,
+            )
+
+        if code == websocket_api_const.ERR_HOME_ASSISTANT_ERROR:
+            return _build_homeassistant_error(
+                HomeAssistantError,
+                message,
+                translation_domain=translation_domain,
+                translation_key=translation_key,
+                translation_placeholders=translation_placeholders,
+            )
+
+    if code == websocket_api_const.ERR_TEMPLATE_ERROR:
+        return TemplateError(message)
+
+    if code == websocket_api_const.ERR_UNAUTHORIZED:
+        return Unauthorized()
+
+    return _build_failed_command(
+        message,
+        command=command,
+        code=code,
+        translation_domain=translation_domain,
+        translation_key=translation_key,
+        translation_placeholders=translation_placeholders,
+    )
+
+
 class HomeAssistantAPI:
     """Async websocket client for Home Assistant."""
 
@@ -56,6 +202,7 @@ class HomeAssistantAPI:
         self._shutdown_complete: asyncio.Event | None = None
         self._subscriptions: dict[int, tuple[dict[str, Any], SubscriptionCallback]] = {}
         self._result_futures: dict[int, asyncio.Future[Any]] = {}
+        self._result_messages: dict[int, dict[str, Any]] = {}
         self._last_msg_id = 1
         self._msg_id_lock = asyncio.Lock()
         self._version: str | None = None
@@ -158,49 +305,33 @@ class HomeAssistantAPI:
             payload["service_data"] = service_data
         if target:
             payload["target"] = target
-        result = await self.send_command("call_service", **payload)
-        if not isinstance(result, dict):
-            raise InvalidMessage(f"Unexpected call_service result: {result!r}")
-        return result
+        return cast(dict[str, Any], await self.send_command("call_service", **payload))
 
     async def async_get_states(self) -> list[dict[str, Any]]:
         """Fetch all remote states."""
-        result = await self.send_command("get_states")
-        if not isinstance(result, list):
-            raise InvalidMessage(f"Unexpected get_states result: {result!r}")
-        return result
+        return cast(list[dict[str, Any]], await self.send_command("get_states"))
 
     async def async_get_config(self) -> dict[str, Any]:
         """Fetch remote config."""
-        result = await self.send_command("get_config")
-        if not isinstance(result, dict):
-            raise InvalidMessage(f"Unexpected get_config result: {result!r}")
-        return result
+        return cast(dict[str, Any], await self.send_command("get_config"))
 
     async def async_get_services(self) -> dict[str, dict[str, Any]]:
         """Fetch remote services."""
-        result = await self.send_command("get_services")
-        if not isinstance(result, dict):
-            raise InvalidMessage(f"Unexpected get_services result: {result!r}")
-        return result
+        return cast(dict[str, dict[str, Any]], await self.send_command("get_services"))
 
     async def async_get_entity_registry(self) -> list[dict[str, Any]]:
         """Fetch remote entity registry entries."""
-        result = await self.send_command("config/entity_registry/list")
-        if not isinstance(result, list):
-            raise InvalidMessage(
-                f"Unexpected config/entity_registry/list result: {result!r}"
-            )
-        return result
+        return cast(
+            list[dict[str, Any]],
+            await self.send_command("config/entity_registry/list"),
+        )
 
     async def async_get_entity_registry_entry(self, entity_id: str) -> dict[str, Any]:
         """Fetch a single remote entity registry entry."""
-        result = await self.send_command("config/entity_registry/get", entity_id=entity_id)
-        if not isinstance(result, dict):
-            raise InvalidMessage(
-                f"Unexpected config/entity_registry/get result: {result!r}"
-            )
-        return result
+        return cast(
+            dict[str, Any],
+            await self.send_command("config/entity_registry/get", entity_id=entity_id),
+        )
 
     async def send_command(self, command: str, **payload: Any) -> Any:
         """Send a command and await the result."""
@@ -209,12 +340,15 @@ class HomeAssistantAPI:
 
         future: asyncio.Future[Any] = self._loop.create_future()
         message_id = await self._next_message_id()
+        message = {"id": message_id, "type": command, **payload}
         self._result_futures[message_id] = future
-        await self._send_json({"id": message_id, "type": command, **payload})
+        self._result_messages[message_id] = message
+        await self._send_json(message)
         try:
             return await future
         finally:
             self._result_futures.pop(message_id, None)
+            self._result_messages.pop(message_id, None)
 
     async def send_command_no_wait(self, command: str, **payload: Any) -> None:
         """Send a command without waiting for the result."""
@@ -253,11 +387,13 @@ class HomeAssistantAPI:
 
         future: asyncio.Future[Any] = self._loop.create_future()
         self._result_futures[message_id] = future
+        self._result_messages[message_id] = message
         try:
             await self._send_json(message)
             await future
         finally:
             self._result_futures.pop(message_id, None)
+            self._result_messages.pop(message_id, None)
 
         self._subscriptions[message_id] = (message, callback)
 
@@ -319,7 +455,9 @@ class HomeAssistantAPI:
                 future.set_result(message.get("result"))
                 return
             error = message.get("error", {})
-            future.set_exception(FailedCommand(error.get("message", "Command failed")))
+            future.set_exception(
+                _translate_command_error(self._result_messages.get(message_id), error)
+            )
             return
 
         subscription_id = message.get("id")

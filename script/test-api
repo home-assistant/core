@@ -1,0 +1,23 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+CORE_DIR="$ROOT/core"
+PYTHON_VERSION="${HASS_CLIENT_PYTHON:-3.14}"
+
+if [[ ! -d "$CORE_DIR/.git" ]]; then
+  "$ROOT/script/setup"
+fi
+
+(
+  cd "$CORE_DIR"
+  PYTHONPATH="$ROOT${PYTHONPATH:+:$PYTHONPATH}" \
+    uv run \
+      --project "$ROOT" \
+      --python "$PYTHON_VERSION" \
+      --with-requirements "$CORE_DIR/requirements.txt" \
+      --with-requirements "$CORE_DIR/requirements_test_all.txt" \
+      python -m pytest \
+        "$ROOT/tests" \
+        "$@"
+)

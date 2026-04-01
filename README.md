@@ -27,7 +27,10 @@ Set up the repo-local Home Assistant core checkout with:
 ./script/setup
 ```
 
-Update that checkout to the latest upstream `dev` branch with:
+This does a shallow clone into `./core` and keeps remote branch tips available,
+so you can check out a different Home Assistant branch in place when needed.
+
+Update the currently checked out `./core` branch from its configured upstream with:
 
 ```bash
 ./script/bootstrap
@@ -37,6 +40,12 @@ Run the Home Assistant core compatibility suite with:
 
 ```bash
 ./script/test-core -q
+```
+
+Run the repo-local API tests with:
+
+```bash
+./script/test-api -q
 ```
 
 By default this runs:
@@ -55,6 +64,7 @@ Useful environment variables:
 - `HASS_CLIENT_SYNC_REMOTE_SERVICES`
 - `HASS_CLIENT_CORE_REPO`
 - `HASS_CLIENT_CORE_BRANCH`
+  Used by `./script/setup` for the initial checkout branch.
 - `HASS_CLIENT_PYTHON`
 - `HASS_CLIENT_TEST_TARGET`
   Use a whitespace-separated pytest target list, for example:

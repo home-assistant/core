@@ -18,7 +18,7 @@ fi
 
 git clone \
   --branch "$CORE_BRANCH" \
-  --single-branch \
+  --no-single-branch \
   --depth 1 \
   "$CORE_REPO" \
   "$CORE_DIR"
