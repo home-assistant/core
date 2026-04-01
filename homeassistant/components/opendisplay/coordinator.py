@@ -39,17 +39,16 @@ class OpenDisplayCoordinator(PassiveBluetoothDataUpdateCoordinator):
             _LOGGER,
             address,
             BluetoothScanningMode.PASSIVE,
+            connectable=True,
         )
         self.data: OpenDisplayUpdate | None = None
-        self._was_unavailable = False
 
     @callback
     def _async_handle_unavailable(
         self, service_info: BluetoothServiceInfoBleak
     ) -> None:
         """Handle the device going unavailable."""
-        if not self._was_unavailable:
-            self._was_unavailable = True
+        if self._available:
             _LOGGER.info("%s: Device is unavailable", service_info.address)
         super()._async_handle_unavailable(service_info)
 
@@ -60,8 +59,7 @@ class OpenDisplayCoordinator(PassiveBluetoothDataUpdateCoordinator):
         change: BluetoothChange,
     ) -> None:
         """Handle a Bluetooth advertisement event."""
-        if self._was_unavailable:
-            self._was_unavailable = False
+        if not self._available:
             _LOGGER.info("%s: Device is available again", service_info.address)
 
         if MANUFACTURER_ID not in service_info.manufacturer_data:
