@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+from dataclasses import dataclass
 from datetime import timedelta
 import logging
 
@@ -18,14 +19,25 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
 
-from .const import CONF_ACCOUNT, DATA_CLIENT, DATA_COORDINATOR, DOMAIN
+from .const import CONF_ACCOUNT
 
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS = [Platform.SENSOR]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+@dataclass
+class OVOEnergyData:
+    """Runtime data for OVO Energy."""
+
+    coordinator: DataUpdateCoordinator[OVODailyUsage]
+    client: OVOEnergy
+
+
+type OVOEnergyConfigEntry = ConfigEntry[OVOEnergyData]
+
+
+async def async_setup_entry(hass: HomeAssistant, entry: OVOEnergyConfigEntry) -> bool:
     """Set up OVO Energy from a config entry."""
 
     client = OVOEnergy(
@@ -75,11 +87,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         update_interval=timedelta(seconds=3600),
     )
 
-    hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN][entry.entry_id] = {
-        DATA_CLIENT: client,
-        DATA_COORDINATOR: coordinator,
-    }
+    entry.runtime_data = OVOEnergyData(coordinator=coordinator, client=client)
 
     # Fetch initial data so we have data when entities subscribe
     await coordinator.async_config_entry_first_refresh()
@@ -90,11 +98,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: OVOEnergyConfigEntry) -> bool:
     """Unload OVO Energy config entry."""
-    # Unload sensors
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-
-    del hass.data[DOMAIN][entry.entry_id]
-
-    return unload_ok
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
