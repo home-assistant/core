@@ -50,9 +50,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     verify_ssl = conf[CONF_VERIFY_SSL]
     tracker_interfaces = conf[CONF_TRACKER_INTERFACES]
 
-    # interfaces_client = diagnostics.InterfaceClient(
-    #     api_key, api_secret, url, verify_ssl, timeout=20
-    # )
     session = async_get_clientsession(hass, verify_ssl=verify_ssl)
     client = OPNsenseClient(url, api_key, api_secret, session, verify_ssl)
     try:
@@ -63,10 +60,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     if tracker_interfaces:
         # Verify that specified tracker interfaces are valid
-        # netinsight_client = diagnostics.NetworkInsightClient(
-        #     api_key, api_secret, url, verify_ssl, timeout=20
-        # )
-        # interfaces = list(netinsight_client.get_interfaces().values())
         interfaces = list(interfaces_resp.values())
         for interface in tracker_interfaces:
             if interface not in interfaces:
