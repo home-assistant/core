@@ -56,9 +56,7 @@ class BirDataUpdateCoordinator(DataUpdateCoordinator[dict[str, WastePickup]]):
         try:
             pickups = await self.client.get_pickups()
         except BirError as err:
-            raise UpdateFailed(
-                f"Error communicating with BIR API: {err}"
-            ) from err
+            raise UpdateFailed(f"Error communicating with BIR API: {err}") from err
 
         return self._process_pickup_data(pickups)
 

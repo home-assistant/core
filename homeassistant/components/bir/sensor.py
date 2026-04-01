@@ -80,9 +80,7 @@ class BirSensor(BirEntity, SensorEntity):
         """Initialize the BIR sensor."""
         super().__init__(entry)
         self.entity_description = description
-        self._attr_unique_id = (
-            f"{entry.data['property_id']}_{description.key}"
-        )
+        self._attr_unique_id = f"{entry.data['property_id']}_{description.key}"
 
     @property
     def available(self) -> bool:

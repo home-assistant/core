@@ -52,9 +52,7 @@ class BirConfigFlow(ConfigFlow, domain=DOMAIN):
             else:
                 try:
                     session = async_get_clientsession(self.hass)
-                    addresses = await BirClient.search_addresses(
-                        session, search_query
-                    )
+                    addresses = await BirClient.search_addresses(session, search_query)
                     self._addresses = [
                         {"id": addr.property_id, "adresse": addr.address}
                         for addr in addresses
@@ -103,9 +101,7 @@ class BirConfigFlow(ConfigFlow, domain=DOMAIN):
                         client = BirClient(selected["id"], session)
                         await client.authenticate()
 
-                        await self.async_set_unique_id(
-                            f"bir_{selected['id']}"
-                        )
+                        await self.async_set_unique_id(f"bir_{selected['id']}")
                         self._abort_if_unique_id_configured()
 
                         return self.async_create_entry(
