@@ -41,9 +41,8 @@ ATTR_LIVE_ACTIVITY_PUSH_TO_START_TOKEN = "live_activity_push_to_start_token"
 ATTR_LIVE_ACTIVITY_PUSH_TO_START_APNS_ENVIRONMENT = (
     "live_activity_push_to_start_apns_environment"
 )
-# Tag identifying a specific Live Activity instance — matches the `tag` field used by
-# the iOS companion app's ActivityKit integration.
-ATTR_LIVE_ACTIVITY_TAG = "tag"
+# Tag identifying a specific Live Activity instance in the iOS companion app webhooks.
+ATTR_LIVE_ACTIVITY_TAG = "live_activity_tag"
 
 # In-memory store for per-device Live Activity push tokens, keyed by webhook_id → tag.
 # Populated by mobile_app_live_activity_token and cleared by mobile_app_live_activity_dismissed webhooks.
@@ -106,12 +105,7 @@ SCHEMA_APP_DATA = vol.Schema(
         # Set to True to indicate that this registration will connect via websocket channel
         # to receive push notifications.
         vol.Optional(ATTR_PUSH_WEBSOCKET_CHANNEL): cv.boolean,
-        # iOS Live Activities capability flags and push-to-start token (iOS 17.2+).
-        # push-to-start allows HA to remotely start a new Live Activity on the device
-        # without requiring one to already be running.
-        vol.Optional(ATTR_SUPPORTS_LIVE_ACTIVITIES): cv.boolean,
-        vol.Optional(ATTR_SUPPORTS_LIVE_ACTIVITIES_FREQUENT_UPDATES): cv.boolean,
-        # push-to-start token and environment must be provided together — a token
+        # Push-to-start token and environment must be provided together — a token
         # without an environment is ambiguous (sandbox tokens fail on production).
         vol.Inclusive(
             ATTR_LIVE_ACTIVITY_PUSH_TO_START_TOKEN, "live_activity_push_to_start"

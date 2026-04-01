@@ -37,7 +37,6 @@ from .const import (
     ATTR_APP_VERSION,
     ATTR_DEVICE_NAME,
     ATTR_LIVE_ACTIVITY_PUSH_TO_START_TOKEN,
-    ATTR_LIVE_ACTIVITY_TAG,
     ATTR_LIVE_UPDATE,
     ATTR_OS_VERSION,
     ATTR_PUSH_RATE_LIMITS,
@@ -236,7 +235,7 @@ class MobileAppNotificationService(BaseNotificationService):
         if not notification_data.get(ATTR_LIVE_UPDATE):
             return None
 
-        tag = notification_data.get(ATTR_LIVE_ACTIVITY_TAG)
+        tag = notification_data.get("tag")
         if not tag or not isinstance(tag, str):
             return None
 

@@ -1322,7 +1322,7 @@ async def test_webhook_update_live_activity_token(
         json={
             "type": "update_live_activity_token",
             "data": {
-                "tag": "washer_cycle",
+                "live_activity_tag": "washer_cycle",
                 "push_token": "a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2",
             },
         },
@@ -1352,7 +1352,7 @@ async def test_webhook_update_live_activity_token_stores_only_push_token(
         json={
             "type": "update_live_activity_token",
             "data": {
-                "tag": "ev_charge",
+                "live_activity_tag": "ev_charge",
                 "push_token": "abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890",
             },
         },
@@ -1381,7 +1381,7 @@ async def test_webhook_live_activity_dismissed(
         json={
             "type": "update_live_activity_token",
             "data": {
-                "tag": "washer_cycle",
+                "live_activity_tag": "washer_cycle",
                 "push_token": "a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2",
             },
         },
@@ -1398,7 +1398,7 @@ async def test_webhook_live_activity_dismissed(
         json={
             "type": "live_activity_dismissed",
             "data": {
-                "tag": "washer_cycle",
+                "live_activity_tag": "washer_cycle",
             },
         },
     )
@@ -1424,7 +1424,7 @@ async def test_webhook_live_activity_dismissed_nonexistent_tag(
         json={
             "type": "live_activity_dismissed",
             "data": {
-                "tag": "nonexistent_activity",
+                "live_activity_tag": "nonexistent_activity",
             },
         },
     )
