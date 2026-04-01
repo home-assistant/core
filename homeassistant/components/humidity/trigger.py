@@ -16,46 +16,35 @@ from homeassistant.components.weather import (
     DOMAIN as WEATHER_DOMAIN,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.automation import NumericalDomainSpec
+from homeassistant.helpers.automation import DomainSpec
 from homeassistant.helpers.trigger import (
-    EntityNumericalStateAttributeChangedTriggerBase,
-    EntityNumericalStateAttributeCrossedThresholdTriggerBase,
     Trigger,
+    make_entity_numerical_state_changed_trigger,
+    make_entity_numerical_state_crossed_threshold_trigger,
 )
 
-HUMIDITY_DOMAIN_SPECS: dict[str, NumericalDomainSpec] = {
-    CLIMATE_DOMAIN: NumericalDomainSpec(
+HUMIDITY_DOMAIN_SPECS: dict[str, DomainSpec] = {
+    CLIMATE_DOMAIN: DomainSpec(
         value_source=CLIMATE_ATTR_CURRENT_HUMIDITY,
     ),
-    HUMIDIFIER_DOMAIN: NumericalDomainSpec(
+    HUMIDIFIER_DOMAIN: DomainSpec(
         value_source=HUMIDIFIER_ATTR_CURRENT_HUMIDITY,
     ),
-    SENSOR_DOMAIN: NumericalDomainSpec(
+    SENSOR_DOMAIN: DomainSpec(
         device_class=SensorDeviceClass.HUMIDITY,
     ),
-    WEATHER_DOMAIN: NumericalDomainSpec(
+    WEATHER_DOMAIN: DomainSpec(
         value_source=ATTR_WEATHER_HUMIDITY,
     ),
 }
 
-
-class HumidityChangedTrigger(EntityNumericalStateAttributeChangedTriggerBase):
-    """Trigger for humidity value changes across multiple domains."""
-
-    _domain_specs = HUMIDITY_DOMAIN_SPECS
-
-
-class HumidityCrossedThresholdTrigger(
-    EntityNumericalStateAttributeCrossedThresholdTriggerBase
-):
-    """Trigger for humidity value crossing a threshold across multiple domains."""
-
-    _domain_specs = HUMIDITY_DOMAIN_SPECS
-
-
 TRIGGERS: dict[str, type[Trigger]] = {
-    "changed": HumidityChangedTrigger,
-    "crossed_threshold": HumidityCrossedThresholdTrigger,
+    "changed": make_entity_numerical_state_changed_trigger(
+        HUMIDITY_DOMAIN_SPECS, valid_unit="%"
+    ),
+    "crossed_threshold": make_entity_numerical_state_crossed_threshold_trigger(
+        HUMIDITY_DOMAIN_SPECS, valid_unit="%"
+    ),
 }
 
 

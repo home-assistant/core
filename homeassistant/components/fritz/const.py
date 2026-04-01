@@ -13,6 +13,7 @@ from fritzconnection.core.exceptions import (
     FritzSecurityError,
     FritzServiceError,
 )
+from requests.exceptions import ConnectionError
 
 from homeassistant.const import Platform
 
@@ -68,6 +69,7 @@ BUTTON_TYPE_WOL = "WakeOnLan"
 UPTIME_DEVIATION = 5
 
 FRITZ_EXCEPTIONS = (
+    ConnectionError,
     FritzActionError,
     FritzActionFailedError,
     FritzConnectionException,
