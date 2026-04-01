@@ -33,7 +33,8 @@ from .services import async_setup_services
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
-PLATFORMS = [Platform.SENSOR]
+_BASE_PLATFORMS: list[Platform] = []
+_FLEX_PLATFORMS = [Platform.SENSOR]
 
 
 @dataclass
@@ -88,7 +89,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: OpenDisplayConfigEntry) 
     dr.async_get(hass).async_get_or_create(
         config_entry_id=entry.entry_id,
         connections={(CONNECTION_BLUETOOTH, address)},
-        name=entry.title,
         manufacturer=manufacturer.manufacturer_name,
         sw_version=f"{fw['major']}.{fw['minor']}",
         hw_version=(
@@ -109,7 +109,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: OpenDisplayConfigEntry) 
         is_flex=is_flex,
     )
 
-    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(
+        entry, _FLEX_PLATFORMS if is_flex else _BASE_PLATFORMS
+    )
     entry.async_on_unload(coordinator.async_start())
 
     return True
@@ -124,4 +126,6 @@ async def async_unload_entry(
         with contextlib.suppress(asyncio.CancelledError):
             await task
 
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    return await hass.config_entries.async_unload_platforms(
+        entry, _FLEX_PLATFORMS if entry.runtime_data.is_flex else _BASE_PLATFORMS
+    )
