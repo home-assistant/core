@@ -2,7 +2,7 @@
 
 import logging
 
-from aioopnsense import OPNsenseApiError, OPNsenseClient
+from aiopnsense import OPNsenseClient
 import voluptuous as vol
 
 from homeassistant.const import CONF_API_KEY, CONF_URL, CONF_VERIFY_SSL, Platform
@@ -51,18 +51,20 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     tracker_interfaces = conf[CONF_TRACKER_INTERFACES]
 
     session = async_get_clientsession(hass, verify_ssl=verify_ssl)
-    client = OPNsenseClient(url, api_key, api_secret, session, verify_ssl)
+    client = OPNsenseClient(
+        url, api_key, api_secret, session, opts={"verify_ssl": verify_ssl}
+    )
     try:
         if tracker_interfaces:
             interfaces_resp = await client.get_interfaces()
-        await client.get_arp()
-    except OPNsenseApiError:
+        await client.get_arp_table()
+    except Exception:
         _LOGGER.exception("Failure while connecting to OPNsense API endpoint")
         return False
 
     if tracker_interfaces:
         # Verify that specified tracker interfaces are valid
-        interfaces = list(interfaces_resp.values())
+        interfaces = list(interfaces_resp.keys())
         for interface in tracker_interfaces:
             if interface not in interfaces:
                 _LOGGER.error(

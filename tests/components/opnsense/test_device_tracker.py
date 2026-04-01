@@ -14,7 +14,7 @@ from homeassistant.setup import async_setup_component
 
 @pytest.fixture(name="mocked_opnsense")
 def mocked_opnsense():
-    """Mock for aioopnsense.OPNsenseClient."""
+    """Mock for aiopnsense.OPNsenseClient."""
     with mock.patch.object(opnsense, "OPNsenseClient") as mocked_opn:
         yield mocked_opn
 
@@ -25,7 +25,7 @@ async def test_get_scanner(
     """Test creating an opnsense scanner."""
     opnsense_client = mock.AsyncMock()
     mocked_opnsense.return_value = opnsense_client
-    opnsense_client.get_arp.return_value = [
+    opnsense_client.get_arp_table.return_value = [
         {
             "hostname": "",
             "intf": "igb1",
@@ -44,7 +44,10 @@ async def test_get_scanner(
         },
     ]
 
-    opnsense_client.get_interfaces.return_value = {"igb0": "WAN", "igb1": "LAN"}
+    opnsense_client.get_interfaces.return_value = {
+        "wan": {"name": "WAN"},
+        "lan": {"name": "LAN"},
+    }
 
     result = await async_setup_component(
         hass,
