@@ -63,19 +63,19 @@ class AirOSUpdateEntity(AirOSEntity, UpdateEntity):
     @property
     def installed_version(self) -> str | None:
         """Return the installed firmware version."""
-        return str(self.status.data.host.fwversion)
+        return self.status.data.host.fwversion
 
     @property
     def latest_version(self) -> str | None:
         """Return the latest firmware version."""
         if not self.firmware.data.get("update", False):
-            return str(self.status.data.host.fwversion)
-        return str(self.firmware.data.get("version"))
+            return self.status.data.host.fwversion
+        return self.firmware.data.get("version")
 
     @property
     def release_url(self) -> str | None:
         """Return the release url of the latest firmware."""
-        return str(self.firmware.data.get("changelog"))
+        return self.firmware.data.get("changelog")
 
     async def async_install(
         self,
