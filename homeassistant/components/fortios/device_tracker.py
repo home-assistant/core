@@ -64,7 +64,6 @@ class FortiOSDeviceScanner(
         self._attr_ip_address = device.get("ipv4_address", "")
         self._attr_mac_address = mac
         self._attr_icon = icon_for_fortios_device(device)
-        self._attr_unique_id = mac
         self._is_online = device.get("is_online", False)
         self._attr_extra_state_attributes: dict[str, Any] = {}
 
