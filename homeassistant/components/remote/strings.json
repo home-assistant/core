@@ -1,7 +1,6 @@
 {
   "common": {
-    "trigger_behavior_description": "The behavior of the targeted remotes to trigger on.",
-    "trigger_behavior_name": "Behavior"
+    "trigger_behavior_name": "Trigger when"
   },
   "device_automation": {
     "action_type": {
@@ -132,7 +131,6 @@
       "description": "Triggers when one or more remotes turn off.",
       "fields": {
         "behavior": {
-          "description": "[%key:component::remote::common::trigger_behavior_description%]",
           "name": "[%key:component::remote::common::trigger_behavior_name%]"
         }
       },
@@ -142,7 +140,6 @@
       "description": "Triggers when one or more remotes turn on.",
       "fields": {
         "behavior": {
-          "description": "[%key:component::remote::common::trigger_behavior_description%]",
           "name": "[%key:component::remote::common::trigger_behavior_name%]"
         }
       },
