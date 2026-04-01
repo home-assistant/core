@@ -40,10 +40,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: WAQIConfigEntry) -> bool
 
     entry.runtime_data = {}
 
-    for subentry in entry.subentries.values():
-        if subentry.subentry_type != SUBENTRY_TYPE_STATION:
-            continue
-
+    for subentry in entry.get_subentries_of_type(SUBENTRY_TYPE_STATION):
         # Create a coordinator for each station subentry
         coordinator = WAQIDataUpdateCoordinator(hass, entry, subentry, client)
         await coordinator.async_config_entry_first_refresh()
