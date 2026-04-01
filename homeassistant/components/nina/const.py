@@ -42,6 +42,7 @@ SENSOR_SUFFIXES: list[str] = [
     "severity",
     "affected_areas",
     "more_info_url",
+    "sent",
 ]
 
 CONST_LIST_A_TO_D: list[str] = ["A", "Ä", "B", "C", "D"]

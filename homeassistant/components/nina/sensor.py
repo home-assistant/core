@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Callable, Sequence
 from dataclasses import dataclass
+from datetime import datetime
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -25,7 +26,7 @@ PARALLEL_UPDATES = 0
 class NinaSensorEntityDescription(SensorEntityDescription):
     """Describes NINA sensor entity."""
 
-    value_fn: Callable[[NinaWarningData], str | None]
+    value_fn: Callable[[NinaWarningData], str | datetime | None]
 
 
 SENSOR_TYPES: tuple[NinaSensorEntityDescription, ...] = (
@@ -57,6 +58,13 @@ SENSOR_TYPES: tuple[NinaSensorEntityDescription, ...] = (
         key=SENSOR_SUFFIXES[4],
         translation_key="more_info_url",
         value_fn=lambda data: data.more_info_url,
+    ),
+    NinaSensorEntityDescription(
+        key=SENSOR_SUFFIXES[5],
+        translation_key="sent",
+        entity_registry_enabled_default=False,
+        device_class=SensorDeviceClass.TIMESTAMP,
+        value_fn=lambda data: data.sent,
     ),
 )
 
@@ -132,6 +140,6 @@ class NinaSensor(NinaEntity, SensorEntity):
         return self._get_warning_data().is_valid and super().available
 
     @property
-    def native_value(self) -> str | None:
+    def native_value(self) -> str | datetime | None:
         """Return the state of the sensor."""
         return self.entity_description.value_fn(self._get_warning_data())

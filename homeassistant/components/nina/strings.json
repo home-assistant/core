@@ -64,6 +64,9 @@
       "sender": {
         "name": "Sender {slot_id}"
       },
+      "sent": {
+        "name": "Sent {slot_id}"
+      },
       "severity": {
         "name": "Severity {slot_id}",
         "state": {

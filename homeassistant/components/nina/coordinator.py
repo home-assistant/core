@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 from dataclasses import dataclass
+from datetime import datetime
 import re
 from typing import Any
 
@@ -40,7 +41,7 @@ class NinaWarningData:
     affected_areas_short: str
     affected_areas: str
     more_info_url: str
-    sent: str
+    sent: datetime
     start: str
     expires: str
     is_valid: bool
@@ -162,7 +163,7 @@ class NINADataUpdateCoordinator(
                     shortened_affected_areas,
                     affected_areas_string,
                     raw_warn.web or "",
-                    raw_warn.sent or "",
+                    datetime.fromisoformat(raw_warn.sent),
                     raw_warn.start or "",
                     raw_warn.expires or "",
                     raw_warn.is_valid,
