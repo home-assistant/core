@@ -188,7 +188,6 @@ async def test_complete_item_intent(
     entity1 = MockTodoListEntity(
         [
             TodoItem(summary="beer", uid="1", status=TodoItemStatus.NEEDS_ACTION),
-TodoItem(summary="Beer", uid="1", status=TodoItemStatus.NEEDS_ACTION),
             TodoItem(summary="Beer", uid="1", status=TodoItemStatus.NEEDS_ACTION),
             TodoItem(summary="Wine", uid="2", status=TodoItemStatus.NEEDS_ACTION),
         ]
