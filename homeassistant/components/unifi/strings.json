@@ -59,6 +59,12 @@
       "port_link_speed": {
         "name": "Link speed"
       },
+      "wan_status": {
+        "state": {
+          "online": "Online",
+          "offline": "Offline"
+        }
+      },
       "wired_client_link_speed": {
         "name": "Link speed"
       }
