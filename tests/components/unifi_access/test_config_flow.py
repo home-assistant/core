@@ -508,6 +508,34 @@ async def test_integration_discovery_updates_host(
     assert mock_config_entry.data[CONF_HOST] == "10.0.0.99"
 
 
+async def test_integration_discovery_preserves_hostname(
+    hass: HomeAssistant,
+) -> None:
+    """Test discovery does not overwrite a user-provided hostname with an IP."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="UniFi Access",
+        data={
+            CONF_HOST: "unifi.local",
+            CONF_API_TOKEN: MOCK_API_TOKEN,
+            CONF_VERIFY_SSL: False,
+        },
+        unique_id="B4FBE4AABBCC",
+    )
+    entry.add_to_hass(hass)
+
+    device = _make_discovered_device(source_ip="10.0.0.99")
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_INTEGRATION_DISCOVERY},
+        data=asdict(device),
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert entry.data[CONF_HOST] == "unifi.local"
+
+
 async def test_integration_discovery_adopts_manual_entry(
     hass: HomeAssistant,
 ) -> None:

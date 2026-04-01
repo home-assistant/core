@@ -15,6 +15,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 from homeassistant.helpers.service_info.ssdp import SsdpServiceInfo
 from homeassistant.helpers.typing import DiscoveryInfoType
+from homeassistant.util.network import is_ip_address
 
 from .const import DOMAIN
 from .discovery import async_start_discovery
@@ -88,7 +89,14 @@ class UnifiAccessConfigFlow(ConfigFlow, domain=DOMAIN):
         await self.async_set_unique_id(mac)
         source_ip = discovery_info["source_ip"]
 
-        self._abort_if_unique_id_configured(updates={CONF_HOST: source_ip})
+        # Only update the host if the stored value is an IP address,
+        # not a user-provided hostname like "unifi.local".
+        updates = {}
+        for entry in self._async_current_entries():
+            if entry.unique_id == mac and is_ip_address(entry.data.get(CONF_HOST, "")):
+                updates[CONF_HOST] = source_ip
+                break
+        self._abort_if_unique_id_configured(updates=updates)
 
         # If a manually created entry exists for this host without a unique_id,
         # adopt it by setting the unique_id so future discoveries can update its IP.
