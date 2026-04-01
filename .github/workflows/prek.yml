@@ -8,6 +8,7 @@ on:
       - master
       - rc
   pull_request: ~
+  workflow_dispatch: ~
 
 permissions: {}
 
