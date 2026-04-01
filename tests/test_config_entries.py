@@ -7745,8 +7745,8 @@ async def test_updating_non_added_subentry_raises(hass: HomeAssistant) -> None:
         hass.config_entries.async_update_subentry(entry, subentry, unique_id="new_id")
 
 
-async def test_get_subentry_by_type(hass: HomeAssistant) -> None:
-    """Test getting subentry by type."""
+async def test_subentries_for_type(hass: HomeAssistant) -> None:
+    """Test getting subentries by type."""
     entry = MockConfigEntry(
         domain="test",
         subentries_data=[
@@ -7771,10 +7771,23 @@ async def test_get_subentry_by_type(hass: HomeAssistant) -> None:
         ],
     )
 
-    assert len(entry.subentries_for_type("test")) == 2
-    assert len(entry.subentries_for_type("test_test")) == 1
+    test_subentries = entry.subentries_for_type("test")
+    assert len(test_subentries) == 2
+    assert [subentry.unique_id for subentry in test_subentries] == [
+        "unique",
+        "very_very_unique",
+    ]
+    assert all(subentry.subentry_type == "test" for subentry in test_subentries)
+    assert len({subentry.subentry_id for subentry in test_subentries}) == len(
+        test_subentries
+    )
 
+    test_test_subentries = entry.subentries_for_type("test_test")
+    assert len(test_test_subentries) == 1
+    assert test_test_subentries[0].unique_id == "very_unique"
+    assert test_test_subentries[0].subentry_type == "test_test"
 
+    assert entry.subentries_for_type("unknown") == []
 async def test_reload_during_setup(hass: HomeAssistant) -> None:
     """Test reload during setup waits."""
     entry = MockConfigEntry(domain="comp", data={"value": "initial"})
