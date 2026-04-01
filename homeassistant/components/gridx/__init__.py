@@ -6,7 +6,6 @@ from importlib.resources import files
 import json
 from typing import Any
 
-from gridx_connector.async_connector import AsyncGridboxConnector
 import httpx
 
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
@@ -14,6 +13,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.httpx_client import create_async_httpx_client
 
+from .client import async_create_connector
 from .const import CONF_OEM, DOMAIN, LOGGER
 from .coordinator import GridxHistoricalCoordinator, GridxLiveCoordinator
 from .types import GridxConfigEntry, GridxData
@@ -45,11 +45,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: GridxConfigEntry) -> boo
     )
 
     try:
-        connector = await AsyncGridboxConnector.create(
-            config,
-            httpx_client=httpx_client,
-            owns_httpx_client=True,
-        )
+        connector = await async_create_connector(config, httpx_client)
     except PermissionError as err:
         LOGGER.error("GridX authentication failed: %s", err)
         raise ConfigEntryNotReady(
