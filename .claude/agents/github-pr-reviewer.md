@@ -1,6 +1,7 @@
 ---
 name: github-pr-reviewer
-description: Review a GitHub pull request and provide feedback comments. Use when the user says "review the current PR" or asks to review a specific PR.
+description: Reviews GitHub pull requests and provides feedback comments.
+disallowedTools: Write, Edit
 ---
 
 # Review GitHub Pull Request
