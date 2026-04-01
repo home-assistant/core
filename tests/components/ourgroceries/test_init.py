@@ -2,9 +2,10 @@
 
 from unittest.mock import AsyncMock
 
+from aiohttp import ClientError
+from ourgroceries.exceptions import InvalidLoginException
 import pytest
 
-from homeassistant.components.ourgroceries import ClientError, InvalidLoginException
 from homeassistant.components.ourgroceries.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
