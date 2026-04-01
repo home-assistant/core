@@ -2,7 +2,8 @@
   "config": {
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
@@ -18,6 +19,19 @@
           "api_token": "[%key:component::unifi_access::config::step::user::data_description::api_token%]"
         },
         "description": "The API token for UniFi Access at {host} is invalid. Please provide a new token."
+      },
+      "reconfigure": {
+        "data": {
+          "api_token": "[%key:common::config_flow::data::api_token%]",
+          "host": "[%key:common::config_flow::data::host%]",
+          "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
+        },
+        "data_description": {
+          "api_token": "[%key:component::unifi_access::config::step::user::data_description::api_token%]",
+          "host": "[%key:component::unifi_access::config::step::user::data_description::host%]",
+          "verify_ssl": "[%key:component::unifi_access::config::step::user::data_description::verify_ssl%]"
+        },
+        "description": "Update the connection settings of this UniFi Access controller."
       },
       "user": {
         "data": {
@@ -62,6 +76,41 @@
         }
       }
     },
+    "image": {
+      "door_thumbnail": {
+        "name": "Thumbnail"
+      }
+    },
+    "select": {
+      "door_lock_rule": {
+        "name": "Lock rule",
+        "state": {
+          "custom": "Custom",
+          "keep_lock": "Keep locked",
+          "keep_unlock": "Keep unlocked",
+          "lock_early": "Lock early",
+          "reset": "Reset",
+          "schedule": "Schedule"
+        }
+      }
+    },
+    "sensor": {
+      "door_lock_rule": {
+        "name": "Lock rule",
+        "state": {
+          "custom": "Custom",
+          "keep_lock": "Locked",
+          "keep_unlock": "Unlocked",
+          "lock_early": "Lock early",
+          "lock_now": "Lock now",
+          "reset": "Reset",
+          "schedule": "Schedule"
+        }
+      },
+      "door_lock_rule_ended_time": {
+        "name": "Rule end time"
+      }
+    },
     "switch": {
       "evacuation": {
         "name": "Evacuation"
@@ -74,6 +123,9 @@
   "exceptions": {
     "emergency_failed": {
       "message": "Failed to set emergency status."
+    },
+    "lock_rule_failed": {
+      "message": "Failed to update the door lock rule."
     },
     "unlock_failed": {
       "message": "Failed to unlock the door."

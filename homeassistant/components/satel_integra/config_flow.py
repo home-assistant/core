@@ -5,12 +5,13 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from satel_integra.satel_integra import AsyncSatel
+from satel_integra import AsyncSatel
 import voluptuous as vol
 
 from homeassistant.components.binary_sensor import BinarySensorDeviceClass
 from homeassistant.config_entries import (
     ConfigEntry,
+    ConfigEntryState,
     ConfigFlow,
     ConfigFlowResult,
     ConfigSubentryFlow,
@@ -163,7 +164,16 @@ class SatelConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             self._async_abort_entries_match({CONF_HOST: user_input[CONF_HOST]})
 
-            if await self.test_connection(user_input[CONF_HOST], user_input[CONF_PORT]):
+            if (
+                reconfigure_entry.state is not ConfigEntryState.LOADED
+                or reconfigure_entry.data != user_input
+            ):
+                if not await self.test_connection(
+                    user_input[CONF_HOST], user_input[CONF_PORT]
+                ):
+                    errors["base"] = "cannot_connect"
+
+            if not errors:
                 return self.async_update_reload_and_abort(
                     reconfigure_entry,
                     data_updates={
@@ -171,10 +181,7 @@ class SatelConfigFlow(ConfigFlow, domain=DOMAIN):
                         CONF_PORT: user_input[CONF_PORT],
                     },
                     title=user_input[CONF_HOST],
-                    reload_even_if_entry_is_unchanged=False,
                 )
-
-            errors["base"] = "cannot_connect"
 
         suggested_values: dict[str, Any] = {
             **reconfigure_entry.data,
@@ -191,14 +198,19 @@ class SatelConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def test_connection(self, host: str, port: int) -> bool:
         """Test a connection to the Satel alarm."""
-        controller = AsyncSatel(host, port, self.hass.loop)
+        controller = AsyncSatel(host, port)
 
-        result = await controller.connect()
-
-        # Make sure we close the connection again
-        controller.close()
-
-        return result
+        try:
+            return await controller.connect(check_busy=False)
+        except Exception:
+            _LOGGER.exception(
+                "Unexpected error during connection test to %s:%s",
+                host,
+                port,
+            )
+            return False
+        finally:
+            await controller.close()
 
 
 class SatelOptionsFlow(OptionsFlow):
