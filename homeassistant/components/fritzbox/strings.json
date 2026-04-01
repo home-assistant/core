@@ -90,6 +90,9 @@
         }
       }
     },
+    "number": {
+      "manual_open_window_period": { "name": "Manual open window duration" }
+    },
     "sensor": {
       "comfort_temperature": { "name": "Comfort temperature" },
       "eco_temperature": { "name": "Eco temperature" },
@@ -97,6 +100,9 @@
       "nextchange_temperature": { "name": "Next scheduled temperature" },
       "nextchange_time": { "name": "Next scheduled change time" },
       "scheduled_preset": { "name": "Current scheduled preset" }
+    },
+    "switch": {
+      "open_window_switch": { "name": "Set window open" }
     }
   },
   "exceptions": {
