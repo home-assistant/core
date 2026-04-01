@@ -49,7 +49,7 @@ def async_get_scanner(hass: HomeAssistant) -> BleakScanner:
     The wrapper is cast to BleakScanner for type compatibility with
     libraries expecting a BleakScanner instance.
     """
-    return cast(BleakScanner, HaBleakScannerWrapper())
+    return BleakScanner(backend=HaBleakScannerWrapper)
 
 
 @hass_callback

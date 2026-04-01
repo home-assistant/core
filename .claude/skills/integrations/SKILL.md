@@ -278,6 +278,12 @@ rules:
       # Use scanner
       pass
 
+  # or if library supports direct scanner injection and it's single use
+  scanner = bluetooth.async_get_scanner()
+  with scanner:
+      # Use scanner
+      pass
+
   # For direct scanner callback data with filters
   entry.async_on_unload(
       bluetooth.async_register_callback(
