@@ -5,7 +5,7 @@ from __future__ import annotations
 import asyncio
 from calendar import monthrange
 from datetime import date, datetime, timedelta
-from enum import Enum
+from enum import StrEnum
 from typing import Any, NoReturn, cast
 
 from uiprotect.data import Camera, Event, EventType, SmartDetectObjectType
@@ -35,7 +35,7 @@ THUMBNAIL_WIDTH = 185
 THUMBNAIL_HEIGHT = 185
 
 
-class SimpleEventType(str, Enum):
+class SimpleEventType(StrEnum):
     """Enum to Camera Video events."""
 
     ALL = "all"
@@ -45,7 +45,7 @@ class SimpleEventType(str, Enum):
     AUDIO = "audio"
 
 
-class IdentifierType(str, Enum):
+class IdentifierType(StrEnum):
     """UniFi Protect identifier type."""
 
     EVENT = "event"
@@ -53,7 +53,7 @@ class IdentifierType(str, Enum):
     BROWSE = "browse"
 
 
-class IdentifierTimeType(str, Enum):
+class IdentifierTimeType(StrEnum):
     """UniFi Protect identifier subtype."""
 
     RECENT = "recent"

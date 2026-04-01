@@ -47,18 +47,14 @@ class VeluxEntity(Entity):
 
     _attr_should_poll = False
     _attr_has_entity_name = True
-    update_callback: Callable[["Node"], Awaitable[None]] | None = None
+    update_callback: Callable[[Node], Awaitable[None]] | None = None
     _attr_available = True
     _unavailable_logged = False
 
     def __init__(self, node: Node, config_entry_id: str) -> None:
         """Initialize the Velux device."""
         self.node = node
-        unique_id = (
-            node.serial_number
-            if node.serial_number
-            else f"{config_entry_id}_{node.node_id}"
-        )
+        unique_id = node.serial_number or f"{config_entry_id}_{node.node_id}"
         self._attr_unique_id = unique_id
         self.unsubscribe = None
 
@@ -69,12 +65,12 @@ class VeluxEntity(Entity):
                     unique_id,
                 )
             },
-            name=node.name if node.name else f"#{node.node_id}",
+            name=node.name or f"#{node.node_id}",
             serial_number=node.serial_number,
             via_device=(DOMAIN, f"gateway_{config_entry_id}"),
         )
 
-    async def after_update_callback(self, node) -> None:
+    async def after_update_callback(self, _: Node) -> None:
         """Call after device was updated."""
         self._attr_available = self.node.pyvlx.get_connected()
         if not self._attr_available:

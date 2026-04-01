@@ -155,21 +155,21 @@ async def test_automatic_offset(hass: HomeAssistant, fritz: Mock) -> None:
 async def test_update_error(hass: HomeAssistant, fritz: Mock) -> None:
     """Test update with error."""
     device = FritzDeviceClimateMock()
-    fritz().update_devices.side_effect = HTTPError("Boom")
+    fritz().update_devices.side_effect = ["", HTTPError("Boom"), ""]
     entry = await setup_config_entry(
         hass, MOCK_CONFIG[DOMAIN][CONF_DEVICES][0], ENTITY_ID, device, fritz
     )
-    assert entry.state is ConfigEntryState.SETUP_RETRY
+    assert entry.state is ConfigEntryState.LOADED
 
-    assert fritz().update_devices.call_count == 2
-    assert fritz().login.call_count == 2
+    assert fritz().update_devices.call_count == 1
+    assert fritz().login.call_count == 1
 
-    next_update = dt_util.utcnow() + timedelta(seconds=200)
+    next_update = dt_util.utcnow() + timedelta(seconds=35)
     async_fire_time_changed(hass, next_update)
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    assert fritz().update_devices.call_count == 4
-    assert fritz().login.call_count == 4
+    assert fritz().update_devices.call_count == 3
+    assert fritz().login.call_count == 2
 
 
 @pytest.mark.parametrize(
@@ -442,7 +442,7 @@ async def test_preset_mode_update(hass: HomeAssistant, fritz: Mock) -> None:
     assert state
     assert state.attributes[ATTR_PRESET_MODE] == PRESET_ECO
 
-    # test boost preset
+    # test boost preset by special temp
     device.target_temperature = 127  # special temp from the api
     next_update = dt_util.utcnow() + timedelta(seconds=200)
     async_fire_time_changed(hass, next_update)
@@ -450,6 +450,18 @@ async def test_preset_mode_update(hass: HomeAssistant, fritz: Mock) -> None:
     state = hass.states.get(ENTITY_ID)
 
     assert fritz().update_devices.call_count == 4
+    assert state
+    assert state.attributes[ATTR_PRESET_MODE] == PRESET_BOOST
+
+    # test boost preset by boost_active
+    device.target_temperature = 21
+    device.boost_active = True
+    next_update = dt_util.utcnow() + timedelta(seconds=200)
+    async_fire_time_changed(hass, next_update)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    state = hass.states.get(ENTITY_ID)
+
+    assert fritz().update_devices.call_count == 5
     assert state
     assert state.attributes[ATTR_PRESET_MODE] == PRESET_BOOST
 

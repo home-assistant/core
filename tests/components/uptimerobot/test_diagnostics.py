@@ -3,7 +3,7 @@
 import json
 from unittest.mock import patch
 
-from pyuptimerobot import UptimeRobotException
+from pyuptimerobot import API_PATH_USER_ME, UptimeRobotException
 
 from homeassistant.core import HomeAssistant
 
@@ -11,7 +11,6 @@ from .common import (
     MOCK_UPTIMEROBOT_ACCOUNT,
     MOCK_UPTIMEROBOT_API_KEY,
     MOCK_UPTIMEROBOT_EMAIL,
-    MockApiResponseKey,
     mock_uptimerobot_api_response,
     setup_uptimerobot_integration,
 )
@@ -30,7 +29,7 @@ async def test_entry_diagnostics(
     with patch(
         "pyuptimerobot.UptimeRobot.async_get_account_details",
         return_value=mock_uptimerobot_api_response(
-            key=MockApiResponseKey.ACCOUNT,
+            api_path=API_PATH_USER_ME,
             data=MOCK_UPTIMEROBOT_ACCOUNT,
         ),
     ):
@@ -41,13 +40,12 @@ async def test_entry_diagnostics(
         )
 
     assert result["account"] == {
-        "down_monitors": 0,
-        "paused_monitors": 0,
-        "up_monitors": 1,
+        "monitorsCount": 1,
+        "email": "**REDACTED**",
     }
 
     assert result["monitors"] == [
-        {"id": 1234, "interval": 0, "status": 2, "type": "MonitorType.HTTP"}
+        {"id": 1234, "interval": 300, "status": "UP", "type": "HTTP"}
     ]
 
     assert list(result.keys()) == ["account", "monitors"]

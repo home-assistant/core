@@ -12,6 +12,7 @@ from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from homeassistant.util import dt as dt_util
 
 from .const import _LOGGER
 from .coordinator import VodafoneConfigEntry, VodafoneStationRouter
@@ -75,9 +76,11 @@ class VodafoneGuestWifiQRImage(
         self.entity_description = description
         self._attr_device_info = coordinator.device_info
         self._attr_unique_id = f"{coordinator.serial_number}-{description.key}-qr-code"
+        self._cached_qr_code: bytes | None = None
 
-    async def async_image(self) -> bytes | None:
-        """Return QR code image bytes."""
+    @property
+    def _qr_code(self) -> bytes:
+        """Return QR code bytes."""
         qr_code = cast(
             BytesIO,
             self.coordinator.data.wifi[WIFI_DATA][self.entity_description.key][
@@ -85,3 +88,24 @@ class VodafoneGuestWifiQRImage(
             ],
         )
         return qr_code.getvalue()
+
+    async def async_added_to_hass(self) -> None:
+        """Set the update time."""
+        self._attr_image_last_updated = dt_util.utcnow()
+        await super().async_added_to_hass()
+
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator.
+
+        If the coordinator has updated the QR code, we can update the image.
+        """
+        qr_code = self._qr_code
+        if self._cached_qr_code != qr_code:
+            self._cached_qr_code = qr_code
+            self._attr_image_last_updated = dt_util.utcnow()
+
+        super()._handle_coordinator_update()
+
+    async def async_image(self) -> bytes | None:
+        """Return QR code image."""
+        return self._qr_code

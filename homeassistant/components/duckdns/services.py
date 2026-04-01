@@ -8,13 +8,14 @@ import voluptuous as vol
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_DOMAIN
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
-from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import config_validation as cv, service
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.selector import ConfigEntrySelector
 
 from .const import ATTR_CONFIG_ENTRY, ATTR_TXT, DOMAIN, SERVICE_SET_TXT
 from .coordinator import DuckDnsConfigEntry
 from .helpers import update_duckdns
+from .issue import action_called_without_config_entry
 
 SERVICE_TXT_SCHEMA = vol.Schema(
     {
@@ -42,18 +43,15 @@ def get_config_entry(
     """Return config entry or raise if not found or not loaded."""
 
     if entry_id is None:
+        action_called_without_config_entry(hass)
         if len(entries := hass.config_entries.async_entries(DOMAIN)) != 1:
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
                 translation_key="entry_not_selected",
             )
-        return entries[0]
-    if not (entry := hass.config_entries.async_get_entry(entry_id)):
-        raise ServiceValidationError(
-            translation_domain=DOMAIN,
-            translation_key="entry_not_found",
-        )
-    return entry
+        entry_id = entries[0].entry_id
+
+    return service.async_get_config_entry(hass, DOMAIN, entry_id)
 
 
 async def update_domain_service(call: ServiceCall) -> None:

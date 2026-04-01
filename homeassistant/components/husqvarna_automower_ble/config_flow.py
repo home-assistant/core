@@ -58,7 +58,7 @@ def _is_supported(discovery_info: BluetoothServiceInfo):
 
     # Some mowers only expose the serial number in the manufacturer data
     # and not the product type, so we allow None here as well.
-    if product_type not in (ProductType.MOWER, None):
+    if product_type not in (ProductType.MOWER, ProductType.UNKNOWN):
         LOGGER.debug("Unsupported device: %s (%s)", manufacturer_data, discovery_info)
         return False
 
@@ -78,7 +78,7 @@ def _pin_valid(pin: str) -> bool:
     """Check if the pin is valid."""
     try:
         int(pin)
-    except (TypeError, ValueError):
+    except TypeError, ValueError:
         return False
     return True
 
@@ -261,7 +261,7 @@ class HusqvarnaAutomowerBleConfigFlow(ConfigFlow, domain=DOMAIN):
                     ),
                     errors=errors,
                 )
-        except (TimeoutError, BleakError):
+        except TimeoutError, BleakError:
             return self.async_abort(reason="cannot_connect")
 
         return self.async_create_entry(
@@ -325,7 +325,7 @@ class HusqvarnaAutomowerBleConfigFlow(ConfigFlow, domain=DOMAIN):
                         data=reauth_entry.data | {CONF_PIN: self.pin},
                     )
 
-            except (TimeoutError, BleakError):
+            except TimeoutError, BleakError:
                 # We don't want to abort a reauth flow when we can't connect, so
                 # we just show the form again with an error.
                 errors["base"] = "cannot_connect"

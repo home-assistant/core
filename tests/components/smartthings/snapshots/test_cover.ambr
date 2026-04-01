@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_all_entities[c2c_shade][cover.curtain_1a-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -41,6 +42,7 @@
       'current_position': 100,
       'device_class': 'shade',
       'friendly_name': 'Curtain 1A',
+      'is_closed': False,
       'supported_features': <CoverEntityFeature: 7>,
     }),
     'context': <ANY>,
@@ -53,8 +55,9 @@
 # ---
 # name: test_all_entities[ikea_kadrilj][cover.kitchen_ikea_kadrilj_window_blind-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -94,6 +97,7 @@
       'current_position': 32,
       'device_class': 'shade',
       'friendly_name': 'Kitchen IKEA KADRILJ Window blind',
+      'is_closed': False,
       'supported_features': <CoverEntityFeature: 7>,
     }),
     'context': <ANY>,

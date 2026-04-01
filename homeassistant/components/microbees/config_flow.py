@@ -19,6 +19,8 @@ class OAuth2FlowHandler(
     """Handle a config flow for microBees."""
 
     DOMAIN = DOMAIN
+    VERSION = 1
+    MINOR_VERSION = 2
 
     @property
     def logger(self) -> logging.Logger:
@@ -47,7 +49,7 @@ class OAuth2FlowHandler(
             self.logger.exception("Unexpected error")
             return self.async_abort(reason="unknown")
 
-        await self.async_set_unique_id(current_user.id)
+        await self.async_set_unique_id(str(current_user.id))
         if self.source != SOURCE_REAUTH:
             self._abort_if_unique_id_configured()
             return self.async_create_entry(

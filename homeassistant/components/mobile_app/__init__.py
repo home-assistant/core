@@ -49,7 +49,7 @@ from .const import (
     STORAGE_KEY,
     STORAGE_VERSION,
 )
-from .helpers import savable_state
+from .helpers import async_is_local_only_user, savable_state
 from .http_api import RegistrationsView
 from .timers import async_handle_timer_event
 from .util import async_create_cloud_hook, supports_push
@@ -107,29 +107,14 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Set up a mobile_app entry."""
-    registration = entry.data
-
-    webhook_id = registration[CONF_WEBHOOK_ID]
-
-    hass.data[DOMAIN][DATA_CONFIG_ENTRIES][webhook_id] = entry
-
-    device_registry = dr.async_get(hass)
-
-    device = device_registry.async_get_or_create(
-        config_entry_id=entry.entry_id,
-        identifiers={(DOMAIN, registration[ATTR_DEVICE_ID])},
-        manufacturer=registration[ATTR_MANUFACTURER],
-        model=registration[ATTR_MODEL],
-        name=registration[ATTR_DEVICE_NAME],
-        sw_version=registration[ATTR_OS_VERSION],
-    )
-
-    hass.data[DOMAIN][DATA_DEVICES][webhook_id] = device
-
-    registration_name = f"Mobile App: {registration[ATTR_DEVICE_NAME]}"
-    webhook_register(hass, DOMAIN, registration_name, webhook_id, handle_webhook)
+async def _async_setup_cloudhook(
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    user_id: str,
+    webhook_id: str,
+) -> None:
+    """Set up cloudhook forwarding for a mobile_app entry."""
+    local_only = await async_is_local_only_user(hass, user_id)
 
     def clean_cloudhook() -> None:
         """Clean up cloudhook from config entry."""
@@ -137,6 +122,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             data = dict(entry.data)
             data.pop(CONF_CLOUDHOOK_URL)
             hass.config_entries.async_update_entry(entry, data=data)
+
+    if local_only:
+        # Local-only user should not have a cloudhook
+        if cloud.async_is_logged_in(hass) and CONF_CLOUDHOOK_URL in entry.data:
+            with suppress(cloud.CloudNotAvailable, ValueError):
+                await cloud.async_delete_cloudhook(hass, webhook_id)
+        clean_cloudhook()
+        return
 
     def on_cloudhook_change(cloudhook: dict[str, Any] | None) -> None:
         """Handle cloudhook changes."""
@@ -179,6 +172,33 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         clean_cloudhook()
 
     entry.async_on_unload(cloud.async_listen_connection_change(hass, manage_cloudhook))
+
+
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Set up a mobile_app entry."""
+    registration = entry.data
+
+    webhook_id = registration[CONF_WEBHOOK_ID]
+
+    hass.data[DOMAIN][DATA_CONFIG_ENTRIES][webhook_id] = entry
+
+    device_registry = dr.async_get(hass)
+
+    device = device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers={(DOMAIN, registration[ATTR_DEVICE_ID])},
+        manufacturer=registration[ATTR_MANUFACTURER],
+        model=registration[ATTR_MODEL],
+        name=registration[ATTR_DEVICE_NAME],
+        sw_version=registration[ATTR_OS_VERSION],
+    )
+
+    hass.data[DOMAIN][DATA_DEVICES][webhook_id] = device
+
+    registration_name = f"Mobile App: {registration[ATTR_DEVICE_NAME]}"
+    webhook_register(hass, DOMAIN, registration_name, webhook_id, handle_webhook)
+
+    await _async_setup_cloudhook(hass, entry, registration[CONF_USER_ID], webhook_id)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 

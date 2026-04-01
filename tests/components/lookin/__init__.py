@@ -49,6 +49,6 @@ def _patch_get_info(device=None, exception=None):
     async def _get_info(*args, **kwargs):
         if exception:
             raise exception
-        return device if device else _mocked_device()
+        return device or _mocked_device()
 
     return patch(f"{MODULE_CONFIG_FLOW}.LookInHttpProtocol.get_info", new=_get_info)

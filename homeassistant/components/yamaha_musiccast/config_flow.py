@@ -52,7 +52,7 @@ class MusicCastFlowHandler(ConfigFlow, domain=DOMAIN):
             info = await MusicCastDevice.get_device_info(
                 host, async_create_clientsession(self.hass, cookie_jar=DummyCookieJar())
             )
-        except (MusicCastConnectionException, ClientConnectorError):
+        except MusicCastConnectionException, ClientConnectorError:
             errors["base"] = "cannot_connect"
         except Exception:
             _LOGGER.exception("Unexpected exception")

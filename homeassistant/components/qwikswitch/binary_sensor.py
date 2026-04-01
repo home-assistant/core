@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+from typing import Any
 
 from pyqwikswitch.qwikswitch import SENSORS
 
@@ -39,9 +40,7 @@ async def async_setup_platform(
 class QSBinarySensor(QSEntity, BinarySensorEntity):
     """Sensor based on a Qwikswitch relay/dimmer module."""
 
-    _val = False
-
-    def __init__(self, sensor):
+    def __init__(self, sensor: dict[str, Any]) -> None:
         """Initialize the sensor."""
 
         super().__init__(sensor["id"], sensor["name"])
@@ -50,7 +49,9 @@ class QSBinarySensor(QSEntity, BinarySensorEntity):
 
         self._decode, _ = SENSORS[sensor_type]
         self._invert = not sensor.get("invert", False)
-        self._class = sensor.get("class", "door")
+        self._attr_is_on = not self._invert
+        self._attr_device_class = sensor.get("class", BinarySensorDeviceClass.DOOR)
+        self._attr_unique_id = f"qs{self.qsid}:{self.channel}"
 
     @callback
     def update_packet(self, packet):
@@ -65,20 +66,5 @@ class QSBinarySensor(QSEntity, BinarySensorEntity):
             packet,
         )
         if val is not None:
-            self._val = bool(val)
+            self._attr_is_on = bool(val) == self._invert
             self.async_write_ha_state()
-
-    @property
-    def is_on(self):
-        """Check if device is on (non-zero)."""
-        return self._val == self._invert
-
-    @property
-    def unique_id(self):
-        """Return a unique identifier for this sensor."""
-        return f"qs{self.qsid}:{self.channel}"
-
-    @property
-    def device_class(self) -> BinarySensorDeviceClass:
-        """Return the class of this sensor."""
-        return self._class
