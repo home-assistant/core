@@ -145,6 +145,7 @@ class SwitchBotAirPurifierEntity(SwitchBotCloudEntity, FanEntity):
     _attr_name = None
     _attr_is_on: bool | None = None
     _attr_speed_count = 3
+    _attr_supported_features = FanEntityFeature.TURN_OFF | FanEntityFeature.TURN_ON
 
     @property
     def is_on(self) -> bool | None:

@@ -231,7 +231,7 @@ class SwitchBotCloudAirPurifierLight(SwitchBotCloudLight):
             parameters=value_map_brightness(brightness),
         )
 
-    async def _send_rgb_color_command(self, rgb_color: tuple) -> None:
+    async def _send_rgb_color_command(self, rgb_color: tuple[int, int, int]) -> None:
         """Send an RGB command."""
         await self.send_api_command(
             AirPurifierCommands.SET_LIGHT_COLOR,
