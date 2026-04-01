@@ -313,6 +313,8 @@ async def async_setup_entry(
 ) -> None:
     """Set up Xbox Live friends."""
     presence = config_entry.runtime_data.presence
+    title_history = config_entry.runtime_data.title_history
+
     if TYPE_CHECKING:
         assert config_entry.unique_id
     async_add_entities(
@@ -325,32 +327,33 @@ async def async_setup_entry(
         ]
     )
     for subentry_id, subentry in config_entry.subentries.items():
-        async_add_entities(
-            [
-                XboxSensorEntity(presence, subentry.unique_id, description)
-                for description in SENSOR_DESCRIPTIONS
-                if subentry.unique_id
-                and check_deprecated_entity(
-                    hass, subentry.unique_id, description, SENSOR_DOMAIN
-                )
-                and subentry.unique_id in presence.data.presence
-                and subentry.subentry_type == SUBENTRY_TYPE_FRIEND
-            ],
-            config_subentry_id=subentry_id,
-        )
-
-    title_history = config_entry.runtime_data.title_history
-    for subentry_id, subentry in config_entry.subentries.items():
-        async_add_entities(
-            [
-                XboxGameSensorEntity(title_history, subentry.unique_id, description)
-                for description in GAME_SENSOR_DESCRIPTIONS
-                if subentry.unique_id
-                and subentry.unique_id in title_history.data
-                and subentry.subentry_type == SUBENTRY_TYPE_GAME
-            ],
-            config_subentry_id=subentry_id,
-        )
+        if TYPE_CHECKING:
+            assert subentry.unique_id
+        if (
+            subentry.subentry_type == SUBENTRY_TYPE_FRIEND
+            and subentry.unique_id in presence.data.presence
+        ):
+            async_add_entities(
+                [
+                    XboxSensorEntity(presence, subentry.unique_id, description)
+                    for description in SENSOR_DESCRIPTIONS
+                    if check_deprecated_entity(
+                        hass, subentry.unique_id, description, SENSOR_DOMAIN
+                    )
+                ],
+                config_subentry_id=subentry_id,
+            )
+        if (
+            subentry.subentry_type == SUBENTRY_TYPE_GAME
+            and subentry.unique_id in title_history.data
+        ):
+            async_add_entities(
+                [
+                    XboxGameSensorEntity(title_history, subentry.unique_id, description)
+                    for description in GAME_SENSOR_DESCRIPTIONS
+                ],
+                config_subentry_id=subentry_id,
+            )
 
     consoles = config_entry.runtime_data.consoles
 

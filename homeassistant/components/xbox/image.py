@@ -78,6 +78,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up Xbox images."""
     coordinator = config_entry.runtime_data.presence
+    title_history = config_entry.runtime_data.title_history
     if TYPE_CHECKING:
         assert config_entry.unique_id
     async_add_entities(
@@ -88,23 +89,23 @@ async def async_setup_entry(
     )
 
     for subentry_id, subentry in config_entry.subentries.items():
-        async_add_entities(
-            [
-                XboxImageEntity(hass, coordinator, subentry.unique_id, description)
-                for description in IMAGE_DESCRIPTIONS
-                if subentry.unique_id
-                and subentry.unique_id in coordinator.data.presence
-                and subentry.subentry_type == SUBENTRY_TYPE_FRIEND
-            ],
-            config_subentry_id=subentry_id,
-        )
-
-    title_history = config_entry.runtime_data.title_history
-    for subentry_id, subentry in config_entry.subentries.items():
+        if TYPE_CHECKING:
+            assert subentry.unique_id
         if (
-            subentry.unique_id
+            subentry.subentry_type == SUBENTRY_TYPE_FRIEND
+            and subentry.unique_id in coordinator.data.presence
+        ):
+            async_add_entities(
+                [
+                    XboxImageEntity(hass, coordinator, subentry.unique_id, description)
+                    for description in IMAGE_DESCRIPTIONS
+                ],
+                config_subentry_id=subentry_id,
+            )
+
+        if (
+            subentry.subentry_type == SUBENTRY_TYPE_GAME
             and subentry.unique_id in title_history.data
-            and subentry.subentry_type == SUBENTRY_TYPE_GAME
         ):
             async_add_entities(
                 [XboxGameTitleImageEntity(hass, title_history, subentry.unique_id)],
