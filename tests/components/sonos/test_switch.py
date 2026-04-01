@@ -21,6 +21,7 @@ from homeassistant.components.sonos.switch import (
     ATTR_SPEECH_ENHANCEMENT_ENABLED,
     ATTR_VOLUME,
 )
+from homeassistant.components.ssdp import SsdpChange
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.config_entries import RELOAD_AFTER_UPDATE_DELAY
 from homeassistant.const import (
@@ -349,8 +350,14 @@ async def test_alarm_setup(
     alarm_event,
     entity_registry: er.EntityRegistry,
     soco_factory: SoCoMockFactory,
+    discover,
 ) -> None:
     """Test for correct creation and deletion of alarms during runtime."""
+
+    def capture_callback(*args, **kwargs):
+        # args[1] is the callback function
+        capture_callback.callback = args[1]
+
     one_alarm = copy(alarm_clock.ListAlarms.return_value)
     alarm_list = one_alarm["CurrentAlarmList"]
     alarm_list = alarm_list.replace("RINCON_test", "RINCON_test_10.10.10.2")
@@ -365,23 +372,15 @@ async def test_alarm_setup(
     # Now add the new speaker and simulate discovery
     # Simulate SSDP discovery event for the new speaker
     soco_bedroom = soco_factory.cache_mock(MockSoCo(), "10.10.10.2", "Bedroom")
-    manager = hass.data.get(DATA_SONOS_DISCOVERY_MANAGER)
     ssdp_info = SsdpServiceInfo(
         ssdp_location=f"http://{soco_bedroom.ip_address}/",
         ssdp_st="urn:schemas-upnp-org:device:ZonePlayer:1",
         ssdp_usn=f"uuid:{soco_bedroom.uid}_MR::urn:schemas-upnp-org:service:GroupRenderingControl:1",
         upnp={"UDN": f"uuid:{soco_bedroom.uid}"},
     )
-    # The signature for async_discovered_player is (source, info, discovered_ip, uid, boot_seqnum, model, mdns_name)
-    manager.async_discovered_player(
-        source="ssdp",
-        info=ssdp_info,
-        discovered_ip=soco_bedroom.ip_address,
-        uid=soco_bedroom.uid,
-        boot_seqnum=None,
-        model="Sonos One",
-        mdns_name=None,
-    )
+
+    # Get the callback from the discover fixture mock's recorded call args
+    discover.call_args.args[1](ssdp_info, SsdpChange.ALIVE)
 
     await hass.async_block_till_done(wait_background_tasks=True)
     assert "switch.sonos_alarm_14" in entity_registry.entities
