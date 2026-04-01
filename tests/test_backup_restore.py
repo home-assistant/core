@@ -264,9 +264,9 @@ def test_aborting_for_older_versions(restore_config: str, tmp_path: Path) -> Non
                 restore_database=True,
                 restore_homeassistant=True,
             ),
-            {"backups/test.tar"},
+            {"backups/test.tar", "deps/test.whl"},
             {"home-assistant_v2.db", "home-assistant_v2.db-wal"},
-            {"backups"},
+            {"backups", "deps"},
         ),
         (
             backup_restore.RestoreBackupFileContent(
@@ -276,9 +276,14 @@ def test_aborting_for_older_versions(restore_config: str, tmp_path: Path) -> Non
                 remove_after_restore=False,
                 restore_homeassistant=True,
             ),
-            {"backups/test.tar", "home-assistant_v2.db", "home-assistant_v2.db-wal"},
+            {
+                "backups/test.tar",
+                "deps/test.whl",
+                "home-assistant_v2.db",
+                "home-assistant_v2.db-wal",
+            },
             set(),
-            {"backups"},
+            {"backups", "deps"},
         ),
         (
             backup_restore.RestoreBackupFileContent(
@@ -288,9 +293,9 @@ def test_aborting_for_older_versions(restore_config: str, tmp_path: Path) -> Non
                 remove_after_restore=False,
                 restore_homeassistant=False,
             ),
-            {".HA_RESTORE", ".HA_VERSION", "backups/test.tar"},
+            {".HA_RESTORE", ".HA_VERSION", "backups/test.tar", "deps/test.whl"},
             {"home-assistant_v2.db", "home-assistant_v2.db-wal"},
-            {"backups", "tmp_backups", "www"},
+            {"backups", "deps", "tmp_backups", "www"},
         ),
     ],
 )
@@ -316,12 +321,14 @@ def test_restore_backup(
 
     existing_dirs = {
         "backups",
+        "deps",
         "tmp_backups",
         "www",
     }
     existing_files = {
         ".HA_RESTORE",
         ".HA_VERSION",
+        "deps/test.whl",
         "home-assistant_v2.db",
         "home-assistant_v2.db-wal",
     }
@@ -339,6 +346,8 @@ def test_restore_backup(
         ".HA_VERSION",
         "backups",
         "backups/test.tar",
+        "deps",
+        "deps/test.whl",
         "home-assistant_v2.db",
         "home-assistant_v2.db-wal",
         "tmp_backups",

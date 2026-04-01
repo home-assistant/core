@@ -19,6 +19,7 @@ from .const import __version__ as HA_VERSION
 RESTORE_BACKUP_FILE = ".HA_RESTORE"
 RESTORE_BACKUP_RESULT_FILE = ".HA_RESTORE_RESULT"
 KEEP_BACKUPS = ("backups",)
+KEEP_DEPS = ("deps",)
 KEEP_DATABASE = (
     "home-assistant_v2.db",
     "home-assistant_v2.db-wal",
@@ -121,7 +122,7 @@ def _extract_backup(
                 filter="fully_trusted",
             )
             if restore_content.restore_homeassistant:
-                keep = list(KEEP_BACKUPS)
+                keep = list(KEEP_BACKUPS + KEEP_DEPS)
                 if not restore_content.restore_database:
                     keep.extend(KEEP_DATABASE)
                 _clear_configuration_directory(config_dir, keep)

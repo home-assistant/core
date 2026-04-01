@@ -27,6 +27,7 @@ EXCLUDE_FROM_BACKUP = [
     "OZW_Log.txt",
     "tts/*",
     ".cache/*",
+    "deps",
 ]
 
 EXCLUDE_DATABASE_FROM_BACKUP = [
