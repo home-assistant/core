@@ -34,20 +34,6 @@ def override_platforms() -> Generator[None]:
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_sensors(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    entity_registry: er.EntityRegistry,
-    snapshot: SnapshotAssertion,
-) -> None:
-    """Test for SFR Box sensors."""
-    await hass.config_entries.async_setup(config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    await snapshot_platform(hass, entity_registry, snapshot, config_entry.entry_id)
-
-
-@pytest.mark.usefixtures("entity_registry_enabled_by_default")
-async def test_sensors_with_auth(
-    hass: HomeAssistant,
     config_entry_with_auth: ConfigEntry,
     entity_registry: er.EntityRegistry,
     snapshot: SnapshotAssertion,
@@ -59,3 +45,18 @@ async def test_sensors_with_auth(
     await snapshot_platform(
         hass, entity_registry, snapshot, config_entry_with_auth.entry_id
     )
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_sensors_no_auth(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test for SFR Box sensors."""
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    # Ensure auth-only entities are not registered
+    for entity_id in entity_registry.entities:
+        assert entity_registry.entities[entity_id].translation_key != "voip_infra"

@@ -36,23 +36,6 @@ def override_platforms() -> Generator[None]:
 @pytest.mark.parametrize("net_infra", ["adsl", "ftth"])
 async def test_binary_sensors(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    entity_registry: er.EntityRegistry,
-    snapshot: SnapshotAssertion,
-    system_get_info: SystemInfo,
-    net_infra: str,
-) -> None:
-    """Test for SFR Box binary sensors."""
-    system_get_info.net_infra = net_infra
-    await hass.config_entries.async_setup(config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    await snapshot_platform(hass, entity_registry, snapshot, config_entry.entry_id)
-
-
-@pytest.mark.parametrize("net_infra", ["adsl", "ftth"])
-async def test_binary_sensors_with_auth(
-    hass: HomeAssistant,
     config_entry_with_auth: ConfigEntry,
     entity_registry: er.EntityRegistry,
     snapshot: SnapshotAssertion,
@@ -67,3 +50,25 @@ async def test_binary_sensors_with_auth(
     await snapshot_platform(
         hass, entity_registry, snapshot, config_entry_with_auth.entry_id
     )
+
+
+@pytest.mark.parametrize("net_infra", ["adsl", "ftth"])
+async def test_binary_sensors_no_auth(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    entity_registry: er.EntityRegistry,
+    system_get_info: SystemInfo,
+    net_infra: str,
+) -> None:
+    """Test for SFR Box binary sensors."""
+    system_get_info.net_infra = net_infra
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    # Ensure auth-only entities are not registered
+    for entity_id in entity_registry.entities:
+        assert entity_registry.entities[entity_id].translation_key not in [
+            "voip_status",
+            "voip_callhistory_active",
+            "voip_hook_status",
+        ]
