@@ -452,7 +452,7 @@
     'state': 'unknown',
   })
 # ---
-# name: test_all_button_entities[button.pve1_shutdown-entry]
+# name: test_all_button_entities[button.pve1_shut_down-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -466,7 +466,7 @@
     'disabled_by': None,
     'domain': 'button',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'button.pve1_shutdown',
+    'entity_id': 'button.pve1_shut_down',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -474,12 +474,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Shutdown',
+    'object_id_base': 'Shut down',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Shutdown',
+    'original_name': 'Shut down',
     'platform': 'proxmoxve',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -489,13 +489,13 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_button_entities[button.pve1_shutdown-state]
+# name: test_all_button_entities[button.pve1_shut_down-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'pve1 Shutdown',
+      'friendly_name': 'pve1 Shut down',
     }),
     'context': <ANY>,
-    'entity_id': 'button.pve1_shutdown',
+    'entity_id': 'button.pve1_shut_down',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -853,7 +853,7 @@
     'state': 'unknown',
   })
 # ---
-# name: test_all_button_entities[button.vm_db_shutdown-entry]
+# name: test_all_button_entities[button.vm_db_shut_down-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -867,7 +867,7 @@
     'disabled_by': None,
     'domain': 'button',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'button.vm_db_shutdown',
+    'entity_id': 'button.vm_db_shut_down',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -875,12 +875,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Shutdown',
+    'object_id_base': 'Shut down',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Shutdown',
+    'original_name': 'Shut down',
     'platform': 'proxmoxve',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -890,13 +890,13 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_button_entities[button.vm_db_shutdown-state]
+# name: test_all_button_entities[button.vm_db_shut_down-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'vm-db Shutdown',
+      'friendly_name': 'vm-db Shut down',
     }),
     'context': <ANY>,
-    'entity_id': 'button.vm_db_shutdown',
+    'entity_id': 'button.vm_db_shut_down',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -1204,7 +1204,7 @@
     'state': 'unknown',
   })
 # ---
-# name: test_all_button_entities[button.vm_web_shutdown-entry]
+# name: test_all_button_entities[button.vm_web_shut_down-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1218,7 +1218,7 @@
     'disabled_by': None,
     'domain': 'button',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'button.vm_web_shutdown',
+    'entity_id': 'button.vm_web_shut_down',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1226,12 +1226,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Shutdown',
+    'object_id_base': 'Shut down',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Shutdown',
+    'original_name': 'Shut down',
     'platform': 'proxmoxve',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -1241,13 +1241,13 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_button_entities[button.vm_web_shutdown-state]
+# name: test_all_button_entities[button.vm_web_shut_down-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'vm-web Shutdown',
+      'friendly_name': 'vm-web Shut down',
     }),
     'context': <ANY>,
-    'entity_id': 'button.vm_web_shutdown',
+    'entity_id': 'button.vm_web_shut_down',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
