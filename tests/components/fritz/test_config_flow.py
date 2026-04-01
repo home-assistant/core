@@ -658,9 +658,15 @@ async def test_ssdp_already_in_progress_host(
     hass: HomeAssistant, fc_class_mock
 ) -> None:
     """Test starting a flow from discovery twice."""
-    with patch(
-        "homeassistant.components.fritz.config_flow.FritzConnection",
-        side_effect=fc_class_mock,
+    with (
+        patch(
+            "homeassistant.components.fritz.config_flow.FritzConnection",
+            side_effect=fc_class_mock,
+        ),
+        patch(
+            "homeassistant.components.fritz.config_flow.socket.gethostbyname",
+            return_value=MOCK_IPS["fritz.box"],
+        ),
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_SSDP}, data=MOCK_SSDP_DATA
@@ -688,6 +694,10 @@ async def test_ssdp(hass: HomeAssistant, fc_class_mock) -> None:
         patch(
             "homeassistant.components.fritz.coordinator.FritzBoxTools._update_device_info",
             return_value=MOCK_FIRMWARE_INFO,
+        ),
+        patch(
+            "homeassistant.components.fritz.config_flow.socket.gethostbyname",
+            return_value=MOCK_IPS["fritz.box"],
         ),
         patch("homeassistant.components.fritz.async_setup_entry") as mock_setup_entry,
         patch("requests.get") as mock_request_get,
@@ -722,9 +732,15 @@ async def test_ssdp(hass: HomeAssistant, fc_class_mock) -> None:
 
 async def test_ssdp_exception(hass: HomeAssistant) -> None:
     """Test starting a flow from discovery but no device found."""
-    with patch(
-        "homeassistant.components.fritz.config_flow.FritzConnection",
-        side_effect=FritzConnectionException,
+    with (
+        patch(
+            "homeassistant.components.fritz.config_flow.FritzConnection",
+            side_effect=FritzConnectionException,
+        ),
+        patch(
+            "homeassistant.components.fritz.config_flow.socket.gethostbyname",
+            return_value=MOCK_IPS["fritz.box"],
+        ),
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_SSDP}, data=MOCK_SSDP_DATA

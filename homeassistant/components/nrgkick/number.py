@@ -87,19 +87,18 @@ NUMBERS: tuple[NRGkickNumberEntityDescription, ...] = (
             int(value)
         ),
     ),
-    NRGkickNumberEntityDescription(
-        key="phase_count",
-        translation_key="phase_count",
-        native_min_value=1,
-        native_max_value=3,
-        native_step=1,
-        mode=NumberMode.SLIDER,
-        value_fn=lambda data: data.control.get(CONTROL_KEY_PHASE_COUNT),
-        set_value_fn=lambda coordinator, value: coordinator.api.set_phase_count(
-            int(value)
-        ),
-        max_value_fn=_get_phase_count_max,
-    ),
+)
+
+PHASE_COUNT_DESCRIPTION = NRGkickNumberEntityDescription(
+    key="phase_count",
+    translation_key="phase_count",
+    native_min_value=1,
+    native_max_value=3,
+    native_step=1,
+    mode=NumberMode.SLIDER,
+    value_fn=lambda data: data.control.get(CONTROL_KEY_PHASE_COUNT),
+    set_value_fn=lambda coordinator, value: coordinator.api.set_phase_count(int(value)),
+    max_value_fn=_get_phase_count_max,
 )
 
 
@@ -111,9 +110,11 @@ async def async_setup_entry(
     """Set up NRGkick number entities based on a config entry."""
     coordinator = entry.runtime_data
 
-    async_add_entities(
+    entities: list[NRGkickNumber] = [
         NRGkickNumber(coordinator, description) for description in NUMBERS
-    )
+    ]
+    entities.append(NRGkickPhaseCountNumber(coordinator, PHASE_COUNT_DESCRIPTION))
+    async_add_entities(entities)
 
 
 class NRGkickNumber(NRGkickEntity, NumberEntity):
@@ -153,3 +154,26 @@ class NRGkickNumber(NRGkickEntity, NumberEntity):
         await self._async_call_api(
             self.entity_description.set_value_fn(self.coordinator, value)
         )
+
+
+class NRGkickPhaseCountNumber(NRGkickNumber):
+    """Phase count number entity with optimistic state.
+
+    The device briefly reports 0 phases while switching. This subclass
+    caches the last valid value to avoid exposing the transient state.
+    """
+
+    _last_phase_count: float | None = None
+
+    @property
+    def native_value(self) -> float | None:
+        """Return the current value, filtering transient zeros."""
+        value = super().native_value
+        if value is not None and value != 0:
+            self._last_phase_count = value
+        return self._last_phase_count
+
+    async def async_set_native_value(self, value: float) -> None:
+        """Set phase count with optimistic update."""
+        self._last_phase_count = int(value)
+        await super().async_set_native_value(value)

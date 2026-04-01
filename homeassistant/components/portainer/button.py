@@ -74,6 +74,26 @@ CONTAINER_BUTTONS: tuple[PortainerButtonDescription, ...] = (
             )
         ),
     ),
+    PortainerButtonDescription(
+        key="pause",
+        translation_key="pause_container",
+        entity_category=EntityCategory.CONFIG,
+        press_action=(
+            lambda portainer, endpoint_id, container_id: portainer.pause_container(
+                endpoint_id, container_id
+            )
+        ),
+    ),
+    PortainerButtonDescription(
+        key="resume",
+        translation_key="resume_container",
+        entity_category=EntityCategory.CONFIG,
+        press_action=(
+            lambda portainer, endpoint_id, container_id: portainer.unpause_container(
+                endpoint_id, container_id
+            )
+        ),
+    ),
 )
 
 

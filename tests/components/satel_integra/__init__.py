@@ -6,19 +6,19 @@ from unittest.mock import AsyncMock
 import pytest
 
 from homeassistant.components.binary_sensor import BinarySensorDeviceClass
-from homeassistant.components.satel_integra import (
+from homeassistant.components.satel_integra.const import (
     CONF_ARM_HOME_MODE,
     CONF_OUTPUT_NUMBER,
     CONF_PARTITION_NUMBER,
     CONF_SWITCHABLE_OUTPUT_NUMBER,
     CONF_ZONE_NUMBER,
     CONF_ZONE_TYPE,
+    DEFAULT_PORT,
     SUBENTRY_TYPE_OUTPUT,
     SUBENTRY_TYPE_PARTITION,
     SUBENTRY_TYPE_SWITCHABLE_OUTPUT,
     SUBENTRY_TYPE_ZONE,
 )
-from homeassistant.components.satel_integra.const import DEFAULT_PORT
 from homeassistant.config_entries import ConfigSubentry
 from homeassistant.const import CONF_CODE, CONF_HOST, CONF_NAME, CONF_PORT
 from homeassistant.core import HomeAssistant
@@ -94,13 +94,19 @@ def get_monitor_callbacks(
     mock_satel: AsyncMock,
 ) -> tuple[
     Callable[[], None],
-    Callable[[dict[str, dict[int, int]]], None],
-    Callable[[dict[str, dict[int, int]]], None],
+    Callable[[dict[int, int]], None],
+    Callable[[dict[int, int]], None],
 ]:
-    """Return (partitions_cb, zones_cb, outputs_cb) passed to monitor_status."""
-    if not mock_satel.monitor_status.call_args_list:
-        pytest.fail("monitor_status was not called")
+    """Return callbacks passed to `register_callbacks`."""
+    if not mock_satel.register_callbacks.call_args_list:
+        pytest.fail("register_callbacks was not called")
 
-    call = mock_satel.monitor_status.call_args_list[-1]
-    partitions_cb, zones_cb, outputs_cb = call.args
+    call = mock_satel.register_callbacks.call_args_list[-1]
+    if call.kwargs:
+        partitions_cb = call.kwargs["alarm_status_callback"]
+        zones_cb = call.kwargs["zone_changed_callback"]
+        outputs_cb = call.kwargs["output_changed_callback"]
+    else:
+        partitions_cb, zones_cb, outputs_cb = call.args
+
     return partitions_cb, zones_cb, outputs_cb

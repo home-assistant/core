@@ -8,7 +8,6 @@ from aiomodernforms.const import LIGHT_POWER_OFF, LIGHT_POWER_ON
 import voluptuous as vol
 
 from homeassistant.components.light import ATTR_BRIGHTNESS, ColorMode, LightEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_platform
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -21,13 +20,12 @@ from . import modernforms_exception_handler
 from .const import (
     ATTR_SLEEP_TIME,
     CLEAR_TIMER,
-    DOMAIN,
     OPT_BRIGHTNESS,
     OPT_ON,
     SERVICE_CLEAR_LIGHT_SLEEP_TIMER,
     SERVICE_SET_LIGHT_SLEEP_TIMER,
 )
-from .coordinator import ModernFormsDataUpdateCoordinator
+from .coordinator import ModernFormsConfigEntry, ModernFormsDataUpdateCoordinator
 from .entity import ModernFormsDeviceEntity
 
 BRIGHTNESS_RANGE = (1, 255)
@@ -35,14 +33,12 @@ BRIGHTNESS_RANGE = (1, 255)
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: ModernFormsConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up a Modern Forms platform from config entry."""
 
-    coordinator: ModernFormsDataUpdateCoordinator = hass.data[DOMAIN][
-        config_entry.entry_id
-    ]
+    coordinator = config_entry.runtime_data
 
     # if no light unit installed no light entity
     if not coordinator.data.info.light_type:

@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_bus_sensor[sensor.m15_1_av_e_79_st_next_arrival-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -51,8 +52,9 @@
 # ---
 # name: test_bus_sensor[sensor.m15_1_av_e_79_st_next_arrival_destination-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -100,8 +102,9 @@
 # ---
 # name: test_bus_sensor[sensor.m15_1_av_e_79_st_next_arrival_route-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -149,8 +152,9 @@
 # ---
 # name: test_bus_sensor[sensor.m15_1_av_e_79_st_second_arrival-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -199,8 +203,9 @@
 # ---
 # name: test_bus_sensor[sensor.m15_1_av_e_79_st_second_arrival_destination-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -248,8 +253,9 @@
 # ---
 # name: test_bus_sensor[sensor.m15_1_av_e_79_st_second_arrival_route-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -297,8 +303,9 @@
 # ---
 # name: test_bus_sensor[sensor.m15_1_av_e_79_st_third_arrival-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -347,8 +354,9 @@
 # ---
 # name: test_bus_sensor[sensor.m15_1_av_e_79_st_third_arrival_destination-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -396,8 +404,9 @@
 # ---
 # name: test_bus_sensor[sensor.m15_1_av_e_79_st_third_arrival_route-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -445,8 +454,9 @@
 # ---
 # name: test_subway_sensor[sensor.1_times_sq_42_st_n_direction_next_arrival-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -495,8 +505,9 @@
 # ---
 # name: test_subway_sensor[sensor.1_times_sq_42_st_n_direction_next_arrival_destination-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -544,8 +555,9 @@
 # ---
 # name: test_subway_sensor[sensor.1_times_sq_42_st_n_direction_next_arrival_route-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -593,8 +605,9 @@
 # ---
 # name: test_subway_sensor[sensor.1_times_sq_42_st_n_direction_second_arrival-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -643,8 +656,9 @@
 # ---
 # name: test_subway_sensor[sensor.1_times_sq_42_st_n_direction_second_arrival_destination-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -692,8 +706,9 @@
 # ---
 # name: test_subway_sensor[sensor.1_times_sq_42_st_n_direction_second_arrival_route-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -741,8 +756,9 @@
 # ---
 # name: test_subway_sensor[sensor.1_times_sq_42_st_n_direction_third_arrival-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -791,8 +807,9 @@
 # ---
 # name: test_subway_sensor[sensor.1_times_sq_42_st_n_direction_third_arrival_destination-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -840,8 +857,9 @@
 # ---
 # name: test_subway_sensor[sensor.1_times_sq_42_st_n_direction_third_arrival_route-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,

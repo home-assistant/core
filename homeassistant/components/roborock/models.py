@@ -13,10 +13,27 @@ from roborock.data import (
     HomeDataProduct,
     NetworkInfo,
 )
+from roborock.devices.device import RoborockDevice
 from roborock.devices.traits.v1.status import StatusTrait
 from vacuum_map_parser_base.map_data import MapData
 
+from homeassistant.helpers.device_registry import DeviceInfo
+
+from .const import DOMAIN
+
 _LOGGER = logging.getLogger(__name__)
+
+
+def get_device_info(device: RoborockDevice) -> DeviceInfo:
+    """Create a DeviceInfo for a Roborock device."""
+    return DeviceInfo(
+        name=device.name,
+        identifiers={(DOMAIN, device.duid)},
+        manufacturer="Roborock",
+        model=device.product.model,
+        model_id=device.product.model,
+        sw_version=device.device_info.fv,
+    )
 
 
 @dataclass

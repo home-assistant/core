@@ -16,6 +16,7 @@ from . import (
     MOCK_PARTITION_SUBENTRY,
     MOCK_SWITCHABLE_OUTPUT_SUBENTRY,
     MOCK_ZONE_SUBENTRY,
+    get_monitor_callbacks,
 )
 
 from tests.common import MockConfigEntry
@@ -63,13 +64,18 @@ def mock_satel() -> Generator[AsyncMock]:
         client.connect = AsyncMock(return_value=True)
         client.set_output = AsyncMock()
 
-        # Immediately push baseline values so entities have stable states for snapshots
-        async def _monitor_status(partitions_cb, zones_cb, outputs_cb):
-            partitions_cb()
-            zones_cb({"zones": {1: 0}})
-            outputs_cb({"outputs": {1: 0}})
+        client.register_callbacks = MagicMock()
 
-        client.monitor_status = AsyncMock(side_effect=_monitor_status)
+        # Immediately push baseline values so entities have stable states for snapshots
+        async def _start(**_: object) -> None:
+            alarm_status_callback, zone_changed_callback, output_changed_callback = (
+                get_monitor_callbacks(client)
+            )
+            alarm_status_callback()
+            zone_changed_callback({1: 0})
+            output_changed_callback({1: 0})
+
+        client.start = AsyncMock(side_effect=_start)
 
         yield client
 

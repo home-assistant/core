@@ -16,6 +16,7 @@ from homeassistant.components.conversation import (
     async_get_chat_log,
 )
 from homeassistant.components.conversation.const import HOME_ASSISTANT_AGENT
+from homeassistant.components.conversation.models import ConversationResult
 from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
 from homeassistant.const import ATTR_FRIENDLY_NAME
 from homeassistant.core import HomeAssistant
@@ -173,6 +174,36 @@ async def test_http_api_wrong_data(
     assert resp.status == HTTPStatus.BAD_REQUEST
 
 
+async def test_http_processing_intent_with_device_satellite_ids(
+    hass: HomeAssistant,
+    init_components,
+    hass_client: ClientSessionGenerator,
+) -> None:
+    """Test processing intent via HTTP API with both device_id and satellite_id."""
+    client = await hass_client()
+    mock_result = intent.IntentResponse(language=hass.config.language)
+    mock_result.async_set_speech("test")
+
+    with patch(
+        "homeassistant.components.conversation.http.async_converse",
+        return_value=ConversationResult(response=mock_result),
+    ) as mock_converse:
+        resp = await client.post(
+            "/api/conversation/process",
+            json={
+                "text": "test",
+                "device_id": "test-device-id",
+                "satellite_id": "test-satellite-id",
+            },
+        )
+
+        assert resp.status == HTTPStatus.OK
+        mock_converse.assert_called_once()
+        call_kwargs = mock_converse.call_args[1]
+        assert call_kwargs["device_id"] == "test-device-id"
+        assert call_kwargs["satellite_id"] == "test-satellite-id"
+
+
 @pytest.mark.parametrize(
     "payload",
     [
@@ -219,6 +250,38 @@ async def test_ws_api(
     assert msg["success"]
     assert msg["result"] == snapshot
     assert msg["result"]["response"]["data"]["code"] == "no_intent_match"
+
+
+async def test_ws_api_with_device_satellite_ids(
+    hass: HomeAssistant,
+    init_components,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test the Websocket conversation API with both device_id and satellite_id."""
+    client = await hass_ws_client(hass)
+    mock_result = intent.IntentResponse(language=hass.config.language)
+    mock_result.async_set_speech("test")
+
+    with patch(
+        "homeassistant.components.conversation.http.async_converse",
+        return_value=ConversationResult(response=mock_result),
+    ) as mock_converse:
+        await client.send_json_auto_id(
+            {
+                "type": "conversation/process",
+                "text": "test",
+                "device_id": "test-device-id",
+                "satellite_id": "test-satellite-id",
+            }
+        )
+
+        msg = await client.receive_json()
+
+        assert msg["success"]
+        mock_converse.assert_called_once()
+        call_kwargs = mock_converse.call_args[1]
+        assert call_kwargs["device_id"] == "test-device-id"
+        assert call_kwargs["satellite_id"] == "test-satellite-id"
 
 
 @pytest.mark.parametrize("agent_id", AGENT_ID_OPTIONS)
@@ -399,7 +462,9 @@ async def test_ws_hass_agent_debug_out_of_range(
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test homeassistant agent debug websocket command with an out of range entity."""
-    test_light = entity_registry.async_get_or_create("light", "demo", "1234")
+    test_light = entity_registry.async_get_or_create(
+        "light", "demo", "1234", original_name="test light"
+    )
     hass.states.async_set(
         test_light.entity_id, "off", attributes={ATTR_FRIENDLY_NAME: "test light"}
     )

@@ -169,6 +169,7 @@ LIGHTLEVEL_DESCRIPTION = SwitchbotCloudSensorEntityDescription(
 SENSOR_DESCRIPTIONS_BY_DEVICE_TYPES = {
     "Bot": (BATTERY_DESCRIPTION,),
     "Battery Circulator Fan": (BATTERY_DESCRIPTION,),
+    "Standing Fan": (BATTERY_DESCRIPTION,),
     "Meter": (
         TEMPERATURE_DESCRIPTION,
         HUMIDITY_DESCRIPTION,
@@ -227,6 +228,8 @@ SENSOR_DESCRIPTIONS_BY_DEVICE_TYPES = {
     "Smart Lock Ultra": (BATTERY_DESCRIPTION,),
     "Smart Lock Vision": (BATTERY_DESCRIPTION,),
     "Smart Lock Vision Pro": (BATTERY_DESCRIPTION,),
+    "Lock Vision": (BATTERY_DESCRIPTION,),
+    "Lock Vision Pro": (BATTERY_DESCRIPTION,),
     "Smart Lock Pro Wifi": (BATTERY_DESCRIPTION,),
     "Relay Switch 2PM": (
         RELAY_SWITCH_2PM_POWER_DESCRIPTION,

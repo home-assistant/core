@@ -29,6 +29,7 @@ from .const import (
     API_CO,
     API_CO2,
     API_HUMIDITY,
+    API_INFLUENZA,
     API_MOLD,
     API_NO2,
     API_OZONE,
@@ -129,6 +130,12 @@ SENSOR_TYPES: tuple[UhooSensorEntityDescription, ...] = (
         translation_key=API_MOLD,
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda data: data.mold_index,
+    ),
+    UhooSensorEntityDescription(
+        key=API_INFLUENZA,
+        translation_key=API_INFLUENZA,
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda data: data.influenza_index,
     ),
 )
 

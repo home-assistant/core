@@ -4,6 +4,8 @@ from __future__ import annotations
 
 import logging
 
+from universal_silabs_flasher.flasher import Zbt2Flasher
+
 from homeassistant.components.homeassistant_hardware.coordinator import (
     FirmwareUpdateCoordinator,
 )
@@ -23,7 +25,6 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import HomeAssistantConnectZBT2ConfigEntry
-from .config_flow import ZBT2FirmwareMixin
 from .const import DOMAIN, FIRMWARE, FIRMWARE_VERSION, HARDWARE_NAME, SERIAL_NUMBER
 
 _LOGGER = logging.getLogger(__name__)
@@ -134,8 +135,7 @@ async def async_setup_entry(
 class FirmwareUpdateEntity(BaseFirmwareUpdateEntity):
     """Connect ZBT-2 firmware update entity."""
 
-    BOOTLOADER_RESET_METHODS = ZBT2FirmwareMixin.BOOTLOADER_RESET_METHODS
-    APPLICATION_PROBE_METHODS = ZBT2FirmwareMixin.APPLICATION_PROBE_METHODS
+    _flasher_cls = Zbt2Flasher
 
     def __init__(
         self,

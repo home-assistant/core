@@ -4,7 +4,7 @@ from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
 import pytest
-from zinvolt.models import BatteryListResponse, BatteryState
+from zinvolt.models import BatteryListResponse, BatteryState, BatteryUnit
 
 from homeassistant.components.zinvolt.const import DOMAIN
 from homeassistant.const import CONF_ACCESS_TOKEN
@@ -53,5 +53,8 @@ def mock_zinvolt_client() -> Generator[AsyncMock]:
         ).batteries
         client.get_battery_status.return_value = BatteryState.from_json(
             load_fixture("current_state.json", DOMAIN)
+        )
+        client.get_battery_unit.return_value = BatteryUnit.from_json(
+            load_fixture("battery_unit.json", DOMAIN)
         )
         yield client

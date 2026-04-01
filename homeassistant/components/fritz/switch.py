@@ -26,7 +26,7 @@ from .const import (
     MeshRoles,
 )
 from .coordinator import FRITZ_DATA_KEY, AvmWrapper, FritzConfigEntry, FritzData
-from .entity import FritzBoxBaseEntity, FritzDeviceBase
+from .entity import FritzBoxBaseEntity
 from .helpers import device_filter_out_from_trackers
 from .models import FritzDevice, SwitchInfo
 
@@ -332,7 +332,7 @@ class FritzBoxBaseSwitch(FritzBoxBaseEntity, SwitchEntity):
 
     @property
     def icon(self) -> str:
-        """Return name."""
+        """Return icon."""
         return self._icon
 
     @property
@@ -485,42 +485,51 @@ class FritzBoxDeflectionSwitch(FritzBoxBaseCoordinatorSwitch):
         self.async_write_ha_state()
 
 
-class FritzBoxProfileSwitch(FritzDeviceBase, SwitchEntity):
+class FritzBoxProfileSwitch(FritzBoxBaseCoordinatorSwitch):
     """Defines a FRITZ!Box Tools DeviceProfile switch."""
 
     _attr_translation_key = "internet_access"
+    _attr_entity_category = EntityCategory.CONFIG
 
     def __init__(self, avm_wrapper: AvmWrapper, device: FritzDevice) -> None:
         """Init Fritz profile."""
-        super().__init__(avm_wrapper, device)
-        self._attr_is_on: bool = False
+        self._mac = device.mac_address
+        description = SwitchEntityDescription(
+            key=f"{self._mac}_internet_access",
+        )
+        super().__init__(avm_wrapper, device.hostname, description)
         self._attr_unique_id = f"{self._mac}_internet_access"
-        self._attr_entity_category = EntityCategory.CONFIG
 
     @property
-    def is_on(self) -> bool | None:
-        """Switch status."""
-        return self._avm_wrapper.devices[self._mac].wan_access
+    def device_info(self) -> DeviceInfo:
+        """Return the device information."""
+        return DeviceInfo(
+            connections={(CONNECTION_NETWORK_MAC, self._mac)},
+        )
+
+    @property
+    def _device(self) -> FritzDevice:
+        """Return the device for this profile switch."""
+        return self.coordinator.devices[self._mac]
 
     @property
     def available(self) -> bool:
         """Return availability of the switch."""
-        if self._avm_wrapper.devices[self._mac].wan_access is None:
+        if self._device.wan_access is None:
             return False
-        return super().available
+        return self.coordinator.last_update_success
 
-    async def async_turn_on(self, **kwargs: Any) -> None:
-        """Turn on switch."""
-        await self._async_handle_turn_on_off(turn_on=True)
-
-    async def async_turn_off(self, **kwargs: Any) -> None:
-        """Turn off switch."""
-        await self._async_handle_turn_on_off(turn_on=False)
+    @property
+    def is_on(self) -> bool | None:
+        """Switch status."""
+        return self._device.wan_access
 
     async def _async_handle_turn_on_off(self, turn_on: bool) -> None:
         """Handle switch state change request."""
-        await self._avm_wrapper.async_set_allow_wan_access(self.ip_address, turn_on)
-        self._avm_wrapper.devices[self._mac].wan_access = turn_on
+        await self.coordinator.async_set_allow_wan_access(
+            self._device.ip_address, turn_on
+        )
+        self._device.wan_access = turn_on
         self.async_write_ha_state()
 
 

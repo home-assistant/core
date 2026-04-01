@@ -16,6 +16,7 @@ Dockerfile.dev linguist-language=Dockerfile
 CODEOWNERS linguist-generated=true
 Dockerfile linguist-generated=true
 homeassistant/generated/*.py linguist-generated=true
+machine/* linguist-generated=true
 mypy.ini linguist-generated=true
 requirements.txt linguist-generated=true
 requirements_all.txt linguist-generated=true

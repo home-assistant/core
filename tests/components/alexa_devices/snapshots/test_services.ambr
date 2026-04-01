@@ -19,6 +19,7 @@
         'hardware_version': '1.0',
         'household_device': False,
         'manufacturer': 'Test manufacturer',
+        'media_player_supported': True,
         'model': 'Test model',
         'notifications': dict({
           'Alarm': dict({
@@ -89,6 +90,7 @@
         'hardware_version': '1.0',
         'household_device': False,
         'manufacturer': 'Test manufacturer',
+        'media_player_supported': True,
         'model': 'Test model',
         'notifications': dict({
           'Alarm': dict({
@@ -159,6 +161,7 @@
         'hardware_version': '1.0',
         'household_device': False,
         'manufacturer': 'Test manufacturer',
+        'media_player_supported': True,
         'model': 'Test model',
         'notifications': dict({
           'Alarm': dict({

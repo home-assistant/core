@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import asyncio
 from collections.abc import Callable
 from datetime import UTC, datetime, timedelta
 import logging
@@ -11,13 +10,8 @@ from time import time
 from typing import Any
 
 from reolink_aio.api import RETRY_ATTEMPTS
-from reolink_aio.exceptions import (
-    CredentialsInvalidError,
-    LoginPrivacyModeError,
-    ReolinkError,
-)
+from reolink_aio.exceptions import CredentialsInvalidError, ReolinkError
 
-from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_PORT, EVENT_HOMEASSISTANT_STOP, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
@@ -29,7 +23,6 @@ from homeassistant.helpers import (
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import (
     BATTERY_PASSIVE_WAKE_UPDATE_INTERVAL,
@@ -40,6 +33,7 @@ from .const import (
     CONF_USE_HTTPS,
     DOMAIN,
 )
+from .coordinator import ReolinkDeviceCoordinator, ReolinkFirmwareCoordinator
 from .exceptions import PasswordIncompatible, ReolinkException, UserNotAdmin
 from .host import ReolinkHost
 from .services import async_setup_services
@@ -60,10 +54,7 @@ PLATFORMS = [
     Platform.SWITCH,
     Platform.UPDATE,
 ]
-DEVICE_UPDATE_INTERVAL_MIN = timedelta(seconds=60)
-DEVICE_UPDATE_INTERVAL_PER_CAM = timedelta(seconds=10)
 FIRMWARE_UPDATE_INTERVAL = timedelta(hours=24)
-NUM_CRED_ERRORS = 3
 
 CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 
@@ -141,81 +132,21 @@ async def async_setup_entry(
         hass.config_entries.async_update_entry(config_entry, data=data)
 
     min_timeout = host.api.timeout * (RETRY_ATTEMPTS + 2)
-    update_timeout = max(min_timeout, min_timeout * host.api.num_cameras / 10)
 
-    async def async_device_config_update() -> None:
-        """Update the host state cache and renew the ONVIF-subscription."""
-        async with asyncio.timeout(update_timeout):
-            try:
-                await host.update_states()
-            except CredentialsInvalidError as err:
-                host.credential_errors += 1
-                if host.credential_errors >= NUM_CRED_ERRORS:
-                    await host.stop()
-                    raise ConfigEntryAuthFailed(err) from err
-                raise UpdateFailed(str(err)) from err
-            except LoginPrivacyModeError:
-                pass  # HTTP API is shutdown when privacy mode is active
-            except ReolinkError as err:
-                host.credential_errors = 0
-                raise UpdateFailed(str(err)) from err
-
-        host.credential_errors = 0
-
-        async with asyncio.timeout(min_timeout):
-            await host.renew()
-
-        if host.api.new_devices and config_entry.state == ConfigEntryState.LOADED:
-            # Their are new cameras/chimes connected, reload to add them.
-            _LOGGER.debug(
-                "Reloading Reolink %s to add new device (capabilities)",
-                host.api.nvr_name,
-            )
-            hass.async_create_task(
-                hass.config_entries.async_reload(config_entry.entry_id)
-            )
-
-    async def async_check_firmware_update() -> None:
-        """Check for firmware updates."""
-        async with asyncio.timeout(min_timeout):
-            try:
-                await host.api.check_new_firmware(host.firmware_ch_list)
-            except ReolinkError as err:
-                if host.starting:
-                    _LOGGER.debug(
-                        "Error checking Reolink firmware update at startup "
-                        "from %s, possibly internet access is blocked",
-                        host.api.nvr_name,
-                    )
-                    return
-
-                raise UpdateFailed(
-                    f"Error checking Reolink firmware update from {host.api.nvr_name}, "
-                    "if the camera is blocked from accessing the internet, "
-                    "disable the update entity"
-                ) from err
-            finally:
-                host.starting = False
-
-    device_coordinator = DataUpdateCoordinator(
+    device_coordinator = ReolinkDeviceCoordinator(
         hass,
-        _LOGGER,
-        config_entry=config_entry,
-        name=f"reolink.{host.api.nvr_name}",
-        update_method=async_device_config_update,
-        update_interval=max(
-            DEVICE_UPDATE_INTERVAL_MIN,
-            DEVICE_UPDATE_INTERVAL_PER_CAM * host.api.num_cameras,
-        ),
+        config_entry,
+        host,
+        min_timeout=min_timeout,
     )
-    firmware_coordinator = DataUpdateCoordinator(
+
+    firmware_coordinator = ReolinkFirmwareCoordinator(
         hass,
-        _LOGGER,
-        config_entry=config_entry,
-        name=f"reolink.{host.api.nvr_name}.firmware",
-        update_method=async_check_firmware_update,
-        update_interval=None,  # Do not fetch data automatically, resume 24h schedule
+        config_entry,
+        host,
+        min_timeout=min_timeout,
     )
+    device_coordinator.firmware_coordinator = firmware_coordinator
 
     async def first_firmware_check(*args: Any) -> None:
         """Start first firmware check delayed to continue 24h schedule."""
@@ -283,7 +214,7 @@ async def async_setup_entry(
 
 async def register_callbacks(
     host: ReolinkHost,
-    device_coordinator: DataUpdateCoordinator[None],
+    device_coordinator: ReolinkDeviceCoordinator,
     hass: HomeAssistant,
 ) -> None:
     """Register update callbacks."""

@@ -6,6 +6,6 @@
   "documentation": "https://www.home-assistant.io/integrations/uhooair",
   "integration_type": "hub",
   "iot_class": "cloud_polling",
-  "quality_scale": "bronze",
-  "requirements": ["uhooapi==1.2.6"]
+  "quality_scale": "silver",
+  "requirements": ["uhooapi==1.2.8"]
 }

@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_celsius_fahrenheit[climate.bsb_lan-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'hvac_modes': list([
@@ -78,8 +79,9 @@
 # ---
 # name: test_climate_entity_properties[climate.bsb_lan-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'hvac_modes': list([

@@ -5,20 +5,29 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 
+from homeassistant.components.bluetooth import BluetoothServiceInfoBleak
 from homeassistant.components.switchbot.const import (
     CONF_CURTAIN_SPEED,
     CONF_RETRY_COUNT,
     DEFAULT_CURTAIN_SPEED,
     DEFAULT_RETRY_COUNT,
+    DEPRECATED_SENSOR_TYPE_AIR_PURIFIER,
+    DEPRECATED_SENSOR_TYPE_AIR_PURIFIER_TABLE,
     DOMAIN,
 )
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_ADDRESS, CONF_NAME, CONF_SENSOR_TYPE
 from homeassistant.core import HomeAssistant
 
 from . import (
+    AIR_PURIFIER_PM25_SERVICE_INFO,
+    AIR_PURIFIER_TABLE_PM25_SERVICE_INFO,
+    AIR_PURIFIER_TABLE_VOC_SERVICE_INFO,
+    AIR_PURIFIER_VOC_SERVICE_INFO,
     HUBMINI_MATTER_SERVICE_INFO,
     LOCK_SERVICE_INFO,
     WOCURTAIN_SERVICE_INFO,
+    WOMETERTHPC_SERVICE_INFO,
     WOSENSORTH_SERVICE_INFO,
     patch_async_ble_device_from_address,
 )
@@ -76,6 +85,32 @@ async def test_setup_entry_without_ble_device(
         "Could not find Switchbot hygrometer_co2 with address aa:bb:cc:dd:ee:ff"
         in caplog.text
     )
+
+
+async def test_setup_entry_meter_pro_co2_uses_non_connectable(
+    hass: HomeAssistant,
+    mock_entry_factory: Callable[[str], MockConfigEntry],
+) -> None:
+    """Test that Meter Pro CO2 setup uses connectable=False for BLE lookup.
+
+    Meter Pro CO2 is in both CONNECTABLE and NON_CONNECTABLE model types,
+    so async_ble_device_from_address should be called with connectable=False
+    to support passive BT proxies.
+    """
+    inject_bluetooth_service_info(hass, WOMETERTHPC_SERVICE_INFO)
+
+    entry = mock_entry_factory("hygrometer_co2")
+    entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.bluetooth.async_ble_device_from_address",
+    ) as mock_ble:
+        mock_ble.return_value = WOMETERTHPC_SERVICE_INFO.device
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+        # connectable should be False since METER_PRO_C is in both lists
+        assert mock_ble.call_args_list[0][0][2] is False
 
 
 async def test_coordinator_wait_ready_timeout(
@@ -211,3 +246,83 @@ async def test_migrate_entry_fails_for_future_version(
     # Entry should not be loaded due to failed migration
     assert entry.version == 2
     assert entry.minor_version == 1
+
+
+@pytest.mark.parametrize(
+    ("old_sensor_type", "service_info", "expected_sensor_type"),
+    [
+        (
+            DEPRECATED_SENSOR_TYPE_AIR_PURIFIER,
+            AIR_PURIFIER_VOC_SERVICE_INFO,
+            "air_purifier_jp",
+        ),
+        (
+            DEPRECATED_SENSOR_TYPE_AIR_PURIFIER,
+            AIR_PURIFIER_PM25_SERVICE_INFO,
+            "air_purifier_us",
+        ),
+        (
+            DEPRECATED_SENSOR_TYPE_AIR_PURIFIER_TABLE,
+            AIR_PURIFIER_TABLE_VOC_SERVICE_INFO,
+            "air_purifier_table_jp",
+        ),
+        (
+            DEPRECATED_SENSOR_TYPE_AIR_PURIFIER_TABLE,
+            AIR_PURIFIER_TABLE_PM25_SERVICE_INFO,
+            "air_purifier_table_us",
+        ),
+    ],
+)
+async def test_migrate_deprecated_air_purifier_sensor_type(
+    hass: HomeAssistant,
+    old_sensor_type: str,
+    service_info: BluetoothServiceInfoBleak,
+    expected_sensor_type: str,
+) -> None:
+    """Test that deprecated air_purifier sensor types are migrated via BLE advertisement."""
+    inject_bluetooth_service_info(hass, service_info)
+
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_ADDRESS: "aa:bb:cc:dd:ee:ff",
+            CONF_NAME: "test-name",
+            CONF_SENSOR_TYPE: old_sensor_type,
+        },
+        unique_id="aabbccddeeff",
+        version=1,
+        minor_version=2,
+        options={CONF_RETRY_COUNT: DEFAULT_RETRY_COUNT},
+    )
+    entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert entry.data[CONF_SENSOR_TYPE] == expected_sensor_type
+
+
+async def test_migrate_deprecated_air_purifier_sensor_type_device_not_in_range(
+    hass: HomeAssistant,
+) -> None:
+    """Test deprecated air_purifier type entry is not loaded when device is out of range."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_ADDRESS: "aa:bb:cc:dd:ee:ff",
+            CONF_NAME: "test-name",
+            CONF_SENSOR_TYPE: DEPRECATED_SENSOR_TYPE_AIR_PURIFIER,
+        },
+        unique_id="aabbccddeeff",
+        version=1,
+        minor_version=2,
+        options={CONF_RETRY_COUNT: DEFAULT_RETRY_COUNT},
+    )
+    entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    # sensor_type unchanged and entry not loaded; will retry when device advertises
+    assert entry.data[CONF_SENSOR_TYPE] == DEPRECATED_SENSOR_TYPE_AIR_PURIFIER
+    assert entry.state is ConfigEntryState.SETUP_RETRY

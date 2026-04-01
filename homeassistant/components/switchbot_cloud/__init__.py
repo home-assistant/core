@@ -190,6 +190,8 @@ async def make_device_data(
         "Smart Lock Vision",
         "Smart Lock Vision Pro",
         "Smart Lock Pro Wifi",
+        "Lock Vision",
+        "Lock Vision Pro",
     ]:
         coordinator = await coordinator_for_device(
             hass, entry, api, device, coordinators_by_id
@@ -245,13 +247,18 @@ async def make_device_data(
 
     if isinstance(device, Device) and device.device_type in [
         "Battery Circulator Fan",
-        "Circulator Fan",
+        "Standing Fan",
     ]:
         coordinator = await coordinator_for_device(
             hass, entry, api, device, coordinators_by_id
         )
         devices_data.fans.append((device, coordinator))
         devices_data.sensors.append((device, coordinator))
+    if isinstance(device, Device) and device.device_type == "Circulator Fan":
+        coordinator = await coordinator_for_device(
+            hass, entry, api, device, coordinators_by_id
+        )
+        devices_data.fans.append((device, coordinator))
     if isinstance(device, Device) and device.device_type in [
         "Curtain",
         "Curtain3",

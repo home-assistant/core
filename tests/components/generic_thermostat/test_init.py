@@ -8,7 +8,11 @@ import pytest
 
 from homeassistant.components import generic_thermostat
 from homeassistant.components.generic_thermostat.config_flow import ConfigFlowHandler
-from homeassistant.components.generic_thermostat.const import DOMAIN
+from homeassistant.components.generic_thermostat.const import (
+    CONF_DUR_COOLDOWN,
+    CONF_MIN_DUR,
+    DOMAIN,
+)
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -595,7 +599,7 @@ async def test_migration_1_1(
     assert generic_thermostat_entity_entry.device_id == switch_entity_entry.device_id
 
     assert generic_thermostat_config_entry.version == 1
-    assert generic_thermostat_config_entry.minor_version == 2
+    assert generic_thermostat_config_entry.minor_version == 3
 
 
 async def test_migration_from_future_version(
@@ -622,3 +626,36 @@ async def test_migration_from_future_version(
     await hass.async_block_till_done()
 
     assert config_entry.state is ConfigEntryState.MIGRATION_ERROR
+
+
+async def test_migration_1_2(hass: HomeAssistant) -> None:
+    """Test migration from 1.2 to 1.3 copies CONF_MIN_DUR to CONF_DUR_COOLDOWN."""
+    config_entry = MockConfigEntry(
+        data={},
+        domain=DOMAIN,
+        options={
+            "name": "My generic thermostat",
+            "heater": "switch.test",
+            "target_sensor": "sensor.test",
+            CONF_MIN_DUR: {"hours": 0, "minutes": 5, "seconds": 0},
+            "ac_mode": False,
+            "cold_tolerance": 0.3,
+            "hot_tolerance": 0.3,
+        },
+        title="My generic thermostat",
+        version=1,
+        minor_version=2,
+    )
+    config_entry.add_to_hass(hass)
+
+    # Run migration
+    result = await generic_thermostat.async_migrate_entry(hass, config_entry)
+    assert result is True
+
+    # After migration, cooldown should be set to min_cycle_duration and minor version bumped
+    assert config_entry.options.get(CONF_DUR_COOLDOWN) == {
+        "hours": 0,
+        "minutes": 5,
+        "seconds": 0,
+    }
+    assert config_entry.minor_version == 3

@@ -250,7 +250,7 @@ async def test_prepare_chat_for_generation_passes_messages_through(
                 "speech": {"plain": {"speech": "12:00 PM", "extra_data": None}},
                 "response_type": "action_done",
                 "speech_slots": {"time": datetime.time(12, 0)},
-                "data": {"targets": [], "success": [], "failed": []},
+                "data": {"success": [], "failed": []},
             },
         )
     )

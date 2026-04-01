@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_number_entities[number.test_thermostat_hysteresis_band-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 0.5,

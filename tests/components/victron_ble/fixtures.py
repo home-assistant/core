@@ -40,6 +40,22 @@ VICTRON_BATTERY_MONITOR_SENSORS = {
     "battery_monitor_midpoint_voltage": "unknown",
 }
 
+# Battery Sense
+
+VICTRON_BATTERY_SENSE_SERVICE_INFO = BluetoothServiceInfo(
+    name="Battery Sense",
+    address="01:02:03:04:05:14",
+    rssi=-60,
+    manufacturer_data={
+        0x02E1: bytes.fromhex("1000a4a3025f150d8dcbff517f30eb65e76b22a04ac4e1")
+    },
+    service_data={},
+    service_uuids=[],
+    source="local",
+)
+
+VICTRON_BATTERY_SENSE_TOKEN = "0da694539597f9cf6c613cde60d7bf05"
+
 # DC/DC converter
 
 VICTRON_DC_DC_CONVERTER_SERVICE_INFO = BluetoothServiceInfo(
@@ -53,6 +69,8 @@ VICTRON_DC_DC_CONVERTER_SERVICE_INFO = BluetoothServiceInfo(
     service_uuids=[],
     source="local",
 )
+
+VICTRON_DC_DC_CONVERTER_TOKEN = "64ba49f1a8562e45197a8e1fe50d7658"
 
 # DC energy meter
 
@@ -155,6 +173,20 @@ VICTRON_VEBUS_SERVICE_INFO = BluetoothServiceInfo(
 
 VICTRON_VEBUS_TOKEN = "da3f5fa2860cb1cf86ba7a6d1d16b9dd"
 
+# Same device type header as VEBus (100380) but garbled encrypted payload.
+# Device type will be recognized but decryption will fail.
+VICTRON_VEBUS_BAD_KEY_SERVICE_INFO = BluetoothServiceInfo(
+    name="Inverter Charger",
+    address="01:02:03:04:05:06",
+    rssi=-60,
+    manufacturer_data={
+        0x02E1: bytes.fromhex("100380270cFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF")
+    },
+    service_data={},
+    service_uuids=[],
+    source="local",
+)
+
 VICTRON_VEBUS_SENSORS = {
     "inverter_charger_device_state": "float",
     "inverter_charger_battery_voltage": "14.45",
@@ -165,3 +197,35 @@ VICTRON_VEBUS_SENSORS = {
     "inverter_charger_battery_temperature": "32",
     "inverter_charger_state_of_charge": "unknown",
 }
+
+# Smart Battery Protect
+
+VICTRON_SMART_BATTERY_PROTECT_SERVICE_INFO = BluetoothServiceInfo(
+    name="Smart Battery Protect",
+    address="01:02:03:04:05:15",
+    rssi=-60,
+    manufacturer_data={
+        0x02E1: bytes.fromhex("1080b0a3093523fadedea38b1af8bcbde91ca8b6dbb60e")
+    },
+    service_data={},
+    service_uuids=[],
+    source="local",
+)
+
+VICTRON_SMART_BATTERY_PROTECT_TOKEN = "fac570d66380b797a5b7543758be00e4"
+
+# AC charger
+
+VICTRON_AC_CHARGER_SERVICE_INFO = BluetoothServiceInfo(
+    name="Smart Charger",
+    address="01:02:03:04:05:12",
+    rssi=-60,
+    manufacturer_data={
+        0x02E1: bytes.fromhex("100030a308f926c1b5170a0d2280335bf12d5ed083")
+    },
+    service_data={},
+    service_uuids=[],
+    source="local",
+)
+
+VICTRON_AC_CHARGER_TOKEN = "c129cf8f75c3fe5a1655b481e205fb7d"

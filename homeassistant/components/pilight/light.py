@@ -55,11 +55,11 @@ class PilightLight(PilightBaseDevice, LightEntity):
     _attr_color_mode = ColorMode.BRIGHTNESS
     _attr_supported_color_modes = {ColorMode.BRIGHTNESS}
 
-    def __init__(self, hass, name, config):
+    def __init__(self, hass: HomeAssistant, name: str, config: ConfigType) -> None:
         """Initialize a switch."""
         super().__init__(hass, name, config)
-        self._dimlevel_min = config.get(CONF_DIMLEVEL_MIN)
-        self._dimlevel_max = config.get(CONF_DIMLEVEL_MAX)
+        self._dimlevel_min: int = config[CONF_DIMLEVEL_MIN]
+        self._dimlevel_max: int = config[CONF_DIMLEVEL_MAX]
 
     @property
     def brightness(self) -> int | None:

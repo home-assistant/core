@@ -114,6 +114,15 @@ def decrypt_payload_legacy(key: str, ciphertext: bytes) -> JsonValueType | None:
     )
 
 
+async def async_is_local_only_user(hass: HomeAssistant, user_id: str) -> bool:
+    """Return True if the user is local only."""
+    user = await hass.auth.async_get_user(user_id)
+    if user is None:
+        # Treat unknown/missing users as local-only to avoid exposing cloud URLs
+        return True
+    return user.local_only
+
+
 def registration_context(registration: Mapping[str, Any]) -> Context:
     """Generate a context from a request."""
     return Context(user_id=registration[CONF_USER_ID])
@@ -193,7 +202,7 @@ def webhook_response(
     )
 
 
-def device_info(registration: dict) -> DeviceInfo:
+def device_info(registration: Mapping[str, Any]) -> DeviceInfo:
     """Return the device info for this registration."""
     return DeviceInfo(
         identifiers={(DOMAIN, registration[ATTR_DEVICE_ID])},

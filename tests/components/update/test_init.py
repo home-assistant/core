@@ -626,6 +626,7 @@ async def test_entity_without_progress_support(
         {ATTR_ENTITY_ID: "update.update_available"},
         blocking=True,
     )
+    await hass.async_block_till_done()
 
     assert len(events) == 2
     assert events[0].data.get("old_state").attributes[ATTR_IN_PROGRESS] is False

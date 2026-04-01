@@ -36,10 +36,10 @@ DEFAULT_SCAN_INTERVAL = timedelta(minutes=5)
 class FireflyCoordinatorData:
     """Data structure for Firefly III coordinator data."""
 
-    accounts: list[Account]
+    accounts: dict[str, Account]
     categories: list[Category]
-    category_details: list[Category]
-    budgets: list[Budget]
+    category_details: dict[str, Category]
+    budgets: dict[str, Budget]
     bills: list[Bill]
     primary_currency: Currency
 
@@ -142,10 +142,10 @@ class FireflyDataUpdateCoordinator(DataUpdateCoordinator[FireflyCoordinatorData]
             ) from err
 
         return FireflyCoordinatorData(
-            accounts=accounts,
+            accounts={account.id: account for account in accounts},
             categories=categories,
-            category_details=category_details,
-            budgets=budgets,
+            category_details={category.id: category for category in category_details},
+            budgets={budget.id: budget for budget in budgets},
             bills=bills,
             primary_currency=primary_currency,
         )

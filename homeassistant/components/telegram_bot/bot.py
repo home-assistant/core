@@ -2,12 +2,11 @@
 
 from abc import abstractmethod
 import asyncio
-from collections.abc import Awaitable, Callable, Sequence
+from collections.abc import Awaitable, Callable, Iterable, Sequence
 import io
 import logging
 import os
 from pathlib import Path
-from ssl import SSLContext
 from types import MappingProxyType
 from typing import Any, cast
 
@@ -48,8 +47,8 @@ from homeassistant.const import (
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers.httpx_client import get_async_client
 from homeassistant.util.json import JsonValueType
-from homeassistant.util.ssl import get_default_context, get_default_no_verify_context
 
 from .const import (
     ATTR_ARGS,
@@ -72,6 +71,8 @@ from .const import (
     ATTR_INLINE_MESSAGE_ID,
     ATTR_KEYBOARD,
     ATTR_KEYBOARD_INLINE,
+    ATTR_MEDIA,
+    ATTR_MEDIA_TYPE,
     ATTR_MESSAGE,
     ATTR_MESSAGE_ID,
     ATTR_MESSAGE_TAG,
@@ -82,6 +83,7 @@ from .const import (
     ATTR_OPEN_PERIOD,
     ATTR_PARSER,
     ATTR_PASSWORD,
+    ATTR_PROTECT_CONTENT,
     ATTR_REPLY_TO_MSGID,
     ATTR_REPLYMARKUP,
     ATTR_RESIZE_KEYBOARD,
@@ -142,6 +144,7 @@ class BaseTelegramBot:
         """Initialize the bot base class."""
         self.hass = hass
         self.config = config
+        self.most_recent_chat_id: int | None = None
         self._bot = bot
 
     @abstractmethod
@@ -151,8 +154,6 @@ class BaseTelegramBot:
     async def handle_update(self, update: Update, context: CallbackContext) -> bool:
         """Handle updates from bot application set up by the respective platform."""
         _LOGGER.debug("Handling update %s", update)
-        if not self.authorize_update(update):
-            return False
 
         # establish event type: text, command or callback_query
         if update.callback_query:
@@ -168,6 +169,11 @@ class BaseTelegramBot:
         else:
             _LOGGER.warning("Unhandled update: %s", update)
             return True
+
+        self.most_recent_chat_id = event_data[ATTR_CHAT_ID]
+
+        if not self.authorize_update(update):
+            return False
 
         event_data["bot"] = _get_bot_info(self._bot, self.config)
 
@@ -432,7 +438,7 @@ class TelegramNotificationService:
 
     async def _send_msg_formatted(
         self,
-        func_send: Callable[..., Awaitable[Message]],
+        func_send: Callable[..., Awaitable[Message | tuple[Message, ...]]],
         message_tag: str | None,
         *args_msg: Any,
         context: Context | None = None,
@@ -445,7 +451,7 @@ class TelegramNotificationService:
         chat_id: int = kwargs_msg.pop(ATTR_CHAT_ID)
         _LOGGER.debug("%s to chat ID %s", func_send.__name__, chat_id)
 
-        response: Message = await self._send_msg(
+        response: Message | tuple[Message, ...] = await self._send_msg(
             func_send,
             message_tag,
             chat_id,
@@ -453,6 +459,9 @@ class TelegramNotificationService:
             context=context,
             **kwargs_msg,
         )
+
+        if isinstance(response, Iterable):
+            return {str(chat_id): [message.id for message in response]}
 
         return {str(chat_id): response.id}
 
@@ -466,9 +475,14 @@ class TelegramNotificationService:
     ) -> Any:
         """Send one message."""
         out = await func_send(*args_msg, **kwargs_msg)
-        if isinstance(out, Message):
-            chat_id = out.chat_id
-            message_id = out.message_id
+
+        message = out
+        if isinstance(message, Iterable):
+            message = out[-1]
+
+        if isinstance(message, Message):
+            chat_id = message.chat_id
+            message_id = message.message_id
             self._last_message_id[chat_id] = message_id
             _LOGGER.debug(
                 "Last message ID: %s (from chat_id %s)",
@@ -520,6 +534,57 @@ class TelegramNotificationService:
             context=context,
         )
 
+    async def send_media_group(
+        self,
+        chat_id: int,
+        context: Context | None = None,
+        **kwargs: Any,
+    ) -> dict[str, JsonValueType]:
+        """Send media group to a chat ID.
+
+        :returns: a dict mapping each chat_id to a list of message_ids for the sent media group.
+        """
+        params = self._get_msg_kwargs(kwargs)
+
+        media: list[
+            InputMediaAudio | InputMediaDocument | InputMediaPhoto | InputMediaVideo
+        ] = []
+        input_media: list[dict[str, Any]] = kwargs[ATTR_MEDIA]
+        for entry in input_media:
+            file_content = await load_data(
+                self.hass,
+                url=entry.get(ATTR_URL),
+                filepath=entry.get(ATTR_FILE),
+                username=entry.get(ATTR_USERNAME, ""),
+                password=entry.get(ATTR_PASSWORD, ""),
+                authentication=entry.get(ATTR_AUTHENTICATION),
+                verify_ssl=entry[ATTR_VERIFY_SSL],
+            )
+            _LOGGER.debug("downloaded: %s", entry[ATTR_URL])
+
+            caption: str | None = entry.get(ATTR_CAPTION)
+            if entry[ATTR_MEDIA_TYPE] == InputMediaType.AUDIO:
+                media.append(InputMediaAudio(file_content, caption=caption))
+            elif entry[ATTR_MEDIA_TYPE] == InputMediaType.DOCUMENT:
+                media.append(InputMediaDocument(file_content, caption=caption))
+            elif entry[ATTR_MEDIA_TYPE] == InputMediaType.PHOTO:
+                media.append(InputMediaPhoto(file_content, caption=caption))
+            else:
+                media.append(InputMediaVideo(file_content, caption=caption))
+
+        return await self._send_msg_formatted(
+            self.bot.send_media_group,
+            params[ATTR_MESSAGE_TAG],
+            chat_id=chat_id,
+            media=media,
+            disable_notification=params[ATTR_DISABLE_NOTIF],
+            protect_content=kwargs.get(ATTR_PROTECT_CONTENT, False),
+            message_thread_id=params[ATTR_MESSAGE_THREAD_ID],
+            reply_to_message_id=params[ATTR_REPLY_TO_MSGID],
+            parse_mode=params[ATTR_PARSER],
+            context=context,
+        )
+
     async def delete_message(
         self,
         chat_id: int,
@@ -566,11 +631,7 @@ class TelegramNotificationService:
             username=kwargs.get(ATTR_USERNAME, ""),
             password=kwargs.get(ATTR_PASSWORD, ""),
             authentication=kwargs.get(ATTR_AUTHENTICATION),
-            verify_ssl=(
-                get_default_context()
-                if kwargs.get(ATTR_VERIFY_SSL, False)
-                else get_default_no_verify_context()
-            ),
+            verify_ssl=kwargs.get(ATTR_VERIFY_SSL, False),
         )
 
         media: InputMedia
@@ -738,11 +799,7 @@ class TelegramNotificationService:
             username=kwargs.get(ATTR_USERNAME, ""),
             password=kwargs.get(ATTR_PASSWORD, ""),
             authentication=kwargs.get(ATTR_AUTHENTICATION),
-            verify_ssl=(
-                get_default_context()
-                if kwargs.get(ATTR_VERIFY_SSL, False)
-                else get_default_no_verify_context()
-            ),
+            verify_ssl=kwargs.get(ATTR_VERIFY_SSL, False),
         )
 
         if file_type == SERVICE_SEND_PHOTO:
@@ -1028,12 +1085,14 @@ def initialize_bot(hass: HomeAssistant, p_config: MappingProxyType[str, Any]) ->
             read_timeout=read_timeout,
             media_write_timeout=media_write_timeout,
         )
+        get_updates_request = HTTPXRequest(proxy=proxy)
     else:
         request = HTTPXRequest(
             connection_pool_size=8,
             read_timeout=read_timeout,
             media_write_timeout=media_write_timeout,
         )
+        get_updates_request = None
 
     base_url: str = p_config[CONF_API_ENDPOINT]
 
@@ -1042,6 +1101,7 @@ def initialize_bot(hass: HomeAssistant, p_config: MappingProxyType[str, Any]) ->
         base_url=f"{base_url}/bot",
         base_file_url=f"{base_url}/file/bot",
         request=request,
+        get_updates_request=get_updates_request,
     )
 
 
@@ -1052,7 +1112,7 @@ async def load_data(
     username: str,
     password: str,
     authentication: str | None,
-    verify_ssl: SSLContext,
+    verify_ssl: bool,
     num_retries: int = 5,
 ) -> io.BytesIO:
     """Load data into ByteIO/File container from a source."""
@@ -1068,33 +1128,29 @@ async def load_data(
         elif authentication == HTTP_BASIC_AUTHENTICATION:
             params["auth"] = httpx.BasicAuth(username, password)
 
-        if verify_ssl is not None:
-            params["verify"] = verify_ssl
-
         retry_num = 0
-        async with httpx.AsyncClient(
-            timeout=DEFAULT_TIMEOUT_SECONDS, headers=headers, **params
-        ) as client:
+        async with get_async_client(hass, verify_ssl) as client:
             while retry_num < num_retries:
                 try:
-                    req = await client.get(url)
+                    response = await client.get(
+                        url, headers=headers, timeout=DEFAULT_TIMEOUT_SECONDS, **params
+                    )
                 except (httpx.HTTPError, httpx.InvalidURL) as err:
                     raise HomeAssistantError(
-                        f"Failed to load URL: {err!s}",
                         translation_domain=DOMAIN,
                         translation_key="failed_to_load_url",
                         translation_placeholders={"error": str(err)},
                     ) from err
 
-                if req.status_code != 200:
+                if response.status_code != 200:
                     _LOGGER.warning(
                         "Status code %s (retry #%s) loading %s",
-                        req.status_code,
+                        response.status_code,
                         retry_num + 1,
                         url,
                     )
                 else:
-                    data = io.BytesIO(req.content)
+                    data = io.BytesIO(response.content)
                     if data.read():
                         data.seek(0)
                         data.name = url
@@ -1107,23 +1163,20 @@ async def load_data(
                         1
                     )  # Add a sleep to allow other async operations to proceed
             raise HomeAssistantError(
-                f"Failed to load URL: {req.status_code}",
                 translation_domain=DOMAIN,
                 translation_key="failed_to_load_url",
-                translation_placeholders={"error": str(req.status_code)},
+                translation_placeholders={"error": str(response.status_code)},
             )
     elif filepath is not None:
         if hass.config.is_allowed_path(filepath):
             return await hass.async_add_executor_job(_read_file_as_bytesio, filepath)
 
         raise ServiceValidationError(
-            "File path has not been configured in allowlist_external_dirs.",
             translation_domain=DOMAIN,
             translation_key="allowlist_external_dirs_error",
         )
     else:
         raise ServiceValidationError(
-            "URL or File is required.",
             translation_domain=DOMAIN,
             translation_key="missing_input",
             translation_placeholders={"field": "URL or File"},
@@ -1138,7 +1191,6 @@ def _validate_credentials_input(
         and not username
     ):
         raise ServiceValidationError(
-            "Username is required.",
             translation_domain=DOMAIN,
             translation_key="missing_input",
             translation_placeholders={"field": "Username"},
@@ -1154,7 +1206,6 @@ def _validate_credentials_input(
         and not password
     ):
         raise ServiceValidationError(
-            "Password is required.",
             translation_domain=DOMAIN,
             translation_key="missing_input",
             translation_placeholders={"field": "Password"},
@@ -1170,7 +1221,6 @@ def _read_file_as_bytesio(file_path: str) -> io.BytesIO:
             return data
     except OSError as err:
         raise HomeAssistantError(
-            f"Failed to load file: {err!s}",
             translation_domain=DOMAIN,
             translation_key="failed_to_load_file",
             translation_placeholders={"error": str(err)},

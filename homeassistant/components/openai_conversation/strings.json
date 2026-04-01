@@ -70,6 +70,7 @@
             "reasoning_effort": "[%key:component::openai_conversation::config_subentries::conversation::step::model::data::reasoning_effort%]",
             "reasoning_summary": "[%key:component::openai_conversation::config_subentries::conversation::step::model::data::reasoning_summary%]",
             "search_context_size": "[%key:component::openai_conversation::config_subentries::conversation::step::model::data::search_context_size%]",
+            "service_tier": "[%key:component::openai_conversation::config_subentries::conversation::step::model::data::service_tier%]",
             "user_location": "[%key:component::openai_conversation::config_subentries::conversation::step::model::data::user_location%]",
             "web_search": "[%key:component::openai_conversation::config_subentries::conversation::step::model::data::web_search%]"
           },
@@ -80,6 +81,7 @@
             "reasoning_effort": "[%key:component::openai_conversation::config_subentries::conversation::step::model::data_description::reasoning_effort%]",
             "reasoning_summary": "[%key:component::openai_conversation::config_subentries::conversation::step::model::data_description::reasoning_summary%]",
             "search_context_size": "[%key:component::openai_conversation::config_subentries::conversation::step::model::data_description::search_context_size%]",
+            "service_tier": "[%key:component::openai_conversation::config_subentries::conversation::step::model::data_description::service_tier%]",
             "user_location": "[%key:component::openai_conversation::config_subentries::conversation::step::model::data_description::user_location%]",
             "web_search": "[%key:component::openai_conversation::config_subentries::conversation::step::model::data_description::web_search%]"
           },
@@ -131,6 +133,7 @@
             "reasoning_effort": "Reasoning effort",
             "reasoning_summary": "Reasoning summary",
             "search_context_size": "Search context size",
+            "service_tier": "Service tier",
             "user_location": "Include home location",
             "web_search": "Enable web search"
           },
@@ -141,6 +144,7 @@
             "reasoning_effort": "How many reasoning tokens the model should generate before creating a response to the prompt",
             "reasoning_summary": "Controls the length and detail of reasoning summaries provided by the model",
             "search_context_size": "High level guidance for the amount of context window space to use for the search",
+            "service_tier": "Controls the cost and response time",
             "user_location": "Refine search results based on geography",
             "web_search": "Allow the model to search the web for the latest information before generating a response"
           },
@@ -240,6 +244,14 @@
         "high": "[%key:common::state::high%]",
         "low": "[%key:common::state::low%]",
         "medium": "[%key:common::state::medium%]"
+      }
+    },
+    "service_tier": {
+      "options": {
+        "auto": "[%key:common::state::auto%]",
+        "default": "Standard",
+        "flex": "Flex",
+        "priority": "Priority"
       }
     },
     "verbosity": {

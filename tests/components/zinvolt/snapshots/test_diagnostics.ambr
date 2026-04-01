@@ -1,0 +1,47 @@
+# serializer version: 1
+# name: test_entry_diagnostics
+  dict({
+    'coordinators': list([
+      dict({
+        'a125ef17-6bdf-45ad-b106-ce54e95e4634': dict({
+          'battery': dict({
+            'current_power': dict({
+              'is_dormant': False,
+              'max_power': 800,
+              'on_grid': True,
+              'online_status': 'ONLINE',
+              'output_current': 4,
+              'photovoltaic_power': 0,
+              'power_socket_output': -19,
+              'state_of_charge': 100.0,
+            }),
+            'global_settings': dict({
+              'battery_lower_threshold': 10,
+              'battery_upper_threshold': 100,
+              'max_output': 800,
+              'max_output_limit': 800,
+              'max_output_unlocked': False,
+              'maximum_charge_power': 800,
+              'standby_time': 60,
+            }),
+            'name': 'ZVG011025120088',
+            'online_status': 'ONLINE',
+            'serial_number': 'ZVG011025120088',
+            'smart_mode': 'CHARGED',
+          }),
+          'model': 'ZVS4000',
+          'points': dict({
+            'charge': True,
+            'communication': True,
+            'current': True,
+            'discharge': True,
+            'other': True,
+            'temperature': True,
+            'voltage': True,
+          }),
+          'sw_version': 'V1.02-V0.00.000',
+        }),
+      }),
+    ]),
+  })
+# ---

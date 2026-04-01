@@ -2,22 +2,9 @@
 
 from __future__ import annotations
 
-from aioimmich import Immich
-from aioimmich.const import CONNECT_ERRORS
-from aioimmich.exceptions import ImmichUnauthorizedError
-
-from homeassistant.const import (
-    CONF_API_KEY,
-    CONF_HOST,
-    CONF_PORT,
-    CONF_SSL,
-    CONF_VERIFY_SSL,
-    Platform,
-)
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN
@@ -38,30 +25,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 async def async_setup_entry(hass: HomeAssistant, entry: ImmichConfigEntry) -> bool:
     """Set up Immich from a config entry."""
 
-    session = async_get_clientsession(hass, entry.data[CONF_VERIFY_SSL])
-    immich = Immich(
-        session,
-        entry.data[CONF_API_KEY],
-        entry.data[CONF_HOST],
-        entry.data[CONF_PORT],
-        entry.data[CONF_SSL],
-        "home-assistant",
-    )
-
-    try:
-        user_info = await immich.users.async_get_my_user()
-    except ImmichUnauthorizedError as err:
-        raise ConfigEntryAuthFailed(
-            translation_domain=DOMAIN,
-            translation_key="auth_error",
-        ) from err
-    except CONNECT_ERRORS as err:
-        raise ConfigEntryNotReady(
-            translation_domain=DOMAIN,
-            translation_key="cannot_connect",
-        ) from err
-
-    coordinator = ImmichDataUpdateCoordinator(hass, entry, immich, user_info.is_admin)
+    coordinator = ImmichDataUpdateCoordinator(hass, entry)
     await coordinator.async_config_entry_first_refresh()
     entry.runtime_data = coordinator
 

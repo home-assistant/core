@@ -8,10 +8,9 @@ from pylaunches.types import Event, Launch
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from . import LaunchLibraryData
 from .const import DOMAIN
+from .coordinator import LaunchLibraryCoordinator
 
 
 async def async_get_config_entry_diagnostics(
@@ -20,7 +19,7 @@ async def async_get_config_entry_diagnostics(
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
 
-    coordinator: DataUpdateCoordinator[LaunchLibraryData] = hass.data[DOMAIN]
+    coordinator: LaunchLibraryCoordinator = hass.data[DOMAIN]
     if coordinator.data is None:
         return {}
 

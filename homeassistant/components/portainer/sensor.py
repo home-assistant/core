@@ -17,7 +17,7 @@ from homeassistant.const import PERCENTAGE, UnitOfInformation
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import STACK_TYPE_COMPOSE, STACK_TYPE_KUBERNETES, STACK_TYPE_SWARM
+from .const import StackType
 from .coordinator import (
     PortainerConfigEntry,
     PortainerContainerData,
@@ -30,7 +30,7 @@ from .entity import (
     PortainerStackEntity,
 )
 
-PARALLEL_UPDATES = 1
+PARALLEL_UPDATES = 0
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -293,11 +293,11 @@ STACK_SENSORS: tuple[PortainerStackSensorEntityDescription, ...] = (
         translation_key="stack_type",
         value_fn=lambda data: (
             "swarm"
-            if data.stack.type == STACK_TYPE_SWARM
+            if data.stack.type == StackType.SWARM
             else "compose"
-            if data.stack.type == STACK_TYPE_COMPOSE
+            if data.stack.type == StackType.COMPOSE
             else "kubernetes"
-            if data.stack.type == STACK_TYPE_KUBERNETES
+            if data.stack.type == StackType.KUBERNETES
             else None
         ),
         device_class=SensorDeviceClass.ENUM,

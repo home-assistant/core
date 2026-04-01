@@ -15,9 +15,6 @@ concurrency:
   group: ${{ github.workflow }}
   cancel-in-progress: true
 
-env:
-  DEFAULT_PYTHON: "3.14.2"
-
 jobs:
   upload:
     name: Upload
@@ -29,13 +26,13 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Set up Python ${{ env.DEFAULT_PYTHON }}
+      - name: Set up Python
         uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
         with:
-          python-version: ${{ env.DEFAULT_PYTHON }}
+          python-version-file: ".python-version"
 
       - name: Upload Translations
         env:
-          LOKALISE_TOKEN: ${{ secrets.LOKALISE_TOKEN }}
+          LOKALISE_TOKEN: ${{ secrets.LOKALISE_TOKEN }} # zizmor: ignore[secrets-outside-env]
         run: |
           python3 -m script.translations upload

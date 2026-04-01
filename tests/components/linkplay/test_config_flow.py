@@ -4,6 +4,7 @@ from ipaddress import ip_address
 from unittest.mock import AsyncMock
 
 from linkplay.exceptions import LinkPlayRequestException
+from linkplay.manufacturers import MANUFACTURER_WIIM
 import pytest
 
 from homeassistant.components.linkplay.const import DOMAIN
@@ -177,6 +178,24 @@ async def test_zeroconf_flow_errors(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "cannot_connect"
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_zeroconf_flow_ignores_wiim_device(
+    hass: HomeAssistant,
+    mock_linkplay_factory_bridge: AsyncMock,
+) -> None:
+    """Test Zeroconf discovery is ignored for WiiM devices."""
+    mock_linkplay_factory_bridge.return_value.device.manufacturer = MANUFACTURER_WIIM
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_ZEROCONF},
+        data=ZEROCONF_DISCOVERY,
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "not_linkplay_device"
 
 
 @pytest.mark.usefixtures("mock_setup_entry")

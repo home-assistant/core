@@ -119,6 +119,10 @@ set_program_and_options:
             - cooking_common_program_hood_automatic
             - cooking_common_program_hood_venting
             - cooking_common_program_hood_delayed_shut_off
+            - cooking_oven_program_heating_mode_3_d_heating
+            - cooking_oven_program_heating_mode_air_fry
+            - cooking_oven_program_heating_mode_grill_large_area
+            - cooking_oven_program_heating_mode_grill_small_area
             - cooking_oven_program_heating_mode_pre_heating
             - cooking_oven_program_heating_mode_hot_air
             - cooking_oven_program_heating_mode_hot_air_eco
@@ -127,6 +131,7 @@ set_program_and_options:
             - cooking_oven_program_heating_mode_top_bottom_heating
             - cooking_oven_program_heating_mode_top_bottom_heating_eco
             - cooking_oven_program_heating_mode_bottom_heating
+            - cooking_oven_program_heating_mode_bread_baking
             - cooking_oven_program_heating_mode_pizza_setting
             - cooking_oven_program_heating_mode_slow_cook
             - cooking_oven_program_heating_mode_intensive_heat
@@ -135,6 +140,7 @@ set_program_and_options:
             - cooking_oven_program_heating_mode_frozen_heatup_special
             - cooking_oven_program_heating_mode_desiccation
             - cooking_oven_program_heating_mode_defrost
+            - cooking_oven_program_heating_mode_dough_proving
             - cooking_oven_program_heating_mode_proof
             - cooking_oven_program_heating_mode_hot_air_30_steam
             - cooking_oven_program_heating_mode_hot_air_60_steam
@@ -678,3 +684,29 @@ change_setting:
       required: true
       selector:
         object:
+
+start_selected_program:
+  fields:
+    device_id:
+      required: true
+      selector:
+        device:
+          integration: home_connect
+    b_s_h_common_option_finish_in_relative:
+      example: 3600
+      required: false
+      selector:
+        number:
+          min: 0
+          step: 1
+          mode: box
+          unit_of_measurement: s
+    b_s_h_common_option_start_in_relative:
+      example: 3600
+      required: false
+      selector:
+        number:
+          min: 0
+          step: 1
+          mode: box
+          unit_of_measurement: s

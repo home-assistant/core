@@ -273,6 +273,7 @@
       "program_id": {
         "name": "Program",
         "state": {
+          "airfry": "AirFry",
           "almond_macaroons_1_tray": "Almond macaroons (1 tray)",
           "almond_macaroons_2_trays": "Almond macaroons (2 trays)",
           "amaranth": "Amaranth",
@@ -334,6 +335,7 @@
           "blanching": "Blanching",
           "blueberry_muffins": "Blueberry muffins",
           "bologna_sausage": "Bologna sausage",
+          "booster": "Booster",
           "bottling": "Bottling",
           "bottling_hard": "Bottling (hard)",
           "bottling_medium": "Bottling (medium)",
@@ -760,6 +762,7 @@
           "pyrolytic": "Pyrolytic",
           "quiche_lorraine": "Quiche Lorraine",
           "quick_hygiene": "QuickHygiene",
+          "quick_intense": "QuickIntense",
           "quick_mw": "Quick MW",
           "quick_power_dry": "QuickPowerDry",
           "quick_power_wash": "QuickPowerWash",
@@ -880,6 +883,7 @@
           "swiss_roll": "Swiss roll",
           "swiss_toffee_cream_100_ml": "Swiss toffee cream (100 ml)",
           "swiss_toffee_cream_150_ml": "Swiss toffee cream (150 ml)",
+          "table_linen": "Table linen",
           "tagliatelli_fresh": "Tagliatelli (fresh)",
           "tall_items": "Tall items",
           "tart_flambe": "Tart flambè",

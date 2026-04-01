@@ -53,6 +53,11 @@
         "name": "Temperature alert"
       }
     },
+    "fan": {
+      "ventilation": {
+        "name": "[%key:component::fan::title%]"
+      }
+    },
     "number": {
       "boiler_target_temperature": {
         "name": "Boiler target temperature"

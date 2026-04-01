@@ -1,0 +1,18 @@
+{
+  "conditions": {
+    "is_closed": {
+      "condition": "mdi:door-closed"
+    },
+    "is_open": {
+      "condition": "mdi:door-open"
+    }
+  },
+  "triggers": {
+    "closed": {
+      "trigger": "mdi:door-closed"
+    },
+    "opened": {
+      "trigger": "mdi:door-open"
+    }
+  }
+}

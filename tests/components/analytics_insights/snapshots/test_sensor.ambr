@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_all_entities[sensor.homeassistant_analytics_core_samba-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -54,8 +55,9 @@
 # ---
 # name: test_all_entities[sensor.homeassistant_analytics_hacs_custom-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -107,8 +109,9 @@
 # ---
 # name: test_all_entities[sensor.homeassistant_analytics_myq-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -160,8 +163,9 @@
 # ---
 # name: test_all_entities[sensor.homeassistant_analytics_spotify-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -213,8 +217,9 @@
 # ---
 # name: test_all_entities[sensor.homeassistant_analytics_total_active_installations-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -266,8 +271,9 @@
 # ---
 # name: test_all_entities[sensor.homeassistant_analytics_total_reported_integrations-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -319,8 +325,9 @@
 # ---
 # name: test_all_entities[sensor.homeassistant_analytics_youtube-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,

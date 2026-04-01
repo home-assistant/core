@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_entities[light.bedroom_lamp-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max_color_temp_kelvin': 7000,
@@ -80,8 +81,9 @@
 # ---
 # name: test_entities[light.lamp_bulb_1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max_color_temp_kelvin': 7000,
@@ -149,8 +151,9 @@
 # ---
 # name: test_entities[light.lamp_bulb_2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max_color_temp_kelvin': 7000,

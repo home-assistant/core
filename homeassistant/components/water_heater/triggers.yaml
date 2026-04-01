@@ -1,0 +1,73 @@
+.trigger_common: &trigger_common
+  target: &trigger_water_heater_target
+    entity:
+      domain: water_heater
+  fields:
+    behavior: &trigger_behavior
+      required: true
+      default: any
+      selector:
+        select:
+          translation_key: trigger_behavior
+          options:
+            - first
+            - last
+            - any
+
+.temperature_units: &temperature_units
+  - "°C"
+  - "°F"
+
+.temperature_threshold_entity: &temperature_threshold_entity
+  - domain: input_number
+    unit_of_measurement: *temperature_units
+  - domain: sensor
+    device_class: temperature
+  - domain: number
+    device_class: temperature
+
+operation_mode_changed:
+  target: *trigger_water_heater_target
+  fields:
+    behavior: *trigger_behavior
+    operation_mode:
+      context:
+        filter_target: target
+      required: true
+      selector:
+        state:
+          attribute: operation_mode
+          hide_states:
+            - unavailable
+            - unknown
+          multiple: true
+
+turned_off: *trigger_common
+turned_on: *trigger_common
+
+target_temperature_changed:
+  target: *trigger_water_heater_target
+  fields:
+    threshold:
+      required: true
+      selector:
+        numeric_threshold:
+          entity: *temperature_threshold_entity
+          mode: changed
+          number:
+            mode: box
+          unit_of_measurement: *temperature_units
+
+target_temperature_crossed_threshold:
+  target: *trigger_water_heater_target
+  fields:
+    behavior: *trigger_behavior
+    threshold:
+      required: true
+      selector:
+        numeric_threshold:
+          entity: *temperature_threshold_entity
+          mode: crossed
+          number:
+            mode: box
+          unit_of_measurement: *temperature_units

@@ -36,8 +36,9 @@
 # ---
 # name: test_snapshots[button.wled_rgb_light_restart-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,

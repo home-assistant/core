@@ -296,7 +296,7 @@
   "services": {
     "reload": {
       "description": "Reloads group configuration, entities, and notify services from YAML-configuration.",
-      "name": "[%key:common::action::reload%]"
+      "name": "Reload groups"
     },
     "remove": {
       "description": "Removes a group.",
@@ -306,10 +306,10 @@
           "name": "[%key:component::group::services::set::fields::object_id::name%]"
         }
       },
-      "name": "Remove"
+      "name": "Remove group"
     },
     "set": {
-      "description": "Creates/Updates a group.",
+      "description": "Creates or updates a group.",
       "fields": {
         "add_entities": {
           "description": "List of members to be added to the group. Cannot be used in combination with `Entities` or `Remove entities`.",
@@ -340,7 +340,7 @@
           "name": "Remove entities"
         }
       },
-      "name": "Set"
+      "name": "Set group"
     }
   },
   "title": "Group"

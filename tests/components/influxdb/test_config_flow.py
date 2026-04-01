@@ -745,3 +745,446 @@ async def test_single_instance_import(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "single_instance_allowed"
+
+
+@pytest.mark.parametrize(
+    ("mock_client", "entry_data", "user_input", "expected_data", "expected_title"),
+    [
+        (
+            DEFAULT_API_VERSION,
+            {
+                CONF_API_VERSION: DEFAULT_API_VERSION,
+                CONF_HOST: "localhost",
+                CONF_PORT: 8086,
+                CONF_USERNAME: "user",
+                CONF_PASSWORD: "pass",
+                CONF_DB_NAME: "home_assistant",
+                CONF_SSL: False,
+                CONF_PATH: "/",
+                CONF_VERIFY_SSL: False,
+            },
+            {
+                CONF_URL: "https://newhost:9999",
+                CONF_VERIFY_SSL: True,
+                CONF_DB_NAME: "new_db",
+                CONF_USERNAME: "new_user",
+                CONF_PASSWORD: "new_pass",
+            },
+            {
+                CONF_API_VERSION: DEFAULT_API_VERSION,
+                CONF_HOST: "newhost",
+                CONF_PORT: 9999,
+                CONF_USERNAME: "new_user",
+                CONF_PASSWORD: "new_pass",
+                CONF_DB_NAME: "new_db",
+                CONF_SSL: True,
+                CONF_PATH: "/",
+                CONF_VERIFY_SSL: True,
+            },
+            "new_db (newhost)",
+        ),
+    ],
+    indirect=["mock_client"],
+)
+async def test_reconfigure_v1(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_client: MagicMock,
+    entry_data: dict[str, Any],
+    user_input: dict[str, Any],
+    expected_data: dict[str, Any],
+    expected_title: str,
+) -> None:
+    """Test reconfiguration of InfluxDB v1."""
+    mock_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=entry_data,
+    )
+    mock_entry.add_to_hass(hass)
+
+    result = await mock_entry.start_reconfigure_flow(hass)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure_v1"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input,
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert mock_entry.data == expected_data
+    assert mock_entry.title == expected_title
+
+
+@pytest.mark.parametrize(
+    ("mock_client", "entry_data", "user_input", "expected_data", "expected_title"),
+    [
+        (
+            API_VERSION_2,
+            {
+                CONF_API_VERSION: API_VERSION_2,
+                CONF_URL: "http://localhost:8086",
+                CONF_TOKEN: "old_token",
+                CONF_ORG: "old_org",
+                CONF_BUCKET: "old_bucket",
+                CONF_VERIFY_SSL: False,
+            },
+            {
+                CONF_URL: "https://newhost:9999",
+                CONF_VERIFY_SSL: True,
+                CONF_ORG: "new_org",
+                CONF_BUCKET: "new_bucket",
+                CONF_TOKEN: "new_token",
+            },
+            {
+                CONF_API_VERSION: API_VERSION_2,
+                CONF_URL: "https://newhost:9999",
+                CONF_TOKEN: "new_token",
+                CONF_ORG: "new_org",
+                CONF_BUCKET: "new_bucket",
+                CONF_VERIFY_SSL: True,
+            },
+            "new_bucket (https://newhost:9999)",
+        ),
+    ],
+    indirect=["mock_client"],
+)
+async def test_reconfigure_v2(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_client: MagicMock,
+    entry_data: dict[str, Any],
+    user_input: dict[str, Any],
+    expected_data: dict[str, Any],
+    expected_title: str,
+) -> None:
+    """Test reconfiguration of InfluxDB v2."""
+    mock_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=entry_data,
+    )
+    mock_entry.add_to_hass(hass)
+
+    result = await mock_entry.start_reconfigure_flow(hass)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure_v2"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input,
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert mock_entry.data == expected_data
+    assert mock_entry.title == expected_title
+
+
+@pytest.mark.parametrize(
+    ("mock_client", "entry_data", "user_input"),
+    [
+        (
+            DEFAULT_API_VERSION,
+            {
+                CONF_API_VERSION: DEFAULT_API_VERSION,
+                CONF_HOST: "localhost",
+                CONF_PORT: 8086,
+                CONF_USERNAME: "user",
+                CONF_PASSWORD: "pass",
+                CONF_DB_NAME: "home_assistant",
+                CONF_SSL: True,
+                CONF_PATH: "/",
+                CONF_VERIFY_SSL: True,
+                CONF_SSL_CA_CERT: "/old/cert.pem",
+            },
+            {
+                CONF_URL: "https://localhost:8086",
+                CONF_VERIFY_SSL: True,
+                CONF_DB_NAME: "home_assistant",
+                CONF_USERNAME: "user",
+                CONF_PASSWORD: "pass",
+                CONF_SSL_CA_CERT: FIXTURE_UPLOAD_UUID,
+            },
+        ),
+    ],
+    indirect=["mock_client"],
+)
+async def test_reconfigure_v1_ssl_cert(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_client: MagicMock,
+    entry_data: dict[str, Any],
+    user_input: dict[str, Any],
+) -> None:
+    """Test reconfiguration of InfluxDB v1 with SSL certificate upload."""
+    mock_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=entry_data,
+    )
+    mock_entry.add_to_hass(hass)
+
+    result = await mock_entry.start_reconfigure_flow(hass)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure_v1"
+
+    with patch_file_upload():
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input,
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert mock_entry.data[CONF_SSL_CA_CERT] == "/.storage/influxdb.crt"
+
+
+@pytest.mark.parametrize(
+    ("mock_client", "entry_data", "user_input"),
+    [
+        (
+            API_VERSION_2,
+            {
+                CONF_API_VERSION: API_VERSION_2,
+                CONF_URL: "https://localhost:8086",
+                CONF_TOKEN: "token",
+                CONF_ORG: "org",
+                CONF_BUCKET: "bucket",
+                CONF_VERIFY_SSL: True,
+                CONF_SSL_CA_CERT: "/old/cert.pem",
+            },
+            {
+                CONF_URL: "https://localhost:8086",
+                CONF_VERIFY_SSL: True,
+                CONF_ORG: "org",
+                CONF_BUCKET: "bucket",
+                CONF_TOKEN: "token",
+                CONF_SSL_CA_CERT: FIXTURE_UPLOAD_UUID,
+            },
+        ),
+    ],
+    indirect=["mock_client"],
+)
+async def test_reconfigure_v2_ssl_cert(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_client: MagicMock,
+    entry_data: dict[str, Any],
+    user_input: dict[str, Any],
+) -> None:
+    """Test reconfiguration of InfluxDB v2 with SSL certificate upload."""
+    mock_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=entry_data,
+    )
+    mock_entry.add_to_hass(hass)
+
+    result = await mock_entry.start_reconfigure_flow(hass)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure_v2"
+
+    with patch_file_upload():
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input,
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert mock_entry.data[CONF_SSL_CA_CERT] == "/.storage/influxdb.crt"
+
+
+@pytest.mark.parametrize(
+    ("mock_client", "entry_data", "user_input"),
+    [
+        (
+            DEFAULT_API_VERSION,
+            {
+                CONF_API_VERSION: DEFAULT_API_VERSION,
+                CONF_HOST: "localhost",
+                CONF_PORT: 8086,
+                CONF_USERNAME: "user",
+                CONF_PASSWORD: "pass",
+                CONF_DB_NAME: "home_assistant",
+                CONF_SSL: False,
+                CONF_PATH: "/",
+                CONF_VERIFY_SSL: False,
+                CONF_SSL_CA_CERT: "/old/cert.pem",
+            },
+            {
+                CONF_URL: "http://localhost:8086",
+                CONF_VERIFY_SSL: False,
+                CONF_DB_NAME: "home_assistant",
+                CONF_USERNAME: "user",
+                CONF_PASSWORD: "pass",
+            },
+        ),
+        (
+            API_VERSION_2,
+            {
+                CONF_API_VERSION: API_VERSION_2,
+                CONF_URL: "https://localhost:8086",
+                CONF_TOKEN: "token",
+                CONF_ORG: "org",
+                CONF_BUCKET: "bucket",
+                CONF_VERIFY_SSL: True,
+                CONF_SSL_CA_CERT: "/old/cert.pem",
+            },
+            {
+                CONF_URL: "https://localhost:8086",
+                CONF_VERIFY_SSL: True,
+                CONF_ORG: "org",
+                CONF_BUCKET: "bucket",
+                CONF_TOKEN: "token",
+            },
+        ),
+    ],
+    indirect=["mock_client"],
+)
+async def test_reconfigure_preserves_existing_cert(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_client: MagicMock,
+    entry_data: dict[str, Any],
+    user_input: dict[str, Any],
+) -> None:
+    """Test reconfiguration preserves existing cert when none uploaded."""
+    mock_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=entry_data,
+    )
+    mock_entry.add_to_hass(hass)
+
+    result = await mock_entry.start_reconfigure_flow(hass)
+
+    assert result["type"] is FlowResultType.FORM
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input,
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert mock_entry.data[CONF_SSL_CA_CERT] == "/old/cert.pem"
+
+
+@pytest.mark.parametrize(
+    (
+        "mock_client",
+        "entry_data",
+        "user_input",
+        "get_write_api",
+        "test_exception",
+        "reason",
+    ),
+    [
+        (
+            DEFAULT_API_VERSION,
+            {
+                CONF_API_VERSION: DEFAULT_API_VERSION,
+                CONF_HOST: "localhost",
+                CONF_PORT: 8086,
+                CONF_DB_NAME: "home_assistant",
+                CONF_SSL: False,
+                CONF_PATH: "/",
+                CONF_VERIFY_SSL: False,
+            },
+            {
+                CONF_URL: "http://localhost:8086",
+                CONF_VERIFY_SSL: False,
+                CONF_DB_NAME: "home_assistant",
+            },
+            _get_write_api_mock_v1,
+            InfluxDBClientError("SSLError"),
+            "ssl_error",
+        ),
+        (
+            DEFAULT_API_VERSION,
+            {
+                CONF_API_VERSION: DEFAULT_API_VERSION,
+                CONF_HOST: "localhost",
+                CONF_PORT: 8086,
+                CONF_DB_NAME: "home_assistant",
+                CONF_SSL: False,
+                CONF_PATH: "/",
+                CONF_VERIFY_SSL: False,
+            },
+            {
+                CONF_URL: "http://localhost:8086",
+                CONF_VERIFY_SSL: False,
+                CONF_DB_NAME: "home_assistant",
+            },
+            _get_write_api_mock_v1,
+            InfluxDBClientError("authorization failed"),
+            "invalid_auth",
+        ),
+        (
+            API_VERSION_2,
+            {
+                CONF_API_VERSION: API_VERSION_2,
+                CONF_URL: "http://localhost:8086",
+                CONF_TOKEN: "token",
+                CONF_ORG: "org",
+                CONF_BUCKET: "bucket",
+                CONF_VERIFY_SSL: False,
+            },
+            {
+                CONF_URL: "http://localhost:8086",
+                CONF_VERIFY_SSL: False,
+                CONF_ORG: "org",
+                CONF_BUCKET: "bucket",
+                CONF_TOKEN: "token",
+            },
+            _get_write_api_mock_v2,
+            ApiException("SSLError"),
+            "ssl_error",
+        ),
+    ],
+    indirect=["mock_client"],
+)
+async def test_reconfigure_connection_error(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_client: MagicMock,
+    entry_data: dict[str, Any],
+    user_input: dict[str, Any],
+    get_write_api: Any,
+    test_exception: Exception,
+    reason: str,
+) -> None:
+    """Test reconfiguration handles connection errors."""
+    mock_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=entry_data,
+    )
+    mock_entry.add_to_hass(hass)
+
+    write_api = get_write_api(mock_client)
+    write_api.side_effect = test_exception
+
+    result = await mock_entry.start_reconfigure_flow(hass)
+
+    assert result["type"] is FlowResultType.FORM
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input,
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": reason}
+
+    write_api.side_effect = None
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input,
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"

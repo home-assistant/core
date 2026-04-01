@@ -2,6 +2,7 @@
 
 import asyncio
 from collections.abc import AsyncGenerator
+from dataclasses import replace
 from http import HTTPStatus
 import os
 from typing import Any
@@ -26,7 +27,6 @@ from tests.common import (
     mock_platform,
     register_auth_provider,
 )
-from tests.test_util.aiohttp import AiohttpClientMocker
 from tests.typing import ClientSessionGenerator
 
 
@@ -38,15 +38,11 @@ async def auth_active(hass: HomeAssistant) -> None:
 
 @pytest.fixture(name="rpi")
 async def rpi_fixture(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, mock_supervisor
+    hass: HomeAssistant, homeassistant_info: AsyncMock, mock_supervisor: None
 ) -> None:
     """Mock core info with rpi."""
-    aioclient_mock.get(
-        "http://127.0.0.1/core/info",
-        json={
-            "result": "ok",
-            "data": {"version_latest": "1.0.0", "machine": "raspberrypi3"},
-        },
+    homeassistant_info.return_value = replace(
+        homeassistant_info.return_value, machine="raspberrypi3"
     )
     assert await async_setup_component(hass, "hassio", {})
     await hass.async_block_till_done()
@@ -54,15 +50,11 @@ async def rpi_fixture(
 
 @pytest.fixture(name="no_rpi")
 async def no_rpi_fixture(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, mock_supervisor
+    hass: HomeAssistant, homeassistant_info: AsyncMock, mock_supervisor: None
 ) -> None:
     """Mock core info with rpi."""
-    aioclient_mock.get(
-        "http://127.0.0.1/core/info",
-        json={
-            "result": "ok",
-            "data": {"version_latest": "1.0.0", "machine": "odroid-n2"},
-        },
+    homeassistant_info.return_value = replace(
+        homeassistant_info.return_value, machine="odroid-n2"
     )
     assert await async_setup_component(hass, "hassio", {})
     await hass.async_block_till_done()
@@ -70,50 +62,23 @@ async def no_rpi_fixture(
 
 @pytest.fixture(name="mock_supervisor")
 async def mock_supervisor_fixture(
-    aioclient_mock: AiohttpClientMocker,
     store_info: AsyncMock,
     supervisor_is_connected: AsyncMock,
     resolution_info: AsyncMock,
+    supervisor_root_info: AsyncMock,
+    host_info: AsyncMock,
+    supervisor_info: AsyncMock,
+    network_info: AsyncMock,
+    os_info: AsyncMock,
+    ingress_panels: AsyncMock,
 ) -> AsyncGenerator[None]:
     """Mock supervisor."""
-    aioclient_mock.post("http://127.0.0.1/homeassistant/options", json={"result": "ok"})
-    aioclient_mock.post("http://127.0.0.1/supervisor/options", json={"result": "ok"})
-    aioclient_mock.get(
-        "http://127.0.0.1/network/info",
-        json={
-            "result": "ok",
-            "data": {
-                "host_internet": True,
-                "supervisor_internet": True,
-            },
-        },
+    supervisor_info.return_value = replace(
+        supervisor_info.return_value, diagnostics=True
     )
     with (
         patch.dict(os.environ, {"SUPERVISOR": "127.0.0.1"}),
-        patch(
-            "homeassistant.components.hassio.HassIO.get_info",
-            return_value={},
-        ),
-        patch(
-            "homeassistant.components.hassio.HassIO.get_host_info",
-            return_value={},
-        ),
-        patch(
-            "homeassistant.components.hassio.HassIO.get_supervisor_info",
-            return_value={"diagnostics": True},
-        ),
-        patch(
-            "homeassistant.components.hassio.HassIO.get_os_info",
-            return_value={},
-        ),
-        patch(
-            "homeassistant.components.hassio.HassIO.get_ingress_panels",
-            return_value={"panels": {}},
-        ),
-        patch.dict(
-            os.environ,
-            {"SUPERVISOR_TOKEN": "123456"},
-        ),
+        patch.dict(os.environ, {"SUPERVISOR_TOKEN": "123456"}),
     ):
         yield
 
@@ -531,7 +496,6 @@ async def test_onboarding_core_no_rpi_power(
     hass: HomeAssistant,
     hass_storage: dict[str, Any],
     hass_client: ClientSessionGenerator,
-    aioclient_mock: AiohttpClientMocker,
     no_rpi,
     mock_default_integrations,
 ) -> None:

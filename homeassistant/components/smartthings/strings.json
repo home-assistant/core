@@ -49,6 +49,9 @@
       "child_lock": {
         "name": "Child lock"
       },
+      "cooktop_operating_state": {
+        "name": "[%key:component::smartthings::entity::sensor::cooktop_operating_state::name%]"
+      },
       "cool_select_plus_door": {
         "name": "CoolSelect+ door"
       },
@@ -70,11 +73,23 @@
       "keep_fresh_mode_active": {
         "name": "Keep fresh mode active"
       },
+      "microfiber_filter_blockage": {
+        "name": "Filter blockage"
+      },
       "oven_cavity_status": {
         "name": "Second cavity status"
       },
       "remote_control": {
         "name": "Remote control"
+      },
+      "robot_cleaner_dust_bag": {
+        "name": "Dust bag full"
+      },
+      "stick_cleaner_dust_bag": {
+        "name": "[%key:component::smartthings::entity::binary_sensor::robot_cleaner_dust_bag::name%]"
+      },
+      "stick_cleaner_status": {
+        "name": "Stick cleaner in station"
       },
       "sub_remote_control": {
         "name": "Upper washer remote control"
@@ -84,11 +99,29 @@
       }
     },
     "button": {
+      "cancel": {
+        "name": "Cancel"
+      },
+      "cancel_and_drain": {
+        "name": "Cancel and drain"
+      },
+      "pause": {
+        "name": "[%key:common::action::pause%]"
+      },
+      "reset_hepa_filter": {
+        "name": "Reset HEPA filter"
+      },
       "reset_hood_filter": {
         "name": "Reset filter"
       },
       "reset_water_filter": {
         "name": "Reset water filter"
+      },
+      "resume": {
+        "name": "Resume"
+      },
+      "start": {
+        "name": "[%key:common::action::start%]"
       },
       "stop": {
         "name": "[%key:common::action::stop%]"
@@ -159,6 +192,11 @@
         }
       }
     },
+    "light": {
+      "light": {
+        "name": "[%key:component::light::title%]"
+      }
+    },
     "number": {
       "cool_select_plus_temperature": {
         "name": "CoolSelect+ temperature"
@@ -223,6 +261,41 @@
           "stop": "[%key:common::state::stopped%]"
         }
       },
+      "robot_cleaner_cleaning_type": {
+        "name": "Cleaning type",
+        "state": {
+          "mop": "Mop",
+          "mop_after_vacuum": "Mop after vacuuming",
+          "vacuum": "Vacuum",
+          "vacuum_and_mop_together": "Vacuum and mop together"
+        }
+      },
+      "robot_cleaner_driving_mode": {
+        "name": "Driving mode",
+        "state": {
+          "area_then_walls": "Area then walls",
+          "quick_clean_zigzag_pattern": "Quick clean in a zigzag pattern",
+          "walls_first": "Walls first"
+        }
+      },
+      "robot_cleaner_sound_mode": {
+        "name": "Sound mode",
+        "state": {
+          "mute": "Mute",
+          "tone": "Tone",
+          "voice": "Voice"
+        }
+      },
+      "robot_cleaner_water_spray_level": {
+        "name": "Water level",
+        "state": {
+          "high": "[%key:common::state::high%]",
+          "low": "[%key:common::state::low%]",
+          "medium": "[%key:common::state::medium%]",
+          "moderate_high": "Moderate high",
+          "moderate_low": "Moderate low"
+        }
+      },
       "selected_zone": {
         "name": "Selected zone",
         "state": {
@@ -243,6 +316,14 @@
           "none": "None",
           "normal": "[%key:common::state::normal%]",
           "up": "Up"
+        }
+      },
+      "sound_detection_sensitivity": {
+        "name": "Sound detection sensitivity",
+        "state": {
+          "high": "[%key:common::state::high%]",
+          "low": "[%key:common::state::low%]",
+          "medium": "[%key:common::state::medium%]"
         }
       },
       "spin_level": {
@@ -510,6 +591,25 @@
       "media_playback_status": {
         "name": "Media playback status"
       },
+      "microfiber_filter_job_state": {
+        "name": "[%key:component::smartthings::entity::sensor::dishwasher_job_state::name%]",
+        "state": {
+          "bypassing": "Bypassing",
+          "filtering": "Filtering",
+          "none": "[%key:component::smartthings::entity::sensor::washer_job_state::state::none%]",
+          "sensing": "Weight sensing",
+          "stopping": "Stopping",
+          "waiting": "Waiting"
+        }
+      },
+      "microfiber_filter_operating_state": {
+        "name": "[%key:component::smartthings::entity::sensor::cooktop_operating_state::name%]",
+        "state": {
+          "paused": "[%key:common::state::paused%]",
+          "ready": "[%key:component::smartthings::entity::sensor::oven_machine_state::state::ready%]",
+          "running": "[%key:component::smartthings::entity::sensor::dishwasher_machine_state::state::run%]"
+        }
+      },
       "odor_sensor": {
         "name": "Odor sensor"
       },
@@ -739,6 +839,22 @@
           "tested": "[%key:component::smartthings::entity::sensor::carbon_monoxide_detector::state::tested%]"
         }
       },
+      "stick_cleaner_dust_bag_usage": {
+        "name": "Dust bag cycles",
+        "unit_of_measurement": "cycles"
+      },
+      "stick_cleaner_dustbin_last_emptied": {
+        "name": "Last emptied"
+      },
+      "stick_cleaner_operating_state": {
+        "state": {
+          "emptying_dustbin": "Emptying dustbin",
+          "ready": "[%key:component::smartthings::entity::sensor::oven_machine_state::state::ready%]",
+          "using_vacuum": "Using vacuum",
+          "uv_cleaning": "UV cleaning",
+          "uv_paused": "UV paused"
+        }
+      },
       "thermostat_cooling_setpoint": {
         "name": "Cooling setpoint"
       },
@@ -856,11 +972,20 @@
       "bubble_soak": {
         "name": "Bubble Soak"
       },
+      "bypass_mode": {
+        "name": "Bypass mode"
+      },
       "display_lighting": {
         "name": "Display lighting"
       },
+      "do_not_disturb": {
+        "name": "Do not disturb"
+      },
       "dry_plus": {
         "name": "Dry plus"
+      },
+      "empty_dustbin": {
+        "name": "Empty dustbin"
       },
       "heated_dry": {
         "name": "Heated dry"
@@ -901,6 +1026,9 @@
       "sanitizing_wash": {
         "name": "Sanitizing wash"
       },
+      "sound_detection": {
+        "name": "Sound detection"
+      },
       "sound_effect": {
         "name": "Sound effect"
       },
@@ -916,11 +1044,36 @@
       "wrinkle_prevent": {
         "name": "Wrinkle prevent"
       }
+    },
+    "time": {
+      "do_not_disturb_end_time": {
+        "name": "Do not disturb end time"
+      },
+      "do_not_disturb_start_time": {
+        "name": "Do not disturb start time"
+      }
+    },
+    "vacuum": {
+      "vacuum": {
+        "state_attributes": {
+          "fan_speed": {
+            "state": {
+              "maximum": "Maximum",
+              "normal": "Normal",
+              "quiet": "Quiet",
+              "smart": "Smart"
+            }
+          }
+        }
+      }
     }
   },
   "exceptions": {
     "oauth2_implementation_unavailable": {
       "message": "[%key:common::exceptions::oauth2_implementation_unavailable::message%]"
+    },
+    "remote_control_status": {
+      "message": "Can only be changed when remote control is enabled"
     }
   },
   "issues": {

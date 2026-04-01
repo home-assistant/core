@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_sensor_setup[load_platforms0][sensor.test_build_up_index-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -54,8 +55,9 @@
 # ---
 # name: test_sensor_setup[load_platforms0][sensor.test_drought_code-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -107,8 +109,9 @@
 # ---
 # name: test_sensor_setup[load_platforms0][sensor.test_duff_moisture_code-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -160,8 +163,9 @@
 # ---
 # name: test_sensor_setup[load_platforms0][sensor.test_fine_fuel_moisture_code-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -213,8 +217,9 @@
 # ---
 # name: test_sensor_setup[load_platforms0][sensor.test_fire_weather_index-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -266,8 +271,9 @@
 # ---
 # name: test_sensor_setup[load_platforms0][sensor.test_frozen_precipitation-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -317,8 +323,9 @@
 # ---
 # name: test_sensor_setup[load_platforms0][sensor.test_fuel_drying-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -385,8 +392,9 @@
 # ---
 # name: test_sensor_setup[load_platforms0][sensor.test_fwi_index-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -453,8 +461,9 @@
 # ---
 # name: test_sensor_setup[load_platforms0][sensor.test_high_cloud_coverage-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -504,8 +513,9 @@
 # ---
 # name: test_sensor_setup[load_platforms0][sensor.test_highest_grass_fire_risk-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -572,8 +582,9 @@
 # ---
 # name: test_sensor_setup[load_platforms0][sensor.test_initial_spread_index-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -625,8 +636,9 @@
 # ---
 # name: test_sensor_setup[load_platforms0][sensor.test_low_cloud_coverage-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -676,8 +688,9 @@
 # ---
 # name: test_sensor_setup[load_platforms0][sensor.test_medium_cloud_coverage-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -727,8 +740,9 @@
 # ---
 # name: test_sensor_setup[load_platforms0][sensor.test_potential_rate_of_spread-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -785,8 +799,9 @@
 # ---
 # name: test_sensor_setup[load_platforms0][sensor.test_precipitation_category-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -855,8 +870,9 @@
 # ---
 # name: test_sensor_setup[load_platforms0][sensor.test_thunder_probability-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -906,8 +922,9 @@
 # ---
 # name: test_sensor_setup[load_platforms0][sensor.test_total_cloud_coverage-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,

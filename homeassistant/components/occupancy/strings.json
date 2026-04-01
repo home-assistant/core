@@ -1,0 +1,62 @@
+{
+  "common": {
+    "condition_behavior_name": "Condition passes if",
+    "trigger_behavior_name": "Trigger when"
+  },
+  "conditions": {
+    "is_detected": {
+      "description": "Tests if one or more occupancy sensors are detecting occupancy.",
+      "fields": {
+        "behavior": {
+          "name": "[%key:component::occupancy::common::condition_behavior_name%]"
+        }
+      },
+      "name": "Occupancy is detected"
+    },
+    "is_not_detected": {
+      "description": "Tests if one or more occupancy sensors are not detecting occupancy.",
+      "fields": {
+        "behavior": {
+          "name": "[%key:component::occupancy::common::condition_behavior_name%]"
+        }
+      },
+      "name": "Occupancy is not detected"
+    }
+  },
+  "selector": {
+    "condition_behavior": {
+      "options": {
+        "all": "All",
+        "any": "Any"
+      }
+    },
+    "trigger_behavior": {
+      "options": {
+        "any": "Any",
+        "first": "First",
+        "last": "Last"
+      }
+    }
+  },
+  "title": "Occupancy",
+  "triggers": {
+    "cleared": {
+      "description": "Triggers after one or more occupancy sensors stop detecting occupancy.",
+      "fields": {
+        "behavior": {
+          "name": "[%key:component::occupancy::common::trigger_behavior_name%]"
+        }
+      },
+      "name": "Occupancy cleared"
+    },
+    "detected": {
+      "description": "Triggers after one or more occupancy sensors start detecting occupancy.",
+      "fields": {
+        "behavior": {
+          "name": "[%key:component::occupancy::common::trigger_behavior_name%]"
+        }
+      },
+      "name": "Occupancy detected"
+    }
+  }
+}

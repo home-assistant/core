@@ -3,7 +3,12 @@
 import pytest
 
 from homeassistant.components.abode import ATTR_DEVICE_ID
-from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN, SensorDeviceClass
+from homeassistant.components.sensor import (
+    ATTR_STATE_CLASS,
+    DOMAIN as SENSOR_DOMAIN,
+    SensorDeviceClass,
+    SensorStateClass,
+)
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_FRIENDLY_NAME,
@@ -40,12 +45,15 @@ async def test_attributes(hass: HomeAssistant) -> None:
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == PERCENTAGE
     assert state.attributes.get(ATTR_FRIENDLY_NAME) == "Environment Sensor Humidity"
     assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.HUMIDITY
+    assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
 
     state = hass.states.get("sensor.environment_sensor_illuminance")
     assert state.state == "1.0"
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == "lx"
+    assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
 
     state = hass.states.get("sensor.environment_sensor_temperature")
     # Abodepy device JSON reports 19.5, but Home Assistant shows 19.4
     assert float(state.state) == pytest.approx(19.44444)
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfTemperature.CELSIUS
+    assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT

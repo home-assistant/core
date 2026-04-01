@@ -1,4 +1,36 @@
 {
+  "conditions": {
+    "awning_is_closed": {
+      "condition": "mdi:storefront-outline"
+    },
+    "awning_is_open": {
+      "condition": "mdi:storefront-outline"
+    },
+    "blind_is_closed": {
+      "condition": "mdi:blinds-horizontal-closed"
+    },
+    "blind_is_open": {
+      "condition": "mdi:blinds-horizontal"
+    },
+    "curtain_is_closed": {
+      "condition": "mdi:curtains-closed"
+    },
+    "curtain_is_open": {
+      "condition": "mdi:curtains"
+    },
+    "shade_is_closed": {
+      "condition": "mdi:roller-shade-closed"
+    },
+    "shade_is_open": {
+      "condition": "mdi:roller-shade"
+    },
+    "shutter_is_closed": {
+      "condition": "mdi:window-shutter"
+    },
+    "shutter_is_open": {
+      "condition": "mdi:window-shutter-open"
+    }
+  },
   "entity_component": {
     "_": {
       "default": "mdi:window-open",
@@ -107,6 +139,38 @@
     },
     "toggle_cover_tilt": {
       "service": "mdi:arrow-top-right-bottom-left"
+    }
+  },
+  "triggers": {
+    "awning_closed": {
+      "trigger": "mdi:storefront-outline"
+    },
+    "awning_opened": {
+      "trigger": "mdi:storefront-outline"
+    },
+    "blind_closed": {
+      "trigger": "mdi:blinds-horizontal-closed"
+    },
+    "blind_opened": {
+      "trigger": "mdi:blinds-horizontal"
+    },
+    "curtain_closed": {
+      "trigger": "mdi:curtains-closed"
+    },
+    "curtain_opened": {
+      "trigger": "mdi:curtains"
+    },
+    "shade_closed": {
+      "trigger": "mdi:roller-shade-closed"
+    },
+    "shade_opened": {
+      "trigger": "mdi:roller-shade"
+    },
+    "shutter_closed": {
+      "trigger": "mdi:window-shutter"
+    },
+    "shutter_opened": {
+      "trigger": "mdi:window-shutter-open"
     }
   }
 }

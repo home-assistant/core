@@ -55,6 +55,7 @@ class Ws66iZone(CoordinatorEntity[Ws66iDataUpdateCoordinator], MediaPlayerEntity
         | MediaPlayerEntityFeature.TURN_OFF
         | MediaPlayerEntityFeature.SELECT_SOURCE
     )
+    _attr_volume_step = 1 / MAX_VOL
 
     def __init__(
         self,
@@ -145,20 +146,6 @@ class Ws66iZone(CoordinatorEntity[Ws66iDataUpdateCoordinator], MediaPlayerEntity
     async def async_set_volume_level(self, volume: float) -> None:
         """Set volume level, range 0..1."""
         await self.hass.async_add_executor_job(self._set_volume, int(volume * MAX_VOL))
-        self._async_update_attrs_write_ha_state()
-
-    async def async_volume_up(self) -> None:
-        """Volume up the media player."""
-        await self.hass.async_add_executor_job(
-            self._set_volume, min(self._status.volume + 1, MAX_VOL)
-        )
-        self._async_update_attrs_write_ha_state()
-
-    async def async_volume_down(self) -> None:
-        """Volume down media player."""
-        await self.hass.async_add_executor_job(
-            self._set_volume, max(self._status.volume - 1, 0)
-        )
         self._async_update_attrs_write_ha_state()
 
     def _set_volume(self, volume: int) -> None:

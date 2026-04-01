@@ -102,6 +102,17 @@ async def test_setup(
                 ),
             ],
         ),
+        (
+            "reeflex_mock",
+            [
+                (
+                    "time.mock_reeflex_start_time",
+                    time(9, 0, tzinfo=timezone(timedelta(hours=1))),
+                    "startTime",
+                    9 * 60,
+                ),
+            ],
+        ),
     ],
 )
 async def test_set_value(
@@ -190,6 +201,18 @@ async def test_set_value(
                     "start_time_night_mode",
                     1320,
                     time(22, 0, tzinfo=timezone(timedelta(hours=1))).isoformat(),
+                ),
+            ],
+        ),
+        (
+            "reeflex_mock",
+            [
+                (
+                    "time.mock_reeflex_start_time",
+                    "reeflex_data",
+                    "startTime",
+                    540,
+                    time(9, 0, tzinfo=timezone(timedelta(hours=1))).isoformat(),
                 ),
             ],
         ),

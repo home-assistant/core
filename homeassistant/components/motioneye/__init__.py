@@ -56,20 +56,16 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_send,
 )
 from homeassistant.helpers.network import NoURLAvailableError, get_url
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import (
     ATTR_EVENT_TYPE,
     ATTR_WEBHOOK_ID,
     CONF_ADMIN_PASSWORD,
     CONF_ADMIN_USERNAME,
-    CONF_CLIENT,
-    CONF_COORDINATOR,
     CONF_SURVEILLANCE_PASSWORD,
     CONF_SURVEILLANCE_USERNAME,
     CONF_WEBHOOK_SET,
     CONF_WEBHOOK_SET_OVERWRITE,
-    DEFAULT_SCAN_INTERVAL,
     DEFAULT_WEBHOOK_SET,
     DEFAULT_WEBHOOK_SET_OVERWRITE,
     DOMAIN,
@@ -84,6 +80,7 @@ from .const import (
     WEB_HOOK_SENTINEL_KEY,
     WEB_HOOK_SENTINEL_VALUE,
 )
+from .coordinator import MotionEyeUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 PLATFORMS = [CAMERA_DOMAIN, SENSOR_DOMAIN, SWITCH_DOMAIN]
@@ -308,24 +305,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass, DOMAIN, "motionEye", entry.data[CONF_WEBHOOK_ID], handle_webhook
     )
 
-    async def async_update_data() -> dict[str, Any] | None:
-        try:
-            return await client.async_get_cameras()
-        except MotionEyeClientError as exc:
-            raise UpdateFailed("Error communicating with API") from exc
-
-    coordinator = DataUpdateCoordinator(
-        hass,
-        _LOGGER,
-        config_entry=entry,
-        name=DOMAIN,
-        update_method=async_update_data,
-        update_interval=DEFAULT_SCAN_INTERVAL,
-    )
-    hass.data[DOMAIN][entry.entry_id] = {
-        CONF_CLIENT: client,
-        CONF_COORDINATOR: coordinator,
-    }
+    coordinator = MotionEyeUpdateCoordinator(hass, entry, client)
+    hass.data[DOMAIN][entry.entry_id] = coordinator
 
     current_cameras: set[tuple[str, str]] = set()
     device_registry = dr.async_get(hass)
@@ -387,8 +368,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
-        config_data = hass.data[DOMAIN].pop(entry.entry_id)
-        await config_data[CONF_CLIENT].async_client_close()
+        coordinator = hass.data[DOMAIN].pop(entry.entry_id)
+        await coordinator.client.async_client_close()
 
     return unload_ok
 
@@ -460,9 +441,8 @@ def _get_media_event_data(
     if not config_entry_id or config_entry_id not in hass.data[DOMAIN]:
         return {}
 
-    config_entry_data = hass.data[DOMAIN][config_entry_id]
-    client = config_entry_data[CONF_CLIENT]
-    coordinator = config_entry_data[CONF_COORDINATOR]
+    coordinator = hass.data[DOMAIN][config_entry_id]
+    client = coordinator.client
 
     for identifier in device.identifiers:
         data = split_motioneye_device_identifier(identifier)

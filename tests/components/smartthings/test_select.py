@@ -30,6 +30,7 @@ from . import (
 from tests.common import MockConfigEntry
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_all_entities(
     hass: HomeAssistant,
     snapshot: SnapshotAssertion,
@@ -250,7 +251,7 @@ async def test_select_option_with_wrong_dishwasher_machine_state(
         await hass.services.async_call(
             SELECT_DOMAIN,
             SERVICE_SELECT_OPTION,
-            {ATTR_ENTITY_ID: "select.dishwasher_selected_zone", ATTR_OPTION: "lower"},
+            {ATTR_ENTITY_ID: "select.dishwasher_1_selected_zone", ATTR_OPTION: "lower"},
             blocking=True,
         )
     devices.execute_device_command.assert_not_called()
@@ -274,7 +275,7 @@ async def test_select_dishwasher_washing_option(
     await hass.services.async_call(
         SELECT_DOMAIN,
         SERVICE_SELECT_OPTION,
-        {ATTR_ENTITY_ID: "select.dishwasher_selected_zone", ATTR_OPTION: "lower"},
+        {ATTR_ENTITY_ID: "select.dishwasher_1_selected_zone", ATTR_OPTION: "lower"},
         blocking=True,
     )
     device_id = "7ff318f3-3772-524d-3c9f-72fcd26413ed"

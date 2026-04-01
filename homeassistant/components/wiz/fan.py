@@ -21,9 +21,8 @@ from homeassistant.util.percentage import (
     ranged_value_to_percentage,
 )
 
-from . import WizConfigEntry
+from .coordinator import WizConfigEntry, WizData
 from .entity import WizEntity
-from .models import WizData
 
 PRESET_MODE_BREEZE = "breeze"
 

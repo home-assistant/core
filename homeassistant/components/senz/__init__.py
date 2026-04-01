@@ -2,16 +2,14 @@
 
 from __future__ import annotations
 
-from datetime import timedelta
 from http import HTTPStatus
 import logging
 
 from aiohttp import ClientResponseError
 from httpx import HTTPStatusError, RequestError
 import jwt
-from pysenz import SENZAPI, Thermostat
+from pysenz import SENZAPI
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
@@ -21,21 +19,16 @@ from homeassistant.helpers.config_entry_oauth2_flow import (
     OAuth2Session,
     async_get_config_entry_implementation,
 )
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .api import SENZConfigEntryAuth
 from .const import DOMAIN
-
-UPDATE_INTERVAL = timedelta(seconds=30)
+from .coordinator import SENZConfigEntry, SENZDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 PLATFORMS = [Platform.CLIMATE, Platform.SENSOR]
-
-type SENZDataUpdateCoordinator = DataUpdateCoordinator[dict[str, Thermostat]]
-type SENZConfigEntry = ConfigEntry[SENZDataUpdateCoordinator]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: SENZConfigEntry) -> bool:
@@ -50,14 +43,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: SENZConfigEntry) -> bool
     session = OAuth2Session(hass, entry, implementation)
     auth = SENZConfigEntryAuth(httpx_client.get_async_client(hass), session)
     senz_api = SENZAPI(auth)
-
-    async def update_thermostats() -> dict[str, Thermostat]:
-        """Fetch SENZ thermostats data."""
-        try:
-            thermostats = await senz_api.get_thermostats()
-        except RequestError as err:
-            raise UpdateFailed from err
-        return {thermostat.serial_number: thermostat for thermostat in thermostats}
 
     try:
         account = await senz_api.get_account()
@@ -92,13 +77,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: SENZConfigEntry) -> bool
             translation_key="config_entry_auth_failed",
         ) from err
 
-    coordinator: SENZDataUpdateCoordinator = DataUpdateCoordinator(
+    coordinator = SENZDataUpdateCoordinator(
         hass,
-        _LOGGER,
-        config_entry=entry,
+        entry,
         name=account.username,
-        update_interval=UPDATE_INTERVAL,
-        update_method=update_thermostats,
+        senz_api=senz_api,
     )
 
     await coordinator.async_config_entry_first_refresh()

@@ -4,13 +4,20 @@ from __future__ import annotations
 
 import asyncio
 from collections import defaultdict
+from collections.abc import Awaitable
 from copy import deepcopy
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, cast
 
 from aiohasupervisor import SupervisorError, SupervisorNotFoundError
-from aiohasupervisor.models import StoreInfo
-from aiohasupervisor.models.mounts import CIFSMountResponse, NFSMountResponse
+from aiohasupervisor.models import (
+    AddonState,
+    CIFSMountResponse,
+    InstalledAddon,
+    NFSMountResponse,
+    StoreInfo,
+)
+from aiohasupervisor.models.base import ResponseData
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_MANUFACTURER, ATTR_NAME
@@ -23,16 +30,16 @@ from homeassistant.loader import bind_hass
 
 from .const import (
     ATTR_AUTO_UPDATE,
+    ATTR_REPOSITORIES,
     ATTR_REPOSITORY,
     ATTR_SLUG,
-    ATTR_STARTED,
-    ATTR_STATE,
     ATTR_URL,
     ATTR_VERSION,
     CONTAINER_INFO,
     CONTAINER_STATS,
     CORE_CONTAINER,
     DATA_ADDONS_INFO,
+    DATA_ADDONS_LIST,
     DATA_ADDONS_STATS,
     DATA_COMPONENT,
     DATA_CORE_INFO,
@@ -57,7 +64,7 @@ from .const import (
     SUPERVISOR_CONTAINER,
     SupervisorEntityModel,
 )
-from .handler import HassioAPIError, get_supervisor_client
+from .handler import get_supervisor_client
 from .jobs import SupervisorJobs
 
 if TYPE_CHECKING:
@@ -118,7 +125,7 @@ def get_network_info(hass: HomeAssistant) -> dict[str, Any] | None:
 
 @callback
 @bind_hass
-def get_addons_info(hass: HomeAssistant) -> dict[str, dict[str, Any]] | None:
+def get_addons_info(hass: HomeAssistant) -> dict[str, dict[str, Any] | None] | None:
     """Return Addons info.
 
     Async friendly.
@@ -127,8 +134,17 @@ def get_addons_info(hass: HomeAssistant) -> dict[str, dict[str, Any]] | None:
 
 
 @callback
+def get_addons_list(hass: HomeAssistant) -> list[dict[str, Any]] | None:
+    """Return list of installed addons and subset of details for each.
+
+    Async friendly.
+    """
+    return hass.data.get(DATA_ADDONS_LIST)
+
+
+@callback
 @bind_hass
-def get_addons_stats(hass: HomeAssistant) -> dict[str, Any]:
+def get_addons_stats(hass: HomeAssistant) -> dict[str, dict[str, Any] | None]:
     """Return Addons stats.
 
     Async friendly.
@@ -341,7 +357,7 @@ class HassioDataUpdateCoordinator(DataUpdateCoordinator):
 
         try:
             await self.force_data_refresh(is_first_update)
-        except HassioAPIError as err:
+        except SupervisorError as err:
             raise UpdateFailed(f"Error on Supervisor API: {err}") from err
 
         new_data: dict[str, Any] = {}
@@ -350,6 +366,7 @@ class HassioDataUpdateCoordinator(DataUpdateCoordinator):
         addons_stats = get_addons_stats(self.hass)
         store_data = get_store(self.hass)
         mounts_info = await self.supervisor_client.mounts.info()
+        addons_list = get_addons_list(self.hass) or []
 
         if store_data:
             repositories = {
@@ -360,17 +377,17 @@ class HassioDataUpdateCoordinator(DataUpdateCoordinator):
             repositories = {}
 
         new_data[DATA_KEY_ADDONS] = {
-            addon[ATTR_SLUG]: {
+            (slug := addon[ATTR_SLUG]): {
                 **addon,
-                **((addons_stats or {}).get(addon[ATTR_SLUG]) or {}),
-                ATTR_AUTO_UPDATE: (addons_info.get(addon[ATTR_SLUG]) or {}).get(
+                **(addons_stats.get(slug) or {}),
+                ATTR_AUTO_UPDATE: (addons_info.get(slug) or {}).get(
                     ATTR_AUTO_UPDATE, False
                 ),
                 ATTR_REPOSITORY: repositories.get(
-                    addon.get(ATTR_REPOSITORY), addon.get(ATTR_REPOSITORY, "")
+                    repo_slug := addon.get(ATTR_REPOSITORY, ""), repo_slug
                 ),
             }
-            for addon in supervisor_info.get("addons", [])
+            for addon in addons_list
         }
         if self.is_hass_os:
             new_data[DATA_KEY_OS] = get_os_info(self.hass)
@@ -462,32 +479,48 @@ class HassioDataUpdateCoordinator(DataUpdateCoordinator):
         container_updates = self._container_updates
 
         data = self.hass.data
-        hassio = self.hassio
-        updates = {
-            DATA_INFO: hassio.get_info(),
-            DATA_CORE_INFO: hassio.get_core_info(),
-            DATA_SUPERVISOR_INFO: hassio.get_supervisor_info(),
-            DATA_OS_INFO: hassio.get_os_info(),
+        client = self.supervisor_client
+
+        updates: dict[str, Awaitable[ResponseData]] = {
+            DATA_INFO: client.info(),
+            DATA_CORE_INFO: client.homeassistant.info(),
+            DATA_SUPERVISOR_INFO: client.supervisor.info(),
+            DATA_OS_INFO: client.os.info(),
+            DATA_STORE: client.store.info(),
         }
         if CONTAINER_STATS in container_updates[CORE_CONTAINER]:
-            updates[DATA_CORE_STATS] = hassio.get_core_stats()
+            updates[DATA_CORE_STATS] = client.homeassistant.stats()
         if CONTAINER_STATS in container_updates[SUPERVISOR_CONTAINER]:
-            updates[DATA_SUPERVISOR_STATS] = hassio.get_supervisor_stats()
+            updates[DATA_SUPERVISOR_STATS] = client.supervisor.stats()
 
-        results = await asyncio.gather(*updates.values())
-        for key, result in zip(updates, results, strict=False):
-            data[key] = result
+        # Pull off addons.list results for further processing before caching
+        addons_list, *results = await asyncio.gather(
+            client.addons.list(), *updates.values()
+        )
+        for key, result in zip(updates, cast(list[ResponseData], results), strict=True):
+            data[key] = result.to_dict()
 
-        _addon_data = data[DATA_SUPERVISOR_INFO].get("addons", [])
-        all_addons: list[str] = []
-        started_addons: list[str] = []
-        for addon in _addon_data:
-            slug = addon[ATTR_SLUG]
-            all_addons.append(slug)
-            if addon[ATTR_STATE] == ATTR_STARTED:
-                started_addons.append(slug)
+        installed_addons = cast(list[InstalledAddon], addons_list)
+        data[DATA_ADDONS_LIST] = [addon.to_dict() for addon in installed_addons]
+
+        # Deprecated 2026.4.0: Folding repositories and addons.list results into supervisor_info for compatibility
+        # Can drop this after removal period
+        data[DATA_SUPERVISOR_INFO].update(
+            {
+                "repositories": data[DATA_STORE][ATTR_REPOSITORIES],
+                "addons": [addon.to_dict() for addon in installed_addons],
+            }
+        )
+
+        all_addons = {addon.slug for addon in installed_addons}
+        started_addons = {
+            addon.slug
+            for addon in installed_addons
+            if addon.state in {AddonState.STARTED, AddonState.STARTUP}
+        }
+
         #
-        # Update add-on info if its the first update or
+        # Update addon info if its the first update or
         # there is at least one entity that needs the data.
         #
         # When entities are added they call async_enable_container_updates
@@ -514,6 +547,12 @@ class HassioDataUpdateCoordinator(DataUpdateCoordinator):
             ),
         ):
             container_data: dict[str, Any] = data.setdefault(data_key, {})
+
+            # Clean up cache
+            for slug in container_data.keys() - wanted_addons:
+                del container_data[slug]
+
+            # Update cache from API
             container_data.update(
                 dict(
                     await asyncio.gather(
@@ -540,7 +579,7 @@ class HassioDataUpdateCoordinator(DataUpdateCoordinator):
         return (slug, stats.to_dict())
 
     async def _update_addon_info(self, slug: str) -> tuple[str, dict[str, Any] | None]:
-        """Return the info for an add-on."""
+        """Return the info for an addon."""
         try:
             info = await self.supervisor_client.addons.addon_info(slug)
         except SupervisorError as err:

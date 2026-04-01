@@ -7,11 +7,11 @@ from http import HTTPStatus
 import logging
 from typing import TYPE_CHECKING, Any
 
-from aiohttp import ClientResponseError
+from aiohttp import ClientError, ClientResponseError
 from tesla_fleet_api.const import TeslaEnergyPeriod
 from tesla_fleet_api.exceptions import InvalidToken, MissingToken, TeslaFleetError
 from tesla_fleet_api.tessie import EnergySite
-from tessie_api import get_battery, get_state
+from tessie_api import get_state
 
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
@@ -83,50 +83,16 @@ class TessieStateUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         except ClientResponseError as e:
             if e.status == HTTPStatus.UNAUTHORIZED:
                 raise ConfigEntryAuthFailed from e
-            raise
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="cannot_connect",
+            ) from e
+        except ClientError as e:
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="cannot_connect",
+            ) from e
         return flatten(vehicle)
-
-
-class TessieBatteryHealthCoordinator(DataUpdateCoordinator[dict[str, Any]]):
-    """Class to manage fetching battery health data from the Tessie API."""
-
-    config_entry: TessieConfigEntry
-
-    def __init__(
-        self,
-        hass: HomeAssistant,
-        config_entry: TessieConfigEntry,
-        api_key: str,
-        vin: str,
-        data: dict[str, Any],
-    ) -> None:
-        """Initialize Tessie Battery Health coordinator."""
-        super().__init__(
-            hass,
-            _LOGGER,
-            config_entry=config_entry,
-            name="Tessie Battery Health",
-            update_interval=timedelta(seconds=TESSIE_SYNC_INTERVAL),
-        )
-        self.api_key = api_key
-        self.vin = vin
-        self.session = async_get_clientsession(hass)
-        self.data = data
-
-    async def _async_update_data(self) -> dict[str, Any]:
-        """Update battery health data using Tessie API."""
-        try:
-            data = await get_battery(
-                session=self.session,
-                api_key=self.api_key,
-                vin=self.vin,
-            )
-        except ClientResponseError as e:
-            if e.status == HTTPStatus.UNAUTHORIZED:
-                raise ConfigEntryAuthFailed from e
-            raise UpdateFailed from e
-
-        return data
 
 
 class TessieEnergySiteLiveCoordinator(DataUpdateCoordinator[dict[str, Any]]):
@@ -165,7 +131,10 @@ class TessieEnergySiteLiveCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         except (InvalidToken, MissingToken) as e:
             raise ConfigEntryAuthFailed from e
         except TeslaFleetError as e:
-            raise UpdateFailed(e.message) from e
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="cannot_connect",
+            ) from e
 
         # Convert Wall Connectors from array to dict
         data["wall_connectors"] = {
@@ -201,7 +170,10 @@ class TessieEnergySiteInfoCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         except (InvalidToken, MissingToken) as e:
             raise ConfigEntryAuthFailed from e
         except TeslaFleetError as e:
-            raise UpdateFailed(e.message) from e
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="cannot_connect",
+            ) from e
 
         return flatten(data)
 
@@ -239,7 +211,10 @@ class TessieEnergyHistoryCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 translation_key="auth_failed",
             ) from e
         except TeslaFleetError as e:
-            raise UpdateFailed(e.message) from e
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="cannot_connect",
+            ) from e
 
         if (
             not data

@@ -45,8 +45,7 @@ rules:
 
   # Gold
   devices: done
-  diagnostics:
-    status: todo
+  diagnostics: done
   discovery-update-info:
     status: exempt
     comment: Integration does not support network discovery
@@ -78,8 +77,7 @@ rules:
     status: todo
   icon-translations:
     status: todo
-  reconfiguration-flow:
-    status: todo
+  reconfiguration-flow: done
   repair-issues:
     status: exempt
     comment: No repair issues needed for current functionality

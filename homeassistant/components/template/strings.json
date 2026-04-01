@@ -1212,7 +1212,7 @@
   "services": {
     "reload": {
       "description": "Reloads template entities from the YAML-configuration.",
-      "name": "[%key:common::action::reload%]"
+      "name": "Reload template entities"
     }
   }
 }

@@ -35,7 +35,6 @@ async def async_get_config_entry_diagnostics(
     vehicles = [
         {
             "data": async_redact_data(x.data_coordinator.data, VEHICLE_REDACT),
-            "battery": x.battery_coordinator.data,
         }
         for x in entry.runtime_data.vehicles
     ]

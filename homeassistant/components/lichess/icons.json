@@ -1,0 +1,30 @@
+{
+  "entity": {
+    "sensor": {
+      "blitz_games": {
+        "default": "mdi:chess-pawn"
+      },
+      "blitz_rating": {
+        "default": "mdi:chart-line"
+      },
+      "bullet_games": {
+        "default": "mdi:chess-pawn"
+      },
+      "bullet_rating": {
+        "default": "mdi:chart-line"
+      },
+      "classical_games": {
+        "default": "mdi:chess-pawn"
+      },
+      "classical_rating": {
+        "default": "mdi:chart-line"
+      },
+      "rapid_games": {
+        "default": "mdi:chess-pawn"
+      },
+      "rapid_rating": {
+        "default": "mdi:chart-line"
+      }
+    }
+  }
+}

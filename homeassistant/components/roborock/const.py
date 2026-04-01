@@ -59,6 +59,7 @@ MAP_FILENAME_SUFFIX = ".png"
 
 
 A01_UPDATE_INTERVAL = timedelta(minutes=1)
+Q10_UPDATE_INTERVAL = timedelta(minutes=1)
 V1_CLOUD_IN_CLEANING_INTERVAL = timedelta(seconds=30)
 V1_CLOUD_NOT_CLEANING_INTERVAL = timedelta(minutes=1)
 V1_LOCAL_IN_CLEANING_INTERVAL = timedelta(seconds=15)

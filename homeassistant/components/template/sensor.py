@@ -229,6 +229,7 @@ class AbstractTemplateSensor(AbstractTemplateEntity, RestoreSensor):
     """Representation of a template sensor features."""
 
     _entity_id_format = ENTITY_ID_FORMAT
+    _state_option = CONF_STATE
 
     # The super init is not called because TemplateEntity and TriggerEntity will call AbstractTemplateEntity.__init__.
     # This ensures that the __init__ on AbstractTemplateEntity is not called twice.
@@ -240,7 +241,6 @@ class AbstractTemplateSensor(AbstractTemplateEntity, RestoreSensor):
         self._attr_last_reset = None
 
         self.setup_state_template(
-            CONF_STATE,
             "_attr_native_value",
             self._validate_state,
         )

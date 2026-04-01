@@ -659,26 +659,34 @@ def _get_exposed_entities(
             continue
 
         entity_entry = entity_registry.async_get(state.entity_id)
-        names = [state.name]
+        device_entry = (
+            device_registry.async_get(entity_entry.device_id)
+            if entity_entry is not None and entity_entry.device_id is not None
+            else None
+        )
+        names = intent.async_get_entity_aliases(hass, entity_entry, state=state)
         area_names = []
 
         if entity_entry is not None:
-            names.extend(entity_entry.aliases)
-            if entity_entry.area_id and (
-                area := area_registry.async_get_area(entity_entry.area_id)
+            if (
+                entity_entry.area_id is not None
+                and (area_entry := area_registry.async_get_area(entity_entry.area_id))
+                is not None
             ):
                 # Entity is in area
-                area_names.append(area.name)
-                area_names.extend(area.aliases)
-            elif entity_entry.device_id and (
-                device := device_registry.async_get(entity_entry.device_id)
-            ):
+                area_names.append(area_entry.name)
+                area_names.extend(area_entry.aliases)
+            elif device_entry is not None:
                 # Check device area
-                if device.area_id and (
-                    area := area_registry.async_get_area(device.area_id)
+                if (
+                    device_entry.area_id is not None
+                    and (
+                        area_entry := area_registry.async_get_area(device_entry.area_id)
+                    )
+                    is not None
                 ):
-                    area_names.append(area.name)
-                    area_names.extend(area.aliases)
+                    area_names.append(area_entry.name)
+                    area_names.extend(area_entry.aliases)
 
         info: dict[str, Any] = {
             "names": ", ".join(names),
@@ -919,12 +927,10 @@ def _get_cached_action_parameters(
             entity_registry = er.async_get(hass)
             if (
                 entity_id := entity_registry.async_get_entity_id(domain, domain, action)
-            ) and (entity_entry := entity_registry.async_get(entity_id)):
-                aliases: list[str] = []
-                if entity_entry.name:
-                    aliases.append(entity_entry.name)
-                if entity_entry.aliases:
-                    aliases.extend(entity_entry.aliases)
+            ) is not None and (
+                entity_entry := entity_registry.async_get(entity_id)
+            ) is not None:
+                aliases = er.async_get_entity_aliases(hass, entity_entry)
                 if aliases:
                     if description:
                         description = description + ". Aliases: " + str(list(aliases))

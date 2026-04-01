@@ -126,8 +126,9 @@
 # ---
 # name: test_media_players[app][media_player.xone-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
     }),
@@ -182,8 +183,9 @@
 # ---
 # name: test_media_players[app][media_player.xonex-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
     }),
@@ -238,8 +240,9 @@
 # ---
 # name: test_media_players[idle][media_player.xone-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
     }),
@@ -291,8 +294,9 @@
 # ---
 # name: test_media_players[idle][media_player.xonex-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
     }),
@@ -344,8 +348,9 @@
 # ---
 # name: test_media_players[livetvapp][media_player.xone-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
     }),
@@ -400,8 +405,9 @@
 # ---
 # name: test_media_players[livetvapp][media_player.xonex-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
     }),

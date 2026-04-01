@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_all_sensor_entities[sensor.intellifire_connection_quality-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -49,10 +50,72 @@
     'state': '988451',
   })
 # ---
+# name: test_all_sensor_entities[sensor.intellifire_control_mode-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'local',
+        'cloud',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.intellifire_control_mode',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Control mode',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Control mode',
+    'platform': 'intellifire',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'control_mode',
+    'unique_id': 'control_mode_mock_serial',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_sensor_entities[sensor.intellifire_control_mode-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by unpublished Intellifire API',
+      'device_class': 'enum',
+      'friendly_name': 'IntelliFire Control mode',
+      'options': list([
+        'local',
+        'cloud',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.intellifire_control_mode',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'local',
+  })
+# ---
 # name: test_all_sensor_entities[sensor.intellifire_downtime-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -102,8 +165,9 @@
 # ---
 # name: test_all_sensor_entities[sensor.intellifire_ecm_latency-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -152,8 +216,9 @@
 # ---
 # name: test_all_sensor_entities[sensor.intellifire_fan_speed-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -205,8 +270,9 @@
 # ---
 # name: test_all_sensor_entities[sensor.intellifire_flame_height-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -258,8 +324,9 @@
 # ---
 # name: test_all_sensor_entities[sensor.intellifire_ip_address-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -306,10 +373,72 @@
     'state': '192.168.2.108',
   })
 # ---
+# name: test_all_sensor_entities[sensor.intellifire_read_mode-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'local',
+        'cloud',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.intellifire_read_mode',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Read mode',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Read mode',
+    'platform': 'intellifire',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'read_mode',
+    'unique_id': 'read_mode_mock_serial',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_sensor_entities[sensor.intellifire_read_mode-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by unpublished Intellifire API',
+      'device_class': 'enum',
+      'friendly_name': 'IntelliFire Read mode',
+      'options': list([
+        'local',
+        'cloud',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.intellifire_read_mode',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'local',
+  })
+# ---
 # name: test_all_sensor_entities[sensor.intellifire_target_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -366,8 +495,9 @@
 # ---
 # name: test_all_sensor_entities[sensor.intellifire_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -424,8 +554,9 @@
 # ---
 # name: test_all_sensor_entities[sensor.intellifire_timer_end-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -475,8 +606,9 @@
 # ---
 # name: test_all_sensor_entities[sensor.intellifire_uptime-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,

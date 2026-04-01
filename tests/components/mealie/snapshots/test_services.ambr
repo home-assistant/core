@@ -4,10 +4,14 @@
     'recipes': dict({
       'items': list([
         dict({
+          'categories': list([
+          ]),
+          'date_added': datetime.date(2024, 1, 21),
           'description': '',
           'group_id': '0bf60b2e-ca89-42a9-94d4-8f67ca72b157',
           'household_id': 'cd2bb87f-5e4c-4dc6-8477-af9537200014',
           'image': None,
+          'last_made': None,
           'name': 'tu6y',
           'original_url': None,
           'perform_time': None,
@@ -16,14 +20,20 @@
           'recipe_id': 'e82f5449-c33b-437c-b712-337587199264',
           'recipe_yield': None,
           'slug': 'tu6y',
+          'tags': list([
+          ]),
           'total_time': None,
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
         }),
         dict({
+          'categories': list([
+          ]),
+          'date_added': datetime.date(2024, 1, 21),
           'description': 'Εύκολη μακαρονάδα με κεφτεδάκια στον φούρνο από τον Άκη Πετρετζίκη. Φτιάξτε την πιο εύκολη μακαρονάδα με κεφτεδάκια σε μόνο ένα σκεύος.',
           'group_id': '0bf60b2e-ca89-42a9-94d4-8f67ca72b157',
           'household_id': 'cd2bb87f-5e4c-4dc6-8477-af9537200014',
           'image': 'En9o',
+          'last_made': None,
           'name': 'Εύκολη μακαρονάδα με κεφτεδάκια στον φούρνο (1)',
           'original_url': 'https://akispetretzikis.com/recipe/7959/efkolh-makaronada-me-keftedakia-ston-fourno',
           'perform_time': '50 Minutes',
@@ -32,14 +42,20 @@
           'recipe_id': 'f79f7e9d-4b58-4930-a586-2b127f16ee34',
           'recipe_yield': '6 servings',
           'slug': 'eukole-makaronada-me-kephtedakia-ston-phourno-1',
+          'tags': list([
+          ]),
           'total_time': None,
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
         }),
         dict({
+          'categories': list([
+          ]),
+          'date_added': datetime.date(2024, 1, 21),
           'description': 'Régalez vous avec ces patates douces cuites au four et légèrement parfumées au thym et au piment. Super bon avec un poulet rôti par exemple.',
           'group_id': '0bf60b2e-ca89-42a9-94d4-8f67ca72b157',
           'household_id': 'cd2bb87f-5e4c-4dc6-8477-af9537200014',
           'image': 'aAhk',
+          'last_made': None,
           'name': 'Patates douces au four (1)',
           'original_url': 'https://www.papillesetpupilles.fr/2018/10/patates-douces-au-four.html/',
           'perform_time': None,
@@ -48,14 +64,20 @@
           'recipe_id': '90097c8b-9d80-468a-b497-73957ac0cd8b',
           'recipe_yield': '',
           'slug': 'patates-douces-au-four-1',
+          'tags': list([
+          ]),
           'total_time': None,
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
         }),
         dict({
+          'categories': list([
+          ]),
+          'date_added': datetime.date(2024, 1, 21),
           'description': 'Régalez vous avec ces patates douces cuites au four et légèrement parfumées au thym et au piment. Super bon avec un poulet rôti par exemple.',
           'group_id': '0bf60b2e-ca89-42a9-94d4-8f67ca72b157',
           'household_id': 'cd2bb87f-5e4c-4dc6-8477-af9537200014',
           'image': 'kdhm',
+          'last_made': None,
           'name': 'Sweet potatoes',
           'original_url': 'https://www.papillesetpupilles.fr/2018/10/patates-douces-au-four.html/',
           'perform_time': None,
@@ -64,14 +86,20 @@
           'recipe_id': '98845807-9365-41fd-acd1-35630b468c27',
           'recipe_yield': '',
           'slug': 'sweet-potatoes',
+          'tags': list([
+          ]),
           'total_time': None,
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
         }),
         dict({
+          'categories': list([
+          ]),
+          'date_added': datetime.date(2024, 1, 21),
           'description': 'Εύκολη μακαρονάδα με κεφτεδάκια στον φούρνο από τον Άκη Πετρετζίκη. Φτιάξτε την πιο εύκολη μακαρονάδα με κεφτεδάκια σε μόνο ένα σκεύος.',
           'group_id': '0bf60b2e-ca89-42a9-94d4-8f67ca72b157',
           'household_id': 'cd2bb87f-5e4c-4dc6-8477-af9537200014',
           'image': 'tNbG',
+          'last_made': None,
           'name': 'Εύκολη μακαρονάδα με κεφτεδάκια στον φούρνο',
           'original_url': 'https://akispetretzikis.com/recipe/7959/efkolh-makaronada-me-keftedakia-ston-fourno',
           'perform_time': '50 Minutes',
@@ -80,14 +108,20 @@
           'recipe_id': '40c227e0-3c7e-41f7-866d-5de04eaecdd7',
           'recipe_yield': '6 servings',
           'slug': 'eukole-makaronada-me-kephtedakia-ston-phourno',
+          'tags': list([
+          ]),
           'total_time': None,
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
         }),
         dict({
+          'categories': list([
+          ]),
+          'date_added': datetime.date(2024, 1, 21),
           'description': 'bourguignon, oignon, carotte, bouquet garni, vin rouge, beurre, sel, poivre',
           'group_id': '0bf60b2e-ca89-42a9-94d4-8f67ca72b157',
           'household_id': 'cd2bb87f-5e4c-4dc6-8477-af9537200014',
           'image': 'nj5M',
+          'last_made': None,
           'name': 'Boeuf bourguignon : la vraie recette (2)',
           'original_url': 'https://www.marmiton.org/recettes/recette_boeuf-bourguignon_18889.aspx',
           'perform_time': '4 Hours',
@@ -96,14 +130,80 @@
           'recipe_id': '9c7b8aee-c93c-4b1b-ab48-2625d444743a',
           'recipe_yield': '4 servings',
           'slug': 'boeuf-bourguignon-la-vraie-recette-2',
+          'tags': list([
+            dict({
+              'name': 'Poivre',
+              'slug': 'poivre',
+              'tag_id': '01c2f4ac-54ce-49bc-9bd7-8a49f353a3a4',
+            }),
+            dict({
+              'name': 'Sel',
+              'slug': 'sel',
+              'tag_id': '90a26cea-a8a1-41a1-9e8c-e94e3c40f7a7',
+            }),
+            dict({
+              'name': 'Beurre',
+              'slug': 'beurre',
+              'tag_id': 'd7b01a4b-5206-4bd2-b9c4-d13b95ca0edb',
+            }),
+            dict({
+              'name': 'Facile',
+              'slug': 'facile',
+              'tag_id': '304faaf8-13ec-4537-91f3-9f39a3585545',
+            }),
+            dict({
+              'name': 'Daube',
+              'slug': 'daube',
+              'tag_id': '6508fb05-fb60-4bed-90c4-584bd6d74cb5',
+            }),
+            dict({
+              'name': 'Bourguignon',
+              'slug': 'bourguignon',
+              'tag_id': '18ff59b6-b599-456a-896b-4b76448b08ca',
+            }),
+            dict({
+              'name': 'Vin Rouge',
+              'slug': 'vin-rouge',
+              'tag_id': '685a0d90-8de4-494e-8eb8-68e7f5d5ffbe',
+            }),
+            dict({
+              'name': 'Oignon',
+              'slug': 'oignon',
+              'tag_id': '5dedc8b5-30f5-4d6e-875f-34deefd01883',
+            }),
+            dict({
+              'name': 'Bouquet Garni',
+              'slug': 'bouquet-garni',
+              'tag_id': '065b79e0-6276-4ebb-9428-7018b40c55bb',
+            }),
+            dict({
+              'name': 'Moyen',
+              'slug': 'moyen',
+              'tag_id': 'd858b1d9-2ca1-46d4-acc2-3d03f991f03f',
+            }),
+            dict({
+              'name': 'Boeuf Bourguignon : La Vraie Recette',
+              'slug': 'boeuf-bourguignon-la-vraie-recette',
+              'tag_id': 'bded0bd8-8d41-4ec5-ad73-e0107fb60908',
+            }),
+            dict({
+              'name': 'Carotte',
+              'slug': 'carotte',
+              'tag_id': '7f99b04f-914a-408b-a057-511ca1125734',
+            }),
+          ]),
           'total_time': '5 Hours',
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
         }),
         dict({
+          'categories': list([
+          ]),
+          'date_added': datetime.date(2024, 1, 21),
           'description': 'bourguignon, oignon, carotte, bouquet garni, vin rouge, beurre, sel, poivre',
           'group_id': '0bf60b2e-ca89-42a9-94d4-8f67ca72b157',
           'household_id': 'cd2bb87f-5e4c-4dc6-8477-af9537200014',
           'image': 'rbU7',
+          'last_made': None,
           'name': 'Boeuf bourguignon : la vraie recette (1)',
           'original_url': 'https://www.marmiton.org/recettes/recette_boeuf-bourguignon_18889.aspx',
           'perform_time': '4 Hours',
@@ -112,14 +212,80 @@
           'recipe_id': 'fc42c7d1-7b0f-4e04-b88a-dbd80b81540b',
           'recipe_yield': '4 servings',
           'slug': 'boeuf-bourguignon-la-vraie-recette-1',
+          'tags': list([
+            dict({
+              'name': 'Poivre',
+              'slug': 'poivre',
+              'tag_id': '01c2f4ac-54ce-49bc-9bd7-8a49f353a3a4',
+            }),
+            dict({
+              'name': 'Sel',
+              'slug': 'sel',
+              'tag_id': '90a26cea-a8a1-41a1-9e8c-e94e3c40f7a7',
+            }),
+            dict({
+              'name': 'Beurre',
+              'slug': 'beurre',
+              'tag_id': 'd7b01a4b-5206-4bd2-b9c4-d13b95ca0edb',
+            }),
+            dict({
+              'name': 'Facile',
+              'slug': 'facile',
+              'tag_id': '304faaf8-13ec-4537-91f3-9f39a3585545',
+            }),
+            dict({
+              'name': 'Daube',
+              'slug': 'daube',
+              'tag_id': '6508fb05-fb60-4bed-90c4-584bd6d74cb5',
+            }),
+            dict({
+              'name': 'Bourguignon',
+              'slug': 'bourguignon',
+              'tag_id': '18ff59b6-b599-456a-896b-4b76448b08ca',
+            }),
+            dict({
+              'name': 'Vin Rouge',
+              'slug': 'vin-rouge',
+              'tag_id': '685a0d90-8de4-494e-8eb8-68e7f5d5ffbe',
+            }),
+            dict({
+              'name': 'Oignon',
+              'slug': 'oignon',
+              'tag_id': '5dedc8b5-30f5-4d6e-875f-34deefd01883',
+            }),
+            dict({
+              'name': 'Bouquet Garni',
+              'slug': 'bouquet-garni',
+              'tag_id': '065b79e0-6276-4ebb-9428-7018b40c55bb',
+            }),
+            dict({
+              'name': 'Moyen',
+              'slug': 'moyen',
+              'tag_id': 'd858b1d9-2ca1-46d4-acc2-3d03f991f03f',
+            }),
+            dict({
+              'name': 'Boeuf Bourguignon : La Vraie Recette',
+              'slug': 'boeuf-bourguignon-la-vraie-recette',
+              'tag_id': 'bded0bd8-8d41-4ec5-ad73-e0107fb60908',
+            }),
+            dict({
+              'name': 'Carotte',
+              'slug': 'carotte',
+              'tag_id': '7f99b04f-914a-408b-a057-511ca1125734',
+            }),
+          ]),
           'total_time': '5 Hours',
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
         }),
         dict({
+          'categories': list([
+          ]),
+          'date_added': datetime.date(2024, 1, 21),
           'description': 'Dieses einfache vegane Erdnussbutter-Schoko-Marmor-Bananenbrot Rezept enthält kein Öl und keinen raffiniernten Zucker, ist aber so fluffig, weich, saftig und lecker wie ein Kuchen! Zubereitet mit vielen gesunden Bananen, gelingt es auch glutenfrei und eignet sich perfekt zum Frühstück, als Dessert oder Snack für Zwischendurch!',
           'group_id': '0bf60b2e-ca89-42a9-94d4-8f67ca72b157',
           'household_id': 'cd2bb87f-5e4c-4dc6-8477-af9537200014',
           'image': 'JSp3',
+          'last_made': None,
           'name': 'Veganes Marmor-Bananenbrot mit Erdnussbutter',
           'original_url': 'https://biancazapatka.com/de/erdnussbutter-schoko-bananenbrot/',
           'perform_time': '55 Minutes',
@@ -128,14 +294,20 @@
           'recipe_id': '89e63d72-7a51-4cef-b162-2e45035d0a91',
           'recipe_yield': '14 servings',
           'slug': 'veganes-marmor-bananenbrot-mit-erdnussbutter',
+          'tags': list([
+          ]),
           'total_time': None,
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
         }),
         dict({
+          'categories': list([
+          ]),
+          'date_added': datetime.date(2024, 1, 21),
           'description': 'Es ist kein Geheimnis: Ich mag es gerne schnell und einfach. Und ich liebe Pasta! Deshalb habe ich mich vor ein paar Wochen auf die Suche nach der perfekten, schnellen Tomatensoße gemacht. Es muss da draußen doch irgendein Rezept geben, das (fast) genauso schnell zuzubereiten ist, wie Miracoli und dabei aber das schöne Gefühl hinterlässt, ...',
           'group_id': '0bf60b2e-ca89-42a9-94d4-8f67ca72b157',
           'household_id': 'cd2bb87f-5e4c-4dc6-8477-af9537200014',
           'image': '9QMh',
+          'last_made': None,
           'name': 'Pasta mit Tomaten, Knoblauch und Basilikum - einfach (und) genial! - Kuechenchaotin',
           'original_url': 'https://kuechenchaotin.de/pasta-mit-tomaten-knoblauch-basilikum/',
           'perform_time': None,
@@ -144,14 +316,20 @@
           'recipe_id': 'eab64457-97ba-4d6c-871c-cb1c724ccb51',
           'recipe_yield': '',
           'slug': 'pasta-mit-tomaten-knoblauch-und-basilikum-einfach-und-genial-kuechenchaotin',
+          'tags': list([
+          ]),
           'total_time': None,
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
         }),
         dict({
+          'categories': list([
+          ]),
+          'date_added': datetime.date(2024, 1, 21),
           'description': '',
           'group_id': '0bf60b2e-ca89-42a9-94d4-8f67ca72b157',
           'household_id': 'cd2bb87f-5e4c-4dc6-8477-af9537200014',
           'image': None,
+          'last_made': None,
           'name': 'test123',
           'original_url': None,
           'perform_time': None,
@@ -160,14 +338,20 @@
           'recipe_id': '12439e3d-3c1c-4dcc-9c6e-4afcea2a0542',
           'recipe_yield': None,
           'slug': 'test123',
+          'tags': list([
+          ]),
           'total_time': None,
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
         }),
         dict({
+          'categories': list([
+          ]),
+          'date_added': datetime.date(2024, 1, 21),
           'description': '',
           'group_id': '0bf60b2e-ca89-42a9-94d4-8f67ca72b157',
           'household_id': 'cd2bb87f-5e4c-4dc6-8477-af9537200014',
           'image': None,
+          'last_made': None,
           'name': 'Bureeto',
           'original_url': None,
           'perform_time': None,
@@ -176,14 +360,20 @@
           'recipe_id': '6567f6ec-e410-49cb-a1a5-d08517184e78',
           'recipe_yield': None,
           'slug': 'bureeto',
+          'tags': list([
+          ]),
           'total_time': None,
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
         }),
         dict({
+          'categories': list([
+          ]),
+          'date_added': datetime.date(2024, 1, 21),
           'description': '',
           'group_id': '0bf60b2e-ca89-42a9-94d4-8f67ca72b157',
           'household_id': 'cd2bb87f-5e4c-4dc6-8477-af9537200014',
           'image': None,
+          'last_made': None,
           'name': 'Subway Double Cookies',
           'original_url': None,
           'perform_time': None,
@@ -192,14 +382,20 @@
           'recipe_id': 'f7737d17-161c-4008-88d4-dd2616778cd0',
           'recipe_yield': None,
           'slug': 'subway-double-cookies',
+          'tags': list([
+          ]),
           'total_time': None,
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
         }),
         dict({
+          'categories': list([
+          ]),
+          'date_added': datetime.date(2024, 1, 21),
           'description': '',
           'group_id': '0bf60b2e-ca89-42a9-94d4-8f67ca72b157',
           'household_id': 'cd2bb87f-5e4c-4dc6-8477-af9537200014',
           'image': None,
+          'last_made': None,
           'name': 'qwerty12345',
           'original_url': None,
           'perform_time': None,
@@ -208,14 +404,20 @@
           'recipe_id': '1904b717-4a8b-4de9-8909-56958875b5f4',
           'recipe_yield': None,
           'slug': 'qwerty12345',
+          'tags': list([
+          ]),
           'total_time': None,
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
         }),
         dict({
+          'categories': list([
+          ]),
+          'date_added': datetime.date(2024, 1, 21),
           'description': 'Cheeseburger Sliders are juicy, cheesy and beefy - everything we love about classic burgers! These sliders are quick and easy plus they are make-ahead and reheat really well.',
           'group_id': '0bf60b2e-ca89-42a9-94d4-8f67ca72b157',
           'household_id': 'cd2bb87f-5e4c-4dc6-8477-af9537200014',
           'image': 'beGq',
+          'last_made': datetime.datetime(2024, 1, 22, 4, 59, 59),
           'name': 'Cheeseburger Sliders (Easy, 30-min Recipe)',
           'original_url': 'https://natashaskitchen.com/cheeseburger-sliders/',
           'perform_time': '22 Minutes',
@@ -224,14 +426,30 @@
           'recipe_id': '8bdd3656-5e7e-45d3-a3c4-557390846a22',
           'recipe_yield': '24 servings',
           'slug': 'cheeseburger-sliders-easy-30-min-recipe',
+          'tags': list([
+            dict({
+              'name': 'Cheeseburger Sliders',
+              'slug': 'cheeseburger-sliders',
+              'tag_id': '7a4ca427-642f-4428-8dc7-557ea9c8d1b4',
+            }),
+            dict({
+              'name': 'Sliders',
+              'slug': 'sliders',
+              'tag_id': '941558d2-50d5-4c9d-8890-a0258f18d493',
+            }),
+          ]),
           'total_time': '30 Minutes',
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
         }),
         dict({
+          'categories': list([
+          ]),
+          'date_added': datetime.date(2024, 1, 21),
           'description': '',
           'group_id': '0bf60b2e-ca89-42a9-94d4-8f67ca72b157',
           'household_id': 'cd2bb87f-5e4c-4dc6-8477-af9537200014',
           'image': None,
+          'last_made': None,
           'name': 'meatloaf',
           'original_url': None,
           'perform_time': None,
@@ -240,14 +458,20 @@
           'recipe_id': '8a30d31d-aa14-411e-af0c-6b61a94f5291',
           'recipe_yield': '4',
           'slug': 'meatloaf',
+          'tags': list([
+          ]),
           'total_time': None,
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
         }),
         dict({
+          'categories': list([
+          ]),
+          'date_added': datetime.date(2024, 1, 21),
           'description': "Richtig rheinischer Sauerbraten - Rheinischer geht's nicht! Über 536 Bewertungen und für köstlich befunden. Mit ► Portionsrechner ► Kochbuch ► Video-Tipps!",
           'group_id': '0bf60b2e-ca89-42a9-94d4-8f67ca72b157',
           'household_id': 'cd2bb87f-5e4c-4dc6-8477-af9537200014',
           'image': 'kCBh',
+          'last_made': None,
           'name': 'Richtig rheinischer Sauerbraten',
           'original_url': 'https://www.chefkoch.de/rezepte/937641199437984/Richtig-rheinischer-Sauerbraten.html',
           'perform_time': '2 Hours 20 Minutes',
@@ -256,14 +480,20 @@
           'recipe_id': 'f2f7880b-1136-436f-91b7-129788d8c117',
           'recipe_yield': '4 servings',
           'slug': 'richtig-rheinischer-sauerbraten',
+          'tags': list([
+          ]),
           'total_time': '3 Hours 20 Minutes',
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
         }),
         dict({
+          'categories': list([
+          ]),
+          'date_added': datetime.date(2024, 1, 21),
           'description': 'Orientalischer Gemüse-Hähnchen Eintopf. Über 164 Bewertungen und für köstlich befunden. Mit ► Portionsrechner ► Kochbuch ► Video-Tipps! Jetzt entdecken und ausprobieren!',
           'group_id': '0bf60b2e-ca89-42a9-94d4-8f67ca72b157',
           'household_id': 'cd2bb87f-5e4c-4dc6-8477-af9537200014',
           'image': 'kpBx',
+          'last_made': None,
           'name': 'Orientalischer Gemüse-Hähnchen Eintopf',
           'original_url': 'https://www.chefkoch.de/rezepte/2307761368177614/Orientalischer-Gemuese-Haehnchen-Eintopf.html',
           'perform_time': '20 Minutes',
@@ -272,14 +502,60 @@
           'recipe_id': 'cf634591-0f82-4254-8e00-2f7e8b0c9022',
           'recipe_yield': '6 servings',
           'slug': 'orientalischer-gemuse-hahnchen-eintopf',
+          'tags': list([
+            dict({
+              'name': 'Gemüse',
+              'slug': 'gemuse',
+              'tag_id': '518f3081-a919-4c80-9cad-75ffbd0e73d3',
+            }),
+            dict({
+              'name': 'Hauptspeise',
+              'slug': 'hauptspeise',
+              'tag_id': 'a3fff625-1902-4112-b169-54aec4f52ea7',
+            }),
+            dict({
+              'name': 'Einfach',
+              'slug': 'einfach',
+              'tag_id': '4c79c0b7-c2d0-415a-b5cf-138cfce92c7e',
+            }),
+            dict({
+              'name': 'Fleisch',
+              'slug': 'fleisch',
+              'tag_id': '1f87d43d-7d9d-4806-993a-fdb89117d64e',
+            }),
+            dict({
+              'name': 'Geflügel',
+              'slug': 'geflugel',
+              'tag_id': '7caa64df-c65d-4fb0-9075-b788e6a05e1d',
+            }),
+            dict({
+              'name': 'Eintopf',
+              'slug': 'eintopf',
+              'tag_id': '38d18d57-d817-491e-94f8-da923d2c540e',
+            }),
+            dict({
+              'name': 'Schmoren',
+              'slug': 'schmoren',
+              'tag_id': '398fbd98-4175-4652-92a4-51e55482dc9b',
+            }),
+            dict({
+              'name': 'Hülsenfrüchte',
+              'slug': 'hulsenfruchte',
+              'tag_id': 'ec303c13-a4f7-4de3-8a4f-d13b72ddd500',
+            }),
+          ]),
           'total_time': '35 Minutes',
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
         }),
         dict({
+          'categories': list([
+          ]),
+          'date_added': datetime.date(2024, 1, 21),
           'description': '',
           'group_id': '0bf60b2e-ca89-42a9-94d4-8f67ca72b157',
           'household_id': 'cd2bb87f-5e4c-4dc6-8477-af9537200014',
           'image': None,
+          'last_made': None,
           'name': 'test 20240121',
           'original_url': None,
           'perform_time': None,
@@ -288,14 +564,20 @@
           'recipe_id': '05208856-d273-4cc9-bcfa-e0215d57108d',
           'recipe_yield': '4',
           'slug': 'test-20240121',
+          'tags': list([
+          ]),
           'total_time': None,
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
         }),
         dict({
+          'categories': list([
+          ]),
+          'date_added': datetime.date(2024, 1, 21),
           'description': 'Zet in 20 minuten deze lekkere loempia bowl in elkaar. Makkelijk, snel en weer eens wat anders. Lekker met prei, sojasaus en kipgehakt.',
           'group_id': '0bf60b2e-ca89-42a9-94d4-8f67ca72b157',
           'household_id': 'cd2bb87f-5e4c-4dc6-8477-af9537200014',
           'image': 'McEx',
+          'last_made': None,
           'name': 'Loempia bowl',
           'original_url': 'https://www.lekkerensimpel.com/loempia-bowl/',
           'perform_time': None,
@@ -304,14 +586,20 @@
           'recipe_id': '145eeb05-781a-4eb0-a656-afa8bc8c0164',
           'recipe_yield': '',
           'slug': 'loempia-bowl',
+          'tags': list([
+          ]),
           'total_time': None,
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
         }),
         dict({
+          'categories': list([
+          ]),
+          'date_added': datetime.date(2024, 1, 21),
           'description': "Chocolate Mousse with Aquafaba, to make the fluffiest of mousses. Whip up this dessert in literally five minutes and chill in the fridge until you're ready to serve!",
           'group_id': '0bf60b2e-ca89-42a9-94d4-8f67ca72b157',
           'household_id': 'cd2bb87f-5e4c-4dc6-8477-af9537200014',
           'image': 'bzqo',
+          'last_made': None,
           'name': '5 Ingredient Chocolate Mousse',
           'original_url': 'https://thehappypear.ie/aquafaba-chocolate-mousse/',
           'perform_time': None,
@@ -320,14 +608,20 @@
           'recipe_id': '5c6532aa-ad84-424c-bc05-c32d50430fe4',
           'recipe_yield': '6 servings',
           'slug': '5-ingredient-chocolate-mousse',
+          'tags': list([
+          ]),
           'total_time': None,
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
         }),
         dict({
+          'categories': list([
+          ]),
+          'date_added': datetime.date(2024, 1, 21),
           'description': 'Der perfekte Pfannkuchen - gelingt einfach immer - von Kindern geliebt und auch für Kochneulinge super geeignet. Über 2529 Bewertungen und für vorzüglich befunden. Mit ► Portionsrechner ► Kochbuch ► Video-Tipps!',
           'group_id': '0bf60b2e-ca89-42a9-94d4-8f67ca72b157',
           'household_id': 'cd2bb87f-5e4c-4dc6-8477-af9537200014',
           'image': 'KGK6',
+          'last_made': None,
           'name': 'Der perfekte Pfannkuchen - gelingt einfach immer',
           'original_url': 'https://www.chefkoch.de/rezepte/1208161226570428/Der-perfekte-Pfannkuchen-gelingt-einfach-immer.html',
           'perform_time': '10 Minutes',
@@ -336,14 +630,55 @@
           'recipe_id': 'f2e684f2-49e0-45ee-90de-951344472f1c',
           'recipe_yield': '4 servings',
           'slug': 'der-perfekte-pfannkuchen-gelingt-einfach-immer',
+          'tags': list([
+            dict({
+              'name': 'Schnell',
+              'slug': 'schnell',
+              'tag_id': '4ec445c6-fc2f-4a1e-b666-93435a46ec42',
+            }),
+            dict({
+              'name': 'Einfach',
+              'slug': 'einfach',
+              'tag_id': '4c79c0b7-c2d0-415a-b5cf-138cfce92c7e',
+            }),
+            dict({
+              'name': 'Backen',
+              'slug': 'backen',
+              'tag_id': '66bc0f60-ff95-44e4-afef-8437b2c2d9af',
+            }),
+            dict({
+              'name': 'Kuchen',
+              'slug': 'kuchen',
+              'tag_id': '48d2a71c-ed17-4c07-bf9f-bc9216936f54',
+            }),
+            dict({
+              'name': 'Kinder',
+              'slug': 'kinder',
+              'tag_id': 'b2821b25-94ea-4576-b488-276331b3d76e',
+            }),
+            dict({
+              'name': 'Mehlspeisen',
+              'slug': 'mehlspeisen',
+              'tag_id': 'fee5e626-792c-479d-a265-81a0029047f2',
+            }),
+          ]),
           'total_time': '15 Minutes',
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
         }),
         dict({
+          'categories': list([
+            dict({
+              'category_id': '6d54ca14-eb71-4d3a-933d-5e88f68edb68',
+              'name': 'Brot',
+              'slug': 'brot',
+            }),
+          ]),
+          'date_added': datetime.date(2024, 1, 21),
           'description': 'Für alle Liebhaber von Dinkel ist dieses Dinkel-Sauerteigbrot ein absolutes Muss. Aussen knusprig und innen herrlich feucht und grossporig.',
           'group_id': '0bf60b2e-ca89-42a9-94d4-8f67ca72b157',
           'household_id': 'cd2bb87f-5e4c-4dc6-8477-af9537200014',
           'image': 'yNDq',
+          'last_made': None,
           'name': 'Dinkel-Sauerteigbrot',
           'original_url': 'https://www.besondersgut.ch/dinkel-sauerteigbrot/',
           'perform_time': '35min',
@@ -352,14 +687,25 @@
           'recipe_id': 'cf239441-b75d-4dea-a48e-9d99b7cb5842',
           'recipe_yield': '1',
           'slug': 'dinkel-sauerteigbrot',
+          'tags': list([
+            dict({
+              'name': 'Sourdough',
+              'slug': 'sourdough',
+              'tag_id': '0f80c5d5-d1ee-41ac-a949-54a76b446459',
+            }),
+          ]),
           'total_time': '24h',
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
         }),
         dict({
+          'categories': list([
+          ]),
+          'date_added': datetime.date(2024, 1, 21),
           'description': '',
           'group_id': '0bf60b2e-ca89-42a9-94d4-8f67ca72b157',
           'household_id': 'cd2bb87f-5e4c-4dc6-8477-af9537200014',
           'image': None,
+          'last_made': None,
           'name': 'test 234234',
           'original_url': None,
           'perform_time': None,
@@ -368,14 +714,20 @@
           'recipe_id': '2673eb90-6d78-4b95-af36-5db8c8a6da37',
           'recipe_yield': None,
           'slug': 'test-234234',
+          'tags': list([
+          ]),
           'total_time': None,
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
         }),
         dict({
+          'categories': list([
+          ]),
+          'date_added': datetime.date(2024, 1, 21),
           'description': '',
           'group_id': '0bf60b2e-ca89-42a9-94d4-8f67ca72b157',
           'household_id': 'cd2bb87f-5e4c-4dc6-8477-af9537200014',
           'image': None,
+          'last_made': None,
           'name': 'test 243',
           'original_url': None,
           'perform_time': None,
@@ -384,14 +736,20 @@
           'recipe_id': '0a723c54-af53-40e9-a15f-c87aae5ac688',
           'recipe_yield': None,
           'slug': 'test-243',
+          'tags': list([
+          ]),
           'total_time': None,
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
         }),
         dict({
+          'categories': list([
+          ]),
+          'date_added': datetime.date(2024, 1, 21),
           'description': 'Einfacher Nudelauflauf mit Brokkoli, Sahnesauce und extra Käse. Dieses vegetarische 5 Zutaten Rezept ist super schnell gemacht und SO gut!',
           'group_id': '0bf60b2e-ca89-42a9-94d4-8f67ca72b157',
           'household_id': 'cd2bb87f-5e4c-4dc6-8477-af9537200014',
           'image': 'nOPT',
+          'last_made': None,
           'name': 'Einfacher Nudelauflauf mit Brokkoli',
           'original_url': 'https://kochkarussell.com/einfacher-nudelauflauf-brokkoli/',
           'perform_time': '20 Minutes',
@@ -400,10 +758,20 @@
           'recipe_id': '9d553779-607e-471b-acf3-84e6be27b159',
           'recipe_yield': '4 servings',
           'slug': 'einfacher-nudelauflauf-mit-brokkoli',
+          'tags': list([
+            dict({
+              'name': '< 4 Hours',
+              'slug': '4-hours',
+              'tag_id': '78318c97-75c7-4d06-95b6-51ef8f4a0257',
+            }),
+          ]),
           'total_time': '35 Minutes',
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
         }),
         dict({
+          'categories': list([
+          ]),
+          'date_added': datetime.date(2024, 1, 21),
           'description': '''
             Tarta cytrynowa z bezą
             Lekko kwaśna masa cytrynowa, która równoważy słodycz bezy – jeśli to brzmi jak ciasto, które chętnie zjesz na deser, wypróbuj nasz przepis! Tarta z bezą i masą cytrynową nawiązuje do kuchni francuskiej, znanej z wyśmienitych quiche i tart. Tym razem proponujemy ją w wersji na słodko.
@@ -419,6 +787,7 @@
           'group_id': '0bf60b2e-ca89-42a9-94d4-8f67ca72b157',
           'household_id': 'cd2bb87f-5e4c-4dc6-8477-af9537200014',
           'image': 'vxuL',
+          'last_made': None,
           'name': 'Tarta cytrynowa z bezą',
           'original_url': 'https://www.przepisy.pl/przepis/tarta-cytrynowa-z-beza',
           'perform_time': None,
@@ -427,14 +796,20 @@
           'recipe_id': '9d3cb303-a996-4144-948a-36afaeeef554',
           'recipe_yield': '8 servings',
           'slug': 'tarta-cytrynowa-z-beza',
+          'tags': list([
+          ]),
           'total_time': '1 Hour',
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
         }),
         dict({
+          'categories': list([
+          ]),
+          'date_added': datetime.date(2024, 1, 21),
           'description': '',
           'group_id': '0bf60b2e-ca89-42a9-94d4-8f67ca72b157',
           'household_id': 'cd2bb87f-5e4c-4dc6-8477-af9537200014',
           'image': None,
+          'last_made': None,
           'name': 'Martins test Recipe',
           'original_url': None,
           'perform_time': None,
@@ -443,14 +818,20 @@
           'recipe_id': '77f05a49-e869-4048-aa62-0d8a1f5a8f1c',
           'recipe_yield': None,
           'slug': 'martins-test-recipe',
+          'tags': list([
+          ]),
           'total_time': None,
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
         }),
         dict({
+          'categories': list([
+          ]),
+          'date_added': datetime.date(2024, 1, 21),
           'description': 'Muffinki czekoladowe to przepyszny i bardzo prosty w przygotowaniu mini deser pieczony w papilotkach. Przepis na najlepsze, bardzo wilgotne i puszyste muffinki czekoladowe polecam każdemu miłośnikowi czekolady.',
           'group_id': '0bf60b2e-ca89-42a9-94d4-8f67ca72b157',
           'household_id': 'cd2bb87f-5e4c-4dc6-8477-af9537200014',
           'image': 'xP1Q',
+          'last_made': None,
           'name': 'Muffinki czekoladowe',
           'original_url': 'https://aniagotuje.pl/przepis/muffinki-czekoladowe',
           'perform_time': '30 Minutes',
@@ -459,14 +840,40 @@
           'recipe_id': '75a90207-9c10-4390-a265-c47a4b67fd69',
           'recipe_yield': '12',
           'slug': 'muffinki-czekoladowe',
+          'tags': list([
+            dict({
+              'name': 'Muffinki Czekoladowe',
+              'slug': 'muffinki-czekoladowe',
+              'tag_id': 'ed2eed99-1285-4507-b5cb-b3047d64855c',
+            }),
+            dict({
+              'name': 'Babeczki I Muffiny',
+              'slug': 'babeczki-i-muffiny',
+              'tag_id': 'e94d5223-5337-4e1b-b36e-7968c8823176',
+            }),
+            dict({
+              'name': 'Sylwester',
+              'slug': 'sylwester',
+              'tag_id': '2d06a44a-331a-4922-abb4-8047ee5e7c1c',
+            }),
+            dict({
+              'name': 'Wegetariańska',
+              'slug': 'wegetarianska',
+              'tag_id': 'c78edd8c-c96b-43fb-86c0-917ea5a08ac7',
+            }),
+          ]),
           'total_time': None,
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
         }),
         dict({
+          'categories': list([
+          ]),
+          'date_added': datetime.date(2024, 1, 21),
           'description': '',
           'group_id': '0bf60b2e-ca89-42a9-94d4-8f67ca72b157',
           'household_id': 'cd2bb87f-5e4c-4dc6-8477-af9537200014',
           'image': None,
+          'last_made': None,
           'name': 'My Test Recipe',
           'original_url': None,
           'perform_time': None,
@@ -475,14 +882,20 @@
           'recipe_id': '4320ba72-377b-4657-8297-dce198f24cdf',
           'recipe_yield': None,
           'slug': 'my-test-recipe',
+          'tags': list([
+          ]),
           'total_time': None,
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
         }),
         dict({
+          'categories': list([
+          ]),
+          'date_added': datetime.date(2024, 1, 21),
           'description': '',
           'group_id': '0bf60b2e-ca89-42a9-94d4-8f67ca72b157',
           'household_id': 'cd2bb87f-5e4c-4dc6-8477-af9537200014',
           'image': None,
+          'last_made': None,
           'name': 'My Test Receipe',
           'original_url': None,
           'perform_time': None,
@@ -491,14 +904,20 @@
           'recipe_id': '98dac844-31ee-426a-b16c-fb62a5dd2816',
           'recipe_yield': None,
           'slug': 'my-test-receipe',
+          'tags': list([
+          ]),
           'total_time': None,
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
         }),
         dict({
+          'categories': list([
+          ]),
+          'date_added': datetime.date(2024, 1, 21),
           'description': 'Régalez vous avec ces patates douces cuites au four et légèrement parfumées au thym et au piment. Super bon avec un poulet rôti par exemple.',
           'group_id': '0bf60b2e-ca89-42a9-94d4-8f67ca72b157',
           'household_id': 'cd2bb87f-5e4c-4dc6-8477-af9537200014',
           'image': 'r1ck',
+          'last_made': None,
           'name': 'Patates douces au four',
           'original_url': 'https://www.papillesetpupilles.fr/2018/10/patates-douces-au-four.html/',
           'perform_time': None,
@@ -507,14 +926,20 @@
           'recipe_id': 'c3c8f207-c704-415d-81b1-da9f032cf52f',
           'recipe_yield': '',
           'slug': 'patates-douces-au-four',
+          'tags': list([
+          ]),
           'total_time': None,
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
         }),
         dict({
+          'categories': list([
+          ]),
+          'date_added': datetime.date(2024, 1, 20),
           'description': 'Follow these basic instructions for a thick, crisp, and chewy pizza crust at home. The recipe yields enough pizza dough for two 12-inch pizzas and you can freeze half of the dough for later. Close to 2 pounds of dough total.',
           'group_id': '0bf60b2e-ca89-42a9-94d4-8f67ca72b157',
           'household_id': 'cd2bb87f-5e4c-4dc6-8477-af9537200014',
           'image': 'gD94',
+          'last_made': None,
           'name': 'Easy Homemade Pizza Dough',
           'original_url': 'https://sallysbakingaddiction.com/homemade-pizza-crust-recipe/',
           'perform_time': '15 Minutes',
@@ -523,14 +948,20 @@
           'recipe_id': '1edb2f6e-133c-4be0-b516-3c23625a97ec',
           'recipe_yield': '2 servings',
           'slug': 'easy-homemade-pizza-dough',
+          'tags': list([
+          ]),
           'total_time': '2 Hours 30 Minutes',
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
         }),
         dict({
+          'categories': list([
+          ]),
+          'date_added': datetime.date(2024, 1, 20),
           'description': 'This All-American beef stew recipe includes tender beef coated in a rich, intense sauce and vegetables that bring complementary texture and flavor.',
           'group_id': '0bf60b2e-ca89-42a9-94d4-8f67ca72b157',
           'household_id': 'cd2bb87f-5e4c-4dc6-8477-af9537200014',
           'image': '356X',
+          'last_made': None,
           'name': 'All-American Beef Stew Recipe',
           'original_url': 'https://www.seriouseats.com/all-american-beef-stew-recipe',
           'perform_time': '3 Hours 10 Minutes',
@@ -539,14 +970,25 @@
           'recipe_id': '48f39d27-4b8e-4c14-bf36-4e1e6497e75e',
           'recipe_yield': '6 servings',
           'slug': 'all-american-beef-stew-recipe',
+          'tags': list([
+            dict({
+              'name': '< 4 Hours',
+              'slug': '4-hours',
+              'tag_id': '78318c97-75c7-4d06-95b6-51ef8f4a0257',
+            }),
+          ]),
           'total_time': '3 Hours 15 Minutes',
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
         }),
         dict({
+          'categories': list([
+          ]),
+          'date_added': datetime.date(2024, 1, 20),
           'description': 'This utterly faithful recipe perfectly recreates a New York City halal-cart classic: Chicken and Rice with White Sauce. The chicken is marinated with herbs, lemon, and spices; the rice golden; the sauce, as white and creamy as ever.',
           'group_id': '0bf60b2e-ca89-42a9-94d4-8f67ca72b157',
           'household_id': 'cd2bb87f-5e4c-4dc6-8477-af9537200014',
           'image': '4Sys',
+          'last_made': None,
           'name': "Serious Eats' Halal Cart-Style Chicken and Rice With White Sauce",
           'original_url': 'https://www.seriouseats.com/serious-eats-halal-cart-style-chicken-and-rice-white-sauce-recipe',
           'perform_time': '55 Minutes',
@@ -555,14 +997,65 @@
           'recipe_id': '6530ea6e-401e-4304-8a7a-12162ddf5b9c',
           'recipe_yield': '4 servings',
           'slug': 'serious-eats-halal-cart-style-chicken-and-rice-with-white-sauce',
+          'tags': list([
+            dict({
+              'name': 'Rice',
+              'slug': 'rice',
+              'tag_id': 'd7aea128-0e7b-4e0c-a236-e500717701bb',
+            }),
+            dict({
+              'name': 'Chicken',
+              'slug': 'chicken',
+              'tag_id': '1dd3541c-ed6b-4a25-b829-9a71358409ef',
+            }),
+            dict({
+              'name': 'Chicken And Rice',
+              'slug': 'chicken-and-rice',
+              'tag_id': 'eb871b57-ea46-4cb5-88a5-98064514e593',
+            }),
+            dict({
+              'name': 'Cook The Book',
+              'slug': 'cook-the-book',
+              'tag_id': '2b0a0ed2-e799-4ab2-8a24-d5ce15827a8e',
+            }),
+            dict({
+              'name': 'Halal',
+              'slug': 'halal',
+              'tag_id': 'e6783087-0cee-4f31-b588-268380f75335',
+            }),
+            dict({
+              'name': 'Middle Eastern',
+              'slug': 'middle-eastern',
+              'tag_id': 'a2d99845-8bd0-4a2a-9a56-f8a34f51039e',
+            }),
+            dict({
+              'name': 'New York City',
+              'slug': 'new-york-city',
+              'tag_id': '6b7b95b0-b3f8-467f-857d-ef036009d5e1',
+            }),
+            dict({
+              'name': 'Serious Eats Book',
+              'slug': 'serious-eats-book',
+              'tag_id': '6bd6c577-9d00-411f-88de-b8679c37ac58',
+            }),
+            dict({
+              'name': 'Street Food',
+              'slug': 'street-food',
+              'tag_id': 'd77a2071-43ae-40b1-854d-ae995a766fba',
+            }),
+          ]),
           'total_time': '2 Hours 15 Minutes',
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
         }),
         dict({
+          'categories': list([
+          ]),
+          'date_added': datetime.date(2024, 1, 20),
           'description': 'Schnelle Käsespätzle. Über 1201 Bewertungen und für sehr gut befunden. Mit ► Portionsrechner ► Kochbuch ► Video-Tipps! Jetzt entdecken und ausprobieren!',
           'group_id': '0bf60b2e-ca89-42a9-94d4-8f67ca72b157',
           'household_id': 'cd2bb87f-5e4c-4dc6-8477-af9537200014',
           'image': '8goY',
+          'last_made': None,
           'name': 'Schnelle Käsespätzle',
           'original_url': 'https://www.chefkoch.de/rezepte/1062121211526182/Schnelle-Kaesespaetzle.html',
           'perform_time': '30 Minutes',
@@ -571,14 +1064,20 @@
           'recipe_id': 'c496cf9c-1ece-448a-9d3f-ef772f078a4e',
           'recipe_yield': '4 servings',
           'slug': 'schnelle-kasespatzle',
+          'tags': list([
+          ]),
           'total_time': '40 Minutes',
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
         }),
         dict({
+          'categories': list([
+          ]),
+          'date_added': datetime.date(2024, 1, 20),
           'description': '',
           'group_id': '0bf60b2e-ca89-42a9-94d4-8f67ca72b157',
           'household_id': 'cd2bb87f-5e4c-4dc6-8477-af9537200014',
           'image': None,
+          'last_made': None,
           'name': 'taco',
           'original_url': None,
           'perform_time': None,
@@ -587,14 +1086,20 @@
           'recipe_id': '49aa6f42-6760-4adf-b6cd-59592da485c3',
           'recipe_yield': None,
           'slug': 'taco',
+          'tags': list([
+          ]),
           'total_time': None,
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
         }),
         dict({
+          'categories': list([
+          ]),
+          'date_added': datetime.date(2024, 1, 20),
           'description': 'Har du inte provat denna trendiga pasta är det hög tid! Enkel och gräddig vardagspasta med smak av tomat och chili och en hemlig ingrediens som ger denna rätt extra sting, nämligen vodka.',
           'group_id': '0bf60b2e-ca89-42a9-94d4-8f67ca72b157',
           'household_id': 'cd2bb87f-5e4c-4dc6-8477-af9537200014',
           'image': 'z8BB',
+          'last_made': datetime.datetime(2024, 1, 21, 22, 59, 59),
           'name': 'Vodkapasta',
           'original_url': 'https://www.ica.se/recept/vodkapasta-729011/',
           'perform_time': None,
@@ -603,14 +1108,20 @@
           'recipe_id': '6402a253-2baa-460d-bf4f-b759bb655588',
           'recipe_yield': '4 servings',
           'slug': 'vodkapasta',
+          'tags': list([
+          ]),
           'total_time': '30 Minutes',
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
         }),
         dict({
+          'categories': list([
+          ]),
+          'date_added': datetime.date(2024, 1, 20),
           'description': 'Har du inte provat denna trendiga pasta är det hög tid! Enkel och gräddig vardagspasta med smak av tomat och chili och en hemlig ingrediens som ger denna rätt extra sting, nämligen vodka.',
           'group_id': '0bf60b2e-ca89-42a9-94d4-8f67ca72b157',
           'household_id': 'cd2bb87f-5e4c-4dc6-8477-af9537200014',
           'image': 'Nqpz',
+          'last_made': datetime.datetime(2024, 1, 21, 4, 59, 59),
           'name': 'Vodkapasta2',
           'original_url': 'https://www.ica.se/recept/vodkapasta-729011/',
           'perform_time': None,
@@ -619,14 +1130,20 @@
           'recipe_id': '4f54e9e1-f21d-40ec-a135-91e633dfb733',
           'recipe_yield': '4 servings',
           'slug': 'vodkapasta2',
+          'tags': list([
+          ]),
           'total_time': '30 Minutes',
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
         }),
         dict({
+          'categories': list([
+          ]),
+          'date_added': datetime.date(2024, 1, 20),
           'description': '',
           'group_id': '0bf60b2e-ca89-42a9-94d4-8f67ca72b157',
           'household_id': 'cd2bb87f-5e4c-4dc6-8477-af9537200014',
           'image': None,
+          'last_made': None,
           'name': 'Rub',
           'original_url': None,
           'perform_time': None,
@@ -635,14 +1152,20 @@
           'recipe_id': 'e1a3edb0-49a0-49a3-83e3-95554e932670',
           'recipe_yield': '1',
           'slug': 'rub',
+          'tags': list([
+          ]),
           'total_time': None,
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
         }),
         dict({
+          'categories': list([
+          ]),
+          'date_added': datetime.date(2024, 1, 20),
           'description': "Tender and moist, these chocolate chip cookies were a HUGE hit in the Test Kitchen. They're like banana bread in a cookie form. Outside, there are crisp edges like a cookie. Inside, though, it's soft like banana bread. We opted to add chocolate chips and nuts. It's a classic flavor combination in banana bread and works just as well in these cookies.",
           'group_id': '0bf60b2e-ca89-42a9-94d4-8f67ca72b157',
           'household_id': 'cd2bb87f-5e4c-4dc6-8477-af9537200014',
           'image': '03XS',
+          'last_made': None,
           'name': 'Banana Bread Chocolate Chip Cookies',
           'original_url': 'https://www.justapinch.com/recipes/dessert/cookies/banana-bread-chocolate-chip-cookies.html',
           'perform_time': '15 Minutes',
@@ -651,14 +1174,55 @@
           'recipe_id': '1a0f4e54-db5b-40f1-ab7e-166dab5f6523',
           'recipe_yield': '',
           'slug': 'banana-bread-chocolate-chip-cookies',
+          'tags': list([
+            dict({
+              'name': 'Cookies',
+              'slug': 'cookies',
+              'tag_id': '6a59e597-9aff-4716-961f-f236b93c34cc',
+            }),
+            dict({
+              'name': 'Banana',
+              'slug': 'banana',
+              'tag_id': '1249f351-4b45-455d-b5f0-64eb0124a41e',
+            }),
+            dict({
+              'name': 'Bread',
+              'slug': 'bread',
+              'tag_id': '81a446b9-4d8d-451d-a472-486987fad85a',
+            }),
+            dict({
+              'name': 'Chocolate Chip',
+              'slug': 'chocolate-chip',
+              'tag_id': 'c2536221-b1c3-4402-a104-46c632663748',
+            }),
+            dict({
+              'name': 'Cookie',
+              'slug': 'cookie',
+              'tag_id': 'c026c67f-0211-419f-9db8-7cd4c7608589',
+            }),
+            dict({
+              'name': 'American',
+              'slug': 'american',
+              'tag_id': '2f9e0bf5-02e2-4bdc-9b5d-a16d2fec885b',
+            }),
+            dict({
+              'name': 'Bake',
+              'slug': 'bake',
+              'tag_id': '2a7c5386-5d26-44fa-8a08-81747ee7f132',
+            }),
+          ]),
           'total_time': None,
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
         }),
         dict({
+          'categories': list([
+          ]),
+          'date_added': datetime.date(2024, 1, 20),
           'description': "Hello friends, today I'm going to share with you how to make a delicious soup/bisque. A Cauliflower Bisques Recipe with Cheddar Cheese. One of my favorite soups to make when its cold outside. We will be continuing the soup collection so let me know what you think in the comments below!",
           'group_id': '0bf60b2e-ca89-42a9-94d4-8f67ca72b157',
           'household_id': 'cd2bb87f-5e4c-4dc6-8477-af9537200014',
           'image': 'KuXV',
+          'last_made': None,
           'name': 'Cauliflower Bisque Recipe with Cheddar Cheese',
           'original_url': 'https://chefjeanpierre.com/recipes/soups/creamy-cauliflower-bisque/',
           'perform_time': None,
@@ -667,14 +1231,20 @@
           'recipe_id': '447acae6-3424-4c16-8c26-c09040ad8041',
           'recipe_yield': '',
           'slug': 'cauliflower-bisque-recipe-with-cheddar-cheese',
+          'tags': list([
+          ]),
           'total_time': None,
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
         }),
         dict({
+          'categories': list([
+          ]),
+          'date_added': datetime.date(2024, 1, 20),
           'description': '',
           'group_id': '0bf60b2e-ca89-42a9-94d4-8f67ca72b157',
           'household_id': 'cd2bb87f-5e4c-4dc6-8477-af9537200014',
           'image': None,
+          'last_made': None,
           'name': 'Prova ',
           'original_url': None,
           'perform_time': None,
@@ -683,14 +1253,20 @@
           'recipe_id': '864136a3-27b0-4f3b-a90f-486f42d6df7a',
           'recipe_yield': '',
           'slug': 'prova',
+          'tags': list([
+          ]),
           'total_time': None,
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
         }),
         dict({
+          'categories': list([
+          ]),
+          'date_added': datetime.date(2024, 1, 20),
           'description': '',
           'group_id': '0bf60b2e-ca89-42a9-94d4-8f67ca72b157',
           'household_id': 'cd2bb87f-5e4c-4dc6-8477-af9537200014',
           'image': None,
+          'last_made': None,
           'name': 'pate au beurre (1)',
           'original_url': None,
           'perform_time': None,
@@ -699,14 +1275,20 @@
           'recipe_id': 'c7ccf4c7-c5f4-4191-a79b-1a49d068f6a4',
           'recipe_yield': None,
           'slug': 'pate-au-beurre-1',
+          'tags': list([
+          ]),
           'total_time': None,
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
         }),
         dict({
+          'categories': list([
+          ]),
+          'date_added': datetime.date(2024, 1, 20),
           'description': '',
           'group_id': '0bf60b2e-ca89-42a9-94d4-8f67ca72b157',
           'household_id': 'cd2bb87f-5e4c-4dc6-8477-af9537200014',
           'image': None,
+          'last_made': None,
           'name': 'pate au beurre',
           'original_url': None,
           'perform_time': None,
@@ -715,14 +1297,20 @@
           'recipe_id': 'd01865c3-0f18-4e8d-84c0-c14c345fdf9c',
           'recipe_yield': None,
           'slug': 'pate-au-beurre',
+          'tags': list([
+          ]),
           'total_time': None,
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
         }),
         dict({
+          'categories': list([
+          ]),
+          'date_added': datetime.date(2024, 1, 20),
           'description': 'Individual foolproof mason jar cheesecakes with strawberry compote and a Graham cracker crumble topping. Foolproof, simple, and delicious.',
           'group_id': '0bf60b2e-ca89-42a9-94d4-8f67ca72b157',
           'household_id': 'cd2bb87f-5e4c-4dc6-8477-af9537200014',
           'image': 'tmwm',
+          'last_made': None,
           'name': 'Sous Vide Cheesecake Recipe',
           'original_url': 'https://saltpepperskillet.com/recipes/sous-vide-cheesecake/',
           'perform_time': '1 Hour 30 Minutes',
@@ -731,14 +1319,20 @@
           'recipe_id': '2cec2bb2-19b6-40b8-a36c-1a76ea29c517',
           'recipe_yield': '4 servings',
           'slug': 'sous-vide-cheesecake-recipe',
+          'tags': list([
+          ]),
           'total_time': '2 Hours 10 Minutes',
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
         }),
         dict({
+          'categories': list([
+          ]),
+          'date_added': datetime.date(2024, 1, 20),
           'description': 'This is a variation of the several cheese cake recipes that have been used for sous vide. These make a fabulous 4oz cheese cake for dessert. Garnish with a raspberry or blackberry and impress your family and friends. They’ll keep great in the fridge for a week easily.',
           'group_id': '0bf60b2e-ca89-42a9-94d4-8f67ca72b157',
           'household_id': 'cd2bb87f-5e4c-4dc6-8477-af9537200014',
           'image': 'xCYc',
+          'last_made': None,
           'name': 'The Bomb Mini Cheesecakes',
           'original_url': 'https://recipes.anovaculinary.com/recipe/the-bomb-cheesecakes',
           'perform_time': None,
@@ -747,14 +1341,20 @@
           'recipe_id': '8e0e4566-9caf-4c2e-a01c-dcead23db86b',
           'recipe_yield': '10 servings',
           'slug': 'the-bomb-mini-cheesecakes',
+          'tags': list([
+          ]),
           'total_time': '1 Hour 30 Minutes',
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
         }),
         dict({
+          'categories': list([
+          ]),
+          'date_added': datetime.date(2024, 1, 20),
           'description': 'Tagliatelle al Salmone - wie beim Italiener. Über 1568 Bewertungen und für vorzüglich befunden. Mit ► Portionsrechner ► Kochbuch ► Video-Tipps!',
           'group_id': '0bf60b2e-ca89-42a9-94d4-8f67ca72b157',
           'household_id': 'cd2bb87f-5e4c-4dc6-8477-af9537200014',
           'image': 'qzaN',
+          'last_made': None,
           'name': 'Tagliatelle al Salmone',
           'original_url': 'https://www.chefkoch.de/rezepte/2109501340136606/Tagliatelle-al-Salmone.html',
           'perform_time': '15 Minutes',
@@ -763,14 +1363,75 @@
           'recipe_id': 'a051eafd-9712-4aee-a8e5-0cd10a6772ee',
           'recipe_yield': '4 servings',
           'slug': 'tagliatelle-al-salmone',
+          'tags': list([
+            dict({
+              'name': 'Gemüse',
+              'slug': 'gemuse',
+              'tag_id': '518f3081-a919-4c80-9cad-75ffbd0e73d3',
+            }),
+            dict({
+              'name': 'Hauptspeise',
+              'slug': 'hauptspeise',
+              'tag_id': 'a3fff625-1902-4112-b169-54aec4f52ea7',
+            }),
+            dict({
+              'name': 'Schnell',
+              'slug': 'schnell',
+              'tag_id': '4ec445c6-fc2f-4a1e-b666-93435a46ec42',
+            }),
+            dict({
+              'name': 'Einfach',
+              'slug': 'einfach',
+              'tag_id': '4c79c0b7-c2d0-415a-b5cf-138cfce92c7e',
+            }),
+            dict({
+              'name': 'Gekocht',
+              'slug': 'gekocht',
+              'tag_id': '6f349f84-655b-4740-8fa6-ed2716f17df7',
+            }),
+            dict({
+              'name': 'Europa',
+              'slug': 'europa',
+              'tag_id': '77bc190f-dc6d-440b-aa82-f32bfe836018',
+            }),
+            dict({
+              'name': 'Pasta',
+              'slug': 'pasta',
+              'tag_id': '7997c911-14ee-4e76-9895-debad7949ae2',
+            }),
+            dict({
+              'name': 'Nudeln',
+              'slug': 'nudeln',
+              'tag_id': '04d2aea8-fc9a-4f9b-9a87-8f15189ab6f9',
+            }),
+            dict({
+              'name': 'Fisch',
+              'slug': 'fisch',
+              'tag_id': 'c56cd402-3ac7-479e-b96c-d4b64d177dd3',
+            }),
+            dict({
+              'name': 'Italien',
+              'slug': 'italien',
+              'tag_id': '88015586-0885-4397-9098-039ae1109cd1',
+            }),
+            dict({
+              'name': 'Saucen',
+              'slug': 'saucen',
+              'tag_id': '024b30ca-53cb-4243-ba6b-d830610f2f48',
+            }),
+          ]),
           'total_time': '25 Minutes',
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
         }),
         dict({
+          'categories': list([
+          ]),
+          'date_added': datetime.date(2024, 1, 20),
           'description': 'Hier ist der Name Programm: Den "Tod durch Schokolade" müsst ihr zwar hoffentlich nicht erleiden, aber Chocoholics werden diesen Kuchen lieben!',
           'group_id': '0bf60b2e-ca89-42a9-94d4-8f67ca72b157',
           'household_id': 'cd2bb87f-5e4c-4dc6-8477-af9537200014',
           'image': 'K9qP',
+          'last_made': None,
           'name': 'Death by Chocolate',
           'original_url': 'https://www.backenmachtgluecklich.de/rezepte/death-by-chocolate-kuchen.html',
           'perform_time': '25 Minutes',
@@ -779,14 +1440,20 @@
           'recipe_id': '093d51e9-0823-40ad-8e0e-a1d5790dd627',
           'recipe_yield': '1 serving',
           'slug': 'death-by-chocolate',
+          'tags': list([
+          ]),
           'total_time': None,
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
         }),
         dict({
+          'categories': list([
+          ]),
+          'date_added': datetime.date(2024, 1, 20),
           'description': 'Palak Dal ist in Grunde genommen Spinat (Palak) mit Linsen oder anderen Hülsenfrüchten (Dal) vom indischen Subkontinent. Es kommen noch Zwiebeln, Tomaten und einige indische Gewürze dazu. Damit ist das Palak Dal ein super einfaches und zugleich veganes indisches Rezept. Es schmeckt hervorragend mit Naan-Brot und etwas gewürztem Joghurt.',
           'group_id': '0bf60b2e-ca89-42a9-94d4-8f67ca72b157',
           'household_id': 'cd2bb87f-5e4c-4dc6-8477-af9537200014',
           'image': 'jKQ3',
+          'last_made': None,
           'name': 'Palak Dal Rezept aus Indien',
           'original_url': 'https://www.fernweh-koch.de/palak-dal-indischer-spinat-linsen-rezept/',
           'perform_time': '20 Minutes',
@@ -795,14 +1462,40 @@
           'recipe_id': '2d1f62ec-4200-4cfd-987e-c75755d7607c',
           'recipe_yield': '4 servings',
           'slug': 'palak-dal-rezept-aus-indien',
+          'tags': list([
+            dict({
+              'name': 'Eintopf',
+              'slug': 'eintopf',
+              'tag_id': '38d18d57-d817-491e-94f8-da923d2c540e',
+            }),
+            dict({
+              'name': 'Indisch',
+              'slug': 'indisch',
+              'tag_id': '43f12acf-a8df-45bd-b33d-20bfe7a7e607',
+            }),
+            dict({
+              'name': 'Linsen',
+              'slug': 'linsen',
+              'tag_id': 'ede834ac-ab8f-4c79-8a42-dfa0270fd18b',
+            }),
+            dict({
+              'name': 'Spinat',
+              'slug': 'spinat',
+              'tag_id': '2b6283e2-b8e0-4b3d-90d9-66f322ca77aa',
+            }),
+          ]),
           'total_time': '30 Minutes',
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
         }),
         dict({
+          'categories': list([
+          ]),
+          'date_added': datetime.date(2024, 1, 20),
           'description': 'Tortelline - á la Romana. Über 13 Bewertungen und für vorzüglich befunden. Mit ► Portionsrechner ► Kochbuch ► Video-Tipps! Jetzt entdecken und ausprobieren!',
           'group_id': '0bf60b2e-ca89-42a9-94d4-8f67ca72b157',
           'household_id': 'cd2bb87f-5e4c-4dc6-8477-af9537200014',
           'image': 'rkSn',
+          'last_made': datetime.datetime(2024, 1, 21, 20, 59, 59),
           'name': 'Tortelline - á la Romana',
           'original_url': 'https://www.chefkoch.de/rezepte/74441028021809/Tortelline-a-la-Romana.html',
           'perform_time': None,
@@ -811,6 +1504,23 @@
           'recipe_id': '973dc36d-1661-49b4-ad2d-0b7191034fb3',
           'recipe_yield': '4 servings',
           'slug': 'tortelline-a-la-romana',
+          'tags': list([
+            dict({
+              'name': 'Einfach',
+              'slug': 'einfach',
+              'tag_id': '4c79c0b7-c2d0-415a-b5cf-138cfce92c7e',
+            }),
+            dict({
+              'name': 'Pasta',
+              'slug': 'pasta',
+              'tag_id': '7997c911-14ee-4e76-9895-debad7949ae2',
+            }),
+            dict({
+              'name': 'Nudeln',
+              'slug': 'nudeln',
+              'tag_id': '04d2aea8-fc9a-4f9b-9a87-8f15189ab6f9',
+            }),
+          ]),
           'total_time': '30 Minutes',
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
         }),
@@ -823,10 +1533,14 @@
     'recipes': dict({
       'items': list([
         dict({
+          'categories': list([
+          ]),
+          'date_added': datetime.date(2024, 1, 21),
           'description': '',
           'group_id': '0bf60b2e-ca89-42a9-94d4-8f67ca72b157',
           'household_id': 'cd2bb87f-5e4c-4dc6-8477-af9537200014',
           'image': None,
+          'last_made': None,
           'name': 'tu6y',
           'original_url': None,
           'perform_time': None,
@@ -835,14 +1549,20 @@
           'recipe_id': 'e82f5449-c33b-437c-b712-337587199264',
           'recipe_yield': None,
           'slug': 'tu6y',
+          'tags': list([
+          ]),
           'total_time': None,
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
         }),
         dict({
+          'categories': list([
+          ]),
+          'date_added': datetime.date(2024, 1, 21),
           'description': 'Εύκολη μακαρονάδα με κεφτεδάκια στον φούρνο από τον Άκη Πετρετζίκη. Φτιάξτε την πιο εύκολη μακαρονάδα με κεφτεδάκια σε μόνο ένα σκεύος.',
           'group_id': '0bf60b2e-ca89-42a9-94d4-8f67ca72b157',
           'household_id': 'cd2bb87f-5e4c-4dc6-8477-af9537200014',
           'image': 'En9o',
+          'last_made': None,
           'name': 'Εύκολη μακαρονάδα με κεφτεδάκια στον φούρνο (1)',
           'original_url': 'https://akispetretzikis.com/recipe/7959/efkolh-makaronada-me-keftedakia-ston-fourno',
           'perform_time': '50 Minutes',
@@ -851,14 +1571,20 @@
           'recipe_id': 'f79f7e9d-4b58-4930-a586-2b127f16ee34',
           'recipe_yield': '6 servings',
           'slug': 'eukole-makaronada-me-kephtedakia-ston-phourno-1',
+          'tags': list([
+          ]),
           'total_time': None,
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
         }),
         dict({
+          'categories': list([
+          ]),
+          'date_added': datetime.date(2024, 1, 21),
           'description': 'Régalez vous avec ces patates douces cuites au four et légèrement parfumées au thym et au piment. Super bon avec un poulet rôti par exemple.',
           'group_id': '0bf60b2e-ca89-42a9-94d4-8f67ca72b157',
           'household_id': 'cd2bb87f-5e4c-4dc6-8477-af9537200014',
           'image': 'aAhk',
+          'last_made': None,
           'name': 'Patates douces au four (1)',
           'original_url': 'https://www.papillesetpupilles.fr/2018/10/patates-douces-au-four.html/',
           'perform_time': None,
@@ -867,14 +1593,20 @@
           'recipe_id': '90097c8b-9d80-468a-b497-73957ac0cd8b',
           'recipe_yield': '',
           'slug': 'patates-douces-au-four-1',
+          'tags': list([
+          ]),
           'total_time': None,
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
         }),
         dict({
+          'categories': list([
+          ]),
+          'date_added': datetime.date(2024, 1, 21),
           'description': 'Régalez vous avec ces patates douces cuites au four et légèrement parfumées au thym et au piment. Super bon avec un poulet rôti par exemple.',
           'group_id': '0bf60b2e-ca89-42a9-94d4-8f67ca72b157',
           'household_id': 'cd2bb87f-5e4c-4dc6-8477-af9537200014',
           'image': 'kdhm',
+          'last_made': None,
           'name': 'Sweet potatoes',
           'original_url': 'https://www.papillesetpupilles.fr/2018/10/patates-douces-au-four.html/',
           'perform_time': None,
@@ -883,14 +1615,20 @@
           'recipe_id': '98845807-9365-41fd-acd1-35630b468c27',
           'recipe_yield': '',
           'slug': 'sweet-potatoes',
+          'tags': list([
+          ]),
           'total_time': None,
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
         }),
         dict({
+          'categories': list([
+          ]),
+          'date_added': datetime.date(2024, 1, 21),
           'description': 'Εύκολη μακαρονάδα με κεφτεδάκια στον φούρνο από τον Άκη Πετρετζίκη. Φτιάξτε την πιο εύκολη μακαρονάδα με κεφτεδάκια σε μόνο ένα σκεύος.',
           'group_id': '0bf60b2e-ca89-42a9-94d4-8f67ca72b157',
           'household_id': 'cd2bb87f-5e4c-4dc6-8477-af9537200014',
           'image': 'tNbG',
+          'last_made': None,
           'name': 'Εύκολη μακαρονάδα με κεφτεδάκια στον φούρνο',
           'original_url': 'https://akispetretzikis.com/recipe/7959/efkolh-makaronada-me-keftedakia-ston-fourno',
           'perform_time': '50 Minutes',
@@ -899,14 +1637,20 @@
           'recipe_id': '40c227e0-3c7e-41f7-866d-5de04eaecdd7',
           'recipe_yield': '6 servings',
           'slug': 'eukole-makaronada-me-kephtedakia-ston-phourno',
+          'tags': list([
+          ]),
           'total_time': None,
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
         }),
         dict({
+          'categories': list([
+          ]),
+          'date_added': datetime.date(2024, 1, 21),
           'description': 'bourguignon, oignon, carotte, bouquet garni, vin rouge, beurre, sel, poivre',
           'group_id': '0bf60b2e-ca89-42a9-94d4-8f67ca72b157',
           'household_id': 'cd2bb87f-5e4c-4dc6-8477-af9537200014',
           'image': 'nj5M',
+          'last_made': None,
           'name': 'Boeuf bourguignon : la vraie recette (2)',
           'original_url': 'https://www.marmiton.org/recettes/recette_boeuf-bourguignon_18889.aspx',
           'perform_time': '4 Hours',
@@ -915,14 +1659,80 @@
           'recipe_id': '9c7b8aee-c93c-4b1b-ab48-2625d444743a',
           'recipe_yield': '4 servings',
           'slug': 'boeuf-bourguignon-la-vraie-recette-2',
+          'tags': list([
+            dict({
+              'name': 'Poivre',
+              'slug': 'poivre',
+              'tag_id': '01c2f4ac-54ce-49bc-9bd7-8a49f353a3a4',
+            }),
+            dict({
+              'name': 'Sel',
+              'slug': 'sel',
+              'tag_id': '90a26cea-a8a1-41a1-9e8c-e94e3c40f7a7',
+            }),
+            dict({
+              'name': 'Beurre',
+              'slug': 'beurre',
+              'tag_id': 'd7b01a4b-5206-4bd2-b9c4-d13b95ca0edb',
+            }),
+            dict({
+              'name': 'Facile',
+              'slug': 'facile',
+              'tag_id': '304faaf8-13ec-4537-91f3-9f39a3585545',
+            }),
+            dict({
+              'name': 'Daube',
+              'slug': 'daube',
+              'tag_id': '6508fb05-fb60-4bed-90c4-584bd6d74cb5',
+            }),
+            dict({
+              'name': 'Bourguignon',
+              'slug': 'bourguignon',
+              'tag_id': '18ff59b6-b599-456a-896b-4b76448b08ca',
+            }),
+            dict({
+              'name': 'Vin Rouge',
+              'slug': 'vin-rouge',
+              'tag_id': '685a0d90-8de4-494e-8eb8-68e7f5d5ffbe',
+            }),
+            dict({
+              'name': 'Oignon',
+              'slug': 'oignon',
+              'tag_id': '5dedc8b5-30f5-4d6e-875f-34deefd01883',
+            }),
+            dict({
+              'name': 'Bouquet Garni',
+              'slug': 'bouquet-garni',
+              'tag_id': '065b79e0-6276-4ebb-9428-7018b40c55bb',
+            }),
+            dict({
+              'name': 'Moyen',
+              'slug': 'moyen',
+              'tag_id': 'd858b1d9-2ca1-46d4-acc2-3d03f991f03f',
+            }),
+            dict({
+              'name': 'Boeuf Bourguignon : La Vraie Recette',
+              'slug': 'boeuf-bourguignon-la-vraie-recette',
+              'tag_id': 'bded0bd8-8d41-4ec5-ad73-e0107fb60908',
+            }),
+            dict({
+              'name': 'Carotte',
+              'slug': 'carotte',
+              'tag_id': '7f99b04f-914a-408b-a057-511ca1125734',
+            }),
+          ]),
           'total_time': '5 Hours',
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
         }),
         dict({
+          'categories': list([
+          ]),
+          'date_added': datetime.date(2024, 1, 21),
           'description': 'bourguignon, oignon, carotte, bouquet garni, vin rouge, beurre, sel, poivre',
           'group_id': '0bf60b2e-ca89-42a9-94d4-8f67ca72b157',
           'household_id': 'cd2bb87f-5e4c-4dc6-8477-af9537200014',
           'image': 'rbU7',
+          'last_made': None,
           'name': 'Boeuf bourguignon : la vraie recette (1)',
           'original_url': 'https://www.marmiton.org/recettes/recette_boeuf-bourguignon_18889.aspx',
           'perform_time': '4 Hours',
@@ -931,14 +1741,80 @@
           'recipe_id': 'fc42c7d1-7b0f-4e04-b88a-dbd80b81540b',
           'recipe_yield': '4 servings',
           'slug': 'boeuf-bourguignon-la-vraie-recette-1',
+          'tags': list([
+            dict({
+              'name': 'Poivre',
+              'slug': 'poivre',
+              'tag_id': '01c2f4ac-54ce-49bc-9bd7-8a49f353a3a4',
+            }),
+            dict({
+              'name': 'Sel',
+              'slug': 'sel',
+              'tag_id': '90a26cea-a8a1-41a1-9e8c-e94e3c40f7a7',
+            }),
+            dict({
+              'name': 'Beurre',
+              'slug': 'beurre',
+              'tag_id': 'd7b01a4b-5206-4bd2-b9c4-d13b95ca0edb',
+            }),
+            dict({
+              'name': 'Facile',
+              'slug': 'facile',
+              'tag_id': '304faaf8-13ec-4537-91f3-9f39a3585545',
+            }),
+            dict({
+              'name': 'Daube',
+              'slug': 'daube',
+              'tag_id': '6508fb05-fb60-4bed-90c4-584bd6d74cb5',
+            }),
+            dict({
+              'name': 'Bourguignon',
+              'slug': 'bourguignon',
+              'tag_id': '18ff59b6-b599-456a-896b-4b76448b08ca',
+            }),
+            dict({
+              'name': 'Vin Rouge',
+              'slug': 'vin-rouge',
+              'tag_id': '685a0d90-8de4-494e-8eb8-68e7f5d5ffbe',
+            }),
+            dict({
+              'name': 'Oignon',
+              'slug': 'oignon',
+              'tag_id': '5dedc8b5-30f5-4d6e-875f-34deefd01883',
+            }),
+            dict({
+              'name': 'Bouquet Garni',
+              'slug': 'bouquet-garni',
+              'tag_id': '065b79e0-6276-4ebb-9428-7018b40c55bb',
+            }),
+            dict({
+              'name': 'Moyen',
+              'slug': 'moyen',
+              'tag_id': 'd858b1d9-2ca1-46d4-acc2-3d03f991f03f',
+            }),
+            dict({
+              'name': 'Boeuf Bourguignon : La Vraie Recette',
+              'slug': 'boeuf-bourguignon-la-vraie-recette',
+              'tag_id': 'bded0bd8-8d41-4ec5-ad73-e0107fb60908',
+            }),
+            dict({
+              'name': 'Carotte',
+              'slug': 'carotte',
+              'tag_id': '7f99b04f-914a-408b-a057-511ca1125734',
+            }),
+          ]),
           'total_time': '5 Hours',
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
         }),
         dict({
+          'categories': list([
+          ]),
+          'date_added': datetime.date(2024, 1, 21),
           'description': 'Dieses einfache vegane Erdnussbutter-Schoko-Marmor-Bananenbrot Rezept enthält kein Öl und keinen raffiniernten Zucker, ist aber so fluffig, weich, saftig und lecker wie ein Kuchen! Zubereitet mit vielen gesunden Bananen, gelingt es auch glutenfrei und eignet sich perfekt zum Frühstück, als Dessert oder Snack für Zwischendurch!',
           'group_id': '0bf60b2e-ca89-42a9-94d4-8f67ca72b157',
           'household_id': 'cd2bb87f-5e4c-4dc6-8477-af9537200014',
           'image': 'JSp3',
+          'last_made': None,
           'name': 'Veganes Marmor-Bananenbrot mit Erdnussbutter',
           'original_url': 'https://biancazapatka.com/de/erdnussbutter-schoko-bananenbrot/',
           'perform_time': '55 Minutes',
@@ -947,14 +1823,20 @@
           'recipe_id': '89e63d72-7a51-4cef-b162-2e45035d0a91',
           'recipe_yield': '14 servings',
           'slug': 'veganes-marmor-bananenbrot-mit-erdnussbutter',
+          'tags': list([
+          ]),
           'total_time': None,
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
         }),
         dict({
+          'categories': list([
+          ]),
+          'date_added': datetime.date(2024, 1, 21),
           'description': 'Es ist kein Geheimnis: Ich mag es gerne schnell und einfach. Und ich liebe Pasta! Deshalb habe ich mich vor ein paar Wochen auf die Suche nach der perfekten, schnellen Tomatensoße gemacht. Es muss da draußen doch irgendein Rezept geben, das (fast) genauso schnell zuzubereiten ist, wie Miracoli und dabei aber das schöne Gefühl hinterlässt, ...',
           'group_id': '0bf60b2e-ca89-42a9-94d4-8f67ca72b157',
           'household_id': 'cd2bb87f-5e4c-4dc6-8477-af9537200014',
           'image': '9QMh',
+          'last_made': None,
           'name': 'Pasta mit Tomaten, Knoblauch und Basilikum - einfach (und) genial! - Kuechenchaotin',
           'original_url': 'https://kuechenchaotin.de/pasta-mit-tomaten-knoblauch-basilikum/',
           'perform_time': None,
@@ -963,14 +1845,20 @@
           'recipe_id': 'eab64457-97ba-4d6c-871c-cb1c724ccb51',
           'recipe_yield': '',
           'slug': 'pasta-mit-tomaten-knoblauch-und-basilikum-einfach-und-genial-kuechenchaotin',
+          'tags': list([
+          ]),
           'total_time': None,
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
         }),
         dict({
+          'categories': list([
+          ]),
+          'date_added': datetime.date(2024, 1, 21),
           'description': '',
           'group_id': '0bf60b2e-ca89-42a9-94d4-8f67ca72b157',
           'household_id': 'cd2bb87f-5e4c-4dc6-8477-af9537200014',
           'image': None,
+          'last_made': None,
           'name': 'test123',
           'original_url': None,
           'perform_time': None,
@@ -979,14 +1867,20 @@
           'recipe_id': '12439e3d-3c1c-4dcc-9c6e-4afcea2a0542',
           'recipe_yield': None,
           'slug': 'test123',
+          'tags': list([
+          ]),
           'total_time': None,
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
         }),
         dict({
+          'categories': list([
+          ]),
+          'date_added': datetime.date(2024, 1, 21),
           'description': '',
           'group_id': '0bf60b2e-ca89-42a9-94d4-8f67ca72b157',
           'household_id': 'cd2bb87f-5e4c-4dc6-8477-af9537200014',
           'image': None,
+          'last_made': None,
           'name': 'Bureeto',
           'original_url': None,
           'perform_time': None,
@@ -995,14 +1889,20 @@
           'recipe_id': '6567f6ec-e410-49cb-a1a5-d08517184e78',
           'recipe_yield': None,
           'slug': 'bureeto',
+          'tags': list([
+          ]),
           'total_time': None,
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
         }),
         dict({
+          'categories': list([
+          ]),
+          'date_added': datetime.date(2024, 1, 21),
           'description': '',
           'group_id': '0bf60b2e-ca89-42a9-94d4-8f67ca72b157',
           'household_id': 'cd2bb87f-5e4c-4dc6-8477-af9537200014',
           'image': None,
+          'last_made': None,
           'name': 'Subway Double Cookies',
           'original_url': None,
           'perform_time': None,
@@ -1011,14 +1911,20 @@
           'recipe_id': 'f7737d17-161c-4008-88d4-dd2616778cd0',
           'recipe_yield': None,
           'slug': 'subway-double-cookies',
+          'tags': list([
+          ]),
           'total_time': None,
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
         }),
         dict({
+          'categories': list([
+          ]),
+          'date_added': datetime.date(2024, 1, 21),
           'description': '',
           'group_id': '0bf60b2e-ca89-42a9-94d4-8f67ca72b157',
           'household_id': 'cd2bb87f-5e4c-4dc6-8477-af9537200014',
           'image': None,
+          'last_made': None,
           'name': 'qwerty12345',
           'original_url': None,
           'perform_time': None,
@@ -1027,14 +1933,20 @@
           'recipe_id': '1904b717-4a8b-4de9-8909-56958875b5f4',
           'recipe_yield': None,
           'slug': 'qwerty12345',
+          'tags': list([
+          ]),
           'total_time': None,
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
         }),
         dict({
+          'categories': list([
+          ]),
+          'date_added': datetime.date(2024, 1, 21),
           'description': 'Cheeseburger Sliders are juicy, cheesy and beefy - everything we love about classic burgers! These sliders are quick and easy plus they are make-ahead and reheat really well.',
           'group_id': '0bf60b2e-ca89-42a9-94d4-8f67ca72b157',
           'household_id': 'cd2bb87f-5e4c-4dc6-8477-af9537200014',
           'image': 'beGq',
+          'last_made': datetime.datetime(2024, 1, 22, 4, 59, 59),
           'name': 'Cheeseburger Sliders (Easy, 30-min Recipe)',
           'original_url': 'https://natashaskitchen.com/cheeseburger-sliders/',
           'perform_time': '22 Minutes',
@@ -1043,14 +1955,30 @@
           'recipe_id': '8bdd3656-5e7e-45d3-a3c4-557390846a22',
           'recipe_yield': '24 servings',
           'slug': 'cheeseburger-sliders-easy-30-min-recipe',
+          'tags': list([
+            dict({
+              'name': 'Cheeseburger Sliders',
+              'slug': 'cheeseburger-sliders',
+              'tag_id': '7a4ca427-642f-4428-8dc7-557ea9c8d1b4',
+            }),
+            dict({
+              'name': 'Sliders',
+              'slug': 'sliders',
+              'tag_id': '941558d2-50d5-4c9d-8890-a0258f18d493',
+            }),
+          ]),
           'total_time': '30 Minutes',
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
         }),
         dict({
+          'categories': list([
+          ]),
+          'date_added': datetime.date(2024, 1, 21),
           'description': '',
           'group_id': '0bf60b2e-ca89-42a9-94d4-8f67ca72b157',
           'household_id': 'cd2bb87f-5e4c-4dc6-8477-af9537200014',
           'image': None,
+          'last_made': None,
           'name': 'meatloaf',
           'original_url': None,
           'perform_time': None,
@@ -1059,14 +1987,20 @@
           'recipe_id': '8a30d31d-aa14-411e-af0c-6b61a94f5291',
           'recipe_yield': '4',
           'slug': 'meatloaf',
+          'tags': list([
+          ]),
           'total_time': None,
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
         }),
         dict({
+          'categories': list([
+          ]),
+          'date_added': datetime.date(2024, 1, 21),
           'description': "Richtig rheinischer Sauerbraten - Rheinischer geht's nicht! Über 536 Bewertungen und für köstlich befunden. Mit ► Portionsrechner ► Kochbuch ► Video-Tipps!",
           'group_id': '0bf60b2e-ca89-42a9-94d4-8f67ca72b157',
           'household_id': 'cd2bb87f-5e4c-4dc6-8477-af9537200014',
           'image': 'kCBh',
+          'last_made': None,
           'name': 'Richtig rheinischer Sauerbraten',
           'original_url': 'https://www.chefkoch.de/rezepte/937641199437984/Richtig-rheinischer-Sauerbraten.html',
           'perform_time': '2 Hours 20 Minutes',
@@ -1075,14 +2009,20 @@
           'recipe_id': 'f2f7880b-1136-436f-91b7-129788d8c117',
           'recipe_yield': '4 servings',
           'slug': 'richtig-rheinischer-sauerbraten',
+          'tags': list([
+          ]),
           'total_time': '3 Hours 20 Minutes',
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
         }),
         dict({
+          'categories': list([
+          ]),
+          'date_added': datetime.date(2024, 1, 21),
           'description': 'Orientalischer Gemüse-Hähnchen Eintopf. Über 164 Bewertungen und für köstlich befunden. Mit ► Portionsrechner ► Kochbuch ► Video-Tipps! Jetzt entdecken und ausprobieren!',
           'group_id': '0bf60b2e-ca89-42a9-94d4-8f67ca72b157',
           'household_id': 'cd2bb87f-5e4c-4dc6-8477-af9537200014',
           'image': 'kpBx',
+          'last_made': None,
           'name': 'Orientalischer Gemüse-Hähnchen Eintopf',
           'original_url': 'https://www.chefkoch.de/rezepte/2307761368177614/Orientalischer-Gemuese-Haehnchen-Eintopf.html',
           'perform_time': '20 Minutes',
@@ -1091,14 +2031,60 @@
           'recipe_id': 'cf634591-0f82-4254-8e00-2f7e8b0c9022',
           'recipe_yield': '6 servings',
           'slug': 'orientalischer-gemuse-hahnchen-eintopf',
+          'tags': list([
+            dict({
+              'name': 'Gemüse',
+              'slug': 'gemuse',
+              'tag_id': '518f3081-a919-4c80-9cad-75ffbd0e73d3',
+            }),
+            dict({
+              'name': 'Hauptspeise',
+              'slug': 'hauptspeise',
+              'tag_id': 'a3fff625-1902-4112-b169-54aec4f52ea7',
+            }),
+            dict({
+              'name': 'Einfach',
+              'slug': 'einfach',
+              'tag_id': '4c79c0b7-c2d0-415a-b5cf-138cfce92c7e',
+            }),
+            dict({
+              'name': 'Fleisch',
+              'slug': 'fleisch',
+              'tag_id': '1f87d43d-7d9d-4806-993a-fdb89117d64e',
+            }),
+            dict({
+              'name': 'Geflügel',
+              'slug': 'geflugel',
+              'tag_id': '7caa64df-c65d-4fb0-9075-b788e6a05e1d',
+            }),
+            dict({
+              'name': 'Eintopf',
+              'slug': 'eintopf',
+              'tag_id': '38d18d57-d817-491e-94f8-da923d2c540e',
+            }),
+            dict({
+              'name': 'Schmoren',
+              'slug': 'schmoren',
+              'tag_id': '398fbd98-4175-4652-92a4-51e55482dc9b',
+            }),
+            dict({
+              'name': 'Hülsenfrüchte',
+              'slug': 'hulsenfruchte',
+              'tag_id': 'ec303c13-a4f7-4de3-8a4f-d13b72ddd500',
+            }),
+          ]),
           'total_time': '35 Minutes',
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
         }),
         dict({
+          'categories': list([
+          ]),
+          'date_added': datetime.date(2024, 1, 21),
           'description': '',
           'group_id': '0bf60b2e-ca89-42a9-94d4-8f67ca72b157',
           'household_id': 'cd2bb87f-5e4c-4dc6-8477-af9537200014',
           'image': None,
+          'last_made': None,
           'name': 'test 20240121',
           'original_url': None,
           'perform_time': None,
@@ -1107,14 +2093,20 @@
           'recipe_id': '05208856-d273-4cc9-bcfa-e0215d57108d',
           'recipe_yield': '4',
           'slug': 'test-20240121',
+          'tags': list([
+          ]),
           'total_time': None,
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
         }),
         dict({
+          'categories': list([
+          ]),
+          'date_added': datetime.date(2024, 1, 21),
           'description': 'Zet in 20 minuten deze lekkere loempia bowl in elkaar. Makkelijk, snel en weer eens wat anders. Lekker met prei, sojasaus en kipgehakt.',
           'group_id': '0bf60b2e-ca89-42a9-94d4-8f67ca72b157',
           'household_id': 'cd2bb87f-5e4c-4dc6-8477-af9537200014',
           'image': 'McEx',
+          'last_made': None,
           'name': 'Loempia bowl',
           'original_url': 'https://www.lekkerensimpel.com/loempia-bowl/',
           'perform_time': None,
@@ -1123,14 +2115,20 @@
           'recipe_id': '145eeb05-781a-4eb0-a656-afa8bc8c0164',
           'recipe_yield': '',
           'slug': 'loempia-bowl',
+          'tags': list([
+          ]),
           'total_time': None,
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
         }),
         dict({
+          'categories': list([
+          ]),
+          'date_added': datetime.date(2024, 1, 21),
           'description': "Chocolate Mousse with Aquafaba, to make the fluffiest of mousses. Whip up this dessert in literally five minutes and chill in the fridge until you're ready to serve!",
           'group_id': '0bf60b2e-ca89-42a9-94d4-8f67ca72b157',
           'household_id': 'cd2bb87f-5e4c-4dc6-8477-af9537200014',
           'image': 'bzqo',
+          'last_made': None,
           'name': '5 Ingredient Chocolate Mousse',
           'original_url': 'https://thehappypear.ie/aquafaba-chocolate-mousse/',
           'perform_time': None,
@@ -1139,14 +2137,20 @@
           'recipe_id': '5c6532aa-ad84-424c-bc05-c32d50430fe4',
           'recipe_yield': '6 servings',
           'slug': '5-ingredient-chocolate-mousse',
+          'tags': list([
+          ]),
           'total_time': None,
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
         }),
         dict({
+          'categories': list([
+          ]),
+          'date_added': datetime.date(2024, 1, 21),
           'description': 'Der perfekte Pfannkuchen - gelingt einfach immer - von Kindern geliebt und auch für Kochneulinge super geeignet. Über 2529 Bewertungen und für vorzüglich befunden. Mit ► Portionsrechner ► Kochbuch ► Video-Tipps!',
           'group_id': '0bf60b2e-ca89-42a9-94d4-8f67ca72b157',
           'household_id': 'cd2bb87f-5e4c-4dc6-8477-af9537200014',
           'image': 'KGK6',
+          'last_made': None,
           'name': 'Der perfekte Pfannkuchen - gelingt einfach immer',
           'original_url': 'https://www.chefkoch.de/rezepte/1208161226570428/Der-perfekte-Pfannkuchen-gelingt-einfach-immer.html',
           'perform_time': '10 Minutes',
@@ -1155,14 +2159,55 @@
           'recipe_id': 'f2e684f2-49e0-45ee-90de-951344472f1c',
           'recipe_yield': '4 servings',
           'slug': 'der-perfekte-pfannkuchen-gelingt-einfach-immer',
+          'tags': list([
+            dict({
+              'name': 'Schnell',
+              'slug': 'schnell',
+              'tag_id': '4ec445c6-fc2f-4a1e-b666-93435a46ec42',
+            }),
+            dict({
+              'name': 'Einfach',
+              'slug': 'einfach',
+              'tag_id': '4c79c0b7-c2d0-415a-b5cf-138cfce92c7e',
+            }),
+            dict({
+              'name': 'Backen',
+              'slug': 'backen',
+              'tag_id': '66bc0f60-ff95-44e4-afef-8437b2c2d9af',
+            }),
+            dict({
+              'name': 'Kuchen',
+              'slug': 'kuchen',
+              'tag_id': '48d2a71c-ed17-4c07-bf9f-bc9216936f54',
+            }),
+            dict({
+              'name': 'Kinder',
+              'slug': 'kinder',
+              'tag_id': 'b2821b25-94ea-4576-b488-276331b3d76e',
+            }),
+            dict({
+              'name': 'Mehlspeisen',
+              'slug': 'mehlspeisen',
+              'tag_id': 'fee5e626-792c-479d-a265-81a0029047f2',
+            }),
+          ]),
           'total_time': '15 Minutes',
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
         }),
         dict({
+          'categories': list([
+            dict({
+              'category_id': '6d54ca14-eb71-4d3a-933d-5e88f68edb68',
+              'name': 'Brot',
+              'slug': 'brot',
+            }),
+          ]),
+          'date_added': datetime.date(2024, 1, 21),
           'description': 'Für alle Liebhaber von Dinkel ist dieses Dinkel-Sauerteigbrot ein absolutes Muss. Aussen knusprig und innen herrlich feucht und grossporig.',
           'group_id': '0bf60b2e-ca89-42a9-94d4-8f67ca72b157',
           'household_id': 'cd2bb87f-5e4c-4dc6-8477-af9537200014',
           'image': 'yNDq',
+          'last_made': None,
           'name': 'Dinkel-Sauerteigbrot',
           'original_url': 'https://www.besondersgut.ch/dinkel-sauerteigbrot/',
           'perform_time': '35min',
@@ -1171,14 +2216,25 @@
           'recipe_id': 'cf239441-b75d-4dea-a48e-9d99b7cb5842',
           'recipe_yield': '1',
           'slug': 'dinkel-sauerteigbrot',
+          'tags': list([
+            dict({
+              'name': 'Sourdough',
+              'slug': 'sourdough',
+              'tag_id': '0f80c5d5-d1ee-41ac-a949-54a76b446459',
+            }),
+          ]),
           'total_time': '24h',
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
         }),
         dict({
+          'categories': list([
+          ]),
+          'date_added': datetime.date(2024, 1, 21),
           'description': '',
           'group_id': '0bf60b2e-ca89-42a9-94d4-8f67ca72b157',
           'household_id': 'cd2bb87f-5e4c-4dc6-8477-af9537200014',
           'image': None,
+          'last_made': None,
           'name': 'test 234234',
           'original_url': None,
           'perform_time': None,
@@ -1187,14 +2243,20 @@
           'recipe_id': '2673eb90-6d78-4b95-af36-5db8c8a6da37',
           'recipe_yield': None,
           'slug': 'test-234234',
+          'tags': list([
+          ]),
           'total_time': None,
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
         }),
         dict({
+          'categories': list([
+          ]),
+          'date_added': datetime.date(2024, 1, 21),
           'description': '',
           'group_id': '0bf60b2e-ca89-42a9-94d4-8f67ca72b157',
           'household_id': 'cd2bb87f-5e4c-4dc6-8477-af9537200014',
           'image': None,
+          'last_made': None,
           'name': 'test 243',
           'original_url': None,
           'perform_time': None,
@@ -1203,14 +2265,20 @@
           'recipe_id': '0a723c54-af53-40e9-a15f-c87aae5ac688',
           'recipe_yield': None,
           'slug': 'test-243',
+          'tags': list([
+          ]),
           'total_time': None,
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
         }),
         dict({
+          'categories': list([
+          ]),
+          'date_added': datetime.date(2024, 1, 21),
           'description': 'Einfacher Nudelauflauf mit Brokkoli, Sahnesauce und extra Käse. Dieses vegetarische 5 Zutaten Rezept ist super schnell gemacht und SO gut!',
           'group_id': '0bf60b2e-ca89-42a9-94d4-8f67ca72b157',
           'household_id': 'cd2bb87f-5e4c-4dc6-8477-af9537200014',
           'image': 'nOPT',
+          'last_made': None,
           'name': 'Einfacher Nudelauflauf mit Brokkoli',
           'original_url': 'https://kochkarussell.com/einfacher-nudelauflauf-brokkoli/',
           'perform_time': '20 Minutes',
@@ -1219,10 +2287,20 @@
           'recipe_id': '9d553779-607e-471b-acf3-84e6be27b159',
           'recipe_yield': '4 servings',
           'slug': 'einfacher-nudelauflauf-mit-brokkoli',
+          'tags': list([
+            dict({
+              'name': '< 4 Hours',
+              'slug': '4-hours',
+              'tag_id': '78318c97-75c7-4d06-95b6-51ef8f4a0257',
+            }),
+          ]),
           'total_time': '35 Minutes',
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
         }),
         dict({
+          'categories': list([
+          ]),
+          'date_added': datetime.date(2024, 1, 21),
           'description': '''
             Tarta cytrynowa z bezą
             Lekko kwaśna masa cytrynowa, która równoważy słodycz bezy – jeśli to brzmi jak ciasto, które chętnie zjesz na deser, wypróbuj nasz przepis! Tarta z bezą i masą cytrynową nawiązuje do kuchni francuskiej, znanej z wyśmienitych quiche i tart. Tym razem proponujemy ją w wersji na słodko.
@@ -1238,6 +2316,7 @@
           'group_id': '0bf60b2e-ca89-42a9-94d4-8f67ca72b157',
           'household_id': 'cd2bb87f-5e4c-4dc6-8477-af9537200014',
           'image': 'vxuL',
+          'last_made': None,
           'name': 'Tarta cytrynowa z bezą',
           'original_url': 'https://www.przepisy.pl/przepis/tarta-cytrynowa-z-beza',
           'perform_time': None,
@@ -1246,14 +2325,20 @@
           'recipe_id': '9d3cb303-a996-4144-948a-36afaeeef554',
           'recipe_yield': '8 servings',
           'slug': 'tarta-cytrynowa-z-beza',
+          'tags': list([
+          ]),
           'total_time': '1 Hour',
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
         }),
         dict({
+          'categories': list([
+          ]),
+          'date_added': datetime.date(2024, 1, 21),
           'description': '',
           'group_id': '0bf60b2e-ca89-42a9-94d4-8f67ca72b157',
           'household_id': 'cd2bb87f-5e4c-4dc6-8477-af9537200014',
           'image': None,
+          'last_made': None,
           'name': 'Martins test Recipe',
           'original_url': None,
           'perform_time': None,
@@ -1262,14 +2347,20 @@
           'recipe_id': '77f05a49-e869-4048-aa62-0d8a1f5a8f1c',
           'recipe_yield': None,
           'slug': 'martins-test-recipe',
+          'tags': list([
+          ]),
           'total_time': None,
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
         }),
         dict({
+          'categories': list([
+          ]),
+          'date_added': datetime.date(2024, 1, 21),
           'description': 'Muffinki czekoladowe to przepyszny i bardzo prosty w przygotowaniu mini deser pieczony w papilotkach. Przepis na najlepsze, bardzo wilgotne i puszyste muffinki czekoladowe polecam każdemu miłośnikowi czekolady.',
           'group_id': '0bf60b2e-ca89-42a9-94d4-8f67ca72b157',
           'household_id': 'cd2bb87f-5e4c-4dc6-8477-af9537200014',
           'image': 'xP1Q',
+          'last_made': None,
           'name': 'Muffinki czekoladowe',
           'original_url': 'https://aniagotuje.pl/przepis/muffinki-czekoladowe',
           'perform_time': '30 Minutes',
@@ -1278,14 +2369,40 @@
           'recipe_id': '75a90207-9c10-4390-a265-c47a4b67fd69',
           'recipe_yield': '12',
           'slug': 'muffinki-czekoladowe',
+          'tags': list([
+            dict({
+              'name': 'Muffinki Czekoladowe',
+              'slug': 'muffinki-czekoladowe',
+              'tag_id': 'ed2eed99-1285-4507-b5cb-b3047d64855c',
+            }),
+            dict({
+              'name': 'Babeczki I Muffiny',
+              'slug': 'babeczki-i-muffiny',
+              'tag_id': 'e94d5223-5337-4e1b-b36e-7968c8823176',
+            }),
+            dict({
+              'name': 'Sylwester',
+              'slug': 'sylwester',
+              'tag_id': '2d06a44a-331a-4922-abb4-8047ee5e7c1c',
+            }),
+            dict({
+              'name': 'Wegetariańska',
+              'slug': 'wegetarianska',
+              'tag_id': 'c78edd8c-c96b-43fb-86c0-917ea5a08ac7',
+            }),
+          ]),
           'total_time': None,
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
         }),
         dict({
+          'categories': list([
+          ]),
+          'date_added': datetime.date(2024, 1, 21),
           'description': '',
           'group_id': '0bf60b2e-ca89-42a9-94d4-8f67ca72b157',
           'household_id': 'cd2bb87f-5e4c-4dc6-8477-af9537200014',
           'image': None,
+          'last_made': None,
           'name': 'My Test Recipe',
           'original_url': None,
           'perform_time': None,
@@ -1294,14 +2411,20 @@
           'recipe_id': '4320ba72-377b-4657-8297-dce198f24cdf',
           'recipe_yield': None,
           'slug': 'my-test-recipe',
+          'tags': list([
+          ]),
           'total_time': None,
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
         }),
         dict({
+          'categories': list([
+          ]),
+          'date_added': datetime.date(2024, 1, 21),
           'description': '',
           'group_id': '0bf60b2e-ca89-42a9-94d4-8f67ca72b157',
           'household_id': 'cd2bb87f-5e4c-4dc6-8477-af9537200014',
           'image': None,
+          'last_made': None,
           'name': 'My Test Receipe',
           'original_url': None,
           'perform_time': None,
@@ -1310,14 +2433,20 @@
           'recipe_id': '98dac844-31ee-426a-b16c-fb62a5dd2816',
           'recipe_yield': None,
           'slug': 'my-test-receipe',
+          'tags': list([
+          ]),
           'total_time': None,
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
         }),
         dict({
+          'categories': list([
+          ]),
+          'date_added': datetime.date(2024, 1, 21),
           'description': 'Régalez vous avec ces patates douces cuites au four et légèrement parfumées au thym et au piment. Super bon avec un poulet rôti par exemple.',
           'group_id': '0bf60b2e-ca89-42a9-94d4-8f67ca72b157',
           'household_id': 'cd2bb87f-5e4c-4dc6-8477-af9537200014',
           'image': 'r1ck',
+          'last_made': None,
           'name': 'Patates douces au four',
           'original_url': 'https://www.papillesetpupilles.fr/2018/10/patates-douces-au-four.html/',
           'perform_time': None,
@@ -1326,14 +2455,20 @@
           'recipe_id': 'c3c8f207-c704-415d-81b1-da9f032cf52f',
           'recipe_yield': '',
           'slug': 'patates-douces-au-four',
+          'tags': list([
+          ]),
           'total_time': None,
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
         }),
         dict({
+          'categories': list([
+          ]),
+          'date_added': datetime.date(2024, 1, 20),
           'description': 'Follow these basic instructions for a thick, crisp, and chewy pizza crust at home. The recipe yields enough pizza dough for two 12-inch pizzas and you can freeze half of the dough for later. Close to 2 pounds of dough total.',
           'group_id': '0bf60b2e-ca89-42a9-94d4-8f67ca72b157',
           'household_id': 'cd2bb87f-5e4c-4dc6-8477-af9537200014',
           'image': 'gD94',
+          'last_made': None,
           'name': 'Easy Homemade Pizza Dough',
           'original_url': 'https://sallysbakingaddiction.com/homemade-pizza-crust-recipe/',
           'perform_time': '15 Minutes',
@@ -1342,14 +2477,20 @@
           'recipe_id': '1edb2f6e-133c-4be0-b516-3c23625a97ec',
           'recipe_yield': '2 servings',
           'slug': 'easy-homemade-pizza-dough',
+          'tags': list([
+          ]),
           'total_time': '2 Hours 30 Minutes',
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
         }),
         dict({
+          'categories': list([
+          ]),
+          'date_added': datetime.date(2024, 1, 20),
           'description': 'This All-American beef stew recipe includes tender beef coated in a rich, intense sauce and vegetables that bring complementary texture and flavor.',
           'group_id': '0bf60b2e-ca89-42a9-94d4-8f67ca72b157',
           'household_id': 'cd2bb87f-5e4c-4dc6-8477-af9537200014',
           'image': '356X',
+          'last_made': None,
           'name': 'All-American Beef Stew Recipe',
           'original_url': 'https://www.seriouseats.com/all-american-beef-stew-recipe',
           'perform_time': '3 Hours 10 Minutes',
@@ -1358,14 +2499,25 @@
           'recipe_id': '48f39d27-4b8e-4c14-bf36-4e1e6497e75e',
           'recipe_yield': '6 servings',
           'slug': 'all-american-beef-stew-recipe',
+          'tags': list([
+            dict({
+              'name': '< 4 Hours',
+              'slug': '4-hours',
+              'tag_id': '78318c97-75c7-4d06-95b6-51ef8f4a0257',
+            }),
+          ]),
           'total_time': '3 Hours 15 Minutes',
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
         }),
         dict({
+          'categories': list([
+          ]),
+          'date_added': datetime.date(2024, 1, 20),
           'description': 'This utterly faithful recipe perfectly recreates a New York City halal-cart classic: Chicken and Rice with White Sauce. The chicken is marinated with herbs, lemon, and spices; the rice golden; the sauce, as white and creamy as ever.',
           'group_id': '0bf60b2e-ca89-42a9-94d4-8f67ca72b157',
           'household_id': 'cd2bb87f-5e4c-4dc6-8477-af9537200014',
           'image': '4Sys',
+          'last_made': None,
           'name': "Serious Eats' Halal Cart-Style Chicken and Rice With White Sauce",
           'original_url': 'https://www.seriouseats.com/serious-eats-halal-cart-style-chicken-and-rice-white-sauce-recipe',
           'perform_time': '55 Minutes',
@@ -1374,14 +2526,65 @@
           'recipe_id': '6530ea6e-401e-4304-8a7a-12162ddf5b9c',
           'recipe_yield': '4 servings',
           'slug': 'serious-eats-halal-cart-style-chicken-and-rice-with-white-sauce',
+          'tags': list([
+            dict({
+              'name': 'Rice',
+              'slug': 'rice',
+              'tag_id': 'd7aea128-0e7b-4e0c-a236-e500717701bb',
+            }),
+            dict({
+              'name': 'Chicken',
+              'slug': 'chicken',
+              'tag_id': '1dd3541c-ed6b-4a25-b829-9a71358409ef',
+            }),
+            dict({
+              'name': 'Chicken And Rice',
+              'slug': 'chicken-and-rice',
+              'tag_id': 'eb871b57-ea46-4cb5-88a5-98064514e593',
+            }),
+            dict({
+              'name': 'Cook The Book',
+              'slug': 'cook-the-book',
+              'tag_id': '2b0a0ed2-e799-4ab2-8a24-d5ce15827a8e',
+            }),
+            dict({
+              'name': 'Halal',
+              'slug': 'halal',
+              'tag_id': 'e6783087-0cee-4f31-b588-268380f75335',
+            }),
+            dict({
+              'name': 'Middle Eastern',
+              'slug': 'middle-eastern',
+              'tag_id': 'a2d99845-8bd0-4a2a-9a56-f8a34f51039e',
+            }),
+            dict({
+              'name': 'New York City',
+              'slug': 'new-york-city',
+              'tag_id': '6b7b95b0-b3f8-467f-857d-ef036009d5e1',
+            }),
+            dict({
+              'name': 'Serious Eats Book',
+              'slug': 'serious-eats-book',
+              'tag_id': '6bd6c577-9d00-411f-88de-b8679c37ac58',
+            }),
+            dict({
+              'name': 'Street Food',
+              'slug': 'street-food',
+              'tag_id': 'd77a2071-43ae-40b1-854d-ae995a766fba',
+            }),
+          ]),
           'total_time': '2 Hours 15 Minutes',
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
         }),
         dict({
+          'categories': list([
+          ]),
+          'date_added': datetime.date(2024, 1, 20),
           'description': 'Schnelle Käsespätzle. Über 1201 Bewertungen und für sehr gut befunden. Mit ► Portionsrechner ► Kochbuch ► Video-Tipps! Jetzt entdecken und ausprobieren!',
           'group_id': '0bf60b2e-ca89-42a9-94d4-8f67ca72b157',
           'household_id': 'cd2bb87f-5e4c-4dc6-8477-af9537200014',
           'image': '8goY',
+          'last_made': None,
           'name': 'Schnelle Käsespätzle',
           'original_url': 'https://www.chefkoch.de/rezepte/1062121211526182/Schnelle-Kaesespaetzle.html',
           'perform_time': '30 Minutes',
@@ -1390,14 +2593,20 @@
           'recipe_id': 'c496cf9c-1ece-448a-9d3f-ef772f078a4e',
           'recipe_yield': '4 servings',
           'slug': 'schnelle-kasespatzle',
+          'tags': list([
+          ]),
           'total_time': '40 Minutes',
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
         }),
         dict({
+          'categories': list([
+          ]),
+          'date_added': datetime.date(2024, 1, 20),
           'description': '',
           'group_id': '0bf60b2e-ca89-42a9-94d4-8f67ca72b157',
           'household_id': 'cd2bb87f-5e4c-4dc6-8477-af9537200014',
           'image': None,
+          'last_made': None,
           'name': 'taco',
           'original_url': None,
           'perform_time': None,
@@ -1406,14 +2615,20 @@
           'recipe_id': '49aa6f42-6760-4adf-b6cd-59592da485c3',
           'recipe_yield': None,
           'slug': 'taco',
+          'tags': list([
+          ]),
           'total_time': None,
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
         }),
         dict({
+          'categories': list([
+          ]),
+          'date_added': datetime.date(2024, 1, 20),
           'description': 'Har du inte provat denna trendiga pasta är det hög tid! Enkel och gräddig vardagspasta med smak av tomat och chili och en hemlig ingrediens som ger denna rätt extra sting, nämligen vodka.',
           'group_id': '0bf60b2e-ca89-42a9-94d4-8f67ca72b157',
           'household_id': 'cd2bb87f-5e4c-4dc6-8477-af9537200014',
           'image': 'z8BB',
+          'last_made': datetime.datetime(2024, 1, 21, 22, 59, 59),
           'name': 'Vodkapasta',
           'original_url': 'https://www.ica.se/recept/vodkapasta-729011/',
           'perform_time': None,
@@ -1422,14 +2637,20 @@
           'recipe_id': '6402a253-2baa-460d-bf4f-b759bb655588',
           'recipe_yield': '4 servings',
           'slug': 'vodkapasta',
+          'tags': list([
+          ]),
           'total_time': '30 Minutes',
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
         }),
         dict({
+          'categories': list([
+          ]),
+          'date_added': datetime.date(2024, 1, 20),
           'description': 'Har du inte provat denna trendiga pasta är det hög tid! Enkel och gräddig vardagspasta med smak av tomat och chili och en hemlig ingrediens som ger denna rätt extra sting, nämligen vodka.',
           'group_id': '0bf60b2e-ca89-42a9-94d4-8f67ca72b157',
           'household_id': 'cd2bb87f-5e4c-4dc6-8477-af9537200014',
           'image': 'Nqpz',
+          'last_made': datetime.datetime(2024, 1, 21, 4, 59, 59),
           'name': 'Vodkapasta2',
           'original_url': 'https://www.ica.se/recept/vodkapasta-729011/',
           'perform_time': None,
@@ -1438,14 +2659,20 @@
           'recipe_id': '4f54e9e1-f21d-40ec-a135-91e633dfb733',
           'recipe_yield': '4 servings',
           'slug': 'vodkapasta2',
+          'tags': list([
+          ]),
           'total_time': '30 Minutes',
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
         }),
         dict({
+          'categories': list([
+          ]),
+          'date_added': datetime.date(2024, 1, 20),
           'description': '',
           'group_id': '0bf60b2e-ca89-42a9-94d4-8f67ca72b157',
           'household_id': 'cd2bb87f-5e4c-4dc6-8477-af9537200014',
           'image': None,
+          'last_made': None,
           'name': 'Rub',
           'original_url': None,
           'perform_time': None,
@@ -1454,14 +2681,20 @@
           'recipe_id': 'e1a3edb0-49a0-49a3-83e3-95554e932670',
           'recipe_yield': '1',
           'slug': 'rub',
+          'tags': list([
+          ]),
           'total_time': None,
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
         }),
         dict({
+          'categories': list([
+          ]),
+          'date_added': datetime.date(2024, 1, 20),
           'description': "Tender and moist, these chocolate chip cookies were a HUGE hit in the Test Kitchen. They're like banana bread in a cookie form. Outside, there are crisp edges like a cookie. Inside, though, it's soft like banana bread. We opted to add chocolate chips and nuts. It's a classic flavor combination in banana bread and works just as well in these cookies.",
           'group_id': '0bf60b2e-ca89-42a9-94d4-8f67ca72b157',
           'household_id': 'cd2bb87f-5e4c-4dc6-8477-af9537200014',
           'image': '03XS',
+          'last_made': None,
           'name': 'Banana Bread Chocolate Chip Cookies',
           'original_url': 'https://www.justapinch.com/recipes/dessert/cookies/banana-bread-chocolate-chip-cookies.html',
           'perform_time': '15 Minutes',
@@ -1470,14 +2703,55 @@
           'recipe_id': '1a0f4e54-db5b-40f1-ab7e-166dab5f6523',
           'recipe_yield': '',
           'slug': 'banana-bread-chocolate-chip-cookies',
+          'tags': list([
+            dict({
+              'name': 'Cookies',
+              'slug': 'cookies',
+              'tag_id': '6a59e597-9aff-4716-961f-f236b93c34cc',
+            }),
+            dict({
+              'name': 'Banana',
+              'slug': 'banana',
+              'tag_id': '1249f351-4b45-455d-b5f0-64eb0124a41e',
+            }),
+            dict({
+              'name': 'Bread',
+              'slug': 'bread',
+              'tag_id': '81a446b9-4d8d-451d-a472-486987fad85a',
+            }),
+            dict({
+              'name': 'Chocolate Chip',
+              'slug': 'chocolate-chip',
+              'tag_id': 'c2536221-b1c3-4402-a104-46c632663748',
+            }),
+            dict({
+              'name': 'Cookie',
+              'slug': 'cookie',
+              'tag_id': 'c026c67f-0211-419f-9db8-7cd4c7608589',
+            }),
+            dict({
+              'name': 'American',
+              'slug': 'american',
+              'tag_id': '2f9e0bf5-02e2-4bdc-9b5d-a16d2fec885b',
+            }),
+            dict({
+              'name': 'Bake',
+              'slug': 'bake',
+              'tag_id': '2a7c5386-5d26-44fa-8a08-81747ee7f132',
+            }),
+          ]),
           'total_time': None,
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
         }),
         dict({
+          'categories': list([
+          ]),
+          'date_added': datetime.date(2024, 1, 20),
           'description': "Hello friends, today I'm going to share with you how to make a delicious soup/bisque. A Cauliflower Bisques Recipe with Cheddar Cheese. One of my favorite soups to make when its cold outside. We will be continuing the soup collection so let me know what you think in the comments below!",
           'group_id': '0bf60b2e-ca89-42a9-94d4-8f67ca72b157',
           'household_id': 'cd2bb87f-5e4c-4dc6-8477-af9537200014',
           'image': 'KuXV',
+          'last_made': None,
           'name': 'Cauliflower Bisque Recipe with Cheddar Cheese',
           'original_url': 'https://chefjeanpierre.com/recipes/soups/creamy-cauliflower-bisque/',
           'perform_time': None,
@@ -1486,14 +2760,20 @@
           'recipe_id': '447acae6-3424-4c16-8c26-c09040ad8041',
           'recipe_yield': '',
           'slug': 'cauliflower-bisque-recipe-with-cheddar-cheese',
+          'tags': list([
+          ]),
           'total_time': None,
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
         }),
         dict({
+          'categories': list([
+          ]),
+          'date_added': datetime.date(2024, 1, 20),
           'description': '',
           'group_id': '0bf60b2e-ca89-42a9-94d4-8f67ca72b157',
           'household_id': 'cd2bb87f-5e4c-4dc6-8477-af9537200014',
           'image': None,
+          'last_made': None,
           'name': 'Prova ',
           'original_url': None,
           'perform_time': None,
@@ -1502,14 +2782,20 @@
           'recipe_id': '864136a3-27b0-4f3b-a90f-486f42d6df7a',
           'recipe_yield': '',
           'slug': 'prova',
+          'tags': list([
+          ]),
           'total_time': None,
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
         }),
         dict({
+          'categories': list([
+          ]),
+          'date_added': datetime.date(2024, 1, 20),
           'description': '',
           'group_id': '0bf60b2e-ca89-42a9-94d4-8f67ca72b157',
           'household_id': 'cd2bb87f-5e4c-4dc6-8477-af9537200014',
           'image': None,
+          'last_made': None,
           'name': 'pate au beurre (1)',
           'original_url': None,
           'perform_time': None,
@@ -1518,14 +2804,20 @@
           'recipe_id': 'c7ccf4c7-c5f4-4191-a79b-1a49d068f6a4',
           'recipe_yield': None,
           'slug': 'pate-au-beurre-1',
+          'tags': list([
+          ]),
           'total_time': None,
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
         }),
         dict({
+          'categories': list([
+          ]),
+          'date_added': datetime.date(2024, 1, 20),
           'description': '',
           'group_id': '0bf60b2e-ca89-42a9-94d4-8f67ca72b157',
           'household_id': 'cd2bb87f-5e4c-4dc6-8477-af9537200014',
           'image': None,
+          'last_made': None,
           'name': 'pate au beurre',
           'original_url': None,
           'perform_time': None,
@@ -1534,14 +2826,20 @@
           'recipe_id': 'd01865c3-0f18-4e8d-84c0-c14c345fdf9c',
           'recipe_yield': None,
           'slug': 'pate-au-beurre',
+          'tags': list([
+          ]),
           'total_time': None,
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
         }),
         dict({
+          'categories': list([
+          ]),
+          'date_added': datetime.date(2024, 1, 20),
           'description': 'Individual foolproof mason jar cheesecakes with strawberry compote and a Graham cracker crumble topping. Foolproof, simple, and delicious.',
           'group_id': '0bf60b2e-ca89-42a9-94d4-8f67ca72b157',
           'household_id': 'cd2bb87f-5e4c-4dc6-8477-af9537200014',
           'image': 'tmwm',
+          'last_made': None,
           'name': 'Sous Vide Cheesecake Recipe',
           'original_url': 'https://saltpepperskillet.com/recipes/sous-vide-cheesecake/',
           'perform_time': '1 Hour 30 Minutes',
@@ -1550,14 +2848,20 @@
           'recipe_id': '2cec2bb2-19b6-40b8-a36c-1a76ea29c517',
           'recipe_yield': '4 servings',
           'slug': 'sous-vide-cheesecake-recipe',
+          'tags': list([
+          ]),
           'total_time': '2 Hours 10 Minutes',
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
         }),
         dict({
+          'categories': list([
+          ]),
+          'date_added': datetime.date(2024, 1, 20),
           'description': 'This is a variation of the several cheese cake recipes that have been used for sous vide. These make a fabulous 4oz cheese cake for dessert. Garnish with a raspberry or blackberry and impress your family and friends. They’ll keep great in the fridge for a week easily.',
           'group_id': '0bf60b2e-ca89-42a9-94d4-8f67ca72b157',
           'household_id': 'cd2bb87f-5e4c-4dc6-8477-af9537200014',
           'image': 'xCYc',
+          'last_made': None,
           'name': 'The Bomb Mini Cheesecakes',
           'original_url': 'https://recipes.anovaculinary.com/recipe/the-bomb-cheesecakes',
           'perform_time': None,
@@ -1566,14 +2870,20 @@
           'recipe_id': '8e0e4566-9caf-4c2e-a01c-dcead23db86b',
           'recipe_yield': '10 servings',
           'slug': 'the-bomb-mini-cheesecakes',
+          'tags': list([
+          ]),
           'total_time': '1 Hour 30 Minutes',
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
         }),
         dict({
+          'categories': list([
+          ]),
+          'date_added': datetime.date(2024, 1, 20),
           'description': 'Tagliatelle al Salmone - wie beim Italiener. Über 1568 Bewertungen und für vorzüglich befunden. Mit ► Portionsrechner ► Kochbuch ► Video-Tipps!',
           'group_id': '0bf60b2e-ca89-42a9-94d4-8f67ca72b157',
           'household_id': 'cd2bb87f-5e4c-4dc6-8477-af9537200014',
           'image': 'qzaN',
+          'last_made': None,
           'name': 'Tagliatelle al Salmone',
           'original_url': 'https://www.chefkoch.de/rezepte/2109501340136606/Tagliatelle-al-Salmone.html',
           'perform_time': '15 Minutes',
@@ -1582,14 +2892,75 @@
           'recipe_id': 'a051eafd-9712-4aee-a8e5-0cd10a6772ee',
           'recipe_yield': '4 servings',
           'slug': 'tagliatelle-al-salmone',
+          'tags': list([
+            dict({
+              'name': 'Gemüse',
+              'slug': 'gemuse',
+              'tag_id': '518f3081-a919-4c80-9cad-75ffbd0e73d3',
+            }),
+            dict({
+              'name': 'Hauptspeise',
+              'slug': 'hauptspeise',
+              'tag_id': 'a3fff625-1902-4112-b169-54aec4f52ea7',
+            }),
+            dict({
+              'name': 'Schnell',
+              'slug': 'schnell',
+              'tag_id': '4ec445c6-fc2f-4a1e-b666-93435a46ec42',
+            }),
+            dict({
+              'name': 'Einfach',
+              'slug': 'einfach',
+              'tag_id': '4c79c0b7-c2d0-415a-b5cf-138cfce92c7e',
+            }),
+            dict({
+              'name': 'Gekocht',
+              'slug': 'gekocht',
+              'tag_id': '6f349f84-655b-4740-8fa6-ed2716f17df7',
+            }),
+            dict({
+              'name': 'Europa',
+              'slug': 'europa',
+              'tag_id': '77bc190f-dc6d-440b-aa82-f32bfe836018',
+            }),
+            dict({
+              'name': 'Pasta',
+              'slug': 'pasta',
+              'tag_id': '7997c911-14ee-4e76-9895-debad7949ae2',
+            }),
+            dict({
+              'name': 'Nudeln',
+              'slug': 'nudeln',
+              'tag_id': '04d2aea8-fc9a-4f9b-9a87-8f15189ab6f9',
+            }),
+            dict({
+              'name': 'Fisch',
+              'slug': 'fisch',
+              'tag_id': 'c56cd402-3ac7-479e-b96c-d4b64d177dd3',
+            }),
+            dict({
+              'name': 'Italien',
+              'slug': 'italien',
+              'tag_id': '88015586-0885-4397-9098-039ae1109cd1',
+            }),
+            dict({
+              'name': 'Saucen',
+              'slug': 'saucen',
+              'tag_id': '024b30ca-53cb-4243-ba6b-d830610f2f48',
+            }),
+          ]),
           'total_time': '25 Minutes',
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
         }),
         dict({
+          'categories': list([
+          ]),
+          'date_added': datetime.date(2024, 1, 20),
           'description': 'Hier ist der Name Programm: Den "Tod durch Schokolade" müsst ihr zwar hoffentlich nicht erleiden, aber Chocoholics werden diesen Kuchen lieben!',
           'group_id': '0bf60b2e-ca89-42a9-94d4-8f67ca72b157',
           'household_id': 'cd2bb87f-5e4c-4dc6-8477-af9537200014',
           'image': 'K9qP',
+          'last_made': None,
           'name': 'Death by Chocolate',
           'original_url': 'https://www.backenmachtgluecklich.de/rezepte/death-by-chocolate-kuchen.html',
           'perform_time': '25 Minutes',
@@ -1598,14 +2969,20 @@
           'recipe_id': '093d51e9-0823-40ad-8e0e-a1d5790dd627',
           'recipe_yield': '1 serving',
           'slug': 'death-by-chocolate',
+          'tags': list([
+          ]),
           'total_time': None,
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
         }),
         dict({
+          'categories': list([
+          ]),
+          'date_added': datetime.date(2024, 1, 20),
           'description': 'Palak Dal ist in Grunde genommen Spinat (Palak) mit Linsen oder anderen Hülsenfrüchten (Dal) vom indischen Subkontinent. Es kommen noch Zwiebeln, Tomaten und einige indische Gewürze dazu. Damit ist das Palak Dal ein super einfaches und zugleich veganes indisches Rezept. Es schmeckt hervorragend mit Naan-Brot und etwas gewürztem Joghurt.',
           'group_id': '0bf60b2e-ca89-42a9-94d4-8f67ca72b157',
           'household_id': 'cd2bb87f-5e4c-4dc6-8477-af9537200014',
           'image': 'jKQ3',
+          'last_made': None,
           'name': 'Palak Dal Rezept aus Indien',
           'original_url': 'https://www.fernweh-koch.de/palak-dal-indischer-spinat-linsen-rezept/',
           'perform_time': '20 Minutes',
@@ -1614,14 +2991,40 @@
           'recipe_id': '2d1f62ec-4200-4cfd-987e-c75755d7607c',
           'recipe_yield': '4 servings',
           'slug': 'palak-dal-rezept-aus-indien',
+          'tags': list([
+            dict({
+              'name': 'Eintopf',
+              'slug': 'eintopf',
+              'tag_id': '38d18d57-d817-491e-94f8-da923d2c540e',
+            }),
+            dict({
+              'name': 'Indisch',
+              'slug': 'indisch',
+              'tag_id': '43f12acf-a8df-45bd-b33d-20bfe7a7e607',
+            }),
+            dict({
+              'name': 'Linsen',
+              'slug': 'linsen',
+              'tag_id': 'ede834ac-ab8f-4c79-8a42-dfa0270fd18b',
+            }),
+            dict({
+              'name': 'Spinat',
+              'slug': 'spinat',
+              'tag_id': '2b6283e2-b8e0-4b3d-90d9-66f322ca77aa',
+            }),
+          ]),
           'total_time': '30 Minutes',
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
         }),
         dict({
+          'categories': list([
+          ]),
+          'date_added': datetime.date(2024, 1, 20),
           'description': 'Tortelline - á la Romana. Über 13 Bewertungen und für vorzüglich befunden. Mit ► Portionsrechner ► Kochbuch ► Video-Tipps! Jetzt entdecken und ausprobieren!',
           'group_id': '0bf60b2e-ca89-42a9-94d4-8f67ca72b157',
           'household_id': 'cd2bb87f-5e4c-4dc6-8477-af9537200014',
           'image': 'rkSn',
+          'last_made': datetime.datetime(2024, 1, 21, 20, 59, 59),
           'name': 'Tortelline - á la Romana',
           'original_url': 'https://www.chefkoch.de/rezepte/74441028021809/Tortelline-a-la-Romana.html',
           'perform_time': None,
@@ -1630,6 +3033,23 @@
           'recipe_id': '973dc36d-1661-49b4-ad2d-0b7191034fb3',
           'recipe_yield': '4 servings',
           'slug': 'tortelline-a-la-romana',
+          'tags': list([
+            dict({
+              'name': 'Einfach',
+              'slug': 'einfach',
+              'tag_id': '4c79c0b7-c2d0-415a-b5cf-138cfce92c7e',
+            }),
+            dict({
+              'name': 'Pasta',
+              'slug': 'pasta',
+              'tag_id': '7997c911-14ee-4e76-9895-debad7949ae2',
+            }),
+            dict({
+              'name': 'Nudeln',
+              'slug': 'nudeln',
+              'tag_id': '04d2aea8-fc9a-4f9b-9a87-8f15189ab6f9',
+            }),
+          ]),
           'total_time': '30 Minutes',
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
         }),
@@ -1793,6 +3213,8 @@
 # name: test_service_import_recipe
   dict({
     'recipe': dict({
+      'categories': list([
+      ]),
       'date_added': datetime.date(2024, 6, 29),
       'description': 'The world’s most famous cake, the Original Sacher-Torte, is the consequence of several lucky twists of fate. The first was in 1832, when the Austrian State Chancellor, Prince Klemens Wenzel von Metternich, tasked his kitchen staff with concocting an extraordinary dessert to impress his special guests. As fortune had it, the chef had fallen ill that evening, leaving the apprentice chef, the then-16-year-old Franz Sacher, to perform this culinary magic trick. Metternich’s parting words to the talented teenager: “I hope you won’t disgrace me tonight.”',
       'group_id': '24477569-f6af-4b53-9e3f-6d04b0ca6916',
@@ -2018,6 +3440,7 @@
           'title': None,
         }),
       ]),
+      'last_made': None,
       'name': 'Original Sacher-Torte (2)',
       'original_url': 'https://www.sacher.com/en/original-sacher-torte/recipe/',
       'perform_time': '1 hour',
@@ -2079,10 +3502,14 @@
         'mealplan_date': HAFakeDate(2024, 1, 22),
         'mealplan_id': 230,
         'recipe': dict({
+          'categories': list([
+          ]),
+          'date_added': HAFakeDate(2024, 1, 22),
           'description': "Een traybake is eigenlijk altijd een goed idee. Deze zoete aardappel curry traybake dus ook. Waarom? Omdat je alleen maar wat groenten - en in dit geval kip - op een bakplaat (traybake dus) legt, hier wat kruiden aan toevoegt en deze in de oven schuift. Ideaal dus als je geen zin hebt om lang in de keuken te staan. Maar gewoon lekker op de bank wil ploffen om te wachten tot de oven klaar is. Joe! That\\'s what we like. Deze zoete aardappel curry traybake bevat behalve zoete aardappel en curry ook kikkererwten, kippendijfilet en bloemkoolroosjes. Je gebruikt yoghurt en limoen als een soort dressing. En je serveert deze heerlijke traybake met naanbrood. Je kunt natuurljk ook voor deze traybake met chipolataworstjes gaan. Wil je graag meer ovengerechten? Dan moet je eigenlijk even kijken naar onze Ovenbijbel. Onmisbaar in je keuken! We willen je deze zoete aardappelstamppot met prei ook niet onthouden. Megalekker bordje comfortfood als je \\'t ons vraagt.",
           'group_id': '0bf60b2e-ca89-42a9-94d4-8f67ca72b157',
           'household_id': None,
           'image': 'AiIo',
+          'last_made': None,
           'name': 'Zoete aardappel curry traybake',
           'original_url': 'https://chickslovefood.com/recept/zoete-aardappel-curry-traybake/',
           'perform_time': None,
@@ -2091,6 +3518,8 @@
           'recipe_id': 'c5f00a93-71a2-4e48-900f-d9ad0bb9de93',
           'recipe_yield': '2 servings',
           'slug': 'zoete-aardappel-curry-traybake',
+          'tags': list([
+          ]),
           'total_time': '40 Minutes',
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
         }),
@@ -2105,10 +3534,14 @@
         'mealplan_date': HAFakeDate(2024, 1, 23),
         'mealplan_id': 229,
         'recipe': dict({
+          'categories': list([
+          ]),
+          'date_added': HAFakeDate(2024, 1, 21),
           'description': 'The BEST Roast Chicken recipe is simple, budget friendly, and gives you a tender, mouth-watering chicken full of flavor! Served with roasted vegetables, this recipe is simple enough for any cook!',
           'group_id': '0bf60b2e-ca89-42a9-94d4-8f67ca72b157',
           'household_id': None,
           'image': 'JeQ2',
+          'last_made': None,
           'name': 'Roast Chicken',
           'original_url': 'https://tastesbetterfromscratch.com/roast-chicken/',
           'perform_time': '1 Hour 20 Minutes',
@@ -2117,6 +3550,8 @@
           'recipe_id': '5b055066-d57d-4fd0-8dfd-a2c2f07b36f1',
           'recipe_yield': '6 servings',
           'slug': 'roast-chicken',
+          'tags': list([
+          ]),
           'total_time': '1 Hour 35 Minutes',
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
         }),
@@ -2131,10 +3566,14 @@
         'mealplan_date': HAFakeDate(2024, 1, 23),
         'mealplan_id': 226,
         'recipe': dict({
+          'categories': list([
+          ]),
+          'date_added': HAFakeDate(2024, 1, 21),
           'description': 'Te explicamos paso a paso, de manera sencilla, la elaboración de la receta de pollo al curry con leche de coco en 10 minutos. Ingredientes, tiempo de...',
           'group_id': '0bf60b2e-ca89-42a9-94d4-8f67ca72b157',
           'household_id': None,
           'image': 'INQz',
+          'last_made': None,
           'name': 'Receta de pollo al curry en 10 minutos (con vídeo incluido)',
           'original_url': 'https://www.directoalpaladar.com/recetas-de-carnes-y-aves/receta-de-pollo-al-curry-en-10-minutos',
           'perform_time': '7 Minutes',
@@ -2143,6 +3582,8 @@
           'recipe_id': 'e360a0cc-18b0-4a84-a91b-8aa59e2451c9',
           'recipe_yield': '2 servings',
           'slug': 'receta-de-pollo-al-curry-en-10-minutos-con-video-incluido',
+          'tags': list([
+          ]),
           'total_time': '10 Minutes',
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
         }),
@@ -2157,10 +3598,14 @@
         'mealplan_date': HAFakeDate(2024, 1, 23),
         'mealplan_id': 224,
         'recipe': dict({
+          'categories': list([
+          ]),
+          'date_added': HAFakeDate(2024, 1, 21),
           'description': 'bourguignon, oignon, carotte, bouquet garni, vin rouge, beurre, sel, poivre',
           'group_id': '0bf60b2e-ca89-42a9-94d4-8f67ca72b157',
           'household_id': None,
           'image': 'nj5M',
+          'last_made': None,
           'name': 'Boeuf bourguignon : la vraie recette (2)',
           'original_url': 'https://www.marmiton.org/recettes/recette_boeuf-bourguignon_18889.aspx',
           'perform_time': '4 Hours',
@@ -2169,6 +3614,68 @@
           'recipe_id': '9c7b8aee-c93c-4b1b-ab48-2625d444743a',
           'recipe_yield': '4 servings',
           'slug': 'boeuf-bourguignon-la-vraie-recette-2',
+          'tags': list([
+            dict({
+              'name': 'Poivre',
+              'slug': 'poivre',
+              'tag_id': '01c2f4ac-54ce-49bc-9bd7-8a49f353a3a4',
+            }),
+            dict({
+              'name': 'Sel',
+              'slug': 'sel',
+              'tag_id': '90a26cea-a8a1-41a1-9e8c-e94e3c40f7a7',
+            }),
+            dict({
+              'name': 'Beurre',
+              'slug': 'beurre',
+              'tag_id': 'd7b01a4b-5206-4bd2-b9c4-d13b95ca0edb',
+            }),
+            dict({
+              'name': 'Facile',
+              'slug': 'facile',
+              'tag_id': '304faaf8-13ec-4537-91f3-9f39a3585545',
+            }),
+            dict({
+              'name': 'Daube',
+              'slug': 'daube',
+              'tag_id': '6508fb05-fb60-4bed-90c4-584bd6d74cb5',
+            }),
+            dict({
+              'name': 'Bourguignon',
+              'slug': 'bourguignon',
+              'tag_id': '18ff59b6-b599-456a-896b-4b76448b08ca',
+            }),
+            dict({
+              'name': 'Vin Rouge',
+              'slug': 'vin-rouge',
+              'tag_id': '685a0d90-8de4-494e-8eb8-68e7f5d5ffbe',
+            }),
+            dict({
+              'name': 'Oignon',
+              'slug': 'oignon',
+              'tag_id': '5dedc8b5-30f5-4d6e-875f-34deefd01883',
+            }),
+            dict({
+              'name': 'Bouquet Garni',
+              'slug': 'bouquet-garni',
+              'tag_id': '065b79e0-6276-4ebb-9428-7018b40c55bb',
+            }),
+            dict({
+              'name': 'Moyen',
+              'slug': 'moyen',
+              'tag_id': 'd858b1d9-2ca1-46d4-acc2-3d03f991f03f',
+            }),
+            dict({
+              'name': 'Boeuf Bourguignon : La Vraie Recette',
+              'slug': 'boeuf-bourguignon-la-vraie-recette',
+              'tag_id': 'bded0bd8-8d41-4ec5-ad73-e0107fb60908',
+            }),
+            dict({
+              'name': 'Carotte',
+              'slug': 'carotte',
+              'tag_id': '7f99b04f-914a-408b-a057-511ca1125734',
+            }),
+          ]),
           'total_time': '5 Hours',
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
         }),
@@ -2183,10 +3690,14 @@
         'mealplan_date': HAFakeDate(2024, 1, 23),
         'mealplan_id': 222,
         'recipe': dict({
+          'categories': list([
+          ]),
+          'date_added': HAFakeDate(2024, 1, 21),
           'description': 'Εύκολη μακαρονάδα με κεφτεδάκια στον φούρνο από τον Άκη Πετρετζίκη. Φτιάξτε την πιο εύκολη μακαρονάδα με κεφτεδάκια σε μόνο ένα σκεύος.',
           'group_id': '0bf60b2e-ca89-42a9-94d4-8f67ca72b157',
           'household_id': None,
           'image': 'En9o',
+          'last_made': None,
           'name': 'Εύκολη μακαρονάδα με κεφτεδάκια στον φούρνο (1)',
           'original_url': 'https://akispetretzikis.com/recipe/7959/efkolh-makaronada-me-keftedakia-ston-fourno',
           'perform_time': '50 Minutes',
@@ -2195,6 +3706,8 @@
           'recipe_id': 'f79f7e9d-4b58-4930-a586-2b127f16ee34',
           'recipe_yield': '6 servings',
           'slug': 'eukole-makaronada-me-kephtedakia-ston-phourno-1',
+          'tags': list([
+          ]),
           'total_time': None,
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
         }),
@@ -2209,10 +3722,14 @@
         'mealplan_date': HAFakeDate(2024, 1, 23),
         'mealplan_id': 221,
         'recipe': dict({
+          'categories': list([
+          ]),
+          'date_added': HAFakeDate(2024, 1, 4),
           'description': 'Delicious Greek turkey meatballs with lemon orzo, tender veggies, and a creamy feta yogurt sauce. These healthy baked Greek turkey meatballs are filled with tons of wonderful herbs and make the perfect protein-packed weeknight meal!',
           'group_id': '0bf60b2e-ca89-42a9-94d4-8f67ca72b157',
           'household_id': None,
           'image': 'Kn62',
+          'last_made': None,
           'name': 'Greek Turkey Meatballs with Lemon Orzo & Creamy Feta Yogurt Sauce',
           'original_url': 'https://www.ambitiouskitchen.com/greek-turkey-meatballs/',
           'perform_time': '20 Minutes',
@@ -2221,6 +3738,8 @@
           'recipe_id': '47595e4c-52bc-441d-b273-3edf4258806d',
           'recipe_yield': '4 servings',
           'slug': 'greek-turkey-meatballs-with-lemon-orzo-creamy-feta-yogurt-sauce',
+          'tags': list([
+          ]),
           'total_time': '1 Hour',
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
         }),
@@ -2235,10 +3754,14 @@
         'mealplan_date': HAFakeDate(2024, 1, 23),
         'mealplan_id': 220,
         'recipe': dict({
+          'categories': list([
+          ]),
+          'date_added': HAFakeDate(2024, 1, 21),
           'description': 'Einfacher Nudelauflauf mit Brokkoli, Sahnesauce und extra Käse. Dieses vegetarische 5 Zutaten Rezept ist super schnell gemacht und SO gut!',
           'group_id': '0bf60b2e-ca89-42a9-94d4-8f67ca72b157',
           'household_id': None,
           'image': 'nOPT',
+          'last_made': None,
           'name': 'Einfacher Nudelauflauf mit Brokkoli',
           'original_url': 'https://kochkarussell.com/einfacher-nudelauflauf-brokkoli/',
           'perform_time': '20 Minutes',
@@ -2247,6 +3770,13 @@
           'recipe_id': '9d553779-607e-471b-acf3-84e6be27b159',
           'recipe_yield': '4 servings',
           'slug': 'einfacher-nudelauflauf-mit-brokkoli',
+          'tags': list([
+            dict({
+              'name': '< 4 Hours',
+              'slug': '4-hours',
+              'tag_id': '78318c97-75c7-4d06-95b6-51ef8f4a0257',
+            }),
+          ]),
           'total_time': '35 Minutes',
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
         }),
@@ -2261,10 +3791,14 @@
         'mealplan_date': HAFakeDate(2024, 1, 23),
         'mealplan_id': 219,
         'recipe': dict({
+          'categories': list([
+          ]),
+          'date_added': HAFakeDate(2024, 1, 6),
           'description': 'This is a modified Pampered Chef recipe. You can use a trifle bowl or large glass punch/salad bowl to show it off. It is really easy to make and I never have any leftovers. Cook time includes chill time.',
           'group_id': '0bf60b2e-ca89-42a9-94d4-8f67ca72b157',
           'household_id': None,
           'image': 'ibL6',
+          'last_made': None,
           'name': 'Pampered Chef Double Chocolate Mocha Trifle',
           'original_url': 'https://www.food.com/recipe/pampered-chef-double-chocolate-mocha-trifle-74963',
           'perform_time': '1 Hour',
@@ -2273,6 +3807,18 @@
           'recipe_id': '92635fd0-f2dc-4e78-a6e4-ecd556ad361f',
           'recipe_yield': '12 servings',
           'slug': 'pampered-chef-double-chocolate-mocha-trifle',
+          'tags': list([
+            dict({
+              'name': 'Weeknight',
+              'slug': 'weeknight',
+              'tag_id': '0248c21d-c85a-47b2-aaf6-fb6caf1b7726',
+            }),
+            dict({
+              'name': '< 4 Hours',
+              'slug': '4-hours',
+              'tag_id': '78318c97-75c7-4d06-95b6-51ef8f4a0257',
+            }),
+          ]),
           'total_time': '1 Hour 15 Minutes',
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
         }),
@@ -2287,10 +3833,14 @@
         'mealplan_date': HAFakeDate(2024, 1, 22),
         'mealplan_id': 217,
         'recipe': dict({
+          'categories': list([
+          ]),
+          'date_added': HAFakeDate(2024, 1, 21),
           'description': 'Cheeseburger Sliders are juicy, cheesy and beefy - everything we love about classic burgers! These sliders are quick and easy plus they are make-ahead and reheat really well.',
           'group_id': '0bf60b2e-ca89-42a9-94d4-8f67ca72b157',
           'household_id': None,
           'image': 'beGq',
+          'last_made': HAFakeDatetime(2024, 1, 22, 4, 59, 59),
           'name': 'Cheeseburger Sliders (Easy, 30-min Recipe)',
           'original_url': 'https://natashaskitchen.com/cheeseburger-sliders/',
           'perform_time': '22 Minutes',
@@ -2299,6 +3849,18 @@
           'recipe_id': '8bdd3656-5e7e-45d3-a3c4-557390846a22',
           'recipe_yield': '24 servings',
           'slug': 'cheeseburger-sliders-easy-30-min-recipe',
+          'tags': list([
+            dict({
+              'name': 'Cheeseburger Sliders',
+              'slug': 'cheeseburger-sliders',
+              'tag_id': '7a4ca427-642f-4428-8dc7-557ea9c8d1b4',
+            }),
+            dict({
+              'name': 'Sliders',
+              'slug': 'sliders',
+              'tag_id': '941558d2-50d5-4c9d-8890-a0258f18d493',
+            }),
+          ]),
           'total_time': '30 Minutes',
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
         }),
@@ -2313,10 +3875,14 @@
         'mealplan_date': HAFakeDate(2024, 1, 22),
         'mealplan_id': 216,
         'recipe': dict({
+          'categories': list([
+          ]),
+          'date_added': HAFakeDate(2024, 1, 20),
           'description': 'This All-American beef stew recipe includes tender beef coated in a rich, intense sauce and vegetables that bring complementary texture and flavor.',
           'group_id': '0bf60b2e-ca89-42a9-94d4-8f67ca72b157',
           'household_id': None,
           'image': '356X',
+          'last_made': None,
           'name': 'All-American Beef Stew Recipe',
           'original_url': 'https://www.seriouseats.com/all-american-beef-stew-recipe',
           'perform_time': '3 Hours 10 Minutes',
@@ -2325,6 +3891,13 @@
           'recipe_id': '48f39d27-4b8e-4c14-bf36-4e1e6497e75e',
           'recipe_yield': '6 servings',
           'slug': 'all-american-beef-stew-recipe',
+          'tags': list([
+            dict({
+              'name': '< 4 Hours',
+              'slug': '4-hours',
+              'tag_id': '78318c97-75c7-4d06-95b6-51ef8f4a0257',
+            }),
+          ]),
           'total_time': '3 Hours 15 Minutes',
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
         }),
@@ -2339,10 +3912,14 @@
         'mealplan_date': HAFakeDate(2024, 1, 23),
         'mealplan_id': 212,
         'recipe': dict({
+          'categories': list([
+          ]),
+          'date_added': HAFakeDate(2024, 1, 20),
           'description': 'This All-American beef stew recipe includes tender beef coated in a rich, intense sauce and vegetables that bring complementary texture and flavor.',
           'group_id': '0bf60b2e-ca89-42a9-94d4-8f67ca72b157',
           'household_id': None,
           'image': '356X',
+          'last_made': None,
           'name': 'All-American Beef Stew Recipe',
           'original_url': 'https://www.seriouseats.com/all-american-beef-stew-recipe',
           'perform_time': '3 Hours 10 Minutes',
@@ -2351,6 +3928,13 @@
           'recipe_id': '48f39d27-4b8e-4c14-bf36-4e1e6497e75e',
           'recipe_yield': '6 servings',
           'slug': 'all-american-beef-stew-recipe',
+          'tags': list([
+            dict({
+              'name': '< 4 Hours',
+              'slug': '4-hours',
+              'tag_id': '78318c97-75c7-4d06-95b6-51ef8f4a0257',
+            }),
+          ]),
           'total_time': '3 Hours 15 Minutes',
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
         }),
@@ -2365,10 +3949,14 @@
         'mealplan_date': HAFakeDate(2024, 1, 22),
         'mealplan_id': 211,
         'recipe': dict({
+          'categories': list([
+          ]),
+          'date_added': HAFakeDate(2024, 1, 21),
           'description': 'Einfacher Nudelauflauf mit Brokkoli, Sahnesauce und extra Käse. Dieses vegetarische 5 Zutaten Rezept ist super schnell gemacht und SO gut!',
           'group_id': '0bf60b2e-ca89-42a9-94d4-8f67ca72b157',
           'household_id': None,
           'image': 'nOPT',
+          'last_made': None,
           'name': 'Einfacher Nudelauflauf mit Brokkoli',
           'original_url': 'https://kochkarussell.com/einfacher-nudelauflauf-brokkoli/',
           'perform_time': '20 Minutes',
@@ -2377,6 +3965,13 @@
           'recipe_id': '9d553779-607e-471b-acf3-84e6be27b159',
           'recipe_yield': '4 servings',
           'slug': 'einfacher-nudelauflauf-mit-brokkoli',
+          'tags': list([
+            dict({
+              'name': '< 4 Hours',
+              'slug': '4-hours',
+              'tag_id': '78318c97-75c7-4d06-95b6-51ef8f4a0257',
+            }),
+          ]),
           'total_time': '35 Minutes',
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
         }),
@@ -2391,10 +3986,14 @@
         'mealplan_date': HAFakeDate(2024, 1, 23),
         'mealplan_id': 196,
         'recipe': dict({
+          'categories': list([
+          ]),
+          'date_added': HAFakeDate(2024, 1, 5),
           'description': 'Simple to prepare and ready in 25 minutes, this vegetarian miso noodle recipe can be eaten on its own or served as a side.',
           'group_id': '0bf60b2e-ca89-42a9-94d4-8f67ca72b157',
           'household_id': None,
           'image': '5G1v',
+          'last_made': None,
           'name': 'Miso Udon Noodles with Spinach and Tofu',
           'original_url': 'https://www.allrecipes.com/recipe/284039/miso-udon-noodles-with-spinach-and-tofu/',
           'perform_time': '15 Minutes',
@@ -2403,6 +4002,8 @@
           'recipe_id': '25b814f2-d9bf-4df0-b40d-d2f2457b4317',
           'recipe_yield': '2 servings',
           'slug': 'miso-udon-noodles-with-spinach-and-tofu',
+          'tags': list([
+          ]),
           'total_time': '25 Minutes',
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
         }),
@@ -2417,10 +4018,14 @@
         'mealplan_date': HAFakeDate(2024, 1, 22),
         'mealplan_id': 195,
         'recipe': dict({
+          'categories': list([
+          ]),
+          'date_added': HAFakeDate(2024, 1, 2),
           'description': 'Avis aux nostalgiques des années 1980, la mousse de saumon est de retour dans une présentation adaptée au goût du jour. On utilise une technique sans faille : un saumon frais cuit au micro-ondes et mélangé au robot avec du fromage à la crème et de la crème sure. On obtient ainsi une texture onctueuse à tartiner, qui n’a rien à envier aux préparations gélatineuses d’antan !',
           'group_id': '0bf60b2e-ca89-42a9-94d4-8f67ca72b157',
           'household_id': None,
           'image': 'rrNL',
+          'last_made': HAFakeDatetime(2024, 1, 2, 22, 59, 59),
           'name': 'Mousse de saumon',
           'original_url': 'https://www.ricardocuisine.com/recettes/8919-mousse-de-saumon',
           'perform_time': '2 Minutes',
@@ -2429,6 +4034,8 @@
           'recipe_id': '55c88810-4cf1-4d86-ae50-63b15fd173fb',
           'recipe_yield': '12 servings',
           'slug': 'mousse-de-saumon',
+          'tags': list([
+          ]),
           'total_time': '17 Minutes',
           'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
         }),
@@ -2452,6 +4059,8 @@
 # name: test_service_recipe
   dict({
     'recipe': dict({
+      'categories': list([
+      ]),
       'date_added': datetime.date(2024, 6, 29),
       'description': 'The world’s most famous cake, the Original Sacher-Torte, is the consequence of several lucky twists of fate. The first was in 1832, when the Austrian State Chancellor, Prince Klemens Wenzel von Metternich, tasked his kitchen staff with concocting an extraordinary dessert to impress his special guests. As fortune had it, the chef had fallen ill that evening, leaving the apprentice chef, the then-16-year-old Franz Sacher, to perform this culinary magic trick. Metternich’s parting words to the talented teenager: “I hope you won’t disgrace me tonight.”',
       'group_id': '24477569-f6af-4b53-9e3f-6d04b0ca6916',
@@ -2677,6 +4286,7 @@
           'title': None,
         }),
       ]),
+      'last_made': None,
       'name': 'Original Sacher-Torte (2)',
       'original_url': 'https://www.sacher.com/en/original-sacher-torte/recipe/',
       'perform_time': '1 hour',
@@ -2737,10 +4347,14 @@
       'mealplan_date': datetime.date(2024, 1, 22),
       'mealplan_id': 230,
       'recipe': dict({
+        'categories': list([
+        ]),
+        'date_added': datetime.date(2024, 1, 22),
         'description': "Een traybake is eigenlijk altijd een goed idee. Deze zoete aardappel curry traybake dus ook. Waarom? Omdat je alleen maar wat groenten - en in dit geval kip - op een bakplaat (traybake dus) legt, hier wat kruiden aan toevoegt en deze in de oven schuift. Ideaal dus als je geen zin hebt om lang in de keuken te staan. Maar gewoon lekker op de bank wil ploffen om te wachten tot de oven klaar is. Joe! That\\'s what we like. Deze zoete aardappel curry traybake bevat behalve zoete aardappel en curry ook kikkererwten, kippendijfilet en bloemkoolroosjes. Je gebruikt yoghurt en limoen als een soort dressing. En je serveert deze heerlijke traybake met naanbrood. Je kunt natuurljk ook voor deze traybake met chipolataworstjes gaan. Wil je graag meer ovengerechten? Dan moet je eigenlijk even kijken naar onze Ovenbijbel. Onmisbaar in je keuken! We willen je deze zoete aardappelstamppot met prei ook niet onthouden. Megalekker bordje comfortfood als je \\'t ons vraagt.",
         'group_id': '0bf60b2e-ca89-42a9-94d4-8f67ca72b157',
         'household_id': None,
         'image': 'AiIo',
+        'last_made': None,
         'name': 'Zoete aardappel curry traybake',
         'original_url': 'https://chickslovefood.com/recept/zoete-aardappel-curry-traybake/',
         'perform_time': None,
@@ -2749,6 +4363,8 @@
         'recipe_id': 'c5f00a93-71a2-4e48-900f-d9ad0bb9de93',
         'recipe_yield': '2 servings',
         'slug': 'zoete-aardappel-curry-traybake',
+        'tags': list([
+        ]),
         'total_time': '40 Minutes',
         'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
       }),
@@ -2767,10 +4383,14 @@
       'mealplan_date': datetime.date(2024, 1, 22),
       'mealplan_id': 230,
       'recipe': dict({
+        'categories': list([
+        ]),
+        'date_added': datetime.date(2024, 1, 22),
         'description': "Een traybake is eigenlijk altijd een goed idee. Deze zoete aardappel curry traybake dus ook. Waarom? Omdat je alleen maar wat groenten - en in dit geval kip - op een bakplaat (traybake dus) legt, hier wat kruiden aan toevoegt en deze in de oven schuift. Ideaal dus als je geen zin hebt om lang in de keuken te staan. Maar gewoon lekker op de bank wil ploffen om te wachten tot de oven klaar is. Joe! That\\'s what we like. Deze zoete aardappel curry traybake bevat behalve zoete aardappel en curry ook kikkererwten, kippendijfilet en bloemkoolroosjes. Je gebruikt yoghurt en limoen als een soort dressing. En je serveert deze heerlijke traybake met naanbrood. Je kunt natuurljk ook voor deze traybake met chipolataworstjes gaan. Wil je graag meer ovengerechten? Dan moet je eigenlijk even kijken naar onze Ovenbijbel. Onmisbaar in je keuken! We willen je deze zoete aardappelstamppot met prei ook niet onthouden. Megalekker bordje comfortfood als je \\'t ons vraagt.",
         'group_id': '0bf60b2e-ca89-42a9-94d4-8f67ca72b157',
         'household_id': None,
         'image': 'AiIo',
+        'last_made': None,
         'name': 'Zoete aardappel curry traybake',
         'original_url': 'https://chickslovefood.com/recept/zoete-aardappel-curry-traybake/',
         'perform_time': None,
@@ -2779,6 +4399,8 @@
         'recipe_id': 'c5f00a93-71a2-4e48-900f-d9ad0bb9de93',
         'recipe_yield': '2 servings',
         'slug': 'zoete-aardappel-curry-traybake',
+        'tags': list([
+        ]),
         'total_time': '40 Minutes',
         'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
       }),
@@ -2797,10 +4419,14 @@
       'mealplan_date': datetime.date(2024, 1, 22),
       'mealplan_id': 230,
       'recipe': dict({
+        'categories': list([
+        ]),
+        'date_added': datetime.date(2024, 1, 22),
         'description': "Een traybake is eigenlijk altijd een goed idee. Deze zoete aardappel curry traybake dus ook. Waarom? Omdat je alleen maar wat groenten - en in dit geval kip - op een bakplaat (traybake dus) legt, hier wat kruiden aan toevoegt en deze in de oven schuift. Ideaal dus als je geen zin hebt om lang in de keuken te staan. Maar gewoon lekker op de bank wil ploffen om te wachten tot de oven klaar is. Joe! That\\'s what we like. Deze zoete aardappel curry traybake bevat behalve zoete aardappel en curry ook kikkererwten, kippendijfilet en bloemkoolroosjes. Je gebruikt yoghurt en limoen als een soort dressing. En je serveert deze heerlijke traybake met naanbrood. Je kunt natuurljk ook voor deze traybake met chipolataworstjes gaan. Wil je graag meer ovengerechten? Dan moet je eigenlijk even kijken naar onze Ovenbijbel. Onmisbaar in je keuken! We willen je deze zoete aardappelstamppot met prei ook niet onthouden. Megalekker bordje comfortfood als je \\'t ons vraagt.",
         'group_id': '0bf60b2e-ca89-42a9-94d4-8f67ca72b157',
         'household_id': None,
         'image': 'AiIo',
+        'last_made': None,
         'name': 'Zoete aardappel curry traybake',
         'original_url': 'https://chickslovefood.com/recept/zoete-aardappel-curry-traybake/',
         'perform_time': None,
@@ -2809,6 +4435,8 @@
         'recipe_id': 'c5f00a93-71a2-4e48-900f-d9ad0bb9de93',
         'recipe_yield': '2 servings',
         'slug': 'zoete-aardappel-curry-traybake',
+        'tags': list([
+        ]),
         'total_time': '40 Minutes',
         'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
       }),
@@ -2827,10 +4455,14 @@
       'mealplan_date': datetime.date(2024, 1, 22),
       'mealplan_id': 230,
       'recipe': dict({
+        'categories': list([
+        ]),
+        'date_added': datetime.date(2024, 1, 22),
         'description': "Een traybake is eigenlijk altijd een goed idee. Deze zoete aardappel curry traybake dus ook. Waarom? Omdat je alleen maar wat groenten - en in dit geval kip - op een bakplaat (traybake dus) legt, hier wat kruiden aan toevoegt en deze in de oven schuift. Ideaal dus als je geen zin hebt om lang in de keuken te staan. Maar gewoon lekker op de bank wil ploffen om te wachten tot de oven klaar is. Joe! That\\'s what we like. Deze zoete aardappel curry traybake bevat behalve zoete aardappel en curry ook kikkererwten, kippendijfilet en bloemkoolroosjes. Je gebruikt yoghurt en limoen als een soort dressing. En je serveert deze heerlijke traybake met naanbrood. Je kunt natuurljk ook voor deze traybake met chipolataworstjes gaan. Wil je graag meer ovengerechten? Dan moet je eigenlijk even kijken naar onze Ovenbijbel. Onmisbaar in je keuken! We willen je deze zoete aardappelstamppot met prei ook niet onthouden. Megalekker bordje comfortfood als je \\'t ons vraagt.",
         'group_id': '0bf60b2e-ca89-42a9-94d4-8f67ca72b157',
         'household_id': None,
         'image': 'AiIo',
+        'last_made': None,
         'name': 'Zoete aardappel curry traybake',
         'original_url': 'https://chickslovefood.com/recept/zoete-aardappel-curry-traybake/',
         'perform_time': None,
@@ -2839,6 +4471,8 @@
         'recipe_id': 'c5f00a93-71a2-4e48-900f-d9ad0bb9de93',
         'recipe_yield': '2 servings',
         'slug': 'zoete-aardappel-curry-traybake',
+        'tags': list([
+        ]),
         'total_time': '40 Minutes',
         'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
       }),

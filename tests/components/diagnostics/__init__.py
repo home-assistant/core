@@ -3,6 +3,7 @@
 from http import HTTPStatus
 from typing import cast
 
+from homeassistant.components.diagnostics import DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntry
@@ -18,7 +19,7 @@ async def _get_diagnostics_for_config_entry(
     config_entry: ConfigEntry,
 ) -> JsonObjectType:
     """Return the diagnostics config entry for the specified domain."""
-    assert await async_setup_component(hass, "diagnostics", {})
+    assert await async_setup_component(hass, DOMAIN, {})
     await hass.async_block_till_done()
 
     client = await hass_client()
@@ -46,7 +47,7 @@ async def _get_diagnostics_for_device(
     device: DeviceEntry,
 ) -> JsonObjectType:
     """Return the diagnostics for the specified device."""
-    assert await async_setup_component(hass, "diagnostics", {})
+    assert await async_setup_component(hass, DOMAIN, {})
 
     client = await hass_client()
     response = await client.get(

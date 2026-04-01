@@ -207,13 +207,13 @@ class AbstractTemplateFan(AbstractTemplateEntity, FanEntity):
 
     _entity_id_format = ENTITY_ID_FORMAT
     _optimistic_entity = True
+    _state_option = CONF_STATE
 
     # The super init is not called because TemplateEntity and TriggerEntity will call AbstractTemplateEntity.__init__.
     # This ensures that the __init__ on AbstractTemplateEntity is not called twice.
     def __init__(self, name: str, config: dict[str, Any]) -> None:  # pylint: disable=super-init-not-called
         """Initialize the features."""
         self.setup_state_template(
-            CONF_STATE,
             "_attr_is_on",
             template_validators.boolean(self, CONF_STATE),
         )

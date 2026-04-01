@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_sensors[sensor.green_planet_energy_current_price-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -54,8 +55,9 @@
 # ---
 # name: test_sensors[sensor.green_planet_energy_highest_price_time-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -104,8 +106,9 @@
 # ---
 # name: test_sensors[sensor.green_planet_energy_highest_price_today-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -157,8 +160,9 @@
 # ---
 # name: test_sensors[sensor.green_planet_energy_lowest_price_day_06_00_18_00-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -210,8 +214,9 @@
 # ---
 # name: test_sensors[sensor.green_planet_energy_lowest_price_day_time_06_00_18_00-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -260,8 +265,9 @@
 # ---
 # name: test_sensors[sensor.green_planet_energy_lowest_price_night_18_00_06_00-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -313,8 +319,9 @@
 # ---
 # name: test_sensors[sensor.green_planet_energy_lowest_price_night_time_18_00_06_00-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,

@@ -626,7 +626,7 @@ def websocket_delete_all_refresh_tokens(
     hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Handle delete all refresh tokens request."""
-    current_refresh_token: RefreshToken
+    current_refresh_token: RefreshToken | None = None
     remove_failed = False
     token_type = msg.get("token_type")
     delete_current_token = msg.get("delete_current_token")
@@ -654,7 +654,7 @@ def websocket_delete_all_refresh_tokens(
     else:
         connection.send_result(msg["id"], {})
 
-    async def _delete_current_token_soon() -> None:
+    async def _delete_current_token_soon(current_refresh_token: RefreshToken) -> None:
         """Delete the current token after a delay.
 
         We do not want to delete the current token immediately as it will
@@ -675,13 +675,15 @@ def websocket_delete_all_refresh_tokens(
             # the token right away.
             hass.auth.async_remove_refresh_token(current_refresh_token)
 
-    if delete_current_token and (
-        not limit_token_types or current_refresh_token.token_type == token_type
+    if (
+        delete_current_token
+        and current_refresh_token
+        and (not limit_token_types or current_refresh_token.token_type == token_type)
     ):
         # Deleting the token will close the connection so we need
         # to do it with a delay in a tracked task to ensure it still
         # happens if Home Assistant is shutting down.
-        hass.async_create_task(_delete_current_token_soon())
+        hass.async_create_task(_delete_current_token_soon(current_refresh_token))
 
 
 @websocket_api.websocket_command(

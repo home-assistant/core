@@ -3,10 +3,9 @@
 from abc import abstractmethod
 from collections.abc import Callable, Sequence
 from dataclasses import dataclass
-import logging
 from typing import Any
 
-from homeassistant.const import CONF_DEVICE_ID, CONF_OPTIMISTIC, CONF_STATE
+from homeassistant.const import CONF_DEVICE_ID, CONF_OPTIMISTIC
 from homeassistant.core import Context, HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.entity import Entity, async_generate_entity_id
@@ -15,8 +14,6 @@ from homeassistant.helpers.template import Template, TemplateStateFromEntityId
 from homeassistant.helpers.typing import ConfigType
 
 from .const import CONF_DEFAULT_ENTITY_ID
-
-_LOGGER = logging.getLogger(__name__)
 
 
 @dataclass
@@ -36,7 +33,7 @@ class AbstractTemplateEntity(Entity):
     _entity_id_format: str
     _optimistic_entity: bool = False
     _extra_optimistic_options: tuple[str, ...] | None = None
-    _template: Template | None = None
+    _state_option: str | None = None
 
     def __init__(
         self,
@@ -53,18 +50,17 @@ class AbstractTemplateEntity(Entity):
         if self._optimistic_entity:
             optimistic = config.get(CONF_OPTIMISTIC)
 
-            self._template = config.get(CONF_STATE)
+            if self._state_option is not None:
+                assumed_optimistic = config.get(self._state_option) is None
+                if self._extra_optimistic_options:
+                    assumed_optimistic = assumed_optimistic and all(
+                        config.get(option) is None
+                        for option in self._extra_optimistic_options
+                    )
 
-            assumed_optimistic = self._template is None
-            if self._extra_optimistic_options:
-                assumed_optimistic = assumed_optimistic and all(
-                    config.get(option) is None
-                    for option in self._extra_optimistic_options
+                self._attr_assumed_state = optimistic or (
+                    optimistic is None and assumed_optimistic
                 )
-
-            self._attr_assumed_state = optimistic or (
-                optimistic is None and assumed_optimistic
-            )
 
         if (default_entity_id := config.get(CONF_DEFAULT_ENTITY_ID)) is not None:
             _, _, object_id = default_entity_id.partition(".")
@@ -89,12 +85,16 @@ class AbstractTemplateEntity(Entity):
     @abstractmethod
     def setup_state_template(
         self,
-        option: str,
         attribute: str,
         validator: Callable[[Any], Any] | None = None,
         on_update: Callable[[Any], None] | None = None,
     ) -> None:
-        """Set up a template that manages the main state of the entity."""
+        """Set up a template that manages the main state of the entity.
+
+        Requires _state_option to be set on the inheriting class. _state_option represents
+        the configuration option that derives the state. E.g. Template weather entities main state option
+        is 'condition', where switch is 'state'.
+        """
 
     @abstractmethod
     def setup_template(

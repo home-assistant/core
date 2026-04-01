@@ -11,6 +11,7 @@ from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant import bootstrap, config as config_util, core, loader, runner
 from homeassistant.config_entries import ConfigEntry
@@ -274,13 +275,34 @@ async def test_core_failure_loads_recovery_mode(
 
 
 @pytest.mark.parametrize("load_registries", [False])
-async def test_setting_up_config(hass: HomeAssistant) -> None:
+async def test_setting_up_empty_config(
+    hass: HomeAssistant,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test default integrations are set up with empty config."""
+    await bootstrap._async_set_up_integrations(hass, {})
+
+    assert all(
+        domain in hass.config.components for domain in bootstrap.DEFAULT_INTEGRATIONS
+    )
+    assert set(hass.config.components) == snapshot
+
+
+@pytest.mark.parametrize("load_registries", [False])
+async def test_setting_up_config(
+    hass: HomeAssistant,
+    snapshot: SnapshotAssertion,
+) -> None:
     """Test we set up domains in config."""
     await bootstrap._async_set_up_integrations(
         hass, {"group hello": {}, "homeassistant": {}}
     )
 
     assert "group" in hass.config.components
+    assert all(
+        domain in hass.config.components for domain in bootstrap.DEFAULT_INTEGRATIONS
+    )
+    assert set(hass.config.components) == snapshot
 
 
 @pytest.mark.parametrize("load_registries", [False])

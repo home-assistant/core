@@ -7,11 +7,14 @@ import pytest
 
 from homeassistant import config_entries, setup
 from homeassistant.components.kitchen_sink import DOMAIN
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
+
+ENTITY_IR_TRANSMITTER = "infrared.ir_blaster_infrared_transmitter"
 
 
 @pytest.fixture
@@ -20,6 +23,16 @@ def no_platforms() -> Generator[None]:
     with patch(
         "homeassistant.components.kitchen_sink.COMPONENTS_WITH_DEMO_PLATFORM",
         [],
+    ):
+        yield
+
+
+@pytest.fixture
+def infrared_only() -> Generator[None]:
+    """Enable only the infrared platform."""
+    with patch(
+        "homeassistant.components.kitchen_sink.COMPONENTS_WITH_DEMO_PLATFORM",
+        [Platform.INFRARED],
     ):
         yield
 
@@ -193,3 +206,57 @@ async def test_subentry_reconfigure_flow(hass: HomeAssistant) -> None:
     }
 
     await hass.async_block_till_done()
+
+
+@pytest.mark.usefixtures("infrared_only")
+async def test_infrared_fan_subentry_flow(hass: HomeAssistant) -> None:
+    """Test infrared fan subentry flow creates an entry."""
+    assert await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
+    await hass.async_block_till_done()
+
+    config_entry = hass.config_entries.async_entries(DOMAIN)[0]
+
+    result = await hass.config_entries.subentries.async_init(
+        (config_entry.entry_id, "infrared_fan"),
+        context={"source": config_entries.SOURCE_USER},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        user_input={
+            "name": "Living Room Fan",
+            "infrared_entity_id": ENTITY_IR_TRANSMITTER,
+        },
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    subentry_id = [
+        sid
+        for sid, s in config_entry.subentries.items()
+        if s.subentry_type == "infrared_fan"
+    ][0]
+    assert config_entry.subentries[subentry_id] == config_entries.ConfigSubentry(
+        data={"infrared_entity_id": ENTITY_IR_TRANSMITTER},
+        subentry_id=subentry_id,
+        subentry_type="infrared_fan",
+        title="Living Room Fan",
+        unique_id=None,
+    )
+
+
+@pytest.mark.usefixtures("no_platforms")
+async def test_infrared_fan_subentry_flow_no_emitters(hass: HomeAssistant) -> None:
+    """Test infrared fan subentry flow aborts when no emitters are available."""
+    config_entry = MockConfigEntry(domain=DOMAIN)
+    config_entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    result = await hass.config_entries.subentries.async_init(
+        (config_entry.entry_id, "infrared_fan"),
+        context={"source": config_entries.SOURCE_USER},
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "no_emitters"

@@ -101,6 +101,8 @@ async def async_setup_entry(
     )
 
     for subentry_id, subentry in config_entry.subentries.items():
+        if subentry.subentry_type != "entity":
+            continue
         async_add_entities(
             [
                 DemoSensor(

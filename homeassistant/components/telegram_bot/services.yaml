@@ -208,6 +208,98 @@ send_photo:
             text:
               multiple: true
 
+send_media_group:
+  fields:
+    entity_id:
+      selector:
+        entity:
+          filter:
+            domain: notify
+            integration: telegram_bot
+          multiple: true
+          reorder: true
+    media:
+      required: true
+      selector:
+        object:
+          multiple: true
+          label_field: url
+          description_field: caption
+          translation_key: "media"
+          fields:
+            media_type:
+              selector:
+                select:
+                  options:
+                    - "audio"
+                    - "document"
+                    - "photo"
+                    - "video"
+                  translation_key: "media_type"
+            caption:
+              selector:
+                text:
+            url:
+              selector:
+                text:
+                  type: url
+            verify_ssl:
+              selector:
+                boolean:
+            authentication:
+              selector:
+                select:
+                  options:
+                    - "basic"
+                    - "digest"
+                    - "bearer_token"
+                  translation_key: "authentication"
+            username:
+              selector:
+                text:
+            password:
+              selector:
+                text:
+                  type: password
+            file:
+              selector:
+                text:
+    parse_mode:
+      selector:
+        select:
+          options:
+            - "html"
+            - "markdown"
+            - "markdownv2"
+            - "plain_text"
+          translation_key: "parse_mode"
+    disable_notification:
+      selector:
+        boolean:
+    protect_content:
+      selector:
+        boolean:
+    reply_to_message_id:
+      selector:
+        number:
+          mode: box
+    message_thread_id:
+      selector:
+        number:
+          mode: box
+    advanced:
+      collapsed: true
+      fields:
+        config_entry_id:
+          selector:
+            config_entry:
+              integration: telegram_bot
+        chat_id:
+          example: "[12345, 67890] or 12345"
+          selector:
+            text:
+              multiple: true
+
 send_sticker:
   fields:
     entity_id:
@@ -790,7 +882,6 @@ edit_message:
           filter:
             domain: notify
             integration: telegram_bot
-          reorder: true
     message_id:
       required: true
       example: "{{ trigger.event.data.message.message_id }}"
@@ -843,7 +934,6 @@ edit_message_media:
           filter:
             domain: notify
             integration: telegram_bot
-          reorder: true
     message_id:
       required: true
       example: "{{ trigger.event.data.message.message_id }}"
@@ -922,7 +1012,6 @@ edit_caption:
           filter:
             domain: notify
             integration: telegram_bot
-          reorder: true
     message_id:
       required: true
       example: "{{ trigger.event.data.message.message_id }}"
@@ -960,7 +1049,6 @@ edit_replymarkup:
           filter:
             domain: notify
             integration: telegram_bot
-          reorder: true
     message_id:
       required: true
       example: "{{ trigger.event.data.message.message_id }}"
@@ -1015,7 +1103,6 @@ delete_message:
           filter:
             domain: notify
             integration: telegram_bot
-          reorder: true
     message_id:
       required: true
       example: "{{ trigger.event.data.message.message_id }}"
@@ -1042,7 +1129,6 @@ leave_chat:
           filter:
             domain: notify
             integration: telegram_bot
-          reorder: true
     advanced:
       collapsed: true
       fields:
@@ -1064,7 +1150,6 @@ set_message_reaction:
           filter:
             domain: notify
             integration: telegram_bot
-          reorder: true
     message_id:
       required: true
       example: 54321

@@ -1,0 +1,12 @@
+{
+  "domain": "hr_energy_qube",
+  "name": "Qube heat pump",
+  "codeowners": ["@MattieGit"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/hr_energy_qube",
+  "integration_type": "hub",
+  "iot_class": "local_polling",
+  "loggers": ["python_qube_heatpump"],
+  "quality_scale": "bronze",
+  "requirements": ["python-qube-heatpump==1.7.0"]
+}

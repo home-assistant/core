@@ -113,7 +113,7 @@ class GoogleTravelTimeSensor(SensorEntity):
         self._attr_device_info = DeviceInfo(
             entry_type=DeviceEntryType.SERVICE,
             identifiers={(DOMAIN, api_key)},
-            name=DOMAIN,
+            name=DEFAULT_NAME,
         )
 
         self._config_entry = config_entry

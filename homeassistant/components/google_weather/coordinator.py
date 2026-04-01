@@ -24,6 +24,8 @@ from homeassistant.helpers.update_coordinator import (
     UpdateFailed,
 )
 
+from .const import DOMAIN
+
 _LOGGER = logging.getLogger(__name__)
 
 T = TypeVar(
@@ -97,7 +99,13 @@ class GoogleWeatherBaseCoordinator(TimestampDataUpdateCoordinator[T]):
                 self.subentry.title,
                 err,
             )
-            raise UpdateFailed(f"Error fetching {self._data_type_name}") from err
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="update_error",
+                translation_placeholders={
+                    "error": str(err),
+                },
+            ) from err
 
 
 class GoogleWeatherCurrentConditionsCoordinator(

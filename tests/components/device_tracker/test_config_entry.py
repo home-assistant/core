@@ -23,6 +23,7 @@ from homeassistant.components.zone import ATTR_RADIUS
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState, ConfigFlow
 from homeassistant.const import (
     ATTR_BATTERY_LEVEL,
+    ATTR_FRIENDLY_NAME,
     ATTR_GPS_ACCURACY,
     ATTR_LATITUDE,
     ATTR_LONGITUDE,
@@ -506,6 +507,7 @@ async def test_scanner_entity_state(
         ATTR_IP: ip_address,
         ATTR_MAC: mac_address,
         ATTR_HOST_NAME: hostname,
+        ATTR_FRIENDLY_NAME: "Device from other integration",
     }
     assert entity_state.state == STATE_NOT_HOME
 
@@ -788,6 +790,7 @@ async def test_entity_has_device_info(
             return dr.DeviceInfo(
                 connections={(dr.CONNECTION_NETWORK_MAC, TEST_MAC_ADDRESS)},
                 identifiers={(TEST_DOMAIN, "device1")},
+                name="Test Device",
                 manufacturer="manufacturer",
                 model="model",
             )
@@ -804,8 +807,6 @@ async def test_entity_has_device_info(
     )  # should be enabled
     assert len(entity_registry.entities) == 1
     assert (
-        entity_registry.entities[
-            f"{DOMAIN}.{TEST_DOMAIN}_{TEST_MAC_ADDRESS.replace(':', '_').lower()}"
-        ].config_entry_id
+        entity_registry.entities[f"{DOMAIN}.test_device"].config_entry_id
         == config_entry.entry_id
     )

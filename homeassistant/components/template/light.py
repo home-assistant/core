@@ -359,6 +359,7 @@ class AbstractTemplateLight(AbstractTemplateEntity, LightEntity):
     _optimistic_entity = True
     _attr_max_color_temp_kelvin = DEFAULT_MAX_KELVIN
     _attr_min_color_temp_kelvin = DEFAULT_MIN_KELVIN
+    _state_option = CONF_STATE
 
     # The super init is not called because TemplateEntity and TriggerEntity will call AbstractTemplateEntity.__init__.
     # This ensures that the __init__ on AbstractTemplateEntity is not called twice.
@@ -369,7 +370,7 @@ class AbstractTemplateLight(AbstractTemplateEntity, LightEntity):
 
         # Setup state and brightness
         self.setup_state_template(
-            CONF_STATE, "_attr_is_on", template_validators.boolean(self, CONF_STATE)
+            "_attr_is_on", template_validators.boolean(self, CONF_STATE)
         )
         self.setup_template(
             CONF_LEVEL,

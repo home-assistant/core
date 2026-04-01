@@ -4,7 +4,6 @@ from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 
 from zinvolt import ZinvoltClient
-from zinvolt.models import BatteryState
 
 from homeassistant.components.number import (
     NumberDeviceClass,
@@ -15,7 +14,7 @@ from homeassistant.const import PERCENTAGE, EntityCategory, UnitOfPower, UnitOfT
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .coordinator import ZinvoltConfigEntry, ZinvoltDeviceCoordinator
+from .coordinator import ZinvoltConfigEntry, ZinvoltData, ZinvoltDeviceCoordinator
 from .entity import ZinvoltEntity
 
 
@@ -23,8 +22,8 @@ from .entity import ZinvoltEntity
 class ZinvoltBatteryStateDescription(NumberEntityDescription):
     """Number description for Zinvolt battery state."""
 
-    max_fn: Callable[[BatteryState], int] | None = None
-    value_fn: Callable[[BatteryState], int]
+    max_fn: Callable[[ZinvoltData], int] | None = None
+    value_fn: Callable[[ZinvoltData], int]
     set_value_fn: Callable[[ZinvoltClient, str, int], Awaitable[None]]
 
 
@@ -35,19 +34,19 @@ NUMBERS: tuple[ZinvoltBatteryStateDescription, ...] = (
         entity_category=EntityCategory.CONFIG,
         device_class=NumberDeviceClass.POWER,
         native_unit_of_measurement=UnitOfPower.WATT,
-        value_fn=lambda state: state.global_settings.max_output,
+        value_fn=lambda state: state.battery.global_settings.max_output,
         set_value_fn=lambda client, battery_id, value: client.set_max_output(
             battery_id, value
         ),
         native_min_value=0,
-        max_fn=lambda state: state.global_settings.max_output_limit,
+        max_fn=lambda state: state.battery.global_settings.max_output_limit,
     ),
     ZinvoltBatteryStateDescription(
         key="upper_threshold",
         translation_key="upper_threshold",
         entity_category=EntityCategory.CONFIG,
         native_unit_of_measurement=PERCENTAGE,
-        value_fn=lambda state: state.global_settings.battery_upper_threshold,
+        value_fn=lambda state: state.battery.global_settings.battery_upper_threshold,
         set_value_fn=lambda client, battery_id, value: client.set_upper_threshold(
             battery_id, value
         ),
@@ -59,7 +58,7 @@ NUMBERS: tuple[ZinvoltBatteryStateDescription, ...] = (
         translation_key="lower_threshold",
         entity_category=EntityCategory.CONFIG,
         native_unit_of_measurement=PERCENTAGE,
-        value_fn=lambda state: state.global_settings.battery_lower_threshold,
+        value_fn=lambda state: state.battery.global_settings.battery_lower_threshold,
         set_value_fn=lambda client, battery_id, value: client.set_lower_threshold(
             battery_id, value
         ),
@@ -72,7 +71,7 @@ NUMBERS: tuple[ZinvoltBatteryStateDescription, ...] = (
         entity_category=EntityCategory.CONFIG,
         native_unit_of_measurement=UnitOfTime.MINUTES,
         device_class=NumberDeviceClass.DURATION,
-        value_fn=lambda state: state.global_settings.standby_time,
+        value_fn=lambda state: state.battery.global_settings.standby_time,
         set_value_fn=lambda client, battery_id, value: client.set_standby_time(
             battery_id, value
         ),
@@ -109,7 +108,9 @@ class ZinvoltBatteryStateNumber(ZinvoltEntity, NumberEntity):
         """Initialize the number."""
         super().__init__(coordinator)
         self.entity_description = description
-        self._attr_unique_id = f"{coordinator.data.serial_number}.{description.key}"
+        self._attr_unique_id = (
+            f"{coordinator.data.battery.serial_number}.{description.key}"
+        )
 
     @property
     def native_max_value(self) -> float:

@@ -2,7 +2,10 @@
   "config": {
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+      "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
+      "unique_id_mismatch": "The Whisker account does not match the previously configured account. Please re-authenticate using the same account, or remove this integration and set it up again if you want to use a different account."
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
@@ -19,6 +22,14 @@
         },
         "description": "Please update your password for {username}",
         "title": "[%key:common::config_flow::title::reauth%]"
+      },
+      "reconfigure": {
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "password": "[%key:component::litterrobot::config::step::user::data_description::password%]"
+        }
       },
       "user": {
         "data": {
@@ -194,10 +205,18 @@
       }
     }
   },
-  "issues": {
-    "deprecated_entity": {
-      "description": "The Litter-Robot entity `{entity}` is deprecated and will be removed in a future release.\nPlease update your dashboards, automations and scripts, disable `{entity}` and reload the integration/restart Home Assistant to fix this issue.",
-      "title": "{name} is deprecated"
+  "exceptions": {
+    "cannot_connect": {
+      "message": "Unable to fetch data from the Whisker API: {error}"
+    },
+    "command_failed": {
+      "message": "An error occurred while communicating with the device: {error}"
+    },
+    "firmware_update_failed": {
+      "message": "Unable to start firmware update on {name}"
+    },
+    "invalid_credentials": {
+      "message": "Invalid credentials. Please check your username and password, then try again"
     }
   },
   "services": {

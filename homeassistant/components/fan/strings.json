@@ -1,16 +1,13 @@
 {
   "common": {
-    "condition_behavior_description": "How the state should match on the targeted fans.",
-    "condition_behavior_name": "Behavior",
-    "trigger_behavior_description": "The behavior of the targeted fans to trigger on.",
-    "trigger_behavior_name": "Behavior"
+    "condition_behavior_name": "Condition passes if",
+    "trigger_behavior_name": "Trigger when"
   },
   "conditions": {
     "is_off": {
       "description": "Tests if one or more fans are off.",
       "fields": {
         "behavior": {
-          "description": "[%key:component::fan::common::condition_behavior_description%]",
           "name": "[%key:component::fan::common::condition_behavior_name%]"
         }
       },
@@ -20,7 +17,6 @@
       "description": "Tests if one or more fans are on.",
       "fields": {
         "behavior": {
-          "description": "[%key:component::fan::common::condition_behavior_description%]",
           "name": "[%key:component::fan::common::condition_behavior_name%]"
         }
       },
@@ -118,7 +114,7 @@
           "name": "Decrement"
         }
       },
-      "name": "Decrease speed"
+      "name": "Decrease fan speed"
     },
     "increase_speed": {
       "description": "Increases the speed of a fan.",
@@ -128,7 +124,7 @@
           "name": "Increment"
         }
       },
-      "name": "Increase speed"
+      "name": "Increase fan speed"
     },
     "oscillate": {
       "description": "Controls the oscillation of a fan.",
@@ -138,7 +134,7 @@
           "name": "Oscillating"
         }
       },
-      "name": "Oscillate"
+      "name": "Oscillate fan"
     },
     "set_direction": {
       "description": "Sets a fan's rotation direction.",
@@ -148,7 +144,7 @@
           "name": "Direction"
         }
       },
-      "name": "Set direction"
+      "name": "Set fan direction"
     },
     "set_percentage": {
       "description": "Sets the speed of a fan.",
@@ -158,28 +154,28 @@
           "name": "Percentage"
         }
       },
-      "name": "Set speed"
+      "name": "Set fan speed"
     },
     "set_preset_mode": {
-      "description": "Sets preset fan mode.",
+      "description": "Sets the preset mode of a fan.",
       "fields": {
         "preset_mode": {
           "description": "Preset fan mode.",
           "name": "Preset mode"
         }
       },
-      "name": "Set preset mode"
+      "name": "Set fan preset mode"
     },
     "toggle": {
       "description": "Toggles a fan on/off.",
-      "name": "[%key:common::action::toggle%]"
+      "name": "Toggle fan"
     },
     "turn_off": {
-      "description": "Turns fan off.",
-      "name": "[%key:common::action::turn_off%]"
+      "description": "Turns off a fan.",
+      "name": "Turn off fan"
     },
     "turn_on": {
-      "description": "Turns fan on.",
+      "description": "Turns on a fan.",
       "fields": {
         "percentage": {
           "description": "[%key:component::fan::services::set_percentage::fields::percentage::description%]",
@@ -190,7 +186,7 @@
           "name": "[%key:component::fan::services::set_preset_mode::fields::preset_mode::name%]"
         }
       },
-      "name": "[%key:common::action::turn_on%]"
+      "name": "Turn on fan"
     }
   },
   "title": "Fan",
@@ -199,7 +195,6 @@
       "description": "Triggers after one or more fans turn off.",
       "fields": {
         "behavior": {
-          "description": "[%key:component::fan::common::trigger_behavior_description%]",
           "name": "[%key:component::fan::common::trigger_behavior_name%]"
         }
       },
@@ -209,7 +204,6 @@
       "description": "Triggers after one or more fans turn on.",
       "fields": {
         "behavior": {
-          "description": "[%key:component::fan::common::trigger_behavior_description%]",
           "name": "[%key:component::fan::common::trigger_behavior_name%]"
         }
       },

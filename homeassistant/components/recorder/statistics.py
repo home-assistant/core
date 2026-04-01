@@ -40,6 +40,7 @@ from homeassistant.helpers.recorder import DATA_RECORDER
 from homeassistant.helpers.singleton import singleton
 from homeassistant.helpers.typing import UNDEFINED, UndefinedType
 from homeassistant.util import dt as dt_util
+from homeassistant.util.async_ import run_callback_threadsafe
 from homeassistant.util.collection import chunked_or_all
 from homeassistant.util.enum import try_parse_enum
 from homeassistant.util.unit_conversion import (
@@ -80,6 +81,7 @@ from .const import (
     EVENT_RECORDER_5MIN_STATISTICS_GENERATED,
     EVENT_RECORDER_HOURLY_STATISTICS_GENERATED,
     INTEGRATION_PLATFORM_COMPILE_STATISTICS,
+    INTEGRATION_PLATFORM_CUSTOM_EQUIVALENT_UNITS,
     INTEGRATION_PLATFORM_LIST_STATISTIC_IDS,
     INTEGRATION_PLATFORM_UPDATE_STATISTICS_ISSUES,
     INTEGRATION_PLATFORM_VALIDATE_STATISTICS,
@@ -684,6 +686,61 @@ def _get_first_id_stmt(start: datetime) -> StatementLambdaElement:
     return lambda_stmt(lambda: select(StatisticsRuns.run_id).filter_by(start=start))
 
 
+CUSTOM_EQUIVALENT_UNITS_SCHEMA = vol.Schema({str: {vol.Any(str, None): str}})
+# Keep track of domains for which a warning about failure to collect custom units has been logged
+_warn_custom_units_error: set[str] = set()
+
+
+def _get_custom_equivalent_units(
+    hass: HomeAssistant,
+) -> dict[str, dict[str | None, str]]:
+    """Check whether any integration supplies custom equivalent units for its entities."""
+    custom_equivalent_units_per_entity: dict[str, dict[str | None, str]] = {}
+    for domain, platform in hass.data[DATA_RECORDER].recorder_platforms.items():
+        custom_equivalent_units = getattr(
+            platform, INTEGRATION_PLATFORM_CUSTOM_EQUIVALENT_UNITS, None
+        )
+
+        if not custom_equivalent_units:
+            continue
+
+        try:
+            platform_custom_equivalent_units = run_callback_threadsafe(
+                hass.loop, custom_equivalent_units, hass
+            ).result()
+        except Exception as exc:  # noqa: BLE001
+            if domain not in _warn_custom_units_error:
+                _warn_custom_units_error.add(domain)
+                _LOGGER.warning(
+                    "Error calling %s for recorder platform domain %s: %s",
+                    INTEGRATION_PLATFORM_CUSTOM_EQUIVALENT_UNITS,
+                    domain,
+                    exc,
+                )
+            continue
+
+        if not platform_custom_equivalent_units:
+            continue
+
+        try:
+            validated_data = CUSTOM_EQUIVALENT_UNITS_SCHEMA(
+                platform_custom_equivalent_units
+            )
+            custom_equivalent_units_per_entity |= validated_data
+        except vol.Invalid as inv:
+            if domain not in _warn_custom_units_error:
+                _warn_custom_units_error.add(domain)
+                _LOGGER.warning(
+                    "Error processing result of %s for recorder platform domain %s: %s for object: %s",
+                    INTEGRATION_PLATFORM_CUSTOM_EQUIVALENT_UNITS,
+                    domain,
+                    inv,
+                    platform_custom_equivalent_units,
+                )
+
+    return custom_equivalent_units_per_entity
+
+
 def _compile_statistics(
     instance: Recorder, session: Session, start: datetime, fire_events: bool
 ) -> set[str]:
@@ -707,6 +764,7 @@ def _compile_statistics(
     _LOGGER.debug("Compiling statistics for %s-%s", start, end)
     platform_stats: list[StatisticResult] = []
     current_metadata: dict[str, tuple[int, StatisticMetaData]] = {}
+    custom_equivalent_units_per_entity = _get_custom_equivalent_units(instance.hass)
     # Collect statistics from all platforms implementing support
     for domain, platform in instance.hass.data[
         DATA_RECORDER
@@ -718,7 +776,7 @@ def _compile_statistics(
         ):
             continue
         compiled: PlatformCompiledStatistics = platform_compile_statistics(
-            instance.hass, session, start, end
+            instance.hass, session, start, end, custom_equivalent_units_per_entity
         )
         _LOGGER.debug(
             "Statistics for %s during %s-%s: %s",
@@ -755,7 +813,9 @@ def _compile_statistics(
                 )
             ):
                 continue
-            platform_update_issues(instance.hass, session)
+            platform_update_issues(
+                instance.hass, session, custom_equivalent_units_per_entity
+            )
 
     if start.minute == 55:
         # A full hour is ready, summarize it
@@ -2651,23 +2711,31 @@ def _sorted_statistics_to_dict(
 
 def validate_statistics(hass: HomeAssistant) -> dict[str, list[ValidationIssue]]:
     """Validate statistics."""
+    custom_equivalent_units_per_entity = _get_custom_equivalent_units(hass)
+
     platform_validation: dict[str, list[ValidationIssue]] = {}
     for platform in hass.data[DATA_RECORDER].recorder_platforms.values():
         if platform_validate_statistics := getattr(
             platform, INTEGRATION_PLATFORM_VALIDATE_STATISTICS, None
         ):
-            platform_validation.update(platform_validate_statistics(hass))
+            platform_validation.update(
+                platform_validate_statistics(hass, custom_equivalent_units_per_entity)
+            )
     return platform_validation
 
 
 def update_statistics_issues(hass: HomeAssistant) -> None:
     """Update statistics issues."""
+    custom_equivalent_units_per_entity = _get_custom_equivalent_units(hass)
+
     with session_scope(hass=hass, read_only=True) as session:
         for platform in hass.data[DATA_RECORDER].recorder_platforms.values():
             if platform_update_statistics_issues := getattr(
                 platform, INTEGRATION_PLATFORM_UPDATE_STATISTICS_ISSUES, None
             ):
-                platform_update_statistics_issues(hass, session)
+                platform_update_statistics_issues(
+                    hass, session, custom_equivalent_units_per_entity
+                )
 
 
 def _statistics_exists(

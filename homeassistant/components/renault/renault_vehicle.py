@@ -11,7 +11,7 @@ import logging
 from typing import TYPE_CHECKING, Any, Concatenate, cast
 
 from renault_api.exceptions import RenaultException
-from renault_api.kamereon import models, schemas
+from renault_api.kamereon import models
 from renault_api.renault_vehicle import RenaultVehicle
 
 from homeassistant.core import HomeAssistant
@@ -175,6 +175,13 @@ class RenaultVehicleProxy:
         return await self._vehicle.set_charge_stop()
 
     @with_error_wrapping
+    async def set_battery_soc(
+        self, min_soc: int, target_soc: int
+    ) -> models.KamereonVehicleBatterySocActionData:
+        """Set vehicle battery SoC levels."""
+        return await self._vehicle.set_battery_soc(min=min_soc, target=target_soc)
+
+    @with_error_wrapping
     async def set_ac_stop(self) -> models.KamereonVehicleHvacStartActionData:
         """Stop vehicle ac."""
         return await self._vehicle.set_ac_stop()
@@ -201,18 +208,7 @@ class RenaultVehicleProxy:
     @with_error_wrapping
     async def get_charging_settings(self) -> models.KamereonVehicleChargingSettingsData:
         """Get vehicle charging settings."""
-        full_endpoint = await self._vehicle.get_full_endpoint("charging-settings")
-        response = await self._vehicle.http_get(full_endpoint)
-        response_data = cast(
-            models.KamereonVehicleDataResponse,
-            schemas.KamereonVehicleDataResponseSchema.load(response.raw_data),
-        )
-        return cast(
-            models.KamereonVehicleChargingSettingsData,
-            response_data.get_attributes(
-                schemas.KamereonVehicleChargingSettingsDataSchema
-            ),
-        )
+        return await self._vehicle.get_charging_settings()
 
     @with_error_wrapping
     async def set_charge_schedules(
@@ -261,6 +257,12 @@ COORDINATORS: tuple[RenaultCoordinatorDescription, ...] = (
         update_method=lambda x: x.get_charge_mode,
     ),
     RenaultCoordinatorDescription(
+        endpoint="charging-settings",
+        key="charging_settings",
+        requires_electricity=True,
+        update_method=lambda x: x.get_charging_settings,
+    ),
+    RenaultCoordinatorDescription(
         endpoint="lock-status",
         key="lock_status",
         update_method=lambda x: x.get_lock_status,
@@ -274,5 +276,11 @@ COORDINATORS: tuple[RenaultCoordinatorDescription, ...] = (
         endpoint="pressure",
         key="pressure",
         update_method=lambda x: x.get_tyre_pressure,
+    ),
+    RenaultCoordinatorDescription(
+        endpoint="soc-levels",
+        key="battery_soc",
+        requires_electricity=True,
+        update_method=lambda x: x.get_battery_soc,
     ),
 )

@@ -27,6 +27,12 @@
           'rated_current': 32.0,
           'serial_number': 'TEST123456',
         }),
+        'gps': dict({
+          'accuracy': 1.5,
+          'altitude': '**REDACTED**',
+          'latitude': '**REDACTED**',
+          'longitude': '**REDACTED**',
+        }),
         'grid': dict({
           'frequency': 50.0,
           'phases': 7,
@@ -53,6 +59,7 @@
         }),
         'general': dict({
           'charge_count': 5,
+          'charge_permitted': 1,
           'charging_rate': 11.0,
           'error_code': 0,
           'rcd_trigger': 0,

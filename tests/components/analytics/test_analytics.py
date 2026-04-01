@@ -359,9 +359,12 @@ async def test_send_usage_with_supervisor(
                     "healthy": True,
                     "supported": True,
                     "arch": "amd64",
-                    "addons": [{"slug": "test_addon"}],
                 }
             ),
+        ),
+        patch(
+            "homeassistant.components.hassio.get_addons_info",
+            side_effect=Mock(return_value={"test_addon": {}}),
         ),
         patch(
             "homeassistant.components.hassio.get_os_info",
@@ -578,9 +581,12 @@ async def test_send_statistics_with_supervisor(
                     "healthy": True,
                     "supported": True,
                     "arch": "amd64",
-                    "addons": [{"slug": "test_addon"}],
                 }
             ),
+        ),
+        patch(
+            "homeassistant.components.hassio.get_addons_info",
+            side_effect=Mock(return_value={"test_addon": {}}),
         ),
         patch(
             "homeassistant.components.hassio.get_os_info",

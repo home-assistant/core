@@ -18,7 +18,7 @@ import sqlite3
 import ssl
 import sys
 import threading
-from typing import TYPE_CHECKING, Any, cast
+from typing import TYPE_CHECKING, Any, Self, cast
 from unittest.mock import AsyncMock, MagicMock, Mock, _patch, patch
 
 from aiohttp import client
@@ -123,7 +123,6 @@ from .typing import (
 if TYPE_CHECKING:
     # Local import to avoid processing recorder and SQLite modules when running a
     # testcase which does not use the recorder.
-    from homeassistant.auth.models import RefreshToken
     from homeassistant.components import recorder
 
 
@@ -177,21 +176,37 @@ def pytest_configure(config: pytest.Config) -> None:
     SnapshotSession.finish = override_syrupy_finish
 
 
+class HASocketBlockedError(pytest_socket.SocketBlockedError):
+    """SocketBlockedError variant which counts instances."""
+
+    instances: list[Self] = []
+
+    def __init__(self, *_args, **_kwargs) -> None:
+        """Initialize HASocketBlockedError and increment instance count."""
+        super().__init__(*_args, **_kwargs)
+        self.__class__.instances.append(self)
+
+
 def pytest_runtest_setup() -> None:
     """Prepare pytest_socket and freezegun.
 
     pytest_socket:
-    Throw if tests attempt to open sockets.
+    - Throw if tests attempt to open sockets.
 
-    allow_unix_socket is set to True because it's needed by asyncio.
-    Important: socket_allow_hosts must be called before disable_socket, otherwise all
-    destinations will be allowed.
+    - allow_unix_socket is set to True because it's needed by asyncio.
+      Important: socket_allow_hosts must be called before disable_socket, otherwise all
+      destinations will be allowed.
+
+    - Replace pytest_socket.SocketBlockedError with a variant which counts the number
+      of times it was raised.
 
     freezegun:
-    Modified to include https://github.com/spulec/freezegun/pull/424 and improve class str.
+    - Modified to include https://github.com/spulec/freezegun/pull/424 and improve class str.
     """
     pytest_socket.socket_allow_hosts(["127.0.0.1"])
     pytest_socket.disable_socket(allow_unix_socket=True)
+
+    pytest_socket.SocketBlockedError = HASocketBlockedError
 
     freezegun.api.FakeDate = patch_time.HAFakeDate  # type: ignore[attr-defined]
 
@@ -407,6 +422,17 @@ def verify_cleanup(
     finally:
         # Clear mock routes not break subsequent tests
         respx.mock.clear()
+
+    try:
+        # Verify no socket connections were attempted
+        assert not HASocketBlockedError.instances, "the test opens sockets"
+    except AssertionError:
+        for instance in HASocketBlockedError.instances:
+            _LOGGER.exception("Socket opened during test", exc_info=instance)
+        raise
+    finally:
+        # Reset socket connection instance count to not break subsequent tests
+        HASocketBlockedError.instances = []
 
 
 @pytest.fixture(autouse=True)
@@ -1959,19 +1985,18 @@ def mock_bleak_scanner_start() -> Generator[MagicMock]:
 
 
 @pytest.fixture
-def hassio_env(supervisor_is_connected: AsyncMock) -> Generator[None]:
+def hassio_env(
+    supervisor_is_connected: AsyncMock, supervisor_root_info: AsyncMock
+) -> Generator[None]:
     """Fixture to inject hassio env."""
-    from homeassistant.components.hassio import HassioAPIError  # noqa: PLC0415
+    from aiohasupervisor import SupervisorError  # noqa: PLC0415
 
     from .components.hassio import SUPERVISOR_TOKEN  # noqa: PLC0415
 
+    supervisor_root_info.side_effect = SupervisorError()
     with (
         patch.dict(os.environ, {"SUPERVISOR": "127.0.0.1"}),
         patch.dict(os.environ, {"SUPERVISOR_TOKEN": SUPERVISOR_TOKEN}),
-        patch(
-            "homeassistant.components.hassio.HassIO.get_info",
-            Mock(side_effect=HassioAPIError()),
-        ),
     ):
         yield
 
@@ -1983,34 +2008,13 @@ async def hassio_stubs(
     hass_client: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
     supervisor_client: AsyncMock,
-) -> RefreshToken:
+    ingress_panels: AsyncMock,
+) -> None:
     """Create mock hassio http client."""
-    from homeassistant.components.hassio import HassioAPIError  # noqa: PLC0415
-
-    with (
-        patch(
-            "homeassistant.components.hassio.HassIO.update_hass_api",
-            return_value={"result": "ok"},
-        ) as hass_api,
-        patch(
-            "homeassistant.components.hassio.HassIO.update_hass_config",
-            return_value={"result": "ok"},
-        ),
-        patch(
-            "homeassistant.components.hassio.HassIO.get_info",
-            side_effect=HassioAPIError(),
-        ),
-        patch(
-            "homeassistant.components.hassio.HassIO.get_ingress_panels",
-            return_value={"panels": []},
-        ),
-        patch(
-            "homeassistant.components.hassio.issues.SupervisorIssues.setup",
-        ),
+    with patch(
+        "homeassistant.components.hassio.issues.SupervisorIssues.setup",
     ):
         await async_setup_component(hass, "hassio", {})
-
-    return hass_api.call_args[0][1]
 
 
 @pytest.fixture

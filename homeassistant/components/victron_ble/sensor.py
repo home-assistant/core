@@ -148,7 +148,10 @@ def error_to_state(value: float | str | None) -> str | None:
         "network_c": "network",
         "network_d": "network",
     }
-    return value_map.get(value)
+    mapped = value_map.get(value)
+    if mapped is not None:
+        return mapped
+    return value if isinstance(value, str) and value in CHARGER_ERROR_OPTIONS else None
 
 
 DEVICE_STATE_OPTIONS = [
@@ -407,6 +410,61 @@ SENSOR_DESCRIPTIONS = {
         device_class=SensorDeviceClass.ENERGY,
         native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
         state_class=SensorStateClass.TOTAL_INCREASING,
+    ),
+    Keys.AC_CURRENT: VictronBLESensorEntityDescription(
+        key=Keys.AC_CURRENT,
+        translation_key=Keys.AC_CURRENT,
+        device_class=SensorDeviceClass.CURRENT,
+        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    Keys.OUTPUT_VOLTAGE_1: VictronBLESensorEntityDescription(
+        key=Keys.OUTPUT_VOLTAGE_1,
+        translation_key="output_phase_voltage",
+        device_class=SensorDeviceClass.VOLTAGE,
+        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
+        state_class=SensorStateClass.MEASUREMENT,
+        translation_placeholders={"phase": "1"},
+    ),
+    Keys.OUTPUT_CURRENT_1: VictronBLESensorEntityDescription(
+        key=Keys.OUTPUT_CURRENT_1,
+        translation_key="output_phase_current",
+        device_class=SensorDeviceClass.CURRENT,
+        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
+        state_class=SensorStateClass.MEASUREMENT,
+        translation_placeholders={"phase": "1"},
+    ),
+    Keys.OUTPUT_VOLTAGE_2: VictronBLESensorEntityDescription(
+        key=Keys.OUTPUT_VOLTAGE_2,
+        translation_key="output_phase_voltage",
+        device_class=SensorDeviceClass.VOLTAGE,
+        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
+        state_class=SensorStateClass.MEASUREMENT,
+        translation_placeholders={"phase": "2"},
+    ),
+    Keys.OUTPUT_CURRENT_2: VictronBLESensorEntityDescription(
+        key=Keys.OUTPUT_CURRENT_2,
+        translation_key="output_phase_current",
+        device_class=SensorDeviceClass.CURRENT,
+        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
+        state_class=SensorStateClass.MEASUREMENT,
+        translation_placeholders={"phase": "2"},
+    ),
+    Keys.OUTPUT_VOLTAGE_3: VictronBLESensorEntityDescription(
+        key=Keys.OUTPUT_VOLTAGE_3,
+        translation_key="output_phase_voltage",
+        device_class=SensorDeviceClass.VOLTAGE,
+        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
+        state_class=SensorStateClass.MEASUREMENT,
+        translation_placeholders={"phase": "3"},
+    ),
+    Keys.OUTPUT_CURRENT_3: VictronBLESensorEntityDescription(
+        key=Keys.OUTPUT_CURRENT_3,
+        translation_key="output_phase_current",
+        device_class=SensorDeviceClass.CURRENT,
+        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
+        state_class=SensorStateClass.MEASUREMENT,
+        translation_placeholders={"phase": "3"},
     ),
 }
 

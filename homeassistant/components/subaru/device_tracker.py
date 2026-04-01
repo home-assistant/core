@@ -10,10 +10,7 @@ from homeassistant.components.device_tracker import TrackerEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-    DataUpdateCoordinator,
-)
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import get_device_info
 from .const import (
@@ -24,6 +21,7 @@ from .const import (
     VEHICLE_STATUS,
     VEHICLE_VIN,
 )
+from .coordinator import SubaruDataUpdateCoordinator
 
 
 async def async_setup_entry(
@@ -33,7 +31,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Subaru device tracker by config_entry."""
     entry: dict = hass.data[DOMAIN][config_entry.entry_id]
-    coordinator: DataUpdateCoordinator = entry[ENTRY_COORDINATOR]
+    coordinator: SubaruDataUpdateCoordinator = entry[ENTRY_COORDINATOR]
     vehicle_info: dict = entry[ENTRY_VEHICLES]
     async_add_entities(
         SubaruDeviceTracker(vehicle, coordinator)
@@ -43,7 +41,7 @@ async def async_setup_entry(
 
 
 class SubaruDeviceTracker(
-    CoordinatorEntity[DataUpdateCoordinator[dict[str, Any]]], TrackerEntity
+    CoordinatorEntity[SubaruDataUpdateCoordinator], TrackerEntity
 ):
     """Class for Subaru device tracker."""
 
@@ -51,7 +49,9 @@ class SubaruDeviceTracker(
     _attr_has_entity_name = True
     _attr_name = None
 
-    def __init__(self, vehicle_info: dict, coordinator: DataUpdateCoordinator) -> None:
+    def __init__(
+        self, vehicle_info: dict, coordinator: SubaruDataUpdateCoordinator
+    ) -> None:
         """Initialize the device tracker."""
         super().__init__(coordinator)
         self.vin = vehicle_info[VEHICLE_VIN]

@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_binary_sensor_setup[binary_sensor.test_occupancy_occupancy-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -40,7 +41,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'occupancy',
       'friendly_name': 'Test Occupancy Occupancy',
-      'lutron_integration_id': 'occ_id',
+      'lutron_integration_id': 5,
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_occupancy_occupancy',

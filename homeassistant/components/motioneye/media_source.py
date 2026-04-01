@@ -22,7 +22,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
 
 from . import get_media_url, split_motioneye_device_identifier
-from .const import CONF_CLIENT, DOMAIN
+from .const import DOMAIN
 
 MIME_TYPE_MAP = {
     "movies": "video/mp4",
@@ -74,7 +74,7 @@ class MotionEyeMediaSource(MediaSource):
         self._verify_kind_or_raise(kind)
 
         url = get_media_url(
-            self.hass.data[DOMAIN][config.entry_id][CONF_CLIENT],
+            self.hass.data[DOMAIN][config.entry_id].client,
             self._get_camera_id_or_raise(config, device),
             self._get_path_or_raise(path),
             kind == "images",
@@ -276,7 +276,7 @@ class MotionEyeMediaSource(MediaSource):
 
         base.children = []
 
-        client = self.hass.data[DOMAIN][config.entry_id][CONF_CLIENT]
+        client = self.hass.data[DOMAIN][config.entry_id].client
         camera_id = self._get_camera_id_or_raise(config, device)
 
         if kind == "movies":

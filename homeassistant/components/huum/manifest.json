@@ -6,5 +6,6 @@
   "documentation": "https://www.home-assistant.io/integrations/huum",
   "integration_type": "device",
   "iot_class": "cloud_polling",
-  "requirements": ["huum==0.8.1"]
+  "quality_scale": "bronze",
+  "requirements": ["huum==0.8.2"]
 }

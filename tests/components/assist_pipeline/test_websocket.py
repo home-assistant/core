@@ -2531,7 +2531,7 @@ async def test_pipeline_list_devices(
     assert msg["result"] == [
         {
             "device_id": assist_device.id,
-            "pipeline_entity": "select.test_assist_device_test_prefix_pipeline",
+            "pipeline_entity": "select.test_device",
         }
     ]
 

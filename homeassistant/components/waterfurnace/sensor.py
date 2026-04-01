@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from homeassistant.components.sensor import (
-    ENTITY_ID_FORMAT,
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
@@ -19,7 +18,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
-from homeassistant.util import slugify
 
 from . import DOMAIN, WaterFurnaceConfigEntry
 from .coordinator import WaterFurnaceCoordinator
@@ -157,10 +155,10 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Waterfurnace sensors from a config entry."""
-    coordinator = config_entry.runtime_data
-
     async_add_entities(
-        WaterFurnaceSensor(coordinator, description) for description in SENSORS
+        WaterFurnaceSensor(coordinator, description)
+        for coordinator in config_entry.runtime_data.values()
+        for description in SENSORS
     )
 
 
@@ -178,10 +176,6 @@ class WaterFurnaceSensor(CoordinatorEntity[WaterFurnaceCoordinator], SensorEntit
         super().__init__(coordinator)
         self.entity_description = description
 
-        # This ensures that the sensors are isolated per waterfurnace unit
-        self.entity_id = ENTITY_ID_FORMAT.format(
-            f"wf_{slugify(coordinator.unit)}_{slugify(description.key)}"
-        )
         self._attr_unique_id = f"{coordinator.unit}_{description.key}"
 
         device_info = DeviceInfo(

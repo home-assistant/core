@@ -23,8 +23,8 @@
   },
   "services": {
     "press": {
-      "description": "Presses a button entity.",
-      "name": "Press"
+      "description": "Presses a button.",
+      "name": "Press button"
     }
   },
   "title": "Button",

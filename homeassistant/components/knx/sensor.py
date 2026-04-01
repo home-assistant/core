@@ -202,34 +202,37 @@ class KnxYamlSensor(_KnxSensor, KnxYamlEntity):
 
     def __init__(self, knx_module: KNXModule, config: ConfigType) -> None:
         """Initialize of a KNX sensor."""
+        self._device = XknxSensor(
+            knx_module.xknx,
+            name=config[CONF_NAME],
+            group_address_state=config[SensorSchema.CONF_STATE_ADDRESS],
+            sync_state=config[CONF_SYNC_STATE],
+            always_callback=True,
+            value_type=config[CONF_TYPE],
+        )
         super().__init__(
             knx_module=knx_module,
-            device=XknxSensor(
-                knx_module.xknx,
-                name=config[CONF_NAME],
-                group_address_state=config[SensorSchema.CONF_STATE_ADDRESS],
-                sync_state=config[CONF_SYNC_STATE],
-                always_callback=True,
-                value_type=config[CONF_TYPE],
-            ),
+            unique_id=str(self._device.sensor_value.group_address_state),
+            name=config[CONF_NAME],
+            entity_category=config.get(CONF_ENTITY_CATEGORY),
         )
         dpt_string = self._device.sensor_value.dpt_class.dpt_number_str()
         dpt_info = get_supported_dpts()[dpt_string]
 
-        if device_class := config.get(CONF_DEVICE_CLASS):
-            self._attr_device_class = device_class
-        else:
-            self._attr_device_class = dpt_info["sensor_device_class"]
-
-        self._attr_state_class = (
-            config.get(CONF_STATE_CLASS) or dpt_info["sensor_state_class"]
+        self._attr_device_class = config.get(
+            CONF_DEVICE_CLASS,
+            dpt_info["sensor_device_class"],
         )
-
-        self._attr_native_unit_of_measurement = dpt_info["unit"]
-        self._attr_force_update = config[SensorSchema.CONF_ALWAYS_CALLBACK]
-        self._attr_entity_category = config.get(CONF_ENTITY_CATEGORY)
-        self._attr_unique_id = str(self._device.sensor_value.group_address_state)
         self._attr_extra_state_attributes = {}
+        self._attr_force_update = config[SensorSchema.CONF_ALWAYS_CALLBACK]
+        self._attr_native_unit_of_measurement = config.get(
+            CONF_UNIT_OF_MEASUREMENT,
+            dpt_info["unit"],
+        )
+        self._attr_state_class = config.get(
+            CONF_STATE_CLASS,
+            dpt_info["sensor_state_class"],
+        )
 
 
 class KnxUiSensor(_KnxSensor, KnxUiEntity):

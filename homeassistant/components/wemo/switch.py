@@ -119,12 +119,10 @@ class WemoSwitch(WemoBinaryStateEntity, SwitchEntity):
             return "mdi:coffee"
         return None
 
-    def turn_on(self, **kwargs: Any) -> None:
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
-        with self._wemo_call_wrapper("turn on"):
-            self.wemo.on()
+        await self._async_wemo_call("turn on", self.wemo.on)
 
-    def turn_off(self, **kwargs: Any) -> None:
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
-        with self._wemo_call_wrapper("turn off"):
-            self.wemo.off()
+        await self._async_wemo_call("turn off", self.wemo.off)

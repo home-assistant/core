@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_switch_setup[switch.test_keypad_test_button-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -53,8 +54,9 @@
 # ---
 # name: test_switch_setup[switch.test_switch-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -91,7 +93,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Test Switch',
-      'lutron_integration_id': 'switch_id',
+      'lutron_integration_id': 2,
     }),
     'context': <ANY>,
     'entity_id': 'switch.test_switch',

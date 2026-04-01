@@ -199,12 +199,12 @@ class NexiaZone(NexiaThermostatZoneEntity, ClimateEntity):
         return self._thermostat.is_blower_active()
 
     @property
-    def current_temperature(self):
+    def current_temperature(self) -> int:
         """Return the current temperature."""
         return self._zone.get_temperature()
 
     @property
-    def fan_mode(self):
+    def fan_mode(self) -> str | None:
         """Return the fan setting."""
         return self._thermostat.get_fan_mode()
 
@@ -275,14 +275,14 @@ class NexiaZone(NexiaThermostatZoneEntity, ClimateEntity):
         return None
 
     @property
-    def current_humidity(self):
+    def current_humidity(self) -> float | None:
         """Humidity indoors."""
         if self._has_relative_humidity:
             return percent_conv(self._thermostat.get_relative_humidity())
         return None
 
     @property
-    def target_temperature(self):
+    def target_temperature(self) -> int | None:
         """Temperature we try to reach."""
         current_mode = self._zone.get_current_mode()
 
@@ -293,7 +293,7 @@ class NexiaZone(NexiaThermostatZoneEntity, ClimateEntity):
         return None
 
     @property
-    def target_temperature_high(self):
+    def target_temperature_high(self) -> int | None:
         """Highest temperature we are trying to reach."""
         current_mode = self._zone.get_current_mode()
 
@@ -302,7 +302,7 @@ class NexiaZone(NexiaThermostatZoneEntity, ClimateEntity):
         return self._zone.get_cooling_setpoint()
 
     @property
-    def target_temperature_low(self):
+    def target_temperature_low(self) -> int | None:
         """Lowest temperature we are trying to reach."""
         current_mode = self._zone.get_current_mode()
 

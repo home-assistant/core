@@ -25,7 +25,6 @@ CONF_ADDON_S2_UNAUTHENTICATED_KEY = "s2_unauthenticated_key"
 CONF_ADDON_LR_S2_ACCESS_CONTROL_KEY = "lr_s2_access_control_key"
 CONF_ADDON_LR_S2_AUTHENTICATED_KEY = "lr_s2_authenticated_key"
 CONF_ADDON_SOCKET = "socket"
-CONF_INSTALLER_MODE = "installer_mode"
 CONF_INTEGRATION_CREATED_ADDON = "integration_created_addon"
 CONF_KEEP_OLD_DEVICES = "keep_old_devices"
 CONF_NETWORK_KEY = "network_key"
@@ -46,6 +45,7 @@ EVENT_DEVICE_ADDED_TO_REGISTRY = f"{DOMAIN}_device_added_to_registry"
 EVENT_VALUE_ADDED = "value added"
 EVENT_VALUE_REMOVED = "value removed"
 EVENT_VALUE_UPDATED = "value updated"
+EVENT_METADATA_UPDATED = "metadata updated"
 
 LOGGER = logging.getLogger(__package__)
 LIB_LOGGER = logging.getLogger("zwave_js_server")
@@ -143,7 +143,6 @@ ATTR_TWIST_ASSIST = "twist_assist"
 ADDON_SLUG = "core_zwave_js"
 
 # Sensor entity description constants
-ENTITY_DESC_KEY_BATTERY_LEVEL = "battery_level"
 ENTITY_DESC_KEY_BATTERY_LIST_STATE = "battery_list_state"
 ENTITY_DESC_KEY_BATTERY_MAXIMUM_CAPACITY = "battery_maximum_capacity"
 ENTITY_DESC_KEY_BATTERY_TEMPERATURE = "battery_temperature"
@@ -159,13 +158,11 @@ ENTITY_DESC_KEY_HUMIDITY = "humidity"
 ENTITY_DESC_KEY_ILLUMINANCE = "illuminance"
 ENTITY_DESC_KEY_PRESSURE = "pressure"
 ENTITY_DESC_KEY_SIGNAL_STRENGTH = "signal_strength"
-ENTITY_DESC_KEY_TEMPERATURE = "temperature"
 ENTITY_DESC_KEY_TARGET_TEMPERATURE = "target_temperature"
 ENTITY_DESC_KEY_UV_INDEX = "uv_index"
 ENTITY_DESC_KEY_MEASUREMENT = "measurement"
 ENTITY_DESC_KEY_TOTAL_INCREASING = "total_increasing"
 
-ENTITY_DESC_KEY_ENERGY_PRODUCTION_POWER = "energy_production_power"
 ENTITY_DESC_KEY_ENERGY_PRODUCTION_TIME = "energy_production_time"
 ENTITY_DESC_KEY_ENERGY_PRODUCTION_TOTAL = "energy_production_total"
 ENTITY_DESC_KEY_ENERGY_PRODUCTION_TODAY = "energy_production_today"
@@ -207,3 +204,7 @@ COVER_TILT_PROPERTY_KEYS: set[str | int | None] = {
     WindowCoveringPropertyKey.VERTICAL_SLATS_ANGLE,
     WindowCoveringPropertyKey.VERTICAL_SLATS_ANGLE_NO_POSITION,
 }
+
+# notification
+NOTIFICATION_ACCESS_CONTROL_PROPERTY = "Access Control"
+OPENING_STATE_PROPERTY_KEY = "Opening state"

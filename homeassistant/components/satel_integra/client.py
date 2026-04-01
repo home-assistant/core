@@ -2,11 +2,11 @@
 
 from collections.abc import Callable
 
-from satel_integra.satel_integra import AsyncSatel
+from satel_integra import AsyncSatel
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_PORT, EVENT_HOMEASSISTANT_STOP
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.const import CONF_HOST, CONF_PORT
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 
 from .const import (
@@ -61,18 +61,12 @@ class SatelClient:
 
         monitored_outputs = outputs + switchable_outputs
 
-        self.controller = AsyncSatel(
-            host, port, hass.loop, zones, monitored_outputs, partitions
-        )
-
-        entry.async_on_unload(
-            hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self.close)
-        )
+        self.controller = AsyncSatel(host, port, zones, monitored_outputs, partitions)
 
     async def async_connect(
         self,
-        zones_update_callback: Callable[[dict[str, dict[int, int]]], None],
-        outputs_update_callback: Callable[[dict[str, dict[int, int]]], None],
+        zones_update_callback: Callable[[dict[int, int]], None],
+        outputs_update_callback: Callable[[dict[int, int]], None],
         partitions_update_callback: Callable[[], None],
     ) -> None:
         """Start controller connection."""
@@ -80,26 +74,15 @@ class SatelClient:
         if not result:
             raise ConfigEntryNotReady("Controller failed to connect")
 
-        self.config_entry.async_create_background_task(
-            self.hass,
-            self.controller.keep_alive(),
-            f"satel_integra.{self.config_entry.entry_id}.keep_alive",
-            eager_start=False,
+        self.controller.register_callbacks(
+            alarm_status_callback=partitions_update_callback,
+            zone_changed_callback=zones_update_callback,
+            output_changed_callback=outputs_update_callback,
         )
 
-        self.config_entry.async_create_background_task(
-            self.hass,
-            self.controller.monitor_status(
-                partitions_update_callback,
-                zones_update_callback,
-                outputs_update_callback,
-            ),
-            f"satel_integra.{self.config_entry.entry_id}.monitor_status",
-            eager_start=False,
-        )
+        await self.controller.start(enable_monitoring=True)
 
-    @callback
-    def close(self, *args, **kwargs) -> None:
+    async def async_close(self) -> None:
         """Close the connection."""
 
-        self.controller.close()
+        await self.controller.close()

@@ -107,6 +107,7 @@ async def test_source_select(hass: HomeAssistant) -> None:
         {ATTR_ENTITY_ID: entity_id, ATTR_INPUT_SOURCE: "xbox"},
         blocking=True,
     )
+    await hass.async_block_till_done()
     state = hass.states.get(entity_id)
     assert state.attributes.get(ATTR_INPUT_SOURCE) == "xbox"
 
@@ -128,6 +129,7 @@ async def test_repeat_set(hass: HomeAssistant) -> None:
         {ATTR_ENTITY_ID: entity_id, ATTR_MEDIA_REPEAT: RepeatMode.ALL},
         blocking=True,
     )
+    await hass.async_block_till_done()
     state = hass.states.get(entity_id)
     assert state.attributes.get(ATTR_MEDIA_REPEAT) == RepeatMode.ALL
 
@@ -148,6 +150,7 @@ async def test_clear_playlist(hass: HomeAssistant) -> None:
         {ATTR_ENTITY_ID: TEST_ENTITY_ID},
         blocking=True,
     )
+    await hass.async_block_till_done()
     state = hass.states.get(TEST_ENTITY_ID)
     assert state.state == STATE_OFF
 
@@ -179,6 +182,7 @@ async def test_volume_services(hass: HomeAssistant) -> None:
         {ATTR_ENTITY_ID: TEST_ENTITY_ID, ATTR_MEDIA_VOLUME_LEVEL: 0.5},
         blocking=True,
     )
+    await hass.async_block_till_done()
     state = hass.states.get(TEST_ENTITY_ID)
     assert state.attributes.get(ATTR_MEDIA_VOLUME_LEVEL) == 0.5
 
@@ -188,6 +192,7 @@ async def test_volume_services(hass: HomeAssistant) -> None:
         {ATTR_ENTITY_ID: TEST_ENTITY_ID},
         blocking=True,
     )
+    await hass.async_block_till_done()
     state = hass.states.get(TEST_ENTITY_ID)
     assert state.attributes.get(ATTR_MEDIA_VOLUME_LEVEL) == 0.4
 
@@ -197,6 +202,7 @@ async def test_volume_services(hass: HomeAssistant) -> None:
         {ATTR_ENTITY_ID: TEST_ENTITY_ID},
         blocking=True,
     )
+    await hass.async_block_till_done()
     state = hass.states.get(TEST_ENTITY_ID)
     assert state.attributes.get(ATTR_MEDIA_VOLUME_LEVEL) == 0.5
 
@@ -219,6 +225,7 @@ async def test_volume_services(hass: HomeAssistant) -> None:
         {ATTR_ENTITY_ID: TEST_ENTITY_ID, ATTR_MEDIA_VOLUME_MUTED: True},
         blocking=True,
     )
+    await hass.async_block_till_done()
 
     state = hass.states.get(TEST_ENTITY_ID)
     assert state.attributes.get(ATTR_MEDIA_VOLUME_MUTED) is True
@@ -240,6 +247,7 @@ async def test_turning_off_and_on(hass: HomeAssistant) -> None:
         {ATTR_ENTITY_ID: TEST_ENTITY_ID},
         blocking=True,
     )
+    await hass.async_block_till_done()
     state = hass.states.get(TEST_ENTITY_ID)
     assert state.state == STATE_OFF
     assert not is_on(hass, TEST_ENTITY_ID)
@@ -250,6 +258,7 @@ async def test_turning_off_and_on(hass: HomeAssistant) -> None:
         {ATTR_ENTITY_ID: TEST_ENTITY_ID},
         blocking=True,
     )
+    await hass.async_block_till_done()
     state = hass.states.get(TEST_ENTITY_ID)
     assert state.state == STATE_PLAYING
     assert is_on(hass, TEST_ENTITY_ID)
@@ -260,6 +269,7 @@ async def test_turning_off_and_on(hass: HomeAssistant) -> None:
         {ATTR_ENTITY_ID: TEST_ENTITY_ID},
         blocking=True,
     )
+    await hass.async_block_till_done()
     state = hass.states.get(TEST_ENTITY_ID)
     assert state.state == STATE_OFF
     assert not is_on(hass, TEST_ENTITY_ID)
@@ -281,6 +291,7 @@ async def test_playing_pausing(hass: HomeAssistant) -> None:
         {ATTR_ENTITY_ID: TEST_ENTITY_ID},
         blocking=True,
     )
+    await hass.async_block_till_done()
     state = hass.states.get(TEST_ENTITY_ID)
     assert state.state == STATE_PAUSED
 
@@ -290,6 +301,7 @@ async def test_playing_pausing(hass: HomeAssistant) -> None:
         {ATTR_ENTITY_ID: TEST_ENTITY_ID},
         blocking=True,
     )
+    await hass.async_block_till_done()
     state = hass.states.get(TEST_ENTITY_ID)
     assert state.state == STATE_PLAYING
 
@@ -299,6 +311,7 @@ async def test_playing_pausing(hass: HomeAssistant) -> None:
         {ATTR_ENTITY_ID: TEST_ENTITY_ID},
         blocking=True,
     )
+    await hass.async_block_till_done()
     state = hass.states.get(TEST_ENTITY_ID)
     assert state.state == STATE_PAUSED
 
@@ -308,6 +321,7 @@ async def test_playing_pausing(hass: HomeAssistant) -> None:
         {ATTR_ENTITY_ID: TEST_ENTITY_ID},
         blocking=True,
     )
+    await hass.async_block_till_done()
     state = hass.states.get(TEST_ENTITY_ID)
     assert state.state == STATE_PLAYING
 
@@ -328,6 +342,7 @@ async def test_prev_next_track(hass: HomeAssistant) -> None:
         {ATTR_ENTITY_ID: TEST_ENTITY_ID},
         blocking=True,
     )
+    await hass.async_block_till_done()
     state = hass.states.get(TEST_ENTITY_ID)
     assert state.attributes.get(ATTR_MEDIA_TRACK) == 2
 
@@ -337,6 +352,7 @@ async def test_prev_next_track(hass: HomeAssistant) -> None:
         {ATTR_ENTITY_ID: TEST_ENTITY_ID},
         blocking=True,
     )
+    await hass.async_block_till_done()
     state = hass.states.get(TEST_ENTITY_ID)
     assert state.attributes.get(ATTR_MEDIA_TRACK) == 3
 
@@ -346,6 +362,7 @@ async def test_prev_next_track(hass: HomeAssistant) -> None:
         {ATTR_ENTITY_ID: TEST_ENTITY_ID},
         blocking=True,
     )
+    await hass.async_block_till_done()
     state = hass.states.get(TEST_ENTITY_ID)
     assert state.attributes.get(ATTR_MEDIA_TRACK) == 2
 
@@ -364,6 +381,7 @@ async def test_prev_next_track(hass: HomeAssistant) -> None:
         {ATTR_ENTITY_ID: ent_id},
         blocking=True,
     )
+    await hass.async_block_till_done()
     state = hass.states.get(ent_id)
     assert state.attributes.get(ATTR_MEDIA_EPISODE) == "2"
 
@@ -373,6 +391,7 @@ async def test_prev_next_track(hass: HomeAssistant) -> None:
         {ATTR_ENTITY_ID: ent_id},
         blocking=True,
     )
+    await hass.async_block_till_done()
     state = hass.states.get(ent_id)
     assert state.attributes.get(ATTR_MEDIA_EPISODE) == "1"
 
@@ -418,6 +437,7 @@ async def test_play_media(hass: HomeAssistant) -> None:
         },
         blocking=True,
     )
+    await hass.async_block_till_done()
     state = hass.states.get(ent_id)
     assert (
         MediaPlayerEntityFeature.PLAY_MEDIA
@@ -479,6 +499,7 @@ async def test_stop(hass: HomeAssistant) -> None:
         {ATTR_ENTITY_ID: TEST_ENTITY_ID},
         blocking=True,
     )
+    await hass.async_block_till_done()
     state = hass.states.get(TEST_ENTITY_ID)
     assert state.state == STATE_OFF
 
@@ -552,6 +573,7 @@ async def test_grouping(hass: HomeAssistant) -> None:
         },
         blocking=True,
     )
+    await hass.async_block_till_done()
     state = hass.states.get(walkman)
     assert state.attributes.get(ATTR_GROUP_MEMBERS) == [walkman, kitchen]
 
@@ -561,6 +583,7 @@ async def test_grouping(hass: HomeAssistant) -> None:
         {ATTR_ENTITY_ID: walkman},
         blocking=True,
     )
+    await hass.async_block_till_done()
     state = hass.states.get(walkman)
     assert state.attributes.get(ATTR_GROUP_MEMBERS) == []
 

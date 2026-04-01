@@ -1,0 +1,83 @@
+.trigger_common_fields:
+  behavior: &trigger_behavior
+    required: true
+    default: any
+    selector:
+      select:
+        translation_key: trigger_behavior
+        options:
+          - first
+          - last
+          - any
+
+.battery_threshold_entity: &battery_threshold_entity
+  - domain: input_number
+    unit_of_measurement: "%"
+  - domain: number
+    device_class: battery
+  - domain: sensor
+    device_class: battery
+
+.battery_threshold_number: &battery_threshold_number
+  min: 0
+  max: 100
+  mode: box
+  unit_of_measurement: "%"
+
+.trigger_target_battery: &trigger_target_battery
+  entity:
+    - domain: binary_sensor
+      device_class: battery
+
+.trigger_target_charging: &trigger_target_charging
+  entity:
+    - domain: binary_sensor
+      device_class: battery_charging
+
+.trigger_target_percentage: &trigger_target_percentage
+  entity:
+    - domain: sensor
+      device_class: battery
+
+low:
+  fields:
+    behavior: *trigger_behavior
+  target: *trigger_target_battery
+
+not_low:
+  fields:
+    behavior: *trigger_behavior
+  target: *trigger_target_battery
+
+started_charging:
+  fields:
+    behavior: *trigger_behavior
+  target: *trigger_target_charging
+
+stopped_charging:
+  fields:
+    behavior: *trigger_behavior
+  target: *trigger_target_charging
+
+level_changed:
+  target: *trigger_target_percentage
+  fields:
+    threshold:
+      required: true
+      selector:
+        numeric_threshold:
+          entity: *battery_threshold_entity
+          mode: changed
+          number: *battery_threshold_number
+
+level_crossed_threshold:
+  target: *trigger_target_percentage
+  fields:
+    behavior: *trigger_behavior
+    threshold:
+      required: true
+      selector:
+        numeric_threshold:
+          entity: *battery_threshold_entity
+          mode: crossed
+          number: *battery_threshold_number

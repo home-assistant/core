@@ -1,0 +1,105 @@
+# serializer version: 1
+# name: test_image_entities[image.back_door_thumbnail-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'image',
+    'entity_category': None,
+    'entity_id': 'image.back_door_thumbnail',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Thumbnail',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Thumbnail',
+    'platform': 'unifi_access',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'door_thumbnail',
+    'unique_id': 'door-002-thumbnail',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_image_entities[image.back_door_thumbnail-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'access_token': '1',
+      'entity_picture': '/api/image_proxy/image.back_door_thumbnail?token=1',
+      'friendly_name': 'Back Door Thumbnail',
+    }),
+    'context': <ANY>,
+    'entity_id': 'image.back_door_thumbnail',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_image_entities[image.front_door_thumbnail-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'image',
+    'entity_category': None,
+    'entity_id': 'image.front_door_thumbnail',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Thumbnail',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Thumbnail',
+    'platform': 'unifi_access',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'door_thumbnail',
+    'unique_id': 'door-001-thumbnail',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_image_entities[image.front_door_thumbnail-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'access_token': '1',
+      'entity_picture': '/api/image_proxy/image.front_door_thumbnail?token=1',
+      'friendly_name': 'Front Door Thumbnail',
+    }),
+    'context': <ANY>,
+    'entity_id': 'image.front_door_thumbnail',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2023-11-14T22:13:20+00:00',
+  })
+# ---

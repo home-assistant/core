@@ -6,36 +6,32 @@ import logging
 from typing import Any
 
 from homeassistant.components.sensor import SensorEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_LATITUDE, ATTR_LONGITUDE, CONF_SHOW_ON_MAP
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-    DataUpdateCoordinator,
-)
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import IssData
 from .const import DEFAULT_NAME, DOMAIN
+from .coordinator import IssConfigEntry, IssDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: IssConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the sensor platform."""
-    coordinator: DataUpdateCoordinator[IssData] = hass.data[DOMAIN]
+    coordinator = entry.runtime_data
 
     show_on_map = entry.options.get(CONF_SHOW_ON_MAP, False)
 
     async_add_entities([IssSensor(coordinator, entry, show_on_map)])
 
 
-class IssSensor(CoordinatorEntity[DataUpdateCoordinator[IssData]], SensorEntity):
+class IssSensor(CoordinatorEntity[IssDataUpdateCoordinator], SensorEntity):
     """Implementation of the ISS sensor."""
 
     _attr_has_entity_name = True
@@ -43,8 +39,8 @@ class IssSensor(CoordinatorEntity[DataUpdateCoordinator[IssData]], SensorEntity)
 
     def __init__(
         self,
-        coordinator: DataUpdateCoordinator[IssData],
-        entry: ConfigEntry,
+        coordinator: IssDataUpdateCoordinator,
+        entry: IssConfigEntry,
         show: bool,
     ) -> None:
         """Initialize the sensor."""

@@ -589,6 +589,15 @@ def nabu_casa_zwa2_legacy_state_fixture() -> NodeDataType:
     )
 
 
+@pytest.fixture(name="hoppe_ehandle_connectsense_state")
+def hoppe_ehandle_connectsense_state_fixture() -> NodeDataType:
+    """Load node state fixture data for Hoppe eHandle ConnectSense."""
+    return cast(
+        NodeDataType,
+        load_json_object_fixture("hoppe_ehandle_connectsense_state.json", DOMAIN),
+    )
+
+
 # model fixtures
 
 
@@ -1471,5 +1480,15 @@ def nabu_casa_zwa2_legacy_fixture(
 ) -> Node:
     """Load node for Nabu Casa ZWA-2 (legacy firmware)."""
     node = Node(client, nabu_casa_zwa2_legacy_state)
+    client.driver.controller.nodes[node.node_id] = node
+    return node
+
+
+@pytest.fixture(name="hoppe_ehandle_connectsense")
+def hoppe_ehandle_connectsense_fixture(
+    client: MagicMock, hoppe_ehandle_connectsense_state: NodeDataType
+) -> Node:
+    """Load node for Hoppe eHandle ConnectSense."""
+    node = Node(client, hoppe_ehandle_connectsense_state)
     client.driver.controller.nodes[node.node_id] = node
     return node

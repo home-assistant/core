@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_lights[color_temperature_light][light.mock_color_temperature_light-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max_color_temp_kelvin': 6535,
@@ -78,8 +79,9 @@
 # ---
 # name: test_lights[extended_color_light][light.mock_extended_color_light-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max_color_temp_kelvin': 6535,
@@ -159,8 +161,9 @@
 # ---
 # name: test_lights[inovelli_vtm30][light.white_series_onoff_switch_light_rgb_indicator-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max_color_temp_kelvin': 1000000,
@@ -230,8 +233,9 @@
 # ---
 # name: test_lights[inovelli_vtm31][light.inovelli_light_1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'supported_color_modes': list([
@@ -289,8 +293,9 @@
 # ---
 # name: test_lights[inovelli_vtm31][light.inovelli_light_6-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max_color_temp_kelvin': 6535,
@@ -360,8 +365,9 @@
 # ---
 # name: test_lights[mock_dimmable_light][light.mock_dimmable_light-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'supported_color_modes': list([
@@ -419,8 +425,9 @@
 # ---
 # name: test_lights[mock_dimmable_plugin_unit][light.dimmable_plugin_unit-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'supported_color_modes': list([
@@ -478,8 +485,9 @@
 # ---
 # name: test_lights[mock_mounted_dimmable_load_control_fixture][light.mock_mounted_dimmable_load_control-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'supported_color_modes': list([
@@ -535,8 +543,9 @@
 # ---
 # name: test_lights[mock_onoff_light][light.mock_onoff_light-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'supported_color_modes': list([
@@ -593,8 +602,9 @@
 # ---
 # name: test_lights[mock_onoff_light_alt_name][light.mock_onoff_light_2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max_color_temp_kelvin': 6535,
@@ -664,8 +674,9 @@
 # ---
 # name: test_lights[mock_onoff_light_no_name][light.mock_light-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max_color_temp_kelvin': 6535,
@@ -735,8 +746,9 @@
 # ---
 # name: test_lights[onoff_light_with_levelcontrol_present][light.d215s-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'supported_color_modes': list([

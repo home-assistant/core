@@ -116,6 +116,7 @@ class AbstractTemplateSelect(AbstractTemplateEntity, SelectEntity):
 
     _entity_id_format = ENTITY_ID_FORMAT
     _optimistic_entity = True
+    _state_option = CONF_STATE
 
     # The super init is not called because TemplateEntity and TriggerEntity will call AbstractTemplateEntity.__init__.
     # This ensures that the __init__ on AbstractTemplateEntity is not called twice.
@@ -124,7 +125,6 @@ class AbstractTemplateSelect(AbstractTemplateEntity, SelectEntity):
         self._attr_options = []
 
         self.setup_state_template(
-            CONF_STATE,
             "_attr_current_option",
             cv.string,
         )

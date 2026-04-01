@@ -402,7 +402,7 @@ def gen_strings_schema(config: Config, integration: Integration) -> vol.Schema:
                         cv.schema_with_slug_keys(
                             {
                                 vol.Required("name"): str,
-                                vol.Required(
+                                vol.Optional(
                                     "description"
                                 ): translation_value_validator,
                             },
@@ -508,7 +508,7 @@ def gen_strings_schema(config: Config, integration: Integration) -> vol.Schema:
                     vol.Optional("fields"): cv.schema_with_slug_keys(
                         {
                             vol.Required("name"): str,
-                            vol.Required("description"): translation_value_validator,
+                            vol.Optional("description"): translation_value_validator,
                             vol.Optional("example"): translation_value_validator,
                         },
                         slug_validator=translation_key_validator,
@@ -530,7 +530,7 @@ def gen_strings_schema(config: Config, integration: Integration) -> vol.Schema:
                     vol.Optional("fields"): cv.schema_with_slug_keys(
                         {
                             vol.Required("name"): str,
-                            vol.Required("description"): translation_value_validator,
+                            vol.Optional("description"): translation_value_validator,
                             vol.Optional("example"): translation_value_validator,
                         },
                         slug_validator=translation_key_validator,
@@ -545,7 +545,7 @@ def gen_strings_schema(config: Config, integration: Integration) -> vol.Schema:
                     vol.Optional("fields"): cv.schema_with_slug_keys(
                         {
                             vol.Required("name"): str,
-                            vol.Required("description"): translation_value_validator,
+                            vol.Optional("description"): translation_value_validator,
                             vol.Optional("example"): translation_value_validator,
                         },
                         slug_validator=translation_key_validator,

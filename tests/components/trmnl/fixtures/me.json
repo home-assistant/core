@@ -1,0 +1,14 @@
+{
+  "data": {
+    "id": 30561,
+    "name": "Test",
+    "email": "test@outlook.com",
+    "first_name": "test",
+    "last_name": "test",
+    "locale": "en",
+    "time_zone": "Amsterdam",
+    "time_zone_iana": "Europe/Amsterdam",
+    "utc_offset": 3600,
+    "api_key": "user_aaaaaaaaaa"
+  }
+}

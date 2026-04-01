@@ -1,7 +1,5 @@
 """Constants for the Home Connect integration."""
 
-from typing import cast
-
 from aiohomeconnect.model import EventKey, OptionKey, ProgramKey, SettingKey, StatusKey
 
 from homeassistant.const import UnitOfTemperature, UnitOfTime, UnitOfVolume
@@ -65,6 +63,7 @@ BSH_DOOR_STATE_OPEN = "BSH.Common.EnumType.DoorState.Open"
 
 SERVICE_SET_PROGRAM_AND_OPTIONS = "set_program_and_options"
 SERVICE_SETTING = "change_setting"
+SERVICE_START_SELECTED_PROGRAM = "start_selected_program"
 
 ATTR_AFFECTS_TO = "affects_to"
 ATTR_KEY = "key"
@@ -76,9 +75,9 @@ AFFECTS_TO_SELECTED_PROGRAM = "selected_program"
 
 
 TRANSLATION_KEYS_PROGRAMS_MAP = {
-    bsh_key_to_translation_key(program.value): cast(ProgramKey, program)
+    bsh_key_to_translation_key(program.value): program
     for program in ProgramKey
-    if program != ProgramKey.UNKNOWN
+    if program not in (ProgramKey.UNKNOWN, ProgramKey.BSH_COMMON_FAVORITE_001)
 }
 
 PROGRAMS_TRANSLATION_KEYS_MAP = {

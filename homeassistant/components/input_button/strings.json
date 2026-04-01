@@ -15,12 +15,12 @@
   },
   "services": {
     "press": {
-      "description": "Mimics a physical button press on a device.",
-      "name": "Press"
+      "description": "Presses an input button.",
+      "name": "Press input button"
     },
     "reload": {
       "description": "Reloads helpers from the YAML-configuration.",
-      "name": "[%key:common::action::reload%]"
+      "name": "Reload input buttons"
     }
   },
   "title": "Input button"

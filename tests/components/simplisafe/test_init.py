@@ -12,7 +12,8 @@ from simplipy.errors import (
 )
 from simplipy.websocket import WebsocketEvent
 
-from homeassistant.components.simplisafe import DEFAULT_SCAN_INTERVAL, DOMAIN
+from homeassistant.components.simplisafe import DOMAIN
+from homeassistant.components.simplisafe.coordinator import DEFAULT_SCAN_INTERVAL
 from homeassistant.config_entries import SOURCE_REAUTH
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
