@@ -116,7 +116,7 @@ class PicoTTSEntity(TextToSpeechEntity):
 class PicoProvider(Provider):
     """The Pico TTS API provider."""
 
-    def __init__(self, lang) -> None:
+    def __init__(self, lang: str) -> None:
         """Initialize Pico TTS provider."""
         self._lang = lang
         self.name = "PicoTTS"
