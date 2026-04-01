@@ -2699,7 +2699,7 @@ uiprotect==10.2.3
 ultraheat-api==0.5.7
 
 # homeassistant.components.unifiprotect
-unifi-discovery==1.2.0
+unifi-discovery==1.3.0
 
 # homeassistant.components.homeassistant_hardware
 universal-silabs-flasher==1.0.3
