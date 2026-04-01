@@ -20,12 +20,12 @@ from tests.common import MockConfigEntry
 
 
 @pytest.mark.parametrize(
-    ("ap_status_fixture", "ap_firmware_fixture"),
+    ("ap_status_fixture", "ap_firmware_fixture", "entity_id"),
     [
-        ("airos_loco5ac_ap-ptp.json", True),
-        ("airos_liteapgps_ap_ptmp_40mhz.json", True),
+        ("airos_loco5ac_ap-ptp.json", True, "update.nanostation_5ac_ap_name_firmware"),
+        ("airos_liteapgps_ap_ptmp_40mhz.json", True, "update.house_bridge_firmware"),
     ],
-    indirect=True,
+    indirect=["ap_status_fixture", "ap_firmware_fixture"],
 )
 async def test_update_entity(
     hass: HomeAssistant,
@@ -33,6 +33,7 @@ async def test_update_entity(
     entity_registry: er.EntityRegistry,
     mock_airos_client: AsyncMock,
     mock_async_get_firmware_data: AsyncMock,
+    entity_id: str,
 ) -> None:
     """Test the firmware update entity behavior."""
     await setup_integration(hass, mock_config_entry, [Platform.UPDATE])
@@ -43,7 +44,7 @@ async def test_update_entity(
     update_entities = [e for e in entries if e.domain == "update"]
 
     assert len(update_entities) == 1
-    entity_id = update_entities[0].entity_id
+    assert update_entities[0].entity_id == entity_id
 
     state = hass.states.get(entity_id)
     assert state is not None
@@ -92,10 +93,20 @@ async def test_no_update_entity(
 
 
 @pytest.mark.parametrize(
-    ("ap_status_fixture", "ap_firmware_fixture", "exception"),
+    ("ap_status_fixture", "ap_firmware_fixture", "exception", "translation_key"),
     [
-        ("airos_loco5ac_ap-ptp.json", True, AirOSConnectionAuthenticationError),
-        ("airos_liteapgps_ap_ptmp_40mhz.json", True, AirOSDeviceConnectionError),
+        (
+            "airos_loco5ac_ap-ptp.json",
+            True,
+            AirOSConnectionAuthenticationError,
+            "update_connection_authentication_error",
+        ),
+        (
+            "airos_liteapgps_ap_ptmp_40mhz.json",
+            True,
+            AirOSDeviceConnectionError,
+            "update_error",
+        ),
     ],
     indirect=["ap_status_fixture", "ap_firmware_fixture"],
 )
@@ -106,6 +117,7 @@ async def test_update_failure(
     mock_airos_client: AsyncMock,
     mock_async_get_firmware_data: AsyncMock,
     exception: AirOSException,
+    translation_key: str,
 ) -> None:
     """Test the firmware update entity behavior."""
     await setup_integration(hass, mock_config_entry, [Platform.UPDATE])
@@ -123,10 +135,12 @@ async def test_update_failure(
 
     mock_airos_client.download.side_effect = exception
 
-    with pytest.raises(HomeAssistantError):
+    with pytest.raises(HomeAssistantError) as exc:
         await hass.services.async_call(
             "update",
             "install",
             {"entity_id": entity_id},
             blocking=True,
         )
+
+    assert exc.value.translation_key == translation_key

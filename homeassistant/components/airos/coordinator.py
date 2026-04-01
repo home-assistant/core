@@ -77,9 +77,6 @@ async def async_fetch_airos_data(
 class AirOSDataUpdateCoordinator(DataUpdateCoordinator[AirOSDataDetect]):
     """Class to manage fetching AirOS status data from single endpoint."""
 
-    airos_device: AirOSDeviceDetect
-    config_entry: AirOSConfigEntry
-
     def __init__(
         self,
         hass: HomeAssistant,
@@ -105,9 +102,6 @@ class AirOSDataUpdateCoordinator(DataUpdateCoordinator[AirOSDataDetect]):
 
 class AirOSFirmwareUpdateCoordinator(DataUpdateCoordinator[AirOSUpdateData]):
     """Class to manage fetching AirOS firmware."""
-
-    airos_device: AirOSDeviceDetect
-    config_entry: AirOSConfigEntry
 
     def __init__(
         self,
