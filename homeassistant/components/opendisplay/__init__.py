@@ -17,6 +17,7 @@ from opendisplay import (
 
 from homeassistant.components.bluetooth import async_ble_device_from_address
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv, device_registry as dr
@@ -27,15 +28,20 @@ if TYPE_CHECKING:
     from opendisplay.models import FirmwareVersion
 
 from .const import DOMAIN
+from .coordinator import OpenDisplayCoordinator
 from .services import async_setup_services
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
+
+_BASE_PLATFORMS: list[Platform] = []
+_FLEX_PLATFORMS = [Platform.SENSOR]
 
 
 @dataclass
 class OpenDisplayRuntimeData:
     """Runtime data for an OpenDisplay config entry."""
 
+    coordinator: OpenDisplayCoordinator
     firmware: FirmwareVersion
     device_config: GlobalConfig
     is_flex: bool
@@ -77,13 +83,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: OpenDisplayConfigEntry) 
     if TYPE_CHECKING:
         assert device_config is not None
 
-    entry.runtime_data = OpenDisplayRuntimeData(
-        firmware=fw,
-        device_config=device_config,
-        is_flex=is_flex,
-    )
+    coordinator = OpenDisplayCoordinator(hass, address)
 
-    # Will be moved to DeviceInfo object in entity.py once entities are added
     manufacturer = device_config.manufacturer
     display = device_config.displays[0]
     color_scheme_enum = display.color_scheme_enum
@@ -97,20 +98,34 @@ async def async_setup_entry(hass: HomeAssistant, entry: OpenDisplayConfigEntry) 
         if display.screen_diagonal_inches is not None
         else f"{display.pixel_width}x{display.pixel_height}"
     )
-
     dr.async_get(hass).async_get_or_create(
         config_entry_id=entry.entry_id,
         connections={(CONNECTION_BLUETOOTH, address)},
         manufacturer=manufacturer.manufacturer_name,
         model=f"{size} {color_scheme}",
         sw_version=f"{fw['major']}.{fw['minor']}",
-        hw_version=f"{manufacturer.board_type_name or manufacturer.board_type} rev. {manufacturer.board_revision}"
+        hw_version=(
+            f"{manufacturer.board_type_name or manufacturer.board_type}"
+            f" rev. {manufacturer.board_revision}"
+        )
         if is_flex
         else None,
         configuration_url="https://opendisplay.org/firmware/config/"
         if is_flex
         else None,
     )
+
+    entry.runtime_data = OpenDisplayRuntimeData(
+        coordinator=coordinator,
+        firmware=fw,
+        device_config=device_config,
+        is_flex=is_flex,
+    )
+
+    await hass.config_entries.async_forward_entry_setups(
+        entry, _FLEX_PLATFORMS if is_flex else _BASE_PLATFORMS
+    )
+    entry.async_on_unload(coordinator.async_start())
 
     return True
 
@@ -124,4 +139,6 @@ async def async_unload_entry(
         with contextlib.suppress(asyncio.CancelledError):
             await task
 
-    return True
+    return await hass.config_entries.async_unload_platforms(
+        entry, _FLEX_PLATFORMS if entry.runtime_data.is_flex else _BASE_PLATFORMS
+    )

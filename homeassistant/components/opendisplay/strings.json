@@ -27,6 +27,13 @@
       }
     }
   },
+  "entity": {
+    "sensor": {
+      "battery_voltage": {
+        "name": "Battery voltage"
+      }
+    }
+  },
   "exceptions": {
     "device_not_found": {
       "message": "Could not find Bluetooth device with address `{address}`."
