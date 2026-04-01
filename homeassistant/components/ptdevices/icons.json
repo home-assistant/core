@@ -13,14 +13,8 @@
       "probe_temperature": {
         "default": "mdi:thermometer"
       },
-      "reported": {
-        "default": "mdi:calendar-clock"
-      },
       "status": {
         "default": "mdi:information-outline"
-      },
-      "tx_reported": {
-        "default": "mdi:calendar-clock"
       },
       "tx_signal": {
         "default": "mdi:wifi"
