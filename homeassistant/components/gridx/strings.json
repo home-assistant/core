@@ -1,201 +1,201 @@
 {
-    "config": {
-        "abort": {
-            "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
-            "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
-            "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
-        },
-        "error": {
-            "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-            "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
-            "unknown": "[%key:common::config_flow::error::unknown%]"
-        },
-        "step": {
-            "user": {
-                "title": "Connect to GridX",
-                "data": {
-                    "username": "[%key:common::config_flow::data::username%]",
-                    "password": "[%key:common::config_flow::data::password%]",
-                    "oem": "Energy Provider"
-                },
-                "data_description": {
-                    "username": "Your e-mail address from the GridX app",
-                    "password": "Your GridX app password",
-                    "oem": "Select the OEM of your GridX-based system"
-                }
-            },
-            "reauth_confirm": {
-                "title": "Re-authenticate GridX",
-                "description": "The GridX integration needs to re-authenticate your account.",
-                "data": {
-                    "username": "[%key:common::config_flow::data::username%]",
-                    "password": "[%key:common::config_flow::data::password%]"
-                },
-                "data_description": {
-                    "username": "Your e-mail address from the GridX app",
-                    "password": "Your GridX app password"
-                }
-            },
-            "reconfigure": {
-                "title": "Reconfigure GridX",
-                "data": {
-                    "username": "[%key:common::config_flow::data::username%]",
-                    "password": "[%key:common::config_flow::data::password%]",
-                    "oem": "Energy Provider"
-                },
-                "data_description": {
-                    "username": "Your e-mail address from the GridX app",
-                    "password": "Your GridX app password",
-                    "oem": "Select the OEM of your GridX-based system"
-                }
-            }
-        }
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
     },
-    "exceptions": {
-        "cannot_connect": {
-            "message": "Unable to connect to GridX."
-        },
-        "invalid_auth": {
-            "message": "Authentication failed. Please check your credentials."
-        }
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
     },
-    "entity": {
-        "sensor": {
-            "photovoltaic": {
-                "name": "PV Power"
-            },
-            "consumption": {
-                "name": "Consumption"
-            },
-            "grid": {
-                "name": "Grid Power"
-            },
-            "production": {
-                "name": "Production"
-            },
-            "self_consumption": {
-                "name": "Self Consumption"
-            },
-            "self_supply": {
-                "name": "Self Supply"
-            },
-            "total_consumption": {
-                "name": "Total Consumption"
-            },
-            "direct_consumption_household": {
-                "name": "Direct Consumption Household"
-            },
-            "direct_consumption_heat_pump": {
-                "name": "Direct Consumption Heat Pump"
-            },
-            "direct_consumption_ev": {
-                "name": "Direct Consumption EV"
-            },
-            "direct_consumption_heater": {
-                "name": "Direct Consumption Heater"
-            },
-            "direct_consumption_rate": {
-                "name": "Direct Consumption Rate"
-            },
-            "self_consumption_rate": {
-                "name": "Self Consumption Rate"
-            },
-            "self_sufficiency_rate": {
-                "name": "Self Sufficiency Rate"
-            },
-            "grid_meter_reading_positive": {
-                "name": "Grid Import Meter"
-            },
-            "grid_meter_reading_negative": {
-                "name": "Grid Export Meter"
-            },
-            "battery_state_of_charge": {
-                "name": "Battery State of Charge"
-            },
-            "battery_power": {
-                "name": "Battery Power"
-            },
-            "battery_capacity": {
-                "name": "Battery Capacity"
-            },
-            "battery_remaining_charge": {
-                "name": "Battery Remaining Charge"
-            },
-            "battery_charge": {
-                "name": "Battery Charge"
-            },
-            "battery_discharge": {
-                "name": "Battery Discharge"
-            },
-            "ev_power": {
-                "name": "EV Charging Power"
-            },
-            "ev_state_of_charge": {
-                "name": "EV State of Charge"
-            },
-            "ev_current_l1": {
-                "name": "EV Current L1"
-            },
-            "ev_current_l2": {
-                "name": "EV Current L2"
-            },
-            "ev_current_l3": {
-                "name": "EV Current L3"
-            },
-            "ev_reading_total": {
-                "name": "EV Total Energy"
-            },
-            "heatpump_power": {
-                "name": "Heat Pump Power"
-            },
-            "heater_power": {
-                "name": "Heater Power"
-            },
-            "heater_temperature": {
-                "name": "Heater Temperature"
-            },
-            "hist_photovoltaic": {
-                "name": "PV Energy Today"
-            },
-            "hist_consumption": {
-                "name": "Consumption Today"
-            },
-            "hist_production": {
-                "name": "Production Today"
-            },
-            "hist_feed_in": {
-                "name": "Feed-In Today"
-            },
-            "hist_supply": {
-                "name": "Grid Supply Today"
-            },
-            "hist_self_consumption": {
-                "name": "Self Consumption Today"
-            },
-            "hist_self_supply": {
-                "name": "Self Supply Today"
-            },
-            "hist_total_consumption": {
-                "name": "Total Consumption Today"
-            },
-            "hist_direct_consumption_household": {
-                "name": "Direct Consumption Household Today"
-            },
-            "hist_direct_consumption_heat_pump": {
-                "name": "Direct Consumption Heat Pump Today"
-            },
-            "hist_direct_consumption_ev": {
-                "name": "Direct Consumption EV Today"
-            },
-            "hist_direct_consumption_heater": {
-                "name": "Direct Consumption Heater Today"
-            },
-            "hist_self_consumption_rate": {
-                "name": "Self Consumption Rate Today"
-            },
-            "hist_self_sufficiency_rate": {
-                "name": "Self Sufficiency Rate Today"
-            }
-        }
+    "step": {
+      "reauth_confirm": {
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]",
+          "username": "[%key:common::config_flow::data::username%]"
+        },
+        "data_description": {
+          "password": "Your GridX app password",
+          "username": "Your e-mail address from the GridX app"
+        },
+        "description": "The GridX integration needs to re-authenticate your account.",
+        "title": "Re-authenticate GridX"
+      },
+      "reconfigure": {
+        "data": {
+          "oem": "Energy Provider",
+          "password": "[%key:common::config_flow::data::password%]",
+          "username": "[%key:common::config_flow::data::username%]"
+        },
+        "data_description": {
+          "oem": "Select the OEM of your GridX-based system",
+          "password": "Your GridX app password",
+          "username": "Your e-mail address from the GridX app"
+        },
+        "title": "Reconfigure GridX"
+      },
+      "user": {
+        "data": {
+          "oem": "Energy Provider",
+          "password": "[%key:common::config_flow::data::password%]",
+          "username": "[%key:common::config_flow::data::username%]"
+        },
+        "data_description": {
+          "oem": "Select the OEM of your GridX-based system",
+          "password": "Your GridX app password",
+          "username": "Your e-mail address from the GridX app"
+        },
+        "title": "Connect to GridX"
+      }
     }
+  },
+  "entity": {
+    "sensor": {
+      "battery_capacity": {
+        "name": "Battery Capacity"
+      },
+      "battery_charge": {
+        "name": "Battery Charge"
+      },
+      "battery_discharge": {
+        "name": "Battery Discharge"
+      },
+      "battery_power": {
+        "name": "Battery Power"
+      },
+      "battery_remaining_charge": {
+        "name": "Battery Remaining Charge"
+      },
+      "battery_state_of_charge": {
+        "name": "Battery State of Charge"
+      },
+      "consumption": {
+        "name": "Consumption"
+      },
+      "direct_consumption_ev": {
+        "name": "Direct Consumption EV"
+      },
+      "direct_consumption_heat_pump": {
+        "name": "Direct Consumption Heat Pump"
+      },
+      "direct_consumption_heater": {
+        "name": "Direct Consumption Heater"
+      },
+      "direct_consumption_household": {
+        "name": "Direct Consumption Household"
+      },
+      "direct_consumption_rate": {
+        "name": "Direct Consumption Rate"
+      },
+      "ev_current_l1": {
+        "name": "EV Current L1"
+      },
+      "ev_current_l2": {
+        "name": "EV Current L2"
+      },
+      "ev_current_l3": {
+        "name": "EV Current L3"
+      },
+      "ev_power": {
+        "name": "EV Charging Power"
+      },
+      "ev_reading_total": {
+        "name": "EV Total Energy"
+      },
+      "ev_state_of_charge": {
+        "name": "EV State of Charge"
+      },
+      "grid": {
+        "name": "Grid Power"
+      },
+      "grid_meter_reading_negative": {
+        "name": "Grid Export Meter"
+      },
+      "grid_meter_reading_positive": {
+        "name": "Grid Import Meter"
+      },
+      "heater_power": {
+        "name": "Heater Power"
+      },
+      "heater_temperature": {
+        "name": "Heater Temperature"
+      },
+      "heatpump_power": {
+        "name": "Heat Pump Power"
+      },
+      "hist_consumption": {
+        "name": "Consumption Today"
+      },
+      "hist_direct_consumption_ev": {
+        "name": "Direct Consumption EV Today"
+      },
+      "hist_direct_consumption_heat_pump": {
+        "name": "Direct Consumption Heat Pump Today"
+      },
+      "hist_direct_consumption_heater": {
+        "name": "Direct Consumption Heater Today"
+      },
+      "hist_direct_consumption_household": {
+        "name": "Direct Consumption Household Today"
+      },
+      "hist_feed_in": {
+        "name": "Feed-In Today"
+      },
+      "hist_photovoltaic": {
+        "name": "PV Energy Today"
+      },
+      "hist_production": {
+        "name": "Production Today"
+      },
+      "hist_self_consumption": {
+        "name": "Self Consumption Today"
+      },
+      "hist_self_consumption_rate": {
+        "name": "Self Consumption Rate Today"
+      },
+      "hist_self_sufficiency_rate": {
+        "name": "Self Sufficiency Rate Today"
+      },
+      "hist_self_supply": {
+        "name": "Self Supply Today"
+      },
+      "hist_supply": {
+        "name": "Grid Supply Today"
+      },
+      "hist_total_consumption": {
+        "name": "Total Consumption Today"
+      },
+      "photovoltaic": {
+        "name": "PV Power"
+      },
+      "production": {
+        "name": "Production"
+      },
+      "self_consumption": {
+        "name": "Self Consumption"
+      },
+      "self_consumption_rate": {
+        "name": "Self Consumption Rate"
+      },
+      "self_sufficiency_rate": {
+        "name": "Self Sufficiency Rate"
+      },
+      "self_supply": {
+        "name": "Self Supply"
+      },
+      "total_consumption": {
+        "name": "Total Consumption"
+      }
+    }
+  },
+  "exceptions": {
+    "cannot_connect": {
+      "message": "Unable to connect to GridX."
+    },
+    "invalid_auth": {
+      "message": "Authentication failed. Please check your credentials."
+    }
+  }
 }

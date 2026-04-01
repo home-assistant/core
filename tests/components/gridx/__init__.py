@@ -1,1 +1,1 @@
-# Tests for the GridX integration.
+"""Tests for the GridX integration."""

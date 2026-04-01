@@ -2,13 +2,12 @@
 
 from __future__ import annotations
 
-import json
 from importlib.resources import files
+import json
 from typing import Any
 
+from gridx_connector.async_connector import AsyncGridboxConnector
 import httpx
-
-from gridx_connector import AsyncGridboxConnector
 
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
@@ -71,7 +70,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: GridxConfigEntry) -> boo
             translation_domain=DOMAIN,
             translation_key="cannot_connect",
         ) from err
-    except Exception as err:
+    except (RuntimeError, TypeError, ValueError) as err:
         LOGGER.error("Error connecting to GridX: %s", err)
         raise ConfigEntryNotReady(
             translation_domain=DOMAIN,

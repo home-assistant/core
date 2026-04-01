@@ -5,9 +5,8 @@ from __future__ import annotations
 from datetime import datetime, timedelta
 from typing import TYPE_CHECKING, Any, TypedDict
 
+from gridx_connector.async_connector import AsyncGridboxConnector
 import httpx
-
-from gridx_connector import AsyncGridboxConnector
 
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
@@ -44,7 +43,7 @@ async def _fetch_live(connector: AsyncGridboxConnector) -> dict[str, Any]:
         ) from err
     except httpx.HTTPError as err:
         raise UpdateFailed(f"Error fetching GridX live data: {err}") from err
-    except Exception as err:
+    except (RuntimeError, TypeError, ValueError) as err:
         raise UpdateFailed(f"Error fetching GridX live data: {err}") from err
 
     if not results:
@@ -78,7 +77,7 @@ async def _fetch_historical(connector: AsyncGridboxConnector) -> GridxHistorical
         ) from err
     except httpx.HTTPError as err:
         raise UpdateFailed(f"Error fetching GridX historical data: {err}") from err
-    except Exception as err:
+    except (RuntimeError, TypeError, ValueError) as err:
         raise UpdateFailed(f"Error fetching GridX historical data: {err}") from err
 
     if not results:
