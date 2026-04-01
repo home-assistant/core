@@ -1,6 +1,5 @@
 """Config flow for Midea LAN."""
 
-from pathlib import Path
 from typing import Any
 
 from aiohttp import ClientSession
@@ -36,8 +35,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import callback
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
-from homeassistant.helpers.json import save_json
-from homeassistant.util.json import load_json
+from homeassistant.helpers.storage import Store
 
 from .const import (
     _LOGGER,
@@ -57,12 +55,17 @@ ADD_WAY = {
     "cache": "Remove login cache",
 }
 
-# Select DEFAULT_CLOUD from the list of supported cloud
-DEFAULT_CLOUD: str = list(SUPPORTED_CLOUDS)[3]
+# Select default cloud without relying on unstable list indexing.
+DEFAULT_CLOUD: str = (
+    "MSmartHome"
+    if "MSmartHome" in SUPPORTED_CLOUDS
+    else next(iter(SUPPORTED_CLOUDS), "")
+)
 
-STORAGE_PATH = f".storage/{DOMAIN}"
+STORAGE_KEY_PREFIX = f"{DOMAIN}.device"
 
-SKIP_LOGIN = "Skip Login (input any user/password)"
+INVALID_SERVER_ID = -1
+SKIP_LOGIN_LABEL = "Skip login (input any user/password)"
 
 
 class MideaLanConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -72,7 +75,7 @@ class MideaLanConfigFlow(ConfigFlow, domain=DOMAIN):
     ConfigFlow will manage the creation of entries from user input, discovery
     """
 
-    VERSION = 2
+    VERSION = 1
     MINOR_VERSION = 1
 
     def __init__(self) -> None:
@@ -101,14 +104,15 @@ class MideaLanConfigFlow(ConfigFlow, domain=DOMAIN):
         ).decode("utf-8", errors="ignore")
         self.preset_cloud_name: str = DEFAULT_CLOUD
 
-    def _save_device_config(self, data: dict[str, Any]) -> None:
-        """Save device config to json file with device id."""
-        storage_path = Path(self.hass.config.path(STORAGE_PATH))
-        storage_path.mkdir(parents=True, exist_ok=True)
-        record_file = storage_path.joinpath(f"{data[CONF_DEVICE_ID]!s}.json")
-        save_json(str(record_file), data)
+    def _get_device_store(self, device_id: str) -> Store[dict[str, Any]]:
+        """Return storage helper for a specific device."""
+        return Store(self.hass, 1, f"{STORAGE_KEY_PREFIX}.{device_id}")
 
-    def _load_device_config(self, device_id: str) -> Any:
+    async def _save_device_config(self, data: dict[str, Any]) -> None:
+        """Save device config to HA storage."""
+        await self._get_device_store(str(data[CONF_DEVICE_ID])).async_save(data)
+
+    async def _load_device_config(self, device_id: str) -> dict[str, Any]:
         """Load device config from json file with device id.
 
         Returns:
@@ -116,13 +120,7 @@ class MideaLanConfigFlow(ConfigFlow, domain=DOMAIN):
         Device configuration (json)
 
         """
-        record_file = Path(
-            self.hass.config.path(f"{STORAGE_PATH}", f"{device_id}.json"),
-        )
-        if record_file.exists():
-            with record_file.open(encoding="utf-8") as f:
-                return load_json(f.name, default={})
-        return {}
+        return await self._get_device_store(device_id).async_load() or {}
 
     @staticmethod
     def _check_storage_device(device: dict, storage_device: dict) -> bool:
@@ -221,7 +219,7 @@ class MideaLanConfigFlow(ConfigFlow, domain=DOMAIN):
             data_schema=vol.Schema(
                 {
                     vol.Required("action", default="remove"): vol.In(
-                        {"action": "remove"},
+                        ["remove"],
                     ),
                 },
             ),
@@ -242,15 +240,17 @@ class MideaLanConfigFlow(ConfigFlow, domain=DOMAIN):
         """
         # get cloud servers configs
         cloud_servers = await MideaCloud.get_cloud_servers()
-        default_keys = await MideaCloud.get_default_keys()
-        # add skip login option to web UI with key 99
-        cloud_servers[next(iter(default_keys))] = SKIP_LOGIN
+        default_server_key = next(
+            key for key, value in cloud_servers.items() if value == DEFAULT_CLOUD
+        )
+        # add skip login option to web UI with a dedicated sentinel key
+        cloud_servers[INVALID_SERVER_ID] = SKIP_LOGIN_LABEL
         # user input data exist
         if user_input is not None:
             if not self.hass.data.get(DOMAIN):
                 self.hass.data[DOMAIN] = {}
             # check skip login option
-            if user_input[CONF_SERVER] == next(iter(default_keys)):
+            if user_input[CONF_SERVER] == INVALID_SERVER_ID:
                 # use preset account and DEFAULT_CLOUD cloud
                 _LOGGER.debug("Skip login matched, cloud_servers: %s", cloud_servers)
                 # get DEFAULT_CLOUD key from dict
@@ -302,7 +302,10 @@ class MideaLanConfigFlow(ConfigFlow, domain=DOMAIN):
                 {
                     vol.Required(CONF_ACCOUNT): str,
                     vol.Required(CONF_PASSWORD): str,
-                    vol.Required(CONF_SERVER, default=1): vol.In(cloud_servers),
+                    vol.Required(
+                        CONF_SERVER,
+                        default=default_server_key,
+                    ): vol.In(cloud_servers),
                 },
             ),
             errors={"base": error} if error else None,
@@ -320,14 +323,14 @@ class MideaLanConfigFlow(ConfigFlow, domain=DOMAIN):
 
         """
         # get all devices list
-        all_devices = discover()
+        all_devices = await self.hass.async_add_executor_job(discover)
         # available devices exist
         if len(all_devices) > 0:
             table = (
                 "Appliance code|Type|IP address|SN|Supported\n:--:|:--:|:--:|:--:|:--:"
             )
-            green = "<font color=gree>YES</font>"
-            red = "<font color=red>NO</font>"
+            green = "YES"
+            red = "NO"
             for device_id, device in all_devices.items():
                 supported = device.get(CONF_TYPE) in self.supports
                 table += (
@@ -367,7 +370,9 @@ class MideaLanConfigFlow(ConfigFlow, domain=DOMAIN):
             else:
                 ip_address = discovery_info[CONF_IP_ADDRESS]
             # use midea-local discover() to get devices list with ip_address
-            self.devices = discover(list(self.supports.keys()), ip_address=ip_address)
+            self.devices = await self.hass.async_add_executor_job(
+                lambda: discover(list(self.supports.keys()), ip_address=ip_address),
+            )
             self.available_device = {}
             for device_id, device in self.devices.items():
                 # remove exist devices and only return new devices
@@ -426,14 +431,12 @@ class MideaLanConfigFlow(ConfigFlow, domain=DOMAIN):
         # check cloud login after self.cloud exist
         if await self.cloud.login():
             _LOGGER.debug(
-                "Using account %s login to %s cloud pass",
-                account,
+                "Cloud login succeeded for %s",
                 cloud_name,
             )
             return True
         _LOGGER.error(
-            "Unable to use account %s login to %s cloud",
-            account,
+            "Unable to login to %s cloud",
             cloud_name,
         )
         return False
@@ -476,16 +479,16 @@ class MideaLanConfigFlow(ConfigFlow, domain=DOMAIN):
                 subtype=0,
                 attributes={},
             )
-            if dm.connect():
+            if await self.hass.async_add_executor_job(dm.connect):
                 try:
-                    dm.authenticate()
+                    await self.hass.async_add_executor_job(dm.authenticate)
                 except AuthException:
                     _LOGGER.debug("Unable to authenticate")
-                    dm.close_socket()
+                    await self.hass.async_add_executor_job(dm.close_socket)
                 except SocketException:
                     _LOGGER.debug("Socket closed")
                 else:
-                    dm.close_socket()
+                    await self.hass.async_add_executor_job(dm.close_socket)
                     return value
             # return debug log with failed key
             _LOGGER.debug(
@@ -523,7 +526,7 @@ class MideaLanConfigFlow(ConfigFlow, domain=DOMAIN):
                 CONF_PORT: device.get(CONF_PORT),
                 CONF_MODEL: device.get(CONF_MODEL),
             }
-            storage_device = self._load_device_config(device_id)
+            storage_device = await self._load_device_config(str(device_id))
             # device config already exist, load from local json without cloud
             if self._check_storage_device(device, storage_device):
                 self.found_device = {
@@ -557,9 +560,8 @@ class MideaLanConfigFlow(ConfigFlow, domain=DOMAIN):
             ):
                 # print error in debug log and show login web
                 _LOGGER.debug(
-                    "Login with cached %s account %s failed in %s server",
+                    "Login with cached %s account failed in %s server",
                     self.hass.data[DOMAIN].get("login_mode"),
-                    self.hass.data[DOMAIN]["login_data"][CONF_ACCOUNT],
                     self.hass.data[DOMAIN]["login_data"][CONF_SERVER],
                 )
                 # remove error cache and relogin
@@ -591,13 +593,13 @@ class MideaLanConfigFlow(ConfigFlow, domain=DOMAIN):
                     # exclude: user selected not login and phase 1 is preset account
                     if self.hass.data[DOMAIN]["login_mode"] == "preset":
                         return await self.async_step_auto(
-                            error="can't get valid token from Midea server",
+                            error="token_unavailable",
                         )
 
                     # get key phase 2: reinit cloud with preset account
                     if not await self._check_cloud_login(force_login=True):
                         return await self.async_step_auto(
-                            error="Perset account login failed!",
+                            error="preset_login_failed",
                         )
                     # try to get a passed key, without default_key
                     keys = await self._check_key_from_cloud(
@@ -612,10 +614,7 @@ class MideaLanConfigFlow(ConfigFlow, domain=DOMAIN):
                             device_id,
                         )
                         return await self.async_step_auto(
-                            error=(
-                                f"Can't get available token from Midea server"
-                                f" for device {device_id}"
-                            ),
+                            error="token_unavailable",
                         )
                 # get key pass
                 self.found_device[CONF_TOKEN] = keys["token"]
@@ -661,9 +660,8 @@ class MideaLanConfigFlow(ConfigFlow, domain=DOMAIN):
             if len(self.devices) < 1:
                 ip = user_input[CONF_IP_ADDRESS]
                 # discover device
-                self.devices = discover(
-                    list(self.supports.keys()),
-                    ip_address=ip,
+                self.devices = await self.hass.async_add_executor_job(
+                    lambda: discover(list(self.supports.keys()), ip_address=ip),
                 )
                 # discover result MUST exist
                 if len(self.devices) != 1:
@@ -674,17 +672,17 @@ class MideaLanConfigFlow(ConfigFlow, domain=DOMAIN):
                 # check if device_id is correctly set for that IP
                 if user_input[CONF_DEVICE_ID] != device_id:
                     return await self.async_step_manually(
-                        error=f"For ip {ip} the device_id MUST be {device_id}",
+                        error="invalid_device_id_for_ip",
                     )
 
             device = self.devices[device_id]
             if user_input[CONF_IP_ADDRESS] != device.get(CONF_IP_ADDRESS):
                 return await self.async_step_manually(
-                    error=f"ip_address MUST be {device.get(CONF_IP_ADDRESS)}",
+                    error="ip_address_mismatch",
                 )
             if user_input[CONF_PROTOCOL] != device.get(CONF_PROTOCOL):
                 return await self.async_step_manually(
-                    error=f"protocol MUST be {device.get(CONF_PROTOCOL)}",
+                    error="protocol_mismatch",
                 )
 
             # try to get token/key with preset account
@@ -695,7 +693,7 @@ class MideaLanConfigFlow(ConfigFlow, domain=DOMAIN):
                 result = await self._check_cloud_login()
                 if not result:
                     return await self.async_step_manually(
-                        error="Perset account login failed!",
+                        error="preset_login_failed",
                     )
                 # try to get a passed key
                 keys = await self._check_key_from_cloud(int(user_input[CONF_DEVICE_ID]))
@@ -707,10 +705,7 @@ class MideaLanConfigFlow(ConfigFlow, domain=DOMAIN):
                         user_input[CONF_DEVICE_ID],
                     )
                     return await self.async_step_manually(
-                        error=(
-                            f"Can't get a valid token from Midea server"
-                            f" for device {user_input[CONF_DEVICE_ID]}"
-                        ),
+                        error="token_unavailable",
                     )
 
                 # set token/key from preset account
@@ -742,19 +737,19 @@ class MideaLanConfigFlow(ConfigFlow, domain=DOMAIN):
                 subtype=0,
                 attributes={},
             )
-            if dm.connect():
+            if await self.hass.async_add_executor_job(dm.connect):
                 try:
                     if user_input[CONF_PROTOCOL] == ProtocolVersion.V3:
-                        dm.authenticate()
+                        await self.hass.async_add_executor_job(dm.authenticate)
                 except SocketException:
                     _LOGGER.exception("Socket closed")
                 except AuthException:
                     _LOGGER.exception(
                         "Unable to authenticate with provided key and token",
                     )
-                    dm.close_socket()
+                    await self.hass.async_add_executor_job(dm.close_socket)
                 else:
-                    dm.close_socket()
+                    await self.hass.async_add_executor_job(dm.close_socket)
                     device_id = user_input[CONF_DEVICE_ID]
                     data = {
                         CONF_NAME: user_input[CONF_NAME],
@@ -769,9 +764,9 @@ class MideaLanConfigFlow(ConfigFlow, domain=DOMAIN):
                         CONF_KEY: user_input[CONF_KEY],
                     }
 
-                    self._save_device_config(data)
+                    await self._save_device_config(data)
 
-                    await self.async_set_unique_id(device_id)
+                    await self.async_set_unique_id(str(device_id))
                     self._abort_if_unique_id_configured()
 
                     return self.async_create_entry(
@@ -779,7 +774,7 @@ class MideaLanConfigFlow(ConfigFlow, domain=DOMAIN):
                         data=data,
                     )
             return await self.async_step_manually(
-                error="Device auth failed with input config",
+                error="device_auth_failed",
             )
         protocol = self.found_device.get(CONF_PROTOCOL)
         return self.async_show_form(
@@ -874,16 +869,8 @@ class MideaLanOptionsFlowHandler(OptionsFlow):
             return self.async_abort(reason="account_option")
         if user_input is not None:
             return self.async_create_entry(title="", data=user_input)
-        ip_address = self._config_entry.options.get(CONF_IP_ADDRESS, None)
-        if ip_address is None:
-            ip_address = self._config_entry.data.get(CONF_IP_ADDRESS, None)
         customize = self._config_entry.options.get(CONF_CUSTOMIZE, "")
         data_schema = vol.Schema(
-            {
-                vol.Required(CONF_IP_ADDRESS, default=ip_address): str,
-            },
-        )
-        data_schema = data_schema.extend(
             {
                 vol.Optional(
                     CONF_CUSTOMIZE,

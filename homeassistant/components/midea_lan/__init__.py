@@ -41,12 +41,9 @@ async def update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
     )
     device_id: int = cast("int", entry.data.get(CONF_DEVICE_ID))
     customize = entry.options.get(CONF_CUSTOMIZE, "")
-    ip_address = entry.options.get(CONF_IP_ADDRESS, "")
     dev: MideaDevice = hass.data[DOMAIN][DEVICES].get(device_id)
     if dev:
         dev.set_customize(customize)
-        if ip_address is not None:
-            dev.set_ip_address(ip_address)
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -66,7 +63,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     name: str = data.get(CONF_NAME, f"{device_id}")
     token: str = data.get(CONF_TOKEN) or ""
     key: str = data.get(CONF_KEY) or ""
-    ip_address: str = options.get(CONF_IP_ADDRESS, data.get(CONF_IP_ADDRESS))
+    ip_address: str = data[CONF_IP_ADDRESS]
     port: int = data[CONF_PORT]
     model: str = data[CONF_MODEL]
     subtype: int = data.get(CONF_SUBTYPE, 0)
@@ -89,7 +86,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         customize,
     )
     if device:
-        device.open()
+        await hass.async_add_executor_job(device.open)
         if DOMAIN not in hass.data:
             hass.data[DOMAIN] = {}
         if DEVICES not in hass.data[DOMAIN]:

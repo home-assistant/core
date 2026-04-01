@@ -73,13 +73,11 @@ async def test_update_listener_updates_device(hass: HomeAssistant) -> None:
     entry.data = {CONF_DEVICE_ID: 123}
     entry.options = {
         CONF_CUSTOMIZE: "x",
-        CONF_IP_ADDRESS: "1.2.3.4",
     }
 
     await update_listener(hass, entry)
 
     assert ("set_customize", "x") in dev.calls
-    assert ("set_ip_address", "1.2.3.4") in dev.calls
 
 
 async def test_update_listener_no_device(hass: HomeAssistant) -> None:

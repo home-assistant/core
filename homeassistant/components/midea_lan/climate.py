@@ -144,11 +144,6 @@ async def async_setup_entry(
 class MideaClimate(MideaEntity, ClimateEntity):
     """Midea Climate Entries Base Class."""
 
-    # https://developers.home-assistant.io/blog/2024/01/24/climate-climateentityfeatures-expanded
-    _enable_turn_on_off_backwards_compatibility: bool = (
-        False  # maybe remove after 2025.1
-    )
-
     _device: MideaClimateDevice
 
     _attr_has_entity_name = True
