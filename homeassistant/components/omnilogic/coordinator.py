@@ -15,6 +15,9 @@ from .const import ALL_ITEM_KINDS
 _LOGGER = logging.getLogger(__name__)
 
 
+type OmniLogicConfigEntry = ConfigEntry[OmniLogicUpdateCoordinator]
+
+
 class OmniLogicUpdateCoordinator(DataUpdateCoordinator[dict[tuple, dict[str, Any]]]):
     """Class to manage fetching update data from single endpoint."""
 

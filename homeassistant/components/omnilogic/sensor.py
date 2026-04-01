@@ -14,10 +14,9 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import OmniLogicConfigEntry
 from .common import check_guard
 from .const import DEFAULT_PH_OFFSET, PUMP_TYPES
-from .coordinator import OmniLogicUpdateCoordinator
+from .coordinator import OmniLogicConfigEntry, OmniLogicUpdateCoordinator
 from .entity import OmniLogicEntity
 
 

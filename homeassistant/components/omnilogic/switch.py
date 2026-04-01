@@ -11,10 +11,9 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import OmniLogicConfigEntry
 from .common import check_guard
 from .const import PUMP_TYPES
-from .coordinator import OmniLogicUpdateCoordinator
+from .coordinator import OmniLogicConfigEntry, OmniLogicUpdateCoordinator
 from .entity import OmniLogicEntity
 
 SERVICE_SET_SPEED = "set_pump_speed"
