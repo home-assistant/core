@@ -18,8 +18,6 @@ from homeassistant.components.mobile_app.const import (
     DATA_DEVICES,
     DATA_LIVE_ACTIVITY_TOKENS,
     DOMAIN,
-    EVENT_LIVE_ACTIVITY_DISMISSED,
-    EVENT_LIVE_ACTIVITY_TOKEN_UPDATED,
 )
 from homeassistant.components.tag import EVENT_TAG_SCANNED
 from homeassistant.components.zone import DOMAIN as ZONE_DOMAIN
@@ -1314,16 +1312,10 @@ async def test_sending_sensor_state(
 
 async def test_webhook_update_live_activity_token(
     hass: HomeAssistant,
-    device_registry: dr.DeviceRegistry,
     create_registrations: tuple[dict[str, Any], dict[str, Any]],
     webhook_client: TestClient,
 ) -> None:
     """Test that we can store a Live Activity push token."""
-    device = device_registry.async_get_device(identifiers={(DOMAIN, "mock-device-id")})
-    assert device is not None
-
-    events = async_capture_events(hass, EVENT_LIVE_ACTIVITY_TOKEN_UPDATED)
-
     webhook_id = create_registrations[1]["webhook_id"]
     resp = await webhook_client.post(
         f"/api/webhook/{webhook_id}",
@@ -1346,12 +1338,6 @@ async def test_webhook_update_live_activity_token(
     assert tokens[webhook_id]["washer_cycle"]["push_token"] == (
         "a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2"
     )
-
-    # Verify event was fired
-    assert len(events) == 1
-    assert events[0].data["tag"] == "washer_cycle"
-    assert events[0].data["device_id"] == device.id
-    assert events[0].data["webhook_id"] == webhook_id
 
 
 async def test_webhook_update_live_activity_token_stores_only_push_token(
@@ -1383,14 +1369,10 @@ async def test_webhook_update_live_activity_token_stores_only_push_token(
 
 async def test_webhook_live_activity_dismissed(
     hass: HomeAssistant,
-    device_registry: dr.DeviceRegistry,
     create_registrations: tuple[dict[str, Any], dict[str, Any]],
     webhook_client: TestClient,
 ) -> None:
     """Test that we can dismiss a Live Activity and clean up its token."""
-    device = device_registry.async_get_device(identifiers={(DOMAIN, "mock-device-id")})
-    assert device is not None
-
     webhook_id = create_registrations[1]["webhook_id"]
 
     # First register a token
@@ -1411,8 +1393,6 @@ async def test_webhook_live_activity_dismissed(
     assert "washer_cycle" in tokens[webhook_id]
 
     # Now dismiss it
-    events = async_capture_events(hass, EVENT_LIVE_ACTIVITY_DISMISSED)
-
     resp = await webhook_client.post(
         f"/api/webhook/{webhook_id}",
         json={
@@ -1429,11 +1409,6 @@ async def test_webhook_live_activity_dismissed(
 
     # Verify token was removed — webhook_id key also cleaned up since no activities remain
     assert webhook_id not in tokens
-
-    # Verify event was fired
-    assert len(events) == 1
-    assert events[0].data["tag"] == "washer_cycle"
-    assert events[0].data["device_id"] == device.id
 
 
 async def test_webhook_live_activity_dismissed_nonexistent_tag(

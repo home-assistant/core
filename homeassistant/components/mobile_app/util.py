@@ -15,7 +15,6 @@ from .const import (
     ATTR_PUSH_TOKEN,
     ATTR_PUSH_URL,
     ATTR_PUSH_WEBSOCKET_CHANNEL,
-    ATTR_SUPPORTS_LIVE_ACTIVITIES,
     CONF_CLOUDHOOK_URL,
     DATA_CONFIG_ENTRIES,
     DATA_DEVICES,
@@ -48,14 +47,6 @@ def supports_push(hass: HomeAssistant, webhook_id: str) -> bool:
     return (
         ATTR_PUSH_TOKEN in app_data and ATTR_PUSH_URL in app_data
     ) or ATTR_PUSH_WEBSOCKET_CHANNEL in app_data
-
-
-@callback
-def supports_live_activities(hass: HomeAssistant, webhook_id: str) -> bool:
-    """Return if the device supports iOS Live Activities."""
-    config_entry = hass.data[DOMAIN][DATA_CONFIG_ENTRIES][webhook_id]
-    app_data = config_entry.data.get(ATTR_APP_DATA, {})
-    return bool(app_data.get(ATTR_SUPPORTS_LIVE_ACTIVITIES))
 
 
 @callback

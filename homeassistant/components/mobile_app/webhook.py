@@ -109,8 +109,6 @@ from .const import (
     ERR_ENCRYPTION_REQUIRED,
     ERR_INVALID_FORMAT,
     ERR_SENSOR_NOT_REGISTERED,
-    EVENT_LIVE_ACTIVITY_DISMISSED,
-    EVENT_LIVE_ACTIVITY_TOKEN_UPDATED,
     SCHEMA_APP_DATA,
     SENSOR_TYPES,
     SIGNAL_LOCATION_UPDATE,
@@ -832,18 +830,6 @@ async def webhook_update_live_activity_token(
         ATTR_PUSH_TOKEN: data[ATTR_PUSH_TOKEN],
     }
 
-    device: dr.DeviceEntry = hass.data[DOMAIN][DATA_DEVICES][webhook_id]
-    hass.bus.async_fire(
-        EVENT_LIVE_ACTIVITY_TOKEN_UPDATED,
-        {
-            ATTR_LIVE_ACTIVITY_TAG: activity_tag,
-            ATTR_DEVICE_ID: device.id,
-            ATTR_WEBHOOK_ID: webhook_id,
-        },
-        EventOrigin.remote,
-        context=registration_context(config_entry.data),
-    )
-
     return empty_okay_response()
 
 
@@ -871,17 +857,5 @@ async def webhook_live_activity_dismissed(
         # Clean up the device key if no activities remain.
         if not live_activity_tokens[webhook_id]:
             del live_activity_tokens[webhook_id]
-
-    device: dr.DeviceEntry = hass.data[DOMAIN][DATA_DEVICES][webhook_id]
-    hass.bus.async_fire(
-        EVENT_LIVE_ACTIVITY_DISMISSED,
-        {
-            ATTR_LIVE_ACTIVITY_TAG: activity_tag,
-            ATTR_DEVICE_ID: device.id,
-            ATTR_WEBHOOK_ID: webhook_id,
-        },
-        EventOrigin.remote,
-        context=registration_context(config_entry.data),
-    )
 
     return empty_okay_response()
