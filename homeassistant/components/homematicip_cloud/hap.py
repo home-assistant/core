@@ -229,7 +229,7 @@ class HomematicipHAP:
         self._log_entity_state_snapshot("post-reconnect-60s")
         # Safety net: fire update_all again in case some entities missed the first round
         _LOGGER.debug("post-reconnect safety net: firing update_all again")
-        self.update_all()
+        self.update_all(after_reconnect=True)
 
     @callback
     def async_update(self, *args, **kwargs) -> None:
@@ -366,7 +366,7 @@ class HomematicipHAP:
         for device in devices_after:
             device.unreach = False
         _LOGGER.debug("get_state: calling update_all() on %d devices", len(devices_after))
-        self.update_all()
+        self.update_all(after_reconnect=True)
 
     def get_state_finished(self, future) -> None:
         """Execute when try_get_state coroutine has finished."""
@@ -391,24 +391,26 @@ class HomematicipHAP:
             device.unreach = True
         self.update_all()
 
-    def update_all(self) -> None:
+    def update_all(self, after_reconnect: bool = False) -> None:
         """Signal all devices to update their state."""
         devices = list(self.home.devices)
-        listeners_total = sum(len(getattr(d, "_on_update", [])) for d in devices)
-        orphaned_devices = [d for d in devices if not getattr(d, "_on_update", [])]
-        _LOGGER.debug(
-            "update_all: %d devices, %d total listeners, %d orphaned (no listeners)",
-            len(devices),
-            listeners_total,
-            len(orphaned_devices),
-        )
-        for device in orphaned_devices:
-            _LOGGER.warning(
-                "update_all: orphaned device (no HA listeners) — id=%s label=%r type=%s",
-                getattr(device, "id", "?"),
-                getattr(device, "label", "?"),
-                type(device).__name__,
+        if after_reconnect:
+            # Only log listener details on reconnect — too noisy for normal operation
+            listeners_total = sum(len(getattr(d, "_on_update", [])) for d in devices)
+            orphaned_devices = [d for d in devices if not getattr(d, "_on_update", [])]
+            _LOGGER.debug(
+                "update_all (reconnect): %d devices, %d total listeners, %d orphaned",
+                len(devices),
+                listeners_total,
+                len(orphaned_devices),
             )
+            for device in orphaned_devices:
+                _LOGGER.warning(
+                    "update_all: orphaned device (no HA listeners) — id=%s label=%r type=%s",
+                    getattr(device, "id", "?"),
+                    getattr(device, "label", "?"),
+                    type(device).__name__,
+                )
         for device in devices:
             device.fire_update_event()
 
