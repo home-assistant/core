@@ -11,12 +11,16 @@ ATTR_STATE_BATTERY_LOW: Final = "battery_low"
 ATTR_STATE_HOLIDAY_MODE: Final = "holiday_mode"
 ATTR_STATE_SUMMER_MODE: Final = "summer_mode"
 ATTR_STATE_WINDOW_OPEN: Final = "window_open"
+ATTR_STATE_MANUAL_OPEN_WINDOW_PERIOD: Final = "manual_open_window_period"
 
 COLOR_MODE: Final = "1"
 COLOR_TEMP_MODE: Final = "4"
 
 DEFAULT_HOST: Final = "fritz.box"
 DEFAULT_USERNAME: Final = "admin"
+# value in seconds
+# default is 10min, same as the default internal open window detection, max is 24h (per API)
+DEFAULT_OPEN_WINDOW_PERIOD: Final[float] = 600.0
 
 DOMAIN: Final = "fritzbox"
 
@@ -28,6 +32,7 @@ PLATFORMS: Final[list[Platform]] = [
     Platform.CLIMATE,
     Platform.COVER,
     Platform.LIGHT,
+    Platform.NUMBER,
     Platform.SENSOR,
     Platform.SWITCH,
 ]
