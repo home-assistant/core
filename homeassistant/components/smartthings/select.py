@@ -26,10 +26,23 @@ LAMP_TO_HA = {
     "off": "off",
 }
 
+SOUND_MODE_TO_HA = {
+    "voice": "voice",
+    "beep": "tone",
+    "mute": "mute",
+}
+
 DRIVING_MODE_TO_HA = {
     "areaThenWalls": "area_then_walls",
     "wallFirst": "walls_first",
     "quickCleaningZigzagPattern": "quick_clean_zigzag_pattern",
+}
+
+CLEANING_TYPE_TO_HA = {
+    "vacuum": "vacuum",
+    "mop": "mop",
+    "vacuumAndMopTogether": "vacuum_and_mop_together",
+    "mopAfterVacuum": "mop_after_vacuum",
 }
 
 WASHER_SOIL_LEVEL_TO_HA = {
@@ -236,6 +249,25 @@ CAPABILITIES_TO_SELECT: dict[Capability | str, SmartThingsSelectDescription] = {
         command=Command.SET_ALARM_THRESHOLD,
         entity_category=EntityCategory.CONFIG,
         value_is_integer=True,
+    ),
+    Capability.SAMSUNG_CE_ROBOT_CLEANER_SYSTEM_SOUND_MODE: SmartThingsSelectDescription(
+        key=Capability.SAMSUNG_CE_ROBOT_CLEANER_SYSTEM_SOUND_MODE,
+        translation_key="robot_cleaner_sound_mode",
+        options_attribute=Attribute.SUPPORTED_SOUND_MODES,
+        status_attribute=Attribute.SOUND_MODE,
+        command=Command.SET_SOUND_MODE,
+        options_map=SOUND_MODE_TO_HA,
+        entity_category=EntityCategory.CONFIG,
+        entity_registry_enabled_default=False,
+    ),
+    Capability.SAMSUNG_CE_ROBOT_CLEANER_CLEANING_TYPE: SmartThingsSelectDescription(
+        key=Capability.SAMSUNG_CE_ROBOT_CLEANER_CLEANING_TYPE,
+        translation_key="robot_cleaner_cleaning_type",
+        options_attribute=Attribute.SUPPORTED_CLEANING_TYPES,
+        status_attribute=Attribute.CLEANING_TYPE,
+        command=Command.SET_CLEANING_TYPE,
+        options_map=CLEANING_TYPE_TO_HA,
+        entity_category=EntityCategory.CONFIG,
     ),
 }
 DISHWASHER_WASHING_OPTIONS_TO_SELECT: dict[

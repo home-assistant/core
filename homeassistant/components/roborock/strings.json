@@ -84,6 +84,9 @@
       }
     },
     "button": {
+      "empty_dustbin": {
+        "name": "Empty dustbin"
+      },
       "pause": {
         "name": "Pause"
       },
@@ -100,7 +103,7 @@
         "name": "Reset side brush consumable"
       },
       "shutdown": {
-        "name": "Shutdown"
+        "name": "Shut down"
       },
       "start": {
         "name": "Start"
@@ -468,7 +471,7 @@
           "clear_water_box_hoare": "Check the clean water tank",
           "cliff_sensor_error": "Cliff sensor error",
           "collect_dust_error_3": "Clean auto-empty dock",
-          "collect_dust_error_4": "Auto empty dock voltage error",
+          "collect_dust_error_4": "Auto-empty dock voltage error",
           "compass_error": "Strong magnetic field detected",
           "dirty_water_box_hoare": "Check the dirty water tank",
           "dock": "Dock not connected to power",
@@ -615,8 +618,14 @@
     "home_data_fail": {
       "message": "Failed to get Roborock home data"
     },
+    "invalid_command": {
+      "message": "Invalid command {command}"
+    },
     "invalid_credentials": {
       "message": "Invalid credentials."
+    },
+    "invalid_fan_speed": {
+      "message": "Invalid fan speed: {fan_speed}"
     },
     "invalid_user_agreement": {
       "message": "User agreement must be accepted again. Open your Roborock app and accept the agreement."
@@ -635,6 +644,9 @@
     },
     "position_not_found": {
       "message": "Robot position not found"
+    },
+    "request_fail": {
+      "message": "Failed to request data"
     },
     "segment_id_parse_error": {
       "message": "Invalid segment ID format: {segment_id}"

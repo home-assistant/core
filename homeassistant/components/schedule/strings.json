@@ -1,4 +1,28 @@
 {
+  "common": {
+    "condition_behavior_name": "Condition passes if",
+    "trigger_behavior_name": "Trigger when"
+  },
+  "conditions": {
+    "is_off": {
+      "description": "Tests if one or more schedule blocks are currently not active.",
+      "fields": {
+        "behavior": {
+          "name": "[%key:component::schedule::common::condition_behavior_name%]"
+        }
+      },
+      "name": "Schedule is off"
+    },
+    "is_on": {
+      "description": "Tests if one or more schedule blocks are currently active.",
+      "fields": {
+        "behavior": {
+          "name": "[%key:component::schedule::common::condition_behavior_name%]"
+        }
+      },
+      "name": "Schedule is on"
+    }
+  },
   "entity_component": {
     "_": {
       "name": "[%key:component::schedule::title%]",
@@ -20,6 +44,21 @@
       }
     }
   },
+  "selector": {
+    "condition_behavior": {
+      "options": {
+        "all": "All",
+        "any": "Any"
+      }
+    },
+    "trigger_behavior": {
+      "options": {
+        "any": "Any",
+        "first": "First",
+        "last": "Last"
+      }
+    }
+  },
   "services": {
     "get_schedule": {
       "description": "Retrieves the configured time ranges of one or multiple schedules.",
@@ -27,8 +66,28 @@
     },
     "reload": {
       "description": "Reloads schedules from the YAML-configuration.",
-      "name": "[%key:common::action::reload%]"
+      "name": "Reload schedules"
     }
   },
-  "title": "Schedule"
+  "title": "Schedule",
+  "triggers": {
+    "turned_off": {
+      "description": "Triggers when a schedule block ends.",
+      "fields": {
+        "behavior": {
+          "name": "[%key:component::schedule::common::trigger_behavior_name%]"
+        }
+      },
+      "name": "Schedule block ended"
+    },
+    "turned_on": {
+      "description": "Triggers when a schedule block starts.",
+      "fields": {
+        "behavior": {
+          "name": "[%key:component::schedule::common::trigger_behavior_name%]"
+        }
+      },
+      "name": "Schedule block started"
+    }
+  }
 }
