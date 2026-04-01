@@ -331,13 +331,13 @@ async def async_setup_entry(
 
     # Diagnostic sensors from system info
     if coordinator.data.system:
-        for diag_description in DIAGNOSTIC_SENSORS:
-            entities.append(
-                WattwaechterDiagnosticSensor(
-                    coordinator=coordinator,
-                    description=diag_description,
-                )
+        entities.extend(
+            WattwaechterDiagnosticSensor(
+                coordinator=coordinator,
+                description=diag_description,
             )
+            for diag_description in DIAGNOSTIC_SENSORS
+        )
 
     async_add_entities(entities)
 

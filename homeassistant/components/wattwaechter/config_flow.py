@@ -251,9 +251,10 @@ class WattwaechterConfigFlow(ConfigFlow, domain=DOMAIN):
             session = async_get_clientsession(self.hass)
             client = Wattwaechter(self._host, token=token, session=session)
             settings = await client.settings()
-            return settings.device_name
         except (WattwaechterConnectionError, WattwaechterAuthenticationError):
             return ""
+        else:
+            return settings.device_name
 
     @staticmethod
     @callback
