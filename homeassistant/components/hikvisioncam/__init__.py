@@ -1,1 +1,1 @@
-"""The hikvisioncam component."""
+"""The Hikvision integration."""
