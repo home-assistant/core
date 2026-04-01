@@ -1,15 +1,11 @@
 """Coordinator entity base class for CometBlue."""
 
-import logging
-
 from homeassistant.components import bluetooth
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import DOMAIN
 from .coordinator import CometBlueDataUpdateCoordinator
-
-LOGGER = logging.getLogger(__name__)
 
 
 class CometBlueBluetoothEntity(CoordinatorEntity[CometBlueDataUpdateCoordinator]):

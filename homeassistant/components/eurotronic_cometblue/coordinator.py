@@ -1,4 +1,4 @@
-"""Provides the DataUpdateCoordinator."""
+"""Provides the DataUpdateCoordinator for Comet Blue."""
 
 from __future__ import annotations
 

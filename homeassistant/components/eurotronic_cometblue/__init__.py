@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-import logging
-
 from bleak.exc import BleakError
 from eurotronic_cometblue_ha import AsyncCometBlue
 
@@ -20,7 +18,6 @@ from .coordinator import CometBlueConfigEntry, CometBlueDataUpdateCoordinator
 PLATFORMS: list[Platform] = [
     Platform.CLIMATE,
 ]
-LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: CometBlueConfigEntry) -> bool:
