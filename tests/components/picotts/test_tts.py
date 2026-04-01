@@ -109,7 +109,6 @@ async def test_tts_service(
             "homeassistant.components.picotts.tts.open",
             mock_open(read_data=get_empty_wav()),
         ),
-        patch("homeassistant.components.picotts.tts.os.remove"),
     ):
         await hass.services.async_call(
             tts.DOMAIN,
