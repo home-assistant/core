@@ -84,6 +84,9 @@
       }
     },
     "button": {
+      "empty_dustbin": {
+        "name": "Empty dustbin"
+      },
       "pause": {
         "name": "Pause"
       },
@@ -100,7 +103,7 @@
         "name": "Reset side brush consumable"
       },
       "shutdown": {
-        "name": "Shutdown"
+        "name": "Shut down"
       },
       "start": {
         "name": "Start"
