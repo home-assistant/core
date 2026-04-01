@@ -38,8 +38,6 @@
   entity:
     - domain: sensor
       device_class: battery
-    - domain: number
-      device_class: battery
 
 low:
   fields:
