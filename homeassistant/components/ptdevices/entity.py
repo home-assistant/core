@@ -26,7 +26,6 @@ class PTDevicesEntity(CoordinatorEntity[PTDevicesCoordinator]):
         super().__init__(coordinator=coordinator)
         self._sensor_key = sensor_key
         self._device_id = device_id
-        self.coordinator = coordinator
 
         self._user_id = coordinator.data[self._device_id]["user_id"]
 
