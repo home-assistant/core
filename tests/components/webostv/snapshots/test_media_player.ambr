@@ -15,6 +15,7 @@
       'device_class': 'tv',
       'friendly_name': 'LG webOS TV MODEL',
       'is_volume_muted': False,
+      'last_non_buffering_state': <MediaPlayerState.ON: 'on'>,
       'media_content_type': <MediaType.CHANNEL: 'channel'>,
       'media_title': 'Channel 1',
       'sound_output': 'speaker',
