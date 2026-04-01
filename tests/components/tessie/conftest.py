@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from copy import deepcopy
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
 
@@ -26,8 +26,9 @@ def mock_get_state():
     """Mock get_state function."""
     with patch(
         "tesla_fleet_api.tessie.Vehicle.state",
-        return_value=TEST_VEHICLE_STATE_ONLINE,
+        new_callable=AsyncMock,
     ) as mock_get_state:
+        mock_get_state.return_value = TEST_VEHICLE_STATE_ONLINE
         yield mock_get_state
 
 
@@ -36,8 +37,9 @@ def mock_get_state_of_all_vehicles():
     """Mock get_state_of_all_vehicles function."""
     with patch(
         "tesla_fleet_api.tessie.Tessie.list_vehicles",
-        return_value=TEST_STATE_OF_ALL_VEHICLES,
+        new_callable=AsyncMock,
     ) as mock_get_state_of_all_vehicles:
+        mock_get_state_of_all_vehicles.return_value = TEST_STATE_OF_ALL_VEHICLES
         yield mock_get_state_of_all_vehicles
 
 
