@@ -165,23 +165,47 @@ class HomematicipHAP:
         """Log hmip entity availability every hour for debugging."""
         while True:
             await asyncio.sleep(3600)
-            try:
-                from homeassistant.const import STATE_UNAVAILABLE
-                all_states = self.hass.states.async_all()
-                hmip_states = [s for s in all_states if s.entity_id.startswith(f"{self.config_entry.domain}.")]
-                unavailable = [s.entity_id for s in hmip_states if s.state == STATE_UNAVAILABLE]
-                devices = list(self.home.devices)
-                orphaned = [d for d in devices if not getattr(d, "_on_update", [])]
-                _LOGGER.debug(
-                    "hourly dump: %d hmip entities, %d unavailable, %d orphaned devices | unavailable: %s | orphaned: %s",
-                    len(hmip_states),
-                    len(unavailable),
-                    len(orphaned),
-                    [e.split(".", 1)[1] for e in unavailable[:10]],
-                    [getattr(d, "label", "?") for d in orphaned],
-                )
-            except Exception:  # noqa: BLE001
-                _LOGGER.exception("hourly_state_dump failed")
+            self._log_entity_state_snapshot("hourly")
+
+    def _log_entity_state_snapshot(self, trigger: str) -> None:
+        """Log current hmip entity states and orphaned device info."""
+        try:
+            from homeassistant.const import STATE_UNAVAILABLE
+            all_states = self.hass.states.async_all()
+            hmip_states = [s for s in all_states if s.entity_id.startswith(f"{self.config_entry.domain}.")]
+            unavailable = [s.entity_id for s in hmip_states if s.state == STATE_UNAVAILABLE]
+            devices = list(self.home.devices)
+            orphaned = [d for d in devices if not getattr(d, "_on_update", [])]
+            # Also log stale-looking states: entities whose last_changed is older than 10 min
+            import datetime
+            now = self.hass.util.dt.utcnow()
+            stale = [
+                s.entity_id for s in hmip_states
+                if s.last_changed and (now - s.last_changed).total_seconds() > 600
+                and s.state not in (STATE_UNAVAILABLE, "unavailable")
+            ]
+            _LOGGER.debug(
+                "[%s] %d hmip entities | %d unavailable: %s | %d orphaned devices: %s | %d stale (>10min unchanged): %s",
+                trigger,
+                len(hmip_states),
+                len(unavailable),
+                [e.split(".", 1)[1] for e in unavailable[:10]],
+                len(orphaned),
+                [getattr(d, "label", "?") for d in orphaned],
+                len(stale),
+                [e.split(".", 1)[1] for e in stale[:10]],
+            )
+        except Exception:  # noqa: BLE001
+            _LOGGER.exception("_log_entity_state_snapshot(%s) failed", trigger)
+
+    async def _post_reconnect_check(self) -> None:
+        """60s after reconnect: log state snapshot and fire update_all as safety net."""
+        await asyncio.sleep(60)
+        _LOGGER.debug("post-reconnect check (60s after get_state succeeded)")
+        self._log_entity_state_snapshot("post-reconnect-60s")
+        # Safety net: fire update_all again in case some entities missed the first round
+        _LOGGER.debug("post-reconnect safety net: firing update_all again")
+        self.update_all()
 
     @callback
     def async_update(self, *args, **kwargs) -> None:
@@ -269,6 +293,8 @@ class HomematicipHAP:
                 _LOGGER.debug("Calling get_state")
                 await self.get_state()
                 _LOGGER.debug("get_state succeeded")
+                # Schedule post-reconnect check: log state + safety-net update_all after 60s
+                self.hass.async_create_task(self._post_reconnect_check())
                 break
             except asyncio.CancelledError:
                 raise
