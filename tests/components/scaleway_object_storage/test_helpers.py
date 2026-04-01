@@ -228,9 +228,7 @@ async def test_check_connection(
     mock_response, mock_response_context = mock_s3_response_factory(status_code=200)
     mock_s3_client.head.return_value = mock_response_context
 
-    await helpers.check_connection(
-        cast(ClientSession, mock_aiohttp_clientsession), valid_config
-    )
+    await helpers.check_connection(mock_s3_client)
     assert mock_response.release.call_count == 1
 
 
@@ -245,9 +243,7 @@ async def test_check_connection_bucket_not_found(
     mock_s3_client.head.return_value = mock_response_context
 
     with pytest.raises(exceptions.BucketNotFoundException):
-        await helpers.check_connection(
-            cast(ClientSession, mock_aiohttp_clientsession), valid_config
-        )
+        await helpers.check_connection(mock_s3_client)
 
     assert mock_response.release.call_count == 1
 
@@ -274,9 +270,7 @@ async def test_check_connection_server_error(
     mock_s3_client.head.return_value = mock_response_context
 
     with pytest.raises(exceptions.ServerUnavailableError):
-        await helpers.check_connection(
-            cast(ClientSession, mock_aiohttp_clientsession), valid_config
-        )
+        await helpers.check_connection(mock_s3_client)
 
     assert mock_response.release.call_count == 1
 
@@ -290,13 +284,8 @@ async def test_check_connection_invalid_bucket(
     """Test check_connection with invalid bucket name."""
     mock_s3_client.head.side_effect = InvalidURL("placeholder")
 
-    config = dict(valid_config)
-    config[CONF_BUCKET] = "invalid/bucket&name"
-
     with pytest.raises(exceptions.InvalidBucketNameException):
-        await helpers.check_connection(
-            cast(ClientSession, mock_aiohttp_clientsession), config
-        )
+        await helpers.check_connection(mock_s3_client)
 
 
 async def test_check_connection_network_error(
@@ -308,9 +297,7 @@ async def test_check_connection_network_error(
     mock_s3_client.head.side_effect = ClientConnectionError()
 
     with pytest.raises(exceptions.ScalewayConnectionError):
-        await helpers.check_connection(
-            cast(ClientSession, mock_aiohttp_clientsession), valid_config
-        )
+        await helpers.check_connection(mock_s3_client)
 
 
 @pytest.mark.parametrize(
@@ -337,15 +324,3 @@ def test_create_client(
         cast(ClientSession, mock_aiohttp_clientsession), config
     )
     assert str(client.url) == expected_endpoint
-
-
-def test_create_client_unscoped(
-    valid_config: Mapping[str, Any], mock_aiohttp_clientsession: MagicMock
-) -> None:
-    """Test create_client with different bucket name formats."""
-    client = helpers.create_client(
-        cast(ClientSession, mock_aiohttp_clientsession),
-        valid_config,
-        bucket_scoped=False,
-    )
-    assert str(client.url) == "https://s3.fr-par.scw.cloud"

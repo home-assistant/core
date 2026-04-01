@@ -24,8 +24,9 @@ type ScalewayConfigEntry = ConfigEntry[S3Client]
 async def async_setup_entry(hass: HomeAssistant, entry: ScalewayConfigEntry) -> bool:
     """Set up an integration config entry."""
     session = aiohttp_client.async_get_clientsession(hass)
+    client = helpers.create_client(session, entry.data)
     try:
-        await helpers.check_connection(session, entry.data)
+        await helpers.check_connection(client)
     except ConfigEntryNotReady, ConfigEntryError, ConfigEntryAuthFailed:
         # Re-raise as they are
         raise
@@ -37,7 +38,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ScalewayConfigEntry) -> 
             translation_placeholders=e.translation_placeholders,
         ) from e
 
-    entry.runtime_data = helpers.create_client(session, entry.data)
+    entry.runtime_data = client
 
     # Notify backup listeners
     def notify_backup_listeners() -> None:

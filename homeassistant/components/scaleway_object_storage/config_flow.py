@@ -108,8 +108,9 @@ class ScalewayConfigFlow(ConfigFlow, domain=DOMAIN):
             True, if the connection succeeded.
         """
         session = async_get_clientsession(self.hass)
+        client = helpers.create_client(session, config)
         try:
-            await helpers.check_connection(session, config)
+            await helpers.check_connection(client)
         except exceptions.ScalewayConfigException as e:
             errors[e.config_schema_key] = e.config_translation_key
             return False

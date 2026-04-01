@@ -32,21 +32,18 @@ _LOGGER = logging.getLogger(__name__)
 def create_client(
     session: ClientSession,
     config: Mapping[str, Any],
-    *,
-    bucket_scoped: bool = True,
 ) -> S3Client:
     """Creates a new S3Client that can be used to manipulate objects in a bucket."""
     region = config[CONF_REGION]
     bucket_name = config[CONF_BUCKET]
-    if bucket_scoped:
-        if "." in bucket_name:
-            # fall back to canonical path addressing
-            # see https://www.scaleway.com/en/docs/object-storage/faq/#is-there-a-limitation-in-the-bucket-name
-            endpoint_url = f"https://s3.{region}.scw.cloud/{bucket_name}"
-        else:
-            endpoint_url = f"https://{bucket_name}.s3.{region}.scw.cloud"
+    if "." in bucket_name:
+        # fall back to canonical path addressing to avoid certificate issues
+        # see https://www.scaleway.com/en/docs/object-storage/faq/#is-there-a-limitation-in-the-bucket-name
+        endpoint_url = f"https://s3.{region}.scw.cloud/{bucket_name}"
     else:
-        endpoint_url = f"https://s3.{region}.scw.cloud"
+        # virtual-host addressing is generally preferred by S3 API providers because it's easier to
+        # scale
+        endpoint_url = f"https://{bucket_name}.s3.{region}.scw.cloud"
 
     credentials = config[CONF_SECTION_CREDENTIALS]
 
@@ -82,13 +79,11 @@ def raise_for_status(response_status: int) -> None:
 
 
 async def check_connection(
-    session: ClientSession,
-    config: Mapping[str, Any],
+    client: S3Client,
 ) -> None:
     """Attempts to validate config by making a HEAD request to the configured bucket."""
-    client = create_client(session, config, bucket_scoped=False)
     try:
-        response = await client.head(object_name=config[CONF_BUCKET])
+        response = await client.head(object_name="")
     except ClientConnectionError as e:
         raise exceptions.ScalewayConnectionError from e
     except InvalidURL as e:
