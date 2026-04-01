@@ -40,7 +40,7 @@ class ListBaseIntentHandler(intent.IntentHandler):
         hass = intent_obj.hass
 
         slots = self.async_validate_slots(intent_obj.slots)
-        item = slots["item"]["value"].strip().capitalize()
+        item = slots["item"]["value"].strip()
         list_name = slots["name"]["value"]
 
         target_list: TodoListEntity | None = None
@@ -91,7 +91,7 @@ class ListAddItemIntentHandler(ListBaseIntentHandler):
 
         # Add to list
         await target_list.async_create_todo_item(
-            TodoItem(summary=item, status=TodoItemStatus.NEEDS_ACTION)
+            TodoItem(summary=item.capitalize(), status=TodoItemStatus.NEEDS_ACTION)
         )
 
 
@@ -140,7 +140,10 @@ class ListRemoveItemIntentHandler(ListBaseIntentHandler):
         # Find item in list
         matching_item = None
         for todo_item in target_list.todo_items or ():
-            if item in (todo_item.uid, todo_item.summary):
+            if (
+                item == todo_item.uid
+                or item.casefold() == (todo_item.summary or "").casefold()
+            )
                 matching_item = todo_item
                 break
         if not matching_item or not matching_item.uid:
