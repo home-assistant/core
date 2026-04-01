@@ -3,25 +3,22 @@
 from __future__ import annotations
 
 from ovoenergy import OVOEnergy
-from ovoenergy.models import OVODailyUsage
 
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-    DataUpdateCoordinator,
-)
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
+from .coordinator import OVOEnergyDataUpdateCoordinator
 
 
-class OVOEnergyEntity(CoordinatorEntity[DataUpdateCoordinator[OVODailyUsage]]):
+class OVOEnergyEntity(CoordinatorEntity[OVOEnergyDataUpdateCoordinator]):
     """Defines a base OVO Energy entity."""
 
     _attr_has_entity_name = True
 
     def __init__(
         self,
-        coordinator: DataUpdateCoordinator[OVODailyUsage],
+        coordinator: OVOEnergyDataUpdateCoordinator,
         client: OVOEnergy,
     ) -> None:
         """Initialize the OVO Energy entity."""
