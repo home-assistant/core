@@ -1,5 +1,5 @@
 """Access point for the HomematicIP Cloud component."""
-# Debug build: lackas/hmip-reconnect-fix v7 (2026-04-01)
+# Debug build: lackas/hmip-reconnect-fix v8 (2026-04-01)
 
 from __future__ import annotations
 
@@ -123,7 +123,7 @@ class HomematicipHAP:
 
     async def async_setup(self, tries: int = 0) -> bool:
         """Initialize connection."""
-        _LOGGER.debug("HomematicIP Cloud HAP starting — debug build v7 (2026-04-01)")
+        _LOGGER.debug("HomematicIP Cloud HAP starting — debug build v8 (2026-04-01)")
         try:
             self.home = await self.get_hap(
                 self.hass,
@@ -167,25 +167,47 @@ class HomematicipHAP:
             await asyncio.sleep(3600)
             self._log_entity_state_snapshot("hourly")
 
-    def _log_entity_state_snapshot(self, trigger: str) -> None:
-        """Log current hmip entity states and orphaned device info."""
+    def _log_entity_state_snapshot(self, trigger: str, since_reconnect: bool = False) -> None:
+        """Log current hmip entity states, orphaned devices, and state mismatches."""
         try:
-            from homeassistant.const import STATE_UNAVAILABLE
+            from homeassistant.const import STATE_UNAVAILABLE, STATE_ON, STATE_OFF
             all_states = self.hass.states.async_all()
             hmip_states = [s for s in all_states if s.entity_id.startswith(f"{self.config_entry.domain}.")]
             unavailable = [s.entity_id for s in hmip_states if s.state == STATE_UNAVAILABLE]
             devices = list(self.home.devices)
             orphaned = [d for d in devices if not getattr(d, "_on_update", [])]
-            # Also log stale-looking states: entities whose last_changed is older than 10 min
-            import datetime
             now = self.hass.util.dt.utcnow()
+
+            # Stale: entities whose last_changed is older than 10 min (catches wrong-value stale)
             stale = [
-                s.entity_id for s in hmip_states
+                (s.entity_id, s.state, str(s.last_changed)[:16] if s.last_changed else "?")
+                for s in hmip_states
                 if s.last_changed and (now - s.last_changed).total_seconds() > 600
-                and s.state not in (STATE_UNAVAILABLE, "unavailable")
+                and s.state not in (STATE_UNAVAILABLE,)
             ]
+
+            # State mismatch: compare library device state vs HA entity state
+            mismatches = []
+            for device in devices:
+                for ch_idx, channel in (getattr(device, "functionalChannels", {}) or {}).items():
+                    lib_on = getattr(channel, "on", None)
+                    if lib_on is None:
+                        continue
+                    # Find HA entities for this device
+                    device_id = getattr(device, "id", None)
+                    if not device_id:
+                        continue
+                    for s in hmip_states:
+                        uid = getattr(self.hass.states.get(s.entity_id), "attributes", {}).get("unique_id")
+                        ha_on = s.state == STATE_ON
+                        if lib_on != ha_on and s.state not in (STATE_UNAVAILABLE,):
+                            if device_id in s.entity_id or (device.label and device.label.lower().replace(" ", "_") in s.entity_id):
+                                mismatches.append(
+                                    f"{s.entity_id}: HA={s.state} lib={'on' if lib_on else 'off'}"
+                                )
+
             _LOGGER.debug(
-                "[%s] %d hmip entities | %d unavailable: %s | %d orphaned devices: %s | %d stale (>10min unchanged): %s",
+                "[%s] %d hmip entities | %d unavailable: %s | %d orphaned: %s | %d stale>10min: %s | %d mismatches: %s",
                 trigger,
                 len(hmip_states),
                 len(unavailable),
@@ -193,7 +215,9 @@ class HomematicipHAP:
                 len(orphaned),
                 [getattr(d, "label", "?") for d in orphaned],
                 len(stale),
-                [e.split(".", 1)[1] for e in stale[:10]],
+                [(e.split(".", 1)[1], v, t) for e, v, t in stale[:5]],
+                len(mismatches),
+                mismatches[:5],
             )
         except Exception:  # noqa: BLE001
             _LOGGER.exception("_log_entity_state_snapshot(%s) failed", trigger)
@@ -439,6 +463,8 @@ class HomematicipHAP:
             self._get_state_task is not None and not self._get_state_task.done(),
         )
         self._ws_connection_closed.set()
+        # Log entity state snapshot at disconnect — for pre/post comparison
+        self._log_entity_state_snapshot("pre-reconnect")
 
     async def ws_reconnected_handler(self, reason: str) -> None:
         """Handle websocket reconnection. Is called when Websocket tries to reconnect."""
