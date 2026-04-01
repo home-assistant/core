@@ -10,15 +10,17 @@ from enocean_async import (
     Instructable,
     QueryActuatorMeasurement,
     QueryActuatorStatus,
+    TeachIn,  # codespell:ignore teachin
 )
 from enocean_async.semantics.instruction import Instruction
 
 from homeassistant.components.button import ButtonEntity
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import EnOceanConfigEntry
-from .entity import EnOceanEntity
+from .entity import LIB_ENTITY_CATEGORY_MAP, EnOceanEntity
 
 PARALLEL_UPDATES = 1
 
@@ -26,6 +28,7 @@ _INSTRUCTABLE_TO_INSTRUCTION: dict[Instructable, type[Instruction]] = {
     Instructable.QUERY_ACTUATOR_STATUS: QueryActuatorStatus,
     Instructable.QUERY_ACTUATOR_MEASUREMENT: QueryActuatorMeasurement,
     Instructable.COVER_QUERY_POSITION_AND_ANGLE: CoverQueryPositionAndAngle,
+    Instructable.TEACH_IN: TeachIn,  # codespell:ignore teachin
 }
 
 
@@ -47,7 +50,11 @@ async def async_setup_entry(
                 continue
             entities.append(
                 EnOceanButton(
-                    eurid, entity.id, gateway, _INSTRUCTABLE_TO_INSTRUCTION[action]
+                    eurid,
+                    entity.id,
+                    gateway,
+                    _INSTRUCTABLE_TO_INSTRUCTION[action],
+                    LIB_ENTITY_CATEGORY_MAP.get(entity.category),
                 )
             )
 
@@ -63,10 +70,12 @@ class EnOceanButton(EnOceanEntity, ButtonEntity):
         entity_key: str,
         gateway: Gateway,
         instruction_cls: type[Instruction],
+        entity_category: EntityCategory | None,
     ) -> None:
         """Initialize the EnOcean trigger button."""
         super().__init__(address, entity_key, gateway)
         self._instruction_cls = instruction_cls
+        self._attr_entity_category = entity_category
 
     async def async_press(self) -> None:
         """Send the trigger command to the device."""

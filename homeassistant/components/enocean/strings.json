@@ -34,6 +34,30 @@
   },
   "entity": {
     "binary_sensor": {
+      "ch1_error_level": {
+        "name": "Channel 1 error level"
+      },
+      "ch2_error_level": {
+        "name": "Channel 2 error level"
+      },
+      "ch3_error_level": {
+        "name": "Channel 3 error level"
+      },
+      "ch4_error_level": {
+        "name": "Channel 4 error level"
+      },
+      "ch5_error_level": {
+        "name": "Channel 5 error level"
+      },
+      "ch6_error_level": {
+        "name": "Channel 6 error level"
+      },
+      "ch7_error_level": {
+        "name": "Channel 7 error level"
+      },
+      "ch8_error_level": {
+        "name": "Channel 8 error level"
+      },
       "contact_state": {
         "name": "Contact"
       },
@@ -56,6 +80,9 @@
       },
       "query_status": {
         "name": "Query status"
+      },
+      "teach_in": {
+        "name": "Send teach-in"
       }
     },
     "event": {
@@ -80,6 +107,9 @@
     "number": {
       "max_brightness": {
         "name": "Maximum brightness"
+      },
+      "max_travel_time": {
+        "name": "Maximum travel time"
       },
       "min_brightness": {
         "name": "Minimum brightness"
@@ -221,6 +251,32 @@
           "open": "Open",
           "tilted": "Tilted"
         }
+      }
+    },
+    "switch": {
+      "ch1_switch_state": {
+        "name": "Channel 1"
+      },
+      "ch2_switch_state": {
+        "name": "Channel 2"
+      },
+      "ch3_switch_state": {
+        "name": "Channel 3"
+      },
+      "ch4_switch_state": {
+        "name": "Channel 4"
+      },
+      "ch5_switch_state": {
+        "name": "Channel 5"
+      },
+      "ch6_switch_state": {
+        "name": "Channel 6"
+      },
+      "ch7_switch_state": {
+        "name": "Channel 7"
+      },
+      "ch8_switch_state": {
+        "name": "Channel 8"
       }
     }
   },
