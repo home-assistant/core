@@ -1084,6 +1084,37 @@
     'via_device_id': None,
   })
 # ---
+# name: test_devices[da_ref_normal_100001]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
+    'configuration_url': 'https://account.smartthings.com',
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'smartthings',
+        'C097277F-0DCF-0000-0000-000000000000',
+      ),
+    }),
+    'labels': set({
+    }),
+    'manufacturer': 'Samsung Electronics',
+    'model': 'DONGLE_0281',
+    'model_id': None,
+    'name': 'Kjøleskap',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': None,
+    'sw_version': None,
+    'via_device_id': None,
+  })
+# ---
 # name: test_devices[da_rvc_map_01011]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
@@ -1236,6 +1267,37 @@
     'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': '20250317.1',
+    'via_device_id': None,
+  })
+# ---
+# name: test_devices[da_vc_stick_01001]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
+    'configuration_url': 'https://account.smartthings.com',
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': 'Realtek',
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'smartthings',
+        'e1f93c0c-6fe0-c65a-a314-c8f7b163c86b',
+      ),
+    }),
+    'labels': set({
+    }),
+    'manufacturer': 'Samsung Electronics',
+    'model': 'A-VSWW-TP1-23-VS9700',
+    'model_id': 'VS28C9784QK/WA',
+    'name': 'Stick vacuum',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': None,
+    'sw_version': 'A-VSWW-TP1-23-VS9700_51250514',
     'via_device_id': None,
   })
 # ---

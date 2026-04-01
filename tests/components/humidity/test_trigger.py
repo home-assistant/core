@@ -11,17 +11,18 @@ from homeassistant.components.climate import (
 from homeassistant.components.humidifier import (
     ATTR_CURRENT_HUMIDITY as HUMIDIFIER_ATTR_CURRENT_HUMIDITY,
 )
+from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.components.weather import ATTR_WEATHER_HUMIDITY
-from homeassistant.const import ATTR_DEVICE_CLASS, CONF_ENTITY_ID, STATE_ON
-from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.const import ATTR_UNIT_OF_MEASUREMENT, STATE_ON
+from homeassistant.core import HomeAssistant
 
 from tests.components.common import (
     TriggerStateDescription,
-    arm_trigger,
     assert_trigger_behavior_any,
     assert_trigger_behavior_first,
     assert_trigger_behavior_last,
     assert_trigger_gated_by_labs_flag,
+    assert_trigger_ignores_limit_entities_with_wrong_unit,
     parametrize_numerical_attribute_changed_trigger_states,
     parametrize_numerical_attribute_crossed_threshold_trigger_states,
     parametrize_numerical_state_value_changed_trigger_states,
@@ -81,16 +82,19 @@ async def test_humidity_triggers_gated_by_labs_flag(
     ("trigger", "trigger_options", "states"),
     [
         *parametrize_numerical_state_value_changed_trigger_states(
-            "humidity.changed", "humidity"
+            "humidity.changed",
+            device_class=SensorDeviceClass.HUMIDITY,
+            unit_attributes={ATTR_UNIT_OF_MEASUREMENT: "%"},
         ),
         *parametrize_numerical_state_value_crossed_threshold_trigger_states(
-            "humidity.crossed_threshold", "humidity"
+            "humidity.crossed_threshold",
+            device_class=SensorDeviceClass.HUMIDITY,
+            unit_attributes={ATTR_UNIT_OF_MEASUREMENT: "%"},
         ),
     ],
 )
 async def test_humidity_trigger_sensor_behavior_any(
     hass: HomeAssistant,
-    service_calls: list[ServiceCall],
     target_sensors: dict[str, list[str]],
     trigger_target_config: dict,
     entity_id: str,
@@ -102,7 +106,6 @@ async def test_humidity_trigger_sensor_behavior_any(
     """Test humidity trigger fires for sensor entities with device_class humidity."""
     await assert_trigger_behavior_any(
         hass,
-        service_calls=service_calls,
         target_entities=target_sensors,
         trigger_target_config=trigger_target_config,
         entity_id=entity_id,
@@ -122,13 +125,14 @@ async def test_humidity_trigger_sensor_behavior_any(
     ("trigger", "trigger_options", "states"),
     [
         *parametrize_numerical_state_value_crossed_threshold_trigger_states(
-            "humidity.crossed_threshold", "humidity"
+            "humidity.crossed_threshold",
+            device_class=SensorDeviceClass.HUMIDITY,
+            unit_attributes={ATTR_UNIT_OF_MEASUREMENT: "%"},
         ),
     ],
 )
 async def test_humidity_trigger_sensor_crossed_threshold_behavior_first(
     hass: HomeAssistant,
-    service_calls: list[ServiceCall],
     target_sensors: dict[str, list[str]],
     trigger_target_config: dict,
     entity_id: str,
@@ -140,7 +144,6 @@ async def test_humidity_trigger_sensor_crossed_threshold_behavior_first(
     """Test humidity crossed_threshold trigger fires on the first sensor state change."""
     await assert_trigger_behavior_first(
         hass,
-        service_calls=service_calls,
         target_entities=target_sensors,
         trigger_target_config=trigger_target_config,
         entity_id=entity_id,
@@ -160,13 +163,14 @@ async def test_humidity_trigger_sensor_crossed_threshold_behavior_first(
     ("trigger", "trigger_options", "states"),
     [
         *parametrize_numerical_state_value_crossed_threshold_trigger_states(
-            "humidity.crossed_threshold", "humidity"
+            "humidity.crossed_threshold",
+            device_class=SensorDeviceClass.HUMIDITY,
+            unit_attributes={ATTR_UNIT_OF_MEASUREMENT: "%"},
         ),
     ],
 )
 async def test_humidity_trigger_sensor_crossed_threshold_behavior_last(
     hass: HomeAssistant,
-    service_calls: list[ServiceCall],
     target_sensors: dict[str, list[str]],
     trigger_target_config: dict,
     entity_id: str,
@@ -178,7 +182,6 @@ async def test_humidity_trigger_sensor_crossed_threshold_behavior_last(
     """Test humidity crossed_threshold trigger fires when the last sensor changes state."""
     await assert_trigger_behavior_last(
         hass,
-        service_calls=service_calls,
         target_entities=target_sensors,
         trigger_target_config=trigger_target_config,
         entity_id=entity_id,
@@ -212,7 +215,6 @@ async def test_humidity_trigger_sensor_crossed_threshold_behavior_last(
 )
 async def test_humidity_trigger_climate_behavior_any(
     hass: HomeAssistant,
-    service_calls: list[ServiceCall],
     target_climates: dict[str, list[str]],
     trigger_target_config: dict,
     entity_id: str,
@@ -224,7 +226,6 @@ async def test_humidity_trigger_climate_behavior_any(
     """Test humidity trigger fires for climate entities."""
     await assert_trigger_behavior_any(
         hass,
-        service_calls=service_calls,
         target_entities=target_climates,
         trigger_target_config=trigger_target_config,
         entity_id=entity_id,
@@ -252,7 +253,6 @@ async def test_humidity_trigger_climate_behavior_any(
 )
 async def test_humidity_trigger_climate_crossed_threshold_behavior_first(
     hass: HomeAssistant,
-    service_calls: list[ServiceCall],
     target_climates: dict[str, list[str]],
     trigger_target_config: dict,
     entity_id: str,
@@ -264,7 +264,6 @@ async def test_humidity_trigger_climate_crossed_threshold_behavior_first(
     """Test humidity crossed_threshold trigger fires on the first climate state change."""
     await assert_trigger_behavior_first(
         hass,
-        service_calls=service_calls,
         target_entities=target_climates,
         trigger_target_config=trigger_target_config,
         entity_id=entity_id,
@@ -292,7 +291,6 @@ async def test_humidity_trigger_climate_crossed_threshold_behavior_first(
 )
 async def test_humidity_trigger_climate_crossed_threshold_behavior_last(
     hass: HomeAssistant,
-    service_calls: list[ServiceCall],
     target_climates: dict[str, list[str]],
     trigger_target_config: dict,
     entity_id: str,
@@ -304,7 +302,6 @@ async def test_humidity_trigger_climate_crossed_threshold_behavior_last(
     """Test humidity crossed_threshold trigger fires when the last climate changes state."""
     await assert_trigger_behavior_last(
         hass,
-        service_calls=service_calls,
         target_entities=target_climates,
         trigger_target_config=trigger_target_config,
         entity_id=entity_id,
@@ -338,7 +335,6 @@ async def test_humidity_trigger_climate_crossed_threshold_behavior_last(
 )
 async def test_humidity_trigger_humidifier_behavior_any(
     hass: HomeAssistant,
-    service_calls: list[ServiceCall],
     target_humidifiers: dict[str, list[str]],
     trigger_target_config: dict,
     entity_id: str,
@@ -350,7 +346,6 @@ async def test_humidity_trigger_humidifier_behavior_any(
     """Test humidity trigger fires for humidifier entities."""
     await assert_trigger_behavior_any(
         hass,
-        service_calls=service_calls,
         target_entities=target_humidifiers,
         trigger_target_config=trigger_target_config,
         entity_id=entity_id,
@@ -378,7 +373,6 @@ async def test_humidity_trigger_humidifier_behavior_any(
 )
 async def test_humidity_trigger_humidifier_crossed_threshold_behavior_first(
     hass: HomeAssistant,
-    service_calls: list[ServiceCall],
     target_humidifiers: dict[str, list[str]],
     trigger_target_config: dict,
     entity_id: str,
@@ -390,7 +384,6 @@ async def test_humidity_trigger_humidifier_crossed_threshold_behavior_first(
     """Test humidity crossed_threshold trigger fires on the first humidifier state change."""
     await assert_trigger_behavior_first(
         hass,
-        service_calls=service_calls,
         target_entities=target_humidifiers,
         trigger_target_config=trigger_target_config,
         entity_id=entity_id,
@@ -418,7 +411,6 @@ async def test_humidity_trigger_humidifier_crossed_threshold_behavior_first(
 )
 async def test_humidity_trigger_humidifier_crossed_threshold_behavior_last(
     hass: HomeAssistant,
-    service_calls: list[ServiceCall],
     target_humidifiers: dict[str, list[str]],
     trigger_target_config: dict,
     entity_id: str,
@@ -430,7 +422,6 @@ async def test_humidity_trigger_humidifier_crossed_threshold_behavior_last(
     """Test humidity crossed_threshold trigger fires when the last humidifier changes state."""
     await assert_trigger_behavior_last(
         hass,
-        service_calls=service_calls,
         target_entities=target_humidifiers,
         trigger_target_config=trigger_target_config,
         entity_id=entity_id,
@@ -464,7 +455,6 @@ async def test_humidity_trigger_humidifier_crossed_threshold_behavior_last(
 )
 async def test_humidity_trigger_weather_behavior_any(
     hass: HomeAssistant,
-    service_calls: list[ServiceCall],
     target_weathers: dict[str, list[str]],
     trigger_target_config: dict,
     entity_id: str,
@@ -476,7 +466,6 @@ async def test_humidity_trigger_weather_behavior_any(
     """Test humidity trigger fires for weather entities."""
     await assert_trigger_behavior_any(
         hass,
-        service_calls=service_calls,
         target_entities=target_weathers,
         trigger_target_config=trigger_target_config,
         entity_id=entity_id,
@@ -504,7 +493,6 @@ async def test_humidity_trigger_weather_behavior_any(
 )
 async def test_humidity_trigger_weather_crossed_threshold_behavior_first(
     hass: HomeAssistant,
-    service_calls: list[ServiceCall],
     target_weathers: dict[str, list[str]],
     trigger_target_config: dict,
     entity_id: str,
@@ -516,7 +504,6 @@ async def test_humidity_trigger_weather_crossed_threshold_behavior_first(
     """Test humidity crossed_threshold trigger fires on the first weather state change."""
     await assert_trigger_behavior_first(
         hass,
-        service_calls=service_calls,
         target_entities=target_weathers,
         trigger_target_config=trigger_target_config,
         entity_id=entity_id,
@@ -544,7 +531,6 @@ async def test_humidity_trigger_weather_crossed_threshold_behavior_first(
 )
 async def test_humidity_trigger_weather_crossed_threshold_behavior_last(
     hass: HomeAssistant,
-    service_calls: list[ServiceCall],
     target_weathers: dict[str, list[str]],
     trigger_target_config: dict,
     entity_id: str,
@@ -556,7 +542,6 @@ async def test_humidity_trigger_weather_crossed_threshold_behavior_last(
     """Test humidity crossed_threshold trigger fires when the last weather changes state."""
     await assert_trigger_behavior_last(
         hass,
-        service_calls=service_calls,
         target_entities=target_weathers,
         trigger_target_config=trigger_target_config,
         entity_id=entity_id,
@@ -567,77 +552,58 @@ async def test_humidity_trigger_weather_crossed_threshold_behavior_last(
     )
 
 
-# --- Device class exclusion test ---
-
-
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
-    (
-        "trigger_key",
-        "trigger_options",
-        "sensor_initial",
-        "sensor_target",
-    ),
+    ("trigger", "trigger_options", "limit_entities"),
     [
         (
             "humidity.changed",
-            {},
-            "50",
-            "60",
+            {
+                "threshold": {
+                    "type": "between",
+                    "value_min": {"entity": "sensor.humidity_above"},
+                    "value_max": {"entity": "sensor.humidity_below"},
+                },
+            },
+            ["sensor.humidity_above", "sensor.humidity_below"],
         ),
         (
             "humidity.crossed_threshold",
-            {"threshold_type": "above", "lower_limit": 10},
-            "5",
-            "50",
+            {
+                "threshold": {
+                    "type": "between",
+                    "value_min": {"entity": "sensor.humidity_lower"},
+                    "value_max": {"entity": "sensor.humidity_upper"},
+                },
+            },
+            ["sensor.humidity_lower", "sensor.humidity_upper"],
         ),
     ],
 )
-async def test_humidity_trigger_excludes_non_humidity_sensor(
+@pytest.mark.usefixtures("enable_labs_preview_features")
+async def test_humidity_trigger_ignores_limit_entity_with_wrong_unit(
     hass: HomeAssistant,
-    service_calls: list[ServiceCall],
-    trigger_key: str,
+    trigger: str,
     trigger_options: dict[str, Any],
-    sensor_initial: str,
-    sensor_target: str,
+    limit_entities: list[str],
 ) -> None:
-    """Test humidity trigger does not fire for sensor entities without device_class humidity."""
-    entity_id_humidity = "sensor.test_humidity"
-    entity_id_temperature = "sensor.test_temperature"
-
-    # Set initial states
-    hass.states.async_set(
-        entity_id_humidity, sensor_initial, {ATTR_DEVICE_CLASS: "humidity"}
-    )
-    hass.states.async_set(
-        entity_id_temperature, sensor_initial, {ATTR_DEVICE_CLASS: "temperature"}
-    )
-    await hass.async_block_till_done()
-
-    await arm_trigger(
+    """Test humidity triggers do not fire if limit entity unit is not %."""
+    await assert_trigger_ignores_limit_entities_with_wrong_unit(
         hass,
-        trigger_key,
-        trigger_options,
-        {
-            CONF_ENTITY_ID: [
-                entity_id_humidity,
-                entity_id_temperature,
-            ]
+        trigger=trigger,
+        trigger_options=trigger_options,
+        entity_id="climate.test_climate",
+        reset_state={
+            "state": HVACMode.AUTO,
+            "attributes": {CLIMATE_ATTR_CURRENT_HUMIDITY: 0},
         },
+        trigger_state={
+            "state": HVACMode.AUTO,
+            "attributes": {CLIMATE_ATTR_CURRENT_HUMIDITY: 50},
+        },
+        limit_entities=[
+            (limit_entities[0], "10"),
+            (limit_entities[1], "90"),
+        ],
+        correct_unit="%",
+        wrong_unit="g/m³",
     )
-
-    # Humidity sensor changes - should trigger
-    hass.states.async_set(
-        entity_id_humidity, sensor_target, {ATTR_DEVICE_CLASS: "humidity"}
-    )
-    await hass.async_block_till_done()
-    assert len(service_calls) == 1
-    assert service_calls[0].data[CONF_ENTITY_ID] == entity_id_humidity
-    service_calls.clear()
-
-    # Temperature sensor changes - should NOT trigger (wrong device class)
-    hass.states.async_set(
-        entity_id_temperature, sensor_target, {ATTR_DEVICE_CLASS: "temperature"}
-    )
-    await hass.async_block_till_done()
-    assert len(service_calls) == 0

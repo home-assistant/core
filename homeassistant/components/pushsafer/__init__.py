@@ -1,1 +1,1 @@
-"""The pushsafer component."""
+"""The Pushsafer integration."""

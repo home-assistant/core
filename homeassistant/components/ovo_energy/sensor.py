@@ -21,10 +21,10 @@ from homeassistant.const import UnitOfEnergy
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.util import dt as dt_util
 
 from .const import DATA_CLIENT, DATA_COORDINATOR, DOMAIN
+from .coordinator import OVOEnergyDataUpdateCoordinator
 from .entity import OVOEnergyDeviceEntity
 
 SCAN_INTERVAL = timedelta(seconds=300)
@@ -118,9 +118,9 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up OVO Energy sensor based on a config entry."""
-    coordinator: DataUpdateCoordinator[OVODailyUsage] = hass.data[DOMAIN][
-        entry.entry_id
-    ][DATA_COORDINATOR]
+    coordinator: OVOEnergyDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id][
+        DATA_COORDINATOR
+    ]
     client: OVOEnergy = hass.data[DOMAIN][entry.entry_id][DATA_CLIENT]
 
     entities = []
@@ -161,12 +161,11 @@ async def async_setup_entry(
 class OVOEnergySensor(OVOEnergyDeviceEntity, SensorEntity):
     """Define a OVO Energy sensor."""
 
-    coordinator: DataUpdateCoordinator[DataUpdateCoordinator[OVODailyUsage]]
     entity_description: OVOEnergySensorEntityDescription
 
     def __init__(
         self,
-        coordinator: DataUpdateCoordinator[OVODailyUsage],
+        coordinator: OVOEnergyDataUpdateCoordinator,
         description: OVOEnergySensorEntityDescription,
         client: OVOEnergy,
     ) -> None:
