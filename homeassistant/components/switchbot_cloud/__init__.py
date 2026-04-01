@@ -160,6 +160,9 @@ async def make_device_data(
         "Plug Mini (US)",
         "Plug Mini (JP)",
         "Plug Mini (EU)",
+        "WeatherStation",
+        "Air Purifier PM2.5",
+        "Air Purifier Table PM2.5",
     ]:
         coordinator = await coordinator_for_device(
             hass, entry, api, device, coordinators_by_id
@@ -225,8 +228,7 @@ async def make_device_data(
         devices_data.switches.append((device, coordinator))
         devices_data.lights.append((device, coordinator))
         devices_data.buttons.append((device, coordinator))
-        if "PM2.5" in device.device_type:
-            devices_data.sensors.append((device, coordinator))
+
     if isinstance(device, Device) and device.device_type in [
         "Motion Sensor",
         "Contact Sensor",
@@ -327,11 +329,6 @@ async def make_device_data(
         devices_data.buttons.append((device, coordinator))
         devices_data.sensors.append((device, coordinator))
         devices_data.images.append((device, coordinator))
-    if isinstance(device, Device) and device.device_type == "WeatherStation":
-        coordinator = await coordinator_for_device(
-            hass, entry, api, device, coordinators_by_id
-        )
-        devices_data.sensors.append((device, coordinator))
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
