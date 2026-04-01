@@ -53,7 +53,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     session = async_get_clientsession(hass, verify_ssl=verify_ssl)
     client = OPNsenseClient(url, api_key, api_secret, session, verify_ssl)
     try:
-        interfaces_resp = await client.get_interfaces()
+        if tracker_interfaces:
+            interfaces_resp = await client.get_interfaces()
+        await client.get_arp()
     except OPNsenseApiError:
         _LOGGER.exception("Failure while connecting to OPNsense API endpoint")
         return False
