@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_all_sensors[sensor.home_controller_daily_active_water_use-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -59,8 +60,9 @@
 # ---
 # name: test_all_sensors[sensor.home_controller_daily_active_watering_time-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -114,8 +116,9 @@
 # ---
 # name: test_all_sensors[sensor.home_controller_daily_inactive_water_use-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -172,8 +175,9 @@
 # ---
 # name: test_all_sensors[sensor.home_controller_daily_total_water_use-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -230,8 +234,9 @@
 # ---
 # name: test_all_sensors[sensor.zone_one_daily_active_water_use-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -288,8 +293,9 @@
 # ---
 # name: test_all_sensors[sensor.zone_one_daily_active_watering_time-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -343,8 +349,9 @@
 # ---
 # name: test_all_sensors[sensor.zone_one_next_cycle-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -394,8 +401,9 @@
 # ---
 # name: test_all_sensors[sensor.zone_one_remaining_watering_time-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -445,8 +453,9 @@
 # ---
 # name: test_all_sensors[sensor.zone_two_daily_active_water_use-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -504,8 +513,9 @@
 # ---
 # name: test_all_sensors[sensor.zone_two_daily_active_watering_time-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -559,8 +569,9 @@
 # ---
 # name: test_all_sensors[sensor.zone_two_next_cycle-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -610,8 +621,9 @@
 # ---
 # name: test_all_sensors[sensor.zone_two_remaining_watering_time-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,

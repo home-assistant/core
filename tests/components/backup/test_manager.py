@@ -5,6 +5,7 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Callable, Generator
 from dataclasses import replace
+from datetime import timedelta
 from io import StringIO
 import json
 from pathlib import Path
@@ -22,6 +23,7 @@ from unittest.mock import (
     patch,
 )
 
+from aiohttp import FormData
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from securetar import SecureTarArchive, SecureTarFile
@@ -47,12 +49,14 @@ from homeassistant.components.backup.manager import (
     ReceiveBackupStage,
     ReceiveBackupState,
     RestoreBackupState,
+    UploadBackupEvent,
     WrittenBackup,
 )
 from homeassistant.const import EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STARTED
 from homeassistant.core import CoreState, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import issue_registry as ir
+from homeassistant.util import dt as dt_util
 
 from .common import (
     LOCAL_AGENT_ID,
@@ -65,6 +69,7 @@ from .common import (
     setup_backup_platform,
 )
 
+from tests.common import async_fire_time_changed
 from tests.typing import ClientSessionGenerator, WebSocketGenerator
 
 _EXPECTED_FILES = [
@@ -596,6 +601,17 @@ async def test_initiate_backup(
         "state": CreateBackupState.IN_PROGRESS,
     }
 
+    # Consume any upload progress events before the final state event
+    result = await ws_client.receive_json()
+    while "uploaded_bytes" in result["event"]:
+        result = await ws_client.receive_json()
+    assert result["event"] == {
+        "manager_state": BackupManagerState.CREATE_BACKUP,
+        "reason": None,
+        "stage": CreateBackupStage.CLEANING_UP,
+        "state": CreateBackupState.IN_PROGRESS,
+    }
+
     result = await ws_client.receive_json()
     assert result["event"] == {
         "manager_state": BackupManagerState.CREATE_BACKUP,
@@ -840,6 +856,17 @@ async def test_initiate_backup_with_agent_error(
         "manager_state": BackupManagerState.CREATE_BACKUP,
         "reason": None,
         "stage": CreateBackupStage.UPLOAD_TO_AGENTS,
+        "state": CreateBackupState.IN_PROGRESS,
+    }
+
+    # Consume any upload progress events before the final state event
+    result = await ws_client.receive_json()
+    while "uploaded_bytes" in result["event"]:
+        result = await ws_client.receive_json()
+    assert result["event"] == {
+        "manager_state": BackupManagerState.CREATE_BACKUP,
+        "reason": None,
+        "stage": CreateBackupStage.CLEANING_UP,
         "state": CreateBackupState.IN_PROGRESS,
     }
 
@@ -1401,7 +1428,10 @@ async def test_initiate_backup_non_agent_upload_error(
         "state": CreateBackupState.IN_PROGRESS,
     }
 
+    # Consume any upload progress events before the final state event
     result = await ws_client.receive_json()
+    while "uploaded_bytes" in result["event"]:
+        result = await ws_client.receive_json()
     assert result["event"] == {
         "manager_state": BackupManagerState.CREATE_BACKUP,
         "reason": "upload_failed",
@@ -1594,7 +1624,10 @@ async def test_initiate_backup_file_error_upload_to_agents(
         "state": CreateBackupState.IN_PROGRESS,
     }
 
+    # Consume any upload progress events before the final state event
     result = await ws_client.receive_json()
+    while "uploaded_bytes" in result["event"]:
+        result = await ws_client.receive_json()
     assert result["event"] == {
         "manager_state": BackupManagerState.CREATE_BACKUP,
         "reason": "upload_failed",
@@ -1979,6 +2012,73 @@ async def test_receive_backup(
             backup_data += chunk
         assert backup_data == expected_backup_data
     assert unlink_mock.call_count == temp_file_unlink_call_count
+
+
+@pytest.mark.parametrize(
+    ("suggested_filename", "expected_filename"),
+    [
+        ("backup.tar", "backup.tar"),
+        ("../traversal.tar", "traversal.tar"),
+        ("../../etc/passwd", "passwd"),
+        ("subdir/backup.tar", "backup.tar"),
+        (".", "backup.tar"),
+        ("..", "backup.tar"),
+        ("../..", "backup.tar"),
+        ("..\\traversal.tar", "traversal.tar"),
+        ("C:\\fakepath\\backup.tar", "backup.tar"),
+    ],
+)
+async def test_receive_backup_path_traversal(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    suggested_filename: str,
+    expected_filename: str,
+) -> None:
+    """Test path traversal in suggested filename is prevented."""
+    await setup_backup_integration(hass)
+    # Make sure we wait for Platform.EVENT and Platform.SENSOR to be fully processed,
+    # to avoid interference with the Path.open patching below which is used to verify
+    # that the file is written to the expected location.
+    await hass.async_block_till_done(True)
+    client = await hass_client()
+
+    upload_data = "test"
+    open_mock = mock_open(read_data=upload_data.encode(encoding="utf-8"))
+    expected_path = Path(hass.config.path("tmp_backups"), expected_filename)
+    opened_paths: list[Path] = []
+
+    def track_open(self: Path, *args: Any, **kwargs: Any) -> Any:
+        opened_paths.append(self)
+        return open_mock(self, *args, **kwargs)
+
+    with (
+        patch("pathlib.Path.open", track_open),
+        patch("homeassistant.components.backup.manager.make_backup_dir"),
+        patch("shutil.move"),
+        patch(
+            "homeassistant.components.backup.manager.read_backup",
+            return_value=TEST_BACKUP_ABC123,
+        ) as read_backup_mock,
+        patch("pathlib.Path.unlink"),
+    ):
+        data = FormData(quote_fields=False)
+        data.add_field(
+            "file",
+            upload_data,
+            filename=suggested_filename,
+            content_type="application/octet-stream",
+        )
+        resp = await client.post(
+            "/api/backup/upload?agent_id=backup.local",
+            data=data,
+        )
+        await hass.async_block_till_done()
+
+    assert resp.status == 201
+    # Verify all file opens went to the expected safe path
+    assert opened_paths == [expected_path]
+    # read_backup is called with the temp_file path; verify it's sanitized
+    read_backup_mock.assert_called_once_with(expected_path)
 
 
 async def test_receive_backup_busy_manager(
@@ -2709,7 +2809,10 @@ async def test_receive_backup_file_read_error(
         "state": ReceiveBackupState.IN_PROGRESS,
     }
 
+    # Consume any upload progress events before the final state event
     result = await ws_client.receive_json()
+    while "uploaded_bytes" in result["event"]:
+        result = await ws_client.receive_json()
     assert result["event"] == {
         "manager_state": BackupManagerState.RECEIVE_BACKUP,
         "reason": final_state_reason,
@@ -3507,7 +3610,7 @@ async def test_initiate_backup_per_agent_encryption(
         await hass.async_block_till_done()
 
     assert mock_secure_tar_archive.mock_calls[0] == call(
-        ANY, ANY, "w", bufsize=4194304, create_version=2, password=inner_tar_password
+        ANY, ANY, "w", bufsize=4194304, create_version=3, password=inner_tar_password
     )
 
     result = await ws_client.receive_json()
@@ -3523,6 +3626,17 @@ async def test_initiate_backup_per_agent_encryption(
         "manager_state": BackupManagerState.CREATE_BACKUP,
         "reason": None,
         "stage": CreateBackupStage.UPLOAD_TO_AGENTS,
+        "state": CreateBackupState.IN_PROGRESS,
+    }
+
+    # Consume any upload progress events before the final state event
+    result = await ws_client.receive_json()
+    while "uploaded_bytes" in result["event"]:
+        result = await ws_client.receive_json()
+    assert result["event"] == {
+        "manager_state": BackupManagerState.CREATE_BACKUP,
+        "reason": None,
+        "stage": CreateBackupStage.CLEANING_UP,
         "state": CreateBackupState.IN_PROGRESS,
     }
 
@@ -3709,3 +3823,169 @@ async def test_manager_not_blocked_after_restore(
         "next_automatic_backup_additional": False,
         "state": "idle",
     }
+
+
+async def test_upload_progress_event(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    generate_backup_id: MagicMock,
+) -> None:
+    """Test that upload progress events are fired when an agent reports progress."""
+    agent_ids = [LOCAL_AGENT_ID, "test.remote"]
+    mock_agents = await setup_backup_integration(hass, remote_agents=["test.remote"])
+
+    remote_agent = mock_agents["test.remote"]
+    original_side_effect = remote_agent.async_upload_backup.side_effect
+
+    async def upload_with_progress(**kwargs: Any) -> None:
+        """Upload and report progress."""
+        on_progress = kwargs["on_progress"]
+        on_progress(bytes_uploaded=500)
+        on_progress(bytes_uploaded=1000)
+        await original_side_effect(**kwargs)
+
+    remote_agent.async_upload_backup.side_effect = upload_with_progress
+
+    ws_client = await hass_ws_client(hass)
+
+    await ws_client.send_json_auto_id({"type": "backup/subscribe_events"})
+
+    result = await ws_client.receive_json()
+    assert result["event"] == {"manager_state": BackupManagerState.IDLE}
+
+    result = await ws_client.receive_json()
+    assert result["success"] is True
+
+    with patch("pathlib.Path.open", mock_open(read_data=b"test")):
+        await ws_client.send_json_auto_id(
+            {"type": "backup/generate", "agent_ids": agent_ids}
+        )
+        result = await ws_client.receive_json()
+        assert result["event"]["manager_state"] == BackupManagerState.CREATE_BACKUP
+
+        result = await ws_client.receive_json()
+        assert result["success"] is True
+
+        await hass.async_block_till_done()
+
+    # Consume intermediate stage events (home_assistant, upload_to_agents)
+    result = await ws_client.receive_json()
+    assert result["event"]["stage"] == CreateBackupStage.HOME_ASSISTANT
+
+    result = await ws_client.receive_json()
+    assert result["event"]["stage"] == CreateBackupStage.UPLOAD_TO_AGENTS
+
+    # Collect all upload progress events until the finishing backup stage event
+    progress_events = []
+    result = await ws_client.receive_json()
+    while "uploaded_bytes" in result["event"]:
+        progress_events.append(result["event"])
+        result = await ws_client.receive_json()
+
+    # Verify progress events from the remote agent (500 from agent + final from manager)
+    remote_progress = [e for e in progress_events if e["agent_id"] == "test.remote"]
+    assert len(remote_progress) == 2
+    assert remote_progress[0]["uploaded_bytes"] == 500
+    assert remote_progress[1]["uploaded_bytes"] == remote_progress[1]["total_bytes"]
+
+    # Verify progress event from the local agent (final from manager)
+    local_progress = [e for e in progress_events if e["agent_id"] == LOCAL_AGENT_ID]
+    assert len(local_progress) == 1
+    assert local_progress[0]["uploaded_bytes"] == local_progress[0]["total_bytes"]
+
+    assert result["event"]["stage"] == CreateBackupStage.CLEANING_UP
+
+    result = await ws_client.receive_json()
+    assert result["event"]["state"] == CreateBackupState.COMPLETED
+
+    result = await ws_client.receive_json()
+    assert result["event"] == {"manager_state": BackupManagerState.IDLE}
+
+
+async def test_upload_progress_debounced(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    generate_backup_id: MagicMock,
+) -> None:
+    """Test that rapid upload progress events are debounced.
+
+    Verify that when the on_progress callback is called multiple times during
+    the debounce cooldown period, only the latest event is fired.
+    """
+    agent_ids = ["test.remote"]
+    mock_agents = await setup_backup_integration(hass, remote_agents=["test.remote"])
+    manager = hass.data[DATA_MANAGER]
+
+    remote_agent = mock_agents["test.remote"]
+
+    progress_done = asyncio.Event()
+    upload_done = asyncio.Event()
+
+    async def upload_with_progress(**kwargs: Any) -> None:
+        """Upload and report progress."""
+        on_progress = kwargs["on_progress"]
+        # First call fires immediately
+        on_progress(bytes_uploaded=100)
+        # These two are buffered during cooldown; 1000 should replace 500
+        on_progress(bytes_uploaded=500)
+        on_progress(bytes_uploaded=1000)
+        progress_done.set()
+        await upload_done.wait()
+
+    remote_agent.async_upload_backup.side_effect = upload_with_progress
+
+    # Subscribe directly to collect all events
+    events: list[Any] = []
+    manager.async_subscribe_events(events.append)
+
+    ws_client = await hass_ws_client(hass)
+
+    with patch("pathlib.Path.open", mock_open(read_data=b"test")):
+        await ws_client.send_json_auto_id(
+            {"type": "backup/generate", "agent_ids": agent_ids}
+        )
+        result = await ws_client.receive_json()
+        assert result["success"] is True
+
+        # Wait for upload to reach the sync point (progress reported, upload paused)
+        await progress_done.wait()
+
+        # At this point the debouncer's cooldown timer is pending.
+        # The first event (100 bytes) fired immediately, 500 and 1000 are buffered.
+        remote_events = [
+            e
+            for e in events
+            if isinstance(e, UploadBackupEvent) and e.agent_id == "test.remote"
+        ]
+        assert len(remote_events) == 1
+        assert remote_events[0].uploaded_bytes == 100
+
+        # Advance time past the cooldown to trigger the debouncer timer.
+        # This fires the coalesced event: 500 was replaced by 1000.
+        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=2))
+
+        remote_events = [
+            e
+            for e in events
+            if isinstance(e, UploadBackupEvent) and e.agent_id == "test.remote"
+        ]
+        assert len(remote_events) == 2
+        assert remote_events[0].uploaded_bytes == 100
+        assert remote_events[1].uploaded_bytes == 1000
+
+        # Let the upload finish
+        upload_done.set()
+        # Fire pending timers so the backup task can complete
+        async_fire_time_changed(
+            hass, dt_util.utcnow() + timedelta(seconds=10), fire_all=True
+        )
+        await hass.async_block_till_done()
+
+    # Check the final 100% progress event is sent, that is sent for every agent
+    remote_events = [
+        e
+        for e in events
+        if isinstance(e, UploadBackupEvent) and e.agent_id == "test.remote"
+    ]
+    assert len(remote_events) == 3
+    assert remote_events[2].uploaded_bytes == remote_events[2].total_bytes

@@ -3,19 +3,25 @@
 import base64
 from collections.abc import AsyncGenerator, Callable, Iterable
 from dataclasses import dataclass, field
+from datetime import UTC, datetime
 import json
 from mimetypes import guess_file_type
 from pathlib import Path
-from typing import Any
+from typing import Any, Literal, cast
 
 import anthropic
 from anthropic import AsyncStream
 from anthropic.types import (
     Base64ImageSourceParam,
     Base64PDFSourceParam,
+    BashCodeExecutionToolResultBlock,
     CitationsDelta,
     CitationsWebSearchResultLocation,
     CitationWebSearchResultLocationParam,
+    CodeExecutionTool20250825Param,
+    CodeExecutionToolResultBlock,
+    CodeExecutionToolResultBlockParamContentParam,
+    Container,
     ContentBlockParam,
     DocumentBlockParam,
     ImageBlockParam,
@@ -41,6 +47,7 @@ from anthropic.types import (
     TextCitation,
     TextCitationParam,
     TextDelta,
+    TextEditorCodeExecutionToolResultBlock,
     ThinkingBlock,
     ThinkingBlockParam,
     ThinkingConfigAdaptiveParam,
@@ -51,18 +58,22 @@ from anthropic.types import (
     ToolChoiceAutoParam,
     ToolChoiceToolParam,
     ToolParam,
-    ToolResultBlockParam,
     ToolUnionParam,
     ToolUseBlock,
     ToolUseBlockParam,
     Usage,
     WebSearchTool20250305Param,
-    WebSearchToolRequestErrorParam,
+    WebSearchTool20260209Param,
     WebSearchToolResultBlock,
-    WebSearchToolResultBlockParam,
-    WebSearchToolResultError,
+    WebSearchToolResultBlockParamContentParam,
+)
+from anthropic.types.bash_code_execution_tool_result_block_param import (
+    Content as BashCodeExecutionToolResultBlockParamContentParam,
 )
 from anthropic.types.message_create_params import MessageCreateParamsStreaming
+from anthropic.types.text_editor_code_execution_tool_result_block_param import (
+    Content as TextEditorCodeExecutionToolResultBlockParamContentParam,
+)
 import voluptuous as vol
 from voluptuous_openapi import convert
 
@@ -74,10 +85,12 @@ from homeassistant.helpers import device_registry as dr, llm
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.json import json_dumps
 from homeassistant.util import slugify
+from homeassistant.util.json import JsonObjectType
 
 from . import AnthropicConfigEntry
 from .const import (
     CONF_CHAT_MODEL,
+    CONF_CODE_EXECUTION,
     CONF_MAX_TOKENS,
     CONF_TEMPERATURE,
     CONF_THINKING_BUDGET,
@@ -95,6 +108,7 @@ from .const import (
     MIN_THINKING_BUDGET,
     NON_ADAPTIVE_THINKING_MODELS,
     NON_THINKING_MODELS,
+    PROGRAMMATIC_TOOL_CALLING_UNSUPPORTED_MODELS,
     UNSUPPORTED_STRUCTURED_OUTPUT_MODELS,
 )
 
@@ -134,6 +148,7 @@ class ContentDetails:
     citation_details: list[CitationDetails] = field(default_factory=list)
     thinking_signature: str | None = None
     redacted_thinking: str | None = None
+    container: Container | None = None
 
     def has_content(self) -> bool:
         """Check if there is any text content."""
@@ -144,6 +159,7 @@ class ContentDetails:
         return (
             self.thinking_signature is not None
             or self.redacted_thinking is not None
+            or self.container is not None
             or self.has_citations()
         )
 
@@ -188,30 +204,63 @@ class ContentDetails:
 
 def _convert_content(
     chat_content: Iterable[conversation.Content],
-) -> list[MessageParam]:
+) -> tuple[list[MessageParam], str | None]:
     """Transform HA chat_log content into Anthropic API format."""
     messages: list[MessageParam] = []
+    container_id: str | None = None
 
     for content in chat_content:
         if isinstance(content, conversation.ToolResultContent):
+            external_tool = True
             if content.tool_name == "web_search":
-                tool_result_block: ContentBlockParam = WebSearchToolResultBlockParam(
-                    type="web_search_tool_result",
-                    tool_use_id=content.tool_call_id,
-                    content=content.tool_result["content"]
-                    if "content" in content.tool_result
-                    else WebSearchToolRequestErrorParam(
-                        type="web_search_tool_result_error",
-                        error_code=content.tool_result.get("error_code", "unavailable"),  # type: ignore[typeddict-item]
+                tool_result_block: ContentBlockParam = {
+                    "type": "web_search_tool_result",
+                    "tool_use_id": content.tool_call_id,
+                    "content": cast(
+                        WebSearchToolResultBlockParamContentParam,
+                        content.tool_result["content"]
+                        if "content" in content.tool_result
+                        else {
+                            "type": "web_search_tool_result_error",
+                            "error_code": content.tool_result.get(
+                                "error_code", "unavailable"
+                            ),
+                        },
                     ),
-                )
-                external_tool = True
+                }
+            elif content.tool_name == "code_execution":
+                tool_result_block = {
+                    "type": "code_execution_tool_result",
+                    "tool_use_id": content.tool_call_id,
+                    "content": cast(
+                        CodeExecutionToolResultBlockParamContentParam,
+                        content.tool_result,
+                    ),
+                }
+            elif content.tool_name == "bash_code_execution":
+                tool_result_block = {
+                    "type": "bash_code_execution_tool_result",
+                    "tool_use_id": content.tool_call_id,
+                    "content": cast(
+                        BashCodeExecutionToolResultBlockParamContentParam,
+                        content.tool_result,
+                    ),
+                }
+            elif content.tool_name == "text_editor_code_execution":
+                tool_result_block = {
+                    "type": "text_editor_code_execution_tool_result",
+                    "tool_use_id": content.tool_call_id,
+                    "content": cast(
+                        TextEditorCodeExecutionToolResultBlockParamContentParam,
+                        content.tool_result,
+                    ),
+                }
             else:
-                tool_result_block = ToolResultBlockParam(
-                    type="tool_result",
-                    tool_use_id=content.tool_call_id,
-                    content=json_dumps(content.tool_result),
-                )
+                tool_result_block = {
+                    "type": "tool_result",
+                    "tool_use_id": content.tool_call_id,
+                    "content": json_dumps(content.tool_result),
+                }
                 external_tool = False
             if not messages or messages[-1]["role"] != (
                 "assistant" if external_tool else "user"
@@ -277,6 +326,11 @@ def _convert_content(
                             data=content.native.redacted_thinking,
                         )
                     )
+                if (
+                    content.native.container is not None
+                    and content.native.container.expires_at > datetime.now(UTC)
+                ):
+                    container_id = content.native.container.id
 
             if content.content:
                 current_index = 0
@@ -325,10 +379,25 @@ def _convert_content(
                         ServerToolUseBlockParam(
                             type="server_tool_use",
                             id=tool_call.id,
-                            name="web_search",
+                            name=cast(
+                                Literal[
+                                    "web_search",
+                                    "code_execution",
+                                    "bash_code_execution",
+                                    "text_editor_code_execution",
+                                ],
+                                tool_call.tool_name,
+                            ),
                             input=tool_call.tool_args,
                         )
-                        if tool_call.external and tool_call.tool_name == "web_search"
+                        if tool_call.external
+                        and tool_call.tool_name
+                        in [
+                            "web_search",
+                            "code_execution",
+                            "bash_code_execution",
+                            "text_editor_code_execution",
+                        ]
                         else ToolUseBlockParam(
                             type="tool_use",
                             id=tool_call.id,
@@ -347,10 +416,14 @@ def _convert_content(
                 # If there is only one text block, simplify the content to a string
                 messages[-1]["content"] = messages[-1]["content"][0]["text"]
         else:
-            # Note: We don't pass SystemContent here as its passed to the API as the prompt
-            raise TypeError(f"Unexpected content type: {type(content)}")
+            # Note: We don't pass SystemContent here as it's passed to the API as the prompt
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="unexpected_chat_log_content",
+                translation_placeholders={"type": type(content).__name__},
+            )
 
-    return messages
+    return messages, container_id
 
 
 async def _transform_stream(  # noqa: C901 - This is complex, but better to have it in one place
@@ -389,8 +462,10 @@ async def _transform_stream(  # noqa: C901 - This is complex, but better to have
 
     Each message could contain multiple blocks of the same type.
     """
-    if stream is None:
-        raise TypeError("Expected a stream of messages")
+    if stream is None or not hasattr(stream, "__aiter__"):
+        raise HomeAssistantError(
+            translation_domain=DOMAIN, translation_key="unexpected_stream_object"
+        )
 
     current_tool_block: ToolUseBlockParam | ServerToolUseBlockParam | None = None
     current_tool_args: str
@@ -403,8 +478,6 @@ async def _transform_stream(  # noqa: C901 - This is complex, but better to have
         LOGGER.debug("Received response: %s", response)
 
         if isinstance(response, RawMessageStartEvent):
-            if response.message.role != "assistant":
-                raise ValueError("Unexpected message role")
             input_usage = response.message.usage
             first_block = True
         elif isinstance(response, RawContentBlockStartEvent):
@@ -413,7 +486,7 @@ async def _transform_stream(  # noqa: C901 - This is complex, but better to have
                     type="tool_use",
                     id=response.content_block.id,
                     name=response.content_block.name,
-                    input={},
+                    input=response.content_block.input or {},
                 )
                 current_tool_args = ""
                 if response.content_block.name == output_tool:
@@ -475,10 +548,18 @@ async def _transform_stream(  # noqa: C901 - This is complex, but better to have
                     type="server_tool_use",
                     id=response.content_block.id,
                     name=response.content_block.name,
-                    input={},
+                    input=response.content_block.input or {},
                 )
                 current_tool_args = ""
-            elif isinstance(response.content_block, WebSearchToolResultBlock):
+            elif isinstance(
+                response.content_block,
+                (
+                    WebSearchToolResultBlock,
+                    CodeExecutionToolResultBlock,
+                    BashCodeExecutionToolResultBlock,
+                    TextEditorCodeExecutionToolResultBlock,
+                ),
+            ):
                 if content_details:
                     content_details.delete_empty()
                     yield {"native": content_details}
@@ -487,26 +568,16 @@ async def _transform_stream(  # noqa: C901 - This is complex, but better to have
                 yield {
                     "role": "tool_result",
                     "tool_call_id": response.content_block.tool_use_id,
-                    "tool_name": "web_search",
+                    "tool_name": response.content_block.type.removesuffix(
+                        "_tool_result"
+                    ),
                     "tool_result": {
-                        "type": "web_search_tool_result_error",
-                        "error_code": response.content_block.content.error_code,
+                        "content": cast(
+                            JsonObjectType, response.content_block.to_dict()["content"]
+                        )
                     }
-                    if isinstance(
-                        response.content_block.content, WebSearchToolResultError
-                    )
-                    else {
-                        "content": [
-                            {
-                                "type": "web_search_result",
-                                "encrypted_content": block.encrypted_content,
-                                "page_age": block.page_age,
-                                "title": block.title,
-                                "url": block.url,
-                            }
-                            for block in response.content_block.content
-                        ]
-                    },
+                    if isinstance(response.content_block.content, list)
+                    else cast(JsonObjectType, response.content_block.content.to_dict()),
                 }
                 first_block = True
         elif isinstance(response, RawContentBlockDeltaEvent):
@@ -540,13 +611,13 @@ async def _transform_stream(  # noqa: C901 - This is complex, but better to have
                     current_tool_block = None
                     continue
                 tool_args = json.loads(current_tool_args) if current_tool_args else {}
-                current_tool_block["input"] = tool_args
+                current_tool_block["input"] |= tool_args
                 yield {
                     "tool_calls": [
                         llm.ToolInput(
                             id=current_tool_block["id"],
                             tool_name=current_tool_block["name"],
-                            tool_args=tool_args,
+                            tool_args=current_tool_block["input"],
                             external=current_tool_block["type"] == "server_tool_use",
                         )
                     ]
@@ -555,8 +626,11 @@ async def _transform_stream(  # noqa: C901 - This is complex, but better to have
         elif isinstance(response, RawMessageDeltaEvent):
             if (usage := response.usage) is not None:
                 chat_log.async_trace(_create_token_stats(input_usage, usage))
+            content_details.container = response.delta.container
             if response.delta.stop_reason == "refusal":
-                raise HomeAssistantError("Potential policy violation detected")
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN, translation_key="api_refusal"
+                )
         elif isinstance(response, RawMessageStopEvent):
             if content_details:
                 content_details.delete_empty()
@@ -615,7 +689,9 @@ class AnthropicBaseLLMEntity(Entity):
 
         system = chat_log.content[0]
         if not isinstance(system, conversation.SystemContent):
-            raise TypeError("First message must be a system message")
+            raise HomeAssistantError(
+                translation_domain=DOMAIN, translation_key="system_message_not_found"
+            )
 
         # System prompt with caching enabled
         system_prompt: list[TextBlockParam] = [
@@ -626,7 +702,7 @@ class AnthropicBaseLLMEntity(Entity):
             )
         ]
 
-        messages = _convert_content(chat_log.content[1:])
+        messages, container_id = _convert_content(chat_log.content[1:])
 
         model = options.get(CONF_CHAT_MODEL, DEFAULT[CONF_CHAT_MODEL])
 
@@ -636,6 +712,7 @@ class AnthropicBaseLLMEntity(Entity):
             max_tokens=options.get(CONF_MAX_TOKENS, DEFAULT[CONF_MAX_TOKENS]),
             system=system_prompt,
             stream=True,
+            container=container_id,
         )
 
         if not model.startswith(tuple(NON_ADAPTIVE_THINKING_MODELS)):
@@ -674,12 +751,35 @@ class AnthropicBaseLLMEntity(Entity):
                 for tool in chat_log.llm_api.tools
             ]
 
+        if options.get(CONF_CODE_EXECUTION):
+            # The `web_search_20260209` tool automatically enables `code_execution_20260120` tool
+            if model.startswith(
+                tuple(PROGRAMMATIC_TOOL_CALLING_UNSUPPORTED_MODELS)
+            ) or not options.get(CONF_WEB_SEARCH):
+                tools.append(
+                    CodeExecutionTool20250825Param(
+                        name="code_execution",
+                        type="code_execution_20250825",
+                    ),
+                )
+
         if options.get(CONF_WEB_SEARCH):
-            web_search = WebSearchTool20250305Param(
-                name="web_search",
-                type="web_search_20250305",
-                max_uses=options.get(CONF_WEB_SEARCH_MAX_USES),
-            )
+            if model.startswith(
+                tuple(PROGRAMMATIC_TOOL_CALLING_UNSUPPORTED_MODELS)
+            ) or not options.get(CONF_CODE_EXECUTION):
+                web_search: WebSearchTool20250305Param | WebSearchTool20260209Param = (
+                    WebSearchTool20250305Param(
+                        name="web_search",
+                        type="web_search_20250305",
+                        max_uses=options.get(CONF_WEB_SEARCH_MAX_USES),
+                    )
+                )
+            else:
+                web_search = WebSearchTool20260209Param(
+                    name="web_search",
+                    type="web_search_20260209",
+                    max_uses=options.get(CONF_WEB_SEARCH_MAX_USES),
+                )
             if options.get(CONF_WEB_SEARCH_USER_LOCATION):
                 web_search["user_location"] = {
                     "type": "approximate",
@@ -696,7 +796,7 @@ class AnthropicBaseLLMEntity(Entity):
             last_message = messages[-1]
             if last_message["role"] != "user":
                 raise HomeAssistantError(
-                    "Last message must be a user message to add attachments"
+                    translation_domain=DOMAIN, translation_key="user_message_not_found"
                 )
             if isinstance(last_message["content"], str):
                 last_message["content"] = [
@@ -784,24 +884,36 @@ class AnthropicBaseLLMEntity(Entity):
             try:
                 stream = await client.messages.create(**model_args)
 
-                messages.extend(
-                    _convert_content(
-                        [
-                            content
-                            async for content in chat_log.async_add_delta_content_stream(
-                                self.entity_id,
-                                _transform_stream(
-                                    chat_log,
-                                    stream,
-                                    output_tool=structure_name or None,
-                                ),
-                            )
-                        ]
-                    )
+                new_messages, model_args["container"] = _convert_content(
+                    [
+                        content
+                        async for content in chat_log.async_add_delta_content_stream(
+                            self.entity_id,
+                            _transform_stream(
+                                chat_log,
+                                stream,
+                                output_tool=structure_name or None,
+                            ),
+                        )
+                    ]
                 )
+                messages.extend(new_messages)
+            except anthropic.AuthenticationError as err:
+                self.entry.async_start_reauth(self.hass)
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN,
+                    translation_key="api_authentication_error",
+                    translation_placeholders={"message": err.message},
+                ) from err
             except anthropic.AnthropicError as err:
                 raise HomeAssistantError(
-                    f"Sorry, I had a problem talking to Anthropic: {err}"
+                    translation_domain=DOMAIN,
+                    translation_key="api_error",
+                    translation_placeholders={
+                        "message": err.message
+                        if isinstance(err, anthropic.APIError)
+                        else str(err)
+                    },
                 ) from err
 
             if not chat_log.unresponded_tool_results:
@@ -821,15 +933,23 @@ async def async_prepare_files_for_prompt(
 
         for file_path, mime_type in files:
             if not file_path.exists():
-                raise HomeAssistantError(f"`{file_path}` does not exist")
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN,
+                    translation_key="wrong_file_path",
+                    translation_placeholders={"file_path": file_path.as_posix()},
+                )
 
             if mime_type is None:
                 mime_type = guess_file_type(file_path)[0]
 
             if not mime_type or not mime_type.startswith(("image/", "application/pdf")):
                 raise HomeAssistantError(
-                    "Only images and PDF are supported by the Anthropic API,"
-                    f"`{file_path}` is not an image file or PDF"
+                    translation_domain=DOMAIN,
+                    translation_key="wrong_file_type",
+                    translation_placeholders={
+                        "file_path": file_path.as_posix(),
+                        "mime_type": mime_type or "unknown",
+                    },
                 )
             if mime_type == "image/jpg":
                 mime_type = "image/jpeg"

@@ -1,0 +1,71 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
+      "cannot_connect": "Unable to connect to the S20 switch",
+      "cannot_discover": "Unable to discover MAC address of S20 switch. Please enter the MAC address.",
+      "invalid_mac": "Invalid MAC address format"
+    },
+    "error": {
+      "cannot_connect": "[%key:component::orvibo::config::abort::cannot_connect%]",
+      "cannot_discover": "[%key:component::orvibo::config::abort::cannot_discover%]",
+      "invalid_mac": "Invalid MAC address format"
+    },
+    "progress": {
+      "start_discovery": "Attempting to discover new S20 switches\n\nThis will take about 3 seconds\n\nDiscovery may fail if the switch is asleep. If your switch does not appear, please power toggle your switch before re-running discovery.",
+      "title": "Orvibo S20"
+    },
+    "step": {
+      "choose_switch": {
+        "data": {
+          "switches": "Choose discovered switch to configure"
+        },
+        "title": "Discovered switches"
+      },
+      "discovery_failed": {
+        "description": "No S20 switches were discovered on the network. Discovery may have failed if the switch is asleep. Please power toggle your switch before re-running discovery.",
+        "menu_options": {
+          "edit": "Enter configuration manually",
+          "start_discovery": "Try discovering again"
+        },
+        "title": "Discovery failed"
+      },
+      "edit": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "mac": "MAC address"
+        },
+        "title": "Configure Orvibo S20 switch"
+      },
+      "user": {
+        "menu_options": {
+          "edit": "Enter configuration manually",
+          "start_discovery": "Discover new S20 switches"
+        },
+        "title": "Orvibo S20 Configuration"
+      }
+    }
+  },
+  "exceptions": {
+    "init_error": {
+      "message": "Error while initializing S20 {host}."
+    },
+    "turn_off_error": {
+      "message": "Error while turning off S20 {name}."
+    },
+    "turn_on_error": {
+      "message": "Error while turning on S20 {name}."
+    }
+  },
+  "issues": {
+    "yaml_deprecation": {
+      "description": "The device (MAC: {mac}, Host: {host}) is configured in `configuration.yaml`. The Orvibo integration now supports UI-based configuration and this device has been migrated to the new UI. Please remove the YAML block from `configuration.yaml` to avoid future issues.",
+      "title": "Legacy YAML configuration detected {host}"
+    },
+    "yaml_deprecation_import_issue": {
+      "description": "Attempting to import this device (MAC: {mac}, Host: {host}) from YAML has failed for reason {reason}. 1) Remove the YAML block from `configuration.yaml`, 2) Restart Home Assistant, 3) Add the device using the UI configuration flow.",
+      "title": "Legacy YAML configuration import issue for {host}"
+    }
+  }
+}

@@ -1,37 +1,35 @@
 """Support for NuHeat thermostats."""
 
-from datetime import timedelta
 from http import HTTPStatus
 import logging
 
 import nuheat
 import requests
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from .const import CONF_SERIAL_NUMBER, DOMAIN, PLATFORMS
+from .const import CONF_SERIAL_NUMBER, PLATFORMS
+from .coordinator import NuHeatConfigEntry, NuHeatCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
 
-def _get_thermostat(api, serial_number):
+def _get_thermostat(api: nuheat.NuHeat, serial_number: str) -> nuheat.NuHeatThermostat:
     """Authenticate and create the thermostat object."""
     api.authenticate()
     return api.get_thermostat(serial_number)
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: NuHeatConfigEntry) -> bool:
     """Set up NuHeat from a config entry."""
 
     conf = entry.data
 
-    username = conf[CONF_USERNAME]
-    password = conf[CONF_PASSWORD]
-    serial_number = conf[CONF_SERIAL_NUMBER]
+    username: str = conf[CONF_USERNAME]
+    password: str = conf[CONF_PASSWORD]
+    serial_number: str = conf[CONF_SERIAL_NUMBER]
 
     api = nuheat.NuHeat(username, password)
 
@@ -53,31 +51,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         _LOGGER.error("Failed to login to nuheat: %s", ex)
         return False
 
-    async def _async_update_data():
-        """Fetch data from API endpoint."""
-        await hass.async_add_executor_job(thermostat.get_data)
-
-    coordinator = DataUpdateCoordinator(
-        hass,
-        _LOGGER,
-        config_entry=entry,
-        name=f"nuheat {serial_number}",
-        update_method=_async_update_data,
-        update_interval=timedelta(minutes=5),
-    )
-
-    hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN][entry.entry_id] = (thermostat, coordinator)
+    entry.runtime_data = NuHeatCoordinator(hass, entry, thermostat)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: NuHeatConfigEntry) -> bool:
     """Unload a config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-    if unload_ok:
-        hass.data[DOMAIN].pop(entry.entry_id)
-
-    return unload_ok
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)

@@ -2,6 +2,7 @@
 
 from dataclasses import dataclass
 import logging
+from typing import Any, cast
 
 from pylutron import Button, Keypad, Led, Lutron, OccupancyGroup, Output
 
@@ -42,7 +43,7 @@ class LutronData:
     covers: list[tuple[str, Output]]
     fans: list[tuple[str, Output]]
     lights: list[tuple[str, Output]]
-    scenes: list[tuple[str, Keypad, Button, Led]]
+    scenes: list[tuple[str, Keypad, Button, Led | None]]
     switches: list[tuple[str, Output]]
 
 
@@ -110,6 +111,14 @@ async def async_setup_entry(
             )
 
         for keypad in area.keypads:
+            _async_check_keypad_identifiers(
+                hass,
+                device_registry,
+                keypad.id,
+                keypad.uuid,
+                keypad.legacy_uuid,
+                entry_data.client.guid,
+            )
             for button in keypad.buttons:
                 # If the button has a function assigned to it, add it as a scene
                 if button.name != "Unknown Button" and button.button_type in (
@@ -224,6 +233,36 @@ def _async_check_device_identifiers(
         device_registry.async_update_device(
             device.id, new_identifiers={(DOMAIN, new_unique_id)}
         )
+
+
+def _async_check_keypad_identifiers(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    keypad_id: int,
+    uuid: str,
+    legacy_uuid: str,
+    controller_guid: str,
+) -> None:
+    """Migrate from integer based keypad.ids to proper uuids."""
+
+    # First check for the very old integer-based ID
+    # We use cast(Any, ...) here because legacy devices may have integer identifiers
+    # in the registry, but modern Home Assistant expects strings.
+    device = device_registry.async_get_device(
+        identifiers={(DOMAIN, cast(Any, keypad_id))}
+    )
+    if device:
+        new_unique_id = f"{controller_guid}_{uuid or legacy_uuid}"
+        _LOGGER.debug("Updating keypad id from %d to %s", keypad_id, new_unique_id)
+        device_registry.async_update_device(
+            device.id, new_identifiers={(DOMAIN, new_unique_id)}
+        )
+        return
+
+    # Now handle legacy_uuid to uuid migration if needed
+    _async_check_device_identifiers(
+        hass, device_registry, uuid, legacy_uuid, controller_guid
+    )
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: LutronConfigEntry) -> bool:

@@ -40,7 +40,16 @@ DOMAIN = "growatt_server"
 
 PLATFORMS = [Platform.NUMBER, Platform.SENSOR, Platform.SWITCH]
 
+# Growatt Classic API error codes
 LOGIN_INVALID_AUTH_CODE = "502"
+
+# Growatt Open API V1 error codes
+# Reference: https://www.showdoc.com.cn/262556420217021/1494055648380019
+V1_API_ERROR_WRONG_DOMAIN = -1  # Use correct regional domain
+V1_API_ERROR_NO_PRIVILEGE = 10011  # No privilege access — invalid or expired token
+V1_API_ERROR_RATE_LIMITED = 10012  # Access frequency limit (5 minutes per call)
+V1_API_ERROR_PAGE_SIZE = 10013  # Page size cannot exceed 100
+V1_API_ERROR_PAGE_COUNT = 10014  # Page count cannot exceed 250
 
 # Config flow error types (also used as abort reasons)
 ERROR_CANNOT_CONNECT = "cannot_connect"  # Used for both form errors and aborts

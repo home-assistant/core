@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from enum import StrEnum
 
+from yarl import URL
+
 from homeassistant.components.update import (
     UpdateEntity,
     UpdateEntityDescription,
@@ -16,7 +18,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import UPTIME_KUMA_KEY
-from .const import DOMAIN
+from .const import DOMAIN, LOCAL_INSTANCE
 from .coordinator import (
     UptimeKumaConfigEntry,
     UptimeKumaDataUpdateCoordinator,
@@ -67,12 +69,14 @@ class UptimeKumaUpdateEntity(
         super().__init__(coordinator)
         self.update_checker = update_coordinator
 
+        url = URL(coordinator.config_entry.data[CONF_URL]) / "dashboard"
+        configuration_url = None if url.host in LOCAL_INSTANCE else url
         self._attr_device_info = DeviceInfo(
             entry_type=DeviceEntryType.SERVICE,
             name=coordinator.config_entry.title,
             identifiers={(DOMAIN, coordinator.config_entry.entry_id)},
             manufacturer="Uptime Kuma",
-            configuration_url=coordinator.config_entry.data[CONF_URL],
+            configuration_url=configuration_url,
             sw_version=coordinator.api.version.version,
         )
         self._attr_unique_id = (

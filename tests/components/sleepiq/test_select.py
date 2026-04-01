@@ -44,33 +44,33 @@ async def test_split_foundation_preset(
     entry = await setup_platform(hass, SELECT_DOMAIN)
 
     state = hass.states.get(
-        f"select.sleepnumber_{BED_NAME_LOWER}_foundation_preset_right"
+        f"select.{BED_NAME_LOWER}_sleepnumber_{BED_NAME_LOWER}_foundation_preset_right"
     )
     assert state.state == PRESET_R_STATE
     assert state.attributes.get(ATTR_ICON) == "mdi:bed"
     assert (
         state.attributes.get(ATTR_FRIENDLY_NAME)
-        == f"SleepNumber {BED_NAME} Foundation Preset Right"
+        == f"{BED_NAME} SleepNumber {BED_NAME} Foundation Preset Right"
     )
 
     entry = entity_registry.async_get(
-        f"select.sleepnumber_{BED_NAME_LOWER}_foundation_preset_right"
+        f"select.{BED_NAME_LOWER}_sleepnumber_{BED_NAME_LOWER}_foundation_preset_right"
     )
     assert entry
     assert entry.unique_id == f"{BED_ID}_preset_R"
 
     state = hass.states.get(
-        f"select.sleepnumber_{BED_NAME_LOWER}_foundation_preset_left"
+        f"select.{BED_NAME_LOWER}_sleepnumber_{BED_NAME_LOWER}_foundation_preset_left"
     )
     assert state.state == PRESET_L_STATE
     assert state.attributes.get(ATTR_ICON) == "mdi:bed"
     assert (
         state.attributes.get(ATTR_FRIENDLY_NAME)
-        == f"SleepNumber {BED_NAME} Foundation Preset Left"
+        == f"{BED_NAME} SleepNumber {BED_NAME} Foundation Preset Left"
     )
 
     entry = entity_registry.async_get(
-        f"select.sleepnumber_{BED_NAME_LOWER}_foundation_preset_left"
+        f"select.{BED_NAME_LOWER}_sleepnumber_{BED_NAME_LOWER}_foundation_preset_left"
     )
     assert entry
     assert entry.unique_id == f"{BED_ID}_preset_L"
@@ -79,7 +79,7 @@ async def test_split_foundation_preset(
         SELECT_DOMAIN,
         SERVICE_SELECT_OPTION,
         {
-            ATTR_ENTITY_ID: f"select.sleepnumber_{BED_NAME_LOWER}_foundation_preset_left",
+            ATTR_ENTITY_ID: f"select.{BED_NAME_LOWER}_sleepnumber_{BED_NAME_LOWER}_foundation_preset_left",
             ATTR_OPTION: "Zero G",
         },
         blocking=True,
@@ -100,16 +100,18 @@ async def test_single_foundation_preset(
     """Test the SleepIQ select entity for single foundation presets."""
     entry = await setup_platform(hass, SELECT_DOMAIN)
 
-    state = hass.states.get(f"select.sleepnumber_{BED_NAME_LOWER}_foundation_preset")
+    state = hass.states.get(
+        f"select.{BED_NAME_LOWER}_sleepnumber_{BED_NAME_LOWER}_foundation_preset"
+    )
     assert state.state == PRESET_R_STATE
     assert state.attributes.get(ATTR_ICON) == "mdi:bed"
     assert (
         state.attributes.get(ATTR_FRIENDLY_NAME)
-        == f"SleepNumber {BED_NAME} Foundation Preset"
+        == f"{BED_NAME} SleepNumber {BED_NAME} Foundation Preset"
     )
 
     entry = entity_registry.async_get(
-        f"select.sleepnumber_{BED_NAME_LOWER}_foundation_preset"
+        f"select.{BED_NAME_LOWER}_sleepnumber_{BED_NAME_LOWER}_foundation_preset"
     )
     assert entry
     assert entry.unique_id == f"{BED_ID}_preset"
@@ -118,7 +120,7 @@ async def test_single_foundation_preset(
         SELECT_DOMAIN,
         SERVICE_SELECT_OPTION,
         {
-            ATTR_ENTITY_ID: f"select.sleepnumber_{BED_NAME_LOWER}_foundation_preset",
+            ATTR_ENTITY_ID: f"select.{BED_NAME_LOWER}_sleepnumber_{BED_NAME_LOWER}_foundation_preset",
             ATTR_OPTION: "Zero G",
         },
         blocking=True,
@@ -142,17 +144,17 @@ async def test_foot_warmer(
     entry = await setup_platform(hass, SELECT_DOMAIN)
 
     state = hass.states.get(
-        f"select.sleepnumber_{BED_NAME_LOWER}_{SLEEPER_L_NAME_LOWER}_foot_warmer"
+        f"select.{BED_NAME_LOWER}_sleepnumber_{BED_NAME_LOWER}_{SLEEPER_L_NAME_LOWER}_foot_warmer"
     )
     assert state.state == FootWarmingTemps.MEDIUM.name.lower()
     assert state.attributes.get(ATTR_ICON) == "mdi:heat-wave"
     assert (
         state.attributes.get(ATTR_FRIENDLY_NAME)
-        == f"SleepNumber {BED_NAME} {SLEEPER_L_NAME} Foot Warmer"
+        == f"{BED_NAME} SleepNumber {BED_NAME} {SLEEPER_L_NAME} Foot Warmer"
     )
 
     entry = entity_registry.async_get(
-        f"select.sleepnumber_{BED_NAME_LOWER}_{SLEEPER_L_NAME_LOWER}_foot_warmer"
+        f"select.{BED_NAME_LOWER}_sleepnumber_{BED_NAME_LOWER}_{SLEEPER_L_NAME_LOWER}_foot_warmer"
     )
     assert entry
     assert entry.unique_id == f"{SLEEPER_L_ID}_foot_warmer"
@@ -161,7 +163,7 @@ async def test_foot_warmer(
         SELECT_DOMAIN,
         SERVICE_SELECT_OPTION,
         {
-            ATTR_ENTITY_ID: f"select.sleepnumber_{BED_NAME_LOWER}_{SLEEPER_L_NAME_LOWER}_foot_warmer",
+            ATTR_ENTITY_ID: f"select.{BED_NAME_LOWER}_sleepnumber_{BED_NAME_LOWER}_{SLEEPER_L_NAME_LOWER}_foot_warmer",
             ATTR_OPTION: "off",
         },
         blocking=True,
@@ -173,17 +175,17 @@ async def test_foot_warmer(
     ].turn_off.assert_called_once()
 
     state = hass.states.get(
-        f"select.sleepnumber_{BED_NAME_LOWER}_{SLEEPER_R_NAME_LOWER}_foot_warmer"
+        f"select.{BED_NAME_LOWER}_sleepnumber_{BED_NAME_LOWER}_{SLEEPER_R_NAME_LOWER}_foot_warmer"
     )
     assert state.state == FootWarmingTemps.OFF.name.lower()
     assert state.attributes.get(ATTR_ICON) == "mdi:heat-wave"
     assert (
         state.attributes.get(ATTR_FRIENDLY_NAME)
-        == f"SleepNumber {BED_NAME} {SLEEPER_R_NAME} Foot Warmer"
+        == f"{BED_NAME} SleepNumber {BED_NAME} {SLEEPER_R_NAME} Foot Warmer"
     )
 
     entry = entity_registry.async_get(
-        f"select.sleepnumber_{BED_NAME_LOWER}_{SLEEPER_R_NAME_LOWER}_foot_warmer"
+        f"select.{BED_NAME_LOWER}_sleepnumber_{BED_NAME_LOWER}_{SLEEPER_R_NAME_LOWER}_foot_warmer"
     )
     assert entry
     assert entry.unique_id == f"{SLEEPER_R_ID}_foot_warmer"
@@ -192,7 +194,7 @@ async def test_foot_warmer(
         SELECT_DOMAIN,
         SERVICE_SELECT_OPTION,
         {
-            ATTR_ENTITY_ID: f"select.sleepnumber_{BED_NAME_LOWER}_{SLEEPER_R_NAME_LOWER}_foot_warmer",
+            ATTR_ENTITY_ID: f"select.{BED_NAME_LOWER}_sleepnumber_{BED_NAME_LOWER}_{SLEEPER_R_NAME_LOWER}_foot_warmer",
             ATTR_OPTION: "high",
         },
         blocking=True,
@@ -216,17 +218,17 @@ async def test_core_climate(
     entry = await setup_platform(hass, SELECT_DOMAIN)
 
     state = hass.states.get(
-        f"select.sleepnumber_{BED_NAME_LOWER}_{SLEEPER_L_NAME_LOWER}_core_climate"
+        f"select.{BED_NAME_LOWER}_sleepnumber_{BED_NAME_LOWER}_{SLEEPER_L_NAME_LOWER}_core_climate"
     )
     assert state.state == "cooling_medium"
     assert state.attributes.get(ATTR_ICON) == "mdi:heat-wave"
     assert (
         state.attributes.get(ATTR_FRIENDLY_NAME)
-        == f"SleepNumber {BED_NAME} {SLEEPER_L_NAME} Core Climate"
+        == f"{BED_NAME} SleepNumber {BED_NAME} {SLEEPER_L_NAME} Core Climate"
     )
 
     entry = entity_registry.async_get(
-        f"select.sleepnumber_{BED_NAME_LOWER}_{SLEEPER_L_NAME_LOWER}_core_climate"
+        f"select.{BED_NAME_LOWER}_sleepnumber_{BED_NAME_LOWER}_{SLEEPER_L_NAME_LOWER}_core_climate"
     )
     assert entry
     assert entry.unique_id == f"{SLEEPER_L_ID}_core_climate"
@@ -235,7 +237,7 @@ async def test_core_climate(
         SELECT_DOMAIN,
         SERVICE_SELECT_OPTION,
         {
-            ATTR_ENTITY_ID: f"select.sleepnumber_{BED_NAME_LOWER}_{SLEEPER_L_NAME_LOWER}_core_climate",
+            ATTR_ENTITY_ID: f"select.{BED_NAME_LOWER}_sleepnumber_{BED_NAME_LOWER}_{SLEEPER_L_NAME_LOWER}_core_climate",
             ATTR_OPTION: "off",
         },
         blocking=True,
@@ -247,17 +249,17 @@ async def test_core_climate(
     ].turn_off.assert_called_once()
 
     state = hass.states.get(
-        f"select.sleepnumber_{BED_NAME_LOWER}_{SLEEPER_R_NAME_LOWER}_core_climate"
+        f"select.{BED_NAME_LOWER}_sleepnumber_{BED_NAME_LOWER}_{SLEEPER_R_NAME_LOWER}_core_climate"
     )
     assert state.state == CoreTemps.OFF.name.lower()
     assert state.attributes.get(ATTR_ICON) == "mdi:heat-wave"
     assert (
         state.attributes.get(ATTR_FRIENDLY_NAME)
-        == f"SleepNumber {BED_NAME} {SLEEPER_R_NAME} Core Climate"
+        == f"{BED_NAME} SleepNumber {BED_NAME} {SLEEPER_R_NAME} Core Climate"
     )
 
     entry = entity_registry.async_get(
-        f"select.sleepnumber_{BED_NAME_LOWER}_{SLEEPER_R_NAME_LOWER}_core_climate"
+        f"select.{BED_NAME_LOWER}_sleepnumber_{BED_NAME_LOWER}_{SLEEPER_R_NAME_LOWER}_core_climate"
     )
     assert entry
     assert entry.unique_id == f"{SLEEPER_R_ID}_core_climate"
@@ -266,7 +268,7 @@ async def test_core_climate(
         SELECT_DOMAIN,
         SERVICE_SELECT_OPTION,
         {
-            ATTR_ENTITY_ID: f"select.sleepnumber_{BED_NAME_LOWER}_{SLEEPER_R_NAME_LOWER}_core_climate",
+            ATTR_ENTITY_ID: f"select.{BED_NAME_LOWER}_sleepnumber_{BED_NAME_LOWER}_{SLEEPER_R_NAME_LOWER}_core_climate",
             ATTR_OPTION: "heating_high",
         },
         blocking=True,
