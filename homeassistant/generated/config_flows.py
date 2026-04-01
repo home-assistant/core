@@ -229,6 +229,7 @@ FLOWS = {
         "folder_watcher",
         "forecast_solar",
         "forked_daapd",
+        "fortios",
         "foscam",
         "freebox",
         "freedompro",

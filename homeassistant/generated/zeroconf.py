@@ -588,6 +588,14 @@ ZEROCONF = {
             "name": "eheimdigital._http._tcp.local.",
         },
         {
+            "domain": "fortios",
+            "name": "fortigate*",
+        },
+        {
+            "domain": "fortios",
+            "name": "fgt*",
+        },
+        {
             "domain": "hdfury",
             "name": "diva-*",
         },
@@ -668,6 +676,16 @@ ZEROCONF = {
             "properties": {
                 "vendor": "tailwind",
             },
+        },
+    ],
+    "_https._tcp.local.": [
+        {
+            "domain": "fortios",
+            "name": "fortigate*",
+        },
+        {
+            "domain": "fortios",
+            "name": "fgt*",
         },
     ],
     "_hue._tcp.local.": [
