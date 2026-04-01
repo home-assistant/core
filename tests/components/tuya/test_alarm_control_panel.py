@@ -3,10 +3,11 @@
 from __future__ import annotations
 
 from typing import Any
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 import pytest
 from syrupy.assertion import SnapshotAssertion
+from tuya_device_handlers import TUYA_QUIRKS_REGISTRY
 from tuya_sharing import CustomerDevice, Manager
 
 from homeassistant.components.alarm_control_panel import (
@@ -47,6 +48,32 @@ async def test_platform_setup_and_discovery(
     await initialize_entry(hass, mock_manager, mock_config_entry, mock_devices)
 
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
+
+
+@pytest.mark.parametrize("mock_device_code", ["mal_gyitctrjj1kefxp2"])
+@pytest.mark.parametrize(
+    ("get_quirks", "available"),
+    [
+        (None, True),
+        ([], False),
+    ],
+)
+async def test_empty_quirk(
+    hass: HomeAssistant,
+    mock_manager: Manager,
+    mock_config_entry: MockConfigEntry,
+    mock_device: CustomerDevice,
+    get_quirks: list | None,
+    available: bool,
+) -> None:
+    """Test None quirk still creates default entities."""
+    with patch.object(TUYA_QUIRKS_REGISTRY, "get_quirk_for_device") as mock_get_quirk:
+        mock_get_quirk.return_value = Mock()
+        mock_get_quirk.return_value.alarm_control_panel_quirks = get_quirks
+        await initialize_entry(hass, mock_manager, mock_config_entry, mock_device)
+
+    state = hass.states.get("alarm_control_panel.multifunction_alarm")
+    assert (state is not None) is available
 
 
 @pytest.mark.parametrize(
