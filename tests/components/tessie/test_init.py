@@ -25,6 +25,13 @@ async def test_load_unload(hass: HomeAssistant) -> None:
     assert entry.state is ConfigEntryState.NOT_LOADED
 
 
+async def test_vehicle_api_handle_is_optional(hass: HomeAssistant) -> None:
+    """Test the runtime vehicle API handle remains optional during migration."""
+
+    entry = await setup_platform(hass)
+    assert all(vehicle.api is None for vehicle in entry.runtime_data.vehicles)
+
+
 async def test_auth_failure(
     hass: HomeAssistant, mock_get_state_of_all_vehicles: AsyncMock
 ) -> None:
