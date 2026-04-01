@@ -11,7 +11,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import OctoprintConfigEntry, OctoprintDataUpdateCoordinator
+from .coordinator import OctoprintConfigEntry, OctoprintDataUpdateCoordinator
 
 
 async def async_setup_entry(

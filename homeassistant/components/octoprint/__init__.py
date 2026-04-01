@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
 import logging
 from typing import cast
 
@@ -10,7 +9,7 @@ import aiohttp
 from pyoctoprintapi import OctoprintClient
 import voluptuous as vol
 
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
+from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import (
     CONF_API_KEY,
     CONF_BINARY_SENSORS,
@@ -35,20 +34,13 @@ from homeassistant.util import slugify as util_slugify
 from homeassistant.util.ssl import get_default_context, get_default_no_verify_context
 
 from .const import CONF_BAUDRATE, DOMAIN, SERVICE_CONNECT
-from .coordinator import OctoprintDataUpdateCoordinator
+from .coordinator import (
+    OctoprintConfigEntry,
+    OctoprintData,
+    OctoprintDataUpdateCoordinator,
+)
 
 _LOGGER = logging.getLogger(__name__)
-
-
-@dataclass
-class OctoprintData:
-    """Runtime data for Octoprint."""
-
-    coordinator: OctoprintDataUpdateCoordinator
-    client: OctoprintClient
-
-
-type OctoprintConfigEntry = ConfigEntry[OctoprintData]
 
 
 def has_all_unique_names(value):

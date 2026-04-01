@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 from datetime import timedelta
 import logging
 from typing import cast
@@ -19,6 +20,17 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN
+
+
+@dataclass
+class OctoprintData:
+    """Runtime data for Octoprint."""
+
+    coordinator: OctoprintDataUpdateCoordinator
+    client: OctoprintClient
+
+
+type OctoprintConfigEntry = ConfigEntry[OctoprintData]
 
 _LOGGER = logging.getLogger(__name__)
 

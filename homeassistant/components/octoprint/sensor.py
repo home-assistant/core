@@ -17,7 +17,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import OctoprintConfigEntry, OctoprintDataUpdateCoordinator
+from .coordinator import OctoprintConfigEntry, OctoprintDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
