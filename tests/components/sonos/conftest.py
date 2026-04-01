@@ -318,7 +318,6 @@ class SoCoMockFactory:
         mock_soco.group.coordinator = mock_soco
         mock_soco.household_id = "test_household_id"
         self.mock_list[ip_address] = mock_soco
-
         return mock_soco
 
     def get_mock(self, *args) -> SoCo:
