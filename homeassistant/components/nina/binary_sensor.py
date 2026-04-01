@@ -96,7 +96,11 @@ class NINAMessage(NinaEntity, BinarySensorEntity):
             ATTR_AFFECTED_AREAS: data.affected_areas,  # Deprecated, remove in 2026.08
             ATTR_WEB: data.more_info_url,  # Deprecated, remove in 2026.08
             ATTR_ID: data.id,
-            ATTR_SENT: data.sent.isoformat(),
-            ATTR_START: data.start.isoformat() if data.start else "",
-            ATTR_EXPIRES: data.expires,
+            ATTR_SENT: data.sent.isoformat(),  # Deprecated, remove in 2026.08
+            ATTR_START: data.start.isoformat()
+            if data.start
+            else "",  # Deprecated, remove in 2026.08
+            ATTR_EXPIRES: data.expires.isoformat()
+            if data.expires
+            else "",  # Deprecated, remove in 2026.08
         }

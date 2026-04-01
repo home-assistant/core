@@ -44,6 +44,7 @@ SENSOR_SUFFIXES: list[str] = [
     "more_info_url",
     "sent",
     "start",
+    "expires",
 ]
 
 CONST_LIST_A_TO_D: list[str] = ["A", "Ä", "B", "C", "D"]

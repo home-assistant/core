@@ -55,6 +55,9 @@
       "affected_areas": {
         "name": "Affected areas {slot_id}"
       },
+      "expires": {
+        "name": "Expires {slot_id}"
+      },
       "headline": {
         "name": "Headline {slot_id}"
       },
