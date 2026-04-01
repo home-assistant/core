@@ -74,6 +74,7 @@ async def test_already_tracked_devices(
 
     # Capture the number of existing device_tracker entities before firing the signal
     tracker_count_before = len(hass.states.async_all(Platform.DEVICE_TRACKER))
+    assert tracker_count_before > 0
 
     coordinator = mock_config_entry.runtime_data
 
