@@ -15,7 +15,7 @@ from tests.common import MockConfigEntry, snapshot_platform
 
 
 @pytest.mark.parametrize(
-    ("ap_fixture"),
+    ("ap_status_fixture"),
     [
         "airos_loco5ac_ap-ptp.json",  # v8 ptp
         "airos_liteapgps_ap_ptmp_40mhz.json",  # v8 ptmp
