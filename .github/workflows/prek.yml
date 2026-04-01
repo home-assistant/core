@@ -13,7 +13,7 @@ concurrency:
 jobs:
   prek:
     name: Run pre-checks
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     permissions:
       contents: read # To check out the repository
     steps:
