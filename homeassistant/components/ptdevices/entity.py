@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
@@ -26,31 +26,18 @@ class PTDevicesEntity(CoordinatorEntity[PTDevicesCoordinator]):
         super().__init__(coordinator=coordinator)
         self._sensor_key = sensor_key
         self._device_id = device_id
-
         self._user_id = coordinator.data[self._device_id]["user_id"]
 
         self._attr_unique_id = f"{self._user_id}_{device_id}_{sensor_key}"
 
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return device information about this device."""
-        device = self.coordinator.data.get(self._device_id)
-
-        if not device:
-            # Device is missing; return minimal information
-            return DeviceInfo(
-                identifiers={(DOMAIN, f"{self._user_id}_{self._device_id}")},
-                configuration_url=f"https://www.ptdevices.com/device/level/{self.device['id']}",
-                manufacturer="ParemTech inc.",
-            )
-
-        return DeviceInfo(
+        self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, f"{self._user_id}_{self._device_id}")},
+            connections={(CONNECTION_NETWORK_MAC, self._device_id)},
             configuration_url=f"https://www.ptdevices.com/device/level/{self.device['id']}",
             manufacturer="ParemTech inc.",
-            model=device["device_type"],
-            sw_version=device["version"],
-            name=device["title"],
+            model=self.device["device_type"],
+            sw_version=self.device["version"],
+            name=self.device["title"],
         )
 
     @property
