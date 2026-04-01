@@ -6,7 +6,7 @@ import pytest
 
 from homeassistant.components.binary_sensor import BinarySensorDeviceClass
 from homeassistant.const import ATTR_DEVICE_CLASS, STATE_OFF, STATE_ON
-from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.core import HomeAssistant
 
 from tests.components.common import (
     TriggerStateDescription,
@@ -70,7 +70,6 @@ async def test_occupancy_triggers_gated_by_labs_flag(
 )
 async def test_occupancy_trigger_binary_sensor_behavior_any(
     hass: HomeAssistant,
-    service_calls: list[ServiceCall],
     target_binary_sensors: dict[str, list[str]],
     trigger_target_config: dict,
     entity_id: str,
@@ -82,7 +81,6 @@ async def test_occupancy_trigger_binary_sensor_behavior_any(
     """Test occupancy trigger fires for binary_sensor entities with device_class occupancy."""
     await assert_trigger_behavior_any(
         hass,
-        service_calls=service_calls,
         target_entities=target_binary_sensors,
         trigger_target_config=trigger_target_config,
         entity_id=entity_id,
@@ -123,7 +121,6 @@ async def test_occupancy_trigger_binary_sensor_behavior_any(
 )
 async def test_occupancy_trigger_binary_sensor_behavior_first(
     hass: HomeAssistant,
-    service_calls: list[ServiceCall],
     target_binary_sensors: dict[str, list[str]],
     trigger_target_config: dict,
     entity_id: str,
@@ -135,7 +132,6 @@ async def test_occupancy_trigger_binary_sensor_behavior_first(
     """Test occupancy trigger fires on the first binary_sensor state change."""
     await assert_trigger_behavior_first(
         hass,
-        service_calls=service_calls,
         target_entities=target_binary_sensors,
         trigger_target_config=trigger_target_config,
         entity_id=entity_id,
@@ -176,7 +172,6 @@ async def test_occupancy_trigger_binary_sensor_behavior_first(
 )
 async def test_occupancy_trigger_binary_sensor_behavior_last(
     hass: HomeAssistant,
-    service_calls: list[ServiceCall],
     target_binary_sensors: dict[str, list[str]],
     trigger_target_config: dict,
     entity_id: str,
@@ -188,7 +183,6 @@ async def test_occupancy_trigger_binary_sensor_behavior_last(
     """Test occupancy trigger fires when the last binary_sensor changes state."""
     await assert_trigger_behavior_last(
         hass,
-        service_calls=service_calls,
         target_entities=target_binary_sensors,
         trigger_target_config=trigger_target_config,
         entity_id=entity_id,

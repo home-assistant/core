@@ -5,7 +5,7 @@ from typing import Any
 import pytest
 
 from homeassistant.const import STATE_OFF, STATE_ON
-from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.core import HomeAssistant
 
 from tests.components.common import (
     TriggerStateDescription,
@@ -61,7 +61,6 @@ async def test_fan_triggers_gated_by_labs_flag(
 )
 async def test_fan_state_trigger_behavior_any(
     hass: HomeAssistant,
-    service_calls: list[ServiceCall],
     target_fans: dict[str, list[str]],
     trigger_target_config: dict,
     entity_id: str,
@@ -73,7 +72,6 @@ async def test_fan_state_trigger_behavior_any(
     """Test that the fan state trigger fires when any fan state changes to a specific state."""
     await assert_trigger_behavior_any(
         hass,
-        service_calls=service_calls,
         target_entities=target_fans,
         trigger_target_config=trigger_target_config,
         entity_id=entity_id,
@@ -106,7 +104,6 @@ async def test_fan_state_trigger_behavior_any(
 )
 async def test_fan_state_trigger_behavior_first(
     hass: HomeAssistant,
-    service_calls: list[ServiceCall],
     target_fans: dict[str, list[str]],
     trigger_target_config: dict,
     entity_id: str,
@@ -118,7 +115,6 @@ async def test_fan_state_trigger_behavior_first(
     """Test that the fan state trigger fires when the first fan changes to a specific state."""
     await assert_trigger_behavior_first(
         hass,
-        service_calls=service_calls,
         target_entities=target_fans,
         trigger_target_config=trigger_target_config,
         entity_id=entity_id,
@@ -151,7 +147,6 @@ async def test_fan_state_trigger_behavior_first(
 )
 async def test_fan_state_trigger_behavior_last(
     hass: HomeAssistant,
-    service_calls: list[ServiceCall],
     target_fans: dict[str, list[str]],
     trigger_target_config: dict,
     entity_id: str,
@@ -163,7 +158,6 @@ async def test_fan_state_trigger_behavior_last(
     """Test that the fan state trigger fires when the last fan changes to a specific state."""
     await assert_trigger_behavior_last(
         hass,
-        service_calls=service_calls,
         target_entities=target_fans,
         trigger_target_config=trigger_target_config,
         entity_id=entity_id,

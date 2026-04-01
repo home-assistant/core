@@ -17,6 +17,7 @@ from zwave_js_server.const.command_class.notification import (
     SmokeAlarmNotificationEvent,
 )
 from zwave_js_server.model.driver import Driver
+from zwave_js_server.model.value import Value as ZwaveValue
 
 from homeassistant.components.automation import automations_with_entity
 from homeassistant.components.binary_sensor import (
@@ -26,7 +27,6 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntityDescription,
 )
 from homeassistant.components.script import scripts_with_entity
-from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.const import EntityCategory, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
@@ -82,8 +82,7 @@ ACCESS_CONTROL_DOOR_STATE_OPEN_REGULAR = 5632
 ACCESS_CONTROL_DOOR_STATE_OPEN_TILT = 5633
 
 
-# Numeric State values used by the "Opening state" notification variable.
-# This is only needed temporarily until the legacy Access Control door state binary sensors are removed.
+# Numeric State values used by the Opening state notification variable.
 class OpeningState(IntEnum):
     """Opening state values exposed by Access Control notifications."""
 
@@ -92,23 +91,23 @@ class OpeningState(IntEnum):
     TILTED = 2
 
 
-# parse_opening_state helpers for the DEPRECATED legacy Access Control binary sensors.
-def _legacy_is_closed(opening_state: OpeningState) -> bool:
+# parse_opening_state helpers.
+def _opening_state_is_closed(opening_state: OpeningState) -> bool:
     """Return if Opening state represents closed."""
     return opening_state is OpeningState.CLOSED
 
 
-def _legacy_is_open(opening_state: OpeningState) -> bool:
+def _opening_state_is_open(opening_state: OpeningState) -> bool:
     """Return if Opening state represents open."""
     return opening_state is OpeningState.OPEN
 
 
-def _legacy_is_open_or_tilted(opening_state: OpeningState) -> bool:
+def _opening_state_is_open_or_tilted(opening_state: OpeningState) -> bool:
     """Return if Opening state represents open or tilted."""
     return opening_state in (OpeningState.OPEN, OpeningState.TILTED)
 
 
-def _legacy_is_tilted(opening_state: OpeningState) -> bool:
+def _opening_state_is_tilted(opening_state: OpeningState) -> bool:
     """Return if Opening state represents tilted."""
     return opening_state is OpeningState.TILTED
 
@@ -137,10 +136,49 @@ class NewNotificationZWaveJSEntityDescription(BinarySensorEntityDescription):
 
 @dataclass(frozen=True, kw_only=True)
 class OpeningStateZWaveJSEntityDescription(BinarySensorEntityDescription):
-    """Describe a legacy Access Control binary sensor that derives state from Opening state."""
+    """Describe an Access Control binary sensor that derives state from Opening state."""
 
     state_key: int
     parse_opening_state: Callable[[OpeningState], bool]
+
+
+@dataclass(frozen=True, kw_only=True)
+class LegacyDoorStateRepairDescription:
+    """Describe how a legacy door state entity should be migrated."""
+
+    issue_translation_key: str
+    replacement_state_key: OpeningState
+
+
+LEGACY_DOOR_STATE_REPAIR_DESCRIPTIONS: dict[str, LegacyDoorStateRepairDescription] = {
+    "legacy_access_control_door_state_simple_open": LegacyDoorStateRepairDescription(
+        issue_translation_key="deprecated_legacy_door_open_state",
+        replacement_state_key=OpeningState.OPEN,
+    ),
+    "legacy_access_control_door_state_open": LegacyDoorStateRepairDescription(
+        issue_translation_key="deprecated_legacy_door_open_state",
+        replacement_state_key=OpeningState.OPEN,
+    ),
+    "legacy_access_control_door_state_open_regular": LegacyDoorStateRepairDescription(
+        issue_translation_key="deprecated_legacy_door_open_state",
+        replacement_state_key=OpeningState.OPEN,
+    ),
+    "legacy_access_control_door_state_open_tilt": LegacyDoorStateRepairDescription(
+        issue_translation_key="deprecated_legacy_door_tilt_state",
+        replacement_state_key=OpeningState.TILTED,
+    ),
+    "legacy_access_control_door_tilt_state_tilted": LegacyDoorStateRepairDescription(
+        issue_translation_key="deprecated_legacy_door_tilt_state",
+        replacement_state_key=OpeningState.TILTED,
+    ),
+}
+
+LEGACY_DOOR_STATE_REPAIR_ISSUE_KEYS = frozenset(
+    {
+        description.issue_translation_key
+        for description in LEGACY_DOOR_STATE_REPAIR_DESCRIPTIONS.values()
+    }
+)
 
 
 # Mappings for Notification sensors
@@ -399,6 +437,9 @@ BOOLEAN_SENSOR_MAPPINGS: dict[tuple[int, int | str], BinarySensorEntityDescripti
 }
 
 
+# This can likely be removed once the legacy notification binary sensor
+# discovery path is gone and Opening state is handled only by the dedicated
+# discovery schemas below.
 @callback
 def is_valid_notification_binary_sensor(
     info: ZwaveDiscoveryInfo | NewZwaveDiscoveryInfo,
@@ -406,11 +447,17 @@ def is_valid_notification_binary_sensor(
     """Return if the notification CC Value is valid as binary sensor."""
     if not info.primary_value.metadata.states:
         return False
-    # Access Control - Opening state is exposed as a single enum sensor instead
-    # of fanning out one binary sensor per state.
+    # Opening state is handled by dedicated discovery schemas
     if is_opening_state_notification_value(info.primary_value):
         return False
     return len(info.primary_value.metadata.states) > 1
+
+
+@callback
+def _async_delete_legacy_entity_repairs(hass: HomeAssistant, entity_id: str) -> None:
+    """Delete all stale legacy door state repair issues for an entity."""
+    for issue_key in LEGACY_DOOR_STATE_REPAIR_ISSUE_KEYS:
+        async_delete_issue(hass, DOMAIN, f"{issue_key}.{entity_id}")
 
 
 @callback
@@ -433,64 +480,71 @@ def _async_check_legacy_entity_repair(
         if entity_id is None:
             return
 
-        issue_id = f"deprecated_legacy_door_state.{entity_id}"
+        repair_description = LEGACY_DOOR_STATE_REPAIR_DESCRIPTIONS.get(
+            entity.entity_description.key
+        )
+        if repair_description is None:
+            _async_delete_legacy_entity_repairs(hass, entity_id)
+            return
 
-        # Delete any stale repair issue if the entity is disabled or missing —
-        # the user has already dealt with it.
         entity_entry = ent_reg.async_get(entity_id)
         if entity_entry is None or entity_entry.disabled:
-            async_delete_issue(hass, DOMAIN, issue_id)
+            _async_delete_legacy_entity_repairs(hass, entity_id)
             return
 
         entity_automations = automations_with_entity(hass, entity_id)
         entity_scripts = scripts_with_entity(hass, entity_id)
-
-        # Delete any stale repair issue if the entity is no longer referenced
-        # in any automation or script.
         if not entity_automations and not entity_scripts:
-            async_delete_issue(hass, DOMAIN, issue_id)
+            _async_delete_legacy_entity_repairs(hass, entity_id)
             return
 
-        opening_state_value = get_opening_state_notification_value(entity.info.node)
+        opening_state_value = get_opening_state_notification_value(
+            entity.info.node, entity.info.primary_value.endpoint
+        )
         if opening_state_value is None:
-            async_delete_issue(hass, DOMAIN, issue_id)
-            return
-        opening_state_unique_id = (
-            f"{driver.controller.home_id}.{opening_state_value.value_id}"
-        )
-        opening_state_entity_id = ent_reg.async_get_entity_id(
-            SENSOR_DOMAIN, DOMAIN, opening_state_unique_id
-        )
-        # Delete any stale repair issue if the replacement opening state sensor
-        # no longer exists for some reason
-        if opening_state_entity_id is None:
-            async_delete_issue(hass, DOMAIN, issue_id)
+            _async_delete_legacy_entity_repairs(hass, entity_id)
             return
 
-        items = [
-            f"- [{item.name or item.original_name or eid}](/config/{domain}/edit/{item.unique_id})"
-            for domain, entity_ids in (
-                ("automation", entity_automations),
-                ("script", entity_scripts),
-            )
-            for eid in entity_ids
-            if (item := ent_reg.async_get(eid))
-        ]
+        replacement_unique_id = (
+            f"{driver.controller.home_id}.{opening_state_value.value_id}."
+            f"{repair_description.replacement_state_key}"
+        )
+        replacement_entity_id = ent_reg.async_get_entity_id(
+            BINARY_SENSOR_DOMAIN, DOMAIN, replacement_unique_id
+        )
+        if replacement_entity_id is None:
+            _async_delete_legacy_entity_repairs(hass, entity_id)
+            return
+
+        items = []
+        for domain, entity_ids in (
+            ("automation", entity_automations),
+            ("script", entity_scripts),
+        ):
+            for eid in entity_ids:
+                item = ent_reg.async_get(eid)
+                if item:
+                    items.append(
+                        f"- [{item.name or item.original_name or eid}]"
+                        f"(/config/{domain}/edit/{item.unique_id})"
+                    )
+                else:
+                    items.append(f"- {eid}")
 
         async_create_issue(
             hass,
             DOMAIN,
-            issue_id,
+            f"{repair_description.issue_translation_key}.{entity_id}",
             is_fixable=False,
             is_persistent=False,
             severity=IssueSeverity.WARNING,
-            translation_key="deprecated_legacy_door_state",
+            translation_key=repair_description.issue_translation_key,
             translation_placeholders={
                 "entity_id": entity_id,
-                "entity_name": entity_entry.name
-                or entity_entry.original_name
-                or entity_id,
-                "opening_state_entity_id": opening_state_entity_id,
+                "entity_name": (
+                    entity_entry.name or entity_entry.original_name or entity_id
+                ),
+                "replacement_entity_id": replacement_entity_id,
                 "items": "\n".join(items),
             },
         )
@@ -537,6 +591,14 @@ async def async_setup_entry(
             and info.entity_class is ZWaveBooleanBinarySensor
         ):
             entities.append(ZWaveBooleanBinarySensor(config_entry, driver, info))
+        elif (
+            isinstance(info, NewZwaveDiscoveryInfo)
+            and info.entity_class is ZWaveOpeningStateBinarySensor
+            and isinstance(
+                info.entity_description, OpeningStateZWaveJSEntityDescription
+            )
+        ):
+            entities.append(ZWaveOpeningStateBinarySensor(config_entry, driver, info))
         elif (
             isinstance(info, NewZwaveDiscoveryInfo)
             and info.entity_class is ZWaveLegacyDoorStateBinarySensor
@@ -700,7 +762,9 @@ class ZWaveLegacyDoorStateBinarySensor(ZWaveBaseEntity, BinarySensorEntity):
     ) -> None:
         """Initialize a legacy Door state binary sensor entity."""
         super().__init__(config_entry, driver, info)
-        opening_state_value = get_opening_state_notification_value(self.info.node)
+        opening_state_value = get_opening_state_notification_value(
+            self.info.node, self.info.primary_value.endpoint
+        )
         assert opening_state_value is not None  # guaranteed by required_values schema
         self._opening_state_value_id = opening_state_value.value_id
         self.watched_value_ids.add(opening_state_value.value_id)
@@ -721,6 +785,69 @@ class ZWaveLegacyDoorStateBinarySensor(ZWaveBaseEntity, BinarySensorEntity):
             return self.entity_description.parse_opening_state(
                 OpeningState(int(opening_state))
             )
+        except TypeError, ValueError:
+            return None
+
+
+class ZWaveOpeningStateBinarySensor(ZWaveBaseEntity, BinarySensorEntity):
+    """Representation of a binary sensor derived from Opening state."""
+
+    entity_description: OpeningStateZWaveJSEntityDescription
+    _known_states: set[str]
+
+    def __init__(
+        self,
+        config_entry: ZwaveJSConfigEntry,
+        driver: Driver,
+        info: NewZwaveDiscoveryInfo,
+    ) -> None:
+        """Initialize an Opening state binary sensor entity."""
+        super().__init__(config_entry, driver, info)
+        self._known_states = set(info.primary_value.metadata.states or ())
+        self._attr_unique_id = (
+            f"{self._attr_unique_id}.{self.entity_description.state_key}"
+        )
+
+    @callback
+    def should_rediscover_on_metadata_update(self) -> bool:
+        """Check if metadata states require adding the Tilt entity."""
+        return (
+            # Open and Tilt entities share the same underlying Opening state value.
+            # Only let the main Open entity trigger rediscovery when Tilt first
+            # appears so we can add the missing sibling without recreating the
+            # main entity and losing its registry customizations.
+            str(OpeningState.TILTED) not in self._known_states
+            and str(OpeningState.TILTED)
+            in set(self.info.primary_value.metadata.states or ())
+            and self.entity_description.state_key == OpeningState.OPEN
+        )
+
+    async def _async_remove_and_rediscover(self, value: ZwaveValue) -> None:
+        """Trigger re-discovery while preserving the main Opening state entity."""
+        assert self.device_entry is not None
+        controller_events = (
+            self.config_entry.runtime_data.driver_events.controller_events
+        )
+
+        # Unlike the base implementation, keep this entity in place so its
+        # registry entry and user customizations survive metadata rediscovery.
+        controller_events.discovered_value_ids[self.device_entry.id].discard(
+            value.value_id
+        )
+        node_events = controller_events.node_events
+        value_updates_disc_info = node_events.value_updates_disc_info[
+            value.node.node_id
+        ]
+        node_events.async_on_value_added(value_updates_disc_info, value)
+
+    @property
+    def is_on(self) -> bool | None:
+        """Return if the sensor is on or off."""
+        value = self.info.primary_value.value
+        if value is None:
+            return None
+        try:
+            return self.entity_description.parse_opening_state(OpeningState(int(value)))
         except TypeError, ValueError:
             return None
 
@@ -823,11 +950,54 @@ DISCOVERY_SCHEMAS: list[NewZWaveDiscoverySchema] = [
         ),
         entity_class=ZWaveNotificationBinarySensor,
     ),
+    NewZWaveDiscoverySchema(
+        platform=Platform.BINARY_SENSOR,
+        primary_value=ZWaveValueDiscoverySchema(
+            command_class={CommandClass.NOTIFICATION},
+            property={"Access Control"},
+            property_key={"Opening state"},
+            type={ValueType.NUMBER},
+            any_available_states_keys={OpeningState.TILTED},
+            any_available_cc_specific={
+                (CC_SPECIFIC_NOTIFICATION_TYPE, NotificationType.ACCESS_CONTROL)
+            },
+        ),
+        # Also derive the main binary sensor from the same value ID
+        allow_multi=True,
+        entity_description=OpeningStateZWaveJSEntityDescription(
+            key="access_control_opening_state_tilted",
+            name="Tilt",
+            state_key=OpeningState.TILTED,
+            parse_opening_state=_opening_state_is_tilted,
+        ),
+        entity_class=ZWaveOpeningStateBinarySensor,
+    ),
+    NewZWaveDiscoverySchema(
+        platform=Platform.BINARY_SENSOR,
+        primary_value=ZWaveValueDiscoverySchema(
+            command_class={CommandClass.NOTIFICATION},
+            property={"Access Control"},
+            property_key={"Opening state"},
+            type={ValueType.NUMBER},
+            any_available_states_keys={OpeningState.OPEN},
+            any_available_cc_specific={
+                (CC_SPECIFIC_NOTIFICATION_TYPE, NotificationType.ACCESS_CONTROL)
+            },
+        ),
+        entity_description=OpeningStateZWaveJSEntityDescription(
+            key="access_control_opening_state_open",
+            state_key=OpeningState.OPEN,
+            parse_opening_state=_opening_state_is_open_or_tilted,
+            device_class=BinarySensorDeviceClass.DOOR,
+        ),
+        entity_class=ZWaveOpeningStateBinarySensor,
+    ),
     # -------------------------------------------------------------------
     # DEPRECATED legacy Access Control door/window binary sensors.
     # These schemas exist only for backwards compatibility with users who
     # already have these entities registered. New integrations should use
-    # the Opening state enum sensor instead. Do not add new schemas here.
+    # the dedicated Opening state binary sensors instead. Do not add new
+    # schemas here.
     # All schemas below use ZWaveLegacyDoorStateBinarySensor and are
     # disabled by default (entity_registry_enabled_default=False).
     # -------------------------------------------------------------------
@@ -851,7 +1021,7 @@ DISCOVERY_SCHEMAS: list[NewZWaveDiscoverySchema] = [
             key="legacy_access_control_door_state_simple_open",
             name="Window/door is open",
             state_key=AccessControlNotificationEvent.DOOR_STATE_WINDOW_DOOR_IS_OPEN,
-            parse_opening_state=_legacy_is_open_or_tilted,
+            parse_opening_state=_opening_state_is_open_or_tilted,
             device_class=BinarySensorDeviceClass.DOOR,
             entity_registry_enabled_default=False,
         ),
@@ -877,7 +1047,7 @@ DISCOVERY_SCHEMAS: list[NewZWaveDiscoverySchema] = [
             key="legacy_access_control_door_state_simple_closed",
             name="Window/door is closed",
             state_key=AccessControlNotificationEvent.DOOR_STATE_WINDOW_DOOR_IS_CLOSED,
-            parse_opening_state=_legacy_is_closed,
+            parse_opening_state=_opening_state_is_closed,
             entity_registry_enabled_default=False,
         ),
         entity_class=ZWaveLegacyDoorStateBinarySensor,
@@ -902,7 +1072,7 @@ DISCOVERY_SCHEMAS: list[NewZWaveDiscoverySchema] = [
             key="legacy_access_control_door_state_open",
             name="Window/door is open",
             state_key=AccessControlNotificationEvent.DOOR_STATE_WINDOW_DOOR_IS_OPEN,
-            parse_opening_state=_legacy_is_open,
+            parse_opening_state=_opening_state_is_open,
             device_class=BinarySensorDeviceClass.DOOR,
             entity_registry_enabled_default=False,
         ),
@@ -928,7 +1098,7 @@ DISCOVERY_SCHEMAS: list[NewZWaveDiscoverySchema] = [
             key="legacy_access_control_door_state_closed",
             name="Window/door is closed",
             state_key=AccessControlNotificationEvent.DOOR_STATE_WINDOW_DOOR_IS_CLOSED,
-            parse_opening_state=_legacy_is_closed,
+            parse_opening_state=_opening_state_is_closed,
             entity_registry_enabled_default=False,
         ),
         entity_class=ZWaveLegacyDoorStateBinarySensor,
@@ -951,7 +1121,7 @@ DISCOVERY_SCHEMAS: list[NewZWaveDiscoverySchema] = [
             key="legacy_access_control_door_state_open_regular",
             name="Window/door is open in regular position",
             state_key=ACCESS_CONTROL_DOOR_STATE_OPEN_REGULAR,
-            parse_opening_state=_legacy_is_open,
+            parse_opening_state=_opening_state_is_open,
             entity_registry_enabled_default=False,
         ),
         entity_class=ZWaveLegacyDoorStateBinarySensor,
@@ -974,7 +1144,7 @@ DISCOVERY_SCHEMAS: list[NewZWaveDiscoverySchema] = [
             key="legacy_access_control_door_state_open_tilt",
             name="Window/door is open in tilt position",
             state_key=ACCESS_CONTROL_DOOR_STATE_OPEN_TILT,
-            parse_opening_state=_legacy_is_tilted,
+            parse_opening_state=_opening_state_is_tilted,
             entity_registry_enabled_default=False,
         ),
         entity_class=ZWaveLegacyDoorStateBinarySensor,
@@ -997,7 +1167,7 @@ DISCOVERY_SCHEMAS: list[NewZWaveDiscoverySchema] = [
             key="legacy_access_control_door_tilt_state_tilted",
             name="Window/door is tilted",
             state_key=OpeningState.OPEN,
-            parse_opening_state=_legacy_is_tilted,
+            parse_opening_state=_opening_state_is_tilted,
             entity_registry_enabled_default=False,
         ),
         entity_class=ZWaveLegacyDoorStateBinarySensor,
