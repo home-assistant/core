@@ -7,6 +7,7 @@ import pytest
 
 from homeassistant import config_entries
 from homeassistant.components.mystrom.const import DOMAIN
+from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
@@ -122,11 +123,15 @@ async def test_wong_answer_from_device(hass: HomeAssistant) -> None:
 
 async def test_dhcp_discovery(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
     """Test DHCP discovery shows a confirmation form and creates an entry."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_DHCP},
-        data=DHCP_SERVICE_INFO,
-    )
+    with patch(
+        "homeassistant.components.mystrom.config_flow.get_device_info",
+        return_value={"type": 101, "mac": DEVICE_MAC},
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_DHCP},
+            data=DHCP_SERVICE_INFO,
+        )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "discovery_confirm"
 
@@ -141,6 +146,21 @@ async def test_dhcp_discovery(hass: HomeAssistant, mock_setup_entry: AsyncMock) 
     assert result2["data"] == {"host": DHCP_SERVICE_INFO.ip}
 
 
+async def test_dhcp_discovery_cannot_connect(hass: HomeAssistant) -> None:
+    """Test DHCP discovery aborts when the device is unreachable."""
+    with patch(
+        "homeassistant.components.mystrom.config_flow.get_device_info",
+        side_effect=MyStromConnectionError(),
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_DHCP},
+            data=DHCP_SERVICE_INFO,
+        )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "cannot_connect"
+
+
 async def test_dhcp_discovery_already_configured_updates_host(
     hass: HomeAssistant,
     mock_setup_entry: AsyncMock,
@@ -148,8 +168,8 @@ async def test_dhcp_discovery_already_configured_updates_host(
     """Test DHCP discovery updates the host of an already-configured entry."""
     entry = MockConfigEntry(
         domain=DOMAIN,
-        unique_id="08:3a:8d:94:64:98",
-        data={"host": "1.1.1.1"},
+        unique_id="083A8D946498",
+        data={CONF_HOST: "1.1.1.1"},
         title="myStrom Device",
     )
     entry.add_to_hass(hass)

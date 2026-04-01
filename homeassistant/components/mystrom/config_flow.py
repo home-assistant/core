@@ -11,7 +11,6 @@ import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_NAME
-from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
 from .const import DOMAIN
@@ -60,9 +59,14 @@ class MyStromConfigFlow(ConfigFlow, domain=DOMAIN):
         self, discovery_info: DhcpServiceInfo
     ) -> ConfigFlowResult:
         """Handle DHCP discovery."""
-        mac_address = format_mac(discovery_info.macaddress)
+        mac_address = discovery_info.macaddress.upper().replace(":", "")
         await self.async_set_unique_id(mac_address)
         self._abort_if_unique_id_configured(updates={CONF_HOST: discovery_info.ip})
+
+        try:
+            await pymystrom.get_device_info(discovery_info.ip)
+        except MyStromConnectionError:
+            return self.async_abort(reason="cannot_connect")
 
         self._host = discovery_info.ip
         self.context["title_placeholders"] = {"host": discovery_info.ip}
