@@ -37,11 +37,7 @@ rules:
   docs-installation-parameters: done
   entity-unavailable: done
   integration-owner: done
-  log-when-unavailable:
-    status: exempt
-    comment: |
-      The logging is handled by DataUpdateCoordinator,
-      however the logging level might not be INFO.
+  log-when-unavailable: done
   parallel-updates:
     status: exempt
     comment: |
