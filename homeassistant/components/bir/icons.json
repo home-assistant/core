@@ -1,0 +1,18 @@
+{
+  "entity": {
+    "sensor": {
+      "mixed_waste_pickup": {
+        "default": "mdi:trash-can"
+      },
+      "paper_and_plastic_pickup": {
+        "default": "mdi:recycle"
+      },
+      "food_waste_pickup": {
+        "default": "mdi:food-apple"
+      },
+      "glass_and_metal_packaging_pickup": {
+        "default": "mdi:bottle-wine"
+      }
+    }
+  }
+}
