@@ -1,11 +1,6 @@
 """Test the IntelliFire config flow."""
 
-import inspect
 from unittest.mock import AsyncMock, patch
-
-from intellifire4py import UnifiedFireplace
-from intellifire4py.const import IntelliFireApiMode
-
 from homeassistant.components.intellifire import CONF_USER_ID
 from homeassistant.components.intellifire.const import (
     API_MODE_CLOUD,
