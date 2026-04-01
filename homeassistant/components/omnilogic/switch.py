@@ -25,7 +25,7 @@ async def async_setup_entry(
     entry: OmniLogicConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up the light platform."""
+    """Set up the switch platform."""
 
     coordinator = entry.runtime_data
     entities = []
