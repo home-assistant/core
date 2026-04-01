@@ -228,8 +228,7 @@ async def test_import_flow_exceptions(
 
 
 async def test_import_flow_account_id_none(
-    hass: HomeAssistant,
-    mock_waterfurnace_client: Mock,
+    hass: HomeAssistant, mock_waterfurnace_client: Mock
 ) -> None:
     """Test import flow when account_id is None."""
     mock_waterfurnace_client.account_id = None
@@ -245,8 +244,7 @@ async def test_import_flow_account_id_none(
 
 
 async def test_import_flow_no_devices(
-    hass: HomeAssistant,
-    mock_waterfurnace_client: Mock,
+    hass: HomeAssistant, mock_waterfurnace_client: Mock
 ) -> None:
     """Test import flow with no devices."""
     mock_waterfurnace_client.devices = []

@@ -52,8 +52,7 @@ async def test_setup_multi_device(
 
 
 async def test_migrate_unique_id(
-    hass: HomeAssistant,
-    mock_waterfurnace_client: Mock,
+    hass: HomeAssistant, mock_waterfurnace_client: Mock
 ) -> None:
     """Test migration from gwid to account_id unique_id."""
     old_entry = MockConfigEntry(
