@@ -6,16 +6,13 @@ from aiohttp import BasicAuth
 from python_opensky import OpenSky
 from python_opensky.exceptions import OpenSkyError
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import CONF_CONTRIBUTING_USER, PLATFORMS
-from .coordinator import OpenSkyDataUpdateCoordinator
-
-type OpenSkyConfigEntry = ConfigEntry[OpenSkyDataUpdateCoordinator]
+from .coordinator import OpenSkyConfigEntry, OpenSkyDataUpdateCoordinator
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: OpenSkyConfigEntry) -> bool:

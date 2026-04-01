@@ -9,9 +9,8 @@ from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import OpenSkyConfigEntry
 from .const import DOMAIN, MANUFACTURER
-from .coordinator import OpenSkyDataUpdateCoordinator
+from .coordinator import OpenSkyConfigEntry, OpenSkyDataUpdateCoordinator
 
 
 async def async_setup_entry(
