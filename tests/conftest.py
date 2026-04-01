@@ -156,6 +156,9 @@ asyncio.set_event_loop_policy(runner.HassEventLoopPolicy(False))
 # Disable fixtures overriding our beautiful policy
 asyncio.set_event_loop_policy = lambda policy: None
 
+# Capture the real socket functions before any test patches them
+_real_getaddrinfo = socket.getaddrinfo
+
 
 def pytest_addoption(parser: pytest.Parser) -> None:
     """Register custom pytest options."""
@@ -207,12 +210,10 @@ def pytest_runtest_setup() -> None:
     pytest_socket.socket_allow_hosts(["127.0.0.1"])
     pytest_socket.disable_socket(allow_unix_socket=True)
 
-    orig_getaddrinfo = socket.getaddrinfo
-
     def disable_dns(host, *args: Any, **kwargs: Any) -> None:
         # Allow localhost/127.0.0.1/::1 for integration tests
         if host in ("localhost", "127.0.0.1", "::1"):
-            return orig_getaddrinfo(host, *args, **kwargs)
+            return _real_getaddrinfo(host, *args, **kwargs)
         raise RuntimeError("DNS resolution disabled in tests")
 
     setattr(socket, "getaddrinfo", disable_dns)
