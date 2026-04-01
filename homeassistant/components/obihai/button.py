@@ -29,7 +29,7 @@ async def async_setup_entry(
     entry: ObihaiConfigEntry,
     async_add_entities: entity_platform.AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up the Obihai sensor entries."""
+    """Set up the Obihai button entries."""
 
     requester = entry.runtime_data
 
