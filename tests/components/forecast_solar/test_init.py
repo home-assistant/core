@@ -58,7 +58,10 @@ async def test_config_entry_not_ready(
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
-async def test_migration_from_v1(hass: HomeAssistant) -> None:
+async def test_migration_from_v1(
+    hass: HomeAssistant,
+    mock_forecast_solar: MagicMock,
+) -> None:
     """Test config entry migration from version 1."""
     mock_config_entry = MockConfigEntry(
         title="Green House",
@@ -101,7 +104,10 @@ async def test_migration_from_v1(hass: HomeAssistant) -> None:
     assert subentry.title == "30° / 190° / 5100W"
 
 
-async def test_migration_from_v2(hass: HomeAssistant) -> None:
+async def test_migration_from_v2(
+    hass: HomeAssistant,
+    mock_forecast_solar: MagicMock,
+) -> None:
     """Test config entry migration from version 2."""
     mock_config_entry = MockConfigEntry(
         title="Green House",
