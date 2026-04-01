@@ -5,7 +5,6 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any, cast
 
-from tuya_device_handlers import TUYA_QUIRKS_REGISTRY
 from tuya_device_handlers.definition.climate import (
     TuyaClimateDefinition,
     get_default_definition,
@@ -62,8 +61,6 @@ _HA_TO_TUYA_TEMPERATURE = {
     UnitOfTemperature.FAHRENHEIT: TuyaUnitOfTemperature.FAHRENHEIT,
 }
 
-_FALLBACK_SWITH_ONLY_HVAC_MODE = HVACMode.HEAT_COOL
-
 
 @dataclass(frozen=True, kw_only=True)
 class TuyaClimateEntityDescription(ClimateEntityDescription):
@@ -100,35 +97,6 @@ CLIMATE_DESCRIPTIONS: dict[DeviceCategory, TuyaClimateEntityDescription] = {
 }
 
 
-def _get_quirk_entities(
-    manager: Manager, device: CustomerDevice, temperature_unit: UnitOfTemperature
-) -> list[TuyaClimateEntity] | None:
-    if (quirk := TUYA_QUIRKS_REGISTRY.get_quirk_for_device(device)) is None or (
-        entity_quirks := quirk.climate_quirks
-    ) is None:
-        return None
-    return [
-        TuyaClimateEntity(
-            device,
-            manager,
-            TuyaClimateEntityDescription(
-                key=entity_quirk.key,
-                switch_only_hvac_mode=_FALLBACK_SWITH_ONLY_HVAC_MODE,
-            ),
-            definition,
-        )
-        for entity_quirk in entity_quirks
-        if (
-            definition := entity_quirk.definition_fn(
-                device,
-                _HA_TO_TUYA_TEMPERATURE.get(
-                    temperature_unit, TuyaUnitOfTemperature.CELSIUS
-                ),
-            )
-        )
-    ]
-
-
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: TuyaConfigEntry,
@@ -143,13 +111,6 @@ async def async_setup_entry(
         entities: list[TuyaClimateEntity] = []
         for device_id in device_ids:
             device = manager.device_map[device_id]
-            if (
-                quirk_entities := _get_quirk_entities(
-                    manager, device, hass.config.units.temperature_unit
-                )
-            ) is not None:
-                entities.extend(quirk_entities)
-                continue
             if (description := CLIMATE_DESCRIPTIONS.get(device.category)) and (
                 definition := get_default_definition(
                     device,
