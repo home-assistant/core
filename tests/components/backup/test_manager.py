@@ -2024,6 +2024,8 @@ async def test_receive_backup(
         (".", "backup.tar"),
         ("..", "backup.tar"),
         ("../..", "backup.tar"),
+        ("..\\traversal.tar", "traversal.tar"),
+        ("C:\\fakepath\\backup.tar", "backup.tar"),
     ],
 )
 async def test_receive_backup_path_traversal(
