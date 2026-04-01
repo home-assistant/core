@@ -44,4 +44,5 @@ jobs:
       - name: Run all hooks
         env:
           SKIP: mypy,pylint,gen_requirements_all,hassfest,hassfest-metadata,hassfest-mypy-config
+          PREK_SKIP: no-commit-to-branch
         run: prek run --all-files
