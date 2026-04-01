@@ -43,7 +43,7 @@ class OPNsenseDeviceScanner(DeviceScanner):
 
     async def async_scan_devices(self) -> list[str]:
         """Scan for new devices and return a list with found device IDs."""
-        await self.update_info()
+        await self._async_update_info()
         return list(self.last_results)
 
     def get_device_name(self, device: str) -> str | None:
@@ -52,7 +52,7 @@ class OPNsenseDeviceScanner(DeviceScanner):
             return None
         return self.last_results[device].get("hostname") or None
 
-    async def update_info(self) -> bool:
+    async def _async_update_info(self) -> bool:
         """Ensure the information from the OPNsense router is up to date.
 
         Return boolean if scanning successful.
