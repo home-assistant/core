@@ -54,8 +54,8 @@ MOCK_BIR_PICKUPS = [
 
 MOCK_ADDRESS_RESULTS = [
     Address(
-        property_id="12345",
-        address="Testveien 1, Bergen",
+        property_id=MOCK_PROPERTY_ID,
+        address=MOCK_ADDRESS,
         municipality="Bergen",
         municipality_number="4601",
     ),
@@ -85,9 +85,7 @@ def mock_config_entry() -> MockConfigEntry:
 @pytest.fixture
 def mock_setup_entry() -> Generator[None]:
     """Mock setting up a config entry."""
-    with patch(
-        "homeassistant.components.bir.async_setup_entry", return_value=True
-    ):
+    with patch("homeassistant.components.bir.async_setup_entry", return_value=True):
         yield
 
 

@@ -10,6 +10,8 @@ from homeassistant.config_entries import SOURCE_USER
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
+from .conftest import MOCK_ADDRESS, MOCK_PROPERTY_ID
+
 from tests.common import MockConfigEntry
 
 pytestmark = pytest.mark.usefixtures("mock_setup_entry")
@@ -41,14 +43,14 @@ async def test_full_user_flow(
 
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            user_input={"selected_address": "12345"},
+            user_input={"selected_address": MOCK_PROPERTY_ID},
         )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "Testveien 1, Bergen"
+    assert result["title"] == MOCK_ADDRESS
     assert result["data"] == {
-        CONF_PROPERTY_ID: "12345",
-        CONF_ADDRESS: "Testveien 1, Bergen",
+        CONF_PROPERTY_ID: MOCK_PROPERTY_ID,
+        CONF_ADDRESS: MOCK_ADDRESS,
     }
 
 
@@ -134,7 +136,7 @@ async def test_address_validation_error(
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            user_input={"selected_address": "12345"},
+            user_input={"selected_address": MOCK_PROPERTY_ID},
         )
 
     assert result["type"] is FlowResultType.FORM
@@ -168,7 +170,7 @@ async def test_already_configured(
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            user_input={"selected_address": "12345"},
+            user_input={"selected_address": MOCK_PROPERTY_ID},
         )
 
     assert result["type"] is FlowResultType.ABORT

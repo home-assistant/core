@@ -1,10 +1,12 @@
 """Tests for the BIR sensors."""
 
-
 import pytest
 
+from homeassistant.components.bir.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
+
+from .conftest import MOCK_PROPERTY_ID
 
 from tests.common import MockConfigEntry
 
@@ -54,7 +56,7 @@ async def test_sensor_device(
 ) -> None:
     """Test sensors are assigned to the correct device."""
     device_entry = device_registry.async_get_device(
-        identifiers={("bir", "12345")}
+        identifiers={(DOMAIN, MOCK_PROPERTY_ID)}
     )
     assert device_entry is not None
     assert device_entry.manufacturer == "BIR"
