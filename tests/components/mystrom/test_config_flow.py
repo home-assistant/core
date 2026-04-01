@@ -124,7 +124,7 @@ async def test_wong_answer_from_device(hass: HomeAssistant) -> None:
 async def test_dhcp_discovery(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
     """Test DHCP discovery shows a confirmation form and creates an entry."""
     with patch(
-        "homeassistant.components.mystrom.config_flow.get_device_info",
+        "homeassistant.components.mystrom.config_flow.pymystrom.get_device_info",
         return_value={"type": 101, "mac": DEVICE_MAC},
     ):
         result = await hass.config_entries.flow.async_init(
@@ -149,7 +149,7 @@ async def test_dhcp_discovery(hass: HomeAssistant, mock_setup_entry: AsyncMock) 
 async def test_dhcp_discovery_cannot_connect(hass: HomeAssistant) -> None:
     """Test DHCP discovery aborts when the device is unreachable."""
     with patch(
-        "homeassistant.components.mystrom.config_flow.get_device_info",
+        "homeassistant.components.mystrom.config_flow.pymystrom.get_device_info",
         side_effect=MyStromConnectionError(),
     ):
         result = await hass.config_entries.flow.async_init(
