@@ -6,7 +6,7 @@ from functools import cache
 from getpass import getuser
 import logging
 import platform
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 from homeassistant.const import __version__ as current_version
 from homeassistant.core import HomeAssistant
@@ -15,7 +15,6 @@ from homeassistant.util.package import is_docker_env, is_virtual_env
 from homeassistant.util.system_info import is_official_image
 
 from .hassio import is_hassio
-from .importlib import async_import_module
 from .singleton import singleton
 
 _LOGGER = logging.getLogger(__name__)
