@@ -53,15 +53,15 @@ rules:
   docs-use-cases: todo
   dynamic-devices: todo
   entity-category: done
-  entity-device-class:
-    status: exempt
-    comment: No applicable device classes for binary_sensor, button, light, or select entities.
+  entity-device-class: done
   entity-disabled-by-default: todo
   entity-translations: done
   exception-translations: done
   icon-translations: done
   reconfiguration-flow: todo
-  repair-issues: todo
+  repair-issues:
+    status: exempt
+    comment: Integration does not register repair issues.
   stale-devices: todo
 
   # Platinum
