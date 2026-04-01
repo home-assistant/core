@@ -804,7 +804,7 @@ async def webhook_scan_tag(
     return empty_okay_response()
 
 
-@WEBHOOK_COMMANDS.register("update_live_activity_token")
+@WEBHOOK_COMMANDS.register("mobile_app_live_activity_token")
 @validate_schema(
     {
         vol.Required(ATTR_LIVE_ACTIVITY_TAG): vol.All(cv.string, vol.Length(min=1)),
@@ -833,7 +833,7 @@ async def webhook_update_live_activity_token(
     return empty_okay_response()
 
 
-@WEBHOOK_COMMANDS.register("live_activity_dismissed")
+@WEBHOOK_COMMANDS.register("mobile_app_live_activity_dismissed")
 @validate_schema(
     {
         vol.Required(ATTR_LIVE_ACTIVITY_TAG): vol.All(cv.string, vol.Length(min=1)),
