@@ -143,7 +143,7 @@ class ForecastSolarOptionFlowHandler(OptionsFlow):
     ) -> ConfigFlowResult:
         """Manage the options."""
         errors: dict[str, str] = {}
-        planes_count = len(self.config_entry.subentries)
+        planes_count = len(self.config_entry.get_subentries_of_type(SUBENTRY_TYPE_PLANE))
 
         if user_input is not None:
             api_key = user_input.get(CONF_API_KEY)
@@ -234,9 +234,10 @@ class PlaneSubentryFlowHandler(ConfigSubentryFlow):
     ) -> SubentryFlowResult:
         """Handle the user step to add a new plane."""
         entry = self._get_entry()
-        if len(entry.subentries) >= MAX_PLANES:
+        planes_count = len(entry.get_subentries_of_type(SUBENTRY_TYPE_PLANE))
+        if planes_count >= MAX_PLANES:
             return self.async_abort(reason="max_planes")
-        if len(entry.subentries) >= 1 and not entry.options.get(CONF_API_KEY):
+        if planes_count >= 1 and not entry.options.get(CONF_API_KEY):
             return self.async_abort(reason="api_key_required")
 
         if user_input is not None:

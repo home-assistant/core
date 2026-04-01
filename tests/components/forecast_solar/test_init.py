@@ -93,8 +93,9 @@ async def test_migration_from_v1(
         "damping_evening": 0.5,
         CONF_INVERTER_SIZE: 2000,
     }
-    assert len(entry.subentries) == 1
-    subentry = list(entry.subentries.values())[0]
+    plane_subentries = entry.get_subentries_of_type(SUBENTRY_TYPE_PLANE)
+    assert len(plane_subentries) == 1
+    subentry = plane_subentries[0]
     assert subentry.subentry_type == SUBENTRY_TYPE_PLANE
     assert subentry.data == {
         CONF_DECLINATION: 30,
@@ -136,8 +137,9 @@ async def test_migration_from_v2(
         CONF_API_KEY: "abcdef12345",
         CONF_INVERTER_SIZE: 2000,
     }
-    assert len(entry.subentries) == 1
-    subentry = list(entry.subentries.values())[0]
+    plane_subentries = entry.get_subentries_of_type(SUBENTRY_TYPE_PLANE)
+    assert len(plane_subentries) == 1
+    subentry = plane_subentries[0]
     assert subentry.subentry_type == SUBENTRY_TYPE_PLANE
     assert subentry.data == {
         CONF_DECLINATION: 30,

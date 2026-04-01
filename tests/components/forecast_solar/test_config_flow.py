@@ -59,8 +59,9 @@ async def test_user_flow(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> No
     assert config_entry.options == {}
 
     # Verify a plane subentry was created
-    assert len(config_entry.subentries) == 1
-    subentry = next(iter(config_entry.subentries.values()))
+    plane_subentries = config_entry.get_subentries_of_type(SUBENTRY_TYPE_PLANE)
+    assert len(plane_subentries) == 1
+    subentry = plane_subentries[0]
     assert subentry.subentry_type == SUBENTRY_TYPE_PLANE
     assert subentry.data == {
         CONF_DECLINATION: 42,
@@ -313,7 +314,7 @@ async def test_subentry_flow_add_plane(
         CONF_MODULES_POWER: 3000,
     }
 
-    assert len(mock_config_entry.subentries) == 2
+    assert len(mock_config_entry.get_subentries_of_type(SUBENTRY_TYPE_PLANE)) == 2
 
 
 @pytest.mark.usefixtures("mock_forecast_solar")
@@ -327,7 +328,7 @@ async def test_subentry_flow_reconfigure_plane(
     await hass.async_block_till_done()
 
     # Get the existing plane subentry id
-    subentry_id = next(iter(mock_config_entry.subentries))
+    subentry_id = mock_config_entry.get_subentries_of_type(SUBENTRY_TYPE_PLANE)[0].subentry_id
 
     result = await hass.config_entries.subentries.async_init(
         (mock_config_entry.entry_id, SUBENTRY_TYPE_PLANE),
@@ -349,8 +350,9 @@ async def test_subentry_flow_reconfigure_plane(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
 
-    assert len(mock_config_entry.subentries) == 1
-    subentry = mock_config_entry.subentries[subentry_id]
+    plane_subentries = mock_config_entry.get_subentries_of_type(SUBENTRY_TYPE_PLANE)
+    assert len(plane_subentries) == 1
+    subentry = plane_subentries[0]
     assert subentry.data == {
         CONF_DECLINATION: 50,
         CONF_AZIMUTH: 200,
@@ -407,7 +409,7 @@ async def test_subentry_flow_max_planes(
         )
         assert result["type"] is FlowResultType.CREATE_ENTRY
 
-    assert len(mock_config_entry.subentries) == 4
+    assert len(mock_config_entry.get_subentries_of_type(SUBENTRY_TYPE_PLANE)) == 4
 
     # Attempt to add a 5th plane should be aborted
     result = await hass.config_entries.subentries.async_init(
@@ -428,7 +430,7 @@ async def test_subentry_flow_reconfigure_plane_not_loaded(
     # Entry is not loaded, so it has no update listeners
 
     # Get the existing plane subentry id
-    subentry_id = next(iter(mock_config_entry.subentries))
+    subentry_id = mock_config_entry.get_subentries_of_type(SUBENTRY_TYPE_PLANE)[0].subentry_id
 
     result = await hass.config_entries.subentries.async_init(
         (mock_config_entry.entry_id, SUBENTRY_TYPE_PLANE),
@@ -450,8 +452,9 @@ async def test_subentry_flow_reconfigure_plane_not_loaded(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
 
-    assert len(mock_config_entry.subentries) == 1
-    subentry = mock_config_entry.subentries[subentry_id]
+    plane_subentries = mock_config_entry.get_subentries_of_type(SUBENTRY_TYPE_PLANE)
+    assert len(plane_subentries) == 1
+    subentry = plane_subentries[0]
     assert subentry.data == {
         CONF_DECLINATION: 50,
         CONF_AZIMUTH: 200,

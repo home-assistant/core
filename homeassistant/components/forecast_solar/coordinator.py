@@ -47,11 +47,7 @@ class ForecastSolarDataUpdateCoordinator(DataUpdateCoordinator[Estimate]):
             inverter_size = inverter_size / 1000
 
         # Build the list of planes from subentries.
-        plane_subentries = [
-            subentry
-            for subentry in entry.subentries.values()
-            if subentry.subentry_type == SUBENTRY_TYPE_PLANE
-        ]
+        plane_subentries = entry.get_subentries_of_type(SUBENTRY_TYPE_PLANE)
 
         # The first plane subentry is the main plane
         main_plane = plane_subentries[0]

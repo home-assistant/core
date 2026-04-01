@@ -79,16 +79,14 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ForecastSolarConfigEntry
 ) -> bool:
     """Set up Forecast.Solar from a config entry."""
-    if not any(
-        subentry.subentry_type == SUBENTRY_TYPE_PLANE
-        for subentry in entry.subentries.values()
-    ):
+    plane_subentries = entry.get_subentries_of_type(SUBENTRY_TYPE_PLANE)
+    if not plane_subentries:
         raise ConfigEntryError(
             translation_domain=DOMAIN,
             translation_key="no_plane",
         )
 
-    if len(entry.subentries) > 1 and not entry.options.get(CONF_API_KEY):
+    if len(plane_subentries) > 1 and not entry.options.get(CONF_API_KEY):
         raise ConfigEntryError(
             translation_domain=DOMAIN,
             translation_key="api_key_required",
