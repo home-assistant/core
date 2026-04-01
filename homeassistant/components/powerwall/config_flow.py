@@ -75,10 +75,19 @@ class PowerwallConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_dhcp(
         self, discovery_info: DhcpServiceInfo
     ) -> ConfigFlowResult:
-        """Handle DHCP discovery."""
+        """Handle DHCP discovery.
+
+        Retained for backwards compatibility with Powerwall 2 gateways
+        which broadcast DHCP hostnames matching 1118431-* / 1232100-*.
+        Powerwall 3 does not broadcast a DHCP hostname, so discovery
+        will not trigger for PW3 — users must add PW3 manually.
+        """
         self.ip_address = discovery_info.ip
-        await self.async_set_unique_id(discovery_info.ip)
-        self._abort_if_unique_id_configured()
+
+        # Use gateway hostname as stable unique_id instead of IP
+        gateway_id = discovery_info.hostname
+        await self.async_set_unique_id(gateway_id)
+        self._abort_if_unique_id_configured(updates={CONF_IP_ADDRESS: self.ip_address})
         self.context["title_placeholders"] = {CONF_IP_ADDRESS: self.ip_address}
         return await self.async_step_user()
 
