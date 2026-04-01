@@ -4,7 +4,6 @@ from datetime import timedelta
 from unittest.mock import Mock, patch
 
 from aiohttp.client_exceptions import ClientResponseError
-from google.auth.exceptions import RefreshError
 from httplib2 import Response
 import pytest
 
@@ -61,23 +60,20 @@ async def test_sensors(
     assert state.state == result
 
 
-@pytest.mark.parametrize(
-    "side_effect",
-    [
-        RefreshError,
-        OAuth2TokenRequestReauthError(request_info=Mock(), domain=DOMAIN),
-    ],
-    ids=["legacy_refresh_error", "oauth_reauth_error"],
-)
 async def test_sensor_reauth_trigger(
     hass: HomeAssistant,
     setup_integration: ComponentSetup,
-    side_effect: Exception | type[Exception],
 ) -> None:
     """Test reauth is triggered after a refresh error."""
     await setup_integration()
 
-    with patch(TOKEN, side_effect=side_effect):
+    with patch(
+        TOKEN,
+        side_effect=OAuth2TokenRequestReauthError(
+            request_info=Mock(),
+            domain=DOMAIN,
+        ),
+    ):
         next_update = dt_util.utcnow() + timedelta(minutes=15)
         async_fire_time_changed(hass, next_update)
         await hass.async_block_till_done(wait_background_tasks=True)

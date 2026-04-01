@@ -3,7 +3,6 @@
 from functools import partial
 
 from aiohttp.client_exceptions import ClientError
-from google.auth.exceptions import RefreshError
 from google.oauth2.credentials import Credentials
 from googleapiclient.discovery import Resource, build
 
@@ -56,13 +55,9 @@ class AsyncConfigEntryAuth:
             if setup_in_progress:
                 raise ConfigEntryNotReady from ex
             raise
-        except (RefreshError, ClientError) as ex:
+        except ClientError as ex:
             if setup_in_progress:
                 raise ConfigEntryNotReady from ex
-            if isinstance(ex, RefreshError):
-                self.oauth_session.config_entry.async_start_reauth(
-                    self.oauth_session.hass
-                )
             raise HomeAssistantError(ex) from ex
         return self.access_token
 
