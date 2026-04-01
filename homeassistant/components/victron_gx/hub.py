@@ -122,11 +122,7 @@ class Hub:
                 if device.manufacturer is not None
                 else "Victron Energy"
             ),
-            name=(
-                f"{device.name} (ID: {device.device_id})"
-                if device.device_id != "0"
-                else device.name
-            ),
+            name=device.name,
             model=device.model,
             serial_number=device.serial_number,
         )

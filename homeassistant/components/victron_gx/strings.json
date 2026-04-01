@@ -390,6 +390,51 @@
           "sustain_alt": "Sustain Alt"
         }
       },
+      "dcdc_dc_current": {
+        "name": "DC output current"
+      },
+      "dcdc_dc_power": {
+        "name": "DC output power"
+      },
+      "dcdc_dc_voltage": {
+        "name": "DC output voltage"
+      },
+      "dcdc_input_current": {
+        "name": "Input current"
+      },
+      "dcdc_input_power": {
+        "name": "Input power"
+      },
+      "dcdc_input_voltage": {
+        "name": "Input voltage"
+      },
+      "dcdc_state": {
+        "name": "State",
+        "state": {
+          "absorption": "Absorption",
+          "auto_equalize": "Auto Equalize / Recondition",
+          "battery_safe": "Battery Safe",
+          "bulk": "Bulk",
+          "discharging": "Discharging",
+          "equalize": "Equalize",
+          "external_control": "External Control",
+          "fault": "Fault",
+          "float": "Float",
+          "inverting": "Inverting",
+          "low_power": "Low Power",
+          "off": "Off",
+          "passthrough": "Passthrough",
+          "power_assist": "Power Assist",
+          "power_supply": "Power Supply",
+          "recharging": "Recharging",
+          "repeated_absorption": "Repeated Absorption",
+          "scheduled_recharging": "Scheduled Recharging",
+          "starting_up": "Starting Up",
+          "storage": "Storage",
+          "sustain": "Sustain",
+          "sustain_alt": "Sustain Alt"
+        }
+      },
       "dcload_current": {
         "name": "Current"
       },
@@ -1643,6 +1688,9 @@
       },
       "vebus_inverter_dc_temperature": {
         "name": "DC temperature"
+      },
+      "vebus_inverter_dc_voltage": {
+        "name": "DC voltage"
       },
       "vebus_inverter_ignoreacin1_state": {
         "name": "State of ignore AC-in-1",
