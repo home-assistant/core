@@ -2,106 +2,74 @@ rules:
   # Bronze
   action-setup:
     status: exempt
-    comment: Integration does not register custom service actions in async_setup. Only entity-level services are used.
-  appropriate-polling:
-    status: done
-  brands:
-    status: done
-  common-modules:
-    status: done
+    comment: Integration does not register custom service actions in async_setup.
+  appropriate-polling: done
+  brands: done
+  common-modules: done
   config-flow-test-coverage:
-    status: done
+    status: todo
+    comment: Review feedback requested stronger config flow test coverage for domain registration errors and removal of unnecessary translation mocking where possible.
   config-flow:
-    status: done
-  dependency-transparency:
-    status: done
+    status: todo
+    comment: Review feedback questioned whether the custom OAuth flow implementation can be simplified, including whether `CONFIG_SCHEMA` and the custom `OAuth2FlowHandler` are both needed.
+  dependency-transparency: done
   docs-actions:
     status: exempt
     comment: Integration does not provide custom service actions beyond standard entity services.
-  docs-high-level-description:
-    status: done
-  docs-installation-instructions:
-    status: done
-  docs-removal-instructions:
-    status: done
-  entity-event-setup:
-    status: done
-  entity-unique-id:
-    status: done
-  has-entity-name:
-    status: done
-  runtime-data:
-    status: done
-  test-before-configure:
-    status: done
-  test-before-setup:
-    status: done
-  unique-config-entry:
-    status: done
+  docs-high-level-description: done
+  docs-installation-instructions: done
+  docs-removal-instructions: done
+  entity-event-setup: done
+  entity-unique-id: done
+  has-entity-name: done
+  runtime-data: done
+  test-before-configure: done
+  test-before-setup: done
+  unique-config-entry: done
   # Silver
-  action-exceptions:
-    status: done
-  config-entry-unloading:
-    status: done
-  docs-configuration-parameters:
-    status: done
-  docs-installation-parameters:
-    status: done
-  entity-unavailable:
-    status: done
-  integration-owner:
-    status: done
+  action-exceptions: done
+  config-entry-unloading: done
+  docs-configuration-parameters: done
+  docs-installation-parameters: done
+  entity-unavailable: done
+  integration-owner: done
   log-when-unavailable:
     status: todo
     comment: Coordinator raises UpdateFailed but does not implement the full log-once pattern (log when becoming unavailable, log when recovering).
-  parallel-updates:
-    status: done
-  reauthentication-flow:
-    status: done
+  parallel-updates: done
+  reauthentication-flow: done
   test-coverage:
-    status: done
+    status: todo
+    comment: Review feedback requested test cleanup follow-ups, including patching API objects where they are used, preferring direct asserts over the `test_climate_offline` snapshot where appropriate, removing an unnecessary `async_setup_component(...)`, and avoiding direct `entry.runtime_data` assertions in unload tests.
   # Gold
-  devices:
-    status: done
-  diagnostics:
-    status: done
+  devices: done
+  diagnostics: done
   discovery-update-info:
     status: exempt
     comment: Integration does not implement device discovery mechanisms.
   discovery:
     status: exempt
     comment: Tesla Fleet API requires OAuth authentication and cannot be automatically discovered.
-  docs-data-update:
-    status: done
+  docs-data-update: done
   docs-examples:
     status: todo
     comment: Documentation includes NGINX configuration examples but lacks automation use case examples.
-  docs-known-limitations:
-    status: done
-  docs-supported-devices:
-    status: done
-  docs-supported-functions:
-    status: done
-  docs-troubleshooting:
-    status: done
+  docs-known-limitations: done
+  docs-supported-devices: done
+  docs-supported-functions: done
+  docs-troubleshooting: done
   docs-use-cases:
     status: todo
     comment: Documentation does not include explicit use case scenarios.
-  dynamic-devices:
-    status: done
-  entity-category:
-    status: done
-  entity-device-class:
-    status: done
-  entity-disabled-by-default:
-    status: done
-  entity-translations:
-    status: done
+  dynamic-devices: done
+  entity-category: done
+  entity-device-class: done
+  entity-disabled-by-default: done
+  entity-translations: done
   exception-translations:
     status: todo
     comment: PR already raised to fix these
-  icon-translations:
-    status: done
+  icon-translations: done
   reconfiguration-flow:
     status: todo
     comment: Integration does not implement async_step_reconfigure for updating settings without removal.
@@ -112,10 +80,8 @@ rules:
     status: todo
     comment: Integration does not automatically remove devices that are no longer present in the Tesla account.
   # Platinum tier
-  async-dependency:
-    status: done
-  inject-websession:
-    status: done
+  async-dependency: done
+  inject-websession: done
   strict-typing:
     status: todo
     comment: Integration is not yet registered in .strict-typing file and needs comprehensive type annotation review.
