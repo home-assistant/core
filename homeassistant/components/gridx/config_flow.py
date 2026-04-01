@@ -7,7 +7,6 @@ from importlib.resources import files
 import json
 from typing import Any
 
-from gridx_connector.async_connector import AsyncGridboxConnector
 import httpx
 import voluptuous as vol
 
@@ -16,6 +15,7 @@ from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.httpx_client import create_async_httpx_client
 
+from .client import async_create_connector
 from .const import CONF_OEM, DOMAIN, LOGGER, SUPPORTED_OEMS
 
 UNEXPECTED_AUTH_ERRORS = (RuntimeError, TypeError, ValueError)
@@ -48,11 +48,7 @@ async def _validate_credentials(
         auto_cleanup=False,
         base_url="https://api.gridx.de",
     )
-    connector = await AsyncGridboxConnector.create(
-        config,
-        httpx_client=httpx_client,
-        owns_httpx_client=True,
-    )
+    connector = await async_create_connector(config, httpx_client)
     try:
         data = await connector.retrieve_live_data()
     finally:

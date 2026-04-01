@@ -5,13 +5,13 @@ from __future__ import annotations
 from datetime import datetime, timedelta
 from typing import TYPE_CHECKING, Any, TypedDict
 
-from gridx_connector.async_connector import AsyncGridboxConnector
 import httpx
 
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
+from .client import GridxConnector
 from .const import DOMAIN, HIST_UPDATE_INTERVAL, LIVE_UPDATE_INTERVAL, LOGGER
 
 if TYPE_CHECKING:
@@ -25,7 +25,7 @@ class GridxHistoricalData(TypedDict):
     last_reset: str  # ISO-8601 local midnight, e.g. "2024-01-01T00:00:00+01:00"
 
 
-async def _fetch_live(connector: AsyncGridboxConnector) -> dict[str, Any]:
+async def _fetch_live(connector: GridxConnector) -> dict[str, Any]:
     """Fetch live data."""
     try:
         results = await connector.retrieve_live_data()
@@ -51,7 +51,7 @@ async def _fetch_live(connector: AsyncGridboxConnector) -> dict[str, Any]:
     return results[0]
 
 
-async def _fetch_historical(connector: AsyncGridboxConnector) -> GridxHistoricalData:
+async def _fetch_historical(connector: GridxConnector) -> GridxHistoricalData:
     """Fetch today's historical totals."""
     now = datetime.now().astimezone()
     midnight = now.replace(hour=0, minute=0, second=0, microsecond=0)
@@ -96,7 +96,7 @@ class GridxLiveCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self,
         hass: HomeAssistant,
         entry: GridxConfigEntry,
-        connector: AsyncGridboxConnector,
+        connector: GridxConnector,
     ) -> None:
         """Initialise the live coordinator."""
         super().__init__(
@@ -122,7 +122,7 @@ class GridxHistoricalCoordinator(DataUpdateCoordinator[GridxHistoricalData]):
         self,
         hass: HomeAssistant,
         entry: GridxConfigEntry,
-        connector: AsyncGridboxConnector,
+        connector: GridxConnector,
     ) -> None:
         """Initialise the historical coordinator."""
         super().__init__(

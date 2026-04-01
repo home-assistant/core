@@ -243,6 +243,7 @@ homeassistant.components.google_weather.*
 homeassistant.components.govee_ble.*
 homeassistant.components.gpsd.*
 homeassistant.components.greeneye_monitor.*
+homeassistant.components.gridx.*
 homeassistant.components.group.*
 homeassistant.components.guardian.*
 homeassistant.components.habitica.*

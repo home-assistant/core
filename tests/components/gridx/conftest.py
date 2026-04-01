@@ -68,7 +68,7 @@ def mock_gridx_connector() -> Generator[MagicMock]:
             "homeassistant.components.gridx.config_flow._validate_credentials",
         ),
         patch(
-            "homeassistant.components.gridx.AsyncGridboxConnector.create",
+            "homeassistant.components.gridx.async_create_connector",
             AsyncMock(return_value=connector),
         ),
     ):
