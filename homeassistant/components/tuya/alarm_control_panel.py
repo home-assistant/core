@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from tuya_device_handlers import TUYA_QUIRKS_REGISTRY
 from tuya_device_handlers.definition.alarm_control_panel import (
+    AlarmControlPanelQuirk,
     TuyaAlarmControlPanelDefinition,
     get_default_definition,
 )
@@ -52,6 +53,12 @@ _TUYA_TO_HA_STATE_MAPPINGS = {
 }
 
 
+def _get_quirk_entity_description(
+    entity_quirk: AlarmControlPanelQuirk,
+) -> AlarmControlPanelEntityDescription:
+    return AlarmControlPanelEntityDescription(key=entity_quirk.key)
+
+
 def _get_quirk_entities(
     manager: Manager, device: CustomerDevice
 ) -> list[TuyaAlarmEntity] | None:
@@ -63,7 +70,7 @@ def _get_quirk_entities(
         TuyaAlarmEntity(
             device,
             manager,
-            AlarmControlPanelEntityDescription(key=entity_quirk.key),
+            _get_quirk_entity_description(entity_quirk),
             definition,
         )
         for entity_quirk in entity_quirks

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from tuya_device_handlers import TUYA_QUIRKS_REGISTRY
 from tuya_device_handlers.definition.camera import (
+    CameraQuirk,
     TuyaCameraDefinition,
     get_default_definition,
 )
@@ -29,6 +30,12 @@ CAMERAS: dict[DeviceCategory, CameraEntityDescription] = {
 }
 
 
+def _get_quirk_entity_description(
+    entity_quirk: CameraQuirk,
+) -> CameraEntityDescription:
+    return CameraEntityDescription(key=entity_quirk.key)
+
+
 def _get_quirk_entities(
     manager: Manager, device: CustomerDevice
 ) -> list[TuyaCameraEntity] | None:
@@ -40,7 +47,7 @@ def _get_quirk_entities(
         TuyaCameraEntity(
             device,
             manager,
-            CameraEntityDescription(key=entity_quirk.key),
+            _get_quirk_entity_description(entity_quirk),
             definition,
         )
         for entity_quirk in entity_quirks

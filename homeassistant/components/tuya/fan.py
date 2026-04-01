@@ -6,6 +6,7 @@ from typing import Any
 
 from tuya_device_handlers import TUYA_QUIRKS_REGISTRY
 from tuya_device_handlers.definition.fan import (
+    FanQuirk,
     TuyaFanDefinition,
     get_default_definition,
 )
@@ -45,6 +46,12 @@ _HA_TO_TUYA_DIRECTION_MAPPINGS = {
 }
 
 
+def _get_quirk_entity_description(
+    entity_quirk: FanQuirk,
+) -> FanEntityDescription:
+    return FanEntityDescription(key=entity_quirk.key)
+
+
 def _get_quirk_entities(
     manager: Manager, device: CustomerDevice
 ) -> list[TuyaFanEntity] | None:
@@ -56,7 +63,7 @@ def _get_quirk_entities(
         TuyaFanEntity(
             device,
             manager,
-            FanEntityDescription(key=entity_quirk.key),
+            _get_quirk_entity_description(entity_quirk),
             definition,
         )
         for entity_quirk in entity_quirks

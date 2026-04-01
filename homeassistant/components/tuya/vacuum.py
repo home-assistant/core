@@ -7,6 +7,7 @@ from typing import Any
 from tuya_device_handlers import TUYA_QUIRKS_REGISTRY
 from tuya_device_handlers.definition.vacuum import (
     TuyaVacuumDefinition,
+    VacuumQuirk,
     get_default_definition,
 )
 from tuya_device_handlers.helpers.homeassistant import (
@@ -43,6 +44,12 @@ VACUUMS: dict[DeviceCategory, StateVacuumEntityDescription] = {
 }
 
 
+def _get_quirk_entity_description(
+    entity_quirk: VacuumQuirk,
+) -> StateVacuumEntityDescription:
+    return StateVacuumEntityDescription(key=entity_quirk.key)
+
+
 def _get_quirk_entities(
     manager: Manager, device: CustomerDevice
 ) -> list[TuyaVacuumEntity] | None:
@@ -54,7 +61,7 @@ def _get_quirk_entities(
         TuyaVacuumEntity(
             device,
             manager,
-            StateVacuumEntityDescription(key=entity_quirk.key),
+            _get_quirk_entity_description(entity_quirk),
             definition,
         )
         for entity_quirk in entity_quirks
