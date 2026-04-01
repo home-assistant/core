@@ -21,9 +21,9 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import OndiloIcoConfigEntry
 from .const import DOMAIN
 from .coordinator import (
+    OndiloIcoConfigEntry,
     OndiloIcoMeasuresCoordinator,
     OndiloIcoPoolData,
     OndiloIcoPoolsCoordinator,

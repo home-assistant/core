@@ -41,10 +41,13 @@ class OndiloIcoMeasurementData:
     sensors: dict[str, Any]
 
 
+type OndiloIcoConfigEntry = ConfigEntry[OndiloIcoPoolsCoordinator]
+
+
 class OndiloIcoPoolsCoordinator(DataUpdateCoordinator[dict[str, OndiloIcoPoolData]]):
     """Fetch Ondilo ICO pools data from API."""
 
-    config_entry: ConfigEntry
+    config_entry: OndiloIcoConfigEntry
 
     def __init__(
         self, hass: HomeAssistant, config_entry: ConfigEntry, api: OndiloClient

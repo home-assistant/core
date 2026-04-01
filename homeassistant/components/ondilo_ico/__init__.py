@@ -4,7 +4,6 @@ from homeassistant.components.application_credentials import (
     ClientCredential,
     async_import_client_credential,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
@@ -17,9 +16,7 @@ from homeassistant.helpers.typing import ConfigType
 
 from .api import OndiloClient
 from .const import DOMAIN, OAUTH2_CLIENT_ID, OAUTH2_CLIENT_SECRET
-from .coordinator import OndiloIcoPoolsCoordinator
-
-type OndiloIcoConfigEntry = ConfigEntry[OndiloIcoPoolsCoordinator]
+from .coordinator import OndiloIcoConfigEntry, OndiloIcoPoolsCoordinator
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 PLATFORMS = [Platform.SENSOR]
