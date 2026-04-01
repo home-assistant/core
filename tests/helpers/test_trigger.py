@@ -37,13 +37,12 @@ from homeassistant.core import (
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, trigger
 from homeassistant.helpers.automation import (
-    ANY_DEVICE_CLASS,
     DomainSpec,
-    NumericalDomainSpec,
     move_top_level_schema_fields_to_options,
 )
 from homeassistant.helpers.trigger import (
     DATA_PLUGGABLE_ACTIONS,
+    TRIGGERS,
     EntityNumericalStateChangedTriggerWithUnitBase,
     EntityNumericalStateCrossedThresholdTriggerWithUnitBase,
     EntityTriggerBase,
@@ -671,6 +670,51 @@ async def test_platform_backwards_compatibility_for_new_style_configs(
     assert result == config_old_style
 
 
+async def test_get_trigger_platform_registers_triggers(
+    hass: HomeAssistant,
+) -> None:
+    """Test _async_get_trigger_platform registers triggers and notifies subscribers."""
+
+    class MockTrigger(Trigger):
+        """Mock trigger."""
+
+        async def async_attach_runner(
+            self, run_action: TriggerActionRunner
+        ) -> CALLBACK_TYPE:
+            return lambda: None
+
+    async def async_get_triggers(
+        hass: HomeAssistant,
+    ) -> dict[str, type[Trigger]]:
+        return {"trig_a": MockTrigger, "trig_b": MockTrigger}
+
+    mock_integration(hass, MockModule("test"))
+    mock_platform(hass, "test.trigger", Mock(async_get_triggers=async_get_triggers))
+
+    subscriber_events: list[set[str]] = []
+
+    async def subscriber(new_triggers: set[str]) -> None:
+        subscriber_events.append(new_triggers)
+
+    trigger.async_subscribe_platform_events(hass, subscriber)
+
+    assert "test.trig_a" not in hass.data[TRIGGERS]
+    assert "test.trig_b" not in hass.data[TRIGGERS]
+
+    # First call registers all triggers from the platform and notifies subscribers
+    await _async_get_trigger_platform(hass, "test.trig_a")
+
+    assert hass.data[TRIGGERS]["test.trig_a"] == "test"
+    assert hass.data[TRIGGERS]["test.trig_b"] == "test"
+    assert len(subscriber_events) == 1
+    assert subscriber_events[0] == {"test.trig_a", "test.trig_b"}
+
+    # Subsequent calls are idempotent — no re-registration or re-notification
+    await _async_get_trigger_platform(hass, "test.trig_a")
+    await _async_get_trigger_platform(hass, "test.trig_b")
+    assert len(subscriber_events) == 1
+
+
 @pytest.mark.parametrize(
     "sun_trigger_descriptions",
     [
@@ -1283,7 +1327,7 @@ async def test_numerical_state_attribute_changed_trigger_config_validation(
     async def async_get_triggers(hass: HomeAssistant) -> dict[str, type[Trigger]]:
         return {
             "test_trigger": make_entity_numerical_state_changed_trigger(
-                {"test": NumericalDomainSpec(value_source="test_attribute")}
+                {"test": DomainSpec(value_source="test_attribute")}
             ),
         }
 
@@ -1312,7 +1356,7 @@ def _make_with_unit_changed_trigger_class() -> type[
         EntityNumericalStateChangedTriggerWithUnitBase,
     ):
         _base_unit = UnitOfTemperature.CELSIUS
-        _domain_specs = {"test": NumericalDomainSpec(value_source="test_attribute")}
+        _domain_specs = {"test": DomainSpec(value_source="test_attribute")}
         _unit_converter = TemperatureConverter
 
     return _TestChangedTrigger
@@ -1514,7 +1558,7 @@ async def test_numerical_state_attribute_changed_error_handling(
     async def async_get_triggers(hass: HomeAssistant) -> dict[str, type[Trigger]]:
         return {
             "attribute_changed": make_entity_numerical_state_changed_trigger(
-                {"test": NumericalDomainSpec(value_source="test_attribute")}
+                {"test": DomainSpec(value_source="test_attribute")}
             ),
         }
 
@@ -1633,7 +1677,7 @@ async def test_numerical_state_attribute_changed_entity_limit_unit_validation(
     async def async_get_triggers(hass: HomeAssistant) -> dict[str, type[Trigger]]:
         return {
             "attribute_changed": make_entity_numerical_state_changed_trigger(
-                {"test": NumericalDomainSpec(value_source="test_attribute")},
+                {"test": DomainSpec(value_source="test_attribute")},
                 valid_unit="%",
             ),
         }
@@ -2232,7 +2276,7 @@ async def test_numerical_state_attribute_crossed_threshold_trigger_config_valida
     async def async_get_triggers(hass: HomeAssistant) -> dict[str, type[Trigger]]:
         return {
             "test_trigger": make_entity_numerical_state_crossed_threshold_trigger(
-                {"test": NumericalDomainSpec(value_source="test_attribute")}
+                {"test": DomainSpec(value_source="test_attribute")}
             ),
         }
 
@@ -2261,7 +2305,7 @@ def _make_with_unit_crossed_threshold_trigger_class() -> type[
         EntityNumericalStateCrossedThresholdTriggerWithUnitBase,
     ):
         _base_unit = UnitOfTemperature.CELSIUS
-        _domain_specs = {"test": NumericalDomainSpec(value_source="test_attribute")}
+        _domain_specs = {"test": DomainSpec(value_source="test_attribute")}
         _unit_converter = TemperatureConverter
 
     return _TestCrossedThresholdTrigger
@@ -2414,7 +2458,7 @@ async def test_numerical_state_attribute_crossed_threshold_error_handling(
     async def async_get_triggers(hass: HomeAssistant) -> dict[str, type[Trigger]]:
         return {
             "crossed_threshold": make_entity_numerical_state_crossed_threshold_trigger(
-                {"test": NumericalDomainSpec(value_source="test_attribute")}
+                {"test": DomainSpec(value_source="test_attribute")}
             ),
         }
 
@@ -2540,7 +2584,7 @@ async def test_numerical_state_attribute_crossed_threshold_entity_limit_unit_val
     async def async_get_triggers(hass: HomeAssistant) -> dict[str, type[Trigger]]:
         return {
             "crossed_threshold": make_entity_numerical_state_crossed_threshold_trigger(
-                {"test": NumericalDomainSpec(value_source="test_attribute")},
+                {"test": DomainSpec(value_source="test_attribute")},
                 valid_unit="%",
             ),
         }
@@ -2848,21 +2892,6 @@ async def test_entity_filter_no_device_class_means_match_all_in_domain(
     entities = {"cover.door", "cover.garage", "cover.plain"}
     result = trig.entity_filter(entities)
     assert result == entities
-
-
-async def test_numerical_domain_spec_converter(hass: HomeAssistant) -> None:
-    """Test NumericalDomainSpec stores converter correctly."""
-    converter = lambda v: float(v) / 255.0 * 100.0  # noqa: E731
-    num_domain_spec = NumericalDomainSpec(
-        value_source="brightness", value_converter=converter
-    )
-    assert num_domain_spec.value_source == "brightness"
-    assert num_domain_spec.value_converter is converter
-    assert num_domain_spec.device_class is ANY_DEVICE_CLASS
-
-    # Plain DomainSpec has no converter
-    domain_spec = DomainSpec(value_source="brightness")
-    assert not isinstance(domain_spec, NumericalDomainSpec)
 
 
 @pytest.mark.parametrize(

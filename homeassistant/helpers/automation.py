@@ -1,6 +1,6 @@
 """Helpers for automation."""
 
-from collections.abc import Callable, Mapping
+from collections.abc import Mapping
 from dataclasses import dataclass
 from enum import Enum
 from typing import Any, Final, Self
@@ -35,14 +35,6 @@ class DomainSpec:
     device_class: str | None | AnyDeviceClassType = ANY_DEVICE_CLASS
     value_source: str | None = None
     """Attribute name to extract the value from, or None for state.state."""
-
-
-@dataclass(frozen=True, slots=True)
-class NumericalDomainSpec(DomainSpec):
-    """DomainSpec with an optional value converter for numerical triggers."""
-
-    value_converter: Callable[[float], float] | None = None
-    """Optional converter for numerical values (e.g. uint8 → percentage)."""
 
 
 def filter_by_domain_specs(

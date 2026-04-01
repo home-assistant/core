@@ -315,6 +315,9 @@
     "no_permission_node_power": {
       "message": "The configured Proxmox VE user does not have permission to manage the power state of nodes. Please grant the user the 'VM.PowerMgmt' permission and try again."
     },
+    "no_permission_snapshot": {
+      "message": "The configured Proxmox VE user does not have permission to create snapshots of VMs and containers. Please grant the user the 'VM.Snapshot' permission and try again."
+    },
     "no_permission_vm_lxc_power": {
       "message": "The configured Proxmox VE user does not have permission to manage the power state of VMs and containers. Please grant the user the 'VM.PowerMgmt' permission and try again."
     },
