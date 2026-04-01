@@ -382,6 +382,9 @@ class SonosDiscoveryManager:
 
         def _add_speakers():
             """Add all speakers in a single executor job."""
+            if not hasattr(self.entry, "runtime_data"):
+                # Entry was unloaded while this task was in flight; skip adding speakers.
+                return
             for soco in socos:
                 if soco.uid in self.data.discovered:
                     continue
