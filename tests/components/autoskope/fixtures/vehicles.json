@@ -1,0 +1,33 @@
+{
+  "vehicles": [
+    {
+      "id": "12345",
+      "name": "Test Vehicle",
+      "ex_pow": 12.5,
+      "bat_pow": 3.7,
+      "hdop": 1.2,
+      "support_infos": {
+        "imei": "123456789012345"
+      },
+      "model": "Autoskope"
+    }
+  ],
+  "positions": {
+    "type": "FeatureCollection",
+    "features": [
+      {
+        "type": "Feature",
+        "geometry": {
+          "type": "Point",
+          "coordinates": [8.6821267, 50.1109221]
+        },
+        "properties": {
+          "carid": "12345",
+          "s": 0,
+          "dt": "2025-05-28T10:00:00Z",
+          "park": false
+        }
+      }
+    ]
+  }
+}

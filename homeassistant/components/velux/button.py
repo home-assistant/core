@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from pyvlx import PyVLX, PyVLXException
+from pyvlx import Node, PyVLX, PyVLXException
 
 from homeassistant.components.button import ButtonDeviceClass, ButtonEntity
 from homeassistant.const import EntityCategory
@@ -13,6 +13,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import VeluxConfigEntry
 from .const import DOMAIN
+from .entity import VeluxEntity, wrap_pyvlx_call_exceptions
 
 PARALLEL_UPDATES = 1
 
@@ -23,9 +24,32 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up button entities for the Velux integration."""
-    async_add_entities(
-        [VeluxGatewayRebootButton(config_entry.entry_id, config_entry.runtime_data)]
+    entities: list[ButtonEntity] = [
+        VeluxGatewayRebootButton(config_entry.entry_id, config_entry.runtime_data)
+    ]
+    entities.extend(
+        VeluxIdentifyButton(node, config_entry.entry_id)
+        for node in config_entry.runtime_data.nodes
+        if isinstance(node, Node)
     )
+    async_add_entities(entities)
+
+
+class VeluxIdentifyButton(VeluxEntity, ButtonEntity):
+    """Representation of a Velux identify button."""
+
+    _attr_device_class = ButtonDeviceClass.IDENTIFY
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
+
+    def __init__(self, node: Node, config_entry_id: str) -> None:
+        """Initialize the Velux identify button."""
+        super().__init__(node, config_entry_id)
+        self._attr_unique_id = f"{self._attr_unique_id}_identify"
+
+    @wrap_pyvlx_call_exceptions
+    async def async_press(self) -> None:
+        """Identify the physical device."""
+        await self.node.wink()
 
 
 class VeluxGatewayRebootButton(ButtonEntity):

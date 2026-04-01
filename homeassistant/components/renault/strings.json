@@ -94,6 +94,14 @@
         "name": "[%key:common::config_flow::data::location%]"
       }
     },
+    "number": {
+      "charge_limit_min": {
+        "name": "Minimum charge level"
+      },
+      "charge_limit_target": {
+        "name": "Target charge level"
+      }
+    },
     "select": {
       "charge_mode": {
         "name": "Charge mode",
@@ -199,6 +207,9 @@
     }
   },
   "exceptions": {
+    "battery_soc_unavailable": {
+      "message": "Battery state of charge data is currently unavailable"
+    },
     "invalid_device_id": {
       "message": "No device with ID {device_id} was found"
     },
@@ -265,6 +276,20 @@
         }
       },
       "name": "Update charge schedule"
+    },
+    "charge_start": {
+      "description": "Starts charging on vehicle.",
+      "fields": {
+        "vehicle": {
+          "description": "[%key:component::renault::services::ac_start::fields::vehicle::description%]",
+          "name": "Vehicle"
+        },
+        "when": {
+          "description": "Timestamp for charging to start (optional - defaults to now).",
+          "name": "When"
+        }
+      },
+      "name": "Start charging"
     }
   }
 }

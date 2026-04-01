@@ -933,7 +933,7 @@ async def test_start_addon(
     assert start_addon.call_args == call("core_zwave_js")
 
 
-@pytest.mark.usefixtures("addon_not_installed", "addon_info")
+@pytest.mark.usefixtures("addon_info")
 async def test_install_addon(
     hass: HomeAssistant,
     install_addon: AsyncMock,
@@ -1446,12 +1446,17 @@ async def test_node_removed(
     assert old_device
     assert old_device.id
 
+    node_events = integration.runtime_data.driver_events.controller_events.node_events
+    assert node.node_id in node_events.value_updates_disc_info
+
     event = {"node": node, "reason": 0}
 
     client.driver.controller.emit("node removed", event)
     await hass.async_block_till_done()
     # Assert device has been removed
     assert not device_registry.async_get(old_device.id)
+    # Assert value_updates_disc_info has been cleaned up
+    assert node.node_id not in node_events.value_updates_disc_info
 
 
 async def test_replace_same_node(

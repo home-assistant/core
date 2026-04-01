@@ -46,7 +46,7 @@ def test_invalid_base_schema(schema) -> None:
 
 def _test_selector(
     selector_type: str,
-    schema: dict,
+    schema: dict | None,
     valid_selections: Iterable[Any],
     invalid_selections: Iterable[Any],
     converter: Callable[[Any], Any] | None = None,
@@ -297,6 +297,24 @@ def test_device_selector_schema_error(schema) -> None:
             ("light.abc123", "blah.blah", FAKE_UUID),
             (None,),
         ),
+        (
+            {
+                "filter": [
+                    {"unit_of_measurement": "baguette"},
+                ]
+            },
+            ("light.abc123", "blah.blah", FAKE_UUID),
+            (None,),
+        ),
+        (
+            {
+                "filter": [
+                    {"unit_of_measurement": ["currywurst", "bratwurst"]},
+                ]
+            },
+            ("light.abc123", "blah.blah", FAKE_UUID),
+            (None,),
+        ),
     ],
 )
 def test_entity_selector_schema(schema, valid_selections, invalid_selections) -> None:
@@ -319,6 +337,13 @@ def test_entity_selector_schema(schema, valid_selections, invalid_selections) ->
         {"filter": [{"supported_features": ["light.LightEntityFeature.blah"]}]},
         # supported_features should be used under the filter key
         {"supported_features": ["light.LightEntityFeature.EFFECT"]},
+        # unit_of_measurement should be used under the filter key
+        {"unit_of_measurement": ["currywurst", "bratwurst"]},
+        # Invalid unit_of_measurement
+        {"filter": [{"unit_of_measurement": 42}]},
+        # reorder can only be used when multiple is true
+        {"reorder": True},
+        {"reorder": True, "multiple": False},
     ],
 )
 def test_entity_selector_schema_error(schema) -> None:
@@ -392,6 +417,20 @@ def test_entity_selector_schema_error(schema) -> None:
 def test_area_selector_schema(schema, valid_selections, invalid_selections) -> None:
     """Test area selector."""
     _test_selector("area", schema, valid_selections, invalid_selections)
+
+
+@pytest.mark.parametrize(
+    "schema",
+    [
+        # reorder can only be used when multiple is true
+        {"reorder": True},
+        {"reorder": True, "multiple": False},
+    ],
+)
+def test_area_selector_schema_error(schema) -> None:
+    """Test area selector."""
+    with pytest.raises(vol.Invalid):
+        selector.validate_selector({"area": schema})
 
 
 @pytest.mark.parametrize(
@@ -476,6 +515,233 @@ def test_number_selector_schema_error(schema) -> None:
     """Test number selector."""
     with pytest.raises(vol.Invalid):
         selector.validate_selector({"number": schema})
+
+
+@pytest.mark.parametrize(
+    ("schema", "valid_selections", "invalid_selections"),
+    [
+        (
+            {"mode": "crossed"},
+            (
+                {"type": "above", "value": {"number": 10}},
+                {"type": "below", "value": {"entity": "sensor.temperature"}},
+                {
+                    "type": "between",
+                    "value_min": {"number": 10},
+                    "value_max": {"number": 20},
+                },
+                {
+                    "type": "outside",
+                    "value_min": {"number": 10},
+                    "value_max": {"entity": "sensor.max_temp"},
+                },
+            ),
+            (
+                None,
+                "not_a_dict",
+                {},
+                {"type": "above"},  # Missing value
+                {"type": "below"},  # Missing value
+                {"type": "between", "value_min": {"number": 10}},  # Missing value_max
+                {"type": "outside", "value_max": {"number": 20}},  # Missing value_min
+                {"type": "above", "value": {}},  # Entry missing number and entity
+                {"type": "above", "value": {"number": 10}, "extra": "key"},
+                {"type": "invalid_type", "value": {"number": 10}},
+                {
+                    "type": "above",
+                    "value": {"active_choice": "invalid", "number": 10},
+                },  # Invalid active_choice
+                {
+                    "type": "above",
+                    "value": {"active_choice": "number", "entity": "sensor.foo"},
+                },  # active_choice "number" but only entity key present
+                {
+                    "type": "above",
+                    "value": {"active_choice": "entity", "number": 10},
+                },  # active_choice "entity" but only number key present
+                {
+                    "type": "between",
+                    "value_min": {"number": 20},
+                    "value_max": {"number": 10},
+                },  # value_min > value_max
+                {
+                    "type": "above",
+                    "value": {"number": 10, "entity": "sensor.foo"},
+                },  # Both number and entity without active_choice
+                {"type": "any"},  # "any" not allowed without mode "changed"
+            ),
+        ),
+        (
+            {"mode": "crossed", "unit_of_measurement": ["°C", "°F"]},
+            (
+                {
+                    "type": "above",
+                    "value": {"number": 10, "unit_of_measurement": "°C"},
+                },
+            ),
+            (
+                # Unit missing
+                {
+                    "type": "between",
+                    "value_min": {"number": 10},
+                    "value_max": {"number": 20},
+                },
+                # Unit not in allowed list
+                {
+                    "type": "above",
+                    "value": {"number": 10, "unit_of_measurement": "K"},
+                },
+                {"type": "any"},  # "any" not allowed without mode "changed"
+            ),
+        ),
+        (
+            {"mode": "crossed", "number": {"min": 0, "max": 100}},
+            ({"type": "above", "value": {"number": 50}},),
+            (
+                {"type": "above", "value": {"number": -1}},  # Below min
+                {"type": "above", "value": {"number": 101}},  # Above max
+                {"type": "any"},  # "any" not allowed without mode "changed"
+            ),
+        ),
+        (
+            {"mode": "crossed", "entity": {"domain": "sensor"}},
+            ({"type": "above", "value": {"entity": "sensor.temperature"}},),
+            (),
+        ),
+        (
+            {
+                "mode": "crossed",
+                "entity": [{"domain": "sensor"}, {"domain": "input_number"}],
+            },
+            ({"type": "above", "value": {"entity": "sensor.temperature"}},),
+            (),
+        ),
+        (
+            {"mode": "crossed"},
+            (
+                {"type": "above", "value": {"number": 10}},
+                {"type": "below", "value": {"number": 5}},
+            ),
+            ({"type": "any"},),  # "any" not allowed for mode "crossed"
+        ),
+        (
+            {"mode": "changed"},
+            (
+                {"type": "above", "value": {"number": 10}},
+                {"type": "any"},
+            ),
+            (),
+        ),
+        (
+            {"mode": "is"},
+            ({"type": "above", "value": {"number": 10}},),
+            ({"type": "any"},),  # "any" not allowed for mode "is"
+        ),
+    ],
+)
+def test_numeric_threshold_selector_schema(
+    schema: dict[str, Any],
+    valid_selections: tuple[Any, ...],
+    invalid_selections: tuple[Any, ...],
+) -> None:
+    """Test numeric threshold selector."""
+    _test_selector("numeric_threshold", schema, valid_selections, invalid_selections)
+
+
+def test_numeric_threshold_selector_invalid_config() -> None:
+    """Test numeric threshold selector rejects an invalid or missing mode in config."""
+    with pytest.raises(vol.Invalid):
+        selector.validate_selector({"numeric_threshold": {"mode": "invalid_mode"}})
+    with pytest.raises(vol.Invalid):
+        selector.validate_selector({"numeric_threshold": {}})
+    with pytest.raises(vol.Invalid):
+        selector.validate_selector({"numeric_threshold": None})
+
+
+@pytest.mark.parametrize(
+    ("value_in", "value_out"),
+    [
+        # No active_choice: pass through unchanged
+        (
+            {"type": "above", "value": {"number": 10}},
+            {"type": "above", "value": {"number": 10.0}},
+        ),
+        (
+            {"type": "below", "value": {"entity": "sensor.temperature"}},
+            {"type": "below", "value": {"entity": "sensor.temperature"}},
+        ),
+        # active_choice "number": keep number + unit_of_measurement, drop rest
+        (
+            {"type": "above", "value": {"active_choice": "number", "number": 10}},
+            {"type": "above", "value": {"number": 10.0}},
+        ),
+        (
+            {
+                "type": "above",
+                "value": {
+                    "active_choice": "number",
+                    "number": 5,
+                    "unit_of_measurement": "°C",
+                },
+            },
+            {"type": "above", "value": {"number": 5.0, "unit_of_measurement": "°C"}},
+        ),
+        # active_choice "entity": keep only entity, drop number and unit_of_measurement
+        (
+            {
+                "type": "below",
+                "value": {
+                    "active_choice": "entity",
+                    "entity": "sensor.temperature",
+                    "number": 10,
+                    "unit_of_measurement": "°C",
+                },
+            },
+            {"type": "below", "value": {"entity": "sensor.temperature"}},
+        ),
+        # active_choice "entity": keep only entity, drop unit_of_measurement
+        (
+            {
+                "type": "below",
+                "value": {
+                    "active_choice": "entity",
+                    "entity": "sensor.temperature",
+                    "unit_of_measurement": "°C",
+                },
+            },
+            {"type": "below", "value": {"entity": "sensor.temperature"}},
+        ),
+        # active_choice in value_min / value_max
+        (
+            {
+                "type": "between",
+                "value_min": {"active_choice": "number", "number": 10},
+                "value_max": {
+                    "active_choice": "entity",
+                    "entity": "sensor.max_temp",
+                },
+            },
+            {
+                "type": "between",
+                "value_min": {"number": 10.0},
+                "value_max": {"entity": "sensor.max_temp"},
+            },
+        ),
+        # "any" type passes through unchanged (no value fields)
+        (
+            {"type": "any"},
+            {"type": "any"},
+        ),
+    ],
+)
+def test_numeric_threshold_selector_active_choice_extraction(
+    value_in: Any, value_out: Any
+) -> None:
+    """Test that active_choice is stripped and only the active field is kept."""
+    vol_schema = vol.Schema(
+        {"selection": selector.selector({"numeric_threshold": {"mode": "changed"}})}
+    )
+    assert vol_schema({"selection": value_in}) == {"selection": value_out}
 
 
 @pytest.mark.parametrize(
@@ -841,6 +1107,11 @@ def test_time_selector_schema(schema, valid_selections, invalid_selections) -> N
         ),
         (
             {"hide_states": ["unknown", "unavailable"]},
+            (),
+            (),
+        ),
+        (
+            {"attribute": "best_attribute"},
             (),
             (),
         ),

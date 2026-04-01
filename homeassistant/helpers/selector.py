@@ -119,6 +119,13 @@ def _validate_supported_features(supported_features: list[str]) -> int:
     return feature_mask
 
 
+def _validate_selector_reorder_config(config: Any) -> Any:
+    """Validate selectors with reorder option."""
+    if config.get("reorder") and not config.get("multiple"):
+        raise vol.Invalid("reorder can only be used when multiple is true")
+    return config
+
+
 def make_selector_config_schema(schema_dict: dict | None = None) -> vol.Schema:
     """Make selector config schema."""
     if schema_dict is None:
@@ -158,8 +165,21 @@ ENTITY_FILTER_SELECTOR_CONFIG_SCHEMA = vol.Schema(
         vol.Optional("supported_features"): [
             vol.All(cv.ensure_list, [str], _validate_supported_features)
         ],
+        # Unit of measurement of the entity
+        vol.Optional(CONF_UNIT_OF_MEASUREMENT): vol.All(cv.ensure_list, [str]),
     }
 )
+
+
+class _LegacyEntityFilterSelectorConfig(TypedDict, total=False):
+    """Class for legacy entity filter support in EntitySelectorConfig.
+
+    Provided for backwards compatibility and remains feature frozen.
+    """
+
+    integration: str
+    domain: str | list[str]
+    device_class: str | list[str]
 
 
 # Legacy entity selector config schema used directly under entity selectors
@@ -183,6 +203,7 @@ class EntityFilterSelectorConfig(TypedDict, total=False):
     domain: str | list[str]
     device_class: str | list[str]
     supported_features: list[str]
+    unit_of_measurement: str | list[str]
 
 
 DEVICE_FILTER_SELECTOR_CONFIG_SCHEMA = vol.Schema(
@@ -310,19 +331,22 @@ class AreaSelector(Selector[AreaSelectorConfig]):
 
     selector_type = "area"
 
-    CONFIG_SCHEMA = make_selector_config_schema(
-        {
-            vol.Optional("entity"): vol.All(
-                cv.ensure_list,
-                [ENTITY_FILTER_SELECTOR_CONFIG_SCHEMA],
-            ),
-            vol.Optional("device"): vol.All(
-                cv.ensure_list,
-                [DEVICE_FILTER_SELECTOR_CONFIG_SCHEMA],
-            ),
-            vol.Optional("multiple", default=False): cv.boolean,
-            vol.Optional("reorder", default=False): cv.boolean,
-        }
+    CONFIG_SCHEMA = vol.All(
+        make_selector_config_schema(
+            {
+                vol.Optional("entity"): vol.All(
+                    cv.ensure_list,
+                    [ENTITY_FILTER_SELECTOR_CONFIG_SCHEMA],
+                ),
+                vol.Optional("device"): vol.All(
+                    cv.ensure_list,
+                    [DEVICE_FILTER_SELECTOR_CONFIG_SCHEMA],
+                ),
+                vol.Optional("multiple", default=False): cv.boolean,
+                vol.Optional("reorder", default=False): cv.boolean,
+            }
+        ),
+        _validate_selector_reorder_config,
     )
 
     def __init__(self, config: AreaSelectorConfig | None = None) -> None:
@@ -878,8 +902,14 @@ class DurationSelector(Selector[DurationSelectorConfig]):
         return cast(dict[str, float], data)
 
 
-class EntitySelectorConfig(BaseSelectorConfig, EntityFilterSelectorConfig, total=False):
+class EntitySelectorConfig(
+    BaseSelectorConfig, _LegacyEntityFilterSelectorConfig, total=False
+):
     """Class to represent an entity selector config."""
+
+    # Note: The class inherits _LegacyEntityFilterSelectorConfig to keep
+    # support for legacy entity filter at top level for backwards compatibility,
+    # new entity filter options should be added under the `filter` key instead.
 
     exclude_entities: list[str]
     include_entities: list[str]
@@ -894,18 +924,21 @@ class EntitySelector(Selector[EntitySelectorConfig]):
 
     selector_type = "entity"
 
-    CONFIG_SCHEMA = make_selector_config_schema(
-        {
-            **_LEGACY_ENTITY_SELECTOR_CONFIG_SCHEMA_DICT,
-            vol.Optional("exclude_entities"): [str],
-            vol.Optional("include_entities"): [str],
-            vol.Optional("multiple", default=False): cv.boolean,
-            vol.Optional("reorder", default=False): cv.boolean,
-            vol.Optional("filter"): vol.All(
-                cv.ensure_list,
-                [ENTITY_FILTER_SELECTOR_CONFIG_SCHEMA],
-            ),
-        }
+    CONFIG_SCHEMA = vol.All(
+        make_selector_config_schema(
+            {
+                **_LEGACY_ENTITY_SELECTOR_CONFIG_SCHEMA_DICT,
+                vol.Optional("exclude_entities"): [str],
+                vol.Optional("include_entities"): [str],
+                vol.Optional("multiple", default=False): cv.boolean,
+                vol.Optional("reorder", default=False): cv.boolean,
+                vol.Optional("filter"): vol.All(
+                    cv.ensure_list,
+                    [ENTITY_FILTER_SELECTOR_CONFIG_SCHEMA],
+                ),
+            }
+        ),
+        _validate_selector_reorder_config,
     )
 
     def __init__(self, config: EntitySelectorConfig | None = None) -> None:
@@ -1283,6 +1316,254 @@ class NumberSelector(Selector[NumberSelectorConfig]):
         return value
 
 
+class NumericThresholdSelectorConfig(BaseSelectorConfig, total=False):
+    """Class to represent a numeric threshold selector config."""
+
+    mode: Required[NumericThresholdMode]
+    unit_of_measurement: list[str | None]
+    number: NumberSelectorConfig
+    entity: EntityFilterSelectorConfig | list[EntityFilterSelectorConfig]
+
+
+class NumericThresholdMode(StrEnum):
+    """Possible modes for a numeric threshold selector."""
+
+    CROSSED = "crossed"  # value crossed a threshold
+    CHANGED = "changed"  # value changed and is matching the threshold
+    IS = "is"  # value is matching the threshold
+
+
+class NumericThresholdType(StrEnum):
+    """Possible threshold types for a numeric threshold selector."""
+
+    ABOVE = "above"
+    BELOW = "below"
+    BETWEEN = "between"
+    OUTSIDE = "outside"
+    ANY = "any"
+
+
+class NumericThresholdActiveChoice(StrEnum):
+    """Possible active choices for a numeric threshold value entry."""
+
+    NUMBER = "number"
+    ENTITY = "entity"
+
+
+def _extract_numeric_threshold_entry(data: dict[str, Any]) -> dict[str, Any]:
+    """Extract only the relevant fields from a threshold value entry.
+
+    When active_choice is present, keep only the chosen field and
+    unit_of_measurement (only for the number choice), then drop active_choice.
+    """
+    active_choice = data.get("active_choice")
+    if active_choice is None:
+        return data
+    if active_choice == NumericThresholdActiveChoice.ENTITY:
+        return {"entity": data["entity"]}
+    result: dict[str, Any] = {"number": data["number"]}
+    if "unit_of_measurement" in data:
+        result["unit_of_measurement"] = data["unit_of_measurement"]
+    return result
+
+
+def _validate_numeric_threshold_active_choice(
+    data: dict[str, Any],
+) -> dict[str, Any]:
+    """Validate that active_choice matches an existing key in the entry."""
+    if "active_choice" not in data and "number" in data and "entity" in data:
+        raise vol.Invalid(
+            "Value entry contains both 'number' and 'entity';"
+            " set 'active_choice' to disambiguate"
+        )
+    if "active_choice" not in data:
+        return data
+    active_choice = data["active_choice"]
+    if active_choice not in data:
+        raise vol.Invalid(
+            f"active_choice is '{active_choice}' but '{active_choice}' key is missing"
+        )
+    return data
+
+
+_NUMERIC_THRESHOLD_VALUE_ENTRY_SCHEMA = vol.All(
+    vol.Schema(
+        {
+            vol.Optional("active_choice"): vol.All(
+                vol.Coerce(NumericThresholdActiveChoice), lambda val: val.value
+            ),
+            vol.Optional("number"): vol.Coerce(float),
+            vol.Optional("entity"): cv.entity_id,
+            vol.Optional("unit_of_measurement"): vol.Any(str, None),
+        }
+    ),
+    vol.Any(
+        vol.Schema({vol.Required("number"): object}, extra=vol.ALLOW_EXTRA),
+        vol.Schema({vol.Required("entity"): object}, extra=vol.ALLOW_EXTRA),
+        msg="Value entry must contain at least one of 'number' or 'entity'",
+    ),
+    _validate_numeric_threshold_active_choice,
+    _extract_numeric_threshold_entry,
+)
+
+
+def _validate_numeric_threshold_range[_T: dict[str, Any]](value: _T) -> _T:
+    """Validate that value_min is not greater than value_max for numeric entries."""
+    threshold_type = value.get("type")
+    if threshold_type not in (
+        NumericThresholdType.BETWEEN,
+        NumericThresholdType.OUTSIDE,
+    ):
+        return value
+    min_entry = value.get("value_min", {})
+    max_entry = value.get("value_max", {})
+    min_number = min_entry.get("number")
+    max_number = max_entry.get("number")
+    if min_number is not None and max_number is not None and min_number > max_number:
+        raise vol.Invalid(
+            f"value_min ({min_number}) must not be greater than"
+            f" value_max ({max_number})"
+        )
+    return value
+
+
+_NUMERIC_THRESHOLD_VALUE_SCHEMA = vol.All(
+    vol.Any(
+        vol.Schema(
+            {
+                vol.Required("type"): vol.In(
+                    [NumericThresholdType.ABOVE, NumericThresholdType.BELOW]
+                ),
+                vol.Required("value"): _NUMERIC_THRESHOLD_VALUE_ENTRY_SCHEMA,
+            }
+        ),
+        vol.Schema(
+            {
+                vol.Required("type"): vol.In(
+                    [NumericThresholdType.BETWEEN, NumericThresholdType.OUTSIDE]
+                ),
+                vol.Required("value_min"): _NUMERIC_THRESHOLD_VALUE_ENTRY_SCHEMA,
+                vol.Required("value_max"): _NUMERIC_THRESHOLD_VALUE_ENTRY_SCHEMA,
+            }
+        ),
+        vol.Schema(
+            {
+                vol.Required("type"): vol.In([NumericThresholdType.ANY]),
+            }
+        ),
+    ),
+    _validate_numeric_threshold_range,
+)
+
+
+def _validate_numeric_threshold_unit[_T: dict[str, Any]](
+    allowed_units: list[str | None],
+) -> Callable[[_T], _T]:
+    """Generate a validator that checks unit_of_measurement against an allowed list."""
+
+    def _validate(value: _T) -> _T:
+        threshold_type = value.get("type")
+        if threshold_type in (
+            NumericThresholdType.ABOVE,
+            NumericThresholdType.BELOW,
+        ):
+            entries: tuple[dict[str, Any], ...] = (value.get("value", {}),)
+        else:
+            entries = (value.get("value_min", {}), value.get("value_max", {}))
+        for entry in entries:
+            if "number" not in entry:
+                continue
+            if "unit_of_measurement" not in entry:
+                raise vol.Invalid(
+                    f"Missing unit_of_measurement, expected one of {allowed_units}"
+                )
+            unit = entry["unit_of_measurement"]
+            if unit not in allowed_units:
+                raise vol.Invalid(
+                    f"Invalid unit_of_measurement '{unit}',"
+                    f" expected one of {allowed_units}"
+                )
+        return value
+
+    return _validate
+
+
+def _validate_numeric_threshold_not_any[_T: dict[str, Any]](value: _T) -> _T:
+    """Validate that the threshold type is not 'any'."""
+    if value.get("type") == NumericThresholdType.ANY:
+        raise vol.Invalid("Threshold type 'any' is only allowed when mode is 'changed'")
+    return value
+
+
+def _validate_numeric_threshold_number_range[_T: dict[str, Any]](
+    number_config: dict[str, Any],
+) -> Callable[[_T], _T]:
+    """Generate a validator that checks numeric values against min/max config."""
+    min_value: float | None = number_config.get("min")
+    max_value: float | None = number_config.get("max")
+
+    def _validate(value: _T) -> _T:
+        threshold_type = value.get("type")
+        if threshold_type in (
+            NumericThresholdType.ABOVE,
+            NumericThresholdType.BELOW,
+        ):
+            entries: tuple[dict[str, Any], ...] = (value.get("value", {}),)
+        else:
+            entries = (value.get("value_min", {}), value.get("value_max", {}))
+        for entry in entries:
+            if "number" not in entry:
+                continue
+            number = entry["number"]
+            if min_value is not None and number < min_value:
+                raise vol.Invalid(
+                    f"Value {number} is less than the minimum {min_value}"
+                )
+            if max_value is not None and number > max_value:
+                raise vol.Invalid(
+                    f"Value {number} is greater than the maximum {max_value}"
+                )
+        return value
+
+    return _validate
+
+
+@SELECTORS.register("numeric_threshold")
+class NumericThresholdSelector(Selector[NumericThresholdSelectorConfig]):
+    """Selector of a numeric threshold condition."""
+
+    selector_type = "numeric_threshold"
+
+    CONFIG_SCHEMA = make_selector_config_schema(
+        {
+            vol.Required("mode"): vol.All(
+                vol.Coerce(NumericThresholdMode), lambda val: val.value
+            ),
+            vol.Optional("unit_of_measurement"): [vol.Any(str, None)],
+            vol.Optional("number"): NumberSelector.CONFIG_SCHEMA,
+            vol.Optional("entity"): vol.All(
+                cv.ensure_list, [ENTITY_FILTER_SELECTOR_CONFIG_SCHEMA]
+            ),
+        }
+    )
+
+    def __init__(self, config: NumericThresholdSelectorConfig | None = None) -> None:
+        """Instantiate a selector."""
+        super().__init__(config)
+
+    def __call__(self, data: Any) -> Any:
+        """Validate the passed selection."""
+        validators: list[Callable[[Any], Any]] = [_NUMERIC_THRESHOLD_VALUE_SCHEMA]
+        mode = self.config["mode"]
+        if mode != NumericThresholdMode.CHANGED:
+            validators.append(_validate_numeric_threshold_not_any)
+        if allowed_units := self.config.get("unit_of_measurement"):
+            validators.append(_validate_numeric_threshold_unit(allowed_units))
+        if number_config := cast(dict[str, Any] | None, self.config.get("number")):
+            validators.append(_validate_numeric_threshold_number_range(number_config))
+        return vol.All(*validators)(data)
+
+
 class ObjectSelectorField(TypedDict, total=False):
     """Class to represent an object selector fields dict."""
 
@@ -1495,6 +1776,7 @@ class StateSelectorConfig(BaseSelectorConfig, total=False):
 
     entity_id: str
     hide_states: list[str]
+    attribute: str
     multiple: bool
 
 
@@ -1517,11 +1799,7 @@ class StateSelector(Selector[StateSelectorConfig]):
         {
             vol.Optional("entity_id"): cv.entity_id,
             vol.Optional("hide_states"): [str],
-            # The attribute to filter on, is currently deliberately not
-            # configurable/exposed. We are considering separating state
-            # selectors into two types: one for state and one for attribute.
-            # Limiting the public use, prevents breaking changes in the future.
-            # vol.Optional("attribute"): str,
+            vol.Optional("attribute"): str,
             vol.Optional("multiple", default=False): cv.boolean,
         }
     )
