@@ -393,7 +393,7 @@ class HassioStatsDataUpdateCoordinator(DataUpdateCoordinator):
                 *[
                     self._update_addon_stats(slug)
                     for slug in started_addons
-                    if CONTAINER_STATS in container_updates[slug]
+                    if CONTAINER_STATS in container_updates.get(slug, {})
                 ]
             )
         )
