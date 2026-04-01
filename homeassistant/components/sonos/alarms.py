@@ -100,7 +100,6 @@ class SonosAlarms(SonosHouseholdCoordinator):
         self.last_processed_event_id = self.alarms.last_id
         return True
 
-    @soco_error()
     def process_added_speaker(self, soco: SoCo) -> None:
         """Update any skipped alarms when speaker is added."""
         self.alarms.update_skipped(soco)

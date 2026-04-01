@@ -88,4 +88,3 @@ class SonosHouseholdCoordinator:
 
     def process_added_speaker(self, soco: SoCo) -> None:
         """Additional processing when a speaker is added if needed."""
-        return

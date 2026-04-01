@@ -341,7 +341,7 @@ async def test_alarm_change_device(
     assert device.name == soco_br.get_speaker_info()["zone_name"]
 
 
-async def test_alarm_setup_on_dead_device(
+async def test_alarm_setup_for_undiscovered_speaker(
     hass: HomeAssistant,
     async_setup_sonos,
     alarm_clock,
@@ -349,7 +349,7 @@ async def test_alarm_setup_on_dead_device(
     soco_factory: SoCoMockFactory,
     discover,
 ) -> None:
-    """Test for creation of alarm on a speaker that is discovered after the alarm cache is updated."""
+    """Test for creation of alarm on a speaker that is discovered after the integration is setup."""
 
     soco_bedroom = soco_factory.cache_mock(MockSoCo(), "10.10.10.2", "Bedroom")
     one_alarm = copy(alarm_clock.ListAlarms.return_value)
