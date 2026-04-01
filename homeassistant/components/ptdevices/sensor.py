@@ -185,9 +185,9 @@ class PTDevicesSensorEntity(PTDevicesEntity, SensorEntity):
     ) -> None:
         """Initialize sensor."""
         super().__init__(
-            coordinator=coordinator,
-            sensor_key=description.key,
-            device_id=device_id,
+            coordinator,
+            description.key,
+            device_id,
         )
 
         self.entity_description = description
