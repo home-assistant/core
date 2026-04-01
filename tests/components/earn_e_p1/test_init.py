@@ -73,3 +73,53 @@ async def test_device_info(
     device = device_registry.async_get_device(identifiers={(DOMAIN, MOCK_SERIAL)})
     assert device is not None
     assert device == snapshot
+
+
+async def test_device_registry_not_updated_on_identical_callback(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_listener: MagicMock,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test device registry is not updated when model/sw_version are unchanged."""
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    trigger_callback(mock_listener)
+    await hass.async_block_till_done()
+
+    device = device_registry.async_get_device(identifiers={(DOMAIN, MOCK_SERIAL)})
+    assert device is not None
+    first_modified = device.modified_at
+
+    trigger_callback(mock_listener)
+    await hass.async_block_till_done()
+
+    device = device_registry.async_get_device(identifiers={(DOMAIN, MOCK_SERIAL)})
+    assert device is not None
+    assert device.modified_at == first_modified
+
+
+async def test_device_registry_updated_on_sw_version_change(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_listener: MagicMock,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test device registry is updated when sw_version changes."""
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    trigger_callback(mock_listener)
+    await hass.async_block_till_done()
+
+    device = device_registry.async_get_device(identifiers={(DOMAIN, MOCK_SERIAL)})
+    assert device is not None
+    assert device.sw_version == "1.0.0"
+
+    trigger_callback(mock_listener, sw_version="2.0.0")
+    await hass.async_block_till_done()
+
+    device = device_registry.async_get_device(identifiers={(DOMAIN, MOCK_SERIAL)})
+    assert device is not None
+    assert device.sw_version == "2.0.0"
