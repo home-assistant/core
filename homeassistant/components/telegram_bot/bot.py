@@ -350,13 +350,15 @@ class TelegramNotificationService:
               - a string like: `/cmd1, /cmd2, /cmd3`
               - or a string like: `text_b1:/cmd1, text_b2:/cmd2`
               - also supports urls instead of callback commands
+              - supports style (danger / success / primary) when using list of 3 items:
+                `["Text", "/callback", "danger"]`
             """
             buttons = []
             if isinstance(row_keyboard, str):
                 for key in row_keyboard.split(","):
                     if ":/" in key:
                         # check if command or URL
-                        if "https://" in key:
+                        if "https://" in key or "http://" in key:
                             label = key.split(":")[0]
                             url = key[len(label) + 1 :]
                             buttons.append(InlineKeyboardButton(label, url=url))
@@ -371,15 +373,42 @@ class TelegramNotificationService:
                         # commands like: '/cmd' become ('CMD', '/cmd')
                         label = key.strip()[1:].upper()
                         buttons.append(InlineKeyboardButton(label, callback_data=key))
+
             elif isinstance(row_keyboard, list):
                 for entry in row_keyboard:
-                    text_btn, data_btn = entry
-                    if data_btn.startswith("https://"):
-                        buttons.append(InlineKeyboardButton(text_btn, url=data_btn))
+                    if isinstance(entry, (list, tuple)):
+                        entry = [str(item).strip() if item is not None else "" for item in entry]
+
+                        if len(entry) == 2:
+                            text_btn, data_btn = entry
+                            if data_btn.startswith(("https://", "http://")):
+                                buttons.append(InlineKeyboardButton(text_btn, url=data_btn))
+                            else:
+                                buttons.append(
+                                    InlineKeyboardButton(text_btn, callback_data=data_btn)
+                                )
+
+                        elif len(entry) == 3:
+                            # style - danger / success / primary (Telegram Bot API 9.5+)
+                            text_btn, data_btn, style = entry
+                            style_value = (str(style).lower() if style and str(style).lower() in ["danger", "success", "primary"] else None)
+
+                            if data_btn.startswith(("https://", "http://")):
+                                button = InlineKeyboardButton(text_btn, url=data_btn, style=style_value)
+                            else:
+                                button = InlineKeyboardButton(text_btn, callback_data=data_btn, style=style_value)
+
+                            buttons.append(button)
+                        else:
+                            # fallback for unexpected length
+                            text_btn = str(entry[0]) if entry else ""
+                            data_btn = str(entry[1]) if len(entry) > 1 else text_btn
+                            buttons.append(InlineKeyboardButton(text_btn, callback_data=data_btn))
+
                     else:
-                        buttons.append(
-                            InlineKeyboardButton(text_btn, callback_data=data_btn)
-                        )
+                        # fallback if NOT list/tuple
+                        buttons.append(InlineKeyboardButton(str(entry), callback_data=str(entry)))
+
             else:
                 raise ServiceValidationError(
                     translation_domain=DOMAIN,
