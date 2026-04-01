@@ -1,8 +1,7 @@
 {
   "config": {
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     },
     "error": {
       "bucket_not_found": "[%key:component::scaleway_object_storage::exceptions::bucket_not_found::message%]",
@@ -13,34 +12,6 @@
       "unsuccessful_response": "Received unsuccessful server response from Scaleway."
     },
     "step": {
-      "reconfigure": {
-        "data": {
-          "bucket": "Bucket Name",
-          "object_prefix": "Object Key Prefix",
-          "region": "Region"
-        },
-        "data_description": {
-          "bucket": "Bucket must already exist and be writable using the provided credentials.",
-          "object_prefix": "A prefix that will be added to every object key.",
-          "region": "The Scaleway region that you have created your bucket in."
-        },
-        "description": "Check out the Scaleway docs on how to [create a bucket]({bucket_docs}) or [an API key]({api_key_docs}).",
-        "sections": {
-          "credentials": {
-            "data": {
-              "access_key_id": "Access Key ID",
-              "secret_key": "Secret Key"
-            },
-            "data_description": {
-              "access_key_id": "Your API key's ID",
-              "secret_key": "The secret part of your API key"
-            },
-            "name": "Credentials"
-          }
-        },
-        "title": "Reconfigure Scaleway Object Storage backup"
-      },
-
       "user": {
         "data": {
           "bucket": "Bucket Name",
