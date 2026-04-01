@@ -14,7 +14,7 @@ from homeassistant.const import CONF_HOST, CONF_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from custom_components.wattwaechter.const import (
+from homeassistant.components.wattwaechter.const import (
     CONF_DEVICE_ID,
     CONF_DEVICE_NAME,
     CONF_FW_VERSION,
@@ -58,11 +58,11 @@ def mock_setup_entry():
     """Mock the integration setup and unload to avoid full platform loading."""
     with (
         patch(
-            "custom_components.wattwaechter.async_setup_entry",
+            "homeassistant.components.wattwaechter.async_setup_entry",
             return_value=True,
         ) as mock,
         patch(
-            "custom_components.wattwaechter.async_unload_entry",
+            "homeassistant.components.wattwaechter.async_unload_entry",
             return_value=True,
         ),
     ):
@@ -81,7 +81,7 @@ async def test_user_flow_success(hass: HomeAssistant) -> None:
     assert result["step_id"] == "user"
 
     with patch(
-        "custom_components.wattwaechter.config_flow.Wattwaechter"
+        "homeassistant.components.wattwaechter.config_flow.Wattwaechter"
     ) as mock_cls:
         client = mock_cls.return_value
         client.alive = AsyncMock(return_value=MOCK_ALIVE_RESPONSE)
@@ -108,7 +108,7 @@ async def test_user_flow_no_token(hass: HomeAssistant) -> None:
     )
 
     with patch(
-        "custom_components.wattwaechter.config_flow.Wattwaechter"
+        "homeassistant.components.wattwaechter.config_flow.Wattwaechter"
     ) as mock_cls:
         client = mock_cls.return_value
         client.alive = AsyncMock(return_value=MOCK_ALIVE_RESPONSE)
@@ -131,7 +131,7 @@ async def test_user_flow_cannot_connect(hass: HomeAssistant) -> None:
     )
 
     with patch(
-        "custom_components.wattwaechter.config_flow.Wattwaechter"
+        "homeassistant.components.wattwaechter.config_flow.Wattwaechter"
     ) as mock_cls:
         client = mock_cls.return_value
         client.alive = AsyncMock(
@@ -154,7 +154,7 @@ async def test_user_flow_invalid_auth(hass: HomeAssistant) -> None:
     )
 
     with patch(
-        "custom_components.wattwaechter.config_flow.Wattwaechter"
+        "homeassistant.components.wattwaechter.config_flow.Wattwaechter"
     ) as mock_cls:
         client = mock_cls.return_value
         client.alive = AsyncMock(return_value=MOCK_ALIVE_RESPONSE)
@@ -195,7 +195,7 @@ async def test_options_flow(hass: HomeAssistant, mock_config_entry) -> None:
 async def test_zeroconf_flow_success(hass: HomeAssistant) -> None:
     """Test successful zeroconf discovery and confirmation."""
     with patch(
-        "custom_components.wattwaechter.config_flow.Wattwaechter"
+        "homeassistant.components.wattwaechter.config_flow.Wattwaechter"
     ) as mock_cls:
         client = mock_cls.return_value
         client.alive = AsyncMock(return_value=MOCK_ALIVE_RESPONSE)
@@ -212,7 +212,7 @@ async def test_zeroconf_flow_success(hass: HomeAssistant) -> None:
 
     # Confirm with token
     with patch(
-        "custom_components.wattwaechter.config_flow.Wattwaechter"
+        "homeassistant.components.wattwaechter.config_flow.Wattwaechter"
     ) as mock_cls:
         client = mock_cls.return_value
         client.system_info = AsyncMock(return_value=MOCK_SYSTEM_INFO)
@@ -236,7 +236,7 @@ async def test_zeroconf_flow_success(hass: HomeAssistant) -> None:
 async def test_zeroconf_flow_no_token(hass: HomeAssistant) -> None:
     """Test zeroconf discovery confirmed without token."""
     with patch(
-        "custom_components.wattwaechter.config_flow.Wattwaechter"
+        "homeassistant.components.wattwaechter.config_flow.Wattwaechter"
     ) as mock_cls:
         client = mock_cls.return_value
         client.alive = AsyncMock(return_value=MOCK_ALIVE_RESPONSE)
@@ -251,7 +251,7 @@ async def test_zeroconf_flow_no_token(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.FORM
 
     with patch(
-        "custom_components.wattwaechter.config_flow.Wattwaechter"
+        "homeassistant.components.wattwaechter.config_flow.Wattwaechter"
     ) as mock_cls:
         client = mock_cls.return_value
         client.settings = AsyncMock(return_value=MOCK_SETTINGS)
@@ -268,7 +268,7 @@ async def test_zeroconf_flow_no_token(hass: HomeAssistant) -> None:
 async def test_zeroconf_flow_cannot_connect(hass: HomeAssistant) -> None:
     """Test zeroconf aborts when device is unreachable."""
     with patch(
-        "custom_components.wattwaechter.config_flow.Wattwaechter"
+        "homeassistant.components.wattwaechter.config_flow.Wattwaechter"
     ) as mock_cls:
         client = mock_cls.return_value
         client.alive = AsyncMock(
@@ -288,7 +288,7 @@ async def test_zeroconf_flow_cannot_connect(hass: HomeAssistant) -> None:
 async def test_zeroconf_flow_invalid_auth_on_confirm(hass: HomeAssistant) -> None:
     """Test zeroconf confirm shows error on invalid token."""
     with patch(
-        "custom_components.wattwaechter.config_flow.Wattwaechter"
+        "homeassistant.components.wattwaechter.config_flow.Wattwaechter"
     ) as mock_cls:
         client = mock_cls.return_value
         client.alive = AsyncMock(return_value=MOCK_ALIVE_RESPONSE)
@@ -302,7 +302,7 @@ async def test_zeroconf_flow_invalid_auth_on_confirm(hass: HomeAssistant) -> Non
     assert result["type"] is FlowResultType.FORM
 
     with patch(
-        "custom_components.wattwaechter.config_flow.Wattwaechter"
+        "homeassistant.components.wattwaechter.config_flow.Wattwaechter"
     ) as mock_cls:
         client = mock_cls.return_value
         client.system_info = AsyncMock(
@@ -323,7 +323,7 @@ async def test_zeroconf_flow_already_configured(
 ) -> None:
     """Test zeroconf aborts when device is already configured."""
     with patch(
-        "custom_components.wattwaechter.config_flow.Wattwaechter"
+        "homeassistant.components.wattwaechter.config_flow.Wattwaechter"
     ) as mock_cls:
         client = mock_cls.return_value
         client.alive = AsyncMock(return_value=MOCK_ALIVE_RESPONSE)

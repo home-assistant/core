@@ -9,14 +9,13 @@ import pytest
 from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
 from homeassistant.core import HomeAssistant
 
-from custom_components.wattwaechter.const import DOMAIN
+from homeassistant.components.wattwaechter.const import DOMAIN
 
 from .conftest import (
     MOCK_ALIVE_RESPONSE,
     MOCK_METER_DATA,
     MOCK_METER_DATA_MINIMAL,
     MOCK_METER_DATA_WITH_UNKNOWN,
-    MOCK_OTA_CHECK_NO_UPDATE,
     MOCK_SYSTEM_INFO,
 )
 
@@ -24,13 +23,12 @@ from .conftest import (
 async def _setup_integration(hass: HomeAssistant, mock_config_entry, meter_data):
     """Set up the integration with given meter data."""
     with patch(
-        "custom_components.wattwaechter.Wattwaechter"
+        "homeassistant.components.wattwaechter.Wattwaechter"
     ) as mock_cls:
         client = mock_cls.return_value
         client.alive = AsyncMock(return_value=MOCK_ALIVE_RESPONSE)
         client.meter_data = AsyncMock(return_value=meter_data)
         client.system_info = AsyncMock(return_value=MOCK_SYSTEM_INFO)
-        client.ota_check = AsyncMock(return_value=MOCK_OTA_CHECK_NO_UPDATE)
         client.host = "192.168.1.100"
 
         await hass.config_entries.async_setup(mock_config_entry.entry_id)

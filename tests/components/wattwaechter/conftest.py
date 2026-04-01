@@ -8,19 +8,16 @@ import pytest
 
 from homeassistant.const import CONF_HOST, CONF_SCAN_INTERVAL, CONF_TOKEN
 from homeassistant.core import HomeAssistant
-from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 from aio_wattwaechter.models import (
     AliveResponse,
     InfoEntry,
     MeterData,
     ObisValue,
-    OtaCheckResponse,
-    OtaData,
     SystemInfo,
 )
 
-from custom_components.wattwaechter.const import (
+from homeassistant.components.wattwaechter.const import (
     CONF_DEVICE_ID,
     CONF_DEVICE_NAME,
     CONF_FW_VERSION,
@@ -28,6 +25,8 @@ from custom_components.wattwaechter.const import (
     CONF_MODEL,
     DOMAIN,
 )
+
+from tests.common import MockConfigEntry
 
 MOCK_HOST = "192.168.1.100"
 MOCK_TOKEN = "test-token-123"
@@ -101,57 +100,6 @@ MOCK_METER_DATA_WITH_UNKNOWN = MeterData(
     },
 )
 
-MOCK_OTA_CHECK_NO_UPDATE = OtaCheckResponse(
-    ok=True,
-    data=OtaData(
-        update_available=False,
-        version=MOCK_FW_VERSION,
-        tag="",
-        release_date="",
-        release_note_de="",
-        release_note_en="",
-        last_checked=0,
-        url="",
-        md5="",
-    ),
-)
-
-MOCK_OTA_CHECK_UPDATE = OtaCheckResponse(
-    ok=True,
-    data=OtaData(
-        update_available=True,
-        version="2.0.0",
-        tag="v2.0.0",
-        release_date="2024-06-01",
-        release_note_en="Bug fixes and improvements",
-        release_note_de="Fehlerbehebungen und Verbesserungen",
-        last_checked=1704067200,
-        url="",
-        md5="",
-    ),
-)
-
-
-@pytest.fixture(autouse=True, scope="session")
-def _warmup_pycares_thread():
-    """Pre-start pycares background thread to avoid thread-leak false positive.
-
-    pycares starts a global daemon thread (_run_safe_shutdown_loop) the first
-    time a Channel is created.  If the thread starts *during* a test, the
-    pytest-homeassistant-custom-component teardown detects it as a leak.
-    Starting it once at session scope puts it into every test's
-    ``threads_before`` snapshot.
-    """
-    from pycares import _shutdown_manager
-
-    _shutdown_manager.start()
-
-
-@pytest.fixture(autouse=True)
-def auto_enable_custom_integrations(enable_custom_integrations):
-    """Enable loading of custom components in all tests."""
-    yield
-
 
 @pytest.fixture(autouse=True)
 def mock_zeroconf(hass: HomeAssistant):
@@ -164,7 +112,7 @@ def mock_zeroconf(hass: HomeAssistant):
 def mock_client():
     """Create a mock Wattwaechter client."""
     with patch(
-        "custom_components.wattwaechter.Wattwaechter",
+        "homeassistant.components.wattwaechter.Wattwaechter",
         autospec=True,
     ) as mock_cls:
         client = mock_cls.return_value
@@ -173,8 +121,6 @@ def mock_client():
         client.system_info = AsyncMock(return_value=MOCK_SYSTEM_INFO)
         client.settings = AsyncMock(return_value=MOCK_SETTINGS)
         client.meter_data = AsyncMock(return_value=MOCK_METER_DATA)
-        client.ota_check = AsyncMock(return_value=MOCK_OTA_CHECK_NO_UPDATE)
-        client.ota_start = AsyncMock(return_value={"ok": True})
         yield client
 
 
