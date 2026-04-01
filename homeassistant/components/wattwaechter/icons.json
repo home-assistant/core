@@ -34,11 +34,6 @@
       "mdns_name": {
         "default": "mdi:dns"
       }
-    },
-    "update": {
-      "firmware": {
-        "default": "mdi:update"
-      }
     }
   }
 }

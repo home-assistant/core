@@ -17,7 +17,7 @@ from .coordinator import WattwaechterCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS = [Platform.SENSOR, Platform.UPDATE]
+PLATFORMS = [Platform.SENSOR]
 
 type WattwaechterConfigEntry = ConfigEntry[WattwaechterCoordinator]
 
