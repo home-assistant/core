@@ -233,6 +233,7 @@ async def test_full_flow_with_domain_registration(
     assert parsed_query["client_id"][0] == "user_client_id"
     assert parsed_query["redirect_uri"][0] == REDIRECT
     assert parsed_query["state"][0] == state
+    assert parsed_query["prompt_missing_scopes"][0] == "true"
     assert parsed_query["scope"][0] == " ".join(SCOPES)
     assert "code_challenge" not in parsed_query
 
