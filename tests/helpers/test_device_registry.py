@@ -363,7 +363,6 @@ async def test_loading_from_storage(
         },
     }
 
-    dr.async_setup(hass)
     await dr.async_load(hass)
     registry = dr.async_get(hass)
     assert len(registry.devices) == 1
@@ -501,7 +500,6 @@ async def test_migration_from_1_1(
         },
     }
 
-    dr.async_setup(hass)
     await dr.async_load(hass)
     registry = dr.async_get(hass)
 
@@ -656,7 +654,6 @@ async def test_migration_from_1_2(
         },
     }
 
-    dr.async_setup(hass)
     await dr.async_load(hass)
     registry = dr.async_get(hass)
 
@@ -793,7 +790,6 @@ async def test_migration_fom_1_3(
         },
     }
 
-    dr.async_setup(hass)
     await dr.async_load(hass)
     registry = dr.async_get(hass)
 
@@ -932,7 +928,6 @@ async def test_migration_from_1_4(
         },
     }
 
-    dr.async_setup(hass)
     await dr.async_load(hass)
     registry = dr.async_get(hass)
 
@@ -1073,7 +1068,6 @@ async def test_migration_from_1_5(
         },
     }
 
-    dr.async_setup(hass)
     await dr.async_load(hass)
     registry = dr.async_get(hass)
 
@@ -1216,7 +1210,6 @@ async def test_migration_from_1_6(
         },
     }
 
-    dr.async_setup(hass)
     await dr.async_load(hass)
     registry = dr.async_get(hass)
 
@@ -1361,7 +1354,6 @@ async def test_migration_from_1_7(
         },
     }
 
-    dr.async_setup(hass)
     await dr.async_load(hass)
     registry = dr.async_get(hass)
 
@@ -1504,7 +1496,6 @@ async def test_migration_from_1_10(
         },
     }
 
-    dr.async_setup(hass)
     await dr.async_load(hass)
     registry = dr.async_get(hass)
 
@@ -1641,7 +1632,6 @@ async def test_migration_from_1_11(
         },
     }
 
-    dr.async_setup(hass)
     await dr.async_load(hass)
     registry = dr.async_get(hass)
 
@@ -3793,7 +3783,6 @@ async def test_cleanup_entity_registry_change(
     Don't pre-load the registries as the debouncer will then not be waiting for
     EVENT_ENTITY_REGISTRY_UPDATED events.
     """
-    dr.async_setup(hass)
     await dr.async_load(hass)
     await er.async_load(hass)
     dev_reg = dr.async_get(hass)
@@ -4955,7 +4944,6 @@ async def test_loading_invalid_configuration_url_from_storage(
         },
     }
 
-    dr.async_setup(hass)
     await dr.async_load(hass)
     registry = dr.async_get(hass)
     assert len(registry.devices) == 1

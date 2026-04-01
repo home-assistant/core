@@ -536,8 +536,6 @@ async def test_entity_registry_loading_waits_for_device_registry(
         await asyncio.sleep(0)
         return await original_load(self)
 
-    dr.async_setup(hass)
-
     with patch.object(dr.DeviceRegistryStore, "async_load", delayed_load):
         await asyncio.gather(
             er.async_load(hass),
@@ -1676,7 +1674,6 @@ async def test_migration_1_21(
         },
     }
 
-    dr.async_setup(hass)
     await dr.async_load(hass)
 
     entity_base = {

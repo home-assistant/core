@@ -772,11 +772,11 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
     devices: ActiveDeviceRegistryItems
     deleted_devices: DeviceRegistryItems[DeletedDeviceEntry]
     _device_data: dict[str, DeviceEntry]
-    _loaded_event: asyncio.Event | None = None
 
     def __init__(self, hass: HomeAssistant) -> None:
         """Initialize the device registry."""
         self.hass = hass
+        self._loaded_event = asyncio.Event()
         self._store = DeviceRegistryStore(
             hass,
             STORAGE_VERSION_MAJOR,
@@ -785,11 +785,6 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
             minor_version=STORAGE_VERSION_MINOR,
             serialize_in_event_loop=False,
         )
-
-    @callback
-    def async_setup(self) -> None:
-        """Set up the registry."""
-        self._loaded_event = asyncio.Event()
 
     @callback
     def async_get(self, device_id: str) -> DeviceEntry | None:
@@ -1470,9 +1465,6 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
 
     async def _async_load(self) -> None:
         """Load the device registry."""
-        assert self._loaded_event is not None
-        assert not self._loaded_event.is_set()
-
         async_setup_cleanup(self.hass, self)
 
         data = await self._store.async_load()
@@ -1577,8 +1569,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
 
         Will only wait if the registry had already been set up.
         """
-        if self._loaded_event is not None:
-            await self._loaded_event.wait()
+        await self._loaded_event.wait()
 
     @callback
     def _data_to_save(self) -> dict[str, Any]:
@@ -1724,12 +1715,6 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
 def async_get(hass: HomeAssistant) -> DeviceRegistry:
     """Get device registry."""
     return DeviceRegistry(hass)
-
-
-def async_setup(hass: HomeAssistant) -> None:
-    """Set up device registry."""
-    assert DATA_REGISTRY not in hass.data
-    async_get(hass).async_setup()
 
 
 async def async_load(hass: HomeAssistant, *, load_empty: bool = False) -> None:
