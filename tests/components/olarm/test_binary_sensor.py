@@ -52,7 +52,10 @@ async def setup_integration(hass: HomeAssistant):
     return config_entry, mock_coordinator
 
 
-async def test_zone_sensors(hass: HomeAssistant, setup_integration: tuple[MockConfigEntry, OlarmDataUpdateCoordinator]) -> None:
+async def test_zone_sensors(
+    hass: HomeAssistant,
+    setup_integration: tuple[MockConfigEntry, OlarmDataUpdateCoordinator],
+) -> None:
     """Test zone sensors creation and state."""
     config_entry, mock_coordinator = setup_integration
 
@@ -84,7 +87,10 @@ async def test_zone_sensors(hass: HomeAssistant, setup_integration: tuple[MockCo
     assert zone_2._attr_is_on is False
 
 
-async def test_ac_power_sensor(hass: HomeAssistant, setup_integration: tuple[MockConfigEntry, OlarmDataUpdateCoordinator]) -> None:
+async def test_ac_power_sensor(
+    hass: HomeAssistant,
+    setup_integration: tuple[MockConfigEntry, OlarmDataUpdateCoordinator],
+) -> None:
     """Test AC power sensor creation and state."""
     config_entry, mock_coordinator = setup_integration
 
