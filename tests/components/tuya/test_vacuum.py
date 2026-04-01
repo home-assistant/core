@@ -66,7 +66,7 @@ async def test_empty_quirk(
     get_quirks: list | None,
     available: bool,
 ) -> None:
-    """Test None quirk still creates default entities."""
+    """Test None quirks use defaults and empty quirk list skips default entities."""
     with patch.object(TUYA_QUIRKS_REGISTRY, "get_quirk_for_device") as mock_get_quirk:
         mock_get_quirk.return_value = Mock()
         mock_get_quirk.return_value.vacuum_quirks = get_quirks
