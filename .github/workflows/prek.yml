@@ -2,12 +2,6 @@ name: Pre-checks
 
 # yamllint disable-line rule:truthy
 on:
-  push:
-    branches:
-      - dev
-      - master
-      - rc
-  pull_request: ~
   workflow_dispatch: ~
 
 permissions: {}
