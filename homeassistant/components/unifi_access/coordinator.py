@@ -116,7 +116,7 @@ class UnifiAccessCoordinator(DataUpdateCoordinator[UnifiAccessData]):
         except ValueError as err:
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
-                translation_key="lock_rule_failed",
+                translation_key="invalid_lock_rule_type",
             ) from err
         rule = DoorLockRule(type=lock_rule_type, interval=interval)
         await self.client.set_door_lock_rule(door_id, rule)

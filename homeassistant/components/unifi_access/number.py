@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import math
+
 from unifi_access_api import Door
 
 from homeassistant.components.number import NumberDeviceClass, NumberMode, RestoreNumber
@@ -91,7 +93,8 @@ class UnifiAccessDoorLockRuleIntervalNumberEntity(UnifiAccessEntity, RestoreNumb
         step = float(self._attr_native_step or 1)
 
         normalized = min(max(float(value), min_value), max_value)
-        normalized = round(normalized / step) * step
+        # Use math.floor + 0.5 instead of round() to avoid banker's rounding
+        normalized = math.floor(normalized / step + 0.5) * step
         normalized = min(max(normalized, min_value), max_value)
         return int(normalized)
 

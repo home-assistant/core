@@ -129,6 +129,9 @@
     "emergency_failed": {
       "message": "Failed to set emergency status."
     },
+    "invalid_lock_rule_type": {
+      "message": "The provided lock rule type is invalid."
+    },
     "lock_rule_failed": {
       "message": "Failed to update the door lock rule."
     },
