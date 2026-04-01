@@ -11,14 +11,17 @@ from aiohasupervisor.models import ContextType
 import voluptuous as vol
 
 from homeassistant.components.repairs import RepairsFlow
+from homeassistant.const import ATTR_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
 
-from . import get_addons_info, get_issues_info
+from . import get_addons_list
 from .const import (
+    ATTR_SLUG,
     EXTRA_PLACEHOLDERS,
     ISSUE_KEY_ADDON_BOOT_FAIL,
     ISSUE_KEY_ADDON_DEPRECATED,
+    ISSUE_KEY_ADDON_DEPRECATED_ARCH,
     ISSUE_KEY_ADDON_DETACHED_ADDON_REMOVED,
     ISSUE_KEY_ADDON_PWNED,
     ISSUE_KEY_SYSTEM_DOCKER_CONFIG,
@@ -28,6 +31,7 @@ from .const import (
     PLACEHOLDER_KEY_COMPONENTS,
     PLACEHOLDER_KEY_REFERENCE,
 )
+from .coordinator import get_issues_info
 from .handler import get_supervisor_client
 from .issues import Issue, Suggestion
 
@@ -62,11 +66,16 @@ class SupervisorIssueRepairFlow(RepairsFlow):
     @property
     def description_placeholders(self) -> dict[str, str] | None:
         """Get description placeholders for steps."""
-        placeholders = {}
-        if self.issue:
-            placeholders = EXTRA_PLACEHOLDERS.get(self.issue.key, {})
-            if self.issue.reference:
-                placeholders |= {PLACEHOLDER_KEY_REFERENCE: self.issue.reference}
+        if not self.issue:
+            return None
+
+        if self.issue.key in EXTRA_PLACEHOLDERS:
+            placeholders: dict[str, str] = EXTRA_PLACEHOLDERS[self.issue.key].copy()
+        else:
+            placeholders = {}
+
+        if self.issue.reference:
+            placeholders |= {PLACEHOLDER_KEY_REFERENCE: self.issue.reference}
 
         return placeholders or None
 
@@ -154,7 +163,7 @@ class DockerConfigIssueRepairFlow(SupervisorIssueRepairFlow):
         placeholders = {PLACEHOLDER_KEY_COMPONENTS: ""}
         supervisor_issues = get_issues_info(self.hass)
         if supervisor_issues and self.issue:
-            addons = get_addons_info(self.hass) or {}
+            addons_list = get_addons_list(self.hass) or []
             components: list[str] = []
             for issue in supervisor_issues.issues:
                 if issue.key == self.issue.key or issue.type != self.issue.type:
@@ -166,9 +175,9 @@ class DockerConfigIssueRepairFlow(SupervisorIssueRepairFlow):
                     components.append(
                         next(
                             (
-                                info["name"]
-                                for slug, info in addons.items()
-                                if slug == issue.reference
+                                addon[ATTR_NAME]
+                                for addon in addons_list
+                                if addon[ATTR_SLUG] == issue.reference
                             ),
                             issue.reference or "",
                         )
@@ -187,13 +196,12 @@ class AddonIssueRepairFlow(SupervisorIssueRepairFlow):
         """Get description placeholders for steps."""
         placeholders: dict[str, str] = super().description_placeholders or {}
         if self.issue and self.issue.reference:
-            addons = get_addons_info(self.hass)
-            if addons and self.issue.reference in addons:
-                placeholders[PLACEHOLDER_KEY_ADDON] = addons[self.issue.reference][
-                    "name"
-                ]
-            else:
-                placeholders[PLACEHOLDER_KEY_ADDON] = self.issue.reference
+            addons_list = get_addons_list(self.hass) or []
+            placeholders[PLACEHOLDER_KEY_ADDON] = self.issue.reference
+            for addon in addons_list:
+                if addon[ATTR_SLUG] == self.issue.reference:
+                    placeholders[PLACEHOLDER_KEY_ADDON] = addon[ATTR_NAME]
+                    break
 
         return placeholders or None
 
@@ -231,6 +239,7 @@ async def async_create_fix_flow(
         ISSUE_KEY_ADDON_DETACHED_ADDON_REMOVED,
         ISSUE_KEY_ADDON_BOOT_FAIL,
         ISSUE_KEY_ADDON_PWNED,
+        ISSUE_KEY_ADDON_DEPRECATED_ARCH,
     }:
         return AddonIssueRepairFlow(hass, issue_id)
 

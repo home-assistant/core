@@ -122,7 +122,7 @@
   },
   "exceptions": {
     "cannot_connect": {
-      "message": "Can not connect to Rehlko servers."
+      "message": "Cannot connect to Rehlko servers."
     },
     "invalid_auth": {
       "message": "Authentication failed for email {email}."

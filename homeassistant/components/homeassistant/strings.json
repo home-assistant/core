@@ -208,11 +208,11 @@
   "services": {
     "check_config": {
       "description": "Checks the Home Assistant YAML-configuration files for errors. Errors will be shown in the Home Assistant logs.",
-      "name": "Check configuration"
+      "name": "Check Home Assistant configuration"
     },
     "reload_all": {
       "description": "Reloads all YAML configuration that can be reloaded without restarting Home Assistant.",
-      "name": "Reload all"
+      "name": "Reload all Home Assistant configuration"
     },
     "reload_config_entry": {
       "description": "Reloads the specified config entry.",
@@ -240,7 +240,7 @@
           "name": "Safe mode"
         }
       },
-      "name": "[%key:common::action::restart%]"
+      "name": "Restart Home Assistant"
     },
     "save_persistent_states": {
       "description": "Saves the persistent states immediately. Maintains the normal periodic saving interval.",
@@ -262,11 +262,11 @@
           "name": "[%key:common::config_flow::data::longitude%]"
         }
       },
-      "name": "Set location"
+      "name": "Set Home Assistant location"
     },
     "stop": {
       "description": "Stops Home Assistant.",
-      "name": "[%key:common::action::stop%]"
+      "name": "Stop Home Assistant"
     },
     "toggle": {
       "description": "Generic action to toggle devices on/off under any domain.",
