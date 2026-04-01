@@ -71,6 +71,16 @@ CODE_EXECUTION_UNSUPPORTED_MODELS = [
     "claude-3-haiku",
 ]
 
+PROGRAMMATIC_TOOL_CALLING_UNSUPPORTED_MODELS = [
+    "claude-haiku-4-5",
+    "claude-opus-4-1",
+    "claude-opus-4-0",
+    "claude-opus-4-20250514",
+    "claude-sonnet-4-0",
+    "claude-sonnet-4-20250514",
+    "claude-3-haiku",
+]
+
 DEPRECATED_MODELS = [
     "claude-3",
 ]
