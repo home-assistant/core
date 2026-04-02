@@ -97,7 +97,11 @@ def _aggregate_energy_history_by_hour(
         if parsed_time is None:
             continue
 
-        start = dt_util.as_utc(parsed_time).replace(minute=0, second=0, microsecond=0)
+        # Floor to the hour in the original timezone before converting to UTC.
+        # This avoids misplacing samples for zones with non-hour offsets (e.g. +05:30).
+        start = dt_util.as_utc(
+            parsed_time.replace(minute=0, second=0, microsecond=0)
+        )
         hour_values = hourly_periods.setdefault(start, {})
 
         for key in ENERGY_HISTORY_FIELDS:
