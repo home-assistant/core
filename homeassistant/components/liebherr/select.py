@@ -199,15 +199,15 @@ class LiebherrSelectEntity(LiebherrEntity, SelectEntity):
     def _select_control(self) -> SelectControl | None:
         """Get the select control for this entity."""
         for control in self.coordinator.data.controls:
+            if not isinstance(
+                control,
+                IceMakerControl | HydroBreezeControl | BioFreshPlusControl,
+            ):
+                continue
             if (
                 isinstance(control, self.entity_description.control_type)
                 and control.zone_id == self._zone_id
             ):
-                if TYPE_CHECKING:
-                    assert isinstance(
-                        control,
-                        IceMakerControl | HydroBreezeControl | BioFreshPlusControl,
-                    )
                 return control
         return None
 

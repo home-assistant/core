@@ -2,12 +2,14 @@
 
 from __future__ import annotations
 
+from datetime import date, datetime
 import logging
 
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from ..const import DOMAIN
@@ -99,24 +101,18 @@ class GrowattSensor(CoordinatorEntity[GrowattCoordinator], SensorEntity):
         self.entity_description = description
 
         self._attr_unique_id = unique_id
-        self._attr_icon = "mdi:solar-power"
 
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, serial_id)},
             manufacturer="Growatt",
             name=name,
+            serial_number=serial_id,
         )
 
     @property
-    def native_value(self) -> str | int | float | None:
+    def native_value(self) -> StateType | date | datetime:
         """Return the state of the sensor."""
-        result = self.coordinator.get_data(self.entity_description)
-        if (
-            isinstance(result, (int, float))
-            and self.entity_description.precision is not None
-        ):
-            result = round(result, self.entity_description.precision)
-        return result
+        return self.coordinator.get_data(self.entity_description)
 
     @property
     def native_unit_of_measurement(self) -> str | None:
