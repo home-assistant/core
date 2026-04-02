@@ -4,7 +4,7 @@ This repository contains the core of Home Assistant, a Python 3 based home autom
 
 ## Git Commit Guidelines
 
-- **Do NOT amend, squash, or rebase previous commits after PR has been created** - Reviewers need to follow the commit history, as well as see what changed since their last review
+- **Do NOT amend, squash, or rebase commits that have already been pushed to the PR branch after the PR is opened** - Reviewers need to follow the commit history, as well as see what changed since their last review
 
 ## Development Commands
 
