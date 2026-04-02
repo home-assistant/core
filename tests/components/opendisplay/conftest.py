@@ -5,9 +5,9 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from homeassistant.components.opendisplay.const import DOMAIN
+from homeassistant.components.opendisplay.const import CONF_ENCRYPTION_KEY, DOMAIN
 
-from . import DEVICE_CONFIG, FIRMWARE_VERSION, TEST_ADDRESS, TEST_TITLE
+from . import DEVICE_CONFIG, ENCRYPTION_KEY, FIRMWARE_VERSION, TEST_ADDRESS, TEST_TITLE
 
 from tests.common import MockConfigEntry
 from tests.components.bluetooth import generate_ble_device
@@ -72,4 +72,15 @@ def mock_config_entry() -> MockConfigEntry:
         unique_id=TEST_ADDRESS,
         title=TEST_TITLE,
         data={},
+    )
+
+
+@pytest.fixture
+def mock_encrypted_config_entry() -> MockConfigEntry:
+    """Create a mock config entry with an encryption key."""
+    return MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=TEST_ADDRESS,
+        title=TEST_TITLE,
+        data={CONF_ENCRYPTION_KEY: ENCRYPTION_KEY},
     )
