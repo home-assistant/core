@@ -110,10 +110,7 @@ rules:
     comment: |
       All sensors are primary entities showing next pickup dates.
   entity-device-class: done
-  entity-disabled-by-default:
-    status: exempt
-    comment: |
-      All four sensors provide essential pickup information.
+  entity-disabled-by-default: done
   entity-translations: done
   exception-translations:
     status: exempt
