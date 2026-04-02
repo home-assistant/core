@@ -31,7 +31,7 @@ from . import UID, init_integration
 
 from tests.test_util.aiohttp import AiohttpClientMocker
 
-CLIMATE_ID = f"{Platform.CLIMATE}.{DOMAIN}"
+CLIMATE_ID = f"{Platform.CLIMATE}.atag_thermostat_{DOMAIN}"
 
 
 async def test_climate(
