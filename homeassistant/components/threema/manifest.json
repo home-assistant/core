@@ -7,6 +7,6 @@
   "integration_type": "service",
   "iot_class": "cloud_push",
   "loggers": ["threema"],
-  "quality_scale": "silver",
+  "quality_scale": "bronze",
   "requirements": ["threema.gateway==8.0.0"]
 }

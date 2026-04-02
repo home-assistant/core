@@ -38,7 +38,7 @@ rules:
   parallel-updates:
     status: exempt
     comment: No polling or data updates.
-  reauthentication-flow: done
+  reauthentication-flow: todo
   test-coverage: done
 
   # Gold

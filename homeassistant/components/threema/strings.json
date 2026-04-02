@@ -2,8 +2,7 @@
   "config": {
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
-      "key_generation_failed": "Failed to generate encryption keys.",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+      "key_generation_failed": "Failed to generate encryption keys."
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
@@ -27,18 +26,6 @@
         },
         "description": "Enter your Threema Gateway ID and secret obtained from gateway.threema.ch.",
         "title": "Gateway credentials"
-      },
-      "reauth_confirm": {
-        "data": {
-          "api_secret": "[%key:component::threema::config::step::credentials::data::api_secret%]",
-          "private_key": "[%key:component::threema::config::step::credentials::data::private_key%]"
-        },
-        "data_description": {
-          "api_secret": "Enter the new API secret from gateway.threema.ch.",
-          "private_key": "Private key, including 'private:' prefix"
-        },
-        "description": "Your Threema Gateway credentials need to be updated.",
-        "title": "[%key:common::config_flow::title::reauth%]"
       },
       "setup_new": {
         "data": {

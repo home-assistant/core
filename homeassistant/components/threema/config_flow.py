@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
 import logging
 from typing import Any
 
@@ -165,62 +164,6 @@ class ThreemaConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="credentials",
             data_schema=schema,
-            errors=errors,
-        )
-
-    async def async_step_reauth(self, _: Mapping[str, Any]) -> ConfigFlowResult:
-        """Handle reauth if credentials become invalid."""
-        return await self.async_step_reauth_confirm()
-
-    async def async_step_reauth_confirm(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Handle reauth confirmation."""
-        errors: dict[str, str] = {}
-
-        if user_input is not None:
-            reauth_entry = self._get_reauth_entry()
-            api_secret = user_input[CONF_API_SECRET].strip()
-            private_key_input = user_input.get(CONF_PRIVATE_KEY, "").strip() or None
-
-            client = ThreemaAPIClient(
-                self.hass,
-                gateway_id=reauth_entry.data[CONF_GATEWAY_ID],
-                api_secret=api_secret,
-                private_key=private_key_input
-                or reauth_entry.data.get(CONF_PRIVATE_KEY),
-            )
-
-            try:
-                await client.validate_credentials()
-            except ThreemaAuthError:
-                errors["base"] = "invalid_auth"
-            except ThreemaConnectionError:
-                errors["base"] = "cannot_connect"
-            except Exception:
-                _LOGGER.exception("Unexpected error validating new credentials")
-                errors["base"] = "unknown"
-            else:
-                await self.async_set_unique_id(reauth_entry.data[CONF_GATEWAY_ID])
-                self._abort_if_unique_id_mismatch()
-                data_updates: dict[str, str] = {
-                    CONF_API_SECRET: api_secret,
-                }
-                if private_key_input:
-                    data_updates[CONF_PRIVATE_KEY] = private_key_input
-                return self.async_update_reload_and_abort(
-                    reauth_entry,
-                    data_updates=data_updates,
-                )
-
-        return self.async_show_form(
-            step_id="reauth_confirm",
-            data_schema=vol.Schema(
-                {
-                    vol.Required(CONF_API_SECRET): str,
-                    vol.Optional(CONF_PRIVATE_KEY): str,
-                }
-            ),
             errors=errors,
         )
 
