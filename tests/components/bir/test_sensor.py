@@ -1,6 +1,6 @@
 """Tests for the BIR sensors."""
 
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
 
@@ -99,7 +99,7 @@ async def test_sensor_device(
 
 async def test_sensor_unavailable_when_waste_type_missing(
     hass: HomeAssistant,
-    mock_bir_client: patch,
+    mock_bir_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test sensor becomes unavailable when waste type disappears from data."""
