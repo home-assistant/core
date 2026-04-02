@@ -195,6 +195,7 @@ GITHUB_USER=$(gh api user --jq .login 2>/dev/null || git remote get-url "$PUSH_R
 # Create PR (gh pr create pushes the branch automatically)
 gh pr create --repo home-assistant/core --base dev \
   --head "$GITHUB_USER:$BRANCH" \
+  --draft \
   --title "TITLE_HERE" \
   --body "$(cat <<'EOF'
 BODY_HERE
