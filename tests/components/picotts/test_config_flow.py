@@ -1,6 +1,6 @@
 """Test the Pico TTS config flow."""
 
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
 
@@ -21,13 +21,9 @@ pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 
 async def test_user_step(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
     """Test user step create entry result."""
-    mock_result = MagicMock()
-    mock_result.returncode = 0
-    with (
-        patch(
-            "homeassistant.components.picotts.tts.subprocess.run",
-            return_value=mock_result,
-        ),
+    with patch(
+        "homeassistant.components.picotts.shutil.which",
+        return_value="/usr/local/bin/pico2wave",
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -55,13 +51,9 @@ async def test_already_configured(
     hass: HomeAssistant, mock_setup_entry: AsyncMock
 ) -> None:
     """Test user step already configured entry."""
-    mock_result = MagicMock()
-    mock_result.returncode = 0
-    with (
-        patch(
-            "homeassistant.components.picotts.tts.subprocess.run",
-            return_value=mock_result,
-        ),
+    with patch(
+        "homeassistant.components.picotts.shutil.which",
+        return_value="/usr/local/bin/pico2wave",
     ):
         config_entry = MockConfigEntry(domain=DOMAIN, data={CONF_LANG: "es-ES"})
         config_entry.add_to_hass(hass)
