@@ -149,7 +149,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'on',
+    'state': 'off',
   })
 # ---
 # name: test_all_entities[binary_sensor.pve1_status-entry]
