@@ -340,102 +340,74 @@ class TelegramNotificationService:
     def _get_msg_kwargs(self, data: dict[str, Any]) -> dict[str, Any]:
         """Get parameters in message data kwargs."""
 
-        def _make_row_inline_keyboard(row_keyboard: Any) -> list[InlineKeyboardButton]:
-            """Make a list of InlineKeyboardButtons.
+        def _create_inline_button(
+            text: str, data: str, style: str | None = None
+        ) -> InlineKeyboardButton:
+            """Create InlineKeyboardButton with support for style parameter.
 
-            It can accept:
-              - a list of tuples like:
-                `[(text_b1, data_callback_b1),
-                (text_b2, data_callback_b2), ...]
-              - a string like: `/cmd1, /cmd2, /cmd3`
-              - or a string like: `text_b1:/cmd1, text_b2:/cmd2`
-              - also supports urls instead of callback commands
-              - supports style (danger / success / primary) when using list of 3 items:
-                `["Text", "/callback", "danger"]`
+            Uses graceful fallback for older python-telegram-bot versions.
             """
-            buttons = []
+            style_value = style if style in {"success", "danger", "primary"} else None
+
+            try:
+                if data.startswith(("https://", "http://")):
+                    return InlineKeyboardButton(text=text, url=data, style=style_value)
+                return InlineKeyboardButton(text=text, callback_data=data, style=style_value)
+            except TypeError:
+                # Older version without 'style' parameter support
+                if data.startswith(("https://", "http://")):
+                    return InlineKeyboardButton(text=text, url=data)
+                return InlineKeyboardButton(text=text, callback_data=data)
+
+        def _make_row_inline_keyboard(row_keyboard: Any) -> list[InlineKeyboardButton]:
+            """Make a list of InlineKeyboardButtons from various input formats."""
+            buttons: list[InlineKeyboardButton] = []
+
             if isinstance(row_keyboard, str):
                 for key in row_keyboard.split(","):
+                    key = key.strip()
                     if ":/" in key:
-                        # check if command or URL
-                        if "https://" in key or "http://" in key:
-                            label = key.split(":")[0]
-                            url = key[len(label) + 1 :]
-                            buttons.append(InlineKeyboardButton(label, url=url))
+                        label, value = key.split(":/", 1)
+                        if value.startswith(("https://", "http://")):
+                            buttons.append(InlineKeyboardButton(text=label, url=value))
                         else:
-                            # commands like: 'Label:/cmd' become ('Label', '/cmd')
-                            label = key.split(":/")[0]
-                            command = key[len(label) + 1 :]
-                            buttons.append(
-                                InlineKeyboardButton(label, callback_data=command)
-                            )
+                            buttons.append(InlineKeyboardButton(text=label, callback_data=value))
                     else:
-                        # commands like: '/cmd' become ('CMD', '/cmd')
-                        label = key.strip()[1:].upper()
-                        buttons.append(InlineKeyboardButton(label, callback_data=key))
+                        label = key.strip()[1:].upper() if key.startswith("/") else key
+                        buttons.append(InlineKeyboardButton(text=label, callback_data=key))
 
             elif isinstance(row_keyboard, list):
                 for entry in row_keyboard:
                     if isinstance(entry, (list, tuple)):
-                        entry = [
-                            str(item).strip() if item is not None else ""
-                            for item in entry
-                        ]
+                        entry = [str(item).strip() if item is not None else "" for item in entry]
 
                         if len(entry) == 2:
-                            text_btn, data_btn = entry
-                            if data_btn.startswith(("https://", "http://")):
-                                buttons.append(
-                                    InlineKeyboardButton(text_btn, url=data_btn)
-                                )
-                            else:
-                                buttons.append(
-                                    InlineKeyboardButton(
-                                        text_btn, callback_data=data_btn
-                                    )
-                                )
+                            text, data = entry
+                            buttons.append(_create_inline_button(text, data))
 
                         elif len(entry) == 3:
-                            # style - danger / success / primary (Telegram Bot API 9.4+)
-                            text_btn, data_btn, style = entry
-                            style_value = None
-                            if style:
-                                style_str = str(style).lower()
-                                if style_str in ["danger", "success", "primary"]:
-                                    style_value = style_str
+                            text, data, style = entry
+                            buttons.append(_create_inline_button(text, data, style))
 
-                            if data_btn.startswith(("https://", "http://")):
-                                button = InlineKeyboardButton(
-                                    text_btn, url=data_btn, style=style_value
-                                )
-                            else:
-                                button = InlineKeyboardButton(
-                                    text_btn, callback_data=data_btn, style=style_value
-                                )
-
-                            buttons.append(button)
                         else:
-                            # fallback for unexpected length
-                            text_btn = str(entry[0]) if entry else ""
-                            data_btn = str(entry[1]) if len(entry) > 1 else text_btn
-                            buttons.append(
-                                InlineKeyboardButton(text_btn, callback_data=data_btn)
-                            )
+                            # fallback
+                            text = str(entry[0]) if entry else ""
+                            data = str(entry[1]) if len(entry) > 1 else text
+                            buttons.append(_create_inline_button(text, data))
 
                     else:
-                        # fallback if NOT list/tuple
-                        buttons.append(
-                            InlineKeyboardButton(str(entry), callback_data=str(entry))
-                        )
+                        # single item fallback
+                        text = str(entry).strip()
+                        buttons.append(InlineKeyboardButton(text=text, callback_data=text))
 
             else:
                 raise ServiceValidationError(
                     translation_domain=DOMAIN,
                     translation_key="invalid_inline_keyboard",
                 )
+
             return buttons
 
-        # Defaults
         params: dict[str, Any] = {
             ATTR_PARSER: self.parse_mode,
             ATTR_DISABLE_NOTIF: False,
@@ -446,6 +418,7 @@ class TelegramNotificationService:
             ATTR_MESSAGE_TAG: None,
             ATTR_MESSAGE_THREAD_ID: None,
         }
+
         if data is not None:
             if ATTR_PARSER in data:
                 params[ATTR_PARSER] = data[ATTR_PARSER]
@@ -461,6 +434,7 @@ class TelegramNotificationService:
                 params[ATTR_MESSAGE_TAG] = data[ATTR_MESSAGE_TAG]
             if ATTR_MESSAGE_THREAD_ID in data:
                 params[ATTR_MESSAGE_THREAD_ID] = data[ATTR_MESSAGE_THREAD_ID]
+
             # Keyboards:
             if ATTR_KEYBOARD in data:
                 keys = data[ATTR_KEYBOARD]
@@ -480,8 +454,10 @@ class TelegramNotificationService:
                 params[ATTR_REPLYMARKUP] = InlineKeyboardMarkup(
                     [_make_row_inline_keyboard(row) for row in keys]
                 )
+
         if params[ATTR_PARSER] == PARSER_PLAIN_TEXT:
             params[ATTR_PARSER] = None
+
         return params
 
     async def _send_msg_formatted(
