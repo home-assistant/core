@@ -40,29 +40,23 @@ VEHICLE_BUTTONS = {
 }
 
 
+@pytest.mark.parametrize("vin", [TEST_VIN_2_EV, TEST_VIN_1_G1])
 async def test_device_exists(
-    hass: HomeAssistant, entity_registry: er.EntityRegistry, ev_entry: MockConfigEntry
-) -> None:
-    """Test subaru remote start button entity exists."""
-    entry = entity_registry.async_get(VEHICLE_BUTTONS[TEST_VIN_2_EV]["remote_start"])
-    assert entry
-    entry = entity_registry.async_get(VEHICLE_BUTTONS[TEST_VIN_2_EV]["remote_stop"])
-    assert entry
-
-
-async def test_device_exists_non_ev(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     subaru_config_entry: MockConfigEntry,
+    vin: str,
 ) -> None:
-    """Test subaru remote start button exists for non-EV vehicle with remote start."""
+    """Test subaru remote button entities exist."""
     await setup_subaru_config_entry(
         hass,
         subaru_config_entry,
-        vehicle_list=[TEST_VIN_1_G1],
-        vehicle_data=VEHICLE_DATA[TEST_VIN_1_G1],
+        vehicle_list=[vin],
+        vehicle_data=VEHICLE_DATA[vin],
     )
-    entry = entity_registry.async_get(VEHICLE_BUTTONS[TEST_VIN_1_G1]["remote_start"])
+    entry = entity_registry.async_get(VEHICLE_BUTTONS[vin]["remote_start"])
+    assert entry
+    entry = entity_registry.async_get(VEHICLE_BUTTONS[vin]["remote_stop"])
     assert entry
 
 
