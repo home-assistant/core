@@ -340,73 +340,71 @@ class TelegramNotificationService:
     def _get_msg_kwargs(self, data: dict[str, Any]) -> dict[str, Any]:
         """Get parameters in message data kwargs."""
 
-        def _create_inline_button(
-            text: str, data: str, style: str | None = None
-        ) -> InlineKeyboardButton:
-            """Create InlineKeyboardButton with support for style parameter.
-
-            Uses graceful fallback for older python-telegram-bot versions.
-            """
+        def _create_inline_button(text: str, data: str, style: str | None = None):
+            """Create InlineKeyboardButton with optional style support."""
             style_value = style if style in {"success", "danger", "primary"} else None
 
             try:
                 if data.startswith(("https://", "http://")):
                     return InlineKeyboardButton(text=text, url=data, style=style_value)
-                return InlineKeyboardButton(text=text, callback_data=data, style=style_value)
+                return InlineKeyboardButton(
+                    text=text, callback_data=data, style=style_value
+                )
             except TypeError:
-                # Older version without 'style' parameter support
+                # Without style
                 if data.startswith(("https://", "http://")):
                     return InlineKeyboardButton(text=text, url=data)
                 return InlineKeyboardButton(text=text, callback_data=data)
 
-        def _make_row_inline_keyboard(row_keyboard: Any) -> list[InlineKeyboardButton]:
-            """Make a list of InlineKeyboardButtons from various input formats."""
-            buttons: list[InlineKeyboardButton] = []
-
-            if isinstance(row_keyboard, str):
-                for key in row_keyboard.split(","):
-                    key = key.strip()
-                    if ":/" in key:
-                        label, value = key.split(":/", 1)
-                        if value.startswith(("https://", "http://")):
-                            buttons.append(InlineKeyboardButton(text=label, url=value))
-                        else:
-                            buttons.append(InlineKeyboardButton(text=label, callback_data=value))
+        def _parse_str_keyboard(row: str) -> list[InlineKeyboardButton]:
+            buttons = []
+            for key in row.split(","):
+                key = key.strip()
+                if ":/" in key:
+                    label, value = key.split(":/", 1)
+                    if value.startswith(("https://", "http://")):
+                        buttons.append(InlineKeyboardButton(text=label, url=value))
                     else:
-                        label = key.strip()[1:].upper() if key.startswith("/") else key
-                        buttons.append(InlineKeyboardButton(text=label, callback_data=key))
-
-            elif isinstance(row_keyboard, list):
-                for entry in row_keyboard:
-                    if isinstance(entry, (list, tuple)):
-                        entry = [str(item).strip() if item is not None else "" for item in entry]
-
-                        if len(entry) == 2:
-                            text, data = entry
-                            buttons.append(_create_inline_button(text, data))
-
-                        elif len(entry) == 3:
-                            text, data, style = entry
-                            buttons.append(_create_inline_button(text, data, style))
-
-                        else:
-                            # fallback
-                            text = str(entry[0]) if entry else ""
-                            data = str(entry[1]) if len(entry) > 1 else text
-                            buttons.append(_create_inline_button(text, data))
-
-                    else:
-                        # single item fallback
-                        text = str(entry).strip()
-                        buttons.append(InlineKeyboardButton(text=text, callback_data=text))
-
-            else:
-                raise ServiceValidationError(
-                    translation_domain=DOMAIN,
-                    translation_key="invalid_inline_keyboard",
-                )
-
+                        buttons.append(
+                            InlineKeyboardButton(text=label, callback_data=value)
+                        )
+                else:
+                    label = key[1:].upper() if key.startswith("/") else key
+                    buttons.append(InlineKeyboardButton(text=label, callback_data=key))
             return buttons
+
+        def _parse_list_keyboard(row: list[Any]) -> list[InlineKeyboardButton]:
+            buttons = []
+            for entry in row:
+                if isinstance(entry, (list, tuple)):
+                    entry = [
+                        str(item).strip() if item is not None else "" for item in entry
+                    ]
+
+                    if len(entry) == 2:
+                        text, data = entry
+                        buttons.append(_create_inline_button(text, data))
+                    elif len(entry) == 3:
+                        text, data, style = entry
+                        buttons.append(_create_inline_button(text, data, style))
+                    else:
+                        text = entry[0] if entry else ""
+                        data = entry[1] if len(entry) > 1 else text
+                        buttons.append(_create_inline_button(text, data))
+                else:
+                    text = str(entry).strip()
+                    buttons.append(InlineKeyboardButton(text=text, callback_data=text))
+            return buttons
+
+        def _make_row_inline_keyboard(row: Any) -> list[InlineKeyboardButton]:
+            if isinstance(row, str):
+                return _parse_str_keyboard(row)
+            if isinstance(row, list):
+                return _parse_list_keyboard(row)
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="invalid_inline_keyboard",
+            )
 
         params: dict[str, Any] = {
             ATTR_PARSER: self.parse_mode,
@@ -419,41 +417,40 @@ class TelegramNotificationService:
             ATTR_MESSAGE_THREAD_ID: None,
         }
 
-        if data is not None:
-            if ATTR_PARSER in data:
-                params[ATTR_PARSER] = data[ATTR_PARSER]
-            if ATTR_TIMEOUT in data:
-                params[ATTR_TIMEOUT] = data[ATTR_TIMEOUT]
-            if ATTR_DISABLE_NOTIF in data:
-                params[ATTR_DISABLE_NOTIF] = data[ATTR_DISABLE_NOTIF]
-            if ATTR_DISABLE_WEB_PREV in data:
-                params[ATTR_DISABLE_WEB_PREV] = data[ATTR_DISABLE_WEB_PREV]
-            if ATTR_REPLY_TO_MSGID in data:
-                params[ATTR_REPLY_TO_MSGID] = data[ATTR_REPLY_TO_MSGID]
-            if ATTR_MESSAGE_TAG in data:
-                params[ATTR_MESSAGE_TAG] = data[ATTR_MESSAGE_TAG]
-            if ATTR_MESSAGE_THREAD_ID in data:
-                params[ATTR_MESSAGE_THREAD_ID] = data[ATTR_MESSAGE_THREAD_ID]
+        if not data:
+            return params
 
-            # Keyboards:
-            if ATTR_KEYBOARD in data:
-                keys = data[ATTR_KEYBOARD]
-                keys = keys if isinstance(keys, list) else [keys]
-                if keys:
-                    params[ATTR_REPLYMARKUP] = ReplyKeyboardMarkup(
-                        [[key.strip() for key in row.split(",")] for row in keys],
-                        resize_keyboard=data.get(ATTR_RESIZE_KEYBOARD, False),
-                        one_time_keyboard=data.get(ATTR_ONE_TIME_KEYBOARD, False),
-                    )
-                else:
-                    params[ATTR_REPLYMARKUP] = ReplyKeyboardRemove(True)
+        for key in (
+            ATTR_PARSER,
+            ATTR_TIMEOUT,
+            ATTR_DISABLE_NOTIF,
+            ATTR_DISABLE_WEB_PREV,
+            ATTR_REPLY_TO_MSGID,
+            ATTR_MESSAGE_TAG,
+            ATTR_MESSAGE_THREAD_ID,
+        ):
+            if key in data:
+                params[key] = data[key]
 
-            elif ATTR_KEYBOARD_INLINE in data:
-                keys = data.get(ATTR_KEYBOARD_INLINE)
-                keys = keys if isinstance(keys, list) else [keys]
-                params[ATTR_REPLYMARKUP] = InlineKeyboardMarkup(
-                    [_make_row_inline_keyboard(row) for row in keys]
+        if ATTR_KEYBOARD in data:
+            keys = data[ATTR_KEYBOARD]
+            keys = keys if isinstance(keys, list) else [keys]
+
+            if keys:
+                params[ATTR_REPLYMARKUP] = ReplyKeyboardMarkup(
+                    [[key.strip() for key in row.split(",")] for row in keys],
+                    resize_keyboard=data.get(ATTR_RESIZE_KEYBOARD, False),
+                    one_time_keyboard=data.get(ATTR_ONE_TIME_KEYBOARD, False),
                 )
+            else:
+                params[ATTR_REPLYMARKUP] = ReplyKeyboardRemove(True)
+
+        elif ATTR_KEYBOARD_INLINE in data:
+            keys = data[ATTR_KEYBOARD_INLINE]
+            keys = keys if isinstance(keys, list) else [keys]
+            params[ATTR_REPLYMARKUP] = InlineKeyboardMarkup(
+                [_make_row_inline_keyboard(row) for row in keys]
+            )
 
         if params[ATTR_PARSER] == PARSER_PLAIN_TEXT:
             params[ATTR_PARSER] = None
