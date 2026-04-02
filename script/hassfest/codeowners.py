@@ -44,6 +44,13 @@ build.json @home-assistant/supervisor
 # Other code
 /homeassistant/scripts/check_config.py @kellerza
 
+# Agent Configurations
+AGENTS.md @home-assistant/core
+CLAUDE.md @home-assistant/core
+/.agent/ @home-assistant/core
+/.claude/ @home-assistant/core
+/.gemini/ @home-assistant/core
+
 # Integrations
 """.strip()
 
