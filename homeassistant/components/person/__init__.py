@@ -11,6 +11,7 @@ import voluptuous as vol
 from homeassistant.auth import EVENT_USER_REMOVED
 from homeassistant.components import persistent_notification, websocket_api
 from homeassistant.components.device_tracker import (
+    ATTR_IN_ZONES,
     ATTR_SOURCE_TYPE,
     DOMAIN as DEVICE_TRACKER_DOMAIN,
     SourceType,
@@ -435,6 +436,7 @@ class Person(
         self._unsub_track_device: Callable[[], None] | None = None
         self._attr_state: str | None = None
         self.device_trackers: list[str] = []
+        self._in_zones: list[str] = []
 
         self._attr_unique_id = config[CONF_ID]
         self._set_attrs_from_config()
@@ -552,6 +554,7 @@ class Person(
             self._latitude = None
             self._longitude = None
             self._gps_accuracy = None
+            self._in_zones = []
 
         self._update_extra_state_attributes()
         self.async_write_ha_state()
@@ -567,6 +570,7 @@ class Person(
         self._latitude = coordinates.attributes.get(ATTR_LATITUDE)
         self._longitude = coordinates.attributes.get(ATTR_LONGITUDE)
         self._gps_accuracy = coordinates.attributes.get(ATTR_GPS_ACCURACY)
+        self._in_zones = coordinates.attributes.get(ATTR_IN_ZONES, [])
 
     @callback
     def _update_extra_state_attributes(self) -> None:
@@ -575,6 +579,7 @@ class Person(
             ATTR_EDITABLE: self.editable,
             ATTR_ID: self.unique_id,
             ATTR_DEVICE_TRACKERS: self.device_trackers,
+            ATTR_IN_ZONES: self._in_zones,
         }
 
         if self._latitude is not None:
