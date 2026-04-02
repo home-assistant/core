@@ -58,7 +58,9 @@ class RenaultSensorEntityDescription(
     condition_lambda: Callable[[RenaultVehicleProxy], bool] | None = None
     requires_fuel: bool = False
     value_lambda: Callable[[RenaultSensor[T]], StateType | datetime] | None = None
-    attributes_lambda: Callable[[RenaultSensor[T]], Mapping[str, Any]] | None = None
+    attributes_lambda: Callable[[RenaultSensor[T]], Mapping[str, Any] | None] | None = (
+        None
+    )
 
 
 async def async_setup_entry(
