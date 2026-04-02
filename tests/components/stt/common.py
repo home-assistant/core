@@ -7,12 +7,14 @@ from pathlib import Path
 from typing import Any
 
 from homeassistant.components.stt import (
+    DEFAULT_AUDIO_PROCESSING,
     AudioBitRates,
     AudioChannels,
     AudioCodecs,
     AudioFormats,
     AudioSampleRates,
     Provider,
+    SpeechAudioProcessing,
     SpeechMetadata,
     SpeechResult,
     SpeechResultState,
@@ -34,13 +36,18 @@ class BaseProvider:
     fail_process_audio = False
 
     def __init__(
-        self, *, supported_languages: list[str] | None = None, text: str = "test_result"
+        self,
+        *,
+        supported_languages: list[str] | None = None,
+        text: str = "test_result",
+        audio_processing: SpeechAudioProcessing | None = None,
     ) -> None:
         """Init test provider."""
         self._supported_languages = supported_languages or ["de", "de-CH", "en"]
         self.calls: list[tuple[SpeechMetadata, AsyncIterable[bytes]]] = []
         self.received: list[bytes] = []
         self.text = text
+        self._audio_processing = audio_processing or DEFAULT_AUDIO_PROCESSING
 
     @property
     def supported_languages(self) -> list[str]:
@@ -71,6 +78,11 @@ class BaseProvider:
     def supported_channels(self) -> list[AudioChannels]:
         """Return a list of supported channels."""
         return [AudioChannels.CHANNEL_MONO]
+
+    @property
+    def audio_processing(self) -> SpeechAudioProcessing:
+        """Return required/preferred input audio processing settings."""
+        return self._audio_processing
 
     async def async_process_audio_stream(
         self, metadata: SpeechMetadata, stream: AsyncIterable[bytes]
