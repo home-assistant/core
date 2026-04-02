@@ -24,6 +24,47 @@ _LOGGER = logging.getLogger(__name__)
 PLATFORMS: Final[list[Platform]] = [Platform.LIGHT]
 
 
+async def _update_unique_id(
+    hass: HomeAssistant, entry: LunatoneConfigEntry, new_unique_id: str
+) -> None:
+    _LOGGER.debug("Update unique ID")
+
+    # Update all associated entities
+    entity_registry = er.async_get(hass)
+    entities = er.async_entries_for_config_entry(entity_registry, entry.entry_id)
+
+    for entity in entities:
+        parts = list(entity.unique_id.partition("-"))
+        parts[0] = new_unique_id
+
+        entity_registry.async_update_entity(
+            entity.entity_id, new_unique_id="".join(parts)
+        )
+
+    # Update all associated devices
+    device_registry = dr.async_get(hass)
+    devices = dr.async_entries_for_config_entry(device_registry, entry.entry_id)
+
+    for device in devices:
+        identifier = device.identifiers.pop()
+        parts = list(identifier[1].partition("-"))
+        parts[0] = new_unique_id
+
+        device_registry.async_update_device(
+            device.id, new_identifiers={(identifier[0], "".join(parts))}
+        )
+
+    # Update the config entry itself
+    hass.config_entries.async_update_entry(
+        entry,
+        unique_id=new_unique_id,
+        minor_version=LunatoneConfigFlow.MINOR_VERSION,
+        version=LunatoneConfigFlow.VERSION,
+    )
+
+    _LOGGER.debug("Update of unique ID successful")
+
+
 async def async_setup_entry(hass: HomeAssistant, entry: LunatoneConfigEntry) -> bool:
     """Set up Lunatone from a config entry."""
     auth_api = Auth(async_get_clientsession(hass), entry.data[CONF_URL])
@@ -33,10 +74,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: LunatoneConfigEntry) -> 
     coordinator_info = LunatoneInfoDataUpdateCoordinator(hass, entry, info_api)
     await coordinator_info.async_config_entry_first_refresh()
 
-    if info_api.serial_number is None:
+    if info_api.data is None or info_api.serial_number is None:
         raise ConfigEntryError(
             translation_domain=DOMAIN, translation_key="missing_device_info"
         )
+
+    if info_api.uid is not None:
+        new_unique_id = info_api.uid.replace("-", "")
+        if new_unique_id != entry.unique_id:
+            await _update_unique_id(hass, entry, new_unique_id)
 
     assert entry.unique_id
 
@@ -76,68 +122,3 @@ async def async_setup_entry(hass: HomeAssistant, entry: LunatoneConfigEntry) -> 
 async def async_unload_entry(hass: HomeAssistant, entry: LunatoneConfigEntry) -> bool:
     """Unload a config entry."""
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-
-
-async def async_migrate_entry(hass: HomeAssistant, entry: LunatoneConfigEntry) -> bool:
-    """Migrate old entry."""
-    info_api = Info(Auth(async_get_clientsession(hass), entry.data[CONF_URL]))
-    await info_api.async_update()
-
-    if info_api.uid is None:
-        # No migration needed
-        # The API interface is on a version that doesn't support the uid yet
-        return True
-
-    _LOGGER.debug(
-        "Migrating configuration from version %s.%s",
-        entry.version,
-        entry.minor_version,
-    )
-
-    if entry.version > LunatoneConfigFlow.VERSION:
-        # This means the user has downgraded from a future version
-        return False
-
-    if entry.version == 1:
-        new_unique_id = info_api.uid.replace("-", "")
-
-        # Update all associated entities
-        entity_registry = er.async_get(hass)
-        entities = er.async_entries_for_config_entry(entity_registry, entry.entry_id)
-
-        for entity in entities:
-            parts = list(entity.unique_id.partition("-"))
-            parts[0] = new_unique_id
-
-            entity_registry.async_update_entity(
-                entity.entity_id, new_unique_id="".join(parts)
-            )
-
-        # Update all associated devices
-        device_registry = dr.async_get(hass)
-        devices = dr.async_entries_for_config_entry(device_registry, entry.entry_id)
-
-        for device in devices:
-            identifier = device.identifiers.pop()
-            parts = list(identifier[1].partition("-"))
-            parts[0] = new_unique_id
-
-            device_registry.async_update_device(
-                device.id, new_identifiers={(identifier[0], "".join(parts))}
-            )
-
-        # Update the config entry itself
-        hass.config_entries.async_update_entry(
-            entry,
-            unique_id=new_unique_id,
-            minor_version=LunatoneConfigFlow.MINOR_VERSION,
-            version=LunatoneConfigFlow.VERSION,
-        )
-
-    _LOGGER.debug(
-        "Migration to configuration version %s.%s successful",
-        entry.version,
-        entry.minor_version,
-    )
-
-    return True

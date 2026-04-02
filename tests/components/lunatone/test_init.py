@@ -4,7 +4,6 @@ from unittest.mock import AsyncMock
 
 import aiohttp
 
-from homeassistant.components.lunatone.config_flow import LunatoneConfigFlow
 from homeassistant.components.lunatone.const import DOMAIN, MANUFACTURER
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_URL
@@ -137,7 +136,7 @@ async def test_config_entry_not_ready_no_serial_number(
     assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
 
 
-async def test_config_entry_migration_successful(
+async def test_config_entry_unique_id_update(
     hass: HomeAssistant,
     mock_lunatone_devices: AsyncMock,
     mock_lunatone_info: AsyncMock,
@@ -157,8 +156,6 @@ async def test_config_entry_migration_successful(
 
     assert config_entry.state is ConfigEntryState.LOADED
     assert config_entry.unique_id == str(SERIAL_NUMBER)
-    assert config_entry.version == 1
-    assert config_entry.minor_version == 1
 
     mock_lunatone_info.uid = UUID
 
@@ -167,26 +164,3 @@ async def test_config_entry_migration_successful(
 
     assert config_entry.state is ConfigEntryState.LOADED
     assert config_entry.unique_id == UUID.replace("-", "")
-    assert config_entry.version == LunatoneConfigFlow.VERSION
-    assert config_entry.minor_version == LunatoneConfigFlow.MINOR_VERSION
-
-
-async def test_config_entry_migration_failed(
-    hass: HomeAssistant,
-    mock_lunatone_devices: AsyncMock,
-    mock_lunatone_info: AsyncMock,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test the Lunatone config entry migration to fail."""
-    await setup_integration(hass, mock_config_entry)
-
-    hass.config_entries.async_update_entry(
-        mock_config_entry,
-        unique_id=str(SERIAL_NUMBER),
-        version=mock_config_entry.version + 1,
-    )
-
-    await hass.config_entries.async_reload(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    assert mock_config_entry.state is ConfigEntryState.MIGRATION_ERROR

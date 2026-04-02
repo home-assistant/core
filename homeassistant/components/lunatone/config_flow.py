@@ -25,7 +25,7 @@ DATA_SCHEMA: Final[vol.Schema] = vol.Schema(
 class LunatoneConfigFlow(ConfigFlow, domain=DOMAIN):
     """Lunatone config flow."""
 
-    VERSION = 2
+    VERSION = 1
     MINOR_VERSION = 1
 
     async def async_step_user(
@@ -52,12 +52,9 @@ class LunatoneConfigFlow(ConfigFlow, domain=DOMAIN):
                 if info_api.serial_number is None:
                     errors["base"] = "missing_device_info"
                 else:
+                    unique_id = str(info_api.serial_number)
                     if info_api.uid is not None:
                         unique_id = info_api.uid.replace("-", "")
-                    else:
-                        unique_id = str(info_api.serial_number)
-                        self.VERSION = 1
-                        self.MINOR_VERSION = 1
                     await self.async_set_unique_id(unique_id)
                     if self.source == SOURCE_RECONFIGURE:
                         self._abort_if_unique_id_mismatch()
