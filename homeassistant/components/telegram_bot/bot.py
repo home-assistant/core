@@ -391,7 +391,11 @@ class TelegramNotificationService:
                         elif len(entry) == 3:
                             # style - danger / success / primary (Telegram Bot API 9.5+)
                             text_btn, data_btn, style = entry
-                            style_value = (str(style).lower() if style and str(style).lower() in ["danger", "success", "primary"] else None)
+                            style_value = None
+                            if style:
+                                style_str = str(style).lower()
+                                if style_str in ["danger", "success", "primary"]:
+                                    style_value = style_str
 
                             if data_btn.startswith(("https://", "http://")):
                                 button = InlineKeyboardButton(text_btn, url=data_btn, style=style_value)
