@@ -49,6 +49,21 @@ async def test_async_setup_entry_login_errors(
     assert config_entry.state is expected_state
 
 
+async def test_async_setup_entry__firmware_check_offline(
+    hass: HomeAssistant, config_entry: ConfigEntry, manager: VeSync
+) -> None:
+    """Test setup succeeds even when firmware check fails due to offline devices."""
+    manager.check_firmware = AsyncMock(
+        side_effect=VeSyncServerError("device offline")
+    )
+
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.LOADED
+    assert manager.check_firmware.call_count == 1
+
+
 async def test_async_setup_entry__no_devices(
     hass: HomeAssistant, config_entry: ConfigEntry, manager: VeSync
 ) -> None:
