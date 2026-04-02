@@ -912,7 +912,7 @@ async def test_bulk_update(
     ws_get_items: WsGetItemsType,
     info: dict[str, Any],
 ) -> None:
-    """Test removing a todo item."""
+    """Test bulk update of a todo list."""
 
     total_items = 5
     completed_items = [0, 2, 3]
