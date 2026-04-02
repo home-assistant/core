@@ -3,8 +3,6 @@
 from __future__ import annotations
 
 from datetime import datetime, timedelta
-from random import randint
-from time import time
 from typing import TYPE_CHECKING, Any
 
 from tesla_fleet_api.const import TeslaEnergyPeriod, VehicleDataEndpoint
@@ -32,14 +30,11 @@ from homeassistant.components.recorder.statistics import (
 from homeassistant.const import CONF_TOKEN, UnitOfEnergy
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
-from homeassistant.helpers.recorder import DATA_INSTANCE
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
 from homeassistant.util.unit_conversion import EnergyConverter
 
 if TYPE_CHECKING:
-    from homeassistant.components.recorder import Recorder
-
     from . import TeslaFleetConfigEntry
 
 from .const import DOMAIN, ENERGY_HISTORY_FIELDS, LOGGER, TeslaFleetState
@@ -113,13 +108,6 @@ def _aggregate_energy_history_by_hour(
         (start, start.timestamp(), values)
         for start, values in sorted(hourly_periods.items())
     ]
-
-
-def _get_recorder_instance(hass: HomeAssistant) -> Recorder | None:
-    """Return the recorder instance if it is loaded."""
-    if DATA_INSTANCE not in hass.data:
-        return None
-    return get_instance(hass)
 
 
 def _invalidate_access_token(
@@ -343,20 +331,6 @@ class TeslaFleetEnergySiteHistoryCoordinator(DataUpdateCoordinator[dict[str, Any
         self.data = {}
         self.updated_once = False
 
-    async def async_config_entry_first_refresh(self) -> None:
-        """Set up the data coordinator."""
-        # Energy history is optional for some sites/users. We still want to set up
-        # the coordinator (and schedule future refreshes) even if the first refresh
-        # fails.
-        await self.async_refresh()
-
-        # Calculate seconds until next 5 minute period plus a random delay
-        delta = randint(310, 330) - (int(time()) % 300)
-        self.logger.debug("Scheduling next %s refresh in %s seconds", self.name, delta)
-        self.update_interval = timedelta(seconds=delta)
-        self._schedule_refresh()
-        self.update_interval = ENERGY_HISTORY_INTERVAL
-
     async def _async_update_data(self) -> dict[str, Any]:
         """Update energy site history data using Tesla Fleet API."""
         try:
@@ -380,27 +354,11 @@ class TeslaFleetEnergySiteHistoryCoordinator(DataUpdateCoordinator[dict[str, Any
         except TeslaFleetError as e:
             raise UpdateFailed(e.message) from e
 
-        data = response.get("response") if isinstance(response, dict) else None
-        if not isinstance(data, dict):
-            raise UpdateFailed(
-                translation_domain=DOMAIN,
-                translation_key="invalid_data",
-            )
-
-        time_series = data.get("time_series")
-        if time_series is None:
-            time_series = []
-        elif not isinstance(time_series, list):
-            raise UpdateFailed(
-                translation_domain=DOMAIN,
-                translation_key="invalid_data",
-            )
-
-        # Insert external statistics with historical timestamps
-        await self._insert_statistics(time_series)
-
         if (
-            not time_series
+            not isinstance(response, dict)
+            or not isinstance((data := response.get("response")), dict)
+            or not isinstance((time_series := data.get("time_series")), list)
+            or not time_series
             or not isinstance((first_period := time_series[0]), dict)
             or not isinstance((timestamp := first_period.get("timestamp")), str)
             or (period_start := dt_util.parse_datetime(timestamp)) is None
@@ -409,6 +367,9 @@ class TeslaFleetEnergySiteHistoryCoordinator(DataUpdateCoordinator[dict[str, Any
                 translation_domain=DOMAIN,
                 translation_key="invalid_data",
             )
+
+        # Insert external statistics with historical timestamps
+        await self._insert_statistics(time_series)
 
         # Calculate daily sums for sensor entities
         output: dict[str, Any] = dict.fromkeys(ENERGY_HISTORY_FIELDS, None)
@@ -431,13 +392,7 @@ class TeslaFleetEnergySiteHistoryCoordinator(DataUpdateCoordinator[dict[str, Any
             return
 
         site_id = self.api.energy_site_id
-        if (recorder := _get_recorder_instance(self.hass)) is None:
-            LOGGER.debug(
-                "Recorder not loaded, skipping external statistics for energy site %s",
-                site_id,
-            )
-            return
-
+        recorder = get_instance(self.hass)
         statistic_ids = [f"{DOMAIN}:{site_id}_{key}" for key in ENERGY_HISTORY_FIELDS]
 
         # Fetch all existing last statistics in a single executor call.

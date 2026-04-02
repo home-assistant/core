@@ -47,7 +47,6 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.config_entry_oauth2_flow import (
     ImplementationUnavailableError,
 )
-from homeassistant.helpers.recorder import DATA_INSTANCE
 
 from . import setup_platform
 from .conftest import create_config_entry
@@ -101,7 +100,6 @@ async def test_remove_entry_clears_statistics(
     """Test remove entry clears external statistics for energy sites."""
     await setup_platform(hass, normal_config_entry)
     assert normal_config_entry.state is ConfigEntryState.LOADED
-    hass.data[DATA_INSTANCE] = object()
 
     with patch(
         "homeassistant.components.tesla_fleet.get_recorder_instance"
@@ -118,23 +116,6 @@ async def test_remove_entry_clears_statistics(
         for field in ENERGY_HISTORY_FIELDS
     }
     assert cleared_ids == expected_ids
-
-
-async def test_remove_entry_without_recorder(
-    hass: HomeAssistant,
-    normal_config_entry: MockConfigEntry,
-) -> None:
-    """Test remove entry skips statistics cleanup when recorder is unavailable."""
-    await setup_platform(hass, normal_config_entry)
-    assert normal_config_entry.state is ConfigEntryState.LOADED
-    hass.data.pop(DATA_INSTANCE, None)
-
-    with patch(
-        "homeassistant.components.tesla_fleet.get_recorder_instance"
-    ) as mock_get_recorder:
-        await async_remove_entry(hass, normal_config_entry)
-
-    mock_get_recorder.assert_not_called()
 
 
 @pytest.mark.parametrize(("side_effect", "state"), SETUP_ERRORS)

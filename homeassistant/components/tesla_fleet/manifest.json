@@ -1,10 +1,9 @@
 {
   "domain": "tesla_fleet",
   "name": "Tesla Fleet",
-  "after_dependencies": ["recorder"],
   "codeowners": ["@Bre77"],
   "config_flow": true,
-  "dependencies": ["application_credentials", "http"],
+  "dependencies": ["application_credentials", "http", "recorder"],
   "documentation": "https://www.home-assistant.io/integrations/tesla_fleet",
   "integration_type": "hub",
   "iot_class": "cloud_polling",
