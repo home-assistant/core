@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_buttons[button.device_1_trigger-entry]
+# name: test_covers[cover.device_1-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -11,9 +11,9 @@
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
-    'domain': 'button',
+    'domain': 'cover',
     'entity_category': None,
-    'entity_id': 'button.device_1_trigger',
+    'entity_id': 'cover.device_1',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -21,35 +21,38 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Trigger',
+    'object_id_base': None,
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <CoverDeviceClass.GATE: 'gate'>,
     'original_icon': None,
-    'original_name': 'Trigger',
+    'original_name': None,
     'platform': 'fluss',
     'previous_unique_id': None,
     'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'trigger',
-    'unique_id': '2a303030sdj1',
+    'supported_features': <CoverEntityFeature: 3>,
+    'translation_key': None,
+    'unique_id': '2a303030sdj1_cover',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_buttons[button.device_1_trigger-state]
+# name: test_covers[cover.device_1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Device 1 Trigger',
+      'device_class': 'gate',
+      'friendly_name': 'Device 1',
+      'is_closed': True,
+      'supported_features': <CoverEntityFeature: 3>,
     }),
     'context': <ANY>,
-    'entity_id': 'button.device_1_trigger',
+    'entity_id': 'cover.device_1',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'closed',
   })
 # ---
-# name: test_buttons[button.device_2_trigger-entry]
+# name: test_covers[cover.device_2-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -61,9 +64,9 @@
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
-    'domain': 'button',
+    'domain': 'cover',
     'entity_category': None,
-    'entity_id': 'button.device_2_trigger',
+    'entity_id': 'cover.device_2',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -71,31 +74,34 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Trigger',
+    'object_id_base': None,
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <CoverDeviceClass.GATE: 'gate'>,
     'original_icon': None,
-    'original_name': 'Trigger',
+    'original_name': None,
     'platform': 'fluss',
     'previous_unique_id': None,
     'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'trigger',
-    'unique_id': 'ape93k9302j2',
+    'supported_features': <CoverEntityFeature: 3>,
+    'translation_key': None,
+    'unique_id': 'ape93k9302j2_cover',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_buttons[button.device_2_trigger-state]
+# name: test_covers[cover.device_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Device 2 Trigger',
+      'device_class': 'gate',
+      'friendly_name': 'Device 2',
+      'is_closed': False,
+      'supported_features': <CoverEntityFeature: 3>,
     }),
     'context': <ANY>,
-    'entity_id': 'button.device_2_trigger',
+    'entity_id': 'cover.device_2',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'open',
   })
 # ---
