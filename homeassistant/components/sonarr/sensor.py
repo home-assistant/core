@@ -65,9 +65,9 @@ def get_queue_attr(queue: SonarrQueue) -> dict[str, str]:
         remaining = 1 if item.size == 0 else item.sizeleft / item.size
         remaining_pct = 100 * (1 - remaining)
         identifier = (
-            f"S{item.episode.seasonNumber:02d}E{item.episode.episodeNumber:02d}"
+            f"S{item.episode.seasonNumber:02d}E{item.episode.episodeNumber:02d}"  # type: ignore[misc]
         )
-        attrs[f"{item.series.title} {identifier}"] = f"{remaining_pct:.2f}%"
+        attrs[f"{item.series.title} {identifier}"] = f"{remaining_pct:.2f}%"  # type: ignore[misc]
     return attrs
 
 
@@ -77,7 +77,7 @@ def get_wanted_attr(wanted: SonarrWantedMissing) -> dict[str, str]:
     for item in wanted.records:
         identifier = f"S{item.seasonNumber:02d}E{item.episodeNumber:02d}"
 
-        name = f"{item.series.title} {identifier}"
+        name = f"{item.series.title} {identifier}"  # type: ignore[misc]
         attrs[name] = dt_util.as_local(
             item.airDateUtc.replace(tzinfo=dt_util.UTC)
         ).isoformat()
@@ -126,7 +126,8 @@ SENSOR_TYPES: dict[str, SonarrSensorEntityDescription[Any]] = {
         translation_key="upcoming",
         value_fn=len,
         attributes_fn=lambda data: {
-            e.series.title: f"S{e.seasonNumber:02d}E{e.episodeNumber:02d}" for e in data
+            e.series.title: f"S{e.seasonNumber:02d}E{e.episodeNumber:02d}"  # type: ignore[misc]
+            for e in data
         },
     ),
     "wanted": SonarrSensorEntityDescription[SonarrWantedMissing](
