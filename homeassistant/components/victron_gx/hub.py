@@ -39,7 +39,9 @@ TO_REDACT = {CONF_USERNAME, CONF_PASSWORD}
 
 type VictronGxConfigEntry = ConfigEntry[Hub]
 
-NewMetricCallback = Callable[[VictronVenusDevice, VictronVenusMetric, DeviceInfo], None]
+NewMetricCallback = Callable[
+    [VictronVenusDevice, VictronVenusMetric, DeviceInfo, str], None
+]
 
 
 class Hub:
@@ -109,7 +111,7 @@ class Hub:
         device_info = Hub._map_device_info(device, hub.installation_id)
         callback = self.new_metric_callbacks.get(metric.metric_kind)
         if callback is not None:
-            callback(device, metric, device_info)
+            callback(device, metric, device_info, hub.installation_id)
 
     @staticmethod
     def _map_device_info(

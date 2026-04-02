@@ -35,7 +35,7 @@ async def test_victron_battery_sensor(
     assert len(entities) == 1
     entity = entities[0]
     assert entity.entity_id == "sensor.battery_dc_bus_current"
-    assert entity.unique_id == "battery_0_battery_current"
+    assert entity.unique_id == "123_battery_0_battery_current"
     assert entity.original_device_class is SensorDeviceClass.CURRENT
     assert entity.unit_of_measurement == "A"
     assert entity.translation_key == "battery_current"
