@@ -222,8 +222,8 @@ build.json @home-assistant/supervisor
 /homeassistant/components/binary_sensor/ @home-assistant/core
 /tests/components/binary_sensor/ @home-assistant/core
 /homeassistant/components/bizkaibus/ @UgaitzEtxebarria
-/homeassistant/components/blebox/ @bbx-a @swistakm
-/tests/components/blebox/ @bbx-a @swistakm
+/homeassistant/components/blebox/ @bbx-a @swistakm @bkobus-bbx
+/tests/components/blebox/ @bbx-a @swistakm @bkobus-bbx
 /homeassistant/components/blink/ @fronzbot
 /tests/components/blink/ @fronzbot
 /homeassistant/components/blue_current/ @gleeuwen @NickKoepr @jtodorova23
@@ -1232,8 +1232,8 @@ build.json @home-assistant/supervisor
 /tests/components/onvif/ @jterrace
 /homeassistant/components/open_meteo/ @frenck
 /tests/components/open_meteo/ @frenck
-/homeassistant/components/open_router/ @joostlek
-/tests/components/open_router/ @joostlek
+/homeassistant/components/open_router/ @joostlek @ab3lson
+/tests/components/open_router/ @joostlek @ab3lson
 /homeassistant/components/opendisplay/ @g4bri3lDev
 /tests/components/opendisplay/ @g4bri3lDev
 /homeassistant/components/openerz/ @misialq

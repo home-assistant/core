@@ -37,6 +37,7 @@ from unifi_access_api.models.websocket import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN
@@ -194,6 +195,9 @@ class UnifiAccessCoordinator(DataUpdateCoordinator[UnifiAccessData]):
 
         supports_lock_rules = bool(door_lock_rules) or bool(unconfirmed_lock_rule_doors)
 
+        current_ids = {door.id for door in doors} | {self.config_entry.entry_id}
+        self._remove_stale_devices(current_ids)
+
         return UnifiAccessData(
             doors={door.id: door for door in doors},
             emergency=emergency,
@@ -220,6 +224,23 @@ class UnifiAccessCoordinator(DataUpdateCoordinator[UnifiAccessData]):
             return await self.client.get_door_lock_rule(door_id)
         except ApiNotFoundError:
             return None
+
+    @callback
+    def _remove_stale_devices(self, current_ids: set[str]) -> None:
+        """Remove devices for doors that no longer exist on the hub."""
+        device_registry = dr.async_get(self.hass)
+        for device in dr.async_entries_for_config_entry(
+            device_registry, self.config_entry.entry_id
+        ):
+            if any(
+                identifier[0] == DOMAIN and identifier[1] in current_ids
+                for identifier in device.identifiers
+            ):
+                continue
+            device_registry.async_update_device(
+                device_id=device.id,
+                remove_config_entry_id=self.config_entry.entry_id,
+            )
 
     def _on_ws_connect(self) -> None:
         """Handle WebSocket connection established."""

@@ -5,6 +5,7 @@ from unittest.mock import Mock
 import pytest
 from waterfurnace.waterfurnace import WFCredentialError
 
+from homeassistant.components.recorder import Recorder
 from homeassistant.components.waterfurnace.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
@@ -124,11 +125,70 @@ async def test_reload_entry(
 ) -> None:
     """Test reloading a config entry."""
     assert mock_config_entry.state is ConfigEntryState.LOADED
-    assert mock_waterfurnace_client.login.call_count == 2
+    assert mock_waterfurnace_client.login.call_count == 3
 
     await hass.config_entries.async_reload(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
-    assert mock_waterfurnace_client.login.call_count == 4
-    assert "TEST_GWID_12345" in mock_config_entry.runtime_data
+    assert mock_waterfurnace_client.login.call_count == 6
+
+
+async def test_setup_creates_energy_coordinator(
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_waterfurnace_client: Mock,
+) -> None:
+    """Test that setup creates both realtime and energy coordinators."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert mock_waterfurnace_client.login.call_count == 3
+    assert mock_waterfurnace_client.read_with_retry.call_count == 1
+    assert mock_waterfurnace_client.get_energy_data.call_count == 1
+
+
+async def test_setup_multi_device_energy_coordinators(
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_waterfurnace_client_multi_device: Mock,
+) -> None:
+    """Test multi-device setup creates energy coordinators with correct gwids."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+
+    gwids = set()
+    for gwid, device_data in mock_config_entry.runtime_data.items():
+        assert device_data.energy is not None
+        assert device_data.energy.gwid == gwid
+        gwids.add(gwid)
+
+    assert gwids == {"TEST_GWID_12345", "TEST_GWID_67890"}
+
+
+async def test_setup_energy_statistic_ids_per_device(
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_waterfurnace_client_multi_device: Mock,
+) -> None:
+    """Test that each device gets a unique statistic_id."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    stat_ids = {
+        device_data.energy.statistic_id
+        for device_data in mock_config_entry.runtime_data.values()
+    }
+    assert stat_ids == {
+        f"{DOMAIN}:test_gwid_12345_energy",
+        f"{DOMAIN}:test_gwid_67890_energy",
+    }

@@ -19,6 +19,8 @@ from anthropic.types import (
     CitationsWebSearchResultLocation,
     CitationWebSearchResultLocationParam,
     CodeExecutionTool20250825Param,
+    CodeExecutionToolResultBlock,
+    CodeExecutionToolResultBlockParamContentParam,
     Container,
     ContentBlockParam,
     DocumentBlockParam,
@@ -61,15 +63,16 @@ from anthropic.types import (
     ToolUseBlockParam,
     Usage,
     WebSearchTool20250305Param,
+    WebSearchTool20260209Param,
     WebSearchToolResultBlock,
     WebSearchToolResultBlockParamContentParam,
 )
 from anthropic.types.bash_code_execution_tool_result_block_param import (
-    Content as BashCodeExecutionToolResultContentParam,
+    Content as BashCodeExecutionToolResultBlockParamContentParam,
 )
 from anthropic.types.message_create_params import MessageCreateParamsStreaming
 from anthropic.types.text_editor_code_execution_tool_result_block_param import (
-    Content as TextEditorCodeExecutionToolResultContentParam,
+    Content as TextEditorCodeExecutionToolResultBlockParamContentParam,
 )
 import voluptuous as vol
 from voluptuous_openapi import convert
@@ -79,12 +82,11 @@ from homeassistant.config_entries import ConfigSubentry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, llm
-from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.json import json_dumps
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import slugify
 from homeassistant.util.json import JsonObjectType
 
-from . import AnthropicConfigEntry
 from .const import (
     CONF_CHAT_MODEL,
     CONF_CODE_EXECUTION,
@@ -105,8 +107,10 @@ from .const import (
     MIN_THINKING_BUDGET,
     NON_ADAPTIVE_THINKING_MODELS,
     NON_THINKING_MODELS,
+    PROGRAMMATIC_TOOL_CALLING_UNSUPPORTED_MODELS,
     UNSUPPORTED_STRUCTURED_OUTPUT_MODELS,
 )
+from .coordinator import AnthropicConfigEntry, AnthropicCoordinator
 
 # Max number of back and forth with the LLM to generate a response
 MAX_TOOL_ITERATIONS = 10
@@ -224,12 +228,22 @@ def _convert_content(
                         },
                     ),
                 }
+            elif content.tool_name == "code_execution":
+                tool_result_block = {
+                    "type": "code_execution_tool_result",
+                    "tool_use_id": content.tool_call_id,
+                    "content": cast(
+                        CodeExecutionToolResultBlockParamContentParam,
+                        content.tool_result,
+                    ),
+                }
             elif content.tool_name == "bash_code_execution":
                 tool_result_block = {
                     "type": "bash_code_execution_tool_result",
                     "tool_use_id": content.tool_call_id,
                     "content": cast(
-                        BashCodeExecutionToolResultContentParam, content.tool_result
+                        BashCodeExecutionToolResultBlockParamContentParam,
+                        content.tool_result,
                     ),
                 }
             elif content.tool_name == "text_editor_code_execution":
@@ -237,7 +251,7 @@ def _convert_content(
                     "type": "text_editor_code_execution_tool_result",
                     "tool_use_id": content.tool_call_id,
                     "content": cast(
-                        TextEditorCodeExecutionToolResultContentParam,
+                        TextEditorCodeExecutionToolResultBlockParamContentParam,
                         content.tool_result,
                     ),
                 }
@@ -368,6 +382,7 @@ def _convert_content(
                             name=cast(
                                 Literal[
                                     "web_search",
+                                    "code_execution",
                                     "bash_code_execution",
                                     "text_editor_code_execution",
                                 ],
@@ -379,6 +394,7 @@ def _convert_content(
                         and tool_call.tool_name
                         in [
                             "web_search",
+                            "code_execution",
                             "bash_code_execution",
                             "text_editor_code_execution",
                         ]
@@ -470,7 +486,7 @@ async def _transform_stream(  # noqa: C901 - This is complex, but better to have
                     type="tool_use",
                     id=response.content_block.id,
                     name=response.content_block.name,
-                    input={},
+                    input=response.content_block.input or {},
                 )
                 current_tool_args = ""
                 if response.content_block.name == output_tool:
@@ -532,13 +548,14 @@ async def _transform_stream(  # noqa: C901 - This is complex, but better to have
                     type="server_tool_use",
                     id=response.content_block.id,
                     name=response.content_block.name,
-                    input={},
+                    input=response.content_block.input or {},
                 )
                 current_tool_args = ""
             elif isinstance(
                 response.content_block,
                 (
                     WebSearchToolResultBlock,
+                    CodeExecutionToolResultBlock,
                     BashCodeExecutionToolResultBlock,
                     TextEditorCodeExecutionToolResultBlock,
                 ),
@@ -594,13 +611,13 @@ async def _transform_stream(  # noqa: C901 - This is complex, but better to have
                     current_tool_block = None
                     continue
                 tool_args = json.loads(current_tool_args) if current_tool_args else {}
-                current_tool_block["input"] = tool_args
+                current_tool_block["input"] |= tool_args
                 yield {
                     "tool_calls": [
                         llm.ToolInput(
                             id=current_tool_block["id"],
                             tool_name=current_tool_block["name"],
-                            tool_args=tool_args,
+                            tool_args=current_tool_block["input"],
                             external=current_tool_block["type"] == "server_tool_use",
                         )
                     ]
@@ -641,7 +658,7 @@ def _create_token_stats(
     }
 
 
-class AnthropicBaseLLMEntity(Entity):
+class AnthropicBaseLLMEntity(CoordinatorEntity[AnthropicCoordinator]):
     """Anthropic base LLM entity."""
 
     _attr_has_entity_name = True
@@ -649,6 +666,7 @@ class AnthropicBaseLLMEntity(Entity):
 
     def __init__(self, entry: AnthropicConfigEntry, subentry: ConfigSubentry) -> None:
         """Initialize the entity."""
+        super().__init__(entry.runtime_data)
         self.entry = entry
         self.subentry = subentry
         self._attr_unique_id = subentry.subentry_id
@@ -735,19 +753,34 @@ class AnthropicBaseLLMEntity(Entity):
             ]
 
         if options.get(CONF_CODE_EXECUTION):
-            tools.append(
-                CodeExecutionTool20250825Param(
-                    name="code_execution",
-                    type="code_execution_20250825",
-                ),
-            )
+            # The `web_search_20260209` tool automatically enables `code_execution_20260120` tool
+            if model.startswith(
+                tuple(PROGRAMMATIC_TOOL_CALLING_UNSUPPORTED_MODELS)
+            ) or not options.get(CONF_WEB_SEARCH):
+                tools.append(
+                    CodeExecutionTool20250825Param(
+                        name="code_execution",
+                        type="code_execution_20250825",
+                    ),
+                )
 
         if options.get(CONF_WEB_SEARCH):
-            web_search = WebSearchTool20250305Param(
-                name="web_search",
-                type="web_search_20250305",
-                max_uses=options.get(CONF_WEB_SEARCH_MAX_USES),
-            )
+            if model.startswith(
+                tuple(PROGRAMMATIC_TOOL_CALLING_UNSUPPORTED_MODELS)
+            ) or not options.get(CONF_CODE_EXECUTION):
+                web_search: WebSearchTool20250305Param | WebSearchTool20260209Param = (
+                    WebSearchTool20250305Param(
+                        name="web_search",
+                        type="web_search_20250305",
+                        max_uses=options.get(CONF_WEB_SEARCH_MAX_USES),
+                    )
+                )
+            else:
+                web_search = WebSearchTool20260209Param(
+                    name="web_search",
+                    type="web_search_20260209",
+                    max_uses=options.get(CONF_WEB_SEARCH_MAX_USES),
+                )
             if options.get(CONF_WEB_SEARCH_USER_LOCATION):
                 web_search["user_location"] = {
                     "type": "approximate",
@@ -845,7 +878,8 @@ class AnthropicBaseLLMEntity(Entity):
         if tools:
             model_args["tools"] = tools
 
-        client = self.entry.runtime_data
+        coordinator = self.entry.runtime_data
+        client = coordinator.client
 
         # To prevent infinite loops, we limit the number of iterations
         for _iteration in range(max_iterations):
@@ -867,13 +901,24 @@ class AnthropicBaseLLMEntity(Entity):
                 )
                 messages.extend(new_messages)
             except anthropic.AuthenticationError as err:
-                self.entry.async_start_reauth(self.hass)
+                # Trigger coordinator to confirm the auth failure and trigger the reauth flow.
+                await coordinator.async_request_refresh()
                 raise HomeAssistantError(
                     translation_domain=DOMAIN,
                     translation_key="api_authentication_error",
                     translation_placeholders={"message": err.message},
                 ) from err
+            except anthropic.APIConnectionError as err:
+                LOGGER.info("Connection error while talking to Anthropic: %s", err)
+                coordinator.mark_connection_error()
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN,
+                    translation_key="api_error",
+                    translation_placeholders={"message": err.message},
+                ) from err
             except anthropic.AnthropicError as err:
+                # Non-connection error, mark connection as healthy
+                coordinator.async_set_updated_data(None)
                 raise HomeAssistantError(
                     translation_domain=DOMAIN,
                     translation_key="api_error",
@@ -885,6 +930,7 @@ class AnthropicBaseLLMEntity(Entity):
                 ) from err
 
             if not chat_log.unresponded_tool_results:
+                coordinator.async_set_updated_data(None)
                 break
 
 
