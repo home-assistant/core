@@ -41,19 +41,19 @@ async def async_setup_entry(
 class LightSensitiveButton(SwitchbotEntity, ButtonEntity):
     """Representation of a Switchbot light sensitive button."""
 
-    _attr_translation_key = "light_sensitive"
+    _attr_translation_key = "light_sensor"
     _device: switchbot.SwitchbotAirPurifier
 
     def __init__(self, coordinator: SwitchbotDataUpdateCoordinator) -> None:
         """Initialize the Switchbot light sensitive button."""
         super().__init__(coordinator)
-        self._attr_unique_id = f"{coordinator.base_unique_id}_light_sensitive"
+        self._attr_unique_id = f"{coordinator.base_unique_id}_light_sensor"
 
     @exception_handler
     async def async_press(self) -> None:
         """Handle the button press."""
         _LOGGER.debug("Toggling light sensitive mode for %s", self._address)
-        await self._device.open_light_sensitive_switch()
+        await self._device.open_light_sensor_switch()
 
 
 class SwitchBotArtFrameButtonBase(SwitchbotEntity, ButtonEntity):

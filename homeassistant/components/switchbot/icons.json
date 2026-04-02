@@ -1,7 +1,7 @@
 {
   "entity": {
     "button": {
-      "light_sensitive": {
+      "light_sensor": {
         "default": "mdi:brightness-auto"
       }
     },

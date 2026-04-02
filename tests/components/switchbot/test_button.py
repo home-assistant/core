@@ -199,14 +199,14 @@ async def test_air_purifier_buttons(
     entry = mock_entry_encrypted_factory(sensor_type)
     entry.add_to_hass(hass)
 
-    entity_id = "button.test_name_light_sensitive"
+    entity_id = "button.test_name_light_sensor"
     mock_instance = AsyncMock(return_value=True)
 
     with patch.multiple(
         "homeassistant.components.switchbot.button.switchbot.SwitchbotAirPurifier",
         update=AsyncMock(return_value=None),
         get_basic_info=AsyncMock(return_value=None),
-        open_light_sensitive_switch=mock_instance,
+        open_light_sensor_switch=mock_instance,
     ):
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
