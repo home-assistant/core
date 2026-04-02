@@ -20,7 +20,7 @@ async def async_setup_entry(
     config_entry: MutesyncConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up the mütesync button."""
+    """Set up the mütesync binary sensors."""
     coordinator = config_entry.runtime_data
     async_add_entities(
         [MuteStatus(coordinator, sensor_type) for sensor_type in SENSORS], True
