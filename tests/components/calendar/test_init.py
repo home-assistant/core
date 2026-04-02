@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import asyncio
 from collections.abc import Generator
 from datetime import timedelta
 from http import HTTPStatus
@@ -17,7 +16,6 @@ import voluptuous as vol
 from homeassistant.components.calendar import (
     CREATE_EVENT_SERVICE,
     DOMAIN,
-    EVENT_LISTENER_DEBOUNCE_COOLDOWN,
     SERVICE_GET_EVENTS,
     CalendarEntity,
     CalendarEntityDescription,
@@ -30,6 +28,7 @@ from homeassistant.util import dt as dt_util
 
 from .conftest import MockCalendarEntity, MockConfigEntry
 
+from tests.common import async_fire_time_changed
 from tests.typing import ClientSessionGenerator, WebSocketGenerator
 
 
@@ -929,8 +928,8 @@ async def test_websocket_subscribe_debounces_rapid_updates(
     # Without debouncing this would be 5 calls.
     assert entity.async_get_events.call_count == 1
 
-    # Wait for debounce cooldown to fire the trailing call
-    await asyncio.sleep(EVENT_LISTENER_DEBOUNCE_COOLDOWN + 0.1)
+    # Advance time past the debounce cooldown to fire the trailing call
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=2))
     await hass.async_block_till_done()
 
     # Should be exactly 2 total: immediate + one coalesced trailing call
@@ -938,13 +937,15 @@ async def test_websocket_subscribe_debounces_rapid_updates(
 
     # Drain messages: immediate update + trailing debounced update
     messages: list[dict] = []
-    while True:
+    for _ in range(10):
         msg = await client.receive_json()
         assert msg["id"] == subscription_id
         assert msg["type"] == "event"
         messages.append(msg)
         if len(msg["event"]["events"]) == 6:  # 1 original + 5 rapid
             break
+    else:
+        pytest.fail("Did not receive expected calendar event list with 6 events")
 
     # The final message has all events
     assert len(messages[-1]["event"]["events"]) == 6

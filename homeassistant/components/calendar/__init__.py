@@ -644,6 +644,13 @@ class CalendarEntity(Entity):
             event.end_datetime_local,
         )
 
+    @callback
+    def _async_cancel_event_listener_debouncer(self) -> None:
+        """Cancel and clear the event listener debouncer."""
+        if self._event_listener_debouncer:
+            self._event_listener_debouncer.async_cancel()
+            self._event_listener_debouncer = None
+
     async def async_will_remove_from_hass(self) -> None:
         """Run when entity will be removed from hass.
 
@@ -652,9 +659,7 @@ class CalendarEntity(Entity):
         for unsub in self._alarm_unsubs or ():
             unsub()
         self._alarm_unsubs = None
-        if self._event_listener_debouncer:
-            self._event_listener_debouncer.async_cancel()
-            self._event_listener_debouncer = None
+        self._async_cancel_event_listener_debouncer()
 
     @final
     @callback
@@ -687,9 +692,8 @@ class CalendarEntity(Entity):
         def unsubscribe() -> None:
             if self._event_listeners:
                 self._event_listeners.remove(listener_data)
-            if not self._event_listeners and self._event_listener_debouncer:
-                self._event_listener_debouncer.async_cancel()
-                self._event_listener_debouncer = None
+            if not self._event_listeners:
+                self._async_cancel_event_listener_debouncer()
 
         return unsubscribe
 
@@ -1007,22 +1011,26 @@ async def handle_calendar_event_subscribe(
         )
         return
 
+    subscription_id = msg["id"]
+
     @callback
     def event_listener(events: list[JsonValueType] | None) -> None:
         """Push updated calendar events to websocket."""
+        if subscription_id not in connection.subscriptions:
+            return
         connection.send_message(
             websocket_api.event_message(
-                msg["id"],
+                subscription_id,
                 {
                     "events": events,
                 },
             )
         )
 
-    connection.subscriptions[msg["id"]] = entity.async_subscribe_events(
+    connection.subscriptions[subscription_id] = entity.async_subscribe_events(
         start_date, end_date, event_listener
     )
-    connection.send_result(msg["id"])
+    connection.send_result(subscription_id)
 
     # Push initial events only to the new subscriber
     entity.async_update_single_event_listener(start_date, end_date, event_listener)
