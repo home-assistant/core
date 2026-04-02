@@ -55,7 +55,8 @@ async def test_storage_missing_used_fraction(
     )
     # Remove used_fraction from the first storage entry
     storage_without_fraction = [
-        {k: v for k, v in s.items() if k != "used_fraction"} for s in storage_data
+        {key: value for key, value in storage.items() if key != "used_fraction"}
+        for storage in storage_data
     ]
     mock_proxmox_client._node_mock.storage.get.return_value = storage_without_fraction
 
@@ -66,5 +67,4 @@ async def test_storage_missing_used_fraction(
         await setup_integration(hass, mock_config_entry)
 
     state = hass.states.get("sensor.storage_local_storage_usage_percentage")
-    assert state is not None
     assert state.state == STATE_UNKNOWN
