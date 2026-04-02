@@ -334,6 +334,8 @@ async def test_send_message_with_inline_keyboard(
             }
         ]
     }
+
+
 async def test_send_message_with_inline_keyboard_style(
     hass: HomeAssistant, webhook_bot
 ) -> None:
@@ -400,6 +402,7 @@ async def test_send_message_with_inline_keyboard_style(
             }
         ]
     }
+
 
 async def test_send_sticker_partial_error(
     hass: HomeAssistant,
