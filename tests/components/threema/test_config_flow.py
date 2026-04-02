@@ -212,6 +212,17 @@ async def test_credentials_invalid_gateway_id(
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "invalid_gateway_id"}
 
+    # Valid Gateway ID — recover and create entry
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_GATEWAY_ID: MOCK_GATEWAY_ID,
+            CONF_API_SECRET: MOCK_API_SECRET,
+        },
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == MOCK_GATEWAY_ID
+
 
 async def test_credentials_already_configured(
     hass: HomeAssistant,
