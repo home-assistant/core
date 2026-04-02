@@ -15,7 +15,10 @@ from homeassistant.components.portainer.const import DOMAIN
 from homeassistant.components.portainer.services import (
     ATTR_DANGLING,
     ATTR_DATE_UNTIL,
+    ATTR_PULL_IMAGE,
+    ATTR_TIMEOUT,
     SERVICE_PRUNE_IMAGES,
+    SERVICE_RECREATE_CONTAINER,
 )
 from homeassistant.const import ATTR_DEVICE_ID
 from homeassistant.core import HomeAssistant
@@ -99,6 +102,48 @@ async def test_service_prune_images(
         endpoint_id=TEST_ENDPOINT_ID,
         until=expected_until,
         dangling=expected_dangling,
+    )
+
+
+@pytest.mark.parametrize(
+    ("call_arguments", "expected_timeout", "expected_pull_image"),
+    [
+        ({}, None, False),
+        ({ATTR_TIMEOUT: timedelta(minutes=10)}, timedelta(minutes=10), False),
+        (
+            {ATTR_TIMEOUT: timedelta(minutes=12), ATTR_PULL_IMAGE: True},
+            timedelta(minutes=12),
+            True,
+        ),
+    ],
+    ids=["no optional", "with duration", "with duration and pull_image"],
+)
+async def test_service_recreate_container(
+    hass: HomeAssistant,
+    device_registry: DeviceRegistry,
+    mock_portainer_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    call_arguments: dict,
+    expected_timeout: timedelta | None,
+    expected_pull_image: bool,
+) -> None:
+    """Test recreate container service with the variants."""
+
+    await setup_integration(hass, mock_config_entry)
+    device = device_registry.async_get_device(
+        identifiers={(DOMAIN, TEST_DEVICE_IDENTIFIER)}
+    )
+    assert device is not None
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_RECREATE_CONTAINER,
+        {ATTR_DEVICE_ID: device.id, **call_arguments},
+        blocking=True,
+    )
+    mock_portainer_client.recreate_container.assert_called_once_with(
+        endpoint_id=TEST_ENDPOINT_ID,
+        timeout=expected_timeout,
+        pull_image=expected_pull_image,
     )
 
 

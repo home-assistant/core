@@ -220,6 +220,24 @@
         }
       },
       "name": "Prune unused images"
+    },
+    "recreate_container": {
+      "description": "Recreates a container on a Portainer endpoint. This is more disruptive than a restart as the container will be stopped, removed, and then re-created with the same configuration. Use with caution.",
+      "fields": {
+        "device_id": {
+          "description": "The container to recreate.",
+          "name": "Container"
+        },
+        "pull_image": {
+          "description": "Whether to pull the image before recreating the container. This can be used to update the container to the latest version of the image.",
+          "name": "Pull image"
+        },
+        "timeout": {
+          "description": "The time to wait for the container to stop before killing it. If not provided, a default of 5 minutes will be used.",
+          "name": "Timeout"
+        }
+      },
+      "name": "Recreate container"
     }
   }
 }

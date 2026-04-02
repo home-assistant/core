@@ -16,3 +16,20 @@ prune_images:
       required: false
       selector:
         boolean: {}
+
+recreate_container:
+  fields:
+    device_id:
+      required: true
+      selector:
+        device:
+          integration: portainer
+          model: Endpoint
+    timeout:
+      required: false
+      selector:
+        duration:
+    pull_image:
+      required: false
+      selector:
+        boolean: {}

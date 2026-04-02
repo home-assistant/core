@@ -88,6 +88,7 @@ def mock_portainer_client() -> Generator[AsyncMock]:
         client.stop_container = AsyncMock(return_value=None)
         client.start_stack = AsyncMock(return_value=None)
         client.stop_stack = AsyncMock(return_value=None)
+        client.container_recreate = AsyncMock(return_value=None)
 
         yield client
 

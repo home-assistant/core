@@ -106,6 +106,9 @@
   "services": {
     "prune_images": {
       "service": "mdi:delete-sweep"
+    },
+    "recreate_container": {
+      "service": "mdi:restart"
     }
   }
 }
