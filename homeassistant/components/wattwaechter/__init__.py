@@ -2,13 +2,13 @@
 
 from __future__ import annotations
 
-from homeassistant.const import CONF_HOST, CONF_TOKEN, Platform
+from aio_wattwaechter import Wattwaechter, WattwaechterConnectionError
+
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_HOST, CONF_TOKEN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-
-from aio_wattwaechter import Wattwaechter, WattwaechterConnectionError
 
 from .const import DOMAIN
 from .coordinator import WattwaechterCoordinator

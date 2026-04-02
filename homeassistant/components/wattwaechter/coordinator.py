@@ -94,8 +94,6 @@ class WattwaechterCoordinator(DataUpdateCoordinator[WattwaechterData]):
                 translation_placeholders={"error": str(err)},
             ) from err
 
-        self.fw_version = (
-            system_info.get_value("esp", "os_version") or self.fw_version
-        )
+        self.fw_version = system_info.get_value("esp", "os_version") or self.fw_version
 
         return WattwaechterData(meter=meter_data, system=system_info)
