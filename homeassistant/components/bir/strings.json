@@ -42,6 +42,18 @@
       },
       "glass_and_metal_packaging_pickup": {
         "name": "Glass and metal packaging pickup"
+      },
+      "mixed_waste_days_until": {
+        "name": "Mixed waste days until pickup"
+      },
+      "paper_and_plastic_days_until": {
+        "name": "Paper and plastic days until pickup"
+      },
+      "food_waste_days_until": {
+        "name": "Food waste days until pickup"
+      },
+      "glass_and_metal_packaging_days_until": {
+        "name": "Glass and metal packaging days until pickup"
       }
     }
   }

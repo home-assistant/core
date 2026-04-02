@@ -98,9 +98,7 @@ class BirConfigFlow(ConfigFlow, domain=DOMAIN):
                     except BirError:
                         errors["base"] = "cannot_connect"
                     else:
-                        await self.async_set_unique_id(
-                            f"bir_{selected.property_id}"
-                        )
+                        await self.async_set_unique_id(f"bir_{selected.property_id}")
                         self._abort_if_unique_id_configured()
 
                         return self.async_create_entry(

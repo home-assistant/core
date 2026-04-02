@@ -12,6 +12,18 @@
       },
       "glass_and_metal_packaging_pickup": {
         "default": "mdi:bottle-wine"
+      },
+      "mixed_waste_days_until": {
+        "default": "mdi:trash-can"
+      },
+      "paper_and_plastic_days_until": {
+        "default": "mdi:recycle"
+      },
+      "food_waste_days_until": {
+        "default": "mdi:food-apple"
+      },
+      "glass_and_metal_packaging_days_until": {
+        "default": "mdi:bottle-wine"
       }
     }
   }

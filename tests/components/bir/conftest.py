@@ -17,6 +17,7 @@ from tests.common import MockConfigEntry
 
 MOCK_PROPERTY_ID = "12345"
 MOCK_ADDRESS = "Testveien 1, Bergen"
+MOCK_REFERENCE_DATE = date(2026, 4, 2)
 
 MOCK_BIR_PICKUPS = [
     BirWastePickup(
@@ -122,6 +123,8 @@ async def init_integration(
 ) -> MockConfigEntry:
     """Set up the BIR integration for testing."""
     mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
+    with patch("homeassistant.components.bir.coordinator.datetime") as mock_datetime:
+        mock_datetime.now.return_value.date.return_value = MOCK_REFERENCE_DATE
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
     return mock_config_entry

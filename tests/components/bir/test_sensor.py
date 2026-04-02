@@ -22,9 +22,34 @@ async def test_sensors_created(
     entity_entries = er.async_entries_for_config_entry(
         entity_registry, mock_config_entry.entry_id
     )
-    assert len(entity_entries) == 4
+    # 4 days_until (enabled) + 4 date (disabled)
+    assert len(entity_entries) == 8
 
 
+@pytest.mark.parametrize(
+    ("entity_id", "expected_value"),
+    [
+        ("sensor.testveien_1_bergen_mixed_waste_days_until_pickup", "13"),
+        ("sensor.testveien_1_bergen_paper_and_plastic_days_until_pickup", "18"),
+        ("sensor.testveien_1_bergen_food_waste_days_until_pickup", "8"),
+        (
+            "sensor.testveien_1_bergen_glass_and_metal_packaging_days_until_pickup",
+            "29",
+        ),
+    ],
+)
+async def test_days_until_sensor_states(
+    hass: HomeAssistant,
+    entity_id: str,
+    expected_value: str,
+) -> None:
+    """Test the BIR days until pickup sensor states."""
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == expected_value
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 @pytest.mark.parametrize(
     ("entity_id", "expected_date"),
     [
@@ -37,12 +62,12 @@ async def test_sensors_created(
         ),
     ],
 )
-async def test_sensor_states(
+async def test_date_sensor_states(
     hass: HomeAssistant,
     entity_id: str,
     expected_date: str,
 ) -> None:
-    """Test the BIR waste pickup sensor states."""
+    """Test the BIR date pickup sensor states."""
     state = hass.states.get(entity_id)
     assert state is not None
     assert state.state == expected_date
