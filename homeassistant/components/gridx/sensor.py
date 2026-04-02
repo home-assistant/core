@@ -634,7 +634,7 @@ class GridxHistoricalSensorEntity(
         """Return the sensor value by calling the description's value_fn."""
         try:
             return self.entity_description.value_fn(self.coordinator.data)
-        except KeyError, TypeError, ValueError:
+        except (KeyError, TypeError, ValueError):
             return None
 
     @property
@@ -647,5 +647,5 @@ class GridxHistoricalSensorEntity(
             return None
         try:
             return dt_util.parse_datetime(data["last_reset"])
-        except KeyError, ValueError:
+        except (KeyError, ValueError):
             return None

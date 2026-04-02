@@ -35,8 +35,9 @@ async def async_create_connector(
     connector_module = import_module("gridx_connector.async_connector")
     async_gridbox_connector = connector_module.AsyncGridboxConnector
 
-    return await async_gridbox_connector.create(
+    connector: GridxConnector = await async_gridbox_connector.create(
         config,
         httpx_client=httpx_client,
         owns_httpx_client=True,
     )
+    return connector
