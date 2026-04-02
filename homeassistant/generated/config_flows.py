@@ -280,6 +280,7 @@ FLOWS = {
         "gpslogger",
         "gree",
         "green_planet_energy",
+        "gridx",
         "growatt_server",
         "guardian",
         "habitica",
