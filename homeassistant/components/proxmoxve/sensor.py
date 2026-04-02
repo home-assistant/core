@@ -426,9 +426,9 @@ STORAGE_SENSORS: tuple[ProxmoxStorageSensorEntityDescription, ...] = (
     ProxmoxStorageSensorEntityDescription(
         key="storage_used_percentage",
         translation_key="storage_used_percentage",
-        value_fn=lambda data: round(v * 100, 1)
-        if (v := data.get("used_fraction")) is not None
-        else None,
+        value_fn=lambda data: (
+            round(v * 100, 1) if (v := data.get("used_fraction")) is not None else None
+        ),
         native_unit_of_measurement=PERCENTAGE,
         entity_category=EntityCategory.DIAGNOSTIC,
         state_class=SensorStateClass.MEASUREMENT,

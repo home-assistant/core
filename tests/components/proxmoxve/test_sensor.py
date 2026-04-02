@@ -51,9 +51,7 @@ async def test_storage_missing_used_fraction(
     storage_without_fraction = [
         {k: v for k, v in s.items() if k != "used_fraction"} for s in storage_data
     ]
-    mock_proxmox_client._node_mock.storage.get.return_value = (
-        storage_without_fraction
-    )
+    mock_proxmox_client._node_mock.storage.get.return_value = storage_without_fraction
 
     with patch(
         "homeassistant.components.proxmoxve.PLATFORMS",
@@ -61,8 +59,6 @@ async def test_storage_missing_used_fraction(
     ):
         await setup_integration(hass, mock_config_entry)
 
-    state = hass.states.get(
-        "sensor.storage_local_storage_usage_percentage"
-    )
+    state = hass.states.get("sensor.storage_local_storage_usage_percentage")
     assert state is not None
     assert state.state == STATE_UNKNOWN
