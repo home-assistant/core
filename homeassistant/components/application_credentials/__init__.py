@@ -236,7 +236,7 @@ class AuthImplementation(config_entry_oauth2_flow.LocalOAuth2Implementation):
 
 
 class DeviceFlowImplementation(config_entry_oauth2_flow.DeviceFlowImplementation):
-    """Device flow flow implementation."""
+    """Device flow implementation."""
 
     def __init__(
         self,
