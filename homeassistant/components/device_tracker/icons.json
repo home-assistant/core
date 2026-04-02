@@ -24,8 +24,14 @@
     "entered_home": {
       "trigger": "mdi:account-arrow-left"
     },
+    "entered_zone": {
+      "trigger": "mdi:map-marker-plus"
+    },
     "left_home": {
       "trigger": "mdi:account-arrow-right"
+    },
+    "left_zone": {
+      "trigger": "mdi:map-marker-minus"
     }
   }
 }

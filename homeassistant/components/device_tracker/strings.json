@@ -130,6 +130,19 @@
       },
       "name": "Entered home"
     },
+    "entered_zone": {
+      "description": "Triggers when one or more device trackers enter a zone.",
+      "fields": {
+        "behavior": {
+          "name": "[%key:component::device_tracker::common::trigger_behavior_name%]"
+        },
+        "zone": {
+          "description": "The zones to trigger on.",
+          "name": "Zones"
+        }
+      },
+      "name": "Entered zone"
+    },
     "left_home": {
       "description": "Triggers when one or more device trackers leave home.",
       "fields": {
@@ -138,6 +151,19 @@
         }
       },
       "name": "Left home"
+    },
+    "left_zone": {
+      "description": "Triggers when one or more device trackers leave a zone.",
+      "fields": {
+        "behavior": {
+          "name": "[%key:component::device_tracker::common::trigger_behavior_name%]"
+        },
+        "zone": {
+          "description": "The zones to trigger on.",
+          "name": "Zones"
+        }
+      },
+      "name": "Left zone"
     }
   }
 }

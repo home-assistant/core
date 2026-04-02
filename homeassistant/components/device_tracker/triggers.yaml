@@ -14,5 +14,27 @@
             - any
           translation_key: trigger_behavior
 
+.trigger_zone: &trigger_zone
+  <<: *trigger_common
+  fields:
+    behavior:
+      required: true
+      default: any
+      selector:
+        select:
+          options:
+            - first
+            - last
+            - any
+          translation_key: trigger_behavior
+    zone:
+      required: true
+      selector:
+        entity:
+          domain: zone
+          multiple: true
+
 entered_home: *trigger_common
+entered_zone: *trigger_zone
 left_home: *trigger_common
+left_zone: *trigger_zone
