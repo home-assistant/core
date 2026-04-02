@@ -91,6 +91,7 @@ SENSORS: tuple[ArcamFmjSensorEntityDescription, ...] = (
         value_fn=lambda state: (
             vp.colorspace.name.lower()
             if (vp := state.get_incoming_video_parameters()) is not None
+            and vp.colorspace is not None
             else None
         ),
     ),
