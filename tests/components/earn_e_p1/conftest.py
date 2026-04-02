@@ -34,11 +34,13 @@ MOCK_DEVICE_DATA: dict[str, Any] = {
 
 def trigger_callback(
     mock_listener: MagicMock,
-    device_data: dict[str, Any] = MOCK_DEVICE_DATA,
+    device_data: dict[str, Any] | None = None,
     model: str | None = "P1 Meter",
     sw_version: str | None = "1.0.0",
 ) -> None:
     """Trigger the registered listener callback with device data."""
+    if device_data is None:
+        device_data = MOCK_DEVICE_DATA
     callback = mock_listener.register.call_args[0][1]
     device = EarnEP1Device(host=MOCK_HOST, serial=MOCK_SERIAL)
     device.model = model
