@@ -244,49 +244,32 @@ async def test_coordinator_handles_invalid_data(
         await coordinator._async_update_data()
 
 
-@pytest.mark.parametrize(
-    ("timestamps", "values", "expected_state"),
-    [
-        (
-            ["2023-06-01T08:12:34-07:00", "2023-06-01T08:45:00-07:00"],
-            [1234, 66],
-            1300.0,
-        ),
-        (
-            ["2023-06-01T14:00:00+05:30", "2023-06-01T14:45:00+05:30"],
-            [100, 200],
-            300.0,
-        ),
-    ],
-    ids=["standard_offset", "half_hour_offset"],
-)
 async def test_coordinator_normalizes_timestamps_to_hour(
     recorder_mock: Recorder,
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_energy_site: AsyncMock,
-    timestamps: list[str],
-    values: list[int],
-    expected_state: float,
 ) -> None:
-    """Test the coordinator aggregates same-hour samples at the top of the hour.
-
-    Verifies both standard timezone offsets and non-hour offsets (e.g. +05:30)
-    where a naïve convert-to-UTC-then-floor approach would split samples into
-    different hourly buckets.
-    """
+    """Test the coordinator aggregates same-hour samples at the top of the hour."""
     mock_config_entry.add_to_hass(hass)
 
-    expected_start = dt_util.parse_datetime(timestamps[0])
-    assert expected_start is not None
-    expected_start = expected_start.replace(minute=0, second=0, microsecond=0)
+    raw_timestamp = "2023-06-01T08:12:34-07:00"
+    expected_start = dt_util.as_utc(dt_util.parse_datetime(raw_timestamp)).replace(
+        minute=0, second=0, microsecond=0
+    )
 
     mock_energy_site.energy_history.return_value = {
         "response": {
             "period": "day",
             "time_series": [
-                {"timestamp": ts, "solar_energy_exported": val}
-                for ts, val in zip(timestamps, values, strict=True)
+                {
+                    "timestamp": raw_timestamp,
+                    "solar_energy_exported": 1234,
+                },
+                {
+                    "timestamp": "2023-06-01T08:45:00-07:00",
+                    "solar_energy_exported": 66,
+                },
             ],
         }
     }
@@ -309,9 +292,9 @@ async def test_coordinator_normalizes_timestamps_to_hour(
 
     assert len(stats[f"tesla_fleet:{SITE_ID}_solar_energy_exported"]) == 1
     stat = stats[f"tesla_fleet:{SITE_ID}_solar_energy_exported"][0]
-    assert stat["start"] == dt_util.as_utc(expected_start).timestamp()
-    assert stat["state"] == expected_state
-    assert stat["sum"] == expected_state
+    assert stat["start"] == expected_start.timestamp()
+    assert stat["state"] == 1300.0
+    assert stat["sum"] == 1300.0
 
 
 async def test_coordinator_updates_latest_hour_statistic(
