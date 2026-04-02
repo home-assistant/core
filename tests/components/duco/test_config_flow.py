@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from unittest.mock import AsyncMock, patch
 
-from duco.exceptions import DucoConnectionError
+from duco.exceptions import DucoConnectionError, DucoError
 from duco.models import BoardInfo, LanInfo
 
 from homeassistant import config_entries
@@ -73,6 +73,30 @@ async def test_user_flow_cannot_connect(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {"base": "cannot_connect"}
+
+
+async def test_user_flow_unknown_error(hass: HomeAssistant) -> None:
+    """Test handling of an unexpected DucoError."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    with patch(
+        "homeassistant.components.duco.config_flow.DucoClient",
+        autospec=True,
+    ) as mock_class:
+        client = mock_class.return_value
+        client.async_get_board_info = AsyncMock(
+            side_effect=DucoError("Unexpected error")
+        )
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], USER_INPUT
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {"base": "unknown"}
 
 
 async def test_user_flow_duplicate(

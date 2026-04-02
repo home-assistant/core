@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 from typing import Any
 
 from duco import DucoClient
@@ -14,6 +15,8 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import format_mac
 
 from .const import DOMAIN
+
+_LOGGER = logging.getLogger(__name__)
 
 STEP_USER_SCHEMA = vol.Schema(
     {
@@ -42,8 +45,11 @@ class DucoConfigFlow(ConfigFlow, domain=DOMAIN):
             try:
                 board_info = await client.async_get_board_info()
                 lan_info = await client.async_get_lan_info()
-            except DucoConnectionError, DucoError:
+            except DucoConnectionError:
                 errors["base"] = "cannot_connect"
+            except DucoError:
+                _LOGGER.exception("Unexpected error connecting to Duco box")
+                errors["base"] = "unknown"
             else:
                 await self.async_set_unique_id(format_mac(lan_info.mac))
                 self._abort_if_unique_id_configured()

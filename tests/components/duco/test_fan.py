@@ -166,15 +166,14 @@ async def test_fan_set_preset_connection_error(
 async def test_coordinator_update_marks_unavailable(
     hass: HomeAssistant,
     mock_duco_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test that entities become unavailable when the coordinator fails."""
     mock_duco_client.async_get_nodes = AsyncMock(
         side_effect=DucoConnectionError("offline")
     )
 
-    await hass.config_entries.async_reload(
-        hass.config_entries.async_entries("duco")[0].entry_id
-    )
+    await mock_config_entry.runtime_data.async_refresh()
     await hass.async_block_till_done()
 
     state = hass.states.get("fan.living_ventilation")
