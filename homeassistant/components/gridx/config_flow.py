@@ -88,7 +88,7 @@ class GridxConfigFlow(ConfigFlow, domain=DOMAIN):
                 )
             except httpx.HTTPError:
                 errors["base"] = "cannot_connect"
-            except (ConnectionError, TimeoutError, OSError):
+            except ConnectionError, TimeoutError, OSError:
                 errors["base"] = "cannot_connect"
             except UNEXPECTED_AUTH_ERRORS:
                 LOGGER.exception("Unexpected error during GridX credential validation")
@@ -147,7 +147,7 @@ class GridxConfigFlow(ConfigFlow, domain=DOMAIN):
                 )
             except httpx.HTTPError:
                 errors["base"] = "cannot_connect"
-            except (ConnectionError, TimeoutError, OSError):
+            except ConnectionError, TimeoutError, OSError:
                 errors["base"] = "cannot_connect"
             except UNEXPECTED_AUTH_ERRORS:
                 LOGGER.exception("Unexpected error during GridX re-authentication")
@@ -199,7 +199,7 @@ class GridxConfigFlow(ConfigFlow, domain=DOMAIN):
                 )
             except httpx.HTTPError:
                 errors["base"] = "cannot_connect"
-            except (ConnectionError, TimeoutError, OSError):
+            except ConnectionError, TimeoutError, OSError:
                 errors["base"] = "cannot_connect"
             except UNEXPECTED_AUTH_ERRORS:
                 LOGGER.exception("Unexpected error during GridX reconfiguration")

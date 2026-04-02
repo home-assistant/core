@@ -601,7 +601,7 @@ class GridxLiveSensorEntity(CoordinatorEntity[GridxLiveCoordinator], SensorEntit
         """Return the sensor value by calling the description's value_fn."""
         try:
             return self.entity_description.value_fn(self.coordinator.data)
-        except (KeyError, TypeError, ValueError):
+        except KeyError, TypeError, ValueError:
             return None
 
 
@@ -634,7 +634,7 @@ class GridxHistoricalSensorEntity(
         """Return the sensor value by calling the description's value_fn."""
         try:
             return self.entity_description.value_fn(self.coordinator.data)
-        except (KeyError, TypeError, ValueError):
+        except KeyError, TypeError, ValueError:
             return None
 
     @property
@@ -642,10 +642,10 @@ class GridxHistoricalSensorEntity(
         """Return last_reset for TOTAL state-class historical sensors."""
         if self.entity_description.state_class != SensorStateClass.TOTAL:
             return None
-        data: GridxHistoricalData = self.coordinator.data
+        data: GridxHistoricalData | None = self.coordinator.data
         if not data:
             return None
         try:
             return dt_util.parse_datetime(data["last_reset"])
-        except (KeyError, ValueError):
+        except KeyError, ValueError:
             return None
