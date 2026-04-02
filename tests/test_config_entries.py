@@ -2023,7 +2023,7 @@ async def test_create_entry_next_flow_invalid(
                 context={"source": config_entries.SOURCE_IMPORT},
             )
 
-        assert async_setup_entry.call_count == 1
+        assert async_setup_entry.call_count == 0
 
 
 async def test_create_entry_options(
@@ -2384,11 +2384,10 @@ async def test_invalid_on_create_entry(
             return self.async_create_entry(
                 title="user_flow",
                 data={"flow": "user"},
-                next_flow=(config_entries.FlowType.CONFIG_FLOW, result["flow_id"]),
             )
 
     class TestOptionsFlowHandler(config_entries.OptionsFlow):
-        """Handle Yale options."""
+        """Handle options."""
 
         async def async_step_init(
             self, user_input: dict[str, Any] | None = None
@@ -10029,7 +10028,7 @@ async def test_config_flow_abort_with_invalid_next_flow_type(
 
     with (
         mock_config_flow("test", TestFlow),
-        pytest.raises(HomeAssistantError, match="Invalid next_flow type"),
+        pytest.raises(HomeAssistantError, match="Invalid flow type: invalid_type"),
     ):
         await hass.config_entries.flow.async_init(
             "test", context={"source": config_entries.SOURCE_USER}

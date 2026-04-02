@@ -3297,6 +3297,23 @@ class ConfigFlow(ConfigEntryBaseFlow):
         """Handle a flow initialized by Zeroconf discovery."""
         return await self._async_step_discovery_without_unique_id()
 
+    def _async_set_next_flow_if_valid(
+        self,
+        result: ConfigFlowResult,
+        next_flow: tuple[FlowType, str] | None,
+    ) -> None:
+        """Validate and set next_flow in result if provided."""
+        if next_flow is None:
+            return
+        flow_type, flow_id = next_flow
+        if flow_type not in FlowType:
+            raise HomeAssistantError(f"Invalid flow type: {flow_type}")
+        if flow_type != FlowType.CONFIG_FLOW:
+            return
+        # Raises UnknownFlow if the flow does not exist.
+        self.hass.config_entries.flow.async_get(flow_id)
+        result["next_flow"] = next_flow
+
     @callback
     def async_abort(
         self,
@@ -3311,7 +3328,7 @@ class ConfigFlow(ConfigEntryBaseFlow):
             description_placeholders=description_placeholders,
         )
         if next_flow:
-            result["next_flow"] = next_flow
+            self._async_set_next_flow_if_valid(result, next_flow)
         return result
 
     async def async_on_create_entry(self, result: ConfigFlowResult) -> ConfigFlowResult:
@@ -3351,7 +3368,7 @@ class ConfigFlow(ConfigEntryBaseFlow):
 
         result["minor_version"] = self.MINOR_VERSION
         if next_flow:
-            result["next_flow"] = next_flow
+            self._async_set_next_flow_if_valid(result, next_flow)
         result["options"] = options or {}
         result["subentries"] = subentries or ()
         result["version"] = self.VERSION
