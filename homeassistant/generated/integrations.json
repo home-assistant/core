@@ -7745,10 +7745,10 @@
       "iot_class": "cloud_polling"
     },
     "wattwaechter": {
-      "config_flow": true,
+      "name": "WattW\u00e4chter Plus",
       "integration_type": "device",
-      "iot_class": "local_polling",
-      "name": "WattW\u00e4chter Plus"
+      "config_flow": true,
+      "iot_class": "local_polling"
     },
     "waze_travel_time": {
       "integration_type": "service",
