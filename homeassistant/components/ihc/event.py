@@ -59,8 +59,12 @@ class IHCButtonEventEntity(IHCEntity, EventEntity):
             if channel is not None:
                 self._name = f"{product['group']}_{product['id']}_{channel:02d}"
 
-    def on_ihc_change(self, ihc_id: int, value: bool) -> None:
+    def _handle_press(self) -> None:
+        """Handle a button press on the Home Assistant event loop."""
+        self._trigger_event("pressed")
+        self.async_write_ha_state()
+
+    def on_ihc_change(self, _ihc_id: int, value: bool) -> None:
         """IHC resource has changed."""
         if value:
-            self._trigger_event("pressed")
-            self.schedule_update_ha_state()
+            self.hass.add_job(self._handle_press)

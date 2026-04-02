@@ -22,6 +22,7 @@ from .const import (
     CONF_AUTOSETUP,
     CONF_BINARY_SENSOR,
     CONF_DIMMABLE,
+    CONF_EVENT,
     CONF_INFO,
     CONF_INVERTING,
     CONF_LIGHT,
@@ -101,6 +102,9 @@ IHC_SCHEMA = vol.Schema(
         ),
         vol.Optional(CONF_SWITCH, default=[]): vol.All(
             cv.ensure_list, [vol.All(SWITCH_SCHEMA, validate_name)]
+        ),
+        vol.Optional(CONF_EVENT, default=[]): vol.All(
+            cv.ensure_list, [vol.All(DEVICE_SCHEMA, validate_name)]
         ),
     }
 )

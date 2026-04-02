@@ -115,45 +115,33 @@ def test_entity_event_types(mock_controller: MagicMock) -> None:
     assert entity.event_types == ["pressed"]
 
 
-def test_on_ihc_change_true_fires_pressed(mock_controller: MagicMock) -> None:
-    """Test that a True value from the IHC resource fires a pressed event."""
+def test_on_ihc_change_true_schedules_job(mock_controller: MagicMock) -> None:
+    """Test that a True value schedules a press handler on the HA event loop."""
     entity = IHCButtonEventEntity(
         mock_controller, CONTROLLER_ID, "name", IHC_ID, _make_product()
     )
-    with patch.object(entity, "schedule_update_ha_state"):
-        entity.on_ihc_change(IHC_ID, True)
+    entity.hass = MagicMock()
+    entity.on_ihc_change(IHC_ID, True)
+    entity.hass.add_job.assert_called_once_with(entity._handle_press)
 
+
+def test_on_ihc_change_false_does_not_schedule(mock_controller: MagicMock) -> None:
+    """Test that a False value (button release) does not schedule any job."""
+    entity = IHCButtonEventEntity(
+        mock_controller, CONTROLLER_ID, "name", IHC_ID, _make_product()
+    )
+    entity.hass = MagicMock()
+    entity.on_ihc_change(IHC_ID, False)
+    entity.hass.add_job.assert_not_called()
+
+
+def test_handle_press_fires_pressed_event(mock_controller: MagicMock) -> None:
+    """Test that _handle_press triggers a pressed event and writes state."""
+    entity = IHCButtonEventEntity(
+        mock_controller, CONTROLLER_ID, "name", IHC_ID, _make_product()
+    )
+    with patch.object(entity, "async_write_ha_state") as mock_write:
+        entity._handle_press()
     assert entity.state_attributes[ATTR_EVENT_TYPE] == "pressed"
     assert entity.state is not None
-
-
-def test_on_ihc_change_false_does_not_fire(mock_controller: MagicMock) -> None:
-    """Test that a False value (button release) does not fire an event."""
-    entity = IHCButtonEventEntity(
-        mock_controller, CONTROLLER_ID, "name", IHC_ID, _make_product()
-    )
-    with patch.object(entity, "schedule_update_ha_state"):
-        entity.on_ihc_change(IHC_ID, False)
-
-    assert entity.state_attributes[ATTR_EVENT_TYPE] is None
-    assert entity.state is None
-
-
-def test_on_ihc_change_schedules_state_update(mock_controller: MagicMock) -> None:
-    """Test that schedule_update_ha_state is called on button press."""
-    entity = IHCButtonEventEntity(
-        mock_controller, CONTROLLER_ID, "name", IHC_ID, _make_product()
-    )
-    with patch.object(entity, "schedule_update_ha_state") as mock_update:
-        entity.on_ihc_change(IHC_ID, True)
-        mock_update.assert_called_once()
-
-
-def test_on_ihc_change_no_schedule_on_release(mock_controller: MagicMock) -> None:
-    """Test that schedule_update_ha_state is not called on button release."""
-    entity = IHCButtonEventEntity(
-        mock_controller, CONTROLLER_ID, "name", IHC_ID, _make_product()
-    )
-    with patch.object(entity, "schedule_update_ha_state") as mock_update:
-        entity.on_ihc_change(IHC_ID, False)
-        mock_update.assert_not_called()
+    mock_write.assert_called_once()
