@@ -59,6 +59,11 @@ class CommandLineAuthProvider(AuthProvider):
         super().__init__(*args, **kwargs)
         self._user_meta: dict[str, dict[str, Any]] = {}
 
+    @property
+    def refresh_user_meta(self) -> bool:
+        """Return whether user metadata should be refreshed at login."""
+        return self.config[CONF_META]
+
     async def async_login_flow(
         self, context: AuthFlowContext | None
     ) -> CommandLineLoginFlow:
@@ -127,11 +132,16 @@ class CommandLineAuthProvider(AuthProvider):
         Currently, supports name, group and local_only.
         """
         meta = self._user_meta.get(credentials.data["username"], {})
+        local_only_value = meta.get("local_only")
         return UserMeta(
             name=meta.get("name"),
             is_active=True,
             group=meta.get("group"),
-            local_only=meta.get("local_only") == "true",
+            local_only=(
+                None
+                if local_only_value is None
+                else local_only_value.casefold() == "true"
+            ),
         )
 
 

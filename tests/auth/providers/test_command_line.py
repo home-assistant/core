@@ -123,6 +123,35 @@ async def test_good_auth_with_meta(
     assert user.local_only
 
 
+async def test_existing_user_syncs_meta(
+    manager: AuthManager,
+    provider: command_line.CommandLineAuthProvider,
+    store: auth_store.AuthStore,
+) -> None:
+    """Test metadata is updated for an existing command_line user."""
+    provider.config[command_line.CONF_ARGS] = ["--with-meta"]
+    provider.config[command_line.CONF_META] = True
+
+    credentials = provider.async_create_credentials({"username": "good-user"})
+    user = await store.async_create_user(
+        credentials=credentials,
+        name="Legacy Name",
+        is_active=True,
+        group_ids=["system-admin"],
+        local_only=False,
+    )
+
+    await provider.async_validate_login("good-user", "good-pass")
+    assert credentials.is_new is False
+
+    updated_user = await manager.async_get_or_create_user(credentials)
+    assert updated_user.id == user.id
+    assert updated_user.name == "Bob"
+    assert len(updated_user.groups) == 1
+    assert updated_user.groups[0].id == "system-users"
+    assert updated_user.local_only
+
+
 async def test_utf_8_username_password(
     provider: command_line.CommandLineAuthProvider,
 ) -> None:

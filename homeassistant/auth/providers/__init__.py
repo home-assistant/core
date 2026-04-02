@@ -83,6 +83,11 @@ class AuthProvider:
         """Return whether multi-factor auth supported by the auth provider."""
         return True
 
+    @property
+    def refresh_user_meta(self) -> bool:
+        """Return whether user metadata should be refreshed at login."""
+        return False
+
     async def async_credentials(self) -> list[Credentials]:
         """Return all credentials of this provider."""
         users = await self.store.async_get_users()
