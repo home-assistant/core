@@ -35,6 +35,4 @@ Integrations with Platinum or Gold level in the Integration Quality Scale reflec
 
 # Skills
 
-- coordinator-move: .claude/skills/coordinator-move/SKILL.md
 - Home Assistant Integration knowledge: .claude/skills/integrations/SKILL.md
-- runtime-data: .claude/skills/runtime-data/SKILL.md
