@@ -41,6 +41,8 @@
     'attributes': ReadOnlyDict({
       'friendly_name': '2021 Honda Accord',
       'gps_accuracy': 10,
+      'in_zones': list([
+      ]),
       'latitude': 37.7749,
       'longitude': -122.4194,
       'source_type': <SourceType.GPS: 'gps'>,
