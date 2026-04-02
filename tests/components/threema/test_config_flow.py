@@ -2,14 +2,13 @@
 
 from __future__ import annotations
 
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 from threema.gateway import GatewayError
 from threema.gateway.exception import GatewayServerError
 
 from homeassistant import config_entries
-from homeassistant.components.threema.client import ThreemaAuthError
 from homeassistant.components.threema.const import (
     CONF_API_SECRET,
     CONF_GATEWAY_ID,
@@ -41,18 +40,15 @@ async def test_user_flow_existing_gateway(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "user"
+    assert result["type"] is FlowResultType.MENU
 
-    # Choose existing gateway
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        user_input={"setup_type": "add_gateway"},
+        {"next_step_id": "credentials"},
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "credentials"
 
-    # Enter credentials
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         user_input={
@@ -68,6 +64,7 @@ async def test_user_flow_existing_gateway(
         CONF_GATEWAY_ID: MOCK_GATEWAY_ID,
         CONF_API_SECRET: MOCK_API_SECRET,
     }
+    assert result["result"].unique_id == MOCK_GATEWAY_ID
 
 
 async def test_user_flow_existing_with_keys(
@@ -77,10 +74,11 @@ async def test_user_flow_existing_with_keys(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
+    assert result["type"] is FlowResultType.MENU
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        user_input={"setup_type": "add_gateway"},
+        {"next_step_id": "credentials"},
     )
 
     result = await hass.config_entries.flow.async_configure(
@@ -97,43 +95,51 @@ async def test_user_flow_existing_with_keys(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"][CONF_PRIVATE_KEY] == "private:abcdef1234567890"
     assert result["data"][CONF_PUBLIC_KEY] == "public:1234567890abcdef"
+    assert result["result"].unique_id == MOCK_GATEWAY_ID
 
 
 async def test_user_flow_new_gateway(
     hass: HomeAssistant, mock_connection: MagicMock
 ) -> None:
     """Test user flow with new gateway (key generation)."""
-    mock_private = "private:generated_private_key_hex"
-    mock_public = "public:generated_public_key_hex"
+    mock_private_key = MagicMock()
+    mock_public_key = MagicMock()
 
-    with patch(
-        "homeassistant.components.threema.config_flow.generate_key_pair",
-        return_value=(mock_private, mock_public),
+    with (
+        patch(
+            "homeassistant.components.threema.client.key.Key.generate_pair",
+            return_value=(mock_private_key, mock_public_key),
+        ),
+        patch(
+            "homeassistant.components.threema.client.key.Key.encode",
+            side_effect=[
+                "private:generated_private_key_hex",
+                "public:generated_public_key_hex",
+            ],
+        ),
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
+        assert result["type"] is FlowResultType.MENU
 
-        # Choose new gateway
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            user_input={"setup_type": "generate_keys"},
+            {"next_step_id": "setup_new"},
         )
         assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "setup_new"
 
-        # Confirm keys and proceed
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             user_input={
-                "public_key": mock_public,
-                "private_key": mock_private,
+                "public_key": "public:generated_public_key_hex",
+                "private_key": "private:generated_private_key_hex",
             },
         )
         assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "credentials"
 
-        # Enter gateway credentials
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             user_input={
@@ -144,23 +150,25 @@ async def test_user_flow_new_gateway(
         await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["data"][CONF_PRIVATE_KEY] == mock_private
-    assert result["data"][CONF_PUBLIC_KEY] == mock_public
+    assert result["data"][CONF_PRIVATE_KEY] == "private:generated_private_key_hex"
+    assert result["data"][CONF_PUBLIC_KEY] == "public:generated_public_key_hex"
+    assert result["result"].unique_id == MOCK_GATEWAY_ID
 
 
 async def test_user_flow_key_generation_failure(hass: HomeAssistant) -> None:
     """Test user flow aborts when key generation fails."""
     with patch(
-        "homeassistant.components.threema.config_flow.generate_key_pair",
+        "homeassistant.components.threema.client.key.Key.generate_pair",
         side_effect=RuntimeError("Key generation failed"),
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
+        assert result["type"] is FlowResultType.MENU
 
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            user_input={"setup_type": "generate_keys"},
+            {"next_step_id": "setup_new"},
         )
 
     assert result["type"] is FlowResultType.ABORT
@@ -174,9 +182,11 @@ async def test_credentials_invalid_gateway_id(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
+    assert result["type"] is FlowResultType.MENU
+
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        user_input={"setup_type": "add_gateway"},
+        {"next_step_id": "credentials"},
     )
 
     # Gateway ID not starting with *
@@ -213,9 +223,11 @@ async def test_credentials_already_configured(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
+    assert result["type"] is FlowResultType.MENU
+
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        user_input={"setup_type": "add_gateway"},
+        {"next_step_id": "credentials"},
     )
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -229,139 +241,76 @@ async def test_credentials_already_configured(
     assert result["reason"] == "already_configured"
 
 
-async def test_credentials_cannot_connect(hass: HomeAssistant) -> None:
-    """Test credentials step when connection fails."""
-    with patch(
-        "homeassistant.components.threema.client.Connection", autospec=True
-    ) as connection_class:
-        connection = MagicMock()
-        connection.__aenter__ = AsyncMock(return_value=connection)
-        connection.__aexit__ = AsyncMock(return_value=None)
-        connection.get_credits = AsyncMock(
-            side_effect=GatewayError("Connection refused")
-        )
-        connection_class.return_value = connection
+@pytest.mark.parametrize(
+    ("side_effect", "expected_error"),
+    [
+        (GatewayError("Connection refused"), "cannot_connect"),
+        (GatewayServerError(status=500), "cannot_connect"),
+        (GatewayServerError(status=401), "invalid_auth"),
+        (RuntimeError("Unexpected"), "unknown"),
+    ],
+    ids=["cannot_connect", "server_error_non_auth", "invalid_auth", "unknown_error"],
+)
+async def test_credentials_error(
+    hass: HomeAssistant,
+    mock_connection: MagicMock,
+    side_effect: Exception,
+    expected_error: str,
+) -> None:
+    """Test credentials step with various errors."""
+    mock_connection.get_credits.side_effect = side_effect
 
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": config_entries.SOURCE_USER}
-        )
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            user_input={"setup_type": "add_gateway"},
-        )
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            user_input={
-                CONF_GATEWAY_ID: MOCK_GATEWAY_ID,
-                CONF_API_SECRET: MOCK_API_SECRET,
-            },
-        )
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.MENU
 
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"base": "cannot_connect"}
-
-
-async def test_credentials_server_error_non_auth(hass: HomeAssistant) -> None:
-    """Test credentials step with non-401 server error."""
-    with patch(
-        "homeassistant.components.threema.client.Connection", autospec=True
-    ) as connection_class:
-        connection = MagicMock()
-        connection.__aenter__ = AsyncMock(return_value=connection)
-        connection.__aexit__ = AsyncMock(return_value=None)
-        connection.get_credits = AsyncMock(side_effect=GatewayServerError(status=500))
-        connection_class.return_value = connection
-
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": config_entries.SOURCE_USER}
-        )
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            user_input={"setup_type": "add_gateway"},
-        )
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            user_input={
-                CONF_GATEWAY_ID: MOCK_GATEWAY_ID,
-                CONF_API_SECRET: MOCK_API_SECRET,
-            },
-        )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {"next_step_id": "credentials"},
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_GATEWAY_ID: MOCK_GATEWAY_ID,
+            CONF_API_SECRET: MOCK_API_SECRET,
+        },
+    )
 
     assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"base": "cannot_connect"}
+    assert result["errors"] == {"base": expected_error}
 
 
-async def test_credentials_invalid_auth(hass: HomeAssistant) -> None:
-    """Test credentials step with invalid authentication."""
-    with patch(
-        "homeassistant.components.threema.config_flow.ThreemaAPIClient.validate_credentials",
-        side_effect=ThreemaAuthError("Invalid credentials"),
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": config_entries.SOURCE_USER}
-        )
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            user_input={"setup_type": "add_gateway"},
-        )
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            user_input={
-                CONF_GATEWAY_ID: MOCK_GATEWAY_ID,
-                CONF_API_SECRET: MOCK_API_SECRET,
-            },
-        )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"base": "invalid_auth"}
-
-
-async def test_credentials_unknown_error(hass: HomeAssistant) -> None:
-    """Test credentials step with unexpected error."""
-    with patch(
-        "homeassistant.components.threema.config_flow.ThreemaAPIClient.validate_credentials",
-        side_effect=RuntimeError("Unexpected"),
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": config_entries.SOURCE_USER}
-        )
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            user_input={"setup_type": "add_gateway"},
-        )
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            user_input={
-                CONF_GATEWAY_ID: MOCK_GATEWAY_ID,
-                CONF_API_SECRET: MOCK_API_SECRET,
-            },
-        )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"base": "unknown"}
-
-
-async def test_reauth_flow_invalid_auth(
+@pytest.mark.parametrize(
+    ("side_effect", "expected_error"),
+    [
+        (GatewayServerError(status=401), "invalid_auth"),
+        (GatewayError("Connection refused"), "cannot_connect"),
+        (RuntimeError("Unexpected"), "unknown"),
+    ],
+    ids=["invalid_auth", "cannot_connect", "unknown_error"],
+)
+async def test_reauth_flow_error(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
+    mock_connection: MagicMock,
+    side_effect: Exception,
+    expected_error: str,
 ) -> None:
-    """Test reauth flow with invalid credentials."""
+    """Test reauth flow with various errors."""
     mock_config_entry.add_to_hass(hass)
+    mock_connection.get_credits.side_effect = side_effect
 
-    with patch(
-        "homeassistant.components.threema.config_flow.ThreemaAPIClient.validate_credentials",
-        side_effect=ThreemaAuthError("Invalid credentials"),
-    ):
-        result = await mock_config_entry.start_reauth_flow(hass)
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            user_input={
-                CONF_API_SECRET: "wrong_secret",
-            },
-        )
+    result = await mock_config_entry.start_reauth_flow(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_API_SECRET: "wrong_secret",
+        },
+    )
 
     assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"base": "invalid_auth"}
+    assert result["errors"] == {"base": expected_error}
 
 
 async def test_reauth_flow_success(
@@ -413,59 +362,6 @@ async def test_reauth_flow_preserves_private_key(
     assert mock_config_entry_with_keys.data[CONF_PRIVATE_KEY] == MOCK_PRIVATE_KEY
 
 
-async def test_reauth_flow_cannot_connect(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test reauth flow with connection failure."""
-    mock_config_entry.add_to_hass(hass)
-
-    with patch(
-        "homeassistant.components.threema.client.Connection", autospec=True
-    ) as connection_class:
-        connection = MagicMock()
-        connection.__aenter__ = AsyncMock(return_value=connection)
-        connection.__aexit__ = AsyncMock(return_value=None)
-        connection.get_credits = AsyncMock(
-            side_effect=GatewayError("Connection refused")
-        )
-        connection_class.return_value = connection
-
-        result = await mock_config_entry.start_reauth_flow(hass)
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            user_input={
-                CONF_API_SECRET: "new_secret",
-            },
-        )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"base": "cannot_connect"}
-
-
-async def test_reauth_flow_unknown_error(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test reauth flow with unexpected error."""
-    mock_config_entry.add_to_hass(hass)
-
-    with patch(
-        "homeassistant.components.threema.config_flow.ThreemaAPIClient.validate_credentials",
-        side_effect=RuntimeError("Unexpected"),
-    ):
-        result = await mock_config_entry.start_reauth_flow(hass)
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            user_input={
-                CONF_API_SECRET: "new_secret",
-            },
-        )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"base": "unknown"}
-
-
 async def test_reauth_flow_updates_private_key(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
@@ -492,7 +388,7 @@ async def test_subentry_add_recipient(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_connection: MagicMock,
-    mock_send: MagicMock,
+    mock_send: tuple[MagicMock, MagicMock],
 ) -> None:
     """Test adding a recipient via subentry flow."""
     mock_config_entry.add_to_hass(hass)
@@ -520,7 +416,7 @@ async def test_subentry_invalid_recipient_id(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_connection: MagicMock,
-    mock_send: MagicMock,
+    mock_send: tuple[MagicMock, MagicMock],
 ) -> None:
     """Test subentry flow rejects invalid Threema ID."""
     mock_config_entry.add_to_hass(hass)
@@ -551,17 +447,34 @@ async def test_subentry_invalid_recipient_id(
 
 async def test_subentry_duplicate_recipient(
     hass: HomeAssistant,
-    mock_config_entry_with_subentry: MockConfigEntry,
     mock_connection: MagicMock,
-    mock_send: MagicMock,
+    mock_send: tuple[MagicMock, MagicMock],
 ) -> None:
     """Test subentry flow rejects duplicate recipient."""
-    mock_config_entry_with_subentry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry_with_subentry.entry_id)
+    entry = MockConfigEntry(
+        title=f"Threema {MOCK_GATEWAY_ID}",
+        domain=DOMAIN,
+        data={
+            CONF_GATEWAY_ID: MOCK_GATEWAY_ID,
+            CONF_API_SECRET: MOCK_API_SECRET,
+        },
+        unique_id=MOCK_GATEWAY_ID,
+        subentries_data=[
+            {
+                "data": {CONF_RECIPIENT: "ABCD1234"},
+                "subentry_id": "mock_subentry_id",
+                "subentry_type": SUBENTRY_TYPE_RECIPIENT,
+                "title": "ABCD1234",
+                "unique_id": "ABCD1234",
+            },
+        ],
+    )
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
     result = await hass.config_entries.subentries.async_init(
-        (mock_config_entry_with_subentry.entry_id, SUBENTRY_TYPE_RECIPIENT),
+        (entry.entry_id, SUBENTRY_TYPE_RECIPIENT),
         context={"source": config_entries.SOURCE_USER},
     )
 

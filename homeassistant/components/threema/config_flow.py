@@ -15,6 +15,7 @@ from homeassistant.config_entries import (
     ConfigSubentryFlow,
     SubentryFlowResult,
 )
+from homeassistant.const import CONF_NAME
 from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv
 
@@ -60,20 +61,9 @@ class ThreemaConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle the initial step - choose setup type."""
-        if user_input is not None:
-            if user_input.get("setup_type") == "generate_keys":
-                return await self.async_step_setup_new()
-            return await self.async_step_credentials()
-
-        return self.async_show_form(
+        return self.async_show_menu(
             step_id="user",
-            data_schema=vol.Schema(
-                {
-                    vol.Required("setup_type", default="add_gateway"): vol.In(
-                        ["add_gateway", "generate_keys"]
-                    ),
-                }
-            ),
+            menu_options=["credentials", "setup_new"],
         )
 
     async def async_step_setup_new(
@@ -262,7 +252,7 @@ class RecipientSubentryFlowHandler(ConfigSubentryFlow):
                     if subentry.data.get(CONF_RECIPIENT) == recipient_id:
                         return self.async_abort(reason="already_configured")
 
-                raw_name = user_input.get("name", "").strip()
+                raw_name = user_input.get(CONF_NAME, "").strip()
                 name = f"{raw_name} ({recipient_id})" if raw_name else recipient_id
 
                 return self.async_create_entry(
@@ -276,7 +266,7 @@ class RecipientSubentryFlowHandler(ConfigSubentryFlow):
             data_schema=vol.Schema(
                 {
                     vol.Required(CONF_RECIPIENT): str,
-                    vol.Optional("name"): str,
+                    vol.Optional(CONF_NAME): str,
                 }
             ),
             errors=errors,

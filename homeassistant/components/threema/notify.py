@@ -10,8 +10,13 @@ from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import ThreemaConfigEntry
-from .client import ThreemaAuthError, ThreemaConnectionError, ThreemaSendError
-from .const import CONF_GATEWAY_ID, CONF_RECIPIENT, DOMAIN
+from .client import (
+    ThreemaAPIClient,
+    ThreemaAuthError,
+    ThreemaConnectionError,
+    ThreemaSendError,
+)
+from .const import CONF_RECIPIENT, DOMAIN, SUBENTRY_TYPE_RECIPIENT
 
 
 async def async_setup_entry(
@@ -21,8 +26,10 @@ async def async_setup_entry(
 ) -> None:
     """Set up Threema notify entities from config entry subentries."""
     for subentry_id, subentry in entry.subentries.items():
+        if subentry.subentry_type != SUBENTRY_TYPE_RECIPIENT:
+            continue
         async_add_entities(
-            [ThreemaNotifyEntity(entry, subentry)],
+            [ThreemaNotifyEntity(entry.runtime_data, subentry)],
             config_subentry_id=subentry_id,
         )
 
@@ -35,29 +42,26 @@ class ThreemaNotifyEntity(NotifyEntity):
 
     def __init__(
         self,
-        entry: ThreemaConfigEntry,
+        client: ThreemaAPIClient,
         subentry: ConfigSubentry,
     ) -> None:
         """Initialize the notify entity."""
-        self._entry = entry
+        self._client = client
         self._recipient_id: str = subentry.data[CONF_RECIPIENT]
-        gateway_id = entry.data[CONF_GATEWAY_ID]
 
-        self._attr_unique_id = f"{gateway_id}_{self._recipient_id}"
+        self._attr_unique_id = f"{client.gateway_id}_{self._recipient_id}"
         self._attr_name = subentry.title
         self._attr_device_info = DeviceInfo(
-            name=entry.title,
             entry_type=DeviceEntryType.SERVICE,
             manufacturer="Threema",
-            identifiers={(DOMAIN, gateway_id)},
+            identifiers={(DOMAIN, client.gateway_id)},
         )
 
     async def async_send_message(self, message: str, title: str | None = None) -> None:
         """Send a message to the configured Threema recipient."""
         text = f"*{title}*\n{message}" if title else message
-        client = self._entry.runtime_data
         try:
-            await client.send_text_message(self._recipient_id, text)
+            await self._client.send_text_message(self._recipient_id, text)
         except ThreemaAuthError as err:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
