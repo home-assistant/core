@@ -26,6 +26,22 @@
   - domain: number
     device_class: temperature
 
+operation_mode_changed:
+  target: *trigger_water_heater_target
+  fields:
+    behavior: *trigger_behavior
+    operation_mode:
+      context:
+        filter_target: target
+      required: true
+      selector:
+        state:
+          attribute: operation_mode
+          hide_states:
+            - unavailable
+            - unknown
+          multiple: true
+
 turned_off: *trigger_common
 turned_on: *trigger_common
 
