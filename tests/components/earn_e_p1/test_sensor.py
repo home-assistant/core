@@ -30,9 +30,7 @@ async def test_sensor_platform(
     trigger_callback(mock_listener)
     await hass.async_block_till_done()
 
-    await snapshot_platform(
-        hass, entity_registry, snapshot, mock_config_entry.entry_id
-    )
+    await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
 async def test_sensor_unavailable_without_data(
