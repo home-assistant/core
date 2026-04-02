@@ -61,7 +61,6 @@ rules:
       This integration uses public application credentials managed by the library.
       There are no user-provided credentials to re-authenticate.
   test-coverage: done
-
   # Gold
   devices: done
   diagnostics: done

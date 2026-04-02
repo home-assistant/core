@@ -5,19 +5,10 @@
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "search_too_short": "Please enter at least 3 characters to search",
-      "no_addresses_found": "No addresses found matching your search"
+      "no_addresses_found": "No addresses found matching your search",
+      "search_too_short": "Please enter at least 3 characters to search"
     },
     "step": {
-      "user": {
-        "data": {
-          "address_search": "Street address"
-        },
-        "data_description": {
-          "address_search": "Enter the street name or address to search for your waste collection location"
-        },
-        "description": "Search for your address to set up waste collection tracking."
-      },
       "select_address": {
         "data": {
           "selected_address": "Address"
@@ -26,19 +17,28 @@
           "selected_address": "Select the address for your waste collection schedule"
         },
         "description": "Found {count} addresses matching \"{query}\". Select your address from the list below."
+      },
+      "user": {
+        "data": {
+          "address_search": "Street address"
+        },
+        "data_description": {
+          "address_search": "Enter the street name or address to search for your waste collection location"
+        },
+        "description": "Search for your address to set up waste collection tracking."
       }
     }
   },
   "entity": {
     "sensor": {
-      "mixed_waste_pickup": {
-        "name": "Mixed waste pickup"
-      },
-      "paper_and_plastic_pickup": {
-        "name": "Paper and plastic pickup"
+      "food_waste_days_until": {
+        "name": "Food waste days until pickup"
       },
       "food_waste_pickup": {
         "name": "Food waste pickup"
+      },
+      "glass_and_metal_packaging_days_until": {
+        "name": "Glass and metal packaging days until pickup"
       },
       "glass_and_metal_packaging_pickup": {
         "name": "Glass and metal packaging pickup"
@@ -46,14 +46,14 @@
       "mixed_waste_days_until": {
         "name": "Mixed waste days until pickup"
       },
+      "mixed_waste_pickup": {
+        "name": "Mixed waste pickup"
+      },
       "paper_and_plastic_days_until": {
         "name": "Paper and plastic days until pickup"
       },
-      "food_waste_days_until": {
-        "name": "Food waste days until pickup"
-      },
-      "glass_and_metal_packaging_days_until": {
-        "name": "Glass and metal packaging days until pickup"
+      "paper_and_plastic_pickup": {
+        "name": "Paper and plastic pickup"
       }
     }
   }
