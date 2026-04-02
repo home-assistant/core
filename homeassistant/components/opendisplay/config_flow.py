@@ -2,11 +2,14 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 import logging
 from typing import Any
 
 from opendisplay import (
     MANUFACTURER_ID,
+    AuthenticationFailedError,
+    AuthenticationRequiredError,
     BLEConnectionError,
     OpenDisplayDevice,
     OpenDisplayError,
@@ -21,9 +24,19 @@ from homeassistant.components.bluetooth import (
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_ADDRESS
 
-from .const import DOMAIN
+from .const import CONF_ENCRYPTION_KEY, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
+
+
+def _validate_key_format(key: str) -> bytes | None:
+    """Return 16-byte key if valid 32-char hex string, else None."""
+    if len(key) != 32:
+        return None
+    try:
+        return bytes.fromhex(key)
+    except ValueError:
+        return None
 
 
 class OpenDisplayConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -33,15 +46,19 @@ class OpenDisplayConfigFlow(ConfigFlow, domain=DOMAIN):
         """Initialize the config flow."""
         self._discovery_info: BluetoothServiceInfoBleak | None = None
         self._discovered_devices: dict[str, BluetoothServiceInfoBleak] = {}
+        self._pending_address: str | None = None
+        self._pending_name: str | None = None
 
-    async def _async_test_connection(self, address: str) -> None:
+    async def _async_test_connection(
+        self, address: str, encryption_key: bytes | None = None
+    ) -> None:
         """Connect to the device and verify it responds."""
         ble_device = async_ble_device_from_address(self.hass, address, connectable=True)
         if ble_device is None:
             raise BLEConnectionError(f"Could not find connectable device for {address}")
 
         async with OpenDisplayDevice(
-            mac_address=address, ble_device=ble_device
+            mac_address=address, ble_device=ble_device, encryption_key=encryption_key
         ) as device:
             await device.read_firmware_version()
 
@@ -56,6 +73,10 @@ class OpenDisplayConfigFlow(ConfigFlow, domain=DOMAIN):
 
         try:
             await self._async_test_connection(discovery_info.address)
+        except AuthenticationRequiredError:
+            self._pending_address = discovery_info.address
+            self._pending_name = discovery_info.name
+            return await self.async_step_encryption_key()
         except OpenDisplayError:
             return self.async_abort(reason="cannot_connect")
         except Exception:
@@ -92,6 +113,10 @@ class OpenDisplayConfigFlow(ConfigFlow, domain=DOMAIN):
 
             try:
                 await self._async_test_connection(address)
+            except AuthenticationRequiredError:
+                self._pending_address = address
+                self._pending_name = self._discovered_devices[address].name
+                return await self.async_step_encryption_key()
             except OpenDisplayError:
                 errors["base"] = "cannot_connect"
             except Exception:
@@ -126,5 +151,94 @@ class OpenDisplayConfigFlow(ConfigFlow, domain=DOMAIN):
                     )
                 }
             ),
+            errors=errors,
+        )
+
+    async def async_step_encryption_key(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle the encryption key step."""
+        assert self._pending_address is not None
+        assert self._pending_name is not None
+        errors: dict[str, str] = {}
+
+        if user_input is not None:
+            raw_key = user_input[CONF_ENCRYPTION_KEY].strip().lower()
+            key_bytes = _validate_key_format(raw_key)
+            if key_bytes is None:
+                errors[CONF_ENCRYPTION_KEY] = "invalid_key_format"
+            else:
+                try:
+                    await self._async_test_connection(self._pending_address, key_bytes)
+                except AuthenticationFailedError:
+                    errors[CONF_ENCRYPTION_KEY] = "invalid_auth"
+                except OpenDisplayError:
+                    errors["base"] = "cannot_connect"
+                except Exception:
+                    _LOGGER.exception("Unexpected error")
+                    errors["base"] = "unknown"
+                else:
+                    return self.async_create_entry(
+                        title=self._pending_name,
+                        data={CONF_ENCRYPTION_KEY: raw_key},
+                    )
+
+        return self.async_show_form(
+            step_id="encryption_key",
+            data_schema=vol.Schema({vol.Required(CONF_ENCRYPTION_KEY): str}),
+            description_placeholders={"name": self._pending_name},
+            errors=errors,
+        )
+
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
+        """Handle re-authentication."""
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reauth confirmation."""
+        reauth_entry = self._get_reauth_entry()
+        errors: dict[str, str] = {}
+
+        if user_input is not None:
+            raw_key = user_input[CONF_ENCRYPTION_KEY].strip().lower()
+            if not raw_key:
+                key_bytes: bytes | None = None
+                store_key: str | None = None
+            else:
+                key_bytes = _validate_key_format(raw_key)
+                if key_bytes is None:
+                    errors[CONF_ENCRYPTION_KEY] = "invalid_key_format"
+                    store_key = None
+                else:
+                    store_key = raw_key
+
+            if not errors:
+                address = reauth_entry.unique_id
+                assert address is not None
+                try:
+                    await self._async_test_connection(address, key_bytes)
+                except AuthenticationFailedError:
+                    errors[CONF_ENCRYPTION_KEY] = "invalid_auth"
+                except OpenDisplayError:
+                    errors["base"] = "cannot_connect"
+                except Exception:
+                    _LOGGER.exception("Unexpected error")
+                    errors["base"] = "unknown"
+                else:
+                    return self.async_update_reload_and_abort(
+                        reauth_entry,
+                        data_updates={CONF_ENCRYPTION_KEY: store_key},
+                    )
+
+        return self.async_show_form(
+            step_id="reauth_confirm",
+            data_schema=vol.Schema(
+                {vol.Optional(CONF_ENCRYPTION_KEY, default=""): str}
+            ),
+            description_placeholders={"name": reauth_entry.title},
             errors=errors,
         )
