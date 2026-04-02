@@ -1223,7 +1223,7 @@ async def test_traffic_rules(
     expected_enable_call = deepcopy(traffic_rule)
     expected_enable_call["enabled"] = True
 
-    assert aioclient_mock.call_count == call_count + 2
+    assert aioclient_mock.call_count == call_count + 1
     assert aioclient_mock.mock_calls[call_count][2] == expected_enable_call
 
 
@@ -1277,7 +1277,7 @@ async def test_traffic_routes(
     expected_enable_call = deepcopy(traffic_route)
     expected_enable_call["enabled"] = True
 
-    assert aioclient_mock.call_count == call_count + 2
+    assert aioclient_mock.call_count == call_count + 1
     assert aioclient_mock.mock_calls[call_count][2] == expected_enable_call
 
 
