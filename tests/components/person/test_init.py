@@ -216,12 +216,13 @@ async def test_setup_two_trackers(
 
     hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
     await hass.async_block_till_done()
-    # Router tracker at home with its own gps_accuracy — the person entity
-    # should get coordinates from the home zone (which has no gps_accuracy),
-    # not from the router tracker's attributes.
-    # Note: This is not realistic, a router tracker would not have gps_accuracy,
-    # but we want to test that the person entity propagates the gps_accuracy from
-    # the zone, not from the state attributes of the device tracker.
+    # Router tracker at home with gps_accuracy — the person entity should get
+    # coordinates from the home zone (which has no gps_accuracy),not from the
+    # router tracker's attributes.
+    # Note: This is not a realistic test case, a router tracker would not have
+    # gps_accuracy, but we want to assert that the person entity uses latitude
+    # longitude and accuracy from the home zone, not from the state attributes
+    # of the device tracker.
     hass.states.async_set(
         DEVICE_TRACKER,
         "home",
