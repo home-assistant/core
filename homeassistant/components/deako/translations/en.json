@@ -1,0 +1,50 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "Device is already configured",
+      "single_instance_allowed": "Already configured. Only a single configuration possible.",
+      "reconfigure_successful": "Re-configuration was successful",
+      "reconfigure_bridge_updated": "Bridge configuration updated. If the selected bridge is currently offline, the integration will keep retrying in the background for up to 48 hours. In the meantime, the integration will continue operating on any available bridge."
+    },
+    "error": {
+      "cannot_connect": "Failed to connect",
+      "no_host": "Please enter a primary bridge IP address",
+      "same_host": "Primary and failover cannot be the same IP address"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "host": "Bridge"
+        },
+        "data_description": {
+          "host": "Select a discovered bridge or choose manual entry."
+        },
+        "description": "Deako bridges found on your network. Select one to set up."
+      },
+      "manual": {
+        "data": {
+          "host": "Host"
+        },
+        "data_description": {
+          "host": "IP address of your Deako bridge. Use this if the bridge is on a different subnet."
+        },
+        "description": "No bridges were discovered automatically. Enter the IP address of your Deako bridge."
+      },
+      "zeroconf_confirm": {
+        "description": "Deako discovered. Do you want to add it to Home Assistant?",
+        "title": "Deako discovered"
+      },
+      "reconfigure": {
+        "data": {
+          "host": "Primary bridge IP",
+          "secondary_host": "Failover bridge IP"
+        },
+        "data_description": {
+          "host": "IP address of the device you want as the primary bridge.",
+          "secondary_host": "IP address of the failover bridge (optional). Leave blank for auto-discovery."
+        },
+        "description": "Enter the IP address of the Deako device you want as the bridge. If the device is currently offline, the integration will keep retrying in the background and the change may take up to 48 hours to take effect."
+      }
+    }
+  }
+}
