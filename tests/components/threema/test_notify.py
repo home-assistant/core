@@ -161,9 +161,9 @@ async def test_send_message_e2e(
 @pytest.mark.parametrize(
     ("side_effect", "match"),
     [
-        (GatewayServerError(status=401), "send_error"),
-        (GatewayError("Network error"), "send_error"),
-        (GatewayServerError(status=500), "send_error"),
+        (GatewayServerError(status=401), "Error sending message"),
+        (GatewayError("Network error"), "Error sending message"),
+        (GatewayServerError(status=500), "Error sending message"),
     ],
     ids=["auth_error", "send_error", "server_error_non_auth"],
 )
