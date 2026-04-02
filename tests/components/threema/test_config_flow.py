@@ -20,7 +20,7 @@ from homeassistant.components.threema.const import (
     SUBENTRY_TYPE_RECIPIENT,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.data_entry_flow import FlowResultType, InvalidData
 
 from .conftest import MOCK_API_SECRET, MOCK_GATEWAY_ID
 
@@ -349,13 +349,19 @@ async def test_subentry_add_recipient_with_name(
     assert result["unique_id"] == "ABCD1234"
 
 
+@pytest.mark.parametrize(
+    "invalid_id",
+    ["ABC", "ABCD!@#$", ""],
+    ids=["too_short", "special_chars", "empty"],
+)
 async def test_subentry_invalid_recipient_id(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_connection: MagicMock,
     mock_send: tuple[MagicMock, MagicMock],
+    invalid_id: str,
 ) -> None:
-    """Test subentry flow rejects invalid Threema ID."""
+    """Test subentry flow rejects invalid Threema ID via schema validation."""
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
@@ -365,21 +371,11 @@ async def test_subentry_invalid_recipient_id(
         context={"source": config_entries.SOURCE_USER},
     )
 
-    # Too short
-    result = await hass.config_entries.subentries.async_configure(
-        result["flow_id"],
-        user_input={CONF_RECIPIENT: "ABC"},
-    )
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"base": "invalid_recipient_id"}
-
-    # Special characters
-    result = await hass.config_entries.subentries.async_configure(
-        result["flow_id"],
-        user_input={CONF_RECIPIENT: "ABCD!@#$"},
-    )
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"base": "invalid_recipient_id"}
+    with pytest.raises(InvalidData):
+        await hass.config_entries.subentries.async_configure(
+            result["flow_id"],
+            user_input={CONF_RECIPIENT: invalid_id},
+        )
 
 
 async def test_subentry_duplicate_recipient(
