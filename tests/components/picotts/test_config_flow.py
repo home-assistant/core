@@ -47,6 +47,22 @@ async def test_user_step(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> No
         assert len(mock_setup_entry.mock_calls) == 1
 
 
+async def test_user_step_binary_not_found(
+    hass: HomeAssistant, mock_setup_entry: AsyncMock
+) -> None:
+    """Test user step aborts when binary not found."""
+    with patch(
+        "homeassistant.components.picotts.shutil.which",
+        return_value=None,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "binary_not_found"
+
+
 async def test_already_configured(
     hass: HomeAssistant, mock_setup_entry: AsyncMock
 ) -> None:
