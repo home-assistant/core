@@ -79,7 +79,7 @@ def run():
     if args.all:
         start = time.perf_counter()
         prepare_download_dir()
-        run_translation(dict(translations["component"]), flattened_translations)
+        run_translation(translations["component"], flattened_translations)
         elapsed = time.perf_counter() - start
         print(
             f"🌎 Generated translation files for all integrations in {elapsed:.2f} seconds"
