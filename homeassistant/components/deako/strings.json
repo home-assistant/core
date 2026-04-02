@@ -1,12 +1,49 @@
 {
   "config": {
     "abort": {
-      "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]",
-      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
+      "reconfigure_bridge_updated": "Bridge configuration updated. If the selected bridge is currently offline, the integration will keep retrying in the background for up to 48 hours. In the meantime, the integration will continue operating on any available bridge."
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "no_host": "Please enter a primary bridge IP address",
+      "same_host": "Primary and failover cannot be the same IP address"
     },
     "step": {
-      "confirm": {
-        "description": "Please confirm setting up the Deako integration"
+      "user": {
+        "data": {
+          "host": "Bridge"
+        },
+        "data_description": {
+          "host": "Select a discovered bridge or choose manual entry."
+        },
+        "description": "Deako bridges found on your network. Select one to set up."
+      },
+      "manual": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]"
+        },
+        "data_description": {
+          "host": "IP address of your Deako bridge. Use this if the bridge is on a different subnet."
+        },
+        "description": "No bridges were discovered automatically. Enter the IP address of your Deako bridge."
+      },
+      "zeroconf_confirm": {
+        "description": "Deako discovered. Do you want to add it to Home Assistant?",
+        "title": "Deako discovered"
+      },
+      "reconfigure": {
+        "data": {
+          "host": "Primary bridge IP",
+          "secondary_host": "Failover bridge IP"
+        },
+        "data_description": {
+          "host": "IP address of the device you want as the primary bridge.",
+          "secondary_host": "IP address of the failover bridge (optional). Leave blank for auto-discovery."
+        },
+        "description": "Enter the IP address of the Deako device you want as the bridge. If the device is currently offline, the integration will keep retrying in the background and the change may take up to 48 hours to take effect."
       }
     }
   }
