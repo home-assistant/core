@@ -11,7 +11,11 @@ from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
 
-from tests.common import MockConfigEntry, async_load_json_array_fixture, snapshot_platform
+from tests.common import (
+    MockConfigEntry,
+    async_load_json_array_fixture,
+    snapshot_platform,
+)
 
 
 @pytest.fixture(autouse=True)
