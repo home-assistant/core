@@ -5,7 +5,7 @@ from __future__ import annotations
 from datetime import date, datetime
 from typing import TypedDict
 
-from pybirno import BirClient, BirError
+from pybirno import BirClient, BirError, WastePickup as BirWastePickup
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ADDRESS
@@ -56,7 +56,7 @@ class BirDataUpdateCoordinator(DataUpdateCoordinator[dict[str, WastePickup]]):
 
     @staticmethod
     def _process_pickup_data(
-        pickups: list, reference_date: date | None = None
+        pickups: list[BirWastePickup], reference_date: date | None = None
     ) -> dict[str, WastePickup]:
         """Process raw pickup data into structured format."""
         if reference_date is None:
