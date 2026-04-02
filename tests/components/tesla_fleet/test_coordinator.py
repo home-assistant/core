@@ -199,51 +199,6 @@ async def test_coordinator_subsequent_run(
     assert stats == snapshot
 
 
-async def test_coordinator_skips_existing_timestamps(
-    recorder_mock: Recorder,
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_energy_site: AsyncMock,
-) -> None:
-    """Test the coordinator skips timestamps that already exist."""
-    mock_config_entry.add_to_hass(hass)
-
-    # First run
-    mock_energy_site.energy_history.return_value = {
-        "response": {
-            "period": "day",
-            "time_series": [
-                {
-                    "timestamp": "2023-06-01T08:00:00-07:00",
-                    "solar_energy_exported": 1000,
-                },
-            ],
-        }
-    }
-
-    with patch(
-        "homeassistant.components.tesla_fleet.coordinator.get_instance"
-    ) as mock_get_instance:
-        mock_get_instance.return_value = recorder_mock
-        coordinator = TeslaFleetEnergySiteHistoryCoordinator(
-            hass, mock_config_entry, mock_energy_site
-        )
-        await coordinator._async_update_data()
-        await async_wait_recording_done(hass)
-
-        # Second run with same data - should not add duplicates
-        await coordinator._async_update_data()
-        await async_wait_recording_done(hass)
-
-    # Verify only one stat entry exists
-    stats = await _get_hourly_stats(
-        hass,
-        {f"tesla_fleet:{SITE_ID}_solar_energy_exported"},
-    )
-
-    assert len(stats[f"tesla_fleet:{SITE_ID}_solar_energy_exported"]) == 1
-
-
 async def test_coordinator_handles_empty_data(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
@@ -289,32 +244,52 @@ async def test_coordinator_handles_invalid_data(
         await coordinator._async_update_data()
 
 
+@pytest.mark.parametrize(
+    ("timestamps", "expected_state"),
+    [
+        (
+            ["2023-06-01T08:12:34-07:00", "2023-06-01T08:45:00-07:00"],
+            1300.0,
+        ),
+        (
+            ["2023-06-01T14:00:00+05:30", "2023-06-01T14:45:00+05:30"],
+            300.0,
+        ),
+    ],
+    ids=["standard_offset", "half_hour_offset"],
+)
 async def test_coordinator_normalizes_timestamps_to_hour(
     recorder_mock: Recorder,
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_energy_site: AsyncMock,
+    timestamps: list[str],
+    expected_state: float,
 ) -> None:
-    """Test the coordinator aggregates same-hour samples at the top of the hour."""
+    """Test the coordinator aggregates same-hour samples at the top of the hour.
+
+    Verifies both standard timezone offsets and non-hour offsets (e.g. +05:30)
+    where a naïve convert-to-UTC-then-floor approach would split samples into
+    different hourly buckets.
+    """
     mock_config_entry.add_to_hass(hass)
 
-    raw_timestamp = "2023-06-01T08:12:34-07:00"
-    expected_start = dt_util.parse_datetime(raw_timestamp)
+    expected_start = dt_util.parse_datetime(timestamps[0])
     assert expected_start is not None
     expected_start = expected_start.replace(minute=0, second=0, microsecond=0)
+
+    values = [
+        int(expected_state * i / len(timestamps)) for i in range(1, len(timestamps) + 1)
+    ]
+    # Ensure values sum to expected_state
+    values[-1] = int(expected_state) - sum(values[:-1])
 
     mock_energy_site.energy_history.return_value = {
         "response": {
             "period": "day",
             "time_series": [
-                {
-                    "timestamp": raw_timestamp,
-                    "solar_energy_exported": 1234,
-                },
-                {
-                    "timestamp": "2023-06-01T08:45:00-07:00",
-                    "solar_energy_exported": 66,
-                },
+                {"timestamp": ts, "solar_energy_exported": val}
+                for ts, val in zip(timestamps, values, strict=True)
             ],
         }
     }
@@ -338,63 +313,8 @@ async def test_coordinator_normalizes_timestamps_to_hour(
     assert len(stats[f"tesla_fleet:{SITE_ID}_solar_energy_exported"]) == 1
     stat = stats[f"tesla_fleet:{SITE_ID}_solar_energy_exported"][0]
     assert stat["start"] == dt_util.as_utc(expected_start).timestamp()
-    assert stat["state"] == 1300.0
-    assert stat["sum"] == 1300.0
-
-
-async def test_coordinator_normalizes_half_hour_offset_timezone(
-    recorder_mock: Recorder,
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_energy_site: AsyncMock,
-) -> None:
-    """Test samples in a +05:30 timezone stay in the correct hourly bucket."""
-    mock_config_entry.add_to_hass(hass)
-
-    # Both samples fall within the 14:00 +05:30 hour.
-    # With a naïve "convert-to-UTC-then-floor" approach the second sample
-    # (14:45 +05:30 = 09:15 UTC) would be floored to 09:00 UTC, while the
-    # first (14:00 +05:30 = 08:30 UTC) would be floored to 08:00 UTC — two
-    # different buckets for the same local hour.
-    raw_ts_1 = "2023-06-01T14:00:00+05:30"
-    raw_ts_2 = "2023-06-01T14:45:00+05:30"
-
-    expected_start = dt_util.parse_datetime(raw_ts_1)
-    assert expected_start is not None
-    expected_start = expected_start.replace(minute=0, second=0, microsecond=0)
-
-    mock_energy_site.energy_history.return_value = {
-        "response": {
-            "period": "day",
-            "time_series": [
-                {"timestamp": raw_ts_1, "solar_energy_exported": 100},
-                {"timestamp": raw_ts_2, "solar_energy_exported": 200},
-            ],
-        }
-    }
-
-    with patch(
-        "homeassistant.components.tesla_fleet.coordinator.get_instance"
-    ) as mock_get_instance:
-        mock_get_instance.return_value = recorder_mock
-        coordinator = TeslaFleetEnergySiteHistoryCoordinator(
-            hass, mock_config_entry, mock_energy_site
-        )
-        await coordinator._async_update_data()
-
-    await async_wait_recording_done(hass)
-
-    stats = await _get_hourly_stats(
-        hass,
-        {f"tesla_fleet:{SITE_ID}_solar_energy_exported"},
-    )
-
-    # Both samples must land in a single hourly bucket.
-    assert len(stats[f"tesla_fleet:{SITE_ID}_solar_energy_exported"]) == 1
-    stat = stats[f"tesla_fleet:{SITE_ID}_solar_energy_exported"][0]
-    assert stat["start"] == dt_util.as_utc(expected_start).timestamp()
-    assert stat["state"] == 300.0
-    assert stat["sum"] == 300.0
+    assert stat["state"] == expected_state
+    assert stat["sum"] == expected_state
 
 
 async def test_coordinator_updates_latest_hour_statistic(
@@ -458,19 +378,13 @@ async def test_coordinator_updates_latest_hour_statistic(
         await coordinator._async_update_data()
         await async_wait_recording_done(hass)
 
-    stats = await hass.async_add_executor_job(
-        statistics_during_period,
+    stats = await _get_hourly_stats(
         hass,
-        dt_util.utc_from_timestamp(0),
-        None,
-        {"tesla_fleet:123456_solar_energy_exported"},
-        "hour",
-        None,
-        STATISTIC_TYPES,
+        {f"tesla_fleet:{SITE_ID}_solar_energy_exported"},
     )
 
-    assert len(stats["tesla_fleet:123456_solar_energy_exported"]) == 2
-    first_stat, second_stat = stats["tesla_fleet:123456_solar_energy_exported"]
+    assert len(stats[f"tesla_fleet:{SITE_ID}_solar_energy_exported"]) == 2
+    first_stat, second_stat = stats[f"tesla_fleet:{SITE_ID}_solar_energy_exported"]
     assert first_stat["state"] == 1500.0
     assert first_stat["sum"] == 1500.0
     assert second_stat["state"] == 400.0
@@ -557,46 +471,3 @@ async def test_coordinator_handles_missing_timestamp(
 
     assert len(stats[f"tesla_fleet:{SITE_ID}_solar_energy_exported"]) == 1
     assert stats[f"tesla_fleet:{SITE_ID}_solar_energy_exported"][0].get("sum") == 2000
-
-
-async def test_coordinator_deduplicates_duplicate_timestamps_in_payload(
-    recorder_mock: Recorder,
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_energy_site: AsyncMock,
-) -> None:
-    """Test duplicate timestamps in one payload are deduplicated."""
-    mock_config_entry.add_to_hass(hass)
-
-    mock_energy_site.energy_history.return_value = {
-        "response": {
-            "period": "day",
-            "time_series": [
-                {
-                    "timestamp": "2023-06-01T08:00:00-07:00",
-                    "solar_energy_exported": 1000,
-                },
-                {
-                    "timestamp": "2023-06-01T08:15:00-07:00",
-                    "solar_energy_exported": 2000,
-                },
-            ],
-        }
-    }
-
-    with patch(
-        "homeassistant.components.tesla_fleet.coordinator.get_instance"
-    ) as mock_get_instance:
-        mock_get_instance.return_value = recorder_mock
-        coordinator = TeslaFleetEnergySiteHistoryCoordinator(
-            hass, mock_config_entry, mock_energy_site
-        )
-        await coordinator._async_update_data()
-        await async_wait_recording_done(hass)
-
-    stats = await _get_hourly_stats(
-        hass,
-        {f"tesla_fleet:{SITE_ID}_solar_energy_exported"},
-    )
-
-    assert len(stats[f"tesla_fleet:{SITE_ID}_solar_energy_exported"]) == 1
