@@ -502,6 +502,12 @@ def get_pipdeptree() -> dict[str, dict[str, Any]]:
     return deptree
 
 
+@cache
+def metadata_cache(package: str) -> dict:
+    """Return package metadata, cached."""
+    return metadata(package)
+
+
 def get_requirements(integration: Integration, packages: set[str]) -> set[str]:
     """Return all (recursively) requirements for an integration."""
     deptree = get_pipdeptree()
@@ -550,7 +556,7 @@ def get_requirements(integration: Integration, packages: set[str]) -> set[str]:
             continue
 
         # Check for restrictive version limits on Python
-        if (requires_python := metadata(package)["Requires-Python"]) and not all(
+        if (requires_python := metadata_cache(package)["Requires-Python"]) and not all(
             _is_dependency_version_range_valid(version_part, "SemVer")
             for version_part in requires_python.split(",")
         ):
