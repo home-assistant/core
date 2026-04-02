@@ -1,13 +1,14 @@
 """Conftest module for ekeybionyx."""
 
 from http import HTTPStatus
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 from aiohttp.test_utils import TestClient
 import pytest
 
 from homeassistant.components.ekeybionyx.const import DOMAIN
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import OAuth2TokenRequestError
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
@@ -60,6 +61,20 @@ def mock_no_response(
     aioclient_mock.get(
         "https://api.bionyx.io/3rd-party/api/systems",
         status=HTTPStatus.INTERNAL_SERVER_ERROR,
+    )
+
+
+@pytest.fixture(name="invalid_token")
+def mock_invalid_token(
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """Fixture to setup fake requests made to Ekey Bionyx API during config flow."""
+    aioclient_mock.get(
+        "https://api.bionyx.io/3rd-party/api/systems",
+        exc=OAuth2TokenRequestError(
+            request_info=Mock(),
+            domain="homeassistant",
+        ),
     )
 
 
