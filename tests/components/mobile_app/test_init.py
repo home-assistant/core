@@ -633,9 +633,9 @@ async def test_unload_removes_live_activity_tokens(
     resp = await webhook_client.post(
         f"/api/webhook/{webhook_id}",
         json={
-            "type": "update_live_activity_token",
+            "type": "mobile_app_live_activity_token",
             "data": {
-                "tag": "washer_cycle",
+                "live_activity_tag": "washer_cycle",
                 "push_token": "a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2",
             },
         },
