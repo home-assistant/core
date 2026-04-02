@@ -1,5 +1,7 @@
 """Test the Met integration init."""
 
+from unittest.mock import patch
+
 import pytest
 
 from homeassistant.components.met.const import (
@@ -8,11 +10,14 @@ from homeassistant.components.met.const import (
     DOMAIN,
 )
 from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import CONF_ELEVATION, CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.core_config import async_process_ha_core_config
 from homeassistant.helpers import device_registry as dr
 
 from . import init_integration
+
+from tests.common import MockConfigEntry
 
 
 async def test_unload_entry(hass: HomeAssistant) -> None:
@@ -77,3 +82,25 @@ async def test_removing_incorrect_devices(
     assert not device_registry.async_get_device(identifiers={(DOMAIN,)})
     assert device_registry.async_get_device(identifiers={(DOMAIN, entry.entry_id)})
     assert "Removing improper device Forecast_legacy" in caplog.text
+
+
+async def test_api_failure(hass: HomeAssistant) -> None:
+    """Test that entry goes to SETUP_RETRY when API fails."""
+    with patch(
+        "homeassistant.components.met.coordinator.metno.MetWeatherData.fetching_data",
+        return_value=False,
+    ):
+        entry = MockConfigEntry(
+            domain=DOMAIN,
+            data={
+                CONF_NAME: "test",
+                CONF_LATITUDE: 0,
+                CONF_LONGITUDE: 1.0,
+                CONF_ELEVATION: 1.0,
+            },
+        )
+        entry.add_to_hass(hass)
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.SETUP_RETRY
