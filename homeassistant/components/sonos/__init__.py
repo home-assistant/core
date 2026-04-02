@@ -662,8 +662,11 @@ class SonosDiscoveryManager:
                 AVAILABILITY_CHECK_INTERVAL,
             )
         )
-
-        await self._async_load_known_speakers()
+        self.entry.async_create_background_task(
+            self.hass,
+            self._async_load_known_speakers(),
+            "sonos_load_known_speakers",
+        )
 
     async def _async_load_known_speakers(self) -> None:
         """Load known speakers from config entry data."""
