@@ -334,7 +334,6 @@ async def test_send_message_with_inline_keyboard(
             }
         ]
     }
-
 async def test_send_message_with_inline_keyboard_style(
     hass: HomeAssistant, webhook_bot
 ) -> None:
