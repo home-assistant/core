@@ -5,6 +5,7 @@ from unittest.mock import patch
 import pytest
 
 from homeassistant.components.bir.const import DOMAIN
+from homeassistant.components.bir.sensor import SENSORS
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -26,7 +27,7 @@ async def test_sensors_created(
         entity_registry, mock_config_entry.entry_id
     )
     # 4 days_until (enabled) + 4 date (disabled)
-    assert len(entity_entries) == 8
+    assert len(entity_entries) == len(SENSORS)
 
 
 @pytest.mark.parametrize(
@@ -108,8 +109,6 @@ async def test_sensor_unavailable_when_waste_type_missing(
         await hass.config_entries.async_reload(mock_config_entry.entry_id)
         await hass.async_block_till_done()
 
-    state = hass.states.get(
-        "sensor.testveien_1_bergen_mixed_waste_days_until_pickup"
-    )
+    state = hass.states.get("sensor.testveien_1_bergen_mixed_waste_days_until_pickup")
     assert state is not None
     assert state.state == STATE_UNAVAILABLE
