@@ -26,9 +26,15 @@ from .const import (
     AudioFormats,
     AudioSampleRates,
 )
-from .models import SpeechMetadata, SpeechResult
+from .models import SpeechAudioProcessing, SpeechMetadata, SpeechResult
 
 _LOGGER = logging.getLogger(__name__)
+
+DEFAULT_AUDIO_PROCESSING = SpeechAudioProcessing(
+    requires_external_vad=True,
+    prefers_auto_gain_enabled=True,
+    prefers_noise_reduction_enabled=True,
+)
 
 
 @callback
@@ -142,6 +148,11 @@ class Provider(ABC):
     @abstractmethod
     def supported_channels(self) -> list[AudioChannels]:
         """Return a list of supported channels."""
+
+    @property
+    def audio_processing(self) -> SpeechAudioProcessing:
+        """Return required/preferred input audio processing settings."""
+        return DEFAULT_AUDIO_PROCESSING
 
     @abstractmethod
     async def async_process_audio_stream(
