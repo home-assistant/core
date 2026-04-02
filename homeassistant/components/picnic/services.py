@@ -7,6 +7,7 @@ from typing import cast
 from python_picnic_api2 import PicnicAPI
 import voluptuous as vol
 
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_CONFIG_ENTRY_ID
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.helpers import config_validation as cv
@@ -19,6 +20,7 @@ from .const import (
     DOMAIN,
     SERVICE_ADD_PRODUCT_TO_CART,
 )
+from .coordinator import PicnicConfigEntry
 
 
 class PicnicServiceException(Exception):
@@ -50,12 +52,11 @@ def async_setup_services(hass: HomeAssistant) -> None:
 
 async def get_api_client(hass: HomeAssistant, config_entry_id: str) -> PicnicAPI:
     """Get the right Picnic API client based on the config entry id."""
-    from .coordinator import PicnicConfigEntry  # noqa: PLC0415
 
     entry: PicnicConfigEntry | None = hass.config_entries.async_get_entry(
         config_entry_id
     )
-    if entry is None:
+    if entry is None or entry.state != ConfigEntryState.LOADED:
         raise ValueError(f"Config entry with id {config_entry_id} not found!")
     return entry.runtime_data.picnic_api_client
 
