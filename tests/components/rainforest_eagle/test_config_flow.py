@@ -203,7 +203,7 @@ async def test_form_invalid_auth(hass: HomeAssistant) -> None:
         "aioeagle.EagleHub.get_device_list",
         side_effect=InvalidAuth,
     ):
-        result2 = await hass.config_entries.flow.async_configure(
+        result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
                 CONF_CLOUD_ID: "abcdef",
@@ -212,8 +212,8 @@ async def test_form_invalid_auth(hass: HomeAssistant) -> None:
             },
         )
 
-    assert result2["type"] is FlowResultType.FORM
-    assert result2["errors"] == {"base": "invalid_auth"}
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "invalid_auth"}
 
 
 async def test_form_cannot_connect(hass: HomeAssistant) -> None:
@@ -226,7 +226,7 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
         "aioeagle.EagleHub.get_device_list",
         side_effect=CannotConnect,
     ):
-        result2 = await hass.config_entries.flow.async_configure(
+        result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
                 CONF_CLOUD_ID: "abcdef",
@@ -235,5 +235,5 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
             },
         )
 
-    assert result2["type"] is FlowResultType.FORM
-    assert result2["errors"] == {"base": "cannot_connect"}
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "cannot_connect"}
