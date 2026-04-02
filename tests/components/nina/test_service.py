@@ -39,7 +39,7 @@ async def test_description_service(
     """Test that the get descriptions service return the description."""
     await setup_platform(hass, mock_config_entry, mock_nina_class, nina_warnings)
 
-    target_entity_id = "binary_sensor.nina_warning_aach_1"
+    target_entity_id = "binary_sensor.aach_warning_1"
 
     result = await hass.services.async_call(
         DOMAIN,
@@ -63,7 +63,7 @@ async def test_description_service_no_warning(
     """Test that the get descriptions service return None if no warning is present."""
     await setup_platform(hass, mock_config_entry, mock_nina_class, [])
 
-    target_entity_id = "binary_sensor.nina_warning_aach_1"
+    target_entity_id = "binary_sensor.aach_warning_1"
 
     result = await hass.services.async_call(
         DOMAIN,
@@ -85,7 +85,7 @@ async def test_affected_area_service_full_description(
     """Test that the get affected area service return the full area."""
     await setup_platform(hass, mock_config_entry, mock_nina_class, nina_warnings)
 
-    target_entity_id = "binary_sensor.nina_warning_aach_1"
+    target_entity_id = "binary_sensor.aach_warning_1"
 
     result = await hass.services.async_call(
         DOMAIN,
@@ -111,7 +111,7 @@ async def test_affected_area_service_no_warning(
     """Test that the get affected area service return None if no warning is present."""
     await setup_platform(hass, mock_config_entry, mock_nina_class, [])
 
-    target_entity_id = "binary_sensor.nina_warning_aach_1"
+    target_entity_id = "binary_sensor.aach_warning_1"
 
     result = await hass.services.async_call(
         DOMAIN,
@@ -133,7 +133,7 @@ async def test_recommended_actions_service(
     """Test that the get recommended actions service return the full area."""
     await setup_platform(hass, mock_config_entry, mock_nina_class, nina_warnings)
 
-    target_entity_id = "binary_sensor.nina_warning_aach_1"
+    target_entity_id = "binary_sensor.aach_warning_1"
 
     result = await hass.services.async_call(
         DOMAIN,
@@ -157,7 +157,7 @@ async def test_recommended_actions_service_no_warning(
     """Test that the get recommended actions service return None if no warning is present."""
     await setup_platform(hass, mock_config_entry, mock_nina_class, [])
 
-    target_entity_id = "binary_sensor.nina_warning_aach_1"
+    target_entity_id = "binary_sensor.aach_warning_1"
 
     result = await hass.services.async_call(
         DOMAIN,
