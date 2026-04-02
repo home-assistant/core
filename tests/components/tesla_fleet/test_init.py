@@ -80,19 +80,6 @@ async def test_load_unload(
     assert not hasattr(normal_config_entry, "runtime_data")
 
 
-async def test_remove_entry_without_runtime_data(
-    hass: HomeAssistant,
-    normal_config_entry: MockConfigEntry,
-) -> None:
-    """Test remove entry when runtime_data is not set."""
-    with patch(
-        "homeassistant.components.tesla_fleet.get_recorder_instance"
-    ) as mock_get_recorder:
-        await async_remove_entry(hass, normal_config_entry)
-
-    mock_get_recorder.assert_not_called()
-
-
 async def test_remove_entry_clears_statistics(
     hass: HomeAssistant,
     normal_config_entry: MockConfigEntry,
@@ -100,6 +87,19 @@ async def test_remove_entry_clears_statistics(
     """Test remove entry clears external statistics for energy sites."""
     await setup_platform(hass, normal_config_entry)
     assert normal_config_entry.state is ConfigEntryState.LOADED
+
+    # Get the energy site serial numbers from the device registry before unload
+    device_registry = dr.async_get(hass)
+    devices = dr.async_entries_for_config_entry(
+        device_registry, normal_config_entry.entry_id
+    )
+    site_serial_numbers = {
+        d.serial_number for d in devices if d.serial_number is not None
+    }
+
+    # Unload first (like real removal flow), which deletes runtime_data
+    await hass.config_entries.async_unload(normal_config_entry.entry_id)
+    assert not hasattr(normal_config_entry, "runtime_data")
 
     with patch(
         "homeassistant.components.tesla_fleet.get_recorder_instance"
@@ -111,8 +111,8 @@ async def test_remove_entry_clears_statistics(
         mock_get_recorder.return_value.async_clear_statistics.call_args.args[0]
     )
     expected_ids = {
-        f"tesla_fleet:{energy_site.id}_{field}"
-        for energy_site in normal_config_entry.runtime_data.energysites
+        f"tesla_fleet:{serial}_{field}"
+        for serial in site_serial_numbers
         for field in ENERGY_HISTORY_FIELDS
     }
     assert cleared_ids == expected_ids
