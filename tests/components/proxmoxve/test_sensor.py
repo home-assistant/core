@@ -11,7 +11,7 @@ from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
 
-from tests.common import MockConfigEntry, load_json_array_fixture, snapshot_platform
+from tests.common import MockConfigEntry, async_load_json_array_fixture, snapshot_platform
 
 
 @pytest.fixture(autouse=True)
@@ -46,7 +46,9 @@ async def test_storage_missing_used_fraction(
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test storage usage percentage sensor when used_fraction is missing."""
-    storage_data = load_json_array_fixture("nodes/storage.json", "proxmoxve")
+    storage_data = await async_load_json_array_fixture(
+        hass, "nodes/storage.json", "proxmoxve"
+    )
     # Remove used_fraction from the first storage entry
     storage_without_fraction = [
         {k: v for k, v in s.items() if k != "used_fraction"} for s in storage_data
