@@ -897,3 +897,78 @@ async def test_reset_item_via_update(
     state = hass.states.get(TEST_ENTITY)
     assert state
     assert state.state == "1"
+
+
+@pytest.mark.parametrize(
+    "info",
+    [
+        {ATTR_STATUS: "needs_action"},
+        {ATTR_STATUS: "completed"},
+    ],
+)
+async def test_bulk_update(
+    hass: HomeAssistant,
+    setup_integration: None,
+    ws_get_items: WsGetItemsType,
+    info: dict[str, Any],
+) -> None:
+    """Test removing a todo item."""
+
+    total_items = 5
+    completed_items = [0, 2, 3]
+    expected_state = total_items - len(completed_items)
+
+    # Populate list
+    for _i in range(total_items):
+        await hass.services.async_call(
+            TODO_DOMAIN,
+            TodoServices.ADD_ITEM,
+            {
+                ATTR_ITEM: f"item {_i}",
+            },
+            target={ATTR_ENTITY_ID: TEST_ENTITY},
+            blocking=True,
+        )
+
+    items = await ws_get_items()
+    assert len(items) == total_items
+    uids = [item["uid"] for item in items]
+    names = [item["summary"] for item in items]
+
+    for _i in completed_items:
+        await hass.services.async_call(
+            TODO_DOMAIN,
+            TodoServices.UPDATE_ITEM,
+            {
+                ATTR_ITEM: uids[_i],
+                ATTR_STATUS: "completed",
+            },
+            target={ATTR_ENTITY_ID: TEST_ENTITY},
+            blocking=True,
+        )
+
+    state = hass.states.get(TEST_ENTITY)
+    assert state
+    assert state.state == str(expected_state)
+
+    # Bulk-update list
+    await hass.services.async_call(
+        TODO_DOMAIN,
+        TodoServices.UPDATE_LIST,
+        info,
+        target={ATTR_ENTITY_ID: TEST_ENTITY},
+        blocking=True,
+    )
+
+    items = await ws_get_items()
+    assert len(items) == total_items
+    assert [item["summary"] for item in items] == names
+
+    # Verify status
+    if status := info.get("status"):
+        assert not [item for item in items if item["status"] != status]
+        expected_state = 0 if status == "completed" else total_items
+
+    state = hass.states.get(TEST_ENTITY)
+    assert state
+    assert state.state == str(expected_state)

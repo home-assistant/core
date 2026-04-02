@@ -3,6 +3,7 @@
 import asyncio
 import datetime
 import logging
+from typing import Any
 
 from ical.calendar import Calendar
 from ical.calendar_stream import IcsCalendarStream
@@ -118,6 +119,7 @@ class LocalTodoListEntity(TodoListEntity):
         | TodoListEntityFeature.SET_DUE_DATETIME_ON_ITEM
         | TodoListEntityFeature.SET_DUE_DATE_ON_ITEM
         | TodoListEntityFeature.SET_DESCRIPTION_ON_ITEM
+        | TodoListEntityFeature.UPDATE_TODO_LIST
     )
     _attr_should_poll = False
 
@@ -174,6 +176,16 @@ class LocalTodoListEntity(TodoListEntity):
         async with self._calendar_lock:
             todo_store = self._new_todo_store()
             await self.hass.async_add_executor_job(todo_store.edit, todo.uid, todo)
+            await self.async_save()
+        await self.async_update_ha_state(force_refresh=True)
+
+    async def async_update_todo_list(self, info: dict[str, Any]) -> None:
+        """Update an item in the To-do list."""
+        item = _convert_item(TodoItem(**info))
+        async with self._calendar_lock:
+            todo_store = self._new_todo_store()
+            for todo in todo_store.todo_list():
+                await self.hass.async_add_executor_job(todo_store.edit, todo.uid, item)
             await self.async_save()
         await self.async_update_ha_state(force_refresh=True)
 
