@@ -204,12 +204,29 @@ async def test_set_addon_options_error(
     with pytest.raises(AddonError) as err:
         await addon_manager.async_set_addon_options({"test_key": "test"})
 
-    assert str(err.value) == "Failed to set the Test app options: Boom"
+    assert str(err.value) == "Failed to set the Test app options"
 
     assert set_addon_options.call_count == 1
     assert set_addon_options.call_args == call(
         "test_addon", AddonsOptions(config={"test_key": "test"})
     )
+
+
+async def test_set_addon_options_error_does_not_include_detail(
+    addon_manager: AddonManager, set_addon_options: AsyncMock
+) -> None:
+    """Test set addon options error does not include backend details."""
+    secret = "00112233445566778899AABBCCDDEEFF"
+    set_addon_options.side_effect = SupervisorError(
+        "not a valid value for dictionary value @ data['options']. "
+        f"Got {{'s0_legacy_key': '{secret}'}}"
+    )
+
+    with pytest.raises(AddonError) as err:
+        await addon_manager.async_set_addon_options({"s0_legacy_key": secret})
+
+    assert str(err.value) == "Failed to set the Test app options"
+    assert secret not in str(err.value)
 
 
 async def test_install_addon(
@@ -823,7 +840,7 @@ async def test_schedule_install_setup_addon(
             1,
             None,
             0,
-            "Failed to set the Test app options: Boom",
+            "Failed to set the Test app options",
         ),
         (
             None,
@@ -892,7 +909,7 @@ async def test_schedule_install_setup_addon_error(
             1,
             None,
             0,
-            "Failed to set the Test app options: Boom",
+            "Failed to set the Test app options",
         ),
         (
             None,
@@ -978,7 +995,7 @@ async def test_schedule_setup_addon(
             1,
             None,
             0,
-            "Failed to set the Test app options: Boom",
+            "Failed to set the Test app options",
         ),
         (
             None,
@@ -1027,7 +1044,7 @@ async def test_schedule_setup_addon_error(
             1,
             None,
             0,
-            "Failed to set the Test app options: Boom",
+            "Failed to set the Test app options",
         ),
         (
             None,
@@ -1061,3 +1078,27 @@ async def test_schedule_setup_addon_logs_error(
     assert error_log in caplog.text
     assert set_addon_options.call_count == set_addon_options_calls
     assert start_addon.call_count == start_addon_calls
+
+
+async def test_schedule_setup_addon_logs_error_without_options_detail(
+    addon_manager: AddonManager,
+    addon_installed: AsyncMock,
+    set_addon_options: AsyncMock,
+    start_addon: AsyncMock,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test schedule setup addon does not log sensitive options."""
+    secret = "00112233445566778899AABBCCDDEEFF"
+    set_addon_options.side_effect = SupervisorError(
+        "not a valid value for dictionary value @ data['options']. "
+        f"Got {{'s0_legacy_key': '{secret}'}}"
+    )
+
+    await addon_manager.async_schedule_setup_addon(
+        {"s0_legacy_key": secret}, catch_error=True
+    )
+
+    assert "Failed to set the Test app options" in caplog.text
+    assert secret not in caplog.text
+    assert set_addon_options.call_count == 1
+    assert start_addon.call_count == 0

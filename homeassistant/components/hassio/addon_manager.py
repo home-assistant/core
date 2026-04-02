@@ -38,6 +38,7 @@ def api_error[_AddonManagerT: AddonManager, **_P, _R](
     error_message: str,
     *,
     expected_error_type: type[HassioAPIError | SupervisorError] | None = None,
+    include_error_detail: bool = True,
 ) -> Callable[
     [_FuncType[_AddonManagerT, _P, _R]], _ReturnFuncType[_AddonManagerT, _P, _R]
 ]:
@@ -57,9 +58,13 @@ def api_error[_AddonManagerT: AddonManager, **_P, _R](
             try:
                 return_value = await func(self, *args, **kwargs)
             except error_type as err:
-                raise AddonError(
-                    f"{error_message.format(addon_name=self.addon_name)}: {err}"
-                ) from err
+                if include_error_detail:
+                    message = (
+                        f"{error_message.format(addon_name=self.addon_name)}: {err}"
+                    )
+                else:
+                    message = error_message.format(addon_name=self.addon_name)
+                raise AddonError(message) from err
 
             return return_value
 
@@ -202,6 +207,7 @@ class AddonManager:
     @api_error(
         "Failed to set the {addon_name} app options",
         expected_error_type=SupervisorError,
+        include_error_detail=False,
     )
     async def async_set_addon_options(self, config: dict) -> None:
         """Set manager add-on options."""
