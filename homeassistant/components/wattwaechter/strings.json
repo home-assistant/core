@@ -24,18 +24,7 @@
     },
     "abort": {
       "already_configured": "This device is already configured. The IP address has been updated.",
-      "already_configured_mqtt": "This device is already integrated via MQTT auto-discovery. Please disable MQTT on the device or remove the MQTT entities first to use this integration instead.",
       "no_device_id": "Could not identify the device."
-    }
-  },
-  "options": {
-    "step": {
-      "init": {
-        "title": "WattWächter Plus Options",
-        "data": {
-          "scan_interval": "Update interval (seconds)"
-        }
-      }
     }
   },
   "exceptions": {
@@ -73,10 +62,7 @@
       "power_factor_l2": { "name": "Power factor L2" },
       "power_factor_l3": { "name": "Power factor L3" },
       "wifi_signal": { "name": "WiFi signal" },
-      "wifi_ssid": { "name": "WiFi SSID" },
-      "ip_address": { "name": "IP address" },
-      "firmware_version": { "name": "Firmware version" },
-      "mdns_name": { "name": "mDNS" }
+      "wifi_ssid": { "name": "WiFi SSID" }
     }
   }
 }

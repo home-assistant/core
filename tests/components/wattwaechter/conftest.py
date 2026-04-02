@@ -6,7 +6,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from homeassistant.const import CONF_HOST, CONF_SCAN_INTERVAL, CONF_TOKEN
+from homeassistant.const import CONF_HOST, CONF_TOKEN
 from homeassistant.core import HomeAssistant
 
 from aio_wattwaechter.models import (
@@ -87,16 +87,6 @@ MOCK_METER_DATA_MINIMAL = MeterData(
     values={
         "1.8.0": ObisValue(value=100.0, unit="kWh", name="Total Import"),
         "16.7.0": ObisValue(value=500, unit="W", name="Active Power"),
-    },
-)
-
-MOCK_METER_DATA_WITH_UNKNOWN = MeterData(
-    timestamp=1704067200,
-    datetime_str="2024-01-01T00:00:00",
-    values={
-        "1.8.0": ObisValue(value=12345.678, unit="kWh", name="Total Import"),
-        "99.99.0": ObisValue(value=42.5, unit="W", name="Unknown"),
-        "0.0.0": ObisValue(value="1EMH0012345678", unit="", name="Meter Number"),
     },
 )
 

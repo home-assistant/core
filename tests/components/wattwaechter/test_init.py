@@ -30,7 +30,6 @@ async def test_setup_entry(hass: HomeAssistant, mock_config_entry) -> None:
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
     assert isinstance(mock_config_entry.runtime_data, WattwaechterCoordinator)
-    assert mock_config_entry.runtime_data.mdns_name == "wattwaechter-aabbccddeeff.local"
 
 
 async def test_setup_entry_connection_error(

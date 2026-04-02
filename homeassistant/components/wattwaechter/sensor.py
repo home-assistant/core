@@ -33,11 +33,6 @@ PARALLEL_UPDATES = 0
 
 
 @dataclass(frozen=True, kw_only=True)
-class ObisSensorDescription(SensorEntityDescription):
-    """Describes a WattWächter OBIS sensor."""
-
-
-@dataclass(frozen=True, kw_only=True)
 class DiagnosticSensorDescription(SensorEntityDescription):
     """Describes a WattWächter diagnostic sensor."""
 
@@ -45,9 +40,9 @@ class DiagnosticSensorDescription(SensorEntityDescription):
     system_key: str
 
 
-KNOWN_OBIS_CODES: dict[str, ObisSensorDescription] = {
+KNOWN_OBIS_CODES: dict[str, SensorEntityDescription] = {
     # Energy meters (kWh) - total_increasing
-    "1.8.0": ObisSensorDescription(
+    "1.8.0": SensorEntityDescription(
         key="1.8.0",
         translation_key="import_total",
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
@@ -55,7 +50,7 @@ KNOWN_OBIS_CODES: dict[str, ObisSensorDescription] = {
         state_class=SensorStateClass.TOTAL_INCREASING,
         suggested_display_precision=2,
     ),
-    "2.8.0": ObisSensorDescription(
+    "2.8.0": SensorEntityDescription(
         key="2.8.0",
         translation_key="export_total",
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
@@ -63,7 +58,7 @@ KNOWN_OBIS_CODES: dict[str, ObisSensorDescription] = {
         state_class=SensorStateClass.TOTAL_INCREASING,
         suggested_display_precision=2,
     ),
-    "1.8.1": ObisSensorDescription(
+    "1.8.1": SensorEntityDescription(
         key="1.8.1",
         translation_key="import_tariff_1",
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
@@ -71,7 +66,7 @@ KNOWN_OBIS_CODES: dict[str, ObisSensorDescription] = {
         state_class=SensorStateClass.TOTAL_INCREASING,
         suggested_display_precision=2,
     ),
-    "1.8.2": ObisSensorDescription(
+    "1.8.2": SensorEntityDescription(
         key="1.8.2",
         translation_key="import_tariff_2",
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
@@ -79,7 +74,7 @@ KNOWN_OBIS_CODES: dict[str, ObisSensorDescription] = {
         state_class=SensorStateClass.TOTAL_INCREASING,
         suggested_display_precision=2,
     ),
-    "2.8.1": ObisSensorDescription(
+    "2.8.1": SensorEntityDescription(
         key="2.8.1",
         translation_key="export_tariff_1",
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
@@ -87,7 +82,7 @@ KNOWN_OBIS_CODES: dict[str, ObisSensorDescription] = {
         state_class=SensorStateClass.TOTAL_INCREASING,
         suggested_display_precision=2,
     ),
-    "2.8.2": ObisSensorDescription(
+    "2.8.2": SensorEntityDescription(
         key="2.8.2",
         translation_key="export_tariff_2",
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
@@ -96,7 +91,7 @@ KNOWN_OBIS_CODES: dict[str, ObisSensorDescription] = {
         suggested_display_precision=2,
     ),
     # Power (W) - measurement
-    "16.7.0": ObisSensorDescription(
+    "16.7.0": SensorEntityDescription(
         key="16.7.0",
         translation_key="active_power",
         native_unit_of_measurement=UnitOfPower.WATT,
@@ -104,7 +99,7 @@ KNOWN_OBIS_CODES: dict[str, ObisSensorDescription] = {
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=0,
     ),
-    "36.7.0": ObisSensorDescription(
+    "36.7.0": SensorEntityDescription(
         key="36.7.0",
         translation_key="active_power_l1",
         native_unit_of_measurement=UnitOfPower.WATT,
@@ -112,7 +107,7 @@ KNOWN_OBIS_CODES: dict[str, ObisSensorDescription] = {
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=0,
     ),
-    "56.7.0": ObisSensorDescription(
+    "56.7.0": SensorEntityDescription(
         key="56.7.0",
         translation_key="active_power_l2",
         native_unit_of_measurement=UnitOfPower.WATT,
@@ -120,7 +115,7 @@ KNOWN_OBIS_CODES: dict[str, ObisSensorDescription] = {
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=0,
     ),
-    "76.7.0": ObisSensorDescription(
+    "76.7.0": SensorEntityDescription(
         key="76.7.0",
         translation_key="active_power_l3",
         native_unit_of_measurement=UnitOfPower.WATT,
@@ -129,7 +124,7 @@ KNOWN_OBIS_CODES: dict[str, ObisSensorDescription] = {
         suggested_display_precision=0,
     ),
     # Voltage (V) - measurement
-    "32.7.0": ObisSensorDescription(
+    "32.7.0": SensorEntityDescription(
         key="32.7.0",
         translation_key="voltage_l1",
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
@@ -137,7 +132,7 @@ KNOWN_OBIS_CODES: dict[str, ObisSensorDescription] = {
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=1,
     ),
-    "52.7.0": ObisSensorDescription(
+    "52.7.0": SensorEntityDescription(
         key="52.7.0",
         translation_key="voltage_l2",
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
@@ -145,7 +140,7 @@ KNOWN_OBIS_CODES: dict[str, ObisSensorDescription] = {
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=1,
     ),
-    "72.7.0": ObisSensorDescription(
+    "72.7.0": SensorEntityDescription(
         key="72.7.0",
         translation_key="voltage_l3",
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
@@ -154,7 +149,7 @@ KNOWN_OBIS_CODES: dict[str, ObisSensorDescription] = {
         suggested_display_precision=1,
     ),
     # Current (A) - measurement
-    "31.7.0": ObisSensorDescription(
+    "31.7.0": SensorEntityDescription(
         key="31.7.0",
         translation_key="current_l1",
         native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
@@ -162,7 +157,7 @@ KNOWN_OBIS_CODES: dict[str, ObisSensorDescription] = {
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=2,
     ),
-    "51.7.0": ObisSensorDescription(
+    "51.7.0": SensorEntityDescription(
         key="51.7.0",
         translation_key="current_l2",
         native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
@@ -170,7 +165,7 @@ KNOWN_OBIS_CODES: dict[str, ObisSensorDescription] = {
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=2,
     ),
-    "71.7.0": ObisSensorDescription(
+    "71.7.0": SensorEntityDescription(
         key="71.7.0",
         translation_key="current_l3",
         native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
@@ -179,7 +174,7 @@ KNOWN_OBIS_CODES: dict[str, ObisSensorDescription] = {
         suggested_display_precision=2,
     ),
     # Frequency (Hz) - measurement
-    "14.7.0": ObisSensorDescription(
+    "14.7.0": SensorEntityDescription(
         key="14.7.0",
         translation_key="frequency",
         native_unit_of_measurement=UnitOfFrequency.HERTZ,
@@ -188,28 +183,28 @@ KNOWN_OBIS_CODES: dict[str, ObisSensorDescription] = {
         suggested_display_precision=2,
     ),
     # Power factor - measurement
-    "13.7.0": ObisSensorDescription(
+    "13.7.0": SensorEntityDescription(
         key="13.7.0",
         translation_key="power_factor",
         device_class=SensorDeviceClass.POWER_FACTOR,
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=3,
     ),
-    "33.7.0": ObisSensorDescription(
+    "33.7.0": SensorEntityDescription(
         key="33.7.0",
         translation_key="power_factor_l1",
         device_class=SensorDeviceClass.POWER_FACTOR,
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=3,
     ),
-    "53.7.0": ObisSensorDescription(
+    "53.7.0": SensorEntityDescription(
         key="53.7.0",
         translation_key="power_factor_l2",
         device_class=SensorDeviceClass.POWER_FACTOR,
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=3,
     ),
-    "73.7.0": ObisSensorDescription(
+    "73.7.0": SensorEntityDescription(
         key="73.7.0",
         translation_key="power_factor_l3",
         device_class=SensorDeviceClass.POWER_FACTOR,
@@ -228,6 +223,7 @@ DIAGNOSTIC_SENSORS: tuple[DiagnosticSensorDescription, ...] = (
         device_class=SensorDeviceClass.SIGNAL_STRENGTH,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
     ),
     DiagnosticSensorDescription(
         key="wifi_ssid",
@@ -235,41 +231,9 @@ DIAGNOSTIC_SENSORS: tuple[DiagnosticSensorDescription, ...] = (
         system_section="wifi",
         system_key="ssid",
         entity_category=EntityCategory.DIAGNOSTIC,
-    ),
-    DiagnosticSensorDescription(
-        key="ip_address",
-        translation_key="ip_address",
-        system_section="wifi",
-        system_key="ip_address",
-        entity_category=EntityCategory.DIAGNOSTIC,
-    ),
-    DiagnosticSensorDescription(
-        key="firmware_version",
-        translation_key="firmware_version",
-        system_section="esp",
-        system_key="os_version",
-        entity_category=EntityCategory.DIAGNOSTIC,
-    ),
-    DiagnosticSensorDescription(
-        key="mdns_name",
-        translation_key="mdns_name",
-        system_section="wifi",
-        system_key="mdns_name",
-        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
     ),
 )
-
-# Map API unit strings to HA unit/device_class/state_class/precision for unknown OBIS codes
-UNIT_MAP: dict[str, tuple[str | None, SensorDeviceClass | None, SensorStateClass | None, int | None]] = {
-    "kWh": ("kWh", SensorDeviceClass.ENERGY, SensorStateClass.TOTAL_INCREASING, 2),
-    "Wh": ("Wh", SensorDeviceClass.ENERGY, SensorStateClass.TOTAL_INCREASING, 0),
-    "W": ("W", SensorDeviceClass.POWER, SensorStateClass.MEASUREMENT, 0),
-    "V": ("V", SensorDeviceClass.VOLTAGE, SensorStateClass.MEASUREMENT, 1),
-    "A": ("A", SensorDeviceClass.CURRENT, SensorStateClass.MEASUREMENT, 2),
-    "Hz": ("Hz", SensorDeviceClass.FREQUENCY, SensorStateClass.MEASUREMENT, 2),
-    "var": ("var", None, SensorStateClass.MEASUREMENT, 0),
-    "VA": ("VA", None, SensorStateClass.MEASUREMENT, 0),
-}
 
 
 async def async_setup_entry(
@@ -283,9 +247,8 @@ async def async_setup_entry(
 
     # Dynamic OBIS sensors from meter data
     if coordinator.data.meter:
-        for obis_code, obis_value in coordinator.data.meter.values.items():
+        for obis_code in coordinator.data.meter.values:
             if obis_code in KNOWN_OBIS_CODES:
-                # Known OBIS code with predefined metadata
                 entities.append(
                     WattwaechterObisSensor(
                         coordinator=coordinator,
@@ -293,51 +256,15 @@ async def async_setup_entry(
                         obis_code=obis_code,
                     )
                 )
-            else:
-                # Unknown OBIS code - create generic sensor from API data
-                api_unit = obis_value.unit
-                value = obis_value.value
-                is_numeric = isinstance(value, (int, float))
-
-                if api_unit and api_unit in UNIT_MAP:
-                    unit, device_class, state_class, precision = UNIT_MAP[api_unit]
-                elif is_numeric:
-                    unit = api_unit or None
-                    device_class = None
-                    state_class = SensorStateClass.MEASUREMENT
-                    precision = None
-                else:
-                    # String values (e.g. meter number, manufacturer code)
-                    unit = None
-                    device_class = None
-                    state_class = None
-                    precision = None
-
-                description = ObisSensorDescription(
-                    key=obis_code,
-                    name=f"OBIS {obis_code}",
-                    native_unit_of_measurement=unit,
-                    device_class=device_class,
-                    state_class=state_class,
-                    suggested_display_precision=precision,
-                )
-                entities.append(
-                    WattwaechterObisSensor(
-                        coordinator=coordinator,
-                        description=description,
-                        obis_code=obis_code,
-                    )
-                )
 
     # Diagnostic sensors from system info
-    if coordinator.data.system:
-        entities.extend(
-            WattwaechterDiagnosticSensor(
-                coordinator=coordinator,
-                description=diag_description,
-            )
-            for diag_description in DIAGNOSTIC_SENSORS
+    entities.extend(
+        WattwaechterDiagnosticSensor(
+            coordinator=coordinator,
+            description=diag_description,
         )
+        for diag_description in DIAGNOSTIC_SENSORS
+    )
 
     async_add_entities(entities)
 
@@ -345,12 +272,12 @@ async def async_setup_entry(
 class WattwaechterObisSensor(WattwaechterEntity, SensorEntity):
     """Sensor for OBIS meter values."""
 
-    entity_description: ObisSensorDescription
+    entity_description: SensorEntityDescription
 
     def __init__(
         self,
         coordinator: WattwaechterCoordinator,
-        description: ObisSensorDescription,
+        description: SensorEntityDescription,
         obis_code: str,
     ) -> None:
         """Initialize the OBIS sensor."""
@@ -388,10 +315,7 @@ class WattwaechterDiagnosticSensor(WattwaechterEntity, SensorEntity):
     @property
     def native_value(self) -> str | float | None:
         """Return the current sensor value."""
-        system = self.coordinator.data.system
-        if not system:
-            return None
-        return system.get_value(
+        return self.coordinator.data.system.get_value(
             self.entity_description.system_section,
             self.entity_description.system_key,
         )

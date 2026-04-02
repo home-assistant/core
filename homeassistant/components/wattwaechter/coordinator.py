@@ -5,7 +5,6 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
-import time
 
 from aio_wattwaechter import (
     Wattwaechter,
@@ -15,12 +14,12 @@ from aio_wattwaechter import (
 )
 from aio_wattwaechter.models import MeterData, SystemInfo
 
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_SCAN_INTERVAL
+from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
+from . import WattwaechterConfigEntry
 from .const import (
     CONF_DEVICE_ID,
     CONF_DEVICE_NAME,
@@ -30,7 +29,6 @@ from .const import (
     DEFAULT_SCAN_INTERVAL,
     DEVICE_NAME,
     DOMAIN,
-    SYSTEM_INFO_INTERVAL,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -47,12 +45,12 @@ class WattwaechterData:
 class WattwaechterCoordinator(DataUpdateCoordinator[WattwaechterData]):
     """Coordinator for WattWächter Plus data updates."""
 
-    config_entry: ConfigEntry
+    config_entry: WattwaechterConfigEntry
 
     def __init__(
         self,
         hass: HomeAssistant,
-        config_entry: ConfigEntry,
+        config_entry: WattwaechterConfigEntry,
         client: Wattwaechter,
     ) -> None:
         """Initialize the coordinator."""
@@ -62,43 +60,27 @@ class WattwaechterCoordinator(DataUpdateCoordinator[WattwaechterData]):
         self.model: str = config_entry.data.get(CONF_MODEL, "WW-Plus")
         self.mac: str = config_entry.data.get(CONF_MAC, "")
         self.fw_version: str = config_entry.data.get(CONF_FW_VERSION, "")
-        self.device_name: str = config_entry.data.get(CONF_DEVICE_NAME, "") or DEVICE_NAME
-        self.mdns_name: str = ""
-        self._last_system_info: SystemInfo | None = None
-        self._last_system_info_time: float = 0.0
-
-        scan_interval = config_entry.options.get(
-            CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL
+        self.device_name: str = (
+            config_entry.data.get(CONF_DEVICE_NAME, "") or DEVICE_NAME
         )
 
         super().__init__(
             hass,
             _LOGGER,
+            config_entry=config_entry,
             name=f"{DOMAIN}_{self.device_id}",
-            update_interval=timedelta(seconds=scan_interval),
+            update_interval=timedelta(seconds=DEFAULT_SCAN_INTERVAL),
         )
-        self.config_entry = config_entry
 
     async def _async_update_data(self) -> WattwaechterData:
         """Fetch data from the WattWächter device."""
-        now = time.monotonic()
-        needs_system_info = (
-            self._last_system_info is None
-            or now - self._last_system_info_time >= SYSTEM_INFO_INTERVAL
-        )
-
         try:
             try:
                 meter_data = await self.client.meter_data()
             except WattwaechterNoDataError:
                 meter_data = None
 
-            if needs_system_info:
-                system_info = await self.client.system_info()
-                self._last_system_info = system_info
-                self._last_system_info_time = now
-            else:
-                system_info = self._last_system_info
+            system_info = await self.client.system_info()
         except WattwaechterAuthenticationError as err:
             raise ConfigEntryAuthFailed(
                 translation_domain=DOMAIN,
@@ -112,9 +94,8 @@ class WattwaechterCoordinator(DataUpdateCoordinator[WattwaechterData]):
                 translation_placeholders={"error": str(err)},
             ) from err
 
-        # Update firmware version and mDNS name from live data
-        assert system_info is not None
-        self.fw_version = system_info.get_value("esp", "os_version") or self.fw_version
-        self.mdns_name = system_info.get_value("wifi", "mdns_name") or ""
+        self.fw_version = (
+            system_info.get_value("esp", "os_version") or self.fw_version
+        )
 
         return WattwaechterData(meter=meter_data, system=system_info)

@@ -597,6 +597,7 @@ homeassistant.components.waqi.*
 homeassistant.components.water_heater.*
 homeassistant.components.watts.*
 homeassistant.components.watttime.*
+homeassistant.components.wattwaechter.*
 homeassistant.components.weather.*
 homeassistant.components.web_rtc.*
 homeassistant.components.webhook.*

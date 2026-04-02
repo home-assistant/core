@@ -24,15 +24,6 @@
       },
       "wifi_ssid": {
         "default": "mdi:wifi-settings"
-      },
-      "ip_address": {
-        "default": "mdi:ip-network"
-      },
-      "firmware_version": {
-        "default": "mdi:chip"
-      },
-      "mdns_name": {
-        "default": "mdi:dns"
       }
     }
   }

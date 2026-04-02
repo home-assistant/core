@@ -171,24 +171,6 @@ async def test_user_flow_invalid_auth(hass: HomeAssistant) -> None:
     assert result["errors"]["base"] == "invalid_auth"
 
 
-# --- Options Flow ---
-
-
-async def test_options_flow(hass: HomeAssistant, mock_config_entry) -> None:
-    """Test options flow for scan interval."""
-    result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "init"
-
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"],
-        {"scan_interval": 60},
-    )
-
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["data"]["scan_interval"] == 60
-
-
 # --- Zeroconf Flow ---
 
 
@@ -210,7 +192,6 @@ async def test_zeroconf_flow_success(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "zeroconf_confirm"
 
-    # Confirm with token
     with patch(
         "homeassistant.components.wattwaechter.config_flow.Wattwaechter"
     ) as mock_cls:
@@ -362,5 +343,3 @@ async def test_zeroconf_flow_no_device_id(hass: HomeAssistant) -> None:
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "no_device_id"
-
-

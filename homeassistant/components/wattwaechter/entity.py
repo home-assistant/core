@@ -17,21 +17,15 @@ class WattwaechterEntity(CoordinatorEntity[WattwaechterCoordinator]):
     def __init__(self, coordinator: WattwaechterCoordinator) -> None:
         """Initialize the entity."""
         super().__init__(coordinator)
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return device information."""
-        config_host = self.coordinator.mdns_name or self.coordinator.host
-        info = DeviceInfo(
-            identifiers={(DOMAIN, self.coordinator.device_id)},
-            name=self.coordinator.device_name,
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, coordinator.device_id)},
+            name=coordinator.device_name,
             manufacturer=MANUFACTURER,
-            model=self.coordinator.model,
-            sw_version=self.coordinator.fw_version,
-            configuration_url=f"http://{config_host}",
+            model=coordinator.model,
+            sw_version=coordinator.fw_version,
+            configuration_url=f"http://{coordinator.host}",
         )
-        if self.coordinator.mac:
-            info["connections"] = {
-                (CONNECTION_NETWORK_MAC, self.coordinator.mac)
+        if coordinator.mac:
+            self._attr_device_info["connections"] = {
+                (CONNECTION_NETWORK_MAC, coordinator.mac)
             }
-        return info
