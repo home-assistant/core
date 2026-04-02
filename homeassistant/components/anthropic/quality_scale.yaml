@@ -35,9 +35,9 @@ rules:
   config-entry-unloading: done
   docs-configuration-parameters: done
   docs-installation-parameters: done
-  entity-unavailable: todo
+  entity-unavailable: done
   integration-owner: done
-  log-when-unavailable: todo
+  log-when-unavailable: done
   parallel-updates:
     status: exempt
     comment: |
@@ -46,7 +46,7 @@ rules:
   test-coverage: done
   # Gold
   devices: done
-  diagnostics: todo
+  diagnostics: done
   discovery-update-info:
     status: exempt
     comment: |
