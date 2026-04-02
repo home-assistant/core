@@ -1,12 +1,15 @@
 """Tests for the BIR sensors."""
 
+from unittest.mock import patch
+
 import pytest
 
 from homeassistant.components.bir.const import DOMAIN
+from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
-from .conftest import MOCK_PROPERTY_ID
+from .conftest import MOCK_PROPERTY_ID, MOCK_REFERENCE_DATE
 
 from tests.common import MockConfigEntry
 
@@ -91,3 +94,22 @@ async def test_sensor_device(
     )
     for entity_entry in entity_entries:
         assert entity_entry.device_id == device_entry.id
+
+
+async def test_sensor_unavailable_when_waste_type_missing(
+    hass: HomeAssistant,
+    mock_bir_client: patch,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test sensor becomes unavailable when waste type disappears from data."""
+    mock_bir_client.get_pickups.return_value = []
+    with patch("homeassistant.components.bir.coordinator.datetime") as mock_datetime:
+        mock_datetime.now.return_value.date.return_value = MOCK_REFERENCE_DATE
+        await hass.config_entries.async_reload(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    state = hass.states.get(
+        "sensor.testveien_1_bergen_mixed_waste_days_until_pickup"
+    )
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE
