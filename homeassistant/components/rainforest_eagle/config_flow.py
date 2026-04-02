@@ -10,7 +10,14 @@ import voluptuous as vol
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_TYPE
 
-from .const import CONF_CLOUD_ID, CONF_HARDWARE_ADDRESS, CONF_INSTALL_CODE, DOMAIN
+from .const import (
+    CONF_CLOUD_ID,
+    CONF_HARDWARE_ADDRESS,
+    CONF_INSTALL_CODE,
+    DOMAIN,
+    TYPE_EAGLE_100,
+    TYPE_EAGLE_200,
+)
 from .data import CannotConnect, InvalidAuth, async_get_type
 
 _LOGGER = logging.getLogger(__name__)
@@ -49,7 +56,7 @@ class RainforestEagleConfigFlow(ConfigFlow, domain=DOMAIN):
         errors = {}
 
         try:
-            eagle_type, meters = await async_get_type(
+            eagle_type, hardware_address = await async_get_type(
                 self.hass,
                 user_input[CONF_CLOUD_ID],
                 user_input[CONF_INSTALL_CODE],
@@ -63,29 +70,27 @@ class RainforestEagleConfigFlow(ConfigFlow, domain=DOMAIN):
             _LOGGER.exception("Unexpected exception")
             errors["base"] = "unknown"
         else:
-            user_input[CONF_TYPE] = eagle_type
-
-            if meters:
-                # If there are meters, use the first one with a connection status of "Connected", or show an error if none are connected.
-                selected_meter = next(
-                    (
-                        m
-                        for m in meters
-                        if getattr(m, "connection_status", None) == "Connected"
-                    ),
-                    None,
-                )
-                if selected_meter:
-                    # If a connected meter was found, use that and create the entry
-                    user_input[CONF_HARDWARE_ADDRESS] = selected_meter.hardware_address
-
-                else:
-                    # If a connected meter was not found, show an error
-                    errors["base"] = "no_meters_connected"
+            # Verify it is a known device, first
+            if not eagle_type:
+                errors["base"] = "unknown_device_type"
             else:
-                # If there are no meters, set to None (expected for EAGLE-100)
-                user_input[CONF_HARDWARE_ADDRESS] = None
+                # The device is supported, so set that and then determine if further action is necessary, based on the type
+                user_input[CONF_TYPE] = eagle_type
 
+                if eagle_type == TYPE_EAGLE_100:
+                    # For EAGLE-100, there is no hardware address to select, so set it to None and move on
+                    user_input[CONF_HARDWARE_ADDRESS] = None
+                elif eagle_type == TYPE_EAGLE_200:
+                    # For EAGLE-200, a connected meter's hardware address is required to create the entry
+                    if not hardware_address:
+                        # hardware_address will be None if there are no meters at all or if none are currently Connected
+                        errors["base"] = "no_meters_connected"
+                    else:
+                        user_input[CONF_HARDWARE_ADDRESS] = hardware_address
+                else:
+                    errors["base"] = "unsupported_device_type"
+
+            # All information gathering is done, so if there are no errors at this point, create the entry
             if not errors:
                 return self.async_create_entry(
                     title=user_input[CONF_CLOUD_ID], data=user_input

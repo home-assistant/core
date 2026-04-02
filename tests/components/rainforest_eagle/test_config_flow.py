@@ -1,6 +1,6 @@
 """Test the Rainforest Eagle config flow."""
 
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 from homeassistant import config_entries
 from homeassistant.components.rainforest_eagle.const import (
@@ -8,6 +8,7 @@ from homeassistant.components.rainforest_eagle.const import (
     CONF_HARDWARE_ADDRESS,
     CONF_INSTALL_CODE,
     DOMAIN,
+    TYPE_EAGLE_100,
     TYPE_EAGLE_200,
 )
 from homeassistant.components.rainforest_eagle.data import CannotConnect, InvalidAuth
@@ -17,7 +18,7 @@ from homeassistant.data_entry_flow import FlowResultType
 
 
 async def test_form_multiple_meters_first_connected(hass: HomeAssistant) -> None:
-    """Test flow auto-selects the first connected meter if present among multiple meters."""
+    """Test proper flow with an EAGLE-200 with a list of meters, one of which is connected (should auto-select it)."""
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -25,23 +26,22 @@ async def test_form_multiple_meters_first_connected(hass: HomeAssistant) -> None
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] is None
 
-    # Create mock meter objects
-    mock_meter_1 = MagicMock()
-    mock_meter_1.hardware_address = "meter-1"
-    mock_meter_1.connection_status = "Not Joined"
+    # Simulate multiple meters with one connected
+    class MockElectricMeter:
+        def __init__(self, hardware_address, connection_status) -> None:
+            self.hardware_address = hardware_address
+            self.connection_status = connection_status
 
-    mock_meter_2 = MagicMock()
-    mock_meter_2.hardware_address = "meter-2"
-    mock_meter_2.connection_status = "Not Joined"
-
-    mock_meter_3 = MagicMock()
-    mock_meter_3.hardware_address = "meter-3"
-    mock_meter_3.connection_status = "Connected"
+    meters = [
+        MockElectricMeter("meter-1", "Not Joined"),
+        MockElectricMeter("meter-2", "Connected"),
+        MockElectricMeter("meter-3", "Not Joined"),
+    ]
 
     with (
         patch(
-            "homeassistant.components.rainforest_eagle.config_flow.async_get_type",
-            return_value=(TYPE_EAGLE_200, [mock_meter_1, mock_meter_2, mock_meter_3]),
+            "aioeagle.EagleHub.get_device_list",
+            return_value=meters,
         ),
         patch(
             "homeassistant.components.rainforest_eagle.async_setup_entry",
@@ -58,7 +58,6 @@ async def test_form_multiple_meters_first_connected(hass: HomeAssistant) -> None
         )
         await hass.async_block_till_done()
 
-    # Should create the entry immediately with the first connected meter
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "abcdef"
     assert result["data"] == {
@@ -66,14 +65,14 @@ async def test_form_multiple_meters_first_connected(hass: HomeAssistant) -> None
         CONF_HOST: "192.168.1.55",
         CONF_CLOUD_ID: "abcdef",
         CONF_INSTALL_CODE: "123456",
-        CONF_HARDWARE_ADDRESS: "meter-3",
+        CONF_HARDWARE_ADDRESS: "meter-2",
     }
     assert result["result"].unique_id == "abcdef"
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_form_multiple_meters_none_connected(hass: HomeAssistant) -> None:
-    """Test that an error is shown when multiple meters are returned but none are connected."""
+async def test_form_eagle_200_meters_none_connected(hass: HomeAssistant) -> None:
+    """Test proper flow with an EAGLE-200 with a list of meters, but all are disconnected (Error should be shown)."""
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -81,18 +80,21 @@ async def test_form_multiple_meters_none_connected(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] is None
 
-    # Create mock meter objects
-    mock_meter_1 = MagicMock()
-    mock_meter_1.hardware_address = "meter-1"
-    mock_meter_1.connection_status = "Not Joined"
+    # Simulate all meters being disconnected
+    class MockElectricMeter:
+        def __init__(self, hardware_address, connection_status) -> None:
+            self.hardware_address = hardware_address
+            self.connection_status = connection_status
 
-    mock_meter_2 = MagicMock()
-    mock_meter_2.hardware_address = "meter-2"
-    mock_meter_2.connection_status = "Not Joined"
+    meters = [
+        MockElectricMeter("meter-1", "Not Joined"),
+        MockElectricMeter("meter-2", "Not Joined"),
+        MockElectricMeter("meter-3", "Not Joined"),
+    ]
 
     with patch(
-        "homeassistant.components.rainforest_eagle.config_flow.async_get_type",
-        return_value=(TYPE_EAGLE_200, [mock_meter_1, mock_meter_2]),
+        "aioeagle.EagleHub.get_device_list",
+        return_value=meters,
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -107,16 +109,21 @@ async def test_form_multiple_meters_none_connected(hass: HomeAssistant) -> None:
     assert result["step_id"] == "user"
     assert result["errors"] == {"base": "no_meters_connected"}
 
-    mock_meter_1.connection_status = "Connected"
 
+async def test_form_eagle_200_no_meters(hass: HomeAssistant) -> None:
+    """Test proper flow with an EAGLE-200 with an empty list of meters (Error should be shown)."""
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] is None
+
+    # Simulate no meters (empty list)
     with (
         patch(
-            "homeassistant.components.rainforest_eagle.config_flow.async_get_type",
-            return_value=(TYPE_EAGLE_200, [mock_meter_1, mock_meter_2]),
-        ),
-        patch(
-            "homeassistant.components.rainforest_eagle.async_setup_entry",
-            return_value=True,
+            "aioeagle.EagleHub.get_device_list",
+            return_value=[],
         ),
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -127,11 +134,15 @@ async def test_form_multiple_meters_none_connected(hass: HomeAssistant) -> None:
                 CONF_HOST: "192.168.1.55",
             },
         )
-    assert result["type"] is FlowResultType.CREATE_ENTRY
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {"base": "no_meters_connected"}
 
 
-async def test_form_no_meters(hass: HomeAssistant) -> None:
-    """Test proper flow with no meters."""
+async def test_form_eagle_100(hass: HomeAssistant) -> None:
+    """Test proper flow for EAGLE-100 (KeyError from get_device_list, then legacy response)."""
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -139,17 +150,28 @@ async def test_form_no_meters(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] is None
 
+    # Patch get_device_list to raise KeyError (expected from EAGLE-100), and async_add_executor_job to return proper EAGLE-100 response
+    eagle_100_response = {"NetworkInfo": {"ModelId": "Z109-EAGLE"}}
+
     with (
         patch(
-            "homeassistant.components.rainforest_eagle.config_flow.async_get_type",
-            return_value=(TYPE_EAGLE_200, []),
+            "aioeagle.EagleHub.get_device_list",
+            side_effect=KeyError,
+        ),
+        patch(
+            "eagle100.Eagle.get_network_info",
+            return_value=eagle_100_response,
+        ),
+        patch(
+            "homeassistant.core.HomeAssistant.async_add_executor_job",
+            return_value=eagle_100_response,
         ),
         patch(
             "homeassistant.components.rainforest_eagle.async_setup_entry",
             return_value=True,
         ) as mock_setup_entry,
     ):
-        result2 = await hass.config_entries.flow.async_configure(
+        result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
                 CONF_CLOUD_ID: "abcdef",
@@ -159,10 +181,10 @@ async def test_form_no_meters(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] is FlowResultType.CREATE_ENTRY
-    assert result2["title"] == "abcdef"
-    assert result2["data"] == {
-        CONF_TYPE: TYPE_EAGLE_200,
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "abcdef"
+    assert result["data"] == {
+        CONF_TYPE: TYPE_EAGLE_100,
         CONF_HOST: "192.168.1.55",
         CONF_CLOUD_ID: "abcdef",
         CONF_INSTALL_CODE: "123456",
