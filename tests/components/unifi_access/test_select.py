@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Generator
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, PropertyMock, patch
 
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -19,7 +19,7 @@ from unifi_access_api import (
 from homeassistant.components.unifi_access.const import DOMAIN
 from homeassistant.const import STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
@@ -300,4 +300,44 @@ async def test_select_option_raises_on_api_error(
             blocking=True,
         )
     assert exc_info.value.translation_key == "lock_rule_failed"
+    assert exc_info.value.translation_domain == DOMAIN
+
+
+async def test_select_option_raises_on_invalid_lock_rule_type(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_client: MagicMock,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test invalid select options raise a validation error."""
+    mock_client.get_door_lock_rule = AsyncMock(return_value=DoorLockRuleStatus())
+    await setup_integration(hass, mock_config_entry)
+
+    with (
+        patch(
+            "homeassistant.components.unifi_access.select.UnifiAccessDoorLockRuleSelectEntity.options",
+            new_callable=PropertyMock,
+            return_value=[
+                "keep_lock",
+                "keep_unlock",
+                "custom",
+                "reset",
+                "invalid_option",
+            ],
+        ),
+        pytest.raises(ServiceValidationError) as exc_info,
+    ):
+        await hass.services.async_call(
+            Platform.SELECT,
+            "select_option",
+            {
+                "entity_id": _select_entity_id(
+                    entity_registry, FRONT_DOOR_LOCK_RULE_SELECT_UNIQUE_ID
+                ),
+                "option": "invalid_option",
+            },
+            blocking=True,
+        )
+
+    assert exc_info.value.translation_key == "invalid_lock_rule_type"
     assert exc_info.value.translation_domain == DOMAIN
