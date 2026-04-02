@@ -14,5 +14,5 @@ async def async_get_config_entry_diagnostics(
 ) -> dict[str, Any]:
     """Return diagnostics for a Tado config entry."""
 
-    await config_entry.runtime_data.get_rate_limit()
-    return {"data": config_entry.runtime_data.data}
+    rate_limit = await config_entry.runtime_data.get_rate_limit()
+    return {"data": config_entry.runtime_data.data, "rate_limit": rate_limit}

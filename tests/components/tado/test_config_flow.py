@@ -7,10 +7,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 from PyTado.http import DeviceActivationStatus
 import pytest
 
-from homeassistant.components.tado.config_flow import (
-    TadoException,
-    TadoRateLimitExceeded,
-)
+from homeassistant.components.tado.config_flow import TadoException
 from homeassistant.components.tado.const import (
     CONF_FALLBACK,
     CONF_REFRESH_TOKEN,
@@ -203,7 +200,7 @@ async def test_wait_for_login_rate_limit(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test that a rate limit error in wait_for_login is handled properly."""
-    mock_tado_api.device_activation.side_effect = TadoRateLimitExceeded("rate limited")
+    mock_tado_api.device_activation.side_effect = TadoException("rate limited")
     mock_tado_api.rate_limit_info.return_value = {"remaining": "0"}
 
     result = await hass.config_entries.flow.async_init(
