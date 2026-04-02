@@ -24,11 +24,10 @@ class EcowittEntity(Entity):
 
         self._attr_unique_id = f"{sensor.station.key}-{sensor.key}"
         self._attr_device_info = DeviceInfo(
-            identifiers={
-                (DOMAIN, sensor.station.key),
-            },
+            identifiers={(DOMAIN, sensor.station.key)},
             name=sensor.station.model,
             model=sensor.station.model,
+            manufacturer="Ecowitt",
             sw_version=sensor.station.version,
         )
 
