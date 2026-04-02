@@ -23,14 +23,14 @@ async def test_buttons(
 
     for entity_id, func in (
         ("button.test_wake", "wake"),
-        ("button.test_flash_lights", "flash_lights"),
+        ("button.test_flash_lights", "flash"),
         ("button.test_honk_horn", "honk"),
-        ("button.test_homelink", "trigger_homelink"),
-        ("button.test_keyless_driving", "enable_keyless_driving"),
-        ("button.test_play_fart", "boombox"),
+        ("button.test_homelink", "tessie_trigger_homelink"),
+        ("button.test_keyless_driving", "remote_start"),
+        ("button.test_play_fart", "remote_boombox"),
     ):
         with patch(
-            f"homeassistant.components.tessie.button.{func}",
+            f"tesla_fleet_api.tessie.Vehicle.{func}",
         ) as mock_press:
             await hass.services.async_call(
                 BUTTON_DOMAIN,
