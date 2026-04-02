@@ -150,7 +150,6 @@ class KioskerConfigFlow(ConfigFlow, domain=DOMAIN):
         self.context["title_placeholders"] = {
             "name": device_name,
             "host": host,
-            "ssl": ssl,
         }
 
         # Store discovered information for later use

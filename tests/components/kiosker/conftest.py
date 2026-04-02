@@ -41,34 +41,35 @@ def mock_config_entry() -> MockConfigEntry:
 
 
 @pytest.fixture
-def mock_kiosker_api():
-    """Mock KioskerAPI."""
-    mock_api = MagicMock()
-    mock_api.host = "10.0.1.5"
-    mock_api.port = 8081
-
-    # Mock status data
-    mock_status = MagicMock()
-    mock_status.device_id = "A98BE1CE-5FE7-4A8D-B2C3-123456789ABC"
-    mock_status.model = "iPad Pro"
-    mock_status.os_version = "18.0"
-    mock_status.app_name = "Kiosker"
-    mock_status.app_version = "25.1.1"
-    mock_status.battery_level = 85
-    mock_status.battery_state = "charging"
-    mock_status.last_interaction = datetime.fromisoformat("2025-01-01T12:00:00+00:00")
-    mock_status.last_motion = datetime.fromisoformat("2025-01-01T11:55:00+00:00")
-    mock_status.last_update = datetime.fromisoformat("2025-01-01T12:05:00+00:00")
-
-    mock_api.status.return_value = mock_status
-
-    return mock_api
-
-
-@pytest.fixture
-def mock_kiosker_api_class():
+def mock_kiosker_api() -> Generator[MagicMock]:
     """Mock the KioskerAPI class."""
-    with patch(
-        "homeassistant.components.kiosker.config_flow.KioskerAPI"
-    ) as mock_api_class:
-        yield mock_api_class
+    with (
+        patch(
+            "homeassistant.components.kiosker.config_flow.KioskerAPI"
+        ) as mock_api_class,
+        patch(
+            "homeassistant.components.kiosker.coordinator.KioskerAPI",
+            new=mock_api_class,
+        ),
+    ):
+        mock_api = mock_api_class.return_value
+        mock_api.host = "10.0.1.5"
+        mock_api.port = 8081
+
+        mock_status = MagicMock()
+        mock_status.device_id = "A98BE1CE-5FE7-4A8D-B2C3-123456789ABC"
+        mock_status.model = "iPad Pro"
+        mock_status.os_version = "18.0"
+        mock_status.app_name = "Kiosker"
+        mock_status.app_version = "25.1.1"
+        mock_status.battery_level = 85
+        mock_status.battery_state = "charging"
+        mock_status.last_interaction = datetime.fromisoformat(
+            "2025-01-01T12:00:00+00:00"
+        )
+        mock_status.last_motion = datetime.fromisoformat("2025-01-01T11:55:00+00:00")
+        mock_status.last_update = datetime.fromisoformat("2025-01-01T12:05:00+00:00")
+
+        mock_api.status.return_value = mock_status
+
+        yield mock_api

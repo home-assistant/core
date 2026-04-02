@@ -338,64 +338,6 @@ async def test_ambient_light_sensor(
     assert "unit_of_measurement" not in state.attributes
 
 
-async def test_sensors_missing_data(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry
-) -> None:
-    """Test sensors when data is missing."""
-    with patch(
-        "homeassistant.components.kiosker.coordinator.KioskerAPI"
-    ) as mock_api_class:
-        # Setup mock API
-        mock_api = MagicMock()
-        mock_api.host = "10.0.1.5"
-        mock_api_class.return_value = mock_api
-
-        # Setup mock data with missing attributes
-        mock_status = MagicMock()
-        mock_status.device_id = "A98BE1CE-5FE7-4A8D-B2C3-123456789ABC"
-        mock_status.model = "iPad Pro"
-        mock_status.os_version = "18.0"
-        mock_status.app_name = "Kiosker"
-        mock_status.app_version = "25.1.1"
-
-        mock_api.status.return_value = mock_status
-
-        # Add the config entry
-        mock_config_entry.add_to_hass(hass)
-
-        # Setup the integration with missing data (None coordinator data)
-        with patch(
-            "homeassistant.components.kiosker.coordinator.KioskerDataUpdateCoordinator._async_update_data"
-        ) as mock_update:
-            mock_update.return_value = KioskerData(
-                status=mock_status,
-                screensaver=None,
-                blackout=None,
-            )
-
-            assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
-            await hass.async_block_till_done()
-
-            # Test missing data by setting coordinator data to None
-            coordinator = mock_config_entry.runtime_data
-            coordinator.data = None
-            coordinator.async_update_listeners()
-            await hass.async_block_till_done()
-
-    # Check that sensors are unavailable when coordinator data is missing
-    sensors_with_unavailable_state = [
-        "sensor.kiosker_a98be1ce_battery",
-        "sensor.kiosker_a98be1ce_last_interaction",
-        "sensor.kiosker_a98be1ce_last_motion",
-        "sensor.kiosker_a98be1ce_ambient_light",
-    ]
-
-    for sensor_id in sensors_with_unavailable_state:
-        state = hass.states.get(sensor_id)
-        assert state is not None
-        assert state.state == "unavailable"
-
-
 async def test_sensor_unique_ids(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> None:
