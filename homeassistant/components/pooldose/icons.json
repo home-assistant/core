@@ -1,7 +1,31 @@
 {
   "entity": {
     "binary_sensor": {
+      "alarm_cl_too_high": {
+        "default": "mdi:pool",
+        "state": {
+          "on": "mdi:alert"
+        }
+      },
+      "alarm_cl_too_high_orp": {
+        "default": "mdi:water-check",
+        "state": {
+          "on": "mdi:water-alert"
+        }
+      },
+      "alarm_cl_too_low_orp": {
+        "default": "mdi:water-check",
+        "state": {
+          "on": "mdi:water-alert"
+        }
+      },
       "alarm_ofa_cl": {
+        "default": "mdi:clock-alert-outline",
+        "state": {
+          "on": "mdi:clock-alert"
+        }
+      },
+      "alarm_ofa_cl_alternative": {
         "default": "mdi:clock-alert-outline",
         "state": {
           "on": "mdi:clock-alert"
@@ -13,11 +37,59 @@
           "on": "mdi:clock-alert"
         }
       },
+      "alarm_ofa_orp_alternative": {
+        "default": "mdi:clock-alert-outline",
+        "state": {
+          "on": "mdi:clock-alert"
+        }
+      },
       "alarm_ofa_ph": {
         "default": "mdi:clock-alert-outline",
         "state": {
           "on": "mdi:clock-alert"
         }
+      },
+      "alarm_ofa_ph_alternative": {
+        "default": "mdi:clock-alert-outline",
+        "state": {
+          "on": "mdi:clock-alert"
+        }
+      },
+      "alarm_ph_too_high": {
+        "default": "mdi:ph",
+        "state": {
+          "on": "mdi:alert"
+        }
+      },
+      "alarm_ph_too_low": {
+        "default": "mdi:ph",
+        "state": {
+          "on": "mdi:alert"
+        }
+      },
+      "alarm_system_standby": {
+        "default": "mdi:power-standby",
+        "state": {
+          "on": "mdi:power-sleep"
+        }
+      },
+      "alarm_water_too_cold": {
+        "default": "mdi:thermometer-low",
+        "state": {
+          "on": "mdi:thermometer-alert"
+        }
+      },
+      "alarm_water_too_hot": {
+        "default": "mdi:thermometer-high",
+        "state": {
+          "on": "mdi:thermometer-alert"
+        }
+      },
+      "circulation_pump_status": {
+        "default": "mdi:pump"
+      },
+      "flow_delay_status": {
+        "default": "mdi:timer-sand"
       },
       "flow_rate_alarm": {
         "default": "mdi:autorenew",
@@ -36,6 +108,9 @@
         "state": {
           "on": "mdi:flask-empty"
         }
+      },
+      "power_on_delay_status": {
+        "default": "mdi:timer-sand"
       },
       "pump_alarm": {
         "default": "mdi:pump",
@@ -72,6 +147,9 @@
       "cl_target": {
         "default": "mdi:pool"
       },
+      "flow_delay_timer": {
+        "default": "mdi:timer-sand"
+      },
       "ofa_cl_lower": {
         "default": "mdi:arrow-down-bold"
       },
@@ -95,6 +173,18 @@
       },
       "ph_target": {
         "default": "mdi:ph"
+      },
+      "power_on_delay_timer": {
+        "default": "mdi:timer-sand"
+      },
+      "time_off_cl_dosing": {
+        "default": "mdi:timer-outline"
+      },
+      "time_off_orp_dosing": {
+        "default": "mdi:timer-outline"
+      },
+      "time_off_ph_dosing": {
+        "default": "mdi:timer-outline"
       }
     },
     "select": {
@@ -129,6 +219,9 @@
       },
       "cl_type_dosing": {
         "default": "mdi:beaker"
+      },
+      "device_config": {
+        "default": "mdi:cog"
       },
       "flow_rate": {
         "default": "mdi:pipe-valve"
@@ -174,6 +267,9 @@
       },
       "ph_type_dosing": {
         "default": "mdi:beaker"
+      },
+      "temperature_unit": {
+        "default": "mdi:thermometer"
       },
       "water_meter_total_permanent": {
         "default": "mdi:counter"

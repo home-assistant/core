@@ -216,7 +216,18 @@ async def test_setup_two_trackers(
 
     hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
     await hass.async_block_till_done()
-    hass.states.async_set(DEVICE_TRACKER, "home", {ATTR_SOURCE_TYPE: SourceType.ROUTER})
+    # Router tracker at home with gps_accuracy — the person entity should get
+    # coordinates from the home zone (which has no gps_accuracy),not from the
+    # router tracker's attributes.
+    # Note: This is not a realistic test case, a router tracker would not have
+    # gps_accuracy, but we want to assert that the person entity uses latitude
+    # longitude and accuracy from the home zone, not from the state attributes
+    # of the device tracker.
+    hass.states.async_set(
+        DEVICE_TRACKER,
+        "home",
+        {ATTR_SOURCE_TYPE: SourceType.ROUTER, ATTR_GPS_ACCURACY: 99},
+    )
     await hass.async_block_till_done()
 
     state = hass.states.get("person.tracked_person")
@@ -224,6 +235,8 @@ async def test_setup_two_trackers(
     assert state.attributes.get(ATTR_ID) == "1234"
     assert state.attributes.get(ATTR_LATITUDE) == 32.87336
     assert state.attributes.get(ATTR_LONGITUDE) == -117.22743
+    # GPS accuracy comes from the coordinates source (home zone), not from
+    # the state source (router tracker which reported gps_accuracy=99).
     assert state.attributes.get(ATTR_GPS_ACCURACY) is None
     assert state.attributes.get(ATTR_SOURCE) == DEVICE_TRACKER
     assert state.attributes.get(ATTR_USER_ID) == user_id

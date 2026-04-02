@@ -43,7 +43,7 @@ from tests.common import MockConfigEntry
                 ),
                 body={"type": "error", "error": {"type": "invalid_request_error"}},
             ),
-            "anthropic integration not ready yet: Your credit balance is too low to access the Claude API",
+            "Your credit balance is too low to access the Claude API",
         ),
     ],
 )

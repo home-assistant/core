@@ -736,6 +736,12 @@
       "config_flow": false,
       "iot_class": "local_polling"
     },
+    "bega": {
+      "name": "BEGA",
+      "iot_standards": [
+        "zigbee"
+      ]
+    },
     "bge": {
       "name": "Baltimore Gas and Electric (BGE)",
       "integration_type": "virtual",
@@ -2954,6 +2960,12 @@
       "config_flow": false,
       "iot_class": "local_polling"
     },
+    "hr_energy_qube": {
+      "name": "Qube heat pump",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "html5": {
       "name": "HTML5 Push Notifications",
       "integration_type": "hub",
@@ -3640,7 +3652,7 @@
       "integrations": {
         "decora_wifi": {
           "integration_type": "hub",
-          "config_flow": false,
+          "config_flow": true,
           "iot_class": "cloud_polling",
           "name": "Leviton Decora Wi-Fi"
         }
@@ -3657,6 +3669,12 @@
     "lg": {
       "name": "LG",
       "integrations": {
+        "lg_infrared": {
+          "integration_type": "device",
+          "config_flow": true,
+          "iot_class": "assumed_state",
+          "name": "LG Infrared"
+        },
         "lg_netcast": {
           "integration_type": "device",
           "config_flow": true,
@@ -5226,8 +5244,8 @@
     },
     "picotts": {
       "name": "Pico TTS",
-      "integration_type": "hub",
-      "config_flow": false,
+      "integration_type": "service",
+      "config_flow": true,
       "iot_class": "local_push"
     },
     "pilight": {
@@ -5265,8 +5283,8 @@
     },
     "pjlink": {
       "name": "PJLink",
-      "integration_type": "hub",
-      "config_flow": false,
+      "integration_type": "device",
+      "config_flow": true,
       "iot_class": "local_polling"
     },
     "plaato": {
@@ -6472,6 +6490,12 @@
     "solarlog": {
       "name": "Solar-Log",
       "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
+    "solarman": {
+      "name": "Solarman",
+      "integration_type": "device",
       "config_flow": true,
       "iot_class": "local_polling"
     },

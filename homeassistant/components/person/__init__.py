@@ -566,7 +566,7 @@ class Person(
         self._source = state.entity_id
         self._latitude = coordinates.attributes.get(ATTR_LATITUDE)
         self._longitude = coordinates.attributes.get(ATTR_LONGITUDE)
-        self._gps_accuracy = state.attributes.get(ATTR_GPS_ACCURACY)
+        self._gps_accuracy = coordinates.attributes.get(ATTR_GPS_ACCURACY)
 
     @callback
     def _update_extra_state_attributes(self) -> None:
