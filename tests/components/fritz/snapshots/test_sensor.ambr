@@ -324,6 +324,56 @@
     'state': '1.7',
   })
 # ---
+# name: test_sensor_cpu_temp_not_supported[None-return_values1][sensor.mock_title_ipv6_prefix-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.mock_title_ipv6_prefix',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'IPv6 prefix',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'IPv6 prefix',
+    'platform': 'fritz',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'ipv6_prefix',
+    'unique_id': '1CED6F123411-ipv6_prefix',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor_cpu_temp_not_supported[None-return_values1][sensor.mock_title_ipv6_prefix-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Mock Title IPv6 prefix',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.mock_title_ipv6_prefix',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2001:db8::/32',
+  })
+# ---
 # name: test_sensor_cpu_temp_not_supported[None-return_values1][sensor.mock_title_last_restart-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -1182,6 +1232,56 @@
     'state': '1.7',
   })
 # ---
+# name: test_sensor_cpu_temp_not_supported[None-return_values2][sensor.mock_title_ipv6_prefix-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.mock_title_ipv6_prefix',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'IPv6 prefix',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'IPv6 prefix',
+    'platform': 'fritz',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'ipv6_prefix',
+    'unique_id': '1CED6F123411-ipv6_prefix',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor_cpu_temp_not_supported[None-return_values2][sensor.mock_title_ipv6_prefix-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Mock Title IPv6 prefix',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.mock_title_ipv6_prefix',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2001:db8::/32',
+  })
+# ---
 # name: test_sensor_cpu_temp_not_supported[None-return_values2][sensor.mock_title_last_restart-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -2038,6 +2138,56 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '1.7',
+  })
+# ---
+# name: test_sensor_cpu_temp_not_supported[side_effect0-None][sensor.mock_title_ipv6_prefix-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.mock_title_ipv6_prefix',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'IPv6 prefix',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'IPv6 prefix',
+    'platform': 'fritz',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'ipv6_prefix',
+    'unique_id': '1CED6F123411-ipv6_prefix',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor_cpu_temp_not_supported[side_effect0-None][sensor.mock_title_ipv6_prefix-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Mock Title IPv6 prefix',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.mock_title_ipv6_prefix',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2001:db8::/32',
   })
 # ---
 # name: test_sensor_cpu_temp_not_supported[side_effect0-None][sensor.mock_title_last_restart-entry]
@@ -2954,6 +3104,56 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '1.7',
+  })
+# ---
+# name: test_sensor_setup[sensor.mock_title_ipv6_prefix-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.mock_title_ipv6_prefix',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'IPv6 prefix',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'IPv6 prefix',
+    'platform': 'fritz',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'ipv6_prefix',
+    'unique_id': '1CED6F123411-ipv6_prefix',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor_setup[sensor.mock_title_ipv6_prefix-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Mock Title IPv6 prefix',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.mock_title_ipv6_prefix',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2001:db8::/32',
   })
 # ---
 # name: test_sensor_setup[sensor.mock_title_last_restart-entry]
