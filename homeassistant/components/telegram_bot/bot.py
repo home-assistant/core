@@ -377,19 +377,26 @@ class TelegramNotificationService:
             elif isinstance(row_keyboard, list):
                 for entry in row_keyboard:
                     if isinstance(entry, (list, tuple)):
-                        entry = [str(item).strip() if item is not None else "" for item in entry]
+                        entry = [
+                            str(item).strip() if item is not None else ""
+                            for item in entry
+                        ]
 
                         if len(entry) == 2:
                             text_btn, data_btn = entry
                             if data_btn.startswith(("https://", "http://")):
-                                buttons.append(InlineKeyboardButton(text_btn, url=data_btn))
+                                buttons.append(
+                                    InlineKeyboardButton(text_btn, url=data_btn)
+                                )
                             else:
                                 buttons.append(
-                                    InlineKeyboardButton(text_btn, callback_data=data_btn)
+                                    InlineKeyboardButton(
+                                        text_btn, callback_data=data_btn
+                                    )
                                 )
 
                         elif len(entry) == 3:
-                            # style - danger / success / primary (Telegram Bot API 9.5+)
+                            # style - danger / success / primary (Telegram Bot API 9.4+)
                             text_btn, data_btn, style = entry
                             style_value = None
                             if style:
@@ -398,20 +405,28 @@ class TelegramNotificationService:
                                     style_value = style_str
 
                             if data_btn.startswith(("https://", "http://")):
-                                button = InlineKeyboardButton(text_btn, url=data_btn, style=style_value)
+                                button = InlineKeyboardButton(
+                                    text_btn, url=data_btn, style=style_value
+                                )
                             else:
-                                button = InlineKeyboardButton(text_btn, callback_data=data_btn, style=style_value)
+                                button = InlineKeyboardButton(
+                                    text_btn, callback_data=data_btn, style=style_value
+                                )
 
                             buttons.append(button)
                         else:
                             # fallback for unexpected length
                             text_btn = str(entry[0]) if entry else ""
                             data_btn = str(entry[1]) if len(entry) > 1 else text_btn
-                            buttons.append(InlineKeyboardButton(text_btn, callback_data=data_btn))
+                            buttons.append(
+                                InlineKeyboardButton(text_btn, callback_data=data_btn)
+                            )
 
                     else:
                         # fallback if NOT list/tuple
-                        buttons.append(InlineKeyboardButton(str(entry), callback_data=str(entry)))
+                        buttons.append(
+                            InlineKeyboardButton(str(entry), callback_data=str(entry))
+                        )
 
             else:
                 raise ServiceValidationError(
