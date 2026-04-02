@@ -41,7 +41,12 @@ def api_error[_AddonManagerT: AddonManager, **_P, _R](
 ) -> Callable[
     [_FuncType[_AddonManagerT, _P, _R]], _ReturnFuncType[_AddonManagerT, _P, _R]
 ]:
-    """Handle SupervisorError and raise a specific AddonError."""
+    """Handle `SupervisorError` and raise a specific `AddonError`.
+
+    When `include_error_detail` is `True` (default), append the original
+    Supervisor exception text to the formatted message for debugging.
+    Set it to `False` when the raised detail may include sensitive data.
+    """
 
     def handle_supervisor_error(
         func: _FuncType[_AddonManagerT, _P, _R],
