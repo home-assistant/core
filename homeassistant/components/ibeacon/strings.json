@@ -24,15 +24,18 @@
   },
   "options": {
     "error": {
+      "invalid_beacon_id_format": "Beacon IDs should use UUID_MAJOR_MINOR format, where major and minor are in the range 0-65535",
       "invalid_uuid_format": "UUIDs should contain 32 hex characters grouped as XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX"
     },
     "step": {
       "init": {
         "data": {
+          "allowed_beacons": "Currently allowed beacon IDs. Uncheck to remove",
           "allow_nameless_uuids": "Currently allowed UUIDs. Uncheck to remove",
+          "new_allowed_beacon": "Enter a new allowed beacon ID",
           "new_uuid": "Enter a new allowed UUID"
         },
-        "description": "iBeacons with an empty device name are ignored by default, unless their UUID is explicitly allowed in the list below."
+        "description": "By default, all iBeacons are tracked. To only track specific beacons, add allowed beacon IDs in UUID_MAJOR_MINOR format (for example, 426c7565-4368-6172-6d42-6561636f6e73_65262_65037). iBeacons with an empty device name are ignored unless their UUID is explicitly allowed below."
       }
     }
   }
