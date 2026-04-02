@@ -195,6 +195,11 @@ class UploadBackupView(HomeAssistantView):
             backup_id = await manager.async_receive_backup(
                 contents=contents, agent_ids=agent_ids
             )
+        except ValueError as err:
+            return Response(
+                body=str(err),
+                status=HTTPStatus.BAD_REQUEST,
+            )
         except OSError as err:
             return Response(
                 body=f"Can't write backup file: {err}",

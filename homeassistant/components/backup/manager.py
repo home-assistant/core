@@ -1958,8 +1958,12 @@ class CoreBackupReaderWriter(BackupReaderWriter):
     ) -> WrittenBackup:
         """Receive a backup."""
         safe_filename = PureWindowsPath(suggested_filename).name
-        if not safe_filename or safe_filename == "..":
-            safe_filename = "backup.tar"
+        if (
+            not safe_filename
+            or safe_filename != suggested_filename
+            or safe_filename == ".."
+        ):
+            raise ValueError(f"Invalid filename: {suggested_filename}")
         temp_file = Path(self.temp_backup_dir, safe_filename)
 
         async_add_executor_job = self._hass.async_add_executor_job
