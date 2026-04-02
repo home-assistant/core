@@ -153,7 +153,7 @@ class OpenDisplayConfigFlow(ConfigFlow, domain=DOMAIN):
         """Test connection, populate errors, and return True on success."""
         try:
             await self._async_test_connection(address, encryption_key)
-        except AuthenticationFailedError:
+        except AuthenticationFailedError, AuthenticationRequiredError:
             errors[CONF_ENCRYPTION_KEY] = "invalid_auth"
         except OpenDisplayError:
             errors["base"] = "cannot_connect"
