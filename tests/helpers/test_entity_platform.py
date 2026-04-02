@@ -683,9 +683,9 @@ async def test_using_prescribed_entity_id(hass: HomeAssistant) -> None:
     component = EntityComponent(_LOGGER, DOMAIN, hass)
     await component.async_setup({})
     await component.async_add_entities(
-        [MockEntity(name="bla", entity_id="hello.world")]
+        [MockEntity(name="bla", entity_id="test_domain.world")]
     )
-    assert "hello.world" in hass.states.async_entity_ids()
+    assert "test_domain.world" in hass.states.async_entity_ids()
 
 
 async def test_using_prescribed_entity_id_with_unique_id(hass: HomeAssistant) -> None:
