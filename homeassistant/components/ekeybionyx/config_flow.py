@@ -32,6 +32,11 @@ class ConfigFlowEkeyApi(ekey_bionyxpy.AbstractAuth):
     """ekey bionyx authentication before a ConfigEntry exists.
 
     This implementation directly provides the token without supporting refresh.
+    """Authentication implementation used during config flow, without refresh.
+
+    This exists to allow the config flow to use the API before it has fully
+    created a config entry required by OAuth2Session. This does not support
+    refreshing tokens, which is fine since it should have been just created.
     """
 
     def __init__(
