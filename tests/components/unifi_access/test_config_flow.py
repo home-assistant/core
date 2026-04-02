@@ -415,13 +415,14 @@ async def test_dhcp_discovery(
     """Test DHCP discovery triggers background discovery and aborts."""
     with patch(
         "homeassistant.components.unifi_access.config_flow.async_start_discovery"
-    ):
+    ) as mock_start_discovery:
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_DHCP}, data=DHCP_DISCOVERY
         )
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "discovery_started"
+    mock_start_discovery.assert_called_once_with(hass)
 
 
 async def test_ssdp_discovery(
@@ -430,13 +431,14 @@ async def test_ssdp_discovery(
     """Test SSDP discovery triggers background discovery and aborts."""
     with patch(
         "homeassistant.components.unifi_access.config_flow.async_start_discovery"
-    ):
+    ) as mock_start_discovery:
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_SSDP}, data=SSDP_DISCOVERY
         )
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "discovery_started"
+    mock_start_discovery.assert_called_once_with(hass)
 
 
 async def test_integration_discovery_new_device(
