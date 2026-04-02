@@ -670,6 +670,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/green_planet_energy/ @petschni
 /homeassistant/components/greeneye_monitor/ @jkeljo
 /tests/components/greeneye_monitor/ @jkeljo
+/homeassistant/components/gridx/ @unl0ck
+/tests/components/gridx/ @unl0ck
 /homeassistant/components/group/ @home-assistant/core
 /tests/components/group/ @home-assistant/core
 /homeassistant/components/growatt_server/ @johanzander

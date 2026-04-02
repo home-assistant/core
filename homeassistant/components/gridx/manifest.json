@@ -1,12 +1,18 @@
 {
   "domain": "gridx",
   "name": "GridX",
-  "codeowners": ["@unl0ck"],
+  "codeowners": [
+    "@unl0ck"
+  ],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/gridx",
   "integration_type": "device",
   "iot_class": "cloud_polling",
-  "loggers": ["gridx_connector"],
+  "loggers": [
+    "gridx_connector"
+  ],
   "quality_scale": "gold",
-  "requirements": ["gridx-connector==3.0.1"]
+  "requirements": [
+    "gridx-connector==3.0.1"
+  ]
 }

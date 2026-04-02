@@ -2666,6 +2666,12 @@
       "config_flow": false,
       "iot_class": "local_polling"
     },
+    "gridx": {
+      "name": "GridX",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
     "growatt_server": {
       "integration_type": "hub",
       "config_flow": true,
