@@ -10,11 +10,11 @@ from homeassistant.core import HomeAssistant
 
 PLATFORMS = [Platform.BINARY_SENSOR, Platform.SWITCH]
 
-type ProgettihwswConfigEntry = ConfigEntry[ProgettiHWSWAPI]
+type ProgettiHWSWConfigEntry = ConfigEntry[ProgettiHWSWAPI]
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ProgettihwswConfigEntry
+    hass: HomeAssistant, entry: ProgettiHWSWConfigEntry
 ) -> bool:
     """Set up ProgettiHWSW Automation from a config entry."""
     api = ProgettiHWSWAPI(f"{entry.data['host']}:{entry.data['port']}")
@@ -30,7 +30,7 @@ async def async_setup_entry(
 
 
 async def async_unload_entry(
-    hass: HomeAssistant, entry: ProgettihwswConfigEntry
+    hass: HomeAssistant, entry: ProgettiHWSWConfigEntry
 ) -> bool:
     """Unload a config entry."""
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
