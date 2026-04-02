@@ -320,7 +320,7 @@ class ShoppingData:
         self._async_notify()
         self.hass.bus.async_fire(
             EVENT_SHOPPING_LIST_UPDATED,
-            {"action": "update_list"},
+            {"action": "update_list", "info": info},
             context=context,
         )
         return self.items
