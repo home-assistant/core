@@ -5,15 +5,13 @@ from __future__ import annotations
 from ipaddress import ip_address
 from unittest.mock import AsyncMock, patch
 
+from aio_wattwaechter import (
+    WattwaechterAuthenticationError,
+    WattwaechterConnectionError,
+)
 import pytest
 
-from aio_wattwaechter import WattwaechterAuthenticationError, WattwaechterConnectionError
-
 from homeassistant import config_entries
-from homeassistant.const import CONF_HOST, CONF_TOKEN
-from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import FlowResultType
-
 from homeassistant.components.wattwaechter.const import (
     CONF_DEVICE_ID,
     CONF_DEVICE_NAME,
@@ -22,10 +20,12 @@ from homeassistant.components.wattwaechter.const import (
     CONF_MODEL,
     DOMAIN,
 )
+from homeassistant.const import CONF_HOST, CONF_TOKEN
+from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
 
 from .conftest import (
     MOCK_ALIVE_RESPONSE,
-    MOCK_CONFIG_DATA,
     MOCK_DEVICE_ID,
     MOCK_DEVICE_NAME,
     MOCK_FW_VERSION,
@@ -37,20 +37,23 @@ from .conftest import (
     MOCK_TOKEN,
 )
 
-
-MOCK_ZEROCONF_DISCOVERY = type("ZeroconfServiceInfo", (), {
-    "host": ip_address(MOCK_HOST),
-    "port": 80,
-    "hostname": "wattwaechter.local.",
-    "type": "_wattwaechter._tcp.local.",
-    "name": f"WWP-{MOCK_DEVICE_ID}._wattwaechter._tcp.local.",
-    "properties": {
-        "id": f"WWP-{MOCK_DEVICE_ID}",
-        "model": MOCK_MODEL,
-        "ver": MOCK_FW_VERSION,
-        "mac": MOCK_MAC,
+MOCK_ZEROCONF_DISCOVERY = type(
+    "ZeroconfServiceInfo",
+    (),
+    {
+        "host": ip_address(MOCK_HOST),
+        "port": 80,
+        "hostname": "wattwaechter.local.",
+        "type": "_wattwaechter._tcp.local.",
+        "name": f"WWP-{MOCK_DEVICE_ID}._wattwaechter._tcp.local.",
+        "properties": {
+            "id": f"WWP-{MOCK_DEVICE_ID}",
+            "model": MOCK_MODEL,
+            "ver": MOCK_FW_VERSION,
+            "mac": MOCK_MAC,
+        },
     },
-})()
+)()
 
 
 @pytest.fixture(autouse=True)
@@ -321,19 +324,23 @@ async def test_zeroconf_flow_already_configured(
 
 async def test_zeroconf_flow_no_device_id(hass: HomeAssistant) -> None:
     """Test zeroconf aborts when no device ID in TXT record."""
-    discovery_no_id = type("ZeroconfServiceInfo", (), {
-        "host": ip_address(MOCK_HOST),
-        "port": 80,
-        "hostname": "wattwaechter.local.",
-        "type": "_wattwaechter._tcp.local.",
-        "name": "wattwaechter._wattwaechter._tcp.local.",
-        "properties": {
-            "id": "",
-            "model": MOCK_MODEL,
-            "ver": MOCK_FW_VERSION,
-            "mac": MOCK_MAC,
+    discovery_no_id = type(
+        "ZeroconfServiceInfo",
+        (),
+        {
+            "host": ip_address(MOCK_HOST),
+            "port": 80,
+            "hostname": "wattwaechter.local.",
+            "type": "_wattwaechter._tcp.local.",
+            "name": "wattwaechter._wattwaechter._tcp.local.",
+            "properties": {
+                "id": "",
+                "model": MOCK_MODEL,
+                "ver": MOCK_FW_VERSION,
+                "mac": MOCK_MAC,
+            },
         },
-    })()
+    )()
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,

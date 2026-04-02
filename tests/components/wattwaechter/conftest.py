@@ -4,11 +4,6 @@ from __future__ import annotations
 
 from unittest.mock import AsyncMock, MagicMock, patch
 
-import pytest
-
-from homeassistant.const import CONF_HOST, CONF_TOKEN
-from homeassistant.core import HomeAssistant
-
 from aio_wattwaechter.models import (
     AliveResponse,
     InfoEntry,
@@ -16,6 +11,7 @@ from aio_wattwaechter.models import (
     ObisValue,
     SystemInfo,
 )
+import pytest
 
 from homeassistant.components.wattwaechter.const import (
     CONF_DEVICE_ID,
@@ -25,6 +21,8 @@ from homeassistant.components.wattwaechter.const import (
     CONF_MODEL,
     DOMAIN,
 )
+from homeassistant.const import CONF_HOST, CONF_TOKEN
+from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
 
@@ -95,7 +93,6 @@ MOCK_METER_DATA_MINIMAL = MeterData(
 def mock_zeroconf(hass: HomeAssistant):
     """Mock zeroconf dependency to avoid socket access in tests."""
     hass.config.components.add("zeroconf")
-    yield
 
 
 @pytest.fixture

@@ -6,19 +6,16 @@ from unittest.mock import AsyncMock, patch
 
 from aio_wattwaechter import WattwaechterConnectionError
 
+from homeassistant.components.wattwaechter.coordinator import WattwaechterCoordinator
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
-
-from homeassistant.components.wattwaechter.coordinator import WattwaechterCoordinator
 
 from .conftest import MOCK_ALIVE_RESPONSE, MOCK_METER_DATA, MOCK_SYSTEM_INFO
 
 
 async def test_setup_entry(hass: HomeAssistant, mock_config_entry) -> None:
     """Test successful integration setup."""
-    with patch(
-        "homeassistant.components.wattwaechter.Wattwaechter"
-    ) as mock_cls:
+    with patch("homeassistant.components.wattwaechter.Wattwaechter") as mock_cls:
         client = mock_cls.return_value
         client.alive = AsyncMock(return_value=MOCK_ALIVE_RESPONSE)
         client.meter_data = AsyncMock(return_value=MOCK_METER_DATA)
@@ -36,9 +33,7 @@ async def test_setup_entry_connection_error(
     hass: HomeAssistant, mock_config_entry
 ) -> None:
     """Test setup when device is unreachable."""
-    with patch(
-        "homeassistant.components.wattwaechter.Wattwaechter"
-    ) as mock_cls:
+    with patch("homeassistant.components.wattwaechter.Wattwaechter") as mock_cls:
         client = mock_cls.return_value
         client.alive = AsyncMock(
             side_effect=WattwaechterConnectionError("Connection refused")
@@ -52,9 +47,7 @@ async def test_setup_entry_connection_error(
 
 async def test_unload_entry(hass: HomeAssistant, mock_config_entry) -> None:
     """Test successful integration unload."""
-    with patch(
-        "homeassistant.components.wattwaechter.Wattwaechter"
-    ) as mock_cls:
+    with patch("homeassistant.components.wattwaechter.Wattwaechter") as mock_cls:
         client = mock_cls.return_value
         client.alive = AsyncMock(return_value=MOCK_ALIVE_RESPONSE)
         client.meter_data = AsyncMock(return_value=MOCK_METER_DATA)
