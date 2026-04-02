@@ -157,6 +157,20 @@
       }),
       dict({
         'disabled': False,
+        'entity_id': 'sensor.x_wing_battery_voltage',
+        'state': dict({
+          'attributes': dict({
+            'device_class': 'voltage',
+            'friendly_name': 'X-Wing Battery Voltage',
+            'state_class': 'measurement',
+            'unit_of_measurement': 'V',
+          }),
+          'state': '4.08',
+        }),
+        'unit_of_measurement': 'V',
+      }),
+      dict({
+        'disabled': False,
         'entity_id': 'sensor.x_wing_geofence',
         'state': dict({
           'attributes': dict({
@@ -182,29 +196,15 @@
       }),
       dict({
         'disabled': False,
-        'entity_id': 'sensor.x_wing_voltage',
+        'entity_id': 'sensor.x_wing_supply_voltage',
         'state': dict({
           'attributes': dict({
             'device_class': 'voltage',
-            'friendly_name': 'X-Wing Voltage',
+            'friendly_name': 'X-Wing Supply Voltage',
             'state_class': 'measurement',
             'unit_of_measurement': 'V',
           }),
           'state': '12.56',
-        }),
-        'unit_of_measurement': 'V',
-      }),
-      dict({
-        'disabled': False,
-        'entity_id': 'sensor.x_wing_voltage_2',
-        'state': dict({
-          'attributes': dict({
-            'device_class': 'voltage',
-            'friendly_name': 'X-Wing Voltage',
-            'state_class': 'measurement',
-            'unit_of_measurement': 'V',
-          }),
-          'state': '4.08',
         }),
         'unit_of_measurement': 'V',
       }),
@@ -324,6 +324,12 @@
       }),
       dict({
         'disabled': True,
+        'entity_id': 'sensor.x_wing_battery_voltage',
+        'state': None,
+        'unit_of_measurement': 'V',
+      }),
+      dict({
+        'disabled': True,
         'entity_id': 'sensor.x_wing_geofence',
         'state': None,
         'unit_of_measurement': None,
@@ -336,13 +342,7 @@
       }),
       dict({
         'disabled': True,
-        'entity_id': 'sensor.x_wing_voltage',
-        'state': None,
-        'unit_of_measurement': 'V',
-      }),
-      dict({
-        'disabled': True,
-        'entity_id': 'sensor.x_wing_voltage_2',
+        'entity_id': 'sensor.x_wing_supply_voltage',
         'state': None,
         'unit_of_measurement': 'V',
       }),
@@ -477,6 +477,12 @@
       }),
       dict({
         'disabled': True,
+        'entity_id': 'sensor.x_wing_battery_voltage',
+        'state': None,
+        'unit_of_measurement': 'V',
+      }),
+      dict({
+        'disabled': True,
         'entity_id': 'sensor.x_wing_geofence',
         'state': None,
         'unit_of_measurement': None,
@@ -489,13 +495,7 @@
       }),
       dict({
         'disabled': True,
-        'entity_id': 'sensor.x_wing_voltage',
-        'state': None,
-        'unit_of_measurement': 'V',
-      }),
-      dict({
-        'disabled': True,
-        'entity_id': 'sensor.x_wing_voltage_2',
+        'entity_id': 'sensor.x_wing_supply_voltage',
         'state': None,
         'unit_of_measurement': 'V',
       }),
