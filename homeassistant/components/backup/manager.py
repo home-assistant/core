@@ -12,7 +12,7 @@ import hashlib
 import io
 from itertools import chain
 import json
-from pathlib import Path, PurePath
+from pathlib import Path, PurePath, PureWindowsPath
 import shutil
 import sys
 import tarfile
@@ -1957,7 +1957,10 @@ class CoreBackupReaderWriter(BackupReaderWriter):
         suggested_filename: str,
     ) -> WrittenBackup:
         """Receive a backup."""
-        temp_file = Path(self.temp_backup_dir, suggested_filename)
+        safe_filename = PureWindowsPath(suggested_filename).name
+        if not safe_filename or safe_filename == "..":
+            safe_filename = "backup.tar"
+        temp_file = Path(self.temp_backup_dir, safe_filename)
 
         async_add_executor_job = self._hass.async_add_executor_job
         await async_add_executor_job(make_backup_dir, self.temp_backup_dir)

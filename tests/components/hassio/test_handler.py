@@ -11,40 +11,13 @@ from homeassistant.components.hassio.handler import HassIO, HassioAPIError
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from tests.test_util.aiohttp import AiohttpClientMocker
-
-
-async def test_api_ingress_panels(
-    hassio_handler: HassIO, aioclient_mock: AiohttpClientMocker
-) -> None:
-    """Test setup with API Ingress panels."""
-    aioclient_mock.get(
-        "http://127.0.0.1/ingress/panels",
-        json={
-            "result": "ok",
-            "data": {
-                "panels": {
-                    "slug": {
-                        "enable": True,
-                        "title": "Test",
-                        "icon": "mdi:test",
-                        "admin": False,
-                    }
-                }
-            },
-        },
-    )
-
-    data = await hassio_handler.get_ingress_panels()
-    assert aioclient_mock.call_count == 1
-    assert data["panels"]
-    assert "slug" in data["panels"]
-
 
 @pytest.mark.parametrize(
     ("api_call", "method", "payload"),
     [
-        ("get_ingress_panels", "GET", None),
+        ("/ingress/panels", "GET", None),
+        ("/supervisor/options", "POST", {"diagnostics": True}),
+        ("/supervisor/update", "POST", None),
     ],
 )
 @pytest.mark.usefixtures("socket_enabled")
@@ -71,11 +44,7 @@ async def test_api_headers(
         f"{server.host}:{server.port}",
     )
 
-    api_func = getattr(hassio_handler, api_call)
-    if payload:
-        await api_func(payload)
-    else:
-        await api_func()
+    await hassio_handler.send_command(api_call, method, payload)
     assert received_request is not None
 
     assert received_request.method == method

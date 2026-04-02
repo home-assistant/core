@@ -11,6 +11,9 @@ from aiowithings import (
     NotificationCategory,
     WithingsAuthenticationFailedError,
     WithingsConnectionError,
+    WithingsError,
+    WithingsInvalidParamsError,
+    WithingsTooManyRequestsError,
     WithingsUnauthorizedError,
 )
 from freezegun.api import FrozenDateTimeFactory
@@ -725,3 +728,122 @@ async def test_oauth_implementation_not_available(
         await hass.async_block_till_done()
 
     assert webhook_config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+async def test_webhook_subscription_retry_on_failure(
+    hass: HomeAssistant,
+    withings: AsyncMock,
+    webhook_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test webhook subscription is retried on failure."""
+    call_count = 0
+
+    async def subscribe_side_effect(*args, **kwargs):
+        nonlocal call_count
+        call_count += 1
+        if call_count <= 2:
+            raise WithingsError("The callback URL is either absent or incorrect")
+
+    withings.subscribe_notification.side_effect = subscribe_side_effect
+
+    await setup_integration(hass, webhook_config_entry)
+    await prepare_webhook_setup(hass, freezer)
+
+    # Trigger first retry (30s delay for attempt 0)
+    freezer.tick(timedelta(seconds=30))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    # Trigger second retry (60s delay for attempt 1)
+    freezer.tick(timedelta(seconds=60))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert withings.subscribe_notification.call_count >= 6
+
+
+async def test_webhook_subscription_continues_retrying(
+    hass: HomeAssistant,
+    withings: AsyncMock,
+    webhook_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test webhook subscription continues retrying with exponential backoff."""
+    withings.subscribe_notification.side_effect = WithingsError(
+        "The callback URL is either absent or incorrect"
+    )
+
+    await setup_integration(hass, webhook_config_entry)
+    await prepare_webhook_setup(hass, freezer)
+
+    # Tick through retry delays with exponential backoff: 30, 60, 120, 240, 480
+    for delay in (30, 60, 120, 240, 480):
+        freezer.tick(timedelta(seconds=delay))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+
+    assert "Failed to subscribe to Withings webhooks" in caplog.text
+
+
+async def test_webhook_subscription_rate_limited(
+    hass: HomeAssistant,
+    withings: AsyncMock,
+    webhook_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test webhook subscription handles rate limiting."""
+    withings.subscribe_notification.side_effect = WithingsTooManyRequestsError(
+        "Too many requests"
+    )
+
+    await setup_integration(hass, webhook_config_entry)
+    await prepare_webhook_setup(hass, freezer)
+
+    assert "Rate limited by Withings API" in caplog.text
+
+
+async def test_webhook_subscription_auth_failure(
+    hass: HomeAssistant,
+    withings: AsyncMock,
+    webhook_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test webhook subscription stops on auth failure and triggers reauth."""
+    withings.subscribe_notification.side_effect = WithingsAuthenticationFailedError(
+        "Authentication failed"
+    )
+
+    await setup_integration(hass, webhook_config_entry)
+    await prepare_webhook_setup(hass, freezer)
+
+    assert "Authentication failed while subscribing to webhooks" in caplog.text
+    assert withings.subscribe_notification.call_count == 1
+
+    flows = hass.config_entries.flow.async_progress()
+    assert any(
+        flow["handler"] == DOMAIN and flow["context"]["source"] == "reauth"
+        for flow in flows
+    )
+
+
+async def test_webhook_subscription_invalid_params(
+    hass: HomeAssistant,
+    withings: AsyncMock,
+    webhook_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test invalid params error stops retrying."""
+    withings.subscribe_notification.side_effect = WithingsInvalidParamsError(
+        "Invalid callback URL"
+    )
+
+    await setup_integration(hass, webhook_config_entry)
+    await prepare_webhook_setup(hass, freezer)
+
+    assert "Webhook URL rejected by Withings" in caplog.text
+    assert withings.subscribe_notification.call_count == 1
