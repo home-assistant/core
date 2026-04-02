@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+from dataclasses import dataclass
 from datetime import timedelta
 import logging
 
@@ -21,16 +22,26 @@ from .const import CONF_ACCOUNT
 
 _LOGGER = logging.getLogger(__name__)
 
+type OVOEnergyConfigEntry = ConfigEntry[OVOEnergyData]
+
+
+@dataclass
+class OVOEnergyData:
+    """Runtime data for OVO Energy."""
+
+    client: OVOEnergy
+    coordinator: OVOEnergyDataUpdateCoordinator
+
 
 class OVOEnergyDataUpdateCoordinator(DataUpdateCoordinator[OVODailyUsage]):
     """Class to manage fetching OVO Energy data."""
 
-    config_entry: ConfigEntry
+    config_entry: OVOEnergyConfigEntry
 
     def __init__(
         self,
         hass: HomeAssistant,
-        config_entry: ConfigEntry,
+        config_entry: OVOEnergyConfigEntry,
         client: OVOEnergy,
     ) -> None:
         """Initialize."""

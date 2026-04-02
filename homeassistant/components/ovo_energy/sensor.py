@@ -16,15 +16,14 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import UnitOfEnergy
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.util import dt as dt_util
 
-from .const import DATA_CLIENT, DATA_COORDINATOR, DOMAIN
-from .coordinator import OVOEnergyDataUpdateCoordinator
+from .const import DOMAIN
+from .coordinator import OVOEnergyConfigEntry, OVOEnergyDataUpdateCoordinator
 from .entity import OVOEnergyDeviceEntity
 
 SCAN_INTERVAL = timedelta(seconds=300)
@@ -114,14 +113,12 @@ SENSOR_TYPES_GAS: tuple[OVOEnergySensorEntityDescription, ...] = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: OVOEnergyConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up OVO Energy sensor based on a config entry."""
-    coordinator: OVOEnergyDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id][
-        DATA_COORDINATOR
-    ]
-    client: OVOEnergy = hass.data[DOMAIN][entry.entry_id][DATA_CLIENT]
+    coordinator = entry.runtime_data.coordinator
+    client = entry.runtime_data.client
 
     entities = []
 
