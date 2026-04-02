@@ -115,4 +115,4 @@ reset_items:
     entity:
       domain: todo
       supported_features:
-        - todo.TodoListEntityFeature.UPDATE_TODO_ITEM
+        - todo.TodoListEntityFeature.UPDATE_TODO_ITEMS

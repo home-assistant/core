@@ -35,6 +35,9 @@ from . import create_mock_platform
 
 from tests.typing import WebSocketGenerator
 
+TEST_TIMEZONE = zoneinfo.ZoneInfo("America/Regina")
+TEST_OFFSET = "-06:00"
+
 ITEM_1 = {
     "uid": "1",
     "summary": "Item #1",
@@ -44,9 +47,8 @@ ITEM_2 = {
     "uid": "2",
     "summary": "Item #2",
     "status": "completed",
+    "completed": f"2026-03-27T11:00:00{TEST_OFFSET}",
 }
-TEST_TIMEZONE = zoneinfo.ZoneInfo("America/Regina")
-TEST_OFFSET = "-06:00"
 
 
 async def test_unload_entry(
@@ -81,7 +83,7 @@ async def test_list_todo_items(
     state = hass.states.get("todo.entity1")
     assert state
     assert state.state == "1"
-    assert state.attributes == {"supported_features": 15}
+    assert state.attributes == {ATTR_SUPPORTED_FEATURES: 143}
 
     client = await hass_ws_client(hass)
     await client.send_json(
@@ -124,7 +126,7 @@ async def test_get_items_service(
     state = hass.states.get("todo.entity1")
     assert state
     assert state.state == "1"
-    assert state.attributes == {ATTR_SUPPORTED_FEATURES: 15}
+    assert state.attributes == {ATTR_SUPPORTED_FEATURES: 143}
 
     result = await hass.services.async_call(
         DOMAIN,
@@ -1070,13 +1072,17 @@ async def test_reset_todo_items_service(
         blocking=True,
     )
 
-    args = test_entity.async_update_todo_item.call_args
+    args = test_entity.async_update_todo_items.call_args
     assert args
-    item = args.kwargs.get("item")
+    items = args.kwargs.get("items")
+    assert len(items) == 1
+
+    item = items[0]
     assert item
     assert item.uid == "2"
     assert item.summary == "Item #2"
     assert item.status == TodoItemStatus.NEEDS_ACTION
+    assert item.completed is None
 
     assert not [
         item
@@ -1084,7 +1090,7 @@ async def test_reset_todo_items_service(
         if item.status == TodoItemStatus.COMPLETED
     ], "COMPLETED items should have been changed to NEEDS_ACTION"
 
-    test_entity.async_update_todo_item.reset_mock()
+    test_entity.async_update_todo_items.reset_mock()
 
     # calling service multiple times will not call the entity method
     await hass.services.async_call(
@@ -1093,7 +1099,7 @@ async def test_reset_todo_items_service(
         target={ATTR_ENTITY_ID: "todo.entity1"},
         blocking=True,
     )
-    test_entity.async_update_todo_item.assert_not_called()
+    test_entity.async_update_todo_items.assert_not_called()
 
 
 async def test_reset_todo_items_service_raises(
@@ -1104,7 +1110,7 @@ async def test_reset_todo_items_service_raises(
 
     await create_mock_platform(hass, [test_entity])
 
-    test_entity.async_update_todo_item.side_effect = HomeAssistantError("Ooops")
+    test_entity.async_update_todo_items.side_effect = HomeAssistantError("Ooops")
     with pytest.raises(HomeAssistantError, match="Ooops"):
         await hass.services.async_call(
             DOMAIN,
@@ -1156,7 +1162,7 @@ async def test_subscribe(
                 "status": "completed",
                 "due": None,
                 "description": None,
-                "completed": None,
+                "completed": f"2026-03-27T11:00:00{TEST_OFFSET}",
             },
         ]
     }
@@ -1184,7 +1190,7 @@ async def test_subscribe(
                 "status": "completed",
                 "due": None,
                 "description": None,
-                "completed": None,
+                "completed": f"2026-03-27T11:00:00{TEST_OFFSET}",
             },
             {
                 "summary": "Item #3",

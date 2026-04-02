@@ -197,7 +197,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         TodoServices.RESET_ITEMS,
         None,
         _async_reset_todo_items,
-        required_features=[TodoListEntityFeature.UPDATE_TODO_ITEM],
+        required_features=[TodoListEntityFeature.UPDATE_TODO_ITEMS],
     )
 
     await component.async_setup(config)
@@ -271,6 +271,10 @@ class TodoListEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
     async def async_delete_todo_items(self, uids: list[str]) -> None:
         """Delete an item in the To-do list."""
+        raise NotImplementedError
+
+    async def async_update_todo_items(self, items: list[TodoItem]) -> None:
+        """Update multiple items in the To-do list."""
         raise NotImplementedError
 
     async def async_move_todo_item(
@@ -547,13 +551,11 @@ async def _async_remove_completed_items(entity: TodoListEntity, _: ServiceCall) 
 
 
 async def _async_reset_todo_items(entity: TodoListEntity, _: ServiceCall) -> None:
-    """Reset all items from the To-do list to needed."""
+    """Reset all completed items from the To-do list to 'not completed'."""
     items = [
-        item
+        dataclasses.replace(item, status=TodoItemStatus.NEEDS_ACTION, completed=None)
         for item in entity.todo_items or ()
         if item.status != TodoItemStatus.NEEDS_ACTION
     ]
-    for item in items:
-        data = dataclasses.asdict(item)
-        data["status"] = TodoItemStatus.NEEDS_ACTION
-        await entity.async_update_todo_item(item=TodoItem(**data))
+    if items:
+        await entity.async_update_todo_items(items=items)

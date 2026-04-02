@@ -1,7 +1,9 @@
 """Fixtures for the todo component tests."""
 
+import datetime
 from collections.abc import Generator
 from unittest.mock import AsyncMock
+import zoneinfo
 
 import pytest
 
@@ -18,6 +20,8 @@ from homeassistant.core import HomeAssistant
 from . import TEST_DOMAIN, MockFlow, MockTodoListEntity
 
 from tests.common import MockModule, mock_config_flow, mock_integration, mock_platform
+
+TEST_TIMEZONE = zoneinfo.ZoneInfo("America/Regina")
 
 
 @pytest.fixture(autouse=True)
@@ -70,8 +74,17 @@ async def set_time_zone(hass: HomeAssistant) -> None:
 def mock_test_entity_items() -> list[TodoItem]:
     """Fixture that creates the items returned by the test entity."""
     return [
-        TodoItem(summary="Item #1", uid="1", status=TodoItemStatus.NEEDS_ACTION),
-        TodoItem(summary="Item #2", uid="2", status=TodoItemStatus.COMPLETED),
+        TodoItem(
+            summary="Item #1",
+            uid="1",
+            status=TodoItemStatus.NEEDS_ACTION,
+        ),
+        TodoItem(
+            summary="Item #2",
+            uid="2",
+            status=TodoItemStatus.COMPLETED,
+            completed=datetime.datetime(2026, 3, 27, 11, 0, 0, tzinfo=TEST_TIMEZONE),
+        ),
     ]
 
 
@@ -85,9 +98,11 @@ def mock_test_entity(test_entity_items: list[TodoItem]) -> TodoListEntity:
         | TodoListEntityFeature.UPDATE_TODO_ITEM
         | TodoListEntityFeature.DELETE_TODO_ITEM
         | TodoListEntityFeature.MOVE_TODO_ITEM
+        | TodoListEntityFeature.UPDATE_TODO_ITEMS
     )
     entity1.async_create_todo_item = AsyncMock(wraps=entity1.async_create_todo_item)
     entity1.async_update_todo_item = AsyncMock(wraps=entity1.async_update_todo_item)
     entity1.async_delete_todo_items = AsyncMock(wraps=entity1.async_delete_todo_items)
+    entity1.async_update_todo_items = AsyncMock(wraps=entity1.async_update_todo_items)
     entity1.async_move_todo_item = AsyncMock()
     return entity1
