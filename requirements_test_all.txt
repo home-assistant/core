@@ -1155,6 +1155,9 @@ ifaddr==0.2.0
 # homeassistant.components.igloohome
 igloohome-api==0.1.1
 
+# homeassistant.components.ihc
+ihcsdk==2.8.5
+
 # homeassistant.components.imeon_inverter
 imeon_inverter_api==0.4.0
 

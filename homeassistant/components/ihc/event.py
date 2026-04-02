@@ -5,7 +5,7 @@ from __future__ import annotations
 from ihcsdk.ihccontroller import IHCController
 
 from homeassistant.components.event import EventEntity
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
@@ -59,6 +59,7 @@ class IHCButtonEventEntity(IHCEntity, EventEntity):
             if channel is not None:
                 self._name = f"{product['group']}_{product['id']}_{channel:02d}"
 
+    @callback
     def _handle_press(self) -> None:
         """Handle a button press on the Home Assistant event loop."""
         self._trigger_event("pressed")
