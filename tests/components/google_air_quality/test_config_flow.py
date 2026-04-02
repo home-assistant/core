@@ -478,3 +478,61 @@ async def test_create_entry_with_custom_laqi(
         },
     }
     assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_subentry_flow_with_custom_laqi(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_api: AsyncMock,
+) -> None:
+    """Test creating a location subentry with a custom local AQI."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_api.async_get_current_conditions.call_count == 1
+
+    result = await hass.config_entries.subentries.async_init(
+        (mock_config_entry.entry_id, "location"),
+        context={"source": "user"},
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "location"
+
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        {
+            CONF_NAME: "Work",
+            CONF_LOCATION: {
+                CONF_LATITUDE: 30.1,
+                CONF_LONGITUDE: 40.1,
+            },
+            CUSTOM_LOCAL_AQI_OPTIONS: {
+                CONF_COUNTRY: "DE",
+                CUSTOM_LAQI: "deu_lubw",
+                CONF_ENABLE_CUSTOM_LAQI: True,
+            },
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "Work"
+    assert result["data"] == {
+        CONF_LATITUDE: 30.1,
+        CONF_LONGITUDE: 40.1,
+        CUSTOM_LOCAL_AQI_OPTIONS: {
+            CONF_COUNTRY: "DE",
+            CUSTOM_LAQI: "deu_lubw",
+            CONF_ENABLE_CUSTOM_LAQI: True,
+        },
+    }
+
+    # Initial setup: 1 of each API call
+    # Subentry flow validation: 1 current conditions call
+    # Reload with 2 subentries: 2 of each API call
+    assert mock_api.async_get_current_conditions.call_count == 1 + 1 + 2
+
+    entry = hass.config_entries.async_get_entry(mock_config_entry.entry_id)
+    assert len(entry.subentries) == 2
