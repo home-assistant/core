@@ -362,14 +362,14 @@ class TelegramNotificationService:
             buttons = []
             for key in row.split(","):
                 key = key.strip()
-                if ":/" in key:
-                    label, value = key.split(":/", 1)
-                    if value.startswith(("https://", "http://")):
-                        buttons.append(InlineKeyboardButton(text=label, url=value))
-                    else:
-                        buttons.append(
-                            InlineKeyboardButton(text=label, callback_data=value)
-                        )
+                if "://" in key:
+                    label, url = key.split(":", 1)
+                    buttons.append(InlineKeyboardButton(text=label, url=url))
+                elif ":/" in key:
+                    label, value = key.split(":", 1)
+                    buttons.append(
+                        InlineKeyboardButton(text=label, callback_data=value)
+                    )
                 else:
                     label = key[1:].upper() if key.startswith("/") else key
                     buttons.append(InlineKeyboardButton(text=label, callback_data=key))
