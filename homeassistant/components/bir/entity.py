@@ -22,5 +22,5 @@ class BirEntity(CoordinatorEntity[BirDataUpdateCoordinator]):
             entry_type=DeviceEntryType.SERVICE,
             identifiers={(DOMAIN, entry.data[CONF_PROPERTY_ID])},
             manufacturer="BIR",
-            name=f"BIR {entry.runtime_data.address}",
+            name=entry.runtime_data.address,
         )

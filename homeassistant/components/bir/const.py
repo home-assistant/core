@@ -19,4 +19,3 @@ WASTE_TYPES: Final[set[str]] = {
 
 # Config keys
 CONF_PROPERTY_ID: Final = "property_id"
-CONF_ADDRESS: Final = "address"

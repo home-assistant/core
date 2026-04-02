@@ -13,6 +13,7 @@ from homeassistant.components.sensor import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from .const import CONF_PROPERTY_ID
 from .coordinator import BirConfigEntry
 from .entity import BirEntity
 
@@ -80,7 +81,7 @@ class BirSensor(BirEntity, SensorEntity):
         """Initialize the BIR sensor."""
         super().__init__(entry)
         self.entity_description = description
-        self._attr_unique_id = f"{entry.data['property_id']}_{description.key}"
+        self._attr_unique_id = f"{entry.data[CONF_PROPERTY_ID]}_{description.key}"
 
     @property
     def available(self) -> bool:

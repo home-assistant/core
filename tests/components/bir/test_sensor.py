@@ -28,11 +28,11 @@ async def test_sensors_created(
 @pytest.mark.parametrize(
     ("entity_id", "expected_date"),
     [
-        ("sensor.bir_testveien_1_bergen_mixed_waste_pickup", "2026-04-15"),
-        ("sensor.bir_testveien_1_bergen_paper_and_plastic_pickup", "2026-04-20"),
-        ("sensor.bir_testveien_1_bergen_food_waste_pickup", "2026-04-10"),
+        ("sensor.testveien_1_bergen_mixed_waste_pickup", "2026-04-15"),
+        ("sensor.testveien_1_bergen_paper_and_plastic_pickup", "2026-04-20"),
+        ("sensor.testveien_1_bergen_food_waste_pickup", "2026-04-10"),
         (
-            "sensor.bir_testveien_1_bergen_glass_and_metal_packaging_pickup",
+            "sensor.testveien_1_bergen_glass_and_metal_packaging_pickup",
             "2026-05-01",
         ),
     ],

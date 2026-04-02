@@ -8,18 +8,12 @@ from typing import TypedDict
 from pybirno import BirClient, BirError
 
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_ADDRESS
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import (
-    CONF_ADDRESS,
-    CONF_PROPERTY_ID,
-    DOMAIN,
-    LOGGER,
-    SCAN_INTERVAL,
-    WASTE_TYPES,
-)
+from .const import CONF_PROPERTY_ID, DOMAIN, LOGGER, SCAN_INTERVAL, WASTE_TYPES
 
 type BirConfigEntry = ConfigEntry[BirDataUpdateCoordinator]
 
@@ -60,8 +54,9 @@ class BirDataUpdateCoordinator(DataUpdateCoordinator[dict[str, WastePickup]]):
 
         return self._process_pickup_data(pickups)
 
+    @staticmethod
     def _process_pickup_data(
-        self, pickups: list, reference_date: date | None = None
+        pickups: list, reference_date: date | None = None
     ) -> dict[str, WastePickup]:
         """Process raw pickup data into structured format."""
         if reference_date is None:

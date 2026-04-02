@@ -5,8 +5,9 @@ from unittest.mock import AsyncMock, patch
 from pybirno import BirAuthenticationError, BirConnectionError
 import pytest
 
-from homeassistant.components.bir.const import CONF_ADDRESS, CONF_PROPERTY_ID, DOMAIN
+from homeassistant.components.bir.const import CONF_PROPERTY_ID, DOMAIN
 from homeassistant.config_entries import SOURCE_USER
+from homeassistant.const import CONF_ADDRESS
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 

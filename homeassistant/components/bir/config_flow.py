@@ -2,14 +2,13 @@
 
 from __future__ import annotations
 
-import logging
 from typing import Any
 
-from pybirno import BirClient, BirError
+from pybirno import Address, BirClient, BirError
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.data_entry_flow import AbortFlow
+from homeassistant.const import CONF_ADDRESS
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.selector import (
     SelectOptionDict,
@@ -21,9 +20,7 @@ from homeassistant.helpers.selector import (
     TextSelectorType,
 )
 
-from .const import CONF_ADDRESS, CONF_PROPERTY_ID, DOMAIN
-
-_LOGGER = logging.getLogger(__name__)
+from .const import CONF_PROPERTY_ID, DOMAIN
 
 MIN_SEARCH_LENGTH = 3
 
@@ -35,7 +32,7 @@ class BirConfigFlow(ConfigFlow, domain=DOMAIN):
 
     def __init__(self) -> None:
         """Initialize the config flow."""
-        self._addresses: list[dict[str, Any]] = []
+        self._addresses: list[Address] = []
         self._search_query: str = ""
 
     async def async_step_user(
@@ -52,11 +49,9 @@ class BirConfigFlow(ConfigFlow, domain=DOMAIN):
             else:
                 try:
                     session = async_get_clientsession(self.hass)
-                    addresses = await BirClient.search_addresses(session, search_query)
-                    self._addresses = [
-                        {"id": addr.property_id, "adresse": addr.address}
-                        for addr in addresses
-                    ]
+                    self._addresses = await BirClient.search_addresses(
+                        session, search_query
+                    )
                     self._search_query = search_query
 
                     if not self._addresses:
@@ -65,7 +60,6 @@ class BirConfigFlow(ConfigFlow, domain=DOMAIN):
                         return await self.async_step_select_address()
 
                 except BirError:
-                    _LOGGER.exception("Error searching for addresses")
                     errors["base"] = "cannot_connect"
 
         return self.async_show_form(
@@ -93,34 +87,34 @@ class BirConfigFlow(ConfigFlow, domain=DOMAIN):
 
             if selected_id:
                 selected = next(
-                    (a for a in self._addresses if a["id"] == selected_id), None
+                    (a for a in self._addresses if a.property_id == selected_id),
+                    None,
                 )
                 if selected:
                     try:
                         session = async_get_clientsession(self.hass)
-                        client = BirClient(selected["id"], session)
+                        client = BirClient(selected.property_id, session)
                         await client.authenticate()
-
-                        await self.async_set_unique_id(f"bir_{selected['id']}")
+                    except BirError:
+                        errors["base"] = "cannot_connect"
+                    else:
+                        await self.async_set_unique_id(
+                            f"bir_{selected.property_id}"
+                        )
                         self._abort_if_unique_id_configured()
 
                         return self.async_create_entry(
-                            title=selected["adresse"],
+                            title=selected.address,
                             data={
-                                CONF_PROPERTY_ID: selected["id"],
-                                CONF_ADDRESS: selected["adresse"],
+                                CONF_PROPERTY_ID: selected.property_id,
+                                CONF_ADDRESS: selected.address,
                             },
                         )
-                    except AbortFlow:
-                        raise
-                    except BirError:
-                        _LOGGER.exception("Error validating property")
-                        errors["base"] = "cannot_connect"
 
         options = [
             SelectOptionDict(
-                value=addr["id"],
-                label=addr["adresse"],
+                value=addr.property_id,
+                label=addr.address,
             )
             for addr in self._addresses
         ]

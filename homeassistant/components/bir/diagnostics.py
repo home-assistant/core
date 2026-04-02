@@ -7,9 +7,10 @@ from typing import Any
 from homeassistant.components.diagnostics import async_redact_data
 from homeassistant.core import HomeAssistant
 
+from .const import CONF_PROPERTY_ID
 from .coordinator import BirConfigEntry
 
-TO_REDACT = {"property_id"}
+TO_REDACT = {CONF_PROPERTY_ID}
 
 
 async def async_get_config_entry_diagnostics(

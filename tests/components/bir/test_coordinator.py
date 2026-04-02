@@ -52,8 +52,9 @@ def test_process_pickup_data() -> None:
         ),
     ]
 
-    coordinator = BirDataUpdateCoordinator.__new__(BirDataUpdateCoordinator)
-    result = coordinator._process_pickup_data(pickups, reference_date=date(2026, 4, 1))
+    result = BirDataUpdateCoordinator._process_pickup_data(
+        pickups, reference_date=date(2026, 4, 1)
+    )
 
     assert len(result) == 4
     assert result["mixed_waste"]["date"] == date(2026, 4, 15)
@@ -95,8 +96,9 @@ def test_process_pickup_data_keeps_earliest() -> None:
         ),
     ]
 
-    coordinator = BirDataUpdateCoordinator.__new__(BirDataUpdateCoordinator)
-    result = coordinator._process_pickup_data(pickups, reference_date=date(2026, 4, 1))
+    result = BirDataUpdateCoordinator._process_pickup_data(
+        pickups, reference_date=date(2026, 4, 1)
+    )
 
     assert len(result) == 1
     assert result["mixed_waste"]["date"] == date(2026, 4, 10)
@@ -105,8 +107,9 @@ def test_process_pickup_data_keeps_earliest() -> None:
 
 def test_process_pickup_data_empty() -> None:
     """Test processing empty pickup data."""
-    coordinator = BirDataUpdateCoordinator.__new__(BirDataUpdateCoordinator)
-    result = coordinator._process_pickup_data([], reference_date=date(2026, 4, 1))
+    result = BirDataUpdateCoordinator._process_pickup_data(
+        [], reference_date=date(2026, 4, 1)
+    )
 
     assert result == {}
 
@@ -124,7 +127,8 @@ def test_process_pickup_data_days_until_minimum_zero() -> None:
         ),
     ]
 
-    coordinator = BirDataUpdateCoordinator.__new__(BirDataUpdateCoordinator)
-    result = coordinator._process_pickup_data(pickups, reference_date=date(2026, 4, 1))
+    result = BirDataUpdateCoordinator._process_pickup_data(
+        pickups, reference_date=date(2026, 4, 1)
+    )
 
     assert result["mixed_waste"]["days_until"] == 0

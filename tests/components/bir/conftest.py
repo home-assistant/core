@@ -9,7 +9,8 @@ from unittest.mock import AsyncMock, patch
 from pybirno import Address, WastePickup as BirWastePickup
 import pytest
 
-from homeassistant.components.bir.const import CONF_ADDRESS, CONF_PROPERTY_ID, DOMAIN
+from homeassistant.components.bir.const import CONF_PROPERTY_ID, DOMAIN
+from homeassistant.const import CONF_ADDRESS
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
