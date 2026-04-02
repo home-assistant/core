@@ -5,7 +5,6 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
-from typing import TYPE_CHECKING
 
 from aio_wattwaechter import (
     Wattwaechter,
@@ -15,13 +14,12 @@ from aio_wattwaechter import (
 )
 from aio_wattwaechter.models import MeterData, SystemInfo
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-if TYPE_CHECKING:
-    from . import WattwaechterConfigEntry
 from .const import (
     CONF_DEVICE_ID,
     CONF_DEVICE_NAME,
@@ -34,6 +32,8 @@ from .const import (
 )
 
 _LOGGER = logging.getLogger(__name__)
+
+type WattwaechterConfigEntry = ConfigEntry[WattwaechterCoordinator]
 
 
 @dataclass

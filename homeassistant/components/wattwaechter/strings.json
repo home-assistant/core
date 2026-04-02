@@ -1,26 +1,26 @@
 {
   "config": {
     "abort": {
-      "already_configured": "This device is already configured. The IP address has been updated.",
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "no_device_id": "Could not identify the device."
     },
     "error": {
-      "cannot_connect": "Cannot connect to the device. Please check the IP address and make sure the device is powered on.",
-      "invalid_auth": "Invalid API token. Please check your token and try again.",
-      "unknown": "An unexpected error occurred."
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "step": {
       "user": {
         "data": {
-          "host": "Host",
-          "token": "API Token (optional)"
+          "host": "[%key:common::config_flow::data::host%]",
+          "token": "[%key:common::config_flow::data::api_token%]"
         },
         "description": "Enter the IP address or hostname of your WattWächter device. The API token is optional if authentication is disabled on the device.",
         "title": "Add WattWächter Plus"
       },
       "zeroconf_confirm": {
         "data": {
-          "token": "API Token (optional)"
+          "token": "[%key:common::config_flow::data::api_token%]"
         },
         "description": "A WattWächter device was found on your network.\n\nModel: {model}\nFirmware: {firmware}\nHost: {host}\nDevice ID: {device_id}\n\nOptionally enter the API token for authenticated access.",
         "title": "WattWächter Plus discovered"
@@ -30,12 +30,8 @@
   "entity": {
     "sensor": {
       "active_power": { "name": "Active power" },
-      "active_power_l1": { "name": "Active power L1" },
-      "active_power_l2": { "name": "Active power L2" },
-      "active_power_l3": { "name": "Active power L3" },
-      "current_l1": { "name": "Current L1" },
-      "current_l2": { "name": "Current L2" },
-      "current_l3": { "name": "Current L3" },
+      "active_power_phase": { "name": "Active power {phase}" },
+      "current_phase": { "name": "Current {phase}" },
       "export_tariff_1": { "name": "Feed-in tariff 1" },
       "export_tariff_2": { "name": "Feed-in tariff 2" },
       "export_total": { "name": "Total feed-in" },
@@ -44,14 +40,10 @@
       "import_tariff_2": { "name": "Consumption tariff 2" },
       "import_total": { "name": "Total consumption" },
       "power_factor": { "name": "Power factor" },
-      "power_factor_l1": { "name": "Power factor L1" },
-      "power_factor_l2": { "name": "Power factor L2" },
-      "power_factor_l3": { "name": "Power factor L3" },
-      "voltage_l1": { "name": "Voltage L1" },
-      "voltage_l2": { "name": "Voltage L2" },
-      "voltage_l3": { "name": "Voltage L3" },
-      "wifi_signal": { "name": "WiFi signal" },
-      "wifi_ssid": { "name": "WiFi SSID" }
+      "power_factor_phase": { "name": "Power factor {phase}" },
+      "voltage_phase": { "name": "Voltage {phase}" },
+      "wifi_signal": { "name": "Wi-Fi signal" },
+      "wifi_ssid": { "name": "Wi-Fi SSID" }
     }
   },
   "exceptions": {

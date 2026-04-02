@@ -4,18 +4,15 @@ from __future__ import annotations
 
 from aio_wattwaechter import Wattwaechter, WattwaechterConnectionError
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_TOKEN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN
-from .coordinator import WattwaechterCoordinator
+from .coordinator import WattwaechterConfigEntry, WattwaechterCoordinator
 
 PLATFORMS = [Platform.SENSOR]
-
-type WattwaechterConfigEntry = ConfigEntry[WattwaechterCoordinator]
 
 
 async def async_setup_entry(

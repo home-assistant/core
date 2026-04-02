@@ -101,7 +101,7 @@ KNOWN_OBIS_CODES: dict[str, SensorEntityDescription] = {
     ),
     "36.7.0": SensorEntityDescription(
         key="36.7.0",
-        translation_key="active_power_l1",
+        translation_key="active_power_phase",
         native_unit_of_measurement=UnitOfPower.WATT,
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
@@ -109,7 +109,7 @@ KNOWN_OBIS_CODES: dict[str, SensorEntityDescription] = {
     ),
     "56.7.0": SensorEntityDescription(
         key="56.7.0",
-        translation_key="active_power_l2",
+        translation_key="active_power_phase",
         native_unit_of_measurement=UnitOfPower.WATT,
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
@@ -117,7 +117,7 @@ KNOWN_OBIS_CODES: dict[str, SensorEntityDescription] = {
     ),
     "76.7.0": SensorEntityDescription(
         key="76.7.0",
-        translation_key="active_power_l3",
+        translation_key="active_power_phase",
         native_unit_of_measurement=UnitOfPower.WATT,
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
@@ -126,7 +126,7 @@ KNOWN_OBIS_CODES: dict[str, SensorEntityDescription] = {
     # Voltage (V) - measurement
     "32.7.0": SensorEntityDescription(
         key="32.7.0",
-        translation_key="voltage_l1",
+        translation_key="voltage_phase",
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         device_class=SensorDeviceClass.VOLTAGE,
         state_class=SensorStateClass.MEASUREMENT,
@@ -134,7 +134,7 @@ KNOWN_OBIS_CODES: dict[str, SensorEntityDescription] = {
     ),
     "52.7.0": SensorEntityDescription(
         key="52.7.0",
-        translation_key="voltage_l2",
+        translation_key="voltage_phase",
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         device_class=SensorDeviceClass.VOLTAGE,
         state_class=SensorStateClass.MEASUREMENT,
@@ -142,7 +142,7 @@ KNOWN_OBIS_CODES: dict[str, SensorEntityDescription] = {
     ),
     "72.7.0": SensorEntityDescription(
         key="72.7.0",
-        translation_key="voltage_l3",
+        translation_key="voltage_phase",
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         device_class=SensorDeviceClass.VOLTAGE,
         state_class=SensorStateClass.MEASUREMENT,
@@ -151,7 +151,7 @@ KNOWN_OBIS_CODES: dict[str, SensorEntityDescription] = {
     # Current (A) - measurement
     "31.7.0": SensorEntityDescription(
         key="31.7.0",
-        translation_key="current_l1",
+        translation_key="current_phase",
         native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
         device_class=SensorDeviceClass.CURRENT,
         state_class=SensorStateClass.MEASUREMENT,
@@ -159,7 +159,7 @@ KNOWN_OBIS_CODES: dict[str, SensorEntityDescription] = {
     ),
     "51.7.0": SensorEntityDescription(
         key="51.7.0",
-        translation_key="current_l2",
+        translation_key="current_phase",
         native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
         device_class=SensorDeviceClass.CURRENT,
         state_class=SensorStateClass.MEASUREMENT,
@@ -167,7 +167,7 @@ KNOWN_OBIS_CODES: dict[str, SensorEntityDescription] = {
     ),
     "71.7.0": SensorEntityDescription(
         key="71.7.0",
-        translation_key="current_l3",
+        translation_key="current_phase",
         native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
         device_class=SensorDeviceClass.CURRENT,
         state_class=SensorStateClass.MEASUREMENT,
@@ -192,25 +192,40 @@ KNOWN_OBIS_CODES: dict[str, SensorEntityDescription] = {
     ),
     "33.7.0": SensorEntityDescription(
         key="33.7.0",
-        translation_key="power_factor_l1",
+        translation_key="power_factor_phase",
         device_class=SensorDeviceClass.POWER_FACTOR,
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=3,
     ),
     "53.7.0": SensorEntityDescription(
         key="53.7.0",
-        translation_key="power_factor_l2",
+        translation_key="power_factor_phase",
         device_class=SensorDeviceClass.POWER_FACTOR,
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=3,
     ),
     "73.7.0": SensorEntityDescription(
         key="73.7.0",
-        translation_key="power_factor_l3",
+        translation_key="power_factor_phase",
         device_class=SensorDeviceClass.POWER_FACTOR,
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=3,
     ),
+}
+
+OBIS_PHASE: dict[str, str] = {
+    "36.7.0": "L1",
+    "56.7.0": "L2",
+    "76.7.0": "L3",
+    "32.7.0": "L1",
+    "52.7.0": "L2",
+    "72.7.0": "L3",
+    "31.7.0": "L1",
+    "51.7.0": "L2",
+    "71.7.0": "L3",
+    "33.7.0": "L1",
+    "53.7.0": "L2",
+    "73.7.0": "L3",
 }
 
 DIAGNOSTIC_SENSORS: tuple[DiagnosticSensorDescription, ...] = (
@@ -243,7 +258,13 @@ async def async_setup_entry(
 ) -> None:
     """Set up WattWächter sensors from a config entry."""
     coordinator = entry.runtime_data
-    entities: list[SensorEntity] = []
+    entities: list[SensorEntity] = [
+        WattwaechterDiagnosticSensor(
+            coordinator=coordinator,
+            description=diag_description,
+        )
+        for diag_description in DIAGNOSTIC_SENSORS
+    ]
 
     # Dynamic OBIS sensors from meter data
     if coordinator.data.meter:
@@ -256,15 +277,6 @@ async def async_setup_entry(
             for obis_code in coordinator.data.meter.values
             if obis_code in KNOWN_OBIS_CODES
         )
-
-    # Diagnostic sensors from system info
-    entities.extend(
-        WattwaechterDiagnosticSensor(
-            coordinator=coordinator,
-            description=diag_description,
-        )
-        for diag_description in DIAGNOSTIC_SENSORS
-    )
 
     async_add_entities(entities)
 
@@ -285,6 +297,8 @@ class WattwaechterObisSensor(WattwaechterEntity, SensorEntity):
         self.entity_description = description
         self._obis_code = obis_code
         self._attr_unique_id = f"{coordinator.device_id}_{obis_code}"
+        if obis_code in OBIS_PHASE:
+            self._attr_translation_placeholders = {"phase": OBIS_PHASE[obis_code]}
 
     @property
     def native_value(self) -> float | str | None:
