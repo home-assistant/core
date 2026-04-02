@@ -369,3 +369,33 @@ async def test_upload_image_auth_error(
 
     flows = hass.config_entries.flow.async_progress_by_handler(DOMAIN)
     assert any(f["context"]["source"] == config_entries.SOURCE_REAUTH for f in flows)
+
+
+async def test_upload_image_invalid_encryption_key_format(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_resolve_media: MagicMock,
+) -> None:
+    """Test that a malformed stored encryption key triggers reauth and raises an error."""
+    hass.config_entries.async_update_entry(
+        mock_config_entry,
+        data={**mock_config_entry.data, CONF_ENCRYPTION_KEY: "not-valid-hex!"},
+    )
+    device_id = _device_id(hass, mock_config_entry)
+
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            DOMAIN,
+            "upload_image",
+            {
+                "device_id": device_id,
+                "image": {
+                    "media_content_id": "media-source://local/test.png",
+                    "media_content_type": "image/png",
+                },
+            },
+            blocking=True,
+        )
+
+    flows = hass.config_entries.flow.async_progress_by_handler(DOMAIN)
+    assert any(f["context"]["source"] == config_entries.SOURCE_REAUTH for f in flows)
