@@ -5,6 +5,7 @@ from __future__ import annotations
 from unittest.mock import AsyncMock, patch
 
 from duco.exceptions import DucoConnectionError
+from duco.models import BoardInfo, LanInfo
 
 from homeassistant import config_entries
 from homeassistant.components.duco.const import DOMAIN
@@ -16,9 +17,9 @@ from .conftest import TEST_MAC, USER_INPUT
 
 async def test_user_flow_success(
     hass: HomeAssistant,
-    mock_board_info,
-    mock_lan_info,
-    mock_duco_client,
+    mock_board_info: BoardInfo,
+    mock_lan_info: LanInfo,
+    mock_duco_client: AsyncMock,
 ) -> None:
     """Test a successful user flow."""
     result = await hass.config_entries.flow.async_init(
@@ -76,9 +77,9 @@ async def test_user_flow_cannot_connect(hass: HomeAssistant) -> None:
 
 async def test_user_flow_duplicate(
     hass: HomeAssistant,
-    mock_board_info,
-    mock_lan_info,
-    mock_duco_client,
+    mock_board_info: BoardInfo,
+    mock_lan_info: LanInfo,
+    mock_duco_client: AsyncMock,
 ) -> None:
     """Test that a duplicate config entry is aborted."""
     # First config entry

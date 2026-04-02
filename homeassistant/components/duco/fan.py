@@ -131,6 +131,8 @@ class DucoVentilationFanEntity(DucoEntity, FanEntity):
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set the ventilation preset mode."""
+        if preset_mode not in _PRESET_TO_STATE:
+            raise HomeAssistantError(f"Invalid preset mode: {preset_mode}")
         # Optimistically update the UI immediately.
         self._attr_preset_mode = preset_mode
         self.async_write_ha_state()
