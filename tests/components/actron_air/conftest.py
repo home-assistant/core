@@ -103,6 +103,40 @@ def mock_actron_api() -> Generator[AsyncMock]:
         # Mock ac_system methods for climate platform
         status.ac_system.set_system_mode = AsyncMock()
 
+        # Mock model_dump for diagnostics
+        status.model_dump = MagicMock(
+            return_value={
+                "is_online": True,
+                "ac_system": {
+                    "system_name": "Test System",
+                    "master_serial": "123456",
+                    "master_wc_model": "Test Model",
+                    "master_wc_firmware_version": "1.0.0",
+                },
+                "user_aircon_settings": {
+                    "is_on": False,
+                    "mode": "COOL",
+                    "fan_mode": "LOW",
+                    "away_mode": False,
+                    "temperature_setpoint_cool_c": 24.0,
+                    "temperature_setpoint_heat_c": 20.0,
+                    "enabled_zones": [],
+                    "quiet_mode_enabled": False,
+                    "turbo_mode_enabled": False,
+                },
+                "master_info": {
+                    "live_temp_c": 22.0,
+                    "live_humidity_pc": 50.0,
+                    "live_outdoor_temp_c": 0.0,
+                },
+                "live_aircon": None,
+                "alerts": None,
+                "remote_zone_info": [],
+                "peripherals": [],
+                "serial_number": "123456",
+            }
+        )
+
         yield api
 
 
