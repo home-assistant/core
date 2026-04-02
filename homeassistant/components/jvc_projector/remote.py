@@ -7,7 +7,7 @@ from collections.abc import Iterable
 import logging
 from typing import Any
 
-from jvcprojector import command as cmd
+from .jvcprojector import command as cmd
 
 from homeassistant.components.remote import RemoteEntity
 from homeassistant.core import HomeAssistant
@@ -111,9 +111,6 @@ class JvcProjectorRemote(JvcProjectorEntity, RemoteEntity):
             # Legacy name fixup
             if "_" in send_command:
                 send_command = send_command.replace("_", "-")
-
-            if send_command not in COMMANDS:
-                raise HomeAssistantError(f"{send_command} is not a known command")
 
             _LOGGER.debug("Sending command '%s'", send_command)
             await self.device.remote(send_command)
