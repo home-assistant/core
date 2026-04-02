@@ -939,37 +939,47 @@ async def test_device_flow_login_task_exceptions(
 
 
 @pytest.mark.parametrize(
-    ("status", "expected_exception"),
+    ("status", "expected_abort_reason"),
     [
-        (HTTPStatus.TOO_MANY_REQUESTS, OAuth2TokenRequestTransientError),
-        (HTTPStatus.INTERNAL_SERVER_ERROR, OAuth2TokenRequestTransientError),
-        (HTTPStatus.UNAUTHORIZED, OAuth2TokenRequestReauthError),
-        (HTTPStatus.BAD_REQUEST, OAuth2TokenRequestReauthError),
+        (HTTPStatus.TOO_MANY_REQUESTS, "oauth_failed"),
+        (HTTPStatus.INTERNAL_SERVER_ERROR, "oauth_failed"),
+        (HTTPStatus.UNAUTHORIZED, "oauth_unauthorized"),
+        (HTTPStatus.BAD_REQUEST, "oauth_unauthorized"),
     ],
 )
 async def test_device_flow_register_device_http_errors(
     hass: HomeAssistant,
+    device_flow_handler: type[config_entry_oauth2_flow.AbstractOAuth2DeviceFlowHandler],
     device_impl: config_entry_oauth2_flow.DeviceFlowImplementation,
     aioclient_mock: AiohttpClientMocker,
     status: HTTPStatus,
-    expected_exception: type,
+    expected_abort_reason: str,
 ) -> None:
-    """Test async_register_device raises the correct exception on HTTP errors."""
+    """Test that HTTP errors during device registration abort the config flow."""
     aioclient_mock.post(AUTHORIZE_URL, status=status)
 
-    with pytest.raises(expected_exception):
-        await device_impl.async_register_device()
+    config_entry_oauth2_flow.async_register_implementation(
+        hass, TEST_DOMAIN, device_impl
+    )
 
-    assert len(aioclient_mock.mock_calls) == 1
-    assert aioclient_mock.mock_calls[0][2] == {"client_id": CLIENT_ID}
+    result = await hass.config_entries.flow.async_init(
+        TEST_DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={"implementation": TEST_DOMAIN}
+    )
+
+    assert result["type"] == data_entry_flow.FlowResultType.ABORT
+    assert result["reason"] == expected_abort_reason
 
 
 async def test_device_flow_register_device_success(
     hass: HomeAssistant,
+    device_flow_handler: type[config_entry_oauth2_flow.AbstractOAuth2DeviceFlowHandler],
     device_impl: config_entry_oauth2_flow.DeviceFlowImplementation,
     aioclient_mock: AiohttpClientMocker,
 ) -> None:
-    """Test async_register_device returns device registration data."""
+    """Test that a successful device registration shows the device flow step."""
     aioclient_mock.post(
         AUTHORIZE_URL,
         json={
@@ -981,11 +991,30 @@ async def test_device_flow_register_device_success(
         },
     )
 
-    device = await device_impl.async_register_device()
+    async def _never_complete(device: dict[str, Any]) -> dict[str, Any]:
+        """Yes, hearts can be broken. No call back."""
+        await asyncio.Event().wait()
+        return {}
 
-    assert device["device_code"] == "device-code"
-    assert device["user_code"] == "user-code"
-    assert len(aioclient_mock.mock_calls) == 1
+    device_impl.async_check_device_activation = AsyncMock(side_effect=_never_complete)
+
+    config_entry_oauth2_flow.async_register_implementation(
+        hass, TEST_DOMAIN, device_impl
+    )
+
+    result = await hass.config_entries.flow.async_init(
+        TEST_DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={"implementation": TEST_DOMAIN}
+    )
+
+    assert result["type"] == data_entry_flow.FlowResultType.SHOW_PROGRESS
+    assert result["step_id"] == "device_flow"
+    assert result["description_placeholders"] == {
+        "url": "https://example.com/device",
+        "code": "user-code",
+    }
 
 
 @pytest.mark.parametrize(

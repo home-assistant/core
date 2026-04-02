@@ -913,6 +913,14 @@ class AbstractOAuth2DeviceFlowHandler(AbstractOAuth2FlowHandler, metaclass=ABCMe
             except TimeoutError as err:
                 _LOGGER.error("Timeout registering device: %s", err)
                 return self.async_abort(reason="authorize_url_timeout")
+            except (
+                OAuth2TokenRequestError,
+                ClientError,
+            ) as err:
+                _LOGGER.error("Error registering device: %s", err)
+                if isinstance(err, OAuth2TokenRequestReauthError):
+                    return self.async_abort(reason="oauth_unauthorized")
+                return self.async_abort(reason="oauth_failed")
 
             self.device_registry = device_registry
 
