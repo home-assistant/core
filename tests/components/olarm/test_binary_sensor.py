@@ -16,7 +16,9 @@ from tests.common import MockConfigEntry
 
 
 @pytest.fixture
-async def setup_integration(hass: HomeAssistant):
+async def setup_integration(
+    hass: HomeAssistant,
+) -> tuple[MockConfigEntry, OlarmDataUpdateCoordinator]:
     """Set up the integration."""
     config_entry = MockConfigEntry(
         domain="olarm",
