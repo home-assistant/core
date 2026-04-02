@@ -1,5 +1,5 @@
 """Access point for the HomematicIP Cloud component."""
-# Debug build: lackas/hmip-reconnect-fix v9 (2026-04-01)
+# Debug build: lackas/hmip-reconnect-fix v10 (2026-04-02)
 
 from __future__ import annotations
 
@@ -123,7 +123,7 @@ class HomematicipHAP:
 
     async def async_setup(self, tries: int = 0) -> bool:
         """Initialize connection."""
-        _LOGGER.debug("HomematicIP Cloud HAP starting — debug build v9 (2026-04-01)")
+        _LOGGER.debug("HomematicIP Cloud HAP starting — debug build v10 (2026-04-02)")
         try:
             self.home = await self.get_hap(
                 self.hass,
@@ -221,6 +221,38 @@ class HomematicipHAP:
             )
         except Exception:  # noqa: BLE001
             _LOGGER.exception("_log_entity_state_snapshot(%s) failed", trigger)
+
+    async def _ws_push_watchdog(self) -> None:
+        """Watchdog: if WS is connected but no push events for 10min, force reconnect."""
+        import time
+        SILENCE_THRESHOLD = 600  # 10 minutes
+        CHECK_INTERVAL = 120     # check every 2 minutes
+        await asyncio.sleep(300)  # initial grace period after startup
+        while True:
+            await asyncio.sleep(CHECK_INTERVAL)
+            if self._ws_close_requested:
+                return
+            ws_client = getattr(self.home, "_websocket_client", None)
+            if ws_client is None or not ws_client.is_connected():
+                continue  # not connected, library will handle reconnect
+            last_msg = getattr(self, "_last_ws_message_time", 0.0)
+            silence = time.monotonic() - last_msg if last_msg > 0 else None
+            if silence is not None and silence > SILENCE_THRESHOLD:
+                _LOGGER.warning(
+                    "WS push watchdog: no push events for %.0fs while connected — forcing reconnect",
+                    silence,
+                )
+                # Force reconnect by stopping and restarting the WS client
+                await ws_client.stop()
+                self._last_ws_message_time = time.monotonic()  # reset to avoid loop
+                await self.home.enable_events()
+                _LOGGER.info("WS push watchdog: reconnect triggered")
+            elif silence is not None:
+                _LOGGER.debug(
+                    "WS push watchdog: last frame %.0fs ago (threshold=%ds)",
+                    silence,
+                    SILENCE_THRESHOLD,
+                )
 
     async def _post_reconnect_check(self) -> None:
         """60s after reconnect: log state snapshot and fire update_all as safety net."""
@@ -421,6 +453,29 @@ class HomematicipHAP:
         home.set_on_connected_handler(self.ws_connected_handler)
         home.set_on_disconnected_handler(self.ws_disconnected_handler)
         home.set_on_reconnect_handler(self.ws_reconnected_handler)
+
+        # Monkey-patch: wrap the library's _listen() to log raw WS frames
+        # and update a last-received timestamp for the watchdog.
+        self._last_ws_message_time: float = 0.0
+        ws_client = getattr(home, "_websocket_client", None)
+        if ws_client is not None:
+            original_handle_ws_message = ws_client._handle_ws_message
+
+            async def _patched_handle_ws_message(message):
+                import time
+                self._last_ws_message_time = time.monotonic()
+                _LOGGER.debug(
+                    "WS raw frame received (len=%d): %s",
+                    len(message),
+                    message[:120] if isinstance(message, str) else str(message)[:120],
+                )
+                await original_handle_ws_message(message)
+
+            ws_client._handle_ws_message = _patched_handle_ws_message
+            _LOGGER.debug("WS frame logging monkey-patch applied")
+
+        # Start the push-event watchdog
+        self.hass.async_create_task(self._ws_push_watchdog())
 
     async def async_reset(self) -> bool:
         """Close the websocket connection."""
