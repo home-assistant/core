@@ -63,9 +63,9 @@ rules:
   entity-disabled-by-default:
     status: exempt
     comment: Not required for this integration at this stage.
-  entity-translations: todo
+  entity-translations: done
   exception-translations: todo
-  icon-translations: todo
+  icon-translations: done
   reconfiguration-flow: todo
   repair-issues:
     status: exempt
