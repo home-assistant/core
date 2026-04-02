@@ -79,7 +79,7 @@ def _get_last_statistics_for_statistic_ids(
 
 def _aggregate_energy_history_by_hour(
     time_series: list[dict[str, Any]],
-) -> list[tuple[datetime, float, dict[str, float]]]:
+) -> list[tuple[datetime, dict[str, float]]]:
     """Aggregate energy history samples into recorder-compatible hourly buckets."""
     hourly_periods: dict[datetime, dict[str, float]] = {}
 
@@ -94,9 +94,7 @@ def _aggregate_energy_history_by_hour(
 
         # Floor to the hour in the original timezone before converting to UTC.
         # This avoids misplacing samples for zones with non-hour offsets (e.g. +05:30).
-        start = dt_util.as_utc(
-            parsed_time.replace(minute=0, second=0, microsecond=0)
-        )
+        start = dt_util.as_utc(parsed_time.replace(minute=0, second=0, microsecond=0))
         hour_values = hourly_periods.setdefault(start, {})
 
         for key in ENERGY_HISTORY_FIELDS:
@@ -104,10 +102,7 @@ def _aggregate_energy_history_by_hour(
                 continue
             hour_values[key] = hour_values.get(key, 0.0) + float(value)
 
-    return [
-        (start, start.timestamp(), values)
-        for start, values in sorted(hourly_periods.items())
-    ]
+    return sorted(hourly_periods.items())
 
 
 def _invalidate_access_token(
@@ -427,8 +422,8 @@ class TeslaFleetEnergySiteHistoryCoordinator(DataUpdateCoordinator[dict[str, Any
                 last_stats_time = latest_stat["start"]
                 latest_sum = latest_stat.get("sum", 0.0) or 0.0
                 if any(
-                    start_ts == last_stats_time and key in hour_values
-                    for _, start_ts, hour_values in hourly_periods
+                    start.timestamp() == last_stats_time and key in hour_values
+                    for start, hour_values in hourly_periods
                 ):
                     # Re-import the latest hour if new samples have appeared for it;
                     # recorder updates the existing row in place for the same start.
@@ -439,7 +434,8 @@ class TeslaFleetEnergySiteHistoryCoordinator(DataUpdateCoordinator[dict[str, Any
 
             statistics: list[StatisticData] = []
 
-            for start, start_ts, hour_values in hourly_periods:
+            for start, hour_values in hourly_periods:
+                start_ts = start.timestamp()
                 if last_stats_time is not None and start_ts < last_stats_time:
                     continue
 

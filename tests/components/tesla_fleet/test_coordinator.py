@@ -1,7 +1,7 @@
 """Tests for the Tesla Fleet energy history coordinator."""
 
 from datetime import timedelta
-from typing import Any, Literal
+from typing import Literal
 from unittest.mock import AsyncMock, patch
 
 import pytest
