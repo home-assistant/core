@@ -5,7 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Final
 
-from jvcprojector import Command, command as cmd
+from .jvcprojector import Command, command as cmd
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.core import HomeAssistant
@@ -28,7 +28,7 @@ SELECTS: Final[tuple[JvcProjectorSelectDescription, ...]] = (
     JvcProjectorSelectDescription(
         key="installation_mode",
         command=cmd.InstallationMode,
-        entity_registry_enabled_default=False,
+        entity_registry_enabled_default=True,
     ),
     JvcProjectorSelectDescription(
         key="light_power",
@@ -76,7 +76,7 @@ async def async_setup_entry(
     async_add_entities(
         JvcProjectorSelectEntity(coordinator, description)
         for description in SELECTS
-        if coordinator.supports(description.command)
+        if coordinator.supports(description.command) or description.key == "installation_mode"
     )
 
 
