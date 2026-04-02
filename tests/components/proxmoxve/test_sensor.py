@@ -53,7 +53,7 @@ async def test_storage_missing_used_fraction(
     storage_data = await async_load_json_array_fixture(
         hass, "nodes/storage.json", "proxmoxve"
     )
-    # Remove used_fraction from the first storage entry
+    # Remove used_fraction from all storage entries
     storage_without_fraction = [
         {key: value for key, value in storage.items() if key != "used_fraction"}
         for storage in storage_data
