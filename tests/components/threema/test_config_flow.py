@@ -322,6 +322,33 @@ async def test_subentry_add_recipient(
     assert result["unique_id"] == "ABCD1234"
 
 
+async def test_subentry_add_recipient_with_name(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_connection: MagicMock,
+    mock_send: tuple[MagicMock, MagicMock],
+) -> None:
+    """Test adding a recipient with a display name."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    result = await hass.config_entries.subentries.async_init(
+        (mock_config_entry.entry_id, SUBENTRY_TYPE_RECIPIENT),
+        context={"source": config_entries.SOURCE_USER},
+    )
+
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        user_input={CONF_RECIPIENT: "ABCD1234", "name": "Dad"},
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "Dad (ABCD1234)"
+    assert result["data"] == {CONF_RECIPIENT: "ABCD1234"}
+    assert result["unique_id"] == "ABCD1234"
+
+
 async def test_subentry_invalid_recipient_id(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
