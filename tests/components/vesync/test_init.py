@@ -53,9 +53,7 @@ async def test_async_setup_entry__firmware_check_offline(
     hass: HomeAssistant, config_entry: ConfigEntry, manager: VeSync
 ) -> None:
     """Test setup succeeds even when firmware check fails due to offline devices."""
-    manager.check_firmware = AsyncMock(
-        side_effect=VeSyncServerError("device offline")
-    )
+    manager.check_firmware = AsyncMock(side_effect=VeSyncServerError("device offline"))
 
     assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
