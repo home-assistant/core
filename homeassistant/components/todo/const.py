@@ -32,6 +32,7 @@ class TodoServices(StrEnum):
     REMOVE_ITEM = "remove_item"
     GET_ITEMS = "get_items"
     REMOVE_COMPLETED_ITEMS = "remove_completed_items"
+    RESET_ITEMS = "reset_items"
 
 
 class TodoListEntityFeature(IntFlag):
