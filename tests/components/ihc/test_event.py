@@ -133,11 +133,17 @@ def test_on_ihc_change_false_does_not_schedule(mock_controller: MagicMock) -> No
     entity.hass.add_job.assert_not_called()
 
 
-def test_handle_press_fires_pressed_event(mock_controller: MagicMock) -> None:
+def test_handle_press_fires_pressed_event(
+    hass: HomeAssistant, mock_controller: MagicMock
+) -> None:
     """Test that _handle_press triggers a pressed event and writes state."""
+    hass.data[DOMAIN] = {
+        CONTROLLER_ID: {IHC_CONTROLLER: mock_controller, CONF_INFO: False}
+    }
     entity = IHCButtonEventEntity(
         mock_controller, CONTROLLER_ID, "name", IHC_ID, _make_product()
     )
+    entity.hass = hass
     with patch.object(entity, "async_write_ha_state") as mock_write:
         entity._handle_press()
     assert entity.state_attributes[ATTR_EVENT_TYPE] == "pressed"

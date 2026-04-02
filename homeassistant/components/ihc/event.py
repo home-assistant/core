@@ -62,7 +62,7 @@ class IHCButtonEventEntity(IHCEntity, EventEntity):
     @callback
     def _handle_press(self) -> None:
         """Handle a button press on the Home Assistant event loop."""
-        self._trigger_event("pressed")
+        self._trigger_event("pressed", self.extra_state_attributes or None)
         self.async_write_ha_state()
 
     def on_ihc_change(self, _ihc_id: int, value: bool) -> None:
