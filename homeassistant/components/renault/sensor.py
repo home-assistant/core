@@ -153,21 +153,18 @@ def _get_charging_settings_mode_formatted(entity: RenaultSensor[T]) -> str | Non
     return charging_mode.lower() if charging_mode else None
 
 
-def _get_charging_settings_attributes(entity: RenaultSensor[T]) -> Mapping[str, Any]:
+def _get_charging_settings_attributes(
+    entity: RenaultSensor[KamereonVehicleChargingSettingsData],
+) -> Mapping[str, Any] | None:
     """Return the charging_settings attributes."""
-    data = cast(KamereonVehicleChargingSettingsData, entity.coordinator.data)
-    schedules = data.schedules if data else None
-    schedules_fmt: list[dict[str, Any]] = (
-        [schedule.for_json() for schedule in schedules] if schedules else []
-    )
-    dateTime = data.dateTime if data else None
-    startDateTime = data.startDateTime if data else None
-    delay = data.delay if data else None
+    data = entity.coordinator.data
     return {
-        "schedules": schedules_fmt,
-        "dateTime": dateTime,
-        "startDateTime": startDateTime,
-        "delay": delay,
+        "schedules": [schedule.for_json() for schedule in schedules]
+        if (schedules := data.schedules)
+        else [],
+        "dateTime": data.dateTime,
+        "startDateTime": data.startDateTime,
+        "delay": data.delay,
     }
 
 
