@@ -361,11 +361,11 @@ async def test_send_message_with_inline_keyboard_style(
             {
                 ATTR_MESSAGE: "Test message with styled buttons",
                 ATTR_KEYBOARD_INLINE: [
-                    ["Approve", "approve:123", "success"],
-                    ["Deny", "deny:123", "danger"],
-                    ["Neutral", "neutral:123", "primary"],
-                    ["Regular Button", "regular:123"],
-                    ["Link with Style", "https://example.com", "success"],
+                    [["Approve", "approve:123", "success"]],
+                    [["Deny", "deny:123", "danger"]],
+                    [["Neutral", "neutral:123", "primary"]],
+                    [["Regular Button", "regular:123"]],
+                    [["Link with Style", "https://example.com", "success"]],
                 ],
             },
             blocking=True,
