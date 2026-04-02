@@ -506,7 +506,7 @@ apsystems-ez1==2.7.0
 aranet4==2.6.0
 
 # homeassistant.components.arcam_fmj
-arcam-fmj==1.8.2
+arcam-fmj==1.8.3
 
 # homeassistant.components.asuswrt
 asusrouter==1.21.3
