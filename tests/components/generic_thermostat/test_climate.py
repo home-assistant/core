@@ -23,6 +23,11 @@ from homeassistant.components.climate import (
     HVACMode,
 )
 from homeassistant.components.generic_thermostat.const import DOMAIN
+from homeassistant.components.generic_thermostat.const import (
+    CONF_SENSOR_ERROR_ACTION,
+    SENSOR_ERROR_ACTION_FORCE_OFF,
+    SENSOR_ERROR_ACTION_FORCE_ON,
+)
 from homeassistant.const import (
     ATTR_TEMPERATURE,
     SERVICE_RELOAD,
@@ -475,6 +480,109 @@ async def test_sensor_becomes_unavailable_sets_current_temperature_none(
     state = hass.states.get(ENTITY)
     assert state is not None
     assert state.attributes.get("current_temperature") == 19
+
+
+async def test_sensor_error_action_force_on_turns_on(hass: HomeAssistant) -> None:
+    """Test force_on action turns on actuator when sensor is unavailable."""
+    hass.config.temperature_unit = UnitOfTemperature.CELSIUS
+    assert await async_setup_component(
+        hass,
+        CLIMATE_DOMAIN,
+        {
+            "climate": {
+                "platform": "generic_thermostat",
+                "name": "test",
+                "cold_tolerance": 0.3,
+                "hot_tolerance": 0.3,
+                "target_temp": 20,
+                "heater": ENT_SWITCH,
+                "target_sensor": ENT_SENSOR,
+                "min_cycle_duration": datetime.timedelta(minutes=0),
+                "cycle_cooldown": datetime.timedelta(minutes=0),
+                CONF_SENSOR_ERROR_ACTION: SENSOR_ERROR_ACTION_FORCE_ON,
+                "initial_hvac_mode": HVACMode.HEAT,
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    calls = _setup_switch(hass, False)
+    _setup_sensor(hass, 20)
+    await hass.async_block_till_done()
+    assert len(calls) == 0
+
+    _setup_sensor(hass, STATE_UNAVAILABLE)
+    await hass.async_block_till_done()
+    assert len(calls) == 1
+    assert calls[0].service == SERVICE_TURN_ON
+
+
+async def test_sensor_error_action_force_off_turns_off(hass: HomeAssistant) -> None:
+    """Test force_off action turns off actuator when sensor is unavailable."""
+    hass.config.temperature_unit = UnitOfTemperature.CELSIUS
+    assert await async_setup_component(
+        hass,
+        CLIMATE_DOMAIN,
+        {
+            "climate": {
+                "platform": "generic_thermostat",
+                "name": "test",
+                "cold_tolerance": 0.3,
+                "hot_tolerance": 0.3,
+                "target_temp": 20,
+                "heater": ENT_SWITCH,
+                "target_sensor": ENT_SENSOR,
+                "min_cycle_duration": datetime.timedelta(minutes=0),
+                "cycle_cooldown": datetime.timedelta(minutes=0),
+                CONF_SENSOR_ERROR_ACTION: SENSOR_ERROR_ACTION_FORCE_OFF,
+                "initial_hvac_mode": HVACMode.HEAT,
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    calls = _setup_switch(hass, True)
+    _setup_sensor(hass, 20)
+    await hass.async_block_till_done()
+    assert len(calls) == 0
+
+    _setup_sensor(hass, STATE_UNAVAILABLE)
+    await hass.async_block_till_done()
+    assert len(calls) == 1
+    assert calls[0].service == SERVICE_TURN_OFF
+
+
+async def test_sensor_error_action_ignored_when_mode_off(
+    hass: HomeAssistant,
+) -> None:
+    """Test sensor error action is ignored when HVAC mode is off."""
+    hass.config.temperature_unit = UnitOfTemperature.CELSIUS
+    assert await async_setup_component(
+        hass,
+        CLIMATE_DOMAIN,
+        {
+            "climate": {
+                "platform": "generic_thermostat",
+                "name": "test",
+                "cold_tolerance": 0.3,
+                "hot_tolerance": 0.3,
+                "target_temp": 20,
+                "heater": ENT_SWITCH,
+                "target_sensor": ENT_SENSOR,
+                CONF_SENSOR_ERROR_ACTION: SENSOR_ERROR_ACTION_FORCE_ON,
+                "initial_hvac_mode": HVACMode.OFF,
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    calls = _setup_switch(hass, False)
+    _setup_sensor(hass, 20)
+    await hass.async_block_till_done()
+
+    _setup_sensor(hass, STATE_UNAVAILABLE)
+    await hass.async_block_till_done()
+    assert len(calls) == 0
 
 
 async def test_sensor_unknown(hass: HomeAssistant) -> None:
