@@ -11,6 +11,7 @@ from homeassistant.components.bluetooth import (
 from homeassistant.components.ibeacon.const import (
     ATTR_SOURCE,
     CONF_ALLOW_NAMELESS_UUIDS,
+    CONF_ALLOWED_BEACONS,
     DOMAIN,
     UPDATE_INTERVAL,
 )
@@ -490,3 +491,65 @@ async def test_changing_source_attribute(hass: HomeAssistant) -> None:
         "sensor.bluecharm_177999_8105_estimated_distance"
     ).attributes
     assert attributes[ATTR_SOURCE] == "proxy"
+
+
+async def test_allowlist_blocks_new_ibeacons(hass: HomeAssistant) -> None:
+    """Test we do not add newly discovered iBeacons when they are not allowlisted."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        options={CONF_ALLOWED_BEACONS: ["12345678-1234-1234-1234-123456789012_1_2"]},
+    )
+    entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    inject_bluetooth_service_info(hass, BLUECHARM_BEACON_SERVICE_INFO)
+    await hass.async_block_till_done()
+
+    assert hass.states.get("device_tracker.bluecharm_177999_8105") is None
+
+
+async def test_allowlist_allows_listed_ibeacons(hass: HomeAssistant) -> None:
+    """Test we do add newly discovered iBeacons when they are allowlisted."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        options={CONF_ALLOWED_BEACONS: ["426c7565-4368-6172-6d42-6561636f6e73_3838_4949"]},
+    )
+    entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    inject_bluetooth_service_info(hass, BLUECHARM_BEACON_SERVICE_INFO)
+    await hass.async_block_till_done()
+
+    assert hass.states.get("device_tracker.bluecharm_177999_8105") is not None
+
+
+async def test_allowlist_update_restores_ignored(hass: HomeAssistant) -> None:
+    """Test updating the allowlist allows tracked iBeacons."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        options={CONF_ALLOWED_BEACONS: ["12345678-1234-1234-1234-123456789012_1_2"]},
+    )
+    entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    inject_bluetooth_service_info(hass, BLUECHARM_BEACON_SERVICE_INFO)
+    await hass.async_block_till_done()
+
+    assert hass.states.get("device_tracker.bluecharm_177999_8105") is None
+
+    hass.config_entries.async_update_entry(
+        entry, options={CONF_ALLOWED_BEACONS: ["426c7565-4368-6172-6d42-6561636f6e73_3838_4949"]}
+    )
+    await hass.async_block_till_done()
+
+    inject_bluetooth_service_info(hass, BLUECHARM_BEACON_SERVICE_INFO_2)
+    await hass.async_block_till_done()
+
+    assert hass.states.get("device_tracker.bluecharm_177999_8105") is not None
+
