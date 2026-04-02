@@ -1,7 +1,7 @@
 """Fixtures for the todo component tests."""
 
-import datetime
 from collections.abc import Generator
+import datetime
 from unittest.mock import AsyncMock
 import zoneinfo
 
@@ -98,11 +98,11 @@ def mock_test_entity(test_entity_items: list[TodoItem]) -> TodoListEntity:
         | TodoListEntityFeature.UPDATE_TODO_ITEM
         | TodoListEntityFeature.DELETE_TODO_ITEM
         | TodoListEntityFeature.MOVE_TODO_ITEM
-        | TodoListEntityFeature.UPDATE_TODO_ITEMS
+        | TodoListEntityFeature.UPDATE_TODO_LIST
     )
     entity1.async_create_todo_item = AsyncMock(wraps=entity1.async_create_todo_item)
     entity1.async_update_todo_item = AsyncMock(wraps=entity1.async_update_todo_item)
     entity1.async_delete_todo_items = AsyncMock(wraps=entity1.async_delete_todo_items)
-    entity1.async_update_todo_items = AsyncMock(wraps=entity1.async_update_todo_items)
+    entity1.async_update_todo_list = AsyncMock(wraps=entity1.async_update_todo_list)
     entity1.async_move_todo_item = AsyncMock()
     return entity1

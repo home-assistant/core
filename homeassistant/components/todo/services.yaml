@@ -103,16 +103,24 @@ remove_item:
       example: "Submit income tax return"
       selector:
         text:
-
 remove_completed_items:
   target:
     entity:
       domain: todo
       supported_features:
         - todo.TodoListEntityFeature.DELETE_TODO_ITEM
-reset_items:
+update_list:
   target:
     entity:
       domain: todo
       supported_features:
-        - todo.TodoListEntityFeature.UPDATE_TODO_ITEMS
+        - todo.TodoListEntityFeature.UPDATE_TODO_LIST
+  fields:
+    status:
+      example: "needs_action"
+      selector:
+        select:
+          translation_key: status
+          options:
+            - needs_action
+            - completed

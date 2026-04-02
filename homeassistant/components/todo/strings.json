@@ -104,10 +104,6 @@
       },
       "name": "Remove to-do list item"
     },
-    "reset_items": {
-      "description": "Reset all to-do list items to 'not completed'.",
-      "name": "Reset completed to-do list items"
-    },
     "update_item": {
       "description": "Updates an existing to-do list item based on its name or UID.",
       "fields": {
@@ -137,6 +133,16 @@
         }
       },
       "name": "Update to-do list item"
+    },
+    "update_list": {
+      "description": "Updates all to-do list items.",
+      "fields": {
+        "status": {
+          "description": "A status or confirmation of the to-do item.",
+          "name": "Set status"
+        }
+      },
+      "name": "Update to-do list items"
     }
   },
   "title": "To-do list",

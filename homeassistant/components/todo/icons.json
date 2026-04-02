@@ -25,11 +25,11 @@
     "remove_item": {
       "service": "mdi:clipboard-minus"
     },
-    "reset_items": {
-      "service": "mdi:checkbox-multiple-blank-outline"
-    },
     "update_item": {
       "service": "mdi:clipboard-edit"
+    },
+    "update_list": {
+      "service": "mdi:checkbox-multiple-blank-outline"
     }
   },
   "triggers": {

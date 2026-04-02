@@ -955,8 +955,10 @@ async def test_move_todo_item_service_invalid_input(
             None,
         ),
         (
-            TodoServices.RESET_ITEMS,
-            None,
+            TodoServices.UPDATE_LIST,
+            {
+                ATTR_STATUS: "needs_action",
+            },
         ),
     ],
 )
@@ -1058,51 +1060,41 @@ async def test_remove_completed_items_service_raises(
         )
 
 
-async def test_reset_todo_items_service(
+@pytest.mark.parametrize(
+    "status",
+    [
+        "needs_action",
+        "completed",
+    ],
+)
+async def test_update_todo_list_action(
     hass: HomeAssistant,
     test_entity: TodoListEntity,
+    status: str,
 ) -> None:
     """Test reset todo items service."""
     await create_mock_platform(hass, [test_entity])
 
     await hass.services.async_call(
         DOMAIN,
-        TodoServices.RESET_ITEMS,
+        TodoServices.UPDATE_LIST,
+        {ATTR_STATUS: status},
         target={ATTR_ENTITY_ID: "todo.entity1"},
         blocking=True,
     )
 
-    args = test_entity.async_update_todo_items.call_args
+    args = test_entity.async_update_todo_list.call_args
     assert args
-    items = args.kwargs.get("items")
-    assert len(items) == 1
-
-    item = items[0]
-    assert item
-    assert item.uid == "2"
-    assert item.summary == "Item #2"
-    assert item.status == TodoItemStatus.NEEDS_ACTION
-    assert item.completed is None
+    info = args.kwargs.get("info")
+    assert sorted(info) == ["status"]
+    assert info["status"] == (expected_status := TodoItemStatus(status))
 
     assert not [
-        item
-        for item in test_entity.todo_items or ()
-        if item.status == TodoItemStatus.COMPLETED
-    ], "COMPLETED items should have been changed to NEEDS_ACTION"
-
-    test_entity.async_update_todo_items.reset_mock()
-
-    # calling service multiple times will not call the entity method
-    await hass.services.async_call(
-        DOMAIN,
-        TodoServices.RESET_ITEMS,
-        target={ATTR_ENTITY_ID: "todo.entity1"},
-        blocking=True,
-    )
-    test_entity.async_update_todo_items.assert_not_called()
+        item for item in test_entity.todo_items or () if item.status != expected_status
+    ], f"Items should have been changed to {expected_status}"
 
 
-async def test_reset_todo_items_service_raises(
+async def test_update_todo_list_action_raises(
     hass: HomeAssistant,
     test_entity: TodoListEntity,
 ) -> None:
@@ -1110,11 +1102,12 @@ async def test_reset_todo_items_service_raises(
 
     await create_mock_platform(hass, [test_entity])
 
-    test_entity.async_update_todo_items.side_effect = HomeAssistantError("Ooops")
+    test_entity.async_update_todo_list.side_effect = HomeAssistantError("Ooops")
     with pytest.raises(HomeAssistantError, match="Ooops"):
         await hass.services.async_call(
             DOMAIN,
-            TodoServices.RESET_ITEMS,
+            TodoServices.UPDATE_LIST,
+            {ATTR_STATUS: "needs_action"},
             target={ATTR_ENTITY_ID: "todo.entity1"},
             blocking=True,
         )
