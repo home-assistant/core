@@ -70,7 +70,7 @@ def _get_last_statistics_for_statistic_ids(
                 hass,
                 1,
                 statistic_id,
-                True,
+                False,
                 {"state", "sum"},
             ).get(statistic_id)
         )
