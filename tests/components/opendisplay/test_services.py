@@ -306,7 +306,8 @@ async def test_upload_image_with_encryption_key(
     """Test that upload_image passes the encryption key to OpenDisplayDevice."""
     # Update the already-loaded entry to include an encryption key
     hass.config_entries.async_update_entry(
-        mock_config_entry, data={CONF_ENCRYPTION_KEY: ENCRYPTION_KEY}
+        mock_config_entry,
+        data={**mock_config_entry.data, CONF_ENCRYPTION_KEY: ENCRYPTION_KEY},
     )
 
     device_id = _device_id(hass, mock_config_entry)
