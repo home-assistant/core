@@ -57,7 +57,7 @@ async def get_api_client(hass: HomeAssistant, config_entry_id: str) -> PicnicAPI
     )
     if entry is None:
         raise ValueError(f"Config entry with id {config_entry_id} not found!")
-    return entry.runtime_data.api_client
+    return entry.runtime_data.picnic_api_client
 
 
 async def handle_add_product(

@@ -8,7 +8,7 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN
-from .coordinator import PicnicConfigEntry, PicnicRuntimeData, PicnicUpdateCoordinator
+from .coordinator import PicnicConfigEntry, PicnicUpdateCoordinator
 from .services import async_setup_services
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
@@ -39,10 +39,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: PicnicConfigEntry) -> bo
     # Fetch initial data so we have data when entities subscribe
     await picnic_coordinator.async_config_entry_first_refresh()
 
-    entry.runtime_data = PicnicRuntimeData(
-        api_client=picnic_client,
-        coordinator=picnic_coordinator,
-    )
+    entry.runtime_data = picnic_coordinator
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 

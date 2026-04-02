@@ -5,7 +5,6 @@ from __future__ import annotations
 import asyncio
 from contextlib import suppress
 import copy
-from dataclasses import dataclass
 from datetime import timedelta
 import logging
 
@@ -20,16 +19,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 from .const import ADDRESS, CART_DATA, LAST_ORDER_DATA, NEXT_DELIVERY_DATA, SLOT_DATA
 
-
-@dataclass
-class PicnicRuntimeData:
-    """Runtime data for the Picnic integration."""
-
-    api_client: PicnicAPI
-    coordinator: PicnicUpdateCoordinator
-
-
-type PicnicConfigEntry = ConfigEntry[PicnicRuntimeData]
+type PicnicConfigEntry = ConfigEntry[PicnicUpdateCoordinator]
 
 
 class PicnicUpdateCoordinator(DataUpdateCoordinator):

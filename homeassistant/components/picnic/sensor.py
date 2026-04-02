@@ -204,7 +204,7 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Picnic sensor entries."""
-    picnic_coordinator = config_entry.runtime_data.coordinator
+    picnic_coordinator = config_entry.runtime_data
 
     # Add an entity for each sensor type
     async_add_entities(

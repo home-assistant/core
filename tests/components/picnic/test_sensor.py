@@ -129,7 +129,7 @@ class TestPicnicSensor(unittest.IsolatedAsyncioTestCase):
 
     @property
     def _coordinator(self):
-        return self.config_entry.runtime_data.coordinator
+        return self.config_entry.runtime_data
 
     def _assert_sensor(self, name, state=None, cls=None, unit=None, disabled=False):
         sensor = self.hass.states.get(name)
