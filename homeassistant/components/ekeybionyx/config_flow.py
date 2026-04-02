@@ -29,9 +29,6 @@ VALID_NAME_PATTERN = re.compile(r"^(?![\d\s])[\w\d \.]*[\w\d]$")
 
 
 class ConfigFlowEkeyApi(ekey_bionyxpy.AbstractAuth):
-    """ekey bionyx authentication before a ConfigEntry exists.
-
-    This implementation directly provides the token without supporting refresh.
     """Authentication implementation used during config flow, without refresh.
 
     This exists to allow the config flow to use the API before it has fully
