@@ -60,6 +60,10 @@ def _create_manager(entry: TuyaConfigEntry, token_listener: TokenListener) -> Ma
 
 async def async_setup_entry(hass: HomeAssistant, entry: TuyaConfigEntry) -> bool:
     """Async setup hass config entry."""
+    await hass.async_add_executor_job(
+        register_tuya_quirks, str(Path(hass.config.config_dir, "tuya_quirks"))
+    )
+
     token_listener = TokenListener(hass, entry)
 
     # Move to executor as it makes blocking call to import_module
@@ -109,9 +113,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: TuyaConfigEntry) -> bool
             model_id=device.product_id,
         )
 
-    await hass.async_add_executor_job(
-        register_tuya_quirks, str(Path(hass.config.config_dir, "tuya_quirks"))
-    )
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     # If the device does not register any entities, the device does not need to subscribe
     # So the subscription is here
