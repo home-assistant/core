@@ -508,7 +508,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '88',
+    'state': '25',
   })
 # ---
 # name: test_sensor_setup[load_platforms0][sensor.test_highest_grass_fire_risk-entry]
@@ -735,7 +735,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '88',
+    'state': '100',
   })
 # ---
 # name: test_sensor_setup[load_platforms0][sensor.test_potential_rate_of_spread-entry]
@@ -865,7 +865,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0',
+    'state': '1',
   })
 # ---
 # name: test_sensor_setup[load_platforms0][sensor.test_thunder_probability-entry]
@@ -917,7 +917,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '37',
+    'state': '0',
   })
 # ---
 # name: test_sensor_setup[load_platforms0][sensor.test_total_cloud_coverage-entry]

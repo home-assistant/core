@@ -96,12 +96,18 @@
         "name": "Precipitation category",
         "state": {
           "0": "No precipitation",
-          "1": "Snow",
-          "2": "Snow and rain",
-          "3": "Rain",
-          "4": "Drizzle",
-          "5": "Freezing rain",
-          "6": "Freezing drizzle"
+          "1": "Rain",
+          "2": "Thunderstorm",
+          "3": "Freezing rain",
+          "4": "Mixed/ice",
+          "5": "Snow",
+          "6": "Wet snow",
+          "7": "Mixture of rain and snow",
+          "8": "Ice pellets",
+          "9": "Graupel",
+          "10": "Hail",
+          "11": "Drizzle",
+          "12": "Freezing drizzle"
         }
       },
       "rate_of_spread": {
