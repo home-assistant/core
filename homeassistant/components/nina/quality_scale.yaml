@@ -53,7 +53,7 @@ rules:
   docs-supported-devices:
     status: exempt
     comment: |
-      This integration does not use devices.
+      This integration exposes Home Assistant devices only for logical grouping and does not integrate specific physical devices that need to be documented as supported hardware.
   docs-supported-functions: done
   docs-troubleshooting: todo
   docs-use-cases: todo
