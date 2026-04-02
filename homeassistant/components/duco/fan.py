@@ -39,7 +39,7 @@ _PRESET_TO_STATE: dict[str, VentilationState] = {
     PRESET_HIGH_FORCED: VentilationState.CNT3,
 }
 
-_STATE_TO_PRESET: dict[str, str] = {
+_STATE_TO_PRESET: dict[VentilationState, str] = {
     VentilationState.AUTO: PRESET_AUTO,
     VentilationState.AUT1: PRESET_AUTO,
     VentilationState.AUT2: PRESET_AUTO,
