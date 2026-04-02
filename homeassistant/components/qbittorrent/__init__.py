@@ -96,7 +96,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     ) -> dict[str, Any] | None:
         torrents = {}
 
-        for entry in hass.config_entries.async_entries(DOMAIN):
+        for entry in hass.config_entries.async_loaded_entries(DOMAIN):
             coordinator: QBittorrentDataCoordinator = entry.runtime_data
             items = await coordinator.get_torrents(service_call.data[TORRENT_FILTER])
             torrents[entry.entry_id] = format_torrents(items)
