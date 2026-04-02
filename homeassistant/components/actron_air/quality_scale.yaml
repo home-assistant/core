@@ -64,7 +64,7 @@ rules:
     status: exempt
     comment: Not required for this integration at this stage.
   entity-translations: todo
-  exception-translations: todo
+  exception-translations: done
   icon-translations: todo
   reconfiguration-flow: todo
   repair-issues:
