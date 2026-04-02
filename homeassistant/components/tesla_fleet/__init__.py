@@ -277,11 +277,13 @@ async def async_remove_entry(hass: HomeAssistant, entry: TeslaFleetConfigEntry) 
     device_registry = dr.async_get(hass)
     devices = dr.async_entries_for_config_entry(device_registry, entry.entry_id)
 
-    # Build statistic IDs from device identifiers (site_id is stored as serial_number)
+    # Build statistic IDs for energy-site devices only (numeric serial_number).
+    # Vehicle devices have alphanumeric VINs as serial_number and don't have
+    # external statistics.
     statistic_ids = [
         f"{DOMAIN}:{device.serial_number}_{key}"
         for device in devices
-        if device.serial_number
+        if device.serial_number and device.serial_number.isdigit()
         for key in ENERGY_HISTORY_FIELDS
     ]
 

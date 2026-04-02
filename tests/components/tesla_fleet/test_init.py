@@ -94,7 +94,9 @@ async def test_remove_entry_clears_statistics(
         device_registry, normal_config_entry.entry_id
     )
     site_serial_numbers = {
-        d.serial_number for d in devices if d.serial_number is not None
+        d.serial_number
+        for d in devices
+        if d.serial_number is not None and d.serial_number.isdigit()
     }
 
     # Unload first (like real removal flow), which deletes runtime_data
