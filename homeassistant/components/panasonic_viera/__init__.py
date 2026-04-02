@@ -19,7 +19,6 @@ from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     ATTR_DEVICE_INFO,
-    ATTR_REMOTE,
     ATTR_UDN,
     CONF_APP_ID,
     CONF_ENCRYPTION_KEY,
@@ -28,6 +27,8 @@ from .const import (
     DEFAULT_PORT,
     DOMAIN,
 )
+
+type PanasonicVieraConfigEntry = ConfigEntry[Remote]
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -68,10 +69,10 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+async def async_setup_entry(
+    hass: HomeAssistant, config_entry: PanasonicVieraConfigEntry
+) -> bool:
     """Set up Panasonic Viera from a config entry."""
-    panasonic_viera_data = hass.data.setdefault(DOMAIN, {})
-
     config = config_entry.data
 
     host = config[CONF_HOST]
@@ -88,7 +89,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     remote = Remote(hass, host, port, on_action, **params)
     await remote.async_create_remote_control(during_setup=True)
 
-    panasonic_viera_data[config_entry.entry_id] = {ATTR_REMOTE: remote}
+    config_entry.runtime_data = remote
 
     # Add device_info to older config entries
     if ATTR_DEVICE_INFO not in config or config[ATTR_DEVICE_INFO] is None:
@@ -112,15 +113,11 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+async def async_unload_entry(
+    hass: HomeAssistant, config_entry: PanasonicVieraConfigEntry
+) -> bool:
     """Unload a config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(
-        config_entry, PLATFORMS
-    )
-    if unload_ok:
-        hass.data[DOMAIN].pop(config_entry.entry_id)
-
-    return unload_ok
+    return await hass.config_entries.async_unload_platforms(config_entry, PLATFORMS)
 
 
 class Remote:
