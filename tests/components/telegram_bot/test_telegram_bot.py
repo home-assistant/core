@@ -334,7 +334,72 @@ async def test_send_message_with_inline_keyboard(
             }
         ]
     }
+async def test_send_message_with_inline_keyboard_style(
+    hass: HomeAssistant, webhook_bot
+) -> None:
+    """Test inline keyboard with the new 3-item format including style parameter.
 
+    This covers the changes added for Telegram Bot API 9.4+ style support
+    (success, danger, primary).
+    """
+    context = Context()
+    events = async_capture_events(hass, "telegram_sent")
+
+    with patch(
+        "homeassistant.components.telegram_bot.bot.Bot.send_message",
+        AsyncMock(
+            return_value=Message(
+                message_id=12345,
+                date=datetime.now(),
+                chat=Chat(id=12345678, type=ChatType.PRIVATE),
+            )
+        ),
+    ) as mock_send_message:
+        response = await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SEND_MESSAGE,
+            {
+                ATTR_MESSAGE: "Test message with styled buttons",
+                ATTR_KEYBOARD_INLINE: [
+                    ["Approve", "approve:123", "success"],
+                    ["Deny", "deny:123", "danger"],
+                    ["Neutral", "neutral:123", "primary"],
+                    ["Regular Button", "regular:123"],
+                    ["Link with Style", "https://example.com", "success"],
+                ],
+            },
+            blocking=True,
+            context=context,
+            return_response=True,
+        )
+        await hass.async_block_till_done()
+
+        mock_send_message.assert_called_once()
+        kwargs = mock_send_message.call_args[1]
+        reply_markup: InlineKeyboardMarkup = kwargs["reply_markup"]
+
+        assert isinstance(reply_markup, InlineKeyboardMarkup)
+        rows = reply_markup.inline_keyboard
+
+        # Check styles
+        assert rows[0][0].style == "success"
+        assert rows[1][0].style == "danger"
+        assert rows[2][0].style == "primary"
+        assert rows[3][0].style is None
+        assert rows[4][0].style == "success"
+
+    assert len(events) == 1
+    assert events[0].context == context
+
+    assert response == {
+        "chats": [
+            {
+                ATTR_CHAT_ID: 12345678,
+                ATTR_MESSAGE_ID: 12345,
+                ATTR_ENTITY_ID: "notify.mock_title_mock_chat",
+            }
+        ]
+    }
 
 async def test_send_sticker_partial_error(
     hass: HomeAssistant,
