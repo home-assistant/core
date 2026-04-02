@@ -56,7 +56,14 @@ type OpenDisplayConfigEntry = ConfigEntry[OpenDisplayRuntimeData]
 def _get_encryption_key(entry: OpenDisplayConfigEntry) -> bytes | None:
     """Return the encryption key bytes from entry data, or None."""
     raw = entry.data.get(CONF_ENCRYPTION_KEY)
-    return bytes.fromhex(raw) if raw is not None else None
+    if raw is None:
+        return None
+    try:
+        return bytes.fromhex(raw)
+    except ValueError as err:
+        raise ConfigEntryAuthFailed(
+            "Stored OpenDisplay encryption key is invalid; reauthentication required"
+        ) from err
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
