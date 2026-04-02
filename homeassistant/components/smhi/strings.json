@@ -95,19 +95,19 @@
       "precipitation_category": {
         "name": "Precipitation category",
         "state": {
-          "0": "No precipitation",
-          "1": "Rain",
-          "2": "Thunderstorm",
-          "3": "Freezing rain",
-          "4": "Mixed/ice",
-          "5": "Snow",
-          "6": "Wet snow",
-          "7": "Mixture of rain and snow",
-          "8": "Ice pellets",
-          "9": "Graupel",
-          "10": "Hail",
-          "11": "Drizzle",
-          "12": "Freezing drizzle"
+          "drizzle": "Drizzle",
+          "freezing_drizzle": "Freezing drizzle",
+          "freezing_rain": "Freezing rain",
+          "graupel": "Graupel",
+          "hail": "Hail",
+          "ice_pellets": "Ice pellets",
+          "mixed_ice": "Mixed/ice",
+          "no_precipitation": "No precipitation",
+          "rain": "Rain",
+          "rain_snow_mixed": "Mixture of rain and snow",
+          "snow": "Snow",
+          "thunderstorm": "Thunderstorm",
+          "wet_snow": "Wet snow"
         }
       },
       "rate_of_spread": {
