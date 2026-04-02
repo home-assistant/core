@@ -4,6 +4,9 @@
       "pause_container": {
         "default": "mdi:pause-circle"
       },
+      "recreate_container": {
+        "default": "mdi:restart"
+      },
       "resume_container": {
         "default": "mdi:play"
       }
