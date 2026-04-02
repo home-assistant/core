@@ -25,6 +25,12 @@ recreate_container:
         device:
           integration: portainer
           model: Endpoint
+    container_device_id:
+      required: true
+      selector:
+        device:
+          integration: portainer
+          model: Container
     timeout:
       required: false
       selector:

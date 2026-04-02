@@ -224,9 +224,13 @@
     "recreate_container": {
       "description": "Recreates a container on a Portainer endpoint. This is more disruptive than a restart as the container will be stopped, removed, and then re-created with the same configuration. Use with caution.",
       "fields": {
-        "device_id": {
+        "container_device_id": {
           "description": "The container to recreate.",
           "name": "Container"
+        },
+        "device_id": {
+          "description": "The endpoint the container belongs to.",
+          "name": "Endpoint"
         },
         "pull_image": {
           "description": "Whether to pull the image before recreating the container. This can be used to update the container to the latest version of the image.",

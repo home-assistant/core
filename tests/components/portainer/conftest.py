@@ -30,6 +30,8 @@ MOCK_TEST_CONFIG = {
 
 TEST_ENTRY = "portainer_test_entry_123"
 TEST_INSTANCE_ID = "299ab403-70a8-4c05-92f7-bf7a994d50df"
+TEST_CONTAINER_NAME = "practical_morse"
+TEST_CONTAINER_ID = "ee20facfb3b3ed4cd362c1e88fc89a53908ad05fb3a4103bca3f9b28292d14bf"
 
 
 @pytest.fixture

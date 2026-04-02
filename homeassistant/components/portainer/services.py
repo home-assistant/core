@@ -22,6 +22,7 @@ ATTR_DATE_UNTIL = "until"
 ATTR_DANGLING = "dangling"
 ATTR_TIMEOUT = "timeout"
 ATTR_PULL_IMAGE = "pull_image"
+ATTR_CONTAINER_DEVICE_ID = "container_device_id"
 
 SERVICE_PRUNE_IMAGES = "prune_images"
 SERVICE_PRUNE_IMAGES_SCHEMA = vol.Schema(
@@ -38,6 +39,7 @@ SERVICE_RECREATE_CONTAINER = "recreate_container"
 SERVICE_RECREATE_CONTAINER_SCHEMA = vol.Schema(
     {
         vol.Required(ATTR_DEVICE_ID): cv.string,
+        vol.Required(ATTR_CONTAINER_DEVICE_ID): cv.string,
         vol.Optional(ATTR_TIMEOUT): vol.All(
             cv.time_period, vol.Range(min=timedelta(minutes=1))
         ),
@@ -94,23 +96,23 @@ async def _get_container_id(
 ) -> str:
     """Get container ID from device ID."""
     device_reg = dr.async_get(call.hass)
-    device_id = call.data[ATTR_DEVICE_ID]
+    device_id = call.data[ATTR_CONTAINER_DEVICE_ID]
     device = device_reg.async_get(device_id)
     assert device
     coordinator = config_entry.runtime_data
 
-    container_id = None
+    con_data = None
     for data in coordinator.data.values():
-        for container in data.containers:
+        for container_name, container_data in data.containers.items():
             if (
                 DOMAIN,
-                f"{config_entry.entry_id}_{data.endpoint.id}_{container.id}",
+                f"{config_entry.entry_id}_{data.endpoint.id}_{container_name}",
             ) in device.identifiers:
-                container_id = container.id
+                con_data = container_data
                 break
 
-    assert container_id
-    return container_id
+    assert con_data
+    return con_data.container.id
 
 
 async def prune_images(call: ServiceCall) -> None:
@@ -146,15 +148,13 @@ async def recreate_container(call: ServiceCall) -> None:
     """Recreate a container in Portainer, with more controls."""
     config_entry = await _extract_config_entry(call)
     coordinator = config_entry.runtime_data
-    endpoint_id = await _get_endpoint_id(call, config_entry)
-    container_id = await _get_container_id(call, config_entry)
-    timeout = call.data.get(ATTR_TIMEOUT)
+    timeout: timedelta | None = call.data.get(ATTR_TIMEOUT)
 
     try:
         await coordinator.portainer.container_recreate(
-            endpoint_id=endpoint_id,
-            container_id=container_id,
-            timeout=timeout,
+            endpoint_id=await _get_endpoint_id(call, config_entry),
+            container_id=await _get_container_id(call, config_entry),
+            **({"timeout": timeout} if timeout is not None else {}),
             pull_image=call.data.get(ATTR_PULL_IMAGE, False),
         )
     except PortainerAuthenticationError as err:
