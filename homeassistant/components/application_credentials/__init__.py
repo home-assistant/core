@@ -381,8 +381,6 @@ async def _async_integration_config(hass: HomeAssistant, domain: str) -> dict[st
         return {}
 
     result: dict[str, Any] = {}
-    # Integrations such as fitbit, gentex_homelink, geocaching and a few others don't implement
-    # async_get_authorization_server, so either we default to client_credentials or update the integrations in separate PRs
     if hasattr(platform, "async_get_authorization_server"):
         result["auth_type"] = AuthorizationTypes.CLIENT_CREDENTIALS
     elif hasattr(platform, "async_get_device_flow_authorization_server"):
