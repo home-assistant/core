@@ -1,6 +1,7 @@
 {
   "domain": "waterfurnace",
   "name": "WaterFurnace",
+  "after_dependencies": ["recorder"],
   "codeowners": ["@sdague", "@masterkoppa"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/waterfurnace",
