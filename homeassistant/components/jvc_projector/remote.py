@@ -7,15 +7,13 @@ from collections.abc import Iterable
 import logging
 from typing import Any
 
-from .jvcprojector import command as cmd
-
 from homeassistant.components.remote import RemoteEntity
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import JVCConfigEntry
 from .entity import JvcProjectorEntity
+from .jvcprojector import command as cmd
 
 COMMANDS: list[str] = [
     cmd.Remote.MENU,
