@@ -2,6 +2,8 @@
 
 from unittest.mock import AsyncMock
 
+from pynina import Warning
+
 from homeassistant.components.nina.const import (
     DOMAIN,
     SERVICE_GET_AFFECTED_AREAS,
