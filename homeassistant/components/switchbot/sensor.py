@@ -198,6 +198,12 @@ class SwitchBotSensor(SwitchbotEntity, SensorEntity):
     @property
     def native_value(self) -> str | int | None:
         """Return the state of the sensor."""
+        # PM2.5 is not present in BLE broadcast data; it is only populated after
+        # the first active poll via get_basic_info().  The entity is intentionally
+        # created before that poll completes (based on device model capability), so
+        # we use .get() here to return None (unknown state) until the value arrives.
+        if self._sensor == "pm25":
+            return self.parsed_data.get(self._sensor)
         return self.parsed_data[self._sensor]
 
 

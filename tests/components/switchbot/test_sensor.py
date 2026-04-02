@@ -21,6 +21,7 @@ from homeassistant.const import (
     CONF_SENSOR_TYPE,
     STATE_OFF,
     STATE_ON,
+    STATE_UNKNOWN,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
@@ -968,6 +969,53 @@ async def test_air_purifier_sensor(hass: HomeAssistant) -> None:
     rssi_sensor_attrs = rssi_sensor.attributes
     assert rssi_sensor_attrs[ATTR_FRIENDLY_NAME] == "test-name Bluetooth signal"
     assert rssi_sensor_attrs[ATTR_UNIT_OF_MEASUREMENT] == "dBm"
+
+    assert await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_air_purifier_pm25_sensor_unknown_before_first_poll(
+    hass: HomeAssistant,
+) -> None:
+    """Test PM2.5 sensor is created with unknown state when active poll has not yet returned data.
+
+    PM2.5 values are not included in BLE broadcast frames.  They are only
+    available after an active BLE query (get_basic_info).  The entity is
+    created based on device model capability before the first poll completes,
+    so its initial state must be STATE_UNKNOWN rather than raising a KeyError.
+    """
+    await async_setup_component(hass, DOMAIN, {})
+    inject_bluetooth_service_info(hass, AIR_PURIFIER_TABLE_US_SERVICE_INFO)
+
+    with patch(
+        "homeassistant.components.switchbot.switch.switchbot.SwitchbotAirPurifier.get_basic_info",
+        new=AsyncMock(return_value=None),
+    ):
+        entry = MockConfigEntry(
+            domain=DOMAIN,
+            data={
+                CONF_ADDRESS: "aa:bb:cc:dd:ee:ff",
+                CONF_NAME: "test-name",
+                CONF_SENSOR_TYPE: "air_purifier_table_us",
+                CONF_KEY_ID: "ff",
+                CONF_ENCRYPTION_KEY: "ffffffffffffffffffffffffffffffff",
+            },
+            unique_id="aabbccddeeab",
+        )
+        entry.add_to_hass(hass)
+
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    # PM2.5 entity must exist even though the poll did not yet return a value.
+    pm25_sensor = hass.states.get("sensor.test_name_pm2_5")
+    assert pm25_sensor is not None
+    assert pm25_sensor.state == STATE_UNKNOWN
+
+    # aqi_level comes from broadcast data and is always available.
+    aqi_sensor = hass.states.get("sensor.test_name_air_quality_level")
+    assert aqi_sensor is not None
 
     assert await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
