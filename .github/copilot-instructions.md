@@ -11,10 +11,9 @@
 
 This repository contains the core of Home Assistant, a Python 3 based home automation application.
 
-## Code Review Guidelines
+## Git Commit Guidelines
 
-**Git commit practices during review:**
-- **Do NOT amend, squash, or rebase commits after review has started** - Reviewers need to see what changed since their last review
+- **Do NOT amend, squash, or rebase previous commits after PR has been created** - Reviewers need to follow the commit history, as well as see what changed since their last review
 
 ## Development Commands
 
@@ -36,4 +35,6 @@ Integrations with Platinum or Gold level in the Integration Quality Scale reflec
 
 # Skills
 
+- coordinator-move: .claude/skills/coordinator-move/SKILL.md
 - Home Assistant Integration knowledge: .claude/skills/integrations/SKILL.md
+- runtime-data: .claude/skills/runtime-data/SKILL.md
