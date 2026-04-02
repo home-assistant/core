@@ -5,6 +5,7 @@ from typing import Any
 
 from qbittorrentapi import APIConnectionError, Forbidden403Error, LoginFailed
 
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
     ATTR_DEVICE_ID,
     CONF_PASSWORD,
@@ -70,13 +71,13 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         entry: QBittorrentConfigEntry | None = hass.config_entries.async_get_entry(
             entry_id
         )
-        if entry is None:
+        if entry is None or entry.state != ConfigEntryState.LOADED:
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
                 translation_key="invalid_entry_id",
                 translation_placeholders={"device_id": entry_id},
             )
-        coordinator: QBittorrentDataCoordinator = entry.runtime_data
+        coordinator = entry.runtime_data
         items = await coordinator.get_torrents(service_call.data[TORRENT_FILTER])
         info = format_torrents(items)
         return {
