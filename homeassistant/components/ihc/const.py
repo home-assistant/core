@@ -11,6 +11,7 @@ AUTO_SETUP_YAML = "ihc_auto_setup.yaml"
 CONF_AUTOSETUP = "auto_setup"
 CONF_BINARY_SENSOR = "binary_sensor"
 CONF_DIMMABLE = "dimmable"
+CONF_EVENT = "event"
 CONF_INFO = "info"
 CONF_INVERTING = "inverting"
 CONF_LIGHT = "light"
@@ -29,6 +30,7 @@ IHC_CONTROLLER = "controller"
 IHC_CONTROLLER_INDEX = "controller_index"
 IHC_PLATFORMS = (
     Platform.BINARY_SENSOR,
+    Platform.EVENT,
     Platform.LIGHT,
     Platform.SENSOR,
     Platform.SWITCH,

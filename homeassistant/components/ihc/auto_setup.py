@@ -15,6 +15,7 @@ from .const import (
     AUTO_SETUP_YAML,
     CONF_BINARY_SENSOR,
     CONF_DIMMABLE,
+    CONF_EVENT,
     CONF_INVERTING,
     CONF_LIGHT,
     CONF_NODE,
@@ -70,6 +71,17 @@ AUTO_SETUP_SCHEMA = vol.Schema(
             ],
         ),
         vol.Optional(CONF_SWITCH, default=[]): vol.All(
+            cv.ensure_list,
+            [
+                vol.All(
+                    {
+                        vol.Required(CONF_NODE): cv.string,
+                        vol.Required(CONF_XPATH): cv.string,
+                    }
+                )
+            ],
+        ),
+        vol.Optional(CONF_EVENT, default=[]): vol.All(
             cv.ensure_list,
             [
                 vol.All(
@@ -139,6 +151,11 @@ def get_discovery_info(platform_setup, groups, controller_id):
                             "position": product.get("position") or "",
                             "model": model,
                             "group": groupname,
+                            "address_channel": int(
+                                node.attrib["address_channel"].strip("_"), 0
+                            )
+                            if "address_channel" in node.attrib
+                            else None,
                         },
                         "product_cfg": product_cfg,
                     }

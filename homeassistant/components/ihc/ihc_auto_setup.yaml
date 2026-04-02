@@ -117,6 +117,11 @@ sensor:
     node: "resource_temperature"
     unit_of_measurement: "°C"
 
+event:
+  # Wireless 6-button push button (batteritryk)
+  - xpath: './/product_airlink[@product_identifier="_0x4103"]'
+    node: "airlink_input"
+
 switch:
   # Wireless Plug outlet
   - xpath: './/product_airlink[@product_identifier="_0x4201"]'
