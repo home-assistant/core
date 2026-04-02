@@ -22,7 +22,10 @@ from tesla_fleet_api.exceptions import (
 )
 
 from homeassistant.components.tesla_fleet import async_remove_entry
-from homeassistant.components.tesla_fleet.const import AUTHORIZE_URL
+from homeassistant.components.tesla_fleet.const import (
+    AUTHORIZE_URL,
+    ENERGY_HISTORY_FIELDS,
+)
 from homeassistant.components.tesla_fleet.coordinator import (
     ENERGY_HISTORY_INTERVAL,
     ENERGY_INTERVAL,
@@ -99,10 +102,15 @@ async def test_remove_entry_clears_statistics(
         await async_remove_entry(hass, normal_config_entry)
 
     mock_get_recorder.return_value.async_clear_statistics.assert_called_once()
-    cleared_ids = mock_get_recorder.return_value.async_clear_statistics.call_args[0][0]
-    # Verify statistic IDs are generated for all energy sites and fields
-    assert any("123456" in sid for sid in cleared_ids)
-    assert any("solar_energy_exported" in sid for sid in cleared_ids)
+    cleared_ids = set(
+        mock_get_recorder.return_value.async_clear_statistics.call_args.args[0]
+    )
+    expected_ids = {
+        f"tesla_fleet:{energy_site.id}_{field}"
+        for energy_site in normal_config_entry.runtime_data.energysites
+        for field in ENERGY_HISTORY_FIELDS
+    }
+    assert cleared_ids == expected_ids
 
 
 async def test_remove_entry_without_recorder(
