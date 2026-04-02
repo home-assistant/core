@@ -21,6 +21,7 @@ from .entity import RingBaseEntity, RingDeviceT
 # Event entity does not perform updates or actions.
 PARALLEL_UPDATES = 0
 
+
 @dataclass(frozen=True, kw_only=True)
 class RingEventEntityDescription(EventEntityDescription, Generic[RingDeviceT]):
     """Base class for event entity description."""
