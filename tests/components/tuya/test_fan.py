@@ -8,6 +8,7 @@ from unittest.mock import Mock, patch
 import pytest
 from syrupy.assertion import SnapshotAssertion
 from tuya_device_handlers import TUYA_QUIRKS_REGISTRY
+from tuya_device_handlers.definition.fan import FanQuirk, get_default_definition
 from tuya_sharing import CustomerDevice, Manager
 
 from homeassistant.components.fan import (
@@ -54,6 +55,8 @@ async def test_platform_setup_and_discovery(
     [
         (None, True),
         ([], False),
+        ([FanQuirk(key="", definition_fn=get_default_definition)], True),
+        ([FanQuirk(key="", definition_fn=lambda d: None)], False),
     ],
 )
 async def test_empty_quirk(

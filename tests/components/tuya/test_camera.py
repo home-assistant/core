@@ -8,6 +8,7 @@ from unittest.mock import Mock, patch
 import pytest
 from syrupy.assertion import SnapshotAssertion
 from tuya_device_handlers import TUYA_QUIRKS_REGISTRY
+from tuya_device_handlers.definition.camera import CameraQuirk, get_default_definition
 from tuya_sharing import CustomerDevice, Manager
 
 from homeassistant.components.camera import (
@@ -64,6 +65,8 @@ async def test_platform_setup_and_discovery(
     [
         (None, True),
         ([], False),
+        ([CameraQuirk(key="", definition_fn=get_default_definition)], True),
+        ([CameraQuirk(key="", definition_fn=lambda d: None)], False),
     ],
 )
 async def test_empty_quirk(
