@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import asyncio
-from dataclasses import dataclass
 from datetime import timedelta
 import logging
 
@@ -22,15 +21,7 @@ from .const import CONF_ACCOUNT
 
 _LOGGER = logging.getLogger(__name__)
 
-type OVOEnergyConfigEntry = ConfigEntry[OVOEnergyData]
-
-
-@dataclass
-class OVOEnergyData:
-    """Runtime data for OVO Energy."""
-
-    client: OVOEnergy
-    coordinator: OVOEnergyDataUpdateCoordinator
+type OVOEnergyConfigEntry = ConfigEntry[OVOEnergyDataUpdateCoordinator]
 
 
 class OVOEnergyDataUpdateCoordinator(DataUpdateCoordinator[OVODailyUsage]):
