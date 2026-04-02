@@ -4,9 +4,7 @@ rules:
     status: exempt
     comment: Integration does not provide service actions.
   appropriate-polling: done
-  brands:
-    status: exempt
-    comment: Brands are managed in the home-assistant/brands repository.
+  brands: done
   common-modules: done
   config-flow-test-coverage: done
   config-flow: done
