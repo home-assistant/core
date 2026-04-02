@@ -23,10 +23,10 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
 from .coordinator import FreshrConfigEntry, FreshrReadingsCoordinator
+from .entity import FreshrEntity
 
 PARALLEL_UPDATES = 0
 
@@ -151,10 +151,9 @@ async def async_setup_entry(
     config_entry.async_on_unload(coordinator.async_add_listener(_check_devices))
 
 
-class FreshrSensor(CoordinatorEntity[FreshrReadingsCoordinator], SensorEntity):
+class FreshrSensor(FreshrEntity, SensorEntity):
     """Representation of a Fresh-r sensor."""
 
-    _attr_has_entity_name = True
     entity_description: FreshrSensorEntityDescription
 
     def __init__(
@@ -164,9 +163,8 @@ class FreshrSensor(CoordinatorEntity[FreshrReadingsCoordinator], SensorEntity):
         device_info: DeviceInfo,
     ) -> None:
         """Initialize the sensor."""
-        super().__init__(coordinator)
+        super().__init__(coordinator, device_info)
         self.entity_description = description
-        self._attr_device_info = device_info
         self._attr_unique_id = f"{coordinator.device_id}_{description.key}"
 
     @property
