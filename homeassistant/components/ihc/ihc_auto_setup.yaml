@@ -118,7 +118,7 @@ sensor:
     unit_of_measurement: "°C"
 
 event:
-  # Wireless 6-button push button (batteritryk)
+  # Wireless 6-button push button
   - xpath: './/product_airlink[@product_identifier="_0x4103"]'
     node: "airlink_input"
 

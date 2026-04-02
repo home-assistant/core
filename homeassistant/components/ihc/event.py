@@ -35,7 +35,7 @@ def setup_platform(
 
 
 class IHCButtonEventEntity(IHCEntity, EventEntity):
-    """IHC Event Entity for wireless push buttons (batteritryk).
+    """IHC Event Entity for wireless battery-powered push buttons.
 
     The associated IHC resource is a boolean airlink_input that momentarily
     goes True when a button is pressed. A 'pressed' event is fired on each press.

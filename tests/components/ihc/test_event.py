@@ -74,13 +74,11 @@ def test_setup_platform_no_discovery_info(hass: HomeAssistant) -> None:
 
 def test_entity_name_with_address_channel(mock_controller: MagicMock) -> None:
     """Test name is formatted as {group}_{product_id}_{channel:02d}."""
-    product = _make_product(
-        group="Kælder kontor", product_id=6173012, address_channel=1
-    )
+    product = _make_product(group="Office", product_id=999, address_channel=1)
     entity = IHCButtonEventEntity(
         mock_controller, CONTROLLER_ID, "fallback", IHC_ID, product
     )
-    assert entity.name == "Kælder kontor_6173012_01"
+    assert entity.name == "Office_999_01"
 
 
 def test_entity_name_channel_zero_padded(mock_controller: MagicMock) -> None:
