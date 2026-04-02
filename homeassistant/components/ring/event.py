@@ -109,7 +109,10 @@ class RingEvent(RingBaseEntity[RingListenCoordinator, RingDeviceT], EventEntity)
 
     @property
     def available(self) -> bool:
-        """Return if entity is available."""
+        """Return if entity is available.""" 
         return self.coordinator.event_listener.started
+
+
+    
     async def async_update(self) -> None:
         """All updates are passive."""
