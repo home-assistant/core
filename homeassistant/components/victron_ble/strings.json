@@ -8,6 +8,13 @@
   "config": {
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
+      "invalid_access_token": "Invalid encryption key for instant readout",
+      "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]",
+      "not_supported": "Device not supported",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+    },
+    "error": {
       "invalid_access_token": "Invalid encryption key for instant readout",
       "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]"
     },
@@ -22,6 +29,15 @@
         },
         "title": "{title}"
       },
+      "reauth_confirm": {
+        "data": {
+          "access_token": "[%key:component::victron_ble::config::step::access_token::data::access_token%]"
+        },
+        "data_description": {
+          "access_token": "[%key:component::victron_ble::config::step::access_token::data_description::access_token%]"
+        },
+        "description": "The encryption key for {title} is invalid or has changed. Please enter the correct key."
+      },
       "user": {
         "data": {
           "address": "The Bluetooth address of the Victron device."
@@ -34,6 +50,9 @@
   },
   "entity": {
     "sensor": {
+      "ac_current": {
+        "name": "AC current"
+      },
       "ac_in_power": {
         "name": "AC-in power"
       },
@@ -126,7 +145,7 @@
           "input_current": "Input overcurrent",
           "input_power": "Input overpower",
           "input_shutdown_current": "Input shutdown (current flow during off mode)",
-          "input_shutdown_failure": "PV input failed to shutdown",
+          "input_shutdown_failure": "PV input shutdown failed",
           "input_shutdown_voltage": "Input shutdown (battery overvoltage)",
           "input_voltage": "Input overvoltage",
           "internal_dc_voltage": "Internal DC voltage error",
@@ -234,6 +253,12 @@
           "switched_off_register": "Switched off by register",
           "switched_off_switch": "Switched off by switch"
         }
+      },
+      "output_phase_current": {
+        "name": "Output phase {phase} current"
+      },
+      "output_phase_voltage": {
+        "name": "Output phase {phase} voltage"
       },
       "output_voltage": {
         "name": "Output voltage"

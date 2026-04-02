@@ -1,0 +1,43 @@
+.detected_condition_common: &detected_condition_common
+  target:
+    entity:
+      - domain: binary_sensor
+        device_class: light
+  fields:
+    behavior: &condition_behavior
+      required: true
+      default: any
+      selector:
+        select:
+          translation_key: condition_behavior
+          options:
+            - all
+            - any
+
+is_detected: *detected_condition_common
+
+is_not_detected: *detected_condition_common
+
+is_value:
+  target:
+    entity:
+      - domain: sensor
+        device_class: illuminance
+  fields:
+    behavior: *condition_behavior
+    threshold:
+      required: true
+      selector:
+        numeric_threshold:
+          entity:
+            - domain: input_number
+              unit_of_measurement: "lx"
+            - domain: sensor
+              device_class: illuminance
+            - domain: number
+              device_class: illuminance
+          mode: is
+          number:
+            min: 0
+            mode: box
+            unit_of_measurement: "lx"

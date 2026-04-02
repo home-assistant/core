@@ -16,18 +16,26 @@ from unifi_access_api.models.websocket import (
     LocationUpdateData,
     LocationUpdateState,
     LocationUpdateV2,
+    ThumbnailInfo,
     V2LocationState,
     V2LocationUpdate,
     V2LocationUpdateData,
     WebsocketMessage,
 )
 
-from homeassistant.config_entries import ConfigEntryState
+from homeassistant.components.unifi_access.const import DOMAIN
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
 
-from . import setup_integration
+from .conftest import _make_door
 
 from tests.common import MockConfigEntry
+
+FRONT_DOOR_BINARY_SENSOR = "binary_sensor.front_door"
+BACK_DOOR_BINARY_SENSOR = "binary_sensor.back_door"
+FRONT_DOOR_IMAGE = "image.front_door_thumbnail"
+BACK_DOOR_IMAGE = "image.back_door_thumbnail"
 
 
 def _get_ws_handlers(
@@ -55,7 +63,7 @@ async def test_setup_entry(
 @pytest.mark.parametrize(
     ("exception", "expected_state"),
     [
-        (ApiAuthError(), ConfigEntryState.SETUP_RETRY),
+        (ApiAuthError(), ConfigEntryState.SETUP_ERROR),
         (ApiConnectionError("Connection failed"), ConfigEntryState.SETUP_RETRY),
     ],
 )
@@ -74,16 +82,30 @@ async def test_setup_entry_error(
 
     assert mock_config_entry.state is expected_state
 
+    if expected_state is ConfigEntryState.SETUP_ERROR:
+        assert any(
+            flow["context"]["source"] == SOURCE_REAUTH
+            for flow in hass.config_entries.flow.async_progress()
+        )
+
 
 @pytest.mark.parametrize(
-    ("failing_method", "exception"),
+    ("failing_method", "exception", "expected_state"),
     [
-        ("get_doors", ApiAuthError()),
-        ("get_doors", ApiConnectionError("Connection failed")),
-        ("get_doors", ApiError("API error")),
-        ("get_emergency_status", ApiAuthError()),
-        ("get_emergency_status", ApiConnectionError("Connection failed")),
-        ("get_emergency_status", ApiError("API error")),
+        ("get_doors", ApiAuthError(), ConfigEntryState.SETUP_ERROR),
+        (
+            "get_doors",
+            ApiConnectionError("Connection failed"),
+            ConfigEntryState.SETUP_RETRY,
+        ),
+        ("get_doors", ApiError("API error"), ConfigEntryState.SETUP_RETRY),
+        ("get_emergency_status", ApiAuthError(), ConfigEntryState.SETUP_ERROR),
+        (
+            "get_emergency_status",
+            ApiConnectionError("Connection failed"),
+            ConfigEntryState.SETUP_RETRY,
+        ),
+        ("get_emergency_status", ApiError("API error"), ConfigEntryState.SETUP_RETRY),
     ],
 )
 async def test_coordinator_update_error(
@@ -92,6 +114,7 @@ async def test_coordinator_update_error(
     mock_client: MagicMock,
     failing_method: str,
     exception: Exception,
+    expected_state: ConfigEntryState,
 ) -> None:
     """Test coordinator handles update errors from get_doors or get_emergency_status."""
     getattr(mock_client, failing_method).side_effect = exception
@@ -99,7 +122,13 @@ async def test_coordinator_update_error(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert mock_config_entry.state is expected_state
+
+    if expected_state is ConfigEntryState.SETUP_ERROR:
+        assert any(
+            flow["context"]["source"] == SOURCE_REAUTH
+            for flow in hass.config_entries.flow.async_progress()
+        )
 
 
 async def test_unload_entry(
@@ -122,14 +151,11 @@ async def test_unload_entry(
 
 async def test_ws_location_update_v2(
     hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
+    init_integration: MockConfigEntry,
     mock_client: MagicMock,
 ) -> None:
     """Test location_update_v2 WebSocket message updates door state."""
-    await setup_integration(hass, mock_config_entry)
-    coordinator = mock_config_entry.runtime_data
-
-    assert coordinator.data.doors["door-001"].door_lock_relay_status == "lock"
+    assert hass.states.get(FRONT_DOOR_BINARY_SENSOR).state == "off"
 
     handlers = _get_ws_handlers(mock_client)
     msg = LocationUpdateV2(
@@ -147,19 +173,16 @@ async def test_ws_location_update_v2(
     await handlers["access.data.device.location_update_v2"](msg)
     await hass.async_block_till_done()
 
-    door = coordinator.data.doors["door-001"]
-    assert door.door_position_status == "open"
-    assert door.door_lock_relay_status == "unlock"
+    assert hass.states.get(FRONT_DOOR_BINARY_SENSOR).state == "on"
 
 
 async def test_ws_v2_location_update(
     hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
+    init_integration: MockConfigEntry,
     mock_client: MagicMock,
 ) -> None:
     """Test V2 location update WebSocket message updates door state."""
-    await setup_integration(hass, mock_config_entry)
-    coordinator = mock_config_entry.runtime_data
+    assert hass.states.get(BACK_DOOR_BINARY_SENSOR).state == "on"
 
     handlers = _get_ws_handlers(mock_client)
     msg = V2LocationUpdate(
@@ -182,20 +205,16 @@ async def test_ws_v2_location_update(
     await handlers["access.data.v2.location.update"](msg)
     await hass.async_block_till_done()
 
-    door = coordinator.data.doors["door-002"]
-    assert door.door_lock_relay_status == "lock"
-    assert door.door_position_status == "close"
+    assert hass.states.get(BACK_DOOR_BINARY_SENSOR).state == "off"
 
 
 async def test_ws_location_update_unknown_door_ignored(
     hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
+    init_integration: MockConfigEntry,
     mock_client: MagicMock,
 ) -> None:
     """Test location update for unknown door is silently ignored."""
-    await setup_integration(hass, mock_config_entry)
-    coordinator = mock_config_entry.runtime_data
-    original_data = coordinator.data
+    state_before = hass.states.get(FRONT_DOOR_BINARY_SENSOR).state
 
     handlers = _get_ws_handlers(mock_client)
     msg = LocationUpdateV2(
@@ -213,19 +232,16 @@ async def test_ws_location_update_unknown_door_ignored(
     await handlers["access.data.device.location_update_v2"](msg)
     await hass.async_block_till_done()
 
-    # Data should be unchanged
-    assert coordinator.data is original_data
+    assert hass.states.get(FRONT_DOOR_BINARY_SENSOR).state == state_before
 
 
 async def test_ws_location_update_no_state_ignored(
     hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
+    init_integration: MockConfigEntry,
     mock_client: MagicMock,
 ) -> None:
     """Test location update with no state is silently ignored."""
-    await setup_integration(hass, mock_config_entry)
-    coordinator = mock_config_entry.runtime_data
-    original_data = coordinator.data
+    state_before = hass.states.get(FRONT_DOOR_BINARY_SENSOR).state
 
     handlers = _get_ws_handlers(mock_client)
     msg = LocationUpdateV2(
@@ -240,4 +256,193 @@ async def test_ws_location_update_no_state_ignored(
     await handlers["access.data.device.location_update_v2"](msg)
     await hass.async_block_till_done()
 
-    assert coordinator.data is original_data
+    assert hass.states.get(FRONT_DOOR_BINARY_SENSOR).state == state_before
+
+
+async def test_ws_location_update_no_op_state_ignored(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    mock_client: MagicMock,
+) -> None:
+    """Test location update with state but no relevant fields is ignored."""
+    state_before = hass.states.get(FRONT_DOOR_BINARY_SENSOR).state
+
+    handlers = _get_ws_handlers(mock_client)
+    msg = LocationUpdateV2(
+        event="access.data.device.location_update_v2",
+        data=LocationUpdateData(
+            id="door-001",
+            location_type="DOOR",
+            state=LocationUpdateState.model_construct(
+                dps=None,
+                lock="unknown",
+            ),
+        ),
+    )
+
+    await handlers["access.data.device.location_update_v2"](msg)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(FRONT_DOOR_BINARY_SENSOR).state == state_before
+
+
+async def test_ws_location_update_with_thumbnail(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    mock_client: MagicMock,
+) -> None:
+    """Test location_update_v2 with thumbnail updates image entity."""
+    assert hass.states.get(BACK_DOOR_IMAGE).state == "unknown"
+
+    handlers = _get_ws_handlers(mock_client)
+    msg = LocationUpdateV2(
+        event="access.data.device.location_update_v2",
+        data=LocationUpdateData(
+            id="door-002",
+            location_type="DOOR",
+            state=None,
+            thumbnail=ThumbnailInfo(
+                url="/thumb/door-002.jpg",
+                door_thumbnail_last_update=1700000000,
+            ),
+        ),
+    )
+
+    await handlers["access.data.device.location_update_v2"](msg)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(BACK_DOOR_IMAGE).state != "unknown"
+
+
+async def test_coordinator_timeout_error(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_client: MagicMock,
+) -> None:
+    """Test coordinator handles timeout from API."""
+    mock_client.get_doors.side_effect = TimeoutError
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+async def test_ws_location_update_thumbnail_only_no_state(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    mock_client: MagicMock,
+) -> None:
+    """Test location update with thumbnail but no state keeps door unchanged."""
+    state_before = hass.states.get(FRONT_DOOR_BINARY_SENSOR).state
+    image_state_before = hass.states.get(FRONT_DOOR_IMAGE).state
+
+    handlers = _get_ws_handlers(mock_client)
+    msg = LocationUpdateV2(
+        event="access.data.device.location_update_v2",
+        data=LocationUpdateData(
+            id="door-001",
+            location_type="DOOR",
+            state=None,
+            thumbnail=ThumbnailInfo(
+                url="/thumb/door-001-new.jpg",
+                door_thumbnail_last_update=1700002000,
+            ),
+        ),
+    )
+
+    await handlers["access.data.device.location_update_v2"](msg)
+    await hass.async_block_till_done()
+
+    # Door state unchanged, thumbnail updated
+    assert hass.states.get(FRONT_DOOR_BINARY_SENSOR).state == state_before
+    assert hass.states.get(FRONT_DOOR_IMAGE).state != image_state_before
+
+
+async def test_new_door_entities_created_on_refresh(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    mock_client: MagicMock,
+) -> None:
+    """Test that new door entities are added dynamically via coordinator listener."""
+    # Verify new door entities do not exist yet
+    assert not hass.states.get("binary_sensor.garage_door")
+    assert not hass.states.get("button.garage_door_unlock")
+    assert not hass.states.get("event.garage_door_doorbell")
+    assert not hass.states.get("event.garage_door_access")
+    assert not hass.states.get("image.garage_door_thumbnail")
+
+    # Add a new door to the API response
+    mock_client.get_doors.return_value = [
+        *mock_client.get_doors.return_value,
+        _make_door("door-003", "Garage Door"),
+    ]
+
+    # Trigger natural refresh via WebSocket reconnect
+    on_disconnect = mock_client.start_websocket.call_args[1]["on_disconnect"]
+    on_connect = mock_client.start_websocket.call_args[1]["on_connect"]
+    on_disconnect()
+    await hass.async_block_till_done()
+    on_connect()
+    await hass.async_block_till_done()
+
+    # Entities for the new door should now exist
+    assert hass.states.get("binary_sensor.garage_door")
+    assert hass.states.get("button.garage_door_unlock")
+    assert hass.states.get("event.garage_door_doorbell")
+    assert hass.states.get("event.garage_door_access")
+    assert hass.states.get("image.garage_door_thumbnail")
+
+
+async def test_stale_device_removed_on_refresh(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    init_integration: MockConfigEntry,
+    mock_client: MagicMock,
+) -> None:
+    """Test that stale devices are automatically removed on data refresh."""
+    # Verify both doors exist after initial setup
+    assert device_registry.async_get_device(identifiers={(DOMAIN, "door-001")})
+    assert device_registry.async_get_device(identifiers={(DOMAIN, "door-002")})
+
+    # Simulate door-002 being removed from the hub
+    mock_client.get_doors.return_value = [
+        door for door in mock_client.get_doors.return_value if door.id != "door-002"
+    ]
+
+    # Trigger natural refresh via WebSocket reconnect
+    on_disconnect = mock_client.start_websocket.call_args[1]["on_disconnect"]
+    on_connect = mock_client.start_websocket.call_args[1]["on_connect"]
+    on_disconnect()
+    await hass.async_block_till_done()
+    on_connect()
+    await hass.async_block_till_done()
+
+    # door-001 still exists, door-002 was removed
+    assert device_registry.async_get_device(identifiers={(DOMAIN, "door-001")})
+    assert not device_registry.async_get_device(identifiers={(DOMAIN, "door-002")})
+
+
+async def test_stale_device_removed_on_startup(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    mock_config_entry: MockConfigEntry,
+    mock_client: MagicMock,
+) -> None:
+    """Test stale devices present before setup are removed on initial refresh."""
+    mock_config_entry.add_to_hass(hass)
+
+    # Create a stale door device that no longer exists on the hub
+    device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id,
+        identifiers={(DOMAIN, "door-003")},
+    )
+    assert device_registry.async_get_device(identifiers={(DOMAIN, "door-003")})
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    # Valid doors from the hub should exist, stale device should be removed
+    assert device_registry.async_get_device(identifiers={(DOMAIN, "door-001")})
+    assert device_registry.async_get_device(identifiers={(DOMAIN, "door-002")})
+    assert not device_registry.async_get_device(identifiers={(DOMAIN, "door-003")})

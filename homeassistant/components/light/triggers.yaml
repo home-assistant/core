@@ -14,27 +14,19 @@
             - any
           translation_key: trigger_behavior
 
-.number_or_entity: &number_or_entity
-  required: false
-  selector:
-    choose:
-      choices:
-        number:
-          selector:
-            number:
-              max: 100
-              min: 0
-              mode: box
-              unit_of_measurement: "%"
-        entity:
-          selector:
-            entity:
-              filter:
-                domain:
-                  - input_number
-                  - number
-                  - sensor
-      translation_key: number_or_entity
+.brightness_threshold_entity: &brightness_threshold_entity
+  - domain: input_number
+    unit_of_measurement: "%"
+  - domain: number
+    unit_of_measurement: "%"
+  - domain: sensor
+    unit_of_measurement: "%"
+
+.brightness_threshold_number: &brightness_threshold_number
+  min: 0
+  max: 100
+  mode: box
+  unit_of_measurement: "%"
 
 turned_on: *trigger_common
 turned_off: *trigger_common
@@ -42,23 +34,22 @@ turned_off: *trigger_common
 brightness_changed:
   target: *trigger_light_target
   fields:
-    above: *number_or_entity
-    below: *number_or_entity
+    threshold:
+      required: true
+      selector:
+        numeric_threshold:
+          entity: *brightness_threshold_entity
+          mode: changed
+          number: *brightness_threshold_number
 
 brightness_crossed_threshold:
   target: *trigger_light_target
   fields:
     behavior: *trigger_behavior
-    threshold_type:
+    threshold:
       required: true
-      default: above
       selector:
-        select:
-          options:
-            - above
-            - below
-            - between
-            - outside
-          translation_key: trigger_threshold_type
-    lower_limit: *number_or_entity
-    upper_limit: *number_or_entity
+        numeric_threshold:
+          entity: *brightness_threshold_entity
+          mode: crossed
+          number: *brightness_threshold_number
