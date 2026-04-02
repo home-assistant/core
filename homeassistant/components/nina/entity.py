@@ -39,12 +39,6 @@ class NinaEntity(CoordinatorEntity[NINADataUpdateCoordinator]):
         """Return the number of active warnings for the region."""
         return len(self.coordinator.data[self._region])
 
-        self._attr_translation_placeholders = {
-            "region_name": region_name,
-            "slot_id": str(slot_id),
-        }
-        self._attr_device_info = coordinator.device_info
-
     def _get_warning_data(self) -> NinaWarningData:
         """Return warning data."""
         return self.coordinator.data[self._region][self._warning_index]
