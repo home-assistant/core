@@ -56,4 +56,4 @@ class DucoVentilationStateSensor(DucoEntity, SensorEntity):
         node = self._node
         if node is None or node.ventilation is None:
             return None
-        return node.ventilation.state
+        return str(node.ventilation.state)

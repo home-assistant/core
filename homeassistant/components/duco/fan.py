@@ -144,6 +144,8 @@ class DucoVentilationFanEntity(DucoEntity, FanEntity):
     ) -> None:
         """Switch to manual ventilation (default: medium)."""
         target = preset_mode or PRESET_MEDIUM
+        if target not in _PRESET_TO_STATE:
+            raise HomeAssistantError(f"Invalid preset mode: {target}")
         self._attr_preset_mode = target
         self.async_write_ha_state()
         await self._async_set_state(_PRESET_TO_STATE[target])
