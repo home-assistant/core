@@ -64,7 +64,7 @@ class SwitchbotAirPurifierLightEntity(SwitchbotEntity, LightEntity, RestoreEntit
             self._attr_is_on = last_state.state == STATE_ON
 
     @property
-    def brightness(self) -> int | None:
+    def brightness(self) -> int:
         """Return the brightness of the light."""
         return max(0, min(255, round(self._device.brightness * 2.55)))
 
