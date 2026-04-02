@@ -11,6 +11,7 @@ import jwt
 import pytest
 from tesla_fleet_api.const import Scope
 
+from homeassistant.components.recorder import Recorder
 from homeassistant.components.tesla_fleet.const import DOMAIN, SCOPES
 
 from .const import (
@@ -202,7 +203,7 @@ def mock_signed_command() -> Generator[AsyncMock]:
 
 
 @pytest.fixture(autouse=True)
-def mock_recorder_functions() -> Generator[None]:
+def mock_recorder_functions(recorder_mock: Recorder) -> Generator[None]:
     """Mock recorder functions used by energy history coordinator."""
     with (
         patch(
