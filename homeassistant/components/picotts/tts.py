@@ -90,7 +90,7 @@ class PicoTTSEntity(TextToSpeechEntity):
 
         cmd = ["pico2wave", "--wave", fname, "-l", language]
         try:
-            subprocess.run(cmd, text=True, input=message, check=True)
+            subprocess.run(cmd, text=True, input=message, check=True, timeout=30)
             with open(fname, "rb") as voice:
                 data = voice.read()
         except subprocess.CalledProcessError as exc:
@@ -98,6 +98,11 @@ class PicoTTSEntity(TextToSpeechEntity):
                 translation_domain=DOMAIN,
                 translation_key="returncode_error",
                 translation_placeholders={"returncode": str(exc.returncode)},
+            ) from exc
+        except subprocess.TimeoutExpired as exc:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="timeout_error",
             ) from exc
         except OSError as exc:
             _LOGGER.debug("Full exception %s", exc)

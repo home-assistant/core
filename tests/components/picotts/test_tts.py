@@ -154,6 +154,28 @@ async def test_get_tts_audio_subprocess_error(
     assert exc_info.value.translation_placeholders == {"returncode": "1"}
 
 
+async def test_get_tts_audio_timeout(
+    hass: HomeAssistant,
+    setup_picotts: None,
+) -> None:
+    """Test get_tts_audio when pico2wave times out."""
+    with (
+        patch(
+            "homeassistant.components.picotts.tts.subprocess.run",
+            side_effect=subprocess.TimeoutExpired("pico2wave", 30),
+        ),
+        pytest.raises(HomeAssistantError) as exc_info,
+    ):
+        await tts.async_get_media_source_audio(
+            hass,
+            tts.generate_media_source_id(
+                hass, "Hello world", "tts.pico_tts_en_us", "en-US"
+            ),
+        )
+
+    assert exc_info.value.translation_key == "timeout_error"
+
+
 async def test_get_tts_audio_file_read_error(
     hass: HomeAssistant,
     setup_picotts: None,

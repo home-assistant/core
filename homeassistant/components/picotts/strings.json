@@ -24,6 +24,9 @@
     },
     "returncode_error": {
       "message": "Error running pico2wave, return code: {returncode}"
+    },
+    "timeout_error": {
+      "message": "Timeout running pico2wave"
     }
   },
   "issues": {
