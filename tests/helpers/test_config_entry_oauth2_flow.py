@@ -22,7 +22,7 @@ from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.helpers.network import NoURLAvailableError
 
 from tests.common import MockConfigEntry, MockModule, mock_integration, mock_platform
-from tests.test_util.aiohttp import AiohttpClientMocker
+from tests.test_util.aiohttp import AiohttpClientMocker, MockLongPollSideEffect
 from tests.typing import ClientSessionGenerator
 
 TEST_DOMAIN = "oauth2_test"
@@ -964,6 +964,30 @@ async def test_device_flow_register_device_http_errors(
     assert aioclient_mock.mock_calls[0][2] == {"client_id": CLIENT_ID}
 
 
+async def test_device_flow_register_device_success(
+    hass: HomeAssistant,
+    device_impl: config_entry_oauth2_flow.DeviceFlowImplementation,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """Test async_register_device returns device registration data."""
+    aioclient_mock.post(
+        AUTHORIZE_URL,
+        json={
+            "device_code": "device-code",
+            "user_code": "user-code",
+            "verification_uri": "https://example.com/device",
+            "expires_in": 60,
+            "interval": 5,
+        },
+    )
+
+    device = await device_impl.async_register_device()
+
+    assert device["device_code"] == "device-code"
+    assert device["user_code"] == "user-code"
+    assert len(aioclient_mock.mock_calls) == 1
+
+
 @pytest.mark.parametrize(
     ("error_response", "expected_exception"),
     [
@@ -1015,6 +1039,101 @@ async def test_device_flow_check_activation_client_error(
                 "interval": 0,
             }
         )
+
+
+async def test_device_flow_check_activation_timeout(
+    hass: HomeAssistant,
+    device_impl: config_entry_oauth2_flow.DeviceFlowImplementation,
+) -> None:
+    """Test async_check_device_activation raises DeviceFlowTimeout on timeout."""
+    with (
+        patch(
+            "homeassistant.helpers.config_entry_oauth2_flow.asyncio.timeout",
+            side_effect=TimeoutError,
+        ),
+        pytest.raises(config_entry_oauth2_flow.DeviceFlowTimeout),
+    ):
+        await device_impl.async_check_device_activation(
+            {
+                "device_code": "device-code",
+                "expires_in": 60,
+                "interval": 0,
+            }
+        )
+
+
+async def test_device_flow_check_activation_authorization_pending_then_success(
+    hass: HomeAssistant,
+    device_impl: config_entry_oauth2_flow.DeviceFlowImplementation,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """Test async_check_device_activation handles pending then success."""
+    side_effect = MockLongPollSideEffect()
+    aioclient_mock.post(TOKEN_URL, side_effect=side_effect)
+    side_effect.queue_response(json={"error": "authorization_pending"})
+    side_effect.queue_response(
+        json={
+            "refresh_token": REFRESH_TOKEN,
+            "access_token": ACCESS_TOKEN_1,
+            "type": "bearer",
+            "expires_in": 60,
+        }
+    )
+
+    with patch(
+        "homeassistant.helpers.config_entry_oauth2_flow.asyncio.sleep",
+        new=AsyncMock(),
+    ) as sleep_mock:
+        token = await device_impl.async_check_device_activation(
+            {
+                "device_code": "device-code",
+                "expires_in": 60,
+                "interval": 0,
+            }
+        )
+
+    assert token["access_token"] == ACCESS_TOKEN_1
+    assert sleep_mock.await_count == 1
+
+
+async def test_device_flow_slow_down_then_success(
+    hass: HomeAssistant,
+    device_impl: config_entry_oauth2_flow.DeviceFlowImplementation,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """Test async_check_device_activation handles slow_down then success."""
+    side_effect = MockLongPollSideEffect()
+    aioclient_mock.post(TOKEN_URL, side_effect=side_effect)
+    side_effect.queue_response(json={"error": "slow_down", "interval": 7})
+    side_effect.queue_response(
+        json={
+            "refresh_token": REFRESH_TOKEN,
+            "access_token": ACCESS_TOKEN_1,
+            "type": "bearer",
+            "expires_in": 60,
+        }
+    )
+
+    with (
+        patch(
+            "homeassistant.helpers.config_entry_oauth2_flow.asyncio.sleep",
+            new=AsyncMock(),
+        ) as sleep_mock,
+        patch(
+            "homeassistant.helpers.config_entry_oauth2_flow.randint",
+            return_value=1,
+        ),
+    ):
+        token = await device_impl.async_check_device_activation(
+            {
+                "device_code": "device-code",
+                "expires_in": 60,
+                "interval": 0,
+            }
+        )
+
+    assert token["access_token"] == ACCESS_TOKEN_1
+    assert sleep_mock.await_args_list[0].args[0] == 8
 
 
 async def test_device_flow_register_timeout(
