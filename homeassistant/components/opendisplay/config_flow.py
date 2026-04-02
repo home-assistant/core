@@ -144,6 +144,26 @@ class OpenDisplayConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
+    async def _async_try_connection(
+        self,
+        address: str,
+        encryption_key: bytes | None,
+        errors: dict[str, str],
+    ) -> bool:
+        """Test connection, populate errors, and return True on success."""
+        try:
+            await self._async_test_connection(address, encryption_key)
+        except AuthenticationFailedError:
+            errors[CONF_ENCRYPTION_KEY] = "invalid_auth"
+        except OpenDisplayError:
+            errors["base"] = "cannot_connect"
+        except Exception:
+            _LOGGER.exception("Unexpected error")
+            errors["base"] = "unknown"
+        else:
+            return True
+        return False
+
     async def async_step_encryption_key(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -159,18 +179,9 @@ class OpenDisplayConfigFlow(ConfigFlow, domain=DOMAIN):
             else:
                 if TYPE_CHECKING:
                     assert self.unique_id is not None
-                try:
-                    await self._async_test_connection(
-                        self.unique_id, bytes.fromhex(key)
-                    )
-                except AuthenticationFailedError:
-                    errors[CONF_ENCRYPTION_KEY] = "invalid_auth"
-                except OpenDisplayError:
-                    errors["base"] = "cannot_connect"
-                except Exception:
-                    _LOGGER.exception("Unexpected error")
-                    errors["base"] = "unknown"
-                else:
+                if await self._async_try_connection(
+                    self.unique_id, bytes.fromhex(key), errors
+                ):
                     return self.async_create_entry(
                         title=name,
                         data={CONF_ENCRYPTION_KEY: key},
@@ -208,18 +219,9 @@ class OpenDisplayConfigFlow(ConfigFlow, domain=DOMAIN):
                 address = reauth_entry.unique_id
                 if TYPE_CHECKING:
                     assert address is not None
-                try:
-                    await self._async_test_connection(
-                        address, bytes.fromhex(key) if key is not None else None
-                    )
-                except AuthenticationFailedError:
-                    errors[CONF_ENCRYPTION_KEY] = "invalid_auth"
-                except OpenDisplayError:
-                    errors["base"] = "cannot_connect"
-                except Exception:
-                    _LOGGER.exception("Unexpected error")
-                    errors["base"] = "unknown"
-                else:
+                if await self._async_try_connection(
+                    address, bytes.fromhex(key) if key is not None else None, errors
+                ):
                     new_data = dict(reauth_entry.data)
                     if key is not None:
                         new_data[CONF_ENCRYPTION_KEY] = key
