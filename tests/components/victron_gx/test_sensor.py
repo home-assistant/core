@@ -43,7 +43,7 @@ async def test_victron_battery_sensor(
     state = hass.states.get(entity.entity_id)
     assert state is not None
     assert state.state == "10.5"
-    assert state.attributes["state_class"] is SensorStateClass.MEASUREMENT
+    assert state.attributes["state_class"] == SensorStateClass.MEASUREMENT
     assert state.attributes["device_class"] == "current"
     assert state.attributes["unit_of_measurement"] == "A"
 

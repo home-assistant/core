@@ -133,19 +133,21 @@ async def test_setup_entry_start_failure_unloads_platforms_and_callbacks(
 
 
 async def test_hub_start_connection_error(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_victron_hub_library: MagicMock,
 ) -> None:
     """Test hub start with connection error."""
     mock_config_entry.add_to_hass(hass)
 
-    with patch(
-        "homeassistant.components.victron_gx.hub.VictronVenusHub.connect",
-        side_effect=CannotConnectError("Connection failed"),
-    ):
-        await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
+    mock_victron_hub_library.return_value.connect.side_effect = CannotConnectError(
+        "Connection failed"
+    )
 
-        assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
 async def test_hub_start_success(
@@ -161,21 +163,23 @@ async def test_hub_start_success(
 
 
 async def test_hub_start_authentication_error(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_victron_hub_library: MagicMock,
 ) -> None:
     """Test hub start with authentication error."""
     mock_config_entry.add_to_hass(hass)
 
-    with patch(
-        "homeassistant.components.victron_gx.hub.VictronVenusHub.connect",
-        side_effect=AuthenticationError("Authentication failed"),
-    ):
-        # Attempt to set up the config entry - should fail with auth error
-        await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
+    mock_victron_hub_library.return_value.connect.side_effect = AuthenticationError(
+        "Authentication failed"
+    )
 
-        # Verify the config entry is in SETUP_ERROR state (auth failed)
-        assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+    # Attempt to set up the config entry - should fail with auth error
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    # Verify the config entry is in SETUP_ERROR state (auth failed)
+    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
 
 
 async def test_hub_stop(

@@ -91,7 +91,7 @@ class Hub:
             ) from auth_error
         except CannotConnectError as connect_error:
             raise ConfigEntryNotReady(
-                f"Cannot connect to the hub: {connect_error}"
+                f"Cannot connect to the hub at {self.host}: {connect_error}"
             ) from connect_error
 
     async def stop(self) -> None:
