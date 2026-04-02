@@ -4,10 +4,12 @@ from collections.abc import Mapping
 import logging
 from typing import Any
 
+from heimanconnect import HeimanConnectionError
 import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlowResult
 from homeassistant.const import CONF_TOKEN
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.config_entry_oauth2_flow import AbstractOAuth2FlowHandler
 import homeassistant.helpers.config_validation as cv
 
@@ -20,7 +22,7 @@ _LOGGER = logging.getLogger(__name__)
 class AuthInfo:
     """Store authentication info temporarily during config flow."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize auth info."""
         self.homes: list[dict[str, Any]] = []
         self.user_info: Any = None
@@ -62,7 +64,7 @@ class HeimanConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
 
         try:
             user_info = await api_client.async_get_user_info()
-        except Exception as err:
+        except (ConfigEntryAuthFailed, HeimanConnectionError) as err:
             _LOGGER.error("Failed to get user info: %s", err)
             return self.async_abort(reason="token_invalid")
 
@@ -71,7 +73,7 @@ class HeimanConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
             homes = await api_client.async_get_homes()
             if not homes:
                 return self.async_abort(reason="no_homes")
-        except Exception as err:
+        except (ConfigEntryAuthFailed, HeimanConnectionError) as err:
             _LOGGER.error("Failed to get homes: %s", err)
             return self.async_abort(reason="homes_fetch_failed")
 
@@ -80,9 +82,13 @@ class HeimanConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
         self._auth_info.user_info = user_info
         self._auth_info.auth_data = data
 
-        _LOGGER.info(f"Found {len(self._auth_info.homes)} homes for user")
+        _LOGGER.info("Found %d homes for user", len(self._auth_info.homes))
         for home in self._auth_info.homes:
-            _LOGGER.debug(f"  - Home: {home.home_name} ({home.device_count} devices)")
+            _LOGGER.debug(
+                "  - Home: %s (%s devices)",
+                home.home_name,
+                home.device_count,
+            )
 
         # 进入家庭选择步骤
         return await self.async_step_select_home()
@@ -104,11 +110,6 @@ class HeimanConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
 
             # 存储选中的家庭 ID
             self._auth_info.selected_home_ids = selected_home_ids
-
-            first_home = next(
-                (h for h in self._auth_info.homes if h.home_id == selected_home_ids[0]),
-                self._auth_info.homes[0] if self._auth_info.homes else None,
-            )
 
             await self.async_set_unique_id(self._auth_info.user_info.user_id)
 
@@ -198,7 +199,7 @@ class HeimanConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
         )
 
     async def async_step_reauth(
-        self, entry_data: Mapping[str, Any]
+        self, _entry_data: Mapping[str, Any]
     ) -> ConfigFlowResult:
         """Perform reauth upon migration of old entries."""
         return await self.async_step_reauth_confirm()

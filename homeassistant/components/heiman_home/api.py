@@ -16,7 +16,11 @@ from heimanconnect import (
 )
 
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    OAuth2TokenRequestError,
+    OAuth2TokenRequestReauthError,
+)
 from homeassistant.helpers.config_entry_oauth2_flow import OAuth2Session
 
 _LOGGER = logging.getLogger(__name__)
@@ -72,12 +76,21 @@ class HeimanApiClient:
             return self._token_data.get("access_token")
         return None
 
+    def get_access_token(self) -> str | None:
+        """Get current access token."""
+        return self._get_access_token()
+
+    @property
+    def cloud_client(self) -> HeimanCloudClient | None:
+        """Return the cloud client."""
+        return self._cloud_client
+
     async def _ensure_authenticated(self) -> None:
         """Ensure we have a valid access token."""
         if self._session:
             try:
                 await self._session.async_ensure_token_valid()
-            except Exception as err:
+            except (OAuth2TokenRequestError, OAuth2TokenRequestReauthError) as err:
                 _LOGGER.error("Token refresh failed: %s", err)
                 raise ConfigEntryAuthFailed(f"Token refresh failed: {err}") from err
 
@@ -103,20 +116,13 @@ class HeimanApiClient:
 
         try:
             user = await self._cloud_client.async_get_user_info()
-            _LOGGER.debug("Retrieved user info: %s", user.email)
-            return user
         except HeimanAuthError as err:
             raise ConfigEntryAuthFailed(f"Authentication failed: {err}") from err
-        except HeimanConnectionError as err:
-            raise err
-        except Exception as err:
-            _LOGGER.error(
-                "Unexpected error getting user info: %s\nException type: %s",
-                err,
-                type(err).__name__,
-                exc_info=True,
-            )
-            raise HeimanConnectionError(f"Failed to get user info: {err}") from err
+        except HeimanConnectionError:
+            raise
+        else:
+            _LOGGER.debug("Retrieved user info: %s", user.email)
+            return user
 
     async def async_get_homes(self) -> list[HeimanHome]:
         """Get list of homes for current user.
@@ -135,20 +141,13 @@ class HeimanApiClient:
 
         try:
             homes = await self._cloud_client.async_get_homes()
-            _LOGGER.debug("Retrieved %d homes", len(homes))
-            return homes
         except HeimanAuthError as err:
             raise ConfigEntryAuthFailed(f"Authentication failed: {err}") from err
-        except HeimanConnectionError as err:
-            raise err
-        except Exception as err:
-            _LOGGER.error(
-                "Unexpected error getting homes: %s\nException type: %s",
-                err,
-                type(err).__name__,
-                exc_info=True,
-            )
-            raise HeimanConnectionError(f"Failed to get homes: {err}") from err
+        except HeimanConnectionError:
+            raise
+        else:
+            _LOGGER.debug("Retrieved %d homes", len(homes))
+            return homes
 
     async def async_get_devices(self, home_id: str) -> dict[str, HeimanDevice]:
         """Get list of devices in specified home.
@@ -169,23 +168,15 @@ class HeimanApiClient:
             raise HeimanConnectionError(message="Client not initialized")
 
         try:
-            # 设置当前家庭 ID
             self._cloud_client.home_id = home_id
             devices = await self._cloud_client.async_get_devices(home_id=home_id)
-            _LOGGER.debug("Retrieved %d devices", len(devices))
-            return devices
         except HeimanAuthError as err:
             raise ConfigEntryAuthFailed(f"Authentication failed: {err}") from err
-        except HeimanConnectionError as err:
-            raise err
-        except Exception as err:
-            _LOGGER.error(
-                "Unexpected error getting devices: %s\nException type: %s",
-                err,
-                type(err).__name__,
-                exc_info=True,  # Add full traceback for debugging
-            )
-            raise HeimanConnectionError(f"Failed to get devices: {err}") from err
+        except HeimanConnectionError:
+            raise
+        else:
+            _LOGGER.debug("Retrieved %d devices", len(devices))
+            return devices
 
     async def async_get_device_properties(self, device_id: str) -> dict[str, Any]:
         """Get current properties of a device.
@@ -207,19 +198,40 @@ class HeimanApiClient:
 
         try:
             properties = await self._cloud_client.async_get_device_properties(device_id)
+        except HeimanAuthError as err:
+            raise ConfigEntryAuthFailed(f"Authentication failed: {err}") from err
+        except HeimanConnectionError:
+            raise
+        except Exception as err:
+            _LOGGER.exception(
+                "Unexpected error getting device properties for %s",
+                device_id,
+            )
+            raise HeimanConnectionError(
+                f"Failed to get device properties: {err}"
+            ) from err
+        else:
             _LOGGER.debug(
                 "Retrieved properties for device %s: %s", device_id, properties
             )
             return properties
-        except HeimanAuthError as err:
-            raise ConfigEntryAuthFailed(f"Authentication failed: {err}") from err
-        except HeimanConnectionError as err:
-            raise err
-        except Exception as err:
-            _LOGGER.error("Unexpected error getting device properties: %s", err)
-            raise HeimanConnectionError(
-                f"Failed to get device properties: {err}"
-            ) from err
+
+    async def async_get_device_detail(self, device_id: str) -> dict[str, Any] | None:
+        """Get device detail info if supported by the client."""
+        await self._ensure_authenticated()
+
+        cloud_client = self._cloud_client
+        if not cloud_client:
+            raise HeimanConnectionError(message="Client not initialized")
+
+        detail_method = getattr(cloud_client, "async_get_device_detail", None)
+        if not callable(detail_method):
+            return None
+
+        try:
+            return await detail_method(device_id)
+        except TypeError:
+            return await detail_method(device_id=device_id)
 
     async def async_control_device(
         self,
@@ -252,6 +264,14 @@ class HeimanApiClient:
                 property_identifier=property_identifier,
                 value=value,
             )
+        except HeimanAuthError as err:
+            raise ConfigEntryAuthFailed(f"Authentication failed: {err}") from err
+        except HeimanConnectionError:
+            raise
+        except Exception as err:
+            _LOGGER.error("Unexpected error controlling device: %s", err)
+            raise HeimanConnectionError(f"Failed to control device: {err}") from err
+        else:
             _LOGGER.debug(
                 "Successfully controlled device %s: %s=%s",
                 device_id,
@@ -259,13 +279,6 @@ class HeimanApiClient:
                 value,
             )
             return result
-        except HeimanAuthError as err:
-            raise ConfigEntryAuthFailed(f"Authentication failed: {err}") from err
-        except HeimanConnectionError as err:
-            raise err
-        except Exception as err:
-            _LOGGER.error("Unexpected error controlling device: %s", err)
-            raise HeimanConnectionError(f"Failed to control device: {err}") from err
 
     async def close(self) -> None:
         """Close the client."""

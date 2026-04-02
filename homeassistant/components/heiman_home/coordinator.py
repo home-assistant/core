@@ -4,11 +4,14 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from datetime import datetime
+import json
 import logging
 from typing import Any
 
 from heimanconnect import (
     DeviceManagement,
+    DeviceProperty,
+    HeimanConnectionError,
     HeimanDevice,
     HeimanHome,
     HeimanMqttClient,
@@ -18,7 +21,11 @@ from heimanconnect import (
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    OAuth2TokenRequestError,
+    OAuth2TokenRequestReauthError,
+)
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .api import HeimanApiClient
@@ -86,370 +93,230 @@ class HeimanDataUpdateCoordinator(DataUpdateCoordinator[HeimanData]):
             ConfigEntryAuthFailed: If authentication fails
             UpdateFailed: If data fetch fails
         """
+        home_id = self.config_entry.data.get(CONF_HOME_ID)
+        if not home_id:
+            raise UpdateFailed("Home ID not found in config entry")
+
         try:
-            # 获取家庭 ID
-            home_id = self.config_entry.data.get(CONF_HOME_ID)
-            if not home_id:
-                raise UpdateFailed("Home ID not found in config entry")
+            await self._async_maybe_fetch_user_info()
+            await self._async_maybe_fetch_home_info(home_id)
 
-            # 获取用户信息（只在首次更新时获取）
-            if self.data.user_info is None:
-                try:
-                    self.data.user_info = await self.api_client.async_get_user_info()
-                    _LOGGER.debug("Fetched user info: %s", self.data.user_info.email)
-                except ConfigEntryAuthFailed:
-                    raise
-                except Exception as err:
-                    _LOGGER.warning("Failed to fetch user info: %s", err)
-                    self.data.errors["user_info"] = str(err)
+            devices = await self._async_fetch_devices(home_id)
+            old_devices = self.data.devices.copy()
+            self.data.devices = devices
+            self._merge_old_device_state(old_devices, devices)
 
-            # 获取家庭信息（只在首次更新时获取）
-            if self.data.home_info is None:
-                try:
-                    homes = await self.api_client.async_get_homes()
-                    if homes:
-                        self.data.home_info = next(
-                            (h for h in homes if h.home_id == home_id),
-                            homes[0],
-                        )
-                        _LOGGER.debug(
-                            "Fetched home info: %s", self.data.home_info.home_name
-                        )
-                except ConfigEntryAuthFailed:
-                    raise
-                except Exception as err:
-                    _LOGGER.warning("Failed to fetch home info: %s", err)
-                    self.data.errors["home_info"] = str(err)
-
-            # 获取设备列表和详情
-            try:
-                devices_dict = await self.api_client.async_get_devices(home_id=home_id)
-
-                # 应用设备过滤
-                if self.device_management:
-                    devices_list = list(devices_dict.values())
-                    filtered_devices_list = (
-                        self.device_management.filter_manager.get_filtered_devices(
-                            devices_list
-                        )
-                    )
-                    # 转回字典
-                    devices = {d.device_id: d for d in filtered_devices_list}
-                    _LOGGER.info(
-                        "Device filter applied: %d/%d devices included",
-                        len(devices),
-                        len(devices_dict),
-                    )
-                else:
-                    devices = devices_dict
-
-                # 从设备列表中提取固件版本信息
-                for device_id, device in devices.items():
-                    # 记录设备对象的属性和原始数据
-                    _LOGGER.debug(
-                        "Device %s attributes: has raw_data=%s, has firmware_info=%s, firmware_version=%s",
-                        device_id,
-                        hasattr(device, "raw_data"),
-                        hasattr(device, "firmware_info"),
-                        getattr(device, "firmware_version", "NOT_SET"),
-                    )
-
-                    # 首先检查设备的原始数据中是否有 firmwareInfo
-                    if hasattr(device, "raw_data") and device.raw_data:
-                        firmware_info = device.raw_data.get("firmwareInfo", {})
-                        _LOGGER.debug(
-                            "Device %s raw_data.firmwareInfo: %s (type: %s)",
-                            device_id,
-                            firmware_info,
-                            type(firmware_info),
-                        )
-                        if (
-                            isinstance(firmware_info, dict)
-                            and "version" in firmware_info
-                        ):
-                            device.firmware_version = firmware_info.get("version")
-                            _LOGGER.info(
-                                "Extracted firmware version %s for device %s from raw_data.firmwareInfo",
-                                device.firmware_version,
-                                device_id,
-                            )
-
-                    # 尝试从设备的 firmware_info 属性获取固件版本
-                    if hasattr(device, "firmware_info") and device.firmware_info:
-                        if (
-                            isinstance(device.firmware_info, dict)
-                            and "version" in device.firmware_info
-                        ):
-                            # 将固件版本存储到设备对象中供后续使用
-                            device.firmware_version = device.firmware_info.get(
-                                "version"
-                            )
-                            _LOGGER.debug(
-                                "Extracted firmware version %s for device %s from firmware_info",
-                                device.firmware_version,
-                                device_id,
-                            )
-
-                # 为过滤后的设备获取详细信息以填充属性值
-                _LOGGER.debug(
-                    "Fetching device details for %d filtered devices",
-                    len(devices),
-                )
-                for device_id, device in devices.items():
-                    try:
-                        # 通过 cloud_client 获取设备详情
-                        if (
-                            hasattr(self.api_client, "_cloud_client")
-                            and self.api_client._cloud_client
-                        ):
-                            device_detail = await self.api_client._cloud_client._async_get_device_detail(
-                                device_id
-                            )
-                            if device_detail:
-                                _LOGGER.debug(
-                                    "Successfully got device detail for %s", device_id
-                                )
-
-                                # 从 firmwareInfo 中提取固件版本（如果之前没有获取到）
-                                if not device.firmware_version:
-                                    firmware_info = device_detail.get(
-                                        "firmwareInfo", {}
-                                    )
-                                    if (
-                                        isinstance(firmware_info, dict)
-                                        and "version" in firmware_info
-                                    ):
-                                        device.firmware_version = firmware_info.get(
-                                            "version"
-                                        )
-                                        _LOGGER.debug(
-                                            "Extracted firmware version %s for device %s from device detail API",
-                                            device.firmware_version,
-                                            device_id,
-                                        )
-
-                                # 从 deriveMetadata 中提取属性值并更新到设备对象
-                                if "deriveMetadata" in device_detail:
-                                    import json
-
-                                    try:
-                                        metadata_str = device_detail.get(
-                                            "deriveMetadata", ""
-                                        )
-                                        _LOGGER.debug(
-                                            "Raw deriveMetadata for %s: %s",
-                                            device_id,
-                                            metadata_str[:200]
-                                            if metadata_str
-                                            else None,
-                                        )
-                                        if metadata_str:
-                                            # deriveMetadata is a JSON string that parses to a list of property objects
-                                            metadata_list = json.loads(metadata_str)
-                                            _LOGGER.debug(
-                                                "Parsed deriveMetadata for %s: %d items",
-                                                device_id,
-                                                len(metadata_list)
-                                                if isinstance(metadata_list, list)
-                                                else 0,
-                                            )
-
-                                            # Iterate through the list and update properties
-                                            if isinstance(metadata_list, list):
-                                                for prop_item in metadata_list:
-                                                    prop_id = prop_item.get(
-                                                        "property", ""
-                                                    )
-                                                    prop_value = prop_item.get("value")
-
-                                                    # Also check 'id' field if 'property' is not available
-                                                    if not prop_id:
-                                                        prop_id = prop_item.get(
-                                                            "id", ""
-                                                        )
-
-                                                    if (
-                                                        prop_id
-                                                        and prop_value is not None
-                                                    ):
-                                                        # Special handling for DeviceINFO object
-                                                        # Extract MAC, DBM, DBM_Level, IP from nested structure
-                                                        if (
-                                                            prop_id == "DeviceINFO"
-                                                            and isinstance(
-                                                                prop_value, dict
-                                                            )
-                                                        ):
-                                                            # Extract MAC address
-                                                            mac_value = prop_value.get(
-                                                                "MAC"
-                                                            )
-                                                            if (
-                                                                mac_value
-                                                                and "DeviceINFO_MAC"
-                                                                in device.properties
-                                                            ):
-                                                                device.properties[
-                                                                    "DeviceINFO_MAC"
-                                                                ].value = mac_value
-                                                                _LOGGER.debug(
-                                                                    "Extracted MAC from DeviceINFO for %s: %s",
-                                                                    device_id,
-                                                                    mac_value,
-                                                                )
-
-                                                            # Extract DBM (signal strength in dBm)
-                                                            dbm_value = prop_value.get(
-                                                                "DBM"
-                                                            )
-                                                            if (
-                                                                dbm_value is not None
-                                                                and "DeviceINFO_DBM"
-                                                                in device.properties
-                                                            ):
-                                                                device.properties[
-                                                                    "DeviceINFO_DBM"
-                                                                ].value = dbm_value
-                                                                _LOGGER.debug(
-                                                                    "Extracted DBM from DeviceINFO for %s: %s",
-                                                                    device_id,
-                                                                    dbm_value,
-                                                                )
-
-                                                            # Extract DBM_Level (signal strength level)
-                                                            dbm_level_value = (
-                                                                prop_value.get("DBM")
-                                                            )
-                                                            if (
-                                                                dbm_level_value
-                                                                is not None
-                                                                and "DeviceINFO_DBM_Level"
-                                                                in device.properties
-                                                            ):
-                                                                # Convert numeric DBM to level string
-                                                                dbm_level = self._convert_dbm_to_level(
-                                                                    dbm_level_value
-                                                                )
-                                                                device.properties[
-                                                                    "DeviceINFO_DBM_Level"
-                                                                ].value = dbm_level
-                                                                _LOGGER.debug(
-                                                                    "Extracted DBM_Level from DeviceINFO for %s: %s -> %s",
-                                                                    device_id,
-                                                                    dbm_level_value,
-                                                                    dbm_level,
-                                                                )
-
-                                                            # Extract IP address
-                                                            ip_value = prop_value.get(
-                                                                "IP"
-                                                            )
-                                                            if (
-                                                                ip_value
-                                                                and "DeviceINFO_IP"
-                                                                in device.properties
-                                                            ):
-                                                                device.properties[
-                                                                    "DeviceINFO_IP"
-                                                                ].value = ip_value
-                                                                _LOGGER.debug(
-                                                                    "Extracted IP from DeviceINFO for %s: %s",
-                                                                    device_id,
-                                                                    ip_value,
-                                                                )
-                                                        # Update regular property
-                                                        elif (
-                                                            prop_id in device.properties
-                                                        ):
-                                                            old_value = (
-                                                                device.properties[
-                                                                    prop_id
-                                                                ].value
-                                                            )
-                                                            device.properties[
-                                                                prop_id
-                                                            ].value = prop_value
-                                                            _LOGGER.debug(
-                                                                "Updated property %s for device %s: %s -> %s",
-                                                                prop_id,
-                                                                device_id,
-                                                                old_value,
-                                                                prop_value,
-                                                            )
-                                                        else:
-                                                            _LOGGER.debug(
-                                                                "Property %s not found in device %s properties",
-                                                                prop_id,
-                                                                device_id,
-                                                            )
-                                                    else:
-                                                        _LOGGER.debug(
-                                                            "Skipping property with no id or value: %s",
-                                                            prop_item,
-                                                        )
-                                    except Exception as err:
-                                        _LOGGER.error(
-                                            "Failed to parse deriveMetadata for %s: %s",
-                                            device_id,
-                                            err,
-                                            exc_info=True,
-                                        )
-                    except Exception as err:
-                        _LOGGER.debug(
-                            "Failed to get detail for device %s: %s",
-                            device_id,
-                            err,
-                        )
-
-                # 更新设备数据
-                old_devices = self.data.devices.copy()
-                self.data.devices = devices
-
-                # 合并旧设备的状态（如果新设备没有该属性）
-                for device_id, new_device in devices.items():
-                    if device_id in old_devices:
-                        old_device = old_devices[device_id]
-                        # 保留旧设备的在线状态和其他动态属性
-                        for prop_id, old_prop in old_device.properties.items():
-                            if prop_id in new_device.properties:
-                                # 保持最新值
-                                if old_prop.value is not None:
-                                    new_device.properties[
-                                        prop_id
-                                    ].value = old_prop.value
-
-                        # 复制在线状态
-                        if not new_device.online and old_device.online:
-                            new_device.online = old_device.online
-
-                _LOGGER.debug("Fetched %d devices", len(devices))
-
-            except ConfigEntryAuthFailed:
-                raise
-            except Exception as err:
-                _LOGGER.error(
-                    "Failed to fetch devices: %s\nException type: %s\nTraceback available in debug logs",
-                    err,
-                    type(err).__name__,
-                    exc_info=True,  # Add full traceback for debugging
-                )
-                self.data.errors["devices"] = str(err)
-                # 如果之前有设备数据，保持不变
-                if not self.data.devices:
-                    raise UpdateFailed(f"Failed to fetch devices: {err}") from err
-
-            # 更新最后更新时间
             self.data.last_update = datetime.now()
             self.data.errors.clear()
-
-            return self.data
-
         except ConfigEntryAuthFailed:
             _LOGGER.error("Authentication failed during data update")
             raise
-        except Exception as err:
-            _LOGGER.error("Unexpected error during data update: %s", err)
+        except HeimanConnectionError as err:
             raise UpdateFailed(f"Error fetching Heiman data: {err}") from err
+        else:
+            return self.data
+
+    async def _async_maybe_fetch_user_info(self) -> None:
+        if self.data.user_info is not None:
+            return
+
+        try:
+            user_info = await self.api_client.async_get_user_info()
+        except ConfigEntryAuthFailed:
+            raise
+        except HeimanConnectionError as err:
+            _LOGGER.warning("Failed to fetch user info: %s", err)
+            self.data.errors["user_info"] = str(err)
+        else:
+            self.data.user_info = user_info
+            _LOGGER.debug("Fetched user info: %s", user_info.email)
+
+    async def _async_maybe_fetch_home_info(self, home_id: str) -> None:
+        if self.data.home_info is not None:
+            return
+
+        try:
+            homes = await self.api_client.async_get_homes()
+        except ConfigEntryAuthFailed:
+            raise
+        except HeimanConnectionError as err:
+            _LOGGER.warning("Failed to fetch home info: %s", err)
+            self.data.errors["home_info"] = str(err)
+            return
+
+        if not homes:
+            return
+
+        self.data.home_info = next((h for h in homes if h.home_id == home_id), homes[0])
+        _LOGGER.debug("Fetched home info: %s", self.data.home_info.home_name)
+
+    async def _async_fetch_devices(self, home_id: str) -> dict[str, HeimanDevice]:
+        try:
+            devices_dict = await self.api_client.async_get_devices(home_id=home_id)
+        except ConfigEntryAuthFailed:
+            raise
+        except HeimanConnectionError as err:
+            _LOGGER.error("Failed to fetch devices: %s", err)
+            self.data.errors["devices"] = str(err)
+            if not self.data.devices:
+                raise UpdateFailed(f"Failed to fetch devices: {err}") from err
+            return self.data.devices
+
+        devices = self._apply_device_filter(devices_dict)
+        self._extract_firmware_versions(devices)
+        await self._async_update_device_details(devices)
+
+        _LOGGER.debug("Fetched %d devices", len(devices))
+        return devices
+
+    def _apply_device_filter(
+        self, devices_dict: dict[str, HeimanDevice]
+    ) -> dict[str, HeimanDevice]:
+        if not self.device_management:
+            return devices_dict
+
+        devices_list = list(devices_dict.values())
+        filtered_devices_list = (
+            self.device_management.filter_manager.get_filtered_devices(devices_list)
+        )
+        devices = {device.device_id: device for device in filtered_devices_list}
+        _LOGGER.info(
+            "Device filter applied: %d/%d devices included",
+            len(devices),
+            len(devices_dict),
+        )
+        return devices
+
+    def _extract_firmware_versions(self, devices: dict[str, HeimanDevice]) -> None:
+        for device_id, device in devices.items():
+            _LOGGER.debug(
+                "Device %s attributes: raw_data=%s firmware_info=%s firmware_version=%s",
+                device_id,
+                hasattr(device, "raw_data"),
+                hasattr(device, "firmware_info"),
+                getattr(device, "firmware_version", "NOT_SET"),
+            )
+
+            if hasattr(device, "raw_data") and device.raw_data:
+                firmware_info = device.raw_data.get("firmwareInfo", {})
+                if isinstance(firmware_info, dict) and "version" in firmware_info:
+                    device.firmware_version = firmware_info.get("version")
+                    _LOGGER.info(
+                        "Extracted firmware version %s for device %s from raw_data",
+                        device.firmware_version,
+                        device_id,
+                    )
+
+            if hasattr(device, "firmware_info") and device.firmware_info:
+                firmware_info = device.firmware_info
+                if isinstance(firmware_info, dict) and "version" in firmware_info:
+                    device.firmware_version = firmware_info.get("version")
+                    _LOGGER.debug(
+                        "Extracted firmware version %s for device %s from firmware_info",
+                        device.firmware_version,
+                        device_id,
+                    )
+
+    async def _async_update_device_details(
+        self, devices: dict[str, HeimanDevice]
+    ) -> None:
+        _LOGGER.debug("Fetching device details for %d devices", len(devices))
+
+        to_level = self._convert_dbm_to_level
+        for device_id, device in devices.items():
+            try:
+                device_detail = await self.api_client.async_get_device_detail(device_id)
+            except HeimanConnectionError as err:
+                _LOGGER.debug("Failed to get detail for device %s: %s", device_id, err)
+                continue
+
+            if not device_detail:
+                continue
+
+            if not device.firmware_version:
+                firmware_info = device_detail.get("firmwareInfo", {})
+                if isinstance(firmware_info, dict) and "version" in firmware_info:
+                    device.firmware_version = firmware_info.get("version")
+
+            metadata_str = device_detail.get("deriveMetadata")
+            if metadata_str:
+                self._apply_derive_metadata(
+                    device_id=device_id,
+                    device=device,
+                    metadata_str=metadata_str,
+                    to_level=to_level,
+                )
+
+    def _apply_derive_metadata(
+        self,
+        device_id: str,
+        device: HeimanDevice,
+        metadata_str: str,
+        to_level,
+    ) -> None:
+        try:
+            metadata_list = json.loads(metadata_str)
+        except ValueError, TypeError:
+            _LOGGER.exception("Failed to parse deriveMetadata for %s", device_id)
+            return
+
+        if not isinstance(metadata_list, list):
+            return
+
+        for prop_item in metadata_list:
+            prop_id = prop_item.get("property", "") or prop_item.get("id", "")
+            prop_value = prop_item.get("value")
+
+            if not prop_id or prop_value is None:
+                continue
+
+            if prop_id == "DeviceINFO" and isinstance(prop_value, dict):
+                self._apply_device_info(device_id, device, prop_value, to_level)
+                continue
+
+            if prop_id not in device.properties:
+                continue
+
+            device.properties[prop_id].value = prop_value
+
+    def _apply_device_info(
+        self,
+        device_id: str,
+        device: HeimanDevice,
+        device_info: dict[str, Any],
+        to_level,
+    ) -> None:
+        mac_value = device_info.get("MAC")
+        if mac_value and "DeviceINFO_MAC" in device.properties:
+            device.properties["DeviceINFO_MAC"].value = mac_value
+
+        dbm_value = device_info.get("DBM")
+        if dbm_value is not None and "DeviceINFO_DBM" in device.properties:
+            device.properties["DeviceINFO_DBM"].value = dbm_value
+
+        if dbm_value is not None and "DeviceINFO_DBM_Level" in device.properties:
+            device.properties["DeviceINFO_DBM_Level"].value = to_level(dbm_value)
+
+        ip_value = device_info.get("IP")
+        if ip_value and "DeviceINFO_IP" in device.properties:
+            device.properties["DeviceINFO_IP"].value = ip_value
+
+    @staticmethod
+    def _merge_old_device_state(
+        old_devices: dict[str, HeimanDevice],
+        new_devices: dict[str, HeimanDevice],
+    ) -> None:
+        for device_id, new_device in new_devices.items():
+            old_device = old_devices.get(device_id)
+            if not old_device:
+                continue
+
+            for prop_id, old_prop in old_device.properties.items():
+                if prop_id in new_device.properties and old_prop.value is not None:
+                    new_device.properties[prop_id].value = old_prop.value
+
+            if not new_device.online and old_device.online:
+                new_device.online = old_device.online
 
     def get_device(self, device_id: str) -> HeimanDevice | None:
         """Get device by ID.
@@ -512,8 +379,6 @@ class HeimanDataUpdateCoordinator(DataUpdateCoordinator[HeimanData]):
             return
 
         try:
-            # Get authentication data from config entry or API client
-            access_token = None
             user_id = self.config_entry.data.get(CONF_USER_ID)
 
             # Try to get from config first
@@ -523,31 +388,17 @@ class HeimanDataUpdateCoordinator(DataUpdateCoordinator[HeimanData]):
             if not access_token and self.oauth_session:
                 try:
                     token_data = await self.oauth_session.async_ensure_token_valid()
-                    _LOGGER.debug("Token data from session: %s", type(token_data))
+                except (OAuth2TokenRequestError, OAuth2TokenRequestReauthError) as err:
+                    _LOGGER.warning("Failed to get access_token from session: %s", err)
+                else:
                     if token_data:
                         access_token = token_data.get("access_token")
-                        _LOGGER.debug(
-                            "Retrieved access_token from session: %s...",
-                            access_token[:20] if access_token else None,
-                        )
                     else:
                         _LOGGER.warning("async_ensure_token_valid() returned None")
-                except Exception as err:
-                    _LOGGER.warning("Failed to get access_token from session: %s", err)
 
             # Final fallback: get token from api_client
-            if not access_token and hasattr(self.api_client, "_get_access_token"):
-                try:
-                    access_token = self.api_client._get_access_token()
-                    if access_token:
-                        _LOGGER.debug(
-                            "Retrieved access_token from api_client: %s...",
-                            access_token[:20],
-                        )
-                except Exception as err:
-                    _LOGGER.warning(
-                        "Failed to get access_token from api_client: %s", err
-                    )
+            if not access_token:
+                access_token = self.api_client.get_access_token()
 
             if not access_token:
                 _LOGGER.warning(
@@ -561,30 +412,13 @@ class HeimanDataUpdateCoordinator(DataUpdateCoordinator[HeimanData]):
 
             # Get user display name (prefer nickName, fallback to email)
             user_display_name = None
-            try:
-                if self.data.user_info:
-                    # Try to get nickName first
-                    user_display_name = getattr(self.data.user_info, "nick_name", None)
-                    if not user_display_name:
-                        # Fallback to email
-                        user_display_name = getattr(self.data.user_info, "email", None)
-                    _LOGGER.debug(
-                        "Using user display name for MQTT: %s",
-                        user_display_name,
-                    )
-            except Exception as err:
-                _LOGGER.warning("Failed to get user display name: %s", err)
+            if self.data.user_info:
+                user_display_name = getattr(self.data.user_info, "nick_name", None)
+                if not user_display_name:
+                    user_display_name = getattr(self.data.user_info, "email", None)
 
             # Get cloud client reference for child device detection
-            cloud_client = None
-            try:
-                if hasattr(self.api_client, "_cloud_client"):
-                    cloud_client = self.api_client._cloud_client
-                    _LOGGER.debug(
-                        "Got cloud_client reference for MQTT child device support"
-                    )
-            except Exception as err:
-                _LOGGER.warning("Failed to get cloud_client reference: %s", err)
+            cloud_client = self.api_client.cloud_client
 
             # Get devices dictionary for child device detection
             devices_dict = dict(self.data.devices) if self.data.devices else {}
@@ -612,7 +446,7 @@ class HeimanDataUpdateCoordinator(DataUpdateCoordinator[HeimanData]):
 
         except HeimanMQTTError as err:
             _LOGGER.error("Failed to initialize MQTT client: %s", err)
-        except Exception as err:
+        except (OSError, RuntimeError, ValueError) as err:
             _LOGGER.error("Unexpected error initializing MQTT client: %s", err)
 
     def _on_device_property_update(
@@ -650,8 +484,6 @@ class HeimanDataUpdateCoordinator(DataUpdateCoordinator[HeimanData]):
                 )
             else:
                 # Add new property if it doesn't exist
-                from heimanconnect import DeviceProperty
-
                 device.properties[prop_name] = DeviceProperty(
                     identifier=prop_name,
                     name=prop_name,
@@ -710,8 +542,6 @@ class HeimanDataUpdateCoordinator(DataUpdateCoordinator[HeimanData]):
                         )
                     else:
                         # Add new property if it doesn't exist
-                        from heimanconnect import DeviceProperty
-
                         device.properties[prop_name] = DeviceProperty(
                             identifier=prop_name,
                             name=prop_name,
@@ -736,7 +566,7 @@ class HeimanDataUpdateCoordinator(DataUpdateCoordinator[HeimanData]):
             else:
                 _LOGGER.warning("No properties returned from device %s", device_id)
 
-        except Exception as err:
+        except (HeimanMQTTError, OSError, RuntimeError) as err:
             _LOGGER.error(
                 "Failed to read properties from device %s: %s", device_id, err
             )

@@ -6,18 +6,8 @@ import logging
 from pathlib import Path
 import sys
 
-_LOGGER = logging.getLogger(__name__)
-
-# 添加本地 heimanconnect 库路径（Docker 环境）
-_custom_components_path = Path("/config/custom_components")
-if str(_custom_components_path) not in sys.path:
-    sys.path.insert(0, str(_custom_components_path))
-    _LOGGER.info(f"Added custom components path: {_custom_components_path}")
-
-from heimanconnect import DeviceManagement
-
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_TOKEN, Platform
+from homeassistant.const import CONF_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import (
     ConfigEntryAuthFailed,
@@ -49,6 +39,17 @@ from .const import (
     SERVICE_READ_DEVICE_PROPERTIES,
 )
 from .coordinator import HeimanDataUpdateCoordinator
+
+_LOGGER = logging.getLogger(__name__)
+
+try:
+    from heimanconnect import DeviceManagement
+except ModuleNotFoundError:
+    custom_components_path = Path("/config/custom_components")
+    if str(custom_components_path) not in sys.path:
+        sys.path.insert(0, str(custom_components_path))
+        _LOGGER.info("Added custom components path: %s", custom_components_path)
+    from heimanconnect import DeviceManagement
 
 type HeimanConfigEntry = ConfigEntry[HeimanDataUpdateCoordinator]
 
@@ -169,7 +170,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: HeimanConfigEntry) -> b
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
-async def async_migrate_entry(hass: HomeAssistant, entry: HeimanConfigEntry) -> bool:
+async def async_migrate_entry(_hass: HomeAssistant, entry: HeimanConfigEntry) -> bool:
     """Migrate old configuration entries."""
     _LOGGER.debug(
         "Migrating configuration from version %s.%s",

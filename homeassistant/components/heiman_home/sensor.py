@@ -158,7 +158,7 @@ class HeimanSensorEntity(CoordinatorEntity[HeimanDataUpdateCoordinator], SensorE
             self._attr_state_class = SensorStateClass.MEASUREMENT
             # Non-numeric sensors should not have state_class set
 
-    def _apply_icon(self, property_identifier: str, prop) -> None:
+    def _apply_icon(self, property_identifier: str, _prop) -> None:
         """Apply icon based on property type.
 
         Args:
@@ -177,7 +177,9 @@ class HeimanSensorEntity(CoordinatorEntity[HeimanDataUpdateCoordinator], SensorE
         if prop_lower in icons_config:
             self._attr_icon = icons_config[prop_lower]
             _LOGGER.debug(
-                f"Applied icon from lowercase config: {self._attr_icon} for {property_identifier}"
+                "Applied icon from lowercase config: %s for %s",
+                self._attr_icon,
+                property_identifier,
             )
             return
 

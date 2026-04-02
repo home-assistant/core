@@ -2,7 +2,7 @@
 
 from json import JSONDecodeError
 import logging
-from typing import cast
+from typing import Any, cast
 
 from aiohttp import BasicAuth, ClientError
 
@@ -20,7 +20,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 async def async_get_auth_implementation(
-    hass: HomeAssistant, auth_domain: str, credential: ClientCredential
+    hass: HomeAssistant, _auth_domain: str, credential: ClientCredential
 ) -> AuthImplementation:
     """Return auth implementation."""
     return HeimanOAuth2Implementation(
@@ -37,7 +37,7 @@ async def async_get_auth_implementation(
 class HeimanOAuth2Implementation(AuthImplementation):
     """OAuth2 implementation for Heiman."""
 
-    async def _token_request(self, data: dict) -> dict:
+    async def _token_request(self, data: dict[str, Any]) -> dict[str, Any]:
         """Make a token request."""
         session = async_get_clientsession(self.hass)
 
@@ -60,4 +60,4 @@ class HeimanOAuth2Implementation(AuthImplementation):
                 error_description,
             )
         resp.raise_for_status()
-        return cast(dict, await resp.json())
+        return cast(dict[str, Any], await resp.json())
