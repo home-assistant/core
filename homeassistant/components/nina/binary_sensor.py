@@ -1,4 +1,4 @@
-"""NINA sensor platform."""
+"""NINA binary sensor platform."""
 
 from __future__ import annotations
 
@@ -88,15 +88,19 @@ class NINAMessage(NinaEntity, BinarySensorEntity):
         data = self._get_warning_data()
 
         return {
-            ATTR_HEADLINE: data.headline,
-            ATTR_DESCRIPTION: data.description,
-            ATTR_SENDER: data.sender,
-            ATTR_SEVERITY: data.severity,
-            ATTR_RECOMMENDED_ACTIONS: data.recommended_actions,
-            ATTR_AFFECTED_AREAS: data.affected_areas,
-            ATTR_WEB: data.web,
+            ATTR_HEADLINE: data.headline,  # Deprecated, remove in 2026.11
+            ATTR_DESCRIPTION: data.description,  # Deprecated, remove in 2026.11
+            ATTR_SENDER: data.sender,  # Deprecated, remove in 2026.11
+            ATTR_SEVERITY: data.severity or "Unknown",  # Deprecated, remove in 2026.11
+            ATTR_RECOMMENDED_ACTIONS: data.recommended_actions,  # Deprecated, remove in 2026.11
+            ATTR_AFFECTED_AREAS: data.affected_areas,  # Deprecated, remove in 2026.11
+            ATTR_WEB: data.more_info_url,  # Deprecated, remove in 2026.11
             ATTR_ID: data.id,
-            ATTR_SENT: data.sent,
-            ATTR_START: data.start,
-            ATTR_EXPIRES: data.expires,
+            ATTR_SENT: data.sent.isoformat(),  # Deprecated, remove in 2026.11
+            ATTR_START: data.start.isoformat()
+            if data.start
+            else "",  # Deprecated, remove in 2026.11
+            ATTR_EXPIRES: data.expires.isoformat()
+            if data.expires
+            else "",  # Deprecated, remove in 2026.11
         }

@@ -1,19 +1,16 @@
 {
   "common": {
-    "trigger_behavior_description": "The behavior of the targeted counters to trigger on.",
-    "trigger_behavior_name": "Behavior"
+    "trigger_behavior_name": "Trigger when"
   },
   "conditions": {
     "is_value": {
       "description": "Tests the value of one or more counters.",
       "fields": {
         "behavior": {
-          "description": "How the state should match on the targeted counters.",
-          "name": "Behavior"
+          "name": "Condition passes if"
         },
         "threshold": {
-          "description": "What to test for and threshold values.",
-          "name": "Threshold"
+          "name": "Threshold type"
         }
       },
       "name": "Counter value"
@@ -98,7 +95,6 @@
       "description": "Triggers after one or more counters reach their maximum value.",
       "fields": {
         "behavior": {
-          "description": "[%key:component::counter::common::trigger_behavior_description%]",
           "name": "[%key:component::counter::common::trigger_behavior_name%]"
         }
       },
@@ -108,7 +104,6 @@
       "description": "Triggers after one or more counters reach their minimum value.",
       "fields": {
         "behavior": {
-          "description": "[%key:component::counter::common::trigger_behavior_description%]",
           "name": "[%key:component::counter::common::trigger_behavior_name%]"
         }
       },
@@ -118,7 +113,6 @@
       "description": "Triggers after one or more counters are reset.",
       "fields": {
         "behavior": {
-          "description": "[%key:component::counter::common::trigger_behavior_description%]",
           "name": "[%key:component::counter::common::trigger_behavior_name%]"
         }
       },
