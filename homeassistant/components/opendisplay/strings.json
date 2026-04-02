@@ -26,16 +26,18 @@
         "data_description": {
           "encryption_key": "Enter the 32-character hexadecimal AES-128 encryption key for this device."
         },
-        "description": "The device {name} requires an encryption key."
+        "description": "{name} requires an encryption key to connect.",
+        "title": "Encryption required"
       },
       "reauth_confirm": {
         "data": {
           "encryption_key": "Encryption key"
         },
         "data_description": {
-          "encryption_key": "Enter the correct 32-character hexadecimal encryption key, or leave blank to disable encryption."
+          "encryption_key": "Enter the correct 32-character hexadecimal encryption key, or leave blank to remove encryption."
         },
-        "description": "Re-enter the encryption key for {name}."
+        "description": "Authentication failed for {name}. Enter the correct encryption key, or leave blank if encryption has been disabled on the device.",
+        "title": "Re-authentication required"
       },
       "user": {
         "data": {
@@ -57,7 +59,7 @@
   },
   "exceptions": {
     "authentication_error": {
-      "message": "Authentication failed. Re-authentication has been initiated — please update the encryption key."
+      "message": "Authentication failed. Please update the encryption key."
     },
     "device_not_found": {
       "message": "Could not find Bluetooth device with address `{address}`."
