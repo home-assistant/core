@@ -2001,6 +2001,34 @@ async def test_invalid_entity_id_report_usage(
     assert entity.platform is not None
 
 
+async def test_wrong_domain_entity_id_report_usage(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test that setting an entity_id with wrong domain reports usage."""
+    platform = MockEntityPlatform(hass)
+    entity = MockEntity(entity_id="wrong_domain.some_entity", unique_id="unique")
+
+    mock_integration = Mock(is_built_in=True, domain="test_platform")
+    with (
+        caplog.at_level(logging.WARNING),
+        patch(
+            "homeassistant.helpers.frame.async_get_issue_integration",
+            return_value=mock_integration,
+        ),
+    ):
+        await platform.async_add_entities([entity])
+
+    assert (
+        "Detected that integration 'test_platform' "
+        "sets an entity ID with wrong domain: 'wrong_domain.some_entity'. "
+        "Expected domain is 'test_domain'"
+    ) in caplog.text
+
+    # Ensure the entity was still added
+    assert entity.hass is not None
+    assert entity.platform is not None
+
+
 class MockBlockingEntity(MockEntity):
     """Class to mock an entity that will block adding entities."""
 
