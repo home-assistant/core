@@ -41,6 +41,8 @@
     'attributes': ReadOnlyDict({
       'friendly_name': 'NRGkick Test GPS tracker',
       'gps_accuracy': 1.5,
+      'in_zones': list([
+      ]),
       'latitude': 47.0748,
       'longitude': 15.4376,
       'source_type': <SourceType.GPS: 'gps'>,

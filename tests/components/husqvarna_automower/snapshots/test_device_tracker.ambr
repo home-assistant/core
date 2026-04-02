@@ -41,6 +41,8 @@
     'attributes': ReadOnlyDict({
       'friendly_name': 'Test Mower 1',
       'gps_accuracy': 0,
+      'in_zones': list([
+      ]),
       'latitude': 35.5402913,
       'longitude': -82.5527055,
       'source_type': <SourceType.GPS: 'gps'>,

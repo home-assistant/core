@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import asyncio
-from typing import final
+from typing import Any, final
 
 from propcache.api import cached_property
 
@@ -18,7 +18,7 @@ from homeassistant.const import (
     STATE_NOT_HOME,
     EntityCategory,
 )
-from homeassistant.core import Event, HomeAssistant, callback
+from homeassistant.core import Event, HomeAssistant, State, callback
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.device_registry import (
     DeviceInfo,
@@ -33,6 +33,7 @@ from homeassistant.util.hass_dict import HassKey
 
 from .const import (
     ATTR_HOST_NAME,
+    ATTR_IN_ZONES,
     ATTR_IP,
     ATTR_MAC,
     ATTR_SOURCE_TYPE,
@@ -223,6 +224,9 @@ class TrackerEntity(
     _attr_longitude: float | None = None
     _attr_source_type: SourceType = SourceType.GPS
 
+    __active_zone: State | None = None
+    __in_zones: list[str] | None = None
+
     @cached_property
     def should_poll(self) -> bool:
         """No polling for entities that have location pushed."""
@@ -256,6 +260,18 @@ class TrackerEntity(
         """Return longitude value of the device."""
         return self._attr_longitude
 
+    @callback
+    def _async_write_ha_state(self) -> None:
+        """Calculate active zones."""
+        if self.latitude is not None and self.longitude is not None:
+            self.__active_zone, self.__in_zones = zone.async_in_zones(
+                self.hass, self.latitude, self.longitude, self.location_accuracy
+            )
+        else:
+            self.__active_zone = None
+            self.__in_zones = None
+        super()._async_write_ha_state()
+
     @property
     def state(self) -> str | None:
         """Return the state of the device."""
@@ -263,9 +279,7 @@ class TrackerEntity(
             return self.location_name
 
         if self.latitude is not None and self.longitude is not None:
-            zone_state = zone.async_active_zone(
-                self.hass, self.latitude, self.longitude, self.location_accuracy
-            )
+            zone_state = self.__active_zone
             if zone_state is None:
                 state = STATE_NOT_HOME
             elif zone_state.entity_id == zone.ENTITY_ID_HOME:
@@ -278,12 +292,13 @@ class TrackerEntity(
 
     @final
     @property
-    def state_attributes(self) -> dict[str, StateType]:
+    def state_attributes(self) -> dict[str, Any]:
         """Return the device state attributes."""
-        attr: dict[str, StateType] = {}
+        attr: dict[str, Any] = {ATTR_IN_ZONES: []}
         attr.update(super().state_attributes)
 
         if self.latitude is not None and self.longitude is not None:
+            attr[ATTR_IN_ZONES] = self.__in_zones or []
             attr[ATTR_LATITUDE] = self.latitude
             attr[ATTR_LONGITUDE] = self.longitude
             attr[ATTR_GPS_ACCURACY] = self.location_accuracy

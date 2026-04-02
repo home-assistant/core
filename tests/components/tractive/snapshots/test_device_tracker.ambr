@@ -42,6 +42,8 @@
       'battery_level': 88,
       'friendly_name': 'Test Pet Tracker',
       'gps_accuracy': 99,
+      'in_zones': list([
+      ]),
       'latitude': 22.333,
       'longitude': 44.555,
       'source_type': <SourceType.GPS: 'gps'>,
