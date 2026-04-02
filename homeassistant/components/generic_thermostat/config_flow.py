@@ -30,8 +30,11 @@ from .const import (
     CONF_MIN_TEMP,
     CONF_PRESETS,
     CONF_SENSOR,
+    CONF_SENSOR_ERROR_ACTION,
+    DEFAULT_SENSOR_ERROR_ACTION,
     DEFAULT_TOLERANCE,
     DOMAIN,
+    SENSOR_ERROR_ACTIONS,
 )
 
 OPTIONS_SCHEMA = {
@@ -65,6 +68,11 @@ OPTIONS_SCHEMA = {
     ),
     vol.Optional(CONF_KEEP_ALIVE): selector.DurationSelector(
         selector.DurationSelectorConfig(allow_negative=False)
+    ),
+    vol.Optional(
+        CONF_SENSOR_ERROR_ACTION, default=DEFAULT_SENSOR_ERROR_ACTION
+    ): selector.SelectSelector(
+        selector.SelectSelectorConfig(options=SENSOR_ERROR_ACTIONS)
     ),
     vol.Optional(CONF_MAX_DUR): selector.DurationSelector(
         selector.DurationSelectorConfig(allow_negative=False)

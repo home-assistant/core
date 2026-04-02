@@ -79,9 +79,14 @@ from .const import (
     CONF_MIN_TEMP,
     CONF_PRESETS,
     CONF_SENSOR,
+    CONF_SENSOR_ERROR_ACTION,
+    DEFAULT_SENSOR_ERROR_ACTION,
     DEFAULT_TOLERANCE,
     DOMAIN,
     PLATFORMS,
+    SENSOR_ERROR_ACTION_FORCE_OFF,
+    SENSOR_ERROR_ACTION_FORCE_ON,
+    SENSOR_ERROR_ACTIONS,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -113,6 +118,9 @@ PLATFORM_SCHEMA_COMMON = vol.Schema(
         vol.Optional(CONF_HOT_TOLERANCE, default=DEFAULT_TOLERANCE): vol.Coerce(float),
         vol.Optional(CONF_TARGET_TEMP): vol.Coerce(float),
         vol.Optional(CONF_KEEP_ALIVE): cv.positive_time_period,
+        vol.Optional(
+            CONF_SENSOR_ERROR_ACTION, default=DEFAULT_SENSOR_ERROR_ACTION
+        ): vol.In(SENSOR_ERROR_ACTIONS),
         vol.Optional(CONF_INITIAL_HVAC_MODE): vol.In(
             [HVACMode.COOL, HVACMode.HEAT, HVACMode.OFF]
         ),
@@ -181,6 +189,7 @@ async def _async_setup_config(
     cold_tolerance: float = config[CONF_COLD_TOLERANCE]
     hot_tolerance: float = config[CONF_HOT_TOLERANCE]
     keep_alive: timedelta | None = config.get(CONF_KEEP_ALIVE)
+    sensor_error_action: str = config[CONF_SENSOR_ERROR_ACTION]
     initial_hvac_mode: HVACMode | None = config.get(CONF_INITIAL_HVAC_MODE)
     presets: dict[str, float] = {
         key: config[value] for key, value in CONF_PRESETS.items() if value in config
@@ -206,6 +215,7 @@ async def _async_setup_config(
                 cold_tolerance=cold_tolerance,
                 hot_tolerance=hot_tolerance,
                 keep_alive=keep_alive,
+                sensor_error_action=sensor_error_action,
                 initial_hvac_mode=initial_hvac_mode,
                 presets=presets,
                 precision=precision,
@@ -239,6 +249,7 @@ class GenericThermostat(ClimateEntity, RestoreEntity):
         cold_tolerance: float,
         hot_tolerance: float,
         keep_alive: timedelta | None,
+        sensor_error_action: str,
         initial_hvac_mode: HVACMode | None,
         presets: dict[str, float],
         precision: float | None,
@@ -267,6 +278,7 @@ class GenericThermostat(ClimateEntity, RestoreEntity):
         self._last_context_id: str | None = None
         self._hot_tolerance = hot_tolerance
         self._keep_alive = keep_alive
+        self._sensor_error_action = sensor_error_action
         self._hvac_mode = initial_hvac_mode
         self._saved_target_temp = target_temp or next(iter(presets.values()), None)
         self._temp_precision = precision
@@ -428,6 +440,14 @@ class GenericThermostat(ClimateEntity, RestoreEntity):
         """Return the temperature we try to reach."""
         return self._target_temp
 
+    @property
+    def extra_state_attributes(self) -> dict[str, Any]:
+        """Return optional state attributes."""
+        return {
+            "sensor_error": self._cur_temp is None,
+            "sensor_error_action": self._sensor_error_action,
+        }
+
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set hvac mode."""
         if hvac_mode == HVACMode.HEAT:
@@ -574,9 +594,7 @@ class GenericThermostat(ClimateEntity, RestoreEntity):
 
             assert self._target_temp is not None
             if self._cur_temp is None:
-                # Keeping current behaviour
-                too_cold = False
-                too_hot = False
+                too_cold, too_hot = self._sensor_error_tolerances()
             else:
                 too_cold = self._target_temp > self._cur_temp + self._cold_tolerance
                 too_hot = self._target_temp < self._cur_temp - self._hot_tolerance
@@ -629,6 +647,16 @@ class GenericThermostat(ClimateEntity, RestoreEntity):
                     "Keep-alive - Turning off heater %s", self.heater_entity_id
                 )
                 await self._async_heater_turn_off(keepalive=True)
+
+    def _sensor_error_tolerances(self) -> tuple[bool, bool]:
+        """Compute control tolerances when sensor temperature is unavailable."""
+        if self._sensor_error_action == SENSOR_ERROR_ACTION_FORCE_OFF:
+            return (False, True) if not self.ac_mode else (True, False)
+
+        if self._sensor_error_action == SENSOR_ERROR_ACTION_FORCE_ON:
+            return (True, False) if not self.ac_mode else (False, True)
+
+        return False, False
 
     @property
     def _is_device_active(self) -> bool | None:
