@@ -8,10 +8,32 @@ import pytest
 
 from homeassistant.components.husqvarna_automower_ble.const import DOMAIN
 from homeassistant.const import CONF_ADDRESS, CONF_CLIENT_ID, CONF_PIN
+from homeassistant.core import HomeAssistant
+from homeassistant.loader import async_get_bluetooth
 
 from . import AUTOMOWER_SERVICE_INFO_SERIAL
 
 from tests.common import MockConfigEntry
+
+
+@pytest.fixture(autouse=True, scope="module")
+def only_discover_this_domain() -> Generator[None]:
+    """Only discover devices for this domain.
+
+    This is needed to avoid interference from domains like
+    gardena bluetooth that also matches on these devices.
+    Which can cause async_block_till_done to wait too long
+    waiting for advertisements that won't show up.
+    """
+
+    async def filtered_matches(hass: HomeAssistant):
+        matchers = await async_get_bluetooth(hass)
+        return [matcher for matcher in matchers if matcher["domain"] == DOMAIN]
+
+    with patch(
+        "homeassistant.components.bluetooth.async_get_bluetooth", new=filtered_matches
+    ):
+        yield
 
 
 @pytest.fixture

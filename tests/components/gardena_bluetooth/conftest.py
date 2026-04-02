@@ -16,12 +16,34 @@ from gardena_bluetooth.scan import (
 )
 import pytest
 
+from homeassistant.components.gardena_bluetooth.const import DOMAIN
 from homeassistant.components.gardena_bluetooth.coordinator import SCAN_INTERVAL
 from homeassistant.core import HomeAssistant
+from homeassistant.loader import async_get_bluetooth
 
 from . import WATER_TIMER_SERVICE_INFO, get_config_entry
 
 from tests.common import async_fire_time_changed
+
+
+@pytest.fixture(autouse=True, scope="module")
+def only_discover_this_domain() -> Generator[None]:
+    """Only discover devices for this domain.
+
+    This is needed to avoid interference from domains like
+    gardena bluetooth that also matches on these devices.
+    Which can cause async_block_till_done to wait too long
+    waiting for advertisements that won't show up.
+    """
+
+    async def filtered_matches(hass: HomeAssistant):
+        matchers = await async_get_bluetooth(hass)
+        return [matcher for matcher in matchers if matcher["domain"] == DOMAIN]
+
+    with patch(
+        "homeassistant.components.bluetooth.async_get_bluetooth", new=filtered_matches
+    ):
+        yield
 
 
 @pytest.fixture
