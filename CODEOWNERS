@@ -1865,12 +1865,12 @@ build.json @home-assistant/supervisor
 /homeassistant/components/watergate/ @adam-the-hero
 /tests/components/watergate/ @adam-the-hero
 /homeassistant/components/watson_tts/ @rutkai
-/homeassistant/components/wattwaechter/ @smartcircuits
-/tests/components/wattwaechter/ @smartcircuits
 /homeassistant/components/watts/ @theobld-ww @devender-verma-ww @ssi-spyro
 /tests/components/watts/ @theobld-ww @devender-verma-ww @ssi-spyro
 /homeassistant/components/watttime/ @bachya
 /tests/components/watttime/ @bachya
+/homeassistant/components/wattwaechter/ @smartcircuits
+/tests/components/wattwaechter/ @smartcircuits
 /homeassistant/components/waze_travel_time/ @eifinger
 /tests/components/waze_travel_time/ @eifinger
 /homeassistant/components/weather/ @home-assistant/core

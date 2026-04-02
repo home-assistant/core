@@ -247,15 +247,15 @@ async def async_setup_entry(
 
     # Dynamic OBIS sensors from meter data
     if coordinator.data.meter:
-        for obis_code in coordinator.data.meter.values:
-            if obis_code in KNOWN_OBIS_CODES:
-                entities.append(
-                    WattwaechterObisSensor(
-                        coordinator=coordinator,
-                        description=KNOWN_OBIS_CODES[obis_code],
-                        obis_code=obis_code,
-                    )
-                )
+        entities.extend(
+            WattwaechterObisSensor(
+                coordinator=coordinator,
+                description=KNOWN_OBIS_CODES[obis_code],
+                obis_code=obis_code,
+            )
+            for obis_code in coordinator.data.meter.values
+            if obis_code in KNOWN_OBIS_CODES
+        )
 
     # Diagnostic sensors from system info
     entities.extend(

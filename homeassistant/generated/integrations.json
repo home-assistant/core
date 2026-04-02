@@ -7666,12 +7666,6 @@
       "config_flow": false,
       "iot_class": "cloud_push"
     },
-    "wattwaechter": {
-      "name": "WattWächter Plus",
-      "integration_type": "device",
-      "config_flow": true,
-      "iot_class": "local_polling"
-    },
     "watts": {
       "name": "Watts Vision +",
       "integration_type": "hub",
@@ -7683,6 +7677,12 @@
       "integration_type": "service",
       "config_flow": true,
       "iot_class": "cloud_polling"
+    },
+    "wattwaechter": {
+      "name": "WattWächter Plus",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "local_polling"
     },
     "waze_travel_time": {
       "integration_type": "service",

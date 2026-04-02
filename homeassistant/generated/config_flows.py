@@ -786,6 +786,7 @@ FLOWS = {
         "watergate",
         "watts",
         "watttime",
+        "wattwaechter",
         "waze_travel_time",
         "weatherflow",
         "weatherflow_cloud",
