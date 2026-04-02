@@ -116,6 +116,7 @@ homeassistant.components.baf.*
 homeassistant.components.bang_olufsen.*
 homeassistant.components.bayesian.*
 homeassistant.components.binary_sensor.*
+homeassistant.components.bir.*
 homeassistant.components.bitcoin.*
 homeassistant.components.blockchain.*
 homeassistant.components.blue_current.*
