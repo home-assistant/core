@@ -51,3 +51,13 @@ SUPPORTED_REMOTERS = [
     DEV_MODEL_FLEX_FOB_YS3614_EC,
     DEV_MODEL_FLEX_FOB_YS3614_UC,
 ]
+
+# Authentication types
+CONF_AUTH_TYPE = "auth_type"
+AUTH_TYPE_OAUTH = "oauth"
+AUTH_TYPE_UAC = "uac"
+
+# UAC configuration
+CONF_UAID = "uaid"
+CONF_SECRET_KEY = "secret_key"
+CONF_HOME_ID = "home_id"

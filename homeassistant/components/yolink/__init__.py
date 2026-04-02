@@ -30,7 +30,17 @@ from homeassistant.helpers.config_entry_oauth2_flow import (
 from homeassistant.helpers.typing import ConfigType
 
 from . import api
-from .const import ATTR_LORA_INFO, DOMAIN, SUPPORTED_REMOTERS, YOLINK_EVENT
+from .const import (
+    ATTR_LORA_INFO,
+    AUTH_TYPE_OAUTH,
+    AUTH_TYPE_UAC,
+    CONF_AUTH_TYPE,
+    CONF_SECRET_KEY,
+    CONF_UAID,
+    DOMAIN,
+    SUPPORTED_REMOTERS,
+    YOLINK_EVENT,
+)
 from .coordinator import YoLinkCoordinator
 from .device_trigger import CONF_LONG_PRESS, CONF_SHORT_PRESS
 from .services import async_setup_services
@@ -124,19 +134,33 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up yolink from a config entry."""
     hass.data.setdefault(DOMAIN, {})
-    try:
-        implementation = await async_get_config_entry_implementation(hass, entry)
-    except ImplementationUnavailableError as err:
-        raise ConfigEntryNotReady(
-            translation_domain=DOMAIN,
-            translation_key="oauth2_implementation_unavailable",
-        ) from err
 
-    session = OAuth2Session(hass, entry, implementation)
+    # Determine authentication type (default to OAuth for backwards compatibility)
+    auth_type = entry.data.get(CONF_AUTH_TYPE, AUTH_TYPE_OAUTH)
 
-    auth_mgr = api.ConfigEntryAuth(
-        hass, aiohttp_client.async_get_clientsession(hass), session
-    )
+    if auth_type == AUTH_TYPE_UAC:
+        # UAC authentication
+        auth_mgr = api.UACAuth(
+            hass,
+            aiohttp_client.async_get_clientsession(hass),
+            entry.data[CONF_UAID],
+            entry.data[CONF_SECRET_KEY],
+        )
+    else:
+        # OAuth2 authentication (existing behavior)
+        try:
+            implementation = await async_get_config_entry_implementation(hass, entry)
+        except ImplementationUnavailableError as err:
+            raise ConfigEntryNotReady(
+                translation_domain=DOMAIN,
+                translation_key="oauth2_implementation_unavailable",
+            ) from err
+
+        session = OAuth2Session(hass, entry, implementation)
+        auth_mgr = api.ConfigEntryAuth(
+            hass, aiohttp_client.async_get_clientsession(hass), session
+        )
+
     yolink_home = YoLinkHome()
     try:
         async with asyncio.timeout(10):
