@@ -6,7 +6,7 @@ import asyncio
 from collections.abc import Mapping
 import logging
 import os
-from typing import Any
+from typing import Any, cast
 
 import voluptuous as vol
 
@@ -62,7 +62,7 @@ class CommandLineAuthProvider(AuthProvider):
     @property
     def refresh_user_meta(self) -> bool:
         """Return whether user metadata should be refreshed at login."""
-        return self.config[CONF_META]
+        return cast(bool, self.config[CONF_META])
 
     async def async_login_flow(
         self, context: AuthFlowContext | None
