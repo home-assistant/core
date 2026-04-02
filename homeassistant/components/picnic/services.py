@@ -16,7 +16,6 @@ from .const import (
     ATTR_PRODUCT_ID,
     ATTR_PRODUCT_IDENTIFIERS,
     ATTR_PRODUCT_NAME,
-    CONF_API,
     DOMAIN,
     SERVICE_ADD_PRODUCT_TO_CART,
 )
@@ -50,10 +49,15 @@ def async_setup_services(hass: HomeAssistant) -> None:
 
 
 async def get_api_client(hass: HomeAssistant, config_entry_id: str) -> PicnicAPI:
-    """Get the right Picnic API client based on the device id, else get the default one."""
-    if config_entry_id not in hass.data[DOMAIN]:
+    """Get the right Picnic API client based on the config entry id."""
+    from .coordinator import PicnicConfigEntry  # noqa: PLC0415
+
+    entry: PicnicConfigEntry | None = hass.config_entries.async_get_entry(
+        config_entry_id
+    )
+    if entry is None:
         raise ValueError(f"Config entry with id {config_entry_id} not found!")
-    return hass.data[DOMAIN][config_entry_id][CONF_API]
+    return entry.runtime_data.api_client
 
 
 async def handle_add_product(

@@ -1,8 +1,11 @@
 """Coordinator to fetch data from the Picnic API."""
 
+from __future__ import annotations
+
 import asyncio
 from contextlib import suppress
 import copy
+from dataclasses import dataclass
 from datetime import timedelta
 import logging
 
@@ -18,16 +21,27 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 from .const import ADDRESS, CART_DATA, LAST_ORDER_DATA, NEXT_DELIVERY_DATA, SLOT_DATA
 
 
+@dataclass
+class PicnicRuntimeData:
+    """Runtime data for the Picnic integration."""
+
+    api_client: PicnicAPI
+    coordinator: PicnicUpdateCoordinator
+
+
+type PicnicConfigEntry = ConfigEntry[PicnicRuntimeData]
+
+
 class PicnicUpdateCoordinator(DataUpdateCoordinator):
     """The coordinator to fetch data from the Picnic API at a set interval."""
 
-    config_entry: ConfigEntry
+    config_entry: PicnicConfigEntry
 
     def __init__(
         self,
         hass: HomeAssistant,
         picnic_api_client: PicnicAPI,
-        config_entry: ConfigEntry,
+        config_entry: PicnicConfigEntry,
     ) -> None:
         """Initialize the coordinator with the given Picnic API client."""
         self.picnic_api_client = picnic_api_client
