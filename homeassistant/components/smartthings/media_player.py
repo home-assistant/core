@@ -15,10 +15,9 @@ from homeassistant.components.media_player import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.util import slugify
 
 from . import FullDevice, SmartThingsConfigEntry
-from .const import MAIN
+from .const import MAIN, MEDIA_SOURCE_ID_TO_HA_KEY
 from .entity import SmartThingsEntity
 
 MEDIA_PLAYER_CAPABILITIES = (
@@ -107,13 +106,14 @@ class SmartThingsMediaPlayer(SmartThingsEntity, MediaPlayerEntity):
         self._build_source_map()
 
     def _build_source_map(self) -> None:
-        """Build the source mapping from slugified HA ID to SmartThings ID."""
+        """Build the source mapping from HA key to SmartThings ID."""
         raw_sources = self._get_raw_source_list()
         if not raw_sources:
             self._source_to_smartthings_id = {}
             return
         self._source_to_smartthings_id = {
-            slugify(source_id): source_id for source_id in raw_sources
+            MEDIA_SOURCE_ID_TO_HA_KEY.get(source_id, source_id): source_id
+            for source_id in raw_sources
         }
 
     def _get_raw_source_list(self) -> list[str] | None:
@@ -376,7 +376,7 @@ class SmartThingsMediaPlayer(SmartThingsEntity, MediaPlayerEntity):
             raw = None
         if raw is None:
             return None
-        return slugify(raw)
+        return MEDIA_SOURCE_ID_TO_HA_KEY.get(raw, raw)
 
     @property
     def source_list(self) -> list[str] | None:

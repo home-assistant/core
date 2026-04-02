@@ -37,6 +37,26 @@ CONF_REFRESH_TOKEN = "refresh_token"
 MAIN = "main"
 OLD_DATA = "old_data"
 
+MEDIA_SOURCE_ID_TO_HA_KEY: dict[str, str] = {
+    "AM": "am",
+    "BT": "bluetooth",
+    "CD": "cd",
+    "D.IN": "digital_input",
+    "HDMI": "hdmi",
+    "HDMI1": "hdmi1",
+    "HDMI2": "hdmi2",
+    "HDMI3": "hdmi3",
+    "HDMI4": "hdmi4",
+    "HDMI5": "hdmi5",
+    "HDMI6": "hdmi6",
+    "USB": "usb",
+    "WIFI": "wifi",
+    "digitalTv": "digital_tv",
+    "dtv": "digital_tv",
+    "melon": "melon",
+    "youtube": "youtube",
+}
+
 CONF_SUBSCRIPTION_ID = "subscription_id"
 EVENT_BUTTON = "smartthings.button"
 

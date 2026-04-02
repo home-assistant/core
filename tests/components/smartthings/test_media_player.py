@@ -437,7 +437,7 @@ async def test_vd_capability_source_update(
 
     state = hass.states.get("media_player.tv_samsung_8_series_49")
     assert state is not None
-    assert state.attributes[ATTR_INPUT_SOURCE] == "dtv"
+    assert state.attributes[ATTR_INPUT_SOURCE] == "digital_tv"
 
 
 @pytest.mark.parametrize("device_fixture", ["hw_q80r_soundbar"])
