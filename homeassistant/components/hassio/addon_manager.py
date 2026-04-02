@@ -197,7 +197,7 @@ class AddonManager:
         )
 
     @api_error("Failed to set the {addon_name} app options", include_error_detail=False)
-    async def async_set_addon_options(self, config: dict) -> None:
+    async def async_set_addon_options(self, config: dict[str, Any]) -> None:
         """Set manager add-on options."""
         await self._supervisor_client.addons.set_addon_options(
             self.addon_slug, AddonsOptions(config=config)
