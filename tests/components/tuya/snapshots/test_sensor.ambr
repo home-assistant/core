@@ -145,7 +145,7 @@
     'object_id_base': 'Total energy',
     'options': dict({
       'sensor': dict({
-        'suggested_display_precision': 3,
+        'suggested_display_precision': 2,
       }),
       'sensor.private': dict({
         'suggested_unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
@@ -386,7 +386,7 @@
     'object_id_base': 'Total energy',
     'options': dict({
       'sensor': dict({
-        'suggested_display_precision': 3,
+        'suggested_display_precision': 2,
       }),
       'sensor.private': dict({
         'suggested_unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
@@ -807,7 +807,7 @@
     'object_id_base': 'Total energy',
     'options': dict({
       'sensor': dict({
-        'suggested_display_precision': 3,
+        'suggested_display_precision': 2,
       }),
       'sensor.private': dict({
         'suggested_unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
@@ -1659,7 +1659,7 @@
     'object_id_base': 'Total energy',
     'options': dict({
       'sensor': dict({
-        'suggested_display_precision': 3,
+        'suggested_display_precision': 2,
       }),
       'sensor.private': dict({
         'suggested_unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
@@ -1900,7 +1900,7 @@
     'object_id_base': 'Total energy',
     'options': dict({
       'sensor': dict({
-        'suggested_display_precision': 3,
+        'suggested_display_precision': 2,
       }),
       'sensor.private': dict({
         'suggested_unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
@@ -2477,7 +2477,7 @@
     'object_id_base': 'Total energy',
     'options': dict({
       'sensor': dict({
-        'suggested_display_precision': 3,
+        'suggested_display_precision': 2,
       }),
       'sensor.private': dict({
         'suggested_unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
@@ -4343,10 +4343,7 @@
     'object_id_base': 'Lifetime battery charge energy',
     'options': dict({
       'sensor': dict({
-        'suggested_display_precision': 3,
-      }),
-      'sensor.private': dict({
-        'suggested_unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+        'suggested_display_precision': 2,
       }),
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
@@ -4404,10 +4401,7 @@
     'object_id_base': 'Lifetime battery discharge energy',
     'options': dict({
       'sensor': dict({
-        'suggested_display_precision': 3,
-      }),
-      'sensor.private': dict({
-        'suggested_unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+        'suggested_display_precision': 2,
       }),
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
@@ -4465,10 +4459,7 @@
     'object_id_base': 'Lifetime inverter output energy',
     'options': dict({
       'sensor': dict({
-        'suggested_display_precision': 3,
-      }),
-      'sensor.private': dict({
-        'suggested_unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+        'suggested_display_precision': 2,
       }),
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
@@ -4526,10 +4517,7 @@
     'object_id_base': 'Lifetime off-grid port energy',
     'options': dict({
       'sensor': dict({
-        'suggested_display_precision': 3,
-      }),
-      'sensor.private': dict({
-        'suggested_unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+        'suggested_display_precision': 0,
       }),
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
@@ -4541,7 +4529,7 @@
     'supported_features': 0,
     'translation_key': 'lifetime_offgrid_port_energy',
     'unique_id': 'tuya.gbq8kiahk57ct0bpncjynxcuml_e_export_offgrid1',
-    'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+    'unit_of_measurement': 'Wh',
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.cbe_pro_2_lifetime_off_grid_port_energy-state]
@@ -4550,7 +4538,7 @@
       'device_class': 'energy',
       'friendly_name': 'CBE Pro 2 Lifetime off-grid port energy',
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+      'unit_of_measurement': 'Wh',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.cbe_pro_2_lifetime_off_grid_port_energy',
@@ -4587,10 +4575,7 @@
     'object_id_base': 'Lifetime PV energy',
     'options': dict({
       'sensor': dict({
-        'suggested_display_precision': 3,
-      }),
-      'sensor.private': dict({
-        'suggested_unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+        'suggested_display_precision': 2,
       }),
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
@@ -5050,7 +5035,7 @@
     'object_id_base': 'Total energy',
     'options': dict({
       'sensor': dict({
-        'suggested_display_precision': 3,
+        'suggested_display_precision': 2,
       }),
       'sensor.private': dict({
         'suggested_unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
@@ -5514,7 +5499,7 @@
     'object_id_base': 'Total energy',
     'options': dict({
       'sensor': dict({
-        'suggested_display_precision': 3,
+        'suggested_display_precision': 2,
       }),
       'sensor.private': dict({
         'suggested_unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
@@ -6028,7 +6013,7 @@
     'object_id_base': 'Total energy',
     'options': dict({
       'sensor': dict({
-        'suggested_display_precision': 3,
+        'suggested_display_precision': 2,
       }),
       'sensor.private': dict({
         'suggested_unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
@@ -6388,10 +6373,7 @@
     'object_id_base': 'Total energy',
     'options': dict({
       'sensor': dict({
-        'suggested_display_precision': 3,
-      }),
-      'sensor.private': dict({
-        'suggested_unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+        'suggested_display_precision': 2,
       }),
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
@@ -6568,7 +6550,7 @@
     'object_id_base': 'Total energy',
     'options': dict({
       'sensor': dict({
-        'suggested_display_precision': 3,
+        'suggested_display_precision': 2,
       }),
       'sensor.private': dict({
         'suggested_unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
@@ -7230,10 +7212,7 @@
     'object_id_base': 'Total energy',
     'options': dict({
       'sensor': dict({
-        'suggested_display_precision': 3,
-      }),
-      'sensor.private': dict({
-        'suggested_unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+        'suggested_display_precision': 2,
       }),
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
@@ -7410,7 +7389,7 @@
     'object_id_base': 'Total energy',
     'options': dict({
       'sensor': dict({
-        'suggested_display_precision': 3,
+        'suggested_display_precision': 2,
       }),
       'sensor.private': dict({
         'suggested_unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
@@ -7651,7 +7630,7 @@
     'object_id_base': 'Total energy',
     'options': dict({
       'sensor': dict({
-        'suggested_display_precision': 3,
+        'suggested_display_precision': 2,
       }),
       'sensor.private': dict({
         'suggested_unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
@@ -7947,7 +7926,7 @@
     'object_id_base': 'Total energy',
     'options': dict({
       'sensor': dict({
-        'suggested_display_precision': 3,
+        'suggested_display_precision': 2,
       }),
       'sensor.private': dict({
         'suggested_unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
@@ -8464,7 +8443,7 @@
     'object_id_base': 'Total energy',
     'options': dict({
       'sensor': dict({
-        'suggested_display_precision': 3,
+        'suggested_display_precision': 2,
       }),
       'sensor.private': dict({
         'suggested_unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
@@ -9382,7 +9361,7 @@
     'object_id_base': 'Total energy',
     'options': dict({
       'sensor': dict({
-        'suggested_display_precision': 3,
+        'suggested_display_precision': 2,
       }),
       'sensor.private': dict({
         'suggested_unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
@@ -10450,7 +10429,7 @@
     'object_id_base': 'Total energy',
     'options': dict({
       'sensor': dict({
-        'suggested_display_precision': 3,
+        'suggested_display_precision': 2,
       }),
       'sensor.private': dict({
         'suggested_unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
@@ -10854,7 +10833,7 @@
     'object_id_base': 'Total energy',
     'options': dict({
       'sensor': dict({
-        'suggested_display_precision': 3,
+        'suggested_display_precision': 2,
       }),
       'sensor.private': dict({
         'suggested_unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
@@ -11204,7 +11183,7 @@
     'object_id_base': 'Total energy',
     'options': dict({
       'sensor': dict({
-        'suggested_display_precision': 3,
+        'suggested_display_precision': 2,
       }),
       'sensor.private': dict({
         'suggested_unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
@@ -11265,10 +11244,7 @@
     'object_id_base': 'Total production',
     'options': dict({
       'sensor': dict({
-        'suggested_display_precision': 3,
-      }),
-      'sensor.private': dict({
-        'suggested_unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+        'suggested_display_precision': 2,
       }),
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
@@ -11987,7 +11963,7 @@
     'object_id_base': 'Total energy',
     'options': dict({
       'sensor': dict({
-        'suggested_display_precision': 3,
+        'suggested_display_precision': 2,
       }),
       'sensor.private': dict({
         'suggested_unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
@@ -12332,7 +12308,7 @@
     'object_id_base': 'Total energy',
     'options': dict({
       'sensor': dict({
-        'suggested_display_precision': 3,
+        'suggested_display_precision': 2,
       }),
       'sensor.private': dict({
         'suggested_unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
@@ -12573,7 +12549,7 @@
     'object_id_base': 'Total energy',
     'options': dict({
       'sensor': dict({
-        'suggested_display_precision': 3,
+        'suggested_display_precision': 2,
       }),
       'sensor.private': dict({
         'suggested_unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
@@ -13689,10 +13665,7 @@
     'object_id_base': 'Total energy',
     'options': dict({
       'sensor': dict({
-        'suggested_display_precision': 3,
-      }),
-      'sensor.private': dict({
-        'suggested_unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+        'suggested_display_precision': 2,
       }),
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
@@ -13750,10 +13723,7 @@
     'object_id_base': 'Total production',
     'options': dict({
       'sensor': dict({
-        'suggested_display_precision': 3,
-      }),
-      'sensor.private': dict({
-        'suggested_unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+        'suggested_display_precision': 2,
       }),
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
@@ -13991,10 +13961,7 @@
     'object_id_base': 'Total energy',
     'options': dict({
       'sensor': dict({
-        'suggested_display_precision': 3,
-      }),
-      'sensor.private': dict({
-        'suggested_unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+        'suggested_display_precision': 2,
       }),
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
@@ -14052,10 +14019,7 @@
     'object_id_base': 'Total production',
     'options': dict({
       'sensor': dict({
-        'suggested_display_precision': 3,
-      }),
-      'sensor.private': dict({
-        'suggested_unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+        'suggested_display_precision': 2,
       }),
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
@@ -14711,10 +14675,7 @@
     'object_id_base': 'Total energy',
     'options': dict({
       'sensor': dict({
-        'suggested_display_precision': 3,
-      }),
-      'sensor.private': dict({
-        'suggested_unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+        'suggested_display_precision': 2,
       }),
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
@@ -15434,7 +15395,7 @@
     'object_id_base': 'Total energy',
     'options': dict({
       'sensor': dict({
-        'suggested_display_precision': 3,
+        'suggested_display_precision': 2,
       }),
       'sensor.private': dict({
         'suggested_unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
@@ -15843,7 +15804,7 @@
     'object_id_base': 'Total energy',
     'options': dict({
       'sensor': dict({
-        'suggested_display_precision': 3,
+        'suggested_display_precision': 2,
       }),
       'sensor.private': dict({
         'suggested_unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
@@ -16505,10 +16466,7 @@
     'object_id_base': 'Total energy',
     'options': dict({
       'sensor': dict({
-        'suggested_display_precision': 3,
-      }),
-      'sensor.private': dict({
-        'suggested_unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+        'suggested_display_precision': 2,
       }),
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
@@ -17501,10 +17459,7 @@
     'object_id_base': 'Total energy',
     'options': dict({
       'sensor': dict({
-        'suggested_display_precision': 3,
-      }),
-      'sensor.private': dict({
-        'suggested_unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+        'suggested_display_precision': 2,
       }),
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
@@ -17620,10 +17575,7 @@
     'object_id_base': 'Total production',
     'options': dict({
       'sensor': dict({
-        'suggested_display_precision': 3,
-      }),
-      'sensor.private': dict({
-        'suggested_unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+        'suggested_display_precision': 2,
       }),
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
@@ -18184,7 +18136,7 @@
     'object_id_base': 'Total energy',
     'options': dict({
       'sensor': dict({
-        'suggested_display_precision': 3,
+        'suggested_display_precision': 2,
       }),
       'sensor.private': dict({
         'suggested_unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
@@ -19786,7 +19738,7 @@
     'object_id_base': 'Total energy',
     'options': dict({
       'sensor': dict({
-        'suggested_display_precision': 3,
+        'suggested_display_precision': 2,
       }),
       'sensor.private': dict({
         'suggested_unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
@@ -20027,7 +19979,7 @@
     'object_id_base': 'Total energy',
     'options': dict({
       'sensor': dict({
-        'suggested_display_precision': 3,
+        'suggested_display_precision': 2,
       }),
       'sensor.private': dict({
         'suggested_unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
@@ -20373,10 +20325,7 @@
     'object_id_base': 'Total energy',
     'options': dict({
       'sensor': dict({
-        'suggested_display_precision': 3,
-      }),
-      'sensor.private': dict({
-        'suggested_unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+        'suggested_display_precision': 2,
       }),
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
@@ -20712,7 +20661,7 @@
     'object_id_base': 'Total energy',
     'options': dict({
       'sensor': dict({
-        'suggested_display_precision': 3,
+        'suggested_display_precision': 2,
       }),
       'sensor.private': dict({
         'suggested_unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
@@ -23173,7 +23122,7 @@
     'object_id_base': 'Total energy',
     'options': dict({
       'sensor': dict({
-        'suggested_display_precision': 3,
+        'suggested_display_precision': 2,
       }),
       'sensor.private': dict({
         'suggested_unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
@@ -23979,7 +23928,7 @@
     'object_id_base': 'Total energy',
     'options': dict({
       'sensor': dict({
-        'suggested_display_precision': 3,
+        'suggested_display_precision': 2,
       }),
       'sensor.private': dict({
         'suggested_unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
@@ -24220,7 +24169,7 @@
     'object_id_base': 'Total energy',
     'options': dict({
       'sensor': dict({
-        'suggested_display_precision': 3,
+        'suggested_display_precision': 2,
       }),
       'sensor.private': dict({
         'suggested_unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
@@ -24461,10 +24410,7 @@
     'object_id_base': 'Total energy',
     'options': dict({
       'sensor': dict({
-        'suggested_display_precision': 3,
-      }),
-      'sensor.private': dict({
-        'suggested_unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+        'suggested_display_precision': 2,
       }),
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
@@ -24522,10 +24468,7 @@
     'object_id_base': 'Total energy',
     'options': dict({
       'sensor': dict({
-        'suggested_display_precision': 3,
-      }),
-      'sensor.private': dict({
-        'suggested_unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+        'suggested_display_precision': 2,
       }),
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
@@ -24641,10 +24584,7 @@
     'object_id_base': 'Total production',
     'options': dict({
       'sensor': dict({
-        'suggested_display_precision': 3,
-      }),
-      'sensor.private': dict({
-        'suggested_unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+        'suggested_display_precision': 2,
       }),
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
@@ -25542,10 +25482,7 @@
     'object_id_base': 'Total energy',
     'options': dict({
       'sensor': dict({
-        'suggested_display_precision': 3,
-      }),
-      'sensor.private': dict({
-        'suggested_unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+        'suggested_display_precision': 2,
       }),
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
@@ -25661,10 +25598,7 @@
     'object_id_base': 'Total production',
     'options': dict({
       'sensor': dict({
-        'suggested_display_precision': 3,
-      }),
-      'sensor.private': dict({
-        'suggested_unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+        'suggested_display_precision': 2,
       }),
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
@@ -25841,7 +25775,7 @@
     'object_id_base': 'Total energy',
     'options': dict({
       'sensor': dict({
-        'suggested_display_precision': 3,
+        'suggested_display_precision': 2,
       }),
       'sensor.private': dict({
         'suggested_unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
