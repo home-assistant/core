@@ -453,6 +453,30 @@ async def test_sensor_bad_value(hass: HomeAssistant) -> None:
     assert state.attributes.get("current_temperature") == temp
 
 
+@pytest.mark.usefixtures("setup_comp_2")
+async def test_sensor_becomes_unavailable_sets_current_temperature_none(
+    hass: HomeAssistant,
+) -> None:
+    """Test unavailable sensor state propagates to current_temperature."""
+    _setup_sensor(hass, 18)
+    await hass.async_block_till_done()
+    state = hass.states.get(ENTITY)
+    assert state is not None
+    assert state.attributes.get("current_temperature") == 18
+
+    _setup_sensor(hass, STATE_UNAVAILABLE)
+    await hass.async_block_till_done()
+    state = hass.states.get(ENTITY)
+    assert state is not None
+    assert state.attributes.get("current_temperature") is None
+
+    _setup_sensor(hass, 19)
+    await hass.async_block_till_done()
+    state = hass.states.get(ENTITY)
+    assert state is not None
+    assert state.attributes.get("current_temperature") == 19
+
+
 async def test_sensor_unknown(hass: HomeAssistant) -> None:
     """Test when target sensor is Unknown."""
     hass.states.async_set("sensor.unknown", STATE_UNKNOWN)
@@ -1128,6 +1152,36 @@ async def test_temp_change_heater_trigger_off_long_enough_2(
     assert call.data["entity_id"] == ENT_SWITCH
 
 
+@pytest.mark.usefixtures("setup_comp_8")
+async def test_keep_alive_still_honored_when_sensor_unavailable(
+    hass: HomeAssistant,
+) -> None:
+    """Test keep_alive callbacks still run when sensor becomes unavailable."""
+    calls = _setup_switch(hass, True)
+    await hass.async_block_till_done()
+
+    _setup_sensor(hass, 20)
+    await hass.async_block_till_done()
+    await common.async_set_temperature(hass, 25)
+
+    _setup_sensor(hass, STATE_UNAVAILABLE)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(ENTITY)
+    assert state is not None
+    assert state.attributes.get("current_temperature") is None
+
+    test_time = datetime.datetime.now(dt_util.UTC)
+    async_fire_time_changed(hass, test_time)
+    await hass.async_block_till_done()
+    assert len(calls) == 0
+
+    async_fire_time_changed(hass, test_time + datetime.timedelta(minutes=10))
+    await hass.async_block_till_done()
+    assert len(calls) == 1
+    assert calls[0].service in (SERVICE_TURN_ON, SERVICE_TURN_OFF)
+
+
 async def test_max_cycle_duration_turns_off(hass: HomeAssistant) -> None:
     """Test that max_cycle_duration forces the heater off after the duration."""
     hass.config.temperature_unit = UnitOfTemperature.CELSIUS
@@ -1169,6 +1223,54 @@ async def test_max_cycle_duration_turns_off(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
 
     # One additional turn_off call should have occurred
+    assert len(calls) == 2
+    assert calls[1].service == SERVICE_TURN_OFF
+
+
+async def test_max_cycle_duration_turns_off_with_unavailable_sensor(
+    hass: HomeAssistant,
+) -> None:
+    """Test max_cycle_duration still turns off after sensor becomes unavailable."""
+    hass.config.temperature_unit = UnitOfTemperature.CELSIUS
+    assert await async_setup_component(
+        hass,
+        CLIMATE_DOMAIN,
+        {
+            "climate": {
+                "platform": "generic_thermostat",
+                "name": "test",
+                "cold_tolerance": 0.3,
+                "hot_tolerance": 0.3,
+                "target_temp": 25,
+                "heater": ENT_SWITCH,
+                "target_sensor": ENT_SENSOR,
+                "min_cycle_duration": datetime.timedelta(minutes=0),
+                "max_cycle_duration": datetime.timedelta(minutes=10),
+                "initial_hvac_mode": HVACMode.HEAT,
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    calls = _setup_switch(hass, False)
+    _setup_sensor(hass, 20)
+    await hass.async_block_till_done()
+    assert len(calls) == 1
+    assert calls[0].service == SERVICE_TURN_ON
+
+    _setup_sensor(hass, STATE_UNAVAILABLE)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(ENTITY)
+    assert state is not None
+    assert state.attributes.get("current_temperature") is None
+
+    test_time = datetime.datetime.now(dt_util.UTC)
+    async_fire_time_changed(hass, test_time)
+    await hass.async_block_till_done()
+    async_fire_time_changed(hass, test_time + datetime.timedelta(minutes=10))
+    await hass.async_block_till_done()
+
     assert len(calls) == 2
     assert calls[1].service == SERVICE_TURN_OFF
 

@@ -475,9 +475,6 @@ class GenericThermostat(ClimateEntity, RestoreEntity):
     async def _async_sensor_changed(self, event: Event[EventStateChangedData]) -> None:
         """Handle temperature changes."""
         new_state = event.data["new_state"]
-        if new_state is None or new_state.state in (STATE_UNAVAILABLE, STATE_UNKNOWN):
-            return
-
         self._async_update_temp(new_state)
         await self._async_control_heating()
         self.async_write_ha_state()
@@ -520,11 +517,16 @@ class GenericThermostat(ClimateEntity, RestoreEntity):
         self.async_write_ha_state()
 
     @callback
-    def _async_update_temp(self, state: State) -> None:
+    def _async_update_temp(self, state: State | None) -> None:
         """Update thermostat with latest state from sensor."""
+        # Propagating sensor availability to current temperature attribute
+        if state is None or state.state in (STATE_UNAVAILABLE, STATE_UNKNOWN):
+            self._cur_temp = None
+            return
         try:
             cur_temp = float(state.state)
             if not math.isfinite(cur_temp):
+                self._cur_temp = None
                 raise ValueError(f"Sensor has illegal state {state.state}")  # noqa: TRY301
             self._cur_temp = cur_temp
         except ValueError as ex:
@@ -563,9 +565,14 @@ class GenericThermostat(ClimateEntity, RestoreEntity):
                 await self._async_heater_turn_off()
                 return
 
-            assert self._cur_temp is not None and self._target_temp is not None
-            too_cold = self._target_temp > self._cur_temp + self._cold_tolerance
-            too_hot = self._target_temp < self._cur_temp - self._hot_tolerance
+            assert self._target_temp is not None
+            if self._cur_temp is None:
+                # Keeping current behaviour
+                too_cold = False
+                too_hot = False
+            else:
+                too_cold = self._target_temp > self._cur_temp + self._cold_tolerance
+                too_hot = self._target_temp < self._cur_temp - self._hot_tolerance
             now = dt_util.utcnow()
 
             if self._is_device_active:
