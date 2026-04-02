@@ -20,6 +20,7 @@ from homeassistant.helpers.service_info.bluetooth import BluetoothServiceInfo
 from homeassistant.util import dt as dt_util
 
 from . import (
+    BEACON_RANDOM_ADDRESS_SERVICE_INFO,
     BLUECHARM_BEACON_SERVICE_INFO,
     BLUECHARM_BEACON_SERVICE_INFO_2,
     BLUECHARM_BEACON_SERVICE_INFO_DBUS,
@@ -257,6 +258,58 @@ async def test_default_name_allowlisted_restore_late(hass: HomeAssistant) -> Non
 
     await hass.async_block_till_done()
     assert len(hass.states.async_entity_ids()) == before_entity_count
+
+
+async def test_disable_new_entities_blocks_new_ibeacons(hass: HomeAssistant) -> None:
+    """Test we do not add newly discovered iBeacons when disabled by config entry."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        pref_disable_new_entities=True,
+    )
+    entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    inject_bluetooth_service_info(hass, BLUECHARM_BEACON_SERVICE_INFO)
+    await hass.async_block_till_done()
+
+    assert hass.states.get("device_tracker.bluecharm_177999_8105") is None
+    assert hass.states.get("sensor.bluecharm_177999_8105_estimated_distance") is None
+
+
+async def test_disable_new_entities_still_updates_existing_ibeacons(
+    hass: HomeAssistant,
+) -> None:
+    """Test existing iBeacons continue to work after disabling new entities."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+    )
+    entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    inject_bluetooth_service_info(hass, BLUECHARM_BEACON_SERVICE_INFO)
+    await hass.async_block_till_done()
+    assert hass.states.get("device_tracker.bluecharm_177999_8105").state == STATE_HOME
+
+    assert await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+
+    hass.config_entries.async_update_entry(entry, pref_disable_new_entities=True)
+
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    inject_bluetooth_service_info(hass, BLUECHARM_BEACON_SERVICE_INFO)
+    await hass.async_block_till_done()
+    assert hass.states.get("device_tracker.bluecharm_177999_8105").state == STATE_HOME
+
+    inject_bluetooth_service_info(hass, BEACON_RANDOM_ADDRESS_SERVICE_INFO)
+    await hass.async_block_till_done()
+
+    assert hass.states.get("device_tracker.randomaddress_1234") is None
 
 
 async def test_rotating_major_minor_and_mac_with_name(hass: HomeAssistant) -> None:

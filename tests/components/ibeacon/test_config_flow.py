@@ -5,7 +5,11 @@ from unittest.mock import patch
 import pytest
 
 from homeassistant import config_entries
-from homeassistant.components.ibeacon.const import CONF_ALLOW_NAMELESS_UUIDS, DOMAIN
+from homeassistant.components.ibeacon.const import (
+    CONF_ALLOWED_BEACONS,
+    CONF_ALLOW_NAMELESS_UUIDS,
+    DOMAIN,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -119,3 +123,71 @@ async def test_options_flow(hass: HomeAssistant) -> None:
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == {CONF_ALLOW_NAMELESS_UUIDS: []}
+
+
+@pytest.mark.usefixtures("enable_bluetooth")
+async def test_options_flow_allowed_beacons(hass: HomeAssistant) -> None:
+    """Test allowlisted beacon IDs in config flow options."""
+    config_entry = MockConfigEntry(domain=DOMAIN)
+    config_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    result = await hass.config_entries.options.async_init(config_entry.entry_id)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "init"
+
+    # test save invalid beacon id
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={
+            "new_allowed_beacon": "invalid",
+        },
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "init"
+    assert result["errors"] == {"new_allowed_beacon": "invalid_beacon_id_format"}
+
+    # test save new beacon id
+    beacon_id = "426c7565-4368-6172-6d42-6561636f6e73_65262_65037"
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={
+            "new_allowed_beacon": beacon_id.upper(),
+        },
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"] == {CONF_ALLOWED_BEACONS: [beacon_id]}
+
+    # test save duplicate beacon id
+    result = await hass.config_entries.options.async_init(config_entry.entry_id)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "init"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_ALLOWED_BEACONS: [beacon_id],
+            "new_allowed_beacon": beacon_id,
+        },
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"] == {CONF_ALLOWED_BEACONS: [beacon_id]}
+
+    # delete
+    result = await hass.config_entries.options.async_init(config_entry.entry_id)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "init"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_ALLOWED_BEACONS: [],
+        },
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"] == {CONF_ALLOWED_BEACONS: []}

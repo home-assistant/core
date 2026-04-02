@@ -248,6 +248,14 @@ class IBeaconCoordinator:
         self._addresses_by_group_id.setdefault(group_id, set()).add(address)
 
     @callback
+    def _async_known_group_id(self, group_id: str) -> bool:
+        """Return True if the iBeacon group_id has already been seen before."""
+        return bool(
+            group_id in self._group_ids_random_macs
+            or group_id in self._unique_ids_by_group_id
+        )
+
+    @callback
     def _async_update_ibeacon(
         self,
         service_info: bluetooth.BluetoothServiceInfoBleak,
@@ -267,13 +275,24 @@ class IBeaconCoordinator:
 
         major = ibeacon_advertisement.major
         minor = ibeacon_advertisement.minor
+        group_id = f"{uuid_str}_{major}_{minor}"
+
+        if (
+            self._entry.pref_disable_new_entities
+            and not self._async_known_group_id(group_id)
+        ):
+            _LOGGER.debug(
+                "ignoring new beacon %s because adding new entities is disabled",
+                group_id,
+            )
+            return
+
         major_minor_by_uuid = self._major_minor_by_uuid.setdefault(uuid_str, set())
         if len(major_minor_by_uuid) + 1 > MAX_IDS_PER_UUID:
             self._async_ignore_uuid(uuid_str)
             return
 
         major_minor_by_uuid.add((major, minor))
-        group_id = f"{uuid_str}_{major}_{minor}"
 
         if group_id in self._group_ids_random_macs:
             self._async_update_ibeacon_with_random_mac(
