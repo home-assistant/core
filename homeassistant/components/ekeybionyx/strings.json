@@ -4,7 +4,6 @@
       "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
       "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
       "authorize_url_timeout": "[%key:common::config_flow::abort::oauth2_authorize_url_timeout%]",
-      "cannot_auth": "Error response from authentication server, please try again.",
       "cannot_connect": "Connection to {ekeybionyx} failed. Please check your Internet connection and try again.",
       "missing_configuration": "[%key:common::config_flow::abort::oauth2_missing_configuration%]",
       "no_available_webhooks": "There are no available webhooks in the {ekeybionyx} system. Please delete some and try again.",

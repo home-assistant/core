@@ -17,7 +17,6 @@ from homeassistant.components.webhook import (
 )
 from homeassistant.config_entries import ConfigFlowResult
 from homeassistant.const import CONF_TOKEN, CONF_URL
-from homeassistant.exceptions import OAuth2TokenRequestError
 from homeassistant.helpers import config_entry_oauth2_flow, config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.network import get_url
@@ -88,11 +87,6 @@ class OAuth2FlowHandler(
         self._data["api"] = ap
         try:
             system_res = await ap.get_systems()
-        except OAuth2TokenRequestError:
-            return self.async_abort(
-                reason="cannot_auth",
-                description_placeholders={"ekeybionyx": INTEGRATION_NAME},
-            )
         except aiohttp.ClientResponseError:
             return self.async_abort(
                 reason="cannot_connect",
