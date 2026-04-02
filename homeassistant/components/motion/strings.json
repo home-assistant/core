@@ -1,16 +1,13 @@
 {
   "common": {
-    "condition_behavior_description": "How the state should match on the targeted motion sensors.",
-    "condition_behavior_name": "Behavior",
-    "trigger_behavior_description": "The behavior of the targeted motion sensors to trigger on.",
-    "trigger_behavior_name": "Behavior"
+    "condition_behavior_name": "Condition passes if",
+    "trigger_behavior_name": "Trigger when"
   },
   "conditions": {
     "is_detected": {
       "description": "Tests if one or more motion sensors are detecting motion.",
       "fields": {
         "behavior": {
-          "description": "[%key:component::motion::common::condition_behavior_description%]",
           "name": "[%key:component::motion::common::condition_behavior_name%]"
         }
       },
@@ -20,7 +17,6 @@
       "description": "Tests if one or more motion sensors are not detecting motion.",
       "fields": {
         "behavior": {
-          "description": "[%key:component::motion::common::condition_behavior_description%]",
           "name": "[%key:component::motion::common::condition_behavior_name%]"
         }
       },
@@ -48,7 +44,6 @@
       "description": "Triggers after one or more motion sensors stop detecting motion.",
       "fields": {
         "behavior": {
-          "description": "[%key:component::motion::common::trigger_behavior_description%]",
           "name": "[%key:component::motion::common::trigger_behavior_name%]"
         }
       },
@@ -58,7 +53,6 @@
       "description": "Triggers after one or more motion sensors start detecting motion.",
       "fields": {
         "behavior": {
-          "description": "[%key:component::motion::common::trigger_behavior_description%]",
           "name": "[%key:component::motion::common::trigger_behavior_name%]"
         }
       },

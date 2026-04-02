@@ -20,6 +20,7 @@ from aiohasupervisor.backups import BackupsClient
 from aiohasupervisor.discovery import DiscoveryClient
 from aiohasupervisor.homeassistant import HomeAssistantClient
 from aiohasupervisor.host import HostClient
+from aiohasupervisor.ingress import IngressClient
 from aiohasupervisor.jobs import JobsClient
 from aiohasupervisor.models import (
     AddonStage,
@@ -781,6 +782,13 @@ def supervisor_stats_fixture(supervisor_client: AsyncMock) -> AsyncMock:
     return supervisor_client.supervisor.stats
 
 
+@pytest.fixture(name="ingress_panels")
+def ingress_panels_fixture(supervisor_client: AsyncMock) -> AsyncMock:
+    """Mock ingress panels API from supervisor."""
+    supervisor_client.ingress.panels.return_value = {}
+    return supervisor_client.ingress.panels
+
+
 @pytest.fixture(name="supervisor_client")
 def supervisor_client() -> Generator[AsyncMock]:
     """Mock the supervisor client."""
@@ -790,6 +798,7 @@ def supervisor_client() -> Generator[AsyncMock]:
     supervisor_client.discovery = AsyncMock(spec=DiscoveryClient)
     supervisor_client.homeassistant = AsyncMock(spec=HomeAssistantClient)
     supervisor_client.host = AsyncMock(spec=HostClient)
+    supervisor_client.ingress = AsyncMock(spec=IngressClient)
     supervisor_client.jobs = AsyncMock(spec=JobsClient)
     supervisor_client.jobs.info.return_value = JobsInfo(ignore_conditions=[], jobs=[])
     supervisor_client.mounts = AsyncMock(spec=MountsClient)
@@ -813,6 +822,10 @@ def supervisor_client() -> Generator[AsyncMock]:
         ),
         patch(
             "homeassistant.components.hassio.addon_manager.get_supervisor_client",
+            return_value=supervisor_client,
+        ),
+        patch(
+            "homeassistant.components.hassio.addon_panel.get_supervisor_client",
             return_value=supervisor_client,
         ),
         patch(

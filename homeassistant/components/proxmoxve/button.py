@@ -23,7 +23,7 @@ from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
 
-from .const import DOMAIN
+from .const import DOMAIN, ProxmoxPermission
 from .coordinator import ProxmoxConfigEntry, ProxmoxCoordinator, ProxmoxNodeData
 from .entity import ProxmoxContainerEntity, ProxmoxNodeEntity, ProxmoxVMEntity
 from .helpers import is_granted
@@ -34,6 +34,8 @@ class ProxmoxNodeButtonNodeEntityDescription(ButtonEntityDescription):
     """Class to hold Proxmox node button description."""
 
     press_action: Callable[[ProxmoxCoordinator, str], None]
+    permission: ProxmoxPermission = ProxmoxPermission.POWER
+    permission_raise: str = "no_permission_node_power"
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -41,6 +43,8 @@ class ProxmoxVMButtonEntityDescription(ButtonEntityDescription):
     """Class to hold Proxmox VM button description."""
 
     press_action: Callable[[ProxmoxCoordinator, str, int], None]
+    permission: ProxmoxPermission = ProxmoxPermission.POWER
+    permission_raise: str = "no_permission_vm_lxc_power"
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -48,6 +52,8 @@ class ProxmoxContainerButtonEntityDescription(ButtonEntityDescription):
     """Class to hold Proxmox container button description."""
 
     press_action: Callable[[ProxmoxCoordinator, str, int], None]
+    permission: ProxmoxPermission = ProxmoxPermission.POWER
+    permission_raise: str = "no_permission_vm_lxc_power"
 
 
 NODE_BUTTONS: tuple[ProxmoxNodeButtonNodeEntityDescription, ...] = (
@@ -156,6 +162,8 @@ VM_BUTTONS: tuple[ProxmoxVMButtonEntityDescription, ...] = (
                 )
             )
         ),
+        permission=ProxmoxPermission.SNAPSHOT,
+        permission_raise="no_permission_snapshot",
         entity_category=EntityCategory.CONFIG,
     ),
 )
@@ -199,6 +207,8 @@ CONTAINER_BUTTONS: tuple[ProxmoxContainerButtonEntityDescription, ...] = (
                 )
             )
         ),
+        permission=ProxmoxPermission.SNAPSHOT,
+        permission_raise="no_permission_snapshot",
         entity_category=EntityCategory.CONFIG,
     ),
 )
@@ -315,10 +325,15 @@ class ProxmoxNodeButtonEntity(ProxmoxNodeEntity, ProxmoxBaseButton):
     async def _async_press_call(self) -> None:
         """Execute the node button action via executor."""
         node_id = self._node_data.node["node"]
-        if not is_granted(self.coordinator.permissions, p_type="nodes", p_id=node_id):
+        if not is_granted(
+            self.coordinator.permissions,
+            p_type="nodes",
+            p_id=node_id,
+            permission=self.entity_description.permission,
+        ):
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
-                translation_key="no_permission_node_power",
+                translation_key=self.entity_description.permission_raise,
             )
         await self.hass.async_add_executor_job(
             self.entity_description.press_action,
@@ -335,10 +350,15 @@ class ProxmoxVMButtonEntity(ProxmoxVMEntity, ProxmoxBaseButton):
     async def _async_press_call(self) -> None:
         """Execute the VM button action via executor."""
         vmid = self.vm_data["vmid"]
-        if not is_granted(self.coordinator.permissions, p_type="vms", p_id=vmid):
+        if not is_granted(
+            self.coordinator.permissions,
+            p_type="vms",
+            p_id=vmid,
+            permission=self.entity_description.permission,
+        ):
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
-                translation_key="no_permission_vm_lxc_power",
+                translation_key=self.entity_description.permission_raise,
             )
         await self.hass.async_add_executor_job(
             self.entity_description.press_action,
@@ -357,10 +377,15 @@ class ProxmoxContainerButtonEntity(ProxmoxContainerEntity, ProxmoxBaseButton):
         """Execute the container button action via executor."""
         vmid = self.container_data["vmid"]
         # Container power actions fall under vms
-        if not is_granted(self.coordinator.permissions, p_type="vms", p_id=vmid):
+        if not is_granted(
+            self.coordinator.permissions,
+            p_type="vms",
+            p_id=vmid,
+            permission=self.entity_description.permission,
+        ):
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
-                translation_key="no_permission_vm_lxc_power",
+                translation_key=self.entity_description.permission_raise,
             )
         await self.hass.async_add_executor_job(
             self.entity_description.press_action,

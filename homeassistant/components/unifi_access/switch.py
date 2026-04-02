@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from typing import Any
 
 from unifi_access_api import EmergencyStatus, UnifiAccessError
@@ -14,7 +14,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN
-from .coordinator import UnifiAccessConfigEntry, UnifiAccessCoordinator, UnifiAccessData
+from .coordinator import UnifiAccessConfigEntry, UnifiAccessCoordinator
 from .entity import UnifiAccessHubEntity
 
 PARALLEL_UPDATES = 1
@@ -103,9 +103,5 @@ class UnifiAccessEmergencySwitch(UnifiAccessHubEntity, SwitchEntity):
         # while the WebSocket is disconnected and all entities are unavailable.
         if self.coordinator.last_update_success:
             self.coordinator.async_set_updated_data(
-                UnifiAccessData(
-                    doors=self.coordinator.data.doors,
-                    emergency=new_status,
-                    door_thumbnails=self.coordinator.data.door_thumbnails,
-                )
+                replace(self.coordinator.data, emergency=new_status)
             )
