@@ -63,7 +63,7 @@ async def test_search_too_short(hass: HomeAssistant) -> None:
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        user_input={"address_search": "Te"},
+        user_input={"address_search": "Ab"},
     )
 
     assert result["type"] is FlowResultType.FORM
