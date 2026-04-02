@@ -14,6 +14,7 @@ from .regex import RegexExtension
 from .serialization import SerializationExtension
 from .string import StringExtension
 from .type_cast import TypeCastExtension
+from .version import VersionExtension
 
 __all__ = [
     "AreaExtension",
@@ -30,4 +31,5 @@ __all__ = [
     "SerializationExtension",
     "StringExtension",
     "TypeCastExtension",
+    "VersionExtension",
 ]
