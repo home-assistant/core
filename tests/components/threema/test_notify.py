@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from typing import Any
 from unittest.mock import MagicMock
 
 import pytest
@@ -39,7 +40,7 @@ RECIPIENT_SUBENTRY = {
 
 
 @pytest.fixture
-def mock_subentries():
+def mock_subentries() -> list[dict[str, Any]]:
     """Override: provide a recipient subentry for notify tests."""
     return [RECIPIENT_SUBENTRY]
 

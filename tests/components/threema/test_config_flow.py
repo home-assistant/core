@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Generator
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -27,7 +28,7 @@ from tests.common import MockConfigEntry
 
 
 @pytest.fixture(autouse=True)
-def mock_setup_entry():
+def mock_setup_entry() -> Generator[None]:
     """Patch async_setup_entry to avoid full setup during flow tests."""
     with patch("homeassistant.components.threema.async_setup_entry", return_value=True):
         yield
@@ -307,6 +308,7 @@ async def test_subentry_add_recipient(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "ABCD1234"
     assert result["data"] == {CONF_RECIPIENT: "ABCD1234"}
+    assert result["unique_id"] == "ABCD1234"
 
 
 async def test_subentry_invalid_recipient_id(

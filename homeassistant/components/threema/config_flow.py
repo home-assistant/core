@@ -185,30 +185,27 @@ class RecipientSubentryFlowHandler(ConfigSubentryFlow):
         errors: dict[str, str] = {}
 
         if user_input is not None:
-            try:
-                recipient_id = RECIPIENT_SCHEMA(user_input[CONF_RECIPIENT])
-            except vol.Invalid:
-                errors["base"] = "invalid_recipient_id"
-            else:
-                # Check for duplicate recipients
-                for subentry in self._get_entry().subentries.values():
-                    if subentry.data.get(CONF_RECIPIENT) == recipient_id:
-                        return self.async_abort(reason="already_configured")
+            recipient_id = user_input[CONF_RECIPIENT]
 
-                raw_name = user_input.get(CONF_NAME, "").strip()
-                name = f"{raw_name} ({recipient_id})" if raw_name else recipient_id
+            # Check for duplicate recipients
+            for subentry in self._get_entry().subentries.values():
+                if subentry.data.get(CONF_RECIPIENT) == recipient_id:
+                    return self.async_abort(reason="already_configured")
 
-                return self.async_create_entry(
-                    title=name,
-                    data={CONF_RECIPIENT: recipient_id},
-                    unique_id=recipient_id,
-                )
+            raw_name = user_input.get(CONF_NAME, "").strip()
+            name = f"{raw_name} ({recipient_id})" if raw_name else recipient_id
+
+            return self.async_create_entry(
+                title=name,
+                data={CONF_RECIPIENT: recipient_id},
+                unique_id=recipient_id,
+            )
 
         return self.async_show_form(
             step_id="user",
             data_schema=vol.Schema(
                 {
-                    vol.Required(CONF_RECIPIENT): str,
+                    vol.Required(CONF_RECIPIENT): RECIPIENT_SCHEMA,
                     vol.Optional(CONF_NAME): str,
                 }
             ),
