@@ -169,7 +169,7 @@ class LocalTodoListEntity(TodoListEntity):
         await self.async_update_ha_state(force_refresh=True)
 
     async def async_update_todo_item(self, item: TodoItem) -> None:
-        """Update an item to the To-do list."""
+        """Update an item in the To-do list."""
         todo = _convert_item(item)
         async with self._calendar_lock:
             todo_store = self._new_todo_store()
