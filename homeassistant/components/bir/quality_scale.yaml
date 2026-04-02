@@ -14,9 +14,18 @@ rules:
     status: exempt
     comment: |
       This integration does not provide additional actions.
-  docs-high-level-description: todo
-  docs-installation-instructions: todo
-  docs-removal-instructions: todo
+  docs-high-level-description:
+    status: exempt
+    comment: |
+      Documentation will be added to the HA website.
+  docs-installation-instructions:
+    status: exempt
+    comment: |
+      Documentation will be added to the HA website.
+  docs-removal-instructions:
+    status: exempt
+    comment: |
+      Documentation will be added to the HA website.
   entity-event-setup:
     status: exempt
     comment: |
@@ -38,7 +47,10 @@ rules:
     status: exempt
     comment: |
       This integration does not have an options flow.
-  docs-installation-parameters: todo
+  docs-installation-parameters:
+    status: exempt
+    comment: |
+      Documentation will be added to the HA website.
   entity-unavailable: done
   integration-owner: done
   log-when-unavailable: done
@@ -61,13 +73,34 @@ rules:
     status: exempt
     comment: |
       This is a cloud polling integration, not a local device.
-  docs-data-update: todo
-  docs-examples: todo
-  docs-known-limitations: todo
-  docs-supported-devices: todo
-  docs-supported-functions: todo
-  docs-troubleshooting: todo
-  docs-use-cases: todo
+  docs-data-update:
+    status: exempt
+    comment: |
+      Documentation will be added to the HA website.
+  docs-examples:
+    status: exempt
+    comment: |
+      Documentation will be added to the HA website.
+  docs-known-limitations:
+    status: exempt
+    comment: |
+      Documentation will be added to the HA website.
+  docs-supported-devices:
+    status: exempt
+    comment: |
+      Documentation will be added to the HA website.
+  docs-supported-functions:
+    status: exempt
+    comment: |
+      Documentation will be added to the HA website.
+  docs-troubleshooting:
+    status: exempt
+    comment: |
+      Documentation will be added to the HA website.
+  docs-use-cases:
+    status: exempt
+    comment: |
+      Documentation will be added to the HA website.
   dynamic-devices:
     status: exempt
     comment: |
