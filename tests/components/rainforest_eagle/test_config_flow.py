@@ -193,6 +193,97 @@ async def test_form_eagle_100(hass: HomeAssistant) -> None:
     assert len(mock_setup_entry.mock_calls) == 1
 
 
+async def test_form_unknown_device_type(hass: HomeAssistant) -> None:
+    """Test flow when device type cannot be determined (get_device_list raises an error but other responses aren't the expected values)."""
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] is None
+
+    # Patch get_device_list to raise KeyError (expected from EAGLE-100), and async_add_executor_job to return an unknown device response
+    unknown_device_response = {"NetworkInfo": {"ModelId": "UNKNOWN-DEVICE"}}
+
+    with (
+        patch(
+            "aioeagle.EagleHub.get_device_list",
+            side_effect=KeyError,
+        ),
+        patch(
+            "eagle100.Eagle.get_network_info",
+            return_value=unknown_device_response,
+        ),
+        patch(
+            "homeassistant.core.HomeAssistant.async_add_executor_job",
+            return_value=unknown_device_response,
+        ),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_CLOUD_ID: "abcdef",
+                CONF_INSTALL_CODE: "123456",
+                CONF_HOST: "192.168.1.55",
+            },
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "unknown_device_type"}
+
+
+async def test_form_unsupported_device_type(hass: HomeAssistant) -> None:
+    """Test flow when device type is unsupported (async_get_type returns an unexpected device type)."""
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] is None
+
+    with patch(
+        "homeassistant.components.rainforest_eagle.config_flow.async_get_type",
+        return_value=("UNSUPPORTED_DEVICE_TYPE", None),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_CLOUD_ID: "abcdef",
+                CONF_INSTALL_CODE: "123456",
+                CONF_HOST: "192.168.1.55",
+            },
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "unsupported_device_type"}
+
+
+async def test_form_unexpected_exception(hass: HomeAssistant) -> None:
+    """Test flow when an unexpected exception occurs."""
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] is None
+
+    with patch(
+        "homeassistant.components.rainforest_eagle.config_flow.async_get_type",
+        side_effect=Exception,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_CLOUD_ID: "abcdef",
+                CONF_INSTALL_CODE: "123456",
+                CONF_HOST: "192.168.1.55",
+            },
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "unknown"}
+
+
 async def test_form_invalid_auth(hass: HomeAssistant) -> None:
     """Test we handle invalid auth."""
     result = await hass.config_entries.flow.async_init(
