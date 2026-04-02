@@ -366,7 +366,7 @@ aiopurpleair==2025.08.1
 aiopvapi==3.3.0
 
 # homeassistant.components.pvpc_hourly_pricing
-aiopvpc==4.2.2
+aiopvpc==4.3.1
 
 # homeassistant.components.lidarr
 # homeassistant.components.radarr
