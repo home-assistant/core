@@ -74,7 +74,10 @@ OPTIONS_SCHEMA = {
     vol.Optional(
         CONF_SENSOR_ERROR_ACTION, default=DEFAULT_SENSOR_ERROR_ACTION
     ): selector.SelectSelector(
-        selector.SelectSelectorConfig(options=SENSOR_ERROR_ACTIONS)
+        selector.SelectSelectorConfig(
+            options=SENSOR_ERROR_ACTIONS,
+            translation_key=CONF_SENSOR_ERROR_ACTION,
+        )
     ),
     vol.Optional(CONF_MAX_DUR): selector.DurationSelector(
         selector.DurationSelectorConfig(allow_negative=False)

@@ -94,6 +94,15 @@
       }
     }
   },
+  "selector": {
+    "sensor_error_action": {
+      "options": {
+        "force_off": "Force output off",
+        "force_on": "Force output on",
+        "keep": "Keep current behavior"
+      }
+    }
+  },
   "services": {
     "reload": {
       "description": "Reloads generic thermostats from the YAML-configuration.",
