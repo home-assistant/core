@@ -16,11 +16,14 @@ class FlussEntity(CoordinatorEntity[FlussDataUpdateCoordinator]):
         coordinator: FlussDataUpdateCoordinator,
         device_id: str,
         device: dict,
+        unique_id_suffix: str = "",
     ) -> None:
         """Initialize the entity with a device ID and device data."""
         super().__init__(coordinator)
         self.device_id = device_id
-        self._attr_unique_id = device_id
+        self._attr_unique_id = (
+            f"{device_id}_{unique_id_suffix}" if unique_id_suffix else device_id
+        )
         self._attr_device_info = DeviceInfo(
             identifiers={("fluss", device_id)},
             name=device.get("deviceName"),

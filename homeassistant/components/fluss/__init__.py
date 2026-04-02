@@ -8,7 +8,7 @@ from homeassistant.core import HomeAssistant
 
 from .coordinator import FlussDataUpdateCoordinator
 
-PLATFORMS: list[Platform] = [Platform.BUTTON]
+PLATFORMS: list[Platform] = [Platform.BUTTON, Platform.COVER]
 
 
 type FlussConfigEntry = ConfigEntry[FlussDataUpdateCoordinator]

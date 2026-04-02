@@ -34,7 +34,7 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 
 @pytest.fixture
 def mock_api_client() -> Generator[AsyncMock]:
-    """Mock Fluss API client with single device."""
+    """Mock Fluss API client with two devices."""
     with (
         patch(
             "homeassistant.components.fluss.coordinator.FlussApiClient",
@@ -52,4 +52,11 @@ def mock_api_client() -> Generator[AsyncMock]:
                 {"deviceId": "ape93k9302j2", "deviceName": "Device 2"},
             ]
         }
+        client.async_get_device_status.side_effect = lambda device_id: {
+            "2a303030sdj1": {"state": "closed"},
+            "ape93k9302j2": {"state": "open"},
+        }.get(device_id, {"state": "closed"})
+        client.async_trigger_device.return_value = None
+        client.async_open_device.return_value = None
+        client.async_close_device.return_value = None
         yield client

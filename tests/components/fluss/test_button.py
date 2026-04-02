@@ -43,7 +43,7 @@ async def test_button_press(
     await hass.services.async_call(
         BUTTON_DOMAIN,
         SERVICE_PRESS,
-        {ATTR_ENTITY_ID: "button.device_1"},
+        {ATTR_ENTITY_ID: "button.device_1_trigger"},
         blocking=True,
     )
 
@@ -60,10 +60,10 @@ async def test_button_press_error(
 
     mock_api_client.async_trigger_device.side_effect = FlussApiClientError("API Boom")
 
-    with pytest.raises(HomeAssistantError, match="Failed to trigger device: API Boom"):
+    with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             BUTTON_DOMAIN,
             SERVICE_PRESS,
-            {ATTR_ENTITY_ID: "button.device_1"},
+            {ATTR_ENTITY_ID: "button.device_1_trigger"},
             blocking=True,
         )

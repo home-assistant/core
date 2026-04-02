@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 from typing import Any
 
 from fluss_api import (
@@ -47,4 +48,23 @@ class FlussDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         except FlussApiClientError as err:
             raise UpdateFailed(f"Error fetching Fluss devices: {err}") from err
 
-        return {device["deviceId"]: device for device in devices.get("devices", [])}
+        device_list = devices.get("devices", [])
+        statuses = await asyncio.gather(
+            *(
+                self._async_get_device_status(device["deviceId"])
+                for device in device_list
+            )
+        )
+
+        return {
+            device["deviceId"]: {**device, "status": status}
+            for device, status in zip(device_list, statuses, strict=True)
+        }
+
+    async def _async_get_device_status(self, device_id: str) -> dict[str, Any] | None:
+        """Fetch status for a single device, returning None on failure."""
+        try:
+            return await self.api.async_get_device_status(device_id)
+        except FlussApiClientError as err:
+            LOGGER.debug("Failed to get status for device %s: %s", device_id, err)
+            return None
