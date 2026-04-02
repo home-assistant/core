@@ -245,14 +245,16 @@ async def test_coordinator_handles_invalid_data(
 
 
 @pytest.mark.parametrize(
-    ("timestamps", "expected_state"),
+    ("timestamps", "values", "expected_state"),
     [
         (
             ["2023-06-01T08:12:34-07:00", "2023-06-01T08:45:00-07:00"],
+            [1234, 66],
             1300.0,
         ),
         (
             ["2023-06-01T14:00:00+05:30", "2023-06-01T14:45:00+05:30"],
+            [100, 200],
             300.0,
         ),
     ],
@@ -264,6 +266,7 @@ async def test_coordinator_normalizes_timestamps_to_hour(
     mock_config_entry: MockConfigEntry,
     mock_energy_site: AsyncMock,
     timestamps: list[str],
+    values: list[int],
     expected_state: float,
 ) -> None:
     """Test the coordinator aggregates same-hour samples at the top of the hour.
@@ -277,12 +280,6 @@ async def test_coordinator_normalizes_timestamps_to_hour(
     expected_start = dt_util.parse_datetime(timestamps[0])
     assert expected_start is not None
     expected_start = expected_start.replace(minute=0, second=0, microsecond=0)
-
-    values = [
-        int(expected_state * i / len(timestamps)) for i in range(1, len(timestamps) + 1)
-    ]
-    # Ensure values sum to expected_state
-    values[-1] = int(expected_state) - sum(values[:-1])
 
     mock_energy_site.energy_history.return_value = {
         "response": {
@@ -443,11 +440,11 @@ async def test_coordinator_handles_missing_timestamp(
             "period": "day",
             "time_series": [
                 {
-                    "solar_energy_exported": 1000,
-                },
-                {
                     "timestamp": "2023-06-01T08:00:00-07:00",
                     "solar_energy_exported": 2000,
+                },
+                {
+                    "solar_energy_exported": 1000,
                 },
             ],
         }
