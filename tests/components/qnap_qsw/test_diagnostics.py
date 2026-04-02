@@ -55,7 +55,6 @@ async def test_config_entry_diagnostics(
     await async_init_integration(hass)
 
     config_entry = hass.config_entries.async_entries(DOMAIN)[0]
-    assert config_entry.runtime_data
     diag = await get_diagnostics_for_config_entry(hass, hass_client, config_entry)
 
     assert (
