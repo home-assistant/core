@@ -41,29 +41,33 @@ def prepare_download_dir():
         download.DOWNLOAD_DIR.mkdir(parents=True)
 
 
+def run_translation(component_translations, flattened_translations):
+    """Run the translation process for the given components."""
+    for integration in component_translations:
+        print(f"Generating translations for {integration}")
+        component_translations[integration] = substitute_references(
+            component_translations[integration],
+            flattened_translations,
+            fail_on_missing=True,
+        )
+
+    (download.DOWNLOAD_DIR / "en.json").write_bytes(
+        orjson.dumps({"component": component_translations})
+    )
+    download.save_integrations_translations()
+
+
 def run_single(translations, flattened_translations, integration):
     """Run the script for a single integration."""
-    print(f"Generating translations for {integration}")
-
     component_translations = translations["component"]
     if integration not in component_translations:
         print("Integration has no strings.json")
         sys.exit(1)
 
-    integration_strings = substitute_references(
-        component_translations[integration],
-        flattened_translations,
-        fail_on_missing=True,
-    )
-    component_translations[integration] = integration_strings
-
     prepare_download_dir()
-
-    (download.DOWNLOAD_DIR / "en.json").write_bytes(
-        orjson.dumps({"component": {integration: integration_strings}})
+    run_translation(
+        {integration: component_translations[integration]}, flattened_translations
     )
-
-    download.save_integrations_translations()
 
 
 def run():
@@ -75,19 +79,7 @@ def run():
     if args.all:
         start = time.perf_counter()
         prepare_download_dir()
-        component_translations = translations["component"]
-        for integration in component_translations:
-            print(f"Generating translations for {integration}")
-            component_translations[integration] = substitute_references(
-                component_translations[integration],
-                flattened_translations,
-                fail_on_missing=True,
-            )
-
-        (download.DOWNLOAD_DIR / "en.json").write_bytes(
-            orjson.dumps({"component": component_translations})
-        )
-        download.save_integrations_translations()
+        run_translation(dict(translations["component"]), flattened_translations)
         elapsed = time.perf_counter() - start
         print(
             f"🌎 Generated translation files for all integrations in {elapsed:.2f} seconds"
