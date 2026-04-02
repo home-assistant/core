@@ -44,6 +44,7 @@
       'group_members': list([
       ]),
       'is_volume_muted': True,
+      'last_non_buffering_state': <MediaPlayerState.IDLE: 'idle'>,
       'media_duration': 1,
       'media_position': 1,
       'query_result': dict({

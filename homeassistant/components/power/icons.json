@@ -1,4 +1,9 @@
 {
+  "conditions": {
+    "is_value": {
+      "condition": "mdi:flash"
+    }
+  },
   "triggers": {
     "changed": {
       "trigger": "mdi:flash"

@@ -1,0 +1,8 @@
+{
+  "issues": {
+    "integration_removed": {
+      "description": "The BMW Connected Drive integration has been removed from Home Assistant.\n\nIn September 2025, BMW blocked third-party access to their servers by adding additional security measures. For EU-registered cars, a community-developed [custom component]({custom_component_url}) using BMW's CarData API is available as an alternative.\n\nTo resolve this issue, please remove the (now defunct) integration entries from your Home Assistant setup. [Click here to see your existing BMW Connected Drive integration entries]({entries}).",
+      "title": "The BMW Connected Drive integration has been removed"
+    }
+  }
+}
