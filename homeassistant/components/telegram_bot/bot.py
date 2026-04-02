@@ -340,7 +340,9 @@ class TelegramNotificationService:
     def _get_msg_kwargs(self, data: dict[str, Any]) -> dict[str, Any]:
         """Get parameters in message data kwargs."""
 
-        def _create_inline_button(text: str, data: str, style: str | None = None):
+        def _create_inline_button(
+            text: str, data: str, style: str | None = None
+        ) -> InlineKeyboardButton:
             """Create InlineKeyboardButton with optional style support."""
             style_value = style if style in {"success", "danger", "primary"} else None
 
