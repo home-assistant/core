@@ -1,0 +1,337 @@
+"""Test alarm control panel triggers."""
+
+from typing import Any
+
+import pytest
+
+from homeassistant.components.alarm_control_panel import (
+    AlarmControlPanelEntityFeature,
+    AlarmControlPanelState,
+)
+from homeassistant.const import ATTR_SUPPORTED_FEATURES
+from homeassistant.core import HomeAssistant
+
+from tests.components.common import (
+    TriggerStateDescription,
+    assert_trigger_behavior_any,
+    assert_trigger_behavior_first,
+    assert_trigger_behavior_last,
+    assert_trigger_gated_by_labs_flag,
+    other_states,
+    parametrize_target_entities,
+    parametrize_trigger_states,
+    target_entities,
+)
+
+
+@pytest.fixture
+async def target_alarm_control_panels(hass: HomeAssistant) -> dict[str, list[str]]:
+    """Create multiple alarm control panel entities associated with different targets."""
+    return await target_entities(hass, "alarm_control_panel")
+
+
+@pytest.mark.parametrize(
+    "trigger_key",
+    [
+        "alarm_control_panel.armed",
+        "alarm_control_panel.armed_away",
+        "alarm_control_panel.armed_home",
+        "alarm_control_panel.armed_night",
+        "alarm_control_panel.armed_vacation",
+        "alarm_control_panel.disarmed",
+        "alarm_control_panel.triggered",
+    ],
+)
+async def test_alarm_control_panel_triggers_gated_by_labs_flag(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, trigger_key: str
+) -> None:
+    """Test the ACP triggers are gated by the labs flag."""
+    await assert_trigger_gated_by_labs_flag(hass, caplog, trigger_key)
+
+
+@pytest.mark.usefixtures("enable_labs_preview_features")
+@pytest.mark.parametrize(
+    ("trigger_target_config", "entity_id", "entities_in_target"),
+    parametrize_target_entities("alarm_control_panel"),
+)
+@pytest.mark.parametrize(
+    ("trigger", "trigger_options", "states"),
+    [
+        *parametrize_trigger_states(
+            trigger="alarm_control_panel.armed",
+            target_states=[
+                AlarmControlPanelState.ARMED_AWAY,
+                AlarmControlPanelState.ARMED_CUSTOM_BYPASS,
+                AlarmControlPanelState.ARMED_HOME,
+                AlarmControlPanelState.ARMED_NIGHT,
+                AlarmControlPanelState.ARMED_VACATION,
+            ],
+            other_states=[
+                AlarmControlPanelState.ARMING,
+                AlarmControlPanelState.DISARMED,
+                AlarmControlPanelState.DISARMING,
+                AlarmControlPanelState.PENDING,
+                AlarmControlPanelState.TRIGGERED,
+            ],
+        ),
+        *parametrize_trigger_states(
+            trigger="alarm_control_panel.armed_away",
+            target_states=[AlarmControlPanelState.ARMED_AWAY],
+            other_states=other_states(AlarmControlPanelState.ARMED_AWAY),
+            required_filter_attributes={
+                ATTR_SUPPORTED_FEATURES: AlarmControlPanelEntityFeature.ARM_AWAY
+            },
+            trigger_from_none=False,
+        ),
+        *parametrize_trigger_states(
+            trigger="alarm_control_panel.armed_home",
+            target_states=[AlarmControlPanelState.ARMED_HOME],
+            other_states=other_states(AlarmControlPanelState.ARMED_HOME),
+            required_filter_attributes={
+                ATTR_SUPPORTED_FEATURES: AlarmControlPanelEntityFeature.ARM_HOME
+            },
+            trigger_from_none=False,
+        ),
+        *parametrize_trigger_states(
+            trigger="alarm_control_panel.armed_night",
+            target_states=[AlarmControlPanelState.ARMED_NIGHT],
+            other_states=other_states(AlarmControlPanelState.ARMED_NIGHT),
+            required_filter_attributes={
+                ATTR_SUPPORTED_FEATURES: AlarmControlPanelEntityFeature.ARM_NIGHT
+            },
+            trigger_from_none=False,
+        ),
+        *parametrize_trigger_states(
+            trigger="alarm_control_panel.armed_vacation",
+            target_states=[AlarmControlPanelState.ARMED_VACATION],
+            other_states=other_states(AlarmControlPanelState.ARMED_VACATION),
+            required_filter_attributes={
+                ATTR_SUPPORTED_FEATURES: AlarmControlPanelEntityFeature.ARM_VACATION
+            },
+            trigger_from_none=False,
+        ),
+        *parametrize_trigger_states(
+            trigger="alarm_control_panel.disarmed",
+            target_states=[AlarmControlPanelState.DISARMED],
+            other_states=other_states(AlarmControlPanelState.DISARMED),
+        ),
+        *parametrize_trigger_states(
+            trigger="alarm_control_panel.triggered",
+            target_states=[AlarmControlPanelState.TRIGGERED],
+            other_states=other_states(AlarmControlPanelState.TRIGGERED),
+        ),
+    ],
+)
+async def test_alarm_control_panel_state_trigger_behavior_any(
+    hass: HomeAssistant,
+    target_alarm_control_panels: dict[str, list[str]],
+    trigger_target_config: dict,
+    entity_id: str,
+    entities_in_target: int,
+    trigger: str,
+    trigger_options: dict[str, Any],
+    states: list[TriggerStateDescription],
+) -> None:
+    """Test that the alarm control panel state trigger fires when any alarm control panel state changes to a specific state."""
+    await assert_trigger_behavior_any(
+        hass,
+        target_entities=target_alarm_control_panels,
+        trigger_target_config=trigger_target_config,
+        entity_id=entity_id,
+        entities_in_target=entities_in_target,
+        trigger=trigger,
+        trigger_options=trigger_options,
+        states=states,
+    )
+
+
+@pytest.mark.usefixtures("enable_labs_preview_features")
+@pytest.mark.parametrize(
+    ("trigger_target_config", "entity_id", "entities_in_target"),
+    parametrize_target_entities("alarm_control_panel"),
+)
+@pytest.mark.parametrize(
+    ("trigger", "trigger_options", "states"),
+    [
+        *parametrize_trigger_states(
+            trigger="alarm_control_panel.armed",
+            target_states=[
+                AlarmControlPanelState.ARMED_AWAY,
+                AlarmControlPanelState.ARMED_CUSTOM_BYPASS,
+                AlarmControlPanelState.ARMED_HOME,
+                AlarmControlPanelState.ARMED_NIGHT,
+                AlarmControlPanelState.ARMED_VACATION,
+            ],
+            other_states=[
+                AlarmControlPanelState.ARMING,
+                AlarmControlPanelState.DISARMED,
+                AlarmControlPanelState.DISARMING,
+                AlarmControlPanelState.PENDING,
+                AlarmControlPanelState.TRIGGERED,
+            ],
+        ),
+        *parametrize_trigger_states(
+            trigger="alarm_control_panel.armed_away",
+            target_states=[AlarmControlPanelState.ARMED_AWAY],
+            other_states=other_states(AlarmControlPanelState.ARMED_AWAY),
+            required_filter_attributes={
+                ATTR_SUPPORTED_FEATURES: AlarmControlPanelEntityFeature.ARM_AWAY
+            },
+            trigger_from_none=False,
+        ),
+        *parametrize_trigger_states(
+            trigger="alarm_control_panel.armed_home",
+            target_states=[AlarmControlPanelState.ARMED_HOME],
+            other_states=other_states(AlarmControlPanelState.ARMED_HOME),
+            required_filter_attributes={
+                ATTR_SUPPORTED_FEATURES: AlarmControlPanelEntityFeature.ARM_HOME
+            },
+            trigger_from_none=False,
+        ),
+        *parametrize_trigger_states(
+            trigger="alarm_control_panel.armed_night",
+            target_states=[AlarmControlPanelState.ARMED_NIGHT],
+            other_states=other_states(AlarmControlPanelState.ARMED_NIGHT),
+            required_filter_attributes={
+                ATTR_SUPPORTED_FEATURES: AlarmControlPanelEntityFeature.ARM_NIGHT
+            },
+            trigger_from_none=False,
+        ),
+        *parametrize_trigger_states(
+            trigger="alarm_control_panel.armed_vacation",
+            target_states=[AlarmControlPanelState.ARMED_VACATION],
+            other_states=other_states(AlarmControlPanelState.ARMED_VACATION),
+            required_filter_attributes={
+                ATTR_SUPPORTED_FEATURES: AlarmControlPanelEntityFeature.ARM_VACATION
+            },
+            trigger_from_none=False,
+        ),
+        *parametrize_trigger_states(
+            trigger="alarm_control_panel.disarmed",
+            target_states=[AlarmControlPanelState.DISARMED],
+            other_states=other_states(AlarmControlPanelState.DISARMED),
+        ),
+        *parametrize_trigger_states(
+            trigger="alarm_control_panel.triggered",
+            target_states=[AlarmControlPanelState.TRIGGERED],
+            other_states=other_states(AlarmControlPanelState.TRIGGERED),
+        ),
+    ],
+)
+async def test_alarm_control_panel_state_trigger_behavior_first(
+    hass: HomeAssistant,
+    target_alarm_control_panels: dict[str, list[str]],
+    trigger_target_config: dict,
+    entity_id: str,
+    entities_in_target: int,
+    trigger: str,
+    trigger_options: dict[str, Any],
+    states: list[TriggerStateDescription],
+) -> None:
+    """Test that the alarm control panel state trigger fires when the first alarm control panel changes to a specific state."""
+    await assert_trigger_behavior_first(
+        hass,
+        target_entities=target_alarm_control_panels,
+        trigger_target_config=trigger_target_config,
+        entity_id=entity_id,
+        entities_in_target=entities_in_target,
+        trigger=trigger,
+        trigger_options=trigger_options,
+        states=states,
+    )
+
+
+@pytest.mark.usefixtures("enable_labs_preview_features")
+@pytest.mark.parametrize(
+    ("trigger_target_config", "entity_id", "entities_in_target"),
+    parametrize_target_entities("alarm_control_panel"),
+)
+@pytest.mark.parametrize(
+    ("trigger", "trigger_options", "states"),
+    [
+        *parametrize_trigger_states(
+            trigger="alarm_control_panel.armed",
+            target_states=[
+                AlarmControlPanelState.ARMED_AWAY,
+                AlarmControlPanelState.ARMED_CUSTOM_BYPASS,
+                AlarmControlPanelState.ARMED_HOME,
+                AlarmControlPanelState.ARMED_NIGHT,
+                AlarmControlPanelState.ARMED_VACATION,
+            ],
+            other_states=[
+                AlarmControlPanelState.ARMING,
+                AlarmControlPanelState.DISARMED,
+                AlarmControlPanelState.DISARMING,
+                AlarmControlPanelState.PENDING,
+                AlarmControlPanelState.TRIGGERED,
+            ],
+        ),
+        *parametrize_trigger_states(
+            trigger="alarm_control_panel.armed_away",
+            target_states=[AlarmControlPanelState.ARMED_AWAY],
+            other_states=other_states(AlarmControlPanelState.ARMED_AWAY),
+            required_filter_attributes={
+                ATTR_SUPPORTED_FEATURES: AlarmControlPanelEntityFeature.ARM_AWAY
+            },
+            trigger_from_none=False,
+        ),
+        *parametrize_trigger_states(
+            trigger="alarm_control_panel.armed_home",
+            target_states=[AlarmControlPanelState.ARMED_HOME],
+            other_states=other_states(AlarmControlPanelState.ARMED_HOME),
+            required_filter_attributes={
+                ATTR_SUPPORTED_FEATURES: AlarmControlPanelEntityFeature.ARM_HOME
+            },
+            trigger_from_none=False,
+        ),
+        *parametrize_trigger_states(
+            trigger="alarm_control_panel.armed_night",
+            target_states=[AlarmControlPanelState.ARMED_NIGHT],
+            other_states=other_states(AlarmControlPanelState.ARMED_NIGHT),
+            required_filter_attributes={
+                ATTR_SUPPORTED_FEATURES: AlarmControlPanelEntityFeature.ARM_NIGHT
+            },
+            trigger_from_none=False,
+        ),
+        *parametrize_trigger_states(
+            trigger="alarm_control_panel.armed_vacation",
+            target_states=[AlarmControlPanelState.ARMED_VACATION],
+            other_states=other_states(AlarmControlPanelState.ARMED_VACATION),
+            required_filter_attributes={
+                ATTR_SUPPORTED_FEATURES: AlarmControlPanelEntityFeature.ARM_VACATION
+            },
+            trigger_from_none=False,
+        ),
+        *parametrize_trigger_states(
+            trigger="alarm_control_panel.disarmed",
+            target_states=[AlarmControlPanelState.DISARMED],
+            other_states=other_states(AlarmControlPanelState.DISARMED),
+        ),
+        *parametrize_trigger_states(
+            trigger="alarm_control_panel.triggered",
+            target_states=[AlarmControlPanelState.TRIGGERED],
+            other_states=other_states(AlarmControlPanelState.TRIGGERED),
+        ),
+    ],
+)
+async def test_alarm_control_panel_state_trigger_behavior_last(
+    hass: HomeAssistant,
+    target_alarm_control_panels: dict[str, list[str]],
+    trigger_target_config: dict,
+    entity_id: str,
+    entities_in_target: int,
+    trigger: str,
+    trigger_options: dict[str, Any],
+    states: list[TriggerStateDescription],
+) -> None:
+    """Test that the alarm_control_panel state trigger fires when the last alarm_control_panel changes to a specific state."""
+    await assert_trigger_behavior_last(
+        hass,
+        target_entities=target_alarm_control_panels,
+        trigger_target_config=trigger_target_config,
+        entity_id=entity_id,
+        entities_in_target=entities_in_target,
+        trigger=trigger,
+        trigger_options=trigger_options,
+        states=states,
+    )

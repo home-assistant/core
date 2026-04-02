@@ -4,13 +4,13 @@
       "grill_type": {
         "default": "mdi:grill",
         "state": {
-          "turkey": "mdi:food-turkey",
-          "sausage": "mdi:sausage",
+          "bbq_smoke": "mdi:smoke",
+          "cold_smoke": "mdi:smoke",
           "fish": "mdi:fish",
           "hamburger": "mdi:hamburger",
-          "bbq_smoke": "mdi:smoke",
           "hot_smoke": "mdi:smoke",
-          "cold_smoke": "mdi:smoke"
+          "sausage": "mdi:sausage",
+          "turkey": "mdi:food-turkey"
         }
       },
       "taste": {

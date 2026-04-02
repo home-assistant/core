@@ -10,7 +10,8 @@
           "serialNumber": 123
         },
         "battery": {
-          "batteryPercent": 100
+          "batteryPercent": 100,
+          "remainingChargingTime": 309
         },
         "capabilities": {
           "canConfirmError": true,
@@ -220,7 +221,8 @@
           "serialNumber": 123
         },
         "battery": {
-          "batteryPercent": 50
+          "batteryPercent": 50,
+          "remainingChargingTime": 0
         },
         "capabilities": {
           "canConfirmError": false,

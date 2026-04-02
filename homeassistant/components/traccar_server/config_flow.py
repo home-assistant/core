@@ -16,11 +16,10 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import (
+    CONF_API_TOKEN,
     CONF_HOST,
-    CONF_PASSWORD,
     CONF_PORT,
     CONF_SSL,
-    CONF_USERNAME,
     CONF_VERIFY_SSL,
 )
 from homeassistant.core import callback
@@ -61,10 +60,7 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
         vol.Optional(CONF_PORT, default="8082"): TextSelector(
             TextSelectorConfig(type=TextSelectorType.TEXT)
         ),
-        vol.Required(CONF_USERNAME): TextSelector(
-            TextSelectorConfig(type=TextSelectorType.EMAIL)
-        ),
-        vol.Required(CONF_PASSWORD): TextSelector(
+        vol.Required(CONF_API_TOKEN): TextSelector(
             TextSelectorConfig(type=TextSelectorType.PASSWORD)
         ),
         vol.Optional(CONF_SSL, default=False): BooleanSelector(BooleanSelectorConfig()),
@@ -120,16 +116,17 @@ OPTIONS_FLOW = {
 class TraccarServerConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Traccar Server."""
 
+    VERSION = 2
+
     async def _get_server_info(self, user_input: dict[str, Any]) -> ServerModel:
         """Get server info."""
         client = ApiClient(
             client_session=async_get_clientsession(self.hass),
             host=user_input[CONF_HOST],
             port=user_input[CONF_PORT],
-            username=user_input[CONF_USERNAME],
-            password=user_input[CONF_PASSWORD],
             ssl=user_input[CONF_SSL],
             verify_ssl=user_input[CONF_VERIFY_SSL],
+            token=user_input[CONF_API_TOKEN],
         )
         return await client.get_server()
 
@@ -201,19 +198,11 @@ class TraccarServerConfigFlow(ConfigFlow, domain=DOMAIN):
                     reauth_entry,
                     data_updates=user_input,
                 )
-        username = (
-            user_input[CONF_USERNAME]
-            if user_input
-            else reauth_entry.data[CONF_USERNAME]
-        )
         return self.async_show_form(
             step_id="reauth_confirm",
             data_schema=vol.Schema(
                 {
-                    vol.Required(CONF_USERNAME, default=username): TextSelector(
-                        TextSelectorConfig(type=TextSelectorType.EMAIL)
-                    ),
-                    vol.Required(CONF_PASSWORD): TextSelector(
+                    vol.Required(CONF_API_TOKEN): TextSelector(
                         TextSelectorConfig(type=TextSelectorType.PASSWORD)
                     ),
                 }

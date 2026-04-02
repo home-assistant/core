@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_sensors_valid_state[sensor.suez_mock_device_water_price-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -20,6 +21,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Water price',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.MONETARY: 'monetary'>,
@@ -52,8 +54,9 @@
 # ---
 # name: test_sensors_valid_state[sensor.suez_mock_device_water_usage_yesterday-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -71,6 +74,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Water usage yesterday',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,

@@ -1,5 +1,6 @@
 """Tests for Shelly button platform."""
 
+from copy import deepcopy
 from unittest.mock import Mock
 
 from aioshelly.ble.const import BLE_SCRIPT_NAME
@@ -14,13 +15,30 @@ from homeassistant.components.event import (
     DOMAIN as EVENT_DOMAIN,
     EventDeviceClass,
 )
-from homeassistant.const import ATTR_DEVICE_CLASS, STATE_UNKNOWN
+from homeassistant.const import ATTR_DEVICE_CLASS, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_registry import EntityRegistry
 
-from . import init_integration, inject_rpc_device_event, register_entity
+from . import (
+    init_integration,
+    inject_rpc_device_event,
+    patch_platforms,
+    register_entity,
+)
+from .conftest import MOCK_BLOCKS
 
 DEVICE_BLOCK_ID = 4
+
+UNORDERED_EVENT_TYPES = unordered(
+    ["double", "long", "long_single", "single", "single_long", "triple"]
+)
+
+
+@pytest.fixture(autouse=True)
+def fixture_platforms():
+    """Limit platforms under test."""
+    with patch_platforms([Platform.EVENT]):
+        yield
 
 
 async def test_rpc_button(
@@ -177,7 +195,7 @@ async def test_block_event(
     """Test block device event."""
     await init_integration(hass, 1)
     # num_outputs is 2, device name and channel name is used
-    entity_id = "event.test_name_channel_1"
+    entity_id = "event.test_name_channel_1_input"
 
     assert (state := hass.states.get(entity_id))
     assert state.state == STATE_UNKNOWN
@@ -201,15 +219,88 @@ async def test_block_event(
     assert state.attributes.get(ATTR_EVENT_TYPE) == "long"
 
 
+async def test_block_event_single_output(
+    hass: HomeAssistant, mock_block_device: Mock, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Test block device event when num_outputs is 1."""
+    monkeypatch.setitem(mock_block_device.shelly, "num_outputs", 1)
+    await init_integration(hass, 1)
+
+    assert hass.states.get("event.test_name_input")
+
+
+async def test_block_event_custom_name(
+    hass: HomeAssistant,
+    monkeypatch: pytest.MonkeyPatch,
+    mock_block_device: Mock,
+) -> None:
+    """Test block device event with custom name."""
+    monkeypatch.setitem(
+        mock_block_device.settings,
+        "relays",
+        [{"name": "test channel", "btn_type": "momentary"}, {"btn_type": "toggle"}],
+    )
+    await init_integration(hass, 1)
+    # num_outputs is 2, device name and custom name is used
+    assert hass.states.get("event.test_channel_input")
+
+
+async def test_block_event_custom_name_single_output(
+    hass: HomeAssistant, mock_block_device: Mock, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Test block device event with custom name when num_outputs is 1."""
+    monkeypatch.setitem(mock_block_device.shelly, "num_outputs", 1)
+    monkeypatch.setitem(
+        mock_block_device.settings,
+        "relays",
+        [{"name": "test channel", "btn_type": "momentary"}, {"btn_type": "toggle"}],
+    )
+    await init_integration(hass, 1)
+
+    assert hass.states.get("event.test_name_input")
+
+
 async def test_block_event_shix3_1(
     hass: HomeAssistant, mock_block_device: Mock, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """Test block device event for SHIX3-1."""
-    monkeypatch.setitem(mock_block_device.shelly, "num_outputs", 1)
-    await init_integration(hass, 1, model=MODEL_I3)
-    entity_id = "event.test_name"
-
-    assert (state := hass.states.get(entity_id))
-    assert state.attributes.get(ATTR_EVENT_TYPES) == unordered(
-        ["double", "long", "long_single", "single", "single_long", "triple"]
+    blocks = deepcopy(MOCK_BLOCKS)
+    blocks[0] = Mock(
+        sensor_ids={
+            "inputEvent": "S",
+            "inputEventCnt": 2,
+        },
+        channel="0",
+        type="input",
+        description="input_0",
     )
+    blocks[1] = Mock(
+        sensor_ids={
+            "inputEvent": "S",
+            "inputEventCnt": 2,
+        },
+        channel="1",
+        type="input",
+        description="input_1",
+    )
+    blocks[2] = Mock(
+        sensor_ids={
+            "inputEvent": "S",
+            "inputEventCnt": 2,
+        },
+        channel="2",
+        type="input",
+        description="input_2",
+    )
+    monkeypatch.setattr(mock_block_device, "blocks", blocks)
+    monkeypatch.delitem(mock_block_device.settings, "relays")
+    await init_integration(hass, 1, model=MODEL_I3)
+
+    assert (state := hass.states.get("event.test_name_tv_leds"))
+    assert state.attributes.get(ATTR_EVENT_TYPES) == UNORDERED_EVENT_TYPES
+
+    assert (state := hass.states.get("event.test_name_tv_spots"))
+    assert state.attributes.get(ATTR_EVENT_TYPES) == UNORDERED_EVENT_TYPES
+
+    assert (state := hass.states.get("event.test_name_input_3"))
+    assert state.attributes.get(ATTR_EVENT_TYPES) == UNORDERED_EVENT_TYPES

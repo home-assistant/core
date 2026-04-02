@@ -2,16 +2,22 @@
 
 from __future__ import annotations
 
-import aiohttp
+from aiohttp import ClientError
 from gassist_text import TextAssistant
 from google.oauth2.credentials import Credentials
 
 from homeassistant.components import conversation
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_NAME, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    ConfigEntryNotReady,
+    OAuth2TokenRequestError,
+    OAuth2TokenRequestReauthError,
+)
 from homeassistant.helpers import config_validation as cv, discovery, intent
 from homeassistant.helpers.config_entry_oauth2_flow import (
+    ImplementationUnavailableError,
     OAuth2Session,
     async_get_config_entry_implementation,
 )
@@ -47,17 +53,21 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: GoogleAssistantSDKConfigEntry
 ) -> bool:
     """Set up Google Assistant SDK from a config entry."""
-    implementation = await async_get_config_entry_implementation(hass, entry)
+    try:
+        implementation = await async_get_config_entry_implementation(hass, entry)
+    except ImplementationUnavailableError as err:
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="oauth2_implementation_unavailable",
+        ) from err
     session = OAuth2Session(hass, entry, implementation)
     try:
         await session.async_ensure_token_valid()
-    except aiohttp.ClientResponseError as err:
-        if 400 <= err.status < 500:
-            raise ConfigEntryAuthFailed(
-                "OAuth session is not valid, reauth required"
-            ) from err
-        raise ConfigEntryNotReady from err
-    except aiohttp.ClientError as err:
+    except OAuth2TokenRequestReauthError as err:
+        raise ConfigEntryAuthFailed(
+            translation_domain=DOMAIN, translation_key="reauth_required"
+        ) from err
+    except (OAuth2TokenRequestError, ClientError) as err:
         raise ConfigEntryNotReady from err
 
     mem_storage = InMemoryStorage(hass)
@@ -76,10 +86,6 @@ async def async_unload_entry(
     hass: HomeAssistant, entry: GoogleAssistantSDKConfigEntry
 ) -> bool:
     """Unload a config entry."""
-    if not hass.config_entries.async_loaded_entries(DOMAIN):
-        for service_name in hass.services.async_services_for_domain(DOMAIN):
-            hass.services.async_remove(DOMAIN, service_name)
-
     conversation.async_unset_agent(hass, entry)
 
     return True

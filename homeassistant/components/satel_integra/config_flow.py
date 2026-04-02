@@ -5,17 +5,17 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from satel_integra.satel_integra import AsyncSatel
+from satel_integra import AsyncSatel
 import voluptuous as vol
 
 from homeassistant.components.binary_sensor import BinarySensorDeviceClass
 from homeassistant.config_entries import (
     ConfigEntry,
+    ConfigEntryState,
     ConfigFlow,
     ConfigFlowResult,
-    ConfigSubentryData,
     ConfigSubentryFlow,
-    OptionsFlowWithReload,
+    OptionsFlow,
     SubentryFlowResult,
 )
 from homeassistant.const import CONF_CODE, CONF_HOST, CONF_NAME, CONF_PORT
@@ -24,15 +24,11 @@ from homeassistant.helpers import config_validation as cv, selector
 
 from .const import (
     CONF_ARM_HOME_MODE,
-    CONF_DEVICE_PARTITIONS,
     CONF_OUTPUT_NUMBER,
-    CONF_OUTPUTS,
     CONF_PARTITION_NUMBER,
     CONF_SWITCHABLE_OUTPUT_NUMBER,
-    CONF_SWITCHABLE_OUTPUTS,
     CONF_ZONE_NUMBER,
     CONF_ZONE_TYPE,
-    CONF_ZONES,
     DEFAULT_CONF_ARM_HOME_MODE,
     DEFAULT_PORT,
     DOMAIN,
@@ -40,8 +36,8 @@ from .const import (
     SUBENTRY_TYPE_PARTITION,
     SUBENTRY_TYPE_SWITCHABLE_OUTPUT,
     SUBENTRY_TYPE_ZONE,
-    SatelConfigEntry,
 )
+from .coordinator import SatelConfigEntry
 
 _LOGGER = logging.getLogger(__package__)
 
@@ -49,7 +45,6 @@ CONNECTION_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_HOST): str,
         vol.Required(CONF_PORT, default=DEFAULT_PORT): cv.port,
-        vol.Optional(CONF_CODE): cv.string,
     }
 )
 
@@ -90,7 +85,13 @@ SWITCHABLE_OUTPUT_SCHEMA = vol.Schema({vol.Required(CONF_NAME): cv.string})
 class SatelConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a Satel Integra config flow."""
 
-    VERSION = 1
+    def __init__(self) -> None:
+        """Initialize the config flow."""
+        super().__init__()
+        self.connection_data: dict[str, Any] = {}
+
+    VERSION = 2
+    MINOR_VERSION = 1
 
     @staticmethod
     @callback
@@ -120,130 +121,99 @@ class SatelConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         if user_input is not None:
-            valid = await self.test_connection(
-                user_input[CONF_HOST], user_input[CONF_PORT]
-            )
+            self._async_abort_entries_match({CONF_HOST: user_input[CONF_HOST]})
 
-            if valid:
-                return self.async_create_entry(
-                    title=user_input[CONF_HOST],
-                    data={
-                        CONF_HOST: user_input[CONF_HOST],
-                        CONF_PORT: user_input[CONF_PORT],
-                    },
-                    options={CONF_CODE: user_input.get(CONF_CODE)},
-                )
+            if await self.test_connection(user_input[CONF_HOST], user_input[CONF_PORT]):
+                self.connection_data = {
+                    CONF_HOST: user_input[CONF_HOST],
+                    CONF_PORT: user_input[CONF_PORT],
+                }
+                return await self.async_step_code()
 
             errors["base"] = "cannot_connect"
 
         return self.async_show_form(
-            step_id="user", data_schema=CONNECTION_SCHEMA, errors=errors
+            step_id="user",
+            data_schema=CONNECTION_SCHEMA,
+            errors=errors,
         )
 
-    async def async_step_import(
-        self, import_config: dict[str, Any]
+    async def async_step_code(
+        self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Handle a flow initialized by import."""
-
-        valid = await self.test_connection(
-            import_config[CONF_HOST], import_config.get(CONF_PORT, DEFAULT_PORT)
-        )
-
-        if valid:
-            subentries: list[ConfigSubentryData] = []
-
-            for partition_number, partition_data in import_config.get(
-                CONF_DEVICE_PARTITIONS, {}
-            ).items():
-                subentries.append(
-                    {
-                        "subentry_type": SUBENTRY_TYPE_PARTITION,
-                        "title": partition_data[CONF_NAME],
-                        "unique_id": f"{SUBENTRY_TYPE_PARTITION}_{partition_number}",
-                        "data": {
-                            CONF_NAME: partition_data[CONF_NAME],
-                            CONF_ARM_HOME_MODE: partition_data.get(
-                                CONF_ARM_HOME_MODE, DEFAULT_CONF_ARM_HOME_MODE
-                            ),
-                            CONF_PARTITION_NUMBER: partition_number,
-                        },
-                    }
-                )
-
-            for zone_number, zone_data in import_config.get(CONF_ZONES, {}).items():
-                subentries.append(
-                    {
-                        "subentry_type": SUBENTRY_TYPE_ZONE,
-                        "title": zone_data[CONF_NAME],
-                        "unique_id": f"{SUBENTRY_TYPE_ZONE}_{zone_number}",
-                        "data": {
-                            CONF_NAME: zone_data[CONF_NAME],
-                            CONF_ZONE_NUMBER: zone_number,
-                            CONF_ZONE_TYPE: zone_data.get(
-                                CONF_ZONE_TYPE, BinarySensorDeviceClass.MOTION
-                            ),
-                        },
-                    }
-                )
-
-            for output_number, output_data in import_config.get(
-                CONF_OUTPUTS, {}
-            ).items():
-                subentries.append(
-                    {
-                        "subentry_type": SUBENTRY_TYPE_OUTPUT,
-                        "title": output_data[CONF_NAME],
-                        "unique_id": f"{SUBENTRY_TYPE_OUTPUT}_{output_number}",
-                        "data": {
-                            CONF_NAME: output_data[CONF_NAME],
-                            CONF_OUTPUT_NUMBER: output_number,
-                            CONF_ZONE_TYPE: output_data.get(
-                                CONF_ZONE_TYPE, BinarySensorDeviceClass.MOTION
-                            ),
-                        },
-                    }
-                )
-
-            for switchable_output_number, switchable_output_data in import_config.get(
-                CONF_SWITCHABLE_OUTPUTS, {}
-            ).items():
-                subentries.append(
-                    {
-                        "subentry_type": SUBENTRY_TYPE_SWITCHABLE_OUTPUT,
-                        "title": switchable_output_data[CONF_NAME],
-                        "unique_id": f"{SUBENTRY_TYPE_SWITCHABLE_OUTPUT}_{switchable_output_number}",
-                        "data": {
-                            CONF_NAME: switchable_output_data[CONF_NAME],
-                            CONF_SWITCHABLE_OUTPUT_NUMBER: switchable_output_number,
-                        },
-                    }
-                )
-
+        """Handle code configuration."""
+        if user_input is not None:
             return self.async_create_entry(
-                title=import_config[CONF_HOST],
-                data={
-                    CONF_HOST: import_config[CONF_HOST],
-                    CONF_PORT: import_config.get(CONF_PORT, DEFAULT_PORT),
-                },
-                options={CONF_CODE: import_config.get(CONF_CODE)},
-                subentries=subentries,
+                title=self.connection_data[CONF_HOST],
+                data=self.connection_data,
+                options={CONF_CODE: user_input.get(CONF_CODE)},
             )
 
-        return self.async_abort(reason="cannot_connect")
+        return self.async_show_form(
+            step_id="code",
+            data_schema=CODE_SCHEMA,
+        )
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration."""
+        errors: dict[str, str] = {}
+        reconfigure_entry = self._get_reconfigure_entry()
+
+        if user_input is not None:
+            self._async_abort_entries_match({CONF_HOST: user_input[CONF_HOST]})
+
+            if (
+                reconfigure_entry.state is not ConfigEntryState.LOADED
+                or reconfigure_entry.data != user_input
+            ):
+                if not await self.test_connection(
+                    user_input[CONF_HOST], user_input[CONF_PORT]
+                ):
+                    errors["base"] = "cannot_connect"
+
+            if not errors:
+                return self.async_update_reload_and_abort(
+                    reconfigure_entry,
+                    data_updates={
+                        CONF_HOST: user_input[CONF_HOST],
+                        CONF_PORT: user_input[CONF_PORT],
+                    },
+                    title=user_input[CONF_HOST],
+                )
+
+        suggested_values: dict[str, Any] = {
+            **reconfigure_entry.data,
+            **(user_input or {}),
+        }
+
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=self.add_suggested_values_to_schema(
+                CONNECTION_SCHEMA, suggested_values
+            ),
+            errors=errors,
+        )
 
     async def test_connection(self, host: str, port: int) -> bool:
         """Test a connection to the Satel alarm."""
-        controller = AsyncSatel(host, port, self.hass.loop)
+        controller = AsyncSatel(host, port)
 
-        result = await controller.connect()
+        try:
+            return await controller.connect(check_busy=False)
+        except Exception:
+            _LOGGER.exception(
+                "Unexpected error during connection test to %s:%s",
+                host,
+                port,
+            )
+            return False
+        finally:
+            await controller.close()
 
-        # Make sure we close the connection again
-        controller.close()
 
-        return result
-
-
-class SatelOptionsFlow(OptionsFlowWithReload):
+class SatelOptionsFlow(OptionsFlow):
     """Handle Satel options flow."""
 
     async def async_step_init(
@@ -279,7 +249,9 @@ class PartitionSubentryFlowHandler(ConfigSubentryFlow):
 
             if not errors:
                 return self.async_create_entry(
-                    title=user_input[CONF_NAME], data=user_input, unique_id=unique_id
+                    title=f"{user_input[CONF_NAME]} ({user_input[CONF_PARTITION_NUMBER]})",
+                    data=user_input,
+                    unique_id=unique_id,
                 )
 
         return self.async_show_form(
@@ -304,7 +276,7 @@ class PartitionSubentryFlowHandler(ConfigSubentryFlow):
             return self.async_update_and_abort(
                 self._get_entry(),
                 subconfig_entry,
-                title=user_input[CONF_NAME],
+                title=f"{user_input[CONF_NAME]} ({subconfig_entry.data[CONF_PARTITION_NUMBER]})",
                 data_updates=user_input,
             )
 
@@ -338,7 +310,9 @@ class ZoneSubentryFlowHandler(ConfigSubentryFlow):
 
             if not errors:
                 return self.async_create_entry(
-                    title=user_input[CONF_NAME], data=user_input, unique_id=unique_id
+                    title=f"{user_input[CONF_NAME]} ({user_input[CONF_ZONE_NUMBER]})",
+                    data=user_input,
+                    unique_id=unique_id,
                 )
 
         return self.async_show_form(
@@ -363,7 +337,7 @@ class ZoneSubentryFlowHandler(ConfigSubentryFlow):
             return self.async_update_and_abort(
                 self._get_entry(),
                 subconfig_entry,
-                title=user_input[CONF_NAME],
+                title=f"{user_input[CONF_NAME]} ({subconfig_entry.data[CONF_ZONE_NUMBER]})",
                 data_updates=user_input,
             )
 
@@ -396,7 +370,9 @@ class OutputSubentryFlowHandler(ConfigSubentryFlow):
 
             if not errors:
                 return self.async_create_entry(
-                    title=user_input[CONF_NAME], data=user_input, unique_id=unique_id
+                    title=f"{user_input[CONF_NAME]} ({user_input[CONF_OUTPUT_NUMBER]})",
+                    data=user_input,
+                    unique_id=unique_id,
                 )
 
         return self.async_show_form(
@@ -421,7 +397,7 @@ class OutputSubentryFlowHandler(ConfigSubentryFlow):
             return self.async_update_and_abort(
                 self._get_entry(),
                 subconfig_entry,
-                title=user_input[CONF_NAME],
+                title=f"{user_input[CONF_NAME]} ({subconfig_entry.data[CONF_OUTPUT_NUMBER]})",
                 data_updates=user_input,
             )
 
@@ -454,7 +430,9 @@ class SwitchableOutputSubentryFlowHandler(ConfigSubentryFlow):
 
             if not errors:
                 return self.async_create_entry(
-                    title=user_input[CONF_NAME], data=user_input, unique_id=unique_id
+                    title=f"{user_input[CONF_NAME]} ({user_input[CONF_SWITCHABLE_OUTPUT_NUMBER]})",
+                    data=user_input,
+                    unique_id=unique_id,
                 )
 
         return self.async_show_form(
@@ -479,7 +457,7 @@ class SwitchableOutputSubentryFlowHandler(ConfigSubentryFlow):
             return self.async_update_and_abort(
                 self._get_entry(),
                 subconfig_entry,
-                title=user_input[CONF_NAME],
+                title=f"{user_input[CONF_NAME]} ({subconfig_entry.data[CONF_SWITCHABLE_OUTPUT_NUMBER]})",
                 data_updates=user_input,
             )
 

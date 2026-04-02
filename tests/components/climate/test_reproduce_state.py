@@ -127,6 +127,7 @@ async def test_attribute(hass: HomeAssistant, service, attribute) -> None:
         (SERVICE_SET_SWING_MODE, ATTR_SWING_MODE),
         (SERVICE_SET_SWING_HORIZONTAL_MODE, ATTR_SWING_HORIZONTAL_MODE),
         (SERVICE_SET_FAN_MODE, ATTR_FAN_MODE),
+        (SERVICE_SET_TEMPERATURE, ATTR_TEMPERATURE),
     ],
 )
 async def test_attribute_with_none(hass: HomeAssistant, service, attribute) -> None:

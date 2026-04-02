@@ -6,7 +6,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any, Final
 
-from aioamazondevices.api import AmazonDevice
+from aioamazondevices.structures import AmazonDevice
 
 from homeassistant.components.switch import (
     DOMAIN as SWITCH_DOMAIN,
@@ -18,7 +18,11 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import AmazonConfigEntry
 from .entity import AmazonEntity
-from .utils import alexa_api_call, async_update_unique_id
+from .utils import (
+    alexa_api_call,
+    async_remove_dnd_from_virtual_group,
+    async_update_unique_id,
+)
 
 PARALLEL_UPDATES = 1
 
@@ -29,7 +33,9 @@ class AmazonSwitchEntityDescription(SwitchEntityDescription):
 
     is_on_fn: Callable[[AmazonDevice], bool]
     is_available_fn: Callable[[AmazonDevice, str], bool] = lambda device, key: (
-        device.online and device.sensors[key].error is False
+        device.online
+        and (sensor := device.sensors.get(key)) is not None
+        and sensor.error is False
     )
     method: str
 
@@ -53,10 +59,15 @@ async def async_setup_entry(
 
     coordinator = entry.runtime_data
 
-    # Replace unique id for "DND" switch and remove from Speaker Group
-    await async_update_unique_id(
-        hass, coordinator, SWITCH_DOMAIN, "do_not_disturb", "dnd"
-    )
+    # DND keys
+    old_key = "do_not_disturb"
+    new_key = "dnd"
+
+    # Remove old DND switch from virtual groups
+    await async_remove_dnd_from_virtual_group(hass, coordinator, old_key)
+
+    # Replace unique id for DND switch
+    await async_update_unique_id(hass, coordinator, SWITCH_DOMAIN, old_key, new_key)
 
     known_devices: set[str] = set()
 
@@ -90,7 +101,10 @@ class AmazonSwitchEntity(AmazonEntity, SwitchEntity):
             assert method is not None
 
         await method(self.device, state)
-        await self.coordinator.async_request_refresh()
+        self.coordinator.data[self.device.serial_number].sensors[
+            self.entity_description.key
+        ].value = state
+        self.async_write_ha_state()
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""

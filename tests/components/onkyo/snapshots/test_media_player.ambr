@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_entities[media_player.tx_nr7100-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'sound_mode_list': list([
@@ -29,6 +30,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'TX-NR7100',
     'options': dict({
     }),
     'original_device_class': None,
@@ -51,6 +53,7 @@
       }),
       'friendly_name': 'TX-NR7100',
       'is_volume_muted': False,
+      'last_non_buffering_state': <MediaPlayerState.ON: 'on'>,
       'preset': 1,
       'sound_mode': 'DIRECT',
       'sound_mode_list': list([
@@ -78,8 +81,9 @@
 # ---
 # name: test_entities[media_player.tx_nr7100_zone_2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'sound_mode_list': list([
@@ -105,6 +109,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'TX-NR7100 Zone 2',
     'options': dict({
     }),
     'original_device_class': None,
@@ -123,6 +128,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'TX-NR7100 Zone 2',
+      'last_non_buffering_state': <MediaPlayerState.ON: 'on'>,
       'sound_mode': 'Stereo',
       'sound_mode_list': list([
         'Stereo',
@@ -145,8 +151,9 @@
 # ---
 # name: test_entities[media_player.tx_nr7100_zone_3-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'source_list': list([
@@ -169,6 +176,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'TX-NR7100 Zone 3',
     'options': dict({
     }),
     'original_device_class': None,
@@ -187,6 +195,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'TX-NR7100 Zone 3',
+      'last_non_buffering_state': <MediaPlayerState.OFF: 'off'>,
       'source_list': list([
         'TV',
         'FM Radio',

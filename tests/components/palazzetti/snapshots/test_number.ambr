@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_all_entities[number.stove_combustion_power-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 5,
@@ -25,6 +26,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Combustion power',
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.POWER_FACTOR: 'power_factor'>,
@@ -59,8 +61,9 @@
 # ---
 # name: test_all_entities[number.stove_left_fan_speed-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 5,
@@ -83,6 +86,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Left fan speed',
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.WIND_SPEED: 'wind_speed'>,
@@ -117,8 +121,9 @@
 # ---
 # name: test_all_entities[number.stove_right_fan_speed-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 5,
@@ -141,6 +146,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Right fan speed',
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.WIND_SPEED: 'wind_speed'>,

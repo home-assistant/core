@@ -4,6 +4,10 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
+from tuya_device_handlers.definition.binary_sensor import (
+    TuyaBinarySensorDefinition,
+    get_default_definition,
+)
 from tuya_sharing import CustomerDevice, Manager
 
 from homeassistant.components.binary_sensor import (
@@ -15,10 +19,9 @@ from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.util.json import json_loads
 
 from . import TuyaConfigEntry
-from .const import TUYA_DISCOVERY_NEW, DeviceCategory, DPCode, DPType
+from .const import TUYA_DISCOVERY_NEW, DeviceCategory, DPCode
 from .entity import TuyaEntity
 
 
@@ -72,6 +75,14 @@ BINARY_SENSORS: dict[DeviceCategory, tuple[TuyaBinarySensorEntityDescription, ..
     ),
     DeviceCategory.CS: (
         TuyaBinarySensorEntityDescription(
+            key=f"{DPCode.FAULT}_water_full",
+            dpcode=DPCode.FAULT,
+            device_class=BinarySensorDeviceClass.PROBLEM,
+            entity_category=EntityCategory.DIAGNOSTIC,
+            bitmap_key="water_full",
+            translation_key="tankfull",
+        ),
+        TuyaBinarySensorEntityDescription(
             key="tankfull",
             dpcode=DPCode.FAULT,
             device_class=BinarySensorDeviceClass.PROBLEM,
@@ -101,6 +112,11 @@ BINARY_SENSORS: dict[DeviceCategory, tuple[TuyaBinarySensorEntityDescription, ..
             key=DPCode.FEED_STATE,
             translation_key="feeding",
             on_value="feeding",
+        ),
+        TuyaBinarySensorEntityDescription(
+            key=DPCode.CHARGE_STATE,
+            device_class=BinarySensorDeviceClass.BATTERY_CHARGING,
+            entity_category=EntityCategory.DIAGNOSTIC,
         ),
     ),
     DeviceCategory.DGNBJ: (
@@ -222,6 +238,24 @@ BINARY_SENSORS: dict[DeviceCategory, tuple[TuyaBinarySensorEntityDescription, ..
             on_value={"AQAB"},
         ),
     ),
+    DeviceCategory.MSP: (
+        TuyaBinarySensorEntityDescription(
+            key=f"{DPCode.FAULT}_full_fault",
+            dpcode=DPCode.FAULT,
+            device_class=BinarySensorDeviceClass.PROBLEM,
+            entity_category=EntityCategory.DIAGNOSTIC,
+            bitmap_key="full_fault",
+            translation_key="bag_full",
+        ),
+        TuyaBinarySensorEntityDescription(
+            key=f"{DPCode.FAULT}_box_out",
+            dpcode=DPCode.FAULT,
+            device_class=BinarySensorDeviceClass.PROBLEM,
+            entity_category=EntityCategory.DIAGNOSTIC,
+            bitmap_key="box_out",
+            translation_key="cover_off",
+        ),
+    ),
     DeviceCategory.PIR: (
         TuyaBinarySensorEntityDescription(
             key=DPCode.PIR,
@@ -289,6 +323,11 @@ BINARY_SENSORS: dict[DeviceCategory, tuple[TuyaBinarySensorEntityDescription, ..
             entity_category=EntityCategory.DIAGNOSTIC,
             on_value="alarm",
         ),
+        TuyaBinarySensorEntityDescription(
+            key=DPCode.CHARGE_STATE,
+            device_class=BinarySensorDeviceClass.BATTERY_CHARGING,
+            entity_category=EntityCategory.DIAGNOSTIC,
+        ),
     ),
     DeviceCategory.WK: (
         TuyaBinarySensorEntityDescription(
@@ -348,22 +387,6 @@ BINARY_SENSORS: dict[DeviceCategory, tuple[TuyaBinarySensorEntityDescription, ..
 }
 
 
-def _get_bitmap_bit_mask(
-    device: CustomerDevice, dpcode: str, bitmap_key: str | None
-) -> int | None:
-    """Get the bit mask for a given bitmap description."""
-    if (
-        bitmap_key is None
-        or (status_range := device.status_range.get(dpcode)) is None
-        or status_range.type != DPType.BITMAP
-        or not isinstance(bitmap_values := json_loads(status_range.values), dict)
-        or not isinstance(bitmap_labels := bitmap_values.get("label"), list)
-        or bitmap_key not in bitmap_labels
-    ):
-        return None
-    return bitmap_labels.index(bitmap_key)
-
-
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: TuyaConfigEntry,
@@ -379,25 +402,18 @@ async def async_setup_entry(
         for device_id in device_ids:
             device = manager.device_map[device_id]
             if descriptions := BINARY_SENSORS.get(device.category):
-                for description in descriptions:
-                    dpcode = description.dpcode or description.key
-                    if dpcode in device.status:
-                        mask = _get_bitmap_bit_mask(
-                            device, dpcode, description.bitmap_key
+                entities.extend(
+                    TuyaBinarySensorEntity(device, manager, description, definition)
+                    for description in descriptions
+                    if (
+                        definition := get_default_definition(
+                            device,
+                            description.dpcode or description.key,
+                            description.bitmap_key,
+                            description.on_value,
                         )
-
-                        if (
-                            description.bitmap_key is None  # Regular binary sensor
-                            or mask is not None  # Bitmap sensor with valid mask
-                        ):
-                            entities.append(
-                                TuyaBinarySensorEntity(
-                                    device,
-                                    manager,
-                                    description,
-                                    mask,
-                                )
-                            )
+                    )
+                )
 
         async_add_entities(entities)
 
@@ -418,26 +434,27 @@ class TuyaBinarySensorEntity(TuyaEntity, BinarySensorEntity):
         device: CustomerDevice,
         device_manager: Manager,
         description: TuyaBinarySensorEntityDescription,
-        bit_mask: int | None = None,
+        definition: TuyaBinarySensorDefinition,
     ) -> None:
         """Init Tuya binary sensor."""
-        super().__init__(device, device_manager)
-        self.entity_description = description
-        self._attr_unique_id = f"{super().unique_id}{description.key}"
-        self._bit_mask = bit_mask
+        super().__init__(device, device_manager, description)
+        self._dpcode_wrapper = definition.binary_sensor_wrapper
 
     @property
-    def is_on(self) -> bool:
+    def is_on(self) -> bool | None:
         """Return true if sensor is on."""
-        dpcode = self.entity_description.dpcode or self.entity_description.key
-        if dpcode not in self.device.status:
-            return False
+        return self._read_wrapper(self._dpcode_wrapper)
 
-        if self._bit_mask is not None:
-            # For bitmap sensors, check the specific bit mask
-            return (self.device.status[dpcode] & (1 << self._bit_mask)) != 0
+    async def _process_device_update(
+        self,
+        updated_status_properties: list[str],
+        dp_timestamps: dict[str, int] | None,
+    ) -> bool:
+        """Called when Tuya device sends an update with updated properties.
 
-        if isinstance(self.entity_description.on_value, set):
-            return self.device.status[dpcode] in self.entity_description.on_value
-
-        return self.device.status[dpcode] == self.entity_description.on_value
+        Returns True if the Home Assistant state should be written,
+        or False if the state write should be skipped.
+        """
+        return not self._dpcode_wrapper.skip_update(
+            self.device, updated_status_properties, dp_timestamps
+        )

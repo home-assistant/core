@@ -53,7 +53,7 @@ class PlexUpdate(UpdateEntity):
             if (release := self._server.plex_server.checkForUpdate()) is None:
                 self._attr_latest_version = self.installed_version
                 return
-        except (requests.exceptions.RequestException, PlexApiException):
+        except requests.exceptions.RequestException, PlexApiException:
             _LOGGER.debug("Polling update sensor failed, will try again")
             return
         self._attr_latest_version = release.version

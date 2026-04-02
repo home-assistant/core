@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 from typing import Any
 
 from homeassistant.components.diagnostics import async_redact_data
@@ -10,9 +11,24 @@ from homeassistant.core import HomeAssistant
 
 from .coordinator import RoborockConfigEntry
 
-TO_REDACT_CONFIG = ["token", "sn", "rruid", CONF_UNIQUE_ID, "username", "uid"]
+_LOGGER = logging.getLogger(__name__)
 
-TO_REDACT_COORD = ["duid", "localKey", "mac", "bssid"]
+TO_REDACT_CONFIG = [
+    "token",
+    "sn",
+    "rruid",
+    CONF_UNIQUE_ID,
+    "username",
+    "uid",
+    "h",
+    "k",
+    "s",
+    "u",
+    "avatarurl",
+    "nickname",
+    "tuyaUuid",
+    "extra",
+]
 
 
 async def async_get_config_entry_diagnostics(
@@ -24,12 +40,7 @@ async def async_get_config_entry_diagnostics(
     return {
         "config_entry": async_redact_data(config_entry.data, TO_REDACT_CONFIG),
         "coordinators": {
-            f"**REDACTED-{i}**": {
-                "roborock_device_info": async_redact_data(
-                    coordinator.roborock_device_info.as_dict(), TO_REDACT_COORD
-                ),
-                "api": coordinator.api.diagnostic_data,
-            }
+            f"**REDACTED-{i}**": coordinator.device.diagnostic_data()
             for i, coordinator in enumerate(coordinators.values())
         },
     }

@@ -80,7 +80,7 @@ async def async_setup_entry(
                     if device_type.get("name") in sensor_type[4]
                 )
 
-    async_add_entities(sensors, True)
+    async_add_entities(sensors)
 
 
 class CanarySensor(CoordinatorEntity[CanaryDataUpdateCoordinator], SensorEntity):

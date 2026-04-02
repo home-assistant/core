@@ -1,9 +1,6 @@
 {
   "entity": {
     "button": {
-      "ptz_up": {
-        "default": "mdi:pan"
-      },
       "ptz_down": {
         "default": "mdi:pan"
       },
@@ -11,6 +8,9 @@
         "default": "mdi:pan"
       },
       "ptz_right": {
+        "default": "mdi:pan"
+      },
+      "ptz_up": {
         "default": "mdi:pan"
       }
     },
@@ -22,6 +22,23 @@
     "select": {
       "alarm_sound_mode": {
         "default": "mdi:alarm"
+      }
+    },
+    "sensor": {
+      "alarm_sound_mode": {
+        "default": "mdi:alarm"
+      },
+      "last_alarm_type_code": {
+        "default": "mdi:alarm"
+      },
+      "last_alarm_type_name": {
+        "default": "mdi:alarm"
+      },
+      "local_ip": {
+        "default": "mdi:ip"
+      },
+      "wan_ip": {
+        "default": "mdi:ip"
       }
     }
   },

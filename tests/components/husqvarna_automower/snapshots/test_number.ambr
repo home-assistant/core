@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_number_snapshot[number.test_mower_1_back_lawn_cutting_height-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 100.0,
@@ -25,6 +26,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Back lawn cutting height',
     'options': dict({
     }),
     'original_device_class': None,
@@ -59,8 +61,9 @@
 # ---
 # name: test_number_snapshot[number.test_mower_1_cutting_height-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 9,
@@ -83,6 +86,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Cutting height',
     'options': dict({
     }),
     'original_device_class': None,
@@ -116,8 +120,9 @@
 # ---
 # name: test_number_snapshot[number.test_mower_1_front_lawn_cutting_height-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 100.0,
@@ -140,6 +145,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Front lawn cutting height',
     'options': dict({
     }),
     'original_device_class': None,
@@ -174,8 +180,9 @@
 # ---
 # name: test_number_snapshot[number.test_mower_1_my_lawn_cutting_height-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 100.0,
@@ -198,6 +205,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'My lawn cutting height',
     'options': dict({
     }),
     'original_device_class': None,

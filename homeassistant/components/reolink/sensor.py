@@ -61,6 +61,7 @@ class ReolinkHostSensorEntityDescription(
 SENSORS = (
     ReolinkSensorEntityDescription(
         key="ptz_pan_position",
+        cmd_id=433,
         cmd_key="GetPtzCurPos",
         translation_key="ptz_pan_position",
         state_class=SensorStateClass.MEASUREMENT,
@@ -70,6 +71,7 @@ SENSORS = (
     ),
     ReolinkSensorEntityDescription(
         key="ptz_tilt_position",
+        cmd_id=433,
         cmd_key="GetPtzCurPos",
         translation_key="ptz_tilt_position",
         state_class=SensorStateClass.MEASUREMENT,
@@ -284,7 +286,7 @@ class ReolinkHostSensorEntity(ReolinkHostCoordinatorEntity, SensorEntity):
 
 
 class ReolinkHddSensorEntity(ReolinkHostCoordinatorEntity, SensorEntity):
-    """Base sensor class for Reolink host sensors."""
+    """Base sensor class for Reolink storage device sensors."""
 
     entity_description: ReolinkSensorEntityDescription
 
@@ -294,7 +296,7 @@ class ReolinkHddSensorEntity(ReolinkHostCoordinatorEntity, SensorEntity):
         hdd_index: int,
         entity_description: ReolinkSensorEntityDescription,
     ) -> None:
-        """Initialize Reolink host sensor."""
+        """Initialize Reolink storage device sensor."""
         self.entity_description = entity_description
         super().__init__(reolink_data)
         self._hdd_index = hdd_index

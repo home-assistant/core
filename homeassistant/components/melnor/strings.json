@@ -13,25 +13,25 @@
   },
   "entity": {
     "number": {
-      "manual_minutes": {
-        "name": "Manual duration"
+      "frequency_duration_minutes": {
+        "name": "Schedule duration"
       },
       "frequency_interval_hours": {
         "name": "Schedule interval"
       },
-      "frequency_duration_minutes": {
-        "name": "Schedule duration"
+      "manual_minutes": {
+        "name": "Manual duration"
       }
     },
     "sensor": {
-      "rssi": {
-        "name": "RSSI"
-      },
       "manual_cycle_end": {
         "name": "Manual cycle end"
       },
       "next_cycle": {
         "name": "Next cycle"
+      },
+      "rssi": {
+        "name": "RSSI"
       }
     },
     "switch": {

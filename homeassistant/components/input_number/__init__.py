@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from contextlib import suppress
 import logging
-from typing import Self
+from typing import Any, Self
 
 import voluptuous as vol
 
@@ -136,8 +136,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     async def reload_service_handler(service_call: ServiceCall) -> None:
         """Reload yaml entities."""
         conf = await component.async_prepare_reload(skip_reset=True)
-        if conf is None:
-            conf = {DOMAIN: {}}
         await yaml_collection.async_load(
             [{CONF_ID: id_, **conf} for id_, conf in conf.get(DOMAIN, {}).items()]
         )
@@ -245,7 +243,7 @@ class InputNumber(collection.CollectionEntity, RestoreEntity):
         return self._config.get(CONF_NAME)
 
     @property
-    def icon(self):
+    def icon(self) -> str | None:
         """Return the icon to be used for this entity."""
         return self._config.get(CONF_ICON)
 
@@ -270,7 +268,7 @@ class InputNumber(collection.CollectionEntity, RestoreEntity):
         return self._config[CONF_ID]
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
         return {
             ATTR_INITIAL: self._config.get(CONF_INITIAL),

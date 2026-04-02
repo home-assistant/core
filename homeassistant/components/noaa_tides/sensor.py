@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timedelta
+from datetime import datetime
 import logging
 from typing import TYPE_CHECKING, Any, Literal, TypedDict
 
@@ -22,19 +22,19 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util.unit_system import METRIC_SYSTEM
 
+from .const import (
+    ATTRIBUTION,
+    CONF_STATION_ID,
+    DEFAULT_NAME,
+    DEFAULT_PREDICTION_LENGTH,
+    DEFAULT_TIMEZONE,
+)
 from .helpers import get_station_unique_id
 
 if TYPE_CHECKING:
     from pandas import Timestamp
 
 _LOGGER = logging.getLogger(__name__)
-
-CONF_STATION_ID = "station_id"
-
-DEFAULT_NAME = "NOAA Tides"
-DEFAULT_TIMEZONE = "lst_ldt"
-
-SCAN_INTERVAL = timedelta(minutes=60)
 
 TIMEZONES = ["gmt", "lst", "lst_ldt"]
 UNIT_SYSTEMS = ["english", "metric"]
@@ -63,9 +63,9 @@ def setup_platform(
     if CONF_UNIT_SYSTEM in config:
         unit_system = config[CONF_UNIT_SYSTEM]
     elif hass.config.units is METRIC_SYSTEM:
-        unit_system = UNIT_SYSTEMS[1]
+        unit_system = "metric"
     else:
-        unit_system = UNIT_SYSTEMS[0]
+        unit_system = "english"
 
     try:
         station = coops.Station(station_id, unit_system)
@@ -97,7 +97,7 @@ class NOAATidesData(TypedDict):
 class NOAATidesAndCurrentsSensor(SensorEntity):
     """Representation of a NOAA Tides and Currents sensor."""
 
-    _attr_attribution = "Data provided by NOAA"
+    _attr_attribution = ATTRIBUTION
 
     def __init__(self, name, station_id, timezone, unit_system, station) -> None:
         """Initialize the sensor."""
@@ -141,8 +141,8 @@ class NOAATidesAndCurrentsSensor(SensorEntity):
         return attr
 
     @property
-    def native_value(self):
-        """Return the state of the device."""
+    def native_value(self) -> str | None:
+        """Return the state."""
         if self.data is None:
             return None
         api_time = self.data["time_stamp"][0]
@@ -157,8 +157,7 @@ class NOAATidesAndCurrentsSensor(SensorEntity):
     def update(self) -> None:
         """Get the latest data from NOAA Tides and Currents API."""
         begin = datetime.now()
-        delta = timedelta(days=2)
-        end = begin + delta
+        end = begin + DEFAULT_PREDICTION_LENGTH
         try:
             df_predictions = self._station.get_data(
                 begin_date=begin.strftime("%Y%m%d %H:%M"),

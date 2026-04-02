@@ -1,5 +1,22 @@
 {
-  "title": "Text",
+  "common": {
+    "condition_behavior_name": "Condition passes if"
+  },
+  "conditions": {
+    "is_equal_to": {
+      "description": "Tests if one or more texts are equal to a specified value.",
+      "fields": {
+        "behavior": {
+          "name": "[%key:component::text::common::condition_behavior_name%]"
+        },
+        "value": {
+          "description": "The value to compare the text to.",
+          "name": "Value"
+        }
+      },
+      "name": "Text is equal to"
+    }
+  },
   "device_automation": {
     "action_type": {
       "set_value": "Set value for {entity_name}"
@@ -21,8 +38,8 @@
         "mode": {
           "name": "[%key:common::config_flow::data::mode%]",
           "state": {
-            "text": "Text",
-            "password": "[%key:common::config_flow::data::password%]"
+            "password": "[%key:common::config_flow::data::password%]",
+            "text": "Text"
           }
         },
         "pattern": {
@@ -31,16 +48,31 @@
       }
     }
   },
+  "selector": {
+    "condition_behavior": {
+      "options": {
+        "all": "All",
+        "any": "Any"
+      }
+    }
+  },
   "services": {
     "set_value": {
-      "name": "Set value",
-      "description": "Sets the value.",
+      "description": "Sets the value of a text entity.",
       "fields": {
         "value": {
-          "name": "Value",
-          "description": "Enter your text."
+          "description": "Enter your text.",
+          "name": "Value"
         }
-      }
+      },
+      "name": "Set text value"
+    }
+  },
+  "title": "Text",
+  "triggers": {
+    "changed": {
+      "description": "Triggers after one or more texts change.",
+      "name": "Text changed"
     }
   }
 }

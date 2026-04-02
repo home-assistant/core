@@ -1,29 +1,25 @@
 """Test the satel integra config flow."""
 
 from typing import Any
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
 from homeassistant.components.binary_sensor import BinarySensorDeviceClass
 from homeassistant.components.satel_integra.const import (
     CONF_ARM_HOME_MODE,
-    CONF_DEVICE_PARTITIONS,
     CONF_OUTPUT_NUMBER,
-    CONF_OUTPUTS,
     CONF_PARTITION_NUMBER,
     CONF_SWITCHABLE_OUTPUT_NUMBER,
-    CONF_SWITCHABLE_OUTPUTS,
     CONF_ZONE_NUMBER,
     CONF_ZONE_TYPE,
-    CONF_ZONES,
     DEFAULT_PORT,
     DOMAIN,
 )
 from homeassistant.config_entries import (
-    SOURCE_IMPORT,
     SOURCE_RECONFIGURE,
     SOURCE_USER,
+    ConfigEntryState,
     ConfigSubentry,
 )
 from homeassistant.const import CONF_CODE, CONF_HOST, CONF_NAME, CONF_PORT
@@ -37,21 +33,24 @@ from . import (
     MOCK_PARTITION_SUBENTRY,
     MOCK_SWITCHABLE_OUTPUT_SUBENTRY,
     MOCK_ZONE_SUBENTRY,
+    setup_integration,
 )
 
 from tests.common import MockConfigEntry
 
 
 @pytest.mark.parametrize(
-    ("user_input", "entry_data", "entry_options"),
+    ("user_input_connection", "user_input_code", "entry_data", "entry_options"),
     [
         (
-            {**MOCK_CONFIG_DATA, **MOCK_CONFIG_OPTIONS},
+            MOCK_CONFIG_DATA,
+            MOCK_CONFIG_OPTIONS,
             MOCK_CONFIG_DATA,
             MOCK_CONFIG_OPTIONS,
         ),
         (
             {CONF_HOST: MOCK_CONFIG_DATA[CONF_HOST]},
+            {},
             {CONF_HOST: MOCK_CONFIG_DATA[CONF_HOST], CONF_PORT: DEFAULT_PORT},
             {CONF_CODE: None},
         ),
@@ -61,7 +60,8 @@ async def test_setup_flow(
     hass: HomeAssistant,
     mock_satel: AsyncMock,
     mock_setup_entry: AsyncMock,
-    user_input: dict[str, Any],
+    user_input_connection: dict[str, Any],
+    user_input_code: dict[str, Any],
     entry_data: dict[str, Any],
     entry_options: dict[str, Any],
 ) -> None:
@@ -76,7 +76,14 @@ async def test_setup_flow(
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        user_input,
+        user_input_connection,
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "code"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input_code,
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == MOCK_CONFIG_DATA[CONF_HOST]
@@ -96,7 +103,7 @@ async def test_setup_connection_failed(
         DOMAIN, context={"source": SOURCE_USER}
     )
 
-    mock_satel.return_value.connect.return_value = False
+    mock_satel.connect.return_value = False
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -106,108 +113,44 @@ async def test_setup_connection_failed(
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "cannot_connect"}
 
-    mock_satel.return_value.connect.return_value = True
+    mock_satel.connect.return_value = True
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         user_input,
     )
 
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert len(mock_setup_entry.mock_calls) == 1
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "code"
 
-
-@pytest.mark.parametrize(
-    ("import_input", "entry_data", "entry_options"),
-    [
-        (
-            {
-                CONF_HOST: MOCK_CONFIG_DATA[CONF_HOST],
-                CONF_PORT: MOCK_CONFIG_DATA[CONF_PORT],
-                CONF_CODE: MOCK_CONFIG_OPTIONS[CONF_CODE],
-                CONF_DEVICE_PARTITIONS: {
-                    "1": {CONF_NAME: "Partition Import 1", CONF_ARM_HOME_MODE: 1}
-                },
-                CONF_ZONES: {
-                    "1": {CONF_NAME: "Zone Import 1", CONF_ZONE_TYPE: "motion"},
-                    "2": {CONF_NAME: "Zone Import 2", CONF_ZONE_TYPE: "door"},
-                },
-                CONF_OUTPUTS: {
-                    "1": {CONF_NAME: "Output Import 1", CONF_ZONE_TYPE: "light"},
-                    "2": {CONF_NAME: "Output Import 2", CONF_ZONE_TYPE: "safety"},
-                },
-                CONF_SWITCHABLE_OUTPUTS: {
-                    "1": {CONF_NAME: "Switchable output Import 1"},
-                    "2": {CONF_NAME: "Switchable output Import 2"},
-                },
-            },
-            MOCK_CONFIG_DATA,
-            MOCK_CONFIG_OPTIONS,
-        )
-    ],
-)
-async def test_import_flow(
-    hass: HomeAssistant,
-    mock_satel: AsyncMock,
-    mock_setup_entry: AsyncMock,
-    import_input: dict[str, Any],
-    entry_data: dict[str, Any],
-    entry_options: dict[str, Any],
-) -> None:
-    """Test the import flow."""
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_IMPORT}, data=import_input
-    )
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == MOCK_CONFIG_DATA[CONF_HOST]
-    assert result["data"] == entry_data
-    assert result["options"] == entry_options
-
-    assert len(result["subentries"]) == 7
-
-    assert len(mock_setup_entry.mock_calls) == 1
-
-
-async def test_import_flow_connection_failure(
-    hass: HomeAssistant, mock_satel: AsyncMock
-) -> None:
-    """Test the import flow."""
-
-    mock_satel.return_value.connect.return_value = False
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_IMPORT},
-        data=MOCK_CONFIG_DATA,
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {},
     )
 
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "cannot_connect"
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert len(mock_setup_entry.mock_calls) == 1
 
 
 @pytest.mark.parametrize(
     ("user_input", "entry_options"),
     [
-        (MOCK_CONFIG_OPTIONS, MOCK_CONFIG_OPTIONS),
+        ({CONF_CODE: "1111"}, {CONF_CODE: "1111"}),
         ({}, {CONF_CODE: None}),
     ],
 )
 async def test_options_flow(
     hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
+    mock_satel: AsyncMock,
+    mock_reload_after_entry_update: MagicMock,
+    mock_config_entry: MockConfigEntry,
     user_input: dict[str, Any],
     entry_options: dict[str, Any],
 ) -> None:
     """Test general options flow."""
+    await setup_integration(hass, mock_config_entry)
 
-    entry = MockConfigEntry(domain=DOMAIN)
-    entry.add_to_hass(hass)
-
-    await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
-
-    result = await hass.config_entries.options.async_init(entry.entry_id)
+    result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "init"
@@ -217,7 +160,10 @@ async def test_options_flow(
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert entry.options == entry_options
+    assert mock_config_entry.options == entry_options
+
+    # Assert the entry is reloaded to use the updated code
+    assert mock_reload_after_entry_update.call_count == 1
 
 
 @pytest.mark.parametrize(
@@ -232,15 +178,13 @@ async def test_options_flow(
 async def test_subentry_creation(
     hass: HomeAssistant,
     mock_satel: AsyncMock,
+    mock_reload_after_entry_update: MagicMock,
     mock_config_entry: MockConfigEntry,
     user_input: dict[str, Any],
     subentry: ConfigSubentry,
 ) -> None:
     """Test partitions options flow."""
-    mock_config_entry.add_to_hass(hass)
-
-    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
+    await setup_integration(hass, mock_config_entry)
 
     result = await hass.config_entries.subentries.async_init(
         (mock_config_entry.entry_id, subentry.subentry_type),
@@ -268,20 +212,26 @@ async def test_subentry_creation(
         **subentry_result
     )
 
+    # Assert the entry is reloaded to set up the entity
+    assert mock_reload_after_entry_update.call_count == 1
+
 
 @pytest.mark.parametrize(
     (
         "user_input",
         "subentry",
+        "number_property",
     ),
     [
         (
             {CONF_NAME: "New Home", CONF_ARM_HOME_MODE: 3},
             MOCK_PARTITION_SUBENTRY,
+            CONF_PARTITION_NUMBER,
         ),
         (
             {CONF_NAME: "Backdoor", CONF_ZONE_TYPE: BinarySensorDeviceClass.DOOR},
             MOCK_ZONE_SUBENTRY,
+            CONF_ZONE_NUMBER,
         ),
         (
             {
@@ -289,10 +239,12 @@ async def test_subentry_creation(
                 CONF_ZONE_TYPE: BinarySensorDeviceClass.PROBLEM,
             },
             MOCK_OUTPUT_SUBENTRY,
+            CONF_OUTPUT_NUMBER,
         ),
         (
             {CONF_NAME: "Gate Lock"},
             MOCK_SWITCHABLE_OUTPUT_SUBENTRY,
+            CONF_SWITCHABLE_OUTPUT_NUMBER,
         ),
     ],
 )
@@ -303,15 +255,10 @@ async def test_subentry_reconfigure(
     mock_config_entry_with_subentries: MockConfigEntry,
     user_input: dict[str, Any],
     subentry: ConfigSubentry,
+    number_property: str,
 ) -> None:
     """Test subentry reconfiguration."""
-
-    mock_config_entry_with_subentries.add_to_hass(hass)
-
-    assert await hass.config_entries.async_setup(
-        mock_config_entry_with_subentries.entry_id
-    )
-    await hass.async_block_till_done()
+    await setup_integration(hass, mock_config_entry_with_subentries)
 
     result = await hass.config_entries.subentries.async_init(
         (
@@ -339,7 +286,7 @@ async def test_subentry_reconfigure(
     subentry_result = {
         **subentry.as_dict(),
         "data": {**subentry.data, **user_input},
-        "title": user_input.get(CONF_NAME),
+        "title": f"{user_input.get(CONF_NAME)} ({subentry.data[number_property]})",
     }
 
     assert mock_config_entry_with_subentries.subentries.get(
@@ -361,17 +308,11 @@ async def test_cannot_create_same_subentry(
     mock_satel: AsyncMock,
     mock_setup_entry: AsyncMock,
     mock_config_entry_with_subentries: MockConfigEntry,
-    subentry: dict[str, Any],
+    subentry: ConfigSubentry,
     error_field: str,
 ) -> None:
     """Test subentry reconfiguration."""
-    mock_config_entry_with_subentries.add_to_hass(hass)
-
-    assert await hass.config_entries.async_setup(
-        mock_config_entry_with_subentries.entry_id
-    )
-    await hass.async_block_till_done()
-
+    await setup_integration(hass, mock_config_entry_with_subentries)
     mock_setup_entry.reset_mock()
 
     result = await hass.config_entries.subentries.async_init(
@@ -393,7 +334,135 @@ async def test_cannot_create_same_subentry(
     assert len(mock_setup_entry.mock_calls) == 0
 
 
-async def test_one_config_allowed(
+async def test_reconfigure_flow_success(
+    hass: HomeAssistant,
+    mock_satel: AsyncMock,
+    mock_setup_entry: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test that reconfigure updates host/port."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_HOST: "10.0.0.2",
+            CONF_PORT: 4321,
+        },
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+
+    assert mock_config_entry.data == {
+        CONF_HOST: "10.0.0.2",
+        CONF_PORT: 4321,
+    }
+
+    await hass.async_block_till_done()
+    assert mock_setup_entry.call_count == 1
+
+
+async def test_reconfigure_flow_config_unchanged_loaded(
+    hass: HomeAssistant,
+    mock_satel: AsyncMock,
+    mock_setup_entry: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test reconfigure skips connection testing if loaded config is unchanged."""
+    await setup_integration(hass, mock_config_entry)
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], dict(mock_config_entry.data)
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert mock_config_entry.data == MOCK_CONFIG_DATA
+    assert mock_satel.connect.call_count == 0
+
+    await hass.async_block_till_done()
+    assert mock_setup_entry.call_count == 1
+
+
+async def test_reconfigure_flow_config_unchanged_not_loaded(
+    hass: HomeAssistant,
+    mock_satel: AsyncMock,
+    mock_setup_entry: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test reconfigure validates unchanged config if the entry is not loaded."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+    assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], dict(mock_config_entry.data)
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert mock_config_entry.data == MOCK_CONFIG_DATA
+    assert mock_satel.connect.call_count == 1
+    assert mock_setup_entry.call_count == 1
+
+
+async def test_reconfigure_connection_failed(
+    hass: HomeAssistant,
+    mock_satel: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Failure path for the reconfigure flow."""
+    mock_satel.connect.return_value = False
+
+    mock_config_entry.add_to_hass(hass)
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_HOST: "1.2.3.4", CONF_PORT: 1234},
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+    assert result["errors"] == {"base": "cannot_connect"}
+
+    mock_satel.connect.return_value = True
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_HOST: "1.2.3.4", CONF_PORT: 1234},
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+
+    assert mock_config_entry.data == {
+        CONF_HOST: "1.2.3.4",
+        CONF_PORT: 1234,
+    }
+
+
+async def test_same_host_config_disallowed(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> None:
     """Test that only one Satel Integra configuration is allowed."""
@@ -403,5 +472,14 @@ async def test_one_config_allowed(
         DOMAIN, context={"source": SOURCE_USER}
     )
 
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        MOCK_CONFIG_DATA,
+    )
+
     assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "single_instance_allowed"
+    assert result["reason"] == "already_configured"

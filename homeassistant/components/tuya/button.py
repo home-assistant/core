@@ -2,6 +2,10 @@
 
 from __future__ import annotations
 
+from tuya_device_handlers.definition.button import (
+    TuyaButtonDefinition,
+    get_default_definition,
+)
 from tuya_sharing import CustomerDevice, Manager
 
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
@@ -19,6 +23,19 @@ BUTTONS: dict[DeviceCategory, tuple[ButtonEntityDescription, ...]] = {
         ButtonEntityDescription(
             key=DPCode.SWITCH_USB6,
             translation_key="snooze",
+        ),
+    ),
+    DeviceCategory.MSP: (
+        ButtonEntityDescription(
+            key=DPCode.FACTORY_RESET,
+            translation_key="factory_reset",
+            entity_category=EntityCategory.DIAGNOSTIC,
+            entity_registry_enabled_default=False,
+        ),
+        ButtonEntityDescription(
+            key=DPCode.MANUAL_CLEAN,
+            translation_key="manual_clean",
+            entity_category=EntityCategory.CONFIG,
         ),
     ),
     DeviceCategory.SD: (
@@ -67,9 +84,9 @@ async def async_setup_entry(
             device = manager.device_map[device_id]
             if descriptions := BUTTONS.get(device.category):
                 entities.extend(
-                    TuyaButtonEntity(device, manager, description)
+                    TuyaButtonEntity(device, manager, description, definition)
                     for description in descriptions
-                    if description.key in device.status
+                    if (definition := get_default_definition(device, description.key))
                 )
 
         async_add_entities(entities)
@@ -89,12 +106,12 @@ class TuyaButtonEntity(TuyaEntity, ButtonEntity):
         device: CustomerDevice,
         device_manager: Manager,
         description: ButtonEntityDescription,
+        definition: TuyaButtonDefinition,
     ) -> None:
         """Init Tuya button."""
-        super().__init__(device, device_manager)
-        self.entity_description = description
-        self._attr_unique_id = f"{super().unique_id}{description.key}"
+        super().__init__(device, device_manager, description)
+        self._dpcode_wrapper = definition.button_wrapper
 
-    def press(self) -> None:
+    async def async_press(self) -> None:
         """Press the button."""
-        self._send_command([{"code": self.entity_description.key, "value": True}])
+        await self._async_send_wrapper_updates(self._dpcode_wrapper, True)

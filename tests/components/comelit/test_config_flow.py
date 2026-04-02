@@ -6,17 +6,23 @@ from aiocomelit import CannotAuthenticate, CannotConnect
 from aiocomelit.const import BRIDGE, VEDO
 import pytest
 
-from homeassistant.components.comelit.const import DOMAIN
+from homeassistant.components.comelit.config_flow import (
+    InvalidPin,
+    InvalidVedoAuth,
+    InvalidVedoPin,
+)
+from homeassistant.components.comelit.const import CONF_VEDO_PIN, DOMAIN
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_HOST, CONF_PIN, CONF_PORT, CONF_TYPE
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import FlowResultType, InvalidData
+from homeassistant.data_entry_flow import FlowResultType
 
 from .const import (
     BAD_PIN,
     BRIDGE_HOST,
     BRIDGE_PIN,
     BRIDGE_PORT,
+    BRIDGE_VEDO_PIN,
     FAKE_PIN,
     VEDO_HOST,
     VEDO_PIN,
@@ -97,6 +103,9 @@ async def test_flow_vedo(
         (CannotConnect, "cannot_connect"),
         (CannotAuthenticate, "invalid_auth"),
         (ConnectionResetError, "unknown"),
+        (InvalidPin, "invalid_pin"),
+        (InvalidVedoPin, "invalid_vedo_pin"),
+        (InvalidVedoAuth, "invalid_vedo_auth"),
     ],
 )
 async def test_exception_connection(
@@ -181,6 +190,7 @@ async def test_reauth_successful(
         (CannotConnect, "cannot_connect"),
         (CannotAuthenticate, "invalid_auth"),
         (ConnectionResetError, "unknown"),
+        (InvalidPin, "invalid_pin"),
     ],
 )
 async def test_reauth_not_successful(
@@ -245,6 +255,7 @@ async def test_reconfigure_successful(
             CONF_HOST: new_host,
             CONF_PORT: BRIDGE_PORT,
             CONF_PIN: BRIDGE_PIN,
+            CONF_VEDO_PIN: BRIDGE_VEDO_PIN,
         },
     )
 
@@ -261,6 +272,9 @@ async def test_reconfigure_successful(
         (CannotConnect, "cannot_connect"),
         (CannotAuthenticate, "invalid_auth"),
         (ConnectionResetError, "unknown"),
+        (InvalidPin, "invalid_pin"),
+        (InvalidVedoPin, "invalid_vedo_pin"),
+        (InvalidVedoAuth, "invalid_vedo_auth"),
     ],
 )
 async def test_reconfigure_fails(
@@ -326,16 +340,17 @@ async def test_pin_format_serial_bridge(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
-    with pytest.raises(InvalidData):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            user_input={
-                CONF_HOST: BRIDGE_HOST,
-                CONF_PORT: BRIDGE_PORT,
-                CONF_PIN: BAD_PIN,
-            },
-        )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_HOST: BRIDGE_HOST,
+            CONF_PORT: BRIDGE_PORT,
+            CONF_PIN: BAD_PIN,
+        },
+    )
     assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {"base": "invalid_pin"}
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -354,3 +369,112 @@ async def test_pin_format_serial_bridge(
     }
     assert not result["result"].unique_id
     await hass.async_block_till_done()
+
+
+async def test_flow_serial_bridge_with_vedo_pin(
+    hass: HomeAssistant,
+    mock_serial_bridge: AsyncMock,
+    mock_serial_bridge_config_entry: MockConfigEntry,
+) -> None:
+    """Test starting a flow by user with VEDO PIN."""
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    # Mock vedo_enabled to return True
+    mock_serial_bridge.vedo_enabled.return_value = True
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_HOST: BRIDGE_HOST,
+            CONF_PORT: BRIDGE_PORT,
+            CONF_PIN: BRIDGE_PIN,
+            CONF_VEDO_PIN: BRIDGE_VEDO_PIN,
+        },
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"] == {
+        CONF_HOST: BRIDGE_HOST,
+        CONF_PORT: BRIDGE_PORT,
+        CONF_PIN: BRIDGE_PIN,
+        CONF_VEDO_PIN: BRIDGE_VEDO_PIN,
+        CONF_TYPE: BRIDGE,
+    }
+    assert not result["result"].unique_id
+    await hass.async_block_till_done()
+
+
+async def test_flow_serial_bridge_with_invalid_vedo_pin(
+    hass: HomeAssistant,
+    mock_serial_bridge: AsyncMock,
+    mock_serial_bridge_config_entry: MockConfigEntry,
+) -> None:
+    """Test starting a flow with invalid VEDO PIN."""
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_HOST: BRIDGE_HOST,
+            CONF_PORT: BRIDGE_PORT,
+            CONF_PIN: BRIDGE_PIN,
+            CONF_VEDO_PIN: BAD_PIN,
+        },
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {"base": "invalid_vedo_pin"}
+
+    # Test with correct VEDO PIN
+    mock_serial_bridge.vedo_enabled.return_value = True
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_HOST: BRIDGE_HOST,
+            CONF_PORT: BRIDGE_PORT,
+            CONF_PIN: BRIDGE_PIN,
+            CONF_VEDO_PIN: BRIDGE_VEDO_PIN,
+        },
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
+
+async def test_flow_serial_bridge_with_vedo_auth_failure(
+    hass: HomeAssistant,
+    mock_serial_bridge: AsyncMock,
+    mock_serial_bridge_config_entry: MockConfigEntry,
+) -> None:
+    """Test starting a flow with VEDO authentication failure."""
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    # Mock vedo_enabled to return False (authentication failed)
+    mock_serial_bridge.vedo_enabled.return_value = False
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_HOST: BRIDGE_HOST,
+            CONF_PORT: BRIDGE_PORT,
+            CONF_PIN: BRIDGE_PIN,
+            CONF_VEDO_PIN: BRIDGE_VEDO_PIN,
+        },
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {"base": "invalid_vedo_auth"}

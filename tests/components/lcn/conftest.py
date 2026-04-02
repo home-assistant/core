@@ -5,8 +5,8 @@ from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
 
 import pypck
-import pypck.module
-from pypck.module import GroupConnection, ModuleConnection
+from pypck import lcn_defs
+from pypck.device import DeviceConnection, Serials
 import pytest
 
 from homeassistant.components.lcn import PchkConnectionManager
@@ -22,25 +22,31 @@ from tests.common import MockConfigEntry, load_fixture
 LATEST_CONFIG_ENTRY_VERSION = (LcnFlowHandler.VERSION, LcnFlowHandler.MINOR_VERSION)
 
 
-class MockModuleConnection(ModuleConnection):
+class MockDeviceConnection(DeviceConnection):
     """Fake a LCN module connection."""
 
-    status_request_handler = AsyncMock()
-    activate_status_request_handler = AsyncMock()
-    cancel_status_request_handler = AsyncMock()
     request_name = AsyncMock(return_value="TestModule")
+    request_serials = AsyncMock(
+        return_value=Serials(
+            hardware_serial=0x1A20A1234,
+            manu=0x01,
+            software_serial=0x190B11,
+            hardware_type=lcn_defs.HardwareType.UPP,
+        )
+    )
     send_command = AsyncMock(return_value=True)
+    request_status_output = AsyncMock()
+    request_status_relays = AsyncMock()
+    request_status_motor_position = AsyncMock()
+    request_status_binary_sensors = AsyncMock()
+    request_status_variable = AsyncMock()
+    request_status_led_and_logic_ops = AsyncMock()
+    request_status_locked_keys = AsyncMock()
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         """Construct ModuleConnection instance."""
         super().__init__(*args, **kwargs)
-        self.serials_request_handler.serial_known.set()
-
-
-class MockGroupConnection(GroupConnection):
-    """Fake a LCN group connection."""
-
-    send_command = AsyncMock(return_value=True)
+        self._serials_known.set()
 
 
 class MockPchkConnectionManager(PchkConnectionManager):
@@ -55,19 +61,10 @@ class MockPchkConnectionManager(PchkConnectionManager):
     async def async_close(self) -> None:
         """Mock closing a connection to PCHK."""
 
-    def get_address_conn(self, addr, request_serials=False):
-        """Get LCN address connection."""
-        return super().get_address_conn(addr, request_serials)
-
-    @patch.object(pypck.connection, "ModuleConnection", MockModuleConnection)
-    def get_module_conn(self, addr, request_serials=False):
-        """Get LCN module connection."""
-        return super().get_module_conn(addr, request_serials)
-
-    @patch.object(pypck.connection, "GroupConnection", MockGroupConnection)
-    def get_group_conn(self, addr):
-        """Get LCN group connection."""
-        return super().get_group_conn(addr)
+    @patch.object(pypck.connection, "DeviceConnection", MockDeviceConnection)
+    def get_device_connection(self, addr):
+        """Get LCN device connection."""
+        return super().get_device_connection(addr)
 
     scan_modules = AsyncMock()
     send_command = AsyncMock()

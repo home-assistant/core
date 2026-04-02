@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from typing import Any
 from unittest.mock import patch
 
 import pytest
@@ -17,8 +18,15 @@ from homeassistant.components.cover import (
     SERVICE_OPEN_COVER,
     SERVICE_SET_COVER_POSITION,
     SERVICE_SET_COVER_TILT_POSITION,
+    SERVICE_STOP_COVER,
 )
-from homeassistant.const import ATTR_ENTITY_ID, Platform
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    STATE_CLOSED,
+    STATE_OPEN,
+    STATE_UNKNOWN,
+    Platform,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceNotSupported
 from homeassistant.helpers import entity_registry as er
@@ -28,7 +36,13 @@ from . import initialize_entry
 from tests.common import MockConfigEntry, snapshot_platform
 
 
-@patch("homeassistant.components.tuya.PLATFORMS", [Platform.COVER])
+@pytest.fixture(autouse=True)
+def platform_autouse():
+    """Platform fixture."""
+    with patch("homeassistant.components.tuya.PLATFORMS", [Platform.COVER]):
+        yield
+
+
 async def test_platform_setup_and_discovery(
     hass: HomeAssistant,
     mock_manager: Manager,
@@ -44,103 +58,92 @@ async def test_platform_setup_and_discovery(
 
 
 @pytest.mark.parametrize(
-    "mock_device_code",
-    ["cl_zah67ekd"],
+    ("mock_device_code", "entity_id", "service", "service_data", "expected_commands"),
+    [
+        (
+            "cl_zah67ekd",
+            "cover.kitchen_blinds_curtain",
+            SERVICE_OPEN_COVER,
+            {},
+            [
+                {"code": "percent_control", "value": 0},
+            ],
+        ),
+        (
+            "cl_zah67ekd",
+            "cover.kitchen_blinds_curtain",
+            SERVICE_CLOSE_COVER,
+            {},
+            [
+                {"code": "percent_control", "value": 100},
+            ],
+        ),
+        (
+            "cl_zah67ekd",
+            "cover.kitchen_blinds_curtain",
+            SERVICE_SET_COVER_POSITION,
+            {
+                ATTR_POSITION: 25,
+            },
+            [
+                {"code": "percent_control", "value": 75},
+            ],
+        ),
+        (
+            "cl_n3xgr5pdmpinictg",
+            "cover.estore_sala_curtain",
+            SERVICE_OPEN_COVER,
+            {},
+            [
+                {"code": "control", "value": "open"},
+            ],
+        ),
+        (
+            "cl_n3xgr5pdmpinictg",
+            "cover.estore_sala_curtain",
+            SERVICE_CLOSE_COVER,
+            {},
+            [
+                {"code": "control", "value": "close"},
+            ],
+        ),
+        (
+            "cl_n3xgr5pdmpinictg",
+            "cover.estore_sala_curtain",
+            SERVICE_STOP_COVER,
+            {},
+            [
+                {"code": "control", "value": "stop"},
+            ],
+        ),
+    ],
 )
-@patch("homeassistant.components.tuya.PLATFORMS", [Platform.COVER])
-async def test_open_service(
+async def test_action(
     hass: HomeAssistant,
     mock_manager: Manager,
     mock_config_entry: MockConfigEntry,
     mock_device: CustomerDevice,
+    entity_id: str,
+    service: str,
+    service_data: dict[str, Any],
+    expected_commands: list[dict[str, Any]],
 ) -> None:
-    """Test open service."""
-    entity_id = "cover.kitchen_blinds_curtain"
+    """Test cover action."""
     await initialize_entry(hass, mock_manager, mock_config_entry, mock_device)
 
     state = hass.states.get(entity_id)
     assert state is not None, f"{entity_id} does not exist"
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_OPEN_COVER,
+        service,
         {
             ATTR_ENTITY_ID: entity_id,
+            **service_data,
         },
         blocking=True,
     )
     mock_manager.send_commands.assert_called_once_with(
-        mock_device.id,
-        [
-            {"code": "control", "value": "open"},
-            {"code": "percent_control", "value": 0},
-        ],
-    )
-
-
-@pytest.mark.parametrize(
-    "mock_device_code",
-    ["cl_zah67ekd"],
-)
-@patch("homeassistant.components.tuya.PLATFORMS", [Platform.COVER])
-async def test_close_service(
-    hass: HomeAssistant,
-    mock_manager: Manager,
-    mock_config_entry: MockConfigEntry,
-    mock_device: CustomerDevice,
-) -> None:
-    """Test close service."""
-    entity_id = "cover.kitchen_blinds_curtain"
-    await initialize_entry(hass, mock_manager, mock_config_entry, mock_device)
-
-    state = hass.states.get(entity_id)
-    assert state is not None, f"{entity_id} does not exist"
-    await hass.services.async_call(
-        COVER_DOMAIN,
-        SERVICE_CLOSE_COVER,
-        {
-            ATTR_ENTITY_ID: entity_id,
-        },
-        blocking=True,
-    )
-    mock_manager.send_commands.assert_called_once_with(
-        mock_device.id,
-        [
-            {"code": "control", "value": "close"},
-            {"code": "percent_control", "value": 100},
-        ],
-    )
-
-
-@pytest.mark.parametrize(
-    "mock_device_code",
-    ["cl_zah67ekd"],
-)
-async def test_set_position(
-    hass: HomeAssistant,
-    mock_manager: Manager,
-    mock_config_entry: MockConfigEntry,
-    mock_device: CustomerDevice,
-) -> None:
-    """Test set position service (not available on this device)."""
-    entity_id = "cover.kitchen_blinds_curtain"
-    await initialize_entry(hass, mock_manager, mock_config_entry, mock_device)
-
-    state = hass.states.get(entity_id)
-    assert state is not None, f"{entity_id} does not exist"
-    await hass.services.async_call(
-        COVER_DOMAIN,
-        SERVICE_SET_COVER_POSITION,
-        {
-            ATTR_ENTITY_ID: entity_id,
-            ATTR_POSITION: 25,
-        },
-        blocking=True,
-    )
-    mock_manager.send_commands.assert_called_once_with(
-        mock_device.id,
-        [
-            {"code": "percent_control", "value": 75},
-        ],
+        mock_device.id, expected_commands
     )
 
 
@@ -156,7 +159,6 @@ async def test_set_position(
         (50, 25),
     ],
 )
-@patch("homeassistant.components.tuya.PLATFORMS", [Platform.COVER])
 async def test_percent_state_on_cover(
     hass: HomeAssistant,
     mock_manager: Manager,
@@ -220,7 +222,6 @@ async def test_set_tilt_position_not_supported(
         (100, "open", 100),
     ],
 )
-@patch("homeassistant.components.tuya.PLATFORMS", [Platform.COVER])
 async def test_clkg_wltqkykhni0papzj_state(
     hass: HomeAssistant,
     mock_manager: Manager,
@@ -258,7 +259,6 @@ async def test_clkg_wltqkykhni0papzj_state(
             SERVICE_OPEN_COVER,
             {},
             [
-                {"code": "control", "value": "open"},
                 {"code": "percent_control", "value": 100},
             ],
         ),
@@ -273,13 +273,11 @@ async def test_clkg_wltqkykhni0papzj_state(
             SERVICE_CLOSE_COVER,
             {},
             [
-                {"code": "control", "value": "close"},
                 {"code": "percent_control", "value": 0},
             ],
         ),
     ],
 )
-@patch("homeassistant.components.tuya.PLATFORMS", [Platform.COVER])
 async def test_clkg_wltqkykhni0papzj_action(
     hass: HomeAssistant,
     mock_manager: Manager,
@@ -311,3 +309,37 @@ async def test_clkg_wltqkykhni0papzj_action(
         mock_device.id,
         expected_commands,
     )
+
+
+@pytest.mark.parametrize(
+    "mock_device_code",
+    ["cl_n3xgr5pdmpinictg"],
+)
+@pytest.mark.parametrize(
+    ("initial_control", "expected_state"),
+    [
+        ("open", STATE_OPEN),
+        ("stop", STATE_UNKNOWN),
+        ("close", STATE_CLOSED),
+    ],
+)
+async def test_cl_n3xgr5pdmpinictg_state(
+    hass: HomeAssistant,
+    mock_manager: Manager,
+    mock_config_entry: MockConfigEntry,
+    mock_device: CustomerDevice,
+    initial_control: str,
+    expected_state: str,
+) -> None:
+    """Test cover position for n3xgr5pdmpinictg device.
+
+    See https://github.com/home-assistant/core/issues/153537
+    """
+    entity_id = "cover.estore_sala_curtain"
+    mock_device.status["control"] = initial_control
+
+    await initialize_entry(hass, mock_manager, mock_config_entry, mock_device)
+
+    state = hass.states.get(entity_id)
+    assert state is not None, f"{entity_id} does not exist"
+    assert state.state == expected_state

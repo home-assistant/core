@@ -1,17 +1,20 @@
 {
   "domain": "litterrobot",
-  "name": "Litter-Robot",
+  "name": "Whisker",
   "codeowners": ["@natekspencer", "@tkdrob"],
   "config_flow": true,
   "dhcp": [
     {
       "hostname": "litter-robot4"
+    },
+    {
+      "hostname": "whiskerrobots"
     }
   ],
   "documentation": "https://www.home-assistant.io/integrations/litterrobot",
   "integration_type": "hub",
   "iot_class": "cloud_push",
   "loggers": ["pylitterbot"],
-  "quality_scale": "bronze",
-  "requirements": ["pylitterbot==2024.2.4"]
+  "quality_scale": "platinum",
+  "requirements": ["pylitterbot==2025.2.0"]
 }

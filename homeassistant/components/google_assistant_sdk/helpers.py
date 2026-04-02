@@ -8,7 +8,6 @@ import logging
 from typing import Any
 import uuid
 
-import aiohttp
 from aiohttp import web
 from gassist_text import TextAssistant
 from google.oauth2.credentials import Credentials
@@ -19,14 +18,18 @@ from homeassistant.components.media_player import (
     ATTR_MEDIA_ANNOUNCE,
     ATTR_MEDIA_CONTENT_ID,
     ATTR_MEDIA_CONTENT_TYPE,
-    DOMAIN as DOMAIN_MP,
+    DOMAIN as MP_DOMAIN,
     SERVICE_PLAY_MEDIA,
     MediaType,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_ENTITY_ID, CONF_ACCESS_TOKEN
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import (
+    HomeAssistantError,
+    OAuth2TokenRequestReauthError,
+    ServiceValidationError,
+)
 from homeassistant.helpers.config_entry_oauth2_flow import OAuth2Session
 from homeassistant.helpers.event import async_call_later
 
@@ -68,14 +71,19 @@ async def async_send_text_commands(
 ) -> list[CommandResponse]:
     """Send text commands to Google Assistant Service."""
     # There can only be 1 entry (config_flow has single_instance_allowed)
-    entry: GoogleAssistantSDKConfigEntry = hass.config_entries.async_entries(DOMAIN)[0]
+    entries = hass.config_entries.async_loaded_entries(DOMAIN)
+    if not entries:
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="entry_not_loaded",
+        )
+    entry: GoogleAssistantSDKConfigEntry = entries[0]
 
     session = entry.runtime_data.session
     try:
         await session.async_ensure_token_valid()
-    except aiohttp.ClientResponseError as err:
-        if 400 <= err.status < 500:
-            entry.async_start_reauth(hass)
+    except OAuth2TokenRequestReauthError:
+        entry.async_start_reauth(hass)
         raise
 
     credentials = Credentials(session.token[CONF_ACCESS_TOKEN])  # type: ignore[no-untyped-call]
@@ -106,7 +114,7 @@ async def async_send_text_commands(
                     )
                 )
                 await hass.services.async_call(
-                    DOMAIN_MP,
+                    MP_DOMAIN,
                     SERVICE_PLAY_MEDIA,
                     {
                         ATTR_ENTITY_ID: media_players,
@@ -136,7 +144,7 @@ def best_matching_language_code(
     # Use the assist language if supported
     if assist_language in SUPPORTED_LANGUAGE_CODES:
         return assist_language
-    language = assist_language.split("-")[0]
+    language = assist_language.split("-", maxsplit=1)[0]
 
     # Use the agent language if assist and agent start with the same language part
     if agent_language is not None and agent_language.startswith(language):

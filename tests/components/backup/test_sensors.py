@@ -4,7 +4,6 @@ from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
-import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.backup import store
@@ -19,7 +18,6 @@ from tests.common import async_fire_time_changed, snapshot_platform
 from tests.typing import WebSocketGenerator
 
 
-@pytest.mark.usefixtures("mock_backup_generation")
 async def test_sensors(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,

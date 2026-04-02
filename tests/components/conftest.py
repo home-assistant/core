@@ -3,22 +3,57 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import AsyncGenerator, Callable, Generator
+from collections.abc import AsyncGenerator, Callable, Coroutine, Generator, Mapping
 from functools import lru_cache
 from importlib.util import find_spec
+import inspect
+from ipaddress import IPv4Address, IPv4Network
 from pathlib import Path
 import re
 import string
 from typing import TYPE_CHECKING, Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
+from aiohasupervisor import SupervisorClient, SupervisorNotFoundError
+from aiohasupervisor.addons import AddonsClient
+from aiohasupervisor.backups import BackupsClient
+from aiohasupervisor.discovery import DiscoveryClient
+from aiohasupervisor.homeassistant import HomeAssistantClient
+from aiohasupervisor.host import HostClient
+from aiohasupervisor.ingress import IngressClient
+from aiohasupervisor.jobs import JobsClient
 from aiohasupervisor.models import (
+    AddonStage,
+    AddonState,
     Discovery,
+    DockerNetwork,
+    GreenInfo,
+    HomeAssistantInfo,
+    HomeAssistantStats,
+    HostInfo,
+    InstalledAddon,
+    JobsInfo,
+    LogLevel,
+    MountsInfo,
+    NetworkInfo,
+    OSInfo,
     Repository,
     ResolutionInfo,
+    RootInfo,
     StoreAddon,
     StoreInfo,
+    SupervisorInfo,
+    SupervisorState,
+    SupervisorStats,
+    UpdateChannel,
+    YellowInfo,
 )
+from aiohasupervisor.mounts import MountsClient
+from aiohasupervisor.network import NetworkClient
+from aiohasupervisor.os import OSClient
+from aiohasupervisor.resolution import ResolutionClient
+from aiohasupervisor.store import StoreClient
+from aiohasupervisor.supervisor import SupervisorManagementClient
 import pytest
 import voluptuous as vol
 
@@ -31,7 +66,17 @@ from homeassistant.config_entries import (
     OptionsFlowManager,
 )
 from homeassistant.const import STATE_OFF, STATE_ON
-from homeassistant.core import Context, HomeAssistant, ServiceRegistry, ServiceResponse
+from homeassistant.core import (
+    Context,
+    EntityServiceResponse,
+    HassJobType,
+    HomeAssistant,
+    ServiceCall,
+    ServiceRegistry,
+    ServiceResponse,
+    SupportsResponse,
+    callback,
+)
 from homeassistant.data_entry_flow import (
     FlowContext,
     FlowHandler,
@@ -42,6 +87,7 @@ from homeassistant.data_entry_flow import (
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.translation import async_get_translations
+from homeassistant.helpers.typing import VolSchemaType
 from homeassistant.util import yaml as yaml_util
 
 from tests.common import QualityScaleStatus, get_quality_scale
@@ -54,6 +100,8 @@ if TYPE_CHECKING:
     from .light.common import MockLight
     from .sensor.common import MockSensor
     from .switch.common import MockSwitch
+
+pytest.register_assert_rewrite("tests.components.common")
 
 # Regex for accessing the integration name from the test path
 RE_REQUEST_DOMAIN = re.compile(r".*tests\/components\/([^/]+)\/.*")
@@ -92,17 +140,6 @@ def entity_registry_enabled_by_default() -> Generator[None]:
         ),
     ):
         yield
-
-
-# Blueprint test fixtures
-@pytest.fixture(name="stub_blueprint_populate")
-def stub_blueprint_populate_fixture() -> Generator[None]:
-    """Stub copying the blueprints to the config folder."""
-    from .blueprint.common import (  # noqa: PLC0415
-        stub_blueprint_populate_fixture_helper,
-    )
-
-    yield from stub_blueprint_populate_fixture_helper()
 
 
 # TTS test fixtures
@@ -167,7 +204,7 @@ def mock_conversation_agent_fixture(hass: HomeAssistant) -> MockAgent:
     return mock_conversation_agent_fixture_helper(hass)
 
 
-@pytest.fixture(scope="session", autouse=find_spec("ffmpeg") is not None)
+@pytest.fixture(scope="session", autouse=find_spec("haffmpeg") is not None)
 def prevent_ffmpeg_subprocess() -> Generator[None]:
     """If installed, prevent ffmpeg from creating a subprocess."""
     with patch(
@@ -309,6 +346,7 @@ def addon_not_installed_fixture(
     """Mock add-on not installed."""
     from .hassio.common import mock_addon_not_installed  # noqa: PLC0415
 
+    addon_info.side_effect = SupervisorNotFoundError
     return mock_addon_not_installed(addon_store_info, addon_info)
 
 
@@ -429,11 +467,9 @@ def uninstall_addon_fixture(supervisor_client: AsyncMock) -> AsyncMock:
 
 
 @pytest.fixture(name="create_backup")
-def create_backup_fixture() -> Generator[AsyncMock]:
+def create_backup_fixture(supervisor_client: AsyncMock) -> AsyncMock:
     """Mock create backup."""
-    from .hassio.common import mock_create_backup  # noqa: PLC0415
-
-    yield from mock_create_backup()
+    return supervisor_client.backups.partial_backup
 
 
 @pytest.fixture(name="update_addon")
@@ -509,22 +545,272 @@ def resolution_suggestions_for_issue_fixture(supervisor_client: AsyncMock) -> As
     return supervisor_client.resolution.suggestions_for_issue
 
 
+@pytest.fixture(name="jobs_info")
+def jobs_info_fixture(supervisor_client: AsyncMock) -> AsyncMock:
+    """Mock jobs info from supervisor."""
+    supervisor_client.jobs.info.return_value = JobsInfo(ignore_conditions=[], jobs=[])
+    return supervisor_client.jobs.info
+
+
+@pytest.fixture(name="os_yellow_info")
+def os_yellow_info_fixture(supervisor_client: AsyncMock) -> AsyncMock:
+    """Mock yellow info API from supervisor OS."""
+    supervisor_client.os.yellow_info.return_value = YellowInfo(
+        disk_led=True, heartbeat_led=True, power_led=True
+    )
+    return supervisor_client.os.yellow_info
+
+
+@pytest.fixture(name="os_green_info")
+def os_green_info_fixture(supervisor_client: AsyncMock) -> AsyncMock:
+    """Mock green info API from supervisor OS."""
+    supervisor_client.os.green_info.return_value = GreenInfo(
+        activity_led=True, power_led=True, system_health_led=True
+    )
+    return supervisor_client.os.green_info
+
+
+@pytest.fixture(name="supervisor_root_info")
+def supervisor_root_info_fixture(supervisor_client: AsyncMock) -> AsyncMock:
+    """Mock root info API from supervisor."""
+    supervisor_client.info.return_value = RootInfo(
+        supervisor="222",
+        homeassistant="0.110.0",
+        hassos="1.2.3",
+        docker="",
+        hostname=None,
+        operating_system=None,
+        features=[],
+        machine=None,
+        machine_id=None,
+        arch="",
+        state=SupervisorState.RUNNING,
+        supported_arch=[],
+        supported=True,
+        channel=UpdateChannel.STABLE,
+        logging=LogLevel.INFO,
+        timezone="Etc/UTC",
+    )
+    return supervisor_client.info
+
+
+@pytest.fixture(name="host_info")
+def host_info_fixture(supervisor_client: AsyncMock) -> AsyncMock:
+    """Mock host info API from supervisor."""
+    supervisor_client.host.info.return_value = HostInfo(
+        agent_version=None,
+        apparmor_version=None,
+        chassis="vm",
+        virtualization=None,
+        cpe=None,
+        deployment=None,
+        disk_free=1.6,
+        disk_total=100.0,
+        disk_used=98.4,
+        disk_life_time=None,
+        features=[],
+        hostname=None,
+        llmnr_hostname=None,
+        kernel="4.19.0-6-amd64",
+        operating_system="Debian GNU/Linux 10 (buster)",
+        timezone=None,
+        dt_utc=None,
+        dt_synchronized=None,
+        use_ntp=None,
+        startup_time=None,
+        boot_timestamp=None,
+        broadcast_llmnr=None,
+        broadcast_mdns=None,
+    )
+    return supervisor_client.host.info
+
+
+@pytest.fixture(name="homeassistant_info")
+def homeassistant_info_fixture(supervisor_client: AsyncMock) -> AsyncMock:
+    """Mock Home Assistant info API from supervisor."""
+    supervisor_client.homeassistant.info.return_value = HomeAssistantInfo(
+        version="1.0.0",
+        version_latest="1.0.0",
+        update_available=False,
+        machine=None,
+        ip_address=IPv4Address("172.30.32.1"),
+        arch=None,
+        image="homeassistant",
+        boot=True,
+        port=8123,
+        ssl=False,
+        watchdog=True,
+        audio_input=None,
+        audio_output=None,
+        backups_exclude_database=False,
+        duplicate_log_file=False,
+    )
+    return supervisor_client.homeassistant.info
+
+
+@pytest.fixture(name="supervisor_info")
+def supervisor_info_fixture(supervisor_client: AsyncMock) -> AsyncMock:
+    """Mock supervisor info API from supervisor."""
+    supervisor_client.supervisor.info.return_value = SupervisorInfo(
+        version="1.0.0",
+        version_latest="1.0.0",
+        update_available=False,
+        channel=UpdateChannel.STABLE,
+        arch="",
+        supported=True,
+        healthy=True,
+        ip_address=IPv4Address("172.30.32.2"),
+        timezone=None,
+        logging=LogLevel.INFO,
+        debug=False,
+        debug_block=False,
+        diagnostics=None,
+        auto_update=True,
+        country=None,
+        detect_blocking_io=False,
+    )
+    return supervisor_client.supervisor.info
+
+
+@pytest.fixture(name="addons_list")
+def addons_list_fixture(supervisor_client: AsyncMock) -> AsyncMock:
+    """Mock addons list API from supervisor."""
+    supervisor_client.addons.list.return_value = [
+        InstalledAddon(
+            detached=False,
+            advanced=False,
+            available=True,
+            build=False,
+            description="",
+            homeassistant=None,
+            icon=False,
+            logo=False,
+            name="test",
+            repository="core",
+            slug="test",
+            stage=AddonStage.STABLE,
+            update_available=True,
+            url="https://github.com/home-assistant/addons/test",
+            version_latest="2.0.1",
+            version="2.0.0",
+            state=AddonState.STARTED,
+        ),
+        InstalledAddon(
+            detached=False,
+            advanced=False,
+            available=True,
+            build=False,
+            description="",
+            homeassistant=None,
+            icon=False,
+            logo=False,
+            name="test2",
+            repository="core",
+            slug="test2",
+            stage=AddonStage.STABLE,
+            update_available=False,
+            url="https://github.com",
+            version_latest="3.1.0",
+            version="3.1.0",
+            state=AddonState.STOPPED,
+        ),
+    ]
+    return supervisor_client.addons.list
+
+
+@pytest.fixture(name="network_info")
+def network_info_fixture(supervisor_client: AsyncMock) -> AsyncMock:
+    """Mock network info API from supervisor."""
+    supervisor_client.network.info.return_value = NetworkInfo(
+        interfaces=[],
+        docker=DockerNetwork(
+            interface="hassio",
+            address=IPv4Network("172.30.32.0/23"),
+            gateway=IPv4Address("172.30.32.1"),
+            dns=IPv4Address("172.30.32.3"),
+        ),
+        host_internet=True,
+        supervisor_internet=True,
+    )
+    return supervisor_client.network.info
+
+
+@pytest.fixture(name="os_info")
+def os_info_fixture(supervisor_client: AsyncMock) -> AsyncMock:
+    """Mock os info API from supervisor."""
+    supervisor_client.os.info.return_value = OSInfo(
+        version="1.0.0",
+        version_latest="1.0.0",
+        update_available=False,
+        board=None,
+        boot=None,
+        data_disk=None,
+        boot_slots={},
+    )
+    return supervisor_client.os.info
+
+
+@pytest.fixture(name="homeassistant_stats")
+def homeassistant_stats_fixture(supervisor_client: AsyncMock) -> AsyncMock:
+    """Mock Home Assistant stats API from supervisor."""
+    supervisor_client.homeassistant.stats.return_value = HomeAssistantStats(
+        cpu_percent=0.99,
+        memory_usage=182611968,
+        memory_limit=3977146368,
+        memory_percent=4.59,
+        network_rx=362570232,
+        network_tx=82374138,
+        blk_read=46010945536,
+        blk_write=15051526144,
+    )
+    return supervisor_client.homeassistant.stats
+
+
+@pytest.fixture(name="supervisor_stats")
+def supervisor_stats_fixture(supervisor_client: AsyncMock) -> AsyncMock:
+    """Mock supervisor stats API from supervisor."""
+    supervisor_client.supervisor.stats.return_value = SupervisorStats(
+        cpu_percent=0.99,
+        memory_usage=182611968,
+        memory_limit=3977146368,
+        memory_percent=4.59,
+        network_rx=362570232,
+        network_tx=82374138,
+        blk_read=46010945536,
+        blk_write=15051526144,
+    )
+    return supervisor_client.supervisor.stats
+
+
+@pytest.fixture(name="ingress_panels")
+def ingress_panels_fixture(supervisor_client: AsyncMock) -> AsyncMock:
+    """Mock ingress panels API from supervisor."""
+    supervisor_client.ingress.panels.return_value = {}
+    return supervisor_client.ingress.panels
+
+
 @pytest.fixture(name="supervisor_client")
 def supervisor_client() -> Generator[AsyncMock]:
     """Mock the supervisor client."""
-    mounts_info_mock = AsyncMock(spec_set=["default_backup_mount", "mounts"])
-    mounts_info_mock.default_backup_mount = None
-    mounts_info_mock.mounts = []
-    supervisor_client = AsyncMock()
-    supervisor_client.addons = AsyncMock()
-    supervisor_client.discovery = AsyncMock()
-    supervisor_client.homeassistant = AsyncMock()
-    supervisor_client.host = AsyncMock()
-    supervisor_client.jobs = AsyncMock()
-    supervisor_client.mounts.info.return_value = mounts_info_mock
-    supervisor_client.os = AsyncMock()
-    supervisor_client.resolution = AsyncMock()
-    supervisor_client.supervisor = AsyncMock()
+    supervisor_client = AsyncMock(spec=SupervisorClient)
+    supervisor_client.addons = AsyncMock(spec=AddonsClient)
+    supervisor_client.backups = AsyncMock(spec=BackupsClient)
+    supervisor_client.discovery = AsyncMock(spec=DiscoveryClient)
+    supervisor_client.homeassistant = AsyncMock(spec=HomeAssistantClient)
+    supervisor_client.host = AsyncMock(spec=HostClient)
+    supervisor_client.ingress = AsyncMock(spec=IngressClient)
+    supervisor_client.jobs = AsyncMock(spec=JobsClient)
+    supervisor_client.jobs.info.return_value = JobsInfo(ignore_conditions=[], jobs=[])
+    supervisor_client.mounts = AsyncMock(spec=MountsClient)
+    supervisor_client.mounts.info.return_value = MagicMock(
+        spec=MountsInfo, default_backup_mount=None, mounts=[]
+    )
+    supervisor_client.network = AsyncMock(spec=NetworkClient)
+    supervisor_client.os = AsyncMock(spec=OSClient)
+    supervisor_client.resolution = AsyncMock(spec=ResolutionClient)
+    supervisor_client.supervisor = AsyncMock(spec=SupervisorManagementClient)
+    supervisor_client.store = AsyncMock(spec=StoreClient)
+
     with (
         patch(
             "homeassistant.components.hassio.get_supervisor_client",
@@ -536,6 +822,10 @@ def supervisor_client() -> Generator[AsyncMock]:
         ),
         patch(
             "homeassistant.components.hassio.addon_manager.get_supervisor_client",
+            return_value=supervisor_client,
+        ),
+        patch(
+            "homeassistant.components.hassio.addon_panel.get_supervisor_client",
             return_value=supervisor_client,
         ),
         patch(
@@ -552,6 +842,10 @@ def supervisor_client() -> Generator[AsyncMock]:
         ),
         patch(
             "homeassistant.components.hassio.issues.get_supervisor_client",
+            return_value=supervisor_client,
+        ),
+        patch(
+            "homeassistant.components.hassio.jobs.get_supervisor_client",
             return_value=supervisor_client,
         ),
         patch(
@@ -593,7 +887,7 @@ async def _validate_translation(
     category: str,
     component: str,
     key: str,
-    description_placeholders: dict[str, str] | None,
+    description_placeholders: Mapping[str, str] | None,
     *,
     translation_required: bool = True,
 ) -> None:
@@ -618,6 +912,13 @@ async def _validate_translation(
 
     translations = await async_get_translations(hass, "en", category, [component])
 
+    if full_key.endswith("."):
+        for subkey, translation in translations.items():
+            if subkey.startswith(full_key):
+                _validate_translation_placeholders(
+                    subkey, translation, description_placeholders, translation_errors
+                )
+        return
     if (translation := translations.get(full_key)) is not None:
         _validate_translation_placeholders(
             full_key, translation, description_placeholders, translation_errors
@@ -627,8 +928,13 @@ async def _validate_translation(
     if not translation_required:
         return
 
+    if full_key not in translation_errors:
+        for k in translation_errors:
+            if k.endswith(".") and full_key.startswith(k):
+                full_key = k
+                break
     if translation_errors.get(full_key) in {"used", "unused"}:
-        # If the does not integration exist, translation errors should be ignored
+        # If the integration does not exist, translation errors should be ignored
         # via the ignore_translations_for_mock_domains fixture instead of the
         # ignore_missing_translations fixture.
         try:
@@ -762,6 +1068,7 @@ async def _check_config_flow_result_translations(
         return
 
     key_prefix = ""
+    description_placeholders = result.get("description_placeholders")
     if isinstance(manager, ConfigEntriesFlowManager):
         category = "config"
         integration = flow.handler
@@ -773,7 +1080,16 @@ async def _check_config_flow_result_translations(
         integration = flow.handler
         issue_id = flow.issue_id
         issue = ir.async_get(flow.hass).async_get_issue(integration, issue_id)
+        if issue is None:
+            # Issue was deleted mid-flow (e.g., config entry removed), skip check
+            return
         key_prefix = f"{issue.translation_key}.fix_flow."
+        description_placeholders = {
+            # Both are used in issue translations, and description_placeholders
+            # takes precedence over translation_placeholders
+            **(issue.translation_placeholders or {}),
+            **(description_placeholders or {}),
+        }
     else:
         return
 
@@ -789,7 +1105,7 @@ async def _check_config_flow_result_translations(
                 category,
                 integration,
                 f"{key_prefix}step.{step_id}",
-                result["description_placeholders"],
+                description_placeholders,
                 result["data_schema"],
                 ignore_translations_for_mock_domains,
             )
@@ -803,7 +1119,7 @@ async def _check_config_flow_result_translations(
                     category,
                     integration,
                     f"{key_prefix}error.{error}",
-                    result["description_placeholders"],
+                    description_placeholders,
                 )
         return
 
@@ -819,7 +1135,7 @@ async def _check_config_flow_result_translations(
             category,
             integration,
             f"{key_prefix}abort.{result['reason']}",
-            result["description_placeholders"],
+            description_placeholders,
         )
 
 
@@ -890,6 +1206,55 @@ async def _check_exception_translation(
     )
 
 
+_DYNAMIC_SERVICE_DOMAINS = {
+    "esphome",
+    "notify",
+    "rest_command",
+    "script",
+    "shell_command",
+    "tts",
+}
+"""These domains create services dynamically.
+
+name/description translations are not required.
+"""
+
+
+async def _check_service_registration_translation(
+    hass: HomeAssistant,
+    domain: str,
+    service_name: str,
+    description_placeholders: Mapping[str, str] | None,
+    translation_errors: dict[str, str],
+    ignore_translations_for_mock_domains: set[str],
+) -> None:
+    # Use trailing . to check all subkeys
+    # This validates placeholders only, and only if the translation exists
+    await _validate_translation(
+        hass,
+        translation_errors,
+        ignore_translations_for_mock_domains,
+        "services",
+        domain,
+        f"{service_name}.",
+        description_placeholders,
+    )
+    # Service `name` and `description` should be compulsory
+    # unless for specific domains where the services are dynamically created
+    if domain not in _DYNAMIC_SERVICE_DOMAINS:
+        for subkey in ("name", "description"):
+            await _validate_translation(
+                hass,
+                translation_errors,
+                ignore_translations_for_mock_domains,
+                "services",
+                domain,
+                f"{service_name}.{subkey}",
+                description_placeholders,
+                translation_required=True,
+            )
+
+
 @pytest.fixture(autouse=True)
 async def check_translations(
     ignore_missing_translations: str | list[str],
@@ -920,6 +1285,7 @@ async def check_translations(
     _original_flow_manager_async_handle_step = FlowManager._async_handle_step
     _original_issue_registry_async_create_issue = ir.IssueRegistry.async_get_or_create
     _original_service_registry_async_call = ServiceRegistry.async_call
+    _original_service_registry_async_register = ServiceRegistry.async_register
 
     # Prepare override functions
     async def _flow_manager_async_handle_step(
@@ -933,7 +1299,7 @@ async def check_translations(
 
     def _issue_registry_async_create_issue(
         self: ir.IssueRegistry, domain: str, issue_id: str, *args, **kwargs
-    ) -> None:
+    ) -> ir.IssueEntry:
         result = _original_issue_registry_async_create_issue(
             self, domain, issue_id, *args, **kwargs
         )
@@ -977,6 +1343,59 @@ async def check_translations(
             )
             raise
 
+    @callback
+    def _service_registry_async_register(
+        self: ServiceRegistry,
+        domain: str,
+        service: str,
+        service_func: Callable[
+            [ServiceCall],
+            Coroutine[Any, Any, ServiceResponse | EntityServiceResponse]
+            | ServiceResponse
+            | EntityServiceResponse
+            | None,
+        ],
+        schema: VolSchemaType | None = None,
+        supports_response: SupportsResponse = SupportsResponse.NONE,
+        job_type: HassJobType | None = None,
+        *,
+        description_placeholders: Mapping[str, str] | None = None,
+    ) -> None:
+        if (
+            (current_frame := inspect.currentframe()) is None
+            or (caller := current_frame.f_back) is None
+            or (
+                # async_mock_service is used in tests to register test services
+                caller.f_code.co_name != "async_mock_service"
+                # ServiceRegistry.async_register can also be called directly in
+                # a test module
+                and not caller.f_code.co_filename.startswith(
+                    str(Path(__file__).parents[0])
+                )
+            )
+        ):
+            translation_coros.add(
+                _check_service_registration_translation(
+                    self._hass,
+                    domain,
+                    service,
+                    description_placeholders,
+                    translation_errors,
+                    ignored_domains,
+                )
+            )
+
+        _original_service_registry_async_register(
+            self,
+            domain,
+            service,
+            service_func,
+            schema,
+            supports_response,
+            job_type,
+            description_placeholders=description_placeholders,
+        )
+
     # Use override functions
     with (
         patch(
@@ -990,6 +1409,10 @@ async def check_translations(
         patch(
             "homeassistant.core.ServiceRegistry.async_call",
             _service_registry_async_call,
+        ),
+        patch(
+            "homeassistant.core.ServiceRegistry.async_register",
+            _service_registry_async_register,
         ),
     ):
         yield
@@ -1007,3 +1430,13 @@ async def check_translations(
     for description in translation_errors.values():
         if description != "used":
             pytest.fail(description)
+
+
+@pytest.fixture(name="enable_labs_preview_features")
+def enable_labs_preview_features() -> Generator[None]:
+    """Enable labs preview features."""
+    with patch(
+        "homeassistant.components.labs.async_is_preview_feature_enabled",
+        return_value=True,
+    ):
+        yield

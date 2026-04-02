@@ -115,6 +115,7 @@ def async_setup(
 ) -> None:
     """Component to allow users to login."""
     hass.http.register_view(WellKnownOAuthInfoView)
+    hass.http.register_view(WellKnownProtectedResourceView)
     hass.http.register_view(AuthProvidersView)
     hass.http.register_view(LoginFlowIndexView(hass.auth.login_flow, store_result))
     hass.http.register_view(LoginFlowResourceView(hass.auth.login_flow, store_result))
@@ -136,13 +137,51 @@ class WellKnownOAuthInfoView(HomeAssistantView):
             url_prefix = get_url(hass, require_current_request=True)
         except NoURLAvailableError:
             url_prefix = ""
+
+        metadata = {
+            "authorization_endpoint": f"{url_prefix}/auth/authorize",
+            "token_endpoint": f"{url_prefix}/auth/token",
+            "revocation_endpoint": f"{url_prefix}/auth/revoke",
+            # Home Assistant already accepts URL-based client_ids via
+            # IndieAuth without prior registration, which is compatible with
+            # draft-ietf-oauth-client-id-metadata-document. This flag
+            # advertises that support to encourage clients to use it. The
+            # metadata document is not actually fetched as IndieAuth doesn't
+            # require it.
+            "client_id_metadata_document_supported": True,
+            "response_types_supported": ["code"],
+            "service_documentation": (
+                "https://developers.home-assistant.io/docs/auth_api"
+            ),
+        }
+
+        # Add issuer only when we have a valid base URL (RFC 8414 compliance)
+        if url_prefix:
+            metadata["issuer"] = url_prefix
+
+        return self.json(metadata)
+
+
+class WellKnownProtectedResourceView(HomeAssistantView):
+    """View to host the OAuth2 Protected Resource Metadata per RFC9728."""
+
+    requires_auth = False
+    url = "/.well-known/oauth-protected-resource"
+    name = "well-known/oauth-protected-resource"
+
+    async def get(self, request: web.Request) -> web.Response:
+        """Return the protected resource metadata."""
+        hass = request.app[KEY_HASS]
+        try:
+            url_prefix = get_url(hass, require_current_request=True)
+        except NoURLAvailableError:
+            return self.json_message("No URL available", HTTPStatus.NOT_FOUND)
+
         return self.json(
             {
-                "authorization_endpoint": f"{url_prefix}/auth/authorize",
-                "token_endpoint": f"{url_prefix}/auth/token",
-                "revocation_endpoint": f"{url_prefix}/auth/revoke",
-                "response_types_supported": ["code"],
-                "service_documentation": (
+                "resource": url_prefix,
+                "authorization_servers": [url_prefix],
+                "resource_documentation": (
                     "https://developers.home-assistant.io/docs/auth_api"
                 ),
             }

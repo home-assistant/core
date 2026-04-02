@@ -57,14 +57,13 @@ async def async_setup_entry(
 ) -> None:
     """Set up OpenWeatherMap weather entity based on a config entry."""
     domain_data = config_entry.runtime_data
-    name = domain_data.name
     mode = domain_data.mode
 
     if mode != OWM_MODE_AIRPOLLUTION:
         weather_coordinator = domain_data.coordinator
 
         unique_id = f"{config_entry.unique_id}"
-        owm_weather = OpenWeatherMapWeather(name, unique_id, mode, weather_coordinator)
+        owm_weather = OpenWeatherMapWeather(unique_id, mode, weather_coordinator)
 
         async_add_entities([owm_weather], False)
 
@@ -93,7 +92,6 @@ class OpenWeatherMapWeather(SingleCoordinatorWeatherEntity[OWMUpdateCoordinator]
 
     def __init__(
         self,
-        name: str,
         unique_id: str,
         mode: str,
         weather_coordinator: OWMUpdateCoordinator,
@@ -105,7 +103,6 @@ class OpenWeatherMapWeather(SingleCoordinatorWeatherEntity[OWMUpdateCoordinator]
             entry_type=DeviceEntryType.SERVICE,
             identifiers={(DOMAIN, unique_id)},
             manufacturer=MANUFACTURER,
-            name=name,
         )
         self.mode = mode
 

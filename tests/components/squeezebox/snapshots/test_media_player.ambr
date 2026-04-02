@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_entity_registry[media_player.test_player-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
     }),
@@ -21,6 +22,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -42,6 +44,7 @@
       'group_members': list([
       ]),
       'is_volume_muted': True,
+      'last_non_buffering_state': <MediaPlayerState.IDLE: 'idle'>,
       'media_duration': 1,
       'media_position': 1,
       'query_result': dict({

@@ -11,23 +11,23 @@
       }
     },
     "sensor": {
+      "cell_state": {
+        "default": "mdi:swap-horizontal-bold"
+      },
       "current_profile": {
         "default": "mdi:gauge"
       },
-      "fan_speed": {
-        "default": "mdi:fan"
+      "efficiency": {
+        "default": "mdi:gauge"
       },
       "extract_fan_speed": {
         "default": "mdi:fan"
       },
-      "supply_fan_speed": {
+      "fan_speed": {
         "default": "mdi:fan"
       },
-      "cell_state": {
-        "default": "mdi:swap-horizontal-bold"
-      },
-      "efficiency": {
-        "default": "mdi:gauge"
+      "supply_fan_speed": {
+        "default": "mdi:fan"
       }
     },
     "switch": {
@@ -37,8 +37,8 @@
     }
   },
   "services": {
-    "set_profile_fan_speed_home": {
-      "service": "mdi:home"
+    "set_profile": {
+      "service": "mdi:fan"
     },
     "set_profile_fan_speed_away": {
       "service": "mdi:walk"
@@ -46,8 +46,8 @@
     "set_profile_fan_speed_boost": {
       "service": "mdi:speedometer"
     },
-    "set_profile": {
-      "service": "mdi:fan"
+    "set_profile_fan_speed_home": {
+      "service": "mdi:home"
     }
   }
 }

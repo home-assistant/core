@@ -35,6 +35,8 @@ from .const import (
 )
 from .helpers import get_device, get_first_geofence, get_geofence_ids
 
+type TraccarServerConfigEntry = ConfigEntry[TraccarServerCoordinator]
+
 
 class TraccarServerCoordinatorDataDevice(TypedDict):
     """Traccar Server coordinator data."""
@@ -51,12 +53,12 @@ type TraccarServerCoordinatorData = dict[int, TraccarServerCoordinatorDataDevice
 class TraccarServerCoordinator(DataUpdateCoordinator[TraccarServerCoordinatorData]):
     """Class to manage fetching Traccar Server data."""
 
-    config_entry: ConfigEntry
+    config_entry: TraccarServerConfigEntry
 
     def __init__(
         self,
         hass: HomeAssistant,
-        config_entry: ConfigEntry,
+        config_entry: TraccarServerConfigEntry,
         client: ApiClient,
     ) -> None:
         """Initialize global Traccar Server data updater."""

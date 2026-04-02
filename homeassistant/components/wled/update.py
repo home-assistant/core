@@ -12,10 +12,16 @@ from homeassistant.components.update import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import WLED_KEY, WLEDConfigEntry
-from .coordinator import WLEDDataUpdateCoordinator, WLEDReleasesDataUpdateCoordinator
+from . import WLED_KEY
+from .coordinator import (
+    WLEDConfigEntry,
+    WLEDDataUpdateCoordinator,
+    WLEDReleasesDataUpdateCoordinator,
+)
 from .entity import WLEDEntity
 from .helpers import wled_exception_handler
+
+PARALLEL_UPDATES = 1
 
 
 async def async_setup_entry(
@@ -96,7 +102,7 @@ class WLEDUpdateEntity(WLEDEntity, UpdateEntity):
         """URL to the full release notes of the latest version available."""
         if (version := self.latest_version) is None:
             return None
-        return f"https://github.com/Aircoookie/WLED/releases/tag/v{version}"
+        return f"https://github.com/wled/WLED/releases/tag/v{version}"
 
     @wled_exception_handler
     async def async_install(

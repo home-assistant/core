@@ -15,8 +15,11 @@ DOMAIN: str = "nina"
 NO_MATCH_REGEX: str = "/(?!)/"
 ALL_MATCH_REGEX: str = ".*"
 
+SEVERITY_VALUES: list[str] = ["extreme", "severe", "moderate", "minor", "unknown"]
+
 CONF_REGIONS: str = "regions"
 CONF_MESSAGE_SLOTS: str = "slots"
+CONF_FILTERS: str = "filters"
 CONF_FILTER_CORONA: str = "corona_filter"  # deprecated
 CONF_HEADLINE_FILTER: str = "headline_filter"
 CONF_AREA_FILTER: str = "area_filter"
@@ -32,6 +35,17 @@ ATTR_ID: str = "id"
 ATTR_SENT: str = "sent"
 ATTR_START: str = "start"
 ATTR_EXPIRES: str = "expires"
+
+SENSOR_SUFFIXES: list[str] = [
+    "headline",
+    "sender",
+    "severity",
+    "affected_areas",
+    "more_info_url",
+    "sent",
+    "start",
+    "expires",
+]
 
 CONST_LIST_A_TO_D: list[str] = ["A", "Ä", "B", "C", "D"]
 CONST_LIST_E_TO_H: list[str] = ["E", "F", "G", "H"]

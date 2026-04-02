@@ -23,6 +23,11 @@ from . import setup_integration
 from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 
+@pytest.fixture(autouse=True)
+def enable_all_entities(entity_registry_enabled_by_default: None) -> None:
+    """Make sure all entities are enabled."""
+
+
 async def test_all_entities(
     hass: HomeAssistant,
     snapshot: SnapshotAssertion,
@@ -53,8 +58,8 @@ async def test_refresh_endpoints_exceptions(
     hass: HomeAssistant,
     mock_portainer_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
-    freezer: FrozenDateTimeFactory,
     exception: Exception,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test entities go unavailable after coordinator refresh failures, for the endpoint fetch."""
     await setup_integration(hass, mock_config_entry)
@@ -64,7 +69,7 @@ async def test_refresh_endpoints_exceptions(
 
     freezer.tick(DEFAULT_SCAN_INTERVAL)
     async_fire_time_changed(hass, dt_util.utcnow())
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     state = hass.states.get("binary_sensor.practical_morse_status")
     assert state.state == STATE_UNAVAILABLE
@@ -82,8 +87,8 @@ async def test_refresh_containers_exceptions(
     hass: HomeAssistant,
     mock_portainer_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
-    freezer: FrozenDateTimeFactory,
     exception: Exception,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test entities go unavailable after coordinator refresh failures, for the container fetch."""
     await setup_integration(hass, mock_config_entry)
@@ -93,7 +98,7 @@ async def test_refresh_containers_exceptions(
 
     freezer.tick(DEFAULT_SCAN_INTERVAL)
     async_fire_time_changed(hass, dt_util.utcnow())
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     state = hass.states.get("binary_sensor.practical_morse_status")
     assert state.state == STATE_UNAVAILABLE

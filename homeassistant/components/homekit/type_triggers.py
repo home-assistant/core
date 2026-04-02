@@ -108,7 +108,7 @@ class DeviceTriggerAccessory(HomeAccessory):
             _LOGGER.log,
         )
 
-    @pyhap_callback  # type: ignore[misc]
+    @pyhap_callback  # type: ignore[untyped-decorator]
     @callback
     def run(self) -> None:
         """Run the accessory."""

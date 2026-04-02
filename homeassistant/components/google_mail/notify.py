@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import base64
 from email.mime.text import MIMEText
+from email.utils import formataddr
 from typing import Any
 
 from googleapiclient.http import HttpRequest
@@ -17,10 +18,20 @@ from homeassistant.components.notify import (
     BaseNotificationService,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .api import AsyncConfigEntryAuth
-from .const import ATTR_BCC, ATTR_CC, ATTR_FROM, ATTR_ME, ATTR_SEND, DATA_AUTH
+from .const import (
+    ATTR_ALIAS_FROM,
+    ATTR_BCC,
+    ATTR_CC,
+    ATTR_FROM,
+    ATTR_ME,
+    ATTR_SEND,
+    DATA_AUTH,
+    DOMAIN,
+)
 
 
 async def async_get_service(
@@ -47,7 +58,17 @@ class GMailNotificationService(BaseNotificationService):
         email = MIMEText(message, "html")
         if to_addrs := kwargs.get(ATTR_TARGET):
             email["To"] = ", ".join(to_addrs)
-        email["From"] = data.get(ATTR_FROM, ATTR_ME)
+
+        email_from = data.get(ATTR_FROM, ATTR_ME)
+        if alias := data.get(ATTR_ALIAS_FROM):
+            if email_from == ATTR_ME:
+                raise ServiceValidationError(
+                    translation_domain=DOMAIN,
+                    translation_key="missing_from_for_alias",
+                )
+            email["From"] = formataddr((alias, email_from))
+        else:
+            email["From"] = email_from
         email["Subject"] = title
         email[ATTR_CC] = ", ".join(data.get(ATTR_CC, []))
         email[ATTR_BCC] = ", ".join(data.get(ATTR_BCC, []))
@@ -57,9 +78,9 @@ class GMailNotificationService(BaseNotificationService):
         msg: HttpRequest
         users = (await self.auth.get_resource()).users()
         if data.get(ATTR_SEND) is False:
-            msg = users.drafts().create(userId=email["From"], body={ATTR_MESSAGE: body})
+            msg = users.drafts().create(userId=email_from, body={ATTR_MESSAGE: body})
         else:
             if not to_addrs:
                 raise ValueError("recipient address required")
-            msg = users.messages().send(userId=email["From"], body=body)
+            msg = users.messages().send(userId=email_from, body=body)
         await self.hass.async_add_executor_job(msg.execute)

@@ -1,5 +1,6 @@
 """Test websocket API."""
 
+from dataclasses import replace
 import os
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
@@ -18,6 +19,7 @@ from homeassistant.components.hassio.const import (
     ATTR_DATA,
     ATTR_ENDPOINT,
     ATTR_METHOD,
+    ATTR_PARAMS,
     ATTR_WS_EVENT,
     EVENT_SUPERVISOR_EVENT,
     WS_ID,
@@ -43,39 +45,27 @@ def mock_all(
     supervisor_is_connected: AsyncMock,
     resolution_info: AsyncMock,
     addon_info: AsyncMock,
+    host_info: AsyncMock,
+    supervisor_root_info: AsyncMock,
+    homeassistant_info: AsyncMock,
+    supervisor_info: AsyncMock,
+    addons_list: AsyncMock,
+    network_info: AsyncMock,
+    os_info: AsyncMock,
+    store_info: AsyncMock,
+    ingress_panels: AsyncMock,
 ) -> None:
     """Mock all setup requests."""
-    aioclient_mock.post("http://127.0.0.1/homeassistant/options", json={"result": "ok"})
-    aioclient_mock.post("http://127.0.0.1/supervisor/options", json={"result": "ok"})
-    aioclient_mock.get(
-        "http://127.0.0.1/info",
-        json={
-            "result": "ok",
-            "data": {"supervisor": "222", "homeassistant": "0.110.0", "hassos": None},
-        },
+    supervisor_root_info.return_value = replace(
+        supervisor_root_info.return_value, hassos=None
     )
-    aioclient_mock.get(
-        "http://127.0.0.1/host/info",
-        json={
-            "result": "ok",
-            "data": {
-                "result": "ok",
-                "data": {
-                    "chassis": "vm",
-                    "operating_system": "Debian GNU/Linux 10 (buster)",
-                    "kernel": "4.19.0-6-amd64",
-                },
-            },
-        },
-    )
-    aioclient_mock.get(
-        "http://127.0.0.1/core/info",
-        json={"result": "ok", "data": {"version_latest": "1.0.0", "version": "1.0.0"}},
-    )
-    aioclient_mock.get(
-        "http://127.0.0.1/os/info",
-        json={"result": "ok", "data": {"version_latest": "1.0.0"}},
-    )
+    addons_list.return_value.pop(1)
+    addon_info.return_value.version = "2.0.0"
+    addon_info.return_value.version_latest = "2.0.1"
+    addon_info.return_value.update_available = True
+
+    # The websocket API still relies on HassIO.send_command for all Supervisor API calls
+    # So must keep some aioclient mocks normally covered by aiohasupervisor in component
     aioclient_mock.get(
         "http://127.0.0.1/supervisor/info",
         json={
@@ -98,19 +88,6 @@ def mock_all(
                         "url": "https://github.com/home-assistant/addons/test",
                     },
                 ],
-            },
-        },
-    )
-    aioclient_mock.get(
-        "http://127.0.0.1/ingress/panels", json={"result": "ok", "data": {"panels": {}}}
-    )
-    aioclient_mock.get(
-        "http://127.0.0.1/network/info",
-        json={
-            "result": "ok",
-            "data": {
-                "host_internet": True,
-                "supervisor_internet": True,
             },
         },
     )
@@ -196,6 +173,37 @@ async def test_websocket_supervisor_api(
         "X-Hass-Source": "core.websocket_api",
         "Authorization": "Bearer 123456",
     }
+
+
+@pytest.mark.usefixtures("hassio_env")
+async def test_websocket_supervisor_api_with_params(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """Test Supervisor websocket api with query params."""
+    assert await async_setup_component(hass, "hassio", {})
+    websocket_client = await hass_ws_client(hass)
+    aioclient_mock.get(
+        "http://127.0.0.1/backups/backup_id/info",
+        json={"result": "ok", "data": {"slug": "backup_id"}},
+    )
+
+    await websocket_client.send_json(
+        {
+            WS_ID: 1,
+            WS_TYPE: WS_TYPE_API,
+            ATTR_ENDPOINT: "/backups/backup_id/info",
+            ATTR_METHOD: "get",
+            ATTR_PARAMS: {"extra_info": "true"},
+        }
+    )
+
+    msg = await websocket_client.receive_json()
+    assert msg["result"]["slug"] == "backup_id"
+
+    # Verify the params were passed to the request URL
+    assert aioclient_mock.mock_calls[-1][1].query == {"extra_info": "true"}
 
 
 @pytest.mark.usefixtures("hassio_env")

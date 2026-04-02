@@ -1823,6 +1823,65 @@ async def test_form_reauth_legacy(hass: HomeAssistant) -> None:
     assert result2["reason"] == "reauth_successful"
 
 
+async def test_reconfigure_host(hass: HomeAssistant) -> None:
+    """Test reconfigure flow updates the host."""
+    entry = MockConfigEntry(domain=DOMAIN, data=ENTRYDATA_WEBSOCKET)
+    entry.add_to_hass(hass)
+
+    result = await entry.start_reconfigure_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == config_entries.SOURCE_RECONFIGURE
+
+    with patch(
+        "homeassistant.components.samsungtv.config_flow.socket.gethostbyname",
+        return_value="10.10.12.77",
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_HOST: "new-host"},
+        )
+
+    assert result2["type"] is FlowResultType.ABORT
+    assert result2["reason"] == "reconfigure_successful"
+    assert entry.data[CONF_HOST] == "10.10.12.77"
+
+
+async def test_reconfigure_host_invalid(hass: HomeAssistant) -> None:
+    """Test reconfigure flow retries on invalid host."""
+    entry = MockConfigEntry(domain=DOMAIN, data=ENTRYDATA_WEBSOCKET)
+    entry.add_to_hass(hass)
+
+    result = await entry.start_reconfigure_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+
+    with patch(
+        "homeassistant.components.samsungtv.config_flow.socket.gethostbyname",
+        side_effect=socket.gaierror("invalid host"),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_HOST: "bad-host"},
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == config_entries.SOURCE_RECONFIGURE
+    assert result["errors"] == {"base": "invalid_host"}
+
+    with patch(
+        "homeassistant.components.samsungtv.config_flow.socket.gethostbyname",
+        return_value="10.10.12.77",
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_HOST: "new-host"},
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert entry.data[CONF_HOST] == "10.10.12.77"
+
+
 @pytest.mark.usefixtures("remote_websocket", "rest_api")
 async def test_form_reauth_websocket(hass: HomeAssistant) -> None:
     """Test reauthenticate websocket."""
@@ -2143,3 +2202,39 @@ async def test_ssdp_update_mac(hass: HomeAssistant) -> None:
         # ensure mac was updated with new wifiMac value
         assert entry.data[CONF_MAC] == "aa:bb:cc:dd:ee:ff"
         assert entry.unique_id == "123"
+
+
+@pytest.mark.usefixtures("remote_websocket")
+async def test_dhcp_while_user_flow_pending(hass: HomeAssistant) -> None:
+    """Simulate pending user flow, then trigger DHCP before submit.
+
+    Covers https://github.com/home-assistant/core/issues/156591.
+    """
+    with patch(
+        "homeassistant.components.samsungtv.bridge.SamsungTVWSBridge.async_device_info",
+        return_value=None,  # Simulate device not connectable
+    ):
+        # Start user flow, which will show form (cannot connect)
+        result_user = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_USER},
+        )
+    assert result_user["type"] is FlowResultType.FORM
+    assert result_user["step_id"] == "user"
+
+    # While user flow is pending (form shown), trigger DHCP flow
+    dhcp_data = DhcpServiceInfo(
+        ip="10.10.12.34", macaddress="aabbccddeeff", hostname="fake_hostname"
+    )
+    with patch(
+        "homeassistant.components.samsungtv.bridge.SamsungTVWSBridge.async_device_info",
+        return_value={
+            "device": {"modelName": "fake_model", "wifiMac": "aa:bb:cc:dd:ee:ff"}
+        },
+    ):
+        result_dhcp = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_DHCP},
+            data=dhcp_data,
+        )
+    assert result_dhcp["type"] is FlowResultType.ABORT

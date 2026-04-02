@@ -14,10 +14,10 @@
   "requirements": ["gotailwind==0.3.0"],
   "zeroconf": [
     {
-      "type": "_http._tcp.local.",
       "properties": {
         "vendor": "tailwind"
-      }
+      },
+      "type": "_http._tcp.local."
     }
   ]
 }

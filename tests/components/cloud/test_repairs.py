@@ -48,7 +48,7 @@ async def test_create_repair_issues_at_startup_if_logged_in(
 ) -> None:
     """Test that we create repair issue at startup if we are logged in."""
     aioclient_mock.get(
-        "https://accounts.nabucasa.com/payments/subscription_info",
+        "https://api.nabucasa.com/account/payments/subscription_info",
         json={"provider": "legacy"},
     )
 
@@ -88,11 +88,11 @@ async def test_legacy_subscription_repair_flow(
 ) -> None:
     """Test desired flow of the fix flow for legacy subscription."""
     aioclient_mock.get(
-        "https://accounts.nabucasa.com/payments/subscription_info",
+        "https://api.nabucasa.com/account/payments/subscription_info",
         json={"provider": None},
     )
     aioclient_mock.post(
-        "https://accounts.nabucasa.com/payments/migrate_paypal_agreement",
+        "https://api.nabucasa.com/account/payments/migrate_paypal_agreement",
         json={"url": "https://paypal.com"},
     )
 

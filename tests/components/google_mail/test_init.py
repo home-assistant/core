@@ -2,18 +2,27 @@
 
 import http
 import time
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 from aiohttp.client_exceptions import ClientError
 import pytest
 
 from homeassistant.components.google_mail import DOMAIN
-from homeassistant.config_entries import ConfigEntryState
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import (
+    OAuth2TokenRequestError,
+    OAuth2TokenRequestReauthError,
+    OAuth2TokenRequestTransientError,
+)
 from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.config_entry_oauth2_flow import (
+    ImplementationUnavailableError,
+)
 
 from .conftest import GOOGLE_TOKEN_URI, ComponentSetup
 
+from tests.common import MockConfigEntry
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 
@@ -29,8 +38,6 @@ async def test_setup_success(
 
     await hass.config_entries.async_unload(entries[0].entry_id)
     await hass.async_block_till_done()
-
-    assert not hass.services.async_services().get(DOMAIN)
 
 
 @pytest.mark.parametrize("expires_at", [time.time() - 3600], ids=["expired"])
@@ -76,11 +83,21 @@ async def test_expired_token_refresh_success(
         ),
         (
             time.time() - 3600,
+            http.HTTPStatus.TOO_MANY_REQUESTS,
+            ConfigEntryState.SETUP_RETRY,
+        ),
+        (
+            time.time() - 3600,
             http.HTTPStatus.BAD_REQUEST,
             ConfigEntryState.SETUP_ERROR,
         ),
     ],
-    ids=["failure_requires_reauth", "transient_failure", "revoked_auth"],
+    ids=[
+        "failure_requires_reauth",
+        "transient_failure",
+        "rate_limited",
+        "revoked_auth",
+    ],
 )
 async def test_expired_token_refresh_failure(
     hass: HomeAssistant,
@@ -121,6 +138,69 @@ async def test_expired_token_refresh_client_error(
     assert entries[0].state is ConfigEntryState.SETUP_RETRY
 
 
+async def test_token_refresh_reauth_error_during_setup(
+    hass: HomeAssistant,
+    setup_integration: ComponentSetup,
+) -> None:
+    """Test setup starts reauth for OAuth reauth errors."""
+    with patch(
+        "homeassistant.components.google_mail.OAuth2Session.async_ensure_token_valid",
+        side_effect=OAuth2TokenRequestReauthError(
+            request_info=Mock(),
+            domain=DOMAIN,
+        ),
+    ):
+        await setup_integration()
+
+    entry = hass.config_entries.async_entries(DOMAIN)[0]
+    assert entry.state is ConfigEntryState.SETUP_ERROR
+
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+    flow = flows[0]
+    assert flow["step_id"] == "reauth_confirm"
+    assert flow["handler"] == DOMAIN
+    assert flow["context"]["source"] == SOURCE_REAUTH
+
+
+async def test_token_refresh_transient_error_during_setup(
+    hass: HomeAssistant,
+    setup_integration: ComponentSetup,
+) -> None:
+    """Test setup retries for transient OAuth token refresh errors."""
+    with patch(
+        "homeassistant.components.google_mail.OAuth2Session.async_ensure_token_valid",
+        side_effect=OAuth2TokenRequestTransientError(
+            request_info=Mock(),
+            domain=DOMAIN,
+        ),
+    ):
+        await setup_integration()
+
+    entry = hass.config_entries.async_entries(DOMAIN)[0]
+    assert entry.state is ConfigEntryState.SETUP_RETRY
+    assert not hass.config_entries.flow.async_progress()
+
+
+async def test_token_refresh_error_during_setup(
+    hass: HomeAssistant,
+    setup_integration: ComponentSetup,
+) -> None:
+    """Test generic OAuth token refresh errors retry setup."""
+    with patch(
+        "homeassistant.components.google_mail.OAuth2Session.async_ensure_token_valid",
+        side_effect=OAuth2TokenRequestError(
+            request_info=Mock(),
+            domain=DOMAIN,
+        ),
+    ):
+        await setup_integration()
+
+    entry = hass.config_entries.async_entries(DOMAIN)[0]
+    assert entry.state is ConfigEntryState.SETUP_RETRY
+    assert not hass.config_entries.flow.async_progress()
+
+
 async def test_device_info(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
@@ -136,3 +216,20 @@ async def test_device_info(
     assert device.identifiers == {(DOMAIN, entry.entry_id)}
     assert device.manufacturer == "Google, Inc."
     assert device.name == "example@gmail.com"
+
+
+async def test_oauth_implementation_not_available(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+) -> None:
+    """Test that unavailable OAuth implementation raises ConfigEntryNotReady."""
+    config_entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.google_mail.async_get_config_entry_implementation",
+        side_effect=ImplementationUnavailableError,
+    ):
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.SETUP_RETRY

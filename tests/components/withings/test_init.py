@@ -11,6 +11,9 @@ from aiowithings import (
     NotificationCategory,
     WithingsAuthenticationFailedError,
     WithingsConnectionError,
+    WithingsError,
+    WithingsInvalidParamsError,
+    WithingsTooManyRequestsError,
     WithingsUnauthorizedError,
 )
 from freezegun.api import FrozenDateTimeFactory
@@ -22,9 +25,13 @@ from homeassistant.components import cloud
 from homeassistant.components.cloud import CloudNotAvailable
 from homeassistant.components.webhook import async_generate_url
 from homeassistant.components.withings.const import DOMAIN
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_WEBHOOK_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.config_entry_oauth2_flow import (
+    ImplementationUnavailableError,
+)
 from homeassistant.util import dt as dt_util
 
 from . import call_webhook, prepare_webhook_setup, setup_integration
@@ -344,7 +351,13 @@ async def test_setup_with_cloud(
         assert not hass.config_entries.async_entries(DOMAIN)
 
 
-@pytest.mark.parametrize("url", ["http://example.com", "https://example.com:444"])
+@pytest.mark.parametrize(
+    ("url", "expected_message"),
+    [
+        ("http://example.com", "HTTPS is required"),
+        ("https://example.com:444", "port 443 is required"),
+    ],
+)
 async def test_setup_no_webhook(
     hass: HomeAssistant,
     webhook_config_entry: MockConfigEntry,
@@ -352,6 +365,7 @@ async def test_setup_no_webhook(
     caplog: pytest.LogCaptureFixture,
     freezer: FrozenDateTimeFactory,
     url: str,
+    expected_message: str,
 ) -> None:
     """Test if set up with cloud link and without https."""
     hass.config.components.add("cloud")
@@ -374,7 +388,61 @@ async def test_setup_no_webhook(
         await hass.async_block_till_done()
         mock_async_generate_url.assert_called_once()
 
-    assert "https and port 443 is required to register the webhook" in caplog.text
+    assert expected_message in caplog.text
+    assert caplog.text.count(expected_message) == 1
+
+
+@pytest.mark.parametrize(
+    ("url", "expected_message"),
+    [
+        ("http://example.com", "HTTPS is required"),
+        ("https://example.com:444", "port 443 is required"),
+    ],
+)
+async def test_setup_no_webhook_logged_once(
+    hass: HomeAssistant,
+    webhook_config_entry: MockConfigEntry,
+    withings: AsyncMock,
+    caplog: pytest.LogCaptureFixture,
+    freezer: FrozenDateTimeFactory,
+    url: str,
+    expected_message: str,
+) -> None:
+    """Test webhook warning is only logged once on repeated retries."""
+    await mock_cloud(hass)
+    await hass.async_block_till_done()
+
+    with (
+        patch("homeassistant.components.cloud.async_is_logged_in", return_value=True),
+        patch.object(cloud, "async_is_connected", return_value=True),
+        patch.object(cloud, "async_active_subscription", return_value=True),
+        patch(
+            "homeassistant.components.cloud.async_create_cloudhook",
+            return_value=url,
+        ),
+        patch(
+            "homeassistant.components.withings.async_get_config_entry_implementation",
+        ),
+        patch(
+            "homeassistant.components.cloud.async_delete_cloudhook",
+        ),
+        patch("homeassistant.components.withings.webhook_generate_url"),
+    ):
+        await setup_integration(hass, webhook_config_entry)
+        await prepare_webhook_setup(hass, freezer)
+        await hass.async_block_till_done()
+
+        assert caplog.text.count(expected_message) == 1
+
+        # Simulate cloud disconnect then reconnect, triggering register_webhook again
+        async_mock_cloud_connection_status(hass, False)
+        await hass.async_block_till_done()
+
+        async_mock_cloud_connection_status(hass, True)
+        await hass.async_block_till_done()
+
+        # Warning should still only be logged once
+        assert caplog.text.count(expected_message) == 1
 
 
 async def test_cloud_disconnect(
@@ -643,3 +711,139 @@ async def test_devices(
         device = device_registry.async_get_device({(DOMAIN, device_id)})
         assert device is not None
         assert device == snapshot(name=device_id)
+
+
+async def test_oauth_implementation_not_available(
+    hass: HomeAssistant,
+    webhook_config_entry: MockConfigEntry,
+) -> None:
+    """Test that unavailable OAuth implementation raises ConfigEntryNotReady."""
+    webhook_config_entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.withings.async_get_config_entry_implementation",
+        side_effect=ImplementationUnavailableError,
+    ):
+        await hass.config_entries.async_setup(webhook_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert webhook_config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+async def test_webhook_subscription_retry_on_failure(
+    hass: HomeAssistant,
+    withings: AsyncMock,
+    webhook_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test webhook subscription is retried on failure."""
+    call_count = 0
+
+    async def subscribe_side_effect(*args, **kwargs):
+        nonlocal call_count
+        call_count += 1
+        if call_count <= 2:
+            raise WithingsError("The callback URL is either absent or incorrect")
+
+    withings.subscribe_notification.side_effect = subscribe_side_effect
+
+    await setup_integration(hass, webhook_config_entry)
+    await prepare_webhook_setup(hass, freezer)
+
+    # Trigger first retry (30s delay for attempt 0)
+    freezer.tick(timedelta(seconds=30))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    # Trigger second retry (60s delay for attempt 1)
+    freezer.tick(timedelta(seconds=60))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert withings.subscribe_notification.call_count >= 6
+
+
+async def test_webhook_subscription_continues_retrying(
+    hass: HomeAssistant,
+    withings: AsyncMock,
+    webhook_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test webhook subscription continues retrying with exponential backoff."""
+    withings.subscribe_notification.side_effect = WithingsError(
+        "The callback URL is either absent or incorrect"
+    )
+
+    await setup_integration(hass, webhook_config_entry)
+    await prepare_webhook_setup(hass, freezer)
+
+    # Tick through retry delays with exponential backoff: 30, 60, 120, 240, 480
+    for delay in (30, 60, 120, 240, 480):
+        freezer.tick(timedelta(seconds=delay))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+
+    assert "Failed to subscribe to Withings webhooks" in caplog.text
+
+
+async def test_webhook_subscription_rate_limited(
+    hass: HomeAssistant,
+    withings: AsyncMock,
+    webhook_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test webhook subscription handles rate limiting."""
+    withings.subscribe_notification.side_effect = WithingsTooManyRequestsError(
+        "Too many requests"
+    )
+
+    await setup_integration(hass, webhook_config_entry)
+    await prepare_webhook_setup(hass, freezer)
+
+    assert "Rate limited by Withings API" in caplog.text
+
+
+async def test_webhook_subscription_auth_failure(
+    hass: HomeAssistant,
+    withings: AsyncMock,
+    webhook_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test webhook subscription stops on auth failure and triggers reauth."""
+    withings.subscribe_notification.side_effect = WithingsAuthenticationFailedError(
+        "Authentication failed"
+    )
+
+    await setup_integration(hass, webhook_config_entry)
+    await prepare_webhook_setup(hass, freezer)
+
+    assert "Authentication failed while subscribing to webhooks" in caplog.text
+    assert withings.subscribe_notification.call_count == 1
+
+    flows = hass.config_entries.flow.async_progress()
+    assert any(
+        flow["handler"] == DOMAIN and flow["context"]["source"] == "reauth"
+        for flow in flows
+    )
+
+
+async def test_webhook_subscription_invalid_params(
+    hass: HomeAssistant,
+    withings: AsyncMock,
+    webhook_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test invalid params error stops retrying."""
+    withings.subscribe_notification.side_effect = WithingsInvalidParamsError(
+        "Invalid callback URL"
+    )
+
+    await setup_integration(hass, webhook_config_entry)
+    await prepare_webhook_setup(hass, freezer)
+
+    assert "Webhook URL rejected by Withings" in caplog.text
+    assert withings.subscribe_notification.call_count == 1

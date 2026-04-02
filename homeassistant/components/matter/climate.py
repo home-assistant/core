@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 from enum import IntEnum
 from typing import Any
 
@@ -15,6 +16,10 @@ from homeassistant.components.climate import (
     ATTR_TARGET_TEMP_LOW,
     DEFAULT_MAX_TEMP,
     DEFAULT_MIN_TEMP,
+    PRESET_AWAY,
+    PRESET_HOME,
+    PRESET_NONE,
+    PRESET_SLEEP,
     ClimateEntity,
     ClimateEntityDescription,
     ClimateEntityFeature,
@@ -26,10 +31,11 @@ from homeassistant.const import ATTR_TEMPERATURE, Platform, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .entity import MatterEntity
+from .entity import MatterEntity, MatterEntityDescription
 from .helpers import get_matter
 from .models import MatterDiscoverySchema
 
+HUMIDITY_SCALING_FACTOR = 100
 TEMPERATURE_SCALING_FACTOR = 100
 HVAC_SYSTEM_MODE_MAP = {
     HVACMode.OFF: 0,
@@ -38,6 +44,18 @@ HVAC_SYSTEM_MODE_MAP = {
     HVACMode.HEAT: 4,
     HVACMode.DRY: 8,
     HVACMode.FAN_ONLY: 7,
+}
+
+# Map of Matter PresetScenarioEnum to HA standard preset constants or custom names
+# This ensures presets are translated correctly using HA's translation system.
+# kUserDefined scenarios always use device-provided names.
+PRESET_SCENARIO_TO_HA_PRESET: dict[int, str] = {
+    clusters.Thermostat.Enums.PresetScenarioEnum.kOccupied: PRESET_HOME,
+    clusters.Thermostat.Enums.PresetScenarioEnum.kUnoccupied: PRESET_AWAY,
+    clusters.Thermostat.Enums.PresetScenarioEnum.kSleep: PRESET_SLEEP,
+    clusters.Thermostat.Enums.PresetScenarioEnum.kWake: "wake",
+    clusters.Thermostat.Enums.PresetScenarioEnum.kVacation: "vacation",
+    clusters.Thermostat.Enums.PresetScenarioEnum.kGoingToSleep: "going_to_sleep",
 }
 
 SINGLE_SETPOINT_DEVICES: set[tuple[int, int]] = {
@@ -122,6 +140,7 @@ SUPPORT_FAN_MODE_DEVICES: set[tuple[int, int]] = {
     # support fan-only mode.
     (0x0001, 0x0108),
     (0x0001, 0x010A),
+    (0x118C, 0x2022),
     (0x1209, 0x8000),
     (0x1209, 0x8001),
     (0x1209, 0x8002),
@@ -152,10 +171,10 @@ SUPPORT_FAN_MODE_DEVICES: set[tuple[int, int]] = {
     (0x1209, 0x8027),
     (0x1209, 0x8028),
     (0x1209, 0x8029),
+    (0x131A, 0x1000),
 }
 
 SystemModeEnum = clusters.Thermostat.Enums.SystemModeEnum
-ControlSequenceEnum = clusters.Thermostat.Enums.ControlSequenceOfOperationEnum
 ThermostatFeature = clusters.Thermostat.Bitmaps.Feature
 
 
@@ -181,14 +200,31 @@ async def async_setup_entry(
     matter.register_platform_handler(Platform.CLIMATE, async_add_entities)
 
 
+@dataclass(frozen=True, kw_only=True)
+class MatterClimateEntityDescription(ClimateEntityDescription, MatterEntityDescription):
+    """Describe Matter Climate entities."""
+
+
 class MatterClimate(MatterEntity, ClimateEntity):
     """Representation of a Matter climate entity."""
 
     _attr_temperature_unit: str = UnitOfTemperature.CELSIUS
     _attr_hvac_mode: HVACMode = HVACMode.OFF
+    _matter_presets: list[clusters.Thermostat.Structs.PresetStruct]
+    _attr_preset_mode: str | None = None
+    _attr_preset_modes: list[str] | None = None
     _feature_map: int | None = None
 
     _platform_translation_key = "thermostat"
+
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
+        """Initialize the climate entity."""
+        # Initialize preset handle mapping as instance attribute before calling super().__init__()
+        # because MatterEntity.__init__() calls _update_from_device() which needs this attribute
+        self._matter_presets = []
+        self._preset_handle_by_name: dict[str, bytes | None] = {}
+        self._preset_name_by_handle: dict[bytes | None, str] = {}
+        super().__init__(*args, **kwargs)
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
@@ -234,6 +270,34 @@ class MatterClimate(MatterEntity, ClimateEntity):
                     matter_attribute=clusters.Thermostat.Attributes.OccupiedCoolingSetpoint,
                 )
 
+    async def async_set_preset_mode(self, preset_mode: str) -> None:
+        """Set new preset mode."""
+        preset_handle = self._preset_handle_by_name[preset_mode]
+
+        command = clusters.Thermostat.Commands.SetActivePresetRequest(
+            presetHandle=preset_handle
+        )
+        await self.send_device_command(command)
+
+        # Optimistic update is required because Matter devices usually confirm
+        # preset changes asynchronously via a later attribute subscription.
+        # Additionally, some devices based on connectedhomeip do not send a
+        # subscription report for ActivePresetHandle after SetActivePresetRequest
+        # because thermostat-server-presets.cpp/SetActivePreset() updates the
+        # value without notifying the reporting engine. Keep this optimistic
+        # update as a workaround for that SDK bug and for normal report delays.
+        # Reference: project-chip/connectedhomeip,
+        # src/app/clusters/thermostat-server/thermostat-server-presets.cpp.
+        self._attr_preset_mode = preset_mode
+        self.async_write_ha_state()
+
+        # Keep the local ActivePresetHandle in sync until subscription update.
+        active_preset_path = create_attribute_path_from_attribute(
+            endpoint_id=self._endpoint.endpoint_id,
+            attribute=clusters.Thermostat.Attributes.ActivePresetHandle,
+        )
+        self._endpoint.set_attribute_value(active_preset_path, preset_handle)
+
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target hvac mode."""
 
@@ -258,9 +322,96 @@ class MatterClimate(MatterEntity, ClimateEntity):
     def _update_from_device(self) -> None:
         """Update from device."""
         self._calculate_features()
+
         self._attr_current_temperature = self._get_temperature_in_degrees(
             clusters.Thermostat.Attributes.LocalTemperature
         )
+        self._attr_current_humidity = (
+            int(raw_measured_humidity) / HUMIDITY_SCALING_FACTOR
+            if (
+                raw_measured_humidity := self.get_matter_attribute_value(
+                    clusters.RelativeHumidityMeasurement.Attributes.MeasuredValue
+                )
+            )
+            is not None
+            else None
+        )
+
+        self._update_presets()
+
+        self._update_hvac_mode_and_action()
+        self._update_target_temperatures()
+        self._update_temperature_limits()
+
+    @callback
+    def _update_presets(self) -> None:
+        """Update preset modes and active preset."""
+        # Check if the device supports presets feature before attempting to load.
+        # Use the already computed supported features instead of re-reading
+        # the FeatureMap attribute to keep a single source of truth and avoid
+        # casting None when the attribute is temporarily unavailable.
+        supported_features = self._attr_supported_features or 0
+        if not (supported_features & ClimateEntityFeature.PRESET_MODE):
+            # Device does not support presets, skip preset update
+            self._preset_handle_by_name.clear()
+            self._preset_name_by_handle.clear()
+            self._attr_preset_modes = []
+            self._attr_preset_mode = None
+            return
+
+        self._matter_presets = (
+            self.get_matter_attribute_value(clusters.Thermostat.Attributes.Presets)
+            or []
+        )
+        # Build preset mapping: use device-provided name if available, else generate unique name
+        self._preset_handle_by_name.clear()
+        self._preset_name_by_handle.clear()
+        if self._matter_presets:
+            used_names = set()
+            for i, preset in enumerate(self._matter_presets, start=1):
+                preset_translation = PRESET_SCENARIO_TO_HA_PRESET.get(
+                    preset.presetScenario
+                )
+                if preset_translation:
+                    preset_name = preset_translation.lower()
+                else:
+                    name = str(preset.name) if preset.name is not None else ""
+                    name = name.strip()
+                    if name:
+                        preset_name = name
+                    else:
+                        # Ensure fallback name is unique
+                        j = i
+                        preset_name = f"Preset{j}"
+                        while preset_name in used_names:
+                            j += 1
+                            preset_name = f"Preset{j}"
+                used_names.add(preset_name)
+                preset_handle = (
+                    preset.presetHandle
+                    if isinstance(preset.presetHandle, (bytes, type(None)))
+                    else None
+                )
+                self._preset_handle_by_name[preset_name] = preset_handle
+                self._preset_name_by_handle[preset_handle] = preset_name
+
+        # Always include PRESET_NONE to allow users to clear the preset
+        self._preset_handle_by_name[PRESET_NONE] = None
+        self._preset_name_by_handle[None] = PRESET_NONE
+
+        self._attr_preset_modes = list(self._preset_handle_by_name)
+
+        # Update active preset mode
+        active_preset_handle = self.get_matter_attribute_value(
+            clusters.Thermostat.Attributes.ActivePresetHandle
+        )
+        self._attr_preset_mode = self._preset_name_by_handle.get(
+            active_preset_handle, PRESET_NONE
+        )
+
+    @callback
+    def _update_hvac_mode_and_action(self) -> None:
+        """Update HVAC mode and action from device."""
         if self.get_matter_attribute_value(clusters.OnOff.Attributes.OnOff) is False:
             # special case: the appliance has a dedicated Power switch on the OnOff cluster
             # if the mains power is off - treat it as if the HVAC mode is off
@@ -312,7 +463,10 @@ class MatterClimate(MatterEntity, ClimateEntity):
                     self._attr_hvac_action = HVACAction.FAN
                 else:
                     self._attr_hvac_action = HVACAction.OFF
-        # update target temperature high/low
+
+    @callback
+    def _update_target_temperatures(self) -> None:
+        """Update target temperature or temperature range."""
         supports_range = (
             self._attr_supported_features
             & ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
@@ -338,6 +492,9 @@ class MatterClimate(MatterEntity, ClimateEntity):
                     clusters.Thermostat.Attributes.OccupiedHeatingSetpoint
                 )
 
+    @callback
+    def _update_temperature_limits(self) -> None:
+        """Update min and max temperature limits."""
         # update min_temp
         if self._attr_hvac_mode == HVACMode.COOL:
             attribute = clusters.Thermostat.Attributes.AbsMinCoolSetpointLimit
@@ -377,6 +534,9 @@ class MatterClimate(MatterEntity, ClimateEntity):
         self._attr_supported_features = (
             ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.TURN_OFF
         )
+        if feature_map & ThermostatFeature.kPresets:
+            self._attr_supported_features |= ClimateEntityFeature.PRESET_MODE
+        # determine supported hvac modes
         if feature_map & ThermostatFeature.kHeating:
             self._attr_hvac_modes.append(HVACMode.HEAT)
         if feature_map & ThermostatFeature.kCooling:
@@ -410,7 +570,7 @@ class MatterClimate(MatterEntity, ClimateEntity):
 DISCOVERY_SCHEMAS = [
     MatterDiscoverySchema(
         platform=Platform.CLIMATE,
-        entity_description=ClimateEntityDescription(
+        entity_description=MatterClimateEntityDescription(
             key="MatterThermostat",
             name=None,
         ),
@@ -419,18 +579,24 @@ DISCOVERY_SCHEMAS = [
         optional_attributes=(
             clusters.Thermostat.Attributes.FeatureMap,
             clusters.Thermostat.Attributes.ControlSequenceOfOperation,
+            clusters.Thermostat.Attributes.NumberOfPresets,
             clusters.Thermostat.Attributes.Occupancy,
             clusters.Thermostat.Attributes.OccupiedCoolingSetpoint,
             clusters.Thermostat.Attributes.OccupiedHeatingSetpoint,
+            clusters.Thermostat.Attributes.Presets,
+            clusters.Thermostat.Attributes.PresetTypes,
+            clusters.Thermostat.Attributes.ActivePresetHandle,
             clusters.Thermostat.Attributes.SystemMode,
             clusters.Thermostat.Attributes.ThermostatRunningMode,
             clusters.Thermostat.Attributes.ThermostatRunningState,
             clusters.Thermostat.Attributes.TemperatureSetpointHold,
             clusters.Thermostat.Attributes.UnoccupiedCoolingSetpoint,
             clusters.Thermostat.Attributes.UnoccupiedHeatingSetpoint,
+            clusters.RelativeHumidityMeasurement.Attributes.MeasuredValue,
             clusters.OnOff.Attributes.OnOff,
         ),
         device_type=(device_types.Thermostat, device_types.RoomAirConditioner),
         allow_multi=True,  # also used for sensor entity
+        allow_none_value=True,
     ),
 ]

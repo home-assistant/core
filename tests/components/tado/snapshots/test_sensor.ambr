@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_entities[sensor.air_conditioning_ac-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -20,6 +21,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'AC',
     'options': dict({
     }),
     'original_device_class': None,
@@ -50,8 +52,9 @@
 # ---
 # name: test_entities[sensor.air_conditioning_humidity-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -71,6 +74,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Humidity',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
@@ -104,8 +108,9 @@
 # ---
 # name: test_entities[sensor.air_conditioning_tado_mode-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -123,6 +128,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Tado mode',
     'options': dict({
     }),
     'original_device_class': None,
@@ -152,8 +158,9 @@
 # ---
 # name: test_entities[sensor.air_conditioning_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -173,6 +180,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -210,8 +218,9 @@
 # ---
 # name: test_entities[sensor.air_conditioning_with_fanlevel_ac-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -229,6 +238,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'AC',
     'options': dict({
     }),
     'original_device_class': None,
@@ -259,8 +269,9 @@
 # ---
 # name: test_entities[sensor.air_conditioning_with_fanlevel_humidity-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -280,6 +291,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Humidity',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
@@ -313,8 +325,9 @@
 # ---
 # name: test_entities[sensor.air_conditioning_with_fanlevel_tado_mode-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -332,6 +345,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Tado mode',
     'options': dict({
     }),
     'original_device_class': None,
@@ -361,8 +375,9 @@
 # ---
 # name: test_entities[sensor.air_conditioning_with_fanlevel_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -382,6 +397,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -419,8 +435,9 @@
 # ---
 # name: test_entities[sensor.air_conditioning_with_swing_ac-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -438,6 +455,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'AC',
     'options': dict({
     }),
     'original_device_class': None,
@@ -468,8 +486,9 @@
 # ---
 # name: test_entities[sensor.air_conditioning_with_swing_humidity-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -489,6 +508,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Humidity',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
@@ -522,8 +542,9 @@
 # ---
 # name: test_entities[sensor.air_conditioning_with_swing_tado_mode-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -541,6 +562,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Tado mode',
     'options': dict({
     }),
     'original_device_class': None,
@@ -570,8 +592,9 @@
 # ---
 # name: test_entities[sensor.air_conditioning_with_swing_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -591,6 +614,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -628,8 +652,9 @@
 # ---
 # name: test_entities[sensor.baseboard_heater_heating-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -649,6 +674,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Heating',
     'options': dict({
     }),
     'original_device_class': None,
@@ -681,8 +707,9 @@
 # ---
 # name: test_entities[sensor.baseboard_heater_humidity-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -702,6 +729,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Humidity',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
@@ -735,8 +763,9 @@
 # ---
 # name: test_entities[sensor.baseboard_heater_tado_mode-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -754,6 +783,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Tado mode',
     'options': dict({
     }),
     'original_device_class': None,
@@ -783,8 +813,9 @@
 # ---
 # name: test_entities[sensor.baseboard_heater_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -804,6 +835,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -841,8 +873,9 @@
 # ---
 # name: test_entities[sensor.home_name_automatic_geofencing-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -860,6 +893,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Automatic geofencing',
     'options': dict({
     }),
     'original_device_class': None,
@@ -889,8 +923,9 @@
 # ---
 # name: test_entities[sensor.home_name_geofencing_mode-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -908,6 +943,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Geofencing mode',
     'options': dict({
     }),
     'original_device_class': None,
@@ -937,8 +973,9 @@
 # ---
 # name: test_entities[sensor.home_name_outdoor_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -958,6 +995,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Outdoor temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -994,8 +1032,9 @@
 # ---
 # name: test_entities[sensor.home_name_solar_percentage-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1015,6 +1054,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Solar percentage',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1047,8 +1087,9 @@
 # ---
 # name: test_entities[sensor.home_name_tado_mode-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1066,6 +1107,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Tado mode',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1095,8 +1137,9 @@
 # ---
 # name: test_entities[sensor.home_name_weather_condition-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1114,6 +1157,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Weather condition',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1144,8 +1188,9 @@
 # ---
 # name: test_entities[sensor.second_water_heater_tado_mode-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1163,6 +1208,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Tado mode',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1192,8 +1238,9 @@
 # ---
 # name: test_entities[sensor.water_heater_tado_mode-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1211,6 +1258,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Tado mode',
     'options': dict({
     }),
     'original_device_class': None,

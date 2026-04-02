@@ -16,7 +16,7 @@ from pathlib import Path
 import re
 import secrets
 from time import monotonic
-from typing import Any, Final, Generic, Protocol, TypeVar
+from typing import Any, Final, Protocol
 
 from aiohttp import web
 import mutagen
@@ -418,7 +418,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     try:
         await tts.async_init_cache()
-    except (HomeAssistantError, KeyError):
+    except HomeAssistantError, KeyError:
         _LOGGER.exception("Error on cache init")
         return False
 
@@ -527,6 +527,8 @@ class ResultStream:
 
         This method will leverage a disk cache to speed up generation.
         """
+        if self._result_cache.done():
+            return
         self._result_cache.set_result(
             self._manager.async_cache_message_in_memory(
                 engine=self.engine,
@@ -543,6 +545,8 @@ class ResultStream:
 
         This method can result in faster first byte when generating long responses.
         """
+        if self._result_cache.done():
+            return
         self._result_cache.set_result(
             self._manager.async_cache_message_stream_in_memory(
                 engine=self.engine,
@@ -628,10 +632,7 @@ class HasLastUsed(Protocol):
     last_used: float
 
 
-T = TypeVar("T", bound=HasLastUsed)
-
-
-class DictCleaning(Generic[T]):
+class DictCleaning[T: HasLastUsed]:
     """Helper to clean up the stale sessions."""
 
     unsub: CALLBACK_TYPE | None = None

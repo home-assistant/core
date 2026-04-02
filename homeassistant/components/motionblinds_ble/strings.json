@@ -9,40 +9,14 @@
       "invalid_mac_code": "Invalid MAC code"
     },
     "step": {
-      "user": {
-        "description": "Fill in the 4-character MAC code of your motor, for example F3ED or E3A6",
-        "data": {
-          "mac_code": "MAC code"
-        }
-      },
       "confirm": {
         "description": "What kind of blind is {display_name}?"
-      }
-    }
-  },
-  "options": {
-    "step": {
-      "init": {
-        "title": "Connection options",
-        "description": "The default disconnect time is 15 seconds, adjustable using the slider below. You may want to adjust this if you have larger blinds or other specific needs. You can also enable a permanent connection to the motor, which disables the disconnect time and automatically reconnects when the motor is disconnected for any reason.\n**WARNING**: Changing any of the below options may significantly reduce battery life of your motor!",
+      },
+      "user": {
         "data": {
-          "permanent_connection": "Permanent connection",
-          "disconnect_time": "Disconnect time (seconds)"
-        }
-      }
-    }
-  },
-  "selector": {
-    "blind_type": {
-      "options": {
-        "roller": "Roller blind",
-        "honeycomb": "Honeycomb blind",
-        "roman": "Roman blind",
-        "venetian": "Venetian blind",
-        "venetian_tilt_only": "Venetian blind (tilt-only)",
-        "double_roller": "Double roller blind",
-        "curtain": "Curtain blind",
-        "vertical": "Vertical blind"
+          "mac_code": "MAC code"
+        },
+        "description": "Fill in the 4-character MAC code of your motor, for example F3ED or E3A6"
       }
     }
   },
@@ -69,22 +43,48 @@
       }
     },
     "sensor": {
-      "connection": {
-        "name": "Connection status",
-        "state": {
-          "connected": "[%key:common::state::connected%]",
-          "disconnected": "[%key:common::state::disconnected%]",
-          "connecting": "Connecting",
-          "disconnecting": "Disconnecting"
-        }
-      },
       "calibration": {
         "name": "Calibration status",
         "state": {
           "calibrated": "Calibrated",
-          "uncalibrated": "Uncalibrated",
-          "calibrating": "Calibration in progress"
+          "calibrating": "Calibration in progress",
+          "uncalibrated": "Uncalibrated"
         }
+      },
+      "connection": {
+        "name": "Connection status",
+        "state": {
+          "connected": "[%key:common::state::connected%]",
+          "connecting": "Connecting",
+          "disconnected": "[%key:common::state::disconnected%]",
+          "disconnecting": "Disconnecting"
+        }
+      }
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "disconnect_time": "Disconnect time (seconds)",
+          "permanent_connection": "Permanent connection"
+        },
+        "description": "The default disconnect time is 15 seconds, adjustable using the slider below. You may want to adjust this if you have larger blinds or other specific needs. You can also enable a permanent connection to the motor, which disables the disconnect time and automatically reconnects when the motor is disconnected for any reason.\n**WARNING**: Changing any of the below options may significantly reduce battery life of your motor!",
+        "title": "Connection options"
+      }
+    }
+  },
+  "selector": {
+    "blind_type": {
+      "options": {
+        "curtain": "Curtain blind",
+        "double_roller": "Double roller blind",
+        "honeycomb": "Honeycomb blind",
+        "roller": "Roller blind",
+        "roman": "Roman blind",
+        "venetian": "Venetian blind",
+        "venetian_tilt_only": "Venetian blind (tilt-only)",
+        "vertical": "Vertical blind"
       }
     }
   }

@@ -5,16 +5,21 @@ from typing import Any
 from homeassistant.components.device_tracker import (
     ATTR_BATTERY,
     ATTR_GPS,
-    ATTR_GPS_ACCURACY,
     ATTR_LOCATION_NAME,
     TrackerEntity,
+)
+from homeassistant.components.zone import (
+    ENTITY_ID_FORMAT as ZONE_ENTITY_ID_FORMAT,
+    HOME_ZONE,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_BATTERY_LEVEL,
     ATTR_DEVICE_ID,
+    ATTR_GPS_ACCURACY,
     ATTR_LATITUDE,
     ATTR_LONGITUDE,
+    STATE_HOME,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -99,6 +104,12 @@ class MobileAppEntity(TrackerEntity, RestoreEntity):
     def location_name(self) -> str | None:
         """Return a location name for the current location of the device."""
         if location_name := self._data.get(ATTR_LOCATION_NAME):
+            if location_name == HOME_ZONE:
+                return STATE_HOME
+            if zone_state := self.hass.states.get(
+                ZONE_ENTITY_ID_FORMAT.format(location_name)
+            ):
+                return zone_state.name
             return location_name
         return None
 

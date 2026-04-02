@@ -25,8 +25,9 @@
 # ---
 # name: test_weather_states[current][weather.openweathermap-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -44,6 +45,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -65,7 +67,7 @@
       'attribution': 'Data provided by OpenWeatherMap',
       'cloud_coverage': 75,
       'dew_point': 4.0,
-      'friendly_name': 'openweathermap',
+      'friendly_name': 'OpenWeatherMap',
       'humidity': 82,
       'precipitation_unit': <UnitOfPrecipitationDepth.MILLIMETERS: 'mm'>,
       'pressure': 1000.0,
@@ -89,8 +91,9 @@
 # ---
 # name: test_weather_states[forecast][weather.openweathermap-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -108,6 +111,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -129,7 +133,7 @@
       'attribution': 'Data provided by OpenWeatherMap',
       'cloud_coverage': 75,
       'dew_point': 4.0,
-      'friendly_name': 'openweathermap',
+      'friendly_name': 'OpenWeatherMap',
       'humidity': 82,
       'precipitation_unit': <UnitOfPrecipitationDepth.MILLIMETERS: 'mm'>,
       'pressure': 1000.0,
@@ -154,8 +158,9 @@
 # ---
 # name: test_weather_states[v3.0][weather.openweathermap-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -173,6 +178,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -194,7 +200,7 @@
       'attribution': 'Data provided by OpenWeatherMap',
       'cloud_coverage': 75,
       'dew_point': 4.0,
-      'friendly_name': 'openweathermap',
+      'friendly_name': 'OpenWeatherMap',
       'humidity': 82,
       'precipitation_unit': <UnitOfPrecipitationDepth.MILLIMETERS: 'mm'>,
       'pressure': 1000.0,

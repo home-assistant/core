@@ -120,7 +120,7 @@ def create_client_mock(
 async def init_integration(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
-    platform="",
+    platform: str | None = None,
     charge_point: dict | None = None,
     status: dict | None = None,
     grid: dict | None = None,
@@ -136,6 +136,10 @@ async def init_integration(
     if grid is None:
         grid = {}
 
+    platforms = [platform] if platform else []
+    if platform:
+        platforms.append(platform)
+
     future_container = FutureContainer(hass.loop.create_future())
     started_loop = Event()
 
@@ -144,7 +148,7 @@ async def init_integration(
     )
 
     with (
-        patch("homeassistant.components.blue_current.PLATFORMS", [platform]),
+        patch("homeassistant.components.blue_current.PLATFORMS", platforms),
         patch("homeassistant.components.blue_current.Client", return_value=client_mock),
     ):
         config_entry.add_to_hass(hass)

@@ -1,7 +1,7 @@
 """Test binary sensor of NextDNS integration."""
 
 from datetime import timedelta
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 from nextdns import ApiError
@@ -11,7 +11,7 @@ from homeassistant.const import STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from . import init_integration, mock_nextdns
+from . import init_integration
 
 from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
@@ -21,6 +21,7 @@ async def test_binary_sensor(
     entity_registry: er.EntityRegistry,
     snapshot: SnapshotAssertion,
     mock_config_entry: MockConfigEntry,
+    mock_nextdns_client: AsyncMock,
 ) -> None:
     """Test states of the binary sensors."""
     with patch("homeassistant.components.nextdns.PLATFORMS", [Platform.BINARY_SENSOR]):
@@ -34,6 +35,7 @@ async def test_availability(
     freezer: FrozenDateTimeFactory,
     mock_config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
+    mock_nextdns_client: AsyncMock,
 ) -> None:
     """Ensure that we mark the entities unavailable correctly when service causes an error."""
     with patch("homeassistant.components.nextdns.PLATFORMS", [Platform.BINARY_SENSOR]):
@@ -47,21 +49,20 @@ async def test_availability(
     for entity_id in entity_ids:
         assert hass.states.get(entity_id).state != STATE_UNAVAILABLE
 
+    mock_nextdns_client.connection_status.side_effect = ApiError("API Error")
+
     freezer.tick(timedelta(minutes=10))
-    with patch(
-        "homeassistant.components.nextdns.NextDns.connection_status",
-        side_effect=ApiError("API Error"),
-    ):
-        async_fire_time_changed(hass)
-        await hass.async_block_till_done(wait_background_tasks=True)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
 
     for entity_id in entity_ids:
         assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
 
+    mock_nextdns_client.connection_status.side_effect = None
+
     freezer.tick(timedelta(minutes=10))
-    with mock_nextdns():
-        async_fire_time_changed(hass)
-        await hass.async_block_till_done(wait_background_tasks=True)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
 
     for entity_id in entity_ids:
         assert hass.states.get(entity_id).state != STATE_UNAVAILABLE

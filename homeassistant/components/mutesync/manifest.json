@@ -4,6 +4,7 @@
   "codeowners": ["@currentoor"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/mutesync",
+  "integration_type": "service",
   "iot_class": "local_polling",
   "loggers": ["mutesync"],
   "requirements": ["mutesync==0.0.1"]

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 from collections import defaultdict
 from collections.abc import Iterable, Mapping
 from datetime import datetime
@@ -396,7 +397,7 @@ class DeviceEntry:
         try:
             dict_repr = self.dict_repr
             return json_bytes(dict_repr)
-        except (ValueError, TypeError):
+        except ValueError, TypeError:
             _LOGGER.error(
                 "Unable to serialize entry %s to JSON. Bad data found at %s",
                 self.id,
@@ -771,6 +772,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
     devices: ActiveDeviceRegistryItems
     deleted_devices: DeviceRegistryItems[DeletedDeviceEntry]
     _device_data: dict[str, DeviceEntry]
+    _loaded_event: asyncio.Event | None = None
 
     def __init__(self, hass: HomeAssistant) -> None:
         """Initialize the device registry."""
@@ -781,7 +783,13 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
             STORAGE_KEY,
             atomic_writes=True,
             minor_version=STORAGE_VERSION_MINOR,
+            serialize_in_event_loop=False,
         )
+
+    @callback
+    def async_setup(self) -> None:
+        """Set up the registry."""
+        self._loaded_event = asyncio.Event()
 
     @callback
     def async_get(self, device_id: str) -> DeviceEntry | None:
@@ -1045,7 +1053,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         """Private update device attributes.
 
         :param add_config_subentry_id: Add the device to a specific subentry of add_config_entry_id
-        :param remove_config_subentry_id: Remove the device from a specific subentry of remove_config_subentry_id
+        :param remove_config_subentry_id: Remove the device from a specific subentry of remove_config_entry_id
         """
         old = self.devices[device_id]
 
@@ -1346,7 +1354,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         """Update device attributes.
 
         :param add_config_subentry_id: Add the device to a specific subentry of add_config_entry_id
-        :param remove_config_subentry_id: Remove the device from a specific subentry of remove_config_subentry_id
+        :param remove_config_subentry_id: Remove the device from a specific subentry of remove_config_entry_id
         """
         if suggested_area is not UNDEFINED:
             report_usage(
@@ -1460,8 +1468,11 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         )
         self.async_schedule_save()
 
-    async def async_load(self) -> None:
+    async def _async_load(self) -> None:
         """Load the device registry."""
+        assert self._loaded_event is not None
+        assert not self._loaded_event.is_set()
+
         async_setup_cleanup(self.hass, self)
 
         data = await self._store.async_load()
@@ -1559,13 +1570,28 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         self.deleted_devices = deleted_devices
         self._device_data = devices.data
 
+        self._loaded_event.set()
+
+    async def async_wait_loaded(self) -> None:
+        """Wait until the device registry is fully loaded.
+
+        Will only wait if the registry had already been set up.
+        """
+        if self._loaded_event is not None:
+            await self._loaded_event.wait()
+
     @callback
     def _data_to_save(self) -> dict[str, Any]:
         """Return data of device registry to store in a file."""
+        # Create intermediate lists to allow this method to be called from a thread
+        # other than the event loop.
         return {
-            "devices": [entry.as_storage_fragment for entry in self.devices.values()],
+            "devices": [
+                entry.as_storage_fragment for entry in list(self.devices.values())
+            ],
             "deleted_devices": [
-                entry.as_storage_fragment for entry in self.deleted_devices.values()
+                entry.as_storage_fragment
+                for entry in list(self.deleted_devices.values())
             ],
         }
 
@@ -1700,10 +1726,15 @@ def async_get(hass: HomeAssistant) -> DeviceRegistry:
     return DeviceRegistry(hass)
 
 
-async def async_load(hass: HomeAssistant) -> None:
-    """Load device registry."""
+def async_setup(hass: HomeAssistant) -> None:
+    """Set up device registry."""
     assert DATA_REGISTRY not in hass.data
-    await async_get(hass).async_load()
+    async_get(hass).async_setup()
+
+
+async def async_load(hass: HomeAssistant, *, load_empty: bool = False) -> None:
+    """Load device registry."""
+    await async_get(hass).async_load(load_empty=load_empty)
 
 
 @callback

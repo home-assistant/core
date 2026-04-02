@@ -22,7 +22,11 @@ from homeassistant.components.recorder.util import (
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
 
-from .common import async_recorder_block_till_done, async_wait_recording_done
+from .common import (
+    async_recorder_block_till_done,
+    async_wait_recording_done,
+    get_patched_live_version,
+)
 
 from tests.common import async_test_home_assistant
 from tests.typing import RecorderInstanceContextManager
@@ -329,6 +333,11 @@ async def test_migration_changes_prevent_trying_to_migrate_again(
     with (
         patch.object(recorder, "db_schema", old_db_schema),
         patch.object(migration, "SCHEMA_VERSION", old_db_schema.SCHEMA_VERSION),
+        patch.object(
+            migration,
+            "LIVE_MIGRATION_MIN_SCHEMA_VERSION",
+            get_patched_live_version(old_db_schema),
+        ),
         patch.object(migration, "non_live_data_migration_needed", return_value=False),
         patch.object(core, "StatesMeta", old_db_schema.StatesMeta),
         patch.object(core, "EventTypes", old_db_schema.EventTypes),

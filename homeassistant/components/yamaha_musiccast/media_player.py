@@ -11,6 +11,7 @@ from aiomusiccast.features import ZoneFeature
 
 from homeassistant.components import media_source
 from homeassistant.components.media_player import (
+    BrowseError,
     BrowseMedia,
     MediaClass,
     MediaPlayerEntity,
@@ -79,6 +80,7 @@ class MusicCastMediaPlayer(MusicCastDeviceEntity, MediaPlayerEntity):
 
     _attr_media_content_type = MediaType.MUSIC
     _attr_should_poll = False
+    _attr_translation_key = "zone"
 
     def __init__(self, zone_id, name, entry_id, coordinator):
         """Initialize the musiccast device."""
@@ -372,7 +374,7 @@ class MusicCastMediaPlayer(MusicCastDeviceEntity, MediaPlayerEntity):
         ]
 
         if add_media_source:
-            with contextlib.suppress(media_source.BrowseError):
+            with contextlib.suppress(BrowseError):
                 item = await media_source.async_browse_media(
                     self.hass,
                     None,

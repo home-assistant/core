@@ -1,0 +1,42 @@
+{
+  "data": [
+    {
+      "apiVersion": 1,
+      "commands": {},
+      "deviceId": "################",
+      "feature": "ess.transfer.charge.cumulated",
+      "gatewayId": "################",
+      "isEnabled": true,
+      "isReady": true,
+      "properties": {
+        "currentDay": {
+          "type": "number",
+          "unit": "wattHour",
+          "value": 5449
+        },
+        "currentMonth": {
+          "type": "number",
+          "unit": "wattHour",
+          "value": 143145
+        },
+        "currentWeek": {
+          "type": "number",
+          "unit": "wattHour",
+          "value": 5450
+        },
+        "currentYear": {
+          "type": "number",
+          "unit": "wattHour",
+          "value": 1251105
+        },
+        "lifeCycle": {
+          "type": "number",
+          "unit": "wattHour",
+          "value": 1879163
+        }
+      },
+      "timestamp": "2025-09-29T16:45:15.994Z",
+      "uri": "https://api.viessmann-climatesolutions.com/iot/v2/features/installations/#######/gateways/################/devices/################/features/ess.transfer.charge.cumulated"
+    }
+  ]
+}

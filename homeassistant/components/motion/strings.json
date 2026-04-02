@@ -1,0 +1,62 @@
+{
+  "common": {
+    "condition_behavior_name": "Condition passes if",
+    "trigger_behavior_name": "Trigger when"
+  },
+  "conditions": {
+    "is_detected": {
+      "description": "Tests if one or more motion sensors are detecting motion.",
+      "fields": {
+        "behavior": {
+          "name": "[%key:component::motion::common::condition_behavior_name%]"
+        }
+      },
+      "name": "Motion is detected"
+    },
+    "is_not_detected": {
+      "description": "Tests if one or more motion sensors are not detecting motion.",
+      "fields": {
+        "behavior": {
+          "name": "[%key:component::motion::common::condition_behavior_name%]"
+        }
+      },
+      "name": "Motion is not detected"
+    }
+  },
+  "selector": {
+    "condition_behavior": {
+      "options": {
+        "all": "All",
+        "any": "Any"
+      }
+    },
+    "trigger_behavior": {
+      "options": {
+        "any": "Any",
+        "first": "First",
+        "last": "Last"
+      }
+    }
+  },
+  "title": "Motion",
+  "triggers": {
+    "cleared": {
+      "description": "Triggers after one or more motion sensors stop detecting motion.",
+      "fields": {
+        "behavior": {
+          "name": "[%key:component::motion::common::trigger_behavior_name%]"
+        }
+      },
+      "name": "Motion cleared"
+    },
+    "detected": {
+      "description": "Triggers after one or more motion sensors start detecting motion.",
+      "fields": {
+        "behavior": {
+          "name": "[%key:component::motion::common::trigger_behavior_name%]"
+        }
+      },
+      "name": "Motion detected"
+    }
+  }
+}

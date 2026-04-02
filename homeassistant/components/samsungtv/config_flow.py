@@ -13,6 +13,7 @@ from samsungtvws.encrypted.authenticator import SamsungTVEncryptedWSAsyncAuthent
 import voluptuous as vol
 
 from homeassistant.config_entries import (
+    SOURCE_RECONFIGURE,
     ConfigEntry,
     ConfigEntryState,
     ConfigFlow,
@@ -289,6 +290,32 @@ class SamsungTVConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration of the config entry."""
+        reconfigure_entry = self._get_reconfigure_entry()
+
+        errors: dict[str, str] | None = None
+        if user_input is not None:
+            if await self._async_set_name_host_from_input(user_input):
+                self._async_abort_entries_match({CONF_HOST: self._host})
+                return self.async_update_reload_and_abort(
+                    reconfigure_entry,
+                    data_updates={CONF_HOST: self._host},
+                )
+            errors = {"base": "invalid_host"}
+
+        suggested_values = user_input or {CONF_HOST: reconfigure_entry.data[CONF_HOST]}
+        return self.async_show_form(
+            step_id=SOURCE_RECONFIGURE,
+            data_schema=self.add_suggested_values_to_schema(
+                DATA_SCHEMA,
+                suggested_values,
+            ),
+            errors=errors,
+        )
+
     async def async_step_pairing(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -441,7 +468,7 @@ class SamsungTVConfigFlow(ConfigFlow, domain=DOMAIN):
 
     def is_matching(self, other_flow: Self) -> bool:
         """Return True if other_flow is matching this flow."""
-        return other_flow._host == self._host  # noqa: SLF001
+        return getattr(other_flow, "_host", None) == self._host
 
     @callback
     def _abort_if_manufacturer_is_not_samsung(self) -> None:

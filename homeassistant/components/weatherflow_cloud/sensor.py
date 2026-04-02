@@ -338,11 +338,11 @@ WF_SENSORS: tuple[WeatherFlowCloudSensorEntityDescription, ...] = (
         translation_key="lightning_strike_last_epoch",
         device_class=SensorDeviceClass.TIMESTAMP,
         value_fn=(
-            lambda data: datetime.fromtimestamp(
-                data.lightning_strike_last_epoch, tz=UTC
+            lambda data: (
+                datetime.fromtimestamp(data.lightning_strike_last_epoch, tz=UTC)
+                if data.lightning_strike_last_epoch is not None
+                else None
             )
-            if data.lightning_strike_last_epoch is not None
-            else None
         ),
     ),
 )

@@ -30,6 +30,7 @@ CONF_AVAILABILITY = "availability"
 CONF_AVAILABILITY_MODE = "availability_mode"
 CONF_AVAILABILITY_TEMPLATE = "availability_template"
 CONF_AVAILABILITY_TOPIC = "availability_topic"
+CONF_AVAILABLE_TONES = "available_tones"
 CONF_BROKER = "broker"
 CONF_BIRTH_MESSAGE = "birth_message"
 CONF_CODE_ARM_REQUIRED = "code_arm_required"
@@ -70,7 +71,6 @@ CONF_BRIGHTNESS_SCALE = "brightness_scale"
 CONF_BRIGHTNESS_STATE_TOPIC = "brightness_state_topic"
 CONF_BRIGHTNESS_TEMPLATE = "brightness_template"
 CONF_BRIGHTNESS_VALUE_TEMPLATE = "brightness_value_template"
-CONF_COLOR_MODE = "color_mode"
 CONF_COLOR_MODE_STATE_TOPIC = "color_mode_state_topic"
 CONF_COLOR_MODE_VALUE_TEMPLATE = "color_mode_value_template"
 CONF_COLOR_TEMP_COMMAND_TEMPLATE = "color_temp_command_template"
@@ -109,6 +109,7 @@ CONF_FLASH_TIME_SHORT = "flash_time_short"
 CONF_GET_POSITION_TEMPLATE = "position_template"
 CONF_GET_POSITION_TOPIC = "position_topic"
 CONF_GREEN_TEMPLATE = "green_template"
+CONF_GROUP = "group"
 CONF_HS_COMMAND_TEMPLATE = "hs_command_template"
 CONF_HS_COMMAND_TOPIC = "hs_command_topic"
 CONF_HS_STATE_TOPIC = "hs_state_topic"
@@ -120,8 +121,10 @@ CONF_HUMIDITY_STATE_TOPIC = "target_humidity_state_topic"
 CONF_HUMIDITY_MAX = "max_humidity"
 CONF_HUMIDITY_MIN = "min_humidity"
 CONF_LAST_RESET_VALUE_TEMPLATE = "last_reset_value_template"
+CONF_MAX = "max"
 CONF_MAX_KELVIN = "max_kelvin"
 CONF_MAX_MIREDS = "max_mireds"
+CONF_MIN = "min"
 CONF_MIN_KELVIN = "min_kelvin"
 CONF_MIN_MIREDS = "min_mireds"
 CONF_MODE_COMMAND_TEMPLATE = "mode_command_template"
@@ -135,6 +138,7 @@ CONF_OSCILLATION_COMMAND_TOPIC = "oscillation_command_topic"
 CONF_OSCILLATION_COMMAND_TEMPLATE = "oscillation_command_template"
 CONF_OSCILLATION_STATE_TOPIC = "oscillation_state_topic"
 CONF_OSCILLATION_VALUE_TEMPLATE = "oscillation_value_template"
+CONF_PATTERN = "pattern"
 CONF_PAYLOAD_ARM_AWAY = "payload_arm_away"
 CONF_PAYLOAD_ARM_CUSTOM_BYPASS = "payload_arm_custom_bypass"
 CONF_PAYLOAD_ARM_HOME = "payload_arm_home"
@@ -168,6 +172,7 @@ CONF_PRESET_MODES_LIST = "preset_modes"
 CONF_PRESET_MODE_STATE_TOPIC = "preset_mode_state_topic"
 CONF_PRESET_MODE_VALUE_TEMPLATE = "preset_mode_value_template"
 CONF_RED_TEMPLATE = "red_template"
+CONF_REPORTS_POSITION = "reports_position"
 CONF_RGB_COMMAND_TEMPLATE = "rgb_command_template"
 CONF_RGB_COMMAND_TOPIC = "rgb_command_topic"
 CONF_RGB_STATE_TOPIC = "rgb_state_topic"
@@ -196,7 +201,10 @@ CONF_STATE_OPENING = "state_opening"
 CONF_STATE_STOPPED = "state_stopped"
 CONF_STATE_UNLOCKED = "state_unlocked"
 CONF_STATE_UNLOCKING = "state_unlocking"
+CONF_STEP = "step"
 CONF_SUGGESTED_DISPLAY_PRECISION = "suggested_display_precision"
+CONF_SUPPORT_DURATION = "support_duration"
+CONF_SUPPORT_VOLUME_SET = "support_volume_set"
 CONF_SUPPORTED_COLOR_MODES = "supported_color_modes"
 CONF_SWING_HORIZONTAL_MODE_COMMAND_TEMPLATE = "swing_horizontal_mode_command_template"
 CONF_SWING_HORIZONTAL_MODE_COMMAND_TOPIC = "swing_horizontal_mode_command_topic"
@@ -261,7 +269,6 @@ CONF_VIA_DEVICE = "via_device"
 CONF_DEPRECATED_VIA_HUB = "via_hub"
 CONF_SUGGESTED_AREA = "suggested_area"
 CONF_CONFIGURATION_URL = "configuration_url"
-CONF_OBJECT_ID = "object_id"
 CONF_SUPPORT_URL = "support_url"
 
 DEFAULT_ALARM_CONTROL_PANEL_COMMAND_TEMPLATE = "{{action}}"
@@ -299,7 +306,6 @@ DEFAULT_PAYLOAD_RESET = "None"
 DEFAULT_PAYLOAD_STOP = "STOP"
 DEFAULT_PAYLOAD_TRIGGER = "TRIGGER"
 DEFAULT_PAYLOAD_UNLOCK = "UNLOCK"
-DEFAULT_PORT = 1883
 DEFAULT_RETAIN = False
 DEFAULT_TILT_CLOSED_POSITION = 0
 DEFAULT_TILT_MAX = 100
@@ -310,7 +316,6 @@ DEFAULT_WS_HEADERS: dict[str, str] = {}
 DEFAULT_WS_PATH = "/"
 DEFAULT_POSITION_CLOSED = 0
 DEFAULT_POSITION_OPEN = 100
-DEFAULT_RETAIN = False
 DEFAULT_SPEED_RANGE_MAX = 100
 DEFAULT_SPEED_RANGE_MIN = 1
 DEFAULT_STATE_LOCKED = "LOCKED"
@@ -370,17 +375,18 @@ DOMAIN = "mqtt"
 LOGGER = logging.getLogger(__package__)
 
 MQTT_CONNECTION_STATE = "mqtt_connection_state"
+MQTT_PROCESSED_SUBSCRIPTIONS = "mqtt_processed_subscriptions"
 
 PAYLOAD_EMPTY_JSON = "{}"
 PAYLOAD_NONE = "None"
 
-CONFIG_ENTRY_VERSION = 1
-CONFIG_ENTRY_MINOR_VERSION = 2
+CONFIG_ENTRY_VERSION = 2
+CONFIG_ENTRY_MINOR_VERSION = 1
 
 # Split mqtt entry data and options
 # Can be removed when config entry is bumped to version 2.1
-# with HA Core 2026.1.0. Read support for version 2.1 is expected before 2026.1
-# From 2026.1 we will write version 2.1
+# with HA Core 2026.7.0. Read support for version 2.1 is expected from 2026.1
+# From 2026.7 we will write version 2.1
 ENTRY_OPTION_FIELDS = (
     CONF_DISCOVERY,
     CONF_DISCOVERY_PREFIX,

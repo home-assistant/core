@@ -172,6 +172,7 @@ def test_url_no_path() -> None:
     for value in (
         "https://localhost/test/index.html",
         "http://home-assistant.io/test/",
+        "http://invalid-port.local:999999",
     ):
         with pytest.raises(vol.MultipleInvalid):
             schema(value)
@@ -711,7 +712,10 @@ async def test_template_no_hass(hass: HomeAssistant) -> None:
         "{{ no_such_function('group.foo')|map(attribute='entity_id')|list }}",
     )
     for value in options:
-        await hass.async_add_executor_job(schema, value)
+        with pytest.raises(
+            vol.Invalid, match="Validates schema outside the event loop"
+        ):
+            await hass.async_add_executor_job(schema, value)
 
 
 def test_dynamic_template(hass: HomeAssistant) -> None:

@@ -5,6 +5,11 @@ from unittest.mock import MagicMock
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.components.plugwise.const import (
+    SELECT_REGULATION_MODE,
+    SELECT_SCHEDULE,
+    SELECT_ZONE_PROFILE,
+)
 from homeassistant.components.select import (
     ATTR_OPTION,
     DOMAIN as SELECT_DOMAIN,
@@ -45,10 +50,9 @@ async def test_adam_change_select_entity(
         },
         blocking=True,
     )
-
     assert mock_smile_adam.set_select.call_count == 1
     mock_smile_adam.set_select.assert_called_with(
-        "select_schedule",
+        SELECT_SCHEDULE,
         "c50f167537524366a5af7aa3942feb1e",
         "Badkamer Schema",
         "on",
@@ -92,9 +96,35 @@ async def test_adam_select_regulation_mode(
     )
     assert mock_smile_adam_heat_cool.set_select.call_count == 1
     mock_smile_adam_heat_cool.set_select.assert_called_with(
-        "select_regulation_mode",
+        SELECT_REGULATION_MODE,
         "bc93488efab249e5bc54fd7e175a6f91",
         "heating",
+        "on",
+    )
+
+
+@pytest.mark.parametrize("chosen_env", ["m_adam_heating"], indirect=True)
+@pytest.mark.parametrize("cooling_present", [True], indirect=True)
+async def test_adam_select_zone_profile(
+    hass: HomeAssistant,
+    mock_smile_adam_heat_cool: MagicMock,
+    init_integration: MockConfigEntry,
+) -> None:
+    """Test changing the zone_profile select."""
+    await hass.services.async_call(
+        SELECT_DOMAIN,
+        SERVICE_SELECT_OPTION,
+        {
+            ATTR_ENTITY_ID: "select.living_room_zone_profile",
+            ATTR_OPTION: "passive",
+        },
+        blocking=True,
+    )
+    assert mock_smile_adam_heat_cool.set_select.call_count == 1
+    mock_smile_adam_heat_cool.set_select.assert_called_with(
+        SELECT_ZONE_PROFILE,
+        "f2bf9048bef64cc5b6d5110154e33c81",
+        "passive",
         "on",
     )
 

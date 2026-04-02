@@ -17,7 +17,6 @@ DEFAULT_TIMEOUT = 5.0  # seconds
 CONF_NUM_CTX = "num_ctx"
 DEFAULT_NUM_CTX = 8192
 MIN_NUM_CTX = 2048
-MAX_NUM_CTX = 131072
 DEFAULT_THINK = False
 
 CONF_MAX_HISTORY = "max_history"
@@ -158,7 +157,7 @@ MODEL_NAMES = [  # https://ollama.com/library
     "yi",
     "zephyr",
 ]
-DEFAULT_MODEL = "qwen3:4b"
+DEFAULT_MODEL = "qwen3:4b-instruct"
 
 DEFAULT_CONVERSATION_NAME = "Ollama Conversation"
 DEFAULT_AI_TASK_NAME = "Ollama AI Task"

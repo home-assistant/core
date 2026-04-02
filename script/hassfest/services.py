@@ -118,8 +118,20 @@ def _service_schema(targeted: bool, custom: bool) -> vol.Schema:
         )
     }
 
+    def raise_on_target_device_filter(value: dict[str, Any]) -> dict[str, Any]:
+        """Raise error if target has a device filter."""
+        if "device" in value:
+            raise vol.Invalid(
+                "Services do not support device filters on target, use a device "
+                "selector instead"
+            )
+        return value
+
     if targeted:
-        schema_dict[vol.Required("target")] = selector.TargetSelector.CONFIG_SCHEMA
+        schema_dict[vol.Required("target")] = vol.All(
+            selector.TargetSelector.CONFIG_SCHEMA,
+            raise_on_target_device_filter,
+        )
 
     if custom:
         schema_dict |= CUSTOM_INTEGRATION_EXTRA_SCHEMA_DICT
@@ -291,8 +303,8 @@ def validate_services(config: Config, integration: Integration) -> None:  # noqa
             integration, service_name, strings, service_schema
         )
 
-        # The same check is done for the description in each of the fields of the
-        # service schema.
+        # The same check is done for each field in the service schema,
+        # except that we don't require fields to have a description.
         for field_name, field_schema in service_schema.get("fields", {}).items():
             if "fields" in field_schema:
                 # This is a section
@@ -304,17 +316,6 @@ def validate_services(config: Config, integration: Integration) -> None:  # noqa
                     integration.add_error(
                         "services",
                         f"Service {service_name} has a field {field_name} with no name {error_msg_suffix}",
-                    )
-
-            if "description" not in field_schema and integration.core:
-                try:
-                    strings["services"][service_name]["fields"][field_name][
-                        "description"
-                    ]
-                except KeyError:
-                    integration.add_error(
-                        "services",
-                        f"Service {service_name} has a field {field_name} with no description {error_msg_suffix}",
                     )
 
             if "selector" in field_schema:
