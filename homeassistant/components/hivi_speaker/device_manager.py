@@ -133,9 +133,7 @@ class HIVIDeviceManager:
                 device_obj.mac_address = device_info.get(
                     "mac_address", device_obj.mac_address
                 )
-                device_obj.hostname = device_info.get(
-                    "hostname", device_obj.hostname
-                )
+                device_obj.hostname = device_info.get("hostname", device_obj.hostname)
                 device_obj.friendly_name = device_info.get(
                     "friendly_name", device_obj.friendly_name
                 )
