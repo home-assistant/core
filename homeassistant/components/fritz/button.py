@@ -69,7 +69,7 @@ BUTTONS: Final = [
 ]
 
 
-async def repair_issue_cleanup(hass: HomeAssistant, avm_wrapper: AvmWrapper) -> None:
+def repair_issue_cleanup(hass: HomeAssistant, avm_wrapper: AvmWrapper) -> None:
     """Repair issue for cleanup button."""
     entity_registry = er.async_get(hass)
 
@@ -111,7 +111,7 @@ async def async_setup_entry(
 
     if avm_wrapper.mesh_role == MeshRoles.SLAVE:
         async_add_entities(entities_list)
-        await repair_issue_cleanup(hass, avm_wrapper)
+        repair_issue_cleanup(hass, avm_wrapper)
         return
 
     data_fritz = hass.data[FRITZ_DATA_KEY]
@@ -130,7 +130,7 @@ async def async_setup_entry(
         )
     )
 
-    await repair_issue_cleanup(hass, avm_wrapper)
+    repair_issue_cleanup(hass, avm_wrapper)
 
 
 class FritzButton(ButtonEntity):
