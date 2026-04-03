@@ -664,7 +664,24 @@ async def test_fix_issue_next_flow(
         msg = await ws_client.receive_json()
 
         assert msg["success"]
-        assert msg["result"] == {"issues": []}
+        await ws_client.send_json(
+            {
+                "id": 5,
+                "type": "repairs/get_issue_data",
+                "domain": "fake_integration",
+                "issue_id": "create_entry_issue1",
+            }
+        )
+        msg2 = await ws_client.receive_json()
+        assert msg2["success"]
+
+        issues = issues.copy()
+        issues[0]["created"] = ANY
+        issues[0]["dismissed_version"] = None
+        issues[0]["ignored"] = False
+        issues[0]["issue_domain"] = None
+        msg["result"]["issues"][0]["data"] = msg2["result"]["issue_data"]
+        assert msg["result"] == {"issues": issues}
 
     if test == "invalid_source":
         assert resp.status == HTTPStatus.BAD_REQUEST
@@ -700,7 +717,23 @@ async def test_fix_issue_next_flow(
         msg = await ws_client.receive_json()
 
         assert msg["success"]
-        assert msg["result"] == {"issues": []}
+        await ws_client.send_json(
+            {
+                "id": 5,
+                "type": "repairs/get_issue_data",
+                "domain": "fake_integration",
+                "issue_id": "create_entry_issue1",
+            }
+        )
+        msg2 = await ws_client.receive_json()
+        assert msg2["success"]
+        issues = issues.copy()
+        issues[0]["created"] = ANY
+        issues[0]["dismissed_version"] = None
+        issues[0]["ignored"] = False
+        issues[0]["issue_domain"] = None
+        msg["result"]["issues"][0]["data"] = msg2["result"]["issue_data"]
+        assert msg["result"] == {"issues": issues}
 
     if test == NextFlowType.CONFIG_SUBENTRIES_FLOW:
         assert resp.status == HTTPStatus.OK
@@ -726,7 +759,23 @@ async def test_fix_issue_next_flow(
         msg = await ws_client.receive_json()
 
         assert msg["success"]
-        assert msg["result"] == {"issues": []}
+        await ws_client.send_json(
+            {
+                "id": 5,
+                "type": "repairs/get_issue_data",
+                "domain": "fake_integration",
+                "issue_id": "create_entry_issue1",
+            }
+        )
+        msg2 = await ws_client.receive_json()
+        assert msg2["success"]
+        issues = issues.copy()
+        issues[0]["created"] = ANY
+        issues[0]["dismissed_version"] = None
+        issues[0]["ignored"] = False
+        issues[0]["issue_domain"] = None
+        msg["result"]["issues"][0]["data"] = msg2["result"]["issue_data"]
+        assert msg["result"] == {"issues": issues}
 
     if test == f"{NextFlowType.CONFIG_SUBENTRIES_FLOW}_invalid_source":
         assert resp.status == HTTPStatus.BAD_REQUEST
