@@ -5,13 +5,12 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime
-from typing import TYPE_CHECKING, Any, cast
+from typing import TYPE_CHECKING, Any, Generic, cast
 
 from renault_api.kamereon.models import (
     KamereonVehicleBatteryStatusData,
     KamereonVehicleChargingSettingsData,
     KamereonVehicleCockpitData,
-    KamereonVehicleDataAttributes,
     KamereonVehicleHvacStatusData,
     KamereonVehicleLocationData,
     KamereonVehicleResStateData,
@@ -49,8 +48,8 @@ PARALLEL_UPDATES = 0
 
 
 @dataclass(frozen=True, kw_only=True)
-class RenaultSensorEntityDescription[T: KamereonVehicleDataAttributes](
-    SensorEntityDescription, RenaultDataEntityDescription
+class RenaultSensorEntityDescription(
+    SensorEntityDescription, RenaultDataEntityDescription, Generic[T]
 ):
     """Class describing Renault sensor entities."""
 
