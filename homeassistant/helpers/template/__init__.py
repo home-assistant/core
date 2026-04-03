@@ -75,12 +75,8 @@ from .context import (
     template_context_manager,
     template_cv,
 )
-from .extensions.type_cast import TypeCastExtension
 from .helpers import raise_no_default, result_as_boolean as result_as_boolean
 from .render_info import RenderInfo, render_info_cv
-
-# Re-export for backwards compatibility
-is_number = TypeCastExtension.is_number
 
 if TYPE_CHECKING:
     from _typeshed import OptExcInfo
