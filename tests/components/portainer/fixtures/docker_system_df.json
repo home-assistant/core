@@ -1,26 +1,41 @@
 {
-  "ImagesDiskUsage": {
+  "ImageUsage": {
     "ActiveCount": 1,
     "TotalCount": 4,
     "Reclaimable": 12345678,
     "TotalSize": 98765432,
     "Items": []
   },
-  "ContainersDiskUsage": {
+  "ContainerUsage": {
     "ActiveCount": 1,
     "TotalCount": 4,
     "Reclaimable": 12345678,
     "TotalSize": 98765432,
     "Items": []
   },
-  "VolumesDiskUsage": {
+  "VolumeUsage": {
     "ActiveCount": 1,
     "TotalCount": 4,
     "Reclaimable": 12345678,
     "TotalSize": 98765432,
-    "Items": []
+    "Items": [
+      {
+        "Name": "myvolume",
+        "UsageData": {
+          "Size": 104857600,
+          "RefCount": 2
+        }
+      },
+      {
+        "Name": "db_data",
+        "UsageData": {
+          "Size": 67108864,
+          "RefCount": 1
+        }
+      }
+    ]
   },
-  "BuildCacheDiskUsage": {
+  "BuildCacheUsage": {
     "ActiveCount": 1,
     "TotalCount": 4,
     "Reclaimable": 12345678,
