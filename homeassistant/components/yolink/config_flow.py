@@ -79,6 +79,18 @@ class OAuth2FlowHandler(
             menu_options=["pick_implementation", "uac"],
         )
 
+    async def async_step_pick_implementation(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle selection of an OAuth implementation."""
+        if self.source != SOURCE_REAUTH and any(
+            entry.data.get(CONF_AUTH_TYPE) == AUTH_TYPE_OAUTH
+            for entry in self._async_current_entries()
+        ):
+            return self.async_abort(reason="already_configured")
+
+        return await super().async_step_pick_implementation(user_input)
+
     async def async_step_uac(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

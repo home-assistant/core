@@ -111,10 +111,8 @@ async def test_oauth_alongside_uac_entries(hass: HomeAssistant) -> None:
 @pytest.mark.usefixtures("current_request_with_host")
 async def test_oauth_duplicate_entry_blocked(
     hass: HomeAssistant,
-    hass_client_no_auth: ClientSessionGenerator,
-    aioclient_mock: AiohttpClientMocker,
 ) -> None:
-    """Check that duplicate OAuth entries are prevented."""
+    """Check that duplicate OAuth entries are prevented early."""
     await setup.async_setup_component(hass, DOMAIN, {})
     await application_credentials.async_import_client_credential(
         hass,
@@ -134,39 +132,10 @@ async def test_oauth_duplicate_entry_blocked(
     # Menu is still shown
     assert result["type"] is FlowResultType.MENU
 
-    # Select OAuth from menu
+    # Select OAuth from menu - should abort immediately
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {"next_step_id": "pick_implementation"}
     )
-    # External step proceeds (duplicate check happens after OAuth)
-    assert result["type"] is FlowResultType.EXTERNAL_STEP
-
-    # Complete OAuth flow
-    state = config_entry_oauth2_flow._encode_jwt(
-        hass,
-        {
-            "flow_id": result["flow_id"],
-            "redirect_uri": "https://example.com/auth/external/callback",
-        },
-    )
-
-    client = await hass_client_no_auth()
-    aioclient_mock.post(
-        OAUTH2_TOKEN,
-        json={
-            "refresh_token": "mock-refresh-token",
-            "access_token": "mock-access-token",
-            "type": "Bearer",
-            "expires_in": 60,
-            "scope": "create",
-        },
-    )
-
-    resp = await client.get(f"/auth/external/callback?code=abcd&state={state}")
-    assert resp.status == HTTPStatus.OK
-
-    # Now the duplicate check should abort
-    result = await hass.config_entries.flow.async_configure(result["flow_id"])
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 

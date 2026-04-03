@@ -110,38 +110,43 @@ class UACAuth(YoLinkAuthMgr):
 
     async def _token_request(self) -> dict:
         """Fetch a new access token from the YoLink OAuth2 endpoint."""
-        async with self._session.post(
-            url=OAUTH2_TOKEN,
-            headers={"Content-Type": "application/x-www-form-urlencoded"},
-            data={
-                "grant_type": "client_credentials",
-                "scope": "create",
-                "client_id": self._client_id,
-                "client_secret": self._client_secret,
-            },
-            timeout=ClientTimeout(total=10),
-        ) as resp:
-            if resp.status >= 400:
-                try:
-                    error_response = await resp.json()
-                except ClientError, ValueError:
-                    error_response = {}
-                error_code = error_response.get("error", "unknown")
-                error_desc = error_response.get(
-                    "error_description", f"HTTP {resp.status}"
-                )
-                _LOGGER.error(
-                    "UAC token request failed (%s): %s", error_code, error_desc
-                )
-                if resp.status in (401, 403):
+        try:
+            async with self._session.post(
+                url=OAUTH2_TOKEN,
+                headers={"Content-Type": "application/x-www-form-urlencoded"},
+                data={
+                    "grant_type": "client_credentials",
+                    "scope": "create",
+                    "client_id": self._client_id,
+                    "client_secret": self._client_secret,
+                },
+                timeout=ClientTimeout(total=10),
+            ) as resp:
+                if resp.status >= 400:
+                    try:
+                        error_response = await resp.json()
+                    except ClientError, ValueError:
+                        error_response = {}
+                    error_code = error_response.get("error", "unknown")
+                    error_desc = error_response.get(
+                        "error_description", f"HTTP {resp.status}"
+                    )
+                    _LOGGER.error(
+                        "UAC token request failed (%s): %s", error_code, error_desc
+                    )
+                    if resp.status in (401, 403):
+                        raise YoLinkAuthFailError(error_code, error_desc)
+                    raise YoLinkClientError(error_code, error_desc)
+                result = await resp.json()
+                # Token endpoint may return HTTP 200 with error in the body
+                if "access_token" not in result:
+                    error_code = result.get("code", result.get("error", "unknown"))
+                    error_desc = result.get(
+                        "desc",
+                        result.get("error_description", "Authentication failed"),
+                    )
                     raise YoLinkAuthFailError(error_code, error_desc)
-                raise YoLinkClientError(error_code, error_desc)
-            result = await resp.json()
-            # Token endpoint may return HTTP 200 with error in the body
-            if "access_token" not in result:
-                error_code = result.get("code", result.get("error", "unknown"))
-                error_desc = result.get(
-                    "desc", result.get("error_description", "Authentication failed")
-                )
-                raise YoLinkAuthFailError(error_code, error_desc)
-            return result
+                return result
+        except (ClientError, OSError) as err:
+            _LOGGER.error("UAC token request failed: %s", err)
+            raise YoLinkClientError("request_failed", str(err)) from err
