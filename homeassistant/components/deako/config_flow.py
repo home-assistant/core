@@ -210,7 +210,7 @@ class DeakoConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             host = user_input[CONF_HOST].strip()
             if not host:
-                errors["base"] = "cannot_connect"
+                errors["base"] = "no_host"
             elif await self._async_validate_connection(host):
                 return self.async_create_entry(
                     title=NAME,
