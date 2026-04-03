@@ -31,6 +31,11 @@ class DucoEntity(CoordinatorEntity[DucoCoordinator]):
         )
 
     @property
+    def available(self) -> bool:
+        """Return True if entity is available."""
+        return super().available and self._node is not None
+
+    @property
     def _node(self) -> Node | None:
         """Return the current node data from the coordinator."""
         return next(
