@@ -167,6 +167,26 @@ class VictronGXConfigFlow(ConfigFlow, domain=DOMAIN):
         self.context["title_placeholders"] = {
             "name": self.friendly_name or self.hostname
         }
+
+        # Verify connectivity before showing the confirmation dialog
+        try:
+            ssdp_conf = {
+                CONF_HOST: self.hostname,
+                CONF_PORT: DEFAULT_PORT,
+                CONF_SERIAL: self.serial,
+                CONF_INSTALLATION_ID: self.installation_id,
+            }
+            await validate_input(ssdp_conf)
+        except AuthenticationError:
+            return await self.async_step_ssdp_auth()
+        except CannotConnectError:
+            return self.async_abort(reason="cannot_connect")
+        except Exception:
+            _LOGGER.exception(
+                "Unexpected error validating SSDP discovery for Victron GX"
+            )
+            return self.async_abort(reason="unknown")
+
         return await self.async_step_ssdp_confirm()
 
     async def async_step_ssdp_confirm(
@@ -177,24 +197,6 @@ class VictronGXConfigFlow(ConfigFlow, domain=DOMAIN):
         assert self.installation_id is not None
 
         if user_input is not None:
-            try:
-                ssdp_conf = {
-                    CONF_HOST: self.hostname,
-                    CONF_PORT: DEFAULT_PORT,
-                    CONF_SERIAL: self.serial,
-                    CONF_INSTALLATION_ID: self.installation_id,
-                }
-                await validate_input(ssdp_conf)
-            except AuthenticationError:
-                return await self.async_step_ssdp_auth()
-            except CannotConnectError:
-                return self.async_abort(reason="cannot_connect")
-            except Exception:
-                _LOGGER.exception(
-                    "Unexpected error validating SSDP discovery for Victron GX"
-                )
-                return self.async_abort(reason="unknown")
-
             return self.async_create_entry(
                 title=ENTRY_TITLE_FORMAT.format(
                     installation_id=self.installation_id,
