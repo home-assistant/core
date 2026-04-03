@@ -1,4 +1,4 @@
-"""Dreo for Integration."""
+"""Dreo integration."""
 
 from __future__ import annotations
 
@@ -14,6 +14,7 @@ from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 
+from .const import FAN_DEVICE_TYPE
 from .coordinator import DreoDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -25,7 +26,7 @@ PLATFORMS = [Platform.FAN]
 
 @dataclass
 class DreoData:
-    """Dreo Data."""
+    """Dreo data."""
 
     client: DreoClient
     devices: list[dict[str, Any]]
@@ -53,7 +54,7 @@ async def async_login(
 
 
 async def async_setup_entry(hass: HomeAssistant, config_entry: DreoConfigEntry) -> bool:
-    """Set up Dreo from as config entry."""
+    """Set up Dreo from a config entry."""
     username = config_entry.data[CONF_USERNAME]
     password = config_entry.data[CONF_PASSWORD]
 
@@ -61,7 +62,9 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: DreoConfigEntry) 
     coordinators: dict[str, DreoDataUpdateCoordinator] = {}
 
     for device in devices:
-        await async_setup_device_coordinator(hass, client, device, coordinators)
+        await async_setup_device_coordinator(
+            hass, config_entry, client, device, coordinators
+        )
 
     config_entry.runtime_data = DreoData(client, devices, coordinators)
 
@@ -71,6 +74,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: DreoConfigEntry) 
 
 async def async_setup_device_coordinator(
     hass: HomeAssistant,
+    config_entry: DreoConfigEntry,
     client: DreoClient,
     device: dict[str, Any],
     coordinators: dict[str, DreoDataUpdateCoordinator],
@@ -82,7 +86,7 @@ async def async_setup_device_coordinator(
     device_type = device.get("deviceType")
     model_config = device.get("config")
 
-    if not device_id or not device_model or not device_type:
+    if not device_id or not device_model or device_type != FAN_DEVICE_TYPE:
         return
 
     if model_config is None:
@@ -93,13 +97,9 @@ async def async_setup_device_coordinator(
         return
 
     coordinator = DreoDataUpdateCoordinator(
-        hass, client, device_id, device_type, model_config
+        hass, config_entry, client, device_id, model_config
     )
-
-    if coordinator.data_processor is None:
-        return
-
-    await coordinator.async_config_entry_first_refresh()
+    await coordinator.async_refresh()
     coordinators[device_id] = coordinator
 
 

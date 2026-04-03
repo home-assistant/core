@@ -18,6 +18,7 @@ from homeassistant.const import (
     SERVICE_TURN_ON,
     STATE_OFF,
     STATE_ON,
+    STATE_UNAVAILABLE,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -110,7 +111,7 @@ async def test_fan_turn_on_service(hass: HomeAssistant) -> None:
 
         config_entry = await init_integration(hass)
         await hass.config_entries.async_setup(config_entry.entry_id)
-    await hass.async_block_till_done()
+        await hass.async_block_till_done()
 
     state = hass.states.get("fan.bedroom_fan")
     assert state is not None
@@ -151,7 +152,7 @@ async def test_fan_turn_off_service(hass: HomeAssistant) -> None:
 
         config_entry = await init_integration(hass)
         await hass.config_entries.async_setup(config_entry.entry_id)
-    await hass.async_block_till_done()
+        await hass.async_block_till_done()
 
     await hass.services.async_call(
         FAN_DOMAIN,
@@ -188,7 +189,7 @@ async def test_fan_set_percentage_service(hass: HomeAssistant) -> None:
 
         config_entry = await init_integration(hass)
         await hass.config_entries.async_setup(config_entry.entry_id)
-    await hass.async_block_till_done()
+        await hass.async_block_till_done()
 
     await hass.services.async_call(
         FAN_DOMAIN,
@@ -228,7 +229,7 @@ async def test_fan_set_preset_mode_service(hass: HomeAssistant) -> None:
 
         config_entry = await init_integration(hass)
         await hass.config_entries.async_setup(config_entry.entry_id)
-    await hass.async_block_till_done()
+        await hass.async_block_till_done()
 
     await hass.services.async_call(
         FAN_DOMAIN,
@@ -237,9 +238,7 @@ async def test_fan_set_preset_mode_service(hass: HomeAssistant) -> None:
         blocking=True,
     )
 
-    mock_client.update_status.assert_called_with(
-        "test-fan-def", power_switch=True, mode="Sleep"
-    )
+    mock_client.update_status.assert_called_with("test-fan-def", mode="Sleep")
 
 
 async def test_fan_oscillate_service(hass: HomeAssistant) -> None:
@@ -268,7 +267,7 @@ async def test_fan_oscillate_service(hass: HomeAssistant) -> None:
 
         config_entry = await init_integration(hass)
         await hass.config_entries.async_setup(config_entry.entry_id)
-    await hass.async_block_till_done()
+        await hass.async_block_till_done()
 
     await hass.services.async_call(
         FAN_DOMAIN,
@@ -277,9 +276,40 @@ async def test_fan_oscillate_service(hass: HomeAssistant) -> None:
         blocking=True,
     )
 
-    mock_client.update_status.assert_called_with(
-        "test-fan-ghi", power_switch=True, oscillate=True
-    )
+    mock_client.update_status.assert_called_with("test-fan-ghi", oscillate=True)
+
+
+async def test_fan_is_on_when_only_power_state_is_reported(
+    hass: HomeAssistant,
+) -> None:
+    """Test the fan is on when the API only reports power state."""
+    with patch("homeassistant.components.dreo.DreoClient") as mock_client_class:
+        mock_client = mock_client_class.return_value
+        mock_client.login = MagicMock()
+        mock_client.get_devices.return_value = [
+            {
+                "deviceSn": "test-fan-power-only",
+                "model": "DR-HTF001S",
+                "deviceName": "Power Only Fan",
+                "deviceType": "fan",
+                "config": {
+                    "preset_modes": ["Sleep", "Auto", "Natural", "Normal"],
+                    "speed_range": [1, 6],
+                },
+            }
+        ]
+        mock_client.get_status.return_value = {
+            "power_switch": True,
+            "connected": True,
+        }
+
+        config_entry = await init_integration(hass)
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    state = hass.states.get("fan.power_only_fan")
+    assert state is not None
+    assert state.state == STATE_ON
 
 
 async def test_fan_unavailable_when_disconnected(hass: HomeAssistant) -> None:
@@ -310,7 +340,7 @@ async def test_fan_unavailable_when_disconnected(hass: HomeAssistant) -> None:
 
     state = hass.states.get("fan.offline_fan")
     assert state is not None
-    assert state.state == STATE_OFF
+    assert state.state == STATE_UNAVAILABLE
 
 
 async def test_fan_coordinator_error_handling(hass: HomeAssistant) -> None:
@@ -331,17 +361,21 @@ async def test_fan_coordinator_error_handling(hass: HomeAssistant) -> None:
             }
         ]
         mock_client.get_status.side_effect = [
-            {"power_switch": True, "connected": True},
+            {"power_switch": True, "connected": True, "speed": 3},
             DreoException("API Error"),
         ]
 
         config_entry = await init_integration(hass)
         await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    coordinator = config_entry.runtime_data.coordinators["test-fan-error"]
+    await coordinator.async_refresh()
     await hass.async_block_till_done()
 
     state = hass.states.get("fan.error_fan")
     assert state is not None
-    assert state.state == STATE_OFF
+    assert state.state == STATE_UNAVAILABLE
 
 
 async def test_fan_state_updates_from_coordinator(hass: HomeAssistant) -> None:
@@ -555,44 +589,6 @@ async def test_fan_setup_missing_device_info(hass: HomeAssistant) -> None:
     entities = er.async_entries_for_config_entry(entity_registry, config_entry.entry_id)
     fan_entities = [e for e in entities if e.domain == FAN_DOMAIN]
     assert len(fan_entities) == 0
-
-
-async def test_fan_state_with_none_available(hass: HomeAssistant) -> None:
-    """Test fan state when coordinator data has available = None."""
-    with patch("homeassistant.components.dreo.DreoClient") as mock_client_class:
-        mock_client = mock_client_class.return_value
-        mock_client.login = MagicMock()
-        mock_client.get_devices.return_value = [
-            {
-                "deviceSn": "test-fan-none-available",
-                "model": "DR-HTF001S",
-                "deviceName": "None Available Fan",
-                "deviceType": "fan",
-                "config": {
-                    "preset_modes": ["Sleep", "Auto", "Natural", "Normal"],
-                    "speed_range": [1, 6],
-                },
-            }
-        ]
-        mock_client.get_status.return_value = {
-            "power_switch": True,
-            "connected": True,
-        }
-
-        config_entry = await init_integration(hass)
-        await hass.config_entries.async_setup(config_entry.entry_id)
-        await hass.async_block_till_done()
-
-    coordinator = config_entry.runtime_data.coordinators["test-fan-none-available"]
-
-    if coordinator.data:
-        coordinator.data.available = None
-        coordinator.async_update_listeners()
-        await hass.async_block_till_done()
-
-    state = hass.states.get("fan.none_available_fan")
-    assert state is not None
-    assert state.state == STATE_OFF
 
 
 async def test_fan_execute_command_with_zero_speed(hass: HomeAssistant) -> None:

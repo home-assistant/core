@@ -33,6 +33,7 @@ class DreoEntity(CoordinatorEntity[DreoDataUpdateCoordinator]):
         """Initialize the Dreo entity."""
 
         super().__init__(coordinator)
+        self._client = coordinator.client
         self._device_id = device.get("deviceSn")
         self._model = device.get("model")
         self._attr_name = name
@@ -54,13 +55,11 @@ class DreoEntity(CoordinatorEntity[DreoDataUpdateCoordinator]):
     async def async_send_command_and_update(
         self, error_translation_key: str, **kwargs: Any
     ) -> None:
-        """Call a device command handling error messages and update entity state."""
+        """Call a device command and refresh the coordinator."""
 
         try:
             await self.coordinator.hass.async_add_executor_job(
-                partial(
-                    self.coordinator.client.update_status, self._device_id, **kwargs
-                )
+                partial(self._client.update_status, self._device_id, **kwargs)
             )
             await self.coordinator.async_refresh()
         except (
