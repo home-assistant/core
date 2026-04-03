@@ -98,3 +98,29 @@ async def test_lowest_price_day_uses_tomorrow_after_18(
     tomorrow_local = dt_util.start_of_local_day(dt_util.now() + timedelta(days=1))
     assert local_dt.date() == tomorrow_local.date()
     assert local_dt.hour == 10
+
+
+async def test_lowest_price_night_time_uses_upcoming_night_after_06(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_api: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """After 06:00 the lowest night-price time sensor must switch to tonight."""
+    freezer.move_to("2024-01-01 06:00:00")
+
+    mock_api.get_lowest_price_night_with_hour.return_value = (29.0, 22)
+
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    time_state = hass.states.get(
+        "sensor.green_planet_energy_lowest_price_night_time_18_00_06_00"
+    )
+    assert time_state is not None
+    state_dt = dt_util.parse_datetime(time_state.state)
+    assert state_dt is not None
+    local_dt = state_dt.astimezone(dt_util.DEFAULT_TIME_ZONE)
+    assert local_dt.date() == dt_util.now().date()
+    assert local_dt.hour == 22
