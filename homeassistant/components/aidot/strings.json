@@ -10,13 +10,13 @@
       "user": {
         "data": {
           "country_code": "Country",
-          "username": "[%key:common::config_flow::data::username%]",
-          "password": "[%key:common::config_flow::data::password%]"
+          "password": "[%key:common::config_flow::data::password%]",
+          "username": "[%key:common::config_flow::data::username%]"
         },
         "data_description": {
           "country_code": "The country selected by Aidot app when logging in",
-          "username": "Account logged in through Aidot app",
-          "password": "Password for logging in through Aidot app"
+          "password": "Password for logging in through Aidot app",
+          "username": "Account logged in through Aidot app"
         }
       }
     }
