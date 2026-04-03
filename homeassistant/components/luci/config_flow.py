@@ -6,6 +6,7 @@ import logging
 from typing import Any
 
 from openwrt_luci_rpc import OpenWrtRpc
+from requests.exceptions import ConnectionError as RequestsConnectionError
 import voluptuous as vol
 
 from homeassistant.config_entries import (
@@ -70,7 +71,7 @@ class LuciConfigFlow(ConfigFlow, domain=DOMAIN):
                 router = await self.hass.async_add_executor_job(
                     _try_connect, user_input
                 )
-            except ConnectionError:
+            except ConnectionError, RequestsConnectionError:
                 errors["base"] = "cannot_connect"
             else:
                 if not router.is_logged_in():

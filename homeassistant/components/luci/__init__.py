@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from openwrt_luci_rpc import OpenWrtRpc
+from requests.exceptions import ConnectionError as RequestsConnectionError
 
 from homeassistant.const import (
     CONF_HOST,
@@ -20,14 +21,19 @@ from .coordinator import LuciConfigEntry, LuciCoordinator
 
 async def async_setup_entry(hass: HomeAssistant, entry: LuciConfigEntry) -> bool:
     """Set up OpenWrt (luci) from a config entry."""
-    router = await hass.async_add_executor_job(
-        OpenWrtRpc,
-        entry.data[CONF_HOST],
-        entry.data[CONF_USERNAME],
-        entry.data[CONF_PASSWORD],
-        entry.data.get(CONF_SSL, DEFAULT_SSL),
-        entry.data.get(CONF_VERIFY_SSL, DEFAULT_VERIFY_SSL),
-    )
+    try:
+        router = await hass.async_add_executor_job(
+            OpenWrtRpc,
+            entry.data[CONF_HOST],
+            entry.data[CONF_USERNAME],
+            entry.data[CONF_PASSWORD],
+            entry.data.get(CONF_SSL, DEFAULT_SSL),
+            entry.data.get(CONF_VERIFY_SSL, DEFAULT_VERIFY_SSL),
+        )
+    except (ConnectionError, RequestsConnectionError) as err:
+        raise ConfigEntryNotReady(
+            f"Cannot connect to router at {entry.data[CONF_HOST]}"
+        ) from err
 
     if not router.is_logged_in():
         raise ConfigEntryNotReady("Cannot connect to router")
