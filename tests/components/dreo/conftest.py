@@ -15,7 +15,7 @@ MOCK_DEVICE_ID2 = "test-device-id-2"
 
 
 @pytest.fixture
-def mock_config_entry():
+def mock_config_entry() -> MockConfigEntry:
     """Return a mock config entry."""
     return MockConfigEntry(
         domain=DOMAIN,

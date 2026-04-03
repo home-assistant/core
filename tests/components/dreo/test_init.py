@@ -16,7 +16,9 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 from tests.common import MockConfigEntry
 
 
-async def test_setup_success(hass: HomeAssistant, mock_config_entry) -> None:
+async def test_setup_success(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
     """Test successful setup of the integration."""
     mock_config_entry.add_to_hass(hass)
 
@@ -185,7 +187,9 @@ async def test_setup_with_multiple_devices(hass: HomeAssistant) -> None:
     )
 
 
-async def test_unload_config_entry(hass: HomeAssistant, mock_config_entry) -> None:
+async def test_unload_config_entry(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
     """Test unloading the config entry."""
     mock_config_entry.add_to_hass(hass)
 
