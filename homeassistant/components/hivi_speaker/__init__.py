@@ -121,7 +121,7 @@ async def async_remove_config_entry_device(
         speaker_device_id = None
         device_dict = (
             device_manager.device_data_registry.get_device_dict_by_ha_device_id(
-                ha_device_id, default=None
+                ha_device_id
             )
         )
         if device_dict is not None:
