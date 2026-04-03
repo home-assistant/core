@@ -1416,50 +1416,6 @@ def has_value(hass: HomeAssistant, entity_id: str) -> bool:
     )
 
 
-def forgiving_round(value, precision=0, method="common", default=_SENTINEL):
-    """Filter to round a value."""
-    try:
-        # support rounding methods like jinja
-        multiplier = float(10**precision)
-        if method == "ceil":
-            value = math.ceil(float(value) * multiplier) / multiplier
-        elif method == "floor":
-            value = math.floor(float(value) * multiplier) / multiplier
-        elif method == "half":
-            value = round(float(value) * 2) / 2
-        else:
-            # if method is common or something else, use common rounding
-            value = round(float(value), precision)
-        return int(value) if precision == 0 else value
-    except ValueError, TypeError:
-        # If value can't be converted to float
-        if default is _SENTINEL:
-            raise_no_default("round", value)
-        return default
-
-
-def multiply(value, amount, default=_SENTINEL):
-    """Filter to convert value to float and multiply it."""
-    try:
-        return float(value) * amount
-    except ValueError, TypeError:
-        # If value can't be converted to float
-        if default is _SENTINEL:
-            raise_no_default("multiply", value)
-        return default
-
-
-def add(value, amount, default=_SENTINEL):
-    """Filter to convert value to float and add it."""
-    try:
-        return float(value) + amount
-    except ValueError, TypeError:
-        # If value can't be converted to float
-        if default is _SENTINEL:
-            raise_no_default("add", value)
-        return default
-
-
 def apply(value, fn, *args, **kwargs):
     """Call the given callable with the provided arguments and keyword arguments."""
     return fn(value, *args, **kwargs)
@@ -1775,17 +1731,14 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.globals["version"] = version
         self.globals["zip"] = zip
 
-        self.filters["add"] = add
         self.filters["apply"] = apply
         self.filters["as_function"] = as_function
         self.filters["combine"] = combine
         self.filters["contains"] = contains
         self.filters["iif"] = iif
         self.filters["is_defined"] = fail_when_undefined
-        self.filters["multiply"] = multiply
         self.filters["ord"] = ord
         self.filters["random"] = random_every_time
-        self.filters["round"] = forgiving_round
         self.filters["typeof"] = typeof
         self.filters["version"] = version
 
