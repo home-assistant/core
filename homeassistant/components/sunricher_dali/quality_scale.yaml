@@ -68,7 +68,7 @@ rules:
   exception-translations: todo
   icon-translations:
     status: exempt
-    comment: >
+    comment: |
       No entities define custom icons (no icon/_attr_icon); icons are provided
       by the entity platforms via their defaults and device classes where
       applicable.
