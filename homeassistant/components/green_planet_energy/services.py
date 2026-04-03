@@ -64,6 +64,8 @@ def async_setup_services(hass: HomeAssistant) -> None:
             minute=(now.minute // 15) * 15, second=0, microsecond=0
         )
         end_time = slot_start + timedelta(hours=hours)
+        today = slot_start.date()
+        tomorrow = today + timedelta(days=1)
 
         slots: list[JsonValueType] = []
         current = slot_start
@@ -71,10 +73,11 @@ def async_setup_services(hass: HomeAssistant) -> None:
             slot_end = current + timedelta(minutes=15)
             h = current.hour
             m = current.minute
+            current_date = current.date()
 
-            if current.date() == slot_start.date():
+            if current_date == today:
                 key = f"gpe_price_{h:02d}_{m:02d}"
-            elif current.date() == (slot_start + timedelta(days=1)).date():
+            elif current_date == tomorrow:
                 key = f"gpe_price_{h:02d}_{m:02d}_tomorrow"
             else:
                 current = slot_end
