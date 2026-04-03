@@ -154,7 +154,7 @@ class _FailoverKeepAlive:
 
     async def _monitor(self) -> None:
         """Monitor the keepalive socket and log if it drops."""
-        loop = asyncio.get_event_loop()
+        loop = asyncio.get_running_loop()
         while not self._stopped:
             await asyncio.sleep(FAILOVER_KEEPALIVE_CHECK_S)
             if self._socket is None:
@@ -545,7 +545,7 @@ class DeakoRuntimeData:
         if old_host and old_host != target and old_host != "discovered":
             self.failover_host = old_host
             keepalive = _FailoverKeepAlive(old_host)
-            loop = asyncio.get_event_loop()
+            loop = asyncio.get_running_loop()
             if await keepalive.start(loop):
                 self.failover_keepalive = keepalive
                 # Look up zc info for old bridge (now failover)
@@ -746,7 +746,7 @@ class DeakoRuntimeData:
                             )
                             target = self.pending_failover_host
                             keepalive = _FailoverKeepAlive(target)
-                            loop = asyncio.get_event_loop()
+                            loop = asyncio.get_running_loop()
                             if await keepalive.start(loop):
                                 self.failover_host = target
                                 self.failover_keepalive = keepalive
@@ -955,7 +955,7 @@ class DeakoRuntimeData:
                     "Failover scanner: %s passed TCP probe, attempting keepalive", ip
                 )
                 keepalive = _FailoverKeepAlive(ip)
-                loop = asyncio.get_event_loop()
+                loop = asyncio.get_running_loop()
                 if await keepalive.start(loop):
                     # Final guard: make sure this isn't the current primary
                     if ip == self.active_host:
@@ -1406,7 +1406,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: DeakoConfigEntry) -> boo
     # If a manual secondary was configured, open the keepalive immediately
     if initial_failover:
         keepalive = _FailoverKeepAlive(initial_failover)
-        loop = asyncio.get_event_loop()
+        loop = asyncio.get_running_loop()
         if await keepalive.start(loop):
             entry.runtime_data.failover_keepalive = keepalive
             _LOGGER.info("Failover keepalive established to %s", initial_failover)
