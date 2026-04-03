@@ -22,5 +22,5 @@ async def async_setup_entry(hass: HomeAssistant, entry: AidotConfigEntry) -> boo
 
 async def async_unload_entry(hass: HomeAssistant, entry: AidotConfigEntry) -> bool:
     """Unload a config entry."""
-    entry.runtime_data.cleanup()
+    await entry.runtime_data.async_cleanup()
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
