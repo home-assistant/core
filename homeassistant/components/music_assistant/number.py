@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from music_assistant.const import PLAYER_OPTIONS_TRANSLATION_KEYS_NUMBER
 from music_assistant_client.client import MusicAssistantClient
 from music_assistant_models.player import (
     PlayerOption,
@@ -43,6 +44,15 @@ async def async_setup_entry(
                 )
                 and not player_option.options  # these we map to select
             ):
+                # the MA translation key will either have the format player_option.<translation key>
+                # or <translation_key>
+                if (
+                    player_option.translation_key is None
+                    or player_option.translation_key.split("player_option.")[-1]
+                    not in PLAYER_OPTIONS_TRANSLATION_KEYS_NUMBER
+                ):
+                    # we ignore entities with unknown translation keys.
+                    continue
                 entities.extend(
                     [
                         MusicAssistantPlayerConfigNumber(
@@ -65,9 +75,13 @@ class MusicAssistantPlayerConfigNumber(MusicAssistantPlayerOptionEntity, NumberE
         """Initialize MusicAssistantPlayerConfigNumber."""
         super().__init__(mass, player_id, player_option)
 
+        # we ensured in our discovery that the translation key is available and part of
+        # strings.json (see tests)
+        assert player_option.translation_key is not None
+
         self.entity_description = NumberEntityDescription(
-            name=player_option.name,
             key=player_option.key,
+            translation_key=player_option.translation_key.split("player_option.")[-1],
         )
 
     @catch_musicassistant_error
@@ -89,5 +103,7 @@ class MusicAssistantPlayerConfigNumber(MusicAssistantPlayerOptionEntity, NumberE
             self._attr_native_step = player_option.step
 
         self._attr_native_value = (
-            player_option.value if isinstance(player_option.value, (int, float)) else None
+            player_option.value
+            if isinstance(player_option.value, (int, float))
+            else None
         )
