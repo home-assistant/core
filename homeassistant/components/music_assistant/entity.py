@@ -126,4 +126,4 @@ class MusicAssistantPlayerOptionEntity(MusicAssistantEntity):
                 break
 
     def on_player_option_update(self, player_option: PlayerOption) -> None:
-        """Update the entities description."""
+        """Callback for player option updates."""
