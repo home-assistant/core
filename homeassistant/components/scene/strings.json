@@ -20,7 +20,7 @@
           "name": "Transition"
         }
       },
-      "name": "Apply"
+      "name": "Apply scene"
     },
     "create": {
       "description": "Creates a new scene.",
@@ -38,15 +38,15 @@
           "name": "Entities snapshot"
         }
       },
-      "name": "Create"
+      "name": "Create scene"
     },
     "delete": {
       "description": "Deletes a dynamically created scene.",
-      "name": "Delete"
+      "name": "Delete scene"
     },
     "reload": {
       "description": "Reloads the scenes from the YAML-configuration.",
-      "name": "[%key:common::action::reload%]"
+      "name": "Reload scenes"
     },
     "turn_on": {
       "description": "Activates a scene.",
@@ -56,7 +56,7 @@
           "name": "Transition"
         }
       },
-      "name": "Activate"
+      "name": "Activate scene"
     }
   },
   "title": "Scene",
