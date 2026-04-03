@@ -45,7 +45,7 @@ from homeassistant.components.webhook import (
     async_register as webhook_register,
     async_unregister as webhook_unregister,
 )
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_DEVICE_ID, ATTR_NAME, CONF_URL, CONF_WEBHOOK_ID
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
@@ -80,7 +80,7 @@ from .const import (
     WEB_HOOK_SENTINEL_KEY,
     WEB_HOOK_SENTINEL_VALUE,
 )
-from .coordinator import MotionEyeUpdateCoordinator
+from .coordinator import MotionEyeConfigEntry, MotionEyeUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 PLATFORMS = [CAMERA_DOMAIN, SENSOR_DOMAIN, SWITCH_DOMAIN]
@@ -134,7 +134,7 @@ def is_acceptable_camera(camera: dict[str, Any] | None) -> bool:
 @callback
 def listen_for_new_cameras(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: MotionEyeConfigEntry,
     add_func: Callable,
 ) -> None:
     """Listen for new cameras."""
@@ -168,7 +168,7 @@ def _add_camera(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     client: MotionEyeClient,
-    entry: ConfigEntry,
+    entry: MotionEyeConfigEntry,
     camera_id: int,
     camera: dict[str, Any],
     device_identifier: tuple[str, str],
@@ -274,9 +274,8 @@ def _add_camera(
     )
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: MotionEyeConfigEntry) -> bool:
     """Set up motionEye from a config entry."""
-    hass.data.setdefault(DOMAIN, {})
 
     client = create_motioneye_client(
         entry.data[CONF_URL],
@@ -306,7 +305,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
 
     coordinator = MotionEyeUpdateCoordinator(hass, entry, client)
-    hass.data[DOMAIN][entry.entry_id] = coordinator
+    entry.runtime_data = coordinator
 
     current_cameras: set[tuple[str, str]] = set()
     device_registry = dr.async_get(hass)
@@ -362,14 +361,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: MotionEyeConfigEntry) -> bool:
     """Unload a config entry."""
     webhook_unregister(hass, entry.data[CONF_WEBHOOK_ID])
 
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
-        coordinator = hass.data[DOMAIN].pop(entry.entry_id)
-        await coordinator.client.async_client_close()
+        await entry.runtime_data.client.async_client_close()
 
     return unload_ok
 
@@ -438,10 +436,14 @@ def _get_media_event_data(
     event_file_type: int,
 ) -> dict[str, str]:
     config_entry_id = next(iter(device.config_entries), None)
-    if not config_entry_id or config_entry_id not in hass.data[DOMAIN]:
+    if (
+        not config_entry_id
+        or not (entry := hass.config_entries.async_get_entry(config_entry_id))
+        or entry.state != ConfigEntryState.LOADED
+    ):
         return {}
 
-    coordinator = hass.data[DOMAIN][config_entry_id]
+    coordinator: MotionEyeUpdateCoordinator = entry.runtime_data
     client = coordinator.client
 
     for identifier in device.identifiers:

@@ -1,0 +1,127 @@
+# serializer version: 1
+# name: test_select_entities[select.back_door_lock_rule-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'keep_lock',
+        'keep_unlock',
+        'custom',
+        'reset',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': None,
+    'entity_id': 'select.back_door_lock_rule',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Lock rule',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Lock rule',
+    'platform': 'unifi_access',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'door_lock_rule',
+    'unique_id': 'door-002-lock_rule_select',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_select_entities[select.back_door_lock_rule-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Back Door Lock rule',
+      'options': list([
+        'keep_lock',
+        'keep_unlock',
+        'custom',
+        'reset',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.back_door_lock_rule',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'keep_lock',
+  })
+# ---
+# name: test_select_entities[select.front_door_lock_rule-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'keep_lock',
+        'keep_unlock',
+        'custom',
+        'reset',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': None,
+    'entity_id': 'select.front_door_lock_rule',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Lock rule',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Lock rule',
+    'platform': 'unifi_access',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'door_lock_rule',
+    'unique_id': 'door-001-lock_rule_select',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_select_entities[select.front_door_lock_rule-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Front Door Lock rule',
+      'options': list([
+        'keep_lock',
+        'keep_unlock',
+        'custom',
+        'reset',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.front_door_lock_rule',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'keep_lock',
+  })
+# ---
