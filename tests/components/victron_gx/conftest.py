@@ -52,7 +52,7 @@ def mock_config_entry() -> MockConfigEntry:
             CONF_MODEL: MOCK_MODEL,
             CONF_SERIAL: MOCK_SERIAL,
         },
-        title=f"Victron OS {MOCK_INSTALLATION_ID} ({MOCK_HOST}:1883",
+        title=f"Victron OS {MOCK_INSTALLATION_ID} ({MOCK_HOST}:1883)",
     )
 
 

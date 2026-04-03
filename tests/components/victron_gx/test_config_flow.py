@@ -280,13 +280,6 @@ async def test_ssdp_discovery_error(
         data=discovery_info,
     )
 
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "ssdp_confirm"
-
-    mock_victron_hub.return_value.connect.side_effect = exception
-
-    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
-
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == reason
 
@@ -348,15 +341,6 @@ async def test_ssdp_flow_auth_required(
         context={"source": SOURCE_SSDP},
         data=discovery_info,
     )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "ssdp_confirm"
-
-    mock_victron_hub.return_value.connect.side_effect = AuthenticationError(
-        "Authentication required"
-    )
-
-    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "ssdp_auth"
