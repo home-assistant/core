@@ -66,6 +66,9 @@
       "images_prune": {
         "name": "Prune unused images"
       },
+      "kill_container": {
+        "name": "Kill container"
+      },
       "pause_container": {
         "name": "Pause container"
       },
