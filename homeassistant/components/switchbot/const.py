@@ -117,6 +117,7 @@ NON_CONNECTABLE_SUPPORTED_MODEL_TYPES = {
     SwitchbotModel.METER: SupportedModels.HYGROMETER,
     SwitchbotModel.IO_METER: SupportedModels.HYGROMETER,
     SwitchbotModel.METER_PRO: SupportedModels.HYGROMETER,
+    SwitchbotModel.METER_PRO_C: SupportedModels.HYGROMETER_CO2,
     SwitchbotModel.CONTACT_SENSOR: SupportedModels.CONTACT,
     SwitchbotModel.MOTION_SENSOR: SupportedModels.MOTION,
     SwitchbotModel.PRESENCE_SENSOR: SupportedModels.PRESENCE_SENSOR,
@@ -205,3 +206,16 @@ CONF_KEY_ID = "key_id"
 CONF_ENCRYPTION_KEY = "encryption_key"
 CONF_LOCK_NIGHTLATCH = "lock_force_nightlatch"
 CONF_CURTAIN_SPEED = "curtain_speed"
+
+AIRPURIFIER_BASIC_MODELS = {
+    SwitchbotModel.AIR_PURIFIER_JP,
+    SwitchbotModel.AIR_PURIFIER_US,
+}
+AIRPURIFIER_TABLE_MODELS = {
+    SwitchbotModel.AIR_PURIFIER_TABLE_JP,
+    SwitchbotModel.AIR_PURIFIER_TABLE_US,
+}
+AIRPURIFIER_PM25_MODELS = {
+    SwitchbotModel.AIR_PURIFIER_US,
+    SwitchbotModel.AIR_PURIFIER_TABLE_US,
+}

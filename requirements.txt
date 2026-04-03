@@ -7,7 +7,7 @@ aiodns==4.0.0
 aiogithubapi==26.0.0
 aiohttp-asyncmdnsresolver==0.1.1
 aiohttp-fast-zlib==0.3.0
-aiohttp==3.13.3
+aiohttp==3.13.5
 aiohttp_cors==0.8.1
 aiozoneinfo==0.2.3
 annotatedyaml==1.0.2
@@ -46,7 +46,7 @@ pyspeex-noise==1.0.2
 python-slugify==8.0.4
 PyTurboJPEG==1.8.0
 PyYAML==6.0.3
-requests==2.32.5
+requests==2.33.1
 securetar==2026.2.0
 SQLAlchemy==2.0.41
 standard-aifc==3.13.0
@@ -54,7 +54,7 @@ standard-telnetlib==3.13.0
 typing-extensions>=4.15.0,<5.0
 ulid-transform==2.2.0
 urllib3>=2.0
-uv==0.10.6
+uv==0.11.1
 voluptuous-openapi==0.2.0
 voluptuous-serialize==2.7.0
 voluptuous==0.15.2

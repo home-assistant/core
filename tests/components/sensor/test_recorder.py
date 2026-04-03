@@ -6,7 +6,7 @@ import logging
 import math
 from statistics import mean
 from typing import Any, Literal
-from unittest.mock import ANY, patch
+from unittest.mock import ANY, Mock, patch
 
 from freezegun import freeze_time
 from freezegun.api import FrozenDateTimeFactory
@@ -59,7 +59,7 @@ from homeassistant.util.unit_system import METRIC_SYSTEM, US_CUSTOMARY_SYSTEM
 
 from .common import MockSensor
 
-from tests.common import setup_test_component_platform
+from tests.common import mock_platform, setup_test_component_platform
 from tests.components.recorder.common import (
     assert_dict_of_states_equal_without_context_and_last_changed,
     assert_multiple_states_equal_without_context_and_last_changed,
@@ -4135,6 +4135,109 @@ async def test_compile_hourly_statistics_equivalent_units_2(
 
 
 @pytest.mark.parametrize(
+    ("device_class", "state_unit", "state_unit2", "unit_class", "mean", "min", "max"),
+    [
+        (None, "KB/s", "kB/s", None, 13.333333, -10, 30),
+        (SensorDeviceClass.DATA_RATE, "KB/s", "kB/s", None, 13.333333, -10, 30),
+        # Can't downgrade from "kB/s" to "KB/s"
+        (None, "kB/s", "KB/s", "data_rate", 30, 30, 30),
+        (SensorDeviceClass.DATA_RATE, "kB/s", "KB/s", "data_rate", 30, 30, 30),
+    ],
+)
+async def test_compile_hourly_statistics_custom_equivalent_units(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    device_class: SensorDeviceClass | None,
+    state_unit: str,
+    state_unit2: str,
+    unit_class: str | None,
+    mean: float,
+    min: float,
+    max: float,
+) -> None:
+    """Test compiling hourly statistics where units change during an hour and the integration provides custom equivalent units."""
+    zero = get_start_time(dt_util.utcnow())
+    await async_setup_component(hass, "sensor", {})
+    # Wait for the sensor recorder platform to be added
+    await async_recorder_block_till_done(hass)
+
+    # Add a recorder platform that provides custom equivalent units
+    def _mock_custom_equivalent_units(*args: Any) -> dict:
+        return {"sensor.test1": {"KB/s": "kB/s"}}
+
+    recorder_platform = Mock(
+        compile_statistics=None,
+        async_custom_equivalent_units=Mock(wraps=_mock_custom_equivalent_units),
+        list_statistic_ids=None,
+        update_statistics_issues=None,
+        validate_statistics=None,
+    )
+
+    mock_platform(hass, "some_domain.recorder", recorder_platform)
+    assert await async_setup_component(hass, "some_domain", {})
+    # Wait for the some_domain recorder platform to be added
+    await async_recorder_block_till_done(hass)
+
+    attributes = {
+        "device_class": device_class,
+        "state_class": "measurement",
+        "unit_of_measurement": state_unit,
+    }
+    with freeze_time(zero) as freezer:
+        four, states = await async_record_states(
+            hass, freezer, zero, "sensor.test1", attributes
+        )
+        attributes["unit_of_measurement"] = state_unit2
+        four, _states = await async_record_states(
+            hass, freezer, zero + timedelta(minutes=5), "sensor.test1", attributes
+        )
+    await async_wait_recording_done(hass)
+    states["sensor.test1"] += _states["sensor.test1"]
+    hist = history.get_significant_states(
+        hass, zero, four, hass.states.async_entity_ids()
+    )
+    assert_dict_of_states_equal_without_context_and_last_changed(states, hist)
+
+    do_adhoc_statistics(hass, start=zero + timedelta(seconds=30 * 10))
+    await async_wait_recording_done(hass)
+    assert "The unit of sensor.test1 is changing" not in caplog.text
+    assert "and matches the unit of already compiled statistics" not in caplog.text
+    statistic_ids = await async_list_statistic_ids(hass)
+    assert statistic_ids == [
+        {
+            "statistic_id": "sensor.test1",
+            "display_unit_of_measurement": state_unit,
+            "has_mean": True,
+            "mean_type": StatisticMeanType.ARITHMETIC,
+            "has_sum": False,
+            "name": None,
+            "source": "recorder",
+            "statistics_unit_of_measurement": state_unit,
+            "unit_class": unit_class,
+        },
+    ]
+    stats = statistics_during_period(hass, zero, period="5minute")
+    assert stats == {
+        "sensor.test1": [
+            {
+                "start": process_timestamp(
+                    zero + timedelta(seconds=30 * 10)
+                ).timestamp(),
+                "end": process_timestamp(zero + timedelta(seconds=30 * 20)).timestamp(),
+                "mean": pytest.approx(mean),
+                "min": pytest.approx(min),
+                "max": pytest.approx(max),
+                "last_reset": None,
+                "state": None,
+                "sum": None,
+            },
+        ]
+    }
+
+    assert "Error while processing event StatisticsTask" not in caplog.text
+
+
+@pytest.mark.parametrize(
     (
         "device_class",
         "unit_1",
@@ -6216,6 +6319,88 @@ async def test_validate_statistics_unit_change_equivalent_units_2(
     await assert_validation_result(hass, client, expected, {UNITS_CHANGED_ISSUE})
 
 
+@pytest.mark.parametrize(
+    ("attributes", "unit1", "unit2"),
+    [
+        (NONE_SENSOR_ATTRIBUTES, "KB/s", "kB/s"),
+        (NONE_SENSOR_ATTRIBUTES, "KW", "kW"),
+    ],
+)
+async def test_validate_statistics_unit_change_custom_equivalent_units(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    attributes: dict,
+    unit1: str,
+    unit2: str,
+) -> None:
+    """Test validate_statistics.
+
+    This tests no validation issue is created when a sensor's unit changes to a custom
+    equivalent unit provided by an integration's recorder platform.
+    """
+    now = get_start_time(dt_util.utcnow())
+
+    await async_setup_component(hass, "sensor", {})
+    await async_recorder_block_till_done(hass)
+
+    # Add a recorder platform that provides custom equivalent units
+    def _mock_custom_equivalent_units(*args: Any) -> dict:
+        return {"sensor.test": {unit1: unit2}}
+
+    recorder_platform = Mock(
+        compile_statistics=None,
+        async_custom_equivalent_units=Mock(wraps=_mock_custom_equivalent_units),
+        list_statistic_ids=None,
+        update_statistics_issues=None,
+        validate_statistics=None,
+    )
+
+    mock_platform(hass, "some_domain.recorder", recorder_platform)
+    assert await async_setup_component(hass, "some_domain", {})
+    # Wait for the some_domain recorder platform to be added
+    await async_recorder_block_till_done(hass)
+
+    client = await hass_ws_client()
+
+    # No statistics, no state - empty response
+    await assert_validation_result(hass, client, {}, {})
+
+    # No statistics, original unit - empty response
+    hass.states.async_set(
+        "sensor.test",
+        10,
+        attributes=attributes | {"unit_of_measurement": unit1},
+        timestamp=now.timestamp(),
+    )
+    await assert_validation_result(hass, client, {}, {})
+
+    # Run statistics
+    await async_recorder_block_till_done(hass)
+    do_adhoc_statistics(hass, start=now)
+    await async_recorder_block_till_done(hass)
+    await assert_statistic_ids(
+        hass, [{"statistic_id": "sensor.test", "unit_of_measurement": unit1}]
+    )
+
+    # Units changed to a custom equivalent unit - empty response
+    hass.states.async_set(
+        "sensor.test",
+        12,
+        attributes=attributes | {"unit_of_measurement": unit2},
+        timestamp=now.timestamp() + 1,
+    )
+    await assert_validation_result(hass, client, {}, {})
+
+    # Run statistics one hour later, metadata will be updated
+    await async_recorder_block_till_done(hass)
+    do_adhoc_statistics(hass, start=now + timedelta(hours=1))
+    await async_recorder_block_till_done(hass)
+    await assert_statistic_ids(
+        hass, [{"statistic_id": "sensor.test", "unit_of_measurement": unit2}]
+    )
+    await assert_validation_result(hass, client, {}, {})
+
+
 async def test_validate_statistics_other_domain(
     hass: HomeAssistant, hass_ws_client: WebSocketGenerator
 ) -> None:
@@ -6250,28 +6435,27 @@ async def test_validate_statistics_other_domain(
     await assert_validation_result(hass, client, {}, {})
 
 
+async def _one_hour_stats(hass: HomeAssistant, start: datetime) -> datetime:
+    """Generate 5-minute statistics for one hour."""
+    for _ in range(12):
+        do_adhoc_statistics(hass, start=start)
+        await async_wait_recording_done(hass)
+        start += timedelta(minutes=5)
+    return start
+
+
 @pytest.mark.parametrize(
-    ("units", "attributes", "unit"),
+    ("units", "attributes"),
     [
-        (US_CUSTOMARY_SYSTEM, POWER_SENSOR_ATTRIBUTES, "W"),
+        (US_CUSTOMARY_SYSTEM, POWER_SENSOR_ATTRIBUTES),
     ],
 )
 async def test_update_statistics_issues(
     hass: HomeAssistant,
     units,
     attributes,
-    unit,
 ) -> None:
     """Test update_statistics_issues."""
-
-    async def one_hour_stats(start: datetime) -> datetime:
-        """Generate 5-minute statistics for one hour."""
-        for _ in range(12):
-            do_adhoc_statistics(hass, start=start)
-            await async_wait_recording_done(hass)
-            start += timedelta(minutes=5)
-        return start
-
     now = get_start_time(dt_util.utcnow())
 
     hass.config.units = units
@@ -6279,7 +6463,7 @@ async def test_update_statistics_issues(
     await async_recorder_block_till_done(hass)
 
     # No statistics, no state - no issues
-    now = await one_hour_stats(now)
+    now = await _one_hour_stats(hass, now)
     assert_issues(hass, {})
 
     # Statistics, valid state - no issues
@@ -6287,7 +6471,7 @@ async def test_update_statistics_issues(
         "sensor.test", 10, attributes=attributes, timestamp=now.timestamp()
     )
     await hass.async_block_till_done()
-    now = await one_hour_stats(now)
+    now = await _one_hour_stats(hass, now)
     assert_issues(hass, {})
 
     # State update with invalid state class, statistics did not run again
@@ -6300,7 +6484,7 @@ async def test_update_statistics_issues(
     assert_issues(hass, {})
 
     # Let statistics run for one hour, expect issue
-    now = await one_hour_stats(now)
+    now = await _one_hour_stats(hass, now)
     expected = {
         "state_class_removed_sensor.test": {
             "issue_type": STATE_CLASS_REMOVED_ISSUE,
@@ -6308,6 +6492,72 @@ async def test_update_statistics_issues(
         }
     }
     assert_issues(hass, expected)
+
+
+@pytest.mark.parametrize(
+    ("attributes", "unit1", "unit2"),
+    [
+        (NONE_SENSOR_ATTRIBUTES, "KB/s", "kB/s"),
+        (NONE_SENSOR_ATTRIBUTES, "KW", "kW"),
+    ],
+)
+async def test_update_statistics_issues_with_custom_equivalent_units(
+    hass: HomeAssistant,
+    attributes: dict,
+    unit1: str,
+    unit2: str,
+) -> None:
+    """Test update_statistics_issues when custom equivalent units are provided."""
+    now = get_start_time(dt_util.utcnow())
+
+    await async_setup_component(hass, "sensor", {})
+    await async_recorder_block_till_done(hass)
+
+    # Add a recorder platform that provides custom equivalent units
+    def _mock_custom_equivalent_units(*args: Any) -> dict:
+        return {"sensor.test": {unit1: unit2}}
+
+    recorder_platform = Mock(
+        compile_statistics=None,
+        async_custom_equivalent_units=Mock(wraps=_mock_custom_equivalent_units),
+        list_statistic_ids=None,
+        update_statistics_issues=None,
+        validate_statistics=None,
+    )
+
+    mock_platform(hass, "some_domain.recorder", recorder_platform)
+    assert await async_setup_component(hass, "some_domain", {})
+    # Wait for the some_domain recorder platform to be added
+    await async_recorder_block_till_done(hass)
+
+    # No statistics, no state - no issues
+    now = await _one_hour_stats(hass, now)
+    assert_issues(hass, {})
+
+    # Statistics, unit not part of unit system but still a valid state - no issues
+    hass.states.async_set(
+        "sensor.test",
+        10,
+        attributes=attributes | {"unit_of_measurement": unit1},
+        timestamp=now.timestamp(),
+    )
+    await hass.async_block_till_done()
+    now = await _one_hour_stats(hass, now)
+    assert_issues(hass, {})
+
+    # State update with equivalent supported unit, statistics did not run again
+    hass.states.async_set(
+        "sensor.test",
+        12,
+        attributes=attributes | {"unit_of_measurement": unit2},
+        timestamp=now.timestamp(),
+    )
+    await hass.async_block_till_done()
+    assert_issues(hass, {})
+
+    # Let statistics run for one hour, expect no issues
+    now = await _one_hour_stats(hass, now)
+    assert_issues(hass, {})
 
 
 async def async_record_meter_states(

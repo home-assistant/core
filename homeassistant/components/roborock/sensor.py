@@ -427,7 +427,11 @@ async def async_setup_entry(
         )
         for coordinator in coordinators.v1
         for description in SENSOR_DESCRIPTIONS
-        if description.value_fn(coordinator.data) is not None
+        # Note: Currently coordinator.data is always available on startup but won't be in the future
+        if (
+            coordinator.data is not None
+            and description.value_fn(coordinator.data) is not None
+        )
     ]
     entities.extend(RoborockCurrentRoom(coordinator) for coordinator in coordinators.v1)
     entities.extend(
@@ -480,6 +484,8 @@ class RoborockSensorEntity(RoborockCoordinatedEntityV1, SensorEntity):
     @property
     def native_value(self) -> StateType | datetime.datetime:
         """Return the value reported by the sensor."""
+        if self.coordinator.data is None:
+            return None
         return self.entity_description.value_fn(self.coordinator.data)
 
 

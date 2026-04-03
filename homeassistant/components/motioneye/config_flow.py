@@ -14,7 +14,6 @@ import voluptuous as vol
 
 from homeassistant.config_entries import (
     SOURCE_REAUTH,
-    ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
     OptionsFlowWithReload,
@@ -39,6 +38,7 @@ from .const import (
     DEFAULT_WEBHOOK_SET_OVERWRITE,
     DOMAIN,
 )
+from .coordinator import MotionEyeConfigEntry
 
 
 class MotionEyeConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -180,7 +180,7 @@ class MotionEyeConfigFlow(ConfigFlow, domain=DOMAIN):
     @staticmethod
     @callback
     def async_get_options_flow(
-        config_entry: ConfigEntry,
+        config_entry: MotionEyeConfigEntry,
     ) -> MotionEyeOptionsFlow:
         """Get the Hyperion Options flow."""
         return MotionEyeOptionsFlow()

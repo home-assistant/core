@@ -136,6 +136,8 @@ async def async_setup_platform(
 class Touchline(ClimateEntity):
     """Representation of a Touchline device."""
 
+    _attr_has_entity_name = True
+    _attr_name = None
     _attr_hvac_mode = HVACMode.HEAT
     _attr_hvac_modes = [HVACMode.HEAT]
     _attr_preset_modes = list(PRESET_MODES)
@@ -148,13 +150,12 @@ class Touchline(ClimateEntity):
     def __init__(self, touchline_thermostat):
         """Initialize the Touchline device."""
         self.unit = touchline_thermostat
-        self._attr_name = self.unit.get_name()
         self._device_id = self.unit.get_device_id()
         self._controller_id = self.unit.get_controller_id()
         self._attr_unique_id = f"{self._controller_id}_{self._device_id}"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self._attr_unique_id)},
-            name=self._attr_name,
+            name=touchline_thermostat.get_name(),
             manufacturer="Roth",
         )
         self._attr_current_temperature = self.unit.get_current_temperature()
