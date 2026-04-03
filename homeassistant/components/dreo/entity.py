@@ -61,7 +61,7 @@ class DreoEntity(CoordinatorEntity[DreoDataUpdateCoordinator]):
             await self.coordinator.hass.async_add_executor_job(
                 partial(self._client.update_status, self._device_id, **kwargs)
             )
-            await self.coordinator.async_refresh()
+            await self.coordinator.async_request_refresh()
         except (
             DreoException,
             DreoBusinessException,

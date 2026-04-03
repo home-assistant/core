@@ -48,6 +48,19 @@ async def test_data_type_conversion_algorithms() -> None:
     assert fan_data.speed_percentage == 50
 
 
+async def test_speed_values_list_conversion_logic() -> None:
+    """Test speed conversion from explicit supported speed values."""
+    status = {"connected": True, "power_switch": True, "speed": 7}
+    model_config = {
+        "preset_modes": ["Sleep", "Auto", "Natural", "Normal"],
+        "speed_range": [1, 3, 5, 7, 9, 12],
+    }
+
+    fan_data = DreoFanDeviceData.process_fan_data(status, model_config)
+
+    assert fan_data.speed_percentage == 66
+
+
 async def test_data_processing_with_missing_speed_range() -> None:
     """Test data processing behavior when speed_range is not in model config."""
     status = {"connected": True, "power_switch": True, "speed": 3}
@@ -87,3 +100,16 @@ async def test_process_fan_data_edge_cases() -> None:
     )
     assert fan_data_zero.oscillate is False
     assert fan_data_zero.speed_percentage == 50
+
+
+async def test_process_fan_data_zero_speed() -> None:
+    """Test zero speed is reported correctly."""
+    status = {"connected": True, "power_switch": True, "speed": 0}
+    model_config = {
+        "preset_modes": ["Sleep", "Auto", "Natural", "Normal"],
+        "speed_range": [1, 6],
+    }
+
+    fan_data = DreoFanDeviceData.process_fan_data(status, model_config)
+
+    assert fan_data.speed_percentage == 0
