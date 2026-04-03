@@ -23,7 +23,7 @@ async def test_user_flow(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "HiVi Speaker"
     assert result["data"] == {}
-    assert result["result"].unique_id is None
+    assert result["result"].unique_id == DOMAIN
 
     await hass.async_block_till_done()
     assert len(mock_setup_entry.mock_calls) == 1
