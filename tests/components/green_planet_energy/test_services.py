@@ -3,6 +3,7 @@
 from unittest.mock import MagicMock
 
 import pytest
+from syrupy.assertion import SnapshotAssertion
 import voluptuous as vol
 
 from homeassistant.components.green_planet_energy.const import DOMAIN
@@ -33,21 +34,12 @@ async def _call_get_prices(hass: HomeAssistant, hours: float, entry_id: str) -> 
 async def test_get_prices_basic(
     hass: HomeAssistant,
     init_integration: MockConfigEntry,
+    snapshot: SnapshotAssertion,
 ) -> None:
-    """Requesting 1 hour returns exactly 4 contiguous 15-minute slots."""
+    """Requesting 1 hour returns the expected response."""
     result = await _call_get_prices(hass, 1, init_integration.entry_id)
 
-    prices = result["prices"]
-    assert result["hours_requested"] == 1.0
-    assert len(prices) == 4
-
-    for i in range(len(prices) - 1):
-        assert prices[i]["end"] == prices[i + 1]["start"]
-
-    for slot in prices:
-        assert slot["price"] > 0
-        assert "start" in slot
-        assert "end" in slot
+    assert result == snapshot
 
 
 @pytest.mark.freeze_time("2026-03-24 14:07:00-07:00")
@@ -88,21 +80,19 @@ async def test_get_prices_correct_values(
 async def test_get_prices_crosses_midnight(
     hass: HomeAssistant,
     init_integration: MockConfigEntry,
+    snapshot: SnapshotAssertion,
 ) -> None:
-    """Slots that cross midnight use _tomorrow keys."""
+    """Slots that cross midnight use the expected response data."""
     result = await _call_get_prices(hass, 1, init_integration.entry_id)
 
-    prices = result["prices"]
-    assert len(prices) == 4
-
-    assert "23:45:00" in prices[0]["start"]
-    assert "00:30:00" in prices[-1]["start"]
+    assert result == snapshot
 
 
 @pytest.mark.freeze_time("2026-03-24 14:07:00-07:00")
 async def test_get_prices_missing_slots_omitted(
     hass: HomeAssistant,
     init_integration: MockConfigEntry,
+    snapshot: SnapshotAssertion,
 ) -> None:
     """Slots whose key is absent from coordinator data are silently omitted."""
     # Remove the 14:15 slot from coordinator data to simulate a gap in API data.
@@ -111,9 +101,7 @@ async def test_get_prices_missing_slots_omitted(
 
     result = await _call_get_prices(hass, 1, init_integration.entry_id)
 
-    assert len(result["prices"]) == 3
-    starts = [s["start"] for s in result["prices"]]
-    assert not any("14:15:00" in s for s in starts)
+    assert result == snapshot
 
 
 async def test_get_prices_entry_not_found(
