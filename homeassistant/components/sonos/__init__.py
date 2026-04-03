@@ -214,7 +214,7 @@ class SonosDiscoveryManager:
             err,
         )
 
-    async def async_subscribe_to_zone_updates(self, ip_address: str) -> bool:
+    async def async_subscribe_to_zone_updates(self, ip_address: str) -> None:
         """Test subscriptions and create SonosSpeakers based on results."""
         try:
             _ = IPv4Address(ip_address)
@@ -223,7 +223,7 @@ class SonosDiscoveryManager:
                 "Sonos integration only supports IPv4 addresses, invalid ip_address received: %s",
                 ip_address,
             )
-            return False
+            return
         soco = SoCo(ip_address)
         try:
             # Cache now to avoid household ID lookup during first ZoneGroupState processing
@@ -235,7 +235,7 @@ class SonosDiscoveryManager:
             sub = await soco.zoneGroupTopology.subscribe()
         except HTTPError as err:
             await self._process_http_connection_error(err, ip_address)
-            return False
+            return
         except (
             OSError,
             SoCoException,
@@ -247,7 +247,7 @@ class SonosDiscoveryManager:
                 ip_address,
                 err,
             )
-            return False
+            return
 
         @callback
         def _async_add_visible_zones(subscription_succeeded: bool = False) -> None:
@@ -341,7 +341,6 @@ class SonosDiscoveryManager:
             )
         except (OSError, Timeout) as ex:
             _LOGGER.error("Cleanup unsubscription from %s failed: %s", ip_address, ex)
-        return True
 
     async def _async_stop_event_listener(self, event: Event | None = None) -> None:
         for speaker in self.data.discovered.values():
@@ -537,24 +536,23 @@ class SonosDiscoveryManager:
         discovered_ip: str,
         source: str,
         boot_seqnum: int | None = None,
-    ) -> bool:
+    ) -> None:
         """Handle discovered player creation and activity."""
         async with self.discovery_lock:
             if not self.data.discovered:
                 # Initial discovery, attempt to add all visible zones
-                return await self.async_subscribe_to_zone_updates(discovered_ip)
-            if uid not in self.data.discovered:
+                await self.async_subscribe_to_zone_updates(discovered_ip)
+            elif uid not in self.data.discovered:
                 if self.is_device_invisible(discovered_ip):
-                    return False
-                return await self.async_subscribe_to_zone_updates(discovered_ip)
-            if boot_seqnum and boot_seqnum > self.data.boot_counts[uid]:
+                    return
+                await self.async_subscribe_to_zone_updates(discovered_ip)
+            elif boot_seqnum and boot_seqnum > self.data.boot_counts[uid]:
                 self.data.boot_counts[uid] = boot_seqnum
                 async_dispatcher_send(self.hass, f"{SONOS_REBOOTED}-{uid}")
             else:
                 async_dispatcher_send(
                     self.hass, f"{SONOS_SPEAKER_ACTIVITY}-{uid}", source
                 )
-            return False
 
     @callback
     def _async_ssdp_discovered_player(
@@ -674,11 +672,7 @@ class SonosDiscoveryManager:
         known_speakers: dict[str, str] = self.entry.data.get(CONF_KNOWN_SPEAKERS, {})
         for uid, host in known_speakers.items():
             _LOGGER.debug("Loading known speaker %s with host %s", uid, host)
-            if await self._async_handle_discovery_message(uid, host, "config entry"):
-                # Successfully subscribed to one speaker; all visible zones in the
-                # Sonos topology are discovered from a single subscription, so
-                # further iterations are redundant.
-                break
+            await self._async_handle_discovery_message(uid, host, "config entry")
 
 
 async def async_remove_config_entry_device(
