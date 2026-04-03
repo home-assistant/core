@@ -211,6 +211,29 @@ def async_discover_entities(
                 if endpoint.has_attribute(None, optional_attribute):
                     attributes_to_watch.append(optional_attribute)
 
+        # Optionally filter by ClusterRevision if requested in schema
+        cluster_revision_value = None
+        if (
+            schema.cluster_revision_min is not None
+            or schema.cluster_revision_max is not None
+        ):
+            CLUSTER_REVISION_ATTRIBUTE_ID = 65533  # 0xFFFD
+            cluster_revision_value = endpoint.get_attribute_value(
+                primary_attribute.cluster_id, CLUSTER_REVISION_ATTRIBUTE_ID
+            )
+            # Skip if cluster revision doesn't match constraints
+            if cluster_revision_value is not None and (
+                (
+                    schema.cluster_revision_min is not None
+                    and cluster_revision_value < schema.cluster_revision_min
+                )
+                or (
+                    schema.cluster_revision_max is not None
+                    and cluster_revision_value > schema.cluster_revision_max
+                )
+            ):
+                continue
+
         yield MatterEntityInfo(
             endpoint=endpoint,
             platform=schema.platform,
@@ -218,6 +241,7 @@ def async_discover_entities(
             entity_description=schema.entity_description,
             entity_class=schema.entity_class,
             discovery_schema=schema,
+            cluster_revision=cluster_revision_value,
         )
 
         # prevent re-discovery of the primary attribute if not allowed

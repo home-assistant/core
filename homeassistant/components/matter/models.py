@@ -63,6 +63,9 @@ class MatterEntityInfo:
     # the original discovery schema used to create this entity
     discovery_schema: MatterDiscoverySchema
 
+    # [optional] cluster revision value if required by discovery schema
+    cluster_revision: int | None = None
+
     @property
     def primary_attribute(self) -> type[ClusterAttributeDescriptor]:
         """Return Primary Attribute belonging to the entity."""
@@ -126,6 +129,14 @@ class MatterDiscoverySchema:
     # [optional] the primary attribute's cluster featuremap must contain this value
     # for example for the DoorSensor on a DoorLock Cluster
     featuremap_contains: int | None = None
+
+    # [optional] minimum cluster revision required (inclusive)
+    # corresponds to the ClusterRevision attribute in Matter clusters
+    cluster_revision_min: int | None = None
+
+    # [optional] maximum cluster revision allowed (inclusive)
+    # corresponds to the ClusterRevision attribute in Matter clusters
+    cluster_revision_max: int | None = None
 
     # [optional] bool to specify if this primary value may be discovered
     # by multiple platforms
