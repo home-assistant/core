@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from music_assistant.const import PLAYER_OPTIONS_TRANSLATION_KEYS_NUMBER
 from music_assistant_client.client import MusicAssistantClient
 from music_assistant_models.player import (
     PlayerOption,
@@ -16,6 +15,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import MusicAssistantConfigEntry
+from .const import PLAYER_OPTIONS_TRANSLATION_KEYS_NUMBER
 from .entity import MusicAssistantPlayerOptionEntity
 from .helpers import catch_musicassistant_error
 
