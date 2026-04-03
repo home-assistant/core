@@ -303,7 +303,12 @@ class DeakoRuntimeData:
                 finally:
                     self._last_command_time = time.monotonic()
                 return
+
             self._last_command_time = time.monotonic()
+            raise RuntimeError(
+                "Control command failed: no active Deako bridge connection "
+                "and no healthy failover bridge available"
+            )
 
     async def _switch_to_failover(self) -> None:
         """Switch the active connection to the failover bridge."""
