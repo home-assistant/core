@@ -24,7 +24,13 @@ from . import MockDeviceListener, check_selective_state_update, initialize_entry
 from tests.common import MockConfigEntry, snapshot_platform
 
 
-@patch("homeassistant.components.tuya.PLATFORMS", [Platform.SIREN])
+@pytest.fixture(autouse=True)
+def platform_autouse():
+    """Platform fixture."""
+    with patch("homeassistant.components.tuya.PLATFORMS", [Platform.SIREN]):
+        yield
+
+
 async def test_platform_setup_and_discovery(
     hass: HomeAssistant,
     mock_manager: Manager,
@@ -46,8 +52,9 @@ async def test_platform_setup_and_discovery(
 @pytest.mark.parametrize(
     ("updates", "expected_state", "last_reported"),
     [
-        # Update without dpcode - state should not change, last_reported stays at initial
-        ({"basic_wdr": False}, "off", "2024-01-01T00:00:00+00:00"),
+        # Update without dpcode - state should not change, last_reported stays
+        # at available_reported
+        ({"basic_wdr": False}, "off", "2024-01-01T00:00:20+00:00"),
         # Update with dpcode - state should change, last_reported advances
         ({"siren_switch": True}, "on", "2024-01-01T00:01:00+00:00"),
         # Update with multiple properties including dpcode - state should change
@@ -58,7 +65,6 @@ async def test_platform_setup_and_discovery(
         ),
     ],
 )
-@patch("homeassistant.components.tuya.PLATFORMS", [Platform.SIREN])
 @pytest.mark.freeze_time("2024-01-01")
 async def test_selective_state_update(
     hass: HomeAssistant,
@@ -87,7 +93,6 @@ async def test_selective_state_update(
     )
 
 
-@patch("homeassistant.components.tuya.PLATFORMS", [Platform.SIREN])
 @pytest.mark.parametrize(
     "mock_device_code",
     ["sp_sdd5f5f2dl5wydjf"],

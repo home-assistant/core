@@ -4,7 +4,7 @@
       "already_configured": "[%key:common::config_flow::abort::already_configured_account%]"
     },
     "error": {
-      "not_readable_path": "The provided path to the file can not be read"
+      "not_readable_path": "The provided path to the file cannot be read"
     },
     "step": {
       "user": {

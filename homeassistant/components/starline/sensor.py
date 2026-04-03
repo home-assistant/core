@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import Any
+
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
@@ -118,7 +120,7 @@ class StarlineSensor(StarlineEntity, SensorEntity):
         self.entity_description = description
 
     @property
-    def icon(self):
+    def icon(self) -> str | None:
         """Icon to use in the frontend, if any."""
         if self._key == "battery":
             return icon_for_battery_level(
@@ -166,7 +168,7 @@ class StarlineSensor(StarlineEntity, SensorEntity):
         return self.entity_description.native_unit_of_measurement
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return the state attributes of the sensor."""
         if self._key == "balance":
             return self._account.balance_attrs(self._device)

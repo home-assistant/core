@@ -61,8 +61,10 @@ DEVICE_TYPES: tuple[YoLinkSwitchEntityDescription, ...] = (
         key="multi_outlet_usb_ports",
         translation_key="usb_ports",
         device_class=SwitchDeviceClass.OUTLET,
-        exists_fn=lambda device: device.device_type == ATTR_DEVICE_MULTI_OUTLET
-        and device.device_model_name.startswith(DEV_MODEL_MULTI_OUTLET_YS6801),
+        exists_fn=lambda device: (
+            device.device_type == ATTR_DEVICE_MULTI_OUTLET
+            and device.device_model_name.startswith(DEV_MODEL_MULTI_OUTLET_YS6801)
+        ),
         plug_index_fn=lambda _: 0,
     ),
     YoLinkSwitchEntityDescription(
@@ -91,16 +93,20 @@ DEVICE_TYPES: tuple[YoLinkSwitchEntityDescription, ...] = (
         key="multi_outlet_plug_3",
         translation_key="plug_3",
         device_class=SwitchDeviceClass.OUTLET,
-        exists_fn=lambda device: device.device_type == ATTR_DEVICE_MULTI_OUTLET
-        and device.device_model_name.startswith(DEV_MODEL_MULTI_OUTLET_YS6801),
+        exists_fn=lambda device: (
+            device.device_type == ATTR_DEVICE_MULTI_OUTLET
+            and device.device_model_name.startswith(DEV_MODEL_MULTI_OUTLET_YS6801)
+        ),
         plug_index_fn=lambda _: 3,
     ),
     YoLinkSwitchEntityDescription(
         key="multi_outlet_plug_4",
         translation_key="plug_4",
         device_class=SwitchDeviceClass.OUTLET,
-        exists_fn=lambda device: device.device_type == ATTR_DEVICE_MULTI_OUTLET
-        and device.device_model_name.startswith(DEV_MODEL_MULTI_OUTLET_YS6801),
+        exists_fn=lambda device: (
+            device.device_type == ATTR_DEVICE_MULTI_OUTLET
+            and device.device_model_name.startswith(DEV_MODEL_MULTI_OUTLET_YS6801)
+        ),
         plug_index_fn=lambda _: 4,
     ),
 )

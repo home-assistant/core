@@ -93,7 +93,7 @@ class AndroidTVRemoteConfigFlow(ConfigFlow, domain=DOMAIN):
                 self._abort_if_unique_id_configured(updates={CONF_HOST: self.host})
                 try:
                     return await self._async_start_pair()
-                except (CannotConnect, ConnectionClosed):
+                except CannotConnect, ConnectionClosed:
                     errors["base"] = "cannot_connect"
         else:
             user_input = {}
@@ -135,7 +135,7 @@ class AndroidTVRemoteConfigFlow(ConfigFlow, domain=DOMAIN):
                 # Attempt to pair again.
                 try:
                     return await self._async_start_pair()
-                except (CannotConnect, ConnectionClosed):
+                except CannotConnect, ConnectionClosed:
                     # Device doesn't respond to the specified host. Abort.
                     # If we are in the user flow we could go back to the user step to allow
                     # them to enter a new IP address but we cannot do that for the zeroconf
@@ -203,7 +203,7 @@ class AndroidTVRemoteConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             try:
                 return await self._async_start_pair()
-            except (CannotConnect, ConnectionClosed):
+            except CannotConnect, ConnectionClosed:
                 # Device became network unreachable after discovery.
                 # Abort and let discovery find it again later.
                 return self.async_abort(reason="cannot_connect")
@@ -229,7 +229,7 @@ class AndroidTVRemoteConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             try:
                 return await self._async_start_pair()
-            except (CannotConnect, ConnectionClosed):
+            except CannotConnect, ConnectionClosed:
                 # Device is network unreachable. Abort.
                 errors["base"] = "cannot_connect"
         return self.async_show_form(
@@ -264,7 +264,7 @@ class AndroidTVRemoteOptionsFlowHandler(OptionsFlowWithReload):
     @callback
     def _save_config(self, data: dict[str, Any]) -> ConfigFlowResult:
         """Save the updated options."""
-        new_data = {k: v for k, v in data.items() if k not in [CONF_APPS]}
+        new_data = {k: v for k, v in data.items() if k != CONF_APPS}
         if self._apps:
             new_data[CONF_APPS] = self._apps
 

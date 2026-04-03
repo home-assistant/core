@@ -24,6 +24,7 @@ from homeassistant.components.climate.const import (
     ATTR_PRESET_MODE,
     ATTR_SWING_HORIZONTAL_MODE,
     ATTR_SWING_MODE,
+    ATTR_TARGET_HUMIDITY_STEP,
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
     SERVICE_SET_FAN_MODE,
@@ -508,6 +509,7 @@ async def test_humidity_validation(
         _attr_target_humidity = 50
         _attr_min_humidity = 50
         _attr_max_humidity = 60
+        _attr_target_humidity_step = 5
 
         def set_humidity(self, humidity: int) -> None:
             """Set new target humidity."""
@@ -526,6 +528,7 @@ async def test_humidity_validation(
 
     state = hass.states.get("climate.test")
     assert state.attributes.get(ATTR_HUMIDITY) == 50
+    assert state.attributes.get(ATTR_TARGET_HUMIDITY_STEP) == 5
 
     with pytest.raises(
         ServiceValidationError,
@@ -702,7 +705,7 @@ async def test_target_temp_high_higher_than_low(
 
     with pytest.raises(
         ServiceValidationError,
-        match="'Lower target temperature' can not be higher than 'Upper target temperature'",
+        match="'Lower target temperature' cannot be higher than 'Upper target temperature'",
     ) as exc:
         await hass.services.async_call(
             DOMAIN,
@@ -716,6 +719,6 @@ async def test_target_temp_high_higher_than_low(
         )
     assert (
         str(exc.value)
-        == "'Lower target temperature' can not be higher than 'Upper target temperature'"
+        == "'Lower target temperature' cannot be higher than 'Upper target temperature'"
     )
     assert exc.value.translation_key == "low_temp_higher_than_high_temp"

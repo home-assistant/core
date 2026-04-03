@@ -895,7 +895,7 @@ class Device(RestoreEntity):
             try:
                 self.gps = float(gps[0]), float(gps[1])
                 self.gps_accuracy = gps_accuracy or 0
-            except (ValueError, TypeError, IndexError):
+            except ValueError, TypeError, IndexError:
                 self.gps = None
                 self.gps_accuracy = 0
                 LOGGER.warning("Could not parse gps value for %s: %s", self.dev_id, gps)

@@ -24,11 +24,12 @@ class TestEntity(trigger_entity.TriggerEntity):
     __test__ = False
     _entity_id_format = "test.{}"
     extra_template_keys = (CONF_STATE,)
+    _state_option = CONF_STATE
 
     @property
     def state(self) -> bool | None:
         """Return extra attributes."""
-        return self._rendered.get(CONF_STATE)
+        return self._rendered.get(self._state_option)
 
 
 async def test_reference_blueprints_is_none(hass: HomeAssistant) -> None:
@@ -192,3 +193,40 @@ async def test_bad_default_entity_id(hass: HomeAssistant) -> None:
     coordinator = TriggerUpdateCoordinator(hass, {})
     entity = TestEntity(hass, coordinator, {"default_entity_id": "bad.test"})
     assert entity.entity_id == "test.test"
+
+
+async def test_multiple_template_validators(hass: HomeAssistant) -> None:
+    """Tests multiple templates execute validators."""
+    await async_trigger(hass, "sensor.state", "opening")
+    await async_trigger(hass, "sensor.position", "50")
+    await async_trigger(hass, "sensor.tilt", "49")
+    with assert_setup_component(1, DOMAIN):
+        assert await async_setup_component(
+            hass,
+            DOMAIN,
+            {
+                "template": {
+                    "triggers": {
+                        "trigger": "state",
+                        "entity_id": ["sensor.trigger"],
+                    },
+                    "cover": {
+                        "name": "test",
+                        "state": "{{ states('sensor.state') }}",
+                        "position": "{{ states('sensor.position') }}",
+                        "tilt": "{{ states('sensor.tilt') }}",
+                        "set_cover_position": [],
+                        "set_cover_tilt_position": [],
+                        "open_cover": [],
+                        "close_cover": [],
+                    },
+                },
+            },
+        )
+    await async_trigger(hass, "sensor.trigger", "anything")
+
+    state = hass.states.get("cover.test")
+    assert state
+    assert state.state == "opening"
+    assert state.attributes["current_position"] == 50
+    assert state.attributes["current_tilt_position"] == 49

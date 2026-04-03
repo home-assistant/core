@@ -81,7 +81,7 @@ def _async_remove_dispatcher[*_Ts](
         # to prevent memory leaks
         if not signal_dispatchers:
             del dispatchers[signal]
-    except (KeyError, ValueError):
+    except KeyError, ValueError:
         # KeyError is key target listener did not exist
         # ValueError if listener did not exist within signal
         _LOGGER.warning("Unable to remove unknown dispatcher %s", target)

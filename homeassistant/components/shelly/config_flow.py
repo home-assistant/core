@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import AsyncIterator, Mapping
+from collections.abc import AsyncGenerator, Mapping
 from contextlib import asynccontextmanager
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any, Final, cast
@@ -292,7 +292,7 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
             # Ping to verify connection is still alive
             try:
                 await self._ble_rpc_device.update_status()
-            except (DeviceConnectionError, RpcCallError):
+            except DeviceConnectionError, RpcCallError:
                 # Connection dropped, need to reconnect
                 LOGGER.debug("BLE connection lost, reconnecting")
                 await self._async_disconnect_ble()
@@ -307,7 +307,7 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
         )
         try:
             await device.initialize()
-        except (DeviceConnectionError, RpcCallError):
+        except DeviceConnectionError, RpcCallError:
             await device.shutdown()
             raise
         self._ble_rpc_device = device
@@ -844,7 +844,7 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
     @asynccontextmanager
     async def _async_provision_context(
         self, mac: str
-    ) -> AsyncIterator[ProvisioningState]:
+    ) -> AsyncGenerator[ProvisioningState]:
         """Context manager to register and cleanup provisioning state."""
         state = ProvisioningState()
         provisioning_registry = async_get_provisioning_registry(self.hass)
@@ -1203,14 +1203,14 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             try:
                 info = await self._async_get_info(host, port)
-            except (DeviceConnectionError, InvalidAuthError):
+            except DeviceConnectionError, InvalidAuthError:
                 return self.async_abort(reason="reauth_unsuccessful")
 
             if get_device_entry_gen(reauth_entry) != 1:
                 user_input[CONF_USERNAME] = "admin"
             try:
                 await validate_input(self.hass, host, port, info, user_input)
-            except (DeviceConnectionError, InvalidAuthError):
+            except DeviceConnectionError, InvalidAuthError:
                 return self.async_abort(reason="reauth_unsuccessful")
             except MacAddressMismatchError:
                 return self.async_abort(reason="mac_address_mismatch")

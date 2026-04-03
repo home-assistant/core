@@ -28,6 +28,7 @@ class AsyncIteratorReader:
     ) -> None:
         """Initialize the wrapper."""
         self._aborted = False
+        self._exhausted = False
         self._loop = loop
         self._stream = stream
         self._buffer: bytes | None = None
@@ -51,6 +52,8 @@ class AsyncIteratorReader:
         """
         result = bytearray()
         while n < 0 or len(result) < n:
+            if self._exhausted:
+                break
             if not self._buffer:
                 self._next_future = asyncio.run_coroutine_threadsafe(
                     self._next(), self._loop
@@ -65,6 +68,7 @@ class AsyncIteratorReader:
                 self._pos = 0
             if not self._buffer:
                 # The stream is exhausted
+                self._exhausted = True
                 break
             chunk = self._buffer[self._pos : self._pos + n]
             result.extend(chunk)

@@ -36,7 +36,7 @@ def run(args):
     args = parser.parse_args()
 
     bench = BENCHMARKS[args.name]
-    print("Using event loop:", asyncio.get_event_loop_policy().loop_name)
+    print("Using event loop:", asyncio.get_event_loop_policy().loop_name)  # type: ignore[deprecated]
 
     with suppress(KeyboardInterrupt):
         while True:

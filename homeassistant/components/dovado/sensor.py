@@ -5,6 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import timedelta
 import re
+from typing import Any
 
 import voluptuous as vol
 
@@ -138,6 +139,6 @@ class DovadoSensor(SensorEntity):
         self._attr_native_value = self._compute_state()
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
         return {k: v for k, v in self._data.state.items() if k not in ["date", "time"]}

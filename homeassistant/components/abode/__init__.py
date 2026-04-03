@@ -30,7 +30,7 @@ from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
-from .const import CONF_POLLING, DOMAIN, LOGGER
+from .const import CONF_POLLING, DOMAIN, DOMAIN_DATA, LOGGER
 from .services import async_setup_services
 
 ATTR_DEVICE_NAME = "device_name"
@@ -99,7 +99,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     except (AbodeException, ConnectTimeout, HTTPError) as ex:
         raise ConfigEntryNotReady(f"Unable to connect to Abode: {ex}") from ex
 
-    hass.data[DOMAIN] = AbodeSystem(abode, polling)
+    hass.data[DOMAIN_DATA] = AbodeSystem(abode, polling)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
@@ -113,11 +113,12 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
-    await hass.async_add_executor_job(hass.data[DOMAIN].abode.events.stop)
-    await hass.async_add_executor_job(hass.data[DOMAIN].abode.logout)
+    await hass.async_add_executor_job(hass.data[DOMAIN_DATA].abode.events.stop)
+    await hass.async_add_executor_job(hass.data[DOMAIN_DATA].abode.logout)
 
-    hass.data[DOMAIN].logout_listener()
-    hass.data.pop(DOMAIN)
+    if logout_listener := hass.data[DOMAIN_DATA].logout_listener:
+        logout_listener()
+    hass.data.pop(DOMAIN_DATA)
 
     return unload_ok
 
@@ -127,16 +128,16 @@ async def setup_hass_events(hass: HomeAssistant) -> None:
 
     def logout(event: Event) -> None:
         """Logout of Abode."""
-        if not hass.data[DOMAIN].polling:
-            hass.data[DOMAIN].abode.events.stop()
+        if not hass.data[DOMAIN_DATA].polling:
+            hass.data[DOMAIN_DATA].abode.events.stop()
 
-        hass.data[DOMAIN].abode.logout()
+        hass.data[DOMAIN_DATA].abode.logout()
         LOGGER.info("Logged out of Abode")
 
-    if not hass.data[DOMAIN].polling:
-        await hass.async_add_executor_job(hass.data[DOMAIN].abode.events.start)
+    if not hass.data[DOMAIN_DATA].polling:
+        await hass.async_add_executor_job(hass.data[DOMAIN_DATA].abode.events.start)
 
-    hass.data[DOMAIN].logout_listener = hass.bus.async_listen_once(
+    hass.data[DOMAIN_DATA].logout_listener = hass.bus.async_listen_once(
         EVENT_HOMEASSISTANT_STOP, logout
     )
 
@@ -178,6 +179,6 @@ def setup_abode_events(hass: HomeAssistant) -> None:
     ]
 
     for event in events:
-        hass.data[DOMAIN].abode.events.add_event_callback(
+        hass.data[DOMAIN_DATA].abode.events.add_event_callback(
             event, partial(event_callback, event)
         )

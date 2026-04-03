@@ -22,6 +22,18 @@
     "addon_stop": {
       "service": "mdi:stop"
     },
+    "app_restart": {
+      "service": "mdi:restart"
+    },
+    "app_start": {
+      "service": "mdi:play"
+    },
+    "app_stdin": {
+      "service": "mdi:console"
+    },
+    "app_stop": {
+      "service": "mdi:stop"
+    },
     "backup_full": {
       "service": "mdi:content-save"
     },
@@ -33,6 +45,9 @@
     },
     "host_shutdown": {
       "service": "mdi:power"
+    },
+    "mount_reload": {
+      "service": "mdi:reload"
     },
     "restore_full": {
       "service": "mdi:backup-restore"

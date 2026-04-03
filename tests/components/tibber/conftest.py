@@ -9,6 +9,7 @@ import pytest
 import tibber
 
 from homeassistant.components.application_credentials import (
+    DOMAIN as APPLICATION_CREDENTIALS_DOMAIN,
     ClientCredential,
     async_import_client_credential,
 )
@@ -216,7 +217,7 @@ async def mock_tibber_setup(
 @pytest.fixture
 async def setup_credentials(hass: HomeAssistant) -> None:
     """Set up application credentials for the OAuth flow."""
-    assert await async_setup_component(hass, "application_credentials", {})
+    assert await async_setup_component(hass, APPLICATION_CREDENTIALS_DOMAIN, {})
     await async_import_client_credential(
         hass,
         DOMAIN,

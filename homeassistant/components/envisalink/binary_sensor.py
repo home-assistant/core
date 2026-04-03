@@ -116,7 +116,7 @@ class EnvisalinkBinarySensor(EnvisalinkEntity, BinarySensorEntity):
         return attr
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool:
         """Return true if sensor is on."""
         return self._info["status"]["open"]
 
