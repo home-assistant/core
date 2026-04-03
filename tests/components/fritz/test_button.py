@@ -21,7 +21,6 @@ from homeassistant.helpers import (
 from .const import (
     MOCK_HOST_ATTRIBUTES_DATA,
     MOCK_MESH_DATA,
-    MOCK_MESH_MASTER_MAC,
     MOCK_NEW_DEVICE_NODE,
     MOCK_USER_DATA,
 )
@@ -278,13 +277,6 @@ async def test_cleanup_button_deprecation_issue(
     """Test deprecation issue is created when legacy cleanup button is enabled."""
     entry = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_DATA)
     entry.add_to_hass(hass)
-
-    entity_registry.async_get_or_create(
-        DOMAIN,
-        BUTTON_DOMAIN,
-        f"{MOCK_MESH_MASTER_MAC}-cleanup",
-        config_entry=entry,
-    )
 
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()

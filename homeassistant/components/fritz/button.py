@@ -69,6 +69,33 @@ BUTTONS: Final = [
 ]
 
 
+async def repair_issue_cleanup(hass: HomeAssistant, avm_wrapper: AvmWrapper) -> None:
+    """Repair issue for cleanup button."""
+    entity_registry = er.async_get(hass)
+
+    if (
+        (
+            entity_button := entity_registry.async_get_entity_id(
+                "button", DOMAIN, f"{avm_wrapper.unique_id}-cleanup"
+            )
+        )
+        and (entity_entry := entity_registry.async_get(entity_button))
+        and not entity_entry.disabled
+    ):
+        # Deprecate the 'cleanup' button: create a Repairs issue for users
+        ir.async_create_issue(
+            hass,
+            domain=DOMAIN,
+            issue_id="deprecated_cleanup_button",
+            is_fixable=False,
+            is_persistent=True,
+            severity=ir.IssueSeverity.WARNING,
+            translation_key="deprecated_cleanup_button",
+            translation_placeholders={"removal_version": "2026.11.0"},
+            breaks_in_ha_version="2026.11.0",
+        )
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: FritzConfigEntry,
@@ -84,6 +111,7 @@ async def async_setup_entry(
 
     if avm_wrapper.mesh_role == MeshRoles.SLAVE:
         async_add_entities(entities_list)
+        await repair_issue_cleanup(hass, avm_wrapper)
         return
 
     data_fritz = hass.data[FRITZ_DATA_KEY]
@@ -102,28 +130,7 @@ async def async_setup_entry(
         )
     )
 
-    entity_registry = er.async_get(hass)
-    if (
-        (
-            entity_button := entity_registry.async_get_entity_id(
-                DOMAIN, "button", f"{avm_wrapper.unique_id}-cleanup"
-            )
-        )
-        and (entity_entry := entity_registry.async_get(entity_button))
-        and not entity_entry.disabled
-    ):
-        # Deprecate the 'cleanup' button: create a Repairs issue for users
-        ir.async_create_issue(
-            hass,
-            domain=DOMAIN,
-            issue_id="deprecated_cleanup_button",
-            is_fixable=False,
-            is_persistent=True,
-            severity=ir.IssueSeverity.WARNING,
-            translation_key="deprecated_cleanup_button",
-            translation_placeholders={"removal_version": "2026.11.0"},
-            breaks_in_ha_version="2026.11.0",
-        )
+    await repair_issue_cleanup(hass, avm_wrapper)
 
 
 class FritzButton(ButtonEntity):
