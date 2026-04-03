@@ -6,6 +6,10 @@ from music_assistant_models.enums import EventType
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.components.music_assistant.const import (
+    DOMAIN,
+    PLAYER_OPTIONS_TRANSLATION_KEYS_NUMBER,
+)
 from homeassistant.components.number import (
     ATTR_VALUE,
     DOMAIN as NUMBER_DOMAIN,
@@ -15,6 +19,7 @@ from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.translation import LOCALE_EN, async_get_translations
 
 from .common import (
     setup_integration_from_fixtures,
@@ -117,3 +122,17 @@ async def test_external_update(
     state = hass.states.get(entity_id)
     assert state
     assert int(state.state) == new_value
+
+
+async def test_name_translation_availability(
+    hass: HomeAssistant,
+) -> None:
+    """Verify, that the list of available translation keys is reflected in strings.json."""
+    translations = await async_get_translations(
+        hass, language=LOCALE_EN, category="entity", integrations=[DOMAIN]
+    )
+    prefix = f"component.{DOMAIN}.entity.{Platform.NUMBER.value}."
+    for translation_key in PLAYER_OPTIONS_TRANSLATION_KEYS_NUMBER:
+        assert translations.get(f"{prefix}{translation_key}.name") is not None, (
+            f"{translation_key} is missing in strings.json for platform number"
+        )
