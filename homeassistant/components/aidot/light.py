@@ -10,7 +10,7 @@ from homeassistant.components.light import (
     LightEntity,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import entity_registry as er  # 导入实体注册表
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.device_registry import (
     CONNECTION_NETWORK_MAC,
     DeviceInfo,
@@ -129,17 +129,17 @@ class AidotLight(CoordinatorEntity[AidotDeviceUpdateCoordinator], LightEntity):
             await self.coordinator.device_client.async_set_brightness(
                 kwargs.get(ATTR_BRIGHTNESS, 255)
             )
-        if ATTR_COLOR_TEMP_KELVIN in kwargs:
+        elif ATTR_COLOR_TEMP_KELVIN in kwargs:
             self._attr_color_mode = ColorMode.COLOR_TEMP
             await self.coordinator.device_client.async_set_cct(
                 kwargs.get(ATTR_COLOR_TEMP_KELVIN)
             )
-        if ATTR_RGBW_COLOR in kwargs:
+        elif ATTR_RGBW_COLOR in kwargs:
             self._attr_color_mode = ColorMode.RGBW
             await self.coordinator.device_client.async_set_rgbw(
                 kwargs.get(ATTR_RGBW_COLOR)
             )
-        if not kwargs:
+        else:
             await self.coordinator.device_client.async_turn_on()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
