@@ -399,8 +399,12 @@ class SonosDiscoveryManager:
                 if soco.uid in self.data.discovered
             }
             if new_speakers:
-                known_speakers = dict(self.entry.data.get(CONF_KNOWN_SPEAKERS, {}))
-                known_speakers.update(new_speakers)
+                # Replace the stored speaker list with the full discovered
+                # set to prune stale entries that are no longer reachable.
+                known_speakers = {
+                    uid: speaker.soco.ip_address
+                    for uid, speaker in self.data.discovered.items()
+                }
                 self.hass.config_entries.async_update_entry(
                     self.entry,
                     data={**self.entry.data, CONF_KNOWN_SPEAKERS: known_speakers},
@@ -671,8 +675,23 @@ class SonosDiscoveryManager:
         """Load known speakers from config entry data."""
         known_speakers: dict[str, str] = self.entry.data.get(CONF_KNOWN_SPEAKERS, {})
         for uid, host in known_speakers.items():
+            # If any speaker has already been discovered (for example via SSDP/mDNS),
+            # avoid iterating all known speakers and causing unnecessary subscription attempts.
+            if self.data.discovered:
+                _LOGGER.debug(
+                    "Aborting load of remaining known speakers; speakers already discovered"
+                )
+                break
             _LOGGER.debug("Loading known speaker %s with host %s", uid, host)
             await self._async_handle_discovery_message(uid, host, "config entry")
+            # Stop after the first successful subscription/topology load to avoid
+            # blocking discovery with repeated slow attempts for stale hosts.
+            if self.data.discovered and uid in self.data.discovered:
+                _LOGGER.debug(
+                    "Successfully loaded known speaker %s; stopping further attempts",
+                    uid,
+                )
+                break
 
 
 async def async_remove_config_entry_device(
