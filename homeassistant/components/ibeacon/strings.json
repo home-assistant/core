@@ -35,7 +35,7 @@
           "new_allowed_beacon": "Enter a new allowed beacon ID",
           "new_uuid": "Enter a new allowed UUID"
         },
-        "description": "By default, all iBeacons are tracked. To only track specific beacons, add allowed beacon IDs in UUID_MAJOR_MINOR format (for example, 426c7565-4368-6172-6d42-6561636f6e73_65262_65037). iBeacons with an empty device name are ignored unless their UUID is explicitly allowed below."
+        "description": "By default, iBeacons with an empty or default device name are ignored unless their UUID is explicitly allowed below. To track specific beacons, add allowed beacon IDs in UUID_MAJOR_MINOR format (for example, 426c7565-4368-6172-6d42-6561636f6e73_65262_65037)."
       }
     }
   }
