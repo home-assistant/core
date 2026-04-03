@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import date, datetime
+from datetime import date
 from typing import TypedDict
 
 from pybirno import BirClient, BirError, WastePickup as BirWastePickup
@@ -12,6 +12,7 @@ from homeassistant.const import CONF_ADDRESS
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.util import dt as dt_util
 
 from .const import CONF_PROPERTY_ID, DOMAIN, LOGGER, SCAN_INTERVAL, WASTE_TYPES
 
@@ -52,15 +53,13 @@ class BirDataUpdateCoordinator(DataUpdateCoordinator[dict[str, WastePickup]]):
         except BirError as err:
             raise UpdateFailed(f"Error communicating with BIR API: {err}") from err
 
-        return self._process_pickup_data(pickups)
+        return self._process_pickup_data(pickups, dt_util.now().date())
 
     @staticmethod
     def _process_pickup_data(
-        pickups: list[BirWastePickup], reference_date: date | None = None
+        pickups: list[BirWastePickup], reference_date: date
     ) -> dict[str, WastePickup]:
         """Process raw pickup data into structured format."""
-        if reference_date is None:
-            reference_date = datetime.now().date()
 
         next_pickups: dict[str, WastePickup] = {}
 

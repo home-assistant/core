@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Generator
-from datetime import date
+from datetime import date, datetime
 from unittest.mock import AsyncMock, patch
 
 from pybirno import Address, WastePickup as BirWastePickup
@@ -123,8 +123,10 @@ async def init_integration(
 ) -> MockConfigEntry:
     """Set up the BIR integration for testing."""
     mock_config_entry.add_to_hass(hass)
-    with patch("homeassistant.components.bir.coordinator.datetime") as mock_datetime:
-        mock_datetime.now.return_value.date.return_value = MOCK_REFERENCE_DATE
+    with patch(
+        "homeassistant.components.bir.coordinator.dt_util.now",
+        return_value=datetime.combine(MOCK_REFERENCE_DATE, datetime.min.time()),
+    ):
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
     return mock_config_entry

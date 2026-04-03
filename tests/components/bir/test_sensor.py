@@ -1,5 +1,6 @@
 """Tests for the BIR sensors."""
 
+from datetime import datetime
 from unittest.mock import AsyncMock, patch
 
 import pytest
@@ -104,8 +105,10 @@ async def test_sensor_unavailable_when_waste_type_missing(
 ) -> None:
     """Test sensor becomes unavailable when waste type disappears from data."""
     mock_bir_client.get_pickups.return_value = []
-    with patch("homeassistant.components.bir.coordinator.datetime") as mock_datetime:
-        mock_datetime.now.return_value.date.return_value = MOCK_REFERENCE_DATE
+    with patch(
+        "homeassistant.components.bir.coordinator.dt_util.now",
+        return_value=datetime.combine(MOCK_REFERENCE_DATE, datetime.min.time()),
+    ):
         await hass.config_entries.async_reload(mock_config_entry.entry_id)
         await hass.async_block_till_done()
 
