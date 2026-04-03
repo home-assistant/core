@@ -46,6 +46,7 @@ from homeassistant.components.telegram_bot.const import (
     ATTR_FILE_NAME,
     ATTR_KEYBOARD,
     ATTR_KEYBOARD_INLINE,
+    ATTR_MEDIA,
     ATTR_MEDIA_TYPE,
     ATTR_MESSAGE,
     ATTR_MESSAGE_ID,
@@ -82,6 +83,7 @@ from homeassistant.components.telegram_bot.const import (
     SERVICE_SEND_CHAT_ACTION,
     SERVICE_SEND_DOCUMENT,
     SERVICE_SEND_LOCATION,
+    SERVICE_SEND_MEDIA_GROUP,
     SERVICE_SEND_MESSAGE,
     SERVICE_SEND_PHOTO,
     SERVICE_SEND_POLL,
@@ -90,6 +92,7 @@ from homeassistant.components.telegram_bot.const import (
     SERVICE_SEND_VOICE,
 )
 from homeassistant.components.telegram_bot.webhooks import TELEGRAM_WEBHOOK_URL
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
     ATTR_DOMAIN,
     ATTR_ENTITY_ID,
@@ -130,6 +133,23 @@ async def test_polling_platform_init(
     await hass.async_block_till_done()
 
     assert hass.services.has_service(DOMAIN, SERVICE_SEND_MESSAGE) is True
+
+
+async def test_polling_platform_init_failed(
+    hass: HomeAssistant,
+    mock_polling_config_entry: MockConfigEntry,
+) -> None:
+    """Test failed initialization of the polling platform."""
+    with patch(
+        "homeassistant.components.telegram_bot.bot.Bot.get_me",
+        side_effect=NetworkError("mock network error"),
+    ) as mock_get_me:
+        mock_polling_config_entry.add_to_hass(hass)
+        await hass.config_entries.async_setup(mock_polling_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    mock_get_me.assert_called_once()
+    assert mock_polling_config_entry.state == ConfigEntryState.SETUP_RETRY
 
 
 @pytest.mark.parametrize(
@@ -205,7 +225,7 @@ async def test_send_message(
     assert events[0].data["bot"]["id"] == 123456
     assert events[0].data["bot"]["first_name"] == "Testbot"
     assert events[0].data["bot"]["last_name"] == "mock last name"
-    assert events[0].data["bot"]["username"] == "mock username"
+    assert events[0].data["bot"]["username"] == "mock_bot"
 
     assert response == {
         "chats": [
@@ -813,7 +833,7 @@ async def test_polling_platform_message_text_update(
     assert events[0].data["bot"]["id"] == 123456
     assert events[0].data["bot"]["first_name"] == "Testbot"
     assert events[0].data["bot"]["last_name"] == "mock last name"
-    assert events[0].data["bot"]["username"] == "mock username"
+    assert events[0].data["bot"]["username"] == "mock_bot"
 
     assert isinstance(events[0].context, Context)
 
@@ -1502,7 +1522,7 @@ async def test_send_video(
                 {
                     ATTR_URL: "https://mock",
                     ATTR_AUTHENTICATION: HTTP_BASIC_AUTHENTICATION,
-                    ATTR_USERNAME: "mock username",
+                    ATTR_USERNAME: "mock_bot",
                     ATTR_PASSWORD: "mock password",
                 },
                 blocking=True,
@@ -1614,7 +1634,7 @@ async def test_send_video(
             {
                 ATTR_URL: "https://mock",
                 ATTR_AUTHENTICATION: HTTP_DIGEST_AUTHENTICATION,
-                ATTR_USERNAME: "mock username",
+                ATTR_USERNAME: "mock_bot",
                 ATTR_PASSWORD: "mock password",
             },
             blocking=True,
@@ -2386,3 +2406,60 @@ async def test_download_file_when_error_when_downloading(
     assert err.value.translation_placeholders is not None
     assert "error" in err.value.translation_placeholders
     assert err.value.translation_placeholders["error"] == "failed to download file"
+
+
+async def test_send_media_group(
+    hass: HomeAssistant,
+    mock_broadcast_config_entry: MockConfigEntry,
+    mock_external_calls: None,
+) -> None:
+    """Test the send_media_group service with multiple media types."""
+    mock_broadcast_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_broadcast_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    with patch(
+        "homeassistant.components.telegram_bot.bot.httpx.AsyncClient.get"
+    ) as mock_get:
+        mock_get.return_value = AsyncMock(status_code=200, content=b"mock content")
+
+        response = await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SEND_MEDIA_GROUP,
+            {
+                ATTR_MEDIA: [
+                    {
+                        ATTR_MEDIA_TYPE: InputMediaType.PHOTO,
+                        ATTR_URL: "https://mock/photo.jpg",
+                        ATTR_CAPTION: "mock photo",
+                    },
+                    {
+                        ATTR_MEDIA_TYPE: InputMediaType.VIDEO,
+                        ATTR_URL: "https://mock/video.mp4",
+                        ATTR_CAPTION: "mock video",
+                    },
+                    {
+                        ATTR_MEDIA_TYPE: InputMediaType.AUDIO,
+                        ATTR_URL: "https://mock/audio.mp3",
+                        ATTR_CAPTION: "mock url",
+                    },
+                    {
+                        ATTR_MEDIA_TYPE: InputMediaType.DOCUMENT,
+                        ATTR_URL: "https://mock/doc.pdf",
+                        ATTR_CAPTION: "mock document",
+                    },
+                ],
+            },
+            blocking=True,
+            return_response=True,
+        )
+
+    assert response == {
+        "chats": [
+            {
+                ATTR_CHAT_ID: 123456,
+                ATTR_ENTITY_ID: "notify.mock_title_mock_chat_1",
+                ATTR_MESSAGE_ID: [12345, 12346, 12347, 12348],
+            }
+        ]
+    }

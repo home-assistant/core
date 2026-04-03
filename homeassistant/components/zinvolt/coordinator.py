@@ -1,5 +1,6 @@
 """Coordinator for Zinvolt."""
 
+from dataclasses import dataclass
 from datetime import timedelta
 import logging
 
@@ -18,7 +19,17 @@ _LOGGER = logging.getLogger(__name__)
 type ZinvoltConfigEntry = ConfigEntry[dict[str, ZinvoltDeviceCoordinator]]
 
 
-class ZinvoltDeviceCoordinator(DataUpdateCoordinator[BatteryState]):
+@dataclass
+class ZinvoltData:
+    """Data for the Zinvolt integration."""
+
+    battery: BatteryState
+    sw_version: str
+    model: str
+    points: dict[str, bool]
+
+
+class ZinvoltDeviceCoordinator(DataUpdateCoordinator[ZinvoltData]):
     """Class for Zinvolt devices."""
 
     def __init__(
@@ -39,12 +50,23 @@ class ZinvoltDeviceCoordinator(DataUpdateCoordinator[BatteryState]):
         self.battery = battery
         self.client = client
 
-    async def _async_update_data(self) -> BatteryState:
+    async def _async_update_data(self) -> ZinvoltData:
         """Update data from Zinvolt."""
         try:
-            return await self.client.get_battery_status(self.battery.identifier)
+            battery_state = await self.client.get_battery_status(
+                self.battery.identifier
+            )
+            battery_unit = await self.client.get_battery_unit(
+                self.battery.identifier, self.battery.serial_number
+            )
         except ZinvoltError as err:
             raise UpdateFailed(
                 translation_key="update_failed",
                 translation_domain=DOMAIN,
             ) from err
+        return ZinvoltData(
+            battery_state,
+            battery_unit.version.current_version,
+            battery_unit.battery_model,
+            {point.point.lower(): point.normal for point in battery_unit.points},
+        )

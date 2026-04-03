@@ -534,7 +534,7 @@ async def test_update_locks(
 
     # Add subscriber
     update_callback = Mock()
-    crd.async_add_listener(update_callback)
+    remove_callbacks = crd.async_add_listener(update_callback)
 
     assert crd.update_interval
 
@@ -577,6 +577,10 @@ async def test_update_locks(
 
     # Unblock queued update
     block.set()
+
+    # Remove callbacks to avoid lingering timers
+    remove_callbacks()
+    await crd.async_shutdown()
 
 
 async def test_refresh_recover(

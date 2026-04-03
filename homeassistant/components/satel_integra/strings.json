@@ -5,20 +5,37 @@
   },
   "config": {
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
     },
     "step": {
-      "user": {
+      "code": {
         "data": {
-          "code": "[%key:component::satel_integra::common::code%]",
+          "code": "[%key:component::satel_integra::common::code%]"
+        },
+        "data_description": {
+          "code": "[%key:component::satel_integra::common::code_input_description%]"
+        }
+      },
+      "reconfigure": {
+        "data": {
           "host": "[%key:common::config_flow::data::host%]",
           "port": "[%key:common::config_flow::data::port%]"
         },
         "data_description": {
-          "code": "[%key:component::satel_integra::common::code_input_description%]",
+          "host": "[%key:component::satel_integra::config::step::user::data_description::host%]",
+          "port": "[%key:component::satel_integra::config::step::user::data_description::port%]"
+        }
+      },
+      "user": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "port": "[%key:common::config_flow::data::port%]"
+        },
+        "data_description": {
           "host": "The IP address of the alarm panel",
           "port": "The port of the alarm panel"
         }
@@ -165,12 +182,6 @@
   "exceptions": {
     "missing_output_access_code": {
       "message": "Cannot control switchable outputs because no user code is configured for this Satel Integra entry. Configure a code in the integration options to enable output control."
-    }
-  },
-  "issues": {
-    "deprecated_yaml_import_issue_cannot_connect": {
-      "description": "Configuring {integration_title} using YAML is being removed but there was an connection error importing your existing configuration.\n\nEnsure connection to {integration_title} works and restart Home Assistant to try again or remove the `{domain}` YAML configuration from your configuration.yaml file and add the {integration_title} integration manually.",
-      "title": "YAML import failed due to a connection error"
     }
   },
   "options": {

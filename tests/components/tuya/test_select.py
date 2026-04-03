@@ -25,7 +25,13 @@ from . import MockDeviceListener, check_selective_state_update, initialize_entry
 from tests.common import MockConfigEntry, snapshot_platform
 
 
-@patch("homeassistant.components.tuya.PLATFORMS", [Platform.SELECT])
+@pytest.fixture(autouse=True)
+def platform_autouse():
+    """Platform fixture."""
+    with patch("homeassistant.components.tuya.PLATFORMS", [Platform.SELECT]):
+        yield
+
+
 async def test_platform_setup_and_discovery(
     hass: HomeAssistant,
     mock_manager: Manager,
@@ -60,7 +66,6 @@ async def test_platform_setup_and_discovery(
         ),
     ],
 )
-@patch("homeassistant.components.tuya.PLATFORMS", [Platform.SELECT])
 @pytest.mark.freeze_time("2024-01-01")
 async def test_selective_state_update(
     hass: HomeAssistant,
