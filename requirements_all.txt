@@ -2972,7 +2972,7 @@ smart-meter-texas==0.5.5
 snapcast==2.3.7
 
 # homeassistant.components.sonos
-soco==0.30.14
+soco==0.30.15
 
 # homeassistant.components.solaredge_local
 solaredge-local==0.2.3
