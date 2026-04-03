@@ -152,7 +152,7 @@ class HIVIDeviceManager:
                     _LOGGER.warning("Device dict conversion result is None")
             else:
                 _LOGGER.debug(
-                    "not yet exist, will add：speaker_device_id = %s", speaker_device_id
+                    "not yet exist, will add: speaker_device_id = %s", speaker_device_id
                 )
                 device_obj = self._create_device_obj_from_discovered_device_info(
                     device_info
@@ -182,7 +182,7 @@ class HIVIDeviceManager:
         for ha_device in ha_device_list:
             ha_device_id = ha_device.id
             device_dict = self.device_data_registry.get_device_dict_by_ha_device_id(
-                ha_device_id=ha_device_id, default=None
+                ha_device_id=ha_device_id
             )
             if device_dict is None:
                 _LOGGER.warning(
@@ -378,7 +378,7 @@ class HIVIDeviceManager:
             )
 
             device_dict = self.device_data_registry.get_device_dict_by_ha_device_id(
-                ha_device.id, default=None
+                ha_device.id
             )
             if device_dict is None:
                 _LOGGER.warning(
@@ -409,7 +409,7 @@ class HIVIDeviceManager:
                     ] = entity_entry
                     device_dict_slave = (
                         self.device_data_registry.get_device_dict_by_speaker_device_id(
-                            slave_speaker_device_id, default=None
+                            slave_speaker_device_id
                         )
                     )
                     if device_dict_slave is None:
@@ -627,7 +627,7 @@ class HIVIDeviceManager:
             )
 
             device_dict = self.device_data_registry.get_device_dict_by_ha_device_id(
-                ha_device.id, default=None
+                ha_device.id
             )
             if device_dict is None:
                 _LOGGER.warning(
@@ -672,7 +672,7 @@ class HIVIDeviceManager:
 
         for ha_device in ha_device_list:
             device_dict = self.device_data_registry.get_device_dict_by_ha_device_id(
-                ha_device.id, default=None
+                ha_device.id
             )
             if device_dict is None:
                 _LOGGER.warning(
