@@ -395,6 +395,7 @@ async def test_q10_cleaning_mode_select_current_option(
     entity_id = "select.roborock_q10_s5_cleaning_mode"
     state = hass.states.get(entity_id)
     assert state is not None
+    assert state.state == STATE_UNKNOWN
     options = state.attributes.get("options")
     assert options is not None
     assert set(options) == {"vac_and_mop", "vacuum", "mop"}
