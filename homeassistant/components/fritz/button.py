@@ -161,7 +161,8 @@ class FritzButton(ButtonEntity):
         if self.entity_description.key == "cleanup":
             _LOGGER.warning(
                 "The 'cleanup' button is deprecated and will be removed in Home Assistant Core 2026.11.0. "
-                "Please update your automations and dashboards",
+                "Please update your automations and dashboards to remove any usage of this button. "
+                "The action is now performed automatically at each data refresh",
             )
         await self.entity_description.press_action(self.avm_wrapper)
 
