@@ -52,16 +52,12 @@ class RenaultDeviceTracker(
     @property
     def latitude(self) -> float | None:
         """Return latitude value of the device."""
-        if not self.coordinator.last_update_success:
-            return None
-        return self.coordinator.data.gpsLatitude
+        return self.coordinator.data.gpsLatitude if self.coordinator.data else None
 
     @property
     def longitude(self) -> float | None:
         """Return longitude value of the device."""
-        if not self.coordinator.last_update_success:
-            return None
-        return self.coordinator.data.gpsLongitude
+        return self.coordinator.data.gpsLongitude if self.coordinator.data else None
 
 
 DEVICE_TRACKER_TYPES: tuple[RenaultTrackerEntityDescription, ...] = (
