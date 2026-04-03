@@ -36,8 +36,7 @@ DEAKO_MDNS_TYPE = "_deako._tcp.local."
 FAILOVER_KEEPALIVE_CHECK_S = 30
 # How often to scan for a failover bridge candidate via zeroconf
 FAILOVER_SCAN_INTERVAL_S = 60
-# Max retries on primary before switching to failover
-PRIMARY_FAIL_THRESHOLD = 3
+
 
 
 def _lookup_bridge_zeroconf(
@@ -150,7 +149,7 @@ class _FailoverKeepAlive:
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         sock.settimeout(5)
         sock.connect((self.host, self.port))
-        sock.settimeout(None)  # non-blocking for recv in monitor
+        sock.settimeout(None)  # restore blocking mode with no timeout
         return sock
 
     async def _monitor(self) -> None:
@@ -291,8 +290,19 @@ class DeakoRuntimeData:
             ):
                 await self._switch_to_failover()
                 # Retry the command on the new connection
-                await self.connection.control_device(uuid, power, dim)
-                self._consecutive_failures = 0
+                try:
+                    await self.connection.control_device(uuid, power, dim)
+                except Exception:
+                    _LOGGER.warning(
+                        "Control command failed after switching to failover bridge at %s",
+                        self.active_host,
+                    )
+                    raise
+                else:
+                    self._consecutive_failures = 0
+                finally:
+                    self._last_command_time = time.monotonic()
+                return
             self._last_command_time = time.monotonic()
 
     async def _switch_to_failover(self) -> None:
