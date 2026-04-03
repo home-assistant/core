@@ -4,7 +4,6 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 from syrupy.assertion import SnapshotAssertion
-from transmission_rpc.error import TransmissionError
 
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
@@ -59,6 +58,8 @@ async def test_port_forwarding_unavailable_on_transmission_error(
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test port forwarding is unknown when port_test raises a TransmissionError."""
+    from transmission_rpc.error import TransmissionError
+
     mock_transmission_client.return_value.port_test.side_effect = TransmissionError(
         "Connection error"
     )
