@@ -409,7 +409,6 @@ async def test_q10_cleaning_mode_select_current_option(
 
     updated_state = hass.states.get(entity_id)
     assert updated_state is not None
-    assert updated_state.state != STATE_UNKNOWN
     assert updated_state.state == "vac_and_mop"
 
 
