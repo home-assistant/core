@@ -133,7 +133,9 @@ async def test_reauth_flow_success(hass: HomeAssistant) -> None:
             "homeassistant.config_entries.ConfigEntries.async_reload",
             return_value=True,
         ),
-        patch("homeassistant.components.dreo.config_flow.DreoClient") as mock_client_class,
+        patch(
+            "homeassistant.components.dreo.config_flow.DreoClient"
+        ) as mock_client_class,
     ):
         mock_client = mock_client_class.return_value
         mock_client.login = MagicMock()

@@ -34,15 +34,12 @@ def get_speed_values(model_config: dict[str, Any]) -> list[int] | None:
     """Return normalized supported fan speed values."""
     raw_speed_values = get_fan_model_config(model_config).get("speed_range")
 
-    if (
-        not isinstance(raw_speed_values, list | tuple)
-        or len(raw_speed_values) < 2
-    ):
+    if not isinstance(raw_speed_values, list | tuple) or len(raw_speed_values) < 2:
         return None
 
     try:
         speed_values = [int(value) for value in raw_speed_values]
-    except (TypeError, ValueError):
+    except TypeError, ValueError:
         return None
 
     if len(speed_values) == 2:
@@ -85,7 +82,7 @@ class DreoFanDeviceData:
         if (speed := status.get("speed")) is not None:
             try:
                 speed_value = int(float(speed))
-            except (TypeError, ValueError):
+            except TypeError, ValueError:
                 speed_value = None
 
             if speed_value == 0:
