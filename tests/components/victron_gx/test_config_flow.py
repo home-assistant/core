@@ -24,15 +24,17 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.ssdp import SsdpServiceInfo
 
+from .const import (
+    MOCK_FRIENDLY_NAME,
+    MOCK_HOST,
+    MOCK_INSTALLATION_ID,
+    MOCK_MODEL,
+    MOCK_SERIAL,
+)
+
 from tests.common import MockConfigEntry
 
 pytestmark = pytest.mark.usefixtures("mock_setup_entry")
-
-MOCK_INSTALLATION_ID = "d41243d9b9c6"
-MOCK_SERIAL = "HQ2234ABCDE"
-MOCK_MODEL = "Cerbo GX"
-MOCK_FRIENDLY_NAME = "Venus GX"
-MOCK_HOST = "192.168.1.100"
 
 
 def assert_entry_title(
@@ -57,21 +59,6 @@ def mock_victron_hub():
         hub_instance.installation_id = MOCK_INSTALLATION_ID
         mock_hub.return_value = hub_instance
         yield mock_hub
-
-
-@pytest.fixture
-def mock_config_entry(hass: HomeAssistant) -> MockConfigEntry:
-    """Mock a config entry."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        unique_id=MOCK_INSTALLATION_ID,
-        data={
-            CONF_HOST: MOCK_HOST,
-            CONF_INSTALLATION_ID: MOCK_INSTALLATION_ID,
-        },
-    )
-    entry.add_to_hass(hass)
-    return entry
 
 
 @pytest.mark.usefixtures("mock_victron_hub")
@@ -191,9 +178,12 @@ async def test_user_flow_error(
     assert result["result"].unique_id == MOCK_INSTALLATION_ID
 
 
-@pytest.mark.usefixtures("mock_victron_hub", "mock_config_entry")
-async def test_user_flow_already_configured(hass: HomeAssistant) -> None:
+@pytest.mark.usefixtures("mock_victron_hub")
+async def test_user_flow_already_configured(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
     """Test configuration flow aborts when device is already configured."""
+    mock_config_entry.add_to_hass(hass)
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_USER},
@@ -239,8 +229,7 @@ async def test_ssdp_flow_success(hass: HomeAssistant) -> None:
     assert result["step_id"] == "ssdp_confirm"
 
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        user_input={},
+        result["flow_id"], user_input={}
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
@@ -294,10 +283,7 @@ async def test_ssdp_confirm_error(
 
     mock_victron_hub.return_value.connect.side_effect = exception
 
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        user_input={},
-    )
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == reason
@@ -361,10 +347,7 @@ async def test_ssdp_flow_auth_required(
         "Authentication required"
     )
 
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        user_input={},
-    )
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "ssdp_auth"

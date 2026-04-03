@@ -16,6 +16,8 @@ from tests.common import MockConfigEntry
 async def test_victron_battery_sensor(
     hass: HomeAssistant,
     init_integration: tuple[VictronVenusHub, MockConfigEntry],
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
 ) -> None:
     """Test SENSOR MetricKind - battery current sensor is created and updated."""
     victron_hub, mock_config_entry = init_integration
@@ -26,7 +28,6 @@ async def test_victron_battery_sensor(
     await hass.async_block_till_done()
 
     # Verify entity was created by checking entity registry
-    entity_registry = er.async_get(hass)
     entities = er.async_entries_for_config_entry(
         entity_registry, mock_config_entry.entry_id
     )
@@ -48,7 +49,6 @@ async def test_victron_battery_sensor(
     assert state.attributes["unit_of_measurement"] == "A"
 
     # Verify device info was registered correctly
-    device_registry = dr.async_get(hass)
     device = device_registry.async_get_device(identifiers={(DOMAIN, "123_battery_0")})
     assert device is not None
     assert device.manufacturer == "Victron Energy"
@@ -66,6 +66,7 @@ async def test_victron_battery_sensor(
 async def test_victron_enum_sensor(
     hass: HomeAssistant,
     init_integration: tuple[VictronVenusHub, MockConfigEntry],
+    device_registry: dr.DeviceRegistry,
 ) -> None:
     """Test sensor with VictronEnum value normalizes to enum id."""
     victron_hub, _mock_config_entry = init_integration
@@ -83,7 +84,6 @@ async def test_victron_enum_sensor(
     assert state.state == "low_power"
 
     # Verify system device has no via_device (it IS the gateway)
-    device_registry = dr.async_get(hass)
     device = device_registry.async_get_device(identifiers={(DOMAIN, "123_system_0")})
     assert device is not None
     assert device.manufacturer == "Victron Energy"
