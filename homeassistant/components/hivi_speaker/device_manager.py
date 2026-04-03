@@ -128,28 +128,25 @@ class HIVIDeviceManager:
                     speaker_device_id,
                 )
                 device_obj = HIVIDevice(**device_dict)
-                if device_obj:
-                    ha_device_id = device_obj.ha_device_id
-                    device_obj.ip_addr = device_info.get("ip_addr", device_obj.ip_addr)
-                    device_obj.mac_address = device_info.get(
-                        "mac_address", device_obj.mac_address
-                    )
-                    device_obj.hostname = device_info.get(
-                        "hostname", device_obj.hostname
-                    )
-                    device_obj.friendly_name = device_info.get(
-                        "friendly_name", device_obj.friendly_name
-                    )
-                    device_obj.model = device_info.get("model_name", device_obj.model)
-                    device_obj.manufacturer = device_info.get(
-                        "manufacturer", device_obj.manufacturer
-                    )
-                    device_dict_new = device_obj.model_dump(mode="json")
-                    self.device_data_registry.set_device_dict_by_ha_device_id(
-                        ha_device_id, device_dict_new
-                    )
-                else:
-                    _LOGGER.warning("Device dict conversion result is None")
+                ha_device_id = device_obj.ha_device_id
+                device_obj.ip_addr = device_info.get("ip_addr", device_obj.ip_addr)
+                device_obj.mac_address = device_info.get(
+                    "mac_address", device_obj.mac_address
+                )
+                device_obj.hostname = device_info.get(
+                    "hostname", device_obj.hostname
+                )
+                device_obj.friendly_name = device_info.get(
+                    "friendly_name", device_obj.friendly_name
+                )
+                device_obj.model = device_info.get("model_name", device_obj.model)
+                device_obj.manufacturer = device_info.get(
+                    "manufacturer", device_obj.manufacturer
+                )
+                device_dict_new = device_obj.model_dump(mode="json")
+                self.device_data_registry.set_device_dict_by_ha_device_id(
+                    ha_device_id, device_dict_new
+                )
             else:
                 _LOGGER.debug(
                     "not yet exist, will add: speaker_device_id = %s", speaker_device_id
