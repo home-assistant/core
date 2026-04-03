@@ -9,7 +9,7 @@ from duco.models import Node, VentilationState
 
 from homeassistant.components.fan import FanEntity, FanEntityFeature
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import DucoConfigEntry, DucoCoordinator
@@ -122,8 +122,7 @@ class DucoVentilationFanEntity(DucoEntity, FanEntity):
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set the ventilation preset mode."""
-        if preset_mode not in _PRESET_TO_STATE:
-            raise ServiceValidationError(f"Invalid preset mode: {preset_mode}")
+        self._valid_preset_mode_or_raise(preset_mode)
         # Optimistically update the UI immediately.
         self._attr_preset_mode = preset_mode
         self.async_write_ha_state()
@@ -137,8 +136,7 @@ class DucoVentilationFanEntity(DucoEntity, FanEntity):
     ) -> None:
         """Switch to manual ventilation (default: medium)."""
         target = preset_mode or PRESET_MEDIUM
-        if target not in _PRESET_TO_STATE:
-            raise ServiceValidationError(f"Invalid preset mode: {target}")
+        self._valid_preset_mode_or_raise(target)
         self._attr_preset_mode = target
         self.async_write_ha_state()
         await self._async_set_state(_PRESET_TO_STATE[target])
