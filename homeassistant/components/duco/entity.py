@@ -4,8 +4,10 @@ from __future__ import annotations
 
 from duco.models import Node
 
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
+from .const import DOMAIN
 from .coordinator import DucoCoordinator
 
 
@@ -14,10 +16,19 @@ class DucoEntity(CoordinatorEntity[DucoCoordinator]):
 
     _attr_has_entity_name = True
 
-    def __init__(self, coordinator: DucoCoordinator, node_id: int) -> None:
+    def __init__(self, coordinator: DucoCoordinator, node: Node) -> None:
         """Initialize the entity."""
         super().__init__(coordinator)
-        self._node_id = node_id
+        self._node_id = node.node_id
+        mac = coordinator.config_entry.unique_id
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, f"{mac}_{node.node_id}")},
+            manufacturer="Duco",
+            model=coordinator.board_info.box_name
+            if node.general.node_type == "BOX"
+            else node.general.node_type,
+            name=node.general.name or f"Node {node.node_id}",
+        )
 
     @property
     def _node(self) -> Node | None:

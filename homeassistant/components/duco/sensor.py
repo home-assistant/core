@@ -6,10 +6,8 @@ from duco.models import Node
 
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN
 from .coordinator import DucoConfigEntry, DucoCoordinator
 from .entity import DucoEntity
 
@@ -38,17 +36,9 @@ class DucoVentilationStateSensor(DucoEntity, SensorEntity):
 
     def __init__(self, coordinator: DucoCoordinator, node: Node) -> None:
         """Initialize the sensor entity."""
-        super().__init__(coordinator, node.node_id)
+        super().__init__(coordinator, node)
         mac = coordinator.config_entry.unique_id
         self._attr_unique_id = f"{mac}_{node.node_id}_ventilation_state"
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, f"{mac}_{node.node_id}")},
-            manufacturer="Duco",
-            model=coordinator.board_info.box_name
-            if node.general.node_type == "BOX"
-            else node.general.node_type,
-            name=node.general.name or f"Node {node.node_id}",
-        )
 
     @property
     def native_value(self) -> str | None:
