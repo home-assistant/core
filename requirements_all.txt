@@ -533,7 +533,7 @@ aqualogic==2.6
 aranet4==2.6.0
 
 # homeassistant.components.arcam_fmj
-arcam-fmj==1.8.2
+arcam-fmj==1.8.3
 
 # homeassistant.components.arris_tg2492lg
 arris-tg2492lg==2.2.0
@@ -1226,10 +1226,10 @@ hole==0.9.0
 
 # homeassistant.components.holiday
 # homeassistant.components.workday
-holidays==0.84
+holidays==0.93
 
 # homeassistant.components.frontend
-home-assistant-frontend==20260325.5
+home-assistant-frontend==20260325.6
 
 # homeassistant.components.conversation
 home-assistant-intents==2026.3.24
@@ -1832,7 +1832,7 @@ proxmoxer==2.3.0
 psutil-home-assistant==0.0.1
 
 # homeassistant.components.systemmonitor
-psutil==7.1.2
+psutil==7.2.2
 
 # homeassistant.components.pulseaudio_loopback
 pulsectl==23.5.2
@@ -2500,13 +2500,13 @@ pysmappee==0.2.29
 pysmarlaapi==1.0.2
 
 # homeassistant.components.smartthings
-pysmartthings==3.7.2
+pysmartthings==3.7.3
 
 # homeassistant.components.smarty
 pysmarty2==0.10.3
 
 # homeassistant.components.smhi
-pysmhi==1.1.0
+pysmhi==2.0.0
 
 # homeassistant.components.edl21
 pysml==0.1.5
@@ -2972,7 +2972,7 @@ smart-meter-texas==0.5.5
 snapcast==2.3.7
 
 # homeassistant.components.sonos
-soco==0.30.14
+soco==0.30.15
 
 # homeassistant.components.solaredge_local
 solaredge-local==0.2.3
@@ -3392,7 +3392,7 @@ zhong-hong-hvac==1.0.13
 ziggo-mediabox-xl==1.1.0
 
 # homeassistant.components.zinvolt
-zinvolt==0.3.0
+zinvolt==0.4.1
 
 # homeassistant.components.zoneminder
 zm-py==0.5.4

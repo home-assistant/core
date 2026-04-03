@@ -8,5 +8,5 @@
   "iot_class": "cloud_polling",
   "loggers": ["zinvolt"],
   "quality_scale": "bronze",
-  "requirements": ["zinvolt==0.3.0"]
+  "requirements": ["zinvolt==0.4.1"]
 }

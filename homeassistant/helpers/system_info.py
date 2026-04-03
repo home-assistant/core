@@ -6,7 +6,7 @@ from functools import cache
 from getpass import getuser
 import logging
 import platform
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 from homeassistant.const import __version__ as current_version
 from homeassistant.core import HomeAssistant
@@ -15,7 +15,6 @@ from homeassistant.util.package import is_docker_env, is_virtual_env
 from homeassistant.util.system_info import is_official_image
 
 from .hassio import is_hassio
-from .importlib import async_import_module
 from .singleton import singleton
 
 _LOGGER = logging.getLogger(__name__)
@@ -54,15 +53,6 @@ cached_get_user = cache(getuser)
 @bind_hass
 async def async_get_system_info(hass: HomeAssistant) -> dict[str, Any]:
     """Return info about the system."""
-    # Local import to avoid circular dependencies
-    # We use the import helper because hassio
-    # may not be loaded yet and we don't want to
-    # do blocking I/O in the event loop to import it.
-    if TYPE_CHECKING:
-        from homeassistant.components import hassio  # noqa: PLC0415
-    else:
-        hassio = await async_import_module(hass, "homeassistant.components.hassio")
-
     is_hassio_ = is_hassio(hass)
 
     info_object = {
@@ -105,6 +95,9 @@ async def async_get_system_info(hass: HomeAssistant) -> dict[str, Any]:
 
     # Enrich with Supervisor information
     if is_hassio_:
+        # Local import to avoid circular dependencies
+        from homeassistant.components import hassio  # noqa: PLC0415
+
         if not (info := hassio.get_info(hass)):
             _LOGGER.warning("No Home Assistant Supervisor info available")
             info = {}
