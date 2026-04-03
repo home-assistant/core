@@ -65,6 +65,9 @@ def create_airplay_enable_switch_service(accessory: Accessory) -> None:
     """Define AirPlay enable switch characteristics."""
     service = accessory.add_service(ServicesTypes.OUTLET)
 
+    outlet_on_char = service.add_char(CharacteristicsTypes.ON)
+    outlet_on_char.value = False
+
     on_char = service.add_char(CharacteristicsTypes.AIRPLAY_ENABLE)
     on_char.perms.append("ev")
     on_char.value = 0
