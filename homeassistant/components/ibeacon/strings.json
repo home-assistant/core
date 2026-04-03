@@ -30,8 +30,8 @@
     "step": {
       "init": {
         "data": {
-          "allowed_beacons": "Currently allowed beacon IDs. Uncheck to remove",
           "allow_nameless_uuids": "Currently allowed UUIDs. Uncheck to remove",
+          "allowed_beacons": "Currently allowed beacon IDs. Uncheck to remove",
           "new_allowed_beacon": "Enter a new allowed beacon ID",
           "new_uuid": "Enter a new allowed UUID"
         },
