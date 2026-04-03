@@ -4,7 +4,7 @@ import asyncio
 from collections.abc import Generator
 import io
 from pathlib import Path
-from unittest.mock import MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import aiohttp
 from opendisplay import (
@@ -304,7 +304,6 @@ async def test_upload_image_with_encryption_key(
     mock_resolve_media: MagicMock,
 ) -> None:
     """Test that upload_image passes the encryption key to OpenDisplayDevice."""
-    # Update the already-loaded entry to include an encryption key
     hass.config_entries.async_update_entry(
         mock_config_entry,
         data={**mock_config_entry.data, CONF_ENCRYPTION_KEY: ENCRYPTION_KEY},
@@ -312,24 +311,28 @@ async def test_upload_image_with_encryption_key(
 
     device_id = _device_id(hass, mock_config_entry)
 
-    # Reset call history so only the upload call is captured
-    class_mock = mock_opendisplay_device._mock_new_parent
-    class_mock.reset_mock()
+    with patch(
+        "homeassistant.components.opendisplay.services.OpenDisplayDevice",
+    ) as mock_class:
+        mock_instance = mock_class.return_value
+        mock_instance.__aenter__ = AsyncMock(return_value=mock_instance)
+        mock_instance.__aexit__ = AsyncMock(return_value=None)
+        mock_instance.upload_image = AsyncMock()
 
-    await hass.services.async_call(
-        DOMAIN,
-        "upload_image",
-        {
-            "device_id": device_id,
-            "image": {
-                "media_content_id": "media-source://local/test.png",
-                "media_content_type": "image/png",
+        await hass.services.async_call(
+            DOMAIN,
+            "upload_image",
+            {
+                "device_id": device_id,
+                "image": {
+                    "media_content_id": "media-source://local/test.png",
+                    "media_content_type": "image/png",
+                },
             },
-        },
-        blocking=True,
-    )
+            blocking=True,
+        )
 
-    assert class_mock.call_args.kwargs["encryption_key"] == bytes.fromhex(
+    assert mock_class.call_args.kwargs["encryption_key"] == bytes.fromhex(
         ENCRYPTION_KEY
     )
 

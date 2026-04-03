@@ -196,6 +196,11 @@ async def _async_upload_image(call: ServiceCall) -> None:
             pil_image = await _async_download_image(call.hass, media.url)
 
         raw_key = entry.data.get(CONF_ENCRYPTION_KEY)
+        if raw_key is not None and len(raw_key) != 32:
+            entry.async_start_reauth(call.hass)
+            raise HomeAssistantError(
+                translation_domain=DOMAIN, translation_key="authentication_error"
+            )
         try:
             encryption_key = bytes.fromhex(raw_key) if raw_key is not None else None
         except ValueError as err:

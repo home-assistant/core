@@ -58,6 +58,10 @@ def _get_encryption_key(entry: OpenDisplayConfigEntry) -> bytes | None:
     raw = entry.data.get(CONF_ENCRYPTION_KEY)
     if raw is None:
         return None
+    if len(raw) != 32:
+        raise ConfigEntryAuthFailed(
+            "Stored OpenDisplay encryption key is invalid; reauthentication required"
+        )
     try:
         return bytes.fromhex(raw)
     except ValueError as err:

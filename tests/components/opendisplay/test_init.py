@@ -17,7 +17,7 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
-from . import ENCRYPTION_KEY
+from . import DEVICE_CONFIG, ENCRYPTION_KEY, FIRMWARE_VERSION
 
 from tests.common import MockConfigEntry
 
@@ -42,17 +42,27 @@ async def test_setup_and_unload(
 async def test_setup_encrypted_device(
     hass: HomeAssistant,
     mock_encrypted_config_entry: MockConfigEntry,
-    mock_opendisplay_device: MagicMock,
 ) -> None:
     """Test setup passes the encryption key to OpenDisplayDevice."""
     mock_encrypted_config_entry.add_to_hass(hass)
-    assert await hass.config_entries.async_setup(mock_encrypted_config_entry.entry_id)
-    await hass.async_block_till_done()
+
+    with patch(
+        "homeassistant.components.opendisplay.OpenDisplayDevice",
+    ) as mock_class:
+        mock_instance = mock_class.return_value
+        mock_instance.__aenter__ = AsyncMock(return_value=mock_instance)
+        mock_instance.__aexit__ = AsyncMock(return_value=None)
+        mock_instance.read_firmware_version = AsyncMock(return_value=FIRMWARE_VERSION)
+        mock_instance.config = DEVICE_CONFIG
+        mock_instance.is_flex = False
+
+        assert await hass.config_entries.async_setup(
+            mock_encrypted_config_entry.entry_id
+        )
+        await hass.async_block_till_done()
 
     assert mock_encrypted_config_entry.state is ConfigEntryState.LOADED
-    # mock_opendisplay_device is the instance; its parent mock is the class
-    class_mock = mock_opendisplay_device._mock_new_parent
-    assert class_mock.call_args.kwargs["encryption_key"] == bytes.fromhex(
+    assert mock_class.call_args.kwargs["encryption_key"] == bytes.fromhex(
         ENCRYPTION_KEY
     )
 
