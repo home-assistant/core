@@ -237,8 +237,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                     return {
                         "content": _content,
                         "status": response.status,
-                        "headers": dict(response.headers),
-                        "cookies": response.headers.getall(hdrs.SET_COOKIE, []),
+                        "headers": {
+                            key: values[0] if len(values) == 1 else values
+                            for key in response.headers
+                            if (values := response.headers.getall(key))
+                        },
                     }
 
             except TimeoutError as err:

@@ -343,7 +343,6 @@ async def test_rest_command_get_response_plaintext(
     assert response["content"] == "success"
     assert response["status"] == 200
     assert response["headers"] == {"content-type": "text/plain"}
-    assert response["cookies"] == []
 
 
 async def test_rest_command_get_response_json(
@@ -369,15 +368,14 @@ async def test_rest_command_get_response_json(
     assert response["content"]["number"] == 42
     assert response["status"] == 200
     assert response["headers"] == {"content-type": "application/json"}
-    assert response["cookies"] == []
 
 
-async def test_rest_command_get_response_multiple_set_cookie_headers(
+async def test_rest_command_get_response_multiple_headers(
     hass: HomeAssistant,
     setup_component: ComponentSetup,
     aioclient_mock: AiohttpClientMocker,
 ) -> None:
-    """Get rest_command response with multiple Set-Cookie headers."""
+    """Get rest_command response with multiple headers of the same name."""
     await setup_component()
 
     aioclient_mock.get(
@@ -399,9 +397,10 @@ async def test_rest_command_get_response_multiple_set_cookie_headers(
     assert len(aioclient_mock.mock_calls) == 1
     assert response["content"] == "success"
     assert response["status"] == 200
-    assert response["headers"]["content-type"] == "text/plain"
-    assert response["headers"]["set-cookie"] == "foo=bar; Path=/"
-    assert response["cookies"] == ["foo=bar; Path=/", "baz=qux; Path=/"]
+    assert response["headers"] == {
+        "content-type": "text/plain",
+        "set-cookie": ["foo=bar; Path=/", "baz=qux; Path=/"],
+    }
 
 
 async def test_rest_command_get_response_malformed_json(
