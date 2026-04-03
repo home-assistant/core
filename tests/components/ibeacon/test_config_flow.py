@@ -191,3 +191,37 @@ async def test_options_flow_allowed_beacons(hass: HomeAssistant) -> None:
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == {CONF_ALLOWED_BEACONS: []}
+
+
+@pytest.mark.usefixtures("enable_bluetooth")
+@pytest.mark.parametrize(
+    "invalid_beacon_id",
+    [
+        "426c7565-4368-6172-6d42-6561636f6e73_a_1",
+        "426c7565-4368-6172-6d42-6561636f6e73_65536_1",
+        "426c7565-4368-6172-6d42-6561636f6e73_1_65536",
+        "426c7565-4368-6172-6d42-6561636f6e73_-1_1",
+    ],
+)
+async def test_options_flow_invalid_allowed_beacon_values(
+    hass: HomeAssistant, invalid_beacon_id: str
+) -> None:
+    """Test invalid numeric values in allowlisted beacon IDs."""
+    config_entry = MockConfigEntry(domain=DOMAIN)
+    config_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    result = await hass.config_entries.options.async_init(config_entry.entry_id)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "init"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={"new_allowed_beacon": invalid_beacon_id},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "init"
+    assert result["errors"] == {"new_allowed_beacon": "invalid_beacon_id_format"}
