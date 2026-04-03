@@ -99,7 +99,7 @@ class Hub:
         _LOGGER.info("Stopping hub")
         try:
             await self._hub.disconnect()
-        except Exception as err:
+        except Exception as err:  # noqa: BLE001
             _LOGGER.warning(
                 "Ignoring error while disconnecting from hub %s during shutdown",
                 self.host,
