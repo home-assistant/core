@@ -37,8 +37,9 @@ class DucoVentilationStateSensor(DucoEntity, SensorEntity):
     def __init__(self, coordinator: DucoCoordinator, node: Node) -> None:
         """Initialize the sensor entity."""
         super().__init__(coordinator, node)
-        mac = coordinator.config_entry.unique_id
-        self._attr_unique_id = f"{mac}_{node.node_id}_ventilation_state"
+        self._attr_unique_id = (
+            f"{coordinator.config_entry.unique_id}_{node.node_id}_ventilation_state"
+        )
 
     @property
     def native_value(self) -> str | None:

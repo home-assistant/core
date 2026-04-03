@@ -23,13 +23,13 @@ class DucoCoordinator(DataUpdateCoordinator[list[Node]]):
     """Coordinator for the Duco integration."""
 
     config_entry: DucoConfigEntry
+    board_info: BoardInfo
 
     def __init__(
         self,
         hass: HomeAssistant,
         config_entry: DucoConfigEntry,
         client: DucoClient,
-        board_info: BoardInfo,
     ) -> None:
         """Initialize the coordinator."""
         super().__init__(
@@ -40,7 +40,13 @@ class DucoCoordinator(DataUpdateCoordinator[list[Node]]):
             update_interval=SCAN_INTERVAL,
         )
         self.client = client
-        self.board_info = board_info
+
+    async def _async_setup(self) -> None:
+        """Fetch board info once during initial setup."""
+        try:
+            self.board_info = await self.client.async_get_board_info()
+        except (DucoConnectionError, DucoError) as err:
+            raise UpdateFailed(f"Cannot connect to Duco box: {err}") from err
 
     async def _async_update_data(self) -> list[Node]:
         """Fetch node data from the Duco box."""

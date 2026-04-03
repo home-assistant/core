@@ -38,24 +38,19 @@ class DucoConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         if user_input is not None:
-            client = DucoClient(
-                session=async_get_clientsession(self.hass),
-                host=user_input[CONF_HOST],
-            )
             try:
-                board_info = await client.async_get_board_info()
-                lan_info = await client.async_get_lan_info()
+                box_name, mac = await self._validate_input(user_input[CONF_HOST])
             except DucoConnectionError:
                 errors["base"] = "cannot_connect"
             except DucoError:
                 _LOGGER.exception("Unexpected error connecting to Duco box")
                 errors["base"] = "unknown"
             else:
-                await self.async_set_unique_id(format_mac(lan_info.mac))
+                await self.async_set_unique_id(format_mac(mac))
                 self._abort_if_unique_id_configured()
 
                 return self.async_create_entry(
-                    title=board_info.box_name,
+                    title=box_name,
                     data={CONF_HOST: user_input[CONF_HOST]},
                 )
 
@@ -64,3 +59,16 @@ class DucoConfigFlow(ConfigFlow, domain=DOMAIN):
             data_schema=STEP_USER_SCHEMA,
             errors=errors,
         )
+
+    async def _validate_input(self, host: str) -> tuple[str, str]:
+        """Validate the user input by connecting to the Duco box.
+
+        Returns a tuple of (box_name, mac_address).
+        """
+        client = DucoClient(
+            session=async_get_clientsession(self.hass),
+            host=host,
+        )
+        board_info = await client.async_get_board_info()
+        lan_info = await client.async_get_lan_info()
+        return board_info.box_name, lan_info.mac

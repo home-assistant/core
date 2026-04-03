@@ -96,8 +96,9 @@ class DucoVentilationFanEntity(DucoEntity, FanEntity):
     def __init__(self, coordinator: DucoCoordinator, node: Node) -> None:
         """Initialize the fan entity."""
         super().__init__(coordinator, node)
-        mac = coordinator.config_entry.unique_id
-        self._attr_unique_id = f"{mac}_{node.node_id}_ventilation"
+        self._attr_unique_id = (
+            f"{coordinator.config_entry.unique_id}_{node.node_id}_ventilation"
+        )
 
     @property
     def is_on(self) -> bool:
