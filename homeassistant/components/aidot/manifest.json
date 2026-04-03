@@ -4,8 +4,8 @@
   "codeowners": ["@s1eedz", "@HongBryan"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/aidot",
+  "integration_type": "hub",
   "iot_class": "local_polling",
   "quality_scale": "bronze",
-  "requirements": ["python-aidot==0.3.49"],
-  "version": "1.1.1-beta.3"
+  "requirements": ["python-aidot==0.3.49"]
 }
