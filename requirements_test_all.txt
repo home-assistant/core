@@ -506,7 +506,7 @@ apsystems-ez1==2.7.0
 aranet4==2.6.0
 
 # homeassistant.components.arcam_fmj
-arcam-fmj==1.8.2
+arcam-fmj==1.8.3
 
 # homeassistant.components.asuswrt
 asusrouter==1.21.3
@@ -1090,7 +1090,7 @@ hole==0.9.0
 
 # homeassistant.components.holiday
 # homeassistant.components.workday
-holidays==0.84
+holidays==0.93
 
 # homeassistant.components.frontend
 home-assistant-frontend==20260325.5
@@ -1123,7 +1123,7 @@ huum==0.8.2
 hyperion-py==0.7.6
 
 # homeassistant.components.hypontech
-hyponcloud==0.9.0
+hyponcloud==0.9.3
 
 # homeassistant.components.iaqualink
 iaqualink==0.6.0
@@ -1590,7 +1590,7 @@ proxmoxer==2.3.0
 psutil-home-assistant==0.0.1
 
 # homeassistant.components.systemmonitor
-psutil==7.1.2
+psutil==7.2.2
 
 # homeassistant.components.pushbullet
 pushbullet.py==0.11.0
@@ -1635,7 +1635,7 @@ py-nightscout==1.2.2
 py-nymta==0.4.0
 
 # homeassistant.components.opendisplay
-py-opendisplay==5.5.0
+py-opendisplay==5.9.0
 
 # homeassistant.components.ecovacs
 py-sucks==0.9.11
@@ -1892,7 +1892,7 @@ pyituran==0.1.5
 pyjvcprojector==2.0.3
 
 # homeassistant.components.kaleidescape
-pykaleidescape==1.1.4
+pykaleidescape==1.1.5
 
 # homeassistant.components.kira
 pykira==0.1.1
@@ -2141,7 +2141,7 @@ pysmartthings==3.7.3
 pysmarty2==0.10.3
 
 # homeassistant.components.smhi
-pysmhi==1.1.0
+pysmhi==2.0.0
 
 # homeassistant.components.edl21
 pysml==0.1.5
@@ -2283,7 +2283,7 @@ python-tado==0.18.16
 python-technove==2.0.0
 
 # homeassistant.components.telegram_bot
-python-telegram-bot[socks]==22.6
+python-telegram-bot[socks]==22.7
 
 # homeassistant.components.xbox
 python-xbox==0.2.0

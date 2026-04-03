@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from ovoenergy import OVOEnergy
-
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -16,15 +14,6 @@ class OVOEnergyEntity(CoordinatorEntity[OVOEnergyDataUpdateCoordinator]):
 
     _attr_has_entity_name = True
 
-    def __init__(
-        self,
-        coordinator: OVOEnergyDataUpdateCoordinator,
-        client: OVOEnergy,
-    ) -> None:
-        """Initialize the OVO Energy entity."""
-        super().__init__(coordinator)
-        self._client = client
-
 
 class OVOEnergyDeviceEntity(OVOEnergyEntity):
     """Defines a OVO Energy device entity."""
@@ -34,7 +23,7 @@ class OVOEnergyDeviceEntity(OVOEnergyEntity):
         """Return device information about this OVO Energy instance."""
         return DeviceInfo(
             entry_type=DeviceEntryType.SERVICE,
-            identifiers={(DOMAIN, self._client.account_id)},
+            identifiers={(DOMAIN, self.coordinator.client.account_id)},
             manufacturer="OVO Energy",
-            name=self._client.username,
+            name=self.coordinator.client.username,
         )
