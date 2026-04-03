@@ -14,12 +14,12 @@ from homeassistant.components.button import (
 )
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import issue_registry as ir
+from homeassistant.helpers import entity_registry as er, issue_registry as ir
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import BUTTON_TYPE_WOL, CONNECTION_TYPE_LAN, MeshRoles
+from .const import BUTTON_TYPE_WOL, CONNECTION_TYPE_LAN, DOMAIN, MeshRoles
 from .coordinator import FRITZ_DATA_KEY, AvmWrapper, FritzConfigEntry, FritzData
 from .entity import FritzDeviceBase
 from .helpers import _is_tracked
@@ -64,6 +64,7 @@ BUTTONS: Final = [
         translation_key="cleanup",
         entity_category=EntityCategory.CONFIG,
         press_action=lambda avm_wrapper: avm_wrapper.async_trigger_cleanup(),
+        entity_registry_enabled_default=False,
     ),
 ]
 
@@ -101,18 +102,28 @@ async def async_setup_entry(
         )
     )
 
-    # Deprecate the 'cleanup' button: create a Repairs issue for users
-    ir.async_create_issue(
-        hass,
-        domain="fritz",
-        issue_id="deprecated_cleanup_button",
-        is_fixable=False,
-        is_persistent=True,
-        severity=ir.IssueSeverity.WARNING,
-        translation_key="deprecated_cleanup_button",
-        translation_placeholders={"removal_version": "2026.11.0"},
-        breaks_in_ha_version="2026.11.0",
-    )
+    entity_registry = er.async_get(hass)
+    if (
+        (
+            entity_button := entity_registry.async_get_entity_id(
+                DOMAIN, "button", "cleanup"
+            )
+        )
+        and (entity_entry := entity_registry.async_get(entity_button))
+        and not entity_entry.disabled
+    ):
+        # Deprecate the 'cleanup' button: create a Repairs issue for users
+        ir.async_create_issue(
+            hass,
+            domain="fritz",
+            issue_id="deprecated_cleanup_button",
+            is_fixable=False,
+            is_persistent=True,
+            severity=ir.IssueSeverity.WARNING,
+            translation_key="deprecated_cleanup_button",
+            translation_placeholders={"removal_version": "2026.11.0"},
+            breaks_in_ha_version="2026.11.0",
+        )
 
 
 class FritzButton(ButtonEntity):
