@@ -312,9 +312,8 @@ async def test_generate_data_content_type(
                     "media_content_id": "media-source://camera/camera.front_door",
                     "media_content_type": "image/jpeg",
                 },
-                {
+                {  # User did not provide content type, fallback to the integration
                     "media_content_id": "media-source://image/image.floorplan",
-                    "media_content_type": "image/jpeg",
                 },
                 {
                     "media_content_id": "media-source://media_player/test.png",
@@ -353,7 +352,7 @@ async def test_generate_data_content_type(
     # Check image attachment
     image_attachment = task.attachments[1]
     assert image_attachment.media_content_id == "media-source://image/image.floorplan"
-    assert image_attachment.mime_type == "image/jpeg"
+    assert image_attachment.mime_type == "image/png"
     assert isinstance(image_attachment.path, Path)
     assert image_attachment.path.suffix == ".png"
 
