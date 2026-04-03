@@ -15,7 +15,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from .coordinator import DucoConfigEntry, DucoCoordinator
 from .entity import DucoEntity
 
-PARALLEL_UPDATES = 0
+PARALLEL_UPDATES = 1
 
 PRESET_AUTO = "auto"
 PRESET_AWAY = "away"
