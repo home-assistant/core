@@ -15,7 +15,10 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import MusicAssistantConfigEntry
-from .const import PLAYER_OPTIONS_TRANSLATION_KEYS_NUMBER
+from .const import (
+    PLAYER_OPTIONS_TRANSLATION_KEY_PREFIX,
+    PLAYER_OPTIONS_TRANSLATION_KEYS_NUMBER,
+)
 from .entity import MusicAssistantPlayerOptionEntity
 from .helpers import catch_musicassistant_error
 
@@ -44,11 +47,13 @@ async def async_setup_entry(
                 )
                 and not player_option.options  # these we map to select
             ):
-                # the MA translation key will either have the format player_option.<translation key>
+                # the MA translation key will either have the format player_options.<translation key>
                 # or <translation_key>
                 if (
                     player_option.translation_key is None
-                    or player_option.translation_key.split("player_option.")[-1]
+                    or player_option.translation_key.split(
+                        PLAYER_OPTIONS_TRANSLATION_KEY_PREFIX
+                    )[-1]
                     not in PLAYER_OPTIONS_TRANSLATION_KEYS_NUMBER
                 ):
                     # we ignore entities with unknown translation keys.
@@ -81,7 +86,9 @@ class MusicAssistantPlayerConfigNumber(MusicAssistantPlayerOptionEntity, NumberE
 
         self.entity_description = NumberEntityDescription(
             key=player_option.key,
-            translation_key=player_option.translation_key.split("player_option.")[-1],
+            translation_key=player_option.translation_key.split(
+                PLAYER_OPTIONS_TRANSLATION_KEY_PREFIX
+            )[-1],
         )
 
     @catch_musicassistant_error

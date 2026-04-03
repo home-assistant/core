@@ -82,6 +82,7 @@ ATTR_CONF_EXPOSE_PLAYER_TO_HA = "expose_player_to_ha"
 
 LOGGER = logging.getLogger(__package__)
 
+PLAYER_OPTIONS_TRANSLATION_KEY_PREFIX = "player_options."
 # translation keys for player option number entities
 PLAYER_OPTIONS_TRANSLATION_KEYS_NUMBER: Final[list[str]] = [
     "bass",
