@@ -74,6 +74,9 @@
       },
       "resume_container": {
         "name": "Resume container"
+      },
+      "volumes_prune": {
+        "name": "Prune unused volumes"
       }
     },
     "sensor": {

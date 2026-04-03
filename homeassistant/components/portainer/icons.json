@@ -6,6 +6,9 @@
       },
       "resume_container": {
         "default": "mdi:play"
+      },
+      "volumes_prune": {
+        "default": "mdi:delete-sweep"
       }
     },
     "sensor": {
