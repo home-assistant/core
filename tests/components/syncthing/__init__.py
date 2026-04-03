@@ -20,13 +20,13 @@ SERVER_NAME = "This Device"
 FOLDER_ID = "test-folder"
 FOLDER_LABEL = "Test Folder"
 
-SERVER_ID_SHORT = SERVER_ID.split("-", maxsplit=1)[0]
+SERVER_ID_SHORT_HA = SERVER_ID.split("-", maxsplit=1)[0].lower()
 SERVER_NAME_HA = SERVER_NAME.lower().replace(" ", "_")
 FOLDER_ID_HA = FOLDER_ID.lower().replace("-", "_")
 FOLDER_LABEL_HA = FOLDER_LABEL.lower().replace(" ", "_")
 
-SERVER_ENTITY_ID = f"sensor.syncthing_{SERVER_NAME_HA}_{SERVER_ID_SHORT}_{SERVER_ID_SHORT}_{SERVER_NAME_HA}"
-FOLDER_ENTITY_ID = f"sensor.syncthing_{SERVER_NAME_HA}_{SERVER_ID_SHORT}_{FOLDER_ID_HA}_{FOLDER_LABEL_HA}"
+SERVER_ENTITY_ID = f"sensor.syncthing_{SERVER_NAME_HA}_{SERVER_ID_SHORT_HA}_{SERVER_ID_SHORT_HA}_{SERVER_NAME_HA}"
+FOLDER_ENTITY_ID = f"sensor.syncthing_{SERVER_NAME_HA}_{SERVER_ID_SHORT_HA}_{FOLDER_ID_HA}_{FOLDER_LABEL_HA}"
 
 MOCK_SYSTEM_STATUS = {"myID": SERVER_ID}
 
@@ -132,6 +132,7 @@ def create_mock_syncthing_client() -> MagicMock:
         """Mock events.listen that doesn't block."""
         while True:
             await asyncio.sleep(3600)
+            yield None
 
     mock_events.listen = mock_listen
     mock_events.last_seen_id = 0
