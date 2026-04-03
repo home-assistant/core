@@ -115,7 +115,7 @@ async def async_setup_entry(
         # Deprecate the 'cleanup' button: create a Repairs issue for users
         ir.async_create_issue(
             hass,
-            domain="fritz",
+            domain=DOMAIN,
             issue_id="deprecated_cleanup_button",
             is_fixable=False,
             is_persistent=True,
