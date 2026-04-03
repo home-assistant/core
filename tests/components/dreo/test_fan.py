@@ -9,6 +9,7 @@ from homeassistant.components.dreo.fan import async_setup_entry
 from homeassistant.components.fan import (
     ATTR_OSCILLATING,
     ATTR_PERCENTAGE,
+    ATTR_PERCENTAGE_STEP,
     ATTR_PRESET_MODE,
     DOMAIN as FAN_DOMAIN,
 )
@@ -67,6 +68,7 @@ async def test_fan_setup_and_device_info(hass: HomeAssistant) -> None:
     assert state is not None
     assert state.state == STATE_ON
     assert state.attributes[ATTR_PERCENTAGE] == 50
+    assert state.attributes[ATTR_PERCENTAGE_STEP] == pytest.approx(100 / 6)
     assert state.attributes[ATTR_PRESET_MODE] == "Auto"
     assert state.attributes[ATTR_OSCILLATING] is True
 
@@ -667,3 +669,48 @@ async def test_fan_execute_command_without_speed_range(hass: HomeAssistant) -> N
     mock_client.update_status.assert_called_with(
         "test-fan-no-speed-range", power_switch=True
     )
+
+
+async def test_fan_set_percentage_service_with_discrete_speed_values(
+    hass: HomeAssistant,
+) -> None:
+    """Test fan set percentage service with explicit speed values."""
+    with patch("homeassistant.components.dreo.DreoClient") as mock_client_class:
+        mock_client = mock_client_class.return_value
+        mock_client.login = MagicMock()
+        mock_client.get_devices.return_value = [
+            {
+                "deviceSn": "test-fan-discrete-speeds",
+                "model": "DR-HTF001S",
+                "deviceName": "Discrete Speed Fan",
+                "deviceType": "fan",
+                "config": {
+                    "preset_modes": ["Sleep", "Auto", "Natural", "Normal"],
+                    "speed_range": [1, 3, 5, 7, 9, 12],
+                },
+            }
+        ]
+        mock_client.get_status.return_value = {
+            "power_switch": True,
+            "connected": True,
+            "speed": 7,
+        }
+        mock_client.update_status = MagicMock()
+
+        config_entry = await init_integration(hass)
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    state = hass.states.get("fan.discrete_speed_fan")
+    assert state is not None
+    assert state.attributes[ATTR_PERCENTAGE] == 66
+    assert state.attributes[ATTR_PERCENTAGE_STEP] == pytest.approx(100 / 6)
+
+    await hass.services.async_call(
+        FAN_DOMAIN,
+        "set_percentage",
+        {ATTR_ENTITY_ID: "fan.discrete_speed_fan", ATTR_PERCENTAGE: 75},
+        blocking=True,
+    )
+
+    mock_client.update_status.assert_called_with("test-fan-discrete-speeds", speed=9)

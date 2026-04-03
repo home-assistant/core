@@ -3,13 +3,12 @@
 from __future__ import annotations
 
 import logging
-import math
 from typing import Any
 
 from homeassistant.components.fan import FanEntity, FanEntityFeature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.util.percentage import percentage_to_ranged_value
+from homeassistant.util.percentage import percentage_to_ordered_list_item
 
 from . import DreoConfigEntry
 from .const import (
@@ -20,7 +19,11 @@ from .const import (
     ERROR_TURN_ON_FAILED,
     FAN_DEVICE_TYPE,
 )
-from .coordinator import DreoDataUpdateCoordinator
+from .coordinator import (
+    DreoDataUpdateCoordinator,
+    get_fan_model_config,
+    get_speed_values,
+)
 from .entity import DreoEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -77,6 +80,7 @@ class DreoFan(DreoEntity, FanEntity):
     _attr_percentage = 0
     _attr_preset_mode = None
     _attr_oscillating = None
+    _attr_speed_count = 100
 
     def __init__(
         self,
@@ -87,8 +91,16 @@ class DreoFan(DreoEntity, FanEntity):
         super().__init__(device, coordinator, FAN_DEVICE_TYPE)
 
         model_config = coordinator.model_config
-        self._speed_range = model_config.get("speed_range")
-        self._attr_preset_modes = model_config.get("preset_modes")
+        fan_model_config = get_fan_model_config(model_config)
+        self._speed_values = get_speed_values(model_config) or []
+        if self._speed_values:
+            self._attr_speed_count = len(self._speed_values)
+        self._attr_preset_modes = fan_model_config.get("preset_modes")
+
+    async def async_added_to_hass(self) -> None:
+        """Register the fan and sync its initial state."""
+        await super().async_added_to_hass()
+        self._update_attributes()
 
     @callback
     def _handle_coordinator_update(self) -> None:
@@ -174,17 +186,24 @@ class DreoFan(DreoEntity, FanEntity):
         if not self.is_on:
             command_params["power_switch"] = True
 
-        if percentage is not None and percentage > 0 and self._speed_range:
-            speed = math.ceil(
-                percentage_to_ranged_value(self._speed_range, percentage)
+        if percentage is not None and percentage > 0 and self._speed_values:
+            speed = percentage_to_ordered_list_item(self._speed_values, percentage)
+            current_percentage = self.percentage
+            current_speed = (
+                percentage_to_ordered_list_item(self._speed_values, current_percentage)
+                if current_percentage
+                else None
             )
-            if speed > 0:
+            if speed > 0 and speed != current_speed:
                 command_params["speed"] = speed
 
         if preset_mode is not None:
             command_params["mode"] = preset_mode
         if oscillate is not None:
             command_params["oscillate"] = oscillate
+
+        if not command_params:
+            return
 
         await self.async_send_command_and_update(
             error_translation_key, **command_params
