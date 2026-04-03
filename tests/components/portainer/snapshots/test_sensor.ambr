@@ -32,7 +32,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'volume_driver',
-    'unique_id': 'portainer_test_entry_123_dashy_config_volume_driver',
+    'unique_id': 'portainer_test_entry_123_1_volume_dashy_config_volume_driver',
     'unit_of_measurement': None,
   })
 # ---
@@ -90,7 +90,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'volume_size',
-    'unique_id': 'portainer_test_entry_123_dashy_config_volume_size',
+    'unique_id': 'portainer_test_entry_123_1_volume_dashy_config_volume_size',
     'unit_of_measurement': <UnitOfInformation.GIBIBYTES: 'GiB'>,
   })
 # ---
@@ -613,7 +613,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'volume_driver',
-    'unique_id': 'portainer_test_entry_123_db_data_volume_driver',
+    'unique_id': 'portainer_test_entry_123_1_volume_db_data_volume_driver',
     'unit_of_measurement': None,
   })
 # ---
@@ -671,7 +671,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'volume_size',
-    'unique_id': 'portainer_test_entry_123_db_data_volume_size',
+    'unique_id': 'portainer_test_entry_123_1_volume_db_data_volume_size',
     'unit_of_measurement': <UnitOfInformation.GIBIBYTES: 'GiB'>,
   })
 # ---
@@ -2416,7 +2416,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'volume_driver',
-    'unique_id': 'portainer_test_entry_123_myvolume_volume_driver',
+    'unique_id': 'portainer_test_entry_123_1_volume_myvolume_volume_driver',
     'unit_of_measurement': None,
   })
 # ---
@@ -2474,7 +2474,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'volume_size',
-    'unique_id': 'portainer_test_entry_123_myvolume_volume_size',
+    'unique_id': 'portainer_test_entry_123_1_volume_myvolume_volume_size',
     'unit_of_measurement': <UnitOfInformation.GIBIBYTES: 'GiB'>,
   })
 # ---

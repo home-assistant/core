@@ -213,7 +213,7 @@ class PortainerVolumeEntity(PortainerCoordinatorEntity):
                 f"{coordinator.config_entry.entry_id}_{self.endpoint_id}",
             ),
         )
-        self._attr_unique_id = f"{coordinator.config_entry.entry_id}_{self.volume_name}_{entity_description.key}"
+        self._attr_unique_id = f"{coordinator.config_entry.entry_id}_{self.endpoint_id}_volume_{self.volume_name}_{entity_description.key}"
 
     @property
     def available(self) -> bool:
