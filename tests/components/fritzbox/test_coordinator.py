@@ -62,7 +62,7 @@ async def test_coordinator_update_after_reboot(
 async def test_coordinator_update_after_reboot_relogin_fails(
     hass: HomeAssistant, fritz: Mock
 ) -> None:
-    """Test coordinator when re-login itself fails after an HTTP error."""
+    """Test coordinator schedules reload when re-login fails with ConnectionError."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         data=MOCK_CONFIG[DOMAIN][CONF_DEVICES][0],
@@ -70,6 +70,7 @@ async def test_coordinator_update_after_reboot_relogin_fails(
     )
     entry.add_to_hass(hass)
     fritz().update_devices.side_effect = ["", HTTPError()]
+    # Initial login succeeds; re-login fails with ConnectionError (box went offline)
     fritz().login.side_effect = [None, ConnectionError()]
 
     assert await hass.config_entries.async_setup(entry.entry_id)
@@ -77,7 +78,7 @@ async def test_coordinator_update_after_reboot_relogin_fails(
     async_fire_time_changed(hass, utcnow() + timedelta(seconds=35))
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    assert entry.state is ConfigEntryState.LOADED
+    assert entry.state is ConfigEntryState.SETUP_RETRY
 
 
 async def test_coordinator_update_after_password_change(
@@ -126,16 +127,14 @@ async def test_coordinator_update_relogin_detects_password_change(
 async def test_coordinator_update_when_unreachable(
     hass: HomeAssistant, fritz: Mock
 ) -> None:
-    """Test coordinator when device is unreachable during initial setup."""
+    """Test coordinator schedules reload when device is unreachable during update."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         data=MOCK_CONFIG[DOMAIN][CONF_DEVICES][0],
         unique_id="any",
     )
     entry.add_to_hass(hass)
-    # Both the initial update and the re-login attempt fail immediately
     fritz().update_devices.side_effect = [ConnectionError()]
-    fritz().login.side_effect = [None, ConnectionError()]
 
     assert not await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done(wait_background_tasks=True)

@@ -183,9 +183,9 @@ class FritzboxDataUpdateCoordinator(DataUpdateCoordinator[FritzboxCoordinatorDat
             new_data = await self.hass.async_add_executor_job(
                 self._update_fritz_devices
             )
-        except (RequestConnectionError, HTTPError, LoginError) as ex:
+        except HTTPError as ex:
             LOGGER.debug(
-                "Error fetching %s data, attempting re-login: '%s'",
+                "Re-login %s due to HTTP error '%s'",
                 self.config_entry.title,
                 ex,
             )
@@ -193,14 +193,28 @@ class FritzboxDataUpdateCoordinator(DataUpdateCoordinator[FritzboxCoordinatorDat
                 await self.hass.async_add_executor_job(self.fritz.login)
             except LoginError as login_ex:
                 raise ConfigEntryAuthFailed from login_ex
-            except (RequestConnectionError, HTTPError) as conn_ex:
-                raise UpdateFailed(conn_ex) from conn_ex
+            except RequestConnectionError as conn_ex:
+                self.hass.config_entries.async_schedule_reload(
+                    self.config_entry.entry_id
+                )
+                raise UpdateFailed(str(conn_ex)) from conn_ex
             try:
                 new_data = await self.hass.async_add_executor_job(
                     self._update_fritz_devices
                 )
-            except (RequestConnectionError, HTTPError, LoginError) as retry_ex:
-                raise UpdateFailed(retry_ex) from retry_ex
+            except (HTTPError, RequestConnectionError) as retry_ex:
+                self.hass.config_entries.async_schedule_reload(
+                    self.config_entry.entry_id
+                )
+                raise UpdateFailed(str(retry_ex)) from retry_ex
+        except RequestConnectionError as ex:
+            LOGGER.debug(
+                "Reload %s due to error '%s' to ensure proper re-login",
+                self.config_entry.title,
+                ex,
+            )
+            self.hass.config_entries.async_schedule_reload(self.config_entry.entry_id)
+            raise UpdateFailed(str(ex)) from ex
 
         for device in new_data.devices.values():
             # create device registry entry for new main devices
