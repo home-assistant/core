@@ -323,9 +323,9 @@ class HIVIDiscoveryScheduler:
                     self.current_interval * 0.95, self.min_interval
                 )
 
-                _LOGGER.debug(
-                    "Discovery interval adjusted to %d seconds", self.current_interval
-                )
+            _LOGGER.debug(
+                "Discovery interval adjusted to %d seconds", self.current_interval
+            )
 
 
 def _scan_speaker_sync() -> list[tuple[str, tuple[str, int]]]:
