@@ -502,7 +502,6 @@ class RoborockQ10CleanModeSelectEntity(RoborockCoordinatedEntityB01Q10, SelectEn
     @property
     def options(self) -> list[str]:
         """Return available cleaning modes."""
-        # Use all YXCleanType values except UNKNOWN
         return [mode.value for mode in YXCleanType if mode != YXCleanType.UNKNOWN]
 
     @property
