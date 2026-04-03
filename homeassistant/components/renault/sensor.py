@@ -5,12 +5,13 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime
-from typing import TYPE_CHECKING, Any, Generic, cast
+from typing import TYPE_CHECKING, Any, cast
 
 from renault_api.kamereon.models import (
     KamereonVehicleBatteryStatusData,
     KamereonVehicleChargingSettingsData,
     KamereonVehicleCockpitData,
+    KamereonVehicleDataAttributes,
     KamereonVehicleHvacStatusData,
     KamereonVehicleLocationData,
     KamereonVehicleResStateData,
@@ -39,7 +40,6 @@ from homeassistant.helpers.typing import StateType
 from homeassistant.util.dt import as_utc, parse_datetime
 
 from . import RenaultConfigEntry
-from .coordinator import T
 from .entity import RenaultDataEntity, RenaultDataEntityDescription
 from .renault_vehicle import RenaultVehicleProxy
 
@@ -48,8 +48,8 @@ PARALLEL_UPDATES = 0
 
 
 @dataclass(frozen=True, kw_only=True)
-class RenaultSensorEntityDescription(
-    SensorEntityDescription, RenaultDataEntityDescription, Generic[T]
+class RenaultSensorEntityDescription[T: KamereonVehicleDataAttributes](
+    SensorEntityDescription, RenaultDataEntityDescription
 ):
     """Class describing Renault sensor entities."""
 
@@ -76,7 +76,9 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class RenaultSensor(RenaultDataEntity[T], SensorEntity):
+class RenaultSensor[T: KamereonVehicleDataAttributes](
+    RenaultDataEntity[T], SensorEntity
+):
     """Mixin for sensor specific attributes."""
 
     entity_description: RenaultSensorEntityDescription[T]
@@ -96,31 +98,39 @@ class RenaultSensor(RenaultDataEntity[T], SensorEntity):
         return self.entity_description.value_lambda(self)
 
 
-def _get_charging_power(entity: RenaultSensor[T]) -> StateType:
+def _get_charging_power(
+    entity: RenaultSensor[KamereonVehicleBatteryStatusData],
+) -> StateType:
     """Return the charging_power of this entity."""
     return cast(float, entity.data) / 1000
 
 
-def _get_charge_state_formatted(entity: RenaultSensor[T]) -> str | None:
+def _get_charge_state_formatted(
+    entity: RenaultSensor[KamereonVehicleBatteryStatusData],
+) -> str | None:
     """Return the charging_status of this entity."""
-    data = cast(KamereonVehicleBatteryStatusData, entity.coordinator.data)
-    charging_status = data.get_charging_status() if data else None
+    charging_status = entity.coordinator.data.get_charging_status()
     return charging_status.name.lower() if charging_status else None
 
 
-def _get_plug_state_formatted(entity: RenaultSensor[T]) -> str | None:
+def _get_plug_state_formatted(
+    entity: RenaultSensor[KamereonVehicleBatteryStatusData],
+) -> str | None:
     """Return the plug_status of this entity."""
-    data = cast(KamereonVehicleBatteryStatusData, entity.coordinator.data)
-    plug_status = data.get_plug_status() if data else None
+    plug_status = entity.coordinator.data.get_plug_status()
     return plug_status.name.lower() if plug_status else None
 
 
-def _get_rounded_value(entity: RenaultSensor[T]) -> float:
+def _get_rounded_value[T: KamereonVehicleDataAttributes](
+    entity: RenaultSensor[T],
+) -> float:
     """Return the rounded value of this entity."""
     return round(cast(float, entity.data))
 
 
-def _get_utc_value(entity: RenaultSensor[T]) -> datetime:
+def _get_utc_value[T: KamereonVehicleDataAttributes](
+    entity: RenaultSensor[T],
+) -> datetime:
     """Return the UTC value of this entity."""
     original_dt = parse_datetime(cast(str, entity.data))
     if TYPE_CHECKING:
@@ -128,10 +138,11 @@ def _get_utc_value(entity: RenaultSensor[T]) -> datetime:
     return as_utc(original_dt)
 
 
-def _get_charging_settings_mode_formatted(entity: RenaultSensor[T]) -> str | None:
+def _get_charging_settings_mode_formatted(
+    entity: RenaultSensor[KamereonVehicleChargingSettingsData],
+) -> str | None:
     """Return the charging_settings mode of this entity."""
-    data = cast(KamereonVehicleChargingSettingsData, entity.coordinator.data)
-    charging_mode = data.mode if data else None
+    charging_mode = entity.coordinator.data.mode
     return charging_mode.lower() if charging_mode else None
 
 
