@@ -517,13 +517,7 @@ class RoborockQ10CleanModeSelectEntity(RoborockCoordinatedEntityB01Q10, SelectEn
 
     async def async_select_option(self, option: str) -> None:
         """Set the cleaning mode."""
-        # Find enum by value (string), not by constructor
-        mode = None
-        for m in YXCleanType:
-            if m.value == option:
-                mode = m
-                break
-        if mode is None:
+        if (mode := next((m for m in YXCleanType if m == option), None)) is None:
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
                 translation_key="select_option_failed",
