@@ -273,7 +273,7 @@
       "name": "Join media players"
     },
     "media_next_track": {
-      "description": "Selects the next track om a media player.",
+      "description": "Selects the next track on a media player.",
       "name": "Next track"
     },
     "media_pause": {
