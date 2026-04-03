@@ -373,7 +373,7 @@ class HIVIDeviceManager:
         ha_device_list = await self._get_devices_for_device()
 
         for ha_device in ha_device_list:
-            existing_entiy_entry_list = await self._get_entities_for_device(
+            existing_entity_entry_list = await self._get_entities_for_device(
                 ha_device.id
             )
 
@@ -390,7 +390,7 @@ class HIVIDeviceManager:
             device_obj = HIVIDevice(**device_dict)
             slave_speaker_device_id_to_entity_entry_dict = {}
             should_remove_entity_id_set = set()
-            for entity_entry in existing_entiy_entry_list:
+            for entity_entry in existing_entity_entry_list:
                 _LOGGER.debug(
                     "check %s 's entity: %s",
                     device_obj.friendly_name,
@@ -537,10 +537,10 @@ class HIVIDeviceManager:
                 slave_uuid = slave_device.uuid
                 unique_id = f"{device_obj.speaker_device_id}_slave_{slave_uuid}"
                 need_to_add_switch_flg = False
-                existing_entiy_entry_list = await self._get_entities_for_device(
+                existing_entity_entry_list = await self._get_entities_for_device(
                     ha_device.id
                 )
-                for entity_entry in existing_entiy_entry_list:
+                for entity_entry in existing_entity_entry_list:
                     if entity_entry.unique_id == unique_id:
                         _LOGGER.debug(
                             "device %s already has a switch to control slave device %s, judge status",
@@ -622,7 +622,7 @@ class HIVIDeviceManager:
         ha_device_list = await self._get_devices_for_device()
 
         for ha_device in ha_device_list:
-            existing_entiy_entry_list = await self._get_entities_for_device(
+            existing_entity_entry_list = await self._get_entities_for_device(
                 ha_device.id
             )
 
@@ -638,7 +638,7 @@ class HIVIDeviceManager:
 
             device_obj = HIVIDevice(**device_dict)
 
-            for entity_entry in existing_entiy_entry_list:
+            for entity_entry in existing_entity_entry_list:
                 if entity_entry.entity_id.startswith(
                     "switch."
                 ) and entity_entry.unique_id.startswith(
