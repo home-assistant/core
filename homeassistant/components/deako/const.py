@@ -1,4 +1,3 @@
-cat > /config/custom_components/deako/const.py << 'ENDOFFILE'
 """Constants for Deako."""
 
 # Base component constants
@@ -13,4 +12,3 @@ DEAKO_DEFAULT_PORT = 23
 
 # Minimum delay between commands to the bridge (seconds)
 COMMAND_THROTTLE_S = 0.25
-ENDOFFILE
