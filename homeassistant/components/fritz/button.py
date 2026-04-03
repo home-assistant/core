@@ -110,8 +110,8 @@ async def async_setup_entry(
         is_persistent=True,
         severity=ir.IssueSeverity.WARNING,
         translation_key="deprecated_cleanup_button",
-        translation_placeholders={"removal_version": "2026.9.0"},
-        breaks_in_ha_version="2026.9.0",
+        translation_placeholders={"removal_version": "2026.11.0"},
+        breaks_in_ha_version="2026.11.0",
     )
 
 
