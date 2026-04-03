@@ -97,7 +97,14 @@ class Hub:
     async def stop(self) -> None:
         """Stop the Victron MQTT hub."""
         _LOGGER.info("Stopping hub")
-        await self._hub.disconnect()
+        try:
+            await self._hub.disconnect()
+        except Exception as err:
+            _LOGGER.warning(
+                "Ignoring error while disconnecting from hub %s during shutdown",
+                self.host,
+                exc_info=err,
+            )
 
     def _on_new_metric(
         self,
