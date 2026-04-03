@@ -1,19 +1,21 @@
 """Tessie integration."""
 
 import asyncio
-from http import HTTPStatus
 import logging
 
-from aiohttp import ClientError, ClientResponseError
 from tesla_fleet_api.const import Scope
 from tesla_fleet_api.exceptions import (
     Forbidden,
+    GatewayTimeout,
+    InvalidResponse,
     InvalidToken,
+    MissingToken,
+    RateLimited,
+    ServiceUnavailable,
     SubscriptionRequired,
     TeslaFleetError,
 )
 from tesla_fleet_api.tessie import Tessie
-from tessie_api import get_state_of_all_vehicles
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ACCESS_TOKEN, Platform
@@ -54,57 +56,69 @@ _LOGGER = logging.getLogger(__name__)
 
 type TessieConfigEntry = ConfigEntry[TessieData]
 
+RETRY_EXCEPTIONS = (
+    InvalidResponse,
+    RateLimited,
+    ServiceUnavailable,
+    GatewayTimeout,
+)
+
 
 async def async_setup_entry(hass: HomeAssistant, entry: TessieConfigEntry) -> bool:
     """Set up Tessie config."""
     api_key = entry.data[CONF_ACCESS_TOKEN]
     session = async_get_clientsession(hass)
+    tessie = Tessie(session, api_key)
 
     try:
-        state_of_all_vehicles = await get_state_of_all_vehicles(
-            session=session,
-            api_key=api_key,
-            only_active=True,
-        )
-    except ClientResponseError as e:
-        if e.status == HTTPStatus.UNAUTHORIZED:
-            raise ConfigEntryAuthFailed from e
-        raise ConfigEntryError("Setup failed, unable to connect to Tessie") from e
-    except ClientError as e:
+        state_of_all_vehicles = await tessie.list_vehicles(only_active=True)
+    except (InvalidToken, MissingToken) as e:
+        raise ConfigEntryAuthFailed from e
+    except RETRY_EXCEPTIONS as e:
         raise ConfigEntryNotReady from e
+    except TeslaFleetError as e:
+        raise ConfigEntryError(
+            translation_domain=DOMAIN,
+            translation_key="cannot_connect",
+        ) from e
 
-    vehicles = [
-        TessieVehicleData(
-            vin=vehicle["vin"],
-            data_coordinator=TessieStateUpdateCoordinator(
-                hass,
-                entry,
-                api_key=api_key,
-                vin=vehicle["vin"],
-                data=vehicle["last_state"],
-            ),
-            device=DeviceInfo(
-                identifiers={(DOMAIN, vehicle["vin"])},
-                manufacturer="Tesla",
-                configuration_url="https://my.tessie.com/",
-                name=vehicle["last_state"]["display_name"],
-                model=MODELS.get(
-                    vehicle["last_state"]["vehicle_config"]["car_type"],
-                    vehicle["last_state"]["vehicle_config"]["car_type"],
+    vehicles: list[TessieVehicleData] = []
+    for vehicle in state_of_all_vehicles["results"]:
+        if vehicle["last_state"] is None:
+            continue
+
+        vin = vehicle["vin"]
+        vehicle_api = tessie.vehicles.create(vin)
+        vehicles.append(
+            TessieVehicleData(
+                vin=vin,
+                data_coordinator=TessieStateUpdateCoordinator(
+                    hass,
+                    entry,
+                    api=vehicle_api,
+                    api_key=api_key,
+                    vin=vin,
+                    data=vehicle["last_state"],
                 ),
-                sw_version=vehicle["last_state"]["vehicle_state"]["car_version"].split(
-                    " "
-                )[0],
-                hw_version=vehicle["last_state"]["vehicle_config"]["driver_assist"],
-                serial_number=vehicle["vin"],
-            ),
+                device=DeviceInfo(
+                    identifiers={(DOMAIN, vin)},
+                    manufacturer="Tesla",
+                    configuration_url="https://my.tessie.com/",
+                    name=vehicle["last_state"]["display_name"],
+                    model=MODELS.get(
+                        vehicle["last_state"]["vehicle_config"]["car_type"],
+                        vehicle["last_state"]["vehicle_config"]["car_type"],
+                    ),
+                    sw_version=vehicle["last_state"]["vehicle_state"][
+                        "car_version"
+                    ].split(" ")[0],
+                    hw_version=vehicle["last_state"]["vehicle_config"]["driver_assist"],
+                    serial_number=vin,
+                ),
+            )
         )
-        for vehicle in state_of_all_vehicles["results"]
-        if vehicle["last_state"] is not None
-    ]
 
     # Energy Sites
-    tessie = Tessie(session, api_key)
     energysites: list[TessieEnergyData] = []
 
     try:

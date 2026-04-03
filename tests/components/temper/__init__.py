@@ -1,1 +1,1 @@
-"""Tests for the temper integration."""
+"""Tests for the TEMPer integration."""
