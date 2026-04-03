@@ -38,10 +38,10 @@ PARALLEL_UPDATES = 5
 
 WIFI_STANDARD = {1: "2.4Ghz", 2: "5Ghz", 3: "5Ghz", 4: "Guest"}
 
-WIFI_SCHEMA = {
-    0: {"band": "2.4Ghz", "type": "Main"},
-    1: {"band": "5Ghz", "type": "Main"},
-    3: {"band": "5Ghz High / 6Ghz", "type": "Main"},
+WIFI_BAND = {
+    0: {"band": "2.4Ghz"},
+    1: {"band": "5Ghz"},
+    3: {"band": "5Ghz High / 6Ghz"},
 }
 
 
@@ -60,9 +60,8 @@ def _wifi_naming(
         return "Guest"
 
     # Cast to correct type for type checker
-    result = WIFI_SCHEMA.get(wifi_index)
-    if result is not None:
-        return result["type"] + (f" {result['band']}" if result["band"] else "")
+    if (result := WIFI_BAND.get(wifi_index)) is not None:
+        return f"Main {result['band']}"
 
     return None
 
@@ -99,7 +98,9 @@ async def _migrate_to_new_unique_id(
 
     networks = await _get_wifi_networks_list(avm_wrapper)
     for index, network in networks.items():
-        old_unique_id_suffix = f"wi_fi_{network['NewSSID'].lower()}"
+        old_unique_id_suffix = (
+            f"{avm_wrapper.unique_id}-wi_fi_{network['NewSSID'].lower()}"
+        )
         if (
             len(
                 [
@@ -112,23 +113,21 @@ async def _migrate_to_new_unique_id(
         ):
             old_unique_id_suffix += f" ({WIFI_STANDARD[index]})"
 
-        new_unique_id_suffix = (
-            f"wi_fi_{slugify(_wifi_naming(network, index - 1, len(networks)))}"
-        )
+        new_unique_id_suffix = f"{avm_wrapper.unique_id}-wi_fi_{slugify(_wifi_naming(network, index - 1, len(networks)))}"
 
         entity_id = entity_registry.async_get_entity_id(
-            Platform.SWITCH, DOMAIN, f"{avm_wrapper.unique_id}-{old_unique_id_suffix}"
+            Platform.SWITCH, DOMAIN, old_unique_id_suffix
         )
 
         if entity_id is not None:
             entity_registry.async_update_entity(
                 entity_id,
-                new_unique_id=f"{avm_wrapper.unique_id}-{new_unique_id_suffix}",
+                new_unique_id=new_unique_id_suffix,
             )
             _LOGGER.debug(
                 "Migrating Wi-FI switch unique_id from [%s] to [%s]",
-                f"{avm_wrapper.unique_id}-{old_unique_id_suffix}",
-                f"{avm_wrapper.unique_id}-{new_unique_id_suffix}",
+                old_unique_id_suffix,
+                new_unique_id_suffix,
             )
 
     _LOGGER.debug("Migration completed")
@@ -629,7 +628,6 @@ class FritzBoxWifiSwitch(FritzBoxBaseSwitch):
         description = f"Wi-Fi {network_data['switch_name']}"
         self._attr_translation_key = slugify(description)
 
-        _LOGGER.error("Switch: %s", description)
         switch_info = SwitchInfo(
             description=description,
             friendly_name=device_friendly_name,
