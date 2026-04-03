@@ -172,8 +172,9 @@ class MatterFan(MatterEntity, FanEntity):
         """Update from device."""
         self._calculate_features()
 
-        # Update speed_count from SpeedMax on every update since SpeedMax can
-        # initially be NullValue and become available or change later.
+        # Update speed_count from SpeedMax on every update. SpeedMax itself is
+        # not nullable per spec, but it may be unavailable (None) in client-side
+        # attribute reads until reported by the device.
         if self._feature_map and self._feature_map & FanControlFeature.kMultiSpeed:
             speed_max_attr = self.get_matter_attribute_value(
                 clusters.FanControl.Attributes.SpeedMax
