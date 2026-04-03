@@ -89,5 +89,5 @@ class MusicAssistantPlayerConfigNumber(MusicAssistantPlayerOptionEntity, NumberE
             self._attr_native_step = player_option.step
 
         self._attr_native_value = (
-            self.mass_value if isinstance(self.mass_value, (int, float)) else None
+            player_option.value if isinstance(player_option.value, (int, float)) else None
         )
