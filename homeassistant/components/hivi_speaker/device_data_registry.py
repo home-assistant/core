@@ -23,7 +23,6 @@ class DeviceDataRegistry:
         self.hass = hass
         self._store: Store[Any] = Store(hass, 1, "hivi_speaker_device_data")
         self._device_data: dict[str, dict[str, Any]] = {}
-        self._listeners: dict[str, list] = {}
 
         async def device_registry_updated(event):
             _LOGGER.debug("Device registry updated event: %s", event.data)
@@ -69,12 +68,9 @@ class DeviceDataRegistry:
         """Return the data dict for Store to persist."""
         return {"device_data": self._device_data, "version": 1}
 
-    def get_device_data(self, ha_device_id: str, key: str | None = None, default=None):
-        """Get device data."""
-        device_entry = self._device_data.get(ha_device_id, {})
-        if key is None:
-            return device_entry
-        return device_entry.get(key, default)
+    def get_device_data(self, ha_device_id: str) -> dict[str, Any]:
+        """Return stored device data for a HA device ID (empty dict if none)."""
+        return self._device_data.get(ha_device_id, {})
 
     def set_device_data(self, ha_device_id: str, key: str, value: Any):
         """Set device data."""
@@ -83,11 +79,6 @@ class DeviceDataRegistry:
 
         self._device_data[ha_device_id][key] = value
         self._schedule_save()
-
-        self._trigger_event(
-            "device_data_updated",
-            {"ha_device_id": ha_device_id, "key": key, "value": value},
-        )
 
     def get_connection_status_counts(self) -> tuple[int, int]:
         """Return (online_count, offline_count) across all tracked devices."""
@@ -107,20 +98,6 @@ class DeviceDataRegistry:
             del self._device_data[ha_device_id]
             await self.async_save()
 
-    def _trigger_event(self, event_type: str, data: dict):
-        """Trigger event."""
-        for listener_fn in self._listeners.get(event_type, []):
-            try:
-                listener_fn(data)
-            except Exception:
-                _LOGGER.exception("Error in event listener")
-
-    def add_listener(self, event_type: str, listener):
-        """Add event listener."""
-        if event_type not in self._listeners:
-            self._listeners[event_type] = []
-        self._listeners[event_type].append(listener)
-
     def set_device_dict_by_ha_device_id(self, ha_device_id: str, value: Any):
         """Set device data."""
         if ha_device_id not in self._device_data:
@@ -130,9 +107,11 @@ class DeviceDataRegistry:
         self._schedule_save()
 
     def get_device_dict_by_ha_device_id(
-        self, ha_device_id: str, default=None
+        self,
+        ha_device_id: str,
+        default: dict[str, Any] | None = None,
     ) -> dict[str, Any] | None:
-        """Return device dict for a given HA device ID, or default."""
+        """Return device dict for a given HA device ID, or default if missing."""
         data = self.get_device_data(ha_device_id)
         if data:
             device_dict = data.get("device_dict")
@@ -142,9 +121,11 @@ class DeviceDataRegistry:
         return default
 
     def get_device_dict_by_speaker_device_id(
-        self, speaker_device_id: str, default=None
+        self,
+        speaker_device_id: str,
+        default: dict[str, Any] | None = None,
     ) -> dict[str, Any] | None:
-        """Return device dict for a given speaker device ID, or default."""
+        """Return device dict for a given speaker device ID, or default if not found."""
         for ha_device_id in self._device_data:
             data = self.get_device_data(ha_device_id)
             if not data:
@@ -213,7 +194,6 @@ class DeviceDataRegistry:
         await self.async_save()
 
         self._device_data.clear()
-        self._listeners.clear()
 
     async def async_clear_all_data(self):
         """Clear all device data AND delete persistent storage.
@@ -227,7 +207,6 @@ class DeviceDataRegistry:
             self._unsub_device_registry = None
 
         self._device_data.clear()
-        self._listeners.clear()
 
         await self.async_save()
         _LOGGER.debug("All device data has been cleared")
