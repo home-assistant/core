@@ -37,11 +37,6 @@
           }
         }
       }
-    },
-    "sensor": {
-      "ventilation_state": {
-        "name": "Ventilation state"
-      }
     }
   }
 }
