@@ -16,7 +16,7 @@ from aiohttp import ClientError
 from requests.exceptions import HTTPError, Timeout
 from soco import events_asyncio, zonegroupstate
 import soco.config as soco_config
-from soco.core import SoCo
+from soco.core import SoCo, soco_initialize
 from soco.events_base import Event as SonosEvent, SubscriptionBase
 from soco.exceptions import SoCoException
 import voluptuous as vol
@@ -108,6 +108,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             )
         )
 
+    soco_initialize()
     async_setup_services(hass)
 
     return True
