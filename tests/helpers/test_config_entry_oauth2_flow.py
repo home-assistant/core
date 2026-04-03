@@ -31,13 +31,13 @@ CLIENT_ID = "1234"
 REFRESH_TOKEN = "mock-refresh-token"
 ACCESS_TOKEN_1 = "mock-access-token-1"
 ACCESS_TOKEN_2 = "mock-access-token-2"
+AUTHORIZE_URL = "https://example.como/auth/authorize"
+TOKEN_URL = "https://example.como/auth/token"
 MOCK_SECRET_TOKEN_URLSAFE = (
     "token-"
     "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
     "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
 )
-AUTHORIZE_URL = "https://example.como/auth/authorize"
-TOKEN_URL = "https://example.como/auth/token"
 
 
 @pytest.fixture
@@ -782,9 +782,9 @@ async def test_full_flow(
     )
 
 
+@pytest.mark.usefixtures("device_flow_handler")
 async def test_device_flow_full_flow(
     hass: HomeAssistant,
-    device_flow_handler: type[config_entry_oauth2_flow.AbstractOAuth2DeviceFlowHandler],
     device_impl: config_entry_oauth2_flow.DeviceFlowImplementation,
 ) -> None:
     """Check full device flow."""
@@ -887,9 +887,9 @@ async def test_device_flow_full_flow(
         (Exception("some other error"), "oauth_error"),  # Just to hit the default
     ],
 )
+@pytest.mark.usefixtures("device_flow_handler")
 async def test_device_flow_login_task_exceptions(
     hass: HomeAssistant,
-    device_flow_handler: type[config_entry_oauth2_flow.AbstractOAuth2DeviceFlowHandler],
     device_impl: config_entry_oauth2_flow.DeviceFlowImplementation,
     exception: Exception,
     reason: str,
@@ -947,9 +947,9 @@ async def test_device_flow_login_task_exceptions(
         (HTTPStatus.BAD_REQUEST, "oauth_unauthorized"),
     ],
 )
+@pytest.mark.usefixtures("device_flow_handler")
 async def test_device_flow_register_device_http_errors(
     hass: HomeAssistant,
-    device_flow_handler: type[config_entry_oauth2_flow.AbstractOAuth2DeviceFlowHandler],
     device_impl: config_entry_oauth2_flow.DeviceFlowImplementation,
     aioclient_mock: AiohttpClientMocker,
     status: HTTPStatus,
@@ -973,13 +973,28 @@ async def test_device_flow_register_device_http_errors(
     assert result["reason"] == expected_abort_reason
 
 
+@pytest.mark.usefixtures("device_flow_handler")
 async def test_device_flow_register_device_success(
     hass: HomeAssistant,
-    device_flow_handler: type[config_entry_oauth2_flow.AbstractOAuth2DeviceFlowHandler],
     device_impl: config_entry_oauth2_flow.DeviceFlowImplementation,
     aioclient_mock: AiohttpClientMocker,
 ) -> None:
-    """Test that a successful device registration shows the device flow step."""
+    """Test that a successful device registration shows the device flow step and completes."""
+    mock_integration(
+        hass,
+        MockModule(
+            domain=TEST_DOMAIN,
+            async_setup_entry=AsyncMock(return_value=True),
+        ),
+    )
+    token_response = {
+        "refresh_token": REFRESH_TOKEN,
+        "access_token": ACCESS_TOKEN_1,
+        "type": "bearer",
+        "expires_in": 60,
+    }
+    login_event = asyncio.Event()
+
     aioclient_mock.post(
         AUTHORIZE_URL,
         json={
@@ -991,12 +1006,14 @@ async def test_device_flow_register_device_success(
         },
     )
 
-    async def _never_complete(device: dict[str, Any]) -> dict[str, Any]:
-        """Yes, hearts can be broken. No call back."""
-        await asyncio.Event().wait()
-        return {}
+    async def _wait_for_activation(device: dict[str, Any]) -> dict[str, Any]:
+        """Wait for the login event to be set, then return the token response."""
+        await login_event.wait()
+        return token_response
 
-    device_impl.async_check_device_activation = AsyncMock(side_effect=_never_complete)
+    device_impl.async_check_device_activation = AsyncMock(
+        side_effect=_wait_for_activation
+    )
 
     config_entry_oauth2_flow.async_register_implementation(
         hass, TEST_DOMAIN, device_impl
@@ -1014,6 +1031,20 @@ async def test_device_flow_register_device_success(
     assert result["description_placeholders"] == {
         "url": "https://example.com/device",
         "code": "user-code",
+    }
+
+    login_event.set()
+    await hass.async_block_till_done()
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+    if result["type"] == data_entry_flow.FlowResultType.SHOW_PROGRESS_DONE:
+        result = await hass.config_entries.flow.async_configure(result["flow_id"])
+
+    # And poof, we're done!
+    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["data"] == {
+        "auth_implementation": TEST_DOMAIN,
+        "token": token_response,
     }
 
 
@@ -1165,9 +1196,9 @@ async def test_device_flow_slow_down_then_success(
     assert sleep_mock.await_args_list[0].args[0] == 8
 
 
+@pytest.mark.usefixtures("device_flow_handler")
 async def test_device_flow_register_timeout(
     hass: HomeAssistant,
-    device_flow_handler: type[config_entry_oauth2_flow.AbstractOAuth2DeviceFlowHandler],
     device_impl: config_entry_oauth2_flow.DeviceFlowImplementation,
 ) -> None:
     """Check device flow aborts when device registration times out."""

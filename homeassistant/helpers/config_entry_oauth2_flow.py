@@ -900,9 +900,9 @@ class AbstractOAuth2DeviceFlowHandler(AbstractOAuth2FlowHandler, metaclass=ABCMe
         self, user_input: dict[str, Any] | None = None
     ) -> config_entries.ConfigFlowResult:
         """Run the auth step for device flow."""
-        return await self.async_step_device()
+        return await self.async_step_device_flow()
 
-    async def async_step_device(
+    async def async_step_device_flow(
         self, user_input: dict[str, Any] | None = None
     ) -> config_entries.ConfigFlowResult:
         """Create an entry for device flow."""
@@ -972,12 +972,6 @@ class AbstractOAuth2DeviceFlowHandler(AbstractOAuth2FlowHandler, metaclass=ABCMe
             case _:
                 reason = "oauth_error"
         return self.async_abort(reason=reason)
-
-    async def async_step_device_flow(
-        self, user_input: dict[str, Any] | None = None
-    ) -> config_entries.ConfigFlowResult:
-        """Proxy the progress step back to the device handler."""
-        return await self.async_step_device(user_input)
 
 
 @callback
