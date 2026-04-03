@@ -153,18 +153,33 @@ class AFSAPIDevice(MediaPlayerEntity):
             self._max_volume = int(await afsapi.get_volume_steps() or 1) - 1
 
         if self._attr_state != MediaPlayerState.OFF:
-            info_name = await afsapi.get_play_name()
-            info_text = await afsapi.get_play_text()
+            try:
+                info_name = await afsapi.get_play_name()
+            except UnicodeDecodeError:
+                info_name = None
+            try:
+                info_text = await afsapi.get_play_text()
+            except UnicodeDecodeError:
+                info_text = None
 
             self._attr_media_title = " - ".join(filter(None, [info_name, info_text]))
-            self._attr_media_artist = await afsapi.get_play_artist()
-            self._attr_media_album_name = await afsapi.get_play_album()
+            try:
+                self._attr_media_artist = await afsapi.get_play_artist()
+            except UnicodeDecodeError:
+                self._attr_media_artist = None
+            try:
+                self._attr_media_album_name = await afsapi.get_play_album()
+            except UnicodeDecodeError:
+                self._attr_media_album_name = None
 
             radio_mode = await afsapi.get_mode()
             self._attr_source = radio_mode.label if radio_mode is not None else None
 
             self._attr_is_volume_muted = await afsapi.get_mute()
-            self._attr_media_image_url = await afsapi.get_play_graphic()
+            try:
+                self._attr_media_image_url = await afsapi.get_play_graphic()
+            except UnicodeDecodeError:
+                self._attr_media_image_url = None
 
             if self._supports_sound_mode:
                 try:
