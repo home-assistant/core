@@ -1,5 +1,11 @@
 {
   "domain": "lg",
   "name": "LG",
-  "integrations": ["lg_netcast", "lg_soundbar", "lg_thinq", "webostv"]
+  "integrations": [
+    "lg_infrared",
+    "lg_netcast",
+    "lg_soundbar",
+    "lg_thinq",
+    "webostv"
+  ]
 }

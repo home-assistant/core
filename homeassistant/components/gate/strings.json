@@ -1,0 +1,62 @@
+{
+  "common": {
+    "condition_behavior_name": "Condition passes if",
+    "trigger_behavior_name": "Trigger when"
+  },
+  "conditions": {
+    "is_closed": {
+      "description": "Tests if one or more gates are closed.",
+      "fields": {
+        "behavior": {
+          "name": "[%key:component::gate::common::condition_behavior_name%]"
+        }
+      },
+      "name": "Gate is closed"
+    },
+    "is_open": {
+      "description": "Tests if one or more gates are open.",
+      "fields": {
+        "behavior": {
+          "name": "[%key:component::gate::common::condition_behavior_name%]"
+        }
+      },
+      "name": "Gate is open"
+    }
+  },
+  "selector": {
+    "condition_behavior": {
+      "options": {
+        "all": "All",
+        "any": "Any"
+      }
+    },
+    "trigger_behavior": {
+      "options": {
+        "any": "Any",
+        "first": "First",
+        "last": "Last"
+      }
+    }
+  },
+  "title": "Gate",
+  "triggers": {
+    "closed": {
+      "description": "Triggers after one or more gates close.",
+      "fields": {
+        "behavior": {
+          "name": "[%key:component::gate::common::trigger_behavior_name%]"
+        }
+      },
+      "name": "Gate closed"
+    },
+    "opened": {
+      "description": "Triggers after one or more gates open.",
+      "fields": {
+        "behavior": {
+          "name": "[%key:component::gate::common::trigger_behavior_name%]"
+        }
+      },
+      "name": "Gate opened"
+    }
+  }
+}

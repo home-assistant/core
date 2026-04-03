@@ -103,6 +103,8 @@
             'custom_attr_1': 'custom_attr_1_value',
             'friendly_name': 'X-Wing',
             'gps_accuracy': 3.5,
+            'in_zones': list([
+            ]),
             'latitude': '**REDACTED**',
             'longitude': '**REDACTED**',
             'source_type': 'gps',
@@ -397,6 +399,8 @@
             'custom_attr_1': 'custom_attr_1_value',
             'friendly_name': 'X-Wing',
             'gps_accuracy': 3.5,
+            'in_zones': list([
+            ]),
             'latitude': '**REDACTED**',
             'longitude': '**REDACTED**',
             'source_type': 'gps',
