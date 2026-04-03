@@ -127,4 +127,3 @@ class MusicAssistantPlayerOptionEntity(MusicAssistantEntity):
 
     def on_player_option_update(self, player_option: PlayerOption) -> None:
         """Update the entities description."""
-        self.mass_value = player_option.value
