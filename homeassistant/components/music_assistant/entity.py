@@ -98,9 +98,9 @@ class MusicAssistantPlayerOptionEntity(MusicAssistantEntity):
         """Initialize MusicAssistantPlayerOptionEntity."""
         super().__init__(mass, player_id)
 
-        self.mass_value = player_option.value
         self.mass_option_key = player_option.key
         self.mass_type = player_option.type
+
         self.on_player_option_update(player_option)
 
     async def async_added_to_hass(self) -> None:
