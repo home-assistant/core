@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_entity_and_device_data[site_payload0-wlan_payload0-traffic_rule_payload0-port_forward_payload0-dpi_group_payload0-dpi_app_payload0-device_payload0-client_payload0-config_entry_options0][switch.block_client_1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -49,59 +50,11 @@
     'state': 'off',
   })
 # ---
-# name: test_entity_and_device_data[site_payload0-wlan_payload0-traffic_rule_payload0-port_forward_payload0-dpi_group_payload0-dpi_app_payload0-device_payload0-client_payload0-config_entry_options0][switch.block_media_streaming-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'switch',
-    'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'switch.block_media_streaming',
-    'has_entity_name': False,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Block Media Streaming',
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Block Media Streaming',
-    'platform': 'unifi',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'dpi_restriction',
-    'unique_id': '5f976f4ae3c58f018ec7dff6',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_entity_and_device_data[site_payload0-wlan_payload0-traffic_rule_payload0-port_forward_payload0-dpi_group_payload0-dpi_app_payload0-device_payload0-client_payload0-config_entry_options0][switch.block_media_streaming-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Block Media Streaming',
-    }),
-    'context': <ANY>,
-    'entity_id': 'switch.block_media_streaming',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'on',
-  })
-# ---
 # name: test_entity_and_device_data[site_payload0-wlan_payload0-traffic_rule_payload0-port_forward_payload0-dpi_group_payload0-dpi_app_payload0-device_payload0-client_payload0-config_entry_options0][switch.dummy_usp_pdu_pro_outlet_2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -150,8 +103,9 @@
 # ---
 # name: test_entity_and_device_data[site_payload0-wlan_payload0-traffic_rule_payload0-port_forward_payload0-dpi_group_payload0-dpi_app_payload0-device_payload0-client_payload0-config_entry_options0][switch.dummy_usp_pdu_pro_usb_outlet_1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -200,8 +154,9 @@
 # ---
 # name: test_entity_and_device_data[site_payload0-wlan_payload0-traffic_rule_payload0-port_forward_payload0-dpi_group_payload0-dpi_app_payload0-device_payload0-client_payload0-config_entry_options0][switch.mock_name_port_1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -250,8 +205,9 @@
 # ---
 # name: test_entity_and_device_data[site_payload0-wlan_payload0-traffic_rule_payload0-port_forward_payload0-dpi_group_payload0-dpi_app_payload0-device_payload0-client_payload0-config_entry_options0][switch.mock_name_port_1_poe-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -300,8 +256,9 @@
 # ---
 # name: test_entity_and_device_data[site_payload0-wlan_payload0-traffic_rule_payload0-port_forward_payload0-dpi_group_payload0-dpi_app_payload0-device_payload0-client_payload0-config_entry_options0][switch.mock_name_port_2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -350,8 +307,9 @@
 # ---
 # name: test_entity_and_device_data[site_payload0-wlan_payload0-traffic_rule_payload0-port_forward_payload0-dpi_group_payload0-dpi_app_payload0-device_payload0-client_payload0-config_entry_options0][switch.mock_name_port_2_poe-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -400,8 +358,9 @@
 # ---
 # name: test_entity_and_device_data[site_payload0-wlan_payload0-traffic_rule_payload0-port_forward_payload0-dpi_group_payload0-dpi_app_payload0-device_payload0-client_payload0-config_entry_options0][switch.mock_name_port_3-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -450,8 +409,9 @@
 # ---
 # name: test_entity_and_device_data[site_payload0-wlan_payload0-traffic_rule_payload0-port_forward_payload0-dpi_group_payload0-dpi_app_payload0-device_payload0-client_payload0-config_entry_options0][switch.mock_name_port_4-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -500,8 +460,9 @@
 # ---
 # name: test_entity_and_device_data[site_payload0-wlan_payload0-traffic_rule_payload0-port_forward_payload0-dpi_group_payload0-dpi_app_payload0-device_payload0-client_payload0-config_entry_options0][switch.mock_name_port_4_poe-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -550,8 +511,9 @@
 # ---
 # name: test_entity_and_device_data[site_payload0-wlan_payload0-traffic_rule_payload0-port_forward_payload0-dpi_group_payload0-dpi_app_payload0-device_payload0-client_payload0-config_entry_options0][switch.plug_outlet_1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -600,8 +562,9 @@
 # ---
 # name: test_entity_and_device_data[site_payload0-wlan_payload0-traffic_rule_payload0-port_forward_payload0-dpi_group_payload0-dpi_app_payload0-device_payload0-client_payload0-config_entry_options0][switch.ssid_1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -648,10 +611,61 @@
     'state': 'on',
   })
 # ---
+# name: test_entity_and_device_data[site_payload0-wlan_payload0-traffic_rule_payload0-port_forward_payload0-dpi_group_payload0-dpi_app_payload0-device_payload0-client_payload0-config_entry_options0][switch.unifi_network_block_media_streaming-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.unifi_network_block_media_streaming',
+    'has_entity_name': False,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Block Media Streaming',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Block Media Streaming',
+    'platform': 'unifi',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'dpi_restriction',
+    'unique_id': '5f976f4ae3c58f018ec7dff6',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entity_and_device_data[site_payload0-wlan_payload0-traffic_rule_payload0-port_forward_payload0-dpi_group_payload0-dpi_app_payload0-device_payload0-client_payload0-config_entry_options0][switch.unifi_network_block_media_streaming-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'UniFi Network Block Media Streaming',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.unifi_network_block_media_streaming',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
 # name: test_entity_and_device_data[site_payload0-wlan_payload0-traffic_rule_payload0-port_forward_payload0-dpi_group_payload0-dpi_app_payload0-device_payload0-client_payload0-config_entry_options0][switch.unifi_network_plex-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -700,8 +714,9 @@
 # ---
 # name: test_entity_and_device_data[site_payload0-wlan_payload0-traffic_rule_payload0-port_forward_payload0-dpi_group_payload0-dpi_app_payload0-device_payload0-client_payload0-config_entry_options0][switch.unifi_network_test_traffic_rule-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,

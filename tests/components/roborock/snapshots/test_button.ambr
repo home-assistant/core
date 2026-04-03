@@ -1,8 +1,59 @@
 # serializer version: 1
+# name: test_buttons[button.roborock_q10_s5_empty_dustbin-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.roborock_q10_s5_empty_dustbin',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Empty dustbin',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Empty dustbin',
+    'platform': 'roborock',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'empty_dustbin',
+    'unique_id': 'empty_dustbin_q10_duid',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_buttons[button.roborock_q10_s5_empty_dustbin-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Roborock Q10 S5+ Empty dustbin',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.roborock_q10_s5_empty_dustbin',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
 # name: test_buttons[button.roborock_s7_2_reset_air_filter_consumable-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -50,8 +101,9 @@
 # ---
 # name: test_buttons[button.roborock_s7_2_reset_main_brush_consumable-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -99,8 +151,9 @@
 # ---
 # name: test_buttons[button.roborock_s7_2_reset_sensor_consumable-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -148,8 +201,9 @@
 # ---
 # name: test_buttons[button.roborock_s7_2_reset_side_brush_consumable-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -197,8 +251,9 @@
 # ---
 # name: test_buttons[button.roborock_s7_2_sc1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -246,8 +301,9 @@
 # ---
 # name: test_buttons[button.roborock_s7_2_sc2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -295,8 +351,9 @@
 # ---
 # name: test_buttons[button.roborock_s7_maxv_reset_air_filter_consumable-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -344,8 +401,9 @@
 # ---
 # name: test_buttons[button.roborock_s7_maxv_reset_main_brush_consumable-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -393,8 +451,9 @@
 # ---
 # name: test_buttons[button.roborock_s7_maxv_reset_sensor_consumable-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -442,8 +501,9 @@
 # ---
 # name: test_buttons[button.roborock_s7_maxv_reset_side_brush_consumable-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -491,8 +551,9 @@
 # ---
 # name: test_buttons[button.roborock_s7_maxv_sc1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -540,8 +601,9 @@
 # ---
 # name: test_buttons[button.roborock_s7_maxv_sc2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -589,8 +651,9 @@
 # ---
 # name: test_buttons[button.zeo_one_pause-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -636,10 +699,11 @@
     'state': 'unknown',
   })
 # ---
-# name: test_buttons[button.zeo_one_shutdown-entry]
+# name: test_buttons[button.zeo_one_shut_down-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -649,7 +713,7 @@
     'disabled_by': None,
     'domain': 'button',
     'entity_category': None,
-    'entity_id': 'button.zeo_one_shutdown',
+    'entity_id': 'button.zeo_one_shut_down',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -657,12 +721,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Shutdown',
+    'object_id_base': 'Shut down',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Shutdown',
+    'original_name': 'Shut down',
     'platform': 'roborock',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -672,13 +736,13 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_buttons[button.zeo_one_shutdown-state]
+# name: test_buttons[button.zeo_one_shut_down-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Zeo One Shutdown',
+      'friendly_name': 'Zeo One Shut down',
     }),
     'context': <ANY>,
-    'entity_id': 'button.zeo_one_shutdown',
+    'entity_id': 'button.zeo_one_shut_down',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -687,8 +751,9 @@
 # ---
 # name: test_buttons[button.zeo_one_start-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,

@@ -77,8 +77,7 @@ rules:
     status: todo
   icon-translations:
     status: todo
-  reconfiguration-flow:
-    status: todo
+  reconfiguration-flow: done
   repair-issues:
     status: exempt
     comment: No repair issues needed for current functionality
