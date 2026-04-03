@@ -511,7 +511,10 @@ class RoborockQ10CleanModeSelectEntity(RoborockCoordinatedEntityB01Q10, SelectEn
         clean_mode = self.coordinator.api.status.clean_mode
         if clean_mode is None or clean_mode.code is None:
             return None
-        return clean_mode.value
+        mode = YXCleanType.from_code_optional(clean_mode.code)
+        if mode is None or mode == YXCleanType.UNKNOWN:
+            return None
+        return mode.value
 
     async def async_select_option(self, option: str) -> None:
         """Set the cleaning mode."""
