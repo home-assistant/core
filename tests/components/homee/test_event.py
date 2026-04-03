@@ -1,5 +1,6 @@
 """Test homee events."""
 
+from collections.abc import AsyncGenerator
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -13,6 +14,13 @@ from homeassistant.helpers import entity_registry as er
 from . import build_mock_node, setup_integration
 
 from tests.common import MockConfigEntry, snapshot_platform
+
+
+@pytest.fixture(autouse=True)
+async def platforms() -> AsyncGenerator[None]:
+    """Return the platforms to be loaded for this test."""
+    with patch("homeassistant.components.homee.PLATFORMS", [Platform.EVENT]):
+        yield
 
 
 @pytest.mark.parametrize(
@@ -85,10 +93,9 @@ async def test_event_snapshot(
     profile: int,
 ) -> None:
     """Test the event entity snapshot."""
-    with patch("homeassistant.components.homee.PLATFORMS", [Platform.EVENT]):
-        mock_homee.nodes = [build_mock_node("events.json")]
-        mock_homee.nodes[0].profile = profile
-        mock_homee.get_node_by_id.return_value = mock_homee.nodes[0]
-        await setup_integration(hass, mock_config_entry)
+    mock_homee.nodes = [build_mock_node("events.json")]
+    mock_homee.nodes[0].profile = profile
+    mock_homee.get_node_by_id.return_value = mock_homee.nodes[0]
+    await setup_integration(hass, mock_config_entry)
 
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
