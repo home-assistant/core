@@ -75,7 +75,7 @@
   },
   "services": {
     "announce": {
-      "description": "Lets a satellite announce a message.",
+      "description": "Lets an Assist satellite announce a message.",
       "fields": {
         "media_id": {
           "description": "The media ID to announce instead of using text-to-speech.",
@@ -94,10 +94,10 @@
           "name": "Preannounce media ID"
         }
       },
-      "name": "Announce"
+      "name": "Announce on satellite"
     },
     "ask_question": {
-      "description": "Asks a question and gets the user's response.",
+      "description": "Lets an Assist satellite ask a question and get the user's response.",
       "fields": {
         "answers": {
           "description": "Possible answers to the question.",
@@ -124,10 +124,10 @@
           "name": "Question media ID"
         }
       },
-      "name": "Ask question"
+      "name": "Ask question on satellite"
     },
     "start_conversation": {
-      "description": "Starts a conversation from a satellite.",
+      "description": "Starts a conversation from an Assist satellite.",
       "fields": {
         "extra_system_prompt": {
           "description": "Provide background information to the AI about the request.",
@@ -150,13 +150,13 @@
           "name": "Message"
         }
       },
-      "name": "Start conversation"
+      "name": "Start conversation on satellite"
     }
   },
   "title": "Assist satellite",
   "triggers": {
     "idle": {
-      "description": "Triggers after one or more voice assistant satellites become idle after having processed a command.",
+      "description": "Triggers after one or more Assist satellites become idle after having processed a command.",
       "fields": {
         "behavior": {
           "name": "[%key:component::assist_satellite::common::trigger_behavior_name%]"
@@ -165,7 +165,7 @@
       "name": "Satellite became idle"
     },
     "listening": {
-      "description": "Triggers after one or more voice assistant satellites start listening for a command from someone.",
+      "description": "Triggers after one or more Assist satellites start listening for a command from someone.",
       "fields": {
         "behavior": {
           "name": "[%key:component::assist_satellite::common::trigger_behavior_name%]"
@@ -174,7 +174,7 @@
       "name": "Satellite started listening"
     },
     "processing": {
-      "description": "Triggers after one or more voice assistant satellites start processing a command after having heard it.",
+      "description": "Triggers after one or more Assist satellites start processing a command after having heard it.",
       "fields": {
         "behavior": {
           "name": "[%key:component::assist_satellite::common::trigger_behavior_name%]"
@@ -183,7 +183,7 @@
       "name": "Satellite started processing"
     },
     "responding": {
-      "description": "Triggers after one or more voice assistant satellites start responding to a command after having processed it, or start announcing something.",
+      "description": "Triggers after one or more Assist satellites start responding to a command after having processed it, or start announcing something.",
       "fields": {
         "behavior": {
           "name": "[%key:component::assist_satellite::common::trigger_behavior_name%]"
