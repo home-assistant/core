@@ -535,5 +535,5 @@ class RoborockQ10CleanModeSelectEntity(RoborockCoordinatedEntityB01Q10, SelectEn
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="command_failed",
-                translation_placeholders={"command": "set_clean_mode"},
+                translation_placeholders={"command": "cleaning_mode"},
             ) from err

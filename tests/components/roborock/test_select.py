@@ -449,7 +449,7 @@ async def test_q10_cleaning_mode_select_update_failure(
     entity_id = "select.roborock_q10_s5_cleaning_mode"
     assert hass.states.get(entity_id) is not None
 
-    with pytest.raises(HomeAssistantError, match="set_clean_mode"):
+    with pytest.raises(HomeAssistantError, match="cleaning_mode"):
         await hass.services.async_call(
             "select",
             SERVICE_SELECT_OPTION,
