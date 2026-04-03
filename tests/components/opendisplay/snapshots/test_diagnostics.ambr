@@ -4,6 +4,8 @@
     'device_config': dict({
       'binary_inputs': list([
       ]),
+      'buzzers': list([
+      ]),
       'data_buses': list([
       ]),
       'displays': list([
@@ -56,6 +58,7 @@
         'tx_power': 0,
         'voltage_scaling_factor': 0,
       }),
+      'security_config': None,
       'sensors': list([
       ]),
       'system': dict({
@@ -63,8 +66,12 @@
         'device_flags': 0,
         'ic_type': 0,
         'pwr_pin': 255,
+        'pwr_pin_2': 255,
+        'pwr_pin_3': 255,
         'reserved': '0000000000000000000000000000000000',
       }),
+      'touch_controllers': list([
+      ]),
       'version': 0,
       'wifi_config': None,
     }),
