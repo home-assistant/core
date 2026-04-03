@@ -126,8 +126,16 @@ async def test_external_update(
 
 async def test_name_translation_availability(
     hass: HomeAssistant,
+    music_assistant_client: MagicMock,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Verify, that the list of available translation keys is reflected in strings.json."""
+    mass_player_id = "00:00:00:00:00:01"
+    mass_option_key = "treble"
+    entity_id = "number.test_player_1_treble"
+    await setup_integration_from_fixtures(hass, music_assistant_client)
+
+    # verify, that PLAYER_OPTIONS_TRANSLATION_KEYS_NUMBER matches strings.json
     translations = await async_get_translations(
         hass, language=LOCALE_EN, category="entity", integrations=[DOMAIN]
     )
@@ -136,3 +144,14 @@ async def test_name_translation_availability(
         assert translations.get(f"{prefix}{translation_key}.name") is not None, (
             f"{translation_key} is missing in strings.json for platform number"
         )
+
+    # verify, that the MA translation key is correctly translated to an HA translation key
+    number_option = next(
+        option
+        for option in music_assistant_client.players._players[mass_player_id].options
+        if option.key == mass_option_key
+    )
+    assert number_option.translation_key == "player_options.treble"  # this is MA
+    entity = entity_registry.async_get(entity_id)
+    assert entity
+    assert entity.translation_key == "treble"  # this is HA

@@ -47,10 +47,12 @@ async def async_setup_entry(
                 )
                 and not player_option.options  # these we map to select
             ):
-                # the MA translation key will either have the format player_options.<translation key>
-                # or <translation_key>
+                # the MA translation key must have the format player_options.<translation key>
                 if (
                     player_option.translation_key is None
+                    or not player_option.translation_key.startswith(
+                        PLAYER_OPTIONS_TRANSLATION_KEY_PREFIX
+                    )
                     or player_option.translation_key.split(
                         PLAYER_OPTIONS_TRANSLATION_KEY_PREFIX
                     )[-1]
