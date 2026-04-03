@@ -42,6 +42,8 @@
       'friendly_name': 'Test Vehicle',
       'gps_accuracy': 6.0,
       'icon': 'mdi:car',
+      'in_zones': list([
+      ]),
       'latitude': 50.1109221,
       'longitude': 8.6821267,
       'source_type': <SourceType.GPS: 'gps'>,

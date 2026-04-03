@@ -49,6 +49,7 @@
       ]),
       'icon': 'mdi:speaker',
       'is_volume_muted': False,
+      'last_non_buffering_state': <MediaPlayerState.PLAYING: 'playing'>,
       'mass_player_type': 'player',
       'media_album_name': 'Test Album',
       'media_artist': 'Test Artist',
@@ -121,6 +122,7 @@
       ]),
       'icon': 'mdi:speaker-multiple',
       'is_volume_muted': False,
+      'last_non_buffering_state': <MediaPlayerState.IDLE: 'idle'>,
       'mass_player_type': 'group',
       'media_album_name': 'Use Your Illusion I',
       'media_artist': "Guns N' Roses",
@@ -194,6 +196,7 @@
       'group_members': list([
       ]),
       'icon': 'mdi:speaker',
+      'last_non_buffering_state': <MediaPlayerState.OFF: 'off'>,
       'mass_player_type': 'player',
       'source_list': list([
         'Music Assistant Queue',
