@@ -140,6 +140,9 @@
       "reset": {
         "name": "Reset"
       },
+      "resume_all": {
+        "name": "Resume"
+      },
       "shutdown": {
         "name": "Shut down"
       },
