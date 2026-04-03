@@ -7,6 +7,6 @@
   "integration_type": "hub",
   "iot_class": "local_polling",
   "loggers": ["openwrt_luci_rpc"],
-  "quality_scale": "legacy",
+  "quality_scale": "bronze",
   "requirements": ["openwrt-luci-rpc==1.1.17"]
 }
