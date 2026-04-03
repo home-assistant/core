@@ -254,7 +254,7 @@ class HIVIDiscoveryScheduler:
         async def _parse_one(response_text: str, addr: tuple[str, int]):
             async with sem:
                 try:
-                    dlna_info = await parse_ssdp_response(response_text, addr)
+                    dlna_info = parse_ssdp_response(response_text, addr)
                     location = dlna_info.get("location", "")
                     device_info = await parse_local_url(session, location)
                     if not device_info:
@@ -419,7 +419,7 @@ async def parse_local_url(session: aiohttp.ClientSession, url: str):
         return None
 
 
-async def parse_ssdp_response(response_text, addr):
+def parse_ssdp_response(response_text, addr):
     """Parse an SSDP response into a device info dictionary."""
     device_info = {"ip": addr[0], "port": addr[1], "raw_response": response_text}
 
