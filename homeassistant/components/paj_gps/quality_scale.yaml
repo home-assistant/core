@@ -41,7 +41,8 @@ rules:
   log-when-unavailable: done
   parallel-updates: done
   reauthentication-flow: todo
-  test-coverage: done
+  # TODO: Add setup/entity lifecycle tests (setup, unload, coordinator refresh, and device_tracker entity creation/availability) before marking test-coverage as done.
+  test-coverage: todo
 
   # Gold
   devices: done
