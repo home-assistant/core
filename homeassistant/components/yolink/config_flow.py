@@ -14,7 +14,7 @@ from yolink.home_manager import YoLinkHome
 from yolink.message_listener import MessageListener
 
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlowResult
-from homeassistant.helpers import aiohttp_client, config_entry_oauth2_flow
+from homeassistant.helpers import aiohttp_client, config_entry_oauth2_flow, selector
 
 from .api import UACAuth
 from .const import (
@@ -40,7 +40,9 @@ class _NoOpMessageListener(MessageListener):
 UAC_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_UAID): str,
-        vol.Required(CONF_SECRET_KEY): str,
+        vol.Required(CONF_SECRET_KEY): selector.TextSelector(
+            selector.TextSelectorConfig(type=selector.TextSelectorType.PASSWORD)
+        ),
     }
 )
 
