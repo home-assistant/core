@@ -894,7 +894,7 @@ class AbstractOAuth2DeviceFlowHandler(AbstractOAuth2FlowHandler, metaclass=ABCMe
         self.login_task: asyncio.Task | None = None
         self.device_token: dict[str, str] | None = None
         self.device_flow_error: BaseException | None = None
-        self.device_registry: dict = {}
+        self.device_registry: dict[str, Any] = {}
 
     async def async_step_auth(
         self, user_input: dict[str, Any] | None = None
