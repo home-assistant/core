@@ -74,6 +74,7 @@ from .const import (
     CONF_MAX_TOKENS,
     CONF_REASONING_EFFORT,
     CONF_REASONING_SUMMARY,
+    CONF_SERVICE_TIER,
     CONF_TEMPERATURE,
     CONF_TOP_P,
     CONF_VERBOSITY,
@@ -92,6 +93,7 @@ from .const import (
     RECOMMENDED_MAX_TOKENS,
     RECOMMENDED_REASONING_EFFORT,
     RECOMMENDED_REASONING_SUMMARY,
+    RECOMMENDED_SERVICE_TIER,
     RECOMMENDED_STT_MODEL,
     RECOMMENDED_TEMPERATURE,
     RECOMMENDED_TOP_P,
@@ -344,7 +346,9 @@ async def _transform_stream(  # noqa: C901 - This is complex, but better to have
                             id=event.item.id,
                             tool_name="web_search_call",
                             tool_args={
-                                "action": event.item.action.to_dict(),
+                                "action": event.item.action.to_dict()
+                                if event.item.action
+                                else None,
                             },
                             external=True,
                         )
@@ -358,6 +362,10 @@ async def _transform_stream(  # noqa: C901 - This is complex, but better to have
                 }
                 last_role = "tool_result"
             elif isinstance(event.item, ImageGenerationCall):
+                if last_summary_index is not None:
+                    yield {"role": "assistant"}
+                    last_role = "assistant"
+                    last_summary_index = None
                 yield {"native": event.item}
                 last_summary_index = -1  # Trigger new assistant message on next turn
         elif isinstance(event, ResponseTextDeltaEvent):
@@ -499,6 +507,7 @@ class OpenAIBaseLLMEntity(Entity):
             input=messages,
             max_output_tokens=options.get(CONF_MAX_TOKENS, RECOMMENDED_MAX_TOKENS),
             user=chat_log.conversation_id,
+            service_tier=options.get(CONF_SERVICE_TIER, RECOMMENDED_SERVICE_TIER),
             store=False,
             stream=True,
         )
@@ -655,6 +664,15 @@ class OpenAIBaseLLMEntity(Entity):
                     )
                 )
             except openai.RateLimitError as err:
+                if (
+                    model_args["service_tier"] == "flex"
+                    and "resource unavailable" in (err.message or "").lower()
+                ):
+                    LOGGER.info(
+                        "Flex tier is not available at the moment, continuing with default tier"
+                    )
+                    model_args["service_tier"] = "default"
+                    continue
                 LOGGER.error("Rate limited by OpenAI: %s", err)
                 raise HomeAssistantError("Rate limited or insufficient funds") from err
             except openai.OpenAIError as err:

@@ -74,7 +74,7 @@ class OAuth2FlowHandler(
 
         client = XboxLiveClient(auth)
 
-        me = await client.people.get_friends_by_xuid(client.xuid)
+        me = await client.people.get_friend_by_xuid(client.xuid)
 
         await self.async_set_unique_id(client.xuid)
 

@@ -2,7 +2,6 @@
 
 from dataclasses import replace
 from datetime import timedelta
-import logging
 from types import MappingProxyType
 from unittest.mock import AsyncMock
 
@@ -15,8 +14,9 @@ from librehardwaremonitor_api import (
 from librehardwaremonitor_api.model import (
     DeviceId,
     DeviceName,
-    LibreHardwareMonitorData,
+    LibreHardwareMonitorSensorData,
 )
+from librehardwaremonitor_api.sensor_type import SensorType
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -57,7 +57,6 @@ async def test_sensors_are_created(
 )
 async def test_sensors_go_unavailable_in_case_of_error_and_recover_after_successful_retry(
     hass: HomeAssistant,
-    entity_registry: er.EntityRegistry,
     mock_lhm_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
@@ -263,8 +262,8 @@ async def _mock_orphaned_device(
     previous_data = mock_lhm_client.get_data.return_value
     assert removed_device in previous_data.main_device_ids_and_names
 
-    mock_lhm_client.get_data.return_value = LibreHardwareMonitorData(
-        computer_name=mock_lhm_client.get_data.return_value.computer_name,
+    mock_lhm_client.get_data.return_value = replace(
+        mock_lhm_client.get_data.return_value,
         main_device_ids_and_names=MappingProxyType(
             {
                 device_id: name
@@ -279,7 +278,6 @@ async def _mock_orphaned_device(
                 if not sensor_id.startswith(removed_device)
             }
         ),
-        is_deprecated_version=False,
     )
 
     return device_registry.async_get_or_create(
@@ -288,34 +286,66 @@ async def _mock_orphaned_device(
     )
 
 
-async def test_integration_does_not_log_new_devices_on_first_refresh(
+async def test_integration_dynamically_adds_new_devices(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
     mock_lhm_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
-    caplog: pytest.LogCaptureFixture,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test that initial data update does not cause warning about new devices."""
-    mock_lhm_client.get_data.return_value = LibreHardwareMonitorData(
-        computer_name=mock_lhm_client.get_data.return_value.computer_name,
+    """Test that new devices are created when detected."""
+    await init_integration(hass, mock_config_entry)
+
+    device_entries: list[DeviceEntry] = dr.async_entries_for_config_entry(
+        registry=device_registry, config_entry_id=mock_config_entry.entry_id
+    )
+    assert len(device_entries) == 3
+
+    mock_lhm_client.get_data.return_value = replace(
+        mock_lhm_client.get_data.return_value,
         main_device_ids_and_names=MappingProxyType(
             {
                 **mock_lhm_client.get_data.return_value.main_device_ids_and_names,
                 DeviceId("generic-memory"): DeviceName("Generic Memory"),
             }
         ),
-        sensor_data=mock_lhm_client.get_data.return_value.sensor_data,
-        is_deprecated_version=False,
+        sensor_data=MappingProxyType(
+            {
+                **mock_lhm_client.get_data.return_value.sensor_data,
+                "generic-memory-test-sensor": LibreHardwareMonitorSensorData(
+                    name="Test sensor",
+                    value="30",
+                    type=SensorType.FACTOR,
+                    min="12",
+                    max="36",
+                    unit=None,
+                    device_id="generic-memory",
+                    device_name="Generic Memory",
+                    device_type="MEMORY",
+                    sensor_id="generic-memory-test-sensor",
+                ),
+            }
+        ),
     )
 
-    with caplog.at_level(logging.WARNING):
-        await init_integration(hass, mock_config_entry)
+    freezer.tick(timedelta(DEFAULT_SCAN_INTERVAL))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
 
-        libre_hardware_monitor_logs = [
-            record
-            for record in caplog.records
-            if record.name.startswith("homeassistant.components.libre_hardware_monitor")
-        ]
-        assert len(libre_hardware_monitor_logs) == 0
+    device_entries: list[DeviceEntry] = dr.async_entries_for_config_entry(
+        registry=device_registry, config_entry_id=mock_config_entry.entry_id
+    )
+    assert len(device_entries) == 4
+    expected_device = next(entry for entry in device_entries if "Generic" in entry.name)
+    assert expected_device.name == "[GAMING-PC] Generic Memory"
+
+    entity_entries = er.async_entries_for_config_entry(
+        entity_registry, mock_config_entry.entry_id
+    )
+    assert "sensor.gaming_pc_generic_memory_test_sensor" in [
+        entry.entity_id for entry in entity_entries
+    ]
 
 
 async def test_non_deprecated_version_does_not_raise_issue(

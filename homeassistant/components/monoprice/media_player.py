@@ -11,21 +11,14 @@ from homeassistant.components.media_player import (
     MediaPlayerEntityFeature,
     MediaPlayerState,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, entity_platform, service
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import (
-    CONF_SOURCES,
-    DOMAIN,
-    FIRST_RUN,
-    MONOPRICE_OBJECT,
-    SERVICE_RESTORE,
-    SERVICE_SNAPSHOT,
-)
+from . import MonopriceConfigEntry
+from .const import CONF_SOURCES, DOMAIN, SERVICE_RESTORE, SERVICE_SNAPSHOT
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -57,13 +50,13 @@ def _get_sources(config_entry):
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: MonopriceConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Monoprice 6-zone amplifier platform."""
     port = config_entry.data[CONF_PORT]
 
-    monoprice = hass.data[DOMAIN][config_entry.entry_id][MONOPRICE_OBJECT]
+    monoprice = config_entry.runtime_data.client
 
     sources = _get_sources(config_entry)
 
@@ -77,8 +70,7 @@ async def async_setup_entry(
             )
 
     # only call update before add if it's the first run so we can try to detect zones
-    first_run = hass.data[DOMAIN][config_entry.entry_id][FIRST_RUN]
-    async_add_entities(entities, first_run)
+    async_add_entities(entities, config_entry.runtime_data.first_run)
 
     platform = entity_platform.async_get_current_platform()
 
