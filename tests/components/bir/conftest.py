@@ -16,7 +16,7 @@ from homeassistant.core import HomeAssistant
 from tests.common import MockConfigEntry
 
 MOCK_PROPERTY_ID = "12345"
-MOCK_ADDRESS = "Testveien 1, Bergen"
+MOCK_ADDRESS = "Teststreet 1, Bergen"
 MOCK_REFERENCE_DATE = date(2026, 4, 2)
 
 MOCK_BIR_PICKUPS = [
