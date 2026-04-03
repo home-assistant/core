@@ -24,6 +24,7 @@ from homeassistant.helpers.event import async_track_time_interval
 
 from .const import (
     CONF_ALLOW_NAMELESS_UUIDS,
+    CONF_ALLOWED_BEACONS,
     CONF_IGNORE_ADDRESSES,
     CONF_IGNORE_UUIDS,
     DOMAIN,
@@ -152,6 +153,8 @@ class IBeaconCoordinator:
         )
         self._ignored_nameless_by_uuid: dict[str, set[str]] = {}
 
+        self._allowed_beacons = set(entry.options.get(CONF_ALLOWED_BEACONS, []))
+
         self._entry.async_on_unload(
             self._entry.add_update_listener(self.async_config_entry_updated)
         )
@@ -276,6 +279,13 @@ class IBeaconCoordinator:
         major = ibeacon_advertisement.major
         minor = ibeacon_advertisement.minor
         group_id = f"{uuid_str}_{major}_{minor}"
+
+        if self._allowed_beacons and group_id not in self._allowed_beacons:
+            _LOGGER.debug(
+                "ignoring beacon %s because it is not in the allowlist",
+                group_id,
+            )
+            return
 
         if (
             self._entry.pref_disable_new_entities
@@ -484,6 +494,7 @@ class IBeaconCoordinator:
         self._allow_nameless_uuids = set(
             self._entry.options.get(CONF_ALLOW_NAMELESS_UUIDS, [])
         )
+        self._allowed_beacons = set(self._entry.options.get(CONF_ALLOWED_BEACONS, []))
 
         for uuid in self._allow_nameless_uuids:
             for address in self._ignored_nameless_by_uuid.pop(uuid, set()):
