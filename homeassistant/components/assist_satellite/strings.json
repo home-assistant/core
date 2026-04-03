@@ -97,7 +97,7 @@
       "name": "Announce on satellite"
     },
     "ask_question": {
-      "description": "Asks a question on an Assist satellite and gets the user's response.",
+      "description": "Lets an Assist satellite ask a question and get the user's response.",
       "fields": {
         "answers": {
           "description": "Possible answers to the question.",
