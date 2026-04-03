@@ -2816,6 +2816,12 @@
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
+    "hivi_speaker": {
+      "name": "HiVi Speaker",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "hko": {
       "name": "Hong Kong Observatory",
       "integration_type": "service",
