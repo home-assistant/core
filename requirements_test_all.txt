@@ -1123,7 +1123,7 @@ huum==0.8.2
 hyperion-py==0.7.6
 
 # homeassistant.components.hypontech
-hyponcloud==0.9.0
+hyponcloud==0.9.3
 
 # homeassistant.components.iaqualink
 iaqualink==0.6.0
