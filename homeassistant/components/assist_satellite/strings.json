@@ -156,7 +156,7 @@
   "title": "Assist satellite",
   "triggers": {
     "idle": {
-      "description": "Triggers after one or more voice assistant satellites become idle after having processed a command.",
+      "description": "Triggers after one or more Assistant satellites become idle after having processed a command.",
       "fields": {
         "behavior": {
           "name": "[%key:component::assist_satellite::common::trigger_behavior_name%]"
