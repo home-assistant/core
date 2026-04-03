@@ -1025,7 +1025,7 @@ greenplanet-energy-api==0.1.10
 gridnet==5.0.1
 
 # homeassistant.components.gridx
-gridx-connector==3.0.1
+gridx-connector==3.0.2
 
 # homeassistant.components.growatt_server
 growattServer==1.9.0
