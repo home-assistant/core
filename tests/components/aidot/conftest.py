@@ -19,7 +19,7 @@ from aidot.device_client import DeviceClient, DeviceInformation, DeviceStatusDat
 import pytest
 
 from homeassistant.components.aidot.const import DOMAIN
-from homeassistant.const import CONF_COUNTRY, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import CONF_COUNTRY_CODE, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import callback
 
 from .const import (
@@ -56,7 +56,7 @@ def mock_config_entry() -> MockConfigEntry:
                 CONF_USERNAME: TEST_EMAIL,
                 CONF_PASSWORD: TEST_PASSWORD,
                 CONF_REGION: TEST_REGION,
-                CONF_COUNTRY: TEST_COUNTRY,
+                CONF_COUNTRY_CODE: TEST_COUNTRY,
                 CONF_ACCESS_TOKEN: "123456789",
                 CONF_ID: "123456",
             }

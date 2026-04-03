@@ -164,7 +164,7 @@ async def test_dynamic_device_remove(
     mock_config_entry: MockConfigEntry,
     mocked_aidot_client: MagicMock,
 ) -> None:
-    """Test if adding a new device dynamically creates the corresponding light entity."""
+    """Test if removing a device dynamically removes the corresponding light entity."""
     mocked_aidot_client.async_get_all_device = AsyncMock(
         return_value=TEST_MULTI_DEVICE_LIST
     )

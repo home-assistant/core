@@ -9,12 +9,12 @@
     "step": {
       "user": {
         "data": {
-          "country": "Country",
+          "country_code": "Country",
           "username": "[%key:common::config_flow::data::username%]",
           "password": "[%key:common::config_flow::data::password%]"
         },
         "data_description": {
-          "country": "The country selected by Aidot app when logging in",
+          "country_code": "The country selected by Aidot app when logging in",
           "username": "Account logged in through Aidot app",
           "password": "Password for logging in through Aidot app"
         }

@@ -8,7 +8,7 @@ from aidot.exceptions import AidotUserOrPassIncorrect
 
 from homeassistant import config_entries
 from homeassistant.components.aidot.const import DOMAIN
-from homeassistant.const import CONF_COUNTRY, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import CONF_COUNTRY_CODE, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -20,7 +20,7 @@ from tests.common import MockConfigEntry
 async def test_config_flow_cloud_login_success(
     hass: HomeAssistant, mock_setup_entry: Generator[AsyncMock]
 ) -> None:
-    """Test a failed config flow using cloud login success."""
+    """Test a successful config flow using cloud login."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -32,7 +32,7 @@ async def test_config_flow_cloud_login_success(
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
-            CONF_COUNTRY: TEST_COUNTRY,
+            CONF_COUNTRY_CODE: TEST_COUNTRY,
             CONF_USERNAME: TEST_EMAIL,
             CONF_PASSWORD: TEST_PASSWORD,
         },
@@ -60,7 +60,7 @@ async def test_config_flow_login_user_password_incorrect(
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
-            CONF_COUNTRY: TEST_COUNTRY,
+            CONF_COUNTRY_CODE: TEST_COUNTRY,
             CONF_USERNAME: TEST_EMAIL,
             CONF_PASSWORD: "ErrorPassword",
         },
@@ -74,7 +74,7 @@ async def test_config_flow_login_user_password_incorrect(
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
-            CONF_COUNTRY: TEST_COUNTRY,
+            CONF_COUNTRY_CODE: TEST_COUNTRY,
             CONF_USERNAME: TEST_EMAIL,
             CONF_PASSWORD: TEST_PASSWORD,
         },
@@ -100,7 +100,7 @@ async def test_form_abort_already_configured(
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
-            CONF_COUNTRY: TEST_COUNTRY,
+            CONF_COUNTRY_CODE: TEST_COUNTRY,
             CONF_USERNAME: TEST_EMAIL,
             CONF_PASSWORD: TEST_PASSWORD,
         },
