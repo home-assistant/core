@@ -9,7 +9,7 @@ from pydantic import BaseModel, Field
 
 
 class SyncGroupStatus(Enum):
-    """Device type enumeration."""
+    """Sync group status or master/slave relationship status of a device."""
 
     UNKNOWN = "unknown"
     MASTER = "master"
