@@ -109,9 +109,7 @@ def _get_charge_state_formatted(
     entity: RenaultSensor[KamereonVehicleBatteryStatusData],
 ) -> str | None:
     """Return the charging_status of this entity."""
-    charging_status = (
-        data.get_charging_status() if (data := entity.coordinator.data) else None
-    )
+    charging_status = entity.coordinator.data.get_charging_status()
     return charging_status.name.lower() if charging_status else None
 
 
@@ -119,7 +117,7 @@ def _get_plug_state_formatted(
     entity: RenaultSensor[KamereonVehicleBatteryStatusData],
 ) -> str | None:
     """Return the plug_status of this entity."""
-    plug_status = data.get_plug_status() if (data := entity.coordinator.data) else None
+    plug_status = entity.coordinator.data.get_plug_status()
     return plug_status.name.lower() if plug_status else None
 
 
@@ -144,7 +142,7 @@ def _get_charging_settings_mode_formatted(
     entity: RenaultSensor[KamereonVehicleChargingSettingsData],
 ) -> str | None:
     """Return the charging_settings mode of this entity."""
-    charging_mode = data.mode if (data := entity.coordinator.data) else None
+    charging_mode = entity.coordinator.data.mode
     return charging_mode.lower() if charging_mode else None
 
 
