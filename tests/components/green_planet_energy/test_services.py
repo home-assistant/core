@@ -12,6 +12,7 @@ from homeassistant.components.green_planet_energy.services import (
     ATTR_HOURS,
     SERVICE_GET_PRICES,
 )
+from homeassistant.const import ATTR_CONFIG_ENTRY_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.setup import async_setup_component
@@ -22,12 +23,12 @@ from tests.common import MockConfigEntry
 FROZEN_NOW = datetime(2026, 3, 24, 14, 7, 0, tzinfo=UTC)
 
 
-async def _call_get_prices(hass: HomeAssistant, hours: float) -> dict:
+async def _call_get_prices(hass: HomeAssistant, hours: float, entry_id: str) -> dict:
     """Helper: call the get_prices service and return the response."""
     return await hass.services.async_call(
         DOMAIN,
         SERVICE_GET_PRICES,
-        {ATTR_HOURS: hours},
+        {ATTR_CONFIG_ENTRY_ID: entry_id, ATTR_HOURS: hours},
         blocking=True,
         return_response=True,
     )
@@ -49,7 +50,7 @@ async def test_get_prices_basic(
     frozen_now: None,
 ) -> None:
     """Requesting 1 hour returns exactly 4 contiguous 15-minute slots."""
-    result = await _call_get_prices(hass, 1)
+    result = await _call_get_prices(hass, 1, init_integration.entry_id)
 
     prices = result["prices"]
     assert result["hours_requested"] == 1.0
@@ -70,7 +71,7 @@ async def test_get_prices_slot_start_snapped(
     frozen_now: None,
 ) -> None:
     """Slot start is snapped to the current 15-minute boundary (14:00, not 14:07)."""
-    result = await _call_get_prices(hass, 0.25)
+    result = await _call_get_prices(hass, 0.25, init_integration.entry_id)
 
     prices = result["prices"]
     assert len(prices) == 1
@@ -84,7 +85,7 @@ async def test_get_prices_correct_values(
     frozen_now: None,
 ) -> None:
     """Prices match mock data formula: (20.0 + hour + minute/100) / 100 EUR/kWh."""
-    result = await _call_get_prices(hass, 1)
+    result = await _call_get_prices(hass, 1, init_integration.entry_id)
     prices = result["prices"]
 
     expected = [
@@ -109,7 +110,7 @@ async def test_get_prices_crosses_midnight(
         "homeassistant.components.green_planet_energy.services.dt_util.now",
         return_value=midnight_cross,
     ):
-        result = await _call_get_prices(hass, 1)
+        result = await _call_get_prices(hass, 1, init_integration.entry_id)
 
     prices = result["prices"]
     assert len(prices) == 4
@@ -128,21 +129,21 @@ async def test_get_prices_missing_slots_omitted(
     coordinator = init_integration.runtime_data
     del coordinator.data["gpe_price_14_15"]
 
-    result = await _call_get_prices(hass, 1)
+    result = await _call_get_prices(hass, 1, init_integration.entry_id)
 
     assert len(result["prices"]) == 3
     starts = [s["start"] for s in result["prices"]]
     assert not any("14:15:00" in s for s in starts)
 
 
-async def test_get_prices_no_config_entry(
+async def test_get_prices_entry_not_found(
     hass: HomeAssistant,
 ) -> None:
-    """Service raises when no config entry is set up."""
+    """Service raises when the config entry does not exist."""
     await async_setup_component(hass, DOMAIN, {})
     with pytest.raises(ServiceValidationError) as exc_info:
-        await _call_get_prices(hass, 1)
-    assert exc_info.value.translation_key == "no_config_entry"
+        await _call_get_prices(hass, 1, "non_existent_entry_id")
+    assert exc_info.value.translation_key == "service_config_entry_not_found"
 
 
 async def test_get_prices_entry_not_loaded(
@@ -154,8 +155,8 @@ async def test_get_prices_entry_not_loaded(
     await async_setup_component(hass, DOMAIN, {})
     mock_config_entry.add_to_hass(hass)
     with pytest.raises(ServiceValidationError) as exc_info:
-        await _call_get_prices(hass, 1)
-    assert exc_info.value.translation_key == "config_entry_not_loaded"
+        await _call_get_prices(hass, 1, mock_config_entry.entry_id)
+    assert exc_info.value.translation_key == "service_config_entry_not_loaded"
 
 
 async def test_get_prices_quarter_hour(
@@ -164,7 +165,7 @@ async def test_get_prices_quarter_hour(
     frozen_now: None,
 ) -> None:
     """Requesting 0.25 h (minimum) returns exactly 1 slot."""
-    result = await _call_get_prices(hass, 0.25)
+    result = await _call_get_prices(hass, 0.25, init_integration.entry_id)
     assert len(result["prices"]) == 1
     assert result["hours_requested"] == 0.25
 
@@ -176,7 +177,7 @@ async def test_get_prices_non_quarter_hour_rejected(
 ) -> None:
     """Non-0.25-multiple hour values are rejected by the service schema."""
     with pytest.raises(vol.Invalid):
-        await _call_get_prices(hass, 0.3)
+        await _call_get_prices(hass, 0.3, init_integration.entry_id)
 
 
 async def test_get_prices_max_hours(
@@ -189,7 +190,6 @@ async def test_get_prices_max_hours(
         "homeassistant.components.green_planet_energy.services.dt_util.now",
         return_value=midnight,
     ):
-        result = await _call_get_prices(hass, 24)
-
+        result = await _call_get_prices(hass, 24, init_integration.entry_id)
     assert result["hours_requested"] == 24.0
     assert len(result["prices"]) == 96

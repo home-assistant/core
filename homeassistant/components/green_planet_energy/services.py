@@ -6,14 +6,15 @@ from datetime import timedelta
 
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import ATTR_CONFIG_ENTRY_ID
 from homeassistant.core import (
     HomeAssistant,
     ServiceCall,
     ServiceResponse,
     SupportsResponse,
 )
-from homeassistant.exceptions import ServiceValidationError
+from homeassistant.helpers.selector import ConfigEntrySelector
+from homeassistant.helpers.service import async_get_config_entry
 from homeassistant.util import dt as dt_util
 from homeassistant.util.json import JsonValueType
 
@@ -32,6 +33,9 @@ def _validate_hours(v: float) -> float:
 
 SERVICE_GET_PRICES_SCHEMA = vol.Schema(
     {
+        vol.Required(ATTR_CONFIG_ENTRY_ID): ConfigEntrySelector(
+            {"integration": DOMAIN}
+        ),
         vol.Required(ATTR_HOURS): vol.All(
             vol.Coerce(float),
             vol.Range(min=0.25, max=24),
@@ -51,23 +55,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
         when the requested window extends beyond tomorrow) are silently omitted
         from the result.
         """
-        entries = hass.config_entries.async_entries(DOMAIN)
-        if not entries:
-            raise ServiceValidationError(
-                translation_domain=DOMAIN,
-                translation_key="no_config_entry",
-            )
-
-        loaded_entries = [
-            entry for entry in entries if entry.state is ConfigEntryState.LOADED
-        ]
-        if not loaded_entries:
-            raise ServiceValidationError(
-                translation_domain=DOMAIN,
-                translation_key="config_entry_not_loaded",
-            )
-
-        entry = loaded_entries[0]
+        entry = async_get_config_entry(hass, DOMAIN, call.data[ATTR_CONFIG_ENTRY_ID])
         data = entry.runtime_data.data
         hours: float = call.data[ATTR_HOURS]
 

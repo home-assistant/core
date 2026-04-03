@@ -1,5 +1,10 @@
 get_prices:
   fields:
+    config_entry_id:
+      required: true
+      selector:
+        config_entry:
+          integration: green_planet_energy
     hours:
       required: true
       selector:
