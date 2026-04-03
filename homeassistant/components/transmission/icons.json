@@ -1,13 +1,5 @@
 {
   "entity": {
-    "binary_sensor": {
-      "port_forwarding": {
-        "default": "mdi:shield-check",
-        "state": {
-          "off": "mdi:shield-off"
-        }
-      }
-    },
     "event": {
       "torrent": {
         "default": "mdi:folder-file-outline"
