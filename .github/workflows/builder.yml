@@ -49,7 +49,7 @@ jobs:
 
       - name: Get information
         id: info
-        uses: home-assistant/actions/helpers/info@master # zizmor: ignore[unpinned-uses]
+        uses: home-assistant/actions/helpers/info@5f5b077d63a1e4c53019231409a0c4d791fb74e5 # zizmor: ignore[unpinned-uses]
 
       - name: Get version
         id: version
