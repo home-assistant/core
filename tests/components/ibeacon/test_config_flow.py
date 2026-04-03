@@ -6,8 +6,8 @@ import pytest
 
 from homeassistant import config_entries
 from homeassistant.components.ibeacon.const import (
-    CONF_ALLOWED_BEACONS,
     CONF_ALLOW_NAMELESS_UUIDS,
+    CONF_ALLOWED_BEACONS,
     DOMAIN,
 )
 from homeassistant.core import HomeAssistant

@@ -18,7 +18,7 @@ from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import VolDictType
 
-from .const import CONF_ALLOWED_BEACONS, CONF_ALLOW_NAMELESS_UUIDS, DOMAIN
+from .const import CONF_ALLOW_NAMELESS_UUIDS, CONF_ALLOWED_BEACONS, DOMAIN
 
 
 def _normalize_allowed_beacon(value: str) -> str:
