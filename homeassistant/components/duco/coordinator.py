@@ -45,8 +45,10 @@ class DucoCoordinator(DataUpdateCoordinator[list[Node]]):
         """Fetch board info once during initial setup."""
         try:
             self.board_info = await self.client.async_get_board_info()
-        except (DucoConnectionError, DucoError) as err:
+        except DucoConnectionError as err:
             raise UpdateFailed(f"Cannot connect to Duco box: {err}") from err
+        except DucoError as err:
+            raise UpdateFailed(f"Duco API error: {err}") from err
 
     async def _async_update_data(self) -> list[Node]:
         """Fetch node data from the Duco box."""
