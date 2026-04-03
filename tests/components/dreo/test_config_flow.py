@@ -3,19 +3,20 @@
 from unittest.mock import MagicMock, patch
 
 from pydreo.exceptions import DreoBusinessException, DreoException
-import pytest
 
 from homeassistant.components.dreo.config_flow import DreoFlowHandler
+from homeassistant.components.dreo.const import DOMAIN
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
+from tests.common import MockConfigEntry
 
-@pytest.mark.skip(reason="Translation issue with data_description keys")
+
 async def test_form(hass: HomeAssistant) -> None:
     """Test we get the form."""
     result = await hass.config_entries.flow.async_init(
-        "dreo", context={"source": "user"}
+        DOMAIN, context={"source": "user"}
     )
 
     assert result["type"] is FlowResultType.FORM
@@ -91,24 +92,60 @@ async def test_user_step_invalid_auth(hass: HomeAssistant) -> None:
 
 async def test_user_step_unique_id_already_configured(hass: HomeAssistant) -> None:
     """Test user step when unique ID is already configured."""
-    flow = DreoFlowHandler()
-    flow.hass = hass
-    flow.context = {}
+    existing_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_USERNAME: "existing@example.com",
+            CONF_PASSWORD: "482c811da5d5b4bc6d497ffa98491e38",
+        },
+        unique_id="existing@example.com",
+    )
+    existing_entry.add_to_hass(hass)
 
     user_input = {CONF_USERNAME: "existing@example.com", CONF_PASSWORD: "password123"}
 
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": "user"}, data=user_input
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+
+async def test_reauth_flow_success(hass: HomeAssistant) -> None:
+    """Test successful reauthentication flow."""
+    existing_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_USERNAME: "test@example.com",
+            CONF_PASSWORD: "482c811da5d5b4bc6d497ffa98491e38",
+        },
+        unique_id="test@example.com",
+    )
+    existing_entry.add_to_hass(hass)
+
+    result = await existing_entry.start_reauth_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+
     with (
         patch(
-            "homeassistant.components.dreo.config_flow.DreoClient"
-        ) as mock_client_class,
-        patch.object(flow, "_abort_if_unique_id_configured") as mock_abort,
+            "homeassistant.config_entries.ConfigEntries.async_reload",
+            return_value=True,
+        ),
+        patch("homeassistant.components.dreo.config_flow.DreoClient") as mock_client_class,
     ):
         mock_client = mock_client_class.return_value
         mock_client.login = MagicMock()
-        mock_abort.side_effect = Exception("Already configured")
 
-        with pytest.raises(Exception, match="Already configured"):
-            await flow.async_step_user(user_input)
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_PASSWORD: "new-password"},
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    assert existing_entry.data[CONF_PASSWORD] == "f1086f68460b65771de50a970cd1242d"
 
 
 def test_password_hashing() -> None:

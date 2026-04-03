@@ -1,7 +1,8 @@
 {
   "config": {
     "abort": {
-      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
@@ -9,10 +10,24 @@
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "step": {
+      "reauth_confirm": {
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "password": "Your updated Dreo account password"
+        },
+        "description": "Please update your Dreo password",
+        "title": "Reauthenticate Dreo"
+      },
       "user": {
         "data": {
           "password": "[%key:common::config_flow::data::password%]",
           "username": "[%key:common::config_flow::data::email%]"
+        },
+        "data_description": {
+          "password": "Your Dreo account password",
+          "username": "The email address for your Dreo account"
         },
         "description": "Please enter your Dreo credentials",
         "title": "Connect to Dreo"

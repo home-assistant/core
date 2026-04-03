@@ -56,7 +56,6 @@ async def test_data_processing_with_missing_speed_range() -> None:
     }
     fan_data = DreoFanDeviceData.process_fan_data(status, model_config)
 
-    assert fan_data.available is True
     assert fan_data.is_on is True
     assert fan_data.speed_percentage is None
 
@@ -64,14 +63,13 @@ async def test_data_processing_with_missing_speed_range() -> None:
 async def test_process_fan_data_edge_cases() -> None:
     """Test edge cases in fan data processing."""
 
-    status = {"connected": False, "power_switch": False}
+    status = {"power_switch": False}
     model_config = {
         "preset_modes": ["Sleep", "Auto", "Natural", "Normal"],
         "speed_range": [1, 6],
     }
 
     fan_data = DreoFanDeviceData.process_fan_data(status, model_config)
-    assert fan_data.available is False
     assert fan_data.is_on is False
     assert fan_data.mode is None
     assert fan_data.oscillate is None

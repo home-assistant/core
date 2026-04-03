@@ -74,7 +74,6 @@ class DreoFan(DreoEntity, FanEntity):
         | FanEntityFeature.TURN_ON
         | FanEntityFeature.TURN_OFF
     )
-    _attr_is_on = False
     _attr_percentage = 0
     _attr_preset_mode = None
     _attr_oscillating = None
@@ -85,27 +84,24 @@ class DreoFan(DreoEntity, FanEntity):
         coordinator: DreoDataUpdateCoordinator,
     ) -> None:
         """Initialize the Dreo fan."""
-        super().__init__(device, coordinator, FAN_DEVICE_TYPE, None)
+        super().__init__(device, coordinator, FAN_DEVICE_TYPE)
 
         model_config = coordinator.model_config
-        speed_range = model_config.get("speed_range")
-
-        self._low_high_range = speed_range
+        self._speed_range = model_config.get("speed_range")
         self._attr_preset_modes = model_config.get("preset_modes")
 
     @callback
-    def _handle_coordinator_update(self):
+    def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         self._update_attributes()
         super()._handle_coordinator_update()
 
-    def _update_attributes(self):
+    def _update_attributes(self) -> None:
         """Update attributes from coordinator data."""
         if not self.coordinator.data:
             return
 
         fan_state_data = self.coordinator.data
-        self._attr_available = fan_state_data.available
 
         if not fan_state_data.is_on:
             self._attr_percentage = 0
@@ -114,7 +110,15 @@ class DreoFan(DreoEntity, FanEntity):
         else:
             self._attr_preset_mode = fan_state_data.mode
             self._attr_oscillating = fan_state_data.oscillate
-            self._attr_percentage = fan_state_data.speed_percentage
+            self._attr_percentage = fan_state_data.speed_percentage or 0
+
+    @property
+    def is_on(self) -> bool | None:
+        """Return whether the fan is on."""
+        if not self.coordinator.data:
+            return None
+
+        return self.coordinator.data.is_on
 
     async def async_turn_on(
         self,
@@ -170,11 +174,11 @@ class DreoFan(DreoEntity, FanEntity):
         if not self.is_on:
             command_params["power_switch"] = True
 
-        if percentage is not None and percentage > 0 and self._low_high_range:
+        if percentage is not None and percentage > 0 and self._speed_range:
             speed = math.ceil(
-                percentage_to_ranged_value(self._low_high_range, percentage)
+                percentage_to_ranged_value(self._speed_range, percentage)
             )
-            if speed is not None and speed > 0:
+            if speed > 0:
                 command_params["speed"] = speed
 
         if preset_mode is not None:
