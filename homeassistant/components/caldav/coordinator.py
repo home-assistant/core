@@ -80,6 +80,7 @@ class CalDavUpdateCoordinator(DataUpdateCoordinator[CalendarEvent | None]):
                     start=self.to_local(vevent.dtstart.value),
                     end=self.to_local(self.get_end_date(vevent)),
                     location=get_attr_value(vevent, "location"),
+                    geo=get_attr_value(vevent, "geo"),
                     description=get_attr_value(vevent, "description"),
                 )
             )
@@ -175,6 +176,7 @@ class CalDavUpdateCoordinator(DataUpdateCoordinator[CalendarEvent | None]):
             start=self.to_local(vevent.dtstart.value),
             end=self.to_local(self.get_end_date(vevent)),
             location=get_attr_value(vevent, "location"),
+            geo=get_attr_value(vevent, "geo"),
             description=get_attr_value(vevent, "description"),
         )
 

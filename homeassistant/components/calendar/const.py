@@ -33,6 +33,7 @@ EVENT_END = "dtend"
 EVENT_SUMMARY = "summary"
 EVENT_DESCRIPTION = "description"
 EVENT_LOCATION = "location"
+EVENT_GEO = "geo"
 EVENT_RECURRENCE_ID = "recurrence_id"
 EVENT_RECURRENCE_RANGE = "recurrence_range"
 EVENT_RRULE = "rrule"
@@ -62,4 +63,5 @@ LIST_EVENT_FIELDS = {
     EVENT_SUMMARY,
     EVENT_DESCRIPTION,
     EVENT_LOCATION,
+    EVENT_GEO,
 }

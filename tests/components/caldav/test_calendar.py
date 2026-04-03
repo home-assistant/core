@@ -30,6 +30,7 @@ DTSTAMP:20171125T000000Z
 DTSTART:20171127T170000Z
 DTEND:20171127T180000Z
 SUMMARY:This is a normal event
+GEO:53.537999;9.989934
 LOCATION:Hamburg
 DESCRIPTION:Surprisingly rainy
 END:VEVENT
@@ -44,6 +45,7 @@ DTSTAMP:20171125T000000Z
 DTSTART:20171127T100000Z
 DTEND:20171127T110000Z
 SUMMARY:This is an offset event !!-02:00
+GEO:53.537999;9.989934
 LOCATION:Hamburg
 DESCRIPTION:Surprisingly shiny
 END:VEVENT
@@ -58,6 +60,7 @@ DTSTAMP:20171125T000000Z
 DTSTART:20171127
 DTEND:20171128
 SUMMARY:This is an all day event
+GEO:53.537999;9.989934
 LOCATION:Hamburg
 DESCRIPTION:What a beautiful day
 END:VEVENT
@@ -71,6 +74,7 @@ UID:4
 DTSTAMP:20171125T000000Z
 DTSTART:20171127
 SUMMARY:This is an event without dtend or duration
+GEO:53.537999;9.989934
 LOCATION:Hamburg
 DESCRIPTION:What an endless day
 END:VEVENT
@@ -85,6 +89,7 @@ DTSTAMP:20171125T000000Z
 DTSTART:20171127
 DURATION:PT1H
 SUMMARY:This is an event with duration
+GEO:53.537999;9.989934
 LOCATION:Hamburg
 DESCRIPTION:What a day
 END:VEVENT
@@ -99,6 +104,7 @@ DTSTAMP:20171125T000000Z
 DTSTART:20171127T100000Z
 DURATION:PT1H
 SUMMARY:This is an event with duration
+GEO:53.537999;9.989934
 LOCATION:Hamburg
 DESCRIPTION:What a day
 END:VEVENT
@@ -113,6 +119,7 @@ DTSTART;TZID=America/Los_Angeles:20171127T083000
 DTSTAMP:20180301T020053Z
 DTEND;TZID=America/Los_Angeles:20171127T093000
 SUMMARY:Enjoy the sun
+GEO:37.735817;-122.453273
 LOCATION:San Francisco
 DESCRIPTION:Sunny day
 END:VEVENT
@@ -126,6 +133,7 @@ UID:8
 DTSTART:20171127T190000
 DTEND:20171127T200000
 SUMMARY:This is a floating Event
+GEO:53.537999;9.989934
 LOCATION:Hamburg
 DESCRIPTION:What a day
 END:VEVENT
@@ -140,6 +148,7 @@ DTSTAMP:20171125T000000Z
 DTSTART:20171027T220000Z
 DTEND:20171027T223000Z
 SUMMARY:This is a recurring event
+GEO:53.537999;9.989934
 LOCATION:Hamburg
 DESCRIPTION:Every day for a while
 RRULE:FREQ=DAILY;UNTIL=20171227T215959
@@ -155,6 +164,7 @@ DTSTAMP:20171125T000000Z
 DTSTART:20171027T230000Z
 DURATION:PT30M
 SUMMARY:This is a recurring event with a duration
+GEO:53.537999;9.989934
 LOCATION:Hamburg
 DESCRIPTION:Every day for a while as well
 RRULE:FREQ=DAILY;UNTIL=20171227T215959
@@ -170,6 +180,7 @@ DTSTAMP:20171125T000000Z
 DTSTART:20171027T233000Z
 DTEND:20171027T235959Z
 SUMMARY:This is a recurring event that has ended
+GEO:53.537999;9.989934
 LOCATION:Hamburg
 DESCRIPTION:Every day for a while
 RRULE:FREQ=DAILY;UNTIL=20171127T225959
@@ -185,6 +196,7 @@ DTSTAMP:20171125T000000Z
 DTSTART:20171027T234500Z
 DTEND:20171027T235959Z
 SUMMARY:This is a recurring event that never ends
+GEO:53.537999;9.989934
 LOCATION:Hamburg
 DESCRIPTION:Every day forever
 RRULE:FREQ=DAILY
@@ -200,6 +212,7 @@ DTSTAMP:20161125T000000Z
 DTSTART:20161127
 DTEND:20161128
 SUMMARY:This is a recurring all day event
+GEO:53.537999;9.989934
 LOCATION:Hamburg
 DESCRIPTION:Groundhog Day
 RRULE:FREQ=DAILY;COUNT=100
@@ -215,6 +228,7 @@ DTSTAMP:20151125T000000Z
 DTSTART:20151127T000000Z
 DTEND:20151127T003000Z
 SUMMARY:This is an hourly recurring event
+GEO:53.537999;9.989934
 LOCATION:Hamburg
 DESCRIPTION:The bell tolls for thee
 RRULE:FREQ=HOURLY;INTERVAL=1;COUNT=12
@@ -271,6 +285,7 @@ DTSTAMP:20171125T000000Z
 DTSTART:20171127
 DTEND:20171128
 SUMMARY:All day event with same start and end
+GEO:53.537999;9.989934
 LOCATION:Hamburg
 END:VEVENT
 END:VCALENDAR
@@ -284,6 +299,7 @@ DTSTAMP:20171125T000000Z
 DTSTART:20171127T010000
 DTEND:20171127T010000
 SUMMARY:Event with no duration
+GEO:53.537999;9.989934
 LOCATION:Hamburg
 END:VEVENT
 END:VCALENDAR
@@ -455,6 +471,7 @@ async def test_ongoing_event(
         "start_time": "2017-11-27 17:00:00",
         "end_time": "2017-11-27 18:00:00",
         "location": "Hamburg",
+        "geo": "53.537999;9.989934",
         "description": "Surprisingly rainy",
         "supported_features": CalendarEntityFeature.CREATE_EVENT,
     }
@@ -480,6 +497,7 @@ async def test_just_ended_event(
         "start_time": "2017-11-27 17:00:00",
         "end_time": "2017-11-27 18:00:00",
         "location": "Hamburg",
+        "geo": "53.537999;9.989934",
         "description": "Surprisingly rainy",
         "supported_features": CalendarEntityFeature.CREATE_EVENT,
     }
@@ -505,6 +523,7 @@ async def test_ongoing_event_different_tz(
         "start_time": "2017-11-27 16:30:00",
         "description": "Sunny day",
         "end_time": "2017-11-27 17:30:00",
+        "geo": "37.735817;-122.453273",
         "location": "San Francisco",
         "supported_features": CalendarEntityFeature.CREATE_EVENT,
     }
@@ -530,6 +549,7 @@ async def test_ongoing_floating_event_returned(
         "start_time": "2017-11-27 19:00:00",
         "end_time": "2017-11-27 20:00:00",
         "location": "Hamburg",
+        "geo": "53.537999;9.989934",
         "description": "What a day",
         "supported_features": CalendarEntityFeature.CREATE_EVENT,
     }
@@ -555,6 +575,7 @@ async def test_ongoing_event_with_offset(
         "start_time": "2017-11-27 10:00:00",
         "end_time": "2017-11-27 11:00:00",
         "location": "Hamburg",
+        "geo": "53.537999;9.989934",
         "description": "Surprisingly shiny",
         "supported_features": CalendarEntityFeature.CREATE_EVENT,
     }
@@ -596,6 +617,7 @@ async def test_matching_filter(
         "start_time": "2017-11-27 17:00:00",
         "end_time": "2017-11-27 18:00:00",
         "location": "Hamburg",
+        "geo": "53.537999;9.989934",
         "description": "Surprisingly rainy",
         "supported_features": CalendarEntityFeature.CREATE_EVENT,
     }
@@ -638,6 +660,7 @@ async def test_matching_filter_real_regexp(
         "start_time": "2017-11-27 17:00:00",
         "end_time": "2017-11-27 18:00:00",
         "location": "Hamburg",
+        "geo": "53.537999;9.989934",
         "description": "Surprisingly rainy",
         "supported_features": CalendarEntityFeature.CREATE_EVENT,
     }
@@ -758,6 +781,7 @@ async def test_all_day_event(
         "start_time": "2017-11-27 00:00:00",
         "end_time": "2017-11-28 00:00:00",
         "location": "Hamburg",
+        "geo": "53.537999;9.989934",
         "description": "What a beautiful day",
         "supported_features": CalendarEntityFeature.CREATE_EVENT,
     }
@@ -783,6 +807,7 @@ async def test_event_rrule(
         "start_time": "2017-11-27 22:00:00",
         "end_time": "2017-11-27 22:30:00",
         "location": "Hamburg",
+        "geo": "53.537999;9.989934",
         "description": "Every day for a while",
         "supported_features": CalendarEntityFeature.CREATE_EVENT,
     }
@@ -808,6 +833,7 @@ async def test_event_rrule_ongoing(
         "start_time": "2017-11-27 22:00:00",
         "end_time": "2017-11-27 22:30:00",
         "location": "Hamburg",
+        "geo": "53.537999;9.989934",
         "description": "Every day for a while",
         "supported_features": CalendarEntityFeature.CREATE_EVENT,
     }
@@ -833,6 +859,7 @@ async def test_event_rrule_duration(
         "start_time": "2017-11-27 23:00:00",
         "end_time": "2017-11-27 23:30:00",
         "location": "Hamburg",
+        "geo": "53.537999;9.989934",
         "description": "Every day for a while as well",
         "supported_features": CalendarEntityFeature.CREATE_EVENT,
     }
@@ -858,6 +885,7 @@ async def test_event_rrule_duration_ongoing(
         "start_time": "2017-11-27 23:00:00",
         "end_time": "2017-11-27 23:30:00",
         "location": "Hamburg",
+        "geo": "53.537999;9.989934",
         "description": "Every day for a while as well",
         "supported_features": CalendarEntityFeature.CREATE_EVENT,
     }
@@ -883,6 +911,7 @@ async def test_event_rrule_endless(
         "start_time": "2017-11-27 23:45:00",
         "end_time": "2017-11-27 23:59:59",
         "location": "Hamburg",
+        "geo": "53.537999;9.989934",
         "description": "Every day forever",
         "supported_features": CalendarEntityFeature.CREATE_EVENT,
     }
@@ -940,6 +969,7 @@ async def test_event_rrule_all_day_early(
         "start_time": "2016-12-01 00:00:00",
         "end_time": "2016-12-02 00:00:00",
         "location": "Hamburg",
+        "geo": "53.537999;9.989934",
         "description": "Groundhog Day",
         "supported_features": CalendarEntityFeature.CREATE_EVENT,
     }
@@ -965,6 +995,7 @@ async def test_event_rrule_hourly_on_first(
         "start_time": "2015-11-27 00:00:00",
         "end_time": "2015-11-27 00:30:00",
         "location": "Hamburg",
+        "geo": "53.537999;9.989934",
         "description": "The bell tolls for thee",
         "supported_features": CalendarEntityFeature.CREATE_EVENT,
     }
@@ -990,6 +1021,7 @@ async def test_event_rrule_hourly_on_last(
         "start_time": "2015-11-27 11:00:00",
         "end_time": "2015-11-27 11:30:00",
         "location": "Hamburg",
+        "geo": "53.537999;9.989934",
         "description": "The bell tolls for thee",
         "supported_features": CalendarEntityFeature.CREATE_EVENT,
     }
@@ -1062,6 +1094,7 @@ async def test_get_events_custom_calendars(
             "start": {"dateTime": "2017-11-27T09:00:00-08:00"},
             "summary": "This is a normal event",
             "location": "Hamburg",
+            "geo": "53.537999;9.989934",
             "description": "Surprisingly rainy",
             "uid": None,
             "recurrence_id": None,
@@ -1123,6 +1156,7 @@ async def test_setup_config_entry(
         "start_time": "2017-11-27 00:00:00",
         "end_time": "2017-11-28 00:00:00",
         "location": "Hamburg",
+        "geo": "53.537999;9.989934",
         "description": "What a beautiful day",
         "supported_features": CalendarEntityFeature.CREATE_EVENT,
     }

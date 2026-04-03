@@ -369,6 +369,7 @@ class CalendarEvent:
     summary: str
     description: str | None = None
     location: str | None = None
+    geo: str | None = None
 
     uid: str | None = None
     recurrence_id: str | None = None
@@ -560,6 +561,7 @@ class CalendarEntity(Entity):
             "start_time": event.start_datetime_local.strftime(DATE_STR_FORMAT),
             "end_time": event.end_datetime_local.strftime(DATE_STR_FORMAT),
             "location": event.location or "",
+            "geo": event.geo or "",
             "description": event.description or "",
         }
 

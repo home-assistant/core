@@ -224,6 +224,8 @@ class WebDavCalendarEntity(CoordinatorEntity[CalDavUpdateCoordinator], CalendarE
             item_data["description"] = description
         if location := kwargs.get("location"):
             item_data["location"] = location
+        if geo := kwargs.get("geo"):
+            item_data["geo"] = geo
         if rrule := kwargs.get("rrule"):
             item_data["rrule"] = rrule
 
