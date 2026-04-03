@@ -17,14 +17,25 @@ from homeassistant.const import (
 
 from tests.common import MockConfigEntry
 
-MOCK_DEVICE_1 = NamedTuple("Device", ["mac", "hostname", "ip", "reachable", "host"])(
+
+class MockDevice(NamedTuple):
+    """Mock device from OpenWrt."""
+
+    mac: str
+    hostname: str
+    ip: str
+    reachable: bool
+    host: str
+
+
+MOCK_DEVICE_1 = MockDevice(
     mac="AA:BB:CC:DD:EE:FF",
     hostname="device1",
     ip="192.168.1.100",
     reachable=True,
     host="192.168.1.1",
 )
-MOCK_DEVICE_2 = NamedTuple("Device", ["mac", "hostname", "ip", "reachable", "host"])(
+MOCK_DEVICE_2 = MockDevice(
     mac="11:22:33:44:55:66",
     hostname="device2",
     ip="192.168.1.101",
