@@ -287,9 +287,8 @@ class IBeaconCoordinator:
             )
             return
 
-        if (
-            self._entry.pref_disable_new_entities
-            and not self._async_known_group_id(group_id)
+        if self._entry.pref_disable_new_entities and not self._async_known_group_id(
+            group_id
         ):
             _LOGGER.debug(
                 "ignoring new beacon %s because adding new entities is disabled",

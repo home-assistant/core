@@ -106,10 +106,7 @@ class IBeaconOptionsFlow(OptionsFlow):
                 updated_beacons = list(
                     user_input.get(CONF_ALLOWED_BEACONS, current_beacons)
                 )
-                if (
-                    new_allowed_beacon
-                    and new_allowed_beacon not in updated_beacons
-                ):
+                if new_allowed_beacon and new_allowed_beacon not in updated_beacons:
                     updated_beacons.append(new_allowed_beacon)
 
                 data: dict[str, list[str]] = {}

@@ -514,7 +514,9 @@ async def test_allowlist_allows_listed_ibeacons(hass: HomeAssistant) -> None:
     """Test we do add newly discovered iBeacons when they are allowlisted."""
     entry = MockConfigEntry(
         domain=DOMAIN,
-        options={CONF_ALLOWED_BEACONS: ["426c7565-4368-6172-6d42-6561636f6e73_3838_4949"]},
+        options={
+            CONF_ALLOWED_BEACONS: ["426c7565-4368-6172-6d42-6561636f6e73_3838_4949"]
+        },
     )
     entry.add_to_hass(hass)
 
@@ -544,7 +546,10 @@ async def test_allowlist_update_restores_ignored(hass: HomeAssistant) -> None:
     assert hass.states.get("device_tracker.bluecharm_177999_8105") is None
 
     hass.config_entries.async_update_entry(
-        entry, options={CONF_ALLOWED_BEACONS: ["426c7565-4368-6172-6d42-6561636f6e73_3838_4949"]}
+        entry,
+        options={
+            CONF_ALLOWED_BEACONS: ["426c7565-4368-6172-6d42-6561636f6e73_3838_4949"]
+        },
     )
     await hass.async_block_till_done()
 
@@ -552,4 +557,3 @@ async def test_allowlist_update_restores_ignored(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
 
     assert hass.states.get("device_tracker.bluecharm_177999_8105") is not None
-
