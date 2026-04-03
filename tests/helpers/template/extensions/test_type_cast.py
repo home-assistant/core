@@ -135,3 +135,19 @@ def test_isnumber(hass: HomeAssistant, value: object, expected: bool) -> None:
     assert render(hass, "{{ is_number(value) }}", {"value": value}) == expected
     assert render(hass, "{{ value | is_number }}", {"value": value}) == expected
     assert render(hass, "{{ value is is_number }}", {"value": value}) == expected
+
+
+@pytest.mark.parametrize(
+    ("value", "expected"),
+    [
+        ("hello", True),
+        (b"hello", True),
+        (bytearray(b"hello"), True),
+        (42, False),
+        ([1, 2], False),
+        (None, False),
+    ],
+)
+def test_string_like(hass: HomeAssistant, value: object, expected: bool) -> None:
+    """Test string_like."""
+    assert render(hass, "{{ value is string_like }}", {"value": value}) == expected
