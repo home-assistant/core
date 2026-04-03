@@ -41,13 +41,13 @@ class PowerwallSensorEntityDescription(SensorEntityDescription):
 
 
 def _get_meter_power(meter_name: str) -> Callable[[PowerwallData], float | None]:
-    """Get instant power for a meter."""
+    """Get instant power for a meter (converted to kW)."""
 
     def getter(data: PowerwallData) -> float | None:
         meter: MeterData | None = getattr(data, meter_name, None)
         if meter is None:
             return None
-        return round(meter.instant_power)
+        return round(meter.instant_power / 1000, 3)
 
     return getter
 
@@ -129,7 +129,7 @@ SENSOR_DESCRIPTIONS: list[PowerwallSensorEntityDescription] = [
     PowerwallSensorEntityDescription(
         key="battery_power",
         translation_key="battery_power",
-        native_unit_of_measurement=UnitOfPower.WATT,
+        native_unit_of_measurement=UnitOfPower.KILO_WATT,
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=_get_meter_power("battery"),
@@ -163,7 +163,7 @@ SENSOR_DESCRIPTIONS: list[PowerwallSensorEntityDescription] = [
     PowerwallSensorEntityDescription(
         key="solar_power",
         translation_key="solar_power",
-        native_unit_of_measurement=UnitOfPower.WATT,
+        native_unit_of_measurement=UnitOfPower.KILO_WATT,
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=_get_meter_power("solar"),
@@ -180,7 +180,7 @@ SENSOR_DESCRIPTIONS: list[PowerwallSensorEntityDescription] = [
     PowerwallSensorEntityDescription(
         key="load_power",
         translation_key="load_power",
-        native_unit_of_measurement=UnitOfPower.WATT,
+        native_unit_of_measurement=UnitOfPower.KILO_WATT,
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=_get_meter_power("load"),
@@ -197,7 +197,7 @@ SENSOR_DESCRIPTIONS: list[PowerwallSensorEntityDescription] = [
     PowerwallSensorEntityDescription(
         key="grid_power",
         translation_key="grid_power",
-        native_unit_of_measurement=UnitOfPower.WATT,
+        native_unit_of_measurement=UnitOfPower.KILO_WATT,
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=_get_meter_power("site"),

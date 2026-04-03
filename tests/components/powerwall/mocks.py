@@ -84,6 +84,7 @@ def create_mock_powerwall(
     mock_pw.grid_status.return_value = grid_status
     mock_pw.site_name.return_value = site_name
     mock_pw.version.return_value = version
+    mock_pw.din.return_value = None
     mock_pw.power.return_value = {
         "site": 500,
         "solar": 2750,
@@ -125,10 +126,12 @@ def create_mock_powerwall_pw3() -> MagicMock:
 
 def create_mock_powerwall_pw2() -> MagicMock:
     """Create a mock for Powerwall 2 (full API)."""
-    return create_mock_powerwall(
+    mock_pw = create_mock_powerwall(
         site_name="My Home",
         version="23.44.0",
     )
+    mock_pw.din.return_value = "1232100-12-B--T12345678901"
+    return mock_pw
 
 
 def patch_powerwall(mock_pw: MagicMock | None = None):

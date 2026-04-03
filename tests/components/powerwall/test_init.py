@@ -2,6 +2,8 @@
 
 from unittest.mock import MagicMock, patch
 
+from pypowerwall.local.exceptions import LoginError
+
 from homeassistant.components.powerwall.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_IP_ADDRESS, CONF_PASSWORD
@@ -63,6 +65,9 @@ async def test_setup_entry_pw2(hass: HomeAssistant) -> None:
     assert config_entry.runtime_data["base_info"].is_powerwall3 is False
     assert config_entry.runtime_data["base_info"].device_type == "Powerwall 2"
     assert config_entry.runtime_data["base_info"].site_name == "My Home"
+    assert (
+        config_entry.runtime_data["base_info"].unique_id == "1232100-12-B--T12345678901"
+    )
 
 
 async def test_setup_entry_connection_error(hass: HomeAssistant) -> None:
@@ -108,6 +113,27 @@ async def test_setup_entry_exception(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
     assert config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+async def test_setup_entry_auth_failure(hass: HomeAssistant) -> None:
+    """Test setup with authentication failure."""
+    with patch(
+        "homeassistant.components.powerwall.pypowerwall.Powerwall",
+        side_effect=LoginError("Invalid Powerwall Login"),
+    ):
+        config_entry = MockConfigEntry(
+            domain=DOMAIN,
+            data={
+                CONF_IP_ADDRESS: "192.168.1.100",
+                CONF_PASSWORD: "wrong-password",
+            },
+        )
+        config_entry.add_to_hass(hass)
+
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.SETUP_ERROR
 
 
 async def test_unload_entry(hass: HomeAssistant) -> None:

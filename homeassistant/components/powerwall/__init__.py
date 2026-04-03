@@ -5,6 +5,7 @@ from __future__ import annotations
 import logging
 
 import pypowerwall
+from pypowerwall.local.exceptions import LoginError as PowerwallLoginError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_IP_ADDRESS, CONF_PASSWORD, Platform
@@ -59,8 +60,9 @@ class PowerwallDataManager:
         """Fetch data from the Powerwall."""
         try:
             return await self.hass.async_add_executor_job(self._fetch_data)
+        except UpdateFailed:
+            raise
         except Exception as err:
-            _LOGGER.error("Error fetching powerwall data: %s", err)
             raise UpdateFailed(f"Error fetching data: {err}") from err
 
     def _fetch_data(self) -> PowerwallData:
@@ -109,7 +111,8 @@ def _fetch_base_info(power_wall: pypowerwall.Powerwall, host: str) -> PowerwallB
     version = power_wall.version()
 
     if site_name is None and version is None:
-        # PW3: Limited API - use IP as unique ID
+        # PW3: Limited API — /api/status returns 404, so no DIN/serial.
+        # Use IP as unique_id.
         return PowerwallBaseInfo(
             unique_id=host,
             site_name=None,
@@ -119,9 +122,10 @@ def _fetch_base_info(power_wall: pypowerwall.Powerwall, host: str) -> PowerwallB
             is_powerwall3=True,
         )
 
-    # PW2: Full API available
+    # PW2: Full API available — prefer gateway DIN as unique_id
+    gateway_din = power_wall.din()
     return PowerwallBaseInfo(
-        unique_id=host,  # Use IP for consistency
+        unique_id=gateway_din or host,
         site_name=site_name,
         version=version,
         device_type="Powerwall 2",
@@ -140,16 +144,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: PowerwallConfigEntry) ->
         power_wall = await hass.async_add_executor_job(
             _create_powerwall, ip_address, password or ""
         )
+    except PowerwallLoginError as err:
+        raise ConfigEntryAuthFailed("Invalid Powerwall credentials") from err
     except Exception as err:
-        _LOGGER.error("Failed to connect to Powerwall at %s: %s", ip_address, err)
         raise ConfigEntryNotReady(f"Cannot connect to {ip_address}") from err
 
     # Test connection by getting battery level
     try:
         level = await hass.async_add_executor_job(power_wall.level)
+    except PowerwallLoginError as err:
+        raise ConfigEntryAuthFailed("Invalid Powerwall credentials") from err
     except Exception as err:
-        _LOGGER.error("Failed to authenticate with Powerwall: %s", err)
-        raise ConfigEntryAuthFailed("Authentication failed") from err
+        raise ConfigEntryNotReady(f"Cannot connect to {ip_address}") from err
 
     if level is None:
         raise ConfigEntryNotReady("Unable to get battery level")

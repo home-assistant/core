@@ -21,6 +21,7 @@ _LOGGER = logging.getLogger(__name__)
 def _test_connection(ip_address: str, password: str) -> dict[str, str]:
     """Test connection to powerwall and return info."""
     import pypowerwall  # noqa: PLC0415
+    from pypowerwall.local.exceptions import LoginError  # noqa: PLC0415
 
     try:
         pw = pypowerwall.Powerwall(
@@ -29,6 +30,9 @@ def _test_connection(ip_address: str, password: str) -> dict[str, str]:
             email="homeassistant@local",
             timezone="UTC",
         )
+    except LoginError as err:
+        _LOGGER.error("Authentication failed: %s", err)
+        raise InvalidAuth from err
     except Exception as err:
         _LOGGER.error("Failed to create Powerwall instance: %s", err)
         raise CannotConnect from err
@@ -36,6 +40,9 @@ def _test_connection(ip_address: str, password: str) -> dict[str, str]:
     # Test connection by getting battery level
     try:
         level = pw.level()
+    except LoginError as err:
+        _LOGGER.error("Authentication failed: %s", err)
+        raise InvalidAuth from err
     except Exception as err:
         _LOGGER.error("Failed to get battery level: %s", err)
         raise CannotConnect from err
@@ -57,11 +64,7 @@ async def validate_input(hass: HomeAssistant, data: dict[str, str]) -> dict[str,
     ip_address = data[CONF_IP_ADDRESS]
     password = data.get(CONF_PASSWORD, "")
 
-    try:
-        return await hass.async_add_executor_job(_test_connection, ip_address, password)
-    except Exception as err:
-        _LOGGER.error("Connection test failed: %s", err)
-        raise CannotConnect from err
+    return await hass.async_add_executor_job(_test_connection, ip_address, password)
 
 
 class PowerwallConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -87,7 +90,7 @@ class PowerwallConfigFlow(ConfigFlow, domain=DOMAIN):
         self.ip_address = discovery_info.ip
 
         # Use gateway hostname as stable unique_id instead of IP
-        gateway_id = discovery_info.hostname
+        gateway_id = discovery_info.hostname.upper()
         await self.async_set_unique_id(gateway_id)
         self._abort_if_unique_id_configured(updates={CONF_IP_ADDRESS: self.ip_address})
         self.context["title_placeholders"] = {CONF_IP_ADDRESS: self.ip_address}
