@@ -68,7 +68,7 @@ async def async_setup_entry(
 
     async_add_entities(
         DucoVentilationFanEntity(coordinator, node)
-        for node in coordinator.data
+        for node in coordinator.data.values()
         if node.ventilation is not None
     )
 

@@ -19,7 +19,7 @@ _LOGGER = logging.getLogger(__name__)
 type DucoConfigEntry = ConfigEntry[DucoCoordinator]
 
 
-class DucoCoordinator(DataUpdateCoordinator[list[Node]]):
+class DucoCoordinator(DataUpdateCoordinator[dict[int, Node]]):
     """Coordinator for the Duco integration."""
 
     config_entry: DucoConfigEntry
@@ -50,11 +50,12 @@ class DucoCoordinator(DataUpdateCoordinator[list[Node]]):
         except DucoError as err:
             raise UpdateFailed(f"Duco API error: {err}") from err
 
-    async def _async_update_data(self) -> list[Node]:
+    async def _async_update_data(self) -> dict[int, Node]:
         """Fetch node data from the Duco box."""
         try:
-            return await self.client.async_get_nodes()
+            nodes = await self.client.async_get_nodes()
         except DucoConnectionError as err:
             raise UpdateFailed(f"Cannot connect to Duco box: {err}") from err
         except DucoError as err:
             raise UpdateFailed(f"Duco API error: {err}") from err
+        return {node.node_id: node for node in nodes}

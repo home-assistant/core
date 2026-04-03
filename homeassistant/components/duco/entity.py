@@ -38,7 +38,4 @@ class DucoEntity(CoordinatorEntity[DucoCoordinator]):
     @property
     def _node(self) -> Node | None:
         """Return the current node data from the coordinator."""
-        return next(
-            (n for n in self.coordinator.data if n.node_id == self._node_id),
-            None,
-        )
+        return self.coordinator.data.get(self._node_id)
