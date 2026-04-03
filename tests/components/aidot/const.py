@@ -2,7 +2,7 @@
 
 from aidot.const import CONF_DEVICE_LIST
 
-TEST_COUNTRY = "United States"
+TEST_COUNTRY = "US"
 TEST_EMAIL = "test@gmail.com"
 TEST_PASSWORD = "123456"
 TEST_REGION = "us"
