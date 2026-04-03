@@ -4,7 +4,7 @@ import asyncio
 from collections.abc import Generator
 import io
 from pathlib import Path
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import MagicMock, patch
 
 import aiohttp
 from opendisplay import (
@@ -300,7 +300,7 @@ async def test_upload_image_cancels_previous_task(
 async def test_upload_image_with_encryption_key(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_opendisplay_device: MagicMock,
+    mock_opendisplay_device_class: MagicMock,
     mock_resolve_media: MagicMock,
 ) -> None:
     """Test that upload_image passes the encryption key to OpenDisplayDevice."""
@@ -311,30 +311,22 @@ async def test_upload_image_with_encryption_key(
 
     device_id = _device_id(hass, mock_config_entry)
 
-    with patch(
-        "homeassistant.components.opendisplay.services.OpenDisplayDevice",
-    ) as mock_class:
-        mock_instance = mock_class.return_value
-        mock_instance.__aenter__ = AsyncMock(return_value=mock_instance)
-        mock_instance.__aexit__ = AsyncMock(return_value=None)
-        mock_instance.upload_image = AsyncMock()
-
-        await hass.services.async_call(
-            DOMAIN,
-            "upload_image",
-            {
-                "device_id": device_id,
-                "image": {
-                    "media_content_id": "media-source://local/test.png",
-                    "media_content_type": "image/png",
-                },
+    await hass.services.async_call(
+        DOMAIN,
+        "upload_image",
+        {
+            "device_id": device_id,
+            "image": {
+                "media_content_id": "media-source://local/test.png",
+                "media_content_type": "image/png",
             },
-            blocking=True,
-        )
-
-    assert mock_class.call_args.kwargs["encryption_key"] == bytes.fromhex(
-        ENCRYPTION_KEY
+        },
+        blocking=True,
     )
+
+    assert mock_opendisplay_device_class.call_args.kwargs[
+        "encryption_key"
+    ] == bytes.fromhex(ENCRYPTION_KEY)
 
 
 @pytest.mark.parametrize(

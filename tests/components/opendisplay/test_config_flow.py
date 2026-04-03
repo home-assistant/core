@@ -282,9 +282,10 @@ async def test_bluetooth_discovery_encrypted_invalid_key_format(
     mock_opendisplay_device: MagicMock,
 ) -> None:
     """Test encryption_key step shows error on invalid key format."""
-    mock_opendisplay_device.__aenter__.side_effect = AuthenticationRequiredError(
-        "auth required"
-    )
+    mock_opendisplay_device.__aenter__.side_effect = [
+        AuthenticationRequiredError("auth required"),
+        mock_opendisplay_device,
+    ]
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -301,6 +302,12 @@ async def test_bluetooth_discovery_encrypted_invalid_key_format(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "encryption_key"
     assert result["errors"] == {CONF_ENCRYPTION_KEY: "invalid_key_format"}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_ENCRYPTION_KEY: ENCRYPTION_KEY},
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_bluetooth_discovery_encrypted_wrong_key(
