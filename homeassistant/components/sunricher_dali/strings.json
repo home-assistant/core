@@ -26,7 +26,7 @@
   },
   "exceptions": {
     "cannot_connect": {
-      "message": "Could not connect to the gateway. You can try removing it and adding it again."
+      "message": "Could not connect to the gateway at {host}. Please check that the device is powered on and reachable"
     },
     "cannot_discover_devices": {
       "message": "Unable to discover devices and scenes from the gateway."

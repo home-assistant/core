@@ -86,6 +86,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: DaliCenterConfigEntry) -
         raise ConfigEntryNotReady(
             translation_domain=DOMAIN,
             translation_key="cannot_connect",
+            translation_placeholders={"host": entry.data[CONF_HOST]},
         ) from exc
 
     try:
