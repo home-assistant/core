@@ -75,7 +75,7 @@
   },
   "services": {
     "announce": {
-      "description": "Lets a satellite announce a message.",
+      "description": "Lets an Assist satellite announce a message.",
       "fields": {
         "media_id": {
           "description": "The media ID to announce instead of using text-to-speech.",
@@ -94,10 +94,10 @@
           "name": "Preannounce media ID"
         }
       },
-      "name": "Announce"
+      "name": "Announce on satellite"
     },
     "ask_question": {
-      "description": "Asks a question and gets the user's response.",
+      "description": "Asks a question on an Assist satellite and gets the user's response.",
       "fields": {
         "answers": {
           "description": "Possible answers to the question.",
@@ -124,10 +124,10 @@
           "name": "Question media ID"
         }
       },
-      "name": "Ask question"
+      "name": "Ask question on satellite"
     },
     "start_conversation": {
-      "description": "Starts a conversation from a satellite.",
+      "description": "Starts a conversation from an Assist satellite.",
       "fields": {
         "extra_system_prompt": {
           "description": "Provide background information to the AI about the request.",
@@ -150,7 +150,7 @@
           "name": "Message"
         }
       },
-      "name": "Start conversation"
+      "name": "Start conversation on satellite"
     }
   },
   "title": "Assist satellite",
