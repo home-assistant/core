@@ -43,9 +43,7 @@ async def _set_charge_limit_min(entity: RenaultNumberEntity, value: float) -> No
 
     The target SOC is required to set the minimum SOC, so we need to fetch it first.
     """
-    if (data := entity.coordinator.data) is None or (
-        target_soc := data.socTarget
-    ) is None:
+    if (target_soc := entity.coordinator.data.socTarget) is None:
         raise ServiceValidationError(
             translation_domain=DOMAIN,
             translation_key="battery_soc_unavailable",
@@ -58,7 +56,7 @@ async def _set_charge_limit_target(entity: RenaultNumberEntity, value: float) ->
 
     The minimum SOC is required to set the target SOC, so we need to fetch it first.
     """
-    if (data := entity.coordinator.data) is None or (min_soc := data.socMin) is None:
+    if (min_soc := entity.coordinator.data.socMin) is None:
         raise ServiceValidationError(
             translation_domain=DOMAIN,
             translation_key="battery_soc_unavailable",
