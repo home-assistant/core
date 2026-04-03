@@ -78,9 +78,16 @@ class TransmissionDataUpdateCoordinator(DataUpdateCoordinator[SessionStats]):
             data = self.api.session_stats()
             self.torrents = self.api.get_torrents()
             self._session = self.api.get_session()
-            self.port_forwarding = self.api.port_test()
         except transmission_rpc.TransmissionError as err:
             raise UpdateFailed("Unable to connect to Transmission client") from err
+
+        # port_test is isolated to prevent update failure when the external
+        # test server is unreachable (e.g. ProtonVPN returns "No Response (0)")
+        try:
+            self.port_forwarding = self.api.port_test()
+        except Exception:  # noqa: BLE001
+            _LOGGER.debug("Port test inconclusive, setting port_forwarding to None")
+            self.port_forwarding = None
 
         self.check_completed_torrent()
         self.check_started_torrent()
