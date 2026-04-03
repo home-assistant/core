@@ -385,6 +385,9 @@ class SonosDiscoveryManager:
             runtime_data = getattr(self.entry, "runtime_data", None)
             if runtime_data is None or runtime_data is not self.data:
                 # Entry was unloaded or replaced while this task was in flight; skip adding speakers.
+                _LOGGER.debug(
+                    "Entry unloaded during speaker creation, skipping adding speakers"
+                )
                 return
             for soco in socos:
                 if soco.uid in self.data.discovered:
@@ -402,6 +405,13 @@ class SonosDiscoveryManager:
     ) -> None:
         """Create and set up a new SonosSpeaker instance."""
         try:
+            runtime_data = getattr(self.entry, "runtime_data", None)
+            if runtime_data is None or runtime_data is not self.data:
+                # Entry was unloaded or replaced while this task was in flight; skip adding speakers.
+                _LOGGER.debug(
+                    "Entry unloaded during speaker creation, skipping adding speaker"
+                )
+                return
             speaker_info = soco.get_speaker_info(True, timeout=7)
             if soco.uid not in self.data.boot_counts:
                 self.data.boot_counts[soco.uid] = soco.boot_seqnum
