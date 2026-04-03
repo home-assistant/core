@@ -39,6 +39,11 @@
       "resume": {
         "name": "Resume dimming"
       }
+    },
+    "select": {
+      "dimming_time": {
+        "name": "Dimming time"
+      }
     }
   },
   "exceptions": {
