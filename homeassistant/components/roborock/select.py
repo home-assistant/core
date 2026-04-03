@@ -517,11 +517,13 @@ class RoborockQ10CleanModeSelectEntity(RoborockCoordinatedEntityB01Q10, SelectEn
 
     async def async_select_option(self, option: str) -> None:
         """Set the cleaning mode."""
-        if (mode := next((m for m in YXCleanType if m == option), None)) is None:
+        try:
+            mode = YXCleanType.from_value(option)
+        except ValueError as err:
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
                 translation_key="select_option_failed",
-            ) from None
+            ) from err
         try:
             await self.coordinator.api.vacuum.set_clean_mode(mode)
         except RoborockException as err:
