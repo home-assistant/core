@@ -31,10 +31,10 @@
       },
       "reauth_confirm": {
         "data": {
-          "encryption_key": "Encryption key"
+          "encryption_key": "[%key:component::opendisplay::config::step::encryption_key::data::encryption_key%]"
         },
         "data_description": {
-          "encryption_key": "Enter the correct 32-character hexadecimal encryption key, or leave blank to remove encryption."
+          "encryption_key": "[%key:component::opendisplay::config::step::encryption_key::data_description::encryption_key%]"
         },
         "description": "Authentication failed for {name}. Enter the correct encryption key, or leave blank if encryption has been disabled on the device.",
         "title": "Re-authentication required"
