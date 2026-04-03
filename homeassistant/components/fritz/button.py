@@ -106,7 +106,7 @@ async def async_setup_entry(
     if (
         (
             entity_button := entity_registry.async_get_entity_id(
-                DOMAIN, "button", "cleanup"
+                DOMAIN, "button", f"{avm_wrapper.unique_id}-cleanup"
             )
         )
         and (entity_entry := entity_registry.async_get(entity_button))
