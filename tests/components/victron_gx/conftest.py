@@ -22,6 +22,8 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 
+from .const import MOCK_HOST, MOCK_INSTALLATION_ID, MOCK_MODEL, MOCK_SERIAL
+
 from tests.common import MockConfigEntry
 
 
@@ -39,17 +41,18 @@ def mock_config_entry() -> MockConfigEntry:
     """Create a mock config entry."""
     return MockConfigEntry(
         domain=DOMAIN,
-        unique_id="123",
+        unique_id=MOCK_INSTALLATION_ID,
         data={
-            CONF_HOST: "venus.local",
+            CONF_HOST: MOCK_HOST,
             CONF_PORT: 1883,
             CONF_USERNAME: "test_user",
             CONF_PASSWORD: "test_pass",
             CONF_SSL: False,
-            CONF_INSTALLATION_ID: "123",
-            CONF_MODEL: "Venus GX",
-            CONF_SERIAL: "HQ12345678",
+            CONF_INSTALLATION_ID: MOCK_INSTALLATION_ID,
+            CONF_MODEL: MOCK_MODEL,
+            CONF_SERIAL: MOCK_SERIAL,
         },
+        title=f"Victron OS {MOCK_INSTALLATION_ID} ({MOCK_HOST}:1883",
     )
 
 

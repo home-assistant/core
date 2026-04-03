@@ -32,7 +32,6 @@ from jinja2.utils import Namespace
 from lru import LRU
 import orjson
 from propcache.api import under_cached_property
-import voluptuous as vol
 
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -76,7 +75,7 @@ from .context import (
     template_context_manager,
     template_cv,
 )
-from .helpers import raise_no_default
+from .helpers import raise_no_default, result_as_boolean as result_as_boolean
 from .render_info import RenderInfo, render_info_cv
 
 if TYPE_CHECKING:
@@ -1127,42 +1126,6 @@ def _resolve_state(
     return None
 
 
-@overload
-def forgiving_boolean(value: Any) -> bool | object: ...
-
-
-@overload
-def forgiving_boolean[_T](value: Any, default: _T) -> bool | _T: ...
-
-
-def forgiving_boolean[_T](
-    value: Any, default: _T | object = _SENTINEL
-) -> bool | _T | object:
-    """Try to convert value to a boolean."""
-    try:
-        # Import here, not at top-level to avoid circular import
-        from homeassistant.helpers import config_validation as cv  # noqa: PLC0415
-
-        return cv.boolean(value)
-    except vol.Invalid:
-        if default is _SENTINEL:
-            raise_no_default("bool", value)
-        return default
-
-
-def result_as_boolean(template_result: Any | None) -> bool:
-    """Convert the template result to a boolean.
-
-    True/not 0/'1'/'true'/'yes'/'on'/'enable' are considered truthy
-    False/0/None/'0'/'false'/'no'/'off'/'disable' are considered falsy
-    All other values are falsy
-    """
-    if template_result is None:
-        return False
-
-    return forgiving_boolean(template_result, default=False)
-
-
 def expand(hass: HomeAssistant, *args: Any) -> Iterable[State]:
     """Expand out any groups and zones into entity states."""
     # circular import.
@@ -1409,7 +1372,7 @@ def entity_name(hass: HomeAssistant, entity_id: str) -> str | None:
     """Get the name of an entity from its entity ID."""
     ent_reg = er.async_get(hass)
     if (entry := ent_reg.async_get(entity_id)) is not None:
-        return entry.name if entry.name is not None else entry.original_name
+        return er.async_get_unprefixed_name(hass, entry)
 
     # Fall back to state for entities without a unique_id (not in the registry)
     if (state := hass.states.get(entity_id)) is not None:
@@ -1599,58 +1562,6 @@ def fail_when_undefined(value):
     if isinstance(value, jinja2.Undefined):
         value()
     return value
-
-
-def forgiving_float(value, default=_SENTINEL):
-    """Try to convert value to a float."""
-    try:
-        return float(value)
-    except ValueError, TypeError:
-        if default is _SENTINEL:
-            raise_no_default("float", value)
-        return default
-
-
-def forgiving_float_filter(value, default=_SENTINEL):
-    """Try to convert value to a float."""
-    try:
-        return float(value)
-    except ValueError, TypeError:
-        if default is _SENTINEL:
-            raise_no_default("float", value)
-        return default
-
-
-def forgiving_int(value, default=_SENTINEL, base=10):
-    """Try to convert value to an int, and raise if it fails."""
-    result = jinja2.filters.do_int(value, default=default, base=base)
-    if result is _SENTINEL:
-        raise_no_default("int", value)
-    return result
-
-
-def forgiving_int_filter(value, default=_SENTINEL, base=10):
-    """Try to convert value to an int, and raise if it fails."""
-    result = jinja2.filters.do_int(value, default=default, base=base)
-    if result is _SENTINEL:
-        raise_no_default("int", value)
-    return result
-
-
-def is_number(value):
-    """Try to convert value to a float."""
-    try:
-        fvalue = float(value)
-    except ValueError, TypeError:
-        return False
-    if not math.isfinite(fvalue):
-        return False
-    return True
-
-
-def _is_string_like(value: Any) -> bool:
-    """Return whether a value is a string or string like object."""
-    return isinstance(value, (str, bytes, bytearray))
 
 
 def struct_pack(value: Any | None, format_string: str) -> bytes | None:
@@ -1944,15 +1855,14 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.add_extension("homeassistant.helpers.template.extensions.MathExtension")
         self.add_extension("homeassistant.helpers.template.extensions.RegexExtension")
         self.add_extension("homeassistant.helpers.template.extensions.StringExtension")
+        self.add_extension(
+            "homeassistant.helpers.template.extensions.TypeCastExtension"
+        )
 
         self.globals["apply"] = apply
         self.globals["as_function"] = as_function
-        self.globals["bool"] = forgiving_boolean
         self.globals["combine"] = combine
-        self.globals["float"] = forgiving_float
         self.globals["iif"] = iif
-        self.globals["int"] = forgiving_int
-        self.globals["is_number"] = is_number
         self.globals["merge_response"] = merge_response
         self.globals["pack"] = struct_pack
         self.globals["typeof"] = typeof
@@ -1963,16 +1873,12 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.filters["add"] = add
         self.filters["apply"] = apply
         self.filters["as_function"] = as_function
-        self.filters["bool"] = forgiving_boolean
         self.filters["combine"] = combine
         self.filters["contains"] = contains
-        self.filters["float"] = forgiving_float_filter
         self.filters["from_json"] = from_json
         self.filters["from_hex"] = from_hex
         self.filters["iif"] = iif
-        self.filters["int"] = forgiving_int_filter
         self.filters["is_defined"] = fail_when_undefined
-        self.filters["is_number"] = is_number
         self.filters["multiply"] = multiply
         self.filters["ord"] = ord
         self.filters["pack"] = struct_pack
@@ -1985,8 +1891,6 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
 
         self.tests["apply"] = apply
         self.tests["contains"] = contains
-        self.tests["is_number"] = is_number
-        self.tests["string_like"] = _is_string_like
 
         if hass is None:
             return
@@ -2027,8 +1931,7 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.filters["config_entry_id"] = self.globals["config_entry_id"]
 
         if limited:
-            # Only device_entities is available to limited templates, mark other
-            # functions and filters as unsupported.
+
             def unsupported(name: str) -> Callable[[], NoReturn]:
                 def warn_unsupported(*args: Any, **kwargs: Any) -> NoReturn:
                     raise TemplateError(
@@ -2056,6 +1959,10 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
                 "entity_name",
                 "expand",
                 "has_value",
+                "state_attr",
+                "state_attr_translated",
+                "state_translated",
+                "states",
             ]
             hass_tests = [
                 "has_value",
@@ -2068,7 +1975,7 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
             for filt in hass_filters:
                 self.filters[filt] = unsupported(filt)
             for test in hass_tests:
-                self.filters[test] = unsupported(test)
+                self.tests[test] = unsupported(test)
             return
 
         self.globals["closest"] = hassfunction(closest)

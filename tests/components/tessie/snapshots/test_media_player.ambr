@@ -42,6 +42,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'speaker',
       'friendly_name': 'Test Media player',
+      'last_non_buffering_state': <MediaPlayerState.IDLE: 'idle'>,
       'supported_features': <MediaPlayerEntityFeature: 0>,
       'volume_level': 0.2258032258064516,
     }),
@@ -58,6 +59,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'speaker',
       'friendly_name': 'Test Media player',
+      'last_non_buffering_state': <MediaPlayerState.PLAYING: 'playing'>,
       'media_album_name': 'Album',
       'media_artist': 'Artist',
       'media_duration': 60.0,

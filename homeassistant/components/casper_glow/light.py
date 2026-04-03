@@ -71,6 +71,7 @@ class CasperGlowLight(CasperGlowEntity, LightEntity):
             self._attr_color_mode = ColorMode.BRIGHTNESS
         if state.brightness_level is not None:
             self._attr_brightness = _device_pct_to_ha_brightness(state.brightness_level)
+            self.coordinator.last_brightness_pct = state.brightness_level
 
     @callback
     def _async_handle_state_update(self, state: GlowState) -> None:
@@ -97,6 +98,7 @@ class CasperGlowLight(CasperGlowEntity, LightEntity):
                 )
             )
             self._attr_brightness = _device_pct_to_ha_brightness(brightness_pct)
+            self.coordinator.last_brightness_pct = brightness_pct
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the light off."""

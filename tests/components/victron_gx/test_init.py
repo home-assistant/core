@@ -30,20 +30,7 @@ def mock_victron_hub_library():
 
 
 @pytest.mark.usefixtures("mock_victron_hub_library")
-async def test_setup_entry(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry
-) -> None:
-    """Test setup entry."""
-    mock_config_entry.add_to_hass(hass)
-
-    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    assert mock_config_entry.state is ConfigEntryState.LOADED
-
-
-@pytest.mark.usefixtures("mock_victron_hub_library")
-async def test_unload_entry(
+async def test_load_unload_entry(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> None:
     """Test unload entry."""
@@ -82,7 +69,6 @@ async def test_unload_entry_does_not_cleanup_on_platform_unload_failure(
         await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.FAILED_UNLOAD
-    assert mock_config_entry.runtime_data.new_metric_callbacks
     hub_disconnect.assert_not_awaited()
 
 
@@ -193,9 +179,8 @@ async def test_hub_stop(
     assert mock_config_entry.state is ConfigEntryState.LOADED
 
     # Unload the config entry (which stops the hub)
-    unload_ok = await hass.config_entries.async_unload(mock_config_entry.entry_id)
+    assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
     # Verify hub is disconnected by checking config entry state
-    assert unload_ok is True
     assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
