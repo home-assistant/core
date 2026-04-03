@@ -1,5 +1,20 @@
 {
   "exceptions": {
+    "invalid_system_mode": {
+      "message": "The requested system mode is not supported: {error}"
+    },
+    "mode_cant_be_temporary": {
+      "message": "The mode `{mode}` does not support `duration` or `period`"
+    },
+    "mode_cant_have_duration": {
+      "message": "The mode `{mode}` does not support `duration`; use `period` instead"
+    },
+    "mode_cant_have_period": {
+      "message": "The mode `{mode}` does not support `period`; use `duration` instead"
+    },
+    "mode_not_supported": {
+      "message": "The mode `{mode}` is not supported by this controller"
+    },
     "zone_only_service": {
       "message": "Only zones support the `{service}` action"
     }

@@ -311,6 +311,19 @@ def _platforms_in_use(hass: HomeAssistant, entry: ConfigEntry) -> set[str | Plat
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the actions and websocket API for the MQTT component."""
 
+    if config.get(DOMAIN) and not mqtt_config_entry_enabled(hass):
+        issue_registry = ir.async_get(hass)
+        issue_registry.async_get_or_create(
+            DOMAIN,
+            "yaml_setup_without_active_setup",
+            is_fixable=False,
+            is_persistent=False,
+            severity=ir.IssueSeverity.WARNING,
+            learn_more_url="https://www.home-assistant.io/integrations/mqtt/"
+            "#configuration",
+            translation_key="yaml_setup_without_active_setup",
+        )
+
     websocket_api.async_register_command(hass, websocket_subscribe)
     websocket_api.async_register_command(hass, websocket_mqtt_info)
 
