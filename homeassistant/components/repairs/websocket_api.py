@@ -24,6 +24,7 @@ from homeassistant.helpers.data_entry_flow import (
 
 from .const import DOMAIN
 from .issue_handler import RepairsFlowManager
+from .models import RepairsFlowResult
 
 
 @callback
@@ -142,9 +143,7 @@ class RepairsFlowIndexView(FlowManagerIndexView[RepairsFlowManager]):
             self._prepare_result_json(result),
         )
 
-    def _prepare_result_json(
-        self, result: data_entry_flow.FlowResult
-    ) -> dict[str, Any]:
+    def _prepare_result_json(self, result: RepairsFlowResult) -> dict[str, Any]:  # type: ignore[override]
         """Convert result to JSON serializable dict."""
         return _prepare_repairs_flow_result_json(result, super()._prepare_result_json)
 
@@ -165,15 +164,13 @@ class RepairsFlowResourceView(FlowManagerResourceView[RepairsFlowManager]):
         """Handle a POST request."""
         return await super().post(request, flow_id)
 
-    def _prepare_result_json(
-        self, result: data_entry_flow.FlowResult
-    ) -> dict[str, Any]:
+    def _prepare_result_json(self, result: RepairsFlowResult) -> dict[str, Any]:  # type: ignore[override]
         """Convert result to JSON serializable dict."""
         return _prepare_repairs_flow_result_json(result, super()._prepare_result_json)
 
 
 def _prepare_repairs_flow_result_json(
-    result: data_entry_flow.FlowResult,
+    result: RepairsFlowResult,
     prepare_result_json: Callable[[data_entry_flow.FlowResult], dict[str, Any]],
 ) -> dict[str, Any]:
     """Convert result to JSON."""
@@ -183,6 +180,6 @@ def _prepare_repairs_flow_result_json(
     ):
         return prepare_result_json(result)
     data = {key: val for key, val in result.items() if key not in ("data", "context")}
-    entry: ConfigEntry = result["result"]  # type: ignore[typeddict-item]
+    entry: ConfigEntry = result["result"]
     data["result"] = entry.as_json_fragment
     return data

@@ -9,7 +9,7 @@ from homeassistant.helpers.typing import ConfigType
 from . import issue_handler, websocket_api
 from .const import DOMAIN, NextFlowType
 from .issue_handler import ConfirmRepairFlow, RepairsFlowManager
-from .models import RepairsFlow
+from .models import RepairsFlow, RepairsFlowResult
 
 __all__ = [
     "DOMAIN",
@@ -17,6 +17,7 @@ __all__ = [
     "NextFlowType",
     "RepairsFlow",
     "RepairsFlowManager",
+    "RepairsFlowResult",
     "repairs_flow_manager",
 ]
 CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)

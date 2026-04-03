@@ -18,7 +18,8 @@ from .const import NextFlowType
 
 
 class RepairsFlowResult(
-    data_entry_flow.FlowResult[data_entry_flow.FlowContext, tuple[str, str]]
+    data_entry_flow.FlowResult[data_entry_flow.FlowContext, str],
+    total=False,
 ):
     """Typed context dict for repairs flow."""
 
@@ -28,9 +29,7 @@ class RepairsFlowResult(
 
 
 class RepairsFlow(
-    data_entry_flow.FlowHandler[
-        data_entry_flow.FlowContext, RepairsFlowResult, tuple[str, str]
-    ]
+    data_entry_flow.FlowHandler[data_entry_flow.FlowContext, RepairsFlowResult, str]
 ):
     """Handle a flow for fixing an issue."""
 
