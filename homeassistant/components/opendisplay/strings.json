@@ -5,16 +5,39 @@
       "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "invalid_key_format": "The encryption key must be exactly 32 hexadecimal characters (0-9, a-f).",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "flow_title": "{name}",
     "step": {
       "bluetooth_confirm": {
         "description": "[%key:component::bluetooth::config::step::bluetooth_confirm::description%]"
+      },
+      "encryption_key": {
+        "data": {
+          "encryption_key": "Encryption key"
+        },
+        "data_description": {
+          "encryption_key": "Enter the 32-character hexadecimal AES-128 encryption key for this device."
+        },
+        "description": "{name} requires an encryption key to connect.",
+        "title": "Encryption required"
+      },
+      "reauth_confirm": {
+        "data": {
+          "encryption_key": "[%key:component::opendisplay::config::step::encryption_key::data::encryption_key%]"
+        },
+        "data_description": {
+          "encryption_key": "[%key:component::opendisplay::config::step::encryption_key::data_description::encryption_key%]"
+        },
+        "description": "Authentication failed for {name}. Enter the correct encryption key, or leave blank if encryption has been disabled on the device.",
+        "title": "Re-authentication required"
       },
       "user": {
         "data": {
@@ -35,6 +58,9 @@
     }
   },
   "exceptions": {
+    "authentication_error": {
+      "message": "Authentication failed. Please update the encryption key."
+    },
     "device_not_found": {
       "message": "Could not find Bluetooth device with address `{address}`."
     },
