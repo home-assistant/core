@@ -14,6 +14,37 @@
       }
     }
   },
+  "config_subentries": {
+    "plane": {
+      "abort": {
+        "api_key_required": "An API key is required to add more than one plane. You can configure it in the integration options.",
+        "max_planes": "You can add a maximum of 4 planes.",
+        "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
+      },
+      "entry_type": "Plane",
+      "initiate_flow": {
+        "user": "Add plane"
+      },
+      "step": {
+        "reconfigure": {
+          "data": {
+            "azimuth": "[%key:component::forecast_solar::config::step::user::data::azimuth%]",
+            "declination": "[%key:component::forecast_solar::config::step::user::data::declination%]",
+            "modules_power": "[%key:component::forecast_solar::config::step::user::data::modules_power%]"
+          },
+          "description": "Edit the solar plane configuration."
+        },
+        "user": {
+          "data": {
+            "azimuth": "[%key:component::forecast_solar::config::step::user::data::azimuth%]",
+            "declination": "[%key:component::forecast_solar::config::step::user::data::declination%]",
+            "modules_power": "[%key:component::forecast_solar::config::step::user::data::modules_power%]"
+          },
+          "description": "Add a solar plane. Multiple planes are supported with a Forecast.Solar API subscription."
+        }
+      }
+    }
+  },
   "entity": {
     "sensor": {
       "energy_current_hour": {
@@ -51,20 +82,26 @@
       }
     }
   },
+  "exceptions": {
+    "api_key_required": {
+      "message": "An API key is required when more than one plane is configured"
+    },
+    "no_plane": {
+      "message": "No plane configured, cannot set up Forecast.Solar"
+    }
+  },
   "options": {
     "error": {
+      "api_key_required": "An API key is required to add more than one plane. You can configure it in the integration options.",
       "invalid_api_key": "[%key:common::config_flow::error::invalid_api_key%]"
     },
     "step": {
       "init": {
         "data": {
           "api_key": "[%key:common::config_flow::data::api_key%]",
-          "azimuth": "[%key:component::forecast_solar::config::step::user::data::azimuth%]",
           "damping_evening": "Damping factor: adjusts the results in the evening",
           "damping_morning": "Damping factor: adjusts the results in the morning",
-          "declination": "[%key:component::forecast_solar::config::step::user::data::declination%]",
-          "inverter_size": "Inverter size (Watt)",
-          "modules_power": "[%key:component::forecast_solar::config::step::user::data::modules_power%]"
+          "inverter_size": "Inverter size (Watt)"
         },
         "description": "These values allow tweaking the Forecast.Solar result. Please refer to the documentation if a field is unclear."
       }
