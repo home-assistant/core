@@ -7,7 +7,7 @@ import socket
 from unittest.mock import AsyncMock, Mock, NonCallableMock, patch
 
 from psutil import NoSuchProcess, Process
-from psutil._common import (
+from psutil._ntuples import (
     sbattery,
     sdiskpart,
     sdiskusage,
