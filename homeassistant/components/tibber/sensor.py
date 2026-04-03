@@ -629,9 +629,11 @@ async def _async_setup_graphql_sensors(
         if home.has_active_subscription:
             if price_coordinator is None:
                 price_coordinator = TibberPriceCoordinator(hass, entry)
+                await price_coordinator.async_config_entry_first_refresh()
             entities.append(TibberSensorElPrice(price_coordinator, home))
             if coordinator is None:
                 coordinator = TibberDataCoordinator(hass, entry, tibber_connection)
+                await coordinator.async_config_entry_first_refresh()
             entities.extend(
                 TibberDataSensor(home, coordinator, entity_description)
                 for entity_description in SENSORS
