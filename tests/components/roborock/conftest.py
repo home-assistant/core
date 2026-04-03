@@ -212,6 +212,8 @@ def create_b01_q10_trait() -> Mock:
             dps[B01_Q10_DP.NOT_DISTURB] = _raw_value(status.not_disturb)
         if hasattr(status, "dust_switch"):
             dps[B01_Q10_DP.DUST_SWITCH] = _raw_value(status.dust_switch)
+        if hasattr(status, "fault"):
+            dps[B01_Q10_DP.FAULT] = _raw_value(status.fault)
         status.update_from_dps(dps)
 
     q10_trait.refresh = AsyncMock(side_effect=refresh_side_effect)
