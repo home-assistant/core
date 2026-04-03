@@ -21,6 +21,7 @@ from .const import (  # noqa: F401
     ATTR_DEV_ID,
     ATTR_GPS,
     ATTR_HOST_NAME,
+    ATTR_IN_ZONES,
     ATTR_IP,
     ATTR_LOCATION_NAME,
     ATTR_MAC,

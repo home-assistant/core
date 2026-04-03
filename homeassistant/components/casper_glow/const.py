@@ -12,5 +12,7 @@ SORTED_BRIGHTNESS_LEVELS = sorted(BRIGHTNESS_LEVELS)
 
 DEFAULT_DIMMING_TIME_MINUTES: int = DIMMING_TIME_MINUTES[0]
 
+DIMMING_TIME_OPTIONS: tuple[str, ...] = tuple(str(m) for m in DIMMING_TIME_MINUTES)
+
 # Interval between periodic state polls to catch externally-triggered changes.
 STATE_POLL_INTERVAL = timedelta(seconds=30)
