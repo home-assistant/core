@@ -5,6 +5,7 @@ from __future__ import annotations
 from unittest.mock import AsyncMock, patch
 
 from duco.exceptions import DucoConnectionError, DucoError
+from duco.models import BoardInfo
 
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
@@ -55,7 +56,7 @@ async def test_setup_entry_duco_error(
 async def test_setup_entry_nodes_fetch_error(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_board_info: AsyncMock,
+    mock_board_info: BoardInfo,
 ) -> None:
     """Test that a connection error during initial node fetch triggers a retry."""
     mock_config_entry.add_to_hass(hass)
