@@ -204,10 +204,16 @@ def rest_api_fixture_non_ssl_only(hass: HomeAssistant) -> Generator[None]:
 @pytest.fixture(name="rest_api_failing")
 def rest_api_failure_fixture() -> Generator[None]:
     """Patch the samsungtvws SamsungTVAsyncRest."""
-    with patch(
-        "homeassistant.components.samsungtv.bridge.SamsungTVAsyncRest",
-        autospec=True,
-    ) as rest_api_class:
+    with (
+        patch(
+            "homeassistant.components.samsungtv.bridge.SamsungTVAsyncRest",
+            autospec=True,
+        ) as rest_api_class,
+        patch(
+            "homeassistant.components.samsungtv.bridge.SamsungTVEncryptedWSAsyncRemote.start_listening",
+            side_effect=OSError,
+        ),
+    ):
         rest_api_class.return_value.rest_device_info.side_effect = ResponseError
         yield
 

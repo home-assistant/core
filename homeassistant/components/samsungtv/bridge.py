@@ -56,6 +56,7 @@ from .const import (
     CONF_SESSION_ID,
     DOMAIN,
     ENCRYPTED_WEBSOCKET_PORT,
+    LEGACY_ENCRYPTED_PORT,
     LEGACY_PORT,
     LOGGER,
     METHOD_ENCRYPTED_WEBSOCKET,
@@ -128,6 +129,21 @@ async def async_get_device_info(
                         info,
                     )
             return RESULT_SUCCESS, port, METHOD_WEBSOCKET, info
+
+    LOGGER.debug("Failed with all websocket ports, trying legacy ports")
+
+    # Try encrypted legacy port
+    bridge = SamsungTVBridge.get_bridge(
+        hass, METHOD_ENCRYPTED_WEBSOCKET, host, LEGACY_ENCRYPTED_PORT
+    )
+    result = await bridge.async_try_connect()
+    if result in SUCCESSFUL_RESULTS:
+        return (
+            result,
+            LEGACY_ENCRYPTED_PORT,
+            METHOD_ENCRYPTED_WEBSOCKET,
+            await bridge.async_device_info(),
+        )
 
     # Try legacy port
     bridge = SamsungTVBridge.get_bridge(hass, METHOD_LEGACY, host, LEGACY_PORT)
@@ -740,7 +756,7 @@ class SamsungTVEncryptedBridge(
 
     async def async_try_connect(self) -> str:
         """Try to connect to the Websocket TV."""
-        self.port = ENCRYPTED_WEBSOCKET_PORT
+        assert self.port
         config = {
             CONF_NAME: VALUE_CONF_NAME,
             CONF_HOST: self.host,

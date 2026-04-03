@@ -46,20 +46,24 @@
       },
       "reconfigure": {
         "data": {
-          "host": "[%key:common::config_flow::data::host%]"
+          "host": "[%key:common::config_flow::data::host%]",
+          "method": "Connection method"
         },
         "data_description": {
-          "host": "[%key:component::samsungtv::config::step::user::data_description::host%]"
+          "host": "[%key:component::samsungtv::config::step::user::data_description::host%]",
+          "method": "Select the method used to connect to your TV."
         },
         "description": "Update the hostname or IP address of your Samsung TV."
       },
       "user": {
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
+          "method": "Connection method",
           "name": "[%key:common::config_flow::data::name%]"
         },
         "data_description": {
           "host": "The hostname or IP address of your TV.",
+          "method": "Select the method used to connect to your TV.",
           "name": "The name of your TV. This will be used to identify the device in Home Assistant."
         },
         "description": "Enter your Samsung TV information. If you never connected Home Assistant before you should see a popup on your TV asking for authorization."

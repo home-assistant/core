@@ -49,9 +49,11 @@ from .const import (
     CONF_SSDP_RENDERING_CONTROL_LOCATION,
     DEFAULT_MANUFACTURER,
     DOMAIN,
+    LEGACY_ENCRYPTED_PORT,
     LOGGER,
     METHOD_ENCRYPTED_WEBSOCKET,
     METHOD_LEGACY,
+    METHOD_WEBSOCKET,
     RESULT_AUTH_MISSING,
     RESULT_CANNOT_CONNECT,
     RESULT_INVALID_PIN,
@@ -62,7 +64,14 @@ from .const import (
     UPNP_SVC_RENDERING_CONTROL,
 )
 
-DATA_SCHEMA = vol.Schema({vol.Required(CONF_HOST): str})
+DATA_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_HOST): str,
+        vol.Optional(CONF_METHOD): vol.In(
+            [METHOD_WEBSOCKET, METHOD_ENCRYPTED_WEBSOCKET, METHOD_LEGACY]
+        ),
+    }
+)
 
 
 def _strip_uuid(udn: str) -> str:
@@ -132,15 +141,17 @@ class SamsungTVConfigFlow(ConfigFlow, domain=DOMAIN):
         self._device_info: dict[str, Any] | None = None
         self._authenticator: SamsungTVEncryptedWSAsyncAuthenticator | None = None
 
-    def _base_config_entry(self) -> dict[str, Any]:
+    def _base_config_entry(
+        self, method: str | None = None, port: int | None = None
+    ) -> dict[str, Any]:
         """Generate the base config entry without the method."""
         return {
             CONF_HOST: self._host,
             CONF_MAC: self._mac,
             CONF_MANUFACTURER: self._manufacturer or DEFAULT_MANUFACTURER,
-            CONF_METHOD: self._bridge.method,
+            CONF_METHOD: method or self._bridge.method,
             CONF_MODEL: self._model,
-            CONF_PORT: self._bridge.port,
+            CONF_PORT: port or self._bridge.port,
             CONF_SSDP_RENDERING_CONTROL_LOCATION: self._ssdp_rendering_control_location,
             CONF_SSDP_MAIN_TV_AGENT_LOCATION: self._ssdp_main_tv_agent_location,
         }
@@ -274,13 +285,14 @@ class SamsungTVConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] | None = None
         if user_input is not None:
             if await self._async_set_name_host_from_input(user_input):
+                if user_input[CONF_METHOD] == METHOD_ENCRYPTED_WEBSOCKET:
+                    return await self.async_step_encrypted_pairing()
+
                 await self._async_create_bridge()
                 self._async_abort_entries_match({CONF_HOST: self._host})
                 if self._bridge.method != METHOD_LEGACY:
                     # Legacy bridge does not provide device info
                     await self._async_set_device_unique_id(raise_on_progress=False)
-                if self._bridge.method == METHOD_ENCRYPTED_WEBSOCKET:
-                    return await self.async_step_encrypted_pairing()
                 return await self.async_step_pairing({})
             errors = {"base": "invalid_host"}
 
@@ -351,9 +363,13 @@ class SamsungTVConfigFlow(ConfigFlow, domain=DOMAIN):
                 and (token := await self._authenticator.try_pin(pin))
                 and (session_id := await self._authenticator.get_session_id_and_close())
             ):
+                # The token and session_id are only valid for a short time, so we create the entry immediately
+                #  instead of waiting for the user to click "Finish" on the form
                 return self.async_create_entry(
                     data={
-                        **self._base_config_entry(),
+                        **self._base_config_entry(
+                            METHOD_ENCRYPTED_WEBSOCKET, LEGACY_ENCRYPTED_PORT
+                        ),
                         CONF_TOKEN: token,
                         CONF_SESSION_ID: session_id,
                     },
