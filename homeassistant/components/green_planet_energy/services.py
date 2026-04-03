@@ -60,9 +60,8 @@ def async_setup_services(hass: HomeAssistant) -> None:
         hours: float = call.data[ATTR_HOURS]
 
         now = dt_util.now()
-        slot_start = now.replace(
-            minute=(now.minute // 15) * 15, second=0, microsecond=0
-        )
+        slot_timestamp = int(dt_util.as_timestamp(now) // 900 * 900)
+        slot_start = dt_util.as_local(dt_util.utc_from_timestamp(slot_timestamp))
         end_time = slot_start + timedelta(hours=hours)
         today = slot_start.date()
         tomorrow = today + timedelta(days=1)
