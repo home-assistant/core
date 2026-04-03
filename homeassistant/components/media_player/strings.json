@@ -293,7 +293,7 @@
       "name": "Previous track"
     },
     "media_seek": {
-      "description": "Allows you to go to a different part of the media that is currently playing.",
+      "description": "Allows you to go to a different part of the media that is currently playing on a media player.",
       "fields": {
         "seek_position": {
           "description": "Target position in the currently playing media. The format is platform dependent.",
