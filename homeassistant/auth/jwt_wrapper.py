@@ -12,6 +12,7 @@ from functools import lru_cache, partial
 from typing import Any
 
 from jwt import DecodeError, PyJWS, PyJWT
+from jwt.types import Options
 
 from homeassistant.util.json import json_loads
 
@@ -25,7 +26,7 @@ _VERIFY_OPTIONS: dict[str, Any] = {f"verify_{key}": True for key in _VERIFY_KEYS
     "strict_aud": False,
     "enforce_minimum_key_length": False,
 }
-_NO_VERIFY_OPTIONS = {f"verify_{key}": False for key in _VERIFY_KEYS}
+_NO_VERIFY_OPTIONS: Options = {f"verify_{key}": False for key in _VERIFY_KEYS}
 
 
 class _PyJWSWithLoadCache(PyJWS):
@@ -59,7 +60,7 @@ class _PyJWTWithVerify(PyJWT):
     """PyJWT with a fast decode implementation."""
 
     def decode_payload(
-        self, jwt: str, key: str, options: dict[str, Any], algorithms: list[str]
+        self, jwt: str, key: str, options: Options, algorithms: list[str]
     ) -> dict[str, Any]:
         """Decode a JWT's payload."""
         if len(jwt) > MAX_TOKEN_SIZE:
@@ -84,7 +85,7 @@ class _PyJWTWithVerify(PyJWT):
         options: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
         """Verify a JWT's signature and claims."""
-        merged_options = {**_VERIFY_OPTIONS, **(options or {})}
+        merged_options: Options = {**_VERIFY_OPTIONS, **(options or {})}
         payload = self.decode_payload(
             jwt=jwt,
             key=key,
