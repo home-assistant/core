@@ -8,6 +8,7 @@ import collections.abc
 from collections.abc import Callable, Generator, Iterable
 from copy import deepcopy
 from datetime import datetime, timedelta
+from enum import Enum
 from functools import cache, lru_cache, partial, wraps
 import json
 import logging
@@ -31,7 +32,6 @@ from jinja2.utils import Namespace
 from lru import LRU
 import orjson
 from propcache.api import under_cached_property
-import voluptuous as vol
 
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -57,7 +57,10 @@ from homeassistant.core import (
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import entity_registry as er, location as loc_helper
 from homeassistant.helpers.singleton import singleton
-from homeassistant.helpers.translation import async_translate_state
+from homeassistant.helpers.translation import (
+    async_translate_state,
+    async_translate_state_attr,
+)
 from homeassistant.helpers.typing import TemplateVarsType
 from homeassistant.util import convert, location as location_util
 from homeassistant.util.async_ import run_callback_threadsafe
@@ -72,7 +75,7 @@ from .context import (
     template_context_manager,
     template_cv,
 )
-from .helpers import raise_no_default
+from .helpers import raise_no_default, result_as_boolean as result_as_boolean
 from .render_info import RenderInfo, render_info_cv
 
 if TYPE_CHECKING:
@@ -807,6 +810,48 @@ class StateTranslated:
         return "<template StateTranslated>"
 
 
+class StateAttrTranslated:
+    """Class to represent a translated state attribute value in a template."""
+
+    def __init__(self, hass: HomeAssistant) -> None:
+        """Initialize."""
+        self._hass = hass
+
+    def __call__(self, entity_id: str, attribute: str) -> Any:
+        """Retrieve translated state attribute value if available."""
+        state = _get_state_if_valid(self._hass, entity_id)
+
+        if state is None:
+            return None
+
+        attr_value = state.attributes.get(attribute)
+        if attr_value is None:
+            return None
+
+        if not isinstance(attr_value, str | Enum):
+            return attr_value
+
+        domain = state.domain
+        device_class = state.attributes.get("device_class")
+        entry = er.async_get(self._hass).async_get(entity_id)
+        platform = None if entry is None else entry.platform
+        translation_key = None if entry is None else entry.translation_key
+
+        return async_translate_state_attr(
+            self._hass,
+            str(attr_value),
+            domain,
+            platform,
+            translation_key,
+            device_class,
+            attribute,
+        )
+
+    def __repr__(self) -> str:
+        """Representation of Translated state attribute."""
+        return "<template StateAttrTranslated>"
+
+
 class DomainStates:
     """Class to expose a specific HA domain as attributes."""
 
@@ -1081,42 +1126,6 @@ def _resolve_state(
     return None
 
 
-@overload
-def forgiving_boolean(value: Any) -> bool | object: ...
-
-
-@overload
-def forgiving_boolean[_T](value: Any, default: _T) -> bool | _T: ...
-
-
-def forgiving_boolean[_T](
-    value: Any, default: _T | object = _SENTINEL
-) -> bool | _T | object:
-    """Try to convert value to a boolean."""
-    try:
-        # Import here, not at top-level to avoid circular import
-        from homeassistant.helpers import config_validation as cv  # noqa: PLC0415
-
-        return cv.boolean(value)
-    except vol.Invalid:
-        if default is _SENTINEL:
-            raise_no_default("bool", value)
-        return default
-
-
-def result_as_boolean(template_result: Any | None) -> bool:
-    """Convert the template result to a boolean.
-
-    True/not 0/'1'/'true'/'yes'/'on'/'enable' are considered truthy
-    False/0/None/'0'/'false'/'no'/'off'/'disable' are considered falsy
-    All other values are falsy
-    """
-    if template_result is None:
-        return False
-
-    return forgiving_boolean(template_result, default=False)
-
-
 def expand(hass: HomeAssistant, *args: Any) -> Iterable[State]:
     """Expand out any groups and zones into entity states."""
     # circular import.
@@ -1359,6 +1368,19 @@ def distance(hass: HomeAssistant, *args: Any) -> float | None:
     )
 
 
+def entity_name(hass: HomeAssistant, entity_id: str) -> str | None:
+    """Get the name of an entity from its entity ID."""
+    ent_reg = er.async_get(hass)
+    if (entry := ent_reg.async_get(entity_id)) is not None:
+        return er.async_get_unprefixed_name(hass, entry)
+
+    # Fall back to state for entities without a unique_id (not in the registry)
+    if (state := hass.states.get(entity_id)) is not None:
+        return state.name
+
+    return None
+
+
 def is_hidden_entity(hass: HomeAssistant, entity_id: str) -> bool:
     """Test if an entity is hidden."""
     entity_reg = er.async_get(hass)
@@ -1540,58 +1562,6 @@ def fail_when_undefined(value):
     if isinstance(value, jinja2.Undefined):
         value()
     return value
-
-
-def forgiving_float(value, default=_SENTINEL):
-    """Try to convert value to a float."""
-    try:
-        return float(value)
-    except ValueError, TypeError:
-        if default is _SENTINEL:
-            raise_no_default("float", value)
-        return default
-
-
-def forgiving_float_filter(value, default=_SENTINEL):
-    """Try to convert value to a float."""
-    try:
-        return float(value)
-    except ValueError, TypeError:
-        if default is _SENTINEL:
-            raise_no_default("float", value)
-        return default
-
-
-def forgiving_int(value, default=_SENTINEL, base=10):
-    """Try to convert value to an int, and raise if it fails."""
-    result = jinja2.filters.do_int(value, default=default, base=base)
-    if result is _SENTINEL:
-        raise_no_default("int", value)
-    return result
-
-
-def forgiving_int_filter(value, default=_SENTINEL, base=10):
-    """Try to convert value to an int, and raise if it fails."""
-    result = jinja2.filters.do_int(value, default=default, base=base)
-    if result is _SENTINEL:
-        raise_no_default("int", value)
-    return result
-
-
-def is_number(value):
-    """Try to convert value to a float."""
-    try:
-        fvalue = float(value)
-    except ValueError, TypeError:
-        return False
-    if not math.isfinite(fvalue):
-        return False
-    return True
-
-
-def _is_string_like(value: Any) -> bool:
-    """Return whether a value is a string or string like object."""
-    return isinstance(value, (str, bytes, bytearray))
 
 
 def struct_pack(value: Any | None, format_string: str) -> bytes | None:
@@ -1885,15 +1855,14 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.add_extension("homeassistant.helpers.template.extensions.MathExtension")
         self.add_extension("homeassistant.helpers.template.extensions.RegexExtension")
         self.add_extension("homeassistant.helpers.template.extensions.StringExtension")
+        self.add_extension(
+            "homeassistant.helpers.template.extensions.TypeCastExtension"
+        )
 
         self.globals["apply"] = apply
         self.globals["as_function"] = as_function
-        self.globals["bool"] = forgiving_boolean
         self.globals["combine"] = combine
-        self.globals["float"] = forgiving_float
         self.globals["iif"] = iif
-        self.globals["int"] = forgiving_int
-        self.globals["is_number"] = is_number
         self.globals["merge_response"] = merge_response
         self.globals["pack"] = struct_pack
         self.globals["typeof"] = typeof
@@ -1904,16 +1873,12 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.filters["add"] = add
         self.filters["apply"] = apply
         self.filters["as_function"] = as_function
-        self.filters["bool"] = forgiving_boolean
         self.filters["combine"] = combine
         self.filters["contains"] = contains
-        self.filters["float"] = forgiving_float_filter
         self.filters["from_json"] = from_json
         self.filters["from_hex"] = from_hex
         self.filters["iif"] = iif
-        self.filters["int"] = forgiving_int_filter
         self.filters["is_defined"] = fail_when_undefined
-        self.filters["is_number"] = is_number
         self.filters["multiply"] = multiply
         self.filters["ord"] = ord
         self.filters["pack"] = struct_pack
@@ -1926,8 +1891,6 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
 
         self.tests["apply"] = apply
         self.tests["contains"] = contains
-        self.tests["is_number"] = is_number
-        self.tests["string_like"] = _is_string_like
 
         if hass is None:
             return
@@ -1968,8 +1931,7 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.filters["config_entry_id"] = self.globals["config_entry_id"]
 
         if limited:
-            # Only device_entities is available to limited templates, mark other
-            # functions and filters as unsupported.
+
             def unsupported(name: str) -> Callable[[], NoReturn]:
                 def warn_unsupported(*args: Any, **kwargs: Any) -> NoReturn:
                     raise TemplateError(
@@ -1979,25 +1941,28 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
                 return warn_unsupported
 
             hass_globals = [
-                "area_id",
-                "area_name",
                 "closest",
                 "distance",
+                "entity_name",
                 "expand",
                 "has_value",
                 "is_hidden_entity",
                 "is_state_attr",
                 "is_state",
                 "state_attr",
+                "state_attr_translated",
                 "state_translated",
                 "states",
             ]
             hass_filters = [
-                "area_id",
-                "area_name",
                 "closest",
+                "entity_name",
                 "expand",
                 "has_value",
+                "state_attr",
+                "state_attr_translated",
+                "state_translated",
+                "states",
             ]
             hass_tests = [
                 "has_value",
@@ -2010,7 +1975,7 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
             for filt in hass_filters:
                 self.filters[filt] = unsupported(filt)
             for test in hass_tests:
-                self.filters[test] = unsupported(test)
+                self.tests[test] = unsupported(test)
             return
 
         self.globals["closest"] = hassfunction(closest)
@@ -2026,6 +1991,8 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
 
         # Entity extensions
 
+        self.globals["entity_name"] = hassfunction(entity_name)
+        self.filters["entity_name"] = self.globals["entity_name"]
         self.globals["is_hidden_entity"] = hassfunction(is_hidden_entity)
         self.tests["is_hidden_entity"] = hassfunction(
             is_hidden_entity, pass_eval_context
@@ -2036,9 +2003,11 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.globals["is_state_attr"] = hassfunction(is_state_attr)
         self.globals["is_state"] = hassfunction(is_state)
         self.globals["state_attr"] = hassfunction(state_attr)
+        self.globals["state_attr_translated"] = StateAttrTranslated(hass)
         self.globals["state_translated"] = StateTranslated(hass)
         self.globals["states"] = AllStates(hass)
         self.filters["state_attr"] = self.globals["state_attr"]
+        self.filters["state_attr_translated"] = self.globals["state_attr_translated"]
         self.filters["state_translated"] = self.globals["state_translated"]
         self.filters["states"] = self.globals["states"]
         self.tests["is_state_attr"] = hassfunction(is_state_attr, pass_eval_context)
@@ -2047,7 +2016,7 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
     def is_safe_callable(self, obj):
         """Test if callback is safe."""
         return isinstance(
-            obj, (AllStates, StateTranslated)
+            obj, (AllStates, StateAttrTranslated, StateTranslated)
         ) or super().is_safe_callable(obj)
 
     def is_safe_attribute(self, obj, attr, value):

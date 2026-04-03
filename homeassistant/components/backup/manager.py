@@ -12,7 +12,7 @@ import hashlib
 import io
 from itertools import chain
 import json
-from pathlib import Path, PurePath
+from pathlib import Path, PurePath, PureWindowsPath
 import shutil
 import sys
 import tarfile
@@ -32,6 +32,7 @@ from homeassistant.helpers import (
     issue_registry as ir,
     start,
 )
+from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.json import json_bytes
 from homeassistant.util import dt as dt_util, json as json_util
 from homeassistant.util.async_iterator import AsyncIteratorReader
@@ -77,6 +78,8 @@ from .util import (
     validate_password,
     validate_password_stream,
 )
+
+UPLOAD_PROGRESS_DEBOUNCE_SECONDS = 1
 
 
 @dataclass(frozen=True, kw_only=True, slots=True)
@@ -141,6 +144,7 @@ class CreateBackupStage(StrEnum):
     ADDONS = "addons"
     AWAIT_ADDON_RESTARTS = "await_addon_restarts"
     DOCKER_CONFIG = "docker_config"
+    CLEANING_UP = "cleaning_up"
     FINISHING_FILE = "finishing_file"
     FOLDERS = "folders"
     HOME_ASSISTANT = "home_assistant"
@@ -250,6 +254,15 @@ class BlockedEvent(ManagerStateEvent):
     """Backup manager blocked, Home Assistant is starting."""
 
     manager_state: BackupManagerState = BackupManagerState.BLOCKED
+
+
+@dataclass(frozen=True, kw_only=True, slots=True)
+class UploadBackupEvent(ManagerStateEvent):
+    """Backup agent upload progress event."""
+
+    agent_id: str
+    uploaded_bytes: int
+    total_bytes: int
 
 
 class BackupPlatformProtocol(Protocol):
@@ -579,9 +592,50 @@ class BackupManager:
                 _backup = replace(
                     backup, protected=should_encrypt, size=streamer.size()
                 )
-            await self.backup_agents[agent_id].async_upload_backup(
+            agent = self.backup_agents[agent_id]
+
+            latest_uploaded_bytes = 0
+
+            @callback
+            def _emit_upload_progress() -> None:
+                """Emit the latest upload progress event."""
+                self.async_on_backup_event(
+                    UploadBackupEvent(
+                        manager_state=self.state,
+                        agent_id=agent_id,
+                        uploaded_bytes=latest_uploaded_bytes,
+                        total_bytes=_backup.size,
+                    )
+                )
+
+            upload_progress_debouncer: Debouncer[None] = Debouncer(
+                self.hass,
+                LOGGER,
+                cooldown=UPLOAD_PROGRESS_DEBOUNCE_SECONDS,
+                immediate=True,
+                function=_emit_upload_progress,
+            )
+
+            @callback
+            def on_upload_progress(*, bytes_uploaded: int, **kwargs: Any) -> None:
+                """Handle upload progress."""
+                nonlocal latest_uploaded_bytes
+                latest_uploaded_bytes = bytes_uploaded
+                upload_progress_debouncer.async_schedule_call()
+
+            await agent.async_upload_backup(
                 open_stream=open_stream_func,
                 backup=_backup,
+                on_progress=on_upload_progress,
+            )
+            upload_progress_debouncer.async_cancel()
+            self.async_on_backup_event(
+                UploadBackupEvent(
+                    manager_state=self.state,
+                    agent_id=agent_id,
+                    uploaded_bytes=_backup.size,
+                    total_bytes=_backup.size,
+                )
             )
             if streamer:
                 await streamer.wait()
@@ -1237,6 +1291,13 @@ class BackupManager:
                 )
             # delete old backups more numerous than copies
             # try this regardless of agent errors above
+            self.async_on_backup_event(
+                CreateBackupEvent(
+                    reason=None,
+                    stage=CreateBackupStage.CLEANING_UP,
+                    state=CreateBackupState.IN_PROGRESS,
+                )
+            )
             await delete_backups_exceeding_configured_count(self)
 
         finally:
@@ -1374,9 +1435,10 @@ class BackupManager:
         """Forward event to subscribers."""
         if (current_state := self.state) != (new_state := event.manager_state):
             LOGGER.debug("Backup state: %s -> %s", current_state, new_state)
-        self.last_event = event
-        if not isinstance(event, (BlockedEvent, IdleEvent)):
-            self.last_action_event = event
+        if not isinstance(event, UploadBackupEvent):
+            self.last_event = event
+            if not isinstance(event, (BlockedEvent, IdleEvent)):
+                self.last_action_event = event
         for subscription in self._backup_event_subscriptions:
             subscription(event)
 
@@ -1895,7 +1957,10 @@ class CoreBackupReaderWriter(BackupReaderWriter):
         suggested_filename: str,
     ) -> WrittenBackup:
         """Receive a backup."""
-        temp_file = Path(self.temp_backup_dir, suggested_filename)
+        safe_filename = PureWindowsPath(suggested_filename).name
+        if not safe_filename or safe_filename == "..":
+            safe_filename = "backup.tar"
+        temp_file = Path(self.temp_backup_dir, safe_filename)
 
         async_add_executor_job = self._hass.async_add_executor_job
         await async_add_executor_job(make_backup_dir, self.temp_backup_dir)

@@ -10,29 +10,26 @@ from homeassistant.core import callback
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-    DataUpdateCoordinator,
-)
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
+from .coordinator import NetgearDataCoordinator, NetgearTrackerCoordinator
 from .router import NetgearRouter
 
 
-class NetgearDeviceEntity(CoordinatorEntity):
+class NetgearDeviceEntity(CoordinatorEntity[NetgearTrackerCoordinator]):
     """Base class for a device connected to a Netgear router."""
 
     _attr_has_entity_name = True
 
     def __init__(
         self,
-        coordinator: DataUpdateCoordinator[Any],
-        router: NetgearRouter,
+        coordinator: NetgearTrackerCoordinator,
         device: dict,
     ) -> None:
         """Initialize a Netgear device."""
         super().__init__(coordinator)
-        self._router = router
+        self._router = coordinator.router
         self._device = device
         self._mac = device["mac"]
         self._device_name = self.get_device_name()
@@ -42,7 +39,7 @@ class NetgearDeviceEntity(CoordinatorEntity):
             connections={(dr.CONNECTION_NETWORK_MAC, self._mac)},
             default_name=self._device_name,
             default_model=device["device_model"],
-            via_device=(DOMAIN, router.unique_id),
+            via_device=(DOMAIN, coordinator.router.unique_id),
         )
 
     def get_device_name(self):
@@ -90,15 +87,15 @@ class NetgearRouterEntity(Entity):
         )
 
 
-class NetgearRouterCoordinatorEntity(NetgearRouterEntity, CoordinatorEntity):
+class NetgearRouterCoordinatorEntity[T: NetgearDataCoordinator[Any]](
+    NetgearRouterEntity, CoordinatorEntity[T]
+):
     """Base class for a Netgear router entity."""
 
-    def __init__(
-        self, coordinator: DataUpdateCoordinator[Any], router: NetgearRouter
-    ) -> None:
+    def __init__(self, coordinator: T) -> None:
         """Initialize a Netgear device."""
         CoordinatorEntity.__init__(self, coordinator)
-        NetgearRouterEntity.__init__(self, router)
+        NetgearRouterEntity.__init__(self, coordinator.router)
 
     @abstractmethod
     @callback

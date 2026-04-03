@@ -1,0 +1,39 @@
+.temperature_units: &temperature_units
+  - "°C"
+  - "°F"
+
+.temperature_threshold_entity: &temperature_threshold_entity
+  - domain: input_number
+    unit_of_measurement: *temperature_units
+  - domain: sensor
+    device_class: temperature
+  - domain: number
+    device_class: temperature
+
+is_value:
+  target:
+    entity:
+      - domain: sensor
+        device_class: temperature
+      - domain: climate
+      - domain: water_heater
+      - domain: weather
+  fields:
+    behavior:
+      required: true
+      default: any
+      selector:
+        select:
+          translation_key: condition_behavior
+          options:
+            - all
+            - any
+    threshold:
+      required: true
+      selector:
+        numeric_threshold:
+          entity: *temperature_threshold_entity
+          mode: is
+          number:
+            mode: box
+          unit_of_measurement: *temperature_units

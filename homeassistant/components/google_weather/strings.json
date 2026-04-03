@@ -98,5 +98,10 @@
         "name": "Wind gust speed"
       }
     }
+  },
+  "exceptions": {
+    "update_error": {
+      "message": "Error fetching weather data: {error}"
+    }
   }
 }

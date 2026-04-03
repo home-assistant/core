@@ -11,7 +11,8 @@ set_preset_mode:
       required: true
       example: "away"
       selector:
-        text:
+        state:
+          attribute: preset_mode
 
 set_temperature:
   target:
@@ -55,16 +56,10 @@ set_temperature:
           mode: box
     hvac_mode:
       selector:
-        select:
-          options:
-            - "off"
-            - "auto"
-            - "cool"
-            - "dry"
-            - "fan_only"
-            - "heat_cool"
-            - "heat"
-          translation_key: hvac_mode
+        state:
+          hide_states:
+            - unavailable
+            - unknown
 set_humidity:
   target:
     entity:
@@ -91,7 +86,8 @@ set_fan_mode:
       required: true
       example: "low"
       selector:
-        text:
+        state:
+          attribute: fan_mode
 
 set_hvac_mode:
   target:
@@ -115,7 +111,8 @@ set_swing_mode:
       required: true
       example: "on"
       selector:
-        text:
+        state:
+          attribute: swing_mode
 
 set_swing_horizontal_mode:
   target:
@@ -128,7 +125,8 @@ set_swing_horizontal_mode:
       required: true
       example: "on"
       selector:
-        text:
+        state:
+          attribute: swing_horizontal_mode
 
 turn_on:
   target:

@@ -6,26 +6,17 @@ from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
 from typing import Any, Generic
 
-from pylitterbot import FeederRobot, LitterRobot, LitterRobot3, LitterRobot4, Robot
+from pylitterbot import FeederRobot, LitterRobot, LitterRobot3, Robot
 
-from homeassistant.components.switch import (
-    DOMAIN as SWITCH_DOMAIN,
-    SwitchEntity,
-    SwitchEntityDescription,
-)
+from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.issue_registry import (
-    IssueSeverity,
-    async_create_issue,
-    async_delete_issue,
-)
 
-from .const import DOMAIN
 from .coordinator import LitterRobotConfigEntry
-from .entity import LitterRobotEntity, _WhiskerEntityT
+from .entity import LitterRobotEntity, _WhiskerEntityT, whisker_command
+
+PARALLEL_UPDATES = 1
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -75,54 +66,27 @@ async def async_setup_entry(
 ) -> None:
     """Set up Litter-Robot switches using config entry."""
     coordinator = entry.runtime_data
-    entities = [
-        RobotSwitchEntity(robot=robot, coordinator=coordinator, description=description)
-        for robot in coordinator.account.robots
-        for robot_type, entity_descriptions in SWITCH_MAP.items()
-        if isinstance(robot, robot_type)
-        for description in entity_descriptions
-    ]
+    known_robots: set[str] = set()
 
-    ent_reg = er.async_get(hass)
-
-    def add_deprecated_entity(
-        robot: LitterRobot4,
-        description: RobotSwitchEntityDescription,
-        entity_cls: type[RobotSwitchEntity],
-    ) -> None:
-        """Add deprecated entities."""
-        unique_id = f"{robot.serial}-{description.key}"
-        if entity_id := ent_reg.async_get_entity_id(SWITCH_DOMAIN, DOMAIN, unique_id):
-            entity_entry = ent_reg.async_get(entity_id)
-            if entity_entry and entity_entry.disabled:
-                ent_reg.async_remove(entity_id)
-                async_delete_issue(
-                    hass,
-                    DOMAIN,
-                    f"deprecated_entity_{unique_id}",
+    def _check_robots() -> None:
+        all_robots = coordinator.account.robots
+        current_robots = {robot.serial for robot in all_robots}
+        new_robots = current_robots - known_robots
+        if new_robots:
+            known_robots.update(new_robots)
+            async_add_entities(
+                RobotSwitchEntity(
+                    robot=robot, coordinator=coordinator, description=description
                 )
-            elif entity_entry:
-                entities.append(entity_cls(robot, coordinator, description))
-                async_create_issue(
-                    hass,
-                    DOMAIN,
-                    f"deprecated_entity_{unique_id}",
-                    breaks_in_ha_version="2026.4.0",
-                    is_fixable=False,
-                    severity=IssueSeverity.WARNING,
-                    translation_key="deprecated_entity",
-                    translation_placeholders={
-                        "name": f"{robot.name} {entity_entry.name or entity_entry.original_name}",
-                        "entity": entity_id,
-                    },
-                )
+                for robot in all_robots
+                if robot.serial in new_robots
+                for robot_type, entity_descriptions in SWITCH_MAP.items()
+                if isinstance(robot, robot_type)
+                for description in entity_descriptions
+            )
 
-    for robot in coordinator.account.get_robots(LitterRobot4):
-        add_deprecated_entity(
-            robot, NIGHT_LIGHT_MODE_ENTITY_DESCRIPTION, RobotSwitchEntity
-        )
-
-    async_add_entities(entities)
+    _check_robots()
+    entry.async_on_unload(coordinator.async_add_listener(_check_robots))
 
 
 class RobotSwitchEntity(LitterRobotEntity[_WhiskerEntityT], SwitchEntity):
@@ -135,10 +99,12 @@ class RobotSwitchEntity(LitterRobotEntity[_WhiskerEntityT], SwitchEntity):
         """Return true if switch is on."""
         return self.entity_description.value_fn(self.robot)
 
+    @whisker_command
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
         await self.entity_description.set_fn(self.robot, True)
 
+    @whisker_command
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
         await self.entity_description.set_fn(self.robot, False)

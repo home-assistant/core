@@ -6,7 +6,6 @@ from collections.abc import Iterable
 from datetime import datetime, timedelta
 import json
 import logging
-import math
 import random
 from unittest.mock import patch
 
@@ -33,7 +32,13 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import TemplateError
-from homeassistant.helpers import entity, entity_registry as er, template, translation
+from homeassistant.helpers import (
+    device_registry as dr,
+    entity,
+    entity_registry as er,
+    template,
+    translation,
+)
 from homeassistant.helpers.entity_platform import EntityPlatform
 from homeassistant.helpers.json import json_dumps
 from homeassistant.helpers.template.render_info import (
@@ -291,131 +296,6 @@ def test_loop_controls(hass: HomeAssistant) -> None:
     {%- endfor -%}
     """
     assert render(hass, tpl) == "02"
-
-
-def test_float_function(hass: HomeAssistant) -> None:
-    """Test float function."""
-    hass.states.async_set("sensor.temperature", "12")
-
-    assert render(hass, "{{ float(states.sensor.temperature.state) }}") == 12.0
-
-    assert render(hass, "{{ float(states.sensor.temperature.state) > 11 }}") is True
-
-    # Test handling of invalid input
-    with pytest.raises(TemplateError):
-        render(hass, "{{ float('forgiving') }}")
-
-    # Test handling of default return value
-    assert render(hass, "{{ float('bad', 1) }}") == 1
-    assert render(hass, "{{ float('bad', default=1) }}") == 1
-
-
-def test_float_filter(hass: HomeAssistant) -> None:
-    """Test float filter."""
-    hass.states.async_set("sensor.temperature", "12")
-
-    assert render(hass, "{{ states.sensor.temperature.state | float }}") == 12.0
-    assert render(hass, "{{ states.sensor.temperature.state | float > 11 }}") is True
-
-    # Test handling of invalid input
-    with pytest.raises(TemplateError):
-        render(hass, "{{ 'bad' | float }}")
-
-    # Test handling of default return value
-    assert render(hass, "{{ 'bad' | float(1) }}") == 1
-    assert render(hass, "{{ 'bad' | float(default=1) }}") == 1
-
-
-def test_int_filter(hass: HomeAssistant) -> None:
-    """Test int filter."""
-    hass.states.async_set("sensor.temperature", "12.2")
-    assert render(hass, "{{ states.sensor.temperature.state | int }}") == 12
-    assert render(hass, "{{ states.sensor.temperature.state | int > 11 }}") is True
-
-    hass.states.async_set("sensor.temperature", "0x10")
-    assert render(hass, "{{ states.sensor.temperature.state | int(base=16) }}") == 16
-
-    # Test handling of invalid input
-    with pytest.raises(TemplateError):
-        render(hass, "{{ 'bad' | int }}")
-
-    # Test handling of default return value
-    assert render(hass, "{{ 'bad' | int(1) }}") == 1
-    assert render(hass, "{{ 'bad' | int(default=1) }}") == 1
-
-
-def test_int_function(hass: HomeAssistant) -> None:
-    """Test int filter."""
-    hass.states.async_set("sensor.temperature", "12.2")
-    assert render(hass, "{{ int(states.sensor.temperature.state) }}") == 12
-    assert render(hass, "{{ int(states.sensor.temperature.state) > 11 }}") is True
-
-    hass.states.async_set("sensor.temperature", "0x10")
-    assert render(hass, "{{ int(states.sensor.temperature.state, base=16) }}") == 16
-
-    # Test handling of invalid input
-    with pytest.raises(TemplateError):
-        render(hass, "{{ int('bad') }}")
-
-    # Test handling of default return value
-    assert render(hass, "{{ int('bad', 1) }}") == 1
-    assert render(hass, "{{ int('bad', default=1) }}") == 1
-
-
-def test_bool_function(hass: HomeAssistant) -> None:
-    """Test bool function."""
-    assert render(hass, "{{ bool(true) }}") is True
-    assert render(hass, "{{ bool(false) }}") is False
-    assert render(hass, "{{ bool('on') }}") is True
-    assert render(hass, "{{ bool('off') }}") is False
-    with pytest.raises(TemplateError):
-        render(hass, "{{ bool('unknown') }}")
-    with pytest.raises(TemplateError):
-        render(hass, "{{ bool(none) }}")
-    assert render(hass, "{{ bool('unavailable', none) }}") is None
-    assert render(hass, "{{ bool('unavailable', default=none) }}") is None
-
-
-def test_bool_filter(hass: HomeAssistant) -> None:
-    """Test bool filter."""
-    assert render(hass, "{{ true | bool }}") is True
-    assert render(hass, "{{ false | bool }}") is False
-    assert render(hass, "{{ 'on' | bool }}") is True
-    assert render(hass, "{{ 'off' | bool }}") is False
-    with pytest.raises(TemplateError):
-        render(hass, "{{ 'unknown' | bool }}")
-    with pytest.raises(TemplateError):
-        render(hass, "{{ none | bool }}")
-    assert render(hass, "{{ 'unavailable' | bool(none) }}") is None
-    assert render(hass, "{{ 'unavailable' | bool(default=none) }}") is None
-
-
-@pytest.mark.parametrize(
-    ("value", "expected"),
-    [
-        (0, True),
-        (0.0, True),
-        ("0", True),
-        ("0.0", True),
-        (True, True),
-        (False, True),
-        ("True", False),
-        ("False", False),
-        (None, False),
-        ("None", False),
-        ("horse", False),
-        (math.pi, True),
-        (math.nan, False),
-        (math.inf, False),
-        ("nan", False),
-        ("inf", False),
-    ],
-)
-def test_isnumber(hass: HomeAssistant, value, expected) -> None:
-    """Test is_number."""
-    assert render(hass, "{{ is_number(value) }}", {"value": value}) == expected
-    assert render(hass, "{{ value | is_number }}", {"value": value}) == expected
-    assert render(hass, "{{ value is is_number }}", {"value": value}) == expected
 
 
 def test_converting_datetime_to_iterable(hass: HomeAssistant) -> None:
@@ -807,6 +687,66 @@ def test_if_state_exists(hass: HomeAssistant) -> None:
     assert result == "exists"
 
 
+def test_entity_name(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test entity_name method."""
+    assert render(hass, "{{ entity_name('sensor.fake') }}") is None
+
+    entry = entity_registry.async_get_or_create(
+        "sensor", "test", "unique_1", original_name="Registry Sensor"
+    )
+    assert render(hass, f"{{{{ entity_name('{entry.entity_id}') }}}}") == (
+        "Registry Sensor"
+    )
+    assert render(hass, f"{{{{ '{entry.entity_id}' | entity_name }}}}") == (
+        "Registry Sensor"
+    )
+
+    entity_registry.async_update_entity(entry.entity_id, name="My Custom Sensor")
+    assert render(hass, f"{{{{ entity_name('{entry.entity_id}') }}}}") == (
+        "My Custom Sensor"
+    )
+
+    # Falls back to state for entities not in the registry
+    hass.states.async_set(
+        "light.no_unique_id", "on", {"friendly_name": "No Unique ID Light"}
+    )
+    assert render(hass, "{{ entity_name('light.no_unique_id') }}") == (
+        "No Unique ID Light"
+    )
+
+    config_entry = MockConfigEntry(domain="test")
+    config_entry.add_to_hass(hass)
+    device_entry = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+        name="My Device",
+    )
+    entry2 = entity_registry.async_get_or_create(
+        "sensor",
+        "test",
+        "unique_2",
+        config_entry=config_entry,
+        device_id=device_entry.id,
+        has_entity_name=True,
+        original_name="Temperature",
+    )
+    assert render(hass, f"{{{{ entity_name('{entry2.entity_id}') }}}}") == (
+        "Temperature"
+    )
+
+    # Strips device name prefix
+    entity_registry.async_update_entity(
+        entry2.entity_id, name="My Device Custom Sensor"
+    )
+    assert render(hass, f"{{{{ entity_name('{entry2.entity_id}') }}}}") == (
+        "Custom Sensor"
+    )
+
+
 def test_is_hidden_entity(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
@@ -1041,6 +981,136 @@ async def test_state_translated(
 
     result = render(hass, '{{ state_translated("domain.is_unknown") }}')
     assert result == "unknown"
+
+
+async def test_state_attr_translated(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
+    """Test state_attr_translated method."""
+    await translation._async_get_translations_cache(hass).async_load("en", set())
+
+    hass.states.async_set(
+        "climate.living_room",
+        "heat",
+        attributes={"fan_mode": "auto", "hvac_action": "heating"},
+    )
+    hass.states.async_set(
+        "switch.test",
+        "on",
+        attributes={"some_attr": "some_value", "numeric_attr": 42, "bool_attr": True},
+    )
+
+    result = render(
+        hass,
+        '{{ state_attr_translated("switch.test", "some_attr") }}',
+    )
+    assert result == "some_value"
+
+    # Non-string attributes should be returned as-is without type conversion
+    result = render(
+        hass,
+        '{{ state_attr_translated("switch.test", "numeric_attr") }}',
+    )
+    assert result == 42
+    assert isinstance(result, int)
+
+    result = render(
+        hass,
+        '{{ state_attr_translated("switch.test", "bool_attr") }}',
+    )
+    assert result is True
+
+    result = render(
+        hass,
+        '{{ state_attr_translated("climate.non_existent", "fan_mode") }}',
+    )
+    assert result is None
+
+    with pytest.raises(TemplateError):
+        render(hass, '{{ state_attr_translated("-invalid", "fan_mode") }}')
+
+    result = render(
+        hass,
+        '{{ state_attr_translated("climate.living_room", "non_existent") }}',
+    )
+    assert result is None
+
+
+@pytest.mark.parametrize(
+    (
+        "entity_id",
+        "attribute",
+        "translations",
+        "expected_result",
+    ),
+    [
+        (
+            "climate.test_platform_5678",
+            "fan_mode",
+            {
+                "component.test_platform.entity.climate.my_climate.state_attributes.fan_mode.state.auto": "Platform Automatic",
+            },
+            "Platform Automatic",
+        ),
+        (
+            "climate.living_room",
+            "fan_mode",
+            {
+                "component.climate.entity_component._.state_attributes.fan_mode.state.auto": "Automatic",
+            },
+            "Automatic",
+        ),
+        (
+            "climate.living_room",
+            "hvac_action",
+            {
+                "component.climate.entity_component._.state_attributes.hvac_action.state.heating": "Heating",
+            },
+            "Heating",
+        ),
+    ],
+)
+async def test_state_attr_translated_translation_lookups(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    entity_id: str,
+    attribute: str,
+    translations: dict[str, str],
+    expected_result: str,
+) -> None:
+    """Test state_attr_translated translation lookups."""
+    await translation._async_get_translations_cache(hass).async_load("en", set())
+
+    hass.states.async_set(
+        "climate.living_room",
+        "heat",
+        attributes={"fan_mode": "auto", "hvac_action": "heating"},
+    )
+
+    config_entry = MockConfigEntry(domain="climate")
+    config_entry.add_to_hass(hass)
+    entity_registry.async_get_or_create(
+        "climate",
+        "test_platform",
+        "5678",
+        config_entry=config_entry,
+        translation_key="my_climate",
+    )
+    hass.states.async_set(
+        "climate.test_platform_5678",
+        "heat",
+        attributes={"fan_mode": "auto"},
+    )
+
+    with patch(
+        "homeassistant.helpers.translation.async_get_cached_translations",
+        return_value=translations,
+    ):
+        result = render(
+            hass,
+            f'{{{{ state_attr_translated("{entity_id}", "{attribute}") }}}}',
+        )
+        assert result == expected_result
 
 
 def test_has_value(hass: HomeAssistant) -> None:

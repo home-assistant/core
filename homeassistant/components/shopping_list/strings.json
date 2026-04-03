@@ -30,11 +30,11 @@
     },
     "clear_completed_items": {
       "description": "Removes completed items from the shopping list.",
-      "name": "Clear completed items"
+      "name": "Clear completed shopping list items"
     },
     "complete_all": {
       "description": "Marks all items as completed in the shopping list (without removing them from the list).",
-      "name": "Complete all"
+      "name": "Complete all shopping list items"
     },
     "complete_item": {
       "description": "Marks the first item with matching name as completed in the shopping list.",
@@ -44,11 +44,11 @@
           "name": "[%key:common::config_flow::data::name%]"
         }
       },
-      "name": "Complete item"
+      "name": "Complete shopping list item"
     },
     "incomplete_all": {
       "description": "Marks all items as incomplete in the shopping list.",
-      "name": "Incomplete all"
+      "name": "Incomplete all shopping list items"
     },
     "incomplete_item": {
       "description": "Marks the first item with matching name as incomplete in the shopping list.",
@@ -58,7 +58,7 @@
           "name": "[%key:common::config_flow::data::name%]"
         }
       },
-      "name": "Incomplete item"
+      "name": "Incomplete shopping list item"
     },
     "remove_item": {
       "description": "Removes the first item with matching name from the shopping list.",
@@ -68,7 +68,7 @@
           "name": "[%key:common::config_flow::data::name%]"
         }
       },
-      "name": "Remove item"
+      "name": "Remove shopping list item"
     },
     "sort": {
       "description": "Sorts all items by name in the shopping list.",
@@ -78,7 +78,7 @@
           "name": "Sort reverse"
         }
       },
-      "name": "Sort all items"
+      "name": "Sort shopping list"
     }
   },
   "title": "Shopping List"

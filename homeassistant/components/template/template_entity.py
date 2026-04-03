@@ -266,13 +266,20 @@ class TemplateEntity(AbstractTemplateEntity):
 
     def _get_this_variable(self) -> TemplateStateFromEntityId:
         """Create a this variable for the entity."""
+        entity_id = self.entity_id
         if self._preview_callback:
-            preview_entity_id = async_generate_entity_id(
-                self._entity_id_format, self._attr_name or "preview", hass=self.hass
-            )
-            return TemplateStateFromEntityId(self.hass, preview_entity_id)
+            # During config flow, the registry entry and entity_id will be None. In this scenario,
+            # a temporary entity_id is created.
+            # During option flow, the preview entity_id will be None, however the registry entry
+            # will contain the target entity_id.
+            if self.registry_entry:
+                entity_id = self.registry_entry.entity_id
+            else:
+                entity_id = async_generate_entity_id(
+                    self._entity_id_format, self._attr_name or "preview", hass=self.hass
+                )
 
-        return TemplateStateFromEntityId(self.hass, self.entity_id)
+        return TemplateStateFromEntityId(self.hass, entity_id)
 
     def _render_script_variables(self) -> dict[str, Any]:
         """Render configured variables."""
@@ -285,12 +292,16 @@ class TemplateEntity(AbstractTemplateEntity):
 
     def setup_state_template(
         self,
-        option: str,
         attribute: str,
         validator: Callable[[Any], Any] | None = None,
         on_update: Callable[[Any], None] | None = None,
     ) -> None:
-        """Set up a template that manages the main state of the entity."""
+        """Set up a template that manages the main state of the entity.
+
+        Requires _state_option to be set on the inheriting class. _state_option represents
+        the configuration option that derives the state. E.g. Template weather entities main state option
+        is 'condition', where switch is 'state'.
+        """
 
         @callback
         def _update_state(result: Any) -> None:
@@ -307,13 +318,22 @@ class TemplateEntity(AbstractTemplateEntity):
                 self._attr_available = True
 
             state = validator(result) if validator else result
+
             if on_update:
                 on_update(state)
             else:
                 setattr(self, attribute, state)
 
+        if self._state_option is None:
+            raise NotImplementedError(
+                f"{self.__class__.__name__} does not implement '_state_option' for 'setup_state_template'."
+            )
+
         self.add_template(
-            option, attribute, on_update=_update_state, none_on_template_error=False
+            self._state_option,
+            attribute,
+            on_update=_update_state,
+            none_on_template_error=False,
         )
 
     def setup_template(

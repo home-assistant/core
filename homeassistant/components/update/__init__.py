@@ -531,7 +531,13 @@ async def websocket_release_notes(
             "Entity does not support release notes",
         )
         return
-
+    if entity.available is False:
+        connection.send_error(
+            msg["id"],
+            websocket_api.ERR_HOME_ASSISTANT_ERROR,
+            "Entity is not available",
+        )
+        return
     connection.send_result(
         msg["id"],
         await entity.async_release_notes(),

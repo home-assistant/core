@@ -113,17 +113,21 @@ DATA_ZONE_STORAGE_COLLECTION: HassKey[ZoneStorageCollection] = HassKey(DOMAIN)
 DATA_ZONE_ENTITY_IDS: HassKey[list[str]] = HassKey(ZONE_ENTITY_IDS)
 
 
-@bind_hass
-def async_active_zone(
+def async_in_zones(
     hass: HomeAssistant, latitude: float, longitude: float, radius: float = 0
-) -> State | None:
-    """Find the active zone for given latitude, longitude.
+) -> tuple[State | None, list[str]]:
+    """Find zones which contain the given latitude and longitude.
+
+    Returns a tuple of the closest active zone and a list of all zones which
+    contain the given latitude and longitude. The list of zones is sorted by
+    distance and then by radius so that the closest and smallest zone is first.
 
     This method must be run in the event loop.
     """
     # Sort entity IDs so that we are deterministic if equal distance to 2 zones
     min_dist: float = sys.maxsize
     closest: State | None = None
+    zones: list[tuple[str, float, float]] = []
 
     # This can be called before async_setup by device tracker
     zone_entity_ids = hass.data.get(DATA_ZONE_ENTITY_IDS, ())
@@ -133,10 +137,12 @@ def async_active_zone(
             not (zone := hass.states.get(entity_id))
             # Skip unavailable zones
             or zone.state == STATE_UNAVAILABLE
-            # Skip passive zones
-            or (zone_attrs := zone.attributes).get(ATTR_PASSIVE)
+        ):
+            continue
+        zone_attrs = zone.attributes
+        if (
             # Skip zones where we cannot calculate distance
-            or (
+            (
                 zone_dist := distance(
                     latitude,
                     longitude,
@@ -149,6 +155,12 @@ def async_active_zone(
             # lat/long is outside the zone
             or not (zone_dist - (zone_radius := zone_attrs[ATTR_RADIUS]) < radius)
         ):
+            continue
+
+        zones.append((zone.entity_id, zone_dist, zone_radius))
+
+        # Skip passive zones
+        if zone_attrs.get(ATTR_PASSIVE):
             continue
 
         # If have a closest and its not closer than the closest skip it
@@ -166,7 +178,20 @@ def async_active_zone(
         min_dist = zone_dist
         closest = zone
 
-    return closest
+    # Sort by distance and then by radius so the closest and smallest zone is first.
+    zones.sort(key=lambda x: (x[1], x[2]))
+    return (closest, [itm[0] for itm in zones])
+
+
+@bind_hass
+def async_active_zone(
+    hass: HomeAssistant, latitude: float, longitude: float, radius: float = 0
+) -> State | None:
+    """Find the active zone for given latitude, longitude.
+
+    This method must be run in the event loop.
+    """
+    return async_in_zones(hass, latitude, longitude, radius)[0]
 
 
 @callback
