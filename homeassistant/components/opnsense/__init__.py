@@ -9,6 +9,7 @@ from aiohttp import (
     ClientSSLError,
 )
 from aiopnsense import OPNsenseClient
+import awesomeversion
 import voluptuous as vol
 
 from homeassistant.const import CONF_API_KEY, CONF_URL, CONF_VERIFY_SSL, Platform
@@ -63,12 +64,23 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         api_secret,
         session,
         opts={"verify_ssl": verify_ssl},
-        initial=True,  # Throw errors
+        throw_errors=True,
     )
     try:
-        if tracker_interfaces:
-            interfaces_resp = await client.get_interfaces()
-        await client.get_arp_table()
+        fw_ver = client.get_host_firmware_version()
+        _LOGGER.debug("OPNsense Firmware %s", fw_ver)
+        if awesomeversion.AwesomeVersion(fw_ver) < awesomeversion.AwesomeVersion(
+            "25.7"
+        ):
+            _LOGGER.error("OPNsense Integration requires OPNsense Firmware >= 25.7")
+            return False
+    except (
+        awesomeversion.exceptions.AwesomeVersionCompareException,
+        TypeError,
+        ValueError,
+    ):
+        _LOGGER.exception("Error checking the OPNsense firmware version at %s", url)
+        return False
     except ClientConnectorDNSError:
         _LOGGER.exception(
             "DNS failure while connecting to OPNsense API endpoint at %s", url
@@ -101,6 +113,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             "Client failure while connecting to OPNsense API endpoint at %s", url
         )
         return False
+
+    client.toggle_throwing_errors(False)
+
+    if tracker_interfaces:
+        interfaces_resp = await client.get_interfaces()
+    await client.get_arp_table()
 
     if tracker_interfaces:
         # Verify that specified tracker interfaces are valid
