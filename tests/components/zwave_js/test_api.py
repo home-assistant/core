@@ -2578,7 +2578,11 @@ async def test_subscribe_rebuild_routes_progress_initial_value(
 
     msg = await ws_client.receive_json()
     assert msg["success"]
-    assert msg["result"] == {"67": "pending"}
+    assert msg["result"] is None
+
+    msg = await ws_client.receive_json()
+    assert msg["event"]["event"] == "rebuild routes progress"
+    assert msg["event"]["rebuild_routes_status"] == {"67": "pending"}
 
 
 async def test_stop_rebuilding_routes(

@@ -1,4 +1,4 @@
-"""Support gathering system information of hosts which are running glances."""
+"""Support gathering system information of hosts which are running Glances."""
 
 from __future__ import annotations
 
