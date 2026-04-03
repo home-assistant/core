@@ -22,9 +22,9 @@ from homeassistant.components.climate import (
     PRESET_SLEEP,
     HVACMode,
 )
-from homeassistant.components.generic_thermostat.const import DOMAIN
 from homeassistant.components.generic_thermostat.const import (
     CONF_SENSOR_ERROR_ACTION,
+    DOMAIN,
     SENSOR_ERROR_ACTION_FORCE_OFF,
     SENSOR_ERROR_ACTION_FORCE_ON,
 )
