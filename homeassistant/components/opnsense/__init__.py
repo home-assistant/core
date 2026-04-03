@@ -2,7 +2,12 @@
 
 import logging
 
-from aiohttp import ClientConnectorDNSError, ClientConnectorError, ClientError
+from aiohttp import (
+    ClientConnectorDNSError,
+    ClientError,
+    ClientResponseError,
+    ClientSSLError,
+)
 from aiopnsense import OPNsenseClient
 import voluptuous as vol
 
@@ -69,10 +74,27 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             "DNS failure while connecting to OPNsense API endpoint at %s", url
         )
         return False
-    except ClientConnectorError:
+    except ClientSSLError:
         _LOGGER.exception(
-            "Connection failure while connecting to OPNsense API endpoint at %s", url
+            "Unable to verify SSL while connecting to OPNsense API endpoint at %s", url
         )
+        return False
+    except ClientResponseError as e:
+        if e.status == 401:
+            _LOGGER.exception(
+                "Authentication failure while connecting to OPNsense API endpoint at %s",
+                url,
+            )
+        elif e.status == 403:
+            _LOGGER.exception(
+                "Invalid Permissions while connecting to OPNsense API endpoint at %s",
+                url,
+            )
+        else:
+            _LOGGER.exception(
+                "Connection failure while connecting to OPNsense API endpoint at %s",
+                url,
+            )
         return False
     except ClientError:
         _LOGGER.exception(
