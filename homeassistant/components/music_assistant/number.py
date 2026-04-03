@@ -81,8 +81,6 @@ class MusicAssistantPlayerConfigNumber(MusicAssistantPlayerOptionEntity, NumberE
 
     def on_player_option_update(self, player_option: PlayerOption) -> None:
         """Update on player option update."""
-        super().on_player_option_update(player_option)
-
         if player_option.min_value is not None:
             self._attr_native_min_value = player_option.min_value
         if player_option.max_value is not None:
