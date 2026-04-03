@@ -336,7 +336,11 @@ DISCOVERY_SCHEMAS = [
         required_attributes=(
             clusters.FanControl.Attributes.FanMode,
             clusters.FanControl.Attributes.PercentCurrent,
+            clusters.FanControl.Attributes.PercentSetting,
         ),
+        # PercentSetting SHALL be null when FanMode is Auto (spec 4.4.6.3),
+        # so allow null values to not block discovery in that state.
+        allow_none_value=True,
         optional_attributes=(
             clusters.FanControl.Attributes.PercentSetting,
             clusters.FanControl.Attributes.SpeedMax,
