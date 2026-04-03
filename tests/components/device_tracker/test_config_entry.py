@@ -827,3 +827,39 @@ async def test_entity_has_device_info(
         entity_registry.entities[f"{DOMAIN}.test_device"].config_entry_id
         == config_entry.entry_id
     )
+
+
+async def test_tracker_entity_unavailable(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    entity_id: str,
+) -> None:
+    """Test unavailable tracker entity does not fail on bad latitude/longitude."""
+
+    class _MockTrackerEntity(MockTrackerEntity):
+        """Test tracker entity that starts with unavailable state."""
+
+        _attr_available = False
+
+        @property
+        def latitude(self) -> float | None:
+            """Return latitude value of the device."""
+            raise ValueError("Upstream error")
+
+        @property
+        def longitude(self) -> float | None:
+            """Return longitude value of the device."""
+            raise ValueError("Upstream error")
+
+    tracker_entity = _MockTrackerEntity()
+    tracker_entity.entity_id = entity_id
+
+    config_entry = await create_mock_platform(hass, config_entry, [tracker_entity])
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == "unavailable"
+    assert state.attributes == {}

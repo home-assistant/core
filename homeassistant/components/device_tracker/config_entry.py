@@ -263,7 +263,7 @@ class TrackerEntity(
     @callback
     def _async_write_ha_state(self) -> None:
         """Calculate active zones."""
-        if self.latitude is not None and self.longitude is not None:
+        if self.available and self.latitude is not None and self.longitude is not None:
             self.__active_zone, self.__in_zones = zone.async_in_zones(
                 self.hass, self.latitude, self.longitude, self.location_accuracy
             )
