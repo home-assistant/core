@@ -85,7 +85,9 @@ class HIVIDevice(BaseModel):
     def model_post_init(self, __context, /) -> None:
         """Auto-generate unique_id from mac_address if not provided."""
         if not self.unique_id:
-            self.unique_id = f"hivi_{self.mac_address.replace(':', '')}"
+            mac_address = self.mac_address.replace(":", "")
+            if mac_address:
+                self.unique_id = f"hivi_{mac_address}"
 
     @property
     def is_available_for_media(self) -> bool:
