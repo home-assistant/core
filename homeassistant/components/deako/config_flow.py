@@ -236,7 +236,7 @@ class DeakoConfigFlow(ConfigFlow, domain=DOMAIN):
         self.discovered_host = discovery_info.host
 
         await self.async_set_unique_id(DOMAIN)
-        self._abort_if_unique_id_configured(updates={CONF_HOST: self.discovered_host})
+        self._abort_if_unique_id_configured()
 
         # Store this bridge in known_bridges for any existing entry
         for entry in self.hass.config_entries.async_entries(DOMAIN):
