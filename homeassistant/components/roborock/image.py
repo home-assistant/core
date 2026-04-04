@@ -98,13 +98,13 @@ class RoborockMap(RoborockCoordinatedEntityV1, ImageEntity):
         """
         if self.coordinator.data is None or (map_content := self._map_content) is None:
             return
-            
+
         if self.cached_map != map_content.image_content:
             self.cached_map = map_content.image_content
             self._attr_image_last_updated = self.coordinator.last_home_update
-            
-            # This is the logic fix: We update the data internally, but we only 
-            # call the super() update (which triggers the Logbook entry) 
+
+            # This is the logic fix: We update the data internally, but we only
+            # call the super() update (which triggers the Logbook entry)
             # when it's absolutely necessary.
             super()._handle_coordinator_update()
 
