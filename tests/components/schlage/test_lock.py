@@ -168,7 +168,7 @@ async def test_add_code_service_default_notify_on_use_value(
     assert isinstance(call_args, AccessCode)
     assert call_args.name == "test_user"
     assert call_args.code == "1234"
-    assert call_args.notify_on_use == True
+    assert call_args.notify_on_use
 
 
 @pytest.mark.parametrize(
