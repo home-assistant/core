@@ -142,7 +142,7 @@ adguardhome==0.8.1
 advantage-air==0.4.4
 
 # homeassistant.components.frontier_silicon
-afsapi==0.2.7
+afsapi==0.3.1
 
 # homeassistant.components.agent_dvr
 agent-py==0.0.24
@@ -374,7 +374,7 @@ aioridwell==2025.09.0
 aioruckus==0.42
 
 # homeassistant.components.russound_rio
-aiorussound==4.9.1
+aiorussound==4.10.0
 
 # homeassistant.components.ruuvi_gateway
 aioruuvigateway==0.1.0
@@ -693,7 +693,7 @@ datadog==0.52.0
 datapoint==0.12.1
 
 # homeassistant.components.bluetooth
-dbus-fast==3.1.2
+dbus-fast==4.0.4
 
 # homeassistant.components.debugpy
 debugpy==1.8.17
@@ -1049,7 +1049,7 @@ ha-silabs-firmware-client==0.3.0
 habiticalib==0.4.7
 
 # homeassistant.components.bluetooth
-habluetooth==5.11.1
+habluetooth==6.0.0
 
 # homeassistant.components.hanna
 hanna-cloud==0.0.7
@@ -1093,7 +1093,7 @@ hole==0.9.0
 holidays==0.93
 
 # homeassistant.components.frontend
-home-assistant-frontend==20260325.5
+home-assistant-frontend==20260325.6
 
 # homeassistant.components.conversation
 home-assistant-intents==2026.3.24
@@ -1123,7 +1123,7 @@ huum==0.8.2
 hyperion-py==0.7.6
 
 # homeassistant.components.hypontech
-hyponcloud==0.9.0
+hyponcloud==0.9.3
 
 # homeassistant.components.iaqualink
 iaqualink==0.6.0
@@ -1590,7 +1590,7 @@ proxmoxer==2.3.0
 psutil-home-assistant==0.0.1
 
 # homeassistant.components.systemmonitor
-psutil==7.1.2
+psutil==7.2.2
 
 # homeassistant.components.pushbullet
 pushbullet.py==0.11.0
@@ -1635,7 +1635,7 @@ py-nightscout==1.2.2
 py-nymta==0.4.0
 
 # homeassistant.components.opendisplay
-py-opendisplay==5.5.0
+py-opendisplay==5.9.0
 
 # homeassistant.components.ecovacs
 py-sucks==0.9.11
@@ -2053,7 +2053,7 @@ pyplaato==0.0.19
 pypoint==3.0.0
 
 # homeassistant.components.portainer
-pyportainer==1.0.33
+pyportainer==1.0.36
 
 # homeassistant.components.probe_plus
 pyprobeplus==1.1.2
@@ -2449,7 +2449,7 @@ samsungtvws[async,encrypted]==2.7.2
 sanix==1.0.6
 
 # homeassistant.components.satel_integra
-satel-integra==1.0.0
+satel-integra==1.1.0
 
 # homeassistant.components.screenlogic
 screenlogicpy==0.10.2
@@ -2520,7 +2520,7 @@ smart-meter-texas==0.5.5
 snapcast==2.3.7
 
 # homeassistant.components.sonos
-soco==0.30.14
+soco==0.30.15
 
 # homeassistant.components.solaredge
 solaredge-web==0.0.1
@@ -2651,7 +2651,7 @@ toonapi==0.3.0
 total-connect-client==2025.12.2
 
 # homeassistant.components.tplink_omada
-tplink-omada-client==1.5.6
+tplink-omada-client==1.5.7
 
 # homeassistant.components.transmission
 transmission-rpc==7.0.3
@@ -2871,7 +2871,7 @@ zeversolar==0.3.2
 zha==1.1.1
 
 # homeassistant.components.zinvolt
-zinvolt==0.3.0
+zinvolt==0.4.1
 
 # homeassistant.components.zoneminder
 zm-py==0.5.4
