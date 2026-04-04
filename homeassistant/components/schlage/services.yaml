@@ -24,7 +24,7 @@ add_code:
           multiline: false
           type: password
     notify_on_use:
-      required: true
+      required: false
       default: true
       selector:
         boolean:
