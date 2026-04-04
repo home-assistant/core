@@ -6,6 +6,8 @@ import json
 import time
 from typing import Any
 
+import radiotherm
+
 from homeassistant.components.climate import (
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
@@ -23,8 +25,6 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, PRECISION_HALVES, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-
-import radiotherm
 
 from . import DOMAIN
 from .coordinator import RadioThermUpdateCoordinator
@@ -139,7 +139,9 @@ class RadioThermostat(RadioThermostatEntity, ClimateEntity):
             self._attr_hvac_modes = CT80_OPERATION_LIST
             self._attr_fan_modes = CT80_FAN_OPERATION_LIST
             self._attr_supported_features |= ClimateEntityFeature.PRESET_MODE
-            self._attr_supported_features |= ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
+            self._attr_supported_features |= (
+                ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
+            )
             self._attr_preset_modes = PRESET_MODES
             self._attr_target_temperature_high: float | None = None
             self._attr_target_temperature_low: float | None = None
@@ -200,7 +202,9 @@ class RadioThermostat(RadioThermostatEntity, ClimateEntity):
         temperature = kwargs.get(ATTR_TEMPERATURE)
 
         if temp_low is not None and temp_high is not None:
-            await self.hass.async_add_executor_job(self._set_temperature_range, temp_low, temp_high)
+            await self.hass.async_add_executor_job(
+                self._set_temperature_range, temp_low, temp_high
+            )
             self._attr_target_temperature_low = round_temp(temp_low)
             self._attr_target_temperature_high = round_temp(temp_high)
         elif temperature is not None:
@@ -221,7 +225,6 @@ class RadioThermostat(RadioThermostatEntity, ClimateEntity):
     def _set_temperature_range(self, temp_low: float, temp_high: float) -> None:
         """Set heat/cool target temperature range."""
         if self.hvac_mode == HVACMode.HEAT_COOL:
-
             low_changed = round_temp(temp_low) != self._attr_target_temperature_low
             high_changed = round_temp(temp_high) != self._attr_target_temperature_high
 
@@ -234,7 +237,6 @@ class RadioThermostat(RadioThermostatEntity, ClimateEntity):
                     # if low also changed, then delay a second
                     time.sleep(1)
                 self.device.it_cool = round_temp(temp_high)
-
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set operation mode (off, heat, cool, heat_cool)."""
@@ -272,12 +274,10 @@ class RadioThermostat(RadioThermostatEntity, ClimateEntity):
         current_hold = self.data.tstat["hold"]
 
         # set both at the same time
-        payload = json.dumps({
-            "tmode": TEMP_MODE_TO_CODE[hvac_mode],
-            "hold": current_hold
-        }).encode("utf-8")
+        payload = json.dumps(
+            {"tmode": TEMP_MODE_TO_CODE[hvac_mode], "hold": current_hold}
+        ).encode("utf-8")
         self.device.post("/tstat", payload)
-
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set Preset mode (Home, Alternate, Away, Holiday)."""

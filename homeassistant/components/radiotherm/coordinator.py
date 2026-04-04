@@ -2,15 +2,15 @@
 
 from __future__ import annotations
 
-import logging
 from datetime import timedelta
+import logging
 from urllib.error import URLError
+
+from radiotherm.validate import RadiothermTstatError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
-
-from radiotherm.validate import RadiothermTstatError
 
 from .data import RadioThermInitData, RadioThermUpdate, async_get_data
 

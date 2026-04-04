@@ -5,11 +5,11 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any
 
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr
-
 import radiotherm
 from radiotherm.thermostat import CommonThermostat
+
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
 
 from .const import TIMEOUT
 
