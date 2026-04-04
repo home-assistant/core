@@ -19,7 +19,7 @@ from tesla_fleet_api.exceptions import (
     VehicleOffline,
 )
 
-from homeassistant.components.tesla_fleet.const import DOMAIN
+from homeassistant.components.tesla_fleet.const import DOMAIN, SCOPES
 from homeassistant.components.tesla_fleet.coordinator import (
     ENERGY_HISTORY_INTERVAL,
     ENERGY_INTERVAL,
@@ -134,6 +134,30 @@ async def test_oauth_refresh_error(
 
         mock_async_ensure_token_valid.assert_called_once()
     assert normal_config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+async def test_setup_uses_scopes_from_refreshed_token(
+    hass: HomeAssistant,
+    noscope_config_entry: MockConfigEntry,
+) -> None:
+    """Test setup uses scopes from the refreshed OAuth token."""
+    refreshed_token = create_config_entry(
+        expires_at=3600,
+        scopes=SCOPES,
+    ).data[CONF_TOKEN]
+
+    noscope_config_entry.data[CONF_TOKEN]["expires_at"] = 0
+
+    with patch(
+        "homeassistant.components.tesla_fleet.oauth.TeslaUserImplementation.async_refresh_token",
+        return_value=refreshed_token,
+    ) as mock_async_refresh_token:
+        await setup_platform(hass, noscope_config_entry)
+
+    mock_async_refresh_token.assert_awaited_once()
+    assert noscope_config_entry.state is ConfigEntryState.LOADED
+    assert noscope_config_entry.runtime_data.scopes == SCOPES
+    assert noscope_config_entry.runtime_data.vehicles
 
 
 async def test_invalidate_access_token_updates_when_not_expired(

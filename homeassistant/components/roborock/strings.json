@@ -103,7 +103,7 @@
         "name": "Reset side brush consumable"
       },
       "shutdown": {
-        "name": "Shutdown"
+        "name": "Shut down"
       },
       "start": {
         "name": "Start"

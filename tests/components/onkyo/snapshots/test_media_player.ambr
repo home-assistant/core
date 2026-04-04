@@ -53,6 +53,7 @@
       }),
       'friendly_name': 'TX-NR7100',
       'is_volume_muted': False,
+      'last_non_buffering_state': <MediaPlayerState.ON: 'on'>,
       'preset': 1,
       'sound_mode': 'DIRECT',
       'sound_mode_list': list([
@@ -127,6 +128,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'TX-NR7100 Zone 2',
+      'last_non_buffering_state': <MediaPlayerState.ON: 'on'>,
       'sound_mode': 'Stereo',
       'sound_mode_list': list([
         'Stereo',
@@ -193,6 +195,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'TX-NR7100 Zone 3',
+      'last_non_buffering_state': <MediaPlayerState.OFF: 'off'>,
       'source_list': list([
         'TV',
         'FM Radio',
