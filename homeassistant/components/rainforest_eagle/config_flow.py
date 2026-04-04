@@ -10,7 +10,14 @@ import voluptuous as vol
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_TYPE
 
-from .const import CONF_CLOUD_ID, CONF_HARDWARE_ADDRESS, CONF_INSTALL_CODE, DOMAIN
+from .const import (
+    CONF_CLOUD_ID,
+    CONF_HARDWARE_ADDRESS,
+    CONF_INSTALL_CODE,
+    DOMAIN,
+    TYPE_EAGLE_100,
+    TYPE_EAGLE_200,
+)
 from .data import CannotConnect, InvalidAuth, async_get_type
 
 _LOGGER = logging.getLogger(__name__)
@@ -63,11 +70,32 @@ class RainforestEagleConfigFlow(ConfigFlow, domain=DOMAIN):
             _LOGGER.exception("Unexpected exception")
             errors["base"] = "unknown"
         else:
-            user_input[CONF_TYPE] = eagle_type
-            user_input[CONF_HARDWARE_ADDRESS] = hardware_address
-            return self.async_create_entry(
-                title=user_input[CONF_CLOUD_ID], data=user_input
-            )
+            # Verify it is a known device, first
+            if not eagle_type:
+                errors["base"] = "unknown_device_type"
+            elif eagle_type == TYPE_EAGLE_100:
+                user_input[CONF_TYPE] = eagle_type
+
+                # For EAGLE-100, there is no hardware address to select, so set it to None and move on
+                user_input[CONF_HARDWARE_ADDRESS] = None
+            elif eagle_type == TYPE_EAGLE_200:
+                user_input[CONF_TYPE] = eagle_type
+
+                # For EAGLE-200, a connected meter's hardware address is required to create the entry
+                if not hardware_address:
+                    # hardware_address will be None if there are no meters at all or if none are currently Connected
+                    errors["base"] = "no_meters_connected"
+                else:
+                    user_input[CONF_HARDWARE_ADDRESS] = hardware_address
+            else:
+                # This is a device that isn't supported, yet, but was detected by async_get_type
+                errors["base"] = "unsupported_device_type"
+
+            # All information gathering is done, so if there are no errors at this point, create the entry
+            if not errors:
+                return self.async_create_entry(
+                    title=user_input[CONF_CLOUD_ID], data=user_input
+                )
 
         return self.async_show_form(
             step_id="user", data_schema=create_schema(user_input), errors=errors
