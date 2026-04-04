@@ -342,7 +342,7 @@ def fixture_axis_rtsp_client() -> Generator[_RtspClientMock]:
             axis_streammanager_session_callback = rtsp_client_mock.call_args[0][4]
 
             if data:
-                rtsp_client_mock.return_value.rtp.data = data
+                rtsp_client_mock.return_value.data = data
                 axis_streammanager_session_callback(signal=Signal.DATA)
             elif state:
                 axis_streammanager_session_callback(signal=state)
