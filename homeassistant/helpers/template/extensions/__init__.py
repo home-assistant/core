@@ -11,6 +11,7 @@ from .issues import IssuesExtension
 from .labels import LabelExtension
 from .math import MathExtension
 from .regex import RegexExtension
+from .serialization import SerializationExtension
 from .string import StringExtension
 from .type_cast import TypeCastExtension
 
@@ -26,6 +27,7 @@ __all__ = [
     "LabelExtension",
     "MathExtension",
     "RegexExtension",
+    "SerializationExtension",
     "StringExtension",
     "TypeCastExtension",
 ]
