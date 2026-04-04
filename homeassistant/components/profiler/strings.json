@@ -48,7 +48,7 @@
       "name": "Create memory profile"
     },
     "set_asyncio_debug": {
-      "description": "Enables or disables the Profiler's asyncio debug.",
+      "description": "Lets the Profiler enable or disable asyncio debug.",
       "fields": {
         "enabled": {
           "description": "Whether to enable or disable asyncio debug.",
