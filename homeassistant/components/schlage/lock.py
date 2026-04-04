@@ -113,7 +113,7 @@ class SchlageLockEntity(SchlageEntity, LockEntity):
             ) from ex
         return self._lock.access_codes
 
-    async def add_code(self, name: str, code: str, notify_on_use: bool) -> None:
+    async def add_code(self, name: str, code: str, notify_on_use: bool = True) -> None:
         """Add a lock code."""
 
         codes = await self._async_fetch_access_codes()

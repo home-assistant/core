@@ -139,6 +139,38 @@ async def test_add_code_service(
     assert call_args.notify_on_use == notify_on_use
 
 
+async def test_add_code_service_default_notify_on_use_value(
+    hass: HomeAssistant,
+    mock_lock: Mock,
+    mock_added_config_entry: MockSchlageConfigEntry,
+) -> None:
+    """Test add_code service."""
+    # Mock access_codes as empty initially
+    mock_lock.access_codes = {}
+    mock_lock.add_access_code = Mock()
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_ADD_CODE,
+        service_data={
+            "entity_id": "lock.vault_door",
+            "name": "test_user",
+            "code": "1234",
+        },
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+
+    # Verify add_access_code was called with correct AccessCode
+    mock_lock.refresh_access_codes.assert_called_once()
+    mock_lock.add_access_code.assert_called_once()
+    call_args = mock_lock.add_access_code.call_args[0][0]
+    assert isinstance(call_args, AccessCode)
+    assert call_args.name == "test_user"
+    assert call_args.code == "1234"
+    assert call_args.notify_on_use == True
+
+
 @pytest.mark.parametrize(
     "code",
     [
