@@ -730,6 +730,99 @@
 # name: test_history_conversion[content6]
   list([
     dict({
+      'content': "What's new in Home Assistant?",
+      'role': 'user',
+    }),
+    dict({
+      'content': list([
+        dict({
+          'signature': 'ErU/V+ayA==',
+          'thinking': 'I need to use the web_fetch tool to fetch the latest release notes from the Home Assistant website.',
+          'type': 'thinking',
+        }),
+        dict({
+          'text': 'Sure, let me check that for you!',
+          'type': 'text',
+        }),
+        dict({
+          'id': 'srvtoolu_12345ABC',
+          'input': dict({
+            'url': 'https://www.home-assistant.io/latest-release-notes/',
+          }),
+          'name': 'web_fetch',
+          'type': 'server_tool_use',
+        }),
+        dict({
+          'content': dict({
+            'content': dict({
+              'citations': dict({
+                'enabled': True,
+              }),
+              'source': dict({
+                'data': '''
+                  Home Assistant new version is out!
+                  Many new features.
+                  Anthropic integration now supports web fetch tool.
+                  Enjoy the release!
+                ''',
+                'media_type': 'text/plain',
+                'type': 'text',
+              }),
+              'title': 'Latest Home Assistant Release Notes',
+              'type': 'document',
+            }),
+            'retrieved_at': '2026-04-04T10:30:00Z',
+            'type': 'web_fetch_result',
+            'url': 'https://www.home-assistant.io/latest-release-notes/',
+          }),
+          'tool_use_id': 'srvtoolu_12345ABC',
+          'type': 'web_fetch_tool_result',
+        }),
+        dict({
+          'text': '''
+            Here's what's great about the new release:
+            1. Lots of new features
+            2. 
+          ''',
+          'type': 'text',
+        }),
+        dict({
+          'citations': list([
+            dict({
+              'cited_text': 'Anthropic integration now supports web fetch tool.',
+              'document_index': 0,
+              'document_title': 'Latest Home Assistant Release Notes',
+              'end_char_index': 105,
+              'start_char_index': 56,
+              'type': 'char_location',
+            }),
+          ]),
+          'text': 'New web fetch tool for Anthropic integration',
+          'type': 'text',
+        }),
+        dict({
+          'text': '''
+            
+            Enjoy!
+          ''',
+          'type': 'text',
+        }),
+      ]),
+      'role': 'assistant',
+    }),
+    dict({
+      'content': 'Are you sure?',
+      'role': 'user',
+    }),
+    dict({
+      'content': 'Yes, I am sure!',
+      'role': 'assistant',
+    }),
+  ])
+# ---
+# name: test_history_conversion[content7]
+  list([
+    dict({
       'content': 'What time is it?',
       'role': 'user',
     }),
@@ -1265,6 +1358,308 @@
       ]),
     ),
   })
+# ---
+# name: test_web_fetch
+  list([
+    dict({
+      'attachments': None,
+      'content': "What's new in Home Assistant? Please check on https://www.home-assistant.io/latest-release-notes/",
+      'created': HAFakeDatetime(2025, 10, 31, 12, 0, tzinfo=datetime.timezone.utc),
+      'role': 'user',
+    }),
+    dict({
+      'agent_id': 'conversation.claude_conversation',
+      'content': 'Sure, let me check that for you!',
+      'created': HAFakeDatetime(2025, 10, 31, 12, 0, tzinfo=datetime.timezone.utc),
+      'native': dict({
+        'citation_details': list([
+        ]),
+        'container': None,
+        'redacted_thinking': None,
+        'thinking_signature': 'ErUBCkYIARgCIkCYXaVNJShe3A86Hp7XUzh9YsCYBbJTbQsrklTAPtJ2sP/NoB6tSzpK/nTL6CjSo2R6n0KNBIg5MH6asM2R/kmaEgyB/X1FtZq5OQAC7jUaDEPWCdcwGQ4RaBy5wiIwmRxExIlDhoY6tILoVPnOExkC/0igZxHEwxK8RU/fmw0b+o+TwAarzUitwzbo21E5Kh3pa3I6yqVROf1t2F8rFocNUeCegsWV/ytwYV+ayA==',
+      }),
+      'role': 'assistant',
+      'thinking_content': 'I will fetch the latest release notes',
+      'tool_calls': list([
+        dict({
+          'external': True,
+          'id': 'srvtoolu_12345ABC',
+          'tool_args': dict({
+            'url': 'https://www.home-assistant.io/latest-release-notes/',
+          }),
+          'tool_name': 'web_fetch',
+        }),
+      ]),
+    }),
+    dict({
+      'agent_id': 'conversation.claude_conversation',
+      'created': HAFakeDatetime(2025, 10, 31, 12, 0, tzinfo=datetime.timezone.utc),
+      'role': 'tool_result',
+      'tool_call_id': 'srvtoolu_12345ABC',
+      'tool_name': 'web_fetch',
+      'tool_result': dict({
+        'content': dict({
+          'citations': None,
+          'source': dict({
+            'data': '''
+              Home Assistant new version is out!
+              Many new features.
+              Anthropic integration now supports web fetch tool.
+              Enjoy the release!
+            ''',
+            'media_type': 'text/plain',
+            'type': 'text',
+          }),
+          'title': 'Latest Home Assistant Release Notes',
+          'type': 'document',
+        }),
+        'retrieved_at': '2026-04-04T17:28:01.637242',
+        'type': 'web_fetch_result',
+        'url': 'https://www.home-assistant.io/latest-release-notes/',
+      }),
+    }),
+    dict({
+      'agent_id': 'conversation.claude_conversation',
+      'content': '''
+        Here's what's great about the new release:
+  
+      ''',
+      'created': HAFakeDatetime(2025, 10, 31, 12, 0, tzinfo=datetime.timezone.utc),
+      'native': dict({
+        'citation_details': list([
+        ]),
+        'container': None,
+        'redacted_thinking': None,
+        'thinking_signature': 'ErUBCkYIARgCIkCYXaVNJShe3A86Hp7XUzh9YsCYBbJTbQsrklTAPtJ2sP/NoB6tSzpK/nTL6CjSo2R6n0KNBIg5MH6asM2R/kmaEgyB/X1FtZq5OQAC7jUaDEPWCdcwGQ4RaBy5wiIwmRxExIlDhoY6tILoVPnOExkC/0igZxHEwxK8RU/fmw0b+o+TwAarzUitwzbo21E5Kh3pa3I6yqVROf1t2F8rFocNUeCegsWV/ytwYV+ayA==',
+      }),
+      'role': 'assistant',
+      'thinking_content': "Great! All clear, let's reply to the user!",
+      'tool_calls': None,
+    }),
+    dict({
+      'agent_id': 'conversation.claude_conversation',
+      'content': '''
+        1. Many new features
+        2. New web fetch tool for Anthropic integration
+        What a release!
+      ''',
+      'created': HAFakeDatetime(2025, 10, 31, 12, 0, tzinfo=datetime.timezone.utc),
+      'native': dict({
+        'citation_details': list([
+          dict({
+            'citations': list([
+              dict({
+                'cited_text': 'Anthropic integration now supports web fetch tool.',
+                'document_index': 0,
+                'document_title': 'Latest Home Assistant Release Notes',
+                'end_char_index': 105,
+                'start_char_index': 56,
+                'type': 'char_location',
+              }),
+            ]),
+            'index': 24,
+            'length': 44,
+          }),
+        ]),
+        'container': None,
+        'redacted_thinking': None,
+        'thinking_signature': None,
+      }),
+      'role': 'assistant',
+      'thinking_content': None,
+      'tool_calls': None,
+    }),
+  ])
+# ---
+# name: test_web_fetch.1
+  list([
+    dict({
+      'content': "What's new in Home Assistant? Please check on https://www.home-assistant.io/latest-release-notes/",
+      'role': 'user',
+    }),
+    dict({
+      'content': list([
+        dict({
+          'signature': 'ErUBCkYIARgCIkCYXaVNJShe3A86Hp7XUzh9YsCYBbJTbQsrklTAPtJ2sP/NoB6tSzpK/nTL6CjSo2R6n0KNBIg5MH6asM2R/kmaEgyB/X1FtZq5OQAC7jUaDEPWCdcwGQ4RaBy5wiIwmRxExIlDhoY6tILoVPnOExkC/0igZxHEwxK8RU/fmw0b+o+TwAarzUitwzbo21E5Kh3pa3I6yqVROf1t2F8rFocNUeCegsWV/ytwYV+ayA==',
+          'thinking': 'I will fetch the latest release notes',
+          'type': 'thinking',
+        }),
+        dict({
+          'text': 'Sure, let me check that for you!',
+          'type': 'text',
+        }),
+        dict({
+          'id': 'srvtoolu_12345ABC',
+          'input': dict({
+            'url': 'https://www.home-assistant.io/latest-release-notes/',
+          }),
+          'name': 'web_fetch',
+          'type': 'server_tool_use',
+        }),
+        dict({
+          'content': dict({
+            'content': dict({
+              'citations': None,
+              'source': dict({
+                'data': '''
+                  Home Assistant new version is out!
+                  Many new features.
+                  Anthropic integration now supports web fetch tool.
+                  Enjoy the release!
+                ''',
+                'media_type': 'text/plain',
+                'type': 'text',
+              }),
+              'title': 'Latest Home Assistant Release Notes',
+              'type': 'document',
+            }),
+            'retrieved_at': '2026-04-04T17:28:01.637242',
+            'type': 'web_fetch_result',
+            'url': 'https://www.home-assistant.io/latest-release-notes/',
+          }),
+          'tool_use_id': 'srvtoolu_12345ABC',
+          'type': 'web_fetch_tool_result',
+        }),
+        dict({
+          'signature': 'ErUBCkYIARgCIkCYXaVNJShe3A86Hp7XUzh9YsCYBbJTbQsrklTAPtJ2sP/NoB6tSzpK/nTL6CjSo2R6n0KNBIg5MH6asM2R/kmaEgyB/X1FtZq5OQAC7jUaDEPWCdcwGQ4RaBy5wiIwmRxExIlDhoY6tILoVPnOExkC/0igZxHEwxK8RU/fmw0b+o+TwAarzUitwzbo21E5Kh3pa3I6yqVROf1t2F8rFocNUeCegsWV/ytwYV+ayA==',
+          'thinking': "Great! All clear, let's reply to the user!",
+          'type': 'thinking',
+        }),
+        dict({
+          'text': '''
+            Here's what's great about the new release:
+  
+          ''',
+          'type': 'text',
+        }),
+        dict({
+          'text': '''
+            1. Many new features
+            2. 
+          ''',
+          'type': 'text',
+        }),
+        dict({
+          'citations': list([
+            dict({
+              'cited_text': 'Anthropic integration now supports web fetch tool.',
+              'document_index': 0,
+              'document_title': 'Latest Home Assistant Release Notes',
+              'end_char_index': 105,
+              'start_char_index': 56,
+              'type': 'char_location',
+            }),
+          ]),
+          'text': 'New web fetch tool for Anthropic integration',
+          'type': 'text',
+        }),
+        dict({
+          'text': '''
+            
+            What a release!
+          ''',
+          'type': 'text',
+        }),
+      ]),
+      'role': 'assistant',
+    }),
+  ])
+# ---
+# name: test_web_fetch_error
+  list([
+    dict({
+      'attachments': None,
+      'content': "What's new in Home Assistant?",
+      'created': HAFakeDatetime(2025, 10, 31, 12, 0, tzinfo=datetime.timezone.utc),
+      'role': 'user',
+    }),
+    dict({
+      'agent_id': 'conversation.claude_conversation',
+      'content': 'Sure, let me check that for you!',
+      'created': HAFakeDatetime(2025, 10, 31, 12, 0, tzinfo=datetime.timezone.utc),
+      'native': dict({
+        'citation_details': list([
+        ]),
+        'container': None,
+        'redacted_thinking': None,
+        'thinking_signature': 'ErUBCkYIARgCIkCYXaVNJShe3A86Hp7XUzh9YsCYBbJTbQsrklTAPtJ2sP/NoB6tSzpK/nTL6CjSo2R6n0KNBIg5MH6asM2R/kmaEgyB/X1FtZq5OQAC7jUaDEPWCdcwGQ4RaBy5wiIwmRxExIlDhoY6tILoVPnOExkC/0igZxHEwxK8RU/fmw0b+o+TwAarzUitwzbo21E5Kh3pa3I6yqVROf1t2F8rFocNUeCegsWV/ytwYV+ayA==',
+      }),
+      'role': 'assistant',
+      'thinking_content': 'I will fetch the latest release notes',
+      'tool_calls': list([
+        dict({
+          'external': True,
+          'id': 'srvtoolu_12345ABC',
+          'tool_args': dict({
+            'url': 'https://www.home-assistant.io/latest-release-notes/',
+          }),
+          'tool_name': 'web_fetch',
+        }),
+      ]),
+    }),
+    dict({
+      'agent_id': 'conversation.claude_conversation',
+      'created': HAFakeDatetime(2025, 10, 31, 12, 0, tzinfo=datetime.timezone.utc),
+      'role': 'tool_result',
+      'tool_call_id': 'srvtoolu_12345ABC',
+      'tool_name': 'web_fetch',
+      'tool_result': dict({
+        'error_code': 'url_not_allowed',
+        'type': 'web_fetch_tool_result_error',
+      }),
+    }),
+    dict({
+      'agent_id': 'conversation.claude_conversation',
+      'content': 'I am unable to perform the web fetch at this time.',
+      'created': HAFakeDatetime(2025, 10, 31, 12, 0, tzinfo=datetime.timezone.utc),
+      'native': None,
+      'role': 'assistant',
+      'thinking_content': None,
+      'tool_calls': None,
+    }),
+  ])
+# ---
+# name: test_web_fetch_error.1
+  list([
+    dict({
+      'content': "What's new in Home Assistant?",
+      'role': 'user',
+    }),
+    dict({
+      'content': list([
+        dict({
+          'signature': 'ErUBCkYIARgCIkCYXaVNJShe3A86Hp7XUzh9YsCYBbJTbQsrklTAPtJ2sP/NoB6tSzpK/nTL6CjSo2R6n0KNBIg5MH6asM2R/kmaEgyB/X1FtZq5OQAC7jUaDEPWCdcwGQ4RaBy5wiIwmRxExIlDhoY6tILoVPnOExkC/0igZxHEwxK8RU/fmw0b+o+TwAarzUitwzbo21E5Kh3pa3I6yqVROf1t2F8rFocNUeCegsWV/ytwYV+ayA==',
+          'thinking': 'I will fetch the latest release notes',
+          'type': 'thinking',
+        }),
+        dict({
+          'text': 'Sure, let me check that for you!',
+          'type': 'text',
+        }),
+        dict({
+          'id': 'srvtoolu_12345ABC',
+          'input': dict({
+            'url': 'https://www.home-assistant.io/latest-release-notes/',
+          }),
+          'name': 'web_fetch',
+          'type': 'server_tool_use',
+        }),
+        dict({
+          'content': dict({
+            'error_code': 'url_not_allowed',
+            'type': 'web_fetch_tool_result_error',
+          }),
+          'tool_use_id': 'srvtoolu_12345ABC',
+          'type': 'web_fetch_tool_result',
+        }),
+        dict({
+          'text': 'I am unable to perform the web fetch at this time.',
+          'type': 'text',
+        }),
+      ]),
+      'role': 'assistant',
+    }),
+  ])
 # ---
 # name: test_web_search
   list([

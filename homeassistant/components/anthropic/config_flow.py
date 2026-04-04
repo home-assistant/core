@@ -29,7 +29,7 @@ from homeassistant.const import (
     CONF_NAME,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import llm
+from homeassistant.helpers import config_validation as cv, llm
 from homeassistant.helpers.httpx_client import get_async_client
 from homeassistant.helpers.selector import (
     NumberSelector,
@@ -52,6 +52,8 @@ from .const import (
     CONF_TEMPERATURE,
     CONF_THINKING_BUDGET,
     CONF_THINKING_EFFORT,
+    CONF_WEB_FETCH,
+    CONF_WEB_FETCH_MAX_USES,
     CONF_WEB_SEARCH,
     CONF_WEB_SEARCH_CITY,
     CONF_WEB_SEARCH_COUNTRY,
@@ -351,7 +353,7 @@ class ConversationSubentryFlowHandler(ConfigSubentryFlow):
             vol.Optional(
                 CONF_MAX_TOKENS,
                 default=DEFAULT[CONF_MAX_TOKENS],
-            ): int,
+            ): cv.positive_int,
             vol.Optional(
                 CONF_TEMPERATURE,
                 default=DEFAULT[CONF_TEMPERATURE],
@@ -437,17 +439,27 @@ class ConversationSubentryFlowHandler(ConfigSubentryFlow):
                     vol.Optional(
                         CONF_WEB_SEARCH_MAX_USES,
                         default=DEFAULT[CONF_WEB_SEARCH_MAX_USES],
-                    ): int,
+                    ): cv.positive_int,
                     vol.Optional(
                         CONF_WEB_SEARCH_USER_LOCATION,
                         default=DEFAULT[CONF_WEB_SEARCH_USER_LOCATION],
                     ): bool,
+                    vol.Optional(
+                        CONF_WEB_FETCH,
+                        default=DEFAULT[CONF_WEB_FETCH],
+                    ): bool,
+                    vol.Optional(
+                        CONF_WEB_FETCH_MAX_USES,
+                        default=DEFAULT[CONF_WEB_FETCH_MAX_USES],
+                    ): cv.positive_int,
                 }
             )
         else:
             self.options.pop(CONF_WEB_SEARCH, None)
             self.options.pop(CONF_WEB_SEARCH_MAX_USES, None)
             self.options.pop(CONF_WEB_SEARCH_USER_LOCATION, None)
+            self.options.pop(CONF_WEB_FETCH, None)
+            self.options.pop(CONF_WEB_FETCH_MAX_USES, None)
 
         self.options.pop(CONF_WEB_SEARCH_CITY, None)
         self.options.pop(CONF_WEB_SEARCH_REGION, None)

@@ -16,8 +16,6 @@ from anthropic.types import (
     Base64PDFSourceParam,
     BashCodeExecutionToolResultBlock,
     CitationsDelta,
-    CitationsWebSearchResultLocation,
-    CitationWebSearchResultLocationParam,
     CodeExecutionTool20250825Param,
     CodeExecutionToolResultBlock,
     CodeExecutionToolResultBlockParamContentParam,
@@ -62,6 +60,9 @@ from anthropic.types import (
     ToolUseBlock,
     ToolUseBlockParam,
     Usage,
+    WebFetchTool20250910Param,
+    WebFetchTool20260209Param,
+    WebFetchToolResultBlock,
     WebSearchTool20250305Param,
     WebSearchTool20260209Param,
     WebSearchToolResultBlock,
@@ -74,6 +75,9 @@ from anthropic.types.message_create_params import MessageCreateParamsStreaming
 from anthropic.types.text_editor_code_execution_tool_result_block_param import (
     Content as TextEditorCodeExecutionToolResultBlockParamContentParam,
 )
+from anthropic.types.web_fetch_tool_result_block_param import (
+    Content as WebFetchToolResultBlockParamContentParam,
+)
 import voluptuous as vol
 from voluptuous_openapi import convert
 
@@ -85,7 +89,7 @@ from homeassistant.helpers import device_registry as dr, llm
 from homeassistant.helpers.json import json_dumps
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import slugify
-from homeassistant.util.json import JsonObjectType
+from homeassistant.util.json import JsonArrayType, JsonObjectType
 
 from .const import (
     CONF_CHAT_MODEL,
@@ -94,6 +98,8 @@ from .const import (
     CONF_TEMPERATURE,
     CONF_THINKING_BUDGET,
     CONF_THINKING_EFFORT,
+    CONF_WEB_FETCH,
+    CONF_WEB_FETCH_MAX_USES,
     CONF_WEB_SEARCH,
     CONF_WEB_SEARCH_CITY,
     CONF_WEB_SEARCH_COUNTRY,
@@ -183,17 +189,9 @@ class ContentDetails:
         """Add a citation to the current detail."""
         if not self.citation_details:
             self.citation_details.append(CitationDetails())
-        citation_param: TextCitationParam | None = None
-        if isinstance(citation, CitationsWebSearchResultLocation):
-            citation_param = CitationWebSearchResultLocationParam(
-                type="web_search_result_location",
-                title=citation.title,
-                url=citation.url,
-                cited_text=citation.cited_text,
-                encrypted_index=citation.encrypted_index,
-            )
-        if citation_param:
-            self.citation_details[-1].citations.append(citation_param)
+        self.citation_details[-1].citations.append(
+            cast(TextCitationParam, citation.to_dict())
+        )
 
     def delete_empty(self) -> None:
         """Delete empty citation details."""
@@ -202,7 +200,7 @@ class ContentDetails:
         ]
 
 
-def _convert_content(
+def _convert_content(  # noqa: C901
     chat_content: Iterable[conversation.Content],
 ) -> tuple[list[MessageParam], str | None]:
     """Transform HA chat_log content into Anthropic API format."""
@@ -252,6 +250,15 @@ def _convert_content(
                     "tool_use_id": content.tool_call_id,
                     "content": cast(
                         TextEditorCodeExecutionToolResultBlockParamContentParam,
+                        content.tool_result,
+                    ),
+                }
+            elif content.tool_name == "web_fetch":
+                tool_result_block = {
+                    "type": "web_fetch_tool_result",
+                    "tool_use_id": content.tool_call_id,
+                    "content": cast(
+                        WebFetchToolResultBlockParamContentParam,
                         content.tool_result,
                     ),
                 }
@@ -381,6 +388,7 @@ def _convert_content(
                             id=tool_call.id,
                             name=cast(
                                 Literal[
+                                    "web_fetch",
                                     "web_search",
                                     "code_execution",
                                     "bash_code_execution",
@@ -393,6 +401,7 @@ def _convert_content(
                         if tool_call.external
                         and tool_call.tool_name
                         in [
+                            "web_fetch",
                             "web_search",
                             "code_execution",
                             "bash_code_execution",
@@ -554,6 +563,7 @@ async def _transform_stream(  # noqa: C901 - This is complex, but better to have
             elif isinstance(
                 response.content_block,
                 (
+                    WebFetchToolResultBlock,
                     WebSearchToolResultBlock,
                     CodeExecutionToolResultBlock,
                     BashCodeExecutionToolResultBlock,
@@ -573,7 +583,7 @@ async def _transform_stream(  # noqa: C901 - This is complex, but better to have
                     ),
                     "tool_result": {
                         "content": cast(
-                            JsonObjectType, response.content_block.to_dict()["content"]
+                            JsonArrayType, response.content_block.to_dict()["content"]
                         )
                     }
                     if isinstance(response.content_block.content, list)
@@ -678,7 +688,7 @@ class AnthropicBaseLLMEntity(CoordinatorEntity[AnthropicCoordinator]):
             entry_type=dr.DeviceEntryType.SERVICE,
         )
 
-    async def _async_handle_chat_log(
+    async def _async_handle_chat_log(  # noqa: C901
         self,
         chat_log: conversation.ChatLog,
         structure_name: str | None = None,
@@ -752,11 +762,15 @@ class AnthropicBaseLLMEntity(CoordinatorEntity[AnthropicCoordinator]):
                 for tool in chat_log.llm_api.tools
             ]
 
-        if options.get(CONF_CODE_EXECUTION):
-            # The `web_search_20260209` tool automatically enables `code_execution_20260120` tool
+        if options.get(CONF_CODE_EXECUTION, DEFAULT[CONF_CODE_EXECUTION]):
+            # The `web_search_20260209` and `web_fetch_20260209` tools
+            # automatically enable `code_execution_20260120` tool
             if model.startswith(
                 tuple(PROGRAMMATIC_TOOL_CALLING_UNSUPPORTED_MODELS)
-            ) or not options.get(CONF_WEB_SEARCH):
+            ) or (
+                not options.get(CONF_WEB_SEARCH, DEFAULT[CONF_WEB_SEARCH])
+                and not options.get(CONF_WEB_FETCH, DEFAULT[CONF_WEB_FETCH])
+            ):
                 tools.append(
                     CodeExecutionTool20250825Param(
                         name="code_execution",
@@ -790,6 +804,26 @@ class AnthropicBaseLLMEntity(CoordinatorEntity[AnthropicCoordinator]):
                     "timezone": options.get(CONF_WEB_SEARCH_TIMEZONE, ""),
                 }
             tools.append(web_search)
+
+        if options.get(CONF_WEB_FETCH):
+            if model.startswith(
+                tuple(PROGRAMMATIC_TOOL_CALLING_UNSUPPORTED_MODELS)
+            ) or not options.get(CONF_CODE_EXECUTION):
+                tools.append(
+                    WebFetchTool20250910Param(
+                        name="web_fetch",
+                        type="web_fetch_20250910",
+                        max_uses=options.get(CONF_WEB_FETCH_MAX_USES),
+                    )
+                )
+            else:
+                tools.append(
+                    WebFetchTool20260209Param(
+                        name="web_fetch",
+                        type="web_fetch_20260209",
+                        max_uses=options.get(CONF_WEB_FETCH_MAX_USES),
+                    )
+                )
 
         # Handle attachments by adding them to the last user message
         last_content = chat_log.content[-1]
