@@ -126,7 +126,7 @@ async def test_external_update(
     )
     state = hass.states.get(entity_id)
     assert state
-    assert int(state.state) == new_value
+    assert int(float(state.state)) == new_value
 
 
 async def test_ignored(
@@ -134,7 +134,7 @@ async def test_ignored(
     music_assistant_client: MagicMock,
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """Test that non compatible player options are ignored."""
+    """Test that non-compatible player options are ignored."""
     config_entry = await setup_integration_from_fixtures(hass, music_assistant_client)
     registry_entries = er.async_entries_for_config_entry(
         entity_registry, config_entry_id=config_entry.entry_id
