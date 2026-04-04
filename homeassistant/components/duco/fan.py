@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from typing import Any
-
 from duco.exceptions import DucoError
 from duco.models import Node, VentilationState
 
@@ -87,11 +85,7 @@ class DucoVentilationFanEntity(DucoEntity, FanEntity):
         PRESET_HIGH,
         PRESET_HIGH_FORCED,
     ]
-    _attr_supported_features = (
-        FanEntityFeature.PRESET_MODE
-        | FanEntityFeature.TURN_ON
-        | FanEntityFeature.TURN_OFF
-    )
+    _attr_supported_features = FanEntityFeature.PRESET_MODE
 
     def __init__(self, coordinator: DucoCoordinator, node: Node) -> None:
         """Initialize the fan entity."""
@@ -115,21 +109,6 @@ class DucoVentilationFanEntity(DucoEntity, FanEntity):
         """Set the ventilation preset mode."""
         self._valid_preset_mode_or_raise(preset_mode)
         await self._async_set_state(_PRESET_TO_STATE[preset_mode])
-
-    async def async_turn_on(
-        self,
-        percentage: int | None = None,
-        preset_mode: str | None = None,
-        **kwargs: Any,
-    ) -> None:
-        """Switch to manual ventilation (default: medium)."""
-        target = preset_mode or PRESET_MEDIUM
-        self._valid_preset_mode_or_raise(target)
-        await self._async_set_state(_PRESET_TO_STATE[target])
-
-    async def async_turn_off(self, **kwargs: Any) -> None:
-        """Return to automatic ventilation control."""
-        await self._async_set_state(VentilationState.AUTO)
 
     async def _async_set_state(self, state: VentilationState) -> None:
         """Send the ventilation state to the device and refresh coordinator."""

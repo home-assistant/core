@@ -13,8 +13,6 @@ from homeassistant.components.fan import (
     ATTR_PRESET_MODE,
     DOMAIN as FAN_DOMAIN,
     SERVICE_SET_PRESET_MODE,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
 )
 from homeassistant.const import ATTR_ENTITY_ID, STATE_ON, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
@@ -41,42 +39,6 @@ async def test_fan_entity_state(
     entry = entity_registry.async_get(entity_id)
     assert entry is not None
     assert entry.unique_id == "aa:bb:cc:dd:ee:ff_1"
-
-
-@pytest.mark.usefixtures("init_integration")
-async def test_fan_turn_on(
-    hass: HomeAssistant,
-    mock_duco_client: AsyncMock,
-) -> None:
-    """Test turning on the fan sets medium (MAN2) by default."""
-    mock_duco_client.async_set_ventilation_state = AsyncMock()
-
-    await hass.services.async_call(
-        FAN_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "fan.living_ventilation"},
-        blocking=True,
-    )
-
-    mock_duco_client.async_set_ventilation_state.assert_called_once_with(1, "MAN2")
-
-
-@pytest.mark.usefixtures("init_integration")
-async def test_fan_turn_off(
-    hass: HomeAssistant,
-    mock_duco_client: AsyncMock,
-) -> None:
-    """Test turning off the fan returns to AUTO mode."""
-    mock_duco_client.async_set_ventilation_state = AsyncMock()
-
-    await hass.services.async_call(
-        FAN_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: "fan.living_ventilation"},
-        blocking=True,
-    )
-
-    mock_duco_client.async_set_ventilation_state.assert_called_once_with(1, "AUTO")
 
 
 @pytest.mark.usefixtures("init_integration")
