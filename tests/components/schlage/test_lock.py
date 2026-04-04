@@ -108,7 +108,7 @@ async def test_add_code_service(
     hass: HomeAssistant,
     mock_lock: Mock,
     mock_added_config_entry: MockSchlageConfigEntry,
-    notify_on_use
+    notify_on_use: bool,
 ) -> None:
     """Test add_code service."""
     # Mock access_codes as empty initially
