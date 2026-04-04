@@ -161,7 +161,7 @@
         'state': dict({
           'attributes': dict({
             'device_class': 'voltage',
-            'friendly_name': 'X-Wing Battery Voltage',
+            'friendly_name': 'X-Wing Battery voltage',
             'state_class': 'measurement',
             'unit_of_measurement': 'V',
           }),
@@ -200,7 +200,7 @@
         'state': dict({
           'attributes': dict({
             'device_class': 'voltage',
-            'friendly_name': 'X-Wing Supply Voltage',
+            'friendly_name': 'X-Wing Supply voltage',
             'state_class': 'measurement',
             'unit_of_measurement': 'V',
           }),
