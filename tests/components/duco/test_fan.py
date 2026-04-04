@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from unittest.mock import AsyncMock
 
-from duco.exceptions import DucoConnectionError
+from duco.exceptions import DucoConnectionError, DucoError
 import pytest
 
 from homeassistant.components.fan import (
@@ -39,27 +39,6 @@ async def test_fan_entity_state(
     entry = entity_registry.async_get(entity_id)
     assert entry is not None
     assert entry.unique_id == "aa:bb:cc:dd:ee:ff_1_ventilation"
-
-
-@pytest.mark.usefixtures("init_integration")
-async def test_fan_set_preset_mode(
-    hass: HomeAssistant,
-    mock_duco_client: AsyncMock,
-) -> None:
-    """Test setting a ventilation preset mode."""
-    mock_duco_client.async_set_ventilation_state = AsyncMock()
-
-    await hass.services.async_call(
-        FAN_DOMAIN,
-        SERVICE_SET_PRESET_MODE,
-        {
-            ATTR_ENTITY_ID: "fan.living_ventilation",
-            ATTR_PRESET_MODE: "high",
-        },
-        blocking=True,
-    )
-
-    mock_duco_client.async_set_ventilation_state.assert_called_once_with(1, "MAN3")
 
 
 @pytest.mark.usefixtures("init_integration")
@@ -99,11 +78,21 @@ async def test_fan_turn_off(
 
 
 @pytest.mark.usefixtures("init_integration")
-async def test_fan_set_preset_forced(
+@pytest.mark.parametrize(
+    ("preset_mode", "expected_duco_state"),
+    [
+        ("high", "MAN3"),
+        ("medium_forced", "CNT2"),
+        ("away", "EMPT"),
+    ],
+)
+async def test_fan_set_preset_mode(
     hass: HomeAssistant,
     mock_duco_client: AsyncMock,
+    preset_mode: str,
+    expected_duco_state: str,
 ) -> None:
-    """Test setting a forced (CNT) preset sends the right Duco state."""
+    """Test setting a ventilation preset mode maps to the correct Duco state."""
     mock_duco_client.async_set_ventilation_state = AsyncMock()
 
     await hass.services.async_call(
@@ -111,44 +100,28 @@ async def test_fan_set_preset_forced(
         SERVICE_SET_PRESET_MODE,
         {
             ATTR_ENTITY_ID: "fan.living_ventilation",
-            ATTR_PRESET_MODE: "medium_forced",
+            ATTR_PRESET_MODE: preset_mode,
         },
         blocking=True,
     )
 
-    mock_duco_client.async_set_ventilation_state.assert_called_once_with(1, "CNT2")
+    mock_duco_client.async_set_ventilation_state.assert_called_once_with(
+        1, expected_duco_state
+    )
 
 
 @pytest.mark.usefixtures("init_integration")
-async def test_fan_set_preset_away(
+@pytest.mark.parametrize(
+    "exception",
+    [DucoConnectionError("Connection refused"), DucoError("Unexpected error")],
+)
+async def test_fan_set_preset_error(
     hass: HomeAssistant,
     mock_duco_client: AsyncMock,
+    exception: Exception,
 ) -> None:
-    """Test setting away preset sends EMPT state."""
-    mock_duco_client.async_set_ventilation_state = AsyncMock()
-
-    await hass.services.async_call(
-        FAN_DOMAIN,
-        SERVICE_SET_PRESET_MODE,
-        {
-            ATTR_ENTITY_ID: "fan.living_ventilation",
-            ATTR_PRESET_MODE: "away",
-        },
-        blocking=True,
-    )
-
-    mock_duco_client.async_set_ventilation_state.assert_called_once_with(1, "EMPT")
-
-
-@pytest.mark.usefixtures("init_integration")
-async def test_fan_set_preset_connection_error(
-    hass: HomeAssistant,
-    mock_duco_client: AsyncMock,
-) -> None:
-    """Test that a HomeAssistantError is raised on connection failure."""
-    mock_duco_client.async_set_ventilation_state = AsyncMock(
-        side_effect=DucoConnectionError("Connection refused")
-    )
+    """Test that a HomeAssistantError is raised on API failure."""
+    mock_duco_client.async_set_ventilation_state = AsyncMock(side_effect=exception)
 
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
