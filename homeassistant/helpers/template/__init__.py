@@ -1759,9 +1759,7 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.add_extension(
             "homeassistant.helpers.template.extensions.TypeCastExtension"
         )
-        self.add_extension(
-            "homeassistant.helpers.template.extensions.VersionExtension"
-        )
+        self.add_extension("homeassistant.helpers.template.extensions.VersionExtension")
 
         self.globals["apply"] = apply
         self.globals["as_function"] = as_function
