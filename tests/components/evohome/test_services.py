@@ -6,6 +6,7 @@ from datetime import UTC, datetime
 from typing import Any
 from unittest.mock import patch
 
+from evohomeasync2.schemas.const import DhwState as EvoDhwState
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 
@@ -15,13 +16,13 @@ from homeassistant.components.evohome.const import (
     ATTR_DURATION,
     ATTR_PERIOD,
     ATTR_SETPOINT,
-    ATTR_STATE,
     DOMAIN,
+    EVO_STATE,
     EvoService,
 )
 from homeassistant.components.evohome.water_heater import EvoDHW
 from homeassistant.components.water_heater import DOMAIN as WATER_HEATER_DOMAIN
-from homeassistant.const import ATTR_ENTITY_ID, ATTR_MODE, STATE_OFF, STATE_ON
+from homeassistant.const import ATTR_ENTITY_ID, ATTR_MODE
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.entity_platform import DATA_DOMAIN_PLATFORM_ENTITIES
@@ -405,7 +406,7 @@ async def test_set_dhw_override(
             DOMAIN,
             EvoService.SET_DHW_OVERRIDE,
             {
-                ATTR_STATE: STATE_OFF,
+                EVO_STATE: EvoDhwState.OFF,
             },
             target={ATTR_ENTITY_ID: dhw_id},
             blocking=True,
@@ -419,7 +420,7 @@ async def test_set_dhw_override(
             DOMAIN,
             EvoService.SET_DHW_OVERRIDE,
             {
-                ATTR_STATE: STATE_ON,
+                EVO_STATE: EvoDhwState.ON,
                 ATTR_DURATION: {"minutes": 135},
             },
             target={ATTR_ENTITY_ID: dhw_id},
@@ -462,7 +463,7 @@ async def test_set_dhw_override_advance(
             DOMAIN,
             EvoService.SET_DHW_OVERRIDE,
             {
-                ATTR_STATE: STATE_ON,
+                EVO_STATE: EvoDhwState.ON,
                 ATTR_DURATION: {"minutes": 0},
             },
             target={ATTR_ENTITY_ID: dhw_id},

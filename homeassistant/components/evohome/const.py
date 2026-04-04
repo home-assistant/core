@@ -26,7 +26,7 @@ ATTR_PERIOD: Final = "period"  # number of days
 ATTR_DURATION: Final = "duration"  # number of minutes, <24h
 
 ATTR_SETPOINT: Final = "setpoint"
-ATTR_STATE: Final = "state"
+EVO_STATE: Final = "state"
 
 
 @unique

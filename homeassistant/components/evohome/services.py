@@ -10,19 +10,27 @@ from evohomeasync2.const import SZ_CAN_BE_TEMPORARY, SZ_SYSTEM_MODE, SZ_TIMING_M
 from evohomeasync2.schemas.const import (
     S2_DURATION as SZ_DURATION,
     S2_PERIOD as SZ_PERIOD,
+    DhwState as EvoDhwState,
 )
 import voluptuous as vol
 
 from homeassistant.components.climate import DOMAIN as CLIMATE_DOMAIN
 from homeassistant.components.water_heater import DOMAIN as WATER_HEATER_DOMAIN
-from homeassistant.const import ATTR_MODE, STATE_OFF, STATE_ON
+from homeassistant.const import ATTR_MODE
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import config_validation as cv, service
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.service import verify_domain_control
 
-from .const import ATTR_DURATION, ATTR_PERIOD, ATTR_SETPOINT, DOMAIN, EvoService
+from .const import (
+    ATTR_DURATION,
+    ATTR_PERIOD,
+    ATTR_SETPOINT,
+    DOMAIN,
+    EVO_STATE,
+    EvoService,
+)
 from .coordinator import EvoDataUpdateCoordinator
 
 # System service schemas (registered as domain services)
@@ -52,7 +60,7 @@ SET_ZONE_OVERRIDE_SCHEMA: Final[dict[str | vol.Marker, Any]] = {
 
 # DHW service schemas (registered as entity services)
 SET_DHW_OVERRIDE_SCHEMA: Final[dict[str | vol.Marker, Any]] = {
-    vol.Required("state"): vol.In([STATE_ON, STATE_OFF]),
+    vol.Required(EVO_STATE): vol.In(EvoDhwState),
     vol.Optional(ATTR_DURATION): vol.All(
         cv.time_period,
         vol.Range(min=timedelta(days=0), max=timedelta(days=1)),
