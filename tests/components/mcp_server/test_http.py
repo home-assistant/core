@@ -36,6 +36,7 @@ from homeassistant.helpers import (
 )
 from homeassistant.helpers.httpx_client import create_async_httpx_client
 from homeassistant.setup import async_setup_component
+from homeassistant.util.yaml.loader import parse_yaml
 
 from tests.common import MockConfigEntry, setup_test_component_platform
 from tests.components.light.common import MockLight
@@ -44,6 +45,44 @@ from tests.typing import ClientSessionGenerator
 _LOGGER = logging.getLogger(__name__)
 
 TEST_ENTITY = "light.kitchen"
+EXPOSED_ENTITIES_RESOURCE_URI = "homeassistant://assist/exposed-entities"
+
+
+class MockLLMAPI(llm.API):
+    """Test LLM API."""
+
+    async def async_get_api_instance(
+        self, llm_context: llm.LLMContext
+    ) -> llm.APIInstance:
+        """Return a test API instance."""
+        return llm.APIInstance(
+            api=self,
+            api_prompt="Test prompt",
+            llm_context=llm_context,
+            tools=[],
+        )
+
+
+@pytest.fixture(name="llm_hass_api")
+def llm_hass_api_fixture(
+    hass: HomeAssistant, request: pytest.FixtureRequest
+) -> str | list[str]:
+    """Fixture for the config entry llm_hass_api."""
+    llm_hass_api: str | list[str] = getattr(request, "param", [llm.LLM_API_ASSIST])
+
+    if isinstance(llm_hass_api, str):
+        llm_api_ids = [llm_hass_api]
+    else:
+        llm_api_ids = llm_hass_api
+
+    if "test-api" in llm_api_ids:
+        llm.async_register_api(
+            hass, MockLLMAPI(hass=hass, id="test-api", name="Test API")
+        )
+
+    return llm_hass_api
+
+
 INITIALIZE_MESSAGE = {
     "jsonrpc": "2.0",
     "id": "request-id-1",
@@ -479,6 +518,199 @@ async def test_get_unknown_prompt(
     async with mcp_client(hass, mcp_url, hass_supervisor_access_token) as session:
         with pytest.raises(McpError):
             await session.get_prompt(name="Unknown")
+
+
+@pytest.mark.parametrize("llm_hass_api", [llm.LLM_API_ASSIST, STATELESS_LLM_API])
+async def test_mcp_resources_list(
+    hass: HomeAssistant,
+    setup_integration: None,
+    mcp_url: str,
+    mcp_client: Any,
+    hass_supervisor_access_token: str,
+) -> None:
+    """Test the resource list endpoint."""
+
+    async with mcp_client(hass, mcp_url, hass_supervisor_access_token) as session:
+        result = await session.list_resources()
+
+    assert len(result.resources) == 1
+    resource = result.resources[0]
+    assert str(resource.uri) == EXPOSED_ENTITIES_RESOURCE_URI
+    assert resource.name == "assist_exposed_entities"
+    assert resource.title == "Assist exposed entities"
+    assert resource.description is not None
+    assert resource.mimeType == "text/yaml"
+
+
+@pytest.mark.parametrize("llm_hass_api", [llm.LLM_API_ASSIST, STATELESS_LLM_API])
+async def test_mcp_resource_read(
+    hass: HomeAssistant,
+    setup_integration: None,
+    mcp_url: str,
+    mcp_client: Any,
+    hass_supervisor_access_token: str,
+) -> None:
+    """Test reading an MCP resource."""
+
+    async with mcp_client(hass, mcp_url, hass_supervisor_access_token) as session:
+        resources = await session.list_resources()
+        resource = resources.resources[0]
+        result = await session.read_resource(resource.uri)
+
+    assert len(result.contents) == 1
+    content = result.contents[0]
+    assert content.uri == resource.uri
+    assert content.mimeType == "text/yaml"
+    parsed = parse_yaml(content.text)
+    assert parsed["assistant"] == "conversation"
+    assert parsed["entities"] == [
+        {
+            "entity_id": "light.kitchen",
+            "names": "Kitchen Light",
+            "domain": "light",
+            "state": "off",
+            "areas": "Kitchen",
+        }
+    ]
+
+
+@pytest.mark.parametrize("llm_hass_api", [llm.LLM_API_ASSIST, STATELESS_LLM_API])
+async def test_mcp_resource_read_includes_attributes_and_local_timestamps(
+    hass: HomeAssistant,
+    setup_integration: None,
+    mcp_url: str,
+    mcp_client: Any,
+    hass_supervisor_access_token: str,
+) -> None:
+    """Test resource payload reuses the Assist exposed entity context."""
+
+    await hass.config.async_set_time_zone("America/New_York")
+    hass.states.async_set(
+        "climate.hallway",
+        "heat",
+        {
+            "friendly_name": "Hallway Thermostat",
+            "current_temperature": 21,
+            "temperature": 22,
+        },
+    )
+    async_expose_entity(hass, CONVERSATION_DOMAIN, "climate.hallway", True)
+
+    hass.states.async_set(
+        "sensor.next_alarm",
+        "2024-01-15T10:30:00+00:00",
+        {
+            "device_class": "timestamp",
+            "friendly_name": "Next Alarm",
+        },
+    )
+    async_expose_entity(hass, CONVERSATION_DOMAIN, "sensor.next_alarm", True)
+
+    async with mcp_client(hass, mcp_url, hass_supervisor_access_token) as session:
+        resources = await session.list_resources()
+        resource = resources.resources[0]
+        result = await session.read_resource(resource.uri)
+
+    parsed = parse_yaml(result.contents[0].text)
+    entities = {entity["entity_id"]: entity for entity in parsed["entities"]}
+
+    assert entities["climate.hallway"]["attributes"] == {
+        "current_temperature": "21",
+        "temperature": "22",
+    }
+    assert entities["sensor.next_alarm"]["state"] == "2024-01-15T05:30:00-05:00"
+    assert entities["sensor.next_alarm"]["attributes"] == {
+        "device_class": "timestamp",
+    }
+
+
+@pytest.mark.parametrize("llm_hass_api", [llm.LLM_API_ASSIST, STATELESS_LLM_API])
+async def test_mcp_resource_read_includes_scripts_and_calendars(
+    hass: HomeAssistant,
+    setup_integration: None,
+    mcp_url: str,
+    mcp_client: Any,
+    hass_supervisor_access_token: str,
+) -> None:
+    """Test resource payload includes all exposed Assist objects."""
+
+    hass.states.async_set(
+        "calendar.household", "on", {"friendly_name": "Household Calendar"}
+    )
+    async_expose_entity(hass, CONVERSATION_DOMAIN, "calendar.household", True)
+
+    assert await async_setup_component(
+        hass,
+        "script",
+        {
+            "script": {
+                "bedtime": {
+                    "alias": "Bedtime",
+                    "description": "Prepare the house for bed",
+                    "sequence": [],
+                }
+            }
+        },
+    )
+    async_expose_entity(hass, CONVERSATION_DOMAIN, "script.bedtime", True)
+    await hass.async_block_till_done()
+
+    async with mcp_client(hass, mcp_url, hass_supervisor_access_token) as session:
+        resources = await session.list_resources()
+        resource = resources.resources[0]
+        result = await session.read_resource(resource.uri)
+
+    entities = {
+        entity["entity_id"]: entity
+        for entity in parse_yaml(result.contents[0].text)["entities"]
+    }
+    assert entities["calendar.household"]["domain"] == "calendar"
+    assert entities["calendar.household"]["names"] == "Household Calendar"
+    assert entities["script.bedtime"]["domain"] == "script"
+    assert entities["script.bedtime"]["names"] == "Bedtime"
+
+
+@pytest.mark.parametrize(
+    ("llm_hass_api", "expected_count"),
+    [
+        ("test-api", 0),
+        ([llm.LLM_API_ASSIST, "test-api"], 1),
+    ],
+)
+async def test_mcp_resources_respect_selected_llm_api(
+    hass: HomeAssistant,
+    setup_integration: None,
+    mcp_url: str,
+    mcp_client: Any,
+    hass_supervisor_access_token: str,
+    expected_count: int,
+) -> None:
+    """Test resources are only exposed when Assist is selected."""
+
+    async with mcp_client(hass, mcp_url, hass_supervisor_access_token) as session:
+        result = await session.list_resources()
+
+    assert len(result.resources) == expected_count
+
+
+@pytest.mark.parametrize("llm_hass_api", [llm.LLM_API_ASSIST, STATELESS_LLM_API])
+async def test_mcp_resource_read_unknown_resource(
+    hass: HomeAssistant,
+    setup_integration: None,
+    mcp_url: str,
+    mcp_client: Any,
+    hass_supervisor_access_token: str,
+) -> None:
+    """Test reading an unknown MCP resource."""
+
+    unknown_uri = mcp.types.Resource(
+        uri="homeassistant://assist/missing",
+        name="missing",
+    ).uri
+
+    async with mcp_client(hass, mcp_url, hass_supervisor_access_token) as session:
+        with pytest.raises(McpError, match="Unknown resource"):
+            await session.read_resource(unknown_uri)
 
 
 @pytest.mark.parametrize("llm_hass_api", [llm.LLM_API_ASSIST])

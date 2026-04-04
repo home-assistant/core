@@ -14,16 +14,61 @@ from typing import Any
 
 from mcp import types
 from mcp.server import Server
+from mcp.server.lowlevel.helper_types import ReadResourceContents
+from pydantic import AnyUrl
 import voluptuous as vol
 from voluptuous_openapi import convert
 
+from homeassistant.components.calendar import DOMAIN as CALENDAR_DOMAIN
+from homeassistant.components.conversation import DOMAIN as CONVERSATION_DOMAIN
+from homeassistant.components.script import DOMAIN as SCRIPT_DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import llm
+from homeassistant.util import yaml as yaml_util
 
 from .const import STATELESS_LLM_API
 
 _LOGGER = logging.getLogger(__name__)
+
+EXPOSED_ENTITIES_RESOURCE_URI = "homeassistant://assist/exposed-entities"
+EXPOSED_ENTITIES_RESOURCE_URL = AnyUrl(EXPOSED_ENTITIES_RESOURCE_URI)
+EXPOSED_ENTITIES_RESOURCE_MIME_TYPE = "text/yaml"
+
+
+def _exposed_entities_resource_supported(
+    llm_api_id: str | list[str], assistant: str | None
+) -> bool:
+    """Return if the Assist exposed entities resource should be available."""
+    if assistant is None:
+        return False
+
+    if isinstance(llm_api_id, str):
+        llm_api_ids = [llm_api_id]
+    else:
+        llm_api_ids = llm_api_id
+
+    return llm.LLM_API_ASSIST in llm_api_ids
+
+
+def _get_exposed_entities_resource_contents(hass: HomeAssistant, assistant: str) -> str:
+    """Build model-friendly exposed entity context for the MCP resource."""
+    exposed_entities = llm.async_get_exposed_entities(
+        hass, assistant, include_state=True
+    )
+    entities = [
+        {"entity_id": entity_id, **entity_info}
+        for domain in (CALENDAR_DOMAIN, SCRIPT_DOMAIN, "entities")
+        for entity_id, entity_info in exposed_entities[domain].items()
+    ]
+    entities.sort(key=lambda item: (item["names"], item["entity_id"]))
+
+    return yaml_util.dump(
+        {
+            "assistant": assistant,
+            "entities": entities,
+        }
+    )
 
 
 def _format_tool(
@@ -53,6 +98,9 @@ async def create_server(
         llm_api_id = llm.LLM_API_ASSIST
 
     server = Server[Any]("home-assistant")
+    has_exposed_entities_resource = _exposed_entities_resource_supported(
+        llm_api_id, llm_context.assistant
+    )
 
     async def get_api_instance() -> llm.APIInstance:
         """Get the LLM API selected."""
@@ -89,6 +137,41 @@ async def create_server(
                 )
             ],
         )
+
+    @server.list_resources()  # type: ignore[no-untyped-call,untyped-decorator]
+    async def handle_list_resources() -> list[types.Resource]:
+        if not has_exposed_entities_resource:
+            return []
+
+        return [
+            types.Resource(
+                uri=EXPOSED_ENTITIES_RESOURCE_URL,
+                name="assist_exposed_entities",
+                title="Assist exposed entities",
+                description=(
+                    "Entities exposed to Assist, including current state and"
+                    " a curated set of attributes."
+                ),
+                mimeType=EXPOSED_ENTITIES_RESOURCE_MIME_TYPE,
+            )
+        ]
+
+    @server.read_resource()  # type: ignore[no-untyped-call,untyped-decorator]
+    async def handle_read_resource(uri: AnyUrl) -> Sequence[ReadResourceContents]:
+        if (
+            not has_exposed_entities_resource
+            or str(uri) != EXPOSED_ENTITIES_RESOURCE_URI
+        ):
+            raise ValueError(f"Unknown resource: {uri}")
+
+        return [
+            ReadResourceContents(
+                content=_get_exposed_entities_resource_contents(
+                    hass, llm_context.assistant or CONVERSATION_DOMAIN
+                ),
+                mime_type=EXPOSED_ENTITIES_RESOURCE_MIME_TYPE,
+            )
+        ]
 
     @server.list_tools()  # type: ignore[no-untyped-call,untyped-decorator]
     async def list_tools() -> list[types.Tool]:

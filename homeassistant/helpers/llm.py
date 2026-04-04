@@ -620,6 +620,16 @@ class AssistAPI(API):
         return tools
 
 
+@callback
+def async_get_exposed_entities(
+    hass: HomeAssistant,
+    assistant: str,
+    include_state: bool = True,
+) -> dict[str, dict[str, dict[str, Any]]]:
+    """Get exposed entities for an assistant."""
+    return _get_exposed_entities(hass, assistant, include_state)
+
+
 def _get_exposed_entities(
     hass: HomeAssistant,
     assistant: str,
