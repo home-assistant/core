@@ -26,6 +26,7 @@ ATTR_PERIOD: Final = "period"  # number of days
 ATTR_DURATION: Final = "duration"  # number of minutes, <24h
 
 ATTR_SETPOINT: Final = "setpoint"
+ATTR_STATE: Final = "state"
 
 
 @unique
@@ -37,3 +38,5 @@ class EvoService(StrEnum):
     RESET_SYSTEM = "reset_system"
     SET_ZONE_OVERRIDE = "set_zone_override"
     CLEAR_ZONE_OVERRIDE = "clear_zone_override"
+    SET_DHW_OVERRIDE = "set_dhw_override"
+    CLEAR_DHW_OVERRIDE = "clear_dhw_override"

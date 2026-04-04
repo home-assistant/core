@@ -9,18 +9,27 @@ from unittest.mock import patch
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 
+from homeassistant.components.climate import DOMAIN as CLIMATE_DOMAIN
+from homeassistant.components.evohome.climate import EvoZone
 from homeassistant.components.evohome.const import (
     ATTR_DURATION,
     ATTR_PERIOD,
     ATTR_SETPOINT,
+    ATTR_STATE,
     DOMAIN,
     EvoService,
 )
-from homeassistant.const import ATTR_ENTITY_ID, ATTR_MODE
+from homeassistant.components.evohome.water_heater import EvoDHW
+from homeassistant.components.water_heater import DOMAIN as WATER_HEATER_DOMAIN
+from homeassistant.const import ATTR_ENTITY_ID, ATTR_MODE, STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
+from homeassistant.helpers.entity_platform import DATA_DOMAIN_PLATFORM_ENTITIES
+from homeassistant.util import dt as dt_util
 
 from .const import TEST_INSTALLS
+
+from tests.patch_time import HAFakeDatetime
 
 
 @pytest.mark.parametrize("install", ["default"])
@@ -199,6 +208,50 @@ async def test_set_zone_override(
 
 
 @pytest.mark.parametrize("install", ["default"])
+async def test_set_zone_override_advance(
+    hass: HomeAssistant,
+    zone_id: str,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test Evohome's set_dhw_override service with no duration.
+
+    The override is temporary until the next schedule change.
+    """
+
+    freezer.move_to("2024-05-10T12:15:00+00:00")
+
+    expected_until = HAFakeDatetime(2024, 5, 10, 21, 10, tzinfo=UTC)
+    expected_tzinfo = dt_util.get_time_zone("Europe/London")
+
+    # Simulate the schedule not yet having been fetched (e.g. HOMEASSISTANT_START)
+    entities = hass.data[DATA_DOMAIN_PLATFORM_ENTITIES].get(
+        (CLIMATE_DOMAIN, DOMAIN), {}
+    )
+
+    zone_entity: EvoZone = entities[zone_id]  # type: ignore[assignment]
+    zone_entity._schedule = None
+    zone_entity._setpoints = {}
+
+    # EvoZoneMode.TEMPORARY_OVERRIDE with duration 0 (i.e. until next schedule change)
+    with patch("evohomeasync2.zone.Zone.set_temperature") as mock_fcn:
+        await hass.services.async_call(
+            DOMAIN,
+            EvoService.SET_ZONE_OVERRIDE,
+            {
+                ATTR_SETPOINT: 19.5,
+                ATTR_DURATION: {"minutes": 0},
+            },
+            target={ATTR_ENTITY_ID: zone_id},
+            blocking=True,
+        )
+
+        mock_fcn.assert_awaited_once_with(19.5, until=expected_until)
+
+    assert zone_entity.setpoints["next_sp_from"] == expected_until
+    assert zone_entity.setpoints["next_sp_from"].tzinfo == expected_tzinfo
+
+
+@pytest.mark.parametrize("install", ["default"])
 async def test_set_zone_override_legacy(
     hass: HomeAssistant,
     zone_id: str,
@@ -316,3 +369,140 @@ async def test_set_system_mode_validator(
     assert exc_info.value.translation_placeholders == {
         ATTR_MODE: service_data[ATTR_MODE]
     }
+
+
+@pytest.mark.parametrize("install", ["default"])
+async def test_clear_dhw_override(
+    hass: HomeAssistant,
+    dhw_id: str,
+) -> None:
+    """Test Evohome's clear_dhw_override service (for a DHW zone)."""
+
+    # EvoZoneMode.FOLLOW_SCHEDULE
+    with patch("evohomeasync2.hotwater.HotWater.reset") as mock_fcn:
+        await hass.services.async_call(
+            DOMAIN,
+            EvoService.CLEAR_DHW_OVERRIDE,
+            {},
+            target={ATTR_ENTITY_ID: dhw_id},
+            blocking=True,
+        )
+
+        mock_fcn.assert_awaited_once_with()
+
+
+@pytest.mark.parametrize("install", ["default"])
+async def test_set_dhw_override(
+    hass: HomeAssistant,
+    dhw_id: str,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test Evohome's set_dhw_override service (for a DHW zone)."""
+
+    freezer.move_to("2024-07-10T12:00:00+00:00")
+
+    # EvoZoneMode.PERMANENT_OVERRIDE (on)
+    with patch("evohomeasync2.hotwater.HotWater.set_on") as mock_fcn:
+        await hass.services.async_call(
+            DOMAIN,
+            EvoService.SET_DHW_OVERRIDE,
+            {
+                ATTR_STATE: STATE_ON,
+            },
+            target={ATTR_ENTITY_ID: dhw_id},
+            blocking=True,
+        )
+
+        mock_fcn.assert_awaited_once_with(until=None)
+
+    # EvoZoneMode.PERMANENT_OVERRIDE (off)
+    with patch("evohomeasync2.hotwater.HotWater.set_off") as mock_fcn:
+        await hass.services.async_call(
+            DOMAIN,
+            EvoService.SET_DHW_OVERRIDE,
+            {
+                ATTR_STATE: STATE_OFF,
+            },
+            target={ATTR_ENTITY_ID: dhw_id},
+            blocking=True,
+        )
+
+        mock_fcn.assert_awaited_once_with(until=None)
+
+    # EvoZoneMode.TEMPORARY_OVERRIDE (on)
+    with patch("evohomeasync2.hotwater.HotWater.set_on") as mock_fcn:
+        await hass.services.async_call(
+            DOMAIN,
+            EvoService.SET_DHW_OVERRIDE,
+            {
+                ATTR_STATE: STATE_ON,
+                ATTR_DURATION: {"minutes": 135},
+            },
+            target={ATTR_ENTITY_ID: dhw_id},
+            blocking=True,
+        )
+
+        mock_fcn.assert_awaited_once_with(
+            until=datetime(2024, 7, 10, 14, 15, tzinfo=UTC)
+        )
+
+    # EvoZoneMode.TEMPORARY_OVERRIDE (off)
+    with patch("evohomeasync2.hotwater.HotWater.set_off") as mock_fcn:
+        await hass.services.async_call(
+            DOMAIN,
+            EvoService.SET_DHW_OVERRIDE,
+            {
+                ATTR_STATE: STATE_OFF,
+                ATTR_DURATION: {"minutes": 135},
+            },
+            target={ATTR_ENTITY_ID: dhw_id},
+            blocking=True,
+        )
+
+        mock_fcn.assert_awaited_once_with(
+            until=datetime(2024, 7, 10, 14, 15, tzinfo=UTC)
+        )
+
+
+@pytest.mark.parametrize("install", ["default"])
+async def test_set_dhw_override_advance(
+    hass: HomeAssistant,
+    dhw_id: str,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test Evohome's set_dhw_override service with no duration.
+
+    The override is temporary until the next schedule change.
+    """
+
+    freezer.move_to("2024-05-10T12:15:00+00:00")
+
+    expected_until = HAFakeDatetime(2024, 5, 10, 15, 30, tzinfo=UTC)
+    expected_tzinfo = dt_util.get_time_zone("Europe/London")
+
+    # Simulate the schedule not yet having been fetched (e.g. HOMEASSISTANT_START)
+    entities = hass.data[DATA_DOMAIN_PLATFORM_ENTITIES].get(
+        (WATER_HEATER_DOMAIN, DOMAIN), {}
+    )
+
+    dhw_entity: EvoDHW = entities[dhw_id]  # type: ignore[assignment]
+    dhw_entity._schedule = None
+    dhw_entity._setpoints = {}
+
+    # EvoZoneMode.TEMPORARY_OVERRIDE with duration 0 (i.e. until next schedule change)
+    with patch("evohomeasync2.hotwater.HotWater.set_on") as mock_fcn:
+        await hass.services.async_call(
+            DOMAIN,
+            EvoService.SET_DHW_OVERRIDE,
+            {
+                ATTR_STATE: STATE_ON,
+                ATTR_DURATION: {"minutes": 0},
+            },
+            target={ATTR_ENTITY_ID: dhw_id},
+            blocking=True,
+        )
+
+        mock_fcn.assert_awaited_once_with(until=expected_until)
+
+    assert dhw_entity.setpoints["next_sp_from"] == expected_until
+    assert dhw_entity.setpoints["next_sp_from"].tzinfo == expected_tzinfo

@@ -13,6 +13,9 @@
     }
   },
   "services": {
+    "clear_dhw_override": {
+      "service": "mdi:water-heater-off"
+    },
     "clear_zone_override": {
       "service": "mdi:motion-sensor-off"
     },
@@ -21,6 +24,9 @@
     },
     "reset_system": {
       "service": "mdi:refresh"
+    },
+    "set_dhw_override": {
+      "service": "mdi:water-heater"
     },
     "set_system_mode": {
       "service": "mdi:pencil"
