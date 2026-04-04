@@ -1154,6 +1154,9 @@ growattServer==1.9.0
 # homeassistant.components.google_sheets
 gspread==5.5.0
 
+# homeassistant.components.guntamatic_sensor
+guntamatic==1.0.3
+
 # homeassistant.components.profiler
 guppy3==3.1.6
 

@@ -2683,6 +2683,12 @@
       "config_flow": true,
       "iot_class": "local_polling"
     },
+    "guntamatic_sensor": {
+      "name": "guntamatic",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "habitica": {
       "name": "Habitica",
       "integration_type": "service",
