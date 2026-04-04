@@ -560,12 +560,13 @@ async def test_logs_add_without_location_update_ignored(
     assert state.state == "unknown"
 
 
-async def test_logs_add_empty_result_ignored(
+@pytest.mark.freeze_time("2025-01-01 00:00:00+00:00")
+async def test_logs_add_empty_result_dispatches_access_denied(
     hass: HomeAssistant,
     init_integration: MockConfigEntry,
     mock_client: MagicMock,
 ) -> None:
-    """Test access.logs.add event with empty result is ignored."""
+    """Test access.logs.add event with empty result dispatches access_denied."""
     handlers = _get_ws_handlers(mock_client)
     await _populate_device_mapping(handlers)
 
@@ -590,7 +591,9 @@ async def test_logs_add_empty_result_ignored(
 
     state = hass.states.get(FRONT_DOOR_ACCESS_ENTITY)
     assert state is not None
-    assert state.state == "unknown"
+    assert state.attributes["event_type"] == "access_denied"
+    assert "result" not in state.attributes
+    assert state.state == "2025-01-01T00:00:00.000+00:00"
 
 
 async def test_logs_add_no_device_config_target_ignored(
@@ -651,3 +654,126 @@ async def test_logs_add_empty_targets_ignored(
     state = hass.states.get(FRONT_DOOR_ACCESS_ENTITY)
     assert state is not None
     assert state.state == "unknown"
+
+
+@pytest.mark.freeze_time("2025-01-01 00:00:00+00:00")
+async def test_logs_add_stale_device_mapping_cleared(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    mock_client: MagicMock,
+) -> None:
+    """Test stale device mappings are cleared when a door's devices change."""
+    handlers = _get_ws_handlers(mock_client)
+    await _populate_device_mapping(handlers)
+
+    # Reassign door-001 to only have camera-device-001 (hub-device-001 removed)
+    reassign_msg = V2LocationUpdate(
+        event="access.data.v2.location.update",
+        data=V2LocationUpdateData(
+            id="door-001",
+            location_type="door",
+            name="Front Door",
+            device_ids=["camera-device-001"],
+        ),
+    )
+    await handlers["access.data.v2.location.update"](reassign_msg)
+
+    # hub-device-001 should no longer resolve to door-001
+    log_msg = LogAdd(
+        event="access.logs.add",
+        data=LogAddData(
+            source=LogSource(
+                target=[
+                    LogTarget(
+                        type="device_config",
+                        id="hub-device-001",
+                        display_name="UA Hub Door",
+                    ),
+                ],
+                actor=LogActor(display_name="John Doe"),
+                event=LogEvent(result="ACCESS"),
+            ),
+        ),
+    )
+
+    await handlers["access.logs.add"](log_msg)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(FRONT_DOOR_ACCESS_ENTITY)
+    assert state is not None
+    assert state.state == "unknown"
+
+    # camera-device-001 should still resolve to door-001
+    camera_log = LogAdd(
+        event="access.logs.add",
+        data=LogAddData(
+            source=LogSource(
+                target=[
+                    LogTarget(
+                        type="device_config",
+                        id="camera-device-001",
+                        display_name="Camera",
+                    ),
+                ],
+                actor=LogActor(display_name="Jane Doe"),
+                event=LogEvent(result="ACCESS"),
+            ),
+        ),
+    )
+
+    await handlers["access.logs.add"](camera_log)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(FRONT_DOOR_ACCESS_ENTITY)
+    assert state is not None
+    assert state.attributes["event_type"] == "access_granted"
+    assert state.state == "2025-01-01T00:00:00.000+00:00"
+
+
+@pytest.mark.freeze_time("2025-01-01 00:00:00+00:00")
+async def test_logs_add_device_mapping_pruned_on_refresh(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    mock_client: MagicMock,
+) -> None:
+    """Test device-to-door mappings are pruned when a door is removed on refresh."""
+    handlers = _get_ws_handlers(mock_client)
+    await _populate_device_mapping(handlers)
+
+    # Simulate door-001 being removed from the hub
+    mock_client.get_doors.return_value = [
+        door for door in mock_client.get_doors.return_value if door.id != "door-001"
+    ]
+
+    # Trigger refresh via WebSocket reconnect
+    on_disconnect = mock_client.start_websocket.call_args[1]["on_disconnect"]
+    on_connect = mock_client.start_websocket.call_args[1]["on_connect"]
+    on_disconnect()
+    await hass.async_block_till_done()
+    on_connect()
+    await hass.async_block_till_done()
+
+    # hub-device-001 mapping should have been pruned;
+    # sending a log event for it must not raise an error
+    log_msg = LogAdd(
+        event="access.logs.add",
+        data=LogAddData(
+            source=LogSource(
+                target=[
+                    LogTarget(
+                        type="device_config",
+                        id="hub-device-001",
+                        display_name="UA Hub Door",
+                    ),
+                ],
+                actor=LogActor(display_name="John Doe"),
+                event=LogEvent(result="ACCESS"),
+            ),
+        ),
+    )
+
+    await handlers["access.logs.add"](log_msg)
+    await hass.async_block_till_done()
+
+    # door-001 entity was removed when the door disappeared
+    assert hass.states.get(FRONT_DOOR_ACCESS_ENTITY) is None

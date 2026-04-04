@@ -278,11 +278,20 @@ class UnifiAccessCoordinator(DataUpdateCoordinator[UnifiAccessData]):
     async def _handle_v2_location_update(self, msg: WebsocketMessage) -> None:
         """Handle V2 location update messages."""
         update = cast(V2LocationUpdate, msg)
+        door_id = update.data.id
+
+        stale_device_ids = [
+            device_id
+            for device_id, mapped_door_id in self._device_to_door.items()
+            if mapped_door_id == door_id
+        ]
+        for device_id in stale_device_ids:
+            del self._device_to_door[device_id]
+
         for device_id in update.data.device_ids:
-            self._device_to_door[device_id] = update.data.id
-        self._process_door_update(
-            update.data.id, update.data.state, update.data.thumbnail
-        )
+            self._device_to_door[device_id] = door_id
+
+        self._process_door_update(door_id, update.data.state, update.data.thumbnail)
 
     def _process_door_update(
         self,
@@ -412,8 +421,6 @@ class UnifiAccessCoordinator(DataUpdateCoordinator[UnifiAccessData]):
         """Handle access log events (entry/exit via access.logs.add)."""
         log = cast(LogAdd, msg)
         source = log.data.source
-        if not source.event.result:
-            return
         device_target = source.device_config
         if device_target is None or device_target.id not in self._device_to_door:
             return
@@ -426,7 +433,8 @@ class UnifiAccessCoordinator(DataUpdateCoordinator[UnifiAccessData]):
             attrs["actor"] = source.actor.display_name
         if source.authentication.credential_provider:
             attrs["authentication"] = source.authentication.credential_provider
-        attrs["result"] = source.event.result
+        if source.event.result:
+            attrs["result"] = source.event.result
         self._dispatch_door_event(door_id, "access", event_type, attrs)
 
     def get_lock_rule_status(self, door_id: str) -> DoorLockRuleStatus | None:
