@@ -2,9 +2,11 @@
 
 from __future__ import annotations
 
+import asyncio
 from collections.abc import Mapping
 import logging
 from typing import Any
+from urllib.parse import urlparse
 
 from unifi_access_api import ApiAuthError, ApiConnectionError, UnifiAccessApiClient
 import voluptuous as vol
@@ -17,12 +19,39 @@ from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
+PROTECT_META_INFO_PATH = "/proxy/protect/integration/v1/meta/info"
+
 
 class UnifiAccessConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for UniFi Access."""
 
     VERSION = 1
     MINOR_VERSION = 1
+
+    async def _is_protect_api_key(self, user_input: dict[str, Any]) -> bool:
+        """Check if the API key is a valid UniFi Protect key."""
+        session = async_get_clientsession(
+            self.hass, verify_ssl=user_input[CONF_VERIFY_SSL]
+        )
+        host = user_input[CONF_HOST]
+        if "://" not in host:
+            host = f"https://{host}"
+        parsed = urlparse(host)
+        # Protect runs on the console's default HTTPS port, not the Access port
+        url = f"https://{parsed.hostname}{PROTECT_META_INFO_PATH}"
+        headers = {
+            "X-API-KEY": user_input[CONF_API_TOKEN],
+            "Accept": "application/json",
+        }
+        try:
+            async with asyncio.timeout(5):
+                resp = await session.get(url, headers=headers)
+                is_protect = resp.status == 200
+                resp.release()
+        except Exception:  # noqa: BLE001
+            return False
+        else:
+            return is_protect
 
     async def _validate_input(self, user_input: dict[str, Any]) -> dict[str, str]:
         """Validate user input and return errors dict."""
@@ -39,7 +68,10 @@ class UnifiAccessConfigFlow(ConfigFlow, domain=DOMAIN):
         try:
             await client.authenticate()
         except ApiAuthError:
-            errors["base"] = "invalid_auth"
+            if await self._is_protect_api_key(user_input):
+                errors["base"] = "protect_api_key"
+            else:
+                errors["base"] = "invalid_auth"
         except ApiConnectionError:
             errors["base"] = "cannot_connect"
         except Exception:
