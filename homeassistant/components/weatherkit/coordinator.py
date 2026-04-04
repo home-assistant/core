@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from datetime import datetime, timedelta
+from typing import Any
 
 from apple_weatherkit import DataSetType
 from apple_weatherkit.client import WeatherKitApiClient, WeatherKitApiClientError
@@ -63,6 +64,14 @@ class WeatherKitDataUpdateCoordinator(DataUpdateCoordinator):
             if data_set in supported_data_sets
         ]
 
+        if DataSetType.WEATHER_ALERTS in self.supported_data_sets:
+            if self.hass.config.country is None:
+                LOGGER.debug(
+                    "Weather alerts are available but no country is configured; "
+                    "skipping weather alerts"
+                )
+                self.supported_data_sets.remove(DataSetType.WEATHER_ALERTS)
+
         LOGGER.debug("Supported data sets: %s", self.supported_data_sets)
 
     async def _async_update_data(self):
@@ -72,13 +81,19 @@ class WeatherKitDataUpdateCoordinator(DataUpdateCoordinator):
                 await self.update_supported_data_sets()
 
             dt_now = dt_util.utcnow()
+            weather_data_kwargs: dict[str, Any] = {
+                "hourly_start": dt_now,
+                "hourly_end": dt_now + HOURLY_FORECAST_DURATION,
+            }
+            country_code = self.hass.config.country
+            if country_code is not None:
+                weather_data_kwargs["country_code"] = country_code
+
             updated_data = await self.client.get_weather_data(
                 self.config_entry.data[CONF_LATITUDE],
                 self.config_entry.data[CONF_LONGITUDE],
                 self.supported_data_sets,
-                hourly_start=dt_now,
-                hourly_end=dt_now + HOURLY_FORECAST_DURATION,
-                country_code=self.hass.config.country,
+                **weather_data_kwargs,
             )
         except WeatherKitApiClientError as exception:
             if self.data is None or (
