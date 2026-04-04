@@ -5,8 +5,10 @@ from __future__ import annotations
 from unittest.mock import AsyncMock
 
 from duco.exceptions import DucoConnectionError, DucoError
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 
+from homeassistant.components.duco.const import SCAN_INTERVAL
 from homeassistant.components.fan import (
     ATTR_PRESET_MODE,
     DOMAIN as FAN_DOMAIN,
@@ -19,7 +21,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 @pytest.mark.usefixtures("init_integration")
@@ -139,15 +141,16 @@ async def test_fan_set_preset_error(
 async def test_coordinator_update_marks_unavailable(
     hass: HomeAssistant,
     mock_duco_client: AsyncMock,
-    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test that entities become unavailable when the coordinator fails."""
     mock_duco_client.async_get_nodes = AsyncMock(
         side_effect=DucoConnectionError("offline")
     )
 
-    await mock_config_entry.runtime_data.async_refresh()
-    await hass.async_block_till_done()
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     state = hass.states.get("fan.living_ventilation")
     assert state is not None
