@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_entity[camera.front-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -48,7 +49,7 @@
       'is_local': False,
       'light_state': None,
       'local_url': None,
-      'monitoring': None,
+      'monitoring': True,
       'motion_detection': True,
       'sd_status': 4,
       'supported_features': <CameraEntityFeature: 3>,
@@ -64,8 +65,9 @@
 # ---
 # name: test_entity[camera.hall-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -111,7 +113,7 @@
       'is_local': True,
       'light_state': None,
       'local_url': 'http://192.168.0.123/678460a0d47e5618699fb31169e2b47d',
-      'monitoring': None,
+      'monitoring': True,
       'motion_detection': True,
       'sd_status': 4,
       'supported_features': <CameraEntityFeature: 3>,
@@ -127,8 +129,9 @@
 # ---
 # name: test_entity[camera.netatmo_doorbell-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -174,7 +177,7 @@
       'is_local': None,
       'light_state': None,
       'local_url': None,
-      'monitoring': None,
+      'monitoring': True,
       'sd_status': 4,
       'supported_features': <CameraEntityFeature: 1>,
       'vpn_url': 'https://prodvpn-eu-6.netatmo.net/10.20.30.40/1111111111111/2222222222222,,',

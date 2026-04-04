@@ -60,6 +60,14 @@ ENDPOINT_BUTTONS: tuple[PortainerButtonDescription, ...] = (
             )
         ),
     ),
+    PortainerButtonDescription(
+        key="volumes_prune",
+        translation_key="volumes_prune",
+        entity_category=EntityCategory.CONFIG,
+        press_action=(
+            lambda portainer, endpoint_id, _: portainer.prune_volumes(endpoint_id)
+        ),
+    ),
 )
 
 CONTAINER_BUTTONS: tuple[PortainerButtonDescription, ...] = (
@@ -70,6 +78,36 @@ CONTAINER_BUTTONS: tuple[PortainerButtonDescription, ...] = (
         entity_category=EntityCategory.CONFIG,
         press_action=(
             lambda portainer, endpoint_id, container_id: portainer.restart_container(
+                endpoint_id, container_id
+            )
+        ),
+    ),
+    PortainerButtonDescription(
+        key="pause",
+        translation_key="pause_container",
+        entity_category=EntityCategory.CONFIG,
+        press_action=(
+            lambda portainer, endpoint_id, container_id: portainer.pause_container(
+                endpoint_id, container_id
+            )
+        ),
+    ),
+    PortainerButtonDescription(
+        key="resume",
+        translation_key="resume_container",
+        entity_category=EntityCategory.CONFIG,
+        press_action=(
+            lambda portainer, endpoint_id, container_id: portainer.unpause_container(
+                endpoint_id, container_id
+            )
+        ),
+    ),
+    PortainerButtonDescription(
+        key="kill",
+        translation_key="kill_container",
+        entity_category=EntityCategory.CONFIG,
+        press_action=(
+            lambda portainer, endpoint_id, container_id: portainer.kill_container(
                 endpoint_id, container_id
             )
         ),
