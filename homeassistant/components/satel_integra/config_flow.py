@@ -218,7 +218,7 @@ class SatelConfigFlow(ConfigFlow, domain=DOMAIN):
         controller = AsyncSatel(host, port, integration_key=integration_key)
 
         try:
-            return await controller.connect(verify_connection=True)
+            return await controller.connect()
         except Exception:
             _LOGGER.exception(
                 "Unexpected error during connection test to %s:%s",

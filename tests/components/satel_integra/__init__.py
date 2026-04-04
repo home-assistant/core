@@ -27,11 +27,10 @@ from homeassistant.core import HomeAssistant
 from tests.common import MockConfigEntry, async_fire_time_changed
 
 MOCK_CODE = "1234"
-MOCK_ENCRYPTION_KEY = "encryption_key"
 MOCK_CONFIG_DATA = {
     CONF_HOST: "192.168.0.2",
     CONF_PORT: DEFAULT_PORT,
-    CONF_ENCRYPTION_KEY: MOCK_ENCRYPTION_KEY,
+    CONF_ENCRYPTION_KEY: "encryption_key",
 }
 MOCK_CONFIG_OPTIONS = {CONF_CODE: MOCK_CODE}
 
