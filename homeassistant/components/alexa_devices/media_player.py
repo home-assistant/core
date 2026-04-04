@@ -9,7 +9,6 @@ from typing import Any, Final
 from aioamazondevices.structures import (
     AmazonMediaControls,
     AmazonMediaState,
-    AmazonMusicSource,
     AmazonVolumeState,
 )
 
@@ -102,7 +101,7 @@ class AlexaDevicesMediaPlayer(AmazonEntity, MediaPlayerEntity):
         description: AmazonDevicesMediaPlayerEntityDescription,
     ) -> None:
         """Initialize."""
-        self._prev_volume: int = 30  # TBD
+        self._prev_volume: int | None = None
         super().__init__(coordinator, serial_num, description)
 
     @property
@@ -135,15 +134,6 @@ class AlexaDevicesMediaPlayer(AmazonEntity, MediaPlayerEntity):
 
         if self.media_state.previous_enabled:
             features |= MediaPlayerEntityFeature.PREVIOUS_TRACK
-
-        if self.media_state.seek_forward_enabled:  # TBD
-            features |= MediaPlayerEntityFeature.SEEK
-
-        if self.media_state.shuffle_enabled:  # TBD
-            features |= MediaPlayerEntityFeature.SHUFFLE_SET
-
-        if self.media_state.repeat_enabled:  # TBD
-            features |= MediaPlayerEntityFeature.REPEAT_SET
 
         return features
 
@@ -195,13 +185,6 @@ class AlexaDevicesMediaPlayer(AmazonEntity, MediaPlayerEntity):
         return self.media_state.now_playing_line2
 
     @property
-    def media_album_artist(self) -> str | None:  # TBD
-        """Album artist (if different from track artist)."""
-        if not self.media_state:
-            return None
-        return self.media_state.now_playing_line1
-
-    @property
     def media_image_url(self) -> str | None:
         """Album art URL."""
         if not self.media_state:
@@ -245,35 +228,27 @@ class AlexaDevicesMediaPlayer(AmazonEntity, MediaPlayerEntity):
         **kwargs: Any,
     ) -> None:
         """Play a piece of media."""
-        await self.async_call_alexa_music(media_id, AmazonMusicSource.AmazonMusic)
+        await self.async_call_alexa_music(media_id, media_type)
 
     @alexa_api_call
-    async def async_call_alexa_music(
-        self, search_term: str, provider: AmazonMusicSource
-    ) -> None:
+    async def async_call_alexa_music(self, search_term: str, provider: str) -> None:
         """Call alexa music."""
         await self.coordinator.api.call_alexa_music(self.device, search_term, provider)
 
     @alexa_api_call
-    async def async_set_volume_level(self, volume: float) -> None:
-        """Set the volume level (0.0 to 1.0)."""
-        device_volume = round(volume * 100)
+    async def async_set_device_volume(self, volume: int) -> None:
+        """Set the device volume."""
         _LOGGER.debug(
             "Setting volume for %s to %s%%",
             self.device.serial_number,
-            device_volume,
+            volume,
         )
-        await self.coordinator.api.set_device_volume(self.device, device_volume)
+        await self.coordinator.api.set_device_volume(self.device, volume)
 
-    async def async_volume_up(self) -> None:
-        """Increase the volume by one step."""
-        current = self.volume_level or 0.0
-        await self.async_set_volume_level(min(1.0, current + 0.05))
-
-    async def async_volume_down(self) -> None:
-        """Decrease the volume by one step."""
-        current = self.volume_level or 0.0
-        await self.async_set_volume_level(max(0.0, current - 0.05))
+    async def async_set_volume_level(self, volume: float) -> None:
+        """Set the volume level (0.0 to 1.0)."""
+        device_volume = round(volume * 100)
+        await self.async_set_device_volume(device_volume)
 
     async def async_mute_volume(self, mute: bool) -> None:
         """Mute or un-mute the volume."""
@@ -285,6 +260,8 @@ class AlexaDevicesMediaPlayer(AmazonEntity, MediaPlayerEntity):
             self._prev_volume = self.volume_state.volume
             target_volume = 0
         else:
+            if self._prev_volume is None:
+                return
             target_volume = self._prev_volume
         await self.async_set_volume_level(target_volume / 100)
 
