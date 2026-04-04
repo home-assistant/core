@@ -6,7 +6,6 @@ from datetime import UTC, datetime
 from typing import Any
 from unittest.mock import patch
 
-from evohomeasync2.schemas.const import DhwState as EvoDhwState
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 
@@ -406,7 +405,7 @@ async def test_set_dhw_override(
             DOMAIN,
             EvoService.SET_DHW_OVERRIDE,
             {
-                EVO_STATE: EvoDhwState.OFF,
+                EVO_STATE: "Off",
             },
             target={ATTR_ENTITY_ID: dhw_id},
             blocking=True,
@@ -420,7 +419,7 @@ async def test_set_dhw_override(
             DOMAIN,
             EvoService.SET_DHW_OVERRIDE,
             {
-                EVO_STATE: EvoDhwState.ON,
+                EVO_STATE: "On",
                 ATTR_DURATION: {"minutes": 135},
             },
             target={ATTR_ENTITY_ID: dhw_id},
