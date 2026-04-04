@@ -14,6 +14,7 @@ from homeassistant.components.color_extractor.services import (
     ATTR_PATH,
     ATTR_URL,
     DOMAIN,
+    SERVICE_GET_COLOR,
     SERVICE_TURN_ON,
 )
 from homeassistant.components.light import (
@@ -339,7 +340,7 @@ async def test_get_color_service(hass: HomeAssistant, setup_integration) -> None
         "homeassistant.components.color_extractor.services._get_file", _get_file_mock
     ):
         result = await hass.services.async_call(
-            DOMAIN, "get_color", service_data, blocking=True, return_response=True
+            DOMAIN, SERVICE_GET_COLOR, service_data, blocking=True, return_response=True
         )
 
     assert result is not None
@@ -368,7 +369,7 @@ async def test_get_color_service_invalid_image(
         pytest.raises(ServiceValidationError) as exc_info,
     ):
         await hass.services.async_call(
-            DOMAIN, "get_color", service_data, blocking=True, return_response=True
+            DOMAIN, SERVICE_GET_COLOR, service_data, blocking=True, return_response=True
         )
 
     assert exc_info.value.translation_key == "invalid_image"
