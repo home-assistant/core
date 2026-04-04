@@ -292,21 +292,28 @@ class KeyboardRemoteManager:
         dev.close()
         return (None, None)
 
-    async def _async_scan_initial_devices(self) -> None:
-        """Scan all current /dev/input/ devices and start matching handlers."""
+    def _scan_and_match_devices(
+        self, handlers: list[DeviceHandler]
+    ) -> list[tuple[str, InputDevice, DeviceHandler]]:
+        """List all devices and return matches (runs in executor)."""
         from evdev import list_devices  # noqa: PLC0415
 
-        start_tasks: set[asyncio.Task] = set()
+        matches: list[tuple[str, InputDevice, DeviceHandler]] = []
+        for descriptor in list_devices(DEVINPUT):
+            dev, handler = self._get_handler_for_device(descriptor, handlers)
+            if dev is not None and handler is not None:
+                matches.append((descriptor, dev, handler))
+        return matches
+
+    async def _async_scan_initial_devices(self) -> None:
+        """Scan all current /dev/input/ devices and start matching handlers."""
         handlers = list(self._handlers.values())
-        descriptors = await self.hass.async_add_executor_job(list_devices, DEVINPUT)
-        for descriptor in descriptors:
-            dev, handler = await self.hass.async_add_executor_job(
-                self._get_handler_for_device, descriptor, handlers
-            )
+        matches = await self.hass.async_add_executor_job(
+            self._scan_and_match_devices, handlers
+        )
 
-            if handler is None or dev is None:
-                continue
-
+        start_tasks: set[asyncio.Task] = set()
+        for descriptor, dev, handler in matches:
             self._active_handlers_by_descriptor[descriptor] = handler
             start_tasks.add(
                 self.hass.async_create_task(handler.async_device_start_monitoring(dev))
@@ -315,22 +322,34 @@ class KeyboardRemoteManager:
         if start_tasks:
             await asyncio.wait(start_tasks)
 
-    async def _async_check_handler(self, handler: DeviceHandler) -> None:
-        """Check if a newly registered handler's device is currently connected."""
+    def _find_device_for_handler(
+        self,
+        handler: DeviceHandler,
+        handlers: list[DeviceHandler],
+        skip_descriptors: set[str],
+    ) -> tuple[str, InputDevice] | None:
+        """Find the first connected device matching a handler (runs in executor)."""
         from evdev import list_devices  # noqa: PLC0415
 
-        handlers = list(self._handlers.values())
-        descriptors = await self.hass.async_add_executor_job(list_devices, DEVINPUT)
-        for descriptor in descriptors:
-            if descriptor in self._active_handlers_by_descriptor:
+        for descriptor in list_devices(DEVINPUT):
+            if descriptor in skip_descriptors:
                 continue
-            dev, matched = await self.hass.async_add_executor_job(
-                self._get_handler_for_device, descriptor, handlers
-            )
+            dev, matched = self._get_handler_for_device(descriptor, handlers)
             if matched is handler and dev is not None:
-                self._active_handlers_by_descriptor[descriptor] = handler
-                await handler.async_device_start_monitoring(dev)
-                return
+                return (descriptor, dev)
+        return None
+
+    async def _async_check_handler(self, handler: DeviceHandler) -> None:
+        """Check if a newly registered handler's device is currently connected."""
+        handlers = list(self._handlers.values())
+        skip = set(self._active_handlers_by_descriptor)
+        result = await self.hass.async_add_executor_job(
+            self._find_device_for_handler, handler, handlers, skip
+        )
+        if result is not None:
+            descriptor, dev = result
+            self._active_handlers_by_descriptor[descriptor] = handler
+            await handler.async_device_start_monitoring(dev)
 
     async def _async_monitor_devices(self) -> None:
         """Monitor /dev/input/ for device add/remove events via inotify."""

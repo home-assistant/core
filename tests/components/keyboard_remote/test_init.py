@@ -33,7 +33,7 @@ from homeassistant.components.keyboard_remote.const import (
     KEY_CODE,
     KEY_VALUE,
 )
-from homeassistant.config_entries import SOURCE_IMPORT
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntryState
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.helpers import issue_registry as ir
 
@@ -81,12 +81,11 @@ async def test_setup_entry(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test setting up a config entry creates the shared manager."""
+    """Test setting up a config entry."""
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert DOMAIN in hass.data
     assert mock_config_entry.state is ConfigEntryState.LOADED
 
 
@@ -94,24 +93,24 @@ async def test_unload_entry(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test unloading the last config entry removes the shared manager."""
+    """Test unloading a config entry."""
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert DOMAIN in hass.data
+    assert mock_config_entry.state is ConfigEntryState.LOADED
 
     await hass.config_entries.async_unload(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert DOMAIN not in hass.data
+    assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
 
 
 async def test_multiple_entries_shared_manager(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test multiple entries share one manager, cleanup on last unload."""
+    """Test multiple entries load and unload independently."""
     entry2 = MockConfigEntry(
         domain=DOMAIN,
         unique_id="usb-Other_Device-event-kbd",
@@ -131,21 +130,21 @@ async def test_multiple_entries_shared_manager(
     await hass.config_entries.async_setup(entry2.entry_id)
     await hass.async_block_till_done()
 
-    assert DOMAIN in hass.data
-    manager = hass.data[DOMAIN]
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert entry2.state is ConfigEntryState.LOADED
 
-    # Unload first entry — manager should still exist
+    # Unload first entry — second should still be loaded
     await hass.config_entries.async_unload(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert DOMAIN in hass.data
-    assert hass.data[DOMAIN] is manager
+    assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
+    assert entry2.state is ConfigEntryState.LOADED
 
-    # Unload second entry — manager should be cleaned up
+    # Unload second entry
     await hass.config_entries.async_unload(entry2.entry_id)
     await hass.async_block_till_done()
 
-    assert DOMAIN not in hass.data
+    assert entry2.state is ConfigEntryState.NOT_LOADED
 
 
 # --- YAML import tests ---

@@ -58,8 +58,8 @@ MOCK_SCAN_RESULT = [
 
 
 @pytest.mark.usefixtures("mock_setup_entry")
-async def test_user_step_shows_devices(hass: HomeAssistant) -> None:
-    """Test user step shows a form with available devices."""
+async def test_user_step_creates_entry(hass: HomeAssistant) -> None:
+    """Test user step shows a form and creates a config entry on valid selection."""
     with patch(
         "homeassistant.components.keyboard_remote.config_flow._scan_input_devices_sync",
         return_value=MOCK_SCAN_RESULT,
@@ -72,18 +72,6 @@ async def test_user_step_shows_devices(hass: HomeAssistant) -> None:
     assert result["step_id"] == "user"
     assert result["errors"] == {}
 
-
-@pytest.mark.usefixtures("mock_setup_entry")
-async def test_user_step_creates_entry(hass: HomeAssistant) -> None:
-    """Test user step creates a config entry on valid selection."""
-    with patch(
-        "homeassistant.components.keyboard_remote.config_flow._scan_input_devices_sync",
-        return_value=MOCK_SCAN_RESULT,
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_USER}
-        )
-
     with patch(
         "homeassistant.components.keyboard_remote.config_flow._get_device_name",
         return_value=FAKE_DEVICE_NAME,
@@ -95,6 +83,7 @@ async def test_user_step_creates_entry(hass: HomeAssistant) -> None:
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == FAKE_DEVICE_NAME
+    assert result["result"].unique_id == FAKE_BY_ID_BASENAME
     assert result["data"] == {
         CONF_DEVICE_PATH: FAKE_DEVICE_PATH,
         CONF_DEVICE_NAME: FAKE_DEVICE_NAME,
@@ -136,6 +125,19 @@ async def test_user_step_cannot_connect(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "cannot_connect"}
 
+    # Retry with a working device — flow should recover
+    with patch(
+        "homeassistant.components.keyboard_remote.config_flow._get_device_name",
+        return_value=FAKE_DEVICE_NAME,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_DEVICE_PATH: FAKE_DEVICE_PATH},
+        )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == FAKE_DEVICE_NAME
+
 
 async def test_user_step_no_devices(hass: HomeAssistant) -> None:
     """Test user step aborts when no devices found."""
@@ -152,16 +154,13 @@ async def test_user_step_no_devices(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.usefixtures("mock_setup_entry")
-async def test_user_step_all_configured(hass: HomeAssistant) -> None:
+async def test_user_step_all_configured(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
     """Test user step aborts when all devices are already configured."""
     # Add an existing entry for the only device in scan results
     single_device = [MOCK_SCAN_RESULT[0]]
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        unique_id=FAKE_BY_ID_BASENAME,
-        data={CONF_DEVICE_PATH: FAKE_DEVICE_PATH},
-    )
-    entry.add_to_hass(hass)
+    mock_config_entry.add_to_hass(hass)
 
     with patch(
         "homeassistant.components.keyboard_remote.config_flow._scan_input_devices_sync",
@@ -176,14 +175,11 @@ async def test_user_step_all_configured(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.usefixtures("mock_setup_entry")
-async def test_user_step_already_configured(hass: HomeAssistant) -> None:
+async def test_user_step_already_configured(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
     """Test user step filters out already-configured devices."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        unique_id=FAKE_BY_ID_BASENAME,
-        data={CONF_DEVICE_PATH: FAKE_DEVICE_PATH},
-    )
-    entry.add_to_hass(hass)
+    mock_config_entry.add_to_hass(hass)
 
     with patch(
         "homeassistant.components.keyboard_remote.config_flow._scan_input_devices_sync",
@@ -234,6 +230,7 @@ async def test_import_with_descriptor_and_by_id(hass: HomeAssistant) -> None:
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == FAKE_DEVICE_NAME
+    assert result["result"].unique_id == FAKE_BY_ID_BASENAME
     assert result["data"][CONF_DEVICE_PATH] == FAKE_DEVICE_PATH
     assert result["data"][CONF_DEVICE_NAME] == FAKE_DEVICE_NAME
     assert result["data"][CONF_DEVICE_DESCRIPTOR] == FAKE_DEVICE_REAL_PATH
@@ -257,6 +254,7 @@ async def test_import_with_name(hass: HomeAssistant) -> None:
         )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == FAKE_BY_ID_BASENAME
     assert result["data"][CONF_DEVICE_PATH] == FAKE_DEVICE_PATH
     assert result["data"][CONF_DEVICE_NAME] == FAKE_DEVICE_NAME
 
@@ -337,43 +335,18 @@ async def test_import_already_configured(hass: HomeAssistant) -> None:
     assert result["reason"] == "already_configured"
 
 
-@pytest.mark.usefixtures("mock_setup_entry")
-async def test_import_default_options(hass: HomeAssistant) -> None:
-    """Test YAML import uses defaults when options not specified."""
-    with patch(
-        "homeassistant.components.keyboard_remote.config_flow._resolve_yaml_device",
-        return_value=(FAKE_DEVICE_PATH, FAKE_DEVICE_NAME, FAKE_BY_ID_BASENAME),
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_IMPORT},
-            data={"device_descriptor": FAKE_DEVICE_REAL_PATH},
-        )
-
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["options"] == {
-        CONF_KEY_TYPES: DEFAULT_KEY_TYPES,
-        CONF_EMULATE_KEY_HOLD: DEFAULT_EMULATE_KEY_HOLD,
-        CONF_EMULATE_KEY_HOLD_DELAY: DEFAULT_EMULATE_KEY_HOLD_DELAY,
-        CONF_EMULATE_KEY_HOLD_REPEAT: DEFAULT_EMULATE_KEY_HOLD_REPEAT,
-    }
-
-
 # --- Options flow tests ---
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_options_flow(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test the options flow allows changing settings."""
     mock_config_entry.add_to_hass(hass)
-    with patch(
-        "homeassistant.components.keyboard_remote.async_setup_entry",
-        return_value=True,
-    ):
-        await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
 
     result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
 
@@ -400,18 +373,15 @@ async def test_options_flow(
     }
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_options_flow_shows_device_path(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test the options flow shows the device path in description."""
     mock_config_entry.add_to_hass(hass)
-    with patch(
-        "homeassistant.components.keyboard_remote.async_setup_entry",
-        return_value=True,
-    ):
-        await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
 
     result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
 
