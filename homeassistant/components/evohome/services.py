@@ -60,7 +60,7 @@ SET_ZONE_OVERRIDE_SCHEMA: Final[dict[str | vol.Marker, Any]] = {
 
 # DHW service schemas (registered as entity services)
 SET_DHW_OVERRIDE_SCHEMA: Final[dict[str | vol.Marker, Any]] = {
-    vol.Required(EVO_STATE): vol.In(EvoDhwState),
+    vol.Required(EVO_STATE): vol.Coerce(EvoDhwState),
     vol.Optional(ATTR_DURATION): vol.All(
         cv.time_period,
         vol.Range(min=timedelta(days=0), max=timedelta(days=1)),
