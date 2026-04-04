@@ -122,23 +122,8 @@ async def _async_wifi_entities_list(
     """Get list of wifi entities."""
     _LOGGER.debug("Setting up %s switches", SWITCH_TYPE_WIFINETWORK)
 
-    #
-    # https://avm.de/fileadmin/user_upload/Global/Service/Schnittstellen/wlanconfigSCPD.pdf
-    #
-    wifi_count = len(
-        [
-            s
-            for s in avm_wrapper.connection.services
-            if s.startswith("WLANConfiguration")
-        ]
-    )
-    _LOGGER.debug("WiFi networks count: %s", wifi_count)
-    networks: dict[int, dict[str, Any]] = {}
-    for i in range(1, wifi_count + 1):
-        network_info = await avm_wrapper.async_get_wlan_configuration(i)
-        # Devices with 4 WLAN services, use the 2nd for internal communications
-        if not (wifi_count == 4 and i == 2):
-            networks[i] = network_info
+    networks = avm_wrapper.data["wifi_networks"]
+
     for i, network in networks.copy().items():
         networks[i]["switch_name"] = network["NewSSID"]
         if (
@@ -533,7 +518,7 @@ class FritzBoxProfileSwitch(FritzBoxBaseCoordinatorSwitch):
         self.async_write_ha_state()
 
 
-class FritzBoxWifiSwitch(FritzBoxBaseSwitch):
+class FritzBoxWifiSwitch(FritzBoxBaseCoordinatorSwitch):
     """Defines a FRITZ!Box Tools Wifi switch."""
 
     def __init__(
@@ -544,53 +529,48 @@ class FritzBoxWifiSwitch(FritzBoxBaseSwitch):
         network_data: dict[str, Any],
     ) -> None:
         """Init Fritz Wifi switch."""
-        self._avm_wrapper = avm_wrapper
-        self._wifi_info = network_data
+        self.network_num = network_num
 
-        self._attributes = {}
-        self._attr_entity_category = EntityCategory.CONFIG
-        self._attr_entity_registry_enabled_default = (
-            avm_wrapper.mesh_role is not MeshRoles.SLAVE
-        )
-        self._network_num = network_num
-
-        switch_info = SwitchInfo(
-            description=f"Wi-Fi {network_data['switch_name']}",
-            friendly_name=device_friendly_name,
+        description = SwitchEntityDescription(
+            key=f"wi_fi_{slugify(network_data['switch_name'])}",
+            name=f"Wi-Fi {network_data['switch_name']}",
             icon="mdi:wifi",
-            type=SWITCH_TYPE_WIFINETWORK,
-            callback_update=self._async_fetch_update,
-            callback_switch=self._async_switch_on_off_executor,
-            init_state=network_data["NewEnable"],
-        )
-        super().__init__(self._avm_wrapper, device_friendly_name, switch_info)
-
-    async def _async_fetch_update(self) -> None:
-        """Fetch updates."""
-
-        wifi_info = await self._avm_wrapper.async_get_wlan_configuration(
-            self._network_num
-        )
-        _LOGGER.debug(
-            "Specific %s response: GetInfo=%s", SWITCH_TYPE_WIFINETWORK, wifi_info
+            entity_category=EntityCategory.CONFIG,
+            entity_registry_enabled_default=avm_wrapper.mesh_role
+            is not MeshRoles.SLAVE,
         )
 
-        if not wifi_info:
-            self._is_available = False
-            return
+        super().__init__(avm_wrapper, device_friendly_name, description)
 
-        self._attr_is_on = wifi_info["NewEnable"] is True
-        self._is_available = True
+    async def async_added_to_hass(self) -> None:
+        """When entity is added to hass."""
+        await super().async_added_to_hass()
+        self.async_on_remove(
+            self.coordinator.register_enabled_wifi_number(self.network_num)
+        )
 
-        std = wifi_info["NewStandard"]
-        self._attributes["standard"] = std or None
-        self._attributes["bssid"] = wifi_info["NewBSSID"]
-        self._attributes["mac_address_control"] = wifi_info[
-            "NewMACAddressControlEnabled"
-        ]
-        self._wifi_info = wifi_info
+    @property
+    def data(self) -> dict[str, Any]:
+        """Return call wifi network data."""
+        return self.coordinator.data["wifi_networks"].get(self.network_num, {})
 
-    async def _async_switch_on_off_executor(self, turn_on: bool) -> None:
+    @property
+    def is_on(self) -> bool | None:
+        """Switch status."""
+        return self.data.get("NewEnable") is True
+
+    @property
+    def extra_state_attributes(self) -> dict[str, Any]:
+        """Return device attributes."""
+        return {
+            "standard": self.data["NewStandard"] or None,
+            "bssid": self.data["NewBSSID"],
+            "mac_address_control": self.data["NewMACAddressControlEnabled"],
+        }
+
+    async def _async_handle_turn_on_off(self, turn_on: bool) -> None:
         """Handle wifi switch."""
-        self._wifi_info["NewEnable"] = turn_on
-        await self._avm_wrapper.async_set_wlan_configuration(self._network_num, turn_on)
+        await self.coordinator.async_set_wlan_configuration(self.network_num, turn_on)
+        network = self.coordinator.data["wifi_networks"][self.network_num]
+        network["NewEnable"] = turn_on
+        self.async_write_ha_state()
