@@ -96,11 +96,19 @@ async def test_changed_by(
     assert lock_device is not None
     assert lock_device.attributes.get("changed_by") == "access code - foo"
 
-
+@pytest.mark.parametrize(
+    "notify_on_use",
+    [
+        True,
+        False,
+    ],
+    ids=["notify-true", "notify-false"],
+)
 async def test_add_code_service(
     hass: HomeAssistant,
     mock_lock: Mock,
     mock_added_config_entry: MockSchlageConfigEntry,
+    notify_on_use: bool,
 ) -> None:
     """Test add_code service."""
     # Mock access_codes as empty initially
@@ -114,6 +122,7 @@ async def test_add_code_service(
             "entity_id": "lock.vault_door",
             "name": "test_user",
             "code": "1234",
+            "notify_on_use": notify_on_use,
         },
         blocking=True,
     )
@@ -126,6 +135,7 @@ async def test_add_code_service(
     assert isinstance(call_args, AccessCode)
     assert call_args.name == "test_user"
     assert call_args.code == "1234"
+    assert call_args.notify_on_use == notify_on_use
 
 
 @pytest.mark.parametrize(
@@ -155,6 +165,7 @@ async def test_add_code_service_invalid_code(
                 "entity_id": "lock.vault_door",
                 "name": "test_user",
                 "code": code,
+                "notify_on_use": False,
             },
             blocking=True,
         )
@@ -184,6 +195,7 @@ async def test_add_code_service_duplicate_name(
                 "entity_id": "lock.vault_door",
                 "name": "test_user",
                 "code": "1234",
+                "notify_on_use": False,
             },
             blocking=True,
         )
@@ -215,6 +227,7 @@ async def test_add_code_service_duplicate_code(
                 "entity_id": "lock.vault_door",
                 "name": "test_user",
                 "code": "1234",
+                "notify_on_use": False,
             },
             blocking=True,
         )
@@ -438,6 +451,7 @@ async def test_add_code_service_refresh_error(
                 "entity_id": "lock.vault_door",
                 "name": "test_user",
                 "code": "1234",
+                "notify_on_use": False,
             },
             blocking=True,
         )
@@ -461,6 +475,7 @@ async def test_add_code_service_api_error(
                 "entity_id": "lock.vault_door",
                 "name": "test_user",
                 "code": "1234",
+                "notify_on_use": False,
             },
             blocking=True,
         )
