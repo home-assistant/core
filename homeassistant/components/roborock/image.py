@@ -50,9 +50,6 @@ class RoborockMap(RoborockCoordinatedEntityV1, ImageEntity):
     _attr_has_entity_name = True
     image_last_updated: datetime
     _attr_name: str
-    # Prevent this entity from being used as a trigger for state-based automations
-    # which helps reduce overall system noise.
-    _attr_should_poll = False
 
     def __init__(
         self,
