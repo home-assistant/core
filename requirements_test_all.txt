@@ -374,7 +374,7 @@ aioridwell==2025.09.0
 aioruckus==0.42
 
 # homeassistant.components.russound_rio
-aiorussound==4.9.1
+aiorussound==4.10.0
 
 # homeassistant.components.ruuvi_gateway
 aioruuvigateway==0.1.0
@@ -1049,7 +1049,7 @@ ha-silabs-firmware-client==0.3.0
 habiticalib==0.4.7
 
 # homeassistant.components.bluetooth
-habluetooth==5.11.1
+habluetooth==6.0.0
 
 # homeassistant.components.hanna
 hanna-cloud==0.0.7
