@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from typing import Any
 
+from apple_weatherkit import DataSetType
+
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
@@ -56,7 +58,7 @@ async def async_setup_entry(
         WeatherKitSensor(coordinator, description) for description in SENSORS
     ]
 
-    if ATTR_WEATHER_ALERTS in (coordinator.supported_data_sets or []):
+    if DataSetType.WEATHER_ALERTS in (coordinator.supported_data_sets or []):
         entities.append(WeatherKitAlertSensor(coordinator))
 
     async_add_entities(entities)
