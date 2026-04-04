@@ -377,3 +377,31 @@ async def test_get_color_service_invalid_image(
         "image_type": "file path",
         "image_reference": "/opt/not_an_image.txt",
     }
+
+
+@patch("os.path.isfile", Mock(return_value=True))
+@patch("os.access", Mock(return_value=True))
+async def test_get_color_service_not_allowed_path(
+    hass: HomeAssistant, setup_integration
+) -> None:
+    """Test that the get_color service raises a ServiceValidationError when given an image from a path that is not allowed."""
+    service_data = {
+        ATTR_PATH: "/opt/not_an_image.txt",
+    }
+
+    with (
+        patch(
+            "homeassistant.components.color_extractor.services._get_file",
+            Mock(side_effect=UnidentifiedImageError("Cannot identify image file")),
+        ),
+        pytest.raises(ServiceValidationError) as exc_info,
+    ):
+        await hass.services.async_call(
+            DOMAIN, SERVICE_GET_COLOR, service_data, blocking=True, return_response=True
+        )
+
+    assert exc_info.value.translation_key == "invalid_image"
+    assert exc_info.value.translation_placeholders == {
+        "image_type": "file path",
+        "image_reference": "/opt/not_an_image.txt",
+    }
