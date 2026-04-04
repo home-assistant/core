@@ -21,7 +21,7 @@ class DucoEntity(CoordinatorEntity[DucoCoordinator]):
         super().__init__(coordinator)
         self._node_id = node.node_id
         mac = coordinator.config_entry.unique_id
-        self._attr_device_info = DeviceInfo(
+        device_info = DeviceInfo(
             identifiers={(DOMAIN, f"{mac}_{node.node_id}")},
             manufacturer="Duco",
             model=coordinator.board_info.box_name
@@ -29,6 +29,9 @@ class DucoEntity(CoordinatorEntity[DucoCoordinator]):
             else node.general.node_type,
             name=node.general.name or f"Node {node.node_id}",
         )
+        if node.general.node_type != "BOX":
+            device_info["via_device"] = (DOMAIN, f"{mac}_1")
+        self._attr_device_info = device_info
 
     @property
     def available(self) -> bool:
