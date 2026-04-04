@@ -47,9 +47,9 @@ class ConfigEntryExtension(BaseTemplateExtension):
         )
 
     def integration_entities(self, entry_name: str) -> Iterable[str]:
-        """Get entity ids for entities tied to an integration/domain.
+        """Get entity IDs for entities tied to an integration/domain.
 
-        Provide entry_name as domain to get all entity id's for a integration/domain
+        Provide entry_name as domain to get all entity IDs for an integration/domain
         or provide a config entry title for filtering between instances of the same
         integration.
         """
