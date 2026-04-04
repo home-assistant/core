@@ -6,6 +6,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
+from homeassistant.components.satel_integra.config_flow import SatelConfigFlow
 from homeassistant.components.satel_integra.const import DOMAIN
 
 from . import (
@@ -89,8 +90,8 @@ def mock_config_entry() -> MockConfigEntry:
         data=MOCK_CONFIG_DATA,
         options=MOCK_CONFIG_OPTIONS,
         entry_id=MOCK_ENTRY_ID,
-        version=2,
-        minor_version=1,
+        version=SatelConfigFlow.VERSION,
+        minor_version=SatelConfigFlow.MINOR_VERSION,
     )
 
 
