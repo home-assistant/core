@@ -68,7 +68,6 @@ from homeassistant.util.yaml import load_yaml_dict
 from . import config_validation as cv, selector
 from .automation import (
     DomainSpec,
-    NumericalDomainSpec,
     ThresholdConfig,
     filter_by_domain_specs,
     get_absolute_description_key,
@@ -203,22 +202,28 @@ async def _register_trigger_platform(
     from homeassistant.components import automation  # noqa: PLC0415
 
     new_triggers: set[str] = set()
+    triggers = hass.data[TRIGGERS]
 
     if hasattr(platform, "async_get_triggers"):
-        for trigger_key in await platform.async_get_triggers(hass):
+        all_triggers = await platform.async_get_triggers(hass)
+        for trigger_key in all_triggers:
             trigger_key = get_absolute_description_key(integration_domain, trigger_key)
-            hass.data[TRIGGERS][trigger_key] = integration_domain
-            new_triggers.add(trigger_key)
+            if trigger_key not in triggers:
+                triggers[trigger_key] = integration_domain
+                new_triggers.add(trigger_key)
         if not new_triggers:
-            _LOGGER.debug(
-                "Integration %s returned no triggers in async_get_triggers",
-                integration_domain,
-            )
+            if not all_triggers:
+                _LOGGER.debug(
+                    "Integration %s returned no triggers in async_get_triggers",
+                    integration_domain,
+                )
             return
     elif hasattr(platform, "async_validate_trigger_config") or hasattr(
         platform, "TRIGGER_SCHEMA"
     ):
-        hass.data[TRIGGERS][integration_domain] = integration_domain
+        if integration_domain in triggers:
+            return
+        triggers[integration_domain] = integration_domain
         new_triggers.add(integration_domain)
     else:
         _LOGGER.debug(
@@ -336,15 +341,14 @@ ENTITY_STATE_TRIGGER_SCHEMA_FIRST_LAST = ENTITY_STATE_TRIGGER_SCHEMA.extend(
                 [BEHAVIOR_FIRST, BEHAVIOR_LAST, BEHAVIOR_ANY]
             ),
         },
-        vol.Required(CONF_TARGET): cv.TARGET_FIELDS,
     }
 )
 
 
-class EntityTriggerBase[DomainSpecT: DomainSpec = DomainSpec](Trigger):
+class EntityTriggerBase(Trigger):
     """Trigger for entity state changes."""
 
-    _domain_specs: Mapping[str, DomainSpecT]
+    _domain_specs: Mapping[str, DomainSpec]
     _schema: vol.Schema = ENTITY_STATE_TRIGGER_SCHEMA_FIRST_LAST
 
     @override
@@ -484,8 +488,8 @@ class EntityTargetStateTriggerBase(EntityTriggerBase):
 class EntityTransitionTriggerBase(EntityTriggerBase):
     """Trigger for entity state changes between specific states."""
 
-    _from_states: set[str]
-    _to_states: set[str]
+    _from_states: set[str | bool]
+    _to_states: set[str | bool]
 
     def is_valid_transition(self, from_state: State, to_state: State) -> bool:
         """Check if the origin state matches the expected ones."""
@@ -535,7 +539,7 @@ NUMERICAL_ATTRIBUTE_CHANGED_TRIGGER_SCHEMA = ENTITY_STATE_TRIGGER_SCHEMA.extend(
 )
 
 
-class EntityNumericalStateTriggerBase(EntityTriggerBase[NumericalDomainSpec]):
+class EntityNumericalStateTriggerBase(EntityTriggerBase):
     """Base class for numerical state and state attribute triggers."""
 
     _valid_unit: str | None | UndefinedType = UNDEFINED
@@ -596,20 +600,11 @@ class EntityNumericalStateTriggerBase(EntityTriggerBase[NumericalDomainSpec]):
             # Entity state is not a valid number
             return None
 
-    def _get_converter(self, state: State) -> Callable[[float], float]:
-        """Get the value converter for an entity."""
-        domain_spec = self._domain_specs[state.domain]
-        if domain_spec.value_converter is not None:
-            return domain_spec.value_converter
-        return lambda x: x
-
     def is_valid_state(self, state: State) -> bool:
         """Check if the new state or state attribute matches the expected one."""
         # Handle missing or None value case first to avoid expensive exceptions
-        if (_attribute_value := self._get_tracked_value(state)) is None:
+        if (current_value := self._get_tracked_value(state)) is None:
             return False
-
-        current_value = self._get_converter(state)(_attribute_value)
 
         if self._threshold_type == NumericThresholdType.ANY:
             # If the threshold type is "any" we always trigger on valid state
@@ -746,19 +741,16 @@ class EntityNumericalStateChangedTriggerWithUnitBase(
         cls._schema = make_numerical_state_changed_with_unit_schema(cls._unit_converter)
 
 
-NUMERICAL_ATTRIBUTE_CROSSED_THRESHOLD_SCHEMA = ENTITY_STATE_TRIGGER_SCHEMA.extend(
-    {
-        vol.Required(CONF_OPTIONS): vol.All(
-            {
-                vol.Required(ATTR_BEHAVIOR, default=BEHAVIOR_ANY): vol.In(
-                    [BEHAVIOR_FIRST, BEHAVIOR_LAST, BEHAVIOR_ANY]
-                ),
+NUMERICAL_ATTRIBUTE_CROSSED_THRESHOLD_SCHEMA = (
+    ENTITY_STATE_TRIGGER_SCHEMA_FIRST_LAST.extend(
+        {
+            vol.Required(CONF_OPTIONS): {
                 vol.Required("threshold"): NumericThresholdSelector(
                     NumericThresholdSelectorConfig(mode=NumericThresholdMode.CROSSED)
                 ),
             },
-        )
-    }
+        }
+    )
 )
 
 
@@ -787,21 +779,16 @@ def _make_numerical_state_crossed_threshold_with_unit_schema(
     This trigger only fires when the observed attribute changes from not within to within
     the defined threshold.
     """
-    return ENTITY_STATE_TRIGGER_SCHEMA.extend(
+    return ENTITY_STATE_TRIGGER_SCHEMA_FIRST_LAST.extend(
         {
-            vol.Required(CONF_OPTIONS, default={}): vol.All(
-                {
-                    vol.Required(ATTR_BEHAVIOR, default=BEHAVIOR_ANY): vol.In(
-                        [BEHAVIOR_FIRST, BEHAVIOR_LAST, BEHAVIOR_ANY]
-                    ),
-                    vol.Required("threshold"): NumericThresholdSelector(
-                        NumericThresholdSelectorConfig(
-                            mode=NumericThresholdMode.CROSSED,
-                            unit_of_measurement=list(unit_converter.VALID_UNITS),
-                        )
-                    ),
-                },
-            )
+            vol.Required(CONF_OPTIONS, default={}): {
+                vol.Required("threshold"): NumericThresholdSelector(
+                    NumericThresholdSelectorConfig(
+                        mode=NumericThresholdMode.CROSSED,
+                        unit_of_measurement=list(unit_converter.VALID_UNITS),
+                    )
+                ),
+            },
         }
     )
 
@@ -857,8 +844,8 @@ def make_entity_target_state_trigger(
 def make_entity_transition_trigger(
     domain_specs: Mapping[str, DomainSpec] | str,
     *,
-    from_states: set[str],
-    to_states: set[str],
+    from_states: set[str | bool],
+    to_states: set[str | bool],
 ) -> type[EntityTransitionTriggerBase]:
     """Create a trigger for entity state changes between specific states.
 
@@ -899,7 +886,7 @@ def make_entity_origin_state_trigger(
 
 
 def make_entity_numerical_state_changed_trigger(
-    domain_specs: Mapping[str, NumericalDomainSpec],
+    domain_specs: Mapping[str, DomainSpec],
     valid_unit: str | None | UndefinedType = UNDEFINED,
 ) -> type[EntityNumericalStateChangedTriggerBase]:
     """Create a trigger for numerical state value change."""
@@ -914,7 +901,7 @@ def make_entity_numerical_state_changed_trigger(
 
 
 def make_entity_numerical_state_crossed_threshold_trigger(
-    domain_specs: Mapping[str, NumericalDomainSpec],
+    domain_specs: Mapping[str, DomainSpec],
     valid_unit: str | None | UndefinedType = UNDEFINED,
 ) -> type[EntityNumericalStateCrossedThresholdTriggerBase]:
     """Create a trigger for numerical state value crossing a threshold."""
@@ -929,7 +916,7 @@ def make_entity_numerical_state_crossed_threshold_trigger(
 
 
 def make_entity_numerical_state_changed_with_unit_trigger(
-    domain_specs: Mapping[str, NumericalDomainSpec],
+    domain_specs: Mapping[str, DomainSpec],
     base_unit: str,
     unit_converter: type[BaseUnitConverter],
 ) -> type[EntityNumericalStateChangedTriggerWithUnitBase]:
@@ -946,7 +933,7 @@ def make_entity_numerical_state_changed_with_unit_trigger(
 
 
 def make_entity_numerical_state_crossed_threshold_with_unit_trigger(
-    domain_specs: Mapping[str, NumericalDomainSpec],
+    domain_specs: Mapping[str, DomainSpec],
     base_unit: str,
     unit_converter: type[BaseUnitConverter],
 ) -> type[EntityNumericalStateCrossedThresholdTriggerWithUnitBase]:
@@ -1203,11 +1190,16 @@ async def _async_get_trigger_platform(
     except IntegrationNotFound:
         raise vol.Invalid(f"Invalid trigger '{trigger_key}' specified") from None
     try:
-        return platform, await integration.async_get_platform("trigger")
+        platform_module = await integration.async_get_platform("trigger")
     except ImportError:
         raise vol.Invalid(
             f"Integration '{platform}' does not provide trigger support"
         ) from None
+
+    # Ensure triggers are registered so descriptions can be loaded
+    await _register_trigger_platform(hass, platform, platform_module)
+
+    return platform, platform_module
 
 
 async def async_validate_trigger_config(

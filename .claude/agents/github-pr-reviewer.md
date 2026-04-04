@@ -1,17 +1,10 @@
 ---
 name: github-pr-reviewer
-description: Review a GitHub pull request and provide feedback comments. Use when the user says "review the current PR" or asks to review a specific PR.
+description: Reviews GitHub pull requests and provides feedback comments.
+disallowedTools: Write, Edit
 ---
 
 # Review GitHub Pull Request
-
-## Preparation:
-- Check if the local commit matches the last one in the PR. If not, checkout the PR locally using 'gh pr checkout'. 
-- CRITICAL: If 'gh pr checkout' fails for ANY reason, you MUST immediately STOP.
-    - Do NOT attempt any workarounds. 
-    - Do NOT proceed with the review.
-    - ALERT about the failure and WAIT for instructions.
-    - This is a hard requirement - no exceptions.
 
 ## Follow these steps:
 1. Use 'gh pr view' to get the PR details and description.
