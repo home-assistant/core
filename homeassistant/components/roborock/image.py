@@ -61,7 +61,7 @@ class RoborockMap(RoborockCoordinatedEntityV1, ImageEntity):
     ) -> None:
         """Initialize a Roborock map."""
         map_name = map_name or f"Map {map_flag}"
-        unique_id = f"{coordinator.duid_slug}_map_{map_name}"
+        unique_id = f"{coordinator.duid_slug}_map_{map_flag}"
         RoborockCoordinatedEntityV1.__init__(self, unique_id, coordinator)
         ImageEntity.__init__(self, coordinator.hass)
         self.config_entry = config_entry
