@@ -90,7 +90,7 @@ AndroidTVConfigEntry = ConfigEntry[AndroidTVRuntimeData]
 
 def get_androidtv_mac(dev_props: dict[str, Any]) -> str | None:
     """Return formatted mac from device properties."""
-    for prop_mac in (PROP_ETHMAC, PROP_WIFIMAC):
+    for prop_mac in (PROP_WIFIMAC, PROP_ETHMAC):
         if if_mac := dev_props.get(prop_mac):
             mac = format_mac(if_mac)
             if mac not in _INVALID_MACS:
