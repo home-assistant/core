@@ -14,6 +14,8 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
 
+from .const import MOCK_INSTALLATION_ID
+
 from tests.common import MockConfigEntry
 
 
@@ -24,7 +26,7 @@ def mock_victron_hub_library():
         hub_instance = MagicMock()
         hub_instance.connect = AsyncMock()
         hub_instance.disconnect = AsyncMock()
-        hub_instance.installation_id = "123"
+        hub_instance.installation_id = MOCK_INSTALLATION_ID
         mock_lib.return_value = hub_instance
         yield mock_lib
 
@@ -145,7 +147,7 @@ async def test_hub_start_success(
 
     # Verify the hub was started (integration was set up successfully)
     assert mock_config_entry.state is ConfigEntryState.LOADED
-    assert victron_hub.installation_id == "123"
+    assert victron_hub.installation_id == MOCK_INSTALLATION_ID
 
 
 async def test_hub_start_authentication_error(

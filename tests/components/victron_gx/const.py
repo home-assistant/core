@@ -1,6 +1,6 @@
 """Constants for victron_gx tests."""
 
-MOCK_INSTALLATION_ID = "d41243d9b9c6"
+MOCK_INSTALLATION_ID = "123"
 MOCK_SERIAL = "HQ2234ABCDE"
 MOCK_MODEL = "Cerbo GX"
 MOCK_FRIENDLY_NAME = "Venus GX"

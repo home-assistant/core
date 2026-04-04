@@ -10,6 +10,8 @@ from homeassistant.components.victron_gx.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
+from .const import MOCK_INSTALLATION_ID
+
 from tests.common import MockConfigEntry
 
 
@@ -23,7 +25,11 @@ async def test_victron_battery_sensor(
     victron_hub, mock_config_entry = init_integration
 
     # Inject a sensor metric (battery current)
-    await inject_message(victron_hub, "N/123/battery/0/Dc/0/Current", '{"value": 10.5}')
+    await inject_message(
+        victron_hub,
+        f"N/{MOCK_INSTALLATION_ID}/battery/0/Dc/0/Current",
+        '{"value": 10.5}',
+    )
     await finalize_injection(victron_hub)
     await hass.async_block_till_done()
 
@@ -36,7 +42,7 @@ async def test_victron_battery_sensor(
     assert len(entities) == 1
     entity = entities[0]
     assert entity.entity_id == "sensor.battery_dc_bus_current"
-    assert entity.unique_id == "123_battery_0_battery_current"
+    assert entity.unique_id == f"{MOCK_INSTALLATION_ID}_battery_0_battery_current"
     assert entity.original_device_class is SensorDeviceClass.CURRENT
     assert entity.unit_of_measurement == "A"
     assert entity.translation_key == "battery_current"
@@ -49,13 +55,19 @@ async def test_victron_battery_sensor(
     assert state.attributes["unit_of_measurement"] == "A"
 
     # Verify device info was registered correctly
-    device = device_registry.async_get_device(identifiers={(DOMAIN, "123_battery_0")})
+    device = device_registry.async_get_device(
+        identifiers={(DOMAIN, f"{MOCK_INSTALLATION_ID}_battery_0")}
+    )
     assert device is not None
     assert device.manufacturer == "Victron Energy"
     assert device.name == "Battery"
 
     # Update the same metric to exercise the entity update callback path.
-    await inject_message(victron_hub, "N/123/battery/0/Dc/0/Current", '{"value": 11.2}')
+    await inject_message(
+        victron_hub,
+        f"N/{MOCK_INSTALLATION_ID}/battery/0/Dc/0/Current",
+        '{"value": 11.2}',
+    )
     await hass.async_block_till_done()
 
     state = hass.states.get(entity.entity_id)
@@ -73,7 +85,9 @@ async def test_victron_enum_sensor(
 
     # SystemState/State produces a VictronEnum (State enum)
     await inject_message(
-        victron_hub, "N/123/system/0/SystemState/State", '{"value": 1}'
+        victron_hub,
+        f"N/{MOCK_INSTALLATION_ID}/system/0/SystemState/State",
+        '{"value": 1}',
     )
     await finalize_injection(victron_hub)
     await hass.async_block_till_done()
@@ -84,7 +98,9 @@ async def test_victron_enum_sensor(
     assert state.state == "low_power"
 
     # Verify system device has no via_device (it IS the gateway)
-    device = device_registry.async_get_device(identifiers={(DOMAIN, "123_system_0")})
+    device = device_registry.async_get_device(
+        identifiers={(DOMAIN, f"{MOCK_INSTALLATION_ID}_system_0")}
+    )
     assert device is not None
     assert device.manufacturer == "Victron Energy"
     assert device.via_device_id is None
