@@ -99,6 +99,12 @@
       "reset_sensor_consumable": {
         "name": "Reset sensor consumable"
       },
+      "reset_dock_cleaning_brush_consumable": {
+        "name": "Reset dock maintenance brush consumable"
+      },
+      "reset_dock_strainer_consumable": {
+        "name": "Reset dock strainer consumable"
+      },
       "reset_side_brush_consumable": {
         "name": "Reset side brush consumable"
       },

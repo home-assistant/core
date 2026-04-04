@@ -14,6 +14,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from .conftest import FakeDevice
+from .mock_data import CONSUMABLE
 
 from tests.common import MockConfigEntry, snapshot_platform
 
@@ -55,6 +56,8 @@ def consumeables_trait_fixture(fake_vacuum: FakeDevice) -> Mock:
         ("button.roborock_s7_maxv_reset_air_filter_consumable"),
         ("button.roborock_s7_maxv_reset_side_brush_consumable"),
         ("button.roborock_s7_maxv_reset_main_brush_consumable"),
+        ("button.roborock_s7_maxv_dock_reset_dock_strainer_consumable"),
+        ("button.roborock_s7_maxv_dock_reset_dock_maintenance_brush_consumable"),
     ],
 )
 @pytest.mark.freeze_time("2023-10-30 08:50:00")
@@ -77,6 +80,47 @@ async def test_update_success(
     )
     assert consumeables_trait.reset_consumable.assert_called_once
     assert hass.states.get(entity_id).state == "2023-10-30T08:50:00+00:00"
+
+
+@pytest.fixture(name="dock_consumable_unsupported")
+def dock_consumable_unsupported_fixture(fake_vacuum: FakeDevice) -> None:
+    """Override consumables refresh so dock fields stay None during coordinator setup."""
+    assert fake_vacuum.v1_properties is not None
+    consumables = fake_vacuum.v1_properties.consumables
+    consumables.strainer_work_times = None
+    consumables.cleaning_brush_work_times = None
+
+    async def refresh_without_dock() -> None:
+        from copy import deepcopy as _deepcopy
+
+        from .conftest import set_trait_attributes
+
+        consumable_no_dock = _deepcopy(CONSUMABLE)
+        consumable_no_dock.strainer_work_times = None
+        consumable_no_dock.cleaning_brush_work_times = None
+        set_trait_attributes(consumables, consumable_no_dock)
+
+    consumables.refresh.side_effect = refresh_without_dock
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default", "dock_consumable_unsupported")
+async def test_dock_consumable_buttons_not_created_when_unsupported(
+    hass: HomeAssistant,
+    setup_entry: MockConfigEntry,
+) -> None:
+    """Test dock consumable buttons are absent when the dock doesn't report them."""
+    assert (
+        hass.states.get(
+            "button.roborock_s7_maxv_dock_reset_dock_strainer_consumable"
+        )
+        is None
+    )
+    assert (
+        hass.states.get(
+            "button.roborock_s7_maxv_dock_reset_dock_maintenance_brush_consumable"
+        )
+        is None
+    )
 
 
 @pytest.mark.parametrize(
