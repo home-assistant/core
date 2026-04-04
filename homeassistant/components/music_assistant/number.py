@@ -5,11 +5,7 @@ from __future__ import annotations
 from typing import Final
 
 from music_assistant_client.client import MusicAssistantClient
-from music_assistant_models.player import (
-    PlayerOption,
-    PlayerOptionType,
-    PlayerOptionTypeMap,
-)
+from music_assistant_models.player import PlayerOption, PlayerOptionType
 
 from homeassistant.components.number import NumberEntity, NumberEntityDescription
 from homeassistant.const import Platform
@@ -60,21 +56,29 @@ async def async_setup_entry(
                 and not player_option.options  # these we map to select
             ):
                 # the MA translation key must have the format player_options.<translation key>
+                # we ignore entities with unknown translation keys.
                 if (
                     player_option.translation_key is None
                     or not player_option.translation_key.startswith(
                         PLAYER_OPTIONS_TRANSLATION_KEY_PREFIX
                     )
-                    or player_option.translation_key.split(
-                        PLAYER_OPTIONS_TRANSLATION_KEY_PREFIX
-                    )[-1]
-                    not in PLAYER_OPTIONS_TRANSLATION_KEYS_NUMBER
                 ):
-                    # we ignore entities with unknown translation keys.
                     continue
+                translation_key = player_option.translation_key[
+                    len(PLAYER_OPTIONS_TRANSLATION_KEY_PREFIX) :
+                ]
+                if translation_key not in PLAYER_OPTIONS_TRANSLATION_KEYS_NUMBER:
+                    continue
+
                 entities.append(
                     MusicAssistantPlayerConfigNumber(
-                        mass, player_id, player_option=player_option
+                        mass,
+                        player_id,
+                        player_option=player_option,
+                        entity_description=NumberEntityDescription(
+                            key=player_option.key,
+                            translation_key=translation_key,
+                        ),
                     )
                 )
         async_add_entities(entities)
@@ -87,7 +91,11 @@ class MusicAssistantPlayerConfigNumber(MusicAssistantPlayerOptionEntity, NumberE
     """Representation of a Number entity to control player provider dependent settings."""
 
     def __init__(
-        self, mass: MusicAssistantClient, player_id: str, player_option: PlayerOption
+        self,
+        mass: MusicAssistantClient,
+        player_id: str,
+        player_option: PlayerOption,
+        entity_description: NumberEntityDescription,
     ) -> None:
         """Initialize MusicAssistantPlayerConfigNumber."""
         super().__init__(mass, player_id, player_option)
@@ -96,20 +104,16 @@ class MusicAssistantPlayerConfigNumber(MusicAssistantPlayerOptionEntity, NumberE
         # strings.json (see tests)
         assert player_option.translation_key is not None
 
-        self.entity_description = NumberEntityDescription(
-            key=player_option.key,
-            translation_key=player_option.translation_key.split(
-                PLAYER_OPTIONS_TRANSLATION_KEY_PREFIX
-            )[-1],
-        )
+        self.entity_description = entity_description
 
     @catch_musicassistant_error
     async def async_set_native_value(self, value: float) -> None:
         """Set a new value."""
+        _value = round(value) if self.mass_type == PlayerOptionType.INTEGER else value
         await self.mass.players.set_option(
             self.player_id,
             self.mass_option_key,
-            PlayerOptionTypeMap[self.mass_type](value),
+            _value,
         )
 
     def on_player_option_update(self, player_option: PlayerOption) -> None:
