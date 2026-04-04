@@ -5,11 +5,11 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any
 
-import radiotherm
-from radiotherm.thermostat import CommonThermostat
-
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
+
+import radiotherm
+from radiotherm.thermostat import CommonThermostat
 
 from .const import TIMEOUT
 
@@ -24,7 +24,7 @@ class RadioThermUpdate:
 
 @dataclass
 class RadioThermInitData:
-    """An data needed to init the integration."""
+    """Data needed to init the integration."""
 
     tstat: CommonThermostat
     host: str

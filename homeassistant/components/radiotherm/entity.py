@@ -32,7 +32,7 @@ class RadioThermostatEntity(CoordinatorEntity[RadioThermUpdateCoordinator]):
 
     @property
     def data(self) -> RadioThermUpdate:
-        """Returnt the last update."""
+        """Return the last update."""
         return self.coordinator.data
 
     @callback
