@@ -124,6 +124,24 @@ async def test_external_update(
     assert int(state.state) == new_value
 
 
+async def test_ignored(
+    hass: HomeAssistant,
+    music_assistant_client: MagicMock,
+) -> None:
+    """Test that non compatible player options are ignored."""
+    mass_ignored_option_keys = [
+        "treble_ro",  # read only goes to sensor platform
+        "enhancer",  # boolean goes to switch platform
+        "enhancer_ro",  # read only goes to sensor platform
+        "network_name",  # string goes to text platform
+        "network_name_ro",  # read only goes to sensor platform
+        "link_audio_delay",  # anything with options goes to select platform
+    ]
+    await setup_integration_from_fixtures(hass, music_assistant_client)
+    for ignored_key in mass_ignored_option_keys:
+        assert hass.states.get(f"number.test_player_1_{ignored_key}") is None
+
+
 async def test_name_translation_availability(
     hass: HomeAssistant,
 ) -> None:
