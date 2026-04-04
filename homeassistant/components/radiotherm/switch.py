@@ -1,4 +1,4 @@
-"""Support for radiotherm switches."""
+"""Support for Radio Thermostat switches."""
 
 from __future__ import annotations
 

@@ -122,7 +122,7 @@ class RadioThermostat(RadioThermostatEntity, ClimateEntity):
         """Initialize the thermostat."""
         super().__init__(coordinator)
 
-        # common init
+        # Common initialization.
         self._attr_unique_id = self.init_data.mac
         self._attr_hvac_modes = CT30_OPERATION_LIST
         self._attr_fan_modes = CT30_FAN_OPERATION_LIST
@@ -134,7 +134,7 @@ class RadioThermostat(RadioThermostatEntity, ClimateEntity):
         )
         self._attr_target_temperature: float | None = None
 
-        # init for CT80 only
+        # Init specific to CT80 only.
         if isinstance(self.device, radiotherm.thermostat.CT80):
             self._attr_hvac_modes = CT80_OPERATION_LIST
             self._attr_fan_modes = CT80_FAN_OPERATION_LIST
@@ -146,7 +146,7 @@ class RadioThermostat(RadioThermostatEntity, ClimateEntity):
             self._attr_target_temperature_high: float | None = None
             self._attr_target_temperature_low: float | None = None
 
-        # Process the already-available coordinator data so the entity
+        # Process the already-available coordinator data so the ClimateEntity
         # has valid state from the very first render.
         self._process_data()
 
@@ -178,7 +178,7 @@ class RadioThermostat(RadioThermostatEntity, ClimateEntity):
         }
         self._attr_hvac_mode = CODE_TO_TEMP_MODE[data["tmode"]]
 
-        # Determine current HVAC action
+        # Determine current HVAC action.
         if self.hvac_mode == HVACMode.OFF:
             self._attr_hvac_action = None
         elif data["tstate"] == 0 and data["fstate"] == 1:
@@ -186,7 +186,7 @@ class RadioThermostat(RadioThermostatEntity, ClimateEntity):
         else:
             self._attr_hvac_action = CODE_TO_TEMP_STATE[data["tstate"]]
 
-        # gracefully handle any missing keys
+        # Set the targets, while failing gracefully.
         if self.hvac_mode == HVACMode.COOL:
             self._attr_target_temperature = data.get("t_cool")
         elif self.hvac_mode == HVACMode.HEAT:
@@ -228,13 +228,13 @@ class RadioThermostat(RadioThermostatEntity, ClimateEntity):
             low_changed = round_temp(temp_low) != self._attr_target_temperature_low
             high_changed = round_temp(temp_high) != self._attr_target_temperature_high
 
-            # cannot consistently set both it_heat and it_cool in the same POST
-            # so, update one or the other, or both--with a delay between
+            # Cannot consistently set both it_heat and it_cool in the same POST.
+            # Therefore, update one or the other, or both with a delay between them.
             if low_changed:
                 self.device.it_heat = round_temp(temp_low)
             if high_changed:
                 if low_changed:
-                    # if low also changed, then delay a second
+                    # if low also changed, then delay a second.
                     time.sleep(1)
                 self.device.it_cool = round_temp(temp_high)
 
@@ -269,11 +269,11 @@ class RadioThermostat(RadioThermostatEntity, ClimateEntity):
 
     def _set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set operation mode (off, heat, cool, heat_cool)."""
-        # get the current hold and use it when setting tmode
-        # this is not always respected on a tmode change
+        # Get the current hold and use it when setting tmode.
+        # However, this is not always respected on a tmode change.
         current_hold = self.data.tstat["hold"]
 
-        # set both at the same time
+        # Set both in the same POST.
         payload = json.dumps(
             {"tmode": TEMP_MODE_TO_CODE[hvac_mode], "hold": current_hold}
         ).encode("utf-8")

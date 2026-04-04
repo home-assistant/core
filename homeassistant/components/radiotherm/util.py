@@ -1,4 +1,4 @@
-"""Utils for radiotherm."""
+"""Utilities for Radio Thermostat."""
 
 from __future__ import annotations
 
