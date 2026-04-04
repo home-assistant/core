@@ -96,36 +96,24 @@ class DucoVentilationFanEntity(DucoEntity, FanEntity):
     def __init__(self, coordinator: DucoCoordinator, node: Node) -> None:
         """Initialize the fan entity."""
         super().__init__(coordinator, node)
-        self._attr_unique_id = (
-            f"{coordinator.config_entry.unique_id}_{node.node_id}_ventilation"
-        )
+        self._attr_unique_id = f"{coordinator.config_entry.unique_id}_{node.node_id}"
 
     @property
     def is_on(self) -> bool:
         """Return True always; the fan is always running physically."""
         return True
 
-    def _handle_coordinator_update(self) -> None:
-        """Clear optimistic state on coordinator update."""
-        self._attr_preset_mode = None
-        super()._handle_coordinator_update()
-
     @property
     def preset_mode(self) -> str | None:
         """Return the current preset mode."""
-        if self._attr_preset_mode is not None:
-            return self._attr_preset_mode
         node = self._node
-        if node is None or node.ventilation is None:
+        if node.ventilation is None:
             return None
         return _STATE_TO_PRESET.get(node.ventilation.state)
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set the ventilation preset mode."""
         self._valid_preset_mode_or_raise(preset_mode)
-        # Optimistically update the UI immediately.
-        self._attr_preset_mode = preset_mode
-        self.async_write_ha_state()
         await self._async_set_state(_PRESET_TO_STATE[preset_mode])
 
     async def async_turn_on(
@@ -137,14 +125,10 @@ class DucoVentilationFanEntity(DucoEntity, FanEntity):
         """Switch to manual ventilation (default: medium)."""
         target = preset_mode or PRESET_MEDIUM
         self._valid_preset_mode_or_raise(target)
-        self._attr_preset_mode = target
-        self.async_write_ha_state()
         await self._async_set_state(_PRESET_TO_STATE[target])
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Return to automatic ventilation control."""
-        self._attr_preset_mode = PRESET_AUTO
-        self.async_write_ha_state()
         await self._async_set_state(VentilationState.AUTO)
 
     async def _async_set_state(self, state: VentilationState) -> None:
@@ -154,8 +138,5 @@ class DucoVentilationFanEntity(DucoEntity, FanEntity):
                 self._node_id, state
             )
         except DucoError as err:
-            # Revert optimistic state on failure.
-            self._attr_preset_mode = None
-            self.async_write_ha_state()
             raise HomeAssistantError(f"Failed to set ventilation state: {err}") from err
         await self.coordinator.async_request_refresh()

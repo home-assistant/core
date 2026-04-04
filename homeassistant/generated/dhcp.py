@@ -174,6 +174,10 @@ DHCP: Final[list[dict[str, str | bool]]] = [
         "hostname": "dsp-w215",
     },
     {
+        "domain": "duco",
+        "hostname": "duco_*",
+    },
+    {
         "domain": "elkm1",
         "registered_devices": True,
     },

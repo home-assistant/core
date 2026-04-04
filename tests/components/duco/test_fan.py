@@ -40,7 +40,7 @@ async def test_fan_entity_state(
 
     entry = entity_registry.async_get(entity_id)
     assert entry is not None
-    assert entry.unique_id == "aa:bb:cc:dd:ee:ff_1_ventilation"
+    assert entry.unique_id == "aa:bb:cc:dd:ee:ff_1"
 
 
 @pytest.mark.usefixtures("init_integration")

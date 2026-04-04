@@ -33,9 +33,9 @@ class DucoEntity(CoordinatorEntity[DucoCoordinator]):
     @property
     def available(self) -> bool:
         """Return True if entity is available."""
-        return super().available and self._node is not None
+        return super().available and self._node_id in self.coordinator.data
 
     @property
-    def _node(self) -> Node | None:
+    def _node(self) -> Node:
         """Return the current node data from the coordinator."""
-        return self.coordinator.data.get(self._node_id)
+        return self.coordinator.data[self._node_id]
