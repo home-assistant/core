@@ -8,7 +8,7 @@
   },
   "exceptions": {
     "invalid_image": {
-      "message": "Bad image from {{image_type}} '{{image_reference}}' provided, are you sure it's an image?"
+      "message": "Bad image from {image_type} '{image_reference}' provided, are you sure it's an image?"
     }
   },
   "services": {
