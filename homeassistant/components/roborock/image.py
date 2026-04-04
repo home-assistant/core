@@ -50,9 +50,6 @@ class RoborockMap(RoborockCoordinatedEntityV1, ImageEntity):
     _attr_has_entity_name = True
     image_last_updated: datetime
     _attr_name: str
-    # Prevent this entity from being used as a trigger for state-based automations
-    # which helps reduce overall system noise.
-    _attr_should_poll = False
 
     def __init__(
         self,
@@ -64,7 +61,7 @@ class RoborockMap(RoborockCoordinatedEntityV1, ImageEntity):
     ) -> None:
         """Initialize a Roborock map."""
         map_name = map_name or f"Map {map_flag}"
-        unique_id = f"{coordinator.duid_slug}_map_{map_name}"
+        unique_id = f"{coordinator.duid_slug}_map_{map_flag}"
         RoborockCoordinatedEntityV1.__init__(self, unique_id, coordinator)
         ImageEntity.__init__(self, coordinator.hass)
         self.config_entry = config_entry
@@ -93,18 +90,18 @@ class RoborockMap(RoborockCoordinatedEntityV1, ImageEntity):
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator.
 
-        Only trigger a state change in Home Assistant if the map image has changed
-        AND the vacuum state has changed, to prevent logbook spam.
+        Only trigger a state change in Home Assistant if the map image content
+        has changed, to prevent logbook spam.
         """
         if self.coordinator.data is None or (map_content := self._map_content) is None:
             return
-
+            
         if self.cached_map != map_content.image_content:
             self.cached_map = map_content.image_content
             self._attr_image_last_updated = self.coordinator.last_home_update
-
-            # This is the logic fix: We update the data internally, but we only
-            # call the super() update (which triggers the Logbook entry)
+            
+            # This is the logic fix: We update the data internally, but we only 
+            # call the super() update (which triggers the Logbook entry) 
             # when it's absolutely necessary.
             super()._handle_coordinator_update()
 
