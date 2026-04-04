@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from unittest.mock import AsyncMock, MagicMock
 
+import aiohttp
 import pytest
 from unifi_access_api import ApiAuthError, ApiConnectionError
 
@@ -447,10 +448,10 @@ async def test_user_flow_protect_api_key_unreachable(
 
     mock_client.authenticate.side_effect = ApiAuthError()
 
-    # Mock the Protect API endpoint as unreachable
+    # Mock a connection failure so the Protect check cannot reach its endpoint
     aioclient_mock.get(
         f"https://{MOCK_HOST}{PROTECT_META_INFO_PATH}",
-        status=401,
+        exc=aiohttp.ClientConnectionError(),
     )
 
     result = await hass.config_entries.flow.async_configure(

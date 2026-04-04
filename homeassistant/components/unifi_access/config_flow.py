@@ -6,10 +6,11 @@ import asyncio
 from collections.abc import Mapping
 import logging
 from typing import Any
-from urllib.parse import urlparse
 
+import aiohttp
 from unifi_access_api import ApiAuthError, ApiConnectionError, UnifiAccessApiClient
 import voluptuous as vol
+from yarl import URL
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_API_TOKEN, CONF_HOST, CONF_VERIFY_SSL
@@ -36,9 +37,14 @@ class UnifiAccessConfigFlow(ConfigFlow, domain=DOMAIN):
         host = user_input[CONF_HOST]
         if "://" not in host:
             host = f"https://{host}"
-        parsed = urlparse(host)
-        # Protect runs on the console's default HTTPS port, not the Access port
-        url = f"https://{parsed.hostname}{PROTECT_META_INFO_PATH}"
+        # Strip any Access-specific port; Protect runs on default HTTPS port 443.
+        # Use yarl to correctly handle IPv6 addresses (brackets required in URLs).
+        parsed = URL(host)
+        url = str(
+            URL.build(
+                scheme="https", host=parsed.host or "", path=PROTECT_META_INFO_PATH
+            )
+        )
         headers = {
             "X-API-KEY": user_input[CONF_API_TOKEN],
             "Accept": "application/json",
@@ -48,7 +54,7 @@ class UnifiAccessConfigFlow(ConfigFlow, domain=DOMAIN):
                 resp = await session.get(url, headers=headers)
                 is_protect = resp.status == 200
                 resp.release()
-        except Exception:  # noqa: BLE001
+        except TimeoutError, aiohttp.ClientError:
             return False
         else:
             return is_protect
