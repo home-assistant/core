@@ -16,7 +16,7 @@ SITE = (
 def run_script() -> None:
     """Run the script."""
     headers = {"User-Agent": "HomeAssistant-Locale-Checker/1.0"}
-    response = requests.get(SITE, timeout=10,headers=headers)
+    response = requests.get(SITE, timeout=10, headers=headers)
     response.raise_for_status()
     soup = BeautifulSoup(response.text, "html.parser")
 
