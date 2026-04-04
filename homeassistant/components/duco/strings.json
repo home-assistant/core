@@ -25,13 +25,13 @@
         "state_attributes": {
           "preset_mode": {
             "state": {
-              "auto": "Auto",
+              "auto": "[%key:common::state::auto%]",
               "away": "Away",
-              "high": "High",
+              "high": "[%key:common::state::high%]",
               "high_forced": "High (permanent)",
-              "low": "Low",
+              "low": "[%key:common::state::low%]",
               "low_forced": "Low (permanent)",
-              "medium": "Medium",
+              "medium": "[%key:common::state::medium%]",
               "medium_forced": "Medium (permanent)"
             }
           }
