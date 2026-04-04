@@ -65,7 +65,7 @@ rules:
     status: exempt
     comment: No noisy or non-essential entities to disable.
   entity-translations: done
-  exception-translations: todo
+  exception-translations: done
   icon-translations:
     status: exempt
     comment: |
