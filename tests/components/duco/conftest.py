@@ -89,15 +89,23 @@ def mock_nodes() -> list[Node]:
 @pytest.fixture
 def mock_duco_client(
     mock_board_info: BoardInfo,
+    mock_lan_info: LanInfo,
     mock_nodes: list[Node],
 ) -> Generator[AsyncMock]:
-    """Return a mocked DucoClient."""
-    with patch(
-        "homeassistant.components.duco.DucoClient",
-        autospec=True,
-    ) as mock_class:
+    """Return a mocked DucoClient used by both the integration and config flow."""
+    with (
+        patch(
+            "homeassistant.components.duco.DucoClient",
+            autospec=True,
+        ) as mock_class,
+        patch(
+            "homeassistant.components.duco.config_flow.DucoClient",
+            new=mock_class,
+        ),
+    ):
         client = mock_class.return_value
         client.async_get_board_info = AsyncMock(return_value=mock_board_info)
+        client.async_get_lan_info = AsyncMock(return_value=mock_lan_info)
         client.async_get_nodes = AsyncMock(return_value=mock_nodes)
         yield client
 

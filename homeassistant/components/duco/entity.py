@@ -33,6 +33,7 @@ class DucoEntity(CoordinatorEntity[DucoCoordinator]):
         )
         if node.general.node_type == "BOX":
             device_info["connections"] = {(CONNECTION_NETWORK_MAC, mac)}
+            device_info["serial_number"] = coordinator.board_info.serial_board_box
         else:
             device_info[ATTR_VIA_DEVICE] = (DOMAIN, f"{mac}_1")
         self._attr_device_info = device_info
