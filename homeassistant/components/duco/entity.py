@@ -4,7 +4,8 @@ from __future__ import annotations
 
 from duco.models import Node
 
-from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.const import ATTR_VIA_DEVICE
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
@@ -21,6 +22,7 @@ class DucoEntity(CoordinatorEntity[DucoCoordinator]):
         super().__init__(coordinator)
         self._node_id = node.node_id
         mac = coordinator.config_entry.unique_id
+        assert mac is not None
         device_info = DeviceInfo(
             identifiers={(DOMAIN, f"{mac}_{node.node_id}")},
             manufacturer="Duco",
@@ -29,8 +31,10 @@ class DucoEntity(CoordinatorEntity[DucoCoordinator]):
             else node.general.node_type,
             name=node.general.name or f"Node {node.node_id}",
         )
-        if node.general.node_type != "BOX":
-            device_info["via_device"] = (DOMAIN, f"{mac}_1")
+        if node.general.node_type == "BOX":
+            device_info["connections"] = {(CONNECTION_NETWORK_MAC, mac)}
+        else:
+            device_info[ATTR_VIA_DEVICE] = (DOMAIN, f"{mac}_1")
         self._attr_device_info = device_info
 
     @property
