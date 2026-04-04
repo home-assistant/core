@@ -95,7 +95,6 @@ class RoborockMap(RoborockCoordinatedEntityV1, ImageEntity):
         """
         if self.coordinator.data is None or (map_content := self._map_content) is None:
             return
-            
         if self.cached_map != map_content.image_content:
             self.cached_map = map_content.image_content
             self._attr_image_last_updated = self.coordinator.last_home_update
