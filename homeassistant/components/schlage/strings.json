@@ -86,7 +86,7 @@
         },
         "notify_on_use": {
           "description": "Whether the native Schlage notification should be sent when this PIN is used.",
-          "name": "Notify when PIN is Used"
+          "name": "Notify when PIN is used"
         }
       },
       "name": "Add PIN code"
