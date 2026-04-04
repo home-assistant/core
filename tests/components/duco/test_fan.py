@@ -7,6 +7,7 @@ from unittest.mock import AsyncMock
 from duco.exceptions import DucoConnectionError, DucoError
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.duco.const import SCAN_INTERVAL
 from homeassistant.components.fan import (
@@ -14,12 +15,12 @@ from homeassistant.components.fan import (
     DOMAIN as FAN_DOMAIN,
     SERVICE_SET_PRESET_MODE,
 )
-from homeassistant.const import ATTR_ENTITY_ID, STATE_ON, STATE_UNAVAILABLE
+from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
-from tests.common import MockConfigEntry, async_fire_time_changed
+from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 
 @pytest.mark.usefixtures("init_integration")
@@ -27,18 +28,10 @@ async def test_fan_entity_state(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     mock_config_entry: MockConfigEntry,
+    snapshot: SnapshotAssertion,
 ) -> None:
     """Test that the fan entity is created with the correct state."""
-    entity_id = "fan.living_ventilation"
-
-    state = hass.states.get(entity_id)
-    assert state is not None
-    assert state.state == STATE_ON  # fan is always running
-    assert state.attributes["preset_mode"] == "auto"
-
-    entry = entity_registry.async_get(entity_id)
-    assert entry is not None
-    assert entry.unique_id == "aa:bb:cc:dd:ee:ff_1"
+    await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
 @pytest.mark.usefixtures("init_integration")
@@ -87,7 +80,7 @@ async def test_fan_set_preset_error(
     """Test that a HomeAssistantError is raised on API failure."""
     mock_duco_client.async_set_ventilation_state = AsyncMock(side_effect=exception)
 
-    with pytest.raises(HomeAssistantError):
+    with pytest.raises(HomeAssistantError, match="Failed to set ventilation state"):
         await hass.services.async_call(
             FAN_DOMAIN,
             SERVICE_SET_PRESET_MODE,

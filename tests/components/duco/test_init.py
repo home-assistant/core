@@ -2,10 +2,9 @@
 
 from __future__ import annotations
 
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock
 
 from duco.exceptions import DucoConnectionError, DucoError
-from duco.models import BoardInfo
 import pytest
 
 from homeassistant.config_entries import ConfigEntryState
@@ -15,78 +14,46 @@ from tests.common import MockConfigEntry
 
 
 @pytest.mark.parametrize(
-    "exception",
-    [DucoConnectionError("Connection refused"), DucoError("Unexpected API error")],
+    ("method", "exception"),
+    [
+        ("async_get_board_info", DucoConnectionError("Connection refused")),
+        ("async_get_board_info", DucoError("Unexpected API error")),
+        ("async_get_nodes", DucoConnectionError("Connection refused")),
+    ],
 )
-async def test_setup_entry_board_info_error(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    exception: Exception,
-) -> None:
-    """Test that a board info fetch error triggers a retry."""
-    mock_config_entry.add_to_hass(hass)
-
-    with patch(
-        "homeassistant.components.duco.DucoClient",
-        autospec=True,
-    ) as mock_class:
-        mock_class.return_value.async_get_board_info = AsyncMock(side_effect=exception)
-        await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
-
-    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
-
-
-async def test_setup_entry_nodes_fetch_error(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_board_info: BoardInfo,
-) -> None:
-    """Test that a connection error during initial node fetch triggers a retry."""
-    mock_config_entry.add_to_hass(hass)
-
-    with patch(
-        "homeassistant.components.duco.DucoClient",
-        autospec=True,
-    ) as mock_class:
-        mock_class.return_value.async_get_board_info = AsyncMock(
-            return_value=mock_board_info
-        )
-        mock_class.return_value.async_get_nodes = AsyncMock(
-            side_effect=DucoConnectionError("Connection refused")
-        )
-        await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
-
-    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
-
-
-async def test_setup_entry_success(
+async def test_setup_entry_error(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_duco_client: AsyncMock,
+    method: str,
+    exception: Exception,
 ) -> None:
-    """Test successful setup of the Duco integration."""
+    """Test that fetch errors during setup trigger a retry."""
+    getattr(mock_duco_client, method).side_effect = exception
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+@pytest.mark.usefixtures("mock_duco_client")
+async def test_setup_entry_success(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+) -> None:
+    """Test successful setup of the Duco integration."""
+    assert init_integration.state is ConfigEntryState.LOADED
 
 
 async def test_unload_entry(
     hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_duco_client: AsyncMock,
+    init_integration: MockConfigEntry,
 ) -> None:
     """Test unloading the Duco integration."""
-    mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    assert init_integration.state is ConfigEntryState.LOADED
+
+    await hass.config_entries.async_unload(init_integration.entry_id)
     await hass.async_block_till_done()
 
-    assert mock_config_entry.state is ConfigEntryState.LOADED
-
-    await hass.config_entries.async_unload(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
+    assert init_integration.state is ConfigEntryState.NOT_LOADED
