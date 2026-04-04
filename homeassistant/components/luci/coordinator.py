@@ -44,7 +44,7 @@ class LuciCoordinator(DataUpdateCoordinator[dict[str, dict[str, Any]]]):
         """Fetch data from the router."""
         try:
             result = await self.hass.async_add_executor_job(
-                self.router.get_all_connected_devices, True
+                lambda: self.router.get_all_connected_devices(only_reachable=True)
             )
         except Exception as err:
             raise UpdateFailed(f"Error communicating with router: {err}") from err

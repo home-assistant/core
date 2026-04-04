@@ -13,7 +13,7 @@ from homeassistant.const import (
     CONF_VERIFY_SSL,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 
 from .const import DEFAULT_SSL, DEFAULT_VERIFY_SSL, PLATFORMS
 from .coordinator import LuciConfigEntry, LuciCoordinator
@@ -35,8 +35,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: LuciConfigEntry) -> bool
             f"Cannot connect to router at {entry.data[CONF_HOST]}"
         ) from err
 
-    if not router.is_logged_in():
-        raise ConfigEntryNotReady("Cannot connect to router")
+    if not await hass.async_add_executor_job(router.is_logged_in):
+        raise ConfigEntryAuthFailed("Invalid credentials for router")
 
     coordinator = LuciCoordinator(hass, entry, router)
 

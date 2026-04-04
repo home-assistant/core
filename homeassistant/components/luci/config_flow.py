@@ -33,6 +33,10 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 )
 
 
+class InvalidAuth(Exception):
+    """Raised when authentication fails."""
+
+
 class LuciConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for OpenWrt (luci)."""
 
@@ -48,19 +52,18 @@ class LuciConfigFlow(ConfigFlow, domain=DOMAIN):
             self._async_abort_entries_match({CONF_HOST: user_input[CONF_HOST]})
 
             try:
-                router = await self.hass.async_add_executor_job(
-                    _try_connect, user_input
-                )
+                await self.hass.async_add_executor_job(_try_connect, user_input)
             except ConnectionError, RequestsConnectionError:
                 errors["base"] = "cannot_connect"
+            except InvalidAuth:
+                errors["base"] = "invalid_auth"
             else:
-                if not router.is_logged_in():
-                    errors["base"] = "invalid_auth"
-                else:
-                    return self.async_create_entry(
-                        title=user_input[CONF_HOST],
-                        data=user_input,
-                    )
+                await self.async_set_unique_id(user_input[CONF_HOST])
+                self._abort_if_unique_id_configured()
+                return self.async_create_entry(
+                    title=user_input[CONF_HOST],
+                    data=user_input,
+                )
 
             return self.async_show_form(
                 step_id="user",
@@ -73,13 +76,34 @@ class LuciConfigFlow(ConfigFlow, domain=DOMAIN):
             data_schema=STEP_USER_DATA_SCHEMA,
         )
 
+    async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:
+        """Handle import from legacy YAML configuration."""
+        self._async_abort_entries_match({CONF_HOST: import_data[CONF_HOST]})
 
-def _try_connect(user_input: dict[str, Any]) -> OpenWrtRpc:
-    """Try to connect to the router."""
-    return OpenWrtRpc(
+        try:
+            await self.hass.async_add_executor_job(_try_connect, import_data)
+        except ConnectionError, RequestsConnectionError:
+            return self.async_abort(reason="cannot_connect")
+        except InvalidAuth:
+            return self.async_abort(reason="invalid_auth")
+
+        await self.async_set_unique_id(import_data[CONF_HOST])
+        self._abort_if_unique_id_configured()
+
+        return self.async_create_entry(
+            title=import_data[CONF_HOST],
+            data=import_data,
+        )
+
+
+def _try_connect(user_input: dict[str, Any]) -> None:
+    """Try to connect and authenticate with the router."""
+    router = OpenWrtRpc(
         user_input[CONF_HOST],
         user_input[CONF_USERNAME],
         user_input[CONF_PASSWORD],
         user_input.get(CONF_SSL, DEFAULT_SSL),
         user_input.get(CONF_VERIFY_SSL, DEFAULT_VERIFY_SSL),
     )
+    if not router.is_logged_in():
+        raise InvalidAuth
