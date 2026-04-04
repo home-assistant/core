@@ -12,6 +12,7 @@ from eveonline.models import (
     MarketOrder,
     UniverseName,
 )
+import pytest
 
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
@@ -35,33 +36,22 @@ async def test_setup_entry(
     assert mock_config_entry.state is ConfigEntryState.LOADED
 
 
-async def test_setup_entry_api_error(
+@pytest.mark.parametrize(
+    "exception",
+    [
+        EveOnlineError("API unavailable"),
+        aiohttp.ClientError("Connection reset"),
+    ],
+)
+async def test_setup_entry_error(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_eveonline_client: AsyncMock,
     setup_credentials: None,
+    exception: Exception,
 ) -> None:
-    """Test setup failure when the API returns an error."""
-    mock_eveonline_client.async_get_character_online.side_effect = EveOnlineError(
-        "API unavailable"
-    )
-
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
-
-
-async def test_setup_entry_network_error(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_eveonline_client: AsyncMock,
-    setup_credentials: None,
-) -> None:
-    """Test setup failure when a network error occurs."""
-    mock_eveonline_client.async_get_character_online.side_effect = aiohttp.ClientError(
-        "Connection reset"
-    )
+    """Test setup failure when an error occurs."""
+    mock_eveonline_client.async_get_character_online.side_effect = exception
 
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
