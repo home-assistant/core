@@ -71,7 +71,7 @@ from .context import (
     template_context_manager,
     template_cv,
 )
-from .helpers import raise_no_default, result_as_boolean as result_as_boolean
+from .helpers import result_as_boolean as result_as_boolean
 from .render_info import RenderInfo, render_info_cv
 
 if TYPE_CHECKING:
