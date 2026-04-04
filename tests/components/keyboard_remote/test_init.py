@@ -10,7 +10,6 @@ from asyncinotify import Mask
 import pytest
 
 from homeassistant.components.keyboard_remote import (
-    DeviceHandler,
     KeyboardRemoteManager,
     _async_import_yaml_device,
     async_setup,
@@ -242,7 +241,10 @@ async def test_matches_device_by_path(
     mock_input_device: MagicMock,
 ) -> None:
     """Test matches_device returns True when configured path resolves to same real path."""
-    handler = DeviceHandler(hass, mock_config_entry)
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    handler = hass.data[DOMAIN]._handlers[mock_config_entry.entry_id]
 
     with (
         patch("os.path.realpath", return_value=FAKE_DEVICE_REAL_PATH),
@@ -271,7 +273,10 @@ async def test_matches_device_by_yaml_descriptor(
             CONF_EMULATE_KEY_HOLD_REPEAT: DEFAULT_EMULATE_KEY_HOLD_REPEAT,
         },
     )
-    handler = DeviceHandler(hass, entry)
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+    handler = hass.data[DOMAIN]._handlers[entry.entry_id]
 
     with (
         patch("os.path.realpath", return_value=FAKE_DEVICE_REAL_PATH),
@@ -286,7 +291,10 @@ async def test_matches_device_by_name(
     mock_input_device: MagicMock,
 ) -> None:
     """Test matches_device returns True when device name matches."""
-    handler = DeviceHandler(hass, mock_config_entry)
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    handler = hass.data[DOMAIN]._handlers[mock_config_entry.entry_id]
 
     with (
         patch("os.path.realpath", side_effect=lambda p: p),
@@ -301,7 +309,10 @@ async def test_matches_device_no_match(
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test matches_device returns False when no strategy matches."""
-    handler = DeviceHandler(hass, mock_config_entry)
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    handler = hass.data[DOMAIN]._handlers[mock_config_entry.entry_id]
     dev = MagicMock()
     dev.name = "Unknown Device"
 
@@ -322,7 +333,9 @@ async def test_device_start_monitoring_fires_connected_event(
 ) -> None:
     """Test start monitoring fires the connected event with correct data."""
     mock_config_entry.add_to_hass(hass)
-    handler = DeviceHandler(hass, mock_config_entry)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    handler = hass.data[DOMAIN]._handlers[mock_config_entry.entry_id]
     events = async_capture_events(hass, EVENT_KEYBOARD_REMOTE_CONNECTED)
 
     await handler.async_device_start_monitoring(mock_input_device)
@@ -341,7 +354,9 @@ async def test_device_start_monitoring_idempotent(
 ) -> None:
     """Test calling start monitoring twice is a no-op the second time."""
     mock_config_entry.add_to_hass(hass)
-    handler = DeviceHandler(hass, mock_config_entry)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    handler = hass.data[DOMAIN]._handlers[mock_config_entry.entry_id]
     events = async_capture_events(hass, EVENT_KEYBOARD_REMOTE_CONNECTED)
 
     await handler.async_device_start_monitoring(mock_input_device)
@@ -359,7 +374,9 @@ async def test_device_stop_monitoring_fires_disconnected_event(
 ) -> None:
     """Test stop monitoring fires the disconnected event and cleans up."""
     mock_config_entry.add_to_hass(hass)
-    handler = DeviceHandler(hass, mock_config_entry)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    handler = hass.data[DOMAIN]._handlers[mock_config_entry.entry_id]
     events = async_capture_events(hass, EVENT_KEYBOARD_REMOTE_DISCONNECTED)
 
     await handler.async_device_start_monitoring(mock_input_device)
@@ -382,7 +399,9 @@ async def test_device_stop_monitoring_noop_when_not_started(
 ) -> None:
     """Test stop monitoring is a no-op when not currently monitoring."""
     mock_config_entry.add_to_hass(hass)
-    handler = DeviceHandler(hass, mock_config_entry)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    handler = hass.data[DOMAIN]._handlers[mock_config_entry.entry_id]
     events = async_capture_events(hass, EVENT_KEYBOARD_REMOTE_DISCONNECTED)
 
     await handler.async_device_stop_monitoring()
@@ -399,7 +418,9 @@ async def test_device_stop_monitoring_ungrab_oserror(
     """Test stop monitoring suppresses OSError from ungrab."""
     mock_config_entry.add_to_hass(hass)
     mock_input_device.ungrab.side_effect = OSError("Permission denied")
-    handler = DeviceHandler(hass, mock_config_entry)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    handler = hass.data[DOMAIN]._handlers[mock_config_entry.entry_id]
 
     await handler.async_device_start_monitoring(mock_input_device)
     await hass.async_block_till_done()
@@ -421,7 +442,9 @@ async def test_monitor_input_fires_key_event(
 ) -> None:
     """Test key events from device fire HA bus events."""
     mock_config_entry.add_to_hass(hass)
-    handler = DeviceHandler(hass, mock_config_entry)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    handler = hass.data[DOMAIN]._handlers[mock_config_entry.entry_id]
     events = async_capture_events(hass, EVENT_KEYBOARD_REMOTE_COMMAND_RECEIVED)
 
     # key_up event (value=0), which is in default key_types
@@ -445,7 +468,9 @@ async def test_monitor_input_ignores_non_key_events(
 ) -> None:
     """Test non-EV_KEY events are ignored."""
     mock_config_entry.add_to_hass(hass)
-    handler = DeviceHandler(hass, mock_config_entry)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    handler = hass.data[DOMAIN]._handlers[mock_config_entry.entry_id]
     events = async_capture_events(hass, EVENT_KEYBOARD_REMOTE_COMMAND_RECEIVED)
 
     # Non-key event (type=2 is EV_REL for relative movement)
@@ -479,7 +504,9 @@ async def test_monitor_input_filters_unconfigured_key_types(
         },
     )
     entry.add_to_hass(hass)
-    handler = DeviceHandler(hass, entry)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+    handler = hass.data[DOMAIN]._handlers[entry.entry_id]
     events = async_capture_events(hass, EVENT_KEYBOARD_REMOTE_COMMAND_RECEIVED)
 
     # key_down event (value=1) — not in configured key_types
@@ -512,7 +539,9 @@ async def test_monitor_input_emulate_key_hold(
         },
     )
     entry.add_to_hass(hass)
-    handler = DeviceHandler(hass, entry)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+    handler = hass.data[DOMAIN]._handlers[entry.entry_id]
     hold_events = async_capture_events(hass, EVENT_KEYBOARD_REMOTE_COMMAND_RECEIVED)
 
     # key_down starts repeat, then key_up cancels it
@@ -540,7 +569,9 @@ async def test_monitor_input_oserror_cleanup(
 ) -> None:
     """Test OSError during monitoring cleans up repeat tasks."""
     mock_config_entry.add_to_hass(hass)
-    handler = DeviceHandler(hass, mock_config_entry)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    handler = hass.data[DOMAIN]._handlers[mock_config_entry.entry_id]
 
     # Make async_read_loop return an async iterator that raises OSError
     async def _raise_oserror():
@@ -577,7 +608,9 @@ async def test_monitor_input_oserror_cancels_repeat_tasks(
         },
     )
     entry.add_to_hass(hass)
-    handler = DeviceHandler(hass, entry)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+    handler = hass.data[DOMAIN]._handlers[entry.entry_id]
 
     # Yield a key_down (starts a repeat task), then raise OSError
     key_down = make_key_event(event_type=EV_KEY, code=30, value=KEY_VALUE["key_down"])
@@ -605,8 +638,10 @@ async def test_get_handler_for_device_oserror(
 ) -> None:
     """Test _get_handler_for_device returns (None, None) on OSError."""
     mock_config_entry.add_to_hass(hass)
-    manager = KeyboardRemoteManager(hass)
-    handler = DeviceHandler(hass, mock_config_entry)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    manager = hass.data[DOMAIN]
+    handler = list(manager._handlers.values())[0]
 
     with patch("evdev.InputDevice", side_effect=OSError("Permission denied")):
         result = manager._get_handler_for_device("/dev/input/event5", [handler])
@@ -621,8 +656,10 @@ async def test_get_handler_for_device_match(
 ) -> None:
     """Test _get_handler_for_device returns device and handler on match."""
     mock_config_entry.add_to_hass(hass)
-    manager = KeyboardRemoteManager(hass)
-    handler = DeviceHandler(hass, mock_config_entry)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    manager = hass.data[DOMAIN]
+    handler = list(manager._handlers.values())[0]
 
     with (
         patch("evdev.InputDevice", return_value=mock_input_device),
@@ -641,8 +678,10 @@ async def test_get_handler_for_device_no_match(
 ) -> None:
     """Test _get_handler_for_device closes device and returns (None, None) when no match."""
     mock_config_entry.add_to_hass(hass)
-    manager = KeyboardRemoteManager(hass)
-    handler = DeviceHandler(hass, mock_config_entry)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    manager = hass.data[DOMAIN]
+    handler = list(manager._handlers.values())[0]
 
     with (
         patch("evdev.InputDevice", return_value=mock_input_device),
@@ -981,7 +1020,9 @@ async def test_keyrepeat_fires_hold_events(
 ) -> None:
     """Test _async_keyrepeat fires key_hold events on a timer."""
     mock_config_entry.add_to_hass(hass)
-    handler = DeviceHandler(hass, mock_config_entry)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    handler = hass.data[DOMAIN]._handlers[mock_config_entry.entry_id]
     handler.dev = mock_input_device
     handler._descriptor = FAKE_DEVICE_PATH
 
