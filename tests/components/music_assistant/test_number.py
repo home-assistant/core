@@ -85,6 +85,11 @@ async def test_number_set_action(
             blocking=True,
         )
 
+    # verify, that a float player option (non-read-only) is also part of the number platform
+    entity_id = "number.test_player_1_bass"
+    state = hass.states.get(entity_id)
+    assert state
+
 
 async def test_external_update(
     hass: HomeAssistant,
@@ -127,19 +132,15 @@ async def test_external_update(
 async def test_ignored(
     hass: HomeAssistant,
     music_assistant_client: MagicMock,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test that non compatible player options are ignored."""
-    mass_ignored_option_keys = [
-        "treble_ro",  # read only goes to sensor platform
-        "enhancer",  # boolean goes to switch platform
-        "enhancer_ro",  # read only goes to sensor platform
-        "network_name",  # string goes to text platform
-        "network_name_ro",  # read only goes to sensor platform
-        "link_audio_delay",  # anything with options goes to select platform
-    ]
-    await setup_integration_from_fixtures(hass, music_assistant_client)
-    for ignored_key in mass_ignored_option_keys:
-        assert hass.states.get(f"number.test_player_1_{ignored_key}") is None
+    config_entry = await setup_integration_from_fixtures(hass, music_assistant_client)
+    registry_entries = er.async_entries_for_config_entry(
+        entity_registry, config_entry_id=config_entry.entry_id
+    )
+    # we only have two non read-only player options, bass and treble
+    assert sum(1 for entry in registry_entries if entry.domain == NUMBER_DOMAIN) == 2
 
 
 async def test_name_translation_availability(

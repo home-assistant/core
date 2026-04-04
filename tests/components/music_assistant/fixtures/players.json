@@ -41,6 +41,19 @@
           "options": null
         },
         {
+          "key": "bass",
+          "name": "Bass",
+          "type": "float",
+          "translation_key": "player_options.bass",
+          "translation_params": null,
+          "value": -6.0,
+          "read_only": false,
+          "min_value": -10.0,
+          "max_value": 10.0,
+          "step": 1.0,
+          "options": null
+        },
+        {
           "key": "treble_ro",
           "name": "Treble RO",
           "type": "integer",
@@ -67,7 +80,7 @@
           "options": null
         },
         {
-          "key": "enhancer",
+          "key": "enhancer_ro",
           "name": "Enhancer RO",
           "type": "boolean",
           "translation_key": "player_options.enhancer",
