@@ -91,6 +91,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: TessieConfigEntry) -> bo
         vehicle_api = tessie.vehicles.create(vin)
         vehicles.append(
             TessieVehicleData(
+                api=vehicle_api,
                 vin=vin,
                 data_coordinator=TessieStateUpdateCoordinator(
                     hass,
