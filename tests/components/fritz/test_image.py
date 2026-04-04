@@ -20,29 +20,9 @@ from .const import MOCK_FB_SERVICES, MOCK_USER_DATA
 from tests.common import MockConfigEntry, async_fire_time_changed
 from tests.typing import ClientSessionGenerator
 
-GUEST_WIFI_ENABLED: dict[str, dict] = {
-    "WLANConfiguration0": {},
-    "WLANConfiguration1": {
-        "GetBeaconAdvertisement": {"NewBeaconAdvertisementEnabled": 1},
-        "GetInfo": {
-            "NewEnable": True,
-            "NewStatus": "Up",
-            "NewSSID": "GuestWifi",
-            "NewBeaconType": "11iandWPA3",
-            "NewX_AVM-DE_PossibleBeaconTypes": "None,11i,11iandWPA3",
-            "NewStandard": "ax",
-            "NewBSSID": "1C:ED:6F:12:34:13",
-        },
-        "GetSSID": {
-            "NewSSID": "GuestWifi",
-        },
-        "GetSecurityKeys": {"NewKeyPassphrase": "1234567890"},
-    },
-}
-
 GUEST_WIFI_CHANGED: dict[str, dict] = {
-    "WLANConfiguration0": {},
-    "WLANConfiguration1": {
+    "WLANConfiguration1": {},
+    "WLANConfiguration2": {
         "GetBeaconAdvertisement": {"NewBeaconAdvertisementEnabled": 1},
         "GetInfo": {
             "NewEnable": True,
@@ -61,8 +41,8 @@ GUEST_WIFI_CHANGED: dict[str, dict] = {
 }
 
 GUEST_WIFI_DISABLED: dict[str, dict] = {
-    "WLANConfiguration0": {},
-    "WLANConfiguration1": {
+    "WLANConfiguration1": {},
+    "WLANConfiguration2": {
         "GetBeaconAdvertisement": {"NewBeaconAdvertisementEnabled": 1},
         "GetInfo": {
             "NewEnable": False,
@@ -84,7 +64,7 @@ GUEST_WIFI_DISABLED: dict[str, dict] = {
 @pytest.mark.parametrize(
     ("fc_data"),
     [
-        ({**MOCK_FB_SERVICES, **GUEST_WIFI_ENABLED}),
+        ({**MOCK_FB_SERVICES}),
         ({**MOCK_FB_SERVICES, **GUEST_WIFI_DISABLED}),
     ],
 )
@@ -137,7 +117,7 @@ async def test_image_entity(
     assert body == snapshot
 
 
-@pytest.mark.parametrize(("fc_data"), [({**MOCK_FB_SERVICES, **GUEST_WIFI_ENABLED})])
+@pytest.mark.parametrize(("fc_data"), [({**MOCK_FB_SERVICES})])
 async def test_image_update(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
@@ -178,7 +158,7 @@ async def test_image_update(
     assert resp_body_new == snapshot
 
 
-@pytest.mark.parametrize(("fc_data"), [({**MOCK_FB_SERVICES, **GUEST_WIFI_ENABLED})])
+@pytest.mark.parametrize(("fc_data"), [({**MOCK_FB_SERVICES})])
 async def test_image_update_unavailable(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
