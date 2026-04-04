@@ -35,7 +35,7 @@ CONTROL_ENTITIES: tuple[RussoundZoneSelectEntityDescription, ...] = (
             PartyMode.MASTER.value.lower(),
         ],
         entity_category=EntityCategory.CONFIG,
-        value_fn=lambda zone: zone.party_mode,
+        value_fn=lambda zone: zone.party_mode.lower(),
         set_value_fn=lambda zone, value: zone.set_party_mode(PartyMode(value.upper())),
     ),
 )
