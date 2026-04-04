@@ -30,7 +30,7 @@ class SpecializedTurboCoordinator(ActiveBluetoothDataUpdateCoordinator[None]):
         hass: HomeAssistant,
         *,
         address: str,
-        pin: int | None = None,
+        pin: str | None = None,
     ) -> None:
         """Initialize the coordinator."""
         super().__init__(

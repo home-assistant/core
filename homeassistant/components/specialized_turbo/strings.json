@@ -36,7 +36,7 @@
         },
         "data_description": {
           "address": "Select the Specialized Turbo bike you want to add.",
-          "pin": "The 4-digit PIN displayed on the bike's TCU screen during Bluetooth pairing. Leave empty if your bike does not require a PIN."
+          "pin": "The PIN displayed on the bike's TCU screen during Bluetooth pairing. Leave empty if your bike does not require a PIN."
         },
         "description": "Select your Specialized Turbo bike from the discovered devices.",
         "title": "Add Specialized Turbo Bike"

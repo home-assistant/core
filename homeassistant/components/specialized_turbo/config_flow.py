@@ -81,7 +81,7 @@ class SpecializedTurboConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="bluetooth_confirm",
             data_schema=vol.Schema(
                 {
-                    vol.Optional(CONF_PIN): vol.Coerce(int),
+                    vol.Optional(CONF_PIN): str,
                 }
             ),
             description_placeholders={
@@ -134,7 +134,7 @@ class SpecializedTurboConfigFlow(ConfigFlow, domain=DOMAIN):
             data_schema=vol.Schema(
                 {
                     vol.Required(CONF_ADDRESS): vol.In(address_options),
-                    vol.Optional(CONF_PIN): vol.Coerce(int),
+                    vol.Optional(CONF_PIN): str,
                 }
             ),
             errors=errors,
@@ -154,7 +154,7 @@ class SpecializedTurboConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="reconfigure",
             data_schema=vol.Schema(
                 {
-                    vol.Optional(CONF_PIN): vol.Coerce(int),
+                    vol.Optional(CONF_PIN): str,
                 }
             ),
         )

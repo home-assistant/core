@@ -71,7 +71,7 @@ def mock_config_entry() -> MockConfigEntry:
     """Create a mock config entry."""
     return MockConfigEntry(
         domain=DOMAIN,
-        data={CONF_ADDRESS: MOCK_ADDRESS, "pin": 1234},
+        data={CONF_ADDRESS: MOCK_ADDRESS, "pin": "012345"},
         unique_id=MOCK_ADDRESS_FORMATTED,
     )
 

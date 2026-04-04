@@ -19,7 +19,7 @@ async def async_setup_entry(
 ) -> bool:
     """Set up Specialized Turbo from a config entry."""
     address: str = entry.data[CONF_ADDRESS]
-    pin: int | None = entry.data.get(CONF_PIN)
+    pin: str | None = entry.data.get(CONF_PIN)
 
     coordinator = SpecializedTurboCoordinator(
         hass,

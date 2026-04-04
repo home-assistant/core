@@ -18,7 +18,7 @@ async def test_setup_entry(hass: HomeAssistant) -> None:
     """Test successful setup of a config entry."""
     entry = MockConfigEntry(
         domain=DOMAIN,
-        data={CONF_ADDRESS: MOCK_ADDRESS, CONF_PIN: 1234},
+        data={CONF_ADDRESS: MOCK_ADDRESS, CONF_PIN: "012345"},
         unique_id=MOCK_ADDRESS_FORMATTED,
     )
     entry.add_to_hass(hass)
@@ -63,7 +63,7 @@ async def test_unload_entry(hass: HomeAssistant) -> None:
     """Test successful unloading of a config entry."""
     entry = MockConfigEntry(
         domain=DOMAIN,
-        data={CONF_ADDRESS: MOCK_ADDRESS, CONF_PIN: 1234},
+        data={CONF_ADDRESS: MOCK_ADDRESS, CONF_PIN: "012345"},
         unique_id=MOCK_ADDRESS_FORMATTED,
     )
     entry.add_to_hass(hass)
