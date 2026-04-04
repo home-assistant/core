@@ -34,11 +34,7 @@ rules:
   log-when-unavailable: done
   parallel-updates: done
   reauthentication-flow: done
-  test-coverage:
-    status: todo
-    comment: |
-      Move big data objects from common.py into JSON fixtures and oad them when needed.
-      Other fields can be moved to const.py. Consider snapshots and testing data updates
+  test-coverage: done
 
   # Gold
   devices: done
@@ -46,9 +42,7 @@ rules:
   discovery-update-info:
     status: done
     comment: The integration is cloud-based
-  discovery:
-    status: todo
-    comment: Need to validate discovery
+  discovery: done
   docs-data-update: done
   docs-examples: done
   docs-known-limitations: done
@@ -56,7 +50,7 @@ rules:
   docs-supported-functions: done
   docs-troubleshooting: done
   docs-use-cases: done
-  dynamic-devices: todo
+  dynamic-devices: done
   entity-category: done
   entity-device-class: done
   entity-disabled-by-default: done
@@ -68,12 +62,7 @@ rules:
     status: done
     comment: |
       This integration doesn't have any cases where raising an issue is needed
-  stale-devices:
-    status: todo
-    comment: |
-      Currently handled via async_remove_config_entry_device,
-      but we should be able to remove devices automatically
-
+  stale-devices: done
   # Platinum
   async-dependency: done
   inject-websession: done

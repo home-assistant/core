@@ -1,16 +1,13 @@
 {
   "common": {
-    "condition_behavior_description": "How the state should match on the targeted device trackers.",
-    "condition_behavior_name": "Behavior",
-    "trigger_behavior_description": "The behavior of the targeted device trackers to trigger on.",
-    "trigger_behavior_name": "Behavior"
+    "condition_behavior_name": "Condition passes if",
+    "trigger_behavior_name": "Trigger when"
   },
   "conditions": {
     "is_home": {
       "description": "Tests if one or more device trackers are home.",
       "fields": {
         "behavior": {
-          "description": "[%key:component::device_tracker::common::condition_behavior_description%]",
           "name": "[%key:component::device_tracker::common::condition_behavior_name%]"
         }
       },
@@ -20,7 +17,6 @@
       "description": "Tests if one or more device trackers are not home.",
       "fields": {
         "behavior": {
-          "description": "[%key:component::device_tracker::common::condition_behavior_description%]",
           "name": "[%key:component::device_tracker::common::condition_behavior_name%]"
         }
       },
@@ -120,7 +116,7 @@
           "name": "MAC address"
         }
       },
-      "name": "See"
+      "name": "See device tracker"
     }
   },
   "title": "Device tracker",
@@ -129,7 +125,6 @@
       "description": "Triggers when one or more device trackers enter home.",
       "fields": {
         "behavior": {
-          "description": "[%key:component::device_tracker::common::trigger_behavior_description%]",
           "name": "[%key:component::device_tracker::common::trigger_behavior_name%]"
         }
       },
@@ -139,7 +134,6 @@
       "description": "Triggers when one or more device trackers leave home.",
       "fields": {
         "behavior": {
-          "description": "[%key:component::device_tracker::common::trigger_behavior_description%]",
           "name": "[%key:component::device_tracker::common::trigger_behavior_name%]"
         }
       },

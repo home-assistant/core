@@ -7,6 +7,6 @@
   "integration_type": "service",
   "iot_class": "cloud_polling",
   "loggers": ["london_tube_status"],
-  "requirements": ["london-tube-status==0.5"],
+  "requirements": ["london-tube-status==0.7"],
   "single_config_entry": true
 }
