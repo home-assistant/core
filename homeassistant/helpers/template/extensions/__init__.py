@@ -3,6 +3,7 @@
 from .areas import AreaExtension
 from .base64 import Base64Extension
 from .collection import CollectionExtension
+from .config_entries import ConfigEntryExtension
 from .crypto import CryptoExtension
 from .datetime import DateTimeExtension
 from .devices import DeviceExtension
@@ -19,6 +20,7 @@ __all__ = [
     "AreaExtension",
     "Base64Extension",
     "CollectionExtension",
+    "ConfigEntryExtension",
     "CryptoExtension",
     "DateTimeExtension",
     "DeviceExtension",
