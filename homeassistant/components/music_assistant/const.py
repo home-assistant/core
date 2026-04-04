@@ -1,7 +1,6 @@
 """Constants for Music Assistant Component."""
 
 import logging
-from typing import Final
 
 DOMAIN = "music_assistant"
 DOMAIN_EVENT = f"{DOMAIN}_event"
@@ -83,15 +82,3 @@ ATTR_CONF_EXPOSE_PLAYER_TO_HA = "expose_player_to_ha"
 LOGGER = logging.getLogger(__package__)
 
 PLAYER_OPTIONS_TRANSLATION_KEY_PREFIX = "player_options."
-# translation keys for player option number entities
-PLAYER_OPTIONS_TRANSLATION_KEYS_NUMBER: Final[list[str]] = [
-    "bass",
-    "dialogue_level",
-    "dialogue_lift",
-    "dts_dialogue_control",
-    "equalizer_high",
-    "equalizer_low",
-    "equalizer_mid",
-    "subwoofer_volume",
-    "treble",
-]

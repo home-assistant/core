@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import Final
+
 from music_assistant_client.client import MusicAssistantClient
 from music_assistant_models.player import (
     PlayerOption,
@@ -15,12 +17,22 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import MusicAssistantConfigEntry
-from .const import (
-    PLAYER_OPTIONS_TRANSLATION_KEY_PREFIX,
-    PLAYER_OPTIONS_TRANSLATION_KEYS_NUMBER,
-)
+from .const import PLAYER_OPTIONS_TRANSLATION_KEY_PREFIX
 from .entity import MusicAssistantPlayerOptionEntity
 from .helpers import catch_musicassistant_error
+
+# translation keys for player option number entities
+PLAYER_OPTIONS_TRANSLATION_KEYS_NUMBER: Final[list[str]] = [
+    "bass",
+    "dialogue_level",
+    "dialogue_lift",
+    "dts_dialogue_control",
+    "equalizer_high",
+    "equalizer_low",
+    "equalizer_mid",
+    "subwoofer_volume",
+    "treble",
+]
 
 
 async def async_setup_entry(
@@ -60,12 +72,10 @@ async def async_setup_entry(
                 ):
                     # we ignore entities with unknown translation keys.
                     continue
-                entities.extend(
-                    [
-                        MusicAssistantPlayerConfigNumber(
-                            mass, player_id, player_option=player_option
-                        )
-                    ]
+                entities.append(
+                    MusicAssistantPlayerConfigNumber(
+                        mass, player_id, player_option=player_option
+                    )
                 )
         async_add_entities(entities)
 
