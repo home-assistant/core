@@ -78,7 +78,6 @@ async def test_switch_action(
 
     entity_id = entity_info["entity_id"]
 
-    # Turn on
     await hass.services.async_call(
         SWITCH_DOMAIN,
         service,

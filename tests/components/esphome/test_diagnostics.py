@@ -141,6 +141,7 @@ async def test_diagnostics_with_bluetooth(
                 "name": "test",
                 "project_name": "",
                 "project_version": "",
+                "serial_proxies": [],
                 "suggested_area": "",
                 "uses_password": False,
                 "legacy_voice_assistant_version": 0,

@@ -1,5 +1,16 @@
 {
   "entity": {
+    "button": {
+      "pause_container": {
+        "default": "mdi:pause-circle"
+      },
+      "resume_container": {
+        "default": "mdi:play"
+      },
+      "volumes_prune": {
+        "default": "mdi:delete-sweep"
+      }
+    },
     "sensor": {
       "api_version": {
         "default": "mdi:api"
