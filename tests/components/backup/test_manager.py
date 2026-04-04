@@ -1975,6 +1975,10 @@ async def test_receive_backup(
 ) -> None:
     """Test receive backup and upload to the local and a remote agent."""
     mock_agents = await setup_backup_integration(hass, remote_agents=["test.remote"])
+    # Make sure we wait for Platform.EVENT and Platform.SENSOR to be fully processed,
+    # to avoid interference with the Path.open patching below which is used to verify
+    # that the file is written to the expected location.
+    await hass.async_block_till_done(True)
     client = await hass_client()
 
     upload_data = "test"
