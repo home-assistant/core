@@ -653,56 +653,6 @@
     'state': 'unknown',
   })
 # ---
-# name: test_all_button_entities_snapshot[button.practical_morse_kill_container-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'button',
-    'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'button.practical_morse_kill_container',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Kill container',
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Kill container',
-    'platform': 'portainer',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'kill_container',
-    'unique_id': 'portainer_test_entry_123_practical_morse_kill',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_all_button_entities_snapshot[button.practical_morse_kill_container-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'practical_morse Kill container',
-    }),
-    'context': <ANY>,
-    'entity_id': 'button.practical_morse_kill_container',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'unknown',
-  })
-# ---
 # name: test_all_button_entities_snapshot[button.my_environment_prune_unused_volumes-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -747,6 +697,56 @@
     }),
     'context': <ANY>,
     'entity_id': 'button.my_environment_prune_unused_volumes',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_all_button_entities_snapshot[button.practical_morse_kill_container-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'button.practical_morse_kill_container',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Kill container',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Kill container',
+    'platform': 'portainer',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'kill_container',
+    'unique_id': 'portainer_test_entry_123_practical_morse_kill',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_button_entities_snapshot[button.practical_morse_kill_container-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'practical_morse Kill container',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.practical_morse_kill_container',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
