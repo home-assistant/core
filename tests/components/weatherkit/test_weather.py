@@ -1,7 +1,5 @@
 """Weather entity tests for the WeatherKit integration."""
 
-from typing import Any
-
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -22,11 +20,6 @@ from homeassistant.components.weather import (
     WeatherEntityFeature,
 )
 from homeassistant.components.weatherkit.const import ATTRIBUTION
-from homeassistant.components.weatherkit.weather import (
-    _map_daily_forecast,
-    _map_hourly_forecast,
-    _sum_precipitation,
-)
 from homeassistant.const import ATTR_ATTRIBUTION, ATTR_SUPPORTED_FEATURES
 from homeassistant.core import HomeAssistant
 
@@ -137,124 +130,119 @@ async def test_daily_forecast(
     assert response == snapshot
 
 
-def _daily_forecast_data(**overrides: Any) -> dict[str, Any]:
-    """Return a minimal daily forecast dict with optional overrides."""
-    base: dict[str, Any] = {
-        "forecastStart": "2023-12-01T07:00:00Z",
-        "conditionCode": "Snow",
-        "temperatureMax": -2.0,
-        "temperatureMin": -10.0,
-        "precipitationAmount": 5.0,
-        "precipitationChance": 0.8,
-        "snowfallAmount": 0.0,
-        "maxUvIndex": 2,
-    }
-    base.update(overrides)
-    return base
-
-
-def _hourly_forecast_data(**overrides: Any) -> dict[str, Any]:
-    """Return a minimal hourly forecast dict with optional overrides."""
-    base: dict[str, Any] = {
-        "forecastStart": "2023-12-01T08:00:00Z",
-        "conditionCode": "Snow",
-        "temperature": -5.0,
-        "temperatureApparent": -8.0,
-        "temperatureDewPoint": -6.0,
-        "pressure": 1015.0,
-        "windGust": 20.0,
-        "windSpeed": 10.0,
-        "windDirection": 180,
-        "humidity": 0.85,
-        "precipitationAmount": 3.0,
-        "precipitationChance": 0.7,
-        "snowfallAmount": 0.0,
-        "cloudCover": 0.9,
-        "uvIndex": 1,
-    }
-    base.update(overrides)
-    return base
-
-
-def test_daily_forecast_sums_snowfall_and_precipitation() -> None:
-    """Test that snowfallAmount is added to precipitationAmount."""
-    forecast = _daily_forecast_data(snowfallAmount=25.0, precipitationAmount=5.0)
-    result = _map_daily_forecast(forecast)
-    assert result["native_precipitation"] == 30.0
-
-
-def test_daily_forecast_precipitation_only_when_no_snowfall() -> None:
-    """Test that result equals precipitationAmount when snowfallAmount is zero."""
-    forecast = _daily_forecast_data(snowfallAmount=0.0, precipitationAmount=5.0)
-    result = _map_daily_forecast(forecast)
-    assert result["native_precipitation"] == 5.0
-
-
-def test_hourly_forecast_sums_snowfall_and_precipitation() -> None:
-    """Test that snowfallAmount is added to precipitationAmount."""
-    forecast = _hourly_forecast_data(snowfallAmount=12.0, precipitationAmount=3.0)
-    result = _map_hourly_forecast(forecast)
-    assert result["native_precipitation"] == 15.0
-
-
-def test_hourly_forecast_precipitation_only_when_no_snowfall() -> None:
-    """Test that result equals precipitationAmount when snowfallAmount is zero."""
-    forecast = _hourly_forecast_data(snowfallAmount=0.0, precipitationAmount=3.0)
-    result = _map_hourly_forecast(forecast)
-    assert result["native_precipitation"] == 3.0
-
-
-@pytest.mark.parametrize(
-    ("snowfall", "precipitation", "expected"),
-    [
-        (10.0, 5.0, 15.0),
-        (0.0, 5.0, 5.0),
-        (10.0, 0.0, 10.0),
-        (0.0, 0.0, 0.0),
-        (None, 5.0, 5.0),
-        (10.0, None, 10.0),
-        (None, None, None),
-    ],
-)
-def test_sum_precipitation(
-    snowfall: float | None, precipitation: float | None, expected: float | None
+async def test_daily_forecast_sums_snowfall_and_precipitation(
+    hass: HomeAssistant,
 ) -> None:
-    """Test _sum_precipitation returns None only when both inputs are None."""
-    result = _sum_precipitation(snowfall, precipitation)
-    assert result == expected
-    if expected is not None:
-        assert isinstance(result, float)
+    """Test that snowfallAmount is added to precipitationAmount in daily forecast."""
+    with mock_weather_response() as weather_response:
+        for day in weather_response["forecastDaily"]["days"]:
+            day["snowfallAmount"] = 25.0
+            day["precipitationAmount"] = 5.0
+        await init_integration(hass)
+
+    response = await hass.services.async_call(
+        WEATHER_DOMAIN,
+        SERVICE_GET_FORECASTS,
+        {"entity_id": "weather.home", "type": "daily"},
+        blocking=True,
+        return_response=True,
+    )
+    for forecast in response["weather.home"]["forecast"]:
+        assert forecast["precipitation"] == 30.0
 
 
-def test_hourly_forecast_none_when_both_missing() -> None:
-    """Test that native_precipitation is None when both keys are absent."""
-    data = _hourly_forecast_data()
-    del data["snowfallAmount"]
-    del data["precipitationAmount"]
-    result = _map_hourly_forecast(data)
-    assert result["native_precipitation"] is None
+async def test_hourly_forecast_sums_snowfall_and_precipitation(
+    hass: HomeAssistant,
+) -> None:
+    """Test that snowfallAmount is added to precipitationAmount in hourly forecast."""
+    with mock_weather_response() as weather_response:
+        for hour in weather_response["forecastHourly"]["hours"]:
+            hour["snowfallAmount"] = 12.0
+            hour["precipitationAmount"] = 3.0
+        await init_integration(hass)
+
+    response = await hass.services.async_call(
+        WEATHER_DOMAIN,
+        SERVICE_GET_FORECASTS,
+        {"entity_id": "weather.home", "type": "hourly"},
+        blocking=True,
+        return_response=True,
+    )
+    for forecast in response["weather.home"]["forecast"]:
+        assert forecast["precipitation"] == 15.0
 
 
-def test_hourly_forecast_snowfall_only_when_precipitation_missing() -> None:
-    """Test that snowfallAmount is used when precipitationAmount is absent."""
-    data = _hourly_forecast_data(snowfallAmount=7.0)
-    del data["precipitationAmount"]
-    result = _map_hourly_forecast(data)
-    assert result["native_precipitation"] == 7.0
+async def test_daily_forecast_snowfall_only(hass: HomeAssistant) -> None:
+    """Test daily forecast when only snowfallAmount is present."""
+    with mock_weather_response() as weather_response:
+        for day in weather_response["forecastDaily"]["days"]:
+            day["snowfallAmount"] = 10.0
+            day.pop("precipitationAmount", None)
+        await init_integration(hass)
+
+    response = await hass.services.async_call(
+        WEATHER_DOMAIN,
+        SERVICE_GET_FORECASTS,
+        {"entity_id": "weather.home", "type": "daily"},
+        blocking=True,
+        return_response=True,
+    )
+    for forecast in response["weather.home"]["forecast"]:
+        assert forecast["precipitation"] == 10.0
 
 
-def test_hourly_forecast_precipitation_only_when_snowfall_missing() -> None:
-    """Test that precipitationAmount is used when snowfallAmount is absent."""
-    data = _hourly_forecast_data(precipitationAmount=4.0)
-    del data["snowfallAmount"]
-    result = _map_hourly_forecast(data)
-    assert result["native_precipitation"] == 4.0
+async def test_hourly_forecast_snowfall_only(hass: HomeAssistant) -> None:
+    """Test hourly forecast when only snowfallAmount is present."""
+    with mock_weather_response() as weather_response:
+        for hour in weather_response["forecastHourly"]["hours"]:
+            hour["snowfallAmount"] = 7.0
+            hour.pop("precipitationAmount", None)
+        await init_integration(hass)
+
+    response = await hass.services.async_call(
+        WEATHER_DOMAIN,
+        SERVICE_GET_FORECASTS,
+        {"entity_id": "weather.home", "type": "hourly"},
+        blocking=True,
+        return_response=True,
+    )
+    for forecast in response["weather.home"]["forecast"]:
+        assert forecast["precipitation"] == 7.0
 
 
-def test_daily_forecast_none_when_both_missing() -> None:
-    """Test that native_precipitation is None when both keys are absent."""
-    data = _daily_forecast_data()
-    del data["snowfallAmount"]
-    del data["precipitationAmount"]
-    result = _map_daily_forecast(data)
-    assert result["native_precipitation"] is None
+async def test_daily_forecast_no_precipitation_keys(hass: HomeAssistant) -> None:
+    """Test daily forecast returns 0 when both keys are absent."""
+    with mock_weather_response() as weather_response:
+        for day in weather_response["forecastDaily"]["days"]:
+            day.pop("snowfallAmount", None)
+            day.pop("precipitationAmount", None)
+        await init_integration(hass)
+
+    response = await hass.services.async_call(
+        WEATHER_DOMAIN,
+        SERVICE_GET_FORECASTS,
+        {"entity_id": "weather.home", "type": "daily"},
+        blocking=True,
+        return_response=True,
+    )
+    for forecast in response["weather.home"]["forecast"]:
+        assert forecast["precipitation"] == 0.0
+
+
+async def test_hourly_forecast_no_precipitation_keys(hass: HomeAssistant) -> None:
+    """Test hourly forecast returns 0 when both keys are absent."""
+    with mock_weather_response() as weather_response:
+        for hour in weather_response["forecastHourly"]["hours"]:
+            hour.pop("snowfallAmount", None)
+            hour.pop("precipitationAmount", None)
+        await init_integration(hass)
+
+    response = await hass.services.async_call(
+        WEATHER_DOMAIN,
+        SERVICE_GET_FORECASTS,
+        {"entity_id": "weather.home", "type": "hourly"},
+        blocking=True,
+        return_response=True,
+    )
+    for forecast in response["weather.home"]["forecast"]:
+        assert forecast["precipitation"] == 0.0
