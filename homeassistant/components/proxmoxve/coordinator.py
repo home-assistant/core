@@ -318,6 +318,7 @@ class ProxmoxCoordinator(DataUpdateCoordinator[dict[str, ProxmoxNodeData]]):
         # Track VMs by VMID only (not by node), since VMIDs are globally
         # unique in a Proxmox cluster and VMs can migrate between nodes.
         current_vms = {vmid for node_data in data.values() for vmid in node_data.vms}
+        self.known_vms &= current_vms
         new_vms = current_vms - self.known_vms
         if new_vms:
             _LOGGER.debug("New VMs found: %s", new_vms)
@@ -336,6 +337,7 @@ class ProxmoxCoordinator(DataUpdateCoordinator[dict[str, ProxmoxNodeData]]):
         current_containers = {
             vmid for node_data in data.values() for vmid in node_data.containers
         }
+        self.known_containers &= current_containers
         new_containers = current_containers - self.known_containers
         if new_containers:
             _LOGGER.debug("New containers found: %s", new_containers)
