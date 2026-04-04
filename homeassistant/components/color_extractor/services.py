@@ -3,6 +3,7 @@
 import asyncio
 import io
 import logging
+from typing import Any
 
 import aiohttp
 from colorthief import ColorThief
@@ -153,7 +154,9 @@ async def async_handle_service(service_call: ServiceCall) -> None:
         )
 
 
-async def async_handle_get_color(service_call: ServiceCall) -> dict | None:
+async def async_handle_get_color(
+    service_call: ServiceCall,
+) -> dict[str, Any]:
     """Handle get_color service call."""
     service_data = dict(service_call.data)
 
@@ -181,6 +184,16 @@ async def async_handle_get_color(service_call: ServiceCall) -> dict | None:
                 "image_reference": image_reference,
             },
         ) from ex
+
+    if color is None:
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="invalid_image",
+            translation_placeholders={
+                "image_type": image_type,
+                "image_reference": image_reference,
+            },
+        )
 
     return {"color": color}
 
