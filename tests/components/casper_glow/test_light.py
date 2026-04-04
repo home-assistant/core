@@ -1,5 +1,6 @@
 """Test the Casper Glow light platform."""
 
+from collections.abc import Callable
 from unittest.mock import MagicMock, patch
 
 from pycasperglow import CasperGlowError, GlowState
@@ -82,21 +83,19 @@ async def test_turn_off(
 async def test_state_update_via_callback(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
-    mock_casper_glow: MagicMock,
+    fire_callbacks: Callable[[GlowState], None],
 ) -> None:
     """Test that the entity updates state when the device fires a callback."""
     state = hass.states.get(ENTITY_ID)
     assert state is not None
     assert state.state == STATE_UNKNOWN
 
-    callback = mock_casper_glow.register_callback.call_args[0][0]
-
-    callback(GlowState(is_on=True))
+    fire_callbacks(GlowState(is_on=True))
     state = hass.states.get(ENTITY_ID)
     assert state is not None
     assert state.state == STATE_ON
 
-    callback(GlowState(is_on=False))
+    fire_callbacks(GlowState(is_on=False))
     state = hass.states.get(ENTITY_ID)
     assert state is not None
     assert state.state == STATE_OFF
@@ -113,25 +112,6 @@ async def test_color_mode(
     assert state.attributes.get(ATTR_COLOR_MODE) is None
     # supported_color_modes is a static class attribute, always present
     assert ColorMode.BRIGHTNESS in state.attributes["supported_color_modes"]
-
-
-async def test_turn_on_with_brightness(
-    hass: HomeAssistant,
-    config_entry: MockConfigEntry,
-    mock_casper_glow: MagicMock,
-) -> None:
-    """Test turning on the light with brightness."""
-    await hass.services.async_call(
-        LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_BRIGHTNESS: 255},
-        blocking=True,
-    )
-
-    mock_casper_glow.turn_on.assert_called_once_with()
-    mock_casper_glow.set_brightness_and_dimming_time.assert_called_once_with(
-        100, DEFAULT_DIMMING_TIME_MINUTES
-    )
 
 
 @pytest.mark.parametrize(
@@ -169,11 +149,10 @@ async def test_brightness_snap_to_nearest(
 async def test_brightness_update_via_callback(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
-    mock_casper_glow: MagicMock,
+    fire_callbacks: Callable[[GlowState], None],
 ) -> None:
     """Test that brightness updates via device callback."""
-    callback = mock_casper_glow.register_callback.call_args[0][0]
-    callback(GlowState(is_on=True, brightness_level=80))
+    fire_callbacks(GlowState(is_on=True, brightness_level=80))
 
     state = hass.states.get(ENTITY_ID)
     assert state is not None
@@ -181,18 +160,29 @@ async def test_brightness_update_via_callback(
     assert state.attributes.get(ATTR_BRIGHTNESS) == 153
 
 
-async def test_turn_on_error(
+@pytest.mark.usefixtures("config_entry")
+@pytest.mark.parametrize(
+    ("service", "mock_method"),
+    [
+        (SERVICE_TURN_ON, "turn_on"),
+        (SERVICE_TURN_OFF, "turn_off"),
+    ],
+)
+async def test_command_error(
     hass: HomeAssistant,
-    config_entry: MockConfigEntry,
     mock_casper_glow: MagicMock,
+    service: str,
+    mock_method: str,
 ) -> None:
-    """Test that a turn on error raises HomeAssistantError without marking entity unavailable."""
-    mock_casper_glow.turn_on.side_effect = CasperGlowError("Connection failed")
+    """Test that a device error raises HomeAssistantError without marking entity unavailable."""
+    getattr(mock_casper_glow, mock_method).side_effect = CasperGlowError(
+        "Connection failed"
+    )
 
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             LIGHT_DOMAIN,
-            SERVICE_TURN_ON,
+            service,
             {ATTR_ENTITY_ID: ENTITY_ID},
             blocking=True,
         )
@@ -202,27 +192,11 @@ async def test_turn_on_error(
     assert state.state == STATE_UNKNOWN
 
 
-async def test_turn_off_error(
-    hass: HomeAssistant,
-    config_entry: MockConfigEntry,
-    mock_casper_glow: MagicMock,
-) -> None:
-    """Test that a turn off error raises HomeAssistantError."""
-    mock_casper_glow.turn_off.side_effect = CasperGlowError("Connection failed")
-
-    with pytest.raises(HomeAssistantError):
-        await hass.services.async_call(
-            LIGHT_DOMAIN,
-            SERVICE_TURN_OFF,
-            {ATTR_ENTITY_ID: ENTITY_ID},
-            blocking=True,
-        )
-
-
 async def test_state_update_via_callback_after_command_failure(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     mock_casper_glow: MagicMock,
+    fire_callbacks: Callable[[GlowState], None],
 ) -> None:
     """Test that device callbacks correctly update state even after a command failure."""
     mock_casper_glow.turn_on.side_effect = CasperGlowError("Connection failed")
@@ -241,8 +215,7 @@ async def test_state_update_via_callback_after_command_failure(
     assert state.state == STATE_UNKNOWN
 
     # Device sends a push state update — entity reflects true device state
-    callback = mock_casper_glow.register_callback.call_args[0][0]
-    callback(GlowState(is_on=True))
+    fire_callbacks(GlowState(is_on=True))
 
     state = hass.states.get(ENTITY_ID)
     assert state is not None

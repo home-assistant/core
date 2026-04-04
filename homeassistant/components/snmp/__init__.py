@@ -1,4 +1,4 @@
-"""The snmp component."""
+"""The SNMP integration."""
 
 from .util import async_get_snmp_engine
 
