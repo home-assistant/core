@@ -332,7 +332,10 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
                 translation_placeholders={"error": str(ex)},
             ) from ex
 
-        _LOGGER.debug("enity_data: %s", entity_data)
+        _LOGGER.debug("entity_data: %s", entity_data)
+
+        await self.async_trigger_cleanup()
+
         return entity_data
 
     @property
