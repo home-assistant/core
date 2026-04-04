@@ -14,6 +14,15 @@ from unifi_access_api.models.websocket import (
     InsightsAddData,
     InsightsMetadata,
     InsightsMetadataEntry,
+    LogActor,
+    LogAdd,
+    LogAddData,
+    LogAuthentication,
+    LogEvent,
+    LogSource,
+    LogTarget,
+    V2LocationUpdate,
+    V2LocationUpdateData,
     WebsocketMessage,
 )
 
@@ -391,3 +400,254 @@ async def test_unload_entry_removes_listeners(
     state = hass.states.get(FRONT_DOOR_DOORBELL_ENTITY)
     assert state is not None
     assert state.state == "unavailable"
+
+
+async def _populate_device_mapping(
+    handlers: dict[str, Callable[[WebsocketMessage], Awaitable[None]]],
+) -> None:
+    """Send a V2 location update to populate the device-to-door mapping."""
+    location_msg = V2LocationUpdate(
+        event="access.data.v2.location.update",
+        data=V2LocationUpdateData(
+            id="door-001",
+            location_type="door",
+            name="Front Door",
+            device_ids=["hub-device-001", "camera-device-001"],
+        ),
+    )
+    await handlers["access.data.v2.location.update"](location_msg)
+
+
+@pytest.mark.freeze_time("2025-01-01 00:00:00+00:00")
+async def test_logs_add_access_granted(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    mock_client: MagicMock,
+) -> None:
+    """Test access.logs.add event dispatches access_granted."""
+    handlers = _get_ws_handlers(mock_client)
+    await _populate_device_mapping(handlers)
+
+    log_msg = LogAdd(
+        event="access.logs.add",
+        data=LogAddData(
+            source=LogSource(
+                target=[
+                    LogTarget(
+                        type="device_config",
+                        id="hub-device-001",
+                        display_name="UA Hub Door",
+                    ),
+                ],
+                actor=LogActor(display_name="John Doe"),
+                event=LogEvent(result="ACCESS"),
+                authentication=LogAuthentication(credential_provider="NFC"),
+            ),
+        ),
+    )
+
+    await handlers["access.logs.add"](log_msg)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(FRONT_DOOR_ACCESS_ENTITY)
+    assert state is not None
+    assert state.attributes["event_type"] == "access_granted"
+    assert state.attributes["actor"] == "John Doe"
+    assert state.attributes["authentication"] == "NFC"
+    assert state.attributes["result"] == "ACCESS"
+    assert state.state == "2025-01-01T00:00:00.000+00:00"
+
+
+@pytest.mark.freeze_time("2025-01-01 00:00:00+00:00")
+async def test_logs_add_access_denied(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    mock_client: MagicMock,
+) -> None:
+    """Test access.logs.add event dispatches access_denied for non-ACCESS result."""
+    handlers = _get_ws_handlers(mock_client)
+    await _populate_device_mapping(handlers)
+
+    log_msg = LogAdd(
+        event="access.logs.add",
+        data=LogAddData(
+            source=LogSource(
+                target=[
+                    LogTarget(
+                        type="device_config",
+                        id="hub-device-001",
+                        display_name="UA Hub Door",
+                    ),
+                ],
+                event=LogEvent(result="BLOCKED"),
+                authentication=LogAuthentication(credential_provider="PIN_CODE"),
+            ),
+        ),
+    )
+
+    await handlers["access.logs.add"](log_msg)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(FRONT_DOOR_ACCESS_ENTITY)
+    assert state is not None
+    assert state.attributes["event_type"] == "access_denied"
+    assert state.attributes["result"] == "BLOCKED"
+    assert state.state == "2025-01-01T00:00:00.000+00:00"
+
+
+async def test_logs_add_unknown_device_ignored(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    mock_client: MagicMock,
+) -> None:
+    """Test access.logs.add event with unknown device ID is ignored."""
+    handlers = _get_ws_handlers(mock_client)
+    await _populate_device_mapping(handlers)
+
+    log_msg = LogAdd(
+        event="access.logs.add",
+        data=LogAddData(
+            source=LogSource(
+                target=[
+                    LogTarget(
+                        type="device_config",
+                        id="unknown-device",
+                        display_name="Unknown Hub",
+                    ),
+                ],
+                event=LogEvent(result="ACCESS"),
+            ),
+        ),
+    )
+
+    await handlers["access.logs.add"](log_msg)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(FRONT_DOOR_ACCESS_ENTITY)
+    assert state is not None
+    assert state.state == "unknown"
+
+
+async def test_logs_add_without_location_update_ignored(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    mock_client: MagicMock,
+) -> None:
+    """Test access.logs.add event is ignored when no device mapping exists."""
+    handlers = _get_ws_handlers(mock_client)
+
+    log_msg = LogAdd(
+        event="access.logs.add",
+        data=LogAddData(
+            source=LogSource(
+                target=[
+                    LogTarget(
+                        type="device_config",
+                        id="hub-device-001",
+                        display_name="UA Hub Door",
+                    ),
+                ],
+                event=LogEvent(result="ACCESS"),
+            ),
+        ),
+    )
+
+    await handlers["access.logs.add"](log_msg)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(FRONT_DOOR_ACCESS_ENTITY)
+    assert state is not None
+    assert state.state == "unknown"
+
+
+async def test_logs_add_empty_result_ignored(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    mock_client: MagicMock,
+) -> None:
+    """Test access.logs.add event with empty result is ignored."""
+    handlers = _get_ws_handlers(mock_client)
+    await _populate_device_mapping(handlers)
+
+    log_msg = LogAdd(
+        event="access.logs.add",
+        data=LogAddData(
+            source=LogSource(
+                target=[
+                    LogTarget(
+                        type="device_config",
+                        id="hub-device-001",
+                        display_name="UA Hub Door",
+                    ),
+                ],
+                event=LogEvent(result=""),
+            ),
+        ),
+    )
+
+    await handlers["access.logs.add"](log_msg)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(FRONT_DOOR_ACCESS_ENTITY)
+    assert state is not None
+    assert state.state == "unknown"
+
+
+async def test_logs_add_no_device_config_target_ignored(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    mock_client: MagicMock,
+) -> None:
+    """Test access.logs.add event without device_config target is ignored."""
+    handlers = _get_ws_handlers(mock_client)
+    await _populate_device_mapping(handlers)
+
+    log_msg = LogAdd(
+        event="access.logs.add",
+        data=LogAddData(
+            source=LogSource(
+                target=[
+                    LogTarget(
+                        type="user",
+                        id="some-user-id",
+                        display_name="Some User",
+                    ),
+                ],
+                event=LogEvent(result="ACCESS"),
+            ),
+        ),
+    )
+
+    await handlers["access.logs.add"](log_msg)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(FRONT_DOOR_ACCESS_ENTITY)
+    assert state is not None
+    assert state.state == "unknown"
+
+
+async def test_logs_add_empty_targets_ignored(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    mock_client: MagicMock,
+) -> None:
+    """Test access.logs.add event with empty targets list is ignored."""
+    handlers = _get_ws_handlers(mock_client)
+    await _populate_device_mapping(handlers)
+
+    log_msg = LogAdd(
+        event="access.logs.add",
+        data=LogAddData(
+            source=LogSource(
+                target=[],
+                event=LogEvent(result="ACCESS"),
+            ),
+        ),
+    )
+
+    await handlers["access.logs.add"](log_msg)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(FRONT_DOOR_ACCESS_ENTITY)
+    assert state is not None
+    assert state.state == "unknown"
