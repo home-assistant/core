@@ -161,7 +161,7 @@ def make_binary_inputs(
 ) -> BinaryInputs:
     """Create a minimal BinaryInputs config entry.
 
-    input_flags is the isused bitmask: bit N set means button_id N is active.
+    input_flags is a bitmask of active inputs: bit N set means button_id N is active.
     """
     return BinaryInputs(
         instance_number=instance_number,

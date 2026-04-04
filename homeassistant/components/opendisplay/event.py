@@ -35,20 +35,23 @@ async def async_setup_entry(
     """Set up OpenDisplay event entities from binary_inputs device config."""
     coordinator = entry.runtime_data.coordinator
 
-    descriptions = [
-        OpenDisplayEventEntityDescription(
-            key=f"button_{bi.instance_number}_{button_id}",
-            translation_key="button",
-            translation_placeholders={"number": str(button_id + 1)},
-            device_class=EventDeviceClass.BUTTON,
-            event_types=["button_down", "button_up"],
-            byte_index=bi.button_data_byte_index,
-            button_id=button_id,
-        )
-        for bi in entry.runtime_data.device_config.binary_inputs
-        for button_id in range(8)
-        if bi.input_flags & (1 << button_id)  # input_flags is an isused bitmask
-    ]
+    descriptions: list[OpenDisplayEventEntityDescription] = []
+    button_number = 0
+    for bi in entry.runtime_data.device_config.binary_inputs:
+        for button_id in range(8):  # input_flags is a bitmask over 8 pin slots
+            if bi.input_flags & (1 << button_id):
+                button_number += 1
+                descriptions.append(
+                    OpenDisplayEventEntityDescription(
+                        key=f"button_{bi.instance_number}_{button_id}",
+                        translation_key="button",
+                        translation_placeholders={"number": str(button_number)},
+                        device_class=EventDeviceClass.BUTTON,
+                        event_types=["button_down", "button_up"],
+                        byte_index=bi.button_data_byte_index,
+                        button_id=button_id,
+                    )
+                )
 
     active_unique_ids = {f"{coordinator.address}-{d.key}" for d in descriptions}
     entity_registry = er.async_get(hass)
@@ -70,16 +73,19 @@ class OpenDisplayEventEntity(OpenDisplayEntity, EventEntity):
     """A button event entity for an OpenDisplay device."""
 
     entity_description: OpenDisplayEventEntityDescription
+    _last_processed_data: object | None = None
 
     @callback
     def _handle_coordinator_update(self) -> None:
         """Fire events for button transitions reported by this coordinator update."""
-        if self.coordinator.data is not None:
-            for event in self.coordinator.data.button_events:
+        data = self.coordinator.data
+        if data is not None and data is not self._last_processed_data:
+            for event in data.button_events:
                 if (
                     event.byte_index == self.entity_description.byte_index
                     and event.button_id == self.entity_description.button_id
                     and event.event_type in self.event_types
                 ):
                     self._trigger_event(event.event_type)
+            self._last_processed_data = data
         self.async_write_ha_state()
