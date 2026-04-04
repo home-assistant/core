@@ -96,6 +96,7 @@ async def test_changed_by(
     assert lock_device is not None
     assert lock_device.attributes.get("changed_by") == "access code - foo"
 
+
 @pytest.mark.parametrize(
     "notify_on_use",
     [
