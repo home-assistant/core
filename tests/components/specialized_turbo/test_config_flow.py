@@ -231,7 +231,7 @@ async def test_user_flow_no_devices(hass: HomeAssistant) -> None:
 
 
 async def test_user_flow_already_configured(hass: HomeAssistant) -> None:
-    """Test user flow aborts when selecting an already configured device."""
+    """Test user flow filters out already configured devices."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         data={"address": MOCK_ADDRESS},
@@ -239,7 +239,6 @@ async def test_user_flow_already_configured(hass: HomeAssistant) -> None:
     )
     entry.add_to_hass(hass)
 
-    # Discover the already-configured address so it appears in the form
     with patch(
         "homeassistant.components.specialized_turbo.config_flow.async_discovered_service_info",
         return_value=[MOCK_SERVICE_INFO],
@@ -249,18 +248,8 @@ async def test_user_flow_already_configured(hass: HomeAssistant) -> None:
             context={"source": config_entries.SOURCE_USER},
         )
 
-    assert result["type"] is FlowResultType.FORM
-
-    # Submit the already-configured address
-    p1, p2 = mock_connection_success()
-    with p1, p2:
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            user_input={"address": MOCK_ADDRESS, CONF_PIN: 1234},
-        )
-
     assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "already_configured"
+    assert result["reason"] == "no_devices_found"
 
 
 async def test_user_flow_cannot_connect(

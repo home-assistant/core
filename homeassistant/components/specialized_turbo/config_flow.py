@@ -116,7 +116,7 @@ class SpecializedTurboConfigFlow(ConfigFlow, domain=DOMAIN):
         # Discover available Specialized bikes
         current_addresses = self._async_current_ids()
         for info in async_discovered_service_info(self.hass):
-            if info.address in current_addresses:
+            if format_mac(info.address) in current_addresses:
                 continue
             if _is_specialized_service_info(info):
                 self._discovered_devices[info.address] = info

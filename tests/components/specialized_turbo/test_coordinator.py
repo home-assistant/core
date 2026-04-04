@@ -5,6 +5,7 @@ from __future__ import annotations
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from bleak import BleakError
+import pytest
 from specialized_turbo import CHAR_NOTIFY
 
 from homeassistant.components.specialized_turbo.coordinator import (
@@ -406,7 +407,7 @@ async def test_async_shutdown_errors(hass: HomeAssistant) -> None:
 
 
 async def test_do_poll_bleak_error_from_start_notify(hass: HomeAssistant) -> None:
-    """Test that BleakError during start_notify is caught and client is cleared."""
+    """Test that BleakError during start_notify propagates and client is cleared."""
     coord = _make_coordinator(hass)
 
     mock_client = AsyncMock()
@@ -423,8 +424,9 @@ async def test_do_poll_bleak_error_from_start_notify(hass: HomeAssistant) -> Non
             new_callable=AsyncMock,
             return_value=mock_client,
         ),
+        pytest.raises(BleakError),
     ):
-        await coord._do_poll()  # should not raise
+        await coord._do_poll()
 
     assert coord._client is None
 
@@ -432,7 +434,7 @@ async def test_do_poll_bleak_error_from_start_notify(hass: HomeAssistant) -> Non
 async def test_do_poll_bleak_error_from_establish_connection(
     hass: HomeAssistant,
 ) -> None:
-    """Test that BleakError during establish_connection is caught."""
+    """Test that BleakError during establish_connection propagates."""
     coord = _make_coordinator(hass)
 
     with (
@@ -445,7 +447,8 @@ async def test_do_poll_bleak_error_from_establish_connection(
             new_callable=AsyncMock,
             side_effect=BleakError("Failed to connect"),
         ),
+        pytest.raises(BleakError),
     ):
-        await coord._do_poll()  # should not raise
+        await coord._do_poll()
 
     assert coord._client is None
