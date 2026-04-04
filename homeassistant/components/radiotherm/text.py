@@ -3,14 +3,13 @@
 from __future__ import annotations
 
 import json
-from urllib.error import URLError
 
 import radiotherm.thermostat
 
 from homeassistant.components.text import TextEntity
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN
