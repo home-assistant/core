@@ -87,7 +87,7 @@ async def test_setup_entry(
     await hass.async_block_till_done()
 
     assert DOMAIN in hass.data
-    assert mock_config_entry.state.name == "LOADED"
+    assert mock_config_entry.state is ConfigEntryState.LOADED
 
 
 async def test_unload_entry(
