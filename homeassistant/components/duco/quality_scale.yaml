@@ -53,10 +53,11 @@ rules:
       The device hostname follows the pattern duco_<last 6 chars of MAC>
       (e.g. duco_061293), which can be used for DHCP hostname matching.
   discovery:
-    status: exempt
+    status: todo
     comment: >-
-      The device does not appear to advertise itself via mDNS or Zeroconf.
-      Confirmation from Duco would be needed to implement this.
+      Device can be discovered via DHCP. The hostname follows the pattern
+      duco_<last 6 chars of MAC> (e.g. duco_061293). To be implemented
+      in a follow-up PR together with discovery-update-info.
   docs-data-update: done
   docs-examples: done
   docs-known-limitations: done
@@ -65,8 +66,10 @@ rules:
   docs-troubleshooting: done
   docs-use-cases: done
   dynamic-devices:
-    status: exempt
-    comment: The node topology of a Duco box is fixed and does not change at runtime.
+    status: todo
+    comment: >-
+      Users can pair new modules (CO2 sensors, humidity sensors, zone valves)
+      to their Duco box. Dynamic device support to be added in a follow-up PR.
   entity-category: todo
   entity-device-class: todo
   entity-disabled-by-default: todo
@@ -76,8 +79,9 @@ rules:
   reconfiguration-flow: todo
   repair-issues: todo
   stale-devices:
-    status: exempt
-    comment: Nodes are fixed; stale device cleanup is not applicable.
+    status: todo
+    comment: >-
+      To be implemented together with dynamic device support in a follow-up PR.
 
   # Platinum
   async-dependency: done
