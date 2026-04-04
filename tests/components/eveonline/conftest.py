@@ -11,7 +11,12 @@ from homeassistant.components.application_credentials import (
     ClientCredential,
     async_import_client_credential,
 )
-from homeassistant.components.eveonline.const import DOMAIN
+from homeassistant.components.eveonline.const import (
+    CONF_CHARACTER_ID,
+    CONF_CHARACTER_NAME,
+    DOMAIN,
+)
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
@@ -50,8 +55,8 @@ def mock_config_entry(hass: HomeAssistant) -> MockConfigEntry:
                 "expires_at": time.time() + 1200,
                 "token_type": "Bearer",
             },
-            "character_id": CHARACTER_ID,
-            "character_name": CHARACTER_NAME,
+            CONF_CHARACTER_ID: CHARACTER_ID,
+            CONF_CHARACTER_NAME: CHARACTER_NAME,
         },
     )
     entry.add_to_hass(hass)
@@ -78,3 +83,18 @@ def mock_eveonline_client() -> Generator[AsyncMock]:
         client.async_get_jump_fatigue = AsyncMock(return_value=None)
         client.async_resolve_names = AsyncMock(return_value=[])
         yield client
+
+
+@pytest.fixture
+async def init_integration(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_eveonline_client: AsyncMock,
+    setup_credentials: None,
+) -> MockConfigEntry:
+    """Set up the Eve Online integration."""
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    return mock_config_entry

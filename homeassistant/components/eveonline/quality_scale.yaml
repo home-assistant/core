@@ -27,6 +27,7 @@ rules:
   action-exceptions:
     status: exempt
     comment: Integration does not provide service actions.
+  config-entry-unloading: done
   docs-configuration-parameters:
     status: exempt
     comment: Integration has no configuration parameters beyond OAuth2 credentials.
@@ -35,6 +36,7 @@ rules:
   integration-owner: done
   log-when-unavailable: done
   parallel-updates: done
+  reauthentication-flow: todo
   test-coverage: done
 
   # Gold

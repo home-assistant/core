@@ -25,15 +25,10 @@ from tests.common import MockConfigEntry
 
 async def test_setup_entry(
     hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_eveonline_client: AsyncMock,
-    setup_credentials: None,
+    init_integration: MockConfigEntry,
 ) -> None:
     """Test successful setup of a config entry."""
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert init_integration.state is ConfigEntryState.LOADED
 
 
 @pytest.mark.parametrize(
@@ -61,84 +56,37 @@ async def test_setup_entry_error(
 
 async def test_unload_entry(
     hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_eveonline_client: AsyncMock,
-    setup_credentials: None,
+    init_integration: MockConfigEntry,
 ) -> None:
     """Test successful unloading of a config entry."""
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    assert init_integration.state is ConfigEntryState.LOADED
+
+    await hass.config_entries.async_unload(init_integration.entry_id)
     await hass.async_block_till_done()
 
-    assert mock_config_entry.state is ConfigEntryState.LOADED
-
-    await hass.config_entries.async_unload(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
+    assert init_integration.state is ConfigEntryState.NOT_LOADED
 
 
+@pytest.mark.parametrize(
+    "exception",
+    [
+        EveOnlineError("Endpoint down"),
+        aiohttp.ClientError("Connection lost"),
+    ],
+)
 async def test_coordinator_optional_endpoint_error(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_eveonline_client: AsyncMock,
     setup_credentials: None,
+    exception: Exception,
 ) -> None:
     """Test that errors on optional endpoints don't fail the coordinator.
 
-    When an optional endpoint raises EveOnlineError, the coordinator
-    should still load successfully with None/empty values for that data.
+    When an optional endpoint raises an error, the coordinator should still
+    load successfully with None/empty values for that data.
     """
-    mock_eveonline_client.async_get_wallet_balance.side_effect = EveOnlineError(
-        "Endpoint down"
-    )
-
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    assert mock_config_entry.state is ConfigEntryState.LOADED
-
-    # Optional endpoints should return None, sensor value is unknown
-    state = hass.states.get("sensor.test_capsuleer_wallet_balance")
-    assert state is not None
-    assert state.state == "unknown"
-
-
-async def test_coordinator_optional_endpoint_network_error(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_eveonline_client: AsyncMock,
-    setup_credentials: None,
-) -> None:
-    """Test that aiohttp.ClientError on optional endpoints degrades gracefully."""
-    mock_eveonline_client.async_get_wallet_balance.side_effect = aiohttp.ClientError(
-        "Connection lost"
-    )
-
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    assert mock_config_entry.state is ConfigEntryState.LOADED
-
-    state = hass.states.get("sensor.test_capsuleer_wallet_balance")
-    assert state is not None
-    assert state.state == "unknown"
-
-
-async def test_coordinator_auth_error_on_optional_endpoint(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_eveonline_client: AsyncMock,
-    setup_credentials: None,
-) -> None:
-    """Test that auth errors on optional endpoints degrade gracefully.
-
-    Without a reauth flow, auth errors on optional endpoints are treated
-    like any other error: the data is set to None and the sensor becomes
-    unknown.
-    """
-    mock_eveonline_client.async_get_wallet_balance.side_effect = EveOnlineError(
-        "Token revoked"
-    )
+    mock_eveonline_client.async_get_wallet_balance.side_effect = exception
 
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
