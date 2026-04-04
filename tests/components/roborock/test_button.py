@@ -1,5 +1,6 @@
 """Test Roborock Button platform."""
 
+from copy import deepcopy
 from unittest.mock import Mock
 
 import pytest
@@ -13,7 +14,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
-from .conftest import FakeDevice
+from .conftest import FakeDevice, set_trait_attributes
 from .mock_data import CONSUMABLE
 
 from tests.common import MockConfigEntry, snapshot_platform
@@ -91,11 +92,7 @@ def dock_consumable_unsupported_fixture(fake_vacuum: FakeDevice) -> None:
     consumables.cleaning_brush_work_times = None
 
     async def refresh_without_dock() -> None:
-        from copy import deepcopy as _deepcopy
-
-        from .conftest import set_trait_attributes
-
-        consumable_no_dock = _deepcopy(CONSUMABLE)
+        consumable_no_dock = deepcopy(CONSUMABLE)
         consumable_no_dock.strainer_work_times = None
         consumable_no_dock.cleaning_brush_work_times = None
         set_trait_attributes(consumables, consumable_no_dock)
@@ -103,16 +100,16 @@ def dock_consumable_unsupported_fixture(fake_vacuum: FakeDevice) -> None:
     consumables.refresh.side_effect = refresh_without_dock
 
 
-@pytest.mark.usefixtures("entity_registry_enabled_by_default", "dock_consumable_unsupported")
+@pytest.mark.usefixtures(
+    "entity_registry_enabled_by_default", "dock_consumable_unsupported"
+)
 async def test_dock_consumable_buttons_not_created_when_unsupported(
     hass: HomeAssistant,
     setup_entry: MockConfigEntry,
 ) -> None:
     """Test dock consumable buttons are absent when the dock doesn't report them."""
     assert (
-        hass.states.get(
-            "button.roborock_s7_maxv_dock_reset_dock_strainer_consumable"
-        )
+        hass.states.get("button.roborock_s7_maxv_dock_reset_dock_strainer_consumable")
         is None
     )
     assert (
