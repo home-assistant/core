@@ -54,7 +54,9 @@ rules:
       (e.g. duco_061293), which can be used for DHCP hostname matching.
   discovery:
     status: exempt
-    comment: Integration does not support automatic discovery.
+    comment: >-
+      The device does not appear to advertise itself via mDNS or Zeroconf.
+      Confirmation from Duco would be needed to implement this.
   docs-data-update: done
   docs-examples: done
   docs-known-limitations: done
