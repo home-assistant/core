@@ -90,8 +90,8 @@ class RoborockMap(RoborockCoordinatedEntityV1, ImageEntity):
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator.
 
-        Only trigger a state change in Home Assistant if the map image has changed,
-        to prevent logbook spam.
+        Only trigger a state change in Home Assistant if the map image content
+        has changed, to prevent logbook spam.
         """
         if self.coordinator.data is None or (map_content := self._map_content) is None:
             return
