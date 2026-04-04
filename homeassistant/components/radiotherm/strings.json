@@ -23,6 +23,11 @@
     }
   },
   "entity": {
+    "button": {
+      "sync_time": {
+        "name": "Sync Time"
+      }
+    },
     "switch": {
       "hold": {
         "name": "Hold"

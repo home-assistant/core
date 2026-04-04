@@ -1,5 +1,10 @@
 {
   "entity": {
+    "button": {
+      "sync_time": {
+        "default": "mdi:timer-sync"
+      }
+    },
     "switch": {
       "hold": {
         "default": "mdi:timer-off",

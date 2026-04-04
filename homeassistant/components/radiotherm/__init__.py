@@ -18,7 +18,12 @@ from .coordinator import RadioThermUpdateCoordinator
 from .data import async_get_init_data
 from .util import async_set_time
 
-PLATFORMS: list[Platform] = [Platform.CLIMATE, Platform.SWITCH]
+PLATFORMS: list[Platform] = [
+    Platform.CLIMATE,
+    Platform.SWITCH,
+    Platform.BUTTON,
+    Platform.TEXT,
+]
 
 
 async def _async_call_or_raise_not_ready[_T](
