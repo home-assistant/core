@@ -15,14 +15,19 @@ SITE = (
 
 def run_script() -> None:
     """Run the script."""
-    response = requests.get(SITE, timeout=10)
+    headers = {"User-Agent": "HomeAssistant-Locale-Checker/1.0"}
+    response = requests.get(SITE, timeout=10,headers=headers)
+    response.raise_for_status()
     soup = BeautifulSoup(response.text, "html.parser")
 
     table = soup.find("table")
+    if not table:
+        print("Error: Could not find table on page.")
+        return
     table_body = table.find_all("tbody")[-1]
     rows = table_body.find_all("tr")
     data = [[ele.text.strip() for ele in row.find_all("td") if ele] for row in rows]
-    upstream_locales_raw = {row[0]: row[3] for row in data}
+    upstream_locales_raw = {row[0]: row[3] for row in data if len(row) > 3}
     language_pattern = re.compile(r"^[a-z]{2}-[A-Z]{2}$")
     upstream_locales = {
         upstream_interface: {
