@@ -46,10 +46,12 @@ rules:
   # Gold
   devices: done
   diagnostics: todo
-  discovery-update-info: done
+  discovery-update-info:
+    status: todo
+    comment: DHCP host updating to be implemented in a follow-up PR.
   discovery:
     status: exempt
-    comment: Integration does not support automatic discovery, only DHCP host updates.
+    comment: Integration does not support automatic discovery.
   docs-data-update: done
   docs-examples: done
   docs-known-limitations: done
