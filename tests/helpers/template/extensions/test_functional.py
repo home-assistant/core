@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import random
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -90,7 +90,7 @@ def test_ord(hass: HomeAssistant) -> None:
 
 
 @patch.object(random, "choice")
-def test_random_every_time(test_choice: random.choice, hass: HomeAssistant) -> None:
+def test_random_every_time(test_choice: MagicMock, hass: HomeAssistant) -> None:
     """Ensure the random filter runs every time, not just once."""
     tpl = template.Template("{{ [1,2] | random }}", hass)
     test_choice.return_value = "foo"

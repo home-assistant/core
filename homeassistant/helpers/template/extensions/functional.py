@@ -133,6 +133,11 @@ class FunctionalExtension(BaseTemplateExtension):
         """Immediate if function/filter that allow for common if/else constructs.
 
         https://en.wikipedia.org/wiki/IIf
+
+        Examples:
+            {{ is_state("device_tracker.frenck", "home") | iif("yes", "no") }}
+            {{ iif(1==2, "yes", "no") }}
+            {{ (1 == 1) | iif("yes", "no") }}
         """
         if value is None and if_none is not _SENTINEL:
             return if_none
@@ -142,7 +147,18 @@ class FunctionalExtension(BaseTemplateExtension):
 
     @staticmethod
     def merge_response(value: ServiceResponse) -> list[Any]:
-        """Merge action responses into single list."""
+        """Merge action responses into single list.
+
+        Checks that the input is a correct service response:
+        {
+            "entity_id": {str: dict[str, Any]},
+        }
+        If response is a single list, it will extend the list with the items
+            and add the entity_id and value_key to each dictionary for reference.
+        If response is a dictionary or multiple lists,
+            it will append the dictionary/lists to the list
+            and add the entity_id to each dictionary for reference.
+        """
         if not isinstance(value, dict):
             raise TypeError("Response is not a dictionary")
         if not value:
