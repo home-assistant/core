@@ -2,14 +2,14 @@
 
 from unittest.mock import MagicMock, call
 
-from home_assistant.component.music_assistant.number import (
-    PLAYER_OPTIONS_TRANSLATION_KEYS_NUMBER,
-)
 from music_assistant_models.enums import EventType
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.music_assistant.const import DOMAIN
+from homeassistant.components.music_assistant.number import (
+    PLAYER_OPTIONS_TRANSLATION_KEYS_NUMBER,
+)
 from homeassistant.components.number import (
     ATTR_VALUE,
     DOMAIN as NUMBER_DOMAIN,
