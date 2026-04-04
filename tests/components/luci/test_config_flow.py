@@ -149,34 +149,3 @@ async def test_user_flow_recover_after_error(
             )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-
-
-async def test_options_flow(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_luci_client: MagicMock,
-) -> None:
-    """Test options flow."""
-    mock_config_entry.add_to_hass(hass)
-
-    with patch(
-        "homeassistant.components.luci.OpenWrtRpc",
-        return_value=mock_luci_client,
-    ):
-        await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
-
-        result = await hass.config_entries.options.async_init(
-            mock_config_entry.entry_id
-        )
-        assert result["type"] is FlowResultType.FORM
-        assert result["step_id"] == "init"
-
-        result = await hass.config_entries.options.async_configure(
-            result["flow_id"],
-            user_input={"consider_home": 300},
-        )
-        await hass.async_block_till_done()
-
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert mock_config_entry.options == {"consider_home": 300}

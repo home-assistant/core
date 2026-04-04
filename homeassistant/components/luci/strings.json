@@ -18,17 +18,5 @@
         }
       }
     }
-  },
-  "options": {
-    "step": {
-      "init": {
-        "data": {
-          "consider_home": "Consider home interval (seconds)"
-        },
-        "data_description": {
-          "consider_home": "Number of seconds to wait after a device is last seen before marking it as not home."
-        }
-      }
-    }
   }
 }
