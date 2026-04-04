@@ -1,6 +1,6 @@
 """Test the Casper Glow sensor platform."""
 
-from collections.abc import Callable
+from collections.abc import Awaitable, Callable
 from unittest.mock import MagicMock, patch
 
 from pycasperglow import BatteryLevel, GlowState
@@ -59,13 +59,13 @@ async def test_battery_state_updated_via_callback(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_casper_glow: MagicMock,
-    fire_callbacks: Callable[[GlowState], None],
+    fire_callbacks: Callable[[GlowState], Awaitable[None]],
 ) -> None:
     """Test battery sensor updates when a device callback fires."""
     with patch("homeassistant.components.casper_glow.PLATFORMS", [Platform.SENSOR]):
         await setup_integration(hass, mock_config_entry)
 
-    fire_callbacks(GlowState(battery_level=BatteryLevel.PCT_50))
+    await fire_callbacks(GlowState(battery_level=BatteryLevel.PCT_50))
 
     state = hass.states.get(BATTERY_ENTITY_ID)
     assert state is not None
