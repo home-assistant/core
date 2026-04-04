@@ -195,6 +195,12 @@
       "message": "Error while updating the data: {error}"
     }
   },
+  "issues": {
+    "deprecated_cleanup_button": {
+      "description": "The 'Cleanup' button is deprecated and will be removed in Home Assistant Core {removal_version}. Please update your automations and dashboards to remove any usage of this button. The action is now performed automatically at each data refresh.",
+      "title": "'Cleanup' button is deprecated"
+    }
+  },
   "options": {
     "step": {
       "init": {
