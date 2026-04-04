@@ -15,15 +15,16 @@ from homeassistant.components.light import (
     LIGHT_TURN_ON_SCHEMA,
 )
 from homeassistant.const import SERVICE_TURN_ON as LIGHT_SERVICE_TURN_ON
-from homeassistant.core import HomeAssistant, ServiceCall, callback
+from homeassistant.core import HomeAssistant, ServiceCall, SupportsResponse, callback
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import aiohttp_client, config_validation as cv
 
-from .const import ATTR_PATH, ATTR_URL, DOMAIN, SERVICE_TURN_ON
+from .const import ATTR_PATH, ATTR_URL, DOMAIN, SERVICE_GET_COLOR, SERVICE_TURN_ON
 
 _LOGGER = logging.getLogger(__name__)
 
 # Extend the existing light.turn_on service schema
-SERVICE_SCHEMA = vol.All(
+TURN_ON_SERVICE_SCHEMA = vol.All(
     cv.has_at_least_one_key(ATTR_URL, ATTR_PATH),
     cv.make_entity_service_schema(
         {
@@ -32,6 +33,14 @@ SERVICE_SCHEMA = vol.All(
             vol.Exclusive(ATTR_URL, "color_extractor"): cv.url,
         }
     ),
+)
+
+GET_COLOR_SERVICE_SCHEMA = vol.All(
+    cv.has_at_least_one_key(ATTR_URL, ATTR_PATH),
+    {
+        vol.Exclusive(ATTR_PATH, "color_extractor"): cv.isfile,
+        vol.Exclusive(ATTR_URL, "color_extractor"): cv.url,
+    },
 )
 
 
@@ -144,6 +153,38 @@ async def async_handle_service(service_call: ServiceCall) -> None:
         )
 
 
+async def async_handle_get_color(service_call: ServiceCall) -> dict | None:
+    """Handle get_color service call."""
+    service_data = dict(service_call.data)
+
+    try:
+        if ATTR_URL in service_data:
+            image_type = "URL"
+            image_reference = service_data.pop(ATTR_URL)
+            color = await _async_extract_color_from_url(
+                service_call.hass, image_reference
+            )
+
+        elif ATTR_PATH in service_data:
+            image_type = "file path"
+            image_reference = service_data.pop(ATTR_PATH)
+            color = await service_call.hass.async_add_executor_job(
+                _extract_color_from_path, service_call.hass, image_reference
+            )
+
+    except UnidentifiedImageError as ex:
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="invalid_image",
+            translation_placeholders={
+                "image_type": image_type,
+                "image_reference": image_reference,
+            },
+        ) from ex
+
+    return {"color": color}
+
+
 @callback
 def async_setup_services(hass: HomeAssistant) -> None:
     """Register the services."""
@@ -152,5 +193,13 @@ def async_setup_services(hass: HomeAssistant) -> None:
         DOMAIN,
         SERVICE_TURN_ON,
         async_handle_service,
-        schema=SERVICE_SCHEMA,
+        schema=TURN_ON_SERVICE_SCHEMA,
+    )
+
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_GET_COLOR,
+        async_handle_get_color,
+        schema=GET_COLOR_SERVICE_SCHEMA,
+        supports_response=SupportsResponse.ONLY,
     )

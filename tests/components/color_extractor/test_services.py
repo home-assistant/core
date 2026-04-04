@@ -6,6 +6,7 @@ from typing import Any
 from unittest.mock import Mock, mock_open, patch
 
 import aiohttp
+from PIL import UnidentifiedImageError
 import pytest
 from voluptuous.error import MultipleInvalid
 
@@ -24,6 +25,7 @@ from homeassistant.components.light import (
 )
 from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.setup import async_setup_component
 from homeassistant.util import color as color_util
 
@@ -32,6 +34,7 @@ from tests.test_util.aiohttp import AiohttpClientMocker
 
 LIGHT_ENTITY = "light.kitchen_lights"
 CLOSE_THRESHOLD = 10
+EXPECTED_FILE_COLOR = (25, 75, 125)
 
 
 @pytest.fixture(autouse=True)
@@ -287,7 +290,7 @@ async def test_file(hass: HomeAssistant, setup_integration) -> None:
     assert state.attributes[ATTR_BRIGHTNESS] == 255
 
     # Ensure the RGB values are correct
-    assert _close_enough(state.attributes[ATTR_RGB_COLOR], (25, 75, 125))
+    assert _close_enough(state.attributes[ATTR_RGB_COLOR], EXPECTED_FILE_COLOR)
 
 
 @patch("os.path.isfile", Mock(return_value=True))
@@ -319,3 +322,57 @@ async def test_file_denied_dir(hass: HomeAssistant, setup_integration) -> None:
 
     # Ensure it's still off due to access error (dir not explicitly allowed)
     assert state.state == STATE_OFF
+
+
+@patch("os.path.isfile", Mock(return_value=True))
+@patch("os.access", Mock(return_value=True))
+async def test_get_color_service(hass: HomeAssistant, setup_integration) -> None:
+    """Test that the get_color service returns the expected RGB color."""
+    service_data = {
+        ATTR_PATH: "/opt/image.png",
+    }
+
+    # Add our /opt/ path to the allowed list of paths
+    hass.config.allowlist_external_dirs.add("/opt/")
+
+    with patch(
+        "homeassistant.components.color_extractor.services._get_file", _get_file_mock
+    ):
+        result = await hass.services.async_call(
+            DOMAIN, "get_color", service_data, blocking=True, return_response=True
+        )
+
+    assert result is not None
+    assert "color" in result
+    assert _close_enough(result["color"], EXPECTED_FILE_COLOR)
+
+
+@patch("os.path.isfile", Mock(return_value=True))
+@patch("os.access", Mock(return_value=True))
+async def test_get_color_service_invalid_image(
+    hass: HomeAssistant, setup_integration
+) -> None:
+    """Test that the get_color service raises a ServiceValidationError when given an invalid image."""
+    service_data = {
+        ATTR_PATH: "/opt/not_an_image.txt",
+    }
+
+    # Add our /opt/ path to the allowed list of paths
+    hass.config.allowlist_external_dirs.add("/opt/")
+
+    with (
+        patch(
+            "homeassistant.components.color_extractor.services._get_file",
+            Mock(side_effect=UnidentifiedImageError("Cannot identify image file")),
+        ),
+        pytest.raises(ServiceValidationError) as exc_info,
+    ):
+        await hass.services.async_call(
+            DOMAIN, "get_color", service_data, blocking=True, return_response=True
+        )
+
+    assert exc_info.value.translation_key == "invalid_image"
+    assert exc_info.value.translation_placeholders == {
+        "image_type": "file path",
+        "image_reference": "/opt/not_an_image.txt",
+    }
