@@ -34,11 +34,11 @@ async def test_sensors_created(
 @pytest.mark.parametrize(
     ("entity_id", "expected_value"),
     [
-        ("sensor.testveien_1_bergen_mixed_waste_days_until_pickup", "13"),
-        ("sensor.testveien_1_bergen_paper_and_plastic_days_until_pickup", "18"),
-        ("sensor.testveien_1_bergen_food_waste_days_until_pickup", "8"),
+        ("sensor.teststreet_1_bergen_mixed_waste_days_until_pickup", "13"),
+        ("sensor.teststreet_1_bergen_paper_and_plastic_days_until_pickup", "18"),
+        ("sensor.teststreet_1_bergen_food_waste_days_until_pickup", "8"),
         (
-            "sensor.testveien_1_bergen_glass_and_metal_packaging_days_until_pickup",
+            "sensor.teststreet_1_bergen_glass_and_metal_packaging_days_until_pickup",
             "29",
         ),
     ],
@@ -58,11 +58,11 @@ async def test_days_until_sensor_states(
 @pytest.mark.parametrize(
     ("entity_id", "expected_date"),
     [
-        ("sensor.testveien_1_bergen_mixed_waste_pickup", "2026-04-15"),
-        ("sensor.testveien_1_bergen_paper_and_plastic_pickup", "2026-04-20"),
-        ("sensor.testveien_1_bergen_food_waste_pickup", "2026-04-10"),
+        ("sensor.teststreet_1_bergen_mixed_waste_pickup", "2026-04-15"),
+        ("sensor.teststreet_1_bergen_paper_and_plastic_pickup", "2026-04-20"),
+        ("sensor.teststreet_1_bergen_food_waste_pickup", "2026-04-10"),
         (
-            "sensor.testveien_1_bergen_glass_and_metal_packaging_pickup",
+            "sensor.teststreet_1_bergen_glass_and_metal_packaging_pickup",
             "2026-05-01",
         ),
     ],
@@ -112,6 +112,6 @@ async def test_sensor_unavailable_when_waste_type_missing(
         await hass.config_entries.async_reload(mock_config_entry.entry_id)
         await hass.async_block_till_done()
 
-    state = hass.states.get("sensor.testveien_1_bergen_mixed_waste_days_until_pickup")
+    state = hass.states.get("sensor.teststreet_1_bergen_mixed_waste_days_until_pickup")
     assert state is not None
     assert state.state == STATE_UNAVAILABLE
