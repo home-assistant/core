@@ -123,12 +123,6 @@ from .coordinator import AnthropicConfigEntry, AnthropicCoordinator
 # Max number of back and forth with the LLM to generate a response
 MAX_TOOL_ITERATIONS = 10
 
-PRELOADED_TOOLS = [
-    "HassTurnOn",
-    "HassTurnOff",
-    "GetLiveContext",
-]
-
 
 def _format_tool(
     tool: llm.Tool, custom_serializer: Callable[[Any], Any] | None
@@ -714,6 +708,14 @@ class AnthropicBaseLLMEntity(CoordinatorEntity[AnthropicCoordinator]):
         """Generate an answer for the chat log."""
         options = self.subentry.data
 
+        preloaded_tools = [
+            "HassTurnOn",
+            "HassTurnOff",
+            "GetLiveContext",
+            "code_execution",
+            "web_search",
+        ]
+
         system = chat_log.content[0]
         if not isinstance(system, conversation.SystemContent):
             raise HomeAssistantError(
@@ -908,14 +910,15 @@ class AnthropicBaseLLMEntity(CoordinatorEntity[AnthropicCoordinator]):
                         ),
                     )
                 )
+                preloaded_tools.append(structure_name)
 
         if tools:
             if (
                 options.get(CONF_TOOL_SEARCH, DEFAULT[CONF_TOOL_SEARCH])
-                and len(tools) > len(PRELOADED_TOOLS) + 1
+                and len(tools) > len(preloaded_tools) + 1
             ):
                 for tool in tools:
-                    if not tool["name"].endswith(tuple(PRELOADED_TOOLS)):
+                    if not tool["name"].endswith(tuple(preloaded_tools)):
                         tool["defer_loading"] = True
                 tools.append(
                     ToolSearchToolBm25_20251119Param(
