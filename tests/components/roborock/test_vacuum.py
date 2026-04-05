@@ -231,10 +231,9 @@ async def test_get_maps(
 async def test_get_maps_not_supported(
     hass: HomeAssistant,
     setup_entry: MockConfigEntry,
-    snapshot: SnapshotAssertion,
     entity_id: str,
 ) -> None:
-    """Test that the service for maps correctly outputs rooms with the right name."""
+    """Test that unsupported vacuums raise ServiceNotSupported for get_maps."""
     with pytest.raises(
         ServiceNotSupported, match="does not support action roborock.get_maps"
     ):
@@ -279,10 +278,9 @@ async def test_goto(
 async def test_goto_not_supported(
     hass: HomeAssistant,
     setup_entry: MockConfigEntry,
-    snapshot: SnapshotAssertion,
     entity_id: str,
 ) -> None:
-    """Test that the service for maps correctly outputs rooms with the right name."""
+    """Test that unsupported vacuums raise ServiceNotSupported for goto."""
     with pytest.raises(
         ServiceNotSupported,
         match="does not support action roborock.set_vacuum_goto_position",
@@ -371,10 +369,9 @@ async def test_get_current_position_no_robot_position(
 async def test_get_current_position_not_supported(
     hass: HomeAssistant,
     setup_entry: MockConfigEntry,
-    snapshot: SnapshotAssertion,
     entity_id: str,
 ) -> None:
-    """Test that the service for maps correctly outputs rooms with the right name."""
+    """Test that the current-position service raises ServiceNotSupported."""
     with pytest.raises(
         ServiceNotSupported,
         match="does not support action roborock.get_vacuum_current_position",
