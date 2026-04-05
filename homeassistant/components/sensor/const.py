@@ -86,7 +86,6 @@ CONF_STATE_CLASS: Final = "state_class"
 ATTR_LAST_RESET: Final = "last_reset"
 ATTR_STATE_CLASS: Final = "state_class"
 ATTR_OPTIONS: Final = "options"
-UPTIME_DRIFT_TOLERANCE: Final = 60
 
 
 class SensorDeviceClass(StrEnum):
@@ -119,6 +118,12 @@ class SensorDeviceClass(StrEnum):
 
     UPTIME = "uptime"
     """Uptime.
+
+    Represents the point in time when a device or service last restarted.
+
+    Small drift between updates is automatically suppressed in
+    `SensorEntity.state` to avoid unnecessary state changes caused by clock
+    jitter.
 
     Unit of measurement: `None`
 

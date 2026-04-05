@@ -23,6 +23,7 @@ from homeassistant.components.sensor import (
     DEVICE_CLASS_UNITS,
     DOMAIN,
     NON_NUMERIC_DEVICE_CLASSES,
+    UPTIME_DRIFT_TOLERANCE,
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
@@ -30,11 +31,7 @@ from homeassistant.components.sensor import (
     async_rounded_state,
     async_update_suggested_units,
 )
-from homeassistant.components.sensor.const import (
-    STATE_CLASS_UNITS,
-    UNIT_CONVERTERS,
-    UPTIME_DRIFT_TOLERANCE,
-)
+from homeassistant.components.sensor.const import STATE_CLASS_UNITS, UNIT_CONVERTERS
 from homeassistant.config_entries import ConfigEntry, ConfigFlow
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,

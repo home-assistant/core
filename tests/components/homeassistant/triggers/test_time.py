@@ -638,12 +638,17 @@ async def test_if_fires_using_at_sensor(
         ({"minutes": 5}, timedelta(minutes=5)),
     ],
 )
+@pytest.mark.parametrize(
+    "device_class",
+    [SensorDeviceClass.TIMESTAMP, SensorDeviceClass.UPTIME],
+)
 async def test_if_fires_using_at_sensor_with_offset(
     hass: HomeAssistant,
     service_calls: list[ServiceCall],
     freezer: FrozenDateTimeFactory,
     offset: str | dict[str, int],
     delta: timedelta,
+    device_class: SensorDeviceClass,
 ) -> None:
     """Test for firing at sensor time."""
     now = dt_util.now()
@@ -654,7 +659,7 @@ async def test_if_fires_using_at_sensor_with_offset(
     hass.states.async_set(
         "sensor.next_alarm",
         start_dt.isoformat(),
-        {ATTR_DEVICE_CLASS: SensorDeviceClass.UPTIME},
+        {ATTR_DEVICE_CLASS: device_class},
     )
 
     time_that_will_not_match_right_away = trigger_dt - timedelta(minutes=1)
@@ -698,7 +703,7 @@ async def test_if_fires_using_at_sensor_with_offset(
     hass.states.async_set(
         "sensor.next_alarm",
         start_dt.isoformat(),
-        {ATTR_DEVICE_CLASS: SensorDeviceClass.UPTIME},
+        {ATTR_DEVICE_CLASS: device_class},
     )
     await hass.async_block_till_done()
 

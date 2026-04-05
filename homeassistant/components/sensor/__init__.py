@@ -51,7 +51,6 @@ from .const import (  # noqa: F401
     STATE_CLASSES_SCHEMA,
     UNIT_CONVERTERS,
     UNITS_PRECISION,
-    UPTIME_DRIFT_TOLERANCE,
     SensorDeviceClass,
     SensorStateClass,
 )
@@ -64,6 +63,7 @@ ENTITY_ID_FORMAT: Final = DOMAIN + ".{}"
 PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA
 PLATFORM_SCHEMA_BASE = cv.PLATFORM_SCHEMA_BASE
 SCAN_INTERVAL: Final = timedelta(seconds=30)
+UPTIME_DRIFT_TOLERANCE: Final = 60  # seconds
 
 __all__ = [
     "ATTR_LAST_RESET",
@@ -625,6 +625,8 @@ class SensorEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         # Checks below only apply if there is a value
         if value is None:
             if device_class is SensorDeviceClass.UPTIME:
+                # Reset baseline so the first uptime after unavailable is not
+                # compared against a stale value.
                 self._previous_uptime_value = None
             return None
 
