@@ -28,8 +28,9 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.entity_registry import EntityRegistry
+from homeassistant.util import slugify
 
-from .conftest import FritzConnectionMock
+from .conftest import FritzConnectionMock, wifi_services_with_ssids
 from .const import (
     MOCK_CALL_DEFLECTION_DATA,
     MOCK_FB_SERVICES,
@@ -460,6 +461,29 @@ async def test_switch_turn_on_off(
     assert state.state == state_value
 
 
+@pytest.mark.parametrize(
+    ("ssid_1", "ssid_2", "old_descriptions", "new_identifiers"),
+    [
+        (
+            "Main WiFi / +",
+            "Guest WiFi / +",
+            [
+                "Wi-Fi Main WiFi / +",
+                "Wi-Fi Guest WiFi / +",
+            ],
+            ["main_2_4ghz", "guest"],
+        ),
+        (
+            "My WiFi / +",
+            "My WiFi / +",
+            [
+                "Wi-Fi My WiFi / + (2.4Ghz)",
+                "Wi-Fi My WiFi / + (5Ghz)",
+            ],
+            ["main_2_4ghz", "guest"],
+        ),
+    ],
+)
 async def test_migrate_to_new_unique_id(
     hass: HomeAssistant,
     fc_class_mock,
@@ -467,28 +491,43 @@ async def test_migrate_to_new_unique_id(
     fs_class_mock,
     entity_registry: EntityRegistry,
     device_registry: dr.DeviceRegistry,
-    caplog: pytest.LogCaptureFixture,
+    ssid_1: str,
+    ssid_2: str,
+    old_descriptions: list[str],
+    new_identifiers: list[str],
 ) -> None:
     """Test migrate from old unique ids to new unique ids."""
 
     MOCK_UNIQUE_ID = "1234567890"
+
+    fc_class_mock.return_value.override_services(
+        wifi_services_with_ssids(ssid_1, ssid_2)
+    )
 
     entry = MockConfigEntry(
         domain=DOMAIN, data=MOCK_USER_DATA, unique_id=MOCK_UNIQUE_ID
     )
     entry.add_to_hass(hass)
 
-    old_unique_id = f"{MOCK_MESH_MASTER_MAC}-wi_fi_mywifi"
-    new_unique_id = f"{MOCK_MESH_MASTER_MAC}-wi_fi_guest"
+    entity_ids: list[str] = []
+    old_unique_ids: list[str] = []
+    new_unique_ids: list[str] = []
+    for old_description, new_identifier in zip(
+        old_descriptions, new_identifiers, strict=True
+    ):
+        old_unique_id = f"{MOCK_MESH_MASTER_MAC}-{slugify(old_description)}"
+        new_unique_id = f"{MOCK_MESH_MASTER_MAC}-wi_fi_{new_identifier}"
+        old_unique_ids.append(old_unique_id)
+        new_unique_ids.append(new_unique_id)
+        entity_ids.append(f"switch.fritz_{slugify(old_unique_id)}")
 
-    entity_registry.async_get_or_create(
-        suggested_object_id="mock_title_wi_fi_mywifi",
-        disabled_by=None,
-        domain=SWITCH_DOMAIN,
-        platform=DOMAIN,
-        unique_id=old_unique_id,
-        config_entry=entry,
-    )
+        entity_registry.async_get_or_create(
+            disabled_by=None,
+            domain=SWITCH_DOMAIN,
+            platform=DOMAIN,
+            unique_id=old_unique_id,
+            config_entry=entry,
+        )
 
     device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
@@ -499,16 +538,18 @@ async def test_migrate_to_new_unique_id(
     )
     await hass.async_block_till_done()
 
-    entity_entry = entity_registry.async_get("switch.mock_title_wi_fi_mywifi")
-    assert entity_entry
-    assert entity_entry.unique_id == old_unique_id
+    for entity_id, old_unique_id in zip(entity_ids, old_unique_ids, strict=True):
+        entity_entry = entity_registry.async_get(entity_id)
+        assert entity_entry
+        assert entity_entry.unique_id == old_unique_id
 
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    entity_entry = entity_registry.async_get("switch.mock_title_wi_fi_mywifi")
-    assert entity_entry
-    assert entity_entry.unique_id == new_unique_id
+    for entity_id, new_unique_id in zip(entity_ids, new_unique_ids, strict=True):
+        entity_entry = entity_registry.async_get(entity_id)
+        assert entity_entry
+        assert entity_entry.unique_id == new_unique_id
 
 
 async def test_wifi_naming_internal_comm_and_skipped() -> None:
@@ -535,3 +576,20 @@ async def test_wifi_naming_internal_comm_and_skipped() -> None:
     assert 3 not in networks  # 1-based index, so 3 is the 3rd
     # The rest should be present
     assert set(networks.keys()) == {1, 2, 4}
+
+
+@pytest.mark.parametrize(
+    ("wifi_index", "wifi_count", "expected_name"),
+    [
+        (0, 2, "Main 2.4Ghz"),
+        (1, 3, "Main 5Ghz"),
+        (1, 2, "Guest"),
+        (2, 4, None),
+        (2, 5, None),
+    ],
+)
+def test_wifi_naming_helper(
+    wifi_index: int, wifi_count: int, expected_name: str | None
+) -> None:
+    """Test Wi-Fi naming helper covers supported and fallback branches."""
+    assert fritz_switch._wifi_naming({}, wifi_index, wifi_count) == expected_name

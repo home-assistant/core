@@ -98,9 +98,7 @@ async def _migrate_to_new_unique_id(
 
     networks = await _get_wifi_networks_list(avm_wrapper)
     for index, network in networks.items():
-        old_unique_id_suffix = (
-            f"{avm_wrapper.unique_id}-wi_fi_{network['NewSSID'].lower()}"
-        )
+        description = f"Wi-Fi {network['NewSSID']}"
         if (
             len(
                 [
@@ -111,23 +109,24 @@ async def _migrate_to_new_unique_id(
             )
             > 1
         ):
-            old_unique_id_suffix += f" ({WIFI_STANDARD[index]})"
+            description += f" ({WIFI_STANDARD[index]})"
 
-        new_unique_id_suffix = f"{avm_wrapper.unique_id}-wi_fi_{slugify(_wifi_naming(network, index - 1, len(networks)))}"
+        old_unique_id = f"{avm_wrapper.unique_id}-{slugify(description)}"
+        new_unique_id = f"{avm_wrapper.unique_id}-wi_fi_{slugify(_wifi_naming(network, index - 1, len(networks)))}"
 
         entity_id = entity_registry.async_get_entity_id(
-            Platform.SWITCH, DOMAIN, old_unique_id_suffix
+            Platform.SWITCH, DOMAIN, old_unique_id
         )
 
         if entity_id is not None:
             entity_registry.async_update_entity(
                 entity_id,
-                new_unique_id=new_unique_id_suffix,
+                new_unique_id=new_unique_id,
             )
             _LOGGER.debug(
                 "Migrating Wi-FI switch unique_id from [%s] to [%s]",
-                old_unique_id_suffix,
-                new_unique_id_suffix,
+                old_unique_id,
+                new_unique_id,
             )
 
     _LOGGER.debug("Migration completed")
