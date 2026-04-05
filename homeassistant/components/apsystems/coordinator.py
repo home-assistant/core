@@ -60,12 +60,21 @@ class ApSystemsDataCoordinator(DataUpdateCoordinator[ApSystemsSensorData]):
             update_interval=timedelta(seconds=12),
         )
         self.api = api
+        self.device_version = ""
+        self.battery_system = False
 
     async def _async_setup(self) -> None:
         try:
-            device_info = await self.api.get_device_info()
+            await self._fetch_device_info()
         except ConnectionError, TimeoutError:
-            raise UpdateFailed from None
+            # Inverter may be offline (e.g. nighttime). Allow setup to
+            # continue so entities are created; device info will be
+            # fetched on the first successful update instead.
+            LOGGER.debug("Inverter not reachable during setup, continuing anyway")
+
+    async def _fetch_device_info(self) -> None:
+        """Fetch device info from inverter and store on coordinator."""
+        device_info = await self.api.get_device_info()
         self.api.max_power = device_info.maxPower
         self.api.min_power = device_info.minPower
         self.device_version = device_info.devVer
@@ -73,6 +82,9 @@ class ApSystemsDataCoordinator(DataUpdateCoordinator[ApSystemsSensorData]):
 
     async def _async_update_data(self) -> ApSystemsSensorData:
         try:
+            # Fetch device info if it wasn't available during setup
+            if not self.device_version:
+                await self._fetch_device_info()
             output_data = await self.api.get_output_data()
             alarm_info = await self.api.get_alarm_info()
         except InverterReturnedError:
