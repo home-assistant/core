@@ -131,6 +131,9 @@ class BSBLanFastCoordinator(BSBLanCoordinator[BSBLanFastData]):
         try:
             dhw = await self.client.hot_water_state(include=DHW_STATE_INCLUDE)
         except BSBLANError:
+            # Preserve last known DHW state if available (entity may depend on it)
+            if self.data:
+                dhw = self.data.dhw
             LOGGER.debug(
                 "DHW (Domestic Hot Water) state not available on device at %s",
                 self.config_entry.data[CONF_HOST],
