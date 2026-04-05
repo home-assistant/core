@@ -58,6 +58,8 @@ from anthropic.types import (
     ToolChoiceAutoParam,
     ToolChoiceToolParam,
     ToolParam,
+    ToolSearchToolBm25_20251119Param,
+    ToolSearchToolResultBlock,
     ToolUnionParam,
     ToolUseBlock,
     ToolUseBlockParam,
@@ -73,6 +75,9 @@ from anthropic.types.bash_code_execution_tool_result_block_param import (
 from anthropic.types.message_create_params import MessageCreateParamsStreaming
 from anthropic.types.text_editor_code_execution_tool_result_block_param import (
     Content as TextEditorCodeExecutionToolResultBlockParamContentParam,
+)
+from anthropic.types.tool_search_tool_result_block_param import (
+    Content as ToolSearchToolResultBlockParamContentParam,
 )
 import voluptuous as vol
 from voluptuous_openapi import convert
@@ -95,6 +100,7 @@ from .const import (
     CONF_TEMPERATURE,
     CONF_THINKING_BUDGET,
     CONF_THINKING_EFFORT,
+    CONF_TOOL_SEARCH,
     CONF_WEB_SEARCH,
     CONF_WEB_SEARCH_CITY,
     CONF_WEB_SEARCH_COUNTRY,
@@ -116,6 +122,12 @@ from .coordinator import AnthropicConfigEntry, AnthropicCoordinator
 
 # Max number of back and forth with the LLM to generate a response
 MAX_TOOL_ITERATIONS = 10
+
+PRELOADED_TOOLS = [
+    "HassTurnOn",
+    "HassTurnOff",
+    "GetLiveContext",
+]
 
 
 def _format_tool(
@@ -204,7 +216,7 @@ class ContentDetails:
         ]
 
 
-def _convert_content(
+def _convert_content(  # noqa: C901
     chat_content: Iterable[conversation.Content],
 ) -> tuple[list[MessageParam], str | None]:
     """Transform HA chat_log content into Anthropic API format."""
@@ -254,6 +266,15 @@ def _convert_content(
                     "tool_use_id": content.tool_call_id,
                     "content": cast(
                         TextEditorCodeExecutionToolResultBlockParamContentParam,
+                        content.tool_result,
+                    ),
+                }
+            elif content.tool_name == "tool_search":
+                tool_result_block = {
+                    "type": "tool_search_tool_result",
+                    "tool_use_id": content.tool_call_id,
+                    "content": cast(
+                        ToolSearchToolResultBlockParamContentParam,
                         content.tool_result,
                     ),
                 }
@@ -387,6 +408,7 @@ def _convert_content(
                                     "code_execution",
                                     "bash_code_execution",
                                     "text_editor_code_execution",
+                                    "tool_search_tool_bm25",
                                 ],
                                 tool_call.tool_name,
                             ),
@@ -399,6 +421,7 @@ def _convert_content(
                             "code_execution",
                             "bash_code_execution",
                             "text_editor_code_execution",
+                            "tool_search_tool_bm25",
                         ]
                         else ToolUseBlockParam(
                             type="tool_use",
@@ -560,6 +583,7 @@ async def _transform_stream(  # noqa: C901 - This is complex, but better to have
                     CodeExecutionToolResultBlock,
                     BashCodeExecutionToolResultBlock,
                     TextEditorCodeExecutionToolResultBlock,
+                    ToolSearchToolResultBlock,
                 ),
             ):
                 if content_details:
@@ -886,6 +910,20 @@ class AnthropicBaseLLMEntity(CoordinatorEntity[AnthropicCoordinator]):
                 )
 
         if tools:
+            if (
+                options.get(CONF_TOOL_SEARCH, DEFAULT[CONF_TOOL_SEARCH])
+                and len(tools) > len(PRELOADED_TOOLS) + 1
+            ):
+                for tool in tools:
+                    if not tool["name"].endswith(tuple(PRELOADED_TOOLS)):
+                        tool["defer_loading"] = True
+                tools.append(
+                    ToolSearchToolBm25_20251119Param(
+                        type="tool_search_tool_bm25_20251119",
+                        name="tool_search_tool_bm25",
+                    )
+                )
+
             model_args["tools"] = tools
 
         coordinator = self.entry.runtime_data
@@ -929,6 +967,7 @@ class AnthropicBaseLLMEntity(CoordinatorEntity[AnthropicCoordinator]):
             except anthropic.AnthropicError as err:
                 # Non-connection error, mark connection as healthy
                 coordinator.async_set_updated_data(None)
+                LOGGER.error("Error while talking to Anthropic: %s", err)
                 raise HomeAssistantError(
                     translation_domain=DOMAIN,
                     translation_key="api_error",
