@@ -173,9 +173,7 @@ class RadioThermostat(RadioThermostatEntity, ClimateEntity):
     def _process_data(self) -> None:
         """Update and validate the data from the thermostat."""
         data = self.data.tstat
-        if isinstance(self.device, radiotherm.thermostat.CT80):
-            self._attr_current_humidity = self.data.humidity
-            self._attr_preset_mode = CODE_TO_PRESET_MODE[data["program_mode"]]
+
         # Map thermostat values into various STATE_ flags.
         self._attr_current_temperature = data["temp"]
         self._attr_fan_mode = CODE_TO_FAN_MODE[data["fmode"]]
@@ -203,6 +201,12 @@ class RadioThermostat(RadioThermostatEntity, ClimateEntity):
                 self._attr_target_temperature_low = data["t_heat"]
             if "t_cool" in data:
                 self._attr_target_temperature_high = data["t_cool"]
+
+        # Set the CT80-only values
+        if self.data.humidity is not None:
+            self._attr_current_humidity = self.data.humidity
+        if isinstance(self.device, radiotherm.thermostat.CT80):
+            self._attr_preset_mode = CODE_TO_PRESET_MODE[data["program_mode"]]
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""

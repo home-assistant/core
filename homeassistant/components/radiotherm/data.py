@@ -19,7 +19,7 @@ class RadioThermUpdate:
     """An update from a Radio Thermostat device."""
 
     tstat: dict[str, Any]
-    humidity: int | None
+    humidity: float | None
 
 
 @dataclass
@@ -62,7 +62,7 @@ def _get_data(device: CommonThermostat) -> RadioThermUpdate:
     # thermostats tend to time out sometimes when they're actively
     # heating or cooling.
     tstat: dict[str, Any] = device.tstat["raw"]
-    humidity: int | None = None
+    humidity: float | None = None
     if isinstance(device, radiotherm.thermostat.CT80):
         humidity = device.humidity["raw"]
     return RadioThermUpdate(tstat, humidity)
