@@ -148,11 +148,15 @@ async def test_form_already_configured(
     assert result["reason"] == "already_configured"
 
 
-async def test_dhcp_discovery(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
+async def test_dhcp_discovery(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_data: dict[str, list[str]],
+) -> None:
     """Test DHCP discovery."""
     with patch(
         "homeassistant.components.guntamatic_sensor.config_flow.Heater.get_data",
-        return_value={"Boiler temperature": ["14.09", "°C"]},
+        return_value=mock_data,
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
