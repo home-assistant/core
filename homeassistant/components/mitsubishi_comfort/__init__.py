@@ -41,7 +41,7 @@ def _load_cached_credentials(hass: HomeAssistant) -> dict[str, dict]:
         if isinstance(cached, dict) and cached:
             _LOGGER.info("Loaded credentials for %d devices from cache", len(cached))
             return cached  # type: ignore[return-value]
-    except OSError, ValueError, TypeError, KeyError:
+    except (OSError, ValueError, TypeError, KeyError):
         pass
 
     addresses = _parse_kumo_cache(hass)
@@ -73,17 +73,25 @@ def _parse_kumo_cache(hass: HomeAssistant) -> dict[str, str]:
         entry = kumo[2]
         if not isinstance(entry, dict):
             return addresses
-        for child in entry.get("children", []):
+        children = entry.get("children")
+        if not isinstance(children, list):
+            return addresses
+        for child in children:
             if not isinstance(child, dict):
                 continue
-            _extract_addresses_from_zone_table(child.get("zoneTable", {}), addresses)
-            for grandchild in child.get("children", []):
+            zone_table = child.get("zoneTable")
+            if isinstance(zone_table, dict):
+                _extract_addresses_from_zone_table(zone_table, addresses)
+            grandchildren = child.get("children")
+            if not isinstance(grandchildren, list):
+                continue
+            for grandchild in grandchildren:
                 if not isinstance(grandchild, dict):
                     continue
-                _extract_addresses_from_zone_table(
-                    grandchild.get("zoneTable", {}), addresses
-                )
-    except OSError, ValueError, TypeError, KeyError:
+                gc_zone_table = grandchild.get("zoneTable")
+                if isinstance(gc_zone_table, dict):
+                    _extract_addresses_from_zone_table(gc_zone_table, addresses)
+    except (OSError, ValueError, TypeError, KeyError):
         pass
     return addresses
 

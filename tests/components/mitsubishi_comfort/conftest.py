@@ -8,6 +8,7 @@ import pytest
 
 from homeassistant.components.mitsubishi_comfort.const import DOMAIN
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+
 from tests.common import MockConfigEntry
 
 MOCK_USERNAME = "test@test.com"
@@ -72,7 +73,7 @@ def mock_device_status() -> DeviceStatus:
 
 
 @pytest.fixture
-def mock_cloud_account(mock_device_info: DeviceInfo) -> Generator[AsyncMock]:
+def mock_cloud_account(mock_device_info: DeviceInfo) -> Generator[AsyncMock, None, None]:
     """Mock MitsubishiCloudAccount."""
     with patch(
         "homeassistant.components.mitsubishi_comfort.MitsubishiCloudAccount"

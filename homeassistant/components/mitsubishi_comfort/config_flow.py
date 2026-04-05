@@ -8,7 +8,6 @@ from typing import Any
 from mitsubishi_comfort import MitsubishiCloudAccount
 import voluptuous as vol
 
-from homeassistant.components.dhcp import DhcpServiceInfo
 from homeassistant.config_entries import (
     ConfigEntry,
     ConfigFlow,
@@ -17,6 +16,7 @@ from homeassistant.config_entries import (
 )
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import callback
+from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
 from .const import CONF_CONNECT_TIMEOUT, CONF_RESPONSE_TIMEOUT, DOMAIN
 
