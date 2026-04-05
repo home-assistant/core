@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from dataclasses import asdict
 import ssl
+from types import SimpleNamespace
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -16,6 +17,7 @@ from homeassistant.config_entries import (
     SOURCE_INTEGRATION_DISCOVERY,
     SOURCE_SSDP,
     SOURCE_USER,
+    ConfigEntryState,
 )
 from homeassistant.const import CONF_API_TOKEN, CONF_HOST, CONF_VERIFY_SSL
 from homeassistant.core import HomeAssistant
@@ -467,7 +469,7 @@ async def test_integration_discovery_new_device(
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "UniFi Access"
+    assert result["title"] == "UniFi-Dream-Machine"
     assert result["data"][CONF_HOST] == "10.0.0.5"
     assert result["data"][CONF_API_TOKEN] == MOCK_API_TOKEN
     assert result["data"][CONF_VERIFY_SSL] is False
@@ -493,11 +495,39 @@ async def test_integration_discovery_already_configured(
 
 async def test_integration_discovery_updates_host(
     hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test integration discovery updates host when IP changes."""
+    """Test integration discovery updates host when IP changes and console is offline."""
     mock_config_entry.add_to_hass(hass)
     hass.config_entries.async_update_entry(mock_config_entry, unique_id="B4FBE4AABBCC")
+    mock_config_entry.mock_state(hass, ConfigEntryState.SETUP_RETRY)
+
+    device = _make_discovered_device(source_ip="10.0.0.99")
+    with patch(
+        "homeassistant.components.unifi_access.config_flow.async_console_is_alive",
+        return_value=False,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_INTEGRATION_DISCOVERY},
+            data=asdict(device),
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert mock_config_entry.data[CONF_HOST] == "10.0.0.99"
+
+
+async def test_integration_discovery_does_not_update_host_when_online(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test discovery does not update host when existing console is still reachable."""
+    mock_config_entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(mock_config_entry, unique_id="B4FBE4AABBCC")
+    mock_config_entry.mock_state(hass, ConfigEntryState.LOADED)
+    mock_config_entry.runtime_data = SimpleNamespace(last_update_success=True)
 
     device = _make_discovered_device(source_ip="10.0.0.99")
     result = await hass.config_entries.flow.async_init(
@@ -508,7 +538,101 @@ async def test_integration_discovery_updates_host(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
+    assert mock_config_entry.data[CONF_HOST] == MOCK_HOST
+
+
+async def test_integration_discovery_updates_host_when_runtime_data_is_unhealthy(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test discovery updates host when a loaded entry is unhealthy."""
+    mock_config_entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(mock_config_entry, unique_id="B4FBE4AABBCC")
+    mock_config_entry.mock_state(hass, ConfigEntryState.LOADED)
+    mock_config_entry.runtime_data = SimpleNamespace(last_update_success=False)
+
+    device = _make_discovered_device(source_ip="10.0.0.99")
+    with patch(
+        "homeassistant.components.unifi_access.config_flow.async_console_is_alive",
+        return_value=False,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_INTEGRATION_DISCOVERY},
+            data=asdict(device),
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
     assert mock_config_entry.data[CONF_HOST] == "10.0.0.99"
+
+
+async def test_integration_discovery_does_not_update_host_when_console_alive(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test discovery does not update host when entry is retrying but console is alive."""
+    mock_config_entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(mock_config_entry, unique_id="B4FBE4AABBCC")
+    mock_config_entry.mock_state(hass, ConfigEntryState.SETUP_RETRY)
+
+    device = _make_discovered_device(source_ip="10.0.0.99")
+    with patch(
+        "homeassistant.components.unifi_access.config_flow.async_console_is_alive",
+        return_value=True,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_INTEGRATION_DISCOVERY},
+            data=asdict(device),
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert mock_config_entry.data[CONF_HOST] == MOCK_HOST
+
+
+async def test_integration_discovery_no_update_when_same_ip(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test discovery does not update host when discovered IP matches stored IP."""
+    mock_config_entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(mock_config_entry, unique_id="B4FBE4AABBCC")
+
+    device = _make_discovered_device(source_ip=MOCK_HOST)
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_INTEGRATION_DISCOVERY},
+        data=asdict(device),
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert mock_config_entry.data[CONF_HOST] == MOCK_HOST
+
+
+async def test_integration_discovery_no_update_without_runtime_data(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test discovery does not update host when runtime_data is not set."""
+    mock_config_entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(mock_config_entry, unique_id="B4FBE4AABBCC")
+    mock_config_entry.mock_state(hass, ConfigEntryState.LOADED)
+
+    device = _make_discovered_device(source_ip="10.0.0.99")
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_INTEGRATION_DISCOVERY},
+        data=asdict(device),
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert mock_config_entry.data[CONF_HOST] == MOCK_HOST
 
 
 async def test_integration_discovery_preserves_hostname(
