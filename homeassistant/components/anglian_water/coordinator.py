@@ -137,12 +137,7 @@ class AnglianWaterUpdateCoordinator(DataUpdateCoordinator[None]):
                         usage_statistic_id,
                     )
                     allow_update_last_stored_hour = True
-                    if not (last_records := last_stat.get(usage_statistic_id)):
-                        _LOGGER.debug(
-                            "No stored statistics found for %s, skipping update",
-                            usage_statistic_id,
-                        )
-                        continue
+                    last_records = last_stat[usage_statistic_id]
                     usage_sum = float(last_records[0].get("sum") or 0.0)
                     last_stats_time = last_records[0]["start"]
                 else:

@@ -227,39 +227,6 @@ async def test_coordinator_subsequent_run_missing_period_statistics(
     assert corrected_stats[statistic_id][0]["sum"] == 70
 
 
-async def test_coordinator_missing_period_statistics_without_last_record(
-    recorder_mock: Recorder,
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_anglian_water_client: AsyncMock,
-    caplog: pytest.LogCaptureFixture,
-) -> None:
-    """Test fallback handles missing record for the expected statistic id."""
-    coordinator = AnglianWaterUpdateCoordinator(
-        hass, mock_anglian_water_client, mock_config_entry
-    )
-
-    with (
-        patch(
-            "homeassistant.components.anglian_water.coordinator.get_last_statistics",
-            return_value={"unexpected_stat_id": [{"start": 1234.0, "sum": 1.0}]},
-        ),
-        patch(
-            "homeassistant.components.anglian_water.coordinator.statistics_during_period",
-            return_value={},
-        ),
-    ):
-        await coordinator._async_update_data()
-
-    assert "No stored statistics found for" in caplog.text
-
-    statistic_id = f"anglian_water:{ACCOUNT_NUMBER}_testsn_usage"
-    stats = await hass.async_add_executor_job(
-        get_last_statistics, hass, 1, statistic_id, True, {"sum"}
-    )
-    assert stats == {}
-
-
 async def test_coordinator_period_statistics_without_sum(
     recorder_mock: Recorder,
     hass: HomeAssistant,
