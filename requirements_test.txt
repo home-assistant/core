@@ -39,7 +39,6 @@ tqdm==4.67.1
 types-aiofiles==24.1.0.20250822
 types-atomicwrites==1.4.5.1
 types-croniter==6.0.0.20250809
-types-caldav==1.3.0.20250516
 types-chardet==0.1.5
 types-decorator==5.2.0.20251101
 types-pexpect==4.9.0.20250916
