@@ -4,6 +4,7 @@ from datetime import timedelta
 from enum import StrEnum
 from functools import partial
 from math import isfinite
+from pathlib import Path
 from typing import Any
 
 from mastodon import Mastodon
@@ -15,6 +16,8 @@ from mastodon.Mastodon import (
 )
 import voluptuous as vol
 
+from homeassistant.components import camera, image
+from homeassistant.components.media_source import async_resolve_media
 from homeassistant.const import ATTR_CONFIG_ENTRY_ID
 from homeassistant.core import (
     HomeAssistant,
@@ -25,6 +28,7 @@ from homeassistant.core import (
 )
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import config_validation as cv, service
+from homeassistant.helpers.selector import MediaSelector
 
 from .const import (
     ATTR_ACCOUNT_NAME,
@@ -98,6 +102,21 @@ SERVICE_POST_SCHEMA = vol.Schema(
     }
 )
 
+SERVICE_UPDATE_PROFILE = "update_profile"
+SERVICE_UPDATE_PROFILE_SCHEMA = vol.Schema(
+    {
+        vol.Required(ATTR_CONFIG_ENTRY_ID): str,
+        vol.Optional("display_name"): str,
+        vol.Optional("note"): str,
+        vol.Optional("avatar"): MediaSelector({"accept": ["image/*"]}),
+        vol.Optional("locked"): bool,
+        vol.Optional("bot"): bool,
+        vol.Optional("discoverable"): bool,
+        vol.Optional("fields"): vol.All(cv.ensure_list, [dict[str, str]]),
+        vol.Optional("attribution_domains"): vol.All(cv.ensure_list, [vol.Url()]),
+    }
+)
+
 
 @callback
 def async_setup_services(hass: HomeAssistant) -> None:
@@ -123,6 +142,13 @@ def async_setup_services(hass: HomeAssistant) -> None:
     )
     hass.services.async_register(
         DOMAIN, SERVICE_POST, _async_post, schema=SERVICE_POST_SCHEMA
+    )
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_UPDATE_PROFILE,
+        _async_update_profile,
+        schema=SERVICE_UPDATE_PROFILE_SCHEMA,
+        supports_response=SupportsResponse.ONLY,
     )
 
 
@@ -319,3 +345,57 @@ def _post(hass: HomeAssistant, client: Mastodon, **kwargs: Any) -> None:
             translation_domain=DOMAIN,
             translation_key="unable_to_send_message",
         ) from err
+
+
+async def _async_update_profile(call: ServiceCall) -> ServiceResponse:
+    """Update profile information."""
+    params = dict(call.data.copy())
+
+    entry: MastodonConfigEntry = service.async_get_config_entry(
+        call.hass, DOMAIN, params.pop(ATTR_CONFIG_ENTRY_ID)
+    )
+    client = entry.runtime_data.client
+
+    if avatar := params.pop("avatar", None):
+        params["avatar"], params["avatar_mime_type"] = await _resolve_media(
+            call.hass, avatar
+        )
+    if header := params.pop("header", None):
+        params["header"], params["header_mime_type"] = await _resolve_media(
+            call.hass, header
+        )
+    if fields := params.get("fields"):
+        params["fields"] = [
+            (field["name"].strip(), field["value"].strip())
+            for field in fields
+            if field["name"].strip()
+        ]
+    return await call.hass.async_add_executor_job(
+        lambda: client.account_update_credentials(**params)
+    )
+
+
+async def _resolve_media(
+    hass: HomeAssistant, media_source: dict[str, str]
+) -> tuple[bytes | Path, str | None]:
+    """Resolve media from a media source."""
+    media_content_id: str = media_source["media_content_id"]
+    if media_content_id.startswith("media-source://camera/"):
+        entity_id = media_content_id.removeprefix("media-source://camera/")
+        snapshot = await camera.async_get_image(hass, entity_id)
+        return snapshot.content, snapshot.content_type
+
+    if media_content_id.startswith("media-source://image/"):
+        entity_id = media_content_id.removeprefix("media-source://image/")
+        img = await image.async_get_image(hass, entity_id)
+        return img.content, img.content_type
+
+    media = await async_resolve_media(hass, media_source["media_content_id"], None)
+
+    if media.path is None:
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="media_source_not_supported",
+        )
+
+    return media.path, media.mime_type
