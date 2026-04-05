@@ -61,7 +61,7 @@ SENSORS: tuple[ApsystemsLocalApiSensorDescription, ...] = (
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
-        value_fn=lambda c: c.te1 + c.te2,
+        value_fn=lambda c: c.te1 + c.te2 if c.te1 is not None else None,
     ),
     ApsystemsLocalApiSensorDescription(
         key="lifetime_production_p1",
@@ -69,7 +69,7 @@ SENSORS: tuple[ApsystemsLocalApiSensorDescription, ...] = (
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
-        value_fn=lambda c: c.te1,
+        value_fn=lambda c: c.te1 if c.te1 is not None else None,
     ),
     ApsystemsLocalApiSensorDescription(
         key="lifetime_production_p2",
@@ -77,7 +77,7 @@ SENSORS: tuple[ApsystemsLocalApiSensorDescription, ...] = (
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
-        value_fn=lambda c: c.te2,
+        value_fn=lambda c: c.te2 if c.te2 is not None else None,
     ),
     ApsystemsLocalApiSensorDescription(
         key="today_production",
@@ -85,7 +85,7 @@ SENSORS: tuple[ApsystemsLocalApiSensorDescription, ...] = (
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
-        value_fn=lambda c: c.e1 + c.e2,
+        value_fn=lambda c: c.e1 + c.e2 if c.e1 is not None else None,
     ),
     ApsystemsLocalApiSensorDescription(
         key="today_production_p1",
@@ -93,7 +93,7 @@ SENSORS: tuple[ApsystemsLocalApiSensorDescription, ...] = (
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
-        value_fn=lambda c: c.e1,
+        value_fn=lambda c: c.e1 if c.e1 is not None else None,
     ),
     ApsystemsLocalApiSensorDescription(
         key="today_production_p2",
@@ -101,7 +101,7 @@ SENSORS: tuple[ApsystemsLocalApiSensorDescription, ...] = (
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
-        value_fn=lambda c: c.e2,
+        value_fn=lambda c: c.e2 if c.e2 is not None else None,
     ),
 )
 

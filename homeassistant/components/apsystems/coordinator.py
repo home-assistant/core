@@ -79,19 +79,40 @@ class ApSystemsDataCoordinator(DataUpdateCoordinator[ApSystemsSensorData]):
             raise UpdateFailed(
                 translation_domain=DOMAIN, translation_key="inverter_error"
             ) from None
-        except (ConnectionError, TimeoutError):
+        except ConnectionError, TimeoutError:
+            # The inverter shuts down at night when there is no solar power,
+            # causing connection errors. Return power as 0 since the inverter
+            # is not producing. Energy values use last known data if available,
+            # or None to avoid a false spike in TOTAL_INCREASING statistics
+            # when the inverter comes back online with real values.
             last = self.data
-            if last is None:
-                raise
+            if last:
+                LOGGER.debug(
+                    "Inverter offline, using last known energy values with zero power"
+                )
+                return ApSystemsSensorData(
+                    output_data=ReturnOutputData(
+                        p1=0,
+                        p2=0,
+                        e1=last.output_data.e1,
+                        e2=last.output_data.e2,
+                        te1=last.output_data.te1,
+                        te2=last.output_data.te2,
+                    ),
+                    alarm_info=last.alarm_info,
+                )
+            LOGGER.debug(
+                "Inverter offline, no previous data available, reporting zero power"
+            )
             return ApSystemsSensorData(
                 output_data=ReturnOutputData(
-                    p1=0,
-                    p2=0,
-                    e1=last.output_data.e1,
-                    e2=last.output_data.e2,
-                    te1=last.output_data.te1,
-                    te2=last.output_data.te2,
+                    p1=0, p2=0, e1=None, e2=None, te1=None, te2=None
                 ),
-                alarm_info=last.alarm_info,
+                alarm_info=ReturnAlarmInfo(
+                    offgrid=False,
+                    shortcircuit_1=False,
+                    shortcircuit_2=False,
+                    operating=False,
+                ),
             )
         return ApSystemsSensorData(output_data=output_data, alarm_info=alarm_info)
