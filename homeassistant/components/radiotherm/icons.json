@@ -6,16 +6,16 @@
       }
     },
     "switch": {
-      "hold": {
-        "default": "mdi:timer-off",
-        "state": {
-          "on": "mdi:timer"
-        }
-      },
       "cloud_enabled": {
         "default": "mdi:cloud-outline",
         "state": {
           "off": "mdi:cloud-off"
+        }
+      },
+      "hold": {
+        "default": "mdi:timer-off",
+        "state": {
+          "on": "mdi:timer"
         }
       }
     }

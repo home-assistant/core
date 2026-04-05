@@ -24,19 +24,19 @@
   },
   "entity": {
     "button": {
-      "sync_time": {
-        "name": "Sync Time"
-      },
       "check_cloud": {
         "name": "Check Cloud Status"
+      },
+      "sync_time": {
+        "name": "Sync Time"
       }
     },
     "switch": {
-      "hold": {
-        "name": "Hold"
-      },
       "cloud_enabled": {
         "name": "Cloud Enabled"
+      },
+      "hold": {
+        "name": "Hold"
       }
     }
   },
