@@ -56,3 +56,13 @@ async def test_alert_sensor_no_alerts(hass: HomeAssistant) -> None:
 
     state = hass.states.get("sensor.home_weather_alerts")
     assert state is None
+
+
+async def test_alert_sensor_no_country(hass: HomeAssistant) -> None:
+    """Test that weather alerts are skipped when no country is configured."""
+    assert hass.config.country is None
+    with mock_weather_response():
+        await init_integration(hass)
+
+    state = hass.states.get("sensor.home_weather_alerts")
+    assert state is None
