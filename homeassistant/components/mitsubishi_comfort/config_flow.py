@@ -7,7 +7,7 @@ import logging
 from mitsubishi_comfort import MitsubishiCloudAccount
 import voluptuous as vol
 
-from homeassistant import config_entries
+from homeassistant.config_entries import ConfigEntry, ConfigFlow, OptionsFlow
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import callback
 
@@ -23,7 +23,7 @@ USER_SCHEMA = vol.Schema(
 )
 
 
-class MitsubishiComfortConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class MitsubishiComfortConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle config flow for Mitsubishi Comfort."""
 
     VERSION = 1
@@ -60,6 +60,8 @@ class MitsubishiComfortConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             except Exception:
                 _LOGGER.exception("Unexpected error during setup")
                 errors["base"] = "unknown"
+            finally:
+                await account.close()
 
         return self.async_show_form(
             step_id="user", data_schema=USER_SCHEMA, errors=errors
@@ -78,12 +80,14 @@ class MitsubishiComfortConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
-    def async_get_options_flow(config_entry):
+    def async_get_options_flow(
+        config_entry: ConfigEntry,
+    ) -> MitsubishiComfortOptionsFlow:
         """Return the options flow handler."""
         return MitsubishiComfortOptionsFlow(config_entry)
 
 
-class MitsubishiComfortOptionsFlow(config_entries.OptionsFlow):
+class MitsubishiComfortOptionsFlow(OptionsFlow):
     """Handle options flow."""
 
     async def async_step_init(self, user_input=None):

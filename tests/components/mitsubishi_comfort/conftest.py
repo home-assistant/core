@@ -1,22 +1,13 @@
 """Test fixtures for Mitsubishi Comfort integration."""
 
 from collections.abc import Generator
-from unittest.mock import AsyncMock, MagicMock, PropertyMock, patch
+from unittest.mock import AsyncMock, patch
 
+from mitsubishi_comfort import DeviceInfo, DeviceStatus
 import pytest
-
-from mitsubishi_comfort import (
-    CommandResult,
-    DeviceInfo,
-    DeviceStatus,
-    FanSpeed,
-    Mode,
-    VaneDirection,
-)
 
 from homeassistant.components.mitsubishi_comfort.const import DOMAIN
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
-
 from tests.common import MockConfigEntry
 
 MOCK_USERNAME = "test@test.com"
@@ -95,13 +86,3 @@ def mock_cloud_account(mock_device_info: DeviceInfo) -> Generator[AsyncMock]:
         account.close = AsyncMock()
         mock_cls.return_value = account
         yield account
-
-
-@pytest.fixture
-def mock_setup_entry() -> Generator[AsyncMock]:
-    """Override async_setup_entry."""
-    with patch(
-        "homeassistant.components.mitsubishi_comfort.async_setup_entry",
-        return_value=True,
-    ) as mock:
-        yield mock

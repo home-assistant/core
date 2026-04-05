@@ -2,19 +2,21 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 import logging
+from typing import Any
 
 from mitsubishi_comfort import FanSpeed, IndoorUnit, Mode, VaneDirection
 
-from homeassistant.components.climate import ClimateEntity
-from homeassistant.components.climate.const import (
+from homeassistant.components.climate import (
+    ClimateEntity,
     ClimateEntityFeature,
     HVACAction,
     HVACMode,
 )
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import MitsubishiComfortConfigEntry
 from .coordinator import MitsubishiComfortCoordinator
@@ -26,7 +28,7 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: MitsubishiComfortConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Mitsubishi Comfort climate entities."""
     coordinators = entry.runtime_data
@@ -243,12 +245,12 @@ class MitsubishiComfortClimate(MitsubishiComfortEntity, ClimateEntity):
         return features
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> Mapping[str, Any] | None:
         """Return extra state attributes."""
-        attrs = {}
+        attrs: dict[str, Any] = {}
         if self._device.status.vane_left_right is not None:
             attrs["vane_left_right"] = self._device.status.vane_left_right
-        return attrs
+        return attrs or None
 
     # -- Commands --
 
@@ -262,7 +264,7 @@ class MitsubishiComfortClimate(MitsubishiComfortEntity, ClimateEntity):
             self._optimistic_mode = result.value
             self.async_write_ha_state()
 
-    async def async_set_temperature(self, **kwargs) -> None:
+    async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set the target temperature."""
         mode = self._effective_mode
         wrote = False

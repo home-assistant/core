@@ -40,32 +40,45 @@ def _load_cached_credentials(hass: HomeAssistant) -> dict[str, dict]:
         cached = load_json(hass.config.path(CREDENTIAL_CACHE))
         if isinstance(cached, dict) and cached:
             _LOGGER.info("Loaded credentials for %d devices from cache", len(cached))
-            return cached
+            return cached  # type: ignore[return-value]
     except OSError, ValueError, TypeError, KeyError:
         pass
 
-    addresses: dict[str, str] = {}
-    try:
-        kumo = load_json(hass.config.path("kumo_cache.json"))
-        if isinstance(kumo, list) and len(kumo) >= 3:
-            for child in kumo[2].get("children", []):
-                for serial, unit in child.get("zoneTable", {}).items():
-                    addr = unit.get("address", "")
-                    if addr and addr not in ("N/A", "empty"):
-                        addresses[serial] = addr
-                for grandchild in child.get("children", []):
-                    for serial, unit in grandchild.get("zoneTable", {}).items():
-                        addr = unit.get("address", "")
-                        if addr and addr not in ("N/A", "empty"):
-                            addresses[serial] = addr
-    except OSError, ValueError, TypeError, KeyError:
-        pass
+    addresses = _parse_kumo_cache(hass)
 
     if addresses:
         _LOGGER.info("Imported %d addresses from legacy kumo cache", len(addresses))
         return {serial: {"address": addr} for serial, addr in addresses.items()}
 
     return {}
+
+
+def _extract_addresses_from_zone_table(
+    zone_table: dict, addresses: dict[str, str]
+) -> None:
+    """Extract valid addresses from a zone table."""
+    for serial, unit in zone_table.items():
+        addr = unit.get("address", "")
+        if addr and addr not in ("N/A", "empty"):
+            addresses[serial] = addr
+
+
+def _parse_kumo_cache(hass: HomeAssistant) -> dict[str, str]:
+    """Parse legacy kumo_cache.json for device addresses."""
+    addresses: dict[str, str] = {}
+    try:
+        kumo = load_json(hass.config.path("kumo_cache.json"))
+        if not isinstance(kumo, list) or len(kumo) < 3:
+            return addresses
+        for child in kumo[2].get("children", []):  # type: ignore[union-attr]
+            _extract_addresses_from_zone_table(child.get("zoneTable", {}), addresses)
+            for grandchild in child.get("children", []):
+                _extract_addresses_from_zone_table(
+                    grandchild.get("zoneTable", {}), addresses
+                )
+    except OSError, ValueError, TypeError, KeyError:
+        pass
+    return addresses
 
 
 def _make_device(
