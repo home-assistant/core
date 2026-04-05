@@ -270,7 +270,7 @@ aiohasupervisor==0.4.3
 aiohomeconnect==0.33.0
 
 # homeassistant.components.homekit_controller
-aiohomekit==3.2.20
+aiohomekit@ git+https://github.com/sirwolfgang/aiohomekit.git@patch/ecobee
 
 # homeassistant.components.mcp_server
 aiohttp_sse==2.2.0
