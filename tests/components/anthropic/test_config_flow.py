@@ -25,6 +25,7 @@ from homeassistant.components.anthropic.const import (
     CONF_CODE_EXECUTION,
     CONF_MAX_TOKENS,
     CONF_PROMPT,
+    CONF_PROMPT_CACHING,
     CONF_RECOMMENDED,
     CONF_TEMPERATURE,
     CONF_THINKING_BUDGET,
@@ -324,6 +325,7 @@ async def test_subentry_web_search_user_location(
         "country": "US",
         "max_tokens": 8192,
         "prompt": "You are a helpful assistant",
+        "prompt_caching": "prompt",
         "recommended": False,
         "region": "California",
         "temperature": 1.0,
@@ -431,6 +433,7 @@ async def test_model_list_error(
                 {
                     CONF_CHAT_MODEL: "claude-3-haiku-20240307",
                     CONF_TEMPERATURE: 1.0,
+                    CONF_PROMPT_CACHING: "prompt",
                 },
             ),
             {
@@ -439,6 +442,7 @@ async def test_model_list_error(
                 CONF_TEMPERATURE: 1.0,
                 CONF_CHAT_MODEL: "claude-3-haiku-20240307",
                 CONF_MAX_TOKENS: DEFAULT[CONF_MAX_TOKENS],
+                CONF_PROMPT_CACHING: "prompt",
             },
         ),
         (  # Model with web search options
@@ -446,6 +450,7 @@ async def test_model_list_error(
                 CONF_RECOMMENDED: False,
                 CONF_CHAT_MODEL: "claude-sonnet-4-5",
                 CONF_PROMPT: "bla",
+                CONF_PROMPT_CACHING: "prompt",
                 CONF_WEB_SEARCH: True,
                 CONF_WEB_SEARCH_MAX_USES: 4,
                 CONF_WEB_SEARCH_USER_LOCATION: True,
@@ -463,6 +468,7 @@ async def test_model_list_error(
                 {
                     CONF_CHAT_MODEL: "claude-haiku-4-5",
                     CONF_TEMPERATURE: 1.0,
+                    CONF_PROMPT_CACHING: "off",
                 },
                 {
                     CONF_WEB_SEARCH: False,
@@ -474,6 +480,7 @@ async def test_model_list_error(
             {
                 CONF_RECOMMENDED: False,
                 CONF_PROMPT: "Speak like a pirate",
+                CONF_PROMPT_CACHING: "off",
                 CONF_TEMPERATURE: 1.0,
                 CONF_CHAT_MODEL: "claude-haiku-4-5",
                 CONF_MAX_TOKENS: DEFAULT[CONF_MAX_TOKENS],
@@ -489,6 +496,7 @@ async def test_model_list_error(
                 CONF_RECOMMENDED: False,
                 CONF_CHAT_MODEL: "claude-sonnet-4-5",
                 CONF_PROMPT: "bla",
+                CONF_PROMPT_CACHING: "off",
                 CONF_WEB_SEARCH: False,
                 CONF_WEB_SEARCH_MAX_USES: 5,
                 CONF_WEB_SEARCH_USER_LOCATION: False,
@@ -504,6 +512,7 @@ async def test_model_list_error(
                 {
                     CONF_CHAT_MODEL: "claude-sonnet-4-5",
                     CONF_TEMPERATURE: 1.0,
+                    CONF_PROMPT_CACHING: "automatic",
                 },
                 {
                     CONF_WEB_SEARCH: False,
@@ -516,6 +525,7 @@ async def test_model_list_error(
             {
                 CONF_RECOMMENDED: False,
                 CONF_PROMPT: "Speak like a pirate",
+                CONF_PROMPT_CACHING: "automatic",
                 CONF_TEMPERATURE: 1.0,
                 CONF_CHAT_MODEL: "claude-sonnet-4-5",
                 CONF_MAX_TOKENS: DEFAULT[CONF_MAX_TOKENS],
@@ -531,6 +541,7 @@ async def test_model_list_error(
                 CONF_RECOMMENDED: False,
                 CONF_CHAT_MODEL: "claude-opus-4-6",
                 CONF_PROMPT: "bla",
+                CONF_PROMPT_CACHING: "automatic",
                 CONF_WEB_SEARCH: False,
                 CONF_WEB_SEARCH_MAX_USES: 5,
                 CONF_WEB_SEARCH_USER_LOCATION: False,
@@ -546,6 +557,7 @@ async def test_model_list_error(
                 {
                     CONF_CHAT_MODEL: "claude-opus-4-6",
                     CONF_TEMPERATURE: 1.0,
+                    CONF_PROMPT_CACHING: "prompt",
                 },
                 {
                     CONF_WEB_SEARCH: False,
@@ -558,6 +570,7 @@ async def test_model_list_error(
             {
                 CONF_RECOMMENDED: False,
                 CONF_PROMPT: "Speak like a pirate",
+                CONF_PROMPT_CACHING: "prompt",
                 CONF_TEMPERATURE: 1.0,
                 CONF_CHAT_MODEL: "claude-opus-4-6",
                 CONF_MAX_TOKENS: DEFAULT[CONF_MAX_TOKENS],
@@ -581,12 +594,14 @@ async def test_model_list_error(
                 },
                 {
                     CONF_TEMPERATURE: 0.3,
+                    CONF_PROMPT_CACHING: "automatic",
                 },
                 {},
             ),
             {
                 CONF_RECOMMENDED: False,
                 CONF_PROMPT: "Speak like a pirate",
+                CONF_PROMPT_CACHING: "automatic",
                 CONF_TEMPERATURE: 0.3,
                 CONF_CHAT_MODEL: DEFAULT[CONF_CHAT_MODEL],
                 CONF_MAX_TOKENS: DEFAULT[CONF_MAX_TOKENS],
@@ -601,6 +616,7 @@ async def test_model_list_error(
             {
                 CONF_RECOMMENDED: False,
                 CONF_PROMPT: "Speak like a pirate",
+                CONF_PROMPT_CACHING: "off",
                 CONF_TEMPERATURE: 0.3,
                 CONF_CHAT_MODEL: DEFAULT[CONF_CHAT_MODEL],
                 CONF_MAX_TOKENS: DEFAULT[CONF_MAX_TOKENS],
@@ -790,6 +806,7 @@ async def test_creating_ai_task_subentry_advanced(
         CONF_WEB_SEARCH_USER_LOCATION: False,
         CONF_THINKING_BUDGET: 0,
         CONF_CODE_EXECUTION: False,
+        CONF_PROMPT_CACHING: "prompt",
     }
 
 
