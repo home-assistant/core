@@ -95,6 +95,7 @@ from .const import (
     CONF_CHAT_MODEL,
     CONF_CODE_EXECUTION,
     CONF_MAX_TOKENS,
+    CONF_PROMPT_CACHING,
     CONF_TEMPERATURE,
     CONF_THINKING_BUDGET,
     CONF_THINKING_EFFORT,
@@ -115,6 +116,7 @@ from .const import (
     NON_THINKING_MODELS,
     PROGRAMMATIC_TOOL_CALLING_UNSUPPORTED_MODELS,
     UNSUPPORTED_STRUCTURED_OUTPUT_MODELS,
+    PromptCaching,
 )
 from .coordinator import AnthropicConfigEntry, AnthropicCoordinator
 
@@ -704,15 +706,6 @@ class AnthropicBaseLLMEntity(CoordinatorEntity[AnthropicCoordinator]):
                 translation_domain=DOMAIN, translation_key="system_message_not_found"
             )
 
-        # System prompt with caching enabled
-        system_prompt: list[TextBlockParam] = [
-            TextBlockParam(
-                type="text",
-                text=system.content,
-                cache_control={"type": "ephemeral"},
-            )
-        ]
-
         messages, container_id = _convert_content(chat_log.content[1:])
 
         model = options.get(CONF_CHAT_MODEL, DEFAULT[CONF_CHAT_MODEL])
@@ -721,10 +714,27 @@ class AnthropicBaseLLMEntity(CoordinatorEntity[AnthropicCoordinator]):
             model=model,
             messages=messages,
             max_tokens=options.get(CONF_MAX_TOKENS, DEFAULT[CONF_MAX_TOKENS]),
-            system=system_prompt,
+            system=system.content,
             stream=True,
             container=container_id,
         )
+
+        if (
+            options.get(CONF_PROMPT_CACHING, DEFAULT[CONF_PROMPT_CACHING])
+            == PromptCaching.PROMPT
+        ):
+            model_args["system"] = [
+                {
+                    "type": "text",
+                    "text": system.content,
+                    "cache_control": {"type": "ephemeral"},
+                }
+            ]
+        elif (
+            options.get(CONF_PROMPT_CACHING, DEFAULT[CONF_PROMPT_CACHING])
+            == PromptCaching.AUTOMATIC
+        ):
+            model_args["cache_control"] = {"type": "ephemeral"}
 
         if not model.startswith(tuple(NON_ADAPTIVE_THINKING_MODELS)):
             thinking_effort = options.get(
