@@ -1728,6 +1728,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/tedee/ @patrickhilker @zweckj
 /homeassistant/components/telegram_bot/ @hanwg
 /tests/components/telegram_bot/ @hanwg
+/homeassistant/components/teleinfo/ @esciara
+/tests/components/teleinfo/ @esciara
 /homeassistant/components/tellduslive/ @fredrike
 /tests/components/tellduslive/ @fredrike
 /homeassistant/components/teltonika/ @karlbeecken
