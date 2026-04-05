@@ -47,11 +47,13 @@
           "data": {
             "chat_model": "[%key:common::generic::model%]",
             "max_tokens": "[%key:component::anthropic::config_subentries::conversation::step::advanced::data::max_tokens%]",
+            "prompt_caching": "[%key:component::anthropic::config_subentries::conversation::step::advanced::data::prompt_caching%]",
             "temperature": "[%key:component::anthropic::config_subentries::conversation::step::advanced::data::temperature%]"
           },
           "data_description": {
             "chat_model": "[%key:component::anthropic::config_subentries::conversation::step::advanced::data_description::chat_model%]",
             "max_tokens": "[%key:component::anthropic::config_subentries::conversation::step::advanced::data_description::max_tokens%]",
+            "prompt_caching": "[%key:component::anthropic::config_subentries::conversation::step::advanced::data_description::prompt_caching%]",
             "temperature": "[%key:component::anthropic::config_subentries::conversation::step::advanced::data_description::temperature%]"
           },
           "title": "[%key:component::anthropic::config_subentries::conversation::step::advanced::title%]"
@@ -103,11 +105,13 @@
           "data": {
             "chat_model": "[%key:common::generic::model%]",
             "max_tokens": "Maximum tokens to return in response",
+            "prompt_caching": "Caching strategy",
             "temperature": "Temperature"
           },
           "data_description": {
             "chat_model": "The model to serve the responses.",
             "max_tokens": "Limit the number of response tokens.",
+            "prompt_caching": "Optimize your API cost and response times based on your usage.",
             "temperature": "Control the randomness of the response, trading off between creativity and coherence."
           },
           "title": "Advanced settings"
@@ -210,6 +214,13 @@
     }
   },
   "selector": {
+    "prompt_caching": {
+      "options": {
+        "automatic": "Full",
+        "off": "Disabled",
+        "prompt": "System prompt"
+      }
+    },
     "thinking_effort": {
       "options": {
         "high": "[%key:common::state::high%]",

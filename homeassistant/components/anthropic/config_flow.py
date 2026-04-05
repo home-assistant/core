@@ -48,6 +48,7 @@ from .const import (
     CONF_CODE_EXECUTION,
     CONF_MAX_TOKENS,
     CONF_PROMPT,
+    CONF_PROMPT_CACHING,
     CONF_RECOMMENDED,
     CONF_TEMPERATURE,
     CONF_THINKING_BUDGET,
@@ -66,6 +67,7 @@ from .const import (
     NON_ADAPTIVE_THINKING_MODELS,
     NON_THINKING_MODELS,
     WEB_SEARCH_UNSUPPORTED_MODELS,
+    PromptCaching,
 )
 
 if TYPE_CHECKING:
@@ -356,6 +358,16 @@ class ConversationSubentryFlowHandler(ConfigSubentryFlow):
                 CONF_TEMPERATURE,
                 default=DEFAULT[CONF_TEMPERATURE],
             ): NumberSelector(NumberSelectorConfig(min=0, max=1, step=0.05)),
+            vol.Optional(
+                CONF_PROMPT_CACHING,
+                default=DEFAULT[CONF_PROMPT_CACHING],
+            ): SelectSelector(
+                SelectSelectorConfig(
+                    options=[x.value for x in PromptCaching],
+                    translation_key=CONF_PROMPT_CACHING,
+                    mode=SelectSelectorMode.DROPDOWN,
+                )
+            ),
         }
 
         if user_input is not None:
