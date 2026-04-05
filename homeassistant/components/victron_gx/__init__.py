@@ -6,7 +6,6 @@ import logging
 
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP, Platform
 from homeassistant.core import Event, HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 
 from .hub import Hub, VictronGxConfigEntry
 
@@ -28,7 +27,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: VictronGxConfigEntry) ->
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     try:
         await hub.start()
-    except ConfigEntryNotReady, ConfigEntryAuthFailed:
+    except Exception as err:
+        _LOGGER.error(
+            "Error starting hub for entry %s: %s",
+            entry.entry_id,
+            err,
+            exc_info=err,
+        )
         await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
         hub.unregister_all_new_metric_callbacks()
         raise
