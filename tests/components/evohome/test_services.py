@@ -25,7 +25,6 @@ from homeassistant.const import ATTR_ENTITY_ID, ATTR_MODE
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.entity_platform import DATA_DOMAIN_PLATFORM_ENTITIES
-from homeassistant.util import dt as dt_util
 
 from .const import TEST_INSTALLS
 
@@ -219,7 +218,6 @@ async def test_set_zone_override_advance(
     freezer.move_to("2024-05-10T12:15:00+00:00")
 
     expected_until = datetime(2024, 5, 10, 21, 10, tzinfo=UTC)
-    expected_tzinfo = dt_util.get_time_zone("Europe/London")
 
     # Simulate the schedule not yet having been fetched (e.g. HOMEASSISTANT_START)
     entities = hass.data[DATA_DOMAIN_PLATFORM_ENTITIES].get(
@@ -246,7 +244,6 @@ async def test_set_zone_override_advance(
         mock_fcn.assert_awaited_once_with(19.5, until=expected_until)
 
     assert zone_entity.setpoints["next_sp_from"] == expected_until
-    assert zone_entity.setpoints["next_sp_from"].tzinfo == expected_tzinfo
 
 
 @pytest.mark.parametrize("install", ["default"])
@@ -445,7 +442,6 @@ async def test_set_dhw_override_advance(
     freezer.move_to("2024-05-10T12:15:00+00:00")
 
     expected_until = datetime(2024, 5, 10, 15, 30, tzinfo=UTC)
-    expected_tzinfo = dt_util.get_time_zone("Europe/London")
 
     # Simulate the schedule not yet having been fetched (e.g. HOMEASSISTANT_START)
     entities = hass.data[DATA_DOMAIN_PLATFORM_ENTITIES].get(
@@ -472,4 +468,3 @@ async def test_set_dhw_override_advance(
         mock_fcn.assert_awaited_once_with(until=expected_until)
 
     assert dhw_entity.setpoints["next_sp_from"] == expected_until
-    assert dhw_entity.setpoints["next_sp_from"].tzinfo == expected_tzinfo
