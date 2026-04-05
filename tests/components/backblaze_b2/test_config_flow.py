@@ -178,6 +178,16 @@ async def test_already_configured(
             "base",
         ),
         (
+            "bad_request",
+            {
+                "patch": "b2sdk.v2.RawSimulator.authorize_account",
+                "exception": exception.BadRequest,
+                "args": ["test", "bad_request"],
+            },
+            "bad_request",
+            "base",
+        ),
+        (
             "unknown_error",
             {
                 "patch": "b2sdk.v2.RawSimulator.authorize_account",
