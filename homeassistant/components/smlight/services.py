@@ -17,7 +17,45 @@ from .coordinator import SmConfigEntry
 
 SERVICE_PLAY_RTTTL = "play_rtttl"
 
-ATTR_TONE = "tone"
+ATTR_BPM = "bpm"
+ATTR_DURATION = "duration"
+ATTR_OCTAVE = "octave"
+ATTR_NOTES = "notes"
+
+RTTTL_VALID_BPMS: list[int] = [
+    25,
+    28,
+    31,
+    35,
+    40,
+    45,
+    50,
+    56,
+    63,
+    70,
+    80,
+    90,
+    100,
+    112,
+    125,
+    140,
+    160,
+    180,
+    200,
+    225,
+    250,
+    285,
+    320,
+    355,
+    400,
+    450,
+    500,
+    565,
+    635,
+    715,
+    800,
+    900,
+]
 
 
 @callback
@@ -26,7 +64,19 @@ def async_setup_services(hass: HomeAssistant) -> None:
 
     async def async_play_rtttl(call: ServiceCall) -> None:
         """Play RTTTL tone."""
-        tone = call.data[ATTR_TONE]
+        notes = call.data[ATTR_NOTES]
+        octave: int = call.data[ATTR_OCTAVE]
+        bpm: int | None = call.data.get(ATTR_BPM)
+        duration: int | None = call.data.get(ATTR_DURATION)
+
+        header: list[str] = []
+
+        if duration is not None:
+            header.append(f"d={duration}")
+        header.append(f"o={octave}")
+        if bpm is not None:
+            header.append(f"b={bpm}")
+        tone = f"S:{','.join(header)}:{notes}"
 
         target_entry_ids = await async_extract_config_entry_ids(call)
         target_entries: list[SmConfigEntry] = [
@@ -68,7 +118,14 @@ def async_setup_services(hass: HomeAssistant) -> None:
     schema = vol.Schema(
         {
             vol.Required(ATTR_DEVICE_ID): vol.All(cv.ensure_list, [cv.string]),
-            vol.Required(ATTR_TONE): cv.string,
+            vol.Optional(ATTR_DURATION): vol.All(
+                vol.Coerce(int), vol.In([1, 2, 4, 8, 16, 32])
+            ),
+            vol.Required(ATTR_OCTAVE): vol.All(
+                vol.Coerce(int), vol.Range(min=4, max=7)
+            ),
+            vol.Optional(ATTR_BPM): vol.All(vol.Coerce(int), vol.In(RTTTL_VALID_BPMS)),
+            vol.Required(ATTR_NOTES): cv.string,
         }
     )
 
