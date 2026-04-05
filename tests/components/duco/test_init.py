@@ -14,11 +14,23 @@ from tests.common import MockConfigEntry
 
 
 @pytest.mark.parametrize(
-    ("method", "exception"),
+    ("method", "exception", "expected_state"),
     [
-        ("async_get_board_info", DucoConnectionError("Connection refused")),
-        ("async_get_board_info", DucoError("Unexpected API error")),
-        ("async_get_nodes", DucoConnectionError("Connection refused")),
+        (
+            "async_get_board_info",
+            DucoConnectionError("Connection refused"),
+            ConfigEntryState.SETUP_RETRY,
+        ),
+        (
+            "async_get_board_info",
+            DucoError("Unexpected API error"),
+            ConfigEntryState.SETUP_ERROR,
+        ),
+        (
+            "async_get_nodes",
+            DucoConnectionError("Connection refused"),
+            ConfigEntryState.SETUP_RETRY,
+        ),
     ],
 )
 async def test_setup_entry_error(
@@ -27,14 +39,15 @@ async def test_setup_entry_error(
     mock_duco_client: AsyncMock,
     method: str,
     exception: Exception,
+    expected_state: ConfigEntryState,
 ) -> None:
-    """Test that fetch errors during setup trigger a retry."""
+    """Test that fetch errors during setup result in the correct state."""
     getattr(mock_duco_client, method).side_effect = exception
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert mock_config_entry.state is expected_state
 
 
 @pytest.mark.usefixtures("mock_duco_client")

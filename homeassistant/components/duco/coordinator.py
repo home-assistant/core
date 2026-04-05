@@ -10,6 +10,7 @@ from duco.models import BoardInfo, Node
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryError
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN, SCAN_INTERVAL
@@ -48,7 +49,7 @@ class DucoCoordinator(DataUpdateCoordinator[dict[int, Node]]):
         except DucoConnectionError as err:
             raise UpdateFailed(f"Cannot connect to Duco box: {err}") from err
         except DucoError as err:
-            raise UpdateFailed(f"Duco API error: {err}") from err
+            raise ConfigEntryError(f"Duco API error: {err}") from err
 
     async def _async_update_data(self) -> dict[int, Node]:
         """Fetch node data from the Duco box."""
