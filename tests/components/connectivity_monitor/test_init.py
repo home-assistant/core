@@ -2,9 +2,14 @@
 
 from __future__ import annotations
 
+from types import SimpleNamespace
 from unittest.mock import AsyncMock, call, patch
 
-from homeassistant.components.connectivity_monitor import async_migrate_entry
+from homeassistant.components.connectivity_monitor import (
+    async_migrate_entry,
+    async_reload_entry,
+    async_setup,
+)
 from homeassistant.components.connectivity_monitor.const import (
     CONF_BLUETOOTH_ADDRESS,
     CONF_DNS_SERVER,
@@ -21,7 +26,11 @@ from homeassistant.components.connectivity_monitor.const import (
     PROTOCOL_ICMP,
     PROTOCOL_MATTER,
     PROTOCOL_ZHA,
+    VERSION,
 )
+
+# pylint: disable-next=hass-component-root-import
+from homeassistant.components.lovelace.const import LOVELACE_DATA
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntryState
 from homeassistant.core import HomeAssistant
 
@@ -207,3 +216,84 @@ async def test_migrate_entry_splits_legacy_targets(hass: HomeAssistant) -> None:
             },
         ),
     ]
+
+
+async def test_async_setup_updates_existing_lovelace_resource(
+    hass: HomeAssistant,
+) -> None:
+    """Test setup updates an existing Lovelace card resource to the current version."""
+    resources = SimpleNamespace(
+        async_load=AsyncMock(),
+        async_items=lambda: [
+            {
+                "id": "resource-id",
+                "url": "/connectivity_monitor/connectivity_monitor_card.js?v=old",
+            }
+        ],
+        async_update_item=AsyncMock(),
+        async_create_item=AsyncMock(),
+    )
+    hass.data[LOVELACE_DATA] = SimpleNamespace(resources=resources)
+    http = SimpleNamespace(async_register_static_paths=AsyncMock())
+
+    with patch.object(hass, "http", http, create=True):
+        assert await async_setup(hass, {})
+        hass.bus.async_fire("homeassistant_started")
+        await hass.async_block_till_done()
+
+    assert http.async_register_static_paths.await_count == 1
+    resources.async_load.assert_awaited_once()
+    resources.async_update_item.assert_awaited_once_with(
+        "resource-id",
+        {"url": f"/connectivity_monitor/connectivity_monitor_card.js?v={VERSION}"},
+    )
+    resources.async_create_item.assert_not_called()
+
+
+async def test_async_setup_creates_lovelace_resource_when_missing(
+    hass: HomeAssistant,
+) -> None:
+    """Test setup creates the Lovelace card resource when none exists."""
+    resources = SimpleNamespace(
+        async_load=AsyncMock(),
+        async_items=list,
+        async_update_item=AsyncMock(),
+        async_create_item=AsyncMock(),
+    )
+    http = SimpleNamespace(async_register_static_paths=AsyncMock())
+    hass.data[LOVELACE_DATA] = SimpleNamespace(resources=resources)
+
+    with patch.object(hass, "http", http, create=True):
+        assert await async_setup(hass, {})
+        hass.bus.async_fire("homeassistant_started")
+        await hass.async_block_till_done()
+
+    resources.async_load.assert_awaited_once()
+    resources.async_update_item.assert_not_called()
+    resources.async_create_item.assert_awaited_once_with(
+        {
+            "res_type": "module",
+            "url": f"/connectivity_monitor/connectivity_monitor_card.js?v={VERSION}",
+        }
+    )
+
+
+async def test_async_reload_entry_reloads_config_entry(
+    hass: HomeAssistant,
+    network_config_entry: MockConfigEntry,
+) -> None:
+    """Test reload delegates to unload and setup for the config entry."""
+    with (
+        patch(
+            "homeassistant.components.connectivity_monitor.async_unload_entry",
+            AsyncMock(return_value=True),
+        ) as mock_unload_entry,
+        patch(
+            "homeassistant.components.connectivity_monitor.async_setup_entry",
+            AsyncMock(return_value=True),
+        ) as mock_setup_entry,
+    ):
+        await async_reload_entry(hass, network_config_entry)
+
+    mock_unload_entry.assert_awaited_once_with(hass, network_config_entry)
+    mock_setup_entry.assert_awaited_once_with(hass, network_config_entry)
