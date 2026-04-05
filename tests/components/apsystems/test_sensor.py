@@ -129,6 +129,55 @@ async def test_sensor_offline_timeout_error(
     )
 
 
+async def test_sensor_cold_start_offline(
+    hass: HomeAssistant,
+    mock_apsystems: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test sensors when inverter is offline from the very first refresh.
+
+    When HA starts and the inverter has never been reachable (no prior data),
+    power sensors should report 0 and energy sensors should be unknown.
+    """
+    mock_apsystems.get_device_info.side_effect = TimeoutError
+    mock_apsystems.get_output_data.side_effect = TimeoutError
+    mock_apsystems.get_alarm_info.side_effect = TimeoutError
+
+    with patch(
+        "homeassistant.components.apsystems.PLATFORMS",
+        [Platform.SENSOR],
+    ):
+        await setup_integration(hass, mock_config_entry)
+
+    # Power sensors should report 0
+    assert hass.states.get("sensor.mock_title_total_power").state == "0"
+    assert hass.states.get("sensor.mock_title_power_of_p1").state == "0"
+    assert hass.states.get("sensor.mock_title_power_of_p2").state == "0"
+
+    # Energy sensors should be unknown (no prior data)
+    assert hass.states.get("sensor.mock_title_production_of_today").state == "unknown"
+    assert (
+        hass.states.get("sensor.mock_title_production_of_today_from_p1").state
+        == "unknown"
+    )
+    assert (
+        hass.states.get("sensor.mock_title_production_of_today_from_p2").state
+        == "unknown"
+    )
+    assert (
+        hass.states.get("sensor.mock_title_total_lifetime_production").state
+        == "unknown"
+    )
+    assert (
+        hass.states.get("sensor.mock_title_lifetime_production_of_p1").state
+        == "unknown"
+    )
+    assert (
+        hass.states.get("sensor.mock_title_lifetime_production_of_p2").state
+        == "unknown"
+    )
+
+
 async def test_sensor_offline_recovery(
     hass: HomeAssistant,
     mock_apsystems: AsyncMock,
