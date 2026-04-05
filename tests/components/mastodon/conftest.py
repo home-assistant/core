@@ -46,6 +46,11 @@ def mock_mastodon_client() -> Generator[AsyncMock]:
         )
         client.mastodon_api_version = 2
         client.status_post.return_value = None
+
+        client.account_update_credentials.return_value = Account.from_json(
+            load_fixture("account.json", DOMAIN)
+        )
+
         yield client
 
 

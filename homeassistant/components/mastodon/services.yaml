@@ -1,6 +1,6 @@
 get_account:
   fields:
-    config_entry_id:
+    config_entry_id: &config_entry_id
       required: true
       selector:
         config_entry:
@@ -11,11 +11,7 @@ get_account:
         text:
 mute_account:
   fields:
-    config_entry_id:
-      required: true
-      selector:
-        config_entry:
-          integration: mastodon
+    config_entry_id: *config_entry_id
     account_name:
       required: true
       selector:
@@ -32,22 +28,14 @@ mute_account:
         boolean:
 unmute_account:
   fields:
-    config_entry_id:
-      required: true
-      selector:
-        config_entry:
-          integration: mastodon
+    config_entry_id: *config_entry_id
     account_name:
       required: true
       selector:
         text:
 post:
   fields:
-    config_entry_id:
-      required: true
-      selector:
-        config_entry:
-          integration: mastodon
+    config_entry_id: *config_entry_id
     status:
       required: true
       selector:
@@ -282,3 +270,55 @@ post:
       required: true
       selector:
         boolean:
+update_profile:
+  fields:
+    config_entry_id: *config_entry_id
+    display_name:
+      selector:
+        text:
+    note:
+      selector:
+        text:
+          multiline: true
+    avatar:
+      required: false
+      selector:
+        media:
+          accept:
+            - "image/*"
+    header:
+      required: false
+      selector:
+        media:
+          accept:
+            - "image/*"
+    locked:
+      selector:
+        boolean:
+    bot:
+      selector:
+        boolean:
+    discoverable:
+      selector:
+        boolean:
+    fields:
+      selector:
+        object:
+          label_field: "value"
+          description_field: "name"
+          multiple: true
+          translation_key: fields
+          fields:
+            name:
+              required: true
+              selector:
+                text:
+            value:
+              required: true
+              selector:
+                text:
+    attribution_domains:
+      selector:
+        text:
+          multiple: true
+          type: url
