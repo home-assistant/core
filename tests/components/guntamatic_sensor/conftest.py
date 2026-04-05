@@ -23,7 +23,7 @@ MOCK_DATA = {
 
 
 @pytest.fixture
-def mock_heater() -> Generator[AsyncMock]:
+def mock_heater() -> Generator[MagicMock]:
     """Mock the Heater class."""
     with patch(
         "homeassistant.components.guntamatic_sensor.Heater",
