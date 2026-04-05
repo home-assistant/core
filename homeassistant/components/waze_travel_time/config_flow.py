@@ -20,6 +20,7 @@ from homeassistant.helpers.selector import (
     DurationSelector,
     DurationSelectorConfig,
     LocationSelector,
+    LocationSelectorConfig,
     SelectSelector,
     SelectSelectorConfig,
     SelectSelectorMode,
@@ -94,7 +95,9 @@ OPTIONS_SCHEMA = vol.Schema(
                 enable_second=False,
             )
         ),
-        vol.Optional(CONF_BASE_COORDINATES): LocationSelector(),
+        vol.Optional(CONF_BASE_COORDINATES): LocationSelector(
+            LocationSelectorConfig(radius=False)
+        ),
     }
 )
 
