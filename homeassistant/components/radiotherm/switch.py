@@ -85,6 +85,7 @@ class RadioThermCloudEnabledSwitch(RadioThermostatEntity, SwitchEntity):
         """Update state from coordinator's cloud data."""
         if self.coordinator.cloud_enabled is not None:
             self._attr_is_on = self.coordinator.cloud_enabled
+            self.async_write_ha_state()
 
     def _set_cloud_enabled(self, enabled: bool) -> None:
         """POST cloud enabled state to /cloud."""
