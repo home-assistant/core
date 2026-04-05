@@ -152,20 +152,28 @@ class CoverPositionMixin(ZWaveBaseEntity, CoverEntity):
 
     @callback
     def on_value_update(self) -> None:
-        """Clear moving state when current position reaches target."""
-        if not self._attr_is_opening and not self._attr_is_closing:
-            return
+        """Update moving state based on current and target position."""
+        current = self._current_position_value.value if self._current_position_value else None
+        target = self._target_position_value.value if self._target_position_value else None
 
-        if (current := self._current_position_value) is None or current.value is None:
-            return
-
-        if (
-            (t := self._target_position_value) is not None
-            and t.value is not None
-            and current.value == t.value
-        ):
-            self._attr_is_opening = False
-            self._attr_is_closing = False
+        if target == current:
+            # Target reached or no position data available — cover is not moving.
+            self._attr_is_opening = self._attr_is_closing = False
+        elif current is not None and target is not None:
+            # Live position available: determine state from current vs target.
+            self._attr_is_opening = target > current
+            self._attr_is_closing = target < current
+        elif target is not None:
+            # current=None: position unknown during movement.
+            # Infer direction only when target is an extreme position — devices
+            # that don't report intermediate positions may still declare a clear intent.
+            if target == self._fully_open_position:
+                self._attr_is_opening = True
+                self._attr_is_closing = False
+            elif target == self._fully_closed_position:
+                self._attr_is_opening = False
+                self._attr_is_closing = True
+            # Otherwise target is intermediate and direction is ambiguous — leave flags unchanged.
 
     @property
     def current_cover_position(self) -> int | None:
@@ -178,70 +186,35 @@ class CoverPositionMixin(ZWaveBaseEntity, CoverEntity):
             return None
         return self.zwave_to_percent_position(self._current_position_value.value)
 
-    async def _async_set_position_and_update_moving_state(
+    async def _async_set_position(
         self, target_position: int
     ) -> None:
-        """Set the target position and update the moving state if applicable."""
+        """Set the target position."""
         assert self._target_position_value
-        result = await self._async_set_value(
-            self._target_position_value, target_position
-        )
-        if (
-            self._moving_state_disabled
-            # If the command is unsupervised, or the device reported that it started
-            # working, we can assume the cover is moving in the desired direction.
-            or result is None
-            or result.status
-            not in (SetValueStatus.WORKING, SetValueStatus.SUCCESS_UNSUPERVISED)
-            # If we don't know the current position, we don't know which direction
-            # the cover is moving, so we can't update the moving state.
-            or (current_value := self._current_position_value) is None
-            or (current := current_value.value) is None
-        ):
-            return
-
-        if target_position > current:
-            self._attr_is_opening = True
-            self._attr_is_closing = False
-        elif target_position < current:
-            self._attr_is_opening = False
-            self._attr_is_closing = True
-        else:
-            return
-
-        self.async_write_ha_state()
+        await self._async_set_value(self._target_position_value, target_position)
 
     async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Move the cover to a specific position."""
-        await self._async_set_position_and_update_moving_state(
+        await self._async_set_position(
             self.percent_to_zwave_position(kwargs[ATTR_POSITION])
         )
 
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the cover."""
-        await self._async_set_position_and_update_moving_state(
+        await self._async_set_position(
             self._fully_open_position
         )
 
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close cover."""
-        await self._async_set_position_and_update_moving_state(
+        await self._async_set_position(
             self._fully_closed_position
         )
 
     async def async_stop_cover(self, **kwargs: Any) -> None:
         """Stop cover."""
         assert self._stop_position_value
-        # Stop the cover, will stop regardless of the actual direction of travel.
-        result = await self._async_set_value(self._stop_position_value, False)
-        # When stopping is successful (or unsupervised), we can assume the cover has stopped moving.
-        if result is not None and result.status in (
-            SetValueStatus.SUCCESS,
-            SetValueStatus.SUCCESS_UNSUPERVISED,
-        ):
-            self._attr_is_opening = False
-            self._attr_is_closing = False
-            self.async_write_ha_state()
+        await self._async_set_value(self._stop_position_value, False)
 
 
 class CoverTiltMixin(ZWaveBaseEntity, CoverEntity):
@@ -495,33 +468,15 @@ class ZWaveWindowCovering(CoverPositionMixin, CoverTiltMixin):
 
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the cover."""
-        result = await self._async_set_value(self._up_value, True)
-        # StartLevelChange: SUCCESS means the device started moving in the desired direction
-        if result is not None and result.status in SET_VALUE_SUCCESS:
-            self._attr_is_opening = True
-            self._attr_is_closing = False
-            self.async_write_ha_state()
+        await self._async_set_value(self._up_value, True)
 
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close the cover."""
-        result = await self._async_set_value(self._down_value, True)
-        # StartLevelChange: SUCCESS means the device started moving in the desired direction
-        if result is not None and result.status in SET_VALUE_SUCCESS:
-            self._attr_is_opening = False
-            self._attr_is_closing = True
-            self.async_write_ha_state()
+        await self._async_set_value(self._down_value, True)
 
     async def async_stop_cover(self, **kwargs: Any) -> None:
         """Stop the cover."""
-        result = await self._async_set_value(self._up_value, False)
-        # When stopping is successful (or unsupervised), we can assume the cover has stopped moving.
-        if result is not None and result.status in (
-            SetValueStatus.SUCCESS,
-            SetValueStatus.SUCCESS_UNSUPERVISED,
-        ):
-            self._attr_is_opening = False
-            self._attr_is_closing = False
-            self.async_write_ha_state()
+        await self._async_set_value(self._up_value, False)
 
 
 class ZwaveMotorizedBarrier(ZWaveBaseEntity, CoverEntity):
