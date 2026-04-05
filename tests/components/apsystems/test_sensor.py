@@ -164,9 +164,5 @@ async def test_sensor_offline_recovery(
     assert (
         hass.states.get("sensor.mock_title_total_lifetime_production").state == "11.0"
     )
-    assert (
-        hass.states.get("sensor.mock_title_lifetime_production_of_p1").state == "4.0"
-    )
-    assert (
-        hass.states.get("sensor.mock_title_lifetime_production_of_p2").state == "7.0"
-    )
+    assert hass.states.get("sensor.mock_title_lifetime_production_of_p1").state == "4.0"
+    assert hass.states.get("sensor.mock_title_lifetime_production_of_p2").state == "7.0"
