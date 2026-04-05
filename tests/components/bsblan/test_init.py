@@ -222,7 +222,7 @@ async def test_coordinator_fast_no_dhw_support(
     assert mock_config_entry.runtime_data.fast_coordinator.data.dhw is None
 
     # Water heater entity should not be created
-    assert hass.states.get("water_heater.bsblan") is None
+    assert hass.states.get("water_heater.bsb_lan") is None
 
 
 async def test_coordinator_slow_no_dhw_support(
