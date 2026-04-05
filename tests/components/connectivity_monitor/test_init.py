@@ -6,7 +6,9 @@ from unittest.mock import AsyncMock, call, patch
 
 from homeassistant.components.connectivity_monitor import async_migrate_entry
 from homeassistant.components.connectivity_monitor.const import (
+    CONF_BLUETOOTH_ADDRESS,
     CONF_DNS_SERVER,
+    CONF_ESPHOME_DEVICE_ID,
     CONF_HOST,
     CONF_INTERVAL,
     CONF_PROTOCOL,
@@ -14,6 +16,8 @@ from homeassistant.components.connectivity_monitor.const import (
     CONF_ZHA_IEEE,
     DEFAULT_DNS_SERVER,
     DOMAIN,
+    PROTOCOL_BLUETOOTH,
+    PROTOCOL_ESPHOME,
     PROTOCOL_ICMP,
     PROTOCOL_MATTER,
     PROTOCOL_ZHA,
@@ -92,6 +96,18 @@ async def test_migrate_entry_splits_legacy_targets(hass: HomeAssistant) -> None:
                     "matter_node_id": "1-1234",
                     "device_name": "Thermostat",
                 },
+                {
+                    CONF_PROTOCOL: PROTOCOL_ESPHOME,
+                    CONF_HOST: "esphome:living-room-air-purifier",
+                    CONF_ESPHOME_DEVICE_ID: "living-room-air-purifier",
+                    "device_name": "Air Purifier",
+                },
+                {
+                    CONF_PROTOCOL: PROTOCOL_BLUETOOTH,
+                    CONF_HOST: "bluetooth:AA:BB:CC:DD:EE:FF",
+                    CONF_BLUETOOTH_ADDRESS: "AA:BB:CC:DD:EE:FF",
+                    "device_name": "Key Tracker",
+                },
             ],
             CONF_INTERVAL: 120,
             CONF_DNS_SERVER: DEFAULT_DNS_SERVER,
@@ -154,6 +170,40 @@ async def test_migrate_entry_splits_legacy_targets(hass: HomeAssistant) -> None:
                 CONF_INTERVAL: 120,
                 CONF_DNS_SERVER: DEFAULT_DNS_SERVER,
                 "entry_type": "matter",
+            },
+        ),
+        call(
+            DOMAIN,
+            context={"source": SOURCE_IMPORT},
+            data={
+                CONF_TARGETS: [
+                    {
+                        CONF_PROTOCOL: PROTOCOL_ESPHOME,
+                        CONF_HOST: "esphome:living-room-air-purifier",
+                        CONF_ESPHOME_DEVICE_ID: "living-room-air-purifier",
+                        "device_name": "Air Purifier",
+                    }
+                ],
+                CONF_INTERVAL: 120,
+                CONF_DNS_SERVER: DEFAULT_DNS_SERVER,
+                "entry_type": "esphome",
+            },
+        ),
+        call(
+            DOMAIN,
+            context={"source": SOURCE_IMPORT},
+            data={
+                CONF_TARGETS: [
+                    {
+                        CONF_PROTOCOL: PROTOCOL_BLUETOOTH,
+                        CONF_HOST: "bluetooth:AA:BB:CC:DD:EE:FF",
+                        CONF_BLUETOOTH_ADDRESS: "AA:BB:CC:DD:EE:FF",
+                        "device_name": "Key Tracker",
+                    }
+                ],
+                CONF_INTERVAL: 120,
+                CONF_DNS_SERVER: DEFAULT_DNS_SERVER,
+                "entry_type": "bluetooth",
             },
         ),
     ]

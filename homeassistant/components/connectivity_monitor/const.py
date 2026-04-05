@@ -11,7 +11,7 @@ try:
     with open(MANIFEST_PATH, encoding="utf-8") as manifest_file:
         manifest = json.load(manifest_file)
         VERSION = manifest.get("version", "0.0.0")
-except (OSError, ValueError, KeyError):
+except OSError, ValueError, KeyError:
     VERSION = "0.0.0"
 
 DEFAULT_PORT = 80
@@ -44,6 +44,13 @@ PROTOCOL_ZHA = "ZHA"
 PROTOCOL_MATTER = "MATTER"
 PROTOCOL_ESPHOME = "ESPHOME"
 PROTOCOL_BLUETOOTH = "BLUETOOTH"
+
+NON_NETWORK_PROTOCOLS = (
+    PROTOCOL_ZHA,
+    PROTOCOL_MATTER,
+    PROTOCOL_ESPHOME,
+    PROTOCOL_BLUETOOTH,
+)
 
 PROTOCOLS = [PROTOCOL_TCP, PROTOCOL_UDP, PROTOCOL_ICMP, PROTOCOL_AD_DC]
 # ZHA / ZigBee device monitoring

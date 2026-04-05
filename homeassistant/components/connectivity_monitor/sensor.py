@@ -45,6 +45,7 @@ from .const import (
     DEFAULT_ALERT_DELAY,
     DEFAULT_INACTIVE_TIMEOUT,
     DOMAIN,
+    NON_NETWORK_PROTOCOLS,
     PROTOCOL_AD_DC,
     PROTOCOL_BLUETOOTH,
     PROTOCOL_ESPHOME,
@@ -83,10 +84,7 @@ async def async_setup_entry(  # noqa: C901
 
     # Separate ZHA targets from regular network targets
     network_targets = [
-        t
-        for t in targets
-        if t.get(CONF_PROTOCOL)
-        not in (PROTOCOL_ZHA, PROTOCOL_MATTER, PROTOCOL_ESPHOME, PROTOCOL_BLUETOOTH)
+        t for t in targets if t.get(CONF_PROTOCOL) not in NON_NETWORK_PROTOCOLS
     ]
     zha_targets = [t for t in targets if t.get(CONF_PROTOCOL) == PROTOCOL_ZHA]
     matter_targets = [t for t in targets if t.get(CONF_PROTOCOL) == PROTOCOL_MATTER]

@@ -15,10 +15,14 @@ from homeassistant.helpers.typing import ConfigType
 from .const import (
     CONF_DNS_SERVER,
     CONF_INTERVAL,
+    CONF_PROTOCOL,
     CONF_TARGETS,
     DEFAULT_DNS_SERVER,
     DEFAULT_INTERVAL,
     DOMAIN,
+    NON_NETWORK_PROTOCOLS,
+    PROTOCOL_BLUETOOTH,
+    PROTOCOL_ESPHOME,
     PROTOCOL_MATTER,
     PROTOCOL_ZHA,
     VERSION,
@@ -49,12 +53,16 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
         dns_server = config_entry.data.get(CONF_DNS_SERVER, DEFAULT_DNS_SERVER)
 
         network_targets = [
-            t
-            for t in targets
-            if t.get("protocol") not in (PROTOCOL_ZHA, PROTOCOL_MATTER)
+            t for t in targets if t.get(CONF_PROTOCOL) not in NON_NETWORK_PROTOCOLS
         ]
-        zha_targets = [t for t in targets if t.get("protocol") == PROTOCOL_ZHA]
-        matter_targets = [t for t in targets if t.get("protocol") == PROTOCOL_MATTER]
+        zha_targets = [t for t in targets if t.get(CONF_PROTOCOL) == PROTOCOL_ZHA]
+        matter_targets = [t for t in targets if t.get(CONF_PROTOCOL) == PROTOCOL_MATTER]
+        esphome_targets = [
+            t for t in targets if t.get(CONF_PROTOCOL) == PROTOCOL_ESPHOME
+        ]
+        bluetooth_targets = [
+            t for t in targets if t.get(CONF_PROTOCOL) == PROTOCOL_BLUETOOTH
+        ]
 
         # Schedule creation of a ZigBee Monitor entry (if ZHA devices exist)
         if zha_targets:
@@ -86,6 +94,36 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
                 )
             )
 
+        # Schedule creation of an ESPHome Monitor entry (if ESPHome devices exist)
+        if esphome_targets:
+            hass.async_create_task(
+                hass.config_entries.flow.async_init(
+                    DOMAIN,
+                    context={"source": SOURCE_IMPORT},
+                    data={
+                        CONF_TARGETS: esphome_targets,
+                        CONF_INTERVAL: interval,
+                        CONF_DNS_SERVER: dns_server,
+                        "entry_type": "esphome",
+                    },
+                )
+            )
+
+        # Schedule creation of a Bluetooth Monitor entry (if Bluetooth devices exist)
+        if bluetooth_targets:
+            hass.async_create_task(
+                hass.config_entries.flow.async_init(
+                    DOMAIN,
+                    context={"source": SOURCE_IMPORT},
+                    data={
+                        CONF_TARGETS: bluetooth_targets,
+                        CONF_INTERVAL: interval,
+                        CONF_DNS_SERVER: dns_server,
+                        "entry_type": "bluetooth",
+                    },
+                )
+            )
+
         # Convert the current entry into the Network Monitor entry
         hass.config_entries.async_update_entry(
             config_entry,
@@ -100,10 +138,12 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
         )
 
         _LOGGER.info(
-            "Connectivity Monitor: migration complete — %d network, %d ZigBee, %d Matter devices",
+            "Connectivity Monitor: migration complete — %d network, %d ZigBee, %d Matter, %d ESPHome, %d Bluetooth devices",
             len(network_targets),
             len(zha_targets),
             len(matter_targets),
+            len(esphome_targets),
+            len(bluetooth_targets),
         )
 
     return True

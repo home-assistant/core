@@ -154,7 +154,7 @@ This module focuses on integration lifecycle behavior.
 | Test | What it proves |
 | --- | --- |
 | `test_load_unload_entry` | A normal network config entry sets up successfully, creates sensor entities, cleans up the alert handler on unload, and removes integration runtime data from `hass.data`. |
-| `test_migrate_entry_splits_legacy_targets` | A legacy version 1 mixed entry is migrated into version 2 by keeping network targets in the network entry and importing separate typed entries for ZHA and Matter targets. |
+| `test_migrate_entry_splits_legacy_targets` | A legacy version 1 mixed entry is migrated into version 2 by keeping network targets in the network entry and importing separate typed entries for ZHA, Matter, ESPHome, and Bluetooth targets. |
 
 ## `test_sensor.py`
 
