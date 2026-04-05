@@ -20,6 +20,9 @@ VOLUME_RESOLUTION_ALLOWED: tuple[VolumeResolution, ...] = typing.get_args(
 OPTION_MAX_VOLUME = "max_volume"
 OPTION_MAX_VOLUME_DEFAULT = 100.0
 
+OPTION_MIN_VOLUME = "min_volume"
+OPTION_MIN_VOLUME_DEFAULT = 0.0
+
 OPTION_INPUT_SOURCES = "input_sources"
 OPTION_LISTENING_MODES = "listening_modes"
 

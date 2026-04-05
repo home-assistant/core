@@ -147,6 +147,74 @@ async def test_actions(
     assert writes[0] == message
 
 
+@pytest.mark.parametrize(
+    "mock_config_entry",
+    [{"min_volume": 20, "max_volume": 80}],
+    indirect=True,
+)
+@pytest.mark.parametrize(
+    ("volume_level", "receiver_volume"),
+    [
+        (0, 16),
+        (0.5, 40),
+        (1, 64),
+    ],
+)
+async def test_set_volume_level_with_min_volume(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    writes: list[Instruction],
+    volume_level: float,
+    receiver_volume: int,
+) -> None:
+    """Test set volume level with a minimum volume."""
+    assert mock_config_entry.options["min_volume"] == 20
+
+    await hass.services.async_call(
+        MEDIA_PLAYER_DOMAIN,
+        SERVICE_VOLUME_SET,
+        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_MEDIA_VOLUME_LEVEL: volume_level},
+        blocking=True,
+    )
+    assert writes[0] == command.Volume(Zone.MAIN, receiver_volume)
+
+
+@pytest.mark.parametrize(
+    "mock_config_entry",
+    [{"min_volume": 20, "max_volume": 80}],
+    indirect=True,
+)
+@pytest.mark.parametrize(
+    ("receiver_volume", "volume_level"),
+    [
+        (16, 0),
+        (40, 0.5),
+        (64, 1),
+    ],
+)
+async def test_volume_level_with_min_volume(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    read_queue: asyncio.Queue,
+    receiver_volume: int,
+    volume_level: float,
+) -> None:
+    """Test receiver volume updates with a minimum volume."""
+    assert mock_config_entry.options["min_volume"] == 20
+
+    read_queue.put_nowait(
+        status.Volume(
+            Code.from_kind_zone(Kind.VOLUME, Zone.MAIN),
+            None,
+            receiver_volume,
+        )
+    )
+    await asyncio.sleep(0)
+
+    assert (state := hass.states.get(ENTITY_ID)) is not None
+    assert state.attributes[ATTR_MEDIA_VOLUME_LEVEL] == volume_level
+
+
 async def test_select_source(hass: HomeAssistant, writes: list[Instruction]) -> None:
     """Test select source."""
     await hass.services.async_call(

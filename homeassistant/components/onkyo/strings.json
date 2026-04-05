@@ -62,19 +62,22 @@
   "options": {
     "error": {
       "empty_input_source_list": "Input source list cannot be empty",
-      "empty_listening_mode_list": "Listening mode list cannot be empty"
+      "empty_listening_mode_list": "Listening mode list cannot be empty",
+      "min_volume_below_max": "Minimum volume must be lower than maximum volume."
     },
     "step": {
       "init": {
         "data": {
           "input_sources": "Input sources",
           "listening_modes": "Listening modes",
-          "max_volume": "Maximum volume limit (%)"
+          "max_volume": "Maximum volume limit (%)",
+          "min_volume": "Minimum volume (%)"
         },
         "data_description": {
           "input_sources": "List of input sources supported by the receiver.",
           "listening_modes": "List of listening modes supported by the receiver.",
-          "max_volume": "Maximum volume limit as a percentage. This will associate Home Assistant's maximum volume to this value on the receiver, i.e., if you set this to 50%, then setting the volume to 100% in Home Assistant will cause the volume on the receiver to be set to 50% of its maximum value."
+          "max_volume": "Maximum volume limit as a percentage. This will associate Home Assistant's maximum volume to this value on the receiver, i.e., if you set this to 50%, then setting the volume to 100% in Home Assistant will cause the volume on the receiver to be set to 50% of its maximum value.",
+          "min_volume": "Minimum volume limit as a percentage. This will associate Home Assistant's minimum volume to this value on the receiver, i.e., if you set this to 20%, then setting the volume to 0% in Home Assistant will cause the volume on the receiver to be set to 20% of its maximum value."
         }
       },
       "names": {

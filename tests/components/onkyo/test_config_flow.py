@@ -12,6 +12,8 @@ from homeassistant.components.onkyo.const import (
     OPTION_LISTENING_MODES,
     OPTION_MAX_VOLUME,
     OPTION_MAX_VOLUME_DEFAULT,
+    OPTION_MIN_VOLUME,
+    OPTION_MIN_VOLUME_DEFAULT,
     OPTION_VOLUME_RESOLUTION,
 )
 from homeassistant.config_entries import SOURCE_IGNORE, SOURCE_USER
@@ -434,6 +436,7 @@ async def test_configure(hass: HomeAssistant) -> None:
     assert result["options"] == {
         OPTION_VOLUME_RESOLUTION: 200,
         OPTION_MAX_VOLUME: OPTION_MAX_VOLUME_DEFAULT,
+        OPTION_MIN_VOLUME: OPTION_MIN_VOLUME_DEFAULT,
         OPTION_INPUT_SOURCES: {"12": "TV"},
         OPTION_LISTENING_MODES: {"04": "THX"},
     }
@@ -529,6 +532,7 @@ async def test_options_flow(
         result["flow_id"],
         user_input={
             OPTION_MAX_VOLUME: 42,
+            OPTION_MIN_VOLUME: 0,
             OPTION_INPUT_SOURCES: [],
             OPTION_LISTENING_MODES: ["STEREO"],
         },
@@ -542,6 +546,7 @@ async def test_options_flow(
         result["flow_id"],
         user_input={
             OPTION_MAX_VOLUME: 42,
+            OPTION_MIN_VOLUME: 0,
             OPTION_INPUT_SOURCES: ["TV"],
             OPTION_LISTENING_MODES: [],
         },
@@ -555,6 +560,7 @@ async def test_options_flow(
         result["flow_id"],
         user_input={
             OPTION_MAX_VOLUME: 42,
+            OPTION_MIN_VOLUME: 0,
             OPTION_INPUT_SOURCES: ["TV"],
             OPTION_LISTENING_MODES: ["STEREO"],
         },
@@ -575,6 +581,32 @@ async def test_options_flow(
     assert result["data"] == {
         OPTION_VOLUME_RESOLUTION: old_volume_resolution,
         OPTION_MAX_VOLUME: 42.0,
+        OPTION_MIN_VOLUME: 0.0,
         OPTION_INPUT_SOURCES: {"12": "television"},
         OPTION_LISTENING_MODES: {"00": "Duophonia"},
     }
+
+
+async def test_options_flow_min_volume_below_max(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test options flow rejects min_volume >= max_volume."""
+    await setup_integration(hass, mock_config_entry)
+
+    result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "init"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={
+            OPTION_MAX_VOLUME: 50,
+            OPTION_MIN_VOLUME: 50,
+            OPTION_INPUT_SOURCES: ["TV"],
+            OPTION_LISTENING_MODES: ["STEREO"],
+        },
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "init"
+    assert result["errors"] == {OPTION_MIN_VOLUME: "min_volume_below_max"}

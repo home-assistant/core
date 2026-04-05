@@ -22,6 +22,8 @@ from .const import (
     LEGACY_HDMI_OUTPUT_MAPPING,
     LEGACY_REV_HDMI_OUTPUT_MAPPING,
     OPTION_MAX_VOLUME,
+    OPTION_MIN_VOLUME,
+    OPTION_MIN_VOLUME_DEFAULT,
     OPTION_VOLUME_RESOLUTION,
     ZONES,
     InputSource,
@@ -115,6 +117,7 @@ async def async_setup_entry(
 
     volume_resolution: VolumeResolution = entry.options[OPTION_VOLUME_RESOLUTION]
     max_volume: float = entry.options[OPTION_MAX_VOLUME]
+    min_volume: float = entry.options.get(OPTION_MIN_VOLUME, OPTION_MIN_VOLUME_DEFAULT)
     sources = data.sources
     sound_modes = data.sound_modes
 
@@ -155,6 +158,7 @@ async def async_setup_entry(
                 zone,
                 volume_resolution=volume_resolution,
                 max_volume=max_volume,
+                min_volume=min_volume,
                 sources=sources,
                 sound_modes=sound_modes,
             )
@@ -188,6 +192,7 @@ class OnkyoMediaPlayer(MediaPlayerEntity):
         *,
         volume_resolution: VolumeResolution,
         max_volume: float,
+        min_volume: float,
         sources: dict[InputSource, str],
         sound_modes: dict[ListeningMode, str],
     ) -> None:
@@ -202,6 +207,7 @@ class OnkyoMediaPlayer(MediaPlayerEntity):
 
         self._volume_resolution = volume_resolution
         self._max_volume = max_volume
+        self._min_volume = min_volume
 
         zone_sources = InputSource.for_zone(zone)
         self._source_mapping = {
@@ -286,15 +292,14 @@ class OnkyoMediaPlayer(MediaPlayerEntity):
     async def async_set_volume_level(self, volume: float) -> None:
         """Set volume level, range 0..1.
 
-        However full volume on the amp is usually far too loud so allow the user to
-        specify the upper range with CONF_MAX_VOLUME. We change as per max_volume
-        set by user. This means that if max volume is 80 then full volume in HA
-        will give 80% volume on the receiver. Then we convert that to the correct
-        scale for the receiver.
+        Map HA 0..1 to receiver range [min_volume%, max_volume%] of resolution.
+        So the full slider uses only the useful range (e.g. 80-100% on receiver).
         """
-        # HA_VOL * (MAX VOL / 100) * VOL_RESOLUTION
-        value = round(volume * (self._max_volume / 100) * self._volume_resolution)
-        message = command.Volume(self._zone, value)
+        min_raw = (self._min_volume / 100) * self._volume_resolution
+        max_raw = (self._max_volume / 100) * self._volume_resolution
+        value = round(min_raw + (max_raw - min_raw) * volume)
+        value = max(min_raw, min(max_raw, value))
+        message = command.Volume(self._zone, int(value))
         await self._manager.write(message)
 
     async def async_volume_up(self) -> None:
@@ -379,11 +384,13 @@ class OnkyoMediaPlayer(MediaPlayerEntity):
                 if not self._supports_volume:
                     self._attr_supported_features |= SUPPORTED_FEATURES_VOLUME
                     self._supports_volume = True
-                # AMP_VOL / (VOL_RESOLUTION * (MAX_VOL / 100))
-                volume_level: float = volume / (
-                    self._volume_resolution * self._max_volume / 100
-                )
-                self._attr_volume_level = min(1, volume_level)
+                min_raw = (self._min_volume / 100) * self._volume_resolution
+                max_raw = (self._max_volume / 100) * self._volume_resolution
+                if max_raw <= min_raw:
+                    self._attr_volume_level = 1.0
+                else:
+                    volume_level = (volume - min_raw) / (max_raw - min_raw)
+                    self._attr_volume_level = max(0, min(1, volume_level))
 
             case status.Muting(param=muting):
                 self._attr_is_volume_muted = bool(muting is status.Muting.Param.ON)

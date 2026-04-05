@@ -170,15 +170,18 @@ def mock_receiver(
 
 
 @pytest.fixture
-def mock_config_entry() -> MockConfigEntry:
+def mock_config_entry(request: pytest.FixtureRequest) -> MockConfigEntry:
     """Mock a config entry."""
     data = {"host": RECEIVER_INFO.host}
     options = {
         "volume_resolution": 80,
         "max_volume": 100,
+        "min_volume": 0,
         "input_sources": {"12": "TV", "24": "FM Radio"},
         "listening_modes": {"00": "Stereo", "04": "THX"},
     }
+    if hasattr(request, "param"):
+        options.update(request.param)
 
     return MockConfigEntry(
         domain=DOMAIN,

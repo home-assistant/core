@@ -36,6 +36,8 @@ from .const import (
     OPTION_LISTENING_MODES,
     OPTION_MAX_VOLUME,
     OPTION_MAX_VOLUME_DEFAULT,
+    OPTION_MIN_VOLUME,
+    OPTION_MIN_VOLUME_DEFAULT,
     OPTION_VOLUME_RESOLUTION,
     OPTION_VOLUME_RESOLUTION_DEFAULT,
     VOLUME_RESOLUTION_ALLOWED,
@@ -286,6 +288,7 @@ class OnkyoConfigFlow(ConfigFlow, domain=DOMAIN):
                     options={
                         OPTION_VOLUME_RESOLUTION: volume_resolution,
                         OPTION_MAX_VOLUME: OPTION_MAX_VOLUME_DEFAULT,
+                        OPTION_MIN_VOLUME: OPTION_MIN_VOLUME_DEFAULT,
                         OPTION_INPUT_SOURCES: input_sources_store,
                         OPTION_LISTENING_MODES: listening_modes_store,
                     },
@@ -344,6 +347,11 @@ OPTIONS_STEP_INIT_SCHEMA = vol.Schema(
         vol.Required(OPTION_MAX_VOLUME): NumberSelector(
             NumberSelectorConfig(min=1, max=100, mode=NumberSelectorMode.BOX)
         ),
+        vol.Optional(
+            OPTION_MIN_VOLUME, default=OPTION_MIN_VOLUME_DEFAULT
+        ): NumberSelector(
+            NumberSelectorConfig(min=0, max=99, mode=NumberSelectorMode.BOX)
+        ),
         vol.Required(OPTION_INPUT_SOURCES): SelectSelector(
             SelectSelectorConfig(
                 options=list(INPUT_SOURCES_ALL_MEANINGS),
@@ -393,6 +401,11 @@ class OnkyoOptionsFlowHandler(OptionsFlowWithReload):
             if not listening_mode_meanings:
                 errors[OPTION_LISTENING_MODES] = "empty_listening_mode_list"
 
+            min_volume = user_input.get(OPTION_MIN_VOLUME, OPTION_MIN_VOLUME_DEFAULT)
+            max_volume = user_input[OPTION_MAX_VOLUME]
+            if min_volume >= max_volume:
+                errors[OPTION_MIN_VOLUME] = "min_volume_below_max"
+
             if not errors:
                 self._input_sources = {}
                 for input_source_meaning in input_source_meanings:
@@ -415,6 +428,9 @@ class OnkyoOptionsFlowHandler(OptionsFlowWithReload):
                 self._data = {
                     OPTION_VOLUME_RESOLUTION: entry_options[OPTION_VOLUME_RESOLUTION],
                     OPTION_MAX_VOLUME: user_input[OPTION_MAX_VOLUME],
+                    OPTION_MIN_VOLUME: user_input.get(
+                        OPTION_MIN_VOLUME, OPTION_MIN_VOLUME_DEFAULT
+                    ),
                 }
 
                 return await self.async_step_names()
@@ -423,6 +439,9 @@ class OnkyoOptionsFlowHandler(OptionsFlowWithReload):
         if suggested_values is None:
             suggested_values = {
                 OPTION_MAX_VOLUME: entry_options[OPTION_MAX_VOLUME],
+                OPTION_MIN_VOLUME: entry_options.get(
+                    OPTION_MIN_VOLUME, OPTION_MIN_VOLUME_DEFAULT
+                ),
                 OPTION_INPUT_SOURCES: [
                     get_meaning(InputSource(input_source))
                     for input_source in entry_options[OPTION_INPUT_SOURCES]
