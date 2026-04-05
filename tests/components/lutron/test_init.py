@@ -59,10 +59,7 @@ async def test_setup_entry_not_ready(
     """Test setting up the integration when Lutron repeater is not ready."""
     mock_config_entry.add_to_hass(hass)
 
-    if method == "load_xml_db":
-        mock_lutron.load_xml_db.side_effect = LutronException("Load failed")
-    else:
-        mock_lutron.connect.side_effect = LutronException("Connect failed")
+    getattr(mock_lutron, method).side_effect = LutronException(f"{method} failed")
 
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
