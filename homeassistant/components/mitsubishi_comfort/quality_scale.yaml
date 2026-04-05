@@ -1,0 +1,44 @@
+rules:
+  # Bronze (required for new integrations)
+  action-setup:
+    status: exempt
+    comment: No service actions registered.
+  appropriate-polling:
+    status: done
+  brands:
+    status: todo
+    comment: PR to home-assistant/brands pending.
+  common-modules:
+    status: done
+  config-flow:
+    status: done
+  config-flow-test-coverage:
+    status: done
+  dependency-transparency:
+    status: done
+  docs-actions:
+    status: exempt
+    comment: No service actions.
+  docs-high-level-description:
+    status: todo
+    comment: PR to home-assistant.io pending.
+  docs-installation-instructions:
+    status: todo
+    comment: PR to home-assistant.io pending.
+  docs-removal-instructions:
+    status: todo
+    comment: PR to home-assistant.io pending.
+  entity-event-setup:
+    status: done
+  entity-unique-id:
+    status: done
+  has-entity-name:
+    status: done
+  runtime-data:
+    status: done
+  test-before-configure:
+    status: done
+  test-before-setup:
+    status: done
+  unique-config-entry:
+    status: done
