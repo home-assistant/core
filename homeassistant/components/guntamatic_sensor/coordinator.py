@@ -6,6 +6,7 @@ import logging
 
 from guntamatic.heater import Heater
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -17,13 +18,14 @@ _LOGGER = logging.getLogger(__name__)
 class GuntamaticCoordinator(DataUpdateCoordinator[dict[str, list[str]]]):
     """Guntamatic data coordinator."""
 
-    def __init__(self, hass: HomeAssistant, heater: Heater) -> None:
+    def __init__(self, hass: HomeAssistant, heater: Heater, entry: ConfigEntry) -> None:
         """Initialize coordinator."""
         super().__init__(
             hass,
             logger=_LOGGER,
             name=DOMAIN,
             update_interval=SCAN_INTERVAL,
+            config_entry=entry,
         )
         self.heater = heater
 

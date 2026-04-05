@@ -17,8 +17,6 @@ from .coordinator import GuntamaticCoordinator
 _LOGGER = logging.getLogger(__name__)
 _PLATFORMS: list[Platform] = [Platform.SENSOR]
 
-type GuntamaticConfigEntry = ConfigEntry[GuntamaticData]
-
 
 @dataclass
 class GuntamaticData:
@@ -28,14 +26,13 @@ class GuntamaticData:
     coordinator: GuntamaticCoordinator
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: GuntamaticConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up guntamatic from a config entry."""
 
     host = entry.data[CONF_HOST]
     heater = Heater(host)
 
-    coordinator = GuntamaticCoordinator(hass, heater)
-    coordinator.config_entry = entry
+    coordinator = GuntamaticCoordinator(hass, heater, entry)
 
     try:
         # Fetch initial data
@@ -48,6 +45,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: GuntamaticConfigEntry) -
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: GuntamaticConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     return await hass.config_entries.async_unload_platforms(entry, _PLATFORMS)
