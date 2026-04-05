@@ -15,6 +15,7 @@ from APsystemsEZ1 import (
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN, LOGGER
@@ -61,6 +62,8 @@ class ApSystemsDataCoordinator(DataUpdateCoordinator[ApSystemsSensorData]):
             update_interval=timedelta(seconds=12),
         )
         self.api = api
+        self.api.max_power = getattr(self.api, "max_power", 800)
+        self.api.min_power = getattr(self.api, "min_power", 30)
         self.device_version = ""
         self.battery_system = False
 
@@ -80,6 +83,20 @@ class ApSystemsDataCoordinator(DataUpdateCoordinator[ApSystemsSensorData]):
         self.api.min_power = device_info.minPower
         self.device_version = device_info.devVer
         self.battery_system = device_info.isBatterySystem
+
+        # Update device registry if the device was already registered
+        # (happens when device info was unavailable during initial setup)
+        registry = dr.async_get(self.hass)
+        assert self.config_entry.unique_id
+        device_entry = registry.async_get_device(
+            identifiers={(DOMAIN, self.config_entry.unique_id)}
+        )
+        if device_entry:
+            version_parts = device_info.devVer.split(" ")
+            sw_version = (
+                version_parts[1] if len(version_parts) > 1 else version_parts[0]
+            )
+            registry.async_update_device(device_entry.id, sw_version=sw_version)
 
     async def _async_update_data(self) -> ApSystemsSensorData:
         try:
