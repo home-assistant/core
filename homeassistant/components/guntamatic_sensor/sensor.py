@@ -21,7 +21,7 @@ from .const import DIAGNOSTIC_SENSORS, DOMAIN
 
 PARALLEL_UPDATES = 0
 
-# mapping from
+# Mapping from unit of measurement to sensor description.
 UNIT_TO_DESCRIPTION: dict[str, SensorEntityDescription] = {
     "°C": SensorEntityDescription(
         key="temperature",
