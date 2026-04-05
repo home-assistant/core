@@ -778,7 +778,7 @@ async def test_service_update_profile(
     payload: dict[str, str],
     kwargs: dict[str, str | None],
 ) -> None:
-    """Test the post service."""
+    """Test the update profile service."""
     assert await async_setup_component(hass, "media_source", {})
     await setup_integration(hass, mock_config_entry)
 
@@ -818,7 +818,7 @@ async def test_service_update_profile_exceptions(
     exception: type[Exception],
     translation_key: str,
 ) -> None:
-    """Test the post service."""
+    """Test the update profile service exceptions."""
     await setup_integration(hass, mock_config_entry)
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
@@ -845,7 +845,7 @@ async def test_service_update_profile_media_source_not_supported(
     mock_mastodon_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test the post service."""
+    """Test the update profile service with unsupported media source."""
     assert await async_setup_component(hass, "tts", {})
     await setup_integration(hass, mock_config_entry)
 
