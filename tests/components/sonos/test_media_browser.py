@@ -1,7 +1,7 @@
 """Tests for the Sonos Media Browser."""
 
 from functools import partial
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, Mock
 
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -22,30 +22,9 @@ from homeassistant.components.sonos.media_browser import (
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
 
-from .conftest import SoCoMockFactory
+from .conftest import MockMusicServiceItem, SoCoMockFactory
 
 from tests.typing import WebSocketGenerator
-
-
-class MockMusicServiceItem:
-    """Mocks a Soco MusicServiceItem."""
-
-    def __init__(
-        self,
-        title: str,
-        item_id: str,
-        parent_id: str,
-        item_class: str,
-    ) -> None:
-        """Initialize the mock item."""
-        self.title = title
-        self.item_id = item_id
-        self.item_class = item_class
-        self.parent_id = parent_id
-
-    def get_uri(self) -> str:
-        """Return URI."""
-        return self.item_id.replace("S://", "x-file-cifs://")
 
 
 def mock_browse_by_idstring(
@@ -340,3 +319,55 @@ async def test_browse_media_library_folders(
     assert response["success"]
     assert response["result"] == snapshot
     assert soco_mock.music_library.browse_by_idstring.call_count == 1
+
+
+async def test_search_media(
+    hass: HomeAssistant,
+    soco_factory: SoCoMockFactory,
+    async_autosetup_sonos,
+    soco,
+    discover,
+    hass_ws_client: WebSocketGenerator,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test the async_search_media method returns tracks matching the query."""
+    soco_mock = soco_factory.mock_list.get("192.168.42.2")
+    mock_items = [
+        MockMusicServiceItem(
+            "Come Together",
+            "S://192.168.42.10/music/The%20Beatles/Abbey%20Road/01%20Come%20Together.mp3",
+            "A:ALBUM/Abbey%20Road",
+            "object.item.audioItem.musicTrack",
+            album_art_uri="http://example.com/abbey_road.jpg",
+        ),
+        MockMusicServiceItem(
+            "Something",
+            "S://192.168.42.10/music/The%20Beatles/Abbey%20Road/03%20Something.mp3",
+            "A:ALBUM/Abbey%20Road",
+            "object.item.audioItem.musicTrack",
+            album_art_uri="http://example.com/abbey_road.jpg",
+        ),
+    ]
+    soco_mock.music_library.get_music_library_information = Mock(
+        return_value=mock_items
+    )
+
+    client = await hass_ws_client()
+    await client.send_json(
+        {
+            "id": 1,
+            "type": "media_player/search_media",
+            "entity_id": "media_player.zone_a",
+            "search_query": "Come Together",
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"]
+
+    assert response["result"] == snapshot
+
+    assert soco_mock.music_library.get_music_library_information.call_args.kwargs == {
+        "search_term": "Come Together",
+        "full_album_art_uri": True,
+        "complete_result": True,
+    }

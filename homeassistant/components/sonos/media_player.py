@@ -37,6 +37,8 @@ from homeassistant.components.media_player import (
     MediaPlayerState,
     MediaType,
     RepeatMode,
+    SearchMedia,
+    SearchMediaQuery,
     async_process_play_media_url,
 )
 from homeassistant.components.plex import PLEX_URI_SCHEME
@@ -126,6 +128,7 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
         | MediaPlayerEntityFeature.PLAY_MEDIA
         | MediaPlayerEntityFeature.PREVIOUS_TRACK
         | MediaPlayerEntityFeature.REPEAT_SET
+        | MediaPlayerEntityFeature.SEARCH_MEDIA
         | MediaPlayerEntityFeature.SEEK
         | MediaPlayerEntityFeature.SELECT_SOURCE
         | MediaPlayerEntityFeature.SHUFFLE_SET
@@ -806,6 +809,18 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
             self.get_browse_image_url,
             media_content_id,
             media_content_type,
+        )
+
+    async def async_search_media(
+        self,
+        query: SearchMediaQuery,
+    ) -> SearchMedia:
+        """Search the music library for media matching the query."""
+        return await media_browser.async_search_media(
+            self.hass,
+            self.media,
+            self.get_browse_image_url,
+            query,
         )
 
     async def async_join_players(self, group_members: list[str]) -> None:

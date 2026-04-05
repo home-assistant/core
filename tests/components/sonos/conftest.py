@@ -491,6 +491,10 @@ class MockMusicServiceItem:
         self.parent_id = parent_id
         self.album_art_uri: None | str = album_art_uri
 
+    def get_uri(self) -> str:
+        """Return URI."""
+        return self.item_id.replace("S://", "x-file-cifs://")
+
 
 def list_from_json_fixture(file_name: str) -> list[MockMusicServiceItem]:
     """Create a list of music service items from a json fixture file."""
@@ -628,7 +632,10 @@ def mock_browse_by_idstring(
 
 
 def mock_get_music_library_information(
-    search_type: str, search_term: str | None = None, full_album_art_uri: bool = True
+    search_type: str,
+    search_term: str | None = None,
+    full_album_art_uri: bool = True,
+    complete_result: bool = False,
 ) -> list[MockMusicServiceItem]:
     """Mock the call to get music library information."""
     if search_type == "albums" and search_term == "Abbey Road":
@@ -662,7 +669,9 @@ def music_library_fixture(
     music_library = MagicMock()
     music_library.get_sonos_favorites.return_value = sonos_favorites
     music_library.browse_by_idstring = Mock(side_effect=mock_browse_by_idstring)
-    music_library.get_music_library_information = mock_get_music_library_information
+    music_library.get_music_library_information = Mock(
+        side_effect=mock_get_music_library_information
+    )
     music_library.browse = Mock(return_value=music_library_browse_categories)
     music_library.build_album_art_full_uri = Mock(
         return_value="build_album_art_full_uri.jpg"

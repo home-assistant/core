@@ -19,6 +19,8 @@ from homeassistant.components.media_player import (
     BrowseMedia,
     MediaClass,
     MediaType,
+    SearchMedia,
+    SearchMediaQuery,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.network import is_internal_request
@@ -208,6 +210,42 @@ async def async_browse_media(
     return response
 
 
+async def async_search_media(
+    hass: HomeAssistant,
+    media: SonosMedia,
+    get_browse_image_url: GetBrowseImageUrlType,
+    query: SearchMediaQuery,
+) -> SearchMedia:
+    """Search media."""
+    search_type = MEDIA_TYPES_TO_SONOS.get(
+        query.media_content_type or MediaType.TRACK, "tracks"
+    )
+    items = await hass.async_add_executor_job(
+        partial(
+            media.library.get_music_library_information,
+            search_type,
+            search_term=query.search_query,
+            full_album_art_uri=True,
+            complete_result=True,
+        )
+    )
+    result = []
+    for item in items:
+        with suppress(UnknownMediaType):
+            result.append(
+                item_payload(
+                    item,
+                    get_thumbnail_url=partial(
+                        get_thumbnail_url_full,
+                        media,
+                        is_internal_request(hass),
+                        get_browse_image_url,
+                    ),
+                )
+            )
+    return SearchMedia(result=result)
+
+
 def build_item_response(
     media_library: MusicLibrary, payload: dict[str, str], get_thumbnail_url=None
 ) -> BrowseMedia | None:
@@ -300,7 +338,7 @@ def item_payload(item: DidlObject, get_thumbnail_url=None) -> BrowseMedia:
 
     content_id = get_content_id(item)
     thumbnail = None
-    if getattr(item, "album_art_uri", None):
+    if getattr(item, "album_art_uri", None) and get_thumbnail_url:
         thumbnail = get_thumbnail_url(media_class, content_id, item=item)
 
     return BrowseMedia(
