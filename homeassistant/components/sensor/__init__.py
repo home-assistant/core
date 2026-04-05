@@ -651,7 +651,7 @@ class SensorEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
                 return value.isoformat(timespec="seconds")
             except (AttributeError, OverflowError, TypeError) as err:
                 raise ValueError(
-                    f"Invalid datetime: {self.entity_id} has {device_class} device class "
+                    f"Invalid datetime: {self.entity_id} has {device_class.value} device class "
                     f"but provides state {value}:{type(value)} resulting in '{err}'"
                 ) from err
 
