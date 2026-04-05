@@ -70,9 +70,16 @@ def _parse_kumo_cache(hass: HomeAssistant) -> dict[str, str]:
         kumo = load_json(hass.config.path("kumo_cache.json"))
         if not isinstance(kumo, list) or len(kumo) < 3:
             return addresses
-        for child in kumo[2].get("children", []):  # type: ignore[union-attr]
+        entry = kumo[2]
+        if not isinstance(entry, dict):
+            return addresses
+        for child in entry.get("children", []):
+            if not isinstance(child, dict):
+                continue
             _extract_addresses_from_zone_table(child.get("zoneTable", {}), addresses)
             for grandchild in child.get("children", []):
+                if not isinstance(grandchild, dict):
+                    continue
                 _extract_addresses_from_zone_table(
                     grandchild.get("zoneTable", {}), addresses
                 )

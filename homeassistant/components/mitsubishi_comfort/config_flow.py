@@ -3,11 +3,18 @@
 from __future__ import annotations
 
 import logging
+from typing import Any
 
 from mitsubishi_comfort import MitsubishiCloudAccount
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigEntry, ConfigFlow, OptionsFlow
+from homeassistant.components.dhcp import DhcpServiceInfo
+from homeassistant.config_entries import (
+    ConfigEntry,
+    ConfigFlow,
+    ConfigFlowResult,
+    OptionsFlow,
+)
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import callback
 
@@ -28,7 +35,9 @@ class MitsubishiComfortConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Handle the user setup step."""
         errors = {}
 
@@ -67,7 +76,9 @@ class MitsubishiComfortConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="user", data_schema=USER_SCHEMA, errors=errors
         )
 
-    async def async_step_dhcp(self, discovery_info):
+    async def async_step_dhcp(
+        self, discovery_info: DhcpServiceInfo
+    ) -> ConfigFlowResult:
         """Handle DHCP discovery -- store IP for later use."""
         _LOGGER.info(
             "DHCP discovered: %s (%s)", discovery_info.ip, discovery_info.macaddress
@@ -84,13 +95,15 @@ class MitsubishiComfortConfigFlow(ConfigFlow, domain=DOMAIN):
         config_entry: ConfigEntry,
     ) -> MitsubishiComfortOptionsFlow:
         """Return the options flow handler."""
-        return MitsubishiComfortOptionsFlow(config_entry)
+        return MitsubishiComfortOptionsFlow()
 
 
 class MitsubishiComfortOptionsFlow(OptionsFlow):
     """Handle options flow."""
 
-    async def async_step_init(self, user_input=None):
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Handle the initial options step."""
         if user_input is not None:
             return self.async_create_entry(title="", data=user_input)

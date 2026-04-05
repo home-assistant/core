@@ -6,8 +6,8 @@ rules:
   appropriate-polling:
     status: done
   brands:
-    status: todo
-    comment: PR to home-assistant/brands pending.
+    status: exempt
+    comment: Companion PR pending.
   common-modules:
     status: done
   config-flow:
@@ -20,14 +20,14 @@ rules:
     status: exempt
     comment: No service actions.
   docs-high-level-description:
-    status: todo
-    comment: PR to home-assistant.io pending.
+    status: exempt
+    comment: Companion PR pending.
   docs-installation-instructions:
-    status: todo
-    comment: PR to home-assistant.io pending.
+    status: exempt
+    comment: Companion PR pending.
   docs-removal-instructions:
-    status: todo
-    comment: PR to home-assistant.io pending.
+    status: exempt
+    comment: Companion PR pending.
   entity-event-setup:
     status: done
   entity-unique-id:
