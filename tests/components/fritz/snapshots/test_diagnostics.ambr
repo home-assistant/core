@@ -38,6 +38,7 @@
         'WANIPConn1',
         'WANPPPConnection1',
         'WLANConfiguration1',
+        'WLANConfiguration2',
         'X_AVM-DE_Homeauto1',
         'X_AVM-DE_HostFilter1',
         'X_AVM-DE_UPnP1',
