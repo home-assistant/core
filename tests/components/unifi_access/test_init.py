@@ -63,17 +63,17 @@ async def test_setup_entry(
 
 
 @pytest.mark.parametrize(
-    ("verify_ssl", "expect_ssl_context"),
+    ("verify_ssl", "expected_ssl_context_type"),
     [
-        (False, True),
-        (True, False),
+        (False, ssl.SSLContext),
+        (True, type(None)),
     ],
 )
 async def test_setup_entry_ssl_context(
     hass: HomeAssistant,
     mock_client: MagicMock,
     verify_ssl: bool,
-    expect_ssl_context: bool,
+    expected_ssl_context_type: type,
 ) -> None:
     """Test that a pre-warmed no-verify SSL context is passed when verify_ssl is False."""
     entry = MockConfigEntry(
@@ -97,10 +97,7 @@ async def test_setup_entry_ssl_context(
         await hass.async_block_till_done()
 
     _, call_kwargs = patched_client.call_args
-    if expect_ssl_context:
-        assert isinstance(call_kwargs["ssl_context"], ssl.SSLContext)
-    else:
-        assert call_kwargs["ssl_context"] is None
+    assert isinstance(call_kwargs["ssl_context"], expected_ssl_context_type)
 
 
 @pytest.mark.parametrize(
