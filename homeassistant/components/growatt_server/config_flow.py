@@ -8,7 +8,7 @@ import growattServer
 import requests
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
 from homeassistant.const import (
     CONF_NAME,
     CONF_PASSWORD,
@@ -64,6 +64,16 @@ class GrowattServerConfigFlow(ConfigFlow, domain=DOMAIN):
             menu_options=["password_auth", "token_auth"],
         )
 
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration."""
+        return await self._async_step_credentials(
+            step_id="reconfigure",
+            entry=self._get_reconfigure_entry(),
+            user_input=user_input,
+        )
+
     async def async_step_reauth(self, _: Mapping[str, Any]) -> ConfigFlowResult:
         """Handle reauth."""
         return await self.async_step_reauth_confirm()
@@ -72,11 +82,23 @@ class GrowattServerConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle reauth confirmation."""
+        return await self._async_step_credentials(
+            step_id="reauth_confirm",
+            entry=self._get_reauth_entry(),
+            user_input=user_input,
+        )
+
+    async def _async_step_credentials(
+        self,
+        step_id: str,
+        entry: ConfigEntry,
+        user_input: dict[str, Any] | None,
+    ) -> ConfigFlowResult:
+        """Handle credential update for both reauth and reconfigure."""
         errors: dict[str, str] = {}
-        reauth_entry = self._get_reauth_entry()
 
         if user_input is not None:
-            auth_type = reauth_entry.data.get(CONF_AUTH_TYPE)
+            auth_type = entry.data.get(CONF_AUTH_TYPE)
 
             if auth_type == AUTH_PASSWORD:
                 server_url = SERVER_URLS_NAMES[user_input[CONF_REGION]]
@@ -91,17 +113,19 @@ class GrowattServerConfigFlow(ConfigFlow, domain=DOMAIN):
                         api.login, user_input[CONF_USERNAME], user_input[CONF_PASSWORD]
                     )
                 except requests.exceptions.RequestException as ex:
-                    _LOGGER.debug("Network error during reauth login: %s", ex)
+                    _LOGGER.debug("Network error during credential update: %s", ex)
                     errors["base"] = ERROR_CANNOT_CONNECT
                 except (ValueError, KeyError, TypeError, AttributeError) as ex:
-                    _LOGGER.debug("Invalid response format during reauth login: %s", ex)
+                    _LOGGER.debug(
+                        "Invalid response format during credential update: %s", ex
+                    )
                     errors["base"] = ERROR_CANNOT_CONNECT
                 else:
                     if not isinstance(login_response, dict):
                         errors["base"] = ERROR_CANNOT_CONNECT
                     elif login_response.get("success"):
                         return self.async_update_reload_and_abort(
-                            reauth_entry,
+                            entry,
                             data_updates={
                                 CONF_USERNAME: user_input[CONF_USERNAME],
                                 CONF_PASSWORD: user_input[CONF_PASSWORD],
@@ -121,28 +145,26 @@ class GrowattServerConfigFlow(ConfigFlow, domain=DOMAIN):
                 try:
                     await self.hass.async_add_executor_job(api.plant_list)
                 except requests.exceptions.RequestException as ex:
-                    _LOGGER.debug(
-                        "Network error during reauth token validation: %s", ex
-                    )
+                    _LOGGER.debug("Network error during credential update: %s", ex)
                     errors["base"] = ERROR_CANNOT_CONNECT
                 except growattServer.GrowattV1ApiError as err:
                     if err.error_code == V1_API_ERROR_NO_PRIVILEGE:
                         errors["base"] = ERROR_INVALID_AUTH
                     else:
                         _LOGGER.debug(
-                            "Growatt V1 API error during reauth: %s (Code: %s)",
+                            "Growatt V1 API error during credential update: %s (Code: %s)",
                             err.error_msg or str(err),
                             err.error_code,
                         )
                         errors["base"] = ERROR_CANNOT_CONNECT
                 except (ValueError, KeyError, TypeError, AttributeError) as ex:
                     _LOGGER.debug(
-                        "Invalid response format during reauth token validation: %s", ex
+                        "Invalid response format during credential update: %s", ex
                     )
                     errors["base"] = ERROR_CANNOT_CONNECT
                 else:
                     return self.async_update_reload_and_abort(
-                        reauth_entry,
+                        entry,
                         data_updates={
                             CONF_TOKEN: user_input[CONF_TOKEN],
                             CONF_URL: server_url,
@@ -151,19 +173,19 @@ class GrowattServerConfigFlow(ConfigFlow, domain=DOMAIN):
 
         # Determine the current region key from the stored config value.
         # Legacy entries may store the region key directly; newer entries store the URL.
-        stored_url = reauth_entry.data.get(CONF_URL, "")
+        stored_url = entry.data.get(CONF_URL, "")
         if stored_url in SERVER_URLS_NAMES:
             current_region = stored_url
         else:
             current_region = _URL_TO_REGION.get(stored_url, DEFAULT_URL)
 
-        auth_type = reauth_entry.data.get(CONF_AUTH_TYPE)
+        auth_type = entry.data.get(CONF_AUTH_TYPE)
         if auth_type == AUTH_PASSWORD:
             data_schema = vol.Schema(
                 {
                     vol.Required(
                         CONF_USERNAME,
-                        default=reauth_entry.data.get(CONF_USERNAME),
+                        default=entry.data.get(CONF_USERNAME),
                     ): str,
                     vol.Required(CONF_PASSWORD): str,
                     vol.Required(CONF_REGION, default=current_region): SelectSelector(
@@ -189,8 +211,18 @@ class GrowattServerConfigFlow(ConfigFlow, domain=DOMAIN):
         else:
             return self.async_abort(reason=ERROR_CANNOT_CONNECT)
 
+        if user_input is not None:
+            data_schema = self.add_suggested_values_to_schema(
+                data_schema,
+                {
+                    key: value
+                    for key, value in user_input.items()
+                    if key not in (CONF_PASSWORD, CONF_TOKEN)
+                },
+            )
+
         return self.async_show_form(
-            step_id="reauth_confirm",
+            step_id=step_id,
             data_schema=data_schema,
             errors=errors,
         )

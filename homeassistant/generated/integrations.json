@@ -1485,6 +1485,12 @@
       "config_flow": true,
       "iot_class": "local_push"
     },
+    "dropbox": {
+      "name": "Dropbox",
+      "integration_type": "service",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
     "droplet": {
       "name": "Droplet",
       "integration_type": "device",
@@ -5244,8 +5250,8 @@
     },
     "picotts": {
       "name": "Pico TTS",
-      "integration_type": "hub",
-      "config_flow": false,
+      "integration_type": "service",
+      "config_flow": true,
       "iot_class": "local_push"
     },
     "pilight": {

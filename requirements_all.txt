@@ -151,7 +151,7 @@ adguardhome==0.8.1
 advantage-air==0.4.4
 
 # homeassistant.components.frontier_silicon
-afsapi==0.2.7
+afsapi==0.3.1
 
 # homeassistant.components.agent_dvr
 agent-py==0.0.24
@@ -288,7 +288,7 @@ aiohomekit==3.2.20
 aiohttp_sse==2.2.0
 
 # homeassistant.components.hue
-aiohue==4.8.0
+aiohue==4.8.1
 
 # homeassistant.components.imap
 aioimaplib==2.0.1
@@ -389,7 +389,7 @@ aioridwell==2025.09.0
 aioruckus==0.42
 
 # homeassistant.components.russound_rio
-aiorussound==4.9.1
+aiorussound==4.10.0
 
 # homeassistant.components.ruuvi_gateway
 aioruuvigateway==0.1.0
@@ -533,7 +533,7 @@ aqualogic==2.6
 aranet4==2.6.0
 
 # homeassistant.components.arcam_fmj
-arcam-fmj==1.8.2
+arcam-fmj==1.8.3
 
 # homeassistant.components.arris_tg2492lg
 arris-tg2492lg==2.2.0
@@ -781,7 +781,7 @@ datadog==0.52.0
 datapoint==0.12.1
 
 # homeassistant.components.bluetooth
-dbus-fast==3.1.2
+dbus-fast==4.0.4
 
 # homeassistant.components.debugpy
 debugpy==1.8.17
@@ -1176,7 +1176,7 @@ ha-silabs-firmware-client==0.3.0
 habiticalib==0.4.7
 
 # homeassistant.components.bluetooth
-habluetooth==5.11.1
+habluetooth==6.0.0
 
 # homeassistant.components.hanna
 hanna-cloud==0.0.7
@@ -1226,10 +1226,10 @@ hole==0.9.0
 
 # homeassistant.components.holiday
 # homeassistant.components.workday
-holidays==0.84
+holidays==0.93
 
 # homeassistant.components.frontend
-home-assistant-frontend==20260325.5
+home-assistant-frontend==20260325.6
 
 # homeassistant.components.conversation
 home-assistant-intents==2026.3.24
@@ -1262,7 +1262,7 @@ huum==0.8.2
 hyperion-py==0.7.6
 
 # homeassistant.components.hypontech
-hyponcloud==0.9.0
+hyponcloud==0.9.3
 
 # homeassistant.components.iammeter
 iammeter==0.2.1
@@ -1835,7 +1835,7 @@ proxmoxer==2.3.0
 psutil-home-assistant==0.0.1
 
 # homeassistant.components.systemmonitor
-psutil==7.1.2
+psutil==7.2.2
 
 # homeassistant.components.pulseaudio_loopback
 pulsectl==23.5.2
@@ -1883,7 +1883,7 @@ py-nightscout==1.2.2
 py-nymta==0.4.0
 
 # homeassistant.components.opendisplay
-py-opendisplay==5.5.0
+py-opendisplay==5.9.0
 
 # homeassistant.components.schluter
 py-schluter==0.1.7
@@ -2212,7 +2212,7 @@ pyituran==0.1.5
 pyjvcprojector==2.0.3
 
 # homeassistant.components.kaleidescape
-pykaleidescape==1.1.4
+pykaleidescape==1.1.5
 
 # homeassistant.components.kira
 pykira==0.1.1
@@ -2400,7 +2400,7 @@ pyplaato==0.0.19
 pypoint==3.0.0
 
 # homeassistant.components.portainer
-pyportainer==1.0.33
+pyportainer==1.0.36
 
 # homeassistant.components.probe_plus
 pyprobeplus==1.1.2
@@ -2503,13 +2503,13 @@ pysmappee==0.2.29
 pysmarlaapi==1.0.2
 
 # homeassistant.components.smartthings
-pysmartthings==3.7.2
+pysmartthings==3.7.3
 
 # homeassistant.components.smarty
 pysmarty2==0.10.3
 
 # homeassistant.components.smhi
-pysmhi==1.1.0
+pysmhi==2.0.0
 
 # homeassistant.components.edl21
 pysml==0.1.5
@@ -2570,6 +2570,9 @@ python-clementine-remote==1.0.1
 
 # homeassistant.components.digital_ocean
 python-digitalocean==1.13.2
+
+# homeassistant.components.dropbox
+python-dropbox-api==0.1.3
 
 # homeassistant.components.ecobee
 python-ecobee-api==0.3.2
@@ -2684,7 +2687,7 @@ python-tado==0.18.16
 python-technove==2.0.0
 
 # homeassistant.components.telegram_bot
-python-telegram-bot[socks]==22.6
+python-telegram-bot[socks]==22.7
 
 # homeassistant.components.vlc
 python-vlc==3.0.18122
@@ -2886,7 +2889,7 @@ samsungtvws[async,encrypted]==2.7.2
 sanix==1.0.6
 
 # homeassistant.components.satel_integra
-satel-integra==1.0.0
+satel-integra==1.1.0
 
 # homeassistant.components.screenlogic
 screenlogicpy==0.10.2
@@ -2975,7 +2978,7 @@ smart-meter-texas==0.5.5
 snapcast==2.3.7
 
 # homeassistant.components.sonos
-soco==0.30.14
+soco==0.30.15
 
 # homeassistant.components.solaredge_local
 solaredge-local==0.2.3
@@ -3139,7 +3142,7 @@ toonapi==0.3.0
 total-connect-client==2025.12.2
 
 # homeassistant.components.tplink_omada
-tplink-omada-client==1.5.6
+tplink-omada-client==1.5.7
 
 # homeassistant.components.transmission
 transmission-rpc==7.0.3
@@ -3187,7 +3190,7 @@ uiprotect==10.2.3
 ultraheat-api==0.5.7
 
 # homeassistant.components.unifiprotect
-unifi-discovery==1.2.0
+unifi-discovery==1.3.0
 
 # homeassistant.components.unifi_direct
 unifi_ap==0.0.2
@@ -3395,7 +3398,7 @@ zhong-hong-hvac==1.0.13
 ziggo-mediabox-xl==1.1.0
 
 # homeassistant.components.zinvolt
-zinvolt==0.3.0
+zinvolt==0.4.1
 
 # homeassistant.components.zoneminder
 zm-py==0.5.4
