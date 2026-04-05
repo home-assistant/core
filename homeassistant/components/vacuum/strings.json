@@ -89,7 +89,7 @@
   },
   "issues": {
     "segments_changed": {
-      "description": "",
+      "description": "The available segments for {entity_id} have changed. You may need to update any automations or scripts that reference specific segments.",
       "title": "Vacuum segments have changed for {entity_id}"
     }
   },
