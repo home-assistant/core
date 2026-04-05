@@ -4,9 +4,7 @@ rules:
     status: exempt
     comment: Integration does not register custom service actions.
   appropriate-polling: done
-  brands:
-    status: exempt
-    comment: This is a service integration without a hardware brand.
+  brands: done
   common-modules: done
   config-flow-test-coverage: done
   config-flow: done
@@ -17,21 +15,12 @@ rules:
   docs-high-level-description: done
   docs-installation-instructions: done
   docs-removal-instructions: done
-  entity-event-setup:
-    status: exempt
-    comment: Integration does not subscribe to HA events for entity updates.
+  entity-event-setup: done
   entity-unique-id: done
   has-entity-name: done
-  runtime-data:
-    status: exempt
-    comment: Uses hass.data for runtime storage shared across entry and sensor platform.
+  runtime-data: done
   test-before-configure: done
-  test-before-setup:
-    status: exempt
-    comment: >-
-      The coordinator's async_config_entry_first_refresh is called in the
-      sensor platform's async_setup_entry, which correctly raises
-      ConfigEntryNotReady on failure.
+  test-before-setup: done
   unique-config-entry: done
   # Silver
   action-exceptions: todo

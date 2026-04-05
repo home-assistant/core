@@ -33,12 +33,12 @@ async def test_load_unload_entry(
 
     with (
         patch(
-            "homeassistant.components.connectivity_monitor.sensor."
+            "homeassistant.components.connectivity_monitor.coordinator."
             "NetworkProbe.async_prepare_host",
             AsyncMock(return_value=None),
         ),
         patch(
-            "homeassistant.components.connectivity_monitor.sensor."
+            "homeassistant.components.connectivity_monitor.coordinator."
             "NetworkProbe.async_update_target",
             AsyncMock(
                 return_value={
@@ -56,7 +56,7 @@ async def test_load_unload_entry(
     assert network_config_entry.state is ConfigEntryState.LOADED
     assert hass.states.get("sensor.connectivity_monitor_router_icmp") is not None
 
-    alert_handler = hass.data[DOMAIN][network_config_entry.entry_id]["alert_handler"]
+    alert_handler = network_config_entry.runtime_data.alert_handler
     alert_handler.async_cleanup = AsyncMock()
 
     assert await hass.config_entries.async_unload(network_config_entry.entry_id)
@@ -64,7 +64,7 @@ async def test_load_unload_entry(
 
     assert alert_handler.async_cleanup.await_count == 1
     assert network_config_entry.state is ConfigEntryState.NOT_LOADED
-    assert network_config_entry.entry_id not in hass.data[DOMAIN]
+    assert not hasattr(network_config_entry, "runtime_data")
 
 
 async def test_migrate_entry_splits_legacy_targets(hass: HomeAssistant) -> None:

@@ -45,6 +45,24 @@ from tests.common import MockConfigEntry
 pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 
 
+@pytest.fixture(autouse=True)
+def mock_network_validation_probe() -> AsyncMock:
+    """Default config-flow network validation to a successful probe."""
+    with patch(
+        "homeassistant.components.connectivity_monitor.config_flow."
+        "NetworkProbe.async_update_target",
+        AsyncMock(
+            return_value={
+                "connected": True,
+                "latency": 3.2,
+                "resolved_ip": "192.168.1.10",
+                "mac_address": None,
+            }
+        ),
+    ) as mock_probe:
+        yield mock_probe
+
+
 @pytest.fixture
 def ignore_missing_translations(request: pytest.FixtureRequest) -> list[str]:
     """Ignore known missing config-flow translations in this integration."""
@@ -255,6 +273,45 @@ async def test_network_flow_invalid_dns_server(hass: HomeAssistant) -> None:
     assert result["errors"] == {"base": "invalid_dns_server"}
 
 
+async def test_network_flow_rejects_unreachable_first_entry(
+    hass: HomeAssistant,
+) -> None:
+    """Test first network entry stays on DNS step when validation cannot connect."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"device_type": "network"}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_HOST: "192.168.1.15",
+            CONF_PROTOCOL: PROTOCOL_ICMP,
+        },
+    )
+
+    with patch(
+        "homeassistant.components.connectivity_monitor.config_flow."
+        "NetworkProbe.async_update_target",
+        AsyncMock(
+            return_value={
+                "connected": False,
+                "latency": None,
+                "resolved_ip": None,
+                "mac_address": None,
+            }
+        ),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_DNS_SERVER: DEFAULT_DNS_SERVER}
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "dns"
+    assert result["errors"] == {"base": "cannot_connect"}
+
+
 async def test_network_flow_updates_existing_typed_entry(
     hass: HomeAssistant,
     network_config_entry: MockConfigEntry,
@@ -299,6 +356,57 @@ async def test_network_flow_updates_existing_typed_entry(
                 "alert_action": "",
                 "alert_action_delay": 30,
             },
+        ],
+        CONF_INTERVAL: 30,
+        CONF_DNS_SERVER: DEFAULT_DNS_SERVER,
+    }
+
+
+async def test_network_flow_rejects_unreachable_existing_entry(
+    hass: HomeAssistant,
+    network_config_entry: MockConfigEntry,
+) -> None:
+    """Test adding a network device to an existing entry requires a successful probe."""
+    network_config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"device_type": "network"}
+    )
+
+    with patch(
+        "homeassistant.components.connectivity_monitor.config_flow."
+        "NetworkProbe.async_update_target",
+        AsyncMock(
+            return_value={
+                "connected": False,
+                "latency": None,
+                "resolved_ip": None,
+                "mac_address": None,
+            }
+        ),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_HOST: "192.168.1.2",
+                CONF_PROTOCOL: PROTOCOL_ICMP,
+                "device_name": "Access Point",
+            },
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "network"
+    assert result["errors"] == {"base": "cannot_connect"}
+    assert network_config_entry.data == {
+        CONF_TARGETS: [
+            {
+                CONF_HOST: "192.168.1.1",
+                CONF_PROTOCOL: PROTOCOL_ICMP,
+                "device_name": "Router",
+            }
         ],
         CONF_INTERVAL: 30,
         CONF_DNS_SERVER: DEFAULT_DNS_SERVER,

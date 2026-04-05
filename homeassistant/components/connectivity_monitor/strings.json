@@ -9,6 +9,7 @@
       "all_esphome_devices_added": "All available ESPHome devices are already being monitored",
       "all_matter_devices_added": "All available Matter devices are already being monitored",
       "all_zha_devices_added": "All available ZigBee devices are already being monitored",
+      "cannot_connect": "Unable to connect to the configured target",
       "invalid_dns_server": "Enter a valid IPv4 DNS server address",
       "no_bluetooth_devices": "No Bluetooth devices are available to add",
       "no_esphome_devices": "No ESPHome devices are available to add",

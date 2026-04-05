@@ -84,12 +84,12 @@ async def test_network_sensors_expose_expected_state(
 
     with (
         patch(
-            "homeassistant.components.connectivity_monitor.sensor."
+            "homeassistant.components.connectivity_monitor.coordinator."
             "NetworkProbe.async_prepare_host",
             AsyncMock(return_value=None),
         ),
         patch(
-            "homeassistant.components.connectivity_monitor.sensor."
+            "homeassistant.components.connectivity_monitor.coordinator."
             "NetworkProbe.async_update_target",
             AsyncMock(
                 return_value={
@@ -140,12 +140,12 @@ async def test_coordinator_refresh_uses_default_data_on_failure(
 
     with (
         patch(
-            "homeassistant.components.connectivity_monitor.sensor."
+            "homeassistant.components.connectivity_monitor.coordinator."
             "NetworkProbe.async_prepare_host",
             AsyncMock(return_value=None),
         ),
         patch(
-            "homeassistant.components.connectivity_monitor.sensor."
+            "homeassistant.components.connectivity_monitor.coordinator."
             "NetworkProbe.async_update_target",
             AsyncMock(
                 return_value={
@@ -160,9 +160,7 @@ async def test_coordinator_refresh_uses_default_data_on_failure(
         assert await hass.config_entries.async_setup(network_config_entry.entry_id)
         await hass.async_block_till_done()
 
-        coordinator = hass.data["connectivity_monitor"][network_config_entry.entry_id][
-            "coordinator"
-        ]
+        coordinator = network_config_entry.runtime_data.coordinator
 
         mock_update_target.side_effect = OSError("probe failed")
         await coordinator.async_refresh()
@@ -440,12 +438,12 @@ async def test_alert_handler_triggers_notification_and_action_after_delays(
 
     with (
         patch(
-            "homeassistant.components.connectivity_monitor.sensor."
+            "homeassistant.components.connectivity_monitor.coordinator."
             "NetworkProbe.async_prepare_host",
             AsyncMock(return_value=None),
         ),
         patch(
-            "homeassistant.components.connectivity_monitor.sensor."
+            "homeassistant.components.connectivity_monitor.coordinator."
             "NetworkProbe.async_update_target",
             AsyncMock(
                 return_value={
@@ -503,12 +501,12 @@ async def test_alert_handler_sends_recovery_after_confirmed_reconnect(
 
     with (
         patch(
-            "homeassistant.components.connectivity_monitor.sensor."
+            "homeassistant.components.connectivity_monitor.coordinator."
             "NetworkProbe.async_prepare_host",
             AsyncMock(return_value=None),
         ),
         patch(
-            "homeassistant.components.connectivity_monitor.sensor."
+            "homeassistant.components.connectivity_monitor.coordinator."
             "NetworkProbe.async_update_target",
             AsyncMock(
                 return_value={
@@ -562,12 +560,12 @@ async def test_alert_handler_cancels_recovery_when_device_flaps(
 
     with (
         patch(
-            "homeassistant.components.connectivity_monitor.sensor."
+            "homeassistant.components.connectivity_monitor.coordinator."
             "NetworkProbe.async_prepare_host",
             AsyncMock(return_value=None),
         ),
         patch(
-            "homeassistant.components.connectivity_monitor.sensor."
+            "homeassistant.components.connectivity_monitor.coordinator."
             "NetworkProbe.async_update_target",
             AsyncMock(
                 return_value={
@@ -633,12 +631,12 @@ async def test_alert_handler_does_not_repeat_notification_or_action(
 
     with (
         patch(
-            "homeassistant.components.connectivity_monitor.sensor."
+            "homeassistant.components.connectivity_monitor.coordinator."
             "NetworkProbe.async_prepare_host",
             AsyncMock(return_value=None),
         ),
         patch(
-            "homeassistant.components.connectivity_monitor.sensor."
+            "homeassistant.components.connectivity_monitor.coordinator."
             "NetworkProbe.async_update_target",
             AsyncMock(
                 return_value={
@@ -693,12 +691,12 @@ async def test_alert_handler_handles_startup_offline_entity(
 
     with (
         patch(
-            "homeassistant.components.connectivity_monitor.sensor."
+            "homeassistant.components.connectivity_monitor.coordinator."
             "NetworkProbe.async_prepare_host",
             AsyncMock(return_value=None),
         ),
         patch(
-            "homeassistant.components.connectivity_monitor.sensor."
+            "homeassistant.components.connectivity_monitor.coordinator."
             "NetworkProbe.async_update_target",
             AsyncMock(
                 return_value={
@@ -1182,12 +1180,12 @@ async def test_ad_overview_sensor_shows_connected_when_all_ports_up(
 
     with (
         patch(
-            "homeassistant.components.connectivity_monitor.sensor."
+            "homeassistant.components.connectivity_monitor.coordinator."
             "NetworkProbe.async_prepare_host",
             AsyncMock(return_value=None),
         ),
         patch(
-            "homeassistant.components.connectivity_monitor.sensor."
+            "homeassistant.components.connectivity_monitor.coordinator."
             "NetworkProbe.async_update_target",
             AsyncMock(
                 return_value={
@@ -1238,12 +1236,12 @@ async def test_ad_overview_sensor_shows_partially_connected_when_some_ports_down
 
     with (
         patch(
-            "homeassistant.components.connectivity_monitor.sensor."
+            "homeassistant.components.connectivity_monitor.coordinator."
             "NetworkProbe.async_prepare_host",
             AsyncMock(return_value=None),
         ),
         patch(
-            "homeassistant.components.connectivity_monitor.sensor."
+            "homeassistant.components.connectivity_monitor.coordinator."
             "NetworkProbe.async_update_target",
             AsyncMock(side_effect=_update_side_effect),
         ),
@@ -1274,12 +1272,12 @@ async def test_ad_overview_sensor_shows_not_connected_when_all_ports_down(
 
     with (
         patch(
-            "homeassistant.components.connectivity_monitor.sensor."
+            "homeassistant.components.connectivity_monitor.coordinator."
             "NetworkProbe.async_prepare_host",
             AsyncMock(return_value=None),
         ),
         patch(
-            "homeassistant.components.connectivity_monitor.sensor."
+            "homeassistant.components.connectivity_monitor.coordinator."
             "NetworkProbe.async_update_target",
             AsyncMock(
                 return_value={
@@ -1349,12 +1347,12 @@ async def test_overview_sensor_shows_partially_connected(
 
     with (
         patch(
-            "homeassistant.components.connectivity_monitor.sensor."
+            "homeassistant.components.connectivity_monitor.coordinator."
             "NetworkProbe.async_prepare_host",
             AsyncMock(return_value=None),
         ),
         patch(
-            "homeassistant.components.connectivity_monitor.sensor."
+            "homeassistant.components.connectivity_monitor.coordinator."
             "NetworkProbe.async_update_target",
             AsyncMock(side_effect=_varying_update),
         ),

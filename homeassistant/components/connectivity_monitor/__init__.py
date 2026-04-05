@@ -23,6 +23,12 @@ from .const import (
     PROTOCOL_ZHA,
     VERSION,
 )
+from .coordinator import (
+    ConnectivityMonitorConfigEntry,
+    ConnectivityMonitorCoordinator,
+    ConnectivityMonitorRuntimeData,
+)
+from .sensor import AlertHandler
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -109,8 +115,6 @@ PLATFORMS: list[Platform] = [Platform.SENSOR]
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Connectivity Monitor component."""
-    hass.data.setdefault(DOMAIN, {})
-
     card_base_url = "/connectivity_monitor/connectivity_monitor_card.js"
     card_url = f"{card_base_url}?v={VERSION}"
 
@@ -173,31 +177,46 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConnectivityMonitorConfigEntry
+) -> bool:
     """Set up Connectivity Monitor from a config entry."""
-    hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN][entry.entry_id] = {}
+    alert_handler = AlertHandler(hass)
+    coordinator = ConnectivityMonitorCoordinator(
+        hass,
+        list(entry.data[CONF_TARGETS]),
+        entry.data[CONF_INTERVAL],
+        entry.data[CONF_DNS_SERVER],
+        entry,
+    )
+    await coordinator.async_config_entry_first_refresh()
+    entry.runtime_data = ConnectivityMonitorRuntimeData(
+        coordinator=coordinator,
+        alert_handler=alert_handler,
+    )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(
+    hass: HomeAssistant, entry: ConnectivityMonitorConfigEntry
+) -> bool:
     """Unload a config entry."""
     # Clean up alert handler before unloading platforms to stop any
     # in-flight callbacks from firing during teardown.
-    entry_data = hass.data[DOMAIN].get(entry.entry_id, {})
-    alert_handler = entry_data.get("alert_handler")
-    if alert_handler:
-        await alert_handler.async_cleanup()
+    if hasattr(entry, "runtime_data"):
+        await entry.runtime_data.alert_handler.async_cleanup()
 
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-    if unload_ok:
-        hass.data[DOMAIN].pop(entry.entry_id)
+    if unload_ok and hasattr(entry, "runtime_data"):
+        del entry.runtime_data
     return unload_ok
 
 
-async def async_reload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
+async def async_reload_entry(
+    hass: HomeAssistant, entry: ConnectivityMonitorConfigEntry
+) -> None:
     """Reload config entry."""
     await async_unload_entry(hass, entry)
     await async_setup_entry(hass, entry)

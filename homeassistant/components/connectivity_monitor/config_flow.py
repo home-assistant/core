@@ -52,9 +52,17 @@ from .const import (
 )
 from .esphome import async_get_esphome_devices
 from .matter import async_get_matter_devices
+from .network import NetworkProbe
 from .zha import async_get_zha_devices
 
 _LOGGER = logging.getLogger(__name__)
+
+NETWORK_PROTOCOLS = {
+    PROTOCOL_TCP,
+    PROTOCOL_UDP,
+    PROTOCOL_ICMP,
+    PROTOCOL_AD_DC,
+}
 
 
 def is_valid_ip(ip: str) -> bool:
@@ -135,6 +143,46 @@ class ConnectivityMonitorConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 name = state.attributes.get("friendly_name") or entity_id
                 actions[entity_id] = f"{name} ({entity_id})"
         return dict(sorted(actions.items(), key=lambda x: x[1].lower()))
+
+    async def _async_validate_network_target(self) -> bool:
+        """Check that the configured network target can be reached before setup."""
+        protocol = self._data.get(CONF_PROTOCOL)
+        host = self._data.get(CONF_HOST)
+        if protocol not in NETWORK_PROTOCOLS or not host:
+            return True
+
+        probe = NetworkProbe(
+            self.hass,
+            self._data.get(CONF_DNS_SERVER, DEFAULT_DNS_SERVER),
+        )
+
+        if protocol == PROTOCOL_AD_DC:
+            validation_targets = [
+                {
+                    CONF_HOST: host,
+                    CONF_PROTOCOL: PROTOCOL_TCP,
+                    CONF_PORT: port,
+                }
+                for port in AD_DC_PORTS
+            ]
+        else:
+            validation_target = {
+                CONF_HOST: host,
+                CONF_PROTOCOL: protocol,
+            }
+            if protocol in (PROTOCOL_TCP, PROTOCOL_UDP):
+                validation_target[CONF_PORT] = self._data[CONF_PORT]
+            validation_targets = [validation_target]
+
+        try:
+            for validation_target in validation_targets:
+                result = await probe.async_update_target(validation_target)
+                if result.get("connected"):
+                    return True
+        except (KeyError, OSError, ValueError) as err:
+            _LOGGER.debug("Network validation failed for %s: %s", host, err)
+
+        return False
 
     async def async_step_import(self, data) -> ConfigFlowResult:
         """Handle import from automated migration — creates a typed entry directly."""
@@ -232,10 +280,14 @@ class ConnectivityMonitorConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     return await self.async_step_port()
                 if not entries:
                     return await self.async_step_dns()
-                return await self.async_step_finish()
             except Exception:
                 _LOGGER.exception("Error in network step")
                 errors["base"] = "unknown"
+            else:
+                if not await self._async_validate_network_target():
+                    errors["base"] = "cannot_connect"
+                else:
+                    return await self.async_step_finish()
 
         notify_groups = await self._async_get_notify_groups()
         alert_actions = await self._async_get_alert_actions()
@@ -834,8 +886,16 @@ class ConnectivityMonitorConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             dns_server = user_input[CONF_DNS_SERVER]
             if is_valid_ip(dns_server):
                 self._data[CONF_DNS_SERVER] = dns_server
-                return await self.async_step_interval()
-            errors["base"] = "invalid_dns_server"
+                if (
+                    not self._async_current_entries()
+                    and self._data.get(CONF_PROTOCOL) in NETWORK_PROTOCOLS
+                    and not await self._async_validate_network_target()
+                ):
+                    errors["base"] = "cannot_connect"
+                else:
+                    return await self.async_step_interval()
+            else:
+                errors["base"] = "invalid_dns_server"
 
         return self.async_show_form(
             step_id="dns",
@@ -867,11 +927,16 @@ class ConnectivityMonitorConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_port(self, user_input=None) -> ConfigFlowResult:
         """Handle port configuration."""
+        errors = {}
+
         if user_input is not None:
             self._data.update(user_input)
             if not self._async_current_entries():
                 return await self.async_step_dns()
-            return await self.async_step_finish()
+            if not await self._async_validate_network_target():
+                errors["base"] = "cannot_connect"
+            else:
+                return await self.async_step_finish()
 
         return self.async_show_form(
             step_id="port",
@@ -882,6 +947,7 @@ class ConnectivityMonitorConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     ),
                 }
             ),
+            errors=errors,
         )
 
     async def async_step_finish(self, user_input=None) -> ConfigFlowResult:
