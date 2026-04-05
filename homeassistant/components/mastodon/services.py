@@ -12,13 +12,14 @@ from mastodon.Mastodon import (
     Account,
     MastodonAPIError,
     MastodonNotFoundError,
+    MastodonUnauthorizedError,
     MediaAttachment,
 )
 import voluptuous as vol
 
 from homeassistant.components import camera, image
 from homeassistant.components.media_source import async_resolve_media
-from homeassistant.const import ATTR_CONFIG_ENTRY_ID
+from homeassistant.const import ATTR_CONFIG_ENTRY_ID, ATTR_NAME
 from homeassistant.core import (
     HomeAssistant,
     ServiceCall,
@@ -32,15 +33,27 @@ from homeassistant.helpers.selector import MediaSelector
 
 from .const import (
     ATTR_ACCOUNT_NAME,
+    ATTR_ATTRIBUTION_DOMAINS,
+    ATTR_AVATAR,
+    ATTR_AVATAR_MIME_TYPE,
+    ATTR_BOT,
     ATTR_CONTENT_WARNING,
+    ATTR_DISCOVERABLE,
+    ATTR_DISPLAY_NAME,
     ATTR_DURATION,
+    ATTR_FIELDS,
+    ATTR_HEADER,
+    ATTR_HEADER_MIME_TYPE,
     ATTR_HIDE_NOTIFICATIONS,
     ATTR_IDEMPOTENCY_KEY,
     ATTR_LANGUAGE,
+    ATTR_LOCKED,
     ATTR_MEDIA,
     ATTR_MEDIA_DESCRIPTION,
     ATTR_MEDIA_WARNING,
+    ATTR_NOTE,
     ATTR_STATUS,
+    ATTR_VALUE,
     ATTR_VISIBILITY,
     DOMAIN,
 )
@@ -106,14 +119,15 @@ SERVICE_UPDATE_PROFILE = "update_profile"
 SERVICE_UPDATE_PROFILE_SCHEMA = vol.Schema(
     {
         vol.Required(ATTR_CONFIG_ENTRY_ID): str,
-        vol.Optional("display_name"): str,
-        vol.Optional("note"): str,
-        vol.Optional("avatar"): MediaSelector({"accept": ["image/*"]}),
-        vol.Optional("locked"): bool,
-        vol.Optional("bot"): bool,
-        vol.Optional("discoverable"): bool,
-        vol.Optional("fields"): vol.All(cv.ensure_list, [dict[str, str]]),
-        vol.Optional("attribution_domains"): vol.All(cv.ensure_list, [vol.Url()]),
+        vol.Optional(ATTR_DISPLAY_NAME): str,
+        vol.Optional(ATTR_NOTE): str,
+        vol.Optional(ATTR_AVATAR): MediaSelector({"accept": ["image/*"]}),
+        vol.Optional(ATTR_HEADER): MediaSelector({"accept": ["image/*"]}),
+        vol.Optional(ATTR_LOCKED): bool,
+        vol.Optional(ATTR_BOT): bool,
+        vol.Optional(ATTR_DISCOVERABLE): bool,
+        vol.Optional(ATTR_FIELDS): vol.All(cv.ensure_list, [dict[str, str]]),
+        vol.Optional(ATTR_ATTRIBUTION_DOMAINS): vol.All(cv.ensure_list, [vol.Url()]),
     }
 )
 
@@ -356,23 +370,35 @@ async def _async_update_profile(call: ServiceCall) -> ServiceResponse:
     )
     client = entry.runtime_data.client
 
-    if avatar := params.pop("avatar", None):
-        params["avatar"], params["avatar_mime_type"] = await _resolve_media(
+    if avatar := params.pop(ATTR_AVATAR, None):
+        params[ATTR_AVATAR], params[ATTR_AVATAR_MIME_TYPE] = await _resolve_media(
             call.hass, avatar
         )
-    if header := params.pop("header", None):
-        params["header"], params["header_mime_type"] = await _resolve_media(
+    if header := params.pop(ATTR_HEADER, None):
+        params[ATTR_HEADER], params[ATTR_HEADER_MIME_TYPE] = await _resolve_media(
             call.hass, header
         )
-    if fields := params.get("fields"):
-        params["fields"] = [
-            (field["name"].strip(), field["value"].strip())
+    if fields := params.get(ATTR_FIELDS):
+        params[ATTR_FIELDS] = [
+            (field[ATTR_NAME].strip(), field[ATTR_VALUE].strip())
             for field in fields
-            if field["name"].strip()
+            if field[ATTR_NAME].strip()
         ]
-    return await call.hass.async_add_executor_job(
-        lambda: client.account_update_credentials(**params)
-    )
+    try:
+        return await call.hass.async_add_executor_job(
+            lambda: client.account_update_credentials(**params)
+        )
+    except MastodonUnauthorizedError as error:
+        entry.async_start_reauth(call.hass)
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="auth_failed",
+        ) from error
+    except MastodonAPIError as err:
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="unable_to_update_profile",
+        ) from err
 
 
 async def _resolve_media(
@@ -396,6 +422,7 @@ async def _resolve_media(
         raise ServiceValidationError(
             translation_domain=DOMAIN,
             translation_key="media_source_not_supported",
+            translation_placeholders={"media_content_id": media_content_id},
         )
 
     return media.path, media.mime_type

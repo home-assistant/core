@@ -104,6 +104,9 @@
     "idempotency_key_too_short": {
       "message": "Idempotency key must be at least 4 characters long."
     },
+    "media_source_not_supported": {
+      "message": "Media source {media_content_id} is not supported."
+    },
     "mute_duration_too_long": {
       "message": "Mute duration is too long."
     },
@@ -121,6 +124,9 @@
     },
     "unable_to_unmute_account": {
       "message": "Unable to unmute account \"{account_name}\""
+    },
+    "unable_to_update_profile": {
+      "message": "Unable to update profile."
     },
     "unable_to_upload_image": {
       "message": "Unable to upload image {media_path}."
