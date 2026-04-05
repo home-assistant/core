@@ -251,9 +251,12 @@ aiofiles==24.1.0
 # homeassistant.components.flo
 aioflo==2021.11.0
 
+<<<<<<< HEAD
 # homeassistant.components.ghost
 aioghost==0.4.0
 
+=======
+>>>>>>> 9ab6d343774 (Replaced aiogarmin, changed token storage, addressed requests)
 # homeassistant.components.github
 aiogithubapi==26.0.0
 
@@ -1035,6 +1038,9 @@ h2==4.3.0
 
 # homeassistant.components.ffmpeg
 ha-ffmpeg==3.2.2
+
+# homeassistant.components.garmin_connect
+ha-garmin==0.1.1
 
 # homeassistant.components.iotawatt
 ha-iotawattpy==0.1.2
