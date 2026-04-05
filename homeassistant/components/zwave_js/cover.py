@@ -153,8 +153,12 @@ class CoverPositionMixin(ZWaveBaseEntity, CoverEntity):
     @callback
     def on_value_update(self) -> None:
         """Update moving state based on current and target position."""
-        current = self._current_position_value.value if self._current_position_value else None
-        target = self._target_position_value.value if self._target_position_value else None
+        current = (
+            self._current_position_value.value if self._current_position_value else None
+        )
+        target = (
+            self._target_position_value.value if self._target_position_value else None
+        )
 
         if target == current:
             # Target reached or no position data available — cover is not moving.
@@ -186,9 +190,7 @@ class CoverPositionMixin(ZWaveBaseEntity, CoverEntity):
             return None
         return self.zwave_to_percent_position(self._current_position_value.value)
 
-    async def _async_set_position(
-        self, target_position: int
-    ) -> None:
+    async def _async_set_position(self, target_position: int) -> None:
         """Set the target position."""
         assert self._target_position_value
         await self._async_set_value(self._target_position_value, target_position)
@@ -201,15 +203,11 @@ class CoverPositionMixin(ZWaveBaseEntity, CoverEntity):
 
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the cover."""
-        await self._async_set_position(
-            self._fully_open_position
-        )
+        await self._async_set_position(self._fully_open_position)
 
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close cover."""
-        await self._async_set_position(
-            self._fully_closed_position
-        )
+        await self._async_set_position(self._fully_closed_position)
 
     async def async_stop_cover(self, **kwargs: Any) -> None:
         """Stop cover."""
