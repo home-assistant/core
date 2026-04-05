@@ -190,7 +190,7 @@ async def test_coordinator_subsequent_run_missing_period_statistics(
 
     # Add a new later reading to ensure fallback also accepts newer entries.
     mock_smart_meter.readings.append(
-        {"read_at": "2024-06-01T15:00:00Z", "consumption": 20, "read": 90}
+        {"read_at": "2024-06-01T15:00:00", "consumption": 20, "read": 90}
     )
 
     with patch(
