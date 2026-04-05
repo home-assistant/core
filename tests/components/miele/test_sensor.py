@@ -262,6 +262,41 @@ async def test_oven_core_probe_sensors_unknown_when_inactive(
 
 @pytest.mark.parametrize("load_device_file", ["oven.json"])
 @pytest.mark.parametrize("platforms", [(SENSOR_DOMAIN,)])
+async def test_oven_core_probe_unknown_when_inactive_raw_scaled(
+    hass: HomeAssistant,
+    mock_miele_client: MagicMock,
+    setup_platform: None,
+    device_fixture: MieleDevices,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Some ovens report int16-min as centidegrees (-32768 -> -327.68 °C); others as -3276800 raw (-32768 °C).
+
+    Both must map to unknown, not a numeric sensor state.
+    """
+    core_temp = "sensor.oven_core_temperature"
+
+    device_fixture["DummyOven"]["state"]["coreTemperature"][0]["value_raw"] = 2200
+    device_fixture["DummyOven"]["state"]["coreTemperature"][0]["value_localized"] = 22.0
+
+    freezer.tick(timedelta(seconds=130))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(core_temp) is not None
+    assert hass.states.get(core_temp).state == "22.0"
+
+    device_fixture["DummyOven"]["state"]["coreTemperature"][0]["value_raw"] = -3276800
+    device_fixture["DummyOven"]["state"]["coreTemperature"][0]["value_localized"] = None
+
+    freezer.tick(timedelta(seconds=130))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(core_temp).state == STATE_UNKNOWN
+
+
+@pytest.mark.parametrize("load_device_file", ["oven.json"])
+@pytest.mark.parametrize("platforms", [(SENSOR_DOMAIN,)])
 async def test_temperature_sensor_registry_lookup(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
