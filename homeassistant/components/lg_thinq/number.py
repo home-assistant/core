@@ -194,10 +194,11 @@ def _check_deprecated_fan_speed_entity(
         DOMAIN,
         f"deprecated_fan_speed_number_{entity_id}",
         breaks_in_ha_version="2026.11.0",
-        is_fixable=False,
+        is_fixable=True,
         severity=IssueSeverity.WARNING,
         translation_key=translation_key,
         translation_placeholders=placeholders,
+        data={"entity_id": entity_id, **placeholders},
     )
     return True
 

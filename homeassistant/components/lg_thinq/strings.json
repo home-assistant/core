@@ -1162,12 +1162,26 @@
   },
   "issues": {
     "deprecated_fan_speed_number": {
-      "description": "The number entity {entity_name} (`{entity_id}`) is deprecated because it has been replaced with a fan entity.\n\nPlease update your dashboards and templates to use the new fan entity and disable the number entity to fix this issue.",
-      "title": "Fan speed number entity deprecated"
+      "fix_flow": {
+        "step": {
+          "confirm": {
+            "description": "The number entity {entity_name} (`{entity_id}`) is deprecated because it has been replaced with a fan entity.\n\nPlease update your dashboards and templates to use the new fan entity.\n\nClick **Submit** to disable the number entity and fix this issue.",
+            "title": "Fan speed number entity deprecated"
+          }
+        }
+      },
+      "title": "[%key:component::lg_thinq::issues::deprecated_fan_speed_number::fix_flow::step::confirm::title%]"
     },
     "deprecated_fan_speed_number_scripts": {
-      "description": "The number entity {entity_name} (`{entity_id}`) is deprecated because it has been replaced with a fan entity.\n\nThe entity was used in the following automations or scripts:\n{items}\n\nPlease update the above automations or scripts to use the new fan entity and disable the number entity to fix this issue.",
-      "title": "[%key:component::lg_thinq::issues::deprecated_fan_speed_number::title%]"
+      "fix_flow": {
+        "step": {
+          "confirm": {
+            "description": "The number entity {entity_name} (`{entity_id}`) is deprecated because it has been replaced with a fan entity.\n\nThe entity was used in the following automations or scripts:\n{items}\n\nPlease update the above automations or scripts to use the new fan entity.\n\nClick **Submit** to disable the number entity and fix this issue.",
+            "title": "[%key:component::lg_thinq::issues::deprecated_fan_speed_number::fix_flow::step::confirm::title%]"
+          }
+        }
+      },
+      "title": "[%key:component::lg_thinq::issues::deprecated_fan_speed_number::fix_flow::step::confirm::title%]"
     }
   }
 }
