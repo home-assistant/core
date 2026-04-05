@@ -151,7 +151,7 @@ adguardhome==0.8.1
 advantage-air==0.4.4
 
 # homeassistant.components.frontier_silicon
-afsapi==0.2.7
+afsapi==0.3.1
 
 # homeassistant.components.agent_dvr
 agent-py==0.0.24
@@ -224,7 +224,7 @@ aiobafi6==0.9.0
 aiobotocore==2.21.1
 
 # homeassistant.components.comelit
-aiocomelit==2.0.1
+aiocomelit==2.0.2
 
 # homeassistant.components.dhcp
 aiodhcpwatcher==1.2.1
@@ -288,7 +288,7 @@ aiohomekit==3.2.20
 aiohttp_sse==2.2.0
 
 # homeassistant.components.hue
-aiohue==4.8.0
+aiohue==4.8.1
 
 # homeassistant.components.imap
 aioimaplib==2.0.1
@@ -366,7 +366,7 @@ aiopurpleair==2025.08.1
 aiopvapi==3.3.0
 
 # homeassistant.components.pvpc_hourly_pricing
-aiopvpc==4.2.2
+aiopvpc==4.3.1
 
 # homeassistant.components.lidarr
 # homeassistant.components.radarr
@@ -389,7 +389,7 @@ aioridwell==2025.09.0
 aioruckus==0.42
 
 # homeassistant.components.russound_rio
-aiorussound==4.9.1
+aiorussound==4.10.0
 
 # homeassistant.components.ruuvi_gateway
 aioruuvigateway==0.1.0
@@ -781,7 +781,7 @@ datadog==0.52.0
 datapoint==0.12.1
 
 # homeassistant.components.bluetooth
-dbus-fast==3.1.2
+dbus-fast==4.0.4
 
 # homeassistant.components.debugpy
 debugpy==1.8.17
@@ -1176,7 +1176,7 @@ ha-silabs-firmware-client==0.3.0
 habiticalib==0.4.7
 
 # homeassistant.components.bluetooth
-habluetooth==5.11.1
+habluetooth==6.0.0
 
 # homeassistant.components.hanna
 hanna-cloud==0.0.7
@@ -2512,7 +2512,7 @@ pysmhi==2.0.0
 pysml==0.1.5
 
 # homeassistant.components.smlight
-pysmlight==0.3.1
+pysmlight==0.3.2
 
 # homeassistant.components.snmp
 pysnmp==7.1.22
@@ -2666,7 +2666,7 @@ python-rabbitair==0.0.8
 python-ripple-api==0.0.3
 
 # homeassistant.components.roborock
-python-roborock==5.0.0
+python-roborock==5.3.0
 
 # homeassistant.components.smarttub
 python-smarttub==0.0.47
@@ -2889,7 +2889,7 @@ samsungtvws[async,encrypted]==2.7.2
 sanix==1.0.6
 
 # homeassistant.components.satel_integra
-satel-integra==1.0.0
+satel-integra==1.1.0
 
 # homeassistant.components.screenlogic
 screenlogicpy==0.10.2
@@ -3023,7 +3023,7 @@ starline==0.1.5
 starlingbank==3.2
 
 # homeassistant.components.starlink
-starlink-grpc-core==1.2.4
+starlink-grpc-core==1.2.5
 
 # homeassistant.components.statsd
 statsd==3.2.1
@@ -3041,7 +3041,7 @@ stookwijzer==1.6.1
 streamlabswater==1.0.1
 
 # homeassistant.components.subaru
-subarulink==0.7.15
+subarulink==0.7.19
 
 # homeassistant.components.surepetcare
 surepy==0.9.0
@@ -3325,7 +3325,7 @@ wsdot==0.0.1
 wyoming==1.7.2
 
 # homeassistant.components.xiaomi_ble
-xiaomi-ble==1.10.0
+xiaomi-ble==1.10.1
 
 # homeassistant.components.knx
 xknx==3.15.0
