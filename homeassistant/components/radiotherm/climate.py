@@ -49,9 +49,9 @@ PRESET_MODES = [
 ]
 
 CT30_OPERATION_LIST = [HVACMode.OFF, HVACMode.HEAT, HVACMode.COOL]
-CT80_OPERATION_LIST = [HVACMode.OFF, HVACMode.HEAT, HVACMode.COOL, HVACMode.HEAT_COOL]
 CT30_FAN_OPERATION_LIST = [FAN_ON, FAN_AUTO]
-CT80_FAN_OPERATION_LIST = [FAN_ON, STATE_CIRCULATE, FAN_AUTO]
+OPERATION_LIST = [HVACMode.OFF, HVACMode.HEAT, HVACMode.COOL, HVACMode.HEAT_COOL]
+FAN_OPERATION_LIST = [FAN_ON, STATE_CIRCULATE, FAN_AUTO]
 
 # Mappings from radiotherm json data codes to and from Home Assistant state
 # flags.  CODE is the thermostat integer code and these map to and
@@ -124,27 +124,33 @@ class RadioThermostat(RadioThermostatEntity, ClimateEntity):
 
         # Common initialization.
         self._attr_unique_id = self.init_data.mac
-        self._attr_hvac_modes = CT30_OPERATION_LIST
-        self._attr_fan_modes = CT30_FAN_OPERATION_LIST
+        self._attr_target_temperature: float | None = None
+        self._attr_target_temperature_high: float | None = None
+        self._attr_target_temperature_low: float | None = None
+
+        # Set common supported features.
         self._attr_supported_features = (
             ClimateEntityFeature.TARGET_TEMPERATURE
             | ClimateEntityFeature.FAN_MODE
             | ClimateEntityFeature.TURN_OFF
             | ClimateEntityFeature.TURN_ON
         )
-        self._attr_target_temperature: float | None = None
 
-        # Init specific to CT80 only.
+        # Add preset modes feature for CT80.
         if isinstance(self.device, radiotherm.thermostat.CT80):
-            self._attr_hvac_modes = CT80_OPERATION_LIST
-            self._attr_fan_modes = CT80_FAN_OPERATION_LIST
+            self._attr_preset_modes = PRESET_MODES
             self._attr_supported_features |= ClimateEntityFeature.PRESET_MODE
+
+        # Set hvac and fan modes for CT30 vs others.
+        if isinstance(self.device, radiotherm.thermostat.CT30):
+            self._attr_hvac_modes = CT30_OPERATION_LIST
+            self._attr_fan_modes = CT30_FAN_OPERATION_LIST
+        else:
+            self._attr_hvac_modes = OPERATION_LIST
+            self._attr_fan_modes = FAN_OPERATION_LIST
             self._attr_supported_features |= (
                 ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
             )
-            self._attr_preset_modes = PRESET_MODES
-            self._attr_target_temperature_high: float | None = None
-            self._attr_target_temperature_low: float | None = None
 
         # Process the already-available coordinator data so the ClimateEntity
         # has valid state from the very first render.
@@ -192,8 +198,11 @@ class RadioThermostat(RadioThermostatEntity, ClimateEntity):
         elif self.hvac_mode == HVACMode.HEAT:
             self._attr_target_temperature = data.get("t_heat")
         elif self.hvac_mode == HVACMode.HEAT_COOL:
-            self._attr_target_temperature_low = data.get("t_heat")
-            self._attr_target_temperature_high = data.get("t_cool")
+            # If packet only contains one target, set only that target.
+            if "t_heat" in data:
+                self._attr_target_temperature_low = data["t_heat"]
+            if "t_cool" in data:
+                self._attr_target_temperature_high = data["t_cool"]
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
