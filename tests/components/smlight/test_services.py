@@ -8,7 +8,13 @@ from pysmlight.models import BuzzerPayload
 import pytest
 
 from homeassistant.components.smlight.const import DOMAIN
-from homeassistant.components.smlight.services import ATTR_TONE, SERVICE_PLAY_RTTTL
+from homeassistant.components.smlight.services import (
+    ATTR_BPM,
+    ATTR_DURATION,
+    ATTR_NOTES,
+    ATTR_OCTAVE,
+    SERVICE_PLAY_RTTTL,
+)
 from homeassistant.const import ATTR_DEVICE_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
@@ -23,16 +29,54 @@ MOCK_ULTIMA = Info(
     model="SLZB-Ultima3",
 )
 
-TEST_TONE = "smb:d=4,o=5,b=100:16e6,16e6"
+TEST_NOTES = "16e6,16e6"
+TEST_BPM = 100
+TEST_OCTAVE = 5
+TEST_DURATION = 4
+TEST_RTTTL = "S:d=4,o=5,b=100:16e6,16e6"
+TEST_RTTTL_NO_DURATION = "S:o=5,b=100:16e6,16e6"
+TEST_RTTTL_NO_BPM = "S:o=5:16e6,16e6"
 
 
+@pytest.mark.parametrize(
+    ("service_data", "expected_rtttl"),
+    [
+        (
+            {
+                ATTR_BPM: TEST_BPM,
+                ATTR_OCTAVE: TEST_OCTAVE,
+                ATTR_DURATION: TEST_DURATION,
+                ATTR_NOTES: TEST_NOTES,
+            },
+            TEST_RTTTL,
+        ),
+        (
+            {
+                ATTR_BPM: TEST_BPM,
+                ATTR_OCTAVE: TEST_OCTAVE,
+                ATTR_NOTES: TEST_NOTES,
+            },
+            TEST_RTTTL_NO_DURATION,
+        ),
+        (
+            {
+                ATTR_OCTAVE: TEST_OCTAVE,
+                ATTR_NOTES: TEST_NOTES,
+            },
+            TEST_RTTTL_NO_BPM,
+        ),
+    ],
+    ids=["all_fields", "no_duration", "no_bpm"],
+)
 async def test_play_rtttl_service(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_smlight_client: MagicMock,
     device_registry: dr.DeviceRegistry,
+    service_data: dict[str, int | str],
+    expected_rtttl: str,
 ) -> None:
-    """Test play_rtttl service."""
+    """Test play_rtttl service constructs correct RTTTL string."""
     mock_smlight_client.get_info.side_effect = None
     mock_smlight_client.get_info.return_value = MOCK_ULTIMA
 
@@ -47,12 +91,12 @@ async def test_play_rtttl_service(
     await hass.services.async_call(
         DOMAIN,
         SERVICE_PLAY_RTTTL,
-        {ATTR_DEVICE_ID: [device_id], ATTR_TONE: TEST_TONE},
+        {ATTR_DEVICE_ID: [device_id], **service_data},
         blocking=True,
     )
 
     mock_smlight_client.actions.buzzer.assert_called_once_with(
-        BuzzerPayload(code=TEST_TONE)
+        BuzzerPayload(code=expected_rtttl)
     )
 
 
@@ -75,7 +119,12 @@ async def test_play_rtttl_service_not_supported(
         await hass.services.async_call(
             DOMAIN,
             SERVICE_PLAY_RTTTL,
-            {ATTR_DEVICE_ID: [device_id], ATTR_TONE: TEST_TONE},
+            {
+                ATTR_DEVICE_ID: [device_id],
+                ATTR_BPM: TEST_BPM,
+                ATTR_OCTAVE: TEST_OCTAVE,
+                ATTR_NOTES: TEST_NOTES,
+            },
             blocking=True,
         )
 
@@ -97,7 +146,12 @@ async def test_play_rtttl_service_no_device(
         await hass.services.async_call(
             DOMAIN,
             SERVICE_PLAY_RTTTL,
-            {ATTR_DEVICE_ID: ["non_existent_device_id"], ATTR_TONE: TEST_TONE},
+            {
+                ATTR_DEVICE_ID: ["non_existent_device_id"],
+                ATTR_BPM: TEST_BPM,
+                ATTR_OCTAVE: TEST_OCTAVE,
+                ATTR_NOTES: TEST_NOTES,
+            },
             blocking=True,
         )
 
@@ -128,7 +182,12 @@ async def test_play_rtttl_service_error(
         await hass.services.async_call(
             DOMAIN,
             SERVICE_PLAY_RTTTL,
-            {ATTR_DEVICE_ID: [device_id], ATTR_TONE: TEST_TONE},
+            {
+                ATTR_DEVICE_ID: [device_id],
+                ATTR_BPM: TEST_BPM,
+                ATTR_OCTAVE: TEST_OCTAVE,
+                ATTR_NOTES: TEST_NOTES,
+            },
             blocking=True,
         )
 
