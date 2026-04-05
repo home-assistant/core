@@ -16,6 +16,7 @@ from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 from homeassistant.helpers.service_info.ssdp import SsdpServiceInfo
 from homeassistant.helpers.typing import DiscoveryInfoType
 from homeassistant.util.network import is_ip_address
+from homeassistant.util.ssl import create_no_verify_ssl_context
 
 from .const import DOMAIN
 from .discovery import async_start_discovery
@@ -45,11 +46,15 @@ class UnifiAccessConfigFlow(ConfigFlow, domain=DOMAIN):
         session = async_get_clientsession(
             self.hass, verify_ssl=user_input[CONF_VERIFY_SSL]
         )
+        ssl_context = (
+            None if user_input[CONF_VERIFY_SSL] else create_no_verify_ssl_context()
+        )
         client = UnifiAccessApiClient(
             host=user_input[CONF_HOST],
             api_token=user_input[CONF_API_TOKEN],
             session=session,
             verify_ssl=user_input[CONF_VERIFY_SSL],
+            ssl_context=ssl_context,
         )
         try:
             await client.authenticate()
