@@ -92,6 +92,7 @@ class AnglianWaterUpdateCoordinator(DataUpdateCoordinator[None]):
                 _LOGGER.debug("Updating statistics for the first time")
                 usage_sum = 0.0
                 last_stats_time = None
+                allow_update_last_stored_hour = False
             else:
                 if not meter.readings or len(meter.readings) == 0:
                     _LOGGER.debug("No recent usage statistics found, skipping update")
@@ -135,6 +136,7 @@ class AnglianWaterUpdateCoordinator(DataUpdateCoordinator[None]):
                         "falling back to last stored statistic",
                         usage_statistic_id,
                     )
+                    allow_update_last_stored_hour = True
                     if not (last_records := last_stat.get(usage_statistic_id)):
                         _LOGGER.debug(
                             "No stored statistics found for %s, skipping update",
@@ -144,6 +146,7 @@ class AnglianWaterUpdateCoordinator(DataUpdateCoordinator[None]):
                     usage_sum = float(last_records[0].get("sum") or 0.0)
                     last_stats_time = last_records[0]["start"]
                 else:
+                    allow_update_last_stored_hour = False
                     records = stats[usage_statistic_id]
 
                     def _safe_get_sum(records: list[Any]) -> float:
@@ -165,7 +168,13 @@ class AnglianWaterUpdateCoordinator(DataUpdateCoordinator[None]):
                     )
                     continue
                 start = dt_util.as_local(parsed_read_at) - timedelta(hours=1)
-                if last_stats_time is not None and start.timestamp() <= last_stats_time:
+                if last_stats_time is not None and (
+                    start.timestamp() < last_stats_time
+                    or (
+                        start.timestamp() == last_stats_time
+                        and not allow_update_last_stored_hour
+                    )
+                ):
                     continue
                 usage_state = max(0, read["consumption"] / 1000)
                 usage_sum = max(0, read["read"])

@@ -1,5 +1,6 @@
 """Tests for the Anglian Water coordinator."""
 
+from datetime import timedelta
 from unittest.mock import AsyncMock, patch
 
 from pyanglianwater.meter import SmartMeter
@@ -179,6 +180,15 @@ async def test_coordinator_subsequent_run_missing_period_statistics(
     await coordinator._async_update_data()
     await async_wait_recording_done(hass)
 
+    # Correct the latest already-stored reading. Fallback should still update
+    # this hour instead of skipping it.
+    mock_smart_meter.readings[-1] = {
+        "read_at": "2024-06-01T14:00:00",
+        "consumption": 35,
+        "read": 70,
+    }
+
+    # Add a new later reading to ensure fallback also accepts newer entries.
     mock_smart_meter.readings.append(
         {"read_at": "2024-06-01T15:00:00Z", "consumption": 20, "read": 90}
     )
@@ -196,4 +206,22 @@ async def test_coordinator_subsequent_run_missing_period_statistics(
     stats = await hass.async_add_executor_job(
         get_last_statistics, hass, 1, statistic_id, True, {"sum"}
     )
-    assert stats[statistic_id][0]["sum"] >= 50
+    assert stats[statistic_id][0]["sum"] >= 70
+
+    parsed_read_at = dt_util.parse_datetime("2024-06-01T14:00:00")
+    assert parsed_read_at is not None
+    corrected_start = dt_util.as_local(parsed_read_at) - timedelta(hours=1)
+
+    corrected_stats = await hass.async_add_executor_job(
+        statistics_during_period,
+        hass,
+        corrected_start,
+        corrected_start + timedelta(seconds=1),
+        {
+            statistic_id,
+        },
+        "hour",
+        None,
+        {"sum"},
+    )
+    assert corrected_stats[statistic_id][0]["sum"] == 70
