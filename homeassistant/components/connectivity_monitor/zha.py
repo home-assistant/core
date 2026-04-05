@@ -75,7 +75,7 @@ def _last_seen_to_timestamp(last_seen) -> float | None:
     if hasattr(last_seen, "timestamp"):
         try:
             return last_seen.timestamp()
-        except AttributeError, TypeError:
+        except (AttributeError, TypeError):
             pass
     return None
 
