@@ -84,15 +84,27 @@ class VelbusConfigFlow(ConfigFlow, domain=DOMAIN):
             if CONF_PASSWORD in user_input and user_input[CONF_PASSWORD] != "":
                 self._device += f"{user_input[CONF_PASSWORD]}@"
             self._device += f"{user_input[CONF_HOST]}:{user_input[CONF_PORT]}"
-            self._async_abort_entries_match({CONF_PORT: self._device})
+            if self.source != SOURCE_RECONFIGURE:
+                self._async_abort_entries_match({CONF_PORT: self._device})
             if await self._test_connection():
                 return await self.async_step_vlp()
             step_errors[CONF_HOST] = "cannot_connect"
         else:
-            user_input = {
-                CONF_TLS: True,
-                CONF_PORT: 27015,
-            }
+            if self.source == SOURCE_RECONFIGURE:
+                current = self._get_reconfigure_entry().data.get(CONF_PORT, "")
+                tls = current.startswith("tls://")
+                host_port = current.removeprefix("tls://").split("@")[-1]
+                host, _, port = host_port.rpartition(":")
+                user_input = {
+                    CONF_TLS: tls,
+                    CONF_HOST: host,
+                    CONF_PORT: int(port) if port.isdigit() else 27015,
+                }
+            else:
+                user_input = {
+                    CONF_TLS: True,
+                    CONF_PORT: 27015,
+                }
 
         return self.async_show_form(
             step_id="network",
@@ -198,7 +210,7 @@ class VelbusConfigFlow(ConfigFlow, domain=DOMAIN):
                     old_entry,
                     data={
                         CONF_VLP_FILE: self._vlp_file,
-                        CONF_PORT: old_entry.data.get(CONF_PORT),
+                        CONF_PORT: self._device,
                     },
                 )
             if not step_errors:
@@ -223,7 +235,7 @@ class VelbusConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle reconfiguration."""
-        return await self.async_step_vlp()
+        return await self.async_step_network()
 
 
 def save_uploaded_vlp_file(hass: HomeAssistant, uploaded_file_id: str) -> str:
