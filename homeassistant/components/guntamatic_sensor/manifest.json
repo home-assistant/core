@@ -4,6 +4,13 @@
   "codeowners": ["@JensTimmerman"],
   "config_flow": true,
   "dependencies": [],
+  "dhcp": [
+    {
+      "hostname": "kessel*",
+      "macaddress": "0024BD*"
+    }
+  ],
+
   "documentation": "https://www.home-assistant.io/integrations/guntamatic_sensor",
   "homekit": {},
   "integration_type": "device",

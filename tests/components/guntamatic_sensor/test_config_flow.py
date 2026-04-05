@@ -9,6 +9,7 @@ from homeassistant.components.guntamatic_sensor.const import DOMAIN
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
 from tests.common import MockConfigEntry
 
@@ -145,3 +146,24 @@ async def test_form_already_configured(
         )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
+
+
+async def test_dhcp_discovery(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
+    """Test DHCP discovery."""
+    with patch(
+        "homeassistant.components.guntamatic_sensor.config_flow.Heater.get_data",
+        return_value={"Boiler temperature": ["14.09", "°C"]},
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_DHCP},
+            data=DhcpServiceInfo(
+                ip="1.1.1.1",
+                hostname="kessel0001",
+                macaddress="0024bd123456",
+            ),
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"] == {CONF_HOST: "1.1.1.1"}

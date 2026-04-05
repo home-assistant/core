@@ -1,6 +1,13 @@
 """Support for Guntamatic sensors in Home Assistant."""
 
-from homeassistant.components.sensor import SensorDeviceClass, SensorEntity, StateType
+from homeassistant.components.sensor import (
+    SensorDeviceClass,
+    SensorEntity,
+    SensorEntityDescription,
+    SensorStateClass,
+    StateType,
+)
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -10,22 +17,43 @@ from homeassistant.helpers.update_coordinator import (
     DataUpdateCoordinator,
 )
 
-from . import GuntamaticConfigEntry
-from .const import (
-    DIAGNOSTIC_SENSORS,
-    DOMAIN,
-    SENSOR_DEVICE_CLASSES,
-    SENSOR_STATE_CLASSES,
-)
+from .const import DIAGNOSTIC_SENSORS, DOMAIN
 
 PARALLEL_UPDATES = 0
+
+# mapping from
+UNIT_TO_DESCRIPTION: dict[str, SensorEntityDescription] = {
+    "°C": SensorEntityDescription(
+        key="temperature",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement="°C",
+    ),
+    "%": SensorEntityDescription(
+        key="percentage",
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement="%",
+    ),
+    "h": SensorEntityDescription(
+        key="duration_hours",
+        device_class=SensorDeviceClass.DURATION,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        native_unit_of_measurement="h",
+    ),
+    "d": SensorEntityDescription(
+        key="duration_days",
+        device_class=SensorDeviceClass.DURATION,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        native_unit_of_measurement="d",
+    ),
+}
 
 type GuntamaticCoordinator = DataUpdateCoordinator[dict[str, list[str]]]
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: GuntamaticConfigEntry,
+    entry: ConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Guntamatic sensors from config entry."""
@@ -34,23 +62,18 @@ async def async_setup_entry(
     coordinator = data.coordinator
     heater = data.heater
 
-    known_sensors: set[str] = set()
+    # Create one entity per sensor
+    sensors = [
+        GuntamaticSensor(coordinator, name, heater.host) for name in coordinator.data
+    ]
 
-    def _check_sensors() -> None:
-        current_sensors = set(coordinator.data)
-        new_sensors = current_sensors - known_sensors
-        if new_sensors:
-            known_sensors.update(new_sensors)
-            async_add_entities(
-                GuntamaticSensor(coordinator, name, heater.host) for name in new_sensors
-            )
-
-    _check_sensors()
-    entry.async_on_unload(coordinator.async_add_listener(_check_sensors))
+    async_add_entities(sensors)
 
 
 class GuntamaticSensor(CoordinatorEntity[GuntamaticCoordinator], SensorEntity):
     """Representation of a single Guntamatic sensor."""
+
+    _attr_has_entity_name = True
 
     def __init__(
         self,
@@ -61,19 +84,15 @@ class GuntamaticSensor(CoordinatorEntity[GuntamaticCoordinator], SensorEntity):
         """Initialize the sensor."""
         super().__init__(coordinator)
         self._name = name
-        self._attr_has_entity_name = True
         self._attr_name = name
-        # serial might not be set on all devices
-        serial = coordinator.data.get("Serial", [None])[0] or host
+        serial = coordinator.data["Serial"][0]
 
-        self._attr_unique_id = (
-            f"guntamatic_{serial.replace('.', '_')}_{name.replace(' ', '_')}"
-        )
+        self._attr_unique_id = f"{serial.replace('.', '_')}_{name.replace(' ', '_')}"
 
         unit = coordinator.data[name][1]
-        self._attr_native_unit_of_measurement = unit
-        self._attr_device_class = SENSOR_DEVICE_CLASSES.get(name)
-        self._attr_state_class = SENSOR_STATE_CLASSES.get(name)
+        description = UNIT_TO_DESCRIPTION.get(unit)
+        if description is not None:
+            self.entity_description = description
 
         self._attr_entity_category = (
             EntityCategory.DIAGNOSTIC if name in DIAGNOSTIC_SENSORS else None
@@ -89,7 +108,7 @@ class GuntamaticSensor(CoordinatorEntity[GuntamaticCoordinator], SensorEntity):
             identifiers={(DOMAIN, serial)},
             name="Guntamatic Heater",
             manufacturer="Guntamatic",
-            serial_number=serial if serial != host else None,
+            serial_number=serial,
             sw_version=coordinator.data.get("Version", [None])[0],
         )
 
