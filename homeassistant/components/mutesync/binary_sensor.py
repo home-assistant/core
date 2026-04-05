@@ -1,14 +1,13 @@
 """mütesync binary sensor entities."""
 
 from homeassistant.components.binary_sensor import BinarySensorEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
-from .coordinator import MutesyncUpdateCoordinator
+from .coordinator import MutesyncConfigEntry, MutesyncUpdateCoordinator
 
 SENSORS = (
     "in_meeting",
@@ -18,11 +17,11 @@ SENSORS = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: MutesyncConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up the mütesync button."""
-    coordinator = hass.data[DOMAIN][config_entry.entry_id]
+    """Set up the mütesync binary sensors."""
+    coordinator = config_entry.runtime_data
     async_add_entities(
         [MuteStatus(coordinator, sensor_type) for sensor_type in SENSORS], True
     )

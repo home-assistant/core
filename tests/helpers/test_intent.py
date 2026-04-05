@@ -888,6 +888,34 @@ async def test_service_handler_device_classes(
         )
 
 
+async def test_service_handler_matched_states_uses_updated_state(
+    hass: HomeAssistant,
+) -> None:
+    """Test that matched_states reflects the post-service-call state, not the pre-call state."""
+    hass.states.async_set("light.kitchen", "off")
+
+    async def mock_turn_on(call):
+        """Mock service that updates the entity state."""
+        hass.states.async_set(call.data["entity_id"], "on")
+
+    hass.services.async_register("light", "turn_on", mock_turn_on)
+
+    handler = intent.ServiceIntentHandler("TestType", "light", "turn_on")
+    intent.async_register(hass, handler)
+
+    result = await intent.async_handle(
+        hass,
+        "test",
+        "TestType",
+        slots={"name": {"value": "kitchen"}},
+    )
+
+    assert result.response_type == intent.IntentResponseType.ACTION_DONE
+    assert len(result.matched_states) == 1
+    assert result.matched_states[0].entity_id == "light.kitchen"
+    assert result.matched_states[0].state == "on"
+
+
 @pytest.mark.parametrize(
     ("aliases", "friendly_name", "expected"),
     [

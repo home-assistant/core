@@ -6,12 +6,10 @@ from collections.abc import Iterable
 from datetime import datetime, timedelta
 import json
 import logging
-import math
 import random
 from unittest.mock import patch
 
 from freezegun import freeze_time
-import orjson
 import pytest
 from syrupy.assertion import SnapshotAssertion
 import voluptuous as vol
@@ -33,7 +31,13 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import TemplateError
-from homeassistant.helpers import entity, entity_registry as er, template, translation
+from homeassistant.helpers import (
+    device_registry as dr,
+    entity,
+    entity_registry as er,
+    template,
+    translation,
+)
 from homeassistant.helpers.entity_platform import EntityPlatform
 from homeassistant.helpers.json import json_dumps
 from homeassistant.helpers.template.render_info import (
@@ -293,131 +297,6 @@ def test_loop_controls(hass: HomeAssistant) -> None:
     assert render(hass, tpl) == "02"
 
 
-def test_float_function(hass: HomeAssistant) -> None:
-    """Test float function."""
-    hass.states.async_set("sensor.temperature", "12")
-
-    assert render(hass, "{{ float(states.sensor.temperature.state) }}") == 12.0
-
-    assert render(hass, "{{ float(states.sensor.temperature.state) > 11 }}") is True
-
-    # Test handling of invalid input
-    with pytest.raises(TemplateError):
-        render(hass, "{{ float('forgiving') }}")
-
-    # Test handling of default return value
-    assert render(hass, "{{ float('bad', 1) }}") == 1
-    assert render(hass, "{{ float('bad', default=1) }}") == 1
-
-
-def test_float_filter(hass: HomeAssistant) -> None:
-    """Test float filter."""
-    hass.states.async_set("sensor.temperature", "12")
-
-    assert render(hass, "{{ states.sensor.temperature.state | float }}") == 12.0
-    assert render(hass, "{{ states.sensor.temperature.state | float > 11 }}") is True
-
-    # Test handling of invalid input
-    with pytest.raises(TemplateError):
-        render(hass, "{{ 'bad' | float }}")
-
-    # Test handling of default return value
-    assert render(hass, "{{ 'bad' | float(1) }}") == 1
-    assert render(hass, "{{ 'bad' | float(default=1) }}") == 1
-
-
-def test_int_filter(hass: HomeAssistant) -> None:
-    """Test int filter."""
-    hass.states.async_set("sensor.temperature", "12.2")
-    assert render(hass, "{{ states.sensor.temperature.state | int }}") == 12
-    assert render(hass, "{{ states.sensor.temperature.state | int > 11 }}") is True
-
-    hass.states.async_set("sensor.temperature", "0x10")
-    assert render(hass, "{{ states.sensor.temperature.state | int(base=16) }}") == 16
-
-    # Test handling of invalid input
-    with pytest.raises(TemplateError):
-        render(hass, "{{ 'bad' | int }}")
-
-    # Test handling of default return value
-    assert render(hass, "{{ 'bad' | int(1) }}") == 1
-    assert render(hass, "{{ 'bad' | int(default=1) }}") == 1
-
-
-def test_int_function(hass: HomeAssistant) -> None:
-    """Test int filter."""
-    hass.states.async_set("sensor.temperature", "12.2")
-    assert render(hass, "{{ int(states.sensor.temperature.state) }}") == 12
-    assert render(hass, "{{ int(states.sensor.temperature.state) > 11 }}") is True
-
-    hass.states.async_set("sensor.temperature", "0x10")
-    assert render(hass, "{{ int(states.sensor.temperature.state, base=16) }}") == 16
-
-    # Test handling of invalid input
-    with pytest.raises(TemplateError):
-        render(hass, "{{ int('bad') }}")
-
-    # Test handling of default return value
-    assert render(hass, "{{ int('bad', 1) }}") == 1
-    assert render(hass, "{{ int('bad', default=1) }}") == 1
-
-
-def test_bool_function(hass: HomeAssistant) -> None:
-    """Test bool function."""
-    assert render(hass, "{{ bool(true) }}") is True
-    assert render(hass, "{{ bool(false) }}") is False
-    assert render(hass, "{{ bool('on') }}") is True
-    assert render(hass, "{{ bool('off') }}") is False
-    with pytest.raises(TemplateError):
-        render(hass, "{{ bool('unknown') }}")
-    with pytest.raises(TemplateError):
-        render(hass, "{{ bool(none) }}")
-    assert render(hass, "{{ bool('unavailable', none) }}") is None
-    assert render(hass, "{{ bool('unavailable', default=none) }}") is None
-
-
-def test_bool_filter(hass: HomeAssistant) -> None:
-    """Test bool filter."""
-    assert render(hass, "{{ true | bool }}") is True
-    assert render(hass, "{{ false | bool }}") is False
-    assert render(hass, "{{ 'on' | bool }}") is True
-    assert render(hass, "{{ 'off' | bool }}") is False
-    with pytest.raises(TemplateError):
-        render(hass, "{{ 'unknown' | bool }}")
-    with pytest.raises(TemplateError):
-        render(hass, "{{ none | bool }}")
-    assert render(hass, "{{ 'unavailable' | bool(none) }}") is None
-    assert render(hass, "{{ 'unavailable' | bool(default=none) }}") is None
-
-
-@pytest.mark.parametrize(
-    ("value", "expected"),
-    [
-        (0, True),
-        (0.0, True),
-        ("0", True),
-        ("0.0", True),
-        (True, True),
-        (False, True),
-        ("True", False),
-        ("False", False),
-        (None, False),
-        ("None", False),
-        ("horse", False),
-        (math.pi, True),
-        (math.nan, False),
-        (math.inf, False),
-        ("nan", False),
-        ("inf", False),
-    ],
-)
-def test_isnumber(hass: HomeAssistant, value, expected) -> None:
-    """Test is_number."""
-    assert render(hass, "{{ is_number(value) }}", {"value": value}) == expected
-    assert render(hass, "{{ value | is_number }}", {"value": value}) == expected
-    assert render(hass, "{{ value is is_number }}", {"value": value}) == expected
-
-
 def test_converting_datetime_to_iterable(hass: HomeAssistant) -> None:
     """Test converting a datetime to an iterable raises an error."""
     dt_ = datetime(2020, 1, 1, 0, 0, 0)
@@ -566,106 +445,9 @@ def test_as_function_no_arguments(hass: HomeAssistant) -> None:
     assert render(hass, tpl) == "Hello"
 
 
-def test_to_json(hass: HomeAssistant) -> None:
-    """Test the object to JSON string filter."""
-
-    # Note that we're not testing the actual json.loads and json.dumps methods,
-    # only the filters, so we don't need to be exhaustive with our sample JSON.
-    expected_result = {"Foo": "Bar"}
-    actual_result = render(hass, "{{ {'Foo': 'Bar'} | to_json }}")
-    assert actual_result == expected_result
-
-    expected_result = orjson.dumps({"Foo": "Bar"}, option=orjson.OPT_INDENT_2).decode()
-    actual_result = render(
-        hass, "{{ {'Foo': 'Bar'} | to_json(pretty_print=True) }}", parse_result=False
-    )
-    assert actual_result == expected_result
-
-    expected_result = orjson.dumps(
-        {"Z": 26, "A": 1, "M": 13}, option=orjson.OPT_SORT_KEYS
-    ).decode()
-    actual_result = render(
-        hass,
-        "{{ {'Z': 26, 'A': 1, 'M': 13} | to_json(sort_keys=True) }}",
-        parse_result=False,
-    )
-    assert actual_result == expected_result
-
-    with pytest.raises(TemplateError):
-        render(hass, "{{ {'Foo': now()} | to_json }}")
-
-    # Test special case where substring class cannot be rendered
-    # See: https://github.com/ijl/orjson/issues/445
-    class MyStr(str):
-        __slots__ = ()
-
-    expected_result = '{"mykey1":11.0,"mykey2":"myvalue2","mykey3":["opt3b","opt3a"]}'
-    test_dict = {
-        MyStr("mykey2"): "myvalue2",
-        MyStr("mykey1"): 11.0,
-        MyStr("mykey3"): ["opt3b", "opt3a"],
-    }
-    actual_result = render(
-        hass,
-        "{{ test_dict | to_json(sort_keys=True) }}",
-        {"test_dict": test_dict},
-        parse_result=False,
-    )
-    assert actual_result == expected_result
-
-
-def test_to_json_ensure_ascii(hass: HomeAssistant) -> None:
-    """Test the object to JSON string filter."""
-
-    # Note that we're not testing the actual json.loads and json.dumps methods,
-    # only the filters, so we don't need to be exhaustive with our sample JSON.
-    actual_value_ascii = render(hass, "{{ 'Bar ҝ éèà' | to_json(ensure_ascii=True) }}")
-    assert actual_value_ascii == '"Bar \\u049d \\u00e9\\u00e8\\u00e0"'
-    actual_value = render(hass, "{{ 'Bar ҝ éèà' | to_json(ensure_ascii=False) }}")
-    assert actual_value == '"Bar ҝ éèà"'
-
-    expected_result = json.dumps({"Foo": "Bar"}, indent=2)
-    actual_result = render(
-        hass,
-        "{{ {'Foo': 'Bar'} | to_json(pretty_print=True, ensure_ascii=True) }}",
-        parse_result=False,
-    )
-    assert actual_result == expected_result
-
-    expected_result = json.dumps({"Z": 26, "A": 1, "M": 13}, sort_keys=True)
-    actual_result = render(
-        hass,
-        "{{ {'Z': 26, 'A': 1, 'M': 13} | to_json(sort_keys=True, ensure_ascii=True) }}",
-        parse_result=False,
-    )
-    assert actual_result == expected_result
-
-
-def test_from_json(hass: HomeAssistant) -> None:
-    """Test the JSON string to object filter."""
-
-    # Note that we're not testing the actual json.loads and json.dumps methods,
-    # only the filters, so we don't need to be exhaustive with our sample JSON.
-    expected_result = "Bar"
-    actual_result = render(hass, '{{ (\'{"Foo": "Bar"}\' | from_json).Foo }}')
-    assert actual_result == expected_result
-
-    info = render_to_info(hass, "{{ 'garbage string' | from_json }}")
-    with pytest.raises(TemplateError, match="no default was specified"):
-        info.result()
-
-    actual_result = render(hass, "{{ 'garbage string' | from_json('Bar') }}")
-    assert actual_result == expected_result
-
-
 def test_ord(hass: HomeAssistant) -> None:
     """Test the ord filter."""
     assert render(hass, '{{ "d" | ord }}') == 100
-
-
-def test_from_hex(hass: HomeAssistant) -> None:
-    """Test the fromhex filter."""
-    assert render(hass, "{{ '0F010003' | from_hex }}") == b"\x0f\x01\x00\x03"
 
 
 @patch.object(random, "choice")
@@ -805,6 +587,66 @@ def test_if_state_exists(hass: HomeAssistant) -> None:
         hass, "{% if states.test.object %}exists{% else %}not exists{% endif %}"
     )
     assert result == "exists"
+
+
+def test_entity_name(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test entity_name method."""
+    assert render(hass, "{{ entity_name('sensor.fake') }}") is None
+
+    entry = entity_registry.async_get_or_create(
+        "sensor", "test", "unique_1", original_name="Registry Sensor"
+    )
+    assert render(hass, f"{{{{ entity_name('{entry.entity_id}') }}}}") == (
+        "Registry Sensor"
+    )
+    assert render(hass, f"{{{{ '{entry.entity_id}' | entity_name }}}}") == (
+        "Registry Sensor"
+    )
+
+    entity_registry.async_update_entity(entry.entity_id, name="My Custom Sensor")
+    assert render(hass, f"{{{{ entity_name('{entry.entity_id}') }}}}") == (
+        "My Custom Sensor"
+    )
+
+    # Falls back to state for entities not in the registry
+    hass.states.async_set(
+        "light.no_unique_id", "on", {"friendly_name": "No Unique ID Light"}
+    )
+    assert render(hass, "{{ entity_name('light.no_unique_id') }}") == (
+        "No Unique ID Light"
+    )
+
+    config_entry = MockConfigEntry(domain="test")
+    config_entry.add_to_hass(hass)
+    device_entry = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+        name="My Device",
+    )
+    entry2 = entity_registry.async_get_or_create(
+        "sensor",
+        "test",
+        "unique_2",
+        config_entry=config_entry,
+        device_id=device_entry.id,
+        has_entity_name=True,
+        original_name="Temperature",
+    )
+    assert render(hass, f"{{{{ entity_name('{entry2.entity_id}') }}}}") == (
+        "Temperature"
+    )
+
+    # Strips device name prefix
+    entity_registry.async_update_entity(
+        entry2.entity_id, name="My Device Custom Sensor"
+    )
+    assert render(hass, f"{{{{ entity_name('{entry2.entity_id}') }}}}") == (
+        "Custom Sensor"
+    )
 
 
 def test_is_hidden_entity(
@@ -1239,74 +1081,6 @@ def test_version(hass: HomeAssistant) -> None:
 
     with pytest.raises(TemplateError):
         render(hass, "{{ version(None) < '2099.9.10' }}")
-
-
-def test_pack(hass: HomeAssistant, caplog: pytest.LogCaptureFixture) -> None:
-    """Test struct pack method."""
-
-    # render as filter
-    variables = {"value": 0xDEADBEEF}
-    assert render(hass, "{{ value | pack('>I') }}", variables) == b"\xde\xad\xbe\xef"
-
-    # render as function
-    assert render(hass, "{{ pack(value, '>I') }}", variables) == b"\xde\xad\xbe\xef"
-
-    # test with None value
-    # "Template warning: 'pack' unable to pack object with type '%s' and format_string '%s' see https://docs.python.org/3/library/struct.html for more information"
-    assert render(hass, "{{ pack(value, '>I') }}", {"value": None}) is None
-    assert (
-        "Template warning: 'pack' unable to pack object 'None' with type 'NoneType' and"
-        " format_string '>I' see https://docs.python.org/3/library/struct.html for more"
-        " information" in caplog.text
-    )
-
-    # test with invalid filter
-    # "Template warning: 'pack' unable to pack object with type '%s' and format_string '%s' see https://docs.python.org/3/library/struct.html for more information"
-    assert render(hass, "{{ pack(value, 'invalid filter') }}", variables) is None
-    assert (
-        "Template warning: 'pack' unable to pack object '3735928559' with type 'int'"
-        " and format_string 'invalid filter' see"
-        " https://docs.python.org/3/library/struct.html for more information"
-        in caplog.text
-    )
-
-
-def test_unpack(hass: HomeAssistant, caplog: pytest.LogCaptureFixture) -> None:
-    """Test struct unpack method."""
-
-    variables = {"value": b"\xde\xad\xbe\xef"}
-
-    # render as filter
-    result = render(hass, """{{ value | unpack('>I') }}""", variables)
-    assert result == 0xDEADBEEF
-
-    # render as function
-    result = render(hass, """{{ unpack(value, '>I') }}""", variables)
-    assert result == 0xDEADBEEF
-
-    # unpack with offset
-    result = render(hass, """{{ unpack(value, '>H', offset=2) }}""", variables)
-    assert result == 0xBEEF
-
-    # test with an empty bytes object
-    assert render(hass, """{{ unpack(value, '>I') }}""", {"value": b""}) is None
-    assert (
-        "Template warning: 'unpack' unable to unpack object 'b''' with format_string"
-        " '>I' and offset 0 see https://docs.python.org/3/library/struct.html for more"
-        " information" in caplog.text
-    )
-
-    # test with invalid filter
-    assert (
-        render(hass, """{{ unpack(value, 'invalid filter') }}""", {"value": b""})
-        is None
-    )
-    assert (
-        "Template warning: 'unpack' unable to unpack object 'b''' with format_string"
-        " 'invalid filter' and offset 0 see"
-        " https://docs.python.org/3/library/struct.html for more information"
-        in caplog.text
-    )
 
 
 def test_distance_function_with_1_state(hass: HomeAssistant) -> None:
