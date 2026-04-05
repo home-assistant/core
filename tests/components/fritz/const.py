@@ -200,6 +200,25 @@ MOCK_FB_SERVICES: dict[str, dict[str, Any]] = {
             "NewBeaconAdvertisementEnabled": True,
         },
     },
+    "WLANConfiguration2": {
+        "GetInfo": {
+            "NewEnable": True,
+            "NewStatus": "Up",
+            "NewSSID": "GuestWifi",
+            "NewBeaconType": "11iandWPA3",
+            "NewX_AVM-DE_PossibleBeaconTypes": "None,11i,11iandWPA3",
+            "NewStandard": "ax",
+            "NewBSSID": "1C:ED:6F:12:34:13",
+            "NewMACAddressControlEnabled": True,
+        },
+        "GetSSID": {
+            "NewSSID": "GuestWifi",
+        },
+        "GetSecurityKeys": {"NewKeyPassphrase": "1234567890"},
+        "GetBeaconAdvertisement": {
+            "NewBeaconAdvertisementEnabled": True,
+        },
+    },
     "X_AVM-DE_Homeauto1": {
         "GetGenericDeviceInfos": [
             {
