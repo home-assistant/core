@@ -8,7 +8,7 @@ from typing import Any
 from unittest.mock import MagicMock, Mock, patch
 import zoneinfo
 
-from caldav.objects import Event
+from caldav.calendarobjectresource import Event
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 
