@@ -1,0 +1,12 @@
+{
+  "domain": "connectivity_monitor",
+  "name": "Connectivity Monitor",
+  "codeowners": ["@joshburkard"],
+  "config_flow": true,
+  "dependencies": ["bluetooth", "http", "lovelace"],
+  "documentation": "https://www.home-assistant.io/integrations/connectivity_monitor",
+  "integration_type": "service",
+  "iot_class": "local_polling",
+  "quality_scale": "bronze",
+  "requirements": ["icmplib==3.0", "dnspython==2.4.2"]
+}
