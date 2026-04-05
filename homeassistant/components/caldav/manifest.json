@@ -7,5 +7,5 @@
   "integration_type": "service",
   "iot_class": "cloud_polling",
   "loggers": ["caldav", "vobject"],
-  "requirements": ["caldav==2.1.0", "icalendar==6.3.1", "vobject==0.9.9"]
+  "requirements": ["caldav==3.1.0", "icalendar==6.3.1", "vobject==0.9.9"]
 }

@@ -723,7 +723,7 @@ buienradar==1.0.6
 cached-ipaddress==1.0.1
 
 # homeassistant.components.caldav
-caldav==2.1.0
+caldav==3.1.0
 
 # homeassistant.components.chess_com
 chess-com-api==1.1.0

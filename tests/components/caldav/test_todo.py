@@ -4,8 +4,8 @@ from datetime import UTC, date, datetime
 from typing import Any
 from unittest.mock import MagicMock, Mock
 
+from caldav import Todo
 from caldav.lib.error import DAVError, NotFoundError
-from caldav.objects import Todo
 import pytest
 
 from homeassistant.components.todo import (
