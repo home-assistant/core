@@ -52,7 +52,7 @@ class GuntamaticConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             self._async_abort_entries_match({CONF_HOST: user_input[CONF_HOST]})
             try:
-                await validate_input(self.hass, user_input)
+                info = await validate_input(self.hass, user_input)
             except CannotConnect, requests.exceptions.ConnectionError:
                 errors["base"] = "cannot_connect"
             except Exception:
@@ -60,7 +60,8 @@ class GuntamaticConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "unknown"
             else:
                 return self.async_create_entry(
-                    title="Guntamatic Heater", data=user_input
+                    title="Guntamatic Heater",
+                    data=info,
                 )
 
         return self.async_show_form(

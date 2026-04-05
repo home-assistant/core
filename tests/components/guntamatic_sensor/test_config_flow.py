@@ -10,6 +10,8 @@ from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
+from tests.common import MockConfigEntry
+
 
 async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
     """Test we get the form."""
@@ -83,3 +85,63 @@ async def test_form_cannot_connect(
         CONF_HOST: "1.1.1.1",
     }
     assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_form_empty_data(
+    hass: HomeAssistant, mock_setup_entry: AsyncMock
+) -> None:
+    """Test we handle empty data from heater."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    with patch(
+        "homeassistant.components.guntamatic_sensor.config_flow.Heater.get_data",
+        return_value={},
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_HOST: "1.1.1.1"},
+        )
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "cannot_connect"}
+
+
+async def test_form_unknown_error(
+    hass: HomeAssistant, mock_setup_entry: AsyncMock
+) -> None:
+    """Test we handle unknown errors."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    with patch(
+        "homeassistant.components.guntamatic_sensor.config_flow.Heater.get_data",
+        side_effect=Exception("Unknown error"),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_HOST: "1.1.1.1"},
+        )
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "unknown"}
+
+
+async def test_form_already_configured(
+    hass: HomeAssistant, mock_setup_entry: AsyncMock
+) -> None:
+    """Test we abort if already configured."""
+    entry = MockConfigEntry(domain=DOMAIN, data={CONF_HOST: "1.1.1.1"})
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    with patch(
+        "homeassistant.components.guntamatic_sensor.config_flow.Heater.get_data",
+        return_value=True,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_HOST: "1.1.1.1"},
+        )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"

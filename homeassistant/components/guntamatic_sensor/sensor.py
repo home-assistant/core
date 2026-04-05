@@ -1,22 +1,31 @@
 """Support for Guntamatic sensors in Home Assistant."""
 
-from datetime import timedelta
-
-from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.components.sensor import SensorDeviceClass, SensorEntity, StateType
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from homeassistant.helpers.update_coordinator import (
+    CoordinatorEntity,
+    DataUpdateCoordinator,
+)
 
-from .const import DOMAIN
+from . import GuntamaticConfigEntry
+from .const import (
+    DIAGNOSTIC_SENSORS,
+    DOMAIN,
+    SENSOR_DEVICE_CLASSES,
+    SENSOR_STATE_CLASSES,
+)
 
-UPDATE_INTERVAL = timedelta(seconds=60)
+PARALLEL_UPDATES = 0
+
+type GuntamaticCoordinator = DataUpdateCoordinator[dict[str, list[str]]]
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: GuntamaticConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Guntamatic sensors from config entry."""
@@ -25,18 +34,30 @@ async def async_setup_entry(
     coordinator = data.coordinator
     heater = data.heater
 
-    # Create one entity per sensor
-    sensors = [
-        GuntamaticSensor(coordinator, name, heater.host) for name in coordinator.data
-    ]
+    known_sensors: set[str] = set()
 
-    async_add_entities(sensors)
+    def _check_sensors() -> None:
+        current_sensors = set(coordinator.data)
+        new_sensors = current_sensors - known_sensors
+        if new_sensors:
+            known_sensors.update(new_sensors)
+            async_add_entities(
+                GuntamaticSensor(coordinator, name, heater.host) for name in new_sensors
+            )
+
+    _check_sensors()
+    entry.async_on_unload(coordinator.async_add_listener(_check_sensors))
 
 
-class GuntamaticSensor(CoordinatorEntity, SensorEntity):
+class GuntamaticSensor(CoordinatorEntity[GuntamaticCoordinator], SensorEntity):
     """Representation of a single Guntamatic sensor."""
 
-    def __init__(self, coordinator, name, host):
+    def __init__(
+        self,
+        coordinator: GuntamaticCoordinator,
+        name: str,
+        host: str,
+    ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator)
         self._name = name
@@ -51,6 +72,13 @@ class GuntamaticSensor(CoordinatorEntity, SensorEntity):
 
         unit = coordinator.data[name][1]
         self._attr_native_unit_of_measurement = unit
+        self._attr_device_class = SENSOR_DEVICE_CLASSES.get(name)
+        self._attr_state_class = SENSOR_STATE_CLASSES.get(name)
+
+        self._attr_entity_category = (
+            EntityCategory.DIAGNOSTIC if name in DIAGNOSTIC_SENSORS else None
+        )
+
         # if no unit is given by the guntamatic, it's a string, so set None
         if not unit:
             self._attr_native_unit_of_measurement = None
@@ -66,11 +94,11 @@ class GuntamaticSensor(CoordinatorEntity, SensorEntity):
         )
 
     @property
-    def native_value(self):
+    def native_value(self) -> StateType:
         """Return the current value of the sensor."""
-        return self.coordinator.data[self._attr_name][0]
+        return self.coordinator.data[self._name][0]
 
     @property
-    def native_unit_of_measurement(self):
-        """Return the current unit of the sensor."""
-        return self.coordinator.data[self._attr_name][1]
+    def available(self) -> bool:
+        """Return True if entity is available."""
+        return super().available and self._name in self.coordinator.data
