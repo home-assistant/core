@@ -107,6 +107,7 @@ class AnglianWaterUpdateCoordinator(DataUpdateCoordinator[None]):
                     continue
                 start = dt_util.as_local(parsed_read_at) - timedelta(hours=1)
                 _LOGGER.debug("Getting statistics at %s", start)
+                stats: dict[str, list[Any]] = {}
                 for end in (start + timedelta(seconds=1), None):
                     stats = await get_instance(self.hass).async_add_executor_job(
                         statistics_during_period,
@@ -127,15 +128,31 @@ class AnglianWaterUpdateCoordinator(DataUpdateCoordinator[None]):
                             "Not found, trying to find oldest statistic after %s",
                             start,
                         )
-                assert stats
 
-                def _safe_get_sum(records: list[Any]) -> float:
-                    if records and "sum" in records[0]:
-                        return float(records[0]["sum"])
-                    return 0.0
+                if not stats or not stats.get(usage_statistic_id):
+                    _LOGGER.debug(
+                        "Could not find existing statistics during period lookup for %s, "
+                        "falling back to last stored statistic",
+                        usage_statistic_id,
+                    )
+                    if not (last_records := last_stat.get(usage_statistic_id)):
+                        _LOGGER.debug(
+                            "No stored statistics found for %s, skipping update",
+                            usage_statistic_id,
+                        )
+                        continue
+                    usage_sum = float(last_records[0].get("sum") or 0.0)
+                    last_stats_time = last_records[0]["start"]
+                else:
+                    records = stats[usage_statistic_id]
 
-                usage_sum = _safe_get_sum(stats.get(usage_statistic_id, []))
-                last_stats_time = stats[usage_statistic_id][0]["start"]
+                    def _safe_get_sum(records: list[Any]) -> float:
+                        if records and "sum" in records[0]:
+                            return float(records[0]["sum"])
+                        return 0.0
+
+                    usage_sum = _safe_get_sum(records)
+                    last_stats_time = records[0]["start"]
 
             usage_statistics = []
 

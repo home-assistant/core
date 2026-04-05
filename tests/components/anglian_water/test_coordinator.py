@@ -1,6 +1,6 @@
 """Tests for the Anglian Water coordinator."""
 
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, patch
 
 from pyanglianwater.meter import SmartMeter
 import pytest
@@ -162,3 +162,38 @@ async def test_coordinator_invalid_readings(
         "Could not parse read_at time also-invalid-date, skipping reading"
         in caplog.text
     )
+
+
+async def test_coordinator_subsequent_run_missing_period_statistics(
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_smart_meter: SmartMeter,
+    mock_anglian_water_client: AsyncMock,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test the coordinator handles missing period lookup statistics."""
+    coordinator = AnglianWaterUpdateCoordinator(
+        hass, mock_anglian_water_client, mock_config_entry
+    )
+    await coordinator._async_update_data()
+    await async_wait_recording_done(hass)
+
+    mock_smart_meter.readings.append(
+        {"read_at": "2024-06-01T15:00:00Z", "consumption": 20, "read": 90}
+    )
+
+    with patch(
+        "homeassistant.components.anglian_water.coordinator.statistics_during_period",
+        return_value={},
+    ):
+        await coordinator._async_update_data()
+    await async_wait_recording_done(hass)
+
+    assert "Could not find existing statistics during period lookup" in caplog.text
+
+    statistic_id = f"anglian_water:{ACCOUNT_NUMBER}_testsn_usage"
+    stats = await hass.async_add_executor_job(
+        get_last_statistics, hass, 1, statistic_id, True, {"sum"}
+    )
+    assert stats[statistic_id][0]["sum"] >= 50
