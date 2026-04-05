@@ -8,6 +8,7 @@ from homeassistant.const import CONF_API_TOKEN, CONF_HOST, CONF_VERIFY_SSL, Plat
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.util.ssl import create_no_verify_ssl_context
 
 from .coordinator import UnifiAccessConfigEntry, UnifiAccessCoordinator
 
@@ -26,11 +27,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: UnifiAccessConfigEntry) 
     """Set up UniFi Access from a config entry."""
     session = async_get_clientsession(hass, verify_ssl=entry.data[CONF_VERIFY_SSL])
 
+    ssl_context = (
+        None if entry.data[CONF_VERIFY_SSL] else create_no_verify_ssl_context()
+    )
     client = UnifiAccessApiClient(
         host=entry.data[CONF_HOST],
         api_token=entry.data[CONF_API_TOKEN],
         session=session,
         verify_ssl=entry.data[CONF_VERIFY_SSL],
+        ssl_context=ssl_context,
     )
 
     try:
