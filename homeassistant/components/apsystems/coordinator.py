@@ -5,6 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import timedelta
 
+from aiohttp import ClientConnectionError
 from APsystemsEZ1 import (
     APsystemsEZ1M,
     InverterReturnedError,
@@ -66,7 +67,7 @@ class ApSystemsDataCoordinator(DataUpdateCoordinator[ApSystemsSensorData]):
     async def _async_setup(self) -> None:
         try:
             await self._fetch_device_info()
-        except ConnectionError, TimeoutError:
+        except ConnectionError, TimeoutError, ClientConnectionError:
             # Inverter may be offline (e.g. nighttime). Allow setup to
             # continue so entities are created; device info will be
             # fetched on the first successful update instead.
@@ -91,7 +92,7 @@ class ApSystemsDataCoordinator(DataUpdateCoordinator[ApSystemsSensorData]):
             raise UpdateFailed(
                 translation_domain=DOMAIN, translation_key="inverter_error"
             ) from None
-        except ConnectionError, TimeoutError:
+        except ConnectionError, TimeoutError, ClientConnectionError:
             # The inverter shuts down at night when there is no solar power,
             # causing connection errors. Return power as 0 since the inverter
             # is not producing. Energy values use last known data if available,
