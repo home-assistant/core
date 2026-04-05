@@ -1175,6 +1175,46 @@ async def test_media_transport(
     assert getattr(soco, client_call).call_count == 1
 
 
+@pytest.mark.parametrize(
+    ("transport_state", "title", "expected_state"),
+    [
+        ("PAUSED_PLAYBACK", "Something", "paused"),
+        ("PAUSED_PLAYBACK", None, "idle"),
+        ("PAUSED_PLAYBACK", " ", "idle"),
+        ("STOPPED", "Something", "paused"),
+        ("STOPPED", None, "idle"),
+        ("STOPPED", " ", "idle"),
+    ],
+)
+async def test_state_paused_idle(
+    hass: HomeAssistant,
+    soco: MockSoCo,
+    async_autosetup_sonos,
+    no_media_event: SonosMockEvent,
+    transport_state: str,
+    title: str | None,
+    expected_state: str,
+) -> None:
+    """Test that idle is returned when title is None or whitespace, paused otherwise."""
+    soco.get_current_track_info.return_value = {
+        "title": title,
+        "artist": "",
+        "album": "",
+        "album_art": "",
+        "position": "NOT_IMPLEMENTED",
+        "playlist_position": "1",
+        "duration": "NOT_IMPLEMENTED",
+        "uri": "x-file-cifs://192.168.42.10/music/track.mp3",
+        "metadata": "NOT_IMPLEMENTED",
+    }
+    no_media_event.variables["transport_state"] = transport_state
+    soco.avTransport.subscribe.return_value.callback(no_media_event)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    state = hass.states.get("media_player.zone_a")
+    assert state.state == expected_state
+
+
 async def test_play_media_announce(
     hass: HomeAssistant,
     soco: MockSoCo,

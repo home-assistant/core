@@ -349,17 +349,24 @@ def long_repr_strings() -> Generator[None]:
 
 
 @pytest.fixture(autouse=True)
-def enable_event_loop_debug() -> None:
+async def enable_event_loop_debug() -> None:
     """Enable event loop debug mode."""
-    asyncio.get_event_loop().set_debug(True)
+    asyncio.get_running_loop().set_debug(True)
 
 
-@pytest.fixture(autouse=True)
+@pytest_asyncio.fixture(autouse=True)
 def verify_cleanup(
     expected_lingering_tasks: bool,
     expected_lingering_timers: bool,
 ) -> Generator[None]:
-    """Verify that the test has cleaned up resources correctly."""
+    """Verify that the test has cleaned up resources correctly.
+
+    This fixture requires the event loop to be stopped.
+    It therefore cannot be an async fixture.
+
+    Use @pytest_asyncio.fixture to make sure the correct event loop is set
+    regardless before calling the fixture.
+    """
     event_loop = asyncio.get_event_loop()
     threads_before = frozenset(threading.enumerate())
     tasks_before = asyncio.all_tasks(event_loop)

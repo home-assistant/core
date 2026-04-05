@@ -13,36 +13,18 @@ from homeassistant.components.image import DOMAIN as IMAGE_DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers.entity_registry import EntityRegistry
+from homeassistant.util import slugify
 
-from .const import MOCK_FB_SERVICES, MOCK_USER_DATA
+from .const import MOCK_FB_SERVICES, MOCK_MESH_MASTER_MAC, MOCK_USER_DATA
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 from tests.typing import ClientSessionGenerator
 
-GUEST_WIFI_ENABLED: dict[str, dict] = {
-    "WLANConfiguration0": {},
-    "WLANConfiguration1": {
-        "GetBeaconAdvertisement": {"NewBeaconAdvertisementEnabled": 1},
-        "GetInfo": {
-            "NewEnable": True,
-            "NewStatus": "Up",
-            "NewSSID": "GuestWifi",
-            "NewBeaconType": "11iandWPA3",
-            "NewX_AVM-DE_PossibleBeaconTypes": "None,11i,11iandWPA3",
-            "NewStandard": "ax",
-            "NewBSSID": "1C:ED:6F:12:34:13",
-        },
-        "GetSSID": {
-            "NewSSID": "GuestWifi",
-        },
-        "GetSecurityKeys": {"NewKeyPassphrase": "1234567890"},
-    },
-}
-
 GUEST_WIFI_CHANGED: dict[str, dict] = {
-    "WLANConfiguration0": {},
-    "WLANConfiguration1": {
+    "WLANConfiguration1": {},
+    "WLANConfiguration2": {
         "GetBeaconAdvertisement": {"NewBeaconAdvertisementEnabled": 1},
         "GetInfo": {
             "NewEnable": True,
@@ -61,8 +43,8 @@ GUEST_WIFI_CHANGED: dict[str, dict] = {
 }
 
 GUEST_WIFI_DISABLED: dict[str, dict] = {
-    "WLANConfiguration0": {},
-    "WLANConfiguration1": {
+    "WLANConfiguration1": {},
+    "WLANConfiguration2": {
         "GetBeaconAdvertisement": {"NewBeaconAdvertisementEnabled": 1},
         "GetInfo": {
             "NewEnable": False,
@@ -84,7 +66,7 @@ GUEST_WIFI_DISABLED: dict[str, dict] = {
 @pytest.mark.parametrize(
     ("fc_data"),
     [
-        ({**MOCK_FB_SERVICES, **GUEST_WIFI_ENABLED}),
+        ({**MOCK_FB_SERVICES}),
         ({**MOCK_FB_SERVICES, **GUEST_WIFI_DISABLED}),
     ],
 )
@@ -126,7 +108,7 @@ async def test_image_entity(
     }
 
     assert (state := entity_registry.async_get("image.mock_title_guestwifi"))
-    assert state.unique_id == "1c_ed_6f_12_34_11_guestwifi_qr_code"
+    assert state.unique_id == "1C:ED:6F:12:34:11-guest_wifi_qr_code"
 
     # test image download
     client = await hass_client()
@@ -137,7 +119,7 @@ async def test_image_entity(
     assert body == snapshot
 
 
-@pytest.mark.parametrize(("fc_data"), [({**MOCK_FB_SERVICES, **GUEST_WIFI_ENABLED})])
+@pytest.mark.parametrize(("fc_data"), [({**MOCK_FB_SERVICES})])
 async def test_image_update(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
@@ -178,7 +160,7 @@ async def test_image_update(
     assert resp_body_new == snapshot
 
 
-@pytest.mark.parametrize(("fc_data"), [({**MOCK_FB_SERVICES, **GUEST_WIFI_ENABLED})])
+@pytest.mark.parametrize(("fc_data"), [({**MOCK_FB_SERVICES})])
 async def test_image_update_unavailable(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
@@ -222,3 +204,53 @@ async def test_image_update_unavailable(
 
     assert (state := hass.states.get(entity_id))
     assert state.state != STATE_UNKNOWN
+
+
+async def test_migrate_to_new_unique_id(
+    hass: HomeAssistant,
+    fc_class_mock,
+    fh_class_mock,
+    entity_registry: EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test migrate from old unique id to new unique id."""
+
+    mock_unique_id = "1234567890"
+
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=MOCK_USER_DATA,
+        unique_id=mock_unique_id,
+    )
+    entry.add_to_hass(hass)
+
+    old_unique_id = slugify(f"{MOCK_MESH_MASTER_MAC}-GuestWifi-qr-code")
+    new_unique_id = f"{MOCK_MESH_MASTER_MAC}-guest_wifi_qr_code"
+
+    entity_registry.async_get_or_create(
+        suggested_object_id="mock_title_mywifi",
+        disabled_by=None,
+        domain=IMAGE_DOMAIN,
+        platform=DOMAIN,
+        unique_id=old_unique_id,
+        config_entry=entry,
+    )
+
+    device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers={(DOMAIN, mock_unique_id)},
+        connections={(dr.CONNECTION_NETWORK_MAC, MOCK_MESH_MASTER_MAC)},
+    )
+    await hass.async_block_till_done()
+
+    entity_entry = entity_registry.async_get("image.mock_title_mywifi")
+    assert entity_entry
+    assert entity_entry.unique_id == old_unique_id
+
+    with patch("homeassistant.components.fritz.PLATFORMS", [Platform.IMAGE]):
+        await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    entity_entry = entity_registry.async_get("image.mock_title_mywifi")
+    assert entity_entry
+    assert entity_entry.unique_id == new_unique_id
