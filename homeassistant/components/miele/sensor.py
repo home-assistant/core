@@ -639,6 +639,7 @@ SENSOR_TYPES: Final[tuple[MieleSensorDefinition[MieleDevice], ...]] = (
             MieleAppliance.OVEN,
             MieleAppliance.OVEN_MICROWAVE,
             MieleAppliance.STEAM_OVEN_COMBI,
+            MieleAppliance.STEAM_OVEN_MK2,
         ),
         description=MieleSensorDescription(
             key="state_core_temperature",
