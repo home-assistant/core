@@ -10,7 +10,7 @@ See https://modelcontextprotocol.io/docs/concepts/architecture#implementation-ex
 from collections.abc import Callable, Sequence
 import json
 import logging
-from typing import Any
+from typing import Any, cast
 
 from mcp import types
 from mcp.server import Server
@@ -19,56 +19,23 @@ from pydantic import AnyUrl
 import voluptuous as vol
 from voluptuous_openapi import convert
 
-from homeassistant.components.calendar import DOMAIN as CALENDAR_DOMAIN
-from homeassistant.components.conversation import DOMAIN as CONVERSATION_DOMAIN
-from homeassistant.components.script import DOMAIN as SCRIPT_DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import llm
-from homeassistant.util import yaml as yaml_util
 
 from .const import STATELESS_LLM_API
 
 _LOGGER = logging.getLogger(__name__)
 
-EXPOSED_ENTITIES_RESOURCE_URI = "homeassistant://assist/exposed-entities"
-EXPOSED_ENTITIES_RESOURCE_URL = AnyUrl(EXPOSED_ENTITIES_RESOURCE_URI)
-EXPOSED_ENTITIES_RESOURCE_MIME_TYPE = "text/yaml"
+LIVE_CONTEXT_RESOURCE_URI = "homeassistant://assist/live-context"
+LIVE_CONTEXT_RESOURCE_URL = AnyUrl(LIVE_CONTEXT_RESOURCE_URI)
+LIVE_CONTEXT_RESOURCE_MIME_TYPE = "text/plain"
+LIVE_CONTEXT_TOOL_NAME = "GetLiveContext"
 
 
-def _exposed_entities_resource_supported(
-    llm_api_id: str | list[str], assistant: str | None
-) -> bool:
-    """Return if the Assist exposed entities resource should be available."""
-    if assistant is None:
-        return False
-
-    if isinstance(llm_api_id, str):
-        llm_api_ids = [llm_api_id]
-    else:
-        llm_api_ids = llm_api_id
-
-    return llm.LLM_API_ASSIST in llm_api_ids
-
-
-def _get_exposed_entities_resource_contents(hass: HomeAssistant, assistant: str) -> str:
-    """Build model-friendly exposed entity context for the MCP resource."""
-    exposed_entities = llm.async_get_exposed_entities(
-        hass, assistant, include_state=True
-    )
-    entities = [
-        {"entity_id": entity_id, **entity_info}
-        for domain in (CALENDAR_DOMAIN, SCRIPT_DOMAIN, "entities")
-        for entity_id, entity_info in exposed_entities[domain].items()
-    ]
-    entities.sort(key=lambda item: (item["names"], item["entity_id"]))
-
-    return yaml_util.dump(
-        {
-            "assistant": assistant,
-            "entities": entities,
-        }
-    )
+def _has_live_context_tool(llm_api: llm.APIInstance) -> bool:
+    """Return if the selected API exposes the live context tool."""
+    return any(tool.name == LIVE_CONTEXT_TOOL_NAME for tool in llm_api.tools)
 
 
 def _format_tool(
@@ -98,9 +65,6 @@ async def create_server(
         llm_api_id = llm.LLM_API_ASSIST
 
     server = Server[Any]("home-assistant")
-    has_exposed_entities_resource = _exposed_entities_resource_supported(
-        llm_api_id, llm_context.assistant
-    )
 
     async def get_api_instance() -> llm.APIInstance:
         """Get the LLM API selected."""
@@ -140,36 +104,42 @@ async def create_server(
 
     @server.list_resources()  # type: ignore[no-untyped-call,untyped-decorator]
     async def handle_list_resources() -> list[types.Resource]:
-        if not has_exposed_entities_resource:
+        llm_api = await get_api_instance()
+        if not _has_live_context_tool(llm_api):
             return []
 
         return [
             types.Resource(
-                uri=EXPOSED_ENTITIES_RESOURCE_URL,
-                name="assist_exposed_entities",
-                title="Assist exposed entities",
+                uri=LIVE_CONTEXT_RESOURCE_URL,
+                name="assist_live_context",
+                title="Assist live context",
                 description=(
-                    "Entities exposed to Assist, including current state and"
-                    " a curated set of attributes."
+                    "A snapshot of the current Assist live context, matching"
+                    " the existing GetLiveContext tool output."
                 ),
-                mimeType=EXPOSED_ENTITIES_RESOURCE_MIME_TYPE,
+                mimeType=LIVE_CONTEXT_RESOURCE_MIME_TYPE,
             )
         ]
 
     @server.read_resource()  # type: ignore[no-untyped-call,untyped-decorator]
     async def handle_read_resource(uri: AnyUrl) -> Sequence[ReadResourceContents]:
-        if (
-            not has_exposed_entities_resource
-            or str(uri) != EXPOSED_ENTITIES_RESOURCE_URI
-        ):
+        if str(uri) != LIVE_CONTEXT_RESOURCE_URI:
             raise ValueError(f"Unknown resource: {uri}")
+
+        llm_api = await get_api_instance()
+        if not _has_live_context_tool(llm_api):
+            raise ValueError(f"Unknown resource: {uri}")
+
+        tool_response = await llm_api.async_call_tool(
+            llm.ToolInput(tool_name=LIVE_CONTEXT_TOOL_NAME, tool_args={})
+        )
+        if not tool_response.get("success"):
+            raise HomeAssistantError(cast(str, tool_response["error"]))
 
         return [
             ReadResourceContents(
-                content=_get_exposed_entities_resource_contents(
-                    hass, llm_context.assistant or CONVERSATION_DOMAIN
-                ),
-                mime_type=EXPOSED_ENTITIES_RESOURCE_MIME_TYPE,
+                content=cast(str, tool_response["result"]),
+                mime_type=LIVE_CONTEXT_RESOURCE_MIME_TYPE,
             )
         ]
 
