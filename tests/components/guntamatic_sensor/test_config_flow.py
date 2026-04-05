@@ -1,6 +1,6 @@
 """Test the guntamatic config flow."""
 
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import requests
 
@@ -149,14 +149,12 @@ async def test_form_already_configured(
 
 
 async def test_dhcp_discovery(
-    hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
-    mock_data: dict[str, list[str]],
+    hass: HomeAssistant, mock_setup_entry: AsyncMock, mock_heater: MagicMock
 ) -> None:
     """Test DHCP discovery."""
     with patch(
         "homeassistant.components.guntamatic_sensor.config_flow.Heater.get_data",
-        return_value=mock_data,
+        return_value=mock_heater,
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,

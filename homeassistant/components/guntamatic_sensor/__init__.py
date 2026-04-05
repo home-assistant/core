@@ -34,22 +34,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: GuntamaticConfigEntry) -
     host = entry.data[CONF_HOST]
     heater = Heater(host)
 
-    # initial connectivity check
-    initial_data = None
-    try:
-        initial_data = await hass.async_add_executor_job(heater.get_data)
-    except Exception as err:
-        raise ConfigEntryNotReady(
-            f"Cannot connect to Guntamatic heater: {err}"
-        ) from err
-
-    if not initial_data:
-        raise ConfigEntryNotReady("Cannot connect to Guntamatic heater")
-
     coordinator = GuntamaticCoordinator(hass, heater)
     coordinator.config_entry = entry
 
-    coordinator.data = initial_data
+    try:
+        # Fetch initial data
+        await coordinator.async_config_entry_first_refresh()
+    except Exception as err:
+        raise ConfigEntryNotReady(f"Error while connecting to {host}: {err}") from err
     entry.runtime_data = GuntamaticData(heater=heater, coordinator=coordinator)
 
     await hass.config_entries.async_forward_entry_setups(entry, _PLATFORMS)
