@@ -6,11 +6,9 @@ from typing import Any, cast
 
 from zwave_js_server.const import (
     CURRENT_VALUE_PROPERTY,
-    SET_VALUE_SUCCESS,
     TARGET_STATE_PROPERTY,
     TARGET_VALUE_PROPERTY,
     CommandClass,
-    SetValueStatus,
 )
 from zwave_js_server.const.command_class.barrier_operator import BarrierState
 from zwave_js_server.const.command_class.multilevel_switch import (
