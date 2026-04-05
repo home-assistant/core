@@ -56,6 +56,7 @@ from .const import (
     ATTR_VALUE,
     ATTR_VISIBILITY,
     DOMAIN,
+    LOGGER,
 )
 from .coordinator import MastodonConfigEntry
 from .utils import get_media_type
@@ -126,8 +127,10 @@ SERVICE_UPDATE_PROFILE_SCHEMA = vol.Schema(
         vol.Optional(ATTR_LOCKED): bool,
         vol.Optional(ATTR_BOT): bool,
         vol.Optional(ATTR_DISCOVERABLE): bool,
-        vol.Optional(ATTR_FIELDS): vol.All(cv.ensure_list, [dict[str, str]]),
-        vol.Optional(ATTR_ATTRIBUTION_DOMAINS): vol.All(cv.ensure_list, [vol.Url()]),
+        vol.Optional(ATTR_FIELDS): vol.All(
+            cv.ensure_list, vol.Length(max=4), [dict[str, str]]
+        ),
+        vol.Optional(ATTR_ATTRIBUTION_DOMAINS): vol.All(cv.ensure_list, [str]),
     }
 )
 
@@ -395,6 +398,7 @@ async def _async_update_profile(call: ServiceCall) -> ServiceResponse:
             translation_key="auth_failed",
         ) from error
     except MastodonAPIError as err:
+        LOGGER.debug("Full exception:", exc_info=err)
         raise HomeAssistantError(
             translation_domain=DOMAIN,
             translation_key="unable_to_update_profile",
