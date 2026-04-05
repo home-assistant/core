@@ -262,6 +262,11 @@ async def test_config_flow_errors(
             "brand_name": "Backblaze B2",
             "allowed_prefix": "test/",
         }
+    elif error_type == "bad_request":
+        assert result.get("description_placeholders") == {
+            "brand_name": "Backblaze B2",
+            "error_message": "test (bad_request)",
+        }
 
 
 @pytest.mark.parametrize(
