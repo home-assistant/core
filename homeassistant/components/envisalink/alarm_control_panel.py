@@ -136,10 +136,19 @@ class EnvisalinkAlarm(EnvisalinkEntity, AlarmControlPanelEntity):
         )
 
     @callback
-    def async_update_callback(self, partition):
+    def async_update_callback(self, partition: int | None) -> None:
         """Update Home Assistant state, if needed."""
         if partition is None or int(partition) == self._partition_number:
             self.async_write_ha_state()
+
+    @property
+    def extra_state_attributes(self) -> dict[str, Any]:
+        """Return user arm/disarm attribution attributes."""
+        status = self._info["status"]
+        return {
+            "last_disarmed_by_user_id": status.get("last_disarmed_by_user") or None,
+            "last_armed_by_user_id": status.get("last_armed_by_user") or None,
+        }
 
     @property
     def alarm_state(self) -> AlarmControlPanelState | None:
