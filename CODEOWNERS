@@ -592,6 +592,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/garages_amsterdam/ @klaasnicolaas
 /homeassistant/components/gardena_bluetooth/ @elupus
 /tests/components/gardena_bluetooth/ @elupus
+/homeassistant/components/garmin_connect/ @cyberjunky
+/tests/components/garmin_connect/ @cyberjunky
 /homeassistant/components/gate/ @home-assistant/core
 /tests/components/gate/ @home-assistant/core
 /homeassistant/components/gdacs/ @exxamalte

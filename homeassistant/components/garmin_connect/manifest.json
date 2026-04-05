@@ -7,6 +7,6 @@
   "integration_type": "service",
   "iot_class": "cloud_polling",
   "loggers": ["ha-garmin"],
-  "quality_scale": "platinum",
+  "quality_scale": "silver",
   "requirements": ["ha-garmin==0.1.1"]
 }

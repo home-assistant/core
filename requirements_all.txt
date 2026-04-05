@@ -263,8 +263,8 @@ aioflo==2021.11.0
 # homeassistant.components.yi
 aioftp==0.21.3
 
-# homeassistant.components.garmin_connect
-aiogarmin==0.1.4
+# homeassistant.components.ghost
+aioghost==0.4.0
 
 # homeassistant.components.github
 aiogithubapi==26.0.0

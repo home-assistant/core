@@ -86,7 +86,7 @@ class GarminConnectConfigFlow(ConfigFlow, domain=DOMAIN):
             client = GarminClient(self._auth, is_cn=self._is_cn)
             profile = await client.get_user_profile()
             unique_id = str(profile.profile_id)
-        except (GarminConnectError, ClientError):
+        except GarminConnectError, ClientError:
             pass
         await self.async_set_unique_id(unique_id)
         self._abort_if_unique_id_configured()
