@@ -1159,5 +1159,15 @@
     "failed_to_connect_mqtt": {
       "message": "Failed to connect MQTT: {error}"
     }
+  },
+  "issues": {
+    "deprecated_fan_speed_number": {
+      "description": "The number entity {entity_name} (`{entity_id}`) is deprecated because it has been replaced with a fan entity.\n\nPlease update your dashboards and templates to use the new fan entity and disable the number entity to fix this issue.",
+      "title": "Fan speed number entity deprecated"
+    },
+    "deprecated_fan_speed_number_scripts": {
+      "description": "The number entity {entity_name} (`{entity_id}`) is deprecated because it has been replaced with a fan entity.\n\nThe entity was used in the following automations or scripts:\n{items}\n\nPlease update the above automations or scripts to use the new fan entity and disable the number entity to fix this issue.",
+      "title": "[%key:component::lg_thinq::issues::deprecated_fan_speed_number::title%]"
+    }
   }
 }

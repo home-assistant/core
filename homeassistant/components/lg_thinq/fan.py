@@ -254,9 +254,8 @@ class ThinQHoodFanEntity(ThinQEntity, FanEntity):
         """Initialize hood fan platform."""
         super().__init__(coordinator, entity_description, property_id)
 
-        # Get min/max from data, default to 0-2 if not available
-        self._min_speed: int = int(self.data.min) if self.data.min is not None else 0
-        self._max_speed: int = int(self.data.max) if self.data.max is not None else 2
+        self._min_speed: int = int(self.data.min)
+        self._max_speed: int = int(self.data.max)
 
         # Speed count is the number of non-zero speeds
         self._attr_speed_count = self._max_speed - self._min_speed
@@ -269,13 +268,6 @@ class ThinQHoodFanEntity(ThinQEntity, FanEntity):
     def _update_status(self) -> None:
         """Update status itself."""
         super()._update_status()
-
-        # Update min/max if available from data
-        if self.data.min is not None:
-            self._min_speed = int(self.data.min)
-        if self.data.max is not None:
-            self._max_speed = int(self.data.max)
-            self._attr_speed_count = self._max_speed - self._min_speed
 
         # Get current speed value
         current_speed = self.data.value
