@@ -65,12 +65,12 @@ async def test_serial_flow_success(hass: HomeAssistant) -> None:
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
-        assert result["type"] is FlowResultType.FORM
-        assert result["step_id"] == "choose_transport"
+        assert result["type"] is FlowResultType.MENU
+        assert result["step_id"] == "user"
 
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {CONF_TRANSPORT: TRANSPORT_SERIAL},
+            {"next_step_id": "configure_serial"},
         )
         assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "configure_serial"
@@ -108,12 +108,12 @@ async def test_tcp_flow_success(hass: HomeAssistant) -> None:
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
-        assert result["type"] is FlowResultType.FORM
-        assert result["step_id"] == "choose_transport"
+        assert result["type"] is FlowResultType.MENU
+        assert result["step_id"] == "user"
 
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {CONF_TRANSPORT: TRANSPORT_TCP},
+            {"next_step_id": "configure_tcp"},
         )
         assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "configure_tcp"
@@ -148,12 +148,12 @@ async def test_serial_flow_no_comports(hass: HomeAssistant) -> None:
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
-        assert result["type"] is FlowResultType.FORM
-        assert result["step_id"] == "choose_transport"
+        assert result["type"] is FlowResultType.MENU
+        assert result["step_id"] == "user"
 
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {CONF_TRANSPORT: TRANSPORT_SERIAL},
+            {"next_step_id": "configure_serial"},
         )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "no_serial_ports"
@@ -171,7 +171,7 @@ async def test_serial_flow_invalid_serial_port(hass: HomeAssistant) -> None:
 
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {CONF_TRANSPORT: TRANSPORT_SERIAL},
+            {"next_step_id": "configure_serial"},
         )
 
         with patch(
@@ -198,7 +198,7 @@ async def test_serial_flow_cannot_open_port(hass: HomeAssistant) -> None:
 
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {CONF_TRANSPORT: TRANSPORT_SERIAL},
+            {"next_step_id": "configure_serial"},
         )
 
         with patch(
@@ -226,7 +226,7 @@ async def test_serial_flow_cannot_connect(hass: HomeAssistant) -> None:
 
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {CONF_TRANSPORT: TRANSPORT_SERIAL},
+            {"next_step_id": "configure_serial"},
         )
 
         with patch(
@@ -267,7 +267,7 @@ async def test_tcp_flow_cannot_connect(hass: HomeAssistant) -> None:
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {CONF_TRANSPORT: TRANSPORT_TCP},
+        {"next_step_id": "configure_tcp"},
     )
 
     with patch(
@@ -322,7 +322,7 @@ async def test_flow_already_configured(hass: HomeAssistant) -> None:
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {CONF_TRANSPORT: TRANSPORT_TCP},
+        {"next_step_id": "configure_tcp"},
     )
 
     with patch(
@@ -341,121 +341,6 @@ async def test_flow_already_configured(hass: HomeAssistant) -> None:
     assert result["reason"] == "already_configured"
 
 
-async def test_reconfigure_serial_success(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry
-) -> None:
-    """Test successful reconfiguration with serial transport."""
-    mock_config_entry.add_to_hass(hass)
-
-    with patch(
-        "serial.tools.list_ports.comports",
-        return_value=FAKE_COMPORTS,
-    ):
-        result = await mock_config_entry.start_reconfigure_flow(hass)
-        assert result["type"] is FlowResultType.FORM
-        assert result["step_id"] == "choose_transport"
-
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {CONF_TRANSPORT: TRANSPORT_SERIAL},
-        )
-        assert result["type"] is FlowResultType.FORM
-        assert result["step_id"] == "configure_serial"
-
-        mock_setup_client = _mock_aurora_client_setup()
-        with (
-            patch(
-                "homeassistant.components.aurora_abb_powerone.config_flow.validate_and_connect_serial",
-                return_value=MOCK_IDENTIFIER,
-            ),
-            patch(
-                "homeassistant.components.aurora_abb_powerone.AuroraClient.from_serial",
-                return_value=mock_setup_client,
-            ),
-        ):
-            result = await hass.config_entries.flow.async_configure(
-                result["flow_id"],
-                {CONF_SERIAL_COMPORT: "/dev/ttyUSB7", CONF_INVERTER_SERIAL_ADDRESS: 3},
-            )
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "reconfigure_successful"
-    assert mock_config_entry.data[CONF_TRANSPORT] == TRANSPORT_SERIAL
-
-
-async def test_reconfigure_tcp_success(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry
-) -> None:
-    """Test successful reconfiguration switching to TCP transport."""
-    mock_config_entry.add_to_hass(hass)
-
-    result = await mock_config_entry.start_reconfigure_flow(hass)
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {CONF_TRANSPORT: TRANSPORT_TCP},
-    )
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "configure_tcp"
-
-    mock_setup_client = _mock_aurora_client_setup()
-    with (
-        patch(
-            "homeassistant.components.aurora_abb_powerone.config_flow.validate_and_connect_tcp",
-            return_value=MOCK_IDENTIFIER,
-        ),
-        patch(
-            "homeassistant.components.aurora_abb_powerone.AuroraClient.from_tcp",
-            return_value=mock_setup_client,
-        ),
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                CONF_TCP_HOST: "127.0.0.1",
-                CONF_TCP_PORT: TCP_PORT_DEFAULT,
-                CONF_INVERTER_SERIAL_ADDRESS: 3,
-            },
-        )
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "reconfigure_successful"
-    assert mock_config_entry.data[CONF_TRANSPORT] == TRANSPORT_TCP
-    assert mock_config_entry.data[CONF_TCP_HOST] == "127.0.0.1"
-
-
-async def test_reconfigure_unique_id_mismatch(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry
-) -> None:
-    """Test reconfigure aborts when the inverter serial number doesn't match."""
-    mock_config_entry.add_to_hass(hass)
-
-    result = await mock_config_entry.start_reconfigure_flow(hass)
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {CONF_TRANSPORT: TRANSPORT_TCP},
-    )
-
-    different_identifier = AuroraInverterIdentifier(
-        serial_number="DIFFERENT_SN",
-        model=MOCK_MODEL,
-        firmware=MOCK_FIRMWARE,
-    )
-    with patch(
-        "homeassistant.components.aurora_abb_powerone.config_flow.validate_and_connect_tcp",
-        return_value=different_identifier,
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                CONF_TCP_HOST: "127.0.0.1",
-                CONF_TCP_PORT: TCP_PORT_DEFAULT,
-                CONF_INVERTER_SERIAL_ADDRESS: 3,
-            },
-        )
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "unique_id_mismatch"
-
-
 async def test_serial_flow_other_os_error(hass: HomeAssistant) -> None:
     """Test serial flow handles non-errno-19 OS errors as cannot_connect."""
     with patch(
@@ -468,7 +353,7 @@ async def test_serial_flow_other_os_error(hass: HomeAssistant) -> None:
 
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {CONF_TRANSPORT: TRANSPORT_SERIAL},
+            {"next_step_id": "configure_serial"},
         )
 
         with patch(
@@ -504,7 +389,7 @@ async def test_serial_flow_end_to_end_via_aurora_client(hass: HomeAssistant) -> 
 
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {CONF_TRANSPORT: TRANSPORT_SERIAL},
+            {"next_step_id": "configure_serial"},
         )
 
         result = await hass.config_entries.flow.async_configure(
@@ -531,7 +416,7 @@ async def test_tcp_flow_end_to_end_via_aurora_client(hass: HomeAssistant) -> Non
 
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {CONF_TRANSPORT: TRANSPORT_TCP},
+            {"next_step_id": "configure_tcp"},
         )
 
         result = await hass.config_entries.flow.async_configure(

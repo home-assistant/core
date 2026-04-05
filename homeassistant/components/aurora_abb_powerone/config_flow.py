@@ -8,11 +8,7 @@ from typing import Any
 import serial.tools.list_ports
 import voluptuous as vol
 
-from homeassistant.config_entries import (
-    SOURCE_RECONFIGURE,
-    ConfigFlow,
-    ConfigFlowResult,
-)
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import ATTR_SERIAL_NUMBER
 from homeassistant.helpers.selector import (
     NumberSelector,
@@ -91,48 +87,16 @@ class AuroraABBConfigFlow(ConfigFlow, domain=DOMAIN):
 
     def __init__(self) -> None:
         """Initialise the config flow."""
-        self._transport: str | None = None
         self._com_ports_list: list[str] | None = None
         self._default_com_port: str | None = None
-
-    def _get_or_default(self, key: str, default: Any = None) -> Any:
-        """Return existing config entry value for reconfigure, or default."""
-        if self.source == SOURCE_RECONFIGURE:
-            return self._get_reconfigure_entry().data.get(key, default)
-        return default
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle a flow initialised by the user."""
-        return await self.async_step_choose_transport(user_input)
-
-    async def async_step_choose_transport(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Handle transport selection step."""
-        if user_input is not None:
-            self._transport = user_input[CONF_TRANSPORT]
-            if self._transport == TRANSPORT_SERIAL:
-                return await self.async_step_configure_serial()
-            return await self.async_step_configure_tcp()
-
-        return self.async_show_form(
-            step_id="choose_transport",
-            data_schema=vol.Schema(
-                {
-                    vol.Required(
-                        CONF_TRANSPORT,
-                        default=self._get_or_default(CONF_TRANSPORT, TRANSPORT_SERIAL),
-                    ): SelectSelector(
-                        SelectSelectorConfig(
-                            options=[TRANSPORT_SERIAL, TRANSPORT_TCP],
-                            mode=SelectSelectorMode.LIST,
-                            translation_key=CONF_TRANSPORT,
-                        )
-                    ),
-                }
-            ),
+        return self.async_show_menu(
+            step_id="user",
+            menu_options=["configure_serial", "configure_tcp"],
         )
 
     async def async_step_configure_serial(
@@ -175,12 +139,8 @@ class AuroraABBConfigFlow(ConfigFlow, domain=DOMAIN):
                 }
                 return await self._async_finish_flow(identifier.serial_number, data)
 
-        default_comport = self._get_or_default(
-            CONF_SERIAL_COMPORT, self._default_com_port
-        )
-        default_address = self._get_or_default(
-            CONF_INVERTER_SERIAL_ADDRESS, INVERTER_SERIAL_ADDRESS_DEFAULT
-        )
+        default_comport = self._default_com_port
+        default_address = INVERTER_SERIAL_ADDRESS_DEFAULT
 
         assert self._com_ports_list is not None
         return self.async_show_form(
@@ -239,11 +199,9 @@ class AuroraABBConfigFlow(ConfigFlow, domain=DOMAIN):
                 }
                 return await self._async_finish_flow(identifier.serial_number, data)
 
-        default_address = self._get_or_default(
-            CONF_INVERTER_SERIAL_ADDRESS, INVERTER_SERIAL_ADDRESS_DEFAULT
-        )
-        default_host = self._get_or_default(CONF_TCP_HOST, "")
-        default_port = self._get_or_default(CONF_TCP_PORT, TCP_PORT_DEFAULT)
+        default_address = INVERTER_SERIAL_ADDRESS_DEFAULT
+        default_host = ""
+        default_port = TCP_PORT_DEFAULT
 
         return self.async_show_form(
             step_id="configure_tcp",
@@ -280,21 +238,7 @@ class AuroraABBConfigFlow(ConfigFlow, domain=DOMAIN):
     async def _async_finish_flow(
         self, serial_number: str, data: dict[str, Any]
     ) -> ConfigFlowResult:
-        """Finish the flow by creating or updating the config entry."""
+        """Finish the flow by creating the config entry."""
         await self.async_set_unique_id(serial_number)
-
-        if self.source == SOURCE_RECONFIGURE:
-            self._abort_if_unique_id_mismatch(reason="unique_id_mismatch")
-            return self.async_update_reload_and_abort(
-                self._get_reconfigure_entry(),
-                data_updates=data,
-            )
-
         self._abort_if_unique_id_configured()
         return self.async_create_entry(title=DEFAULT_INTEGRATION_TITLE, data=data)
-
-    async def async_step_reconfigure(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Handle reconfiguration of an existing entry."""
-        return await self.async_step_choose_transport(user_input)

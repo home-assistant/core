@@ -2,9 +2,7 @@
   "config": {
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "no_serial_ports": "No com ports found. The integration needs a valid RS485 device to communicate.",
-      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
-      "unique_id_mismatch": "The serial number of the inverter does not match the previously configured inverter. Please ensure you are reconfiguring against the same device."
+      "no_serial_ports": "No com ports found. The integration needs a valid RS485 device to communicate."
     },
     "error": {
       "cannot_connect": "Unable to connect, please check connection settings, electrical connection and that inverter is on (in daylight)",
@@ -12,15 +10,6 @@
       "invalid_serial_port": "Serial port is not a valid device or could not be opened"
     },
     "step": {
-      "choose_transport": {
-        "data": {
-          "transport": "Connection type"
-        },
-        "data_description": {
-          "transport": "Select serial for a direct RS485 connection, or TCP for an Ethernet-to-RS485 gateway."
-        },
-        "description": "Select the transport used to communicate with the inverter"
-      },
       "configure_serial": {
         "data": {
           "inverter_serial_address": "Inverter address",
@@ -35,6 +24,14 @@
           "tcp_port": "Gateway TCP port"
         },
         "description": "Connect via an Ethernet-to-RS485 gateway. Please enter the gateway's network address, TCP port, and the inverter's address as configured on the LCD panel"
+      },
+      "user": {
+        "description": "Select the transport used to communicate with the inverter",
+        "menu_options": {
+          "configure_serial": "Serial (RS485)",
+          "configure_tcp": "TCP (Ethernet gateway)"
+        },
+        "title": "Aurora ABB PowerOne configuration"
       }
     }
   },
@@ -84,14 +81,6 @@
       },
       "voltage_in_2": {
         "name": "String 2 voltage"
-      }
-    }
-  },
-  "selector": {
-    "transport": {
-      "options": {
-        "serial": "Serial (RS485)",
-        "tcp": "TCP (Ethernet gateway)"
       }
     }
   }
