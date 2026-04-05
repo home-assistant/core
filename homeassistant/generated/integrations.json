@@ -1170,6 +1170,12 @@
       "integration_type": "virtual",
       "supported_by": "opower"
     },
+    "connectivity_monitor": {
+      "name": "Connectivity Monitor",
+      "integration_type": "service",
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "constructa": {
       "name": "Constructa",
       "integration_type": "virtual",

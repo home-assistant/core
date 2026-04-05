@@ -1,0 +1,363 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "This monitor is already configured",
+      "device_added": "The device was added to the existing monitor entry"
+    },
+    "error": {
+      "all_bluetooth_devices_added": "All available Bluetooth devices are already being monitored",
+      "all_esphome_devices_added": "All available ESPHome devices are already being monitored",
+      "all_matter_devices_added": "All available Matter devices are already being monitored",
+      "all_zha_devices_added": "All available ZigBee devices are already being monitored",
+      "invalid_dns_server": "Enter a valid IPv4 DNS server address",
+      "no_bluetooth_devices": "No Bluetooth devices are available to add",
+      "no_esphome_devices": "No ESPHome devices are available to add",
+      "no_matter_devices": "No Matter devices are available to add",
+      "no_zha_devices": "No ZigBee devices are available to add",
+      "unknown": "Unexpected error"
+    },
+    "step": {
+      "bluetooth_configure": {
+        "data": {
+          "alert_action": "Alert action",
+          "alert_action_delay": "Alert action delay (minutes)",
+          "alert_action_enabled": "Enable alert action",
+          "alert_delay": "Notification delay (minutes)",
+          "alert_group": "Notification target",
+          "alerts_enabled": "Enable notifications",
+          "device_name": "Device name"
+        },
+        "description": "Configure alerts for {device_name} ({bt_address}).",
+        "title": "Configure Bluetooth device"
+      },
+      "bluetooth_device": {
+        "data": {
+          "bluetooth_address": "Bluetooth device"
+        },
+        "title": "Select Bluetooth device"
+      },
+      "dns": {
+        "data": {
+          "dns_server": "DNS server"
+        },
+        "description": "Enter the DNS server used to resolve monitored hostnames. The default is {default_dns}.",
+        "title": "Configure DNS"
+      },
+      "esphome_configure": {
+        "data": {
+          "alert_action": "Alert action",
+          "alert_action_delay": "Alert action delay (minutes)",
+          "alert_action_enabled": "Enable alert action",
+          "alert_delay": "Notification delay (minutes)",
+          "alert_group": "Notification target",
+          "alerts_enabled": "Enable notifications",
+          "device_name": "Device name"
+        },
+        "description": "Configure alerts for {device_name} ({device_id}).",
+        "title": "Configure ESPHome device"
+      },
+      "esphome_device": {
+        "data": {
+          "esphome_device_id": "ESPHome device"
+        },
+        "title": "Select ESPHome device"
+      },
+      "interval": {
+        "data": {
+          "interval": "Update interval (seconds)"
+        },
+        "title": "Configure polling interval"
+      },
+      "matter_configure": {
+        "data": {
+          "alert_action": "Alert action",
+          "alert_action_delay": "Alert action delay (minutes)",
+          "alert_action_enabled": "Enable alert action",
+          "alert_delay": "Notification delay (minutes)",
+          "alert_group": "Notification target",
+          "alerts_enabled": "Enable notifications",
+          "device_name": "Device name"
+        },
+        "description": "Configure alerts for {device_name} ({node_id}).",
+        "title": "Configure Matter device"
+      },
+      "matter_device": {
+        "data": {
+          "matter_node_id": "Matter device"
+        },
+        "title": "Select Matter device"
+      },
+      "network": {
+        "data": {
+          "alert_action": "Alert action",
+          "alert_action_delay": "Alert action delay (minutes)",
+          "alert_action_enabled": "Enable alert action",
+          "alert_delay": "Notification delay (minutes)",
+          "alert_group": "Notification target",
+          "alerts_enabled": "Enable notifications",
+          "device_name": "Device name",
+          "host": "Host or IP address",
+          "protocol": "Check type"
+        },
+        "data_description": {
+          "alert_action": "Automation or script to trigger after the action delay.",
+          "alert_action_delay": "How long the device must stay offline before the action runs.",
+          "alert_delay": "How long the device must stay offline before sending a notification.",
+          "alert_group": "Notification service to use when alerts are enabled.",
+          "device_name": "Optional friendly name used for the created sensors.",
+          "host": "Hostname, FQDN, or IPv4 address to monitor.",
+          "protocol": "ICMP, TCP, UDP, or Active Directory domain controller checks."
+        },
+        "title": "Configure network monitor"
+      },
+      "port": {
+        "data": {
+          "port": "Port"
+        },
+        "title": "Configure port"
+      },
+      "user": {
+        "data": {
+          "device_type": "Monitor type"
+        },
+        "description": "Choose what kind of device or service you want Connectivity Monitor to watch.",
+        "title": "Add monitor"
+      },
+      "zha_configure": {
+        "data": {
+          "alert_action": "Alert action",
+          "alert_action_delay": "Alert action delay (minutes)",
+          "alert_action_enabled": "Enable alert action",
+          "alert_delay": "Notification delay (minutes)",
+          "alert_group": "Notification target",
+          "alerts_enabled": "Enable notifications",
+          "device_name": "Device name",
+          "inactive_timeout": "Inactive timeout (minutes)"
+        },
+        "description": "Configure alerts and inactivity detection for {device_name} ({ieee}).",
+        "title": "Configure ZigBee device"
+      },
+      "zha_device": {
+        "data": {
+          "zha_ieee": "ZigBee device"
+        },
+        "title": "Select ZigBee device"
+      }
+    }
+  },
+  "options": {
+    "abort": {
+      "cleanup_done": "Orphaned devices were cleaned up"
+    },
+    "error": {
+      "invalid_host": "Enter a valid host or IP address",
+      "no_notify_groups": "No notification targets are available"
+    },
+    "step": {
+      "alert_config": {
+        "data": {
+          "alert_action": "Alert action",
+          "alert_action_delay": "Alert action delay (minutes)",
+          "alert_action_enabled": "Enable alert action",
+          "alert_delay": "Notification delay (minutes)",
+          "alert_group": "Notification target",
+          "alerts_enabled": "Enable notifications"
+        },
+        "title": "Alert settings"
+      },
+      "bluetooth_alert_config": {
+        "data": {
+          "alert_action": "Alert action",
+          "alert_action_delay": "Alert action delay (minutes)",
+          "alert_action_enabled": "Enable alert action",
+          "alert_delay": "Notification delay (minutes)",
+          "alert_group": "Notification target",
+          "alerts_enabled": "Enable notifications"
+        },
+        "title": "Bluetooth alert settings"
+      },
+      "bluetooth_alert_select": {
+        "data": {
+          "bt_address": "Bluetooth device"
+        },
+        "title": "Select Bluetooth device"
+      },
+      "bluetooth_menu": {
+        "data": {
+          "action": "Bluetooth action"
+        },
+        "title": "Bluetooth device options"
+      },
+      "device_select": {
+        "data": {
+          "device": "Device"
+        },
+        "title": "Select device"
+      },
+      "esphome_alert_config": {
+        "data": {
+          "alert_action": "Alert action",
+          "alert_action_delay": "Alert action delay (minutes)",
+          "alert_action_enabled": "Enable alert action",
+          "alert_delay": "Notification delay (minutes)",
+          "alert_group": "Notification target",
+          "alerts_enabled": "Enable notifications"
+        },
+        "title": "ESPHome alert settings"
+      },
+      "esphome_alert_select": {
+        "data": {
+          "device_id": "ESPHome device"
+        },
+        "title": "Select ESPHome device"
+      },
+      "esphome_menu": {
+        "data": {
+          "action": "ESPHome action"
+        },
+        "title": "ESPHome device options"
+      },
+      "matter_alert_config": {
+        "data": {
+          "alert_action": "Alert action",
+          "alert_action_delay": "Alert action delay (minutes)",
+          "alert_action_enabled": "Enable alert action",
+          "alert_delay": "Notification delay (minutes)",
+          "alert_group": "Notification target",
+          "alerts_enabled": "Enable notifications"
+        },
+        "title": "Matter alert settings"
+      },
+      "matter_alert_select": {
+        "data": {
+          "node_id": "Matter device"
+        },
+        "title": "Select Matter device"
+      },
+      "matter_menu": {
+        "data": {
+          "action": "Matter action"
+        },
+        "title": "Matter device options"
+      },
+      "menu": {
+        "data": {
+          "action": "Action"
+        },
+        "title": "Connectivity Monitor options"
+      },
+      "modify_alerts": {
+        "data": {
+          "alert_delay": "Notification delay (minutes)",
+          "alert_group": "Notification target",
+          "device": "Device"
+        },
+        "description": "Create a notify group first if you want to send notifications. You can manage integrations at {setup_link}.",
+        "title": "Modify alerts"
+      },
+      "network_menu": {
+        "data": {
+          "action": "Network action"
+        },
+        "title": "Network device options"
+      },
+      "remove_bluetooth_device": {
+        "data": {
+          "bt_address": "Bluetooth device"
+        },
+        "title": "Remove Bluetooth device"
+      },
+      "remove_device": {
+        "data": {
+          "device": "Device"
+        },
+        "title": "Remove device"
+      },
+      "remove_esphome_device": {
+        "data": {
+          "device_id": "ESPHome device"
+        },
+        "title": "Remove ESPHome device"
+      },
+      "remove_matter_device": {
+        "data": {
+          "node_id": "Matter device"
+        },
+        "title": "Remove Matter device"
+      },
+      "remove_sensor": {
+        "data": {
+          "sensor": "Sensor"
+        },
+        "title": "Remove sensor"
+      },
+      "remove_zha_device": {
+        "data": {
+          "ieee": "ZigBee device"
+        },
+        "title": "Remove ZigBee device"
+      },
+      "rename_device_select": {
+        "data": {
+          "device": "Device"
+        },
+        "title": "Select device to rename"
+      },
+      "rename_host": {
+        "data": {
+          "device_name": "Device name",
+          "host": "Host or IP address"
+        },
+        "title": "Rename device"
+      },
+      "settings": {
+        "data": {
+          "dns_server": "DNS server",
+          "interval": "Update interval (seconds)"
+        },
+        "title": "General settings"
+      },
+      "settings_menu": {
+        "data": {
+          "action": "Settings action"
+        },
+        "title": "Settings"
+      },
+      "zha_alert_config": {
+        "data": {
+          "alert_action": "Alert action",
+          "alert_action_delay": "Alert action delay (minutes)",
+          "alert_action_enabled": "Enable alert action",
+          "alert_delay": "Notification delay (minutes)",
+          "alert_group": "Notification target",
+          "alerts_enabled": "Enable notifications"
+        },
+        "title": "ZigBee alert settings"
+      },
+      "zha_alert_select": {
+        "data": {
+          "ieee": "ZigBee device"
+        },
+        "title": "Select ZigBee device"
+      },
+      "zha_menu": {
+        "data": {
+          "action": "ZigBee action"
+        },
+        "title": "ZigBee device options"
+      },
+      "zha_select_for_timeout": {
+        "data": {
+          "ieee": "ZigBee device"
+        },
+        "title": "Select ZigBee device"
+      },
+      "zha_update_timeout": {
+        "data": {
+          "inactive_timeout": "Inactive timeout (minutes)"
+        },
+        "title": "Update inactivity timeout"
+      }
+    }
+  }
+}

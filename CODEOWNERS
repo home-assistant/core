@@ -325,6 +325,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/config/ @home-assistant/core
 /homeassistant/components/configurator/ @home-assistant/core
 /tests/components/configurator/ @home-assistant/core
+/homeassistant/components/connectivity_monitor/ @joshburkard
+/tests/components/connectivity_monitor/ @joshburkard
 /homeassistant/components/control4/ @lawtancool @davidrecordon
 /tests/components/control4/ @lawtancool @davidrecordon
 /homeassistant/components/conversation/ @home-assistant/core @synesthesiam @arturpragacz
