@@ -10,14 +10,12 @@ from copy import deepcopy
 from datetime import datetime, timedelta
 from enum import Enum
 from functools import cache, lru_cache, partial, wraps
-import json
 import logging
 import math
 from operator import contains
 import pathlib
 import random
 import re
-from struct import error as StructError, pack, unpack_from
 import sys
 from types import CodeType
 from typing import TYPE_CHECKING, Any, Concatenate, Literal, NoReturn, Self, overload
@@ -30,7 +28,6 @@ from jinja2.runtime import AsyncLoopContext, LoopContext
 from jinja2.sandbox import ImmutableSandboxedEnvironment
 from jinja2.utils import Namespace
 from lru import LRU
-import orjson
 from propcache.api import under_cached_property
 
 from homeassistant.const import (
@@ -142,10 +139,6 @@ MAX_TEMPLATE_OUTPUT = 256 * 1024  # 256KiB
 CACHED_TEMPLATE_LRU: LRU[State, TemplateState] = LRU(CACHED_TEMPLATE_STATES)
 CACHED_TEMPLATE_NO_COLLECT_LRU: LRU[State, TemplateState] = LRU(CACHED_TEMPLATE_STATES)
 ENTITY_COUNT_GROWTH_FACTOR = 1.2
-
-ORJSON_PASSTHROUGH_OPTIONS = (
-    orjson.OPT_PASSTHROUGH_DATACLASS | orjson.OPT_PASSTHROUGH_DATETIME
-)
 
 
 def _template_state_no_collect(hass: HomeAssistant, state: State) -> TemplateState:
@@ -1564,95 +1557,6 @@ def fail_when_undefined(value):
     return value
 
 
-def struct_pack(value: Any | None, format_string: str) -> bytes | None:
-    """Pack an object into a bytes object."""
-    try:
-        return pack(format_string, value)
-    except StructError:
-        _LOGGER.warning(
-            (
-                "Template warning: 'pack' unable to pack object '%s' with type '%s' and"
-                " format_string '%s' see https://docs.python.org/3/library/struct.html"
-                " for more information"
-            ),
-            str(value),
-            type(value).__name__,
-            format_string,
-        )
-        return None
-
-
-def struct_unpack(value: bytes, format_string: str, offset: int = 0) -> Any | None:
-    """Unpack an object from bytes an return the first native object."""
-    try:
-        return unpack_from(format_string, value, offset)[0]
-    except StructError:
-        _LOGGER.warning(
-            (
-                "Template warning: 'unpack' unable to unpack object '%s' with"
-                " format_string '%s' and offset %s see"
-                " https://docs.python.org/3/library/struct.html for more information"
-            ),
-            value,
-            format_string,
-            offset,
-        )
-        return None
-
-
-def from_hex(value: str) -> bytes:
-    """Perform hex string decode."""
-    return bytes.fromhex(value)
-
-
-def from_json(value, default=_SENTINEL):
-    """Convert a JSON string to an object."""
-    try:
-        return json_loads(value)
-    except JSON_DECODE_EXCEPTIONS:
-        if default is _SENTINEL:
-            raise_no_default("from_json", value)
-        return default
-
-
-def _to_json_default(obj: Any) -> None:
-    """Disable custom types in json serialization."""
-    raise TypeError(f"Object of type {type(obj).__name__} is not JSON serializable")
-
-
-def to_json(
-    value: Any,
-    ensure_ascii: bool = False,
-    pretty_print: bool = False,
-    sort_keys: bool = False,
-) -> str:
-    """Convert an object to a JSON string."""
-    if ensure_ascii:
-        # For those who need ascii, we can't use orjson, so we fall back to the json library.
-        return json.dumps(
-            value,
-            ensure_ascii=ensure_ascii,
-            indent=2 if pretty_print else None,
-            sort_keys=sort_keys,
-        )
-
-    option = (
-        ORJSON_PASSTHROUGH_OPTIONS
-        # OPT_NON_STR_KEYS is added as a workaround to
-        # ensure subclasses of str are allowed as dict keys
-        # See: https://github.com/ijl/orjson/issues/445
-        | orjson.OPT_NON_STR_KEYS
-        | (orjson.OPT_INDENT_2 if pretty_print else 0)
-        | (orjson.OPT_SORT_KEYS if sort_keys else 0)
-    )
-
-    return orjson.dumps(
-        value,
-        option=option,
-        default=_to_json_default,
-    ).decode("utf-8")
-
-
 @pass_context
 def random_every_time(context, values):
     """Choose a random value.
@@ -1854,6 +1758,9 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.add_extension("homeassistant.helpers.template.extensions.LabelExtension")
         self.add_extension("homeassistant.helpers.template.extensions.MathExtension")
         self.add_extension("homeassistant.helpers.template.extensions.RegexExtension")
+        self.add_extension(
+            "homeassistant.helpers.template.extensions.SerializationExtension"
+        )
         self.add_extension("homeassistant.helpers.template.extensions.StringExtension")
         self.add_extension(
             "homeassistant.helpers.template.extensions.TypeCastExtension"
@@ -1864,9 +1771,7 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.globals["combine"] = combine
         self.globals["iif"] = iif
         self.globals["merge_response"] = merge_response
-        self.globals["pack"] = struct_pack
         self.globals["typeof"] = typeof
-        self.globals["unpack"] = struct_unpack
         self.globals["version"] = version
         self.globals["zip"] = zip
 
@@ -1875,18 +1780,13 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.filters["as_function"] = as_function
         self.filters["combine"] = combine
         self.filters["contains"] = contains
-        self.filters["from_json"] = from_json
-        self.filters["from_hex"] = from_hex
         self.filters["iif"] = iif
         self.filters["is_defined"] = fail_when_undefined
         self.filters["multiply"] = multiply
         self.filters["ord"] = ord
-        self.filters["pack"] = struct_pack
         self.filters["random"] = random_every_time
         self.filters["round"] = forgiving_round
-        self.filters["to_json"] = to_json
         self.filters["typeof"] = typeof
-        self.filters["unpack"] = struct_unpack
         self.filters["version"] = version
 
         self.tests["apply"] = apply

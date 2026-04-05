@@ -15,6 +15,7 @@ from yarl import URL
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_API_TOKEN, CONF_HOST, CONF_VERIFY_SSL
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.util.ssl import create_no_verify_ssl_context
 
 from .const import DOMAIN
 
@@ -65,11 +66,15 @@ class UnifiAccessConfigFlow(ConfigFlow, domain=DOMAIN):
         session = async_get_clientsession(
             self.hass, verify_ssl=user_input[CONF_VERIFY_SSL]
         )
+        ssl_context = (
+            None if user_input[CONF_VERIFY_SSL] else create_no_verify_ssl_context()
+        )
         client = UnifiAccessApiClient(
             host=user_input[CONF_HOST],
             api_token=user_input[CONF_API_TOKEN],
             session=session,
             verify_ssl=user_input[CONF_VERIFY_SSL],
+            ssl_context=ssl_context,
         )
         try:
             await client.authenticate()
