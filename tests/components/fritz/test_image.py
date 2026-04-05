@@ -244,7 +244,7 @@ async def test_migrate_to_new_unique_id(
     )
     entry.add_to_hass(hass)
 
-    old_unique_id = slugify(f"{MOCK_MESH_MASTER_MAC}-MyWifi-qr-code")
+    old_unique_id = slugify(f"{MOCK_MESH_MASTER_MAC}-GuestWifi-qr-code")
     new_unique_id = f"{MOCK_MESH_MASTER_MAC}-guest_wifi_qr_code"
 
     entity_registry.async_get_or_create(
