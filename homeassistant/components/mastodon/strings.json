@@ -267,7 +267,7 @@
           "name": "[%key:component::mastodon::services::post::fields::config_entry_id::name%]"
         },
         "discoverable": {
-          "description": "Whether your should be discoverable. Public posts and the profile may be featured or recommended across Mastodon.",
+          "description": "Whether your profile should be discoverable. Public posts and the profile may be featured or recommended across Mastodon.",
           "name": "Discoverable"
         },
         "display_name": {
