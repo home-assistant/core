@@ -30,6 +30,7 @@ async def test_sensor_values(
 
 async def test_alert_sensor(hass: HomeAssistant) -> None:
     """Test that the weather alert sensor returns the correct count and attributes."""
+    hass.config.country = "US"
     with mock_weather_response():
         await init_integration(hass)
 
@@ -49,6 +50,7 @@ async def test_alert_sensor(hass: HomeAssistant) -> None:
 
 async def test_alert_sensor_no_alerts(hass: HomeAssistant) -> None:
     """Test the weather alert sensor when alerts are not available."""
+    hass.config.country = "US"
     with mock_weather_response(has_weather_alerts=False):
         await init_integration(hass)
 
