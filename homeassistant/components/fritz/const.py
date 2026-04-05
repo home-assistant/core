@@ -13,6 +13,7 @@ from fritzconnection.core.exceptions import (
     FritzSecurityError,
     FritzServiceError,
 )
+from requests.exceptions import ConnectionError
 
 from homeassistant.const import Platform
 
@@ -66,6 +67,7 @@ SWITCH_TYPE_WIFINETWORK = "WiFiNetwork"
 BUTTON_TYPE_WOL = "WakeOnLan"
 
 FRITZ_EXCEPTIONS = (
+    ConnectionError,
     FritzActionError,
     FritzActionFailedError,
     FritzConnectionException,

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import abc
 from collections import deque
-from collections.abc import Callable, Container, Coroutine, Generator, Iterable
+from collections.abc import Callable, Container, Coroutine, Generator, Iterable, Mapping
 from contextlib import contextmanager
 from dataclasses import dataclass
 from datetime import datetime, time as dt_time, timedelta
@@ -30,6 +30,7 @@ import voluptuous as vol
 
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
+    ATTR_UNIT_OF_MEASUREMENT,
     CONF_ABOVE,
     CONF_AFTER,
     CONF_ATTRIBUTE,
@@ -54,7 +55,7 @@ from homeassistant.const import (
     STATE_UNKNOWN,
     WEEKDAYS,
 )
-from homeassistant.core import HomeAssistant, State, callback, split_entity_id
+from homeassistant.core import HomeAssistant, State, callback
 from homeassistant.exceptions import (
     ConditionError,
     ConditionErrorContainer,
@@ -72,16 +73,26 @@ from homeassistant.loader import (
 from homeassistant.util import dt as dt_util
 from homeassistant.util.async_ import run_callback_threadsafe
 from homeassistant.util.hass_dict import HassKey
+from homeassistant.util.unit_conversion import BaseUnitConverter
 from homeassistant.util.yaml import load_yaml_dict
 
 from . import config_validation as cv, entity_registry as er, selector
 from .automation import (
+    DomainSpec,
+    ThresholdConfig,
+    filter_by_domain_specs,
     get_absolute_description_key,
     get_relative_description_key,
     move_options_fields_to_top_level,
 )
 from .integration_platform import async_process_integration_platforms
-from .selector import TargetSelector
+from .selector import (
+    NumericThresholdMode,
+    NumericThresholdSelector,
+    NumericThresholdSelectorConfig,
+    NumericThresholdType,
+    TargetSelector,
+)
 from .target import TargetSelection, async_extract_referenced_entity_ids
 from .template import Template, render_complex
 from .trace import (
@@ -94,7 +105,7 @@ from .trace import (
     trace_stack_push,
     trace_stack_top,
 )
-from .typing import ConfigType, TemplateVarsType
+from .typing import UNDEFINED, ConfigType, TemplateVarsType, UndefinedType
 
 ASYNC_FROM_CONFIG_FORMAT = "async_{}_from_config"
 FROM_CONFIG_FORMAT = "{}_from_config"
@@ -219,19 +230,23 @@ async def _register_condition_platform(
     from homeassistant.components import automation  # noqa: PLC0415
 
     new_conditions: set[str] = set()
+    conditions = hass.data[CONDITIONS]
 
     if hasattr(platform, "async_get_conditions"):
-        for condition_key in await platform.async_get_conditions(hass):
+        all_conditions = await platform.async_get_conditions(hass)
+        for condition_key in all_conditions:
             condition_key = get_absolute_description_key(
                 integration_domain, condition_key
             )
-            hass.data[CONDITIONS][condition_key] = integration_domain
-            new_conditions.add(condition_key)
+            if condition_key not in conditions:
+                conditions[condition_key] = integration_domain
+                new_conditions.add(condition_key)
         if not new_conditions:
-            _LOGGER.debug(
-                "Integration %s returned no conditions in async_get_conditions",
-                integration_domain,
-            )
+            if not all_conditions:
+                _LOGGER.debug(
+                    "Integration %s returned no conditions in async_get_conditions",
+                    integration_domain,
+                )
             return
     else:
         _LOGGER.debug(
@@ -319,15 +334,14 @@ ATTR_BEHAVIOR: Final = "behavior"
 BEHAVIOR_ANY: Final = "any"
 BEHAVIOR_ALL: Final = "all"
 
-STATE_CONDITION_OPTIONS_SCHEMA: dict[vol.Marker, Any] = {
-    vol.Required(ATTR_BEHAVIOR, default=BEHAVIOR_ANY): vol.In(
-        [BEHAVIOR_ANY, BEHAVIOR_ALL]
-    ),
-}
 ENTITY_STATE_CONDITION_SCHEMA_ANY_ALL = vol.Schema(
     {
         vol.Required(CONF_TARGET): cv.TARGET_FIELDS,
-        vol.Required(CONF_OPTIONS): STATE_CONDITION_OPTIONS_SCHEMA,
+        vol.Required(CONF_OPTIONS): {
+            vol.Required(ATTR_BEHAVIOR, default=BEHAVIOR_ANY): vol.In(
+                [BEHAVIOR_ANY, BEHAVIOR_ALL]
+            ),
+        },
     }
 )
 
@@ -335,7 +349,7 @@ ENTITY_STATE_CONDITION_SCHEMA_ANY_ALL = vol.Schema(
 class EntityConditionBase(Condition):
     """Base class for entity conditions."""
 
-    _domain: str
+    _domain_specs: Mapping[str, DomainSpec]
     _schema: vol.Schema = ENTITY_STATE_CONDITION_SCHEMA_ANY_ALL
 
     @override
@@ -356,12 +370,15 @@ class EntityConditionBase(Condition):
         self._behavior = config.options[ATTR_BEHAVIOR]
 
     def entity_filter(self, entities: set[str]) -> set[str]:
-        """Filter entities of this domain."""
-        return {
-            entity_id
-            for entity_id in entities
-            if split_entity_id(entity_id)[0] == self._domain
-        }
+        """Filter entities matching any of the domain specs."""
+        return filter_by_domain_specs(self._hass, self._domain_specs, entities)
+
+    def _get_tracked_value(self, entity_state: State) -> Any:
+        """Get the tracked value from a state based on the DomainSpec."""
+        domain_spec = self._domain_specs[entity_state.domain]
+        if domain_spec.value_source is None:
+            return entity_state.state
+        return entity_state.attributes.get(domain_spec.value_source)
 
     @abc.abstractmethod
     def is_valid_state(self, entity_state: State) -> bool:
@@ -408,59 +425,261 @@ class EntityConditionBase(Condition):
 class EntityStateConditionBase(EntityConditionBase):
     """State condition."""
 
-    _states: set[str]
+    _states: set[str | bool]
 
     def is_valid_state(self, entity_state: State) -> bool:
         """Check if the state matches the expected state(s)."""
-        return entity_state.state in self._states
+        return self._get_tracked_value(entity_state) in self._states
+
+
+def _normalize_domain_specs(
+    domain_specs: Mapping[str, DomainSpec] | str,
+) -> Mapping[str, DomainSpec]:
+    """Normalize domain_specs argument to a Mapping."""
+    if isinstance(domain_specs, str):
+        return {domain_specs: DomainSpec()}
+    return domain_specs
 
 
 def make_entity_state_condition(
-    domain: str, states: str | set[str]
+    domain_specs: Mapping[str, DomainSpec] | str,
+    states: str | bool | set[str | bool],
 ) -> type[EntityStateConditionBase]:
-    """Create a condition for entity state changes to specific state(s)."""
+    """Create a condition for entity state changes to specific state(s).
 
-    if isinstance(states, str):
-        states_set = {states}
+    domain_specs can be a string (domain name) for simple state-based conditions,
+    or a Mapping[str, DomainSpec] for attribute-based or multi-domain conditions.
+    """
+    specs = _normalize_domain_specs(domain_specs)
+
+    if isinstance(states, (str, bool)):
+        states_set: set[str | bool] = {states}
     else:
         states_set = states
 
     class CustomCondition(EntityStateConditionBase):
         """Condition for entity state."""
 
-        _domain = domain
+        _domain_specs = specs
         _states = states_set
 
     return CustomCondition
 
 
-class EntityStateAttributeConditionBase(EntityConditionBase):
-    """State attribute condition."""
+NUMERICAL_CONDITION_SCHEMA = ENTITY_STATE_CONDITION_SCHEMA_ANY_ALL.extend(
+    {
+        vol.Required(CONF_OPTIONS): {
+            vol.Required("threshold"): NumericThresholdSelector(
+                NumericThresholdSelectorConfig(mode=NumericThresholdMode.IS)
+            ),
+        },
+    }
+)
 
-    _attribute: str
-    _attribute_states: set[str]
+
+class EntityNumericalConditionBase(EntityConditionBase):
+    """Condition for numerical state comparisons with above/below thresholds."""
+
+    _schema = NUMERICAL_CONDITION_SCHEMA
+    _valid_unit: str | None | UndefinedType = UNDEFINED
+
+    def __init__(self, hass: HomeAssistant, config: ConditionConfig) -> None:
+        """Initialize the numerical condition."""
+        super().__init__(hass, config)
+        if TYPE_CHECKING:
+            assert config.options is not None
+        threshold_options: dict[str, Any] = config.options["threshold"]
+        self.threshold = ThresholdConfig.from_config(threshold_options.get("value"))
+        self.lower_threshold = ThresholdConfig.from_config(
+            threshold_options.get("value_min")
+        )
+        self.upper_threshold = ThresholdConfig.from_config(
+            threshold_options.get("value_max")
+        )
+        self._threshold_type = threshold_options["type"]
+
+    def _is_valid_unit(self, unit: str | None) -> bool:
+        """Check if the given unit is valid for this condition."""
+        if isinstance(self._valid_unit, UndefinedType):
+            return True
+        return unit == self._valid_unit
+
+    def _get_threshold_value(self, threshold: ThresholdConfig | None) -> float | None:
+        """Get threshold value from float or entity state."""
+        if threshold is None:
+            return None
+        if threshold.numerical:
+            return threshold.number
+
+        if not (entity_state := self._hass.states.get(threshold.entity)):  # type: ignore[arg-type]
+            # Entity not found
+            return None
+        if not self._is_valid_unit(
+            entity_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+        ):
+            # Entity unit does not match the expected unit
+            return None
+        try:
+            return float(entity_state.state)
+        except TypeError, ValueError:
+            # Entity state is not a valid number
+            return None
+
+    def _get_tracked_value(self, entity_state: State) -> Any:
+        """Get the tracked value from a state, with unit validation for state-based values."""
+        domain_spec = self._domain_specs[entity_state.domain]
+        if domain_spec.value_source is None:
+            if not self._is_valid_unit(
+                entity_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+            ):
+                return None
+            return entity_state.state
+        return entity_state.attributes.get(domain_spec.value_source)
 
     def is_valid_state(self, entity_state: State) -> bool:
-        """Check if the state matches the expected state(s)."""
-        return entity_state.attributes.get(self._attribute) in self._attribute_states
+        """Check if the state is within the specified range."""
+        try:
+            value = float(self._get_tracked_value(entity_state))
+        except TypeError, ValueError:
+            return False
+
+        if self._threshold_type == NumericThresholdType.ABOVE:
+            if (limit := self._get_threshold_value(self.threshold)) is None:
+                # Entity not found or invalid number, don't trigger
+                return False
+            return value > limit
+        if self._threshold_type == NumericThresholdType.BELOW:
+            if (limit := self._get_threshold_value(self.threshold)) is None:
+                # Entity not found or invalid number, don't trigger
+                return False
+            return value < limit
+
+        # Mode is BETWEEN or OUTSIDE
+        lower_limit = self._get_threshold_value(self.lower_threshold)
+        upper_limit = self._get_threshold_value(self.upper_threshold)
+        if lower_limit is None or upper_limit is None:
+            # Entity not found or invalid number, don't trigger
+            return False
+        between = lower_limit < value < upper_limit
+        if self._threshold_type == NumericThresholdType.BETWEEN:
+            return between
+        return not between
 
 
-def make_entity_state_attribute_condition(
-    domain: str, attribute: str, attribute_states: str | set[str]
-) -> type[EntityStateAttributeConditionBase]:
-    """Create a condition for entity attribute matching specific state(s)."""
+def make_entity_numerical_condition(
+    domain_specs: Mapping[str, DomainSpec] | str,
+    valid_unit: str | None | UndefinedType = UNDEFINED,
+) -> type[EntityNumericalConditionBase]:
+    """Create a condition for numerical state comparisons."""
+    specs = _normalize_domain_specs(domain_specs)
 
-    if isinstance(attribute_states, str):
-        attribute_states_set = {attribute_states}
-    else:
-        attribute_states_set = attribute_states
+    class CustomCondition(EntityNumericalConditionBase):
+        """Condition for numerical state."""
 
-    class CustomCondition(EntityStateAttributeConditionBase):
-        """Condition for entity attribute."""
+        _domain_specs = specs
+        _valid_unit = valid_unit
 
-        _domain = domain
-        _attribute = attribute
-        _attribute_states = attribute_states_set
+    return CustomCondition
+
+
+def _make_numerical_condition_with_unit_schema(
+    unit_converter: type[BaseUnitConverter],
+) -> vol.Schema:
+    """Factory for numerical condition schema with unit option."""
+    return ENTITY_STATE_CONDITION_SCHEMA_ANY_ALL.extend(
+        {
+            vol.Required(CONF_OPTIONS): {
+                vol.Required("threshold"): NumericThresholdSelector(
+                    NumericThresholdSelectorConfig(
+                        mode=NumericThresholdMode.IS,
+                        unit_of_measurement=list(unit_converter.VALID_UNITS),
+                    )
+                ),
+            },
+        }
+    )
+
+
+class EntityNumericalConditionWithUnitBase(EntityNumericalConditionBase):
+    """Condition for numerical state comparisons with unit conversion."""
+
+    _base_unit: str | None  # Base unit for the tracked value
+    _unit_converter: type[BaseUnitConverter]
+
+    def __init_subclass__(cls, **kwargs: Any) -> None:
+        """Create a schema."""
+        super().__init_subclass__(**kwargs)
+        cls._schema = _make_numerical_condition_with_unit_schema(cls._unit_converter)
+
+    def _get_entity_unit(self, entity_state: State) -> str | None:
+        """Get the unit of an entity from its state."""
+        return entity_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+
+    def _get_threshold_value(self, threshold: ThresholdConfig | None) -> float | None:
+        """Get threshold value from float or entity state."""
+        if threshold is None:
+            return None
+        if threshold.numerical:
+            return self._unit_converter.convert(
+                threshold.number,  # type: ignore[arg-type]
+                threshold.unit,  # type: ignore[arg-type]
+                self._base_unit,
+            )
+
+        if not (entity_state := self._hass.states.get(threshold.entity)):  # type: ignore[arg-type]
+            # Entity not found
+            return None
+        try:
+            value = float(entity_state.state)
+        except TypeError, ValueError:
+            # Entity state is not a valid number
+            return None
+
+        try:
+            return self._unit_converter.convert(
+                value,
+                entity_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT),
+                self._base_unit,
+            )
+        except HomeAssistantError:
+            # Unit conversion failed (i.e. incompatible units), treat as invalid number
+            return None
+
+    def _get_tracked_value(self, entity_state: State) -> Any:
+        """Get the tracked numerical value from a state."""
+        domain_spec = self._domain_specs[entity_state.domain]
+        raw_value: Any
+        if domain_spec.value_source is None:
+            raw_value = entity_state.state
+        else:
+            raw_value = entity_state.attributes.get(domain_spec.value_source)
+
+        try:
+            value = float(raw_value)
+        except TypeError, ValueError:
+            return None
+
+        try:
+            return self._unit_converter.convert(
+                value, self._get_entity_unit(entity_state), self._base_unit
+            )
+        except HomeAssistantError:
+            return None
+
+
+def make_entity_numerical_condition_with_unit(
+    domain_specs: Mapping[str, DomainSpec],
+    base_unit: str,
+    unit_converter: type[BaseUnitConverter],
+) -> type[EntityNumericalConditionWithUnitBase]:
+    """Create a condition for numerical state comparisons with unit conversion."""
+
+    class CustomCondition(EntityNumericalConditionWithUnitBase):
+        """Condition for numerical state with unit conversion."""
+
+        _domain_specs = domain_specs
+        _base_unit = base_unit
+        _unit_converter = unit_converter
 
     return CustomCondition
 
@@ -606,11 +825,16 @@ async def _async_get_condition_platform(
             f'Invalid condition "{condition_key}" specified'
         ) from None
     try:
-        return platform, await integration.async_get_platform("condition")
+        platform_module = await integration.async_get_platform("condition")
     except ImportError:
         raise HomeAssistantError(
             f"Integration '{platform}' does not provide condition support"
         ) from None
+
+    # Ensure conditions are registered so descriptions can be loaded
+    await _register_condition_platform(hass, platform, platform_module)
+
+    return platform, platform_module
 
 
 async def _async_get_checker(condition: Condition) -> ConditionCheckerType:
