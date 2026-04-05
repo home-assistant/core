@@ -41,6 +41,9 @@ class RadioThermUpdateCoordinator(DataUpdateCoordinator[RadioThermUpdate]):
             update_interval=UPDATE_INTERVAL,
         )
 
+        # Represent the state of the (now-defunct) cloud sync.
+        self.cloud_enabled: bool | None = None
+
     async def _async_update_data(self) -> RadioThermUpdate:
         """Update data from the thermostat."""
         try:

@@ -11,6 +11,12 @@
         "state": {
           "on": "mdi:timer"
         }
+      },
+      "cloud_enabled": {
+        "default": "mdi:cloud-outline",
+        "state": {
+          "off": "mdi:cloud-off"
+        }
       }
     }
   }
