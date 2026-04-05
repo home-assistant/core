@@ -371,3 +371,29 @@ async def test_search_media(
         "full_album_art_uri": True,
         "complete_result": True,
     }
+
+
+async def test_search_media_invalid_media_content_type(
+    hass: HomeAssistant,
+    async_autosetup_sonos,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test that async_search_media raises on an unsupported media_content_type."""
+    client = await hass_ws_client()
+    await client.send_json(
+        {
+            "id": 1,
+            "type": "media_player/search_media",
+            "entity_id": "media_player.zone_a",
+            "media_content_type": "movie",
+            "media_content_id": "some_id",
+            "search_query": "test",
+        }
+    )
+    response = await client.receive_json()
+    assert not response["success"]
+    assert response["error"]["code"] == "home_assistant_error"
+    assert response["error"]["translation_key"] == "invalid_media_content_type"
+    assert response["error"]["translation_placeholders"] == {
+        "media_content_type": "movie"
+    }

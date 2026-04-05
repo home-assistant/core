@@ -118,6 +118,9 @@
     "invalid_media": {
       "message": "Could not find media in library: {media_id}"
     },
+    "invalid_media_content_type": {
+      "message": "Media content type {media_content_type} is not supported"
+    },
     "invalid_sonos_playlist": {
       "message": "Could not find Sonos playlist: {name}"
     },

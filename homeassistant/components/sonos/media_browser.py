@@ -23,6 +23,7 @@ from homeassistant.components.media_player import (
     SearchMediaQuery,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.network import is_internal_request
 
 from .const import (
@@ -217,9 +218,15 @@ async def async_search_media(
     query: SearchMediaQuery,
 ) -> SearchMedia:
     """Search media."""
-    search_type = MEDIA_TYPES_TO_SONOS.get(
-        query.media_content_type or MediaType.TRACK, "tracks"
-    )
+    search_type = MEDIA_TYPES_TO_SONOS.get(query.media_content_type or "")
+    if search_type is None:
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="invalid_media_content_type",
+            translation_placeholders={
+                "media_content_type": query.media_content_type or "",
+            },
+        )
     items = await hass.async_add_executor_job(
         partial(
             media.library.get_music_library_information,
