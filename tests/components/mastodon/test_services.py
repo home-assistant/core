@@ -840,9 +840,9 @@ async def test_service_update_profile_exceptions(
     assert err.value.translation_key == translation_key
 
 
+@pytest.mark.usefixtures("mock_mastodon_client")
 async def test_service_update_profile_media_source_not_supported(
     hass: HomeAssistant,
-    mock_mastodon_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test the update profile service with unsupported media source."""
