@@ -18,6 +18,10 @@ from tests.common import MockConfigEntry
 pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 
 
+MOCK_NEW_PROPERTY_ID = "67890"
+MOCK_NEW_ADDRESS = "Testveien 2, Bergen"
+
+
 async def test_full_user_flow(
     hass: HomeAssistant,
     mock_address_search: AsyncMock,
@@ -172,6 +176,183 @@ async def test_already_configured(
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             user_input={"selected_address": MOCK_PROPERTY_ID},
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+
+async def test_reconfigure_flow(
+    hass: HomeAssistant,
+    mock_address_search: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test the full reconfigure flow."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={"address_search": "Testveien"},
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure_select_address"
+
+    with patch(
+        "homeassistant.components.bir.config_flow.BirClient.authenticate",
+        new_callable=AsyncMock,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={"selected_address": MOCK_NEW_PROPERTY_ID},
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert mock_config_entry.data == {
+        CONF_PROPERTY_ID: MOCK_NEW_PROPERTY_ID,
+        CONF_ADDRESS: MOCK_NEW_ADDRESS,
+    }
+    assert mock_config_entry.title == MOCK_NEW_ADDRESS
+    assert mock_config_entry.unique_id == f"bir_{MOCK_NEW_PROPERTY_ID}"
+
+
+async def test_reconfigure_search_too_short(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test error when reconfigure search query is too short."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={"address_search": "Ab"},
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+    assert result["errors"] == {"base": "search_too_short"}
+
+
+async def test_reconfigure_no_addresses_found(
+    hass: HomeAssistant,
+    mock_address_search: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test error when no addresses match during reconfigure."""
+    mock_config_entry.add_to_hass(hass)
+    mock_address_search.return_value = []
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={"address_search": "Nonexistent Street"},
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+    assert result["errors"] == {"base": "no_addresses_found"}
+
+
+async def test_reconfigure_connection_error(
+    hass: HomeAssistant,
+    mock_address_search: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test error when connection fails during reconfigure search."""
+    mock_config_entry.add_to_hass(hass)
+    mock_address_search.side_effect = BirConnectionError("Connection failed")
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={"address_search": "Testveien"},
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+    assert result["errors"] == {"base": "cannot_connect"}
+
+
+async def test_reconfigure_validation_error(
+    hass: HomeAssistant,
+    mock_address_search: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test error when address validation fails during reconfigure."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={"address_search": "Testveien"},
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure_select_address"
+
+    with patch(
+        "homeassistant.components.bir.config_flow.BirClient.authenticate",
+        new_callable=AsyncMock,
+        side_effect=BirAuthenticationError("API error"),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={"selected_address": MOCK_NEW_PROPERTY_ID},
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure_select_address"
+    assert result["errors"] == {"base": "cannot_connect"}
+
+
+@pytest.mark.usefixtures("mock_address_search")
+async def test_reconfigure_already_configured(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test reconfigure aborts when selecting an address already configured by another entry."""
+    mock_config_entry.add_to_hass(hass)
+
+    # Add a second entry for the other address
+    other_entry = MockConfigEntry(
+        title=MOCK_NEW_ADDRESS,
+        domain=DOMAIN,
+        data={
+            CONF_PROPERTY_ID: MOCK_NEW_PROPERTY_ID,
+            CONF_ADDRESS: MOCK_NEW_ADDRESS,
+        },
+        unique_id=f"bir_{MOCK_NEW_PROPERTY_ID}",
+    )
+    other_entry.add_to_hass(hass)
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={"address_search": "Testveien"},
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure_select_address"
+
+    with patch(
+        "homeassistant.components.bir.config_flow.BirClient.authenticate",
+        new_callable=AsyncMock,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={"selected_address": MOCK_NEW_PROPERTY_ID},
         )
 
     assert result["type"] is FlowResultType.ABORT

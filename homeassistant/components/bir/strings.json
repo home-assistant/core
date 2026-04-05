@@ -1,7 +1,8 @@
 {
   "config": {
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_location%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_location%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
@@ -26,6 +27,24 @@
           "address_search": "Enter the street name or address to search for your waste collection location"
         },
         "description": "Search for your address to set up waste collection tracking."
+      },
+      "reconfigure": {
+        "data": {
+          "address_search": "[%key:component::bir::config::step::user::data::address_search%]"
+        },
+        "data_description": {
+          "address_search": "[%key:component::bir::config::step::user::data_description::address_search%]"
+        },
+        "description": "Search for a new address to update your waste collection tracking."
+      },
+      "reconfigure_select_address": {
+        "data": {
+          "selected_address": "[%key:component::bir::config::step::select_address::data::selected_address%]"
+        },
+        "data_description": {
+          "selected_address": "[%key:component::bir::config::step::select_address::data_description::selected_address%]"
+        },
+        "description": "[%key:component::bir::config::step::select_address::description%]"
       }
     }
   },
