@@ -41,6 +41,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Arcam FMJ (127.0.0.1)',
+      'last_non_buffering_state': <MediaPlayerState.ON: 'on'>,
       'supported_features': <MediaPlayerEntityFeature: 200588>,
       'volume_level': 0.0,
     }),
@@ -94,6 +95,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Arcam FMJ (127.0.0.1) Zone 2',
+      'last_non_buffering_state': <MediaPlayerState.ON: 'on'>,
       'supported_features': <MediaPlayerEntityFeature: 135052>,
       'volume_level': 0.0,
     }),
