@@ -38,24 +38,24 @@ class UnifiAccessConfigFlow(ConfigFlow, domain=DOMAIN):
         host = user_input[CONF_HOST]
         if "://" not in host:
             host = f"https://{host}"
-        # Strip any Access-specific port; Protect runs on default HTTPS port 443.
-        # Use yarl to correctly handle IPv6 addresses (brackets required in URLs).
-        parsed = URL(host)
-        url = str(
-            URL.build(
-                scheme="https", host=parsed.host or "", path=PROTECT_META_INFO_PATH
-            )
-        )
         headers = {
             "X-API-KEY": user_input[CONF_API_TOKEN],
             "Accept": "application/json",
         }
         try:
+            # Strip any Access-specific port; Protect runs on default HTTPS port 443.
+            # Use yarl to correctly handle IPv6 addresses (brackets required in URLs).
+            parsed = URL(host)
+            url = str(
+                URL.build(
+                    scheme="https", host=parsed.host or "", path=PROTECT_META_INFO_PATH
+                )
+            )
             async with asyncio.timeout(5):
                 resp = await session.get(url, headers=headers)
                 is_protect = resp.status == 200
                 resp.release()
-        except TimeoutError, aiohttp.ClientError:
+        except ValueError, TimeoutError, aiohttp.ClientError:
             return False
         else:
             return is_protect
