@@ -258,3 +258,30 @@ async def test_coordinator_missing_period_statistics_without_last_record(
         get_last_statistics, hass, 1, statistic_id, True, {"sum"}
     )
     assert stats == {}
+
+
+async def test_coordinator_period_statistics_without_sum(
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_anglian_water_client: AsyncMock,
+) -> None:
+    """Test period lookup records without sum are handled safely."""
+    coordinator = AnglianWaterUpdateCoordinator(
+        hass, mock_anglian_water_client, mock_config_entry
+    )
+    await coordinator._async_update_data()
+    await async_wait_recording_done(hass)
+
+    statistic_id = f"anglian_water:{ACCOUNT_NUMBER}_testsn_usage"
+    with patch(
+        "homeassistant.components.anglian_water.coordinator.statistics_during_period",
+        return_value={statistic_id: [{"start": 0.0}]},
+    ):
+        await coordinator._async_update_data()
+    await async_wait_recording_done(hass)
+
+    stats = await hass.async_add_executor_job(
+        get_last_statistics, hass, 1, statistic_id, True, {"sum"}
+    )
+    assert stats[statistic_id]
