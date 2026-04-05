@@ -39,7 +39,7 @@ SENSORS = (
 )
 
 ALERT_SENSOR = SensorEntityDescription(
-    key="weatherAlerts",
+    key=ATTR_WEATHER_ALERTS,
     translation_key="weather_alerts",
 )
 
