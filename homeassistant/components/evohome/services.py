@@ -14,25 +14,24 @@ from evohomeasync2.schemas.const import (
 import voluptuous as vol
 
 from homeassistant.components.climate import DOMAIN as CLIMATE_DOMAIN
-from homeassistant.const import ATTR_MODE
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import config_validation as cv, service
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.service import verify_domain_control
 
-from .const import ATTR_DURATION, ATTR_PERIOD, ATTR_SETPOINT, DOMAIN, EvoService
+from .const import DOMAIN, EVO_DURATION, EVO_MODE, EVO_PERIOD, EVO_SETPOINT, EvoService
 from .coordinator import EvoDataUpdateCoordinator
 
 # System service schemas (registered as domain services)
 SET_SYSTEM_MODE_SCHEMA: Final[dict[str | vol.Marker, Any]] = {
     # unsupported modes are rejected at runtime with ServiceValidationError
-    vol.Required(ATTR_MODE): cv.string,  # avoid vol.In(SystemMode)
-    vol.Exclusive(ATTR_DURATION, "temporary"): vol.All(
+    vol.Required(EVO_MODE): cv.string,  # avoid vol.In(SystemMode)
+    vol.Exclusive(EVO_DURATION, "temporary"): vol.All(
         cv.time_period,
         vol.Range(min=timedelta(hours=0), max=timedelta(hours=24)),
     ),
-    vol.Exclusive(ATTR_PERIOD, "temporary"): vol.All(
+    vol.Exclusive(EVO_PERIOD, "temporary"): vol.All(
         cv.time_period,
         vol.Range(min=timedelta(days=1), max=timedelta(days=99)),
     ),
@@ -40,10 +39,10 @@ SET_SYSTEM_MODE_SCHEMA: Final[dict[str | vol.Marker, Any]] = {
 
 # Zone service schemas (registered as entity services)
 SET_ZONE_OVERRIDE_SCHEMA: Final[dict[str | vol.Marker, Any]] = {
-    vol.Required(ATTR_SETPOINT): vol.All(
+    vol.Required(EVO_SETPOINT): vol.All(
         vol.Coerce(float), vol.Range(min=4.0, max=35.0)
     ),
-    vol.Optional(ATTR_DURATION): vol.All(
+    vol.Optional(EVO_DURATION): vol.All(
         cv.time_period,
         vol.Range(min=timedelta(days=0), max=timedelta(days=1)),
     ),
@@ -74,7 +73,7 @@ def _register_zone_entity_services(hass: HomeAssistant) -> None:
 def _validate_set_system_mode_params(tcs: ControlSystem, data: dict[str, Any]) -> None:
     """Validate that a set_system_mode service call is properly formed."""
 
-    mode = data[ATTR_MODE]
+    mode = data[EVO_MODE]
     tcs_modes = {m[SZ_SYSTEM_MODE]: m for m in tcs.allowed_system_modes}
 
     # Validation occurs here, instead of in the library, because it uses a slightly
@@ -85,34 +84,34 @@ def _validate_set_system_mode_params(tcs: ControlSystem, data: dict[str, Any]) -
         raise ServiceValidationError(
             translation_domain=DOMAIN,
             translation_key="mode_not_supported",
-            translation_placeholders={ATTR_MODE: mode},
+            translation_placeholders={EVO_MODE: mode},
         )
 
     # voluptuous schema ensures that duration and period are not both present
 
     if not mode_info[SZ_CAN_BE_TEMPORARY]:
-        if ATTR_DURATION in data or ATTR_PERIOD in data:
+        if EVO_DURATION in data or EVO_PERIOD in data:
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
                 translation_key="mode_cant_be_temporary",
-                translation_placeholders={ATTR_MODE: mode},
+                translation_placeholders={EVO_MODE: mode},
             )
         return
 
     timing_mode = mode_info.get(SZ_TIMING_MODE)  # will not be None, as can_be_temporary
 
-    if timing_mode == SZ_DURATION and ATTR_PERIOD in data:
+    if timing_mode == SZ_DURATION and EVO_PERIOD in data:
         raise ServiceValidationError(
             translation_domain=DOMAIN,
             translation_key="mode_cant_have_period",
-            translation_placeholders={ATTR_MODE: mode},
+            translation_placeholders={EVO_MODE: mode},
         )
 
-    if timing_mode == SZ_PERIOD and ATTR_DURATION in data:
+    if timing_mode == SZ_PERIOD and EVO_DURATION in data:
         raise ServiceValidationError(
             translation_domain=DOMAIN,
             translation_key="mode_cant_have_duration",
-            translation_placeholders={ATTR_MODE: mode},
+            translation_placeholders={EVO_MODE: mode},
         )
 
 

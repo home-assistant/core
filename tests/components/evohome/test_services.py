@@ -10,13 +10,14 @@ from freezegun.api import FrozenDateTimeFactory
 import pytest
 
 from homeassistant.components.evohome.const import (
-    ATTR_DURATION,
-    ATTR_PERIOD,
-    ATTR_SETPOINT,
     DOMAIN,
+    EVO_DURATION,
+    EVO_MODE,
+    EVO_PERIOD,
+    EVO_SETPOINT,
     EvoService,
 )
-from homeassistant.const import ATTR_ENTITY_ID, ATTR_MODE
+from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 
@@ -73,7 +74,7 @@ async def test_set_system_mode(
             DOMAIN,
             EvoService.SET_SYSTEM_MODE,
             {
-                ATTR_MODE: "Auto",
+                EVO_MODE: "Auto",
             },
             blocking=True,
         )
@@ -88,8 +89,8 @@ async def test_set_system_mode(
             DOMAIN,
             EvoService.SET_SYSTEM_MODE,
             {
-                ATTR_MODE: "AutoWithEco",
-                ATTR_DURATION: {"hours": 12},
+                EVO_MODE: "AutoWithEco",
+                EVO_DURATION: {"hours": 12},
             },
             blocking=True,
         )
@@ -104,8 +105,8 @@ async def test_set_system_mode(
             DOMAIN,
             EvoService.SET_SYSTEM_MODE,
             {
-                ATTR_MODE: "Away",
-                ATTR_PERIOD: {"days": 7},
+                EVO_MODE: "Away",
+                EVO_PERIOD: {"days": 7},
             },
             blocking=True,
         )
@@ -172,7 +173,7 @@ async def test_set_zone_override(
             DOMAIN,
             EvoService.SET_ZONE_OVERRIDE,
             {
-                ATTR_SETPOINT: 19.5,
+                EVO_SETPOINT: 19.5,
             },
             target={ATTR_ENTITY_ID: zone_id},
             blocking=True,
@@ -186,8 +187,8 @@ async def test_set_zone_override(
             DOMAIN,
             EvoService.SET_ZONE_OVERRIDE,
             {
-                ATTR_SETPOINT: 19.5,
-                ATTR_DURATION: {"minutes": 135},
+                EVO_SETPOINT: 19.5,
+                EVO_DURATION: {"minutes": 135},
             },
             target={ATTR_ENTITY_ID: zone_id},
             blocking=True,
@@ -215,7 +216,7 @@ async def test_set_zone_override_legacy(
             EvoService.SET_ZONE_OVERRIDE,
             {
                 ATTR_ENTITY_ID: zone_id,
-                ATTR_SETPOINT: 19.5,
+                EVO_SETPOINT: 19.5,
             },
             blocking=True,
         )
@@ -229,8 +230,8 @@ async def test_set_zone_override_legacy(
             EvoService.SET_ZONE_OVERRIDE,
             {
                 ATTR_ENTITY_ID: zone_id,
-                ATTR_SETPOINT: 19.5,
-                ATTR_DURATION: {"minutes": 135},
+                EVO_SETPOINT: 19.5,
+                EVO_DURATION: {"minutes": 135},
             },
             blocking=True,
         )
@@ -245,7 +246,7 @@ async def test_set_zone_override_legacy(
     ("service", "service_data"),
     [
         (EvoService.CLEAR_ZONE_OVERRIDE, {}),
-        (EvoService.SET_ZONE_OVERRIDE, {ATTR_SETPOINT: 19.5}),
+        (EvoService.SET_ZONE_OVERRIDE, {EVO_SETPOINT: 19.5}),
     ],
 )
 async def test_zone_services_with_ctl_id(
@@ -271,19 +272,19 @@ async def test_zone_services_with_ctl_id(
 
 _SET_SYSTEM_MODE_VALIDATOR_PARAMS = [
     (
-        {ATTR_MODE: "NotARealMode"},
+        {EVO_MODE: "NotARealMode"},
         "mode_not_supported",
     ),
     (
-        {ATTR_MODE: "Auto", ATTR_DURATION: {"hours": 1}},
+        {EVO_MODE: "Auto", EVO_DURATION: {"hours": 1}},
         "mode_cant_be_temporary",
     ),
     (
-        {ATTR_MODE: "AutoWithEco", ATTR_PERIOD: {"days": 1}},
+        {EVO_MODE: "AutoWithEco", EVO_PERIOD: {"days": 1}},
         "mode_cant_have_period",
     ),
     (
-        {ATTR_MODE: "DayOff", ATTR_DURATION: {"hours": 1}},
+        {EVO_MODE: "DayOff", EVO_DURATION: {"hours": 1}},
         "mode_cant_have_duration",
     ),
 ]
@@ -313,6 +314,4 @@ async def test_set_system_mode_validator(
         )
 
     assert exc_info.value.translation_key == expected_translation_key
-    assert exc_info.value.translation_placeholders == {
-        ATTR_MODE: service_data[ATTR_MODE]
-    }
+    assert exc_info.value.translation_placeholders == {EVO_MODE: service_data[EVO_MODE]}
