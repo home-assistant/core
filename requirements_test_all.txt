@@ -737,7 +737,7 @@ directv==0.4.0
 discovery30303==0.3.3
 
 # homeassistant.components.connectivity_monitor
-dnspython==2.4.2
+dnspython==2.8.0
 
 # homeassistant.components.dremel_3d_printer
 dremel3dpy==2.1.1
