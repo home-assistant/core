@@ -186,3 +186,24 @@ async def test_hub_stop(
 
     # Verify hub is disconnected by checking config entry state
     assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
+
+
+async def test_hub_stop_disconnect_error(
+    hass: HomeAssistant,
+    init_integration: tuple[VictronVenusHub, MockConfigEntry],
+) -> None:
+    """Test hub stop gracefully handles disconnect errors."""
+    victron_hub, mock_config_entry = init_integration
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+
+    # Disconnect normally first to clean up keepalive, then make the
+    # wrapper's inner hub raise on the second disconnect during unload.
+    await victron_hub.disconnect()
+    victron_hub.disconnect = AsyncMock(side_effect=Exception("disconnect failed"))
+
+    unload_ok = await hass.config_entries.async_unload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert unload_ok is True
+    assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
