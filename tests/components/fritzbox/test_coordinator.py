@@ -141,6 +141,23 @@ async def test_coordinator_update_when_unreachable(
     assert entry.state is ConfigEntryState.SETUP_RETRY
 
 
+async def test_coordinator_update_when_timeout(
+    hass: HomeAssistant, fritz: Mock
+) -> None:
+    """Test coordinator schedules reload when update times out."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=MOCK_CONFIG[DOMAIN][CONF_DEVICES][0],
+        unique_id="any",
+    )
+    entry.add_to_hass(hass)
+    fritz().update_devices.side_effect = [TimeoutError()]
+
+    assert not await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert entry.state is ConfigEntryState.SETUP_RETRY
+
+
 async def test_coordinator_automatic_registry_cleanup(
     hass: HomeAssistant,
     fritz: Mock,

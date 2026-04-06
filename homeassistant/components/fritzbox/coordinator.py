@@ -207,7 +207,7 @@ class FritzboxDataUpdateCoordinator(DataUpdateCoordinator[FritzboxCoordinatorDat
                     self.config_entry.entry_id
                 )
                 raise UpdateFailed(str(retry_ex)) from retry_ex
-        except RequestConnectionError as ex:
+        except (RequestConnectionError, TimeoutError) as ex:
             LOGGER.debug(
                 "Reload %s due to error '%s' to ensure proper re-login",
                 self.config_entry.title,
