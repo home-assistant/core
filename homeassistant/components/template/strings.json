@@ -7,6 +7,7 @@
     "device_class": "Device class",
     "device_id_description": "Select a device to link to this entity.",
     "state": "State",
+    "text_template": "Text template",
     "turn_off": "Actions on turn off",
     "turn_on": "Actions on turn on",
     "unit_of_measurement": "Unit of measurement"
@@ -404,6 +405,29 @@
         },
         "title": "Template switch"
       },
+      "text": {
+        "data": {
+          "device_id": "[%key:common::config_flow::data::device%]",
+          "name": "[%key:common::config_flow::data::name%]",
+          "state": "[%key:component::template::common::state%]"
+        },
+        "data_description": {
+          "device_id": "[%key:component::template::common::device_id_description%]",
+          "state": "Defines a template to get the state of the text."
+        },
+        "sections": {
+          "advanced_options": {
+            "data": {
+              "availability": "[%key:component::template::common::availability%]"
+            },
+            "data_description": {
+              "availability": "[%key:component::template::common::availability_description%]"
+            },
+            "name": "[%key:component::template::common::advanced_options%]"
+          }
+        },
+        "title": "Template text"
+      },
       "update": {
         "data": {
           "backup": "Backup",
@@ -462,6 +486,7 @@
           "select": "[%key:component::select::title%]",
           "sensor": "[%key:component::sensor::title%]",
           "switch": "[%key:component::switch::title%]",
+          "text": "[%key:component::text::title%]",
           "update": "[%key:component::update::title%]",
           "vacuum": "[%key:component::vacuum::title%]",
           "weather": "[%key:component::weather::title%]"
@@ -943,6 +968,29 @@
           }
         },
         "title": "[%key:component::template::config::step::switch::title%]"
+      },
+      "text": {
+        "data": {
+          "device_id": "[%key:common::config_flow::data::device%]",
+          "name": "[%key:common::config_flow::data::name%]",
+          "state": "[%key:component::template::common::state%]"
+        },
+        "data_description": {
+          "device_id": "[%key:component::template::common::device_id_description%]",
+          "state": "[%key:component::template::config::step::text::data_description::state%]"
+        },
+        "sections": {
+          "advanced_options": {
+            "data": {
+              "availability": "[%key:component::template::common::availability%]"
+            },
+            "data_description": {
+              "availability": "[%key:component::template::common::availability_description%]"
+            },
+            "name": "[%key:component::template::common::advanced_options%]"
+          }
+        },
+        "title": "[%key:component::template::config::step::text::title%]"
       },
       "update": {
         "data": {
