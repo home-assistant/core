@@ -215,7 +215,12 @@ class RadioThermostat(RadioThermostatEntity, ClimateEntity):
         if self.data.humidity is not None:
             self._attr_current_humidity = self.data.humidity
         if isinstance(self.device, radiotherm.thermostat.CT80):
-            self._attr_preset_mode = CODE_TO_PRESET_MODE.get(data["program_mode"], 0)
+            # Try to safely get program_mode to set the preset_mode.
+            preset_mode = data.get("program_mode")
+            if preset_mode in CODE_TO_TEMP_MODE:
+                self._attr_preset_mode = CODE_TO_PRESET_MODE[preset_mode]
+            else:
+                self._attr_preset_mode = 0
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
