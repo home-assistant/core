@@ -2,8 +2,11 @@
 
 from __future__ import annotations
 
+import logging
 from types import SimpleNamespace
 from unittest.mock import AsyncMock, call, patch
+
+import pytest
 
 from homeassistant.components.connectivity_monitor import (
     async_migrate_entry,
@@ -276,6 +279,97 @@ async def test_async_setup_creates_lovelace_resource_when_missing(
             "url": f"/connectivity_monitor/connectivity_monitor_card.js?v={VERSION}",
         }
     )
+
+
+async def test_async_setup_handles_static_path_registration_error(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test setup logs and continues if static path registration fails."""
+    http = SimpleNamespace(
+        async_register_static_paths=AsyncMock(side_effect=OSError("boom"))
+    )
+
+    with (
+        patch.object(hass, "http", http, create=True),
+        caplog.at_level(logging.WARNING),
+    ):
+        assert await async_setup(hass, {})
+
+    assert "could not register static path" in caplog.text
+
+
+async def test_async_setup_skips_lovelace_registration_without_data(
+    hass: HomeAssistant,
+) -> None:
+    """Test setup skips Lovelace resource registration when data is unavailable."""
+    http = SimpleNamespace(async_register_static_paths=AsyncMock())
+
+    with patch.object(hass, "http", http, create=True):
+        assert await async_setup(hass, {})
+        hass.bus.async_fire("homeassistant_started")
+        await hass.async_block_till_done()
+
+    assert http.async_register_static_paths.await_count == 1
+
+
+async def test_async_setup_skips_lovelace_registration_without_resources(
+    hass: HomeAssistant,
+) -> None:
+    """Test setup skips Lovelace resource registration when resources are unavailable."""
+    http = SimpleNamespace(async_register_static_paths=AsyncMock())
+    hass.data[LOVELACE_DATA] = SimpleNamespace()
+
+    with patch.object(hass, "http", http, create=True):
+        assert await async_setup(hass, {})
+        hass.bus.async_fire("homeassistant_started")
+        await hass.async_block_till_done()
+
+    assert http.async_register_static_paths.await_count == 1
+
+
+async def test_async_setup_skips_existing_current_lovelace_resource(
+    hass: HomeAssistant,
+) -> None:
+    """Test setup does nothing when the current Lovelace resource already exists."""
+    current_url = f"/connectivity_monitor/connectivity_monitor_card.js?v={VERSION}"
+    resources = SimpleNamespace(
+        async_load=AsyncMock(),
+        async_items=lambda: [{"id": "resource-id", "url": current_url}],
+        async_update_item=AsyncMock(),
+        async_create_item=AsyncMock(),
+    )
+    http = SimpleNamespace(async_register_static_paths=AsyncMock())
+    hass.data[LOVELACE_DATA] = SimpleNamespace(resources=resources)
+
+    with patch.object(hass, "http", http, create=True):
+        assert await async_setup(hass, {})
+        hass.bus.async_fire("homeassistant_started")
+        await hass.async_block_till_done()
+
+    resources.async_load.assert_awaited_once()
+    resources.async_update_item.assert_not_called()
+    resources.async_create_item.assert_not_called()
+
+
+async def test_async_setup_logs_lovelace_registration_error(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test setup logs and continues if Lovelace resource registration raises."""
+    resources = SimpleNamespace(async_load=AsyncMock())
+    http = SimpleNamespace(async_register_static_paths=AsyncMock())
+    hass.data[LOVELACE_DATA] = SimpleNamespace(resources=resources)
+
+    with (
+        patch.object(hass, "http", http, create=True),
+        caplog.at_level(logging.WARNING),
+    ):
+        assert await async_setup(hass, {})
+        hass.bus.async_fire("homeassistant_started")
+        await hass.async_block_till_done()
+
+    assert "could not register Lovelace resource" in caplog.text
 
 
 async def test_async_reload_entry_reloads_config_entry(
