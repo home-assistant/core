@@ -199,6 +199,8 @@ class PortainerBaseButton(ButtonEntity):
                 translation_key="timeout_connect_no_details",
             ) from err
 
+        await self.coordinator.async_request_refresh()
+
 
 class PortainerEndpointButton(PortainerEndpointEntity, PortainerBaseButton):
     """Defines a Portainer endpoint button."""
