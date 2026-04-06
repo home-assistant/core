@@ -56,7 +56,7 @@ def consumeables_trait_fixture(fake_vacuum: FakeDevice) -> Mock:
         ("button.roborock_s7_maxv_reset_side_brush_consumable"),
         ("button.roborock_s7_maxv_reset_main_brush_consumable"),
         ("button.roborock_s7_maxv_dock_reset_dock_strainer_consumable"),
-        ("button.roborock_s7_maxv_dock_reset_dock_maintenance_brush_consumable"),
+        ("button.roborock_s7_maxv_dock_reset_dock_cleaning_brush_consumable"),
     ],
 )
 @pytest.mark.freeze_time("2023-10-30 08:50:00")
