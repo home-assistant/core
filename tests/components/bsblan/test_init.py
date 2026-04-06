@@ -204,6 +204,30 @@ async def test_config_entry_timeout_error(
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
+async def test_coordinator_fast_no_dhw_support(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_bsblan: MagicMock,
+) -> None:
+    """Test fast coordinator when device does not support DHW."""
+    mock_bsblan.hot_water_state.side_effect = BSBLANError(
+        "None of the requested parameters are valid for this section"
+    )
+
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    # Integration should still load even if DHW is not supported
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+
+    # DHW data should be None in the fast coordinator
+    assert mock_config_entry.runtime_data.fast_coordinator.data.dhw is None
+
+    # Water heater entity should not be created
+    assert hass.states.get("water_heater.bsb_lan") is None
+
+
 async def test_coordinator_slow_no_dhw_support(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
