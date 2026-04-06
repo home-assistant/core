@@ -20,6 +20,7 @@ from homeassistant.helpers.typing import ConfigType
 
 from . import KNOWN_DEVICES
 from .connection import HKDevice
+from .ecobee import EcobeeModeSelect
 from .entity import CharacteristicEntity
 
 
@@ -53,13 +54,6 @@ SELECT_ENTITIES: dict[str, HomeKitSelectEntityDescription] = {
         },
     ),
 }
-
-_ECOBEE_MODE_TO_TEXT = {
-    0: "home",
-    1: "sleep",
-    2: "away",
-}
-_ECOBEE_MODE_TO_NUMBERS = {v: k for (k, v) in _ECOBEE_MODE_TO_TEXT.items()}
 
 
 class BaseHomeKitSelect(CharacteristicEntity, SelectEntity):
@@ -110,38 +104,6 @@ class HomeKitSelect(BaseHomeKitSelect):
         """Set the current option."""
         await self.async_put_characteristics(
             {self._char.type: self._choice_to_enum[option]}
-        )
-
-
-class EcobeeModeSelect(BaseHomeKitSelect):
-    """Represents a ecobee mode select entity."""
-
-    _attr_options = ["home", "sleep", "away"]
-    _attr_translation_key = "ecobee_mode"
-
-    @property
-    def name(self) -> str:
-        """Return the name of the device if any."""
-        if name := super().name:
-            return f"{name} Current Mode"
-        return "Current Mode"
-
-    def get_characteristic_types(self) -> list[str]:
-        """Define the homekit characteristics the entity cares about."""
-        return [
-            CharacteristicsTypes.VENDOR_ECOBEE_CURRENT_MODE,
-        ]
-
-    @property
-    def current_option(self) -> str | None:
-        """Return the current selected option."""
-        return _ECOBEE_MODE_TO_TEXT.get(self._char.value)
-
-    async def async_select_option(self, option: str) -> None:
-        """Set the current mode."""
-        option_int = _ECOBEE_MODE_TO_NUMBERS[option]
-        await self.async_put_characteristics(
-            {CharacteristicsTypes.VENDOR_ECOBEE_SET_HOLD_SCHEDULE: option_int}
         )
 
 

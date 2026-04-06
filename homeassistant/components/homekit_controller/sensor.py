@@ -41,6 +41,7 @@ from homeassistant.const import (
     UnitOfPressure,
     UnitOfSoundPressure,
     UnitOfTemperature,
+    UnitOfTime,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -370,6 +371,54 @@ SIMPLE_SENSOR: dict[str, HomeKitSensorEntityDescription] = {
         entity_category=EntityCategory.DIAGNOSTIC,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=PERCENTAGE,
+    ),
+    CharacteristicsTypes.VENDOR_ECOBEE_FAN_READ_SPEED: HomeKitSensorEntityDescription(
+        key=CharacteristicsTypes.VENDOR_ECOBEE_FAN_READ_SPEED,
+        name="Fan Speed State",
+        translation_key="ecobee_fan_speed_state",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=PERCENTAGE,
+    ),
+    CharacteristicsTypes.VENDOR_ECOBEE_ALERT_TEXT: HomeKitSensorEntityDescription(
+        key=CharacteristicsTypes.VENDOR_ECOBEE_ALERT_TEXT,
+        name="Alert",
+        translation_key="ecobee_alert",
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    CharacteristicsTypes.VENDOR_ECOBEE_EQUIPMENT_RUNNING: HomeKitSensorEntityDescription(
+        key=CharacteristicsTypes.VENDOR_ECOBEE_EQUIPMENT_RUNNING,
+        name="Equipment Running",
+        translation_key="ecobee_equipment_running",
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    CharacteristicsTypes.VENDOR_ECOBEE_STATUS_CODE: HomeKitSensorEntityDescription(
+        key=CharacteristicsTypes.VENDOR_ECOBEE_STATUS_CODE,
+        name="Status Code",
+        translation_key="ecobee_status_code",
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    CharacteristicsTypes.VENDOR_ECOBEE_AUX_HEAT_ACTIVE: HomeKitSensorEntityDescription(
+        key=CharacteristicsTypes.VENDOR_ECOBEE_AUX_HEAT_ACTIVE,
+        name="Aux Heat Active",
+        translation_key="ecobee_aux_heat_active",
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    CharacteristicsTypes.VENDOR_ECOBEE_MOTION_LAST_ACTIVATION: HomeKitSensorEntityDescription(
+        key=CharacteristicsTypes.VENDOR_ECOBEE_MOTION_LAST_ACTIVATION,
+        name="Motion Last Activation",
+        translation_key="ecobee_motion_last_activation",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfTime.SECONDS,
+    ),
+    CharacteristicsTypes.VENDOR_ECOBEE_OCCUPANCY_LAST_ACTIVATION: HomeKitSensorEntityDescription(
+        key=CharacteristicsTypes.VENDOR_ECOBEE_OCCUPANCY_LAST_ACTIVATION,
+        name="Occupancy Last Activation",
+        translation_key="ecobee_occupancy_last_activation",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfTime.SECONDS,
     ),
 }
 

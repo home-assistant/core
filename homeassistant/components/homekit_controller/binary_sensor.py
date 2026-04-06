@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from aiohomekit.model.characteristics import CharacteristicsTypes
+from aiohomekit.model.characteristics import CharacteristicsTypes, Characteristic
 from aiohomekit.model.services import Service, ServicesTypes
 
 from homeassistant.components.binary_sensor import (
@@ -16,6 +16,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import KNOWN_DEVICES
 from .connection import HKDevice
+from .ecobee import EcobeeHoldActiveBinarySensor
 from .entity import HomeKitEntity
 
 
@@ -183,3 +184,25 @@ async def async_setup_entry(
         return True
 
     conn.add_listener(async_add_service)
+
+    @callback
+    def async_add_hold_active(char: Characteristic) -> bool:
+        if char.type != CharacteristicsTypes.VENDOR_ECOBEE_NEXT_SCHEDULED_CHANGE_TIME:
+            return False
+        info = {"aid": char.service.accessory.aid, "iid": char.service.iid}
+        async_add_entities([EcobeeHoldActiveBinarySensor(conn, info, char)])
+        # Return False so the char is not marked as claimed — the datetime
+        # factory must also run for the same characteristic.
+        return False
+
+    # Bypass the entity_key guard by scanning the current entity map directly.
+    # add_char_factory() calls _add_new_entities_for_char([single_factory]) which
+    # skips chars already claimed — if datetime.py's factory ran first and claimed
+    # VENDOR_ECOBEE_NEXT_SCHEDULED_CHANGE_TIME, our factory would never fire.
+    # Instead: scan now (before anyone claims it) and register in char_factories
+    # at index 0 so future discoveries always run us before the datetime factory.
+    for accessory in conn.entity_map.accessories:
+        for service in accessory.services:
+            for char in service.characteristics:
+                async_add_hold_active(char)
+    conn.char_factories.insert(0, async_add_hold_active)

@@ -29,6 +29,7 @@ from homeassistant.util.percentage import (
 
 from . import KNOWN_DEVICES
 from .connection import HKDevice
+from .ecobee import EcobeeFanEntity
 from .entity import HomeKitEntity
 
 # 0 is clockwise, 1 is counter-clockwise. The match to forward and reverse is so that
@@ -286,3 +287,17 @@ async def async_setup_entry(
         return True
 
     conn.add_listener(async_add_service)
+
+    @callback
+    def async_add_ecobee_fan(char) -> bool:
+        if char.type != CharacteristicsTypes.VENDOR_ECOBEE_FAN_WRITE_SPEED:
+            return False
+        info = {"aid": char.service.accessory.aid, "iid": char.service.iid}
+        entity = EcobeeFanEntity(conn, info, char)
+        conn.async_migrate_unique_id(
+            entity.old_unique_id, entity.unique_id, Platform.FAN
+        )
+        async_add_entities([entity])
+        return True
+
+    conn.add_char_factory(async_add_ecobee_fan)

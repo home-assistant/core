@@ -12,17 +12,20 @@ from homeassistant.components.number import (
     DEFAULT_MAX_VALUE,
     DEFAULT_MIN_VALUE,
     DEFAULT_STEP,
+    NumberDeviceClass,
     NumberEntity,
     NumberEntityDescription,
+    NumberMode,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import EntityCategory, Platform
+from homeassistant.const import EntityCategory, Platform, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import ConfigType
 
 from . import KNOWN_DEVICES
 from .connection import HKDevice
+from .ecobee import ECOBEE_NUMBER_ENTITIES
 from .entity import CharacteristicEntity
 
 NUMBER_ENTITIES: dict[str, NumberEntityDescription] = {
@@ -63,6 +66,7 @@ NUMBER_ENTITIES: dict[str, NumberEntityDescription] = {
         entity_category=EntityCategory.CONFIG,
     ),
 }
+NUMBER_ENTITIES.update(ECOBEE_NUMBER_ENTITIES)
 
 
 async def async_setup_entry(
