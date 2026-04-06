@@ -18,6 +18,7 @@ from .const import (
     MOCK_FB_SERVICES,
     MOCK_HOST_ATTRIBUTES_DATA,
     MOCK_MESH_DATA,
+    MOCK_MESH_MASTER_MAC,
     MOCK_MODELNAME,
     MOCK_STATUS_CONNECTION_DATA,
 )
@@ -97,6 +98,9 @@ class FritzConnectionMock:
                 normalized = alt
 
         action_data = self._fc_data.get(normalized, {}).get(action, {})
+        if action == "X_AVM-DE_GetSpecificHostEntryByIP" and not action_data:
+            return {"NewMACAddress": MOCK_MESH_MASTER_MAC}
+
         if kwargs:
             if (index := kwargs.get("NewIndex")) is None:
                 index = next(iter(kwargs.values()))
@@ -149,6 +153,11 @@ def fh_class_mock() -> Generator[type[FritzHosts]]:
             FritzHosts,
             "get_hosts_attributes",
             MagicMock(return_value=MOCK_HOST_ATTRIBUTES_DATA),
+        ),
+        patch.object(
+            FritzHosts,
+            "get_specific_host_entry_by_ip",
+            MagicMock(return_value={"NewMACAddress": MOCK_MESH_MASTER_MAC}),
         ),
     ):
         yield result
