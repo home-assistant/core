@@ -9,7 +9,7 @@ from duco.models import BoardInfo, LanInfo, Node, NodeGeneralInfo, NodeVentilati
 import pytest
 
 from homeassistant.components.duco.const import DOMAIN
-from homeassistant.const import CONF_HOST
+from homeassistant.const import CONF_HOST, Platform
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
@@ -120,4 +120,38 @@ async def init_integration(
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
+    return mock_config_entry
+
+
+@pytest.fixture
+async def init_fan_integration(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_duco_client: AsyncMock,
+) -> MockConfigEntry:
+    """Set up the Duco integration with only the fan platform."""
+    with patch(
+        "homeassistant.components.duco.PLATFORMS",
+        [Platform.FAN],
+    ):
+        mock_config_entry.add_to_hass(hass)
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+    return mock_config_entry
+
+
+@pytest.fixture
+async def init_sensor_integration(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_duco_client: AsyncMock,
+) -> MockConfigEntry:
+    """Set up the Duco integration with only the sensor platform."""
+    with patch(
+        "homeassistant.components.duco.PLATFORMS",
+        [Platform.SENSOR],
+    ):
+        mock_config_entry.add_to_hass(hass)
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
     return mock_config_entry
