@@ -368,6 +368,9 @@
           "water_empty": "Water empty"
         }
       },
+      "filter_life": {
+        "name": "Filter time used"
+      },
       "filter_time_left": {
         "name": "Filter time left"
       },
@@ -376,6 +379,9 @@
       },
       "last_clean_start": {
         "name": "Last clean begin"
+      },
+      "main_brush_life": {
+        "name": "Main brush time used"
       },
       "main_brush_time_left": {
         "name": "Main brush time left"
@@ -402,8 +408,14 @@
           "waiting_for_orders": "Waiting for orders"
         }
       },
+      "sensor_life": {
+        "name": "Sensor time used"
+      },
       "sensor_time_left": {
         "name": "Sensor time left"
+      },
+      "side_brush_life": {
+        "name": "Side brush time used"
       },
       "side_brush_time_left": {
         "name": "Side brush time left"
@@ -430,15 +442,23 @@
           "locked": "Locked",
           "manual_mode": "Manual mode",
           "mapping": "Mapping",
+          "mopping": "Mopping",
           "paused": "[%key:common::state::paused%]",
+          "relocating": "Relocating",
           "remote_control_active": "Remote control active",
           "returning_home": "Returning home",
+          "saving_map": "Saving map",
           "segment_cleaning": "Segment cleaning",
           "shutting_down": "Shutting down",
+          "sleeping": "Sleeping",
           "spot_cleaning": "Spot cleaning",
           "starting": "Starting",
+          "sweep_and_mop": "Sweep and mop",
+          "sweeping": "Sweeping",
+          "transitioning": "Transitioning",
           "unknown": "Unknown",
           "updating": "Updating",
+          "waiting_to_charge": "Waiting to charge",
           "washing_the_mop": "Washing the mop",
           "zoned_cleaning": "Zoned cleaning"
         }
@@ -461,10 +481,14 @@
       "vacuum_error": {
         "name": "Vacuum error",
         "state": {
+          "audio_error": "Audio error",
           "battery_error": "Battery error",
           "bumper_stuck": "Bumper stuck",
           "cannot_cross_carpet": "Cannot cross carpet",
           "charging_error": "Charging error",
+          "check_clean_carouse": "Check the cleaning carousel",
+          "clean_carousel_exception": "Cleaning carousel error",
+          "clean_carousel_water_full": "Cleaning carousel water full",
           "clear_brush_exception": "Check that the water filter has been correctly installed",
           "clear_brush_exception_2": "Positioning button error",
           "clear_water_box_exception": "Clean water tank empty",
@@ -476,6 +500,7 @@
           "dirty_water_box_hoare": "Check the dirty water tank",
           "dock": "Dock not connected to power",
           "dock_locator_error": "Dock locator error",
+          "drain_water_exception": "Drain water exception",
           "fan_error": "Fan error",
           "filter_blocked": "Filter blocked",
           "filter_screen_exception": "Clean the dock water filter",
@@ -491,6 +516,7 @@
           "no_dustbin": "No dustbin",
           "nogo_zone_detected": "No-go zone detected",
           "none": "None",
+          "optical_flow_sensor_dirt": "Optical flow sensor dirty",
           "return_to_dock_fail": "Return to dock fail",
           "robot_on_carpet": "Robot on carpet",
           "robot_tilted": "Robot tilted",
@@ -500,10 +526,12 @@
           "sink_strainer_hoare": "Reinstall the water filter",
           "strainer_error": "Filter is wet or blocked",
           "temperature_protection": "Unit temperature protection",
+          "up_water_exception": "Water supply exception",
           "vertical_bumper_pressed": "Vertical bumper pressed",
           "vibrarise_jammed": "VibraRise jammed",
           "visual_sensor": "Camera error",
           "wall_sensor_dirty": "Wall sensor dirty",
+          "water_carriage_drop": "Water carriage dropped",
           "wheels_jammed": "Wheels jammed",
           "wheels_suspended": "Wheels suspended"
         }
