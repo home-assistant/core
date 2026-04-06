@@ -4,7 +4,7 @@ import datetime
 from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
 
-from anthropic import AuthenticationError, RateLimitError
+from anthropic import RateLimitError
 from anthropic.types import (
     CitationsWebSearchResultLocation,
     CitationWebSearchResultLocationParam,
@@ -33,6 +33,7 @@ from homeassistant.components import conversation
 from homeassistant.components.anthropic.const import (
     CONF_CHAT_MODEL,
     CONF_CODE_EXECUTION,
+    CONF_PROMPT_CACHING,
     CONF_THINKING_BUDGET,
     CONF_THINKING_EFFORT,
     CONF_WEB_SEARCH,
@@ -42,10 +43,8 @@ from homeassistant.components.anthropic.const import (
     CONF_WEB_SEARCH_REGION,
     CONF_WEB_SEARCH_TIMEZONE,
     CONF_WEB_SEARCH_USER_LOCATION,
-    DOMAIN,
 )
 from homeassistant.components.anthropic.entity import CitationDetails, ContentDetails
-from homeassistant.config_entries import SOURCE_REAUTH
 from homeassistant.const import CONF_LLM_HASS_API
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -129,38 +128,6 @@ async def test_error_handling(
     assert result.response.error_code == "unknown", result
 
 
-async def test_auth_error_handling(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_init_component,
-    mock_create_stream: AsyncMock,
-) -> None:
-    """Test reauth after authentication error during conversation."""
-    mock_create_stream.side_effect = AuthenticationError(
-        message="Invalid API key",
-        response=Response(status_code=403, request=Request(method="POST", url=URL())),
-        body=None,
-    )
-
-    result = await conversation.async_converse(
-        hass, "hello", None, Context(), agent_id="conversation.claude_conversation"
-    )
-
-    assert result.response.response_type == intent.IntentResponseType.ERROR
-    assert result.response.error_code == "unknown", result
-
-    await hass.async_block_till_done()
-    flows = hass.config_entries.flow.async_progress()
-    assert len(flows) == 1
-
-    flow = flows[0]
-    assert flow["step_id"] == "reauth_confirm"
-    assert flow["handler"] == DOMAIN
-    assert "context" in flow
-    assert flow["context"]["source"] == SOURCE_REAUTH
-    assert flow["context"]["entry_id"] == mock_config_entry.entry_id
-
-
 async def test_template_error(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
@@ -202,6 +169,7 @@ async def test_template_variables(
         mock_config_entry,
         subentry,
         data={
+            "prompt_caching": "off",
             "prompt": (
                 "The user name is {{ user_name }}. "
                 "The user id is {{ llm_context.context.user_id }}."
@@ -228,12 +196,10 @@ async def test_template_variables(
         == "Okay, let me take care of that for you."
     )
 
-    system = mock_create_stream.call_args.kwargs["system"]
-    assert isinstance(system, list)
-    system_text = " ".join(block["text"] for block in system if "text" in block)
-
-    assert "The user name is Test User." in system_text
-    assert "The user id is 12345." in system_text
+    assert (
+        "The user name is Test User." in mock_create_stream.call_args.kwargs["system"]
+    )
+    assert "The user id is 12345." in mock_create_stream.call_args.kwargs["system"]
 
 
 async def test_conversation_agent(
@@ -246,9 +212,10 @@ async def test_conversation_agent(
     assert agent.supported_languages == "*"
 
 
-async def test_system_prompt_uses_text_block_with_cache_control(
+async def test_prompt_caching_system_prompt(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
+    mock_init_component: None,
     mock_create_stream: AsyncMock,
 ) -> None:
     """Ensure system prompt is sent as TextBlockParam with cache_control."""
@@ -258,16 +225,13 @@ async def test_system_prompt_uses_text_block_with_cache_control(
         create_content_block(0, ["ok"]),
     ]
 
-    with patch("anthropic.resources.models.AsyncModels.list", new_callable=AsyncMock):
-        await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
-        await conversation.async_converse(
-            hass,
-            "hello",
-            None,
-            context,
-            agent_id="conversation.claude_conversation",
-        )
+    await conversation.async_converse(
+        hass,
+        "hello",
+        None,
+        context,
+        agent_id="conversation.claude_conversation",
+    )
 
     system = mock_create_stream.call_args.kwargs["system"]
     assert isinstance(system, list)
@@ -276,6 +240,41 @@ async def test_system_prompt_uses_text_block_with_cache_control(
     assert block["type"] == "text"
     assert "Home Assistant" in block["text"]
     assert block["cache_control"] == {"type": "ephemeral"}
+    assert "cache_control" not in mock_create_stream.call_args.kwargs
+
+
+async def test_prompt_caching_automatic(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_init_component: None,
+    mock_create_stream: AsyncMock,
+) -> None:
+    """Ensure model args include cache_control."""
+    hass.config_entries.async_update_subentry(
+        mock_config_entry,
+        next(iter(mock_config_entry.subentries.values())),
+        data={
+            CONF_PROMPT_CACHING: "automatic",
+        },
+    )
+
+    context = Context()
+
+    mock_create_stream.return_value = [
+        create_content_block(0, ["ok"]),
+    ]
+
+    await conversation.async_converse(
+        hass,
+        "hello",
+        None,
+        context,
+        agent_id="conversation.claude_conversation",
+    )
+
+    assert mock_create_stream.call_args.kwargs["cache_control"] == {"type": "ephemeral"}
+    system = mock_create_stream.call_args.kwargs["system"]
+    assert isinstance(system, str)
 
 
 @patch("homeassistant.components.anthropic.entity.llm.AssistAPI._async_get_tools")

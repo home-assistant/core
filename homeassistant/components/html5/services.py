@@ -32,6 +32,7 @@ from .const import (
 )
 
 SERVICE_SEND_MESSAGE = "send_message"
+SERVICE_DISMISS_MESSAGE = "dismiss_message"
 
 SERVICE_SEND_MESSAGE_SCHEMA = cv.make_entity_service_schema(
     {
@@ -67,6 +68,10 @@ SERVICE_SEND_MESSAGE_SCHEMA = cv.make_entity_service_schema(
     }
 )
 
+SERVICE_DISMISS_MESSAGE_SCHEMA = cv.make_entity_service_schema(
+    {vol.Optional(ATTR_TAG): cv.string}
+)
+
 
 @callback
 def async_setup_services(hass: HomeAssistant) -> None:
@@ -79,4 +84,12 @@ def async_setup_services(hass: HomeAssistant) -> None:
         entity_domain=NOTIFY_DOMAIN,
         schema=SERVICE_SEND_MESSAGE_SCHEMA,
         func="send_push_notification",
+    )
+    service.async_register_platform_entity_service(
+        hass,
+        DOMAIN,
+        SERVICE_DISMISS_MESSAGE,
+        entity_domain=NOTIFY_DOMAIN,
+        schema=SERVICE_DISMISS_MESSAGE_SCHEMA,
+        func="dismiss_notification",
     )

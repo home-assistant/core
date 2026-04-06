@@ -82,16 +82,16 @@ from homeassistant.config_entries import ConfigSubentry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, llm
-from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.json import json_dumps
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import slugify
 from homeassistant.util.json import JsonObjectType
 
-from . import AnthropicConfigEntry
 from .const import (
     CONF_CHAT_MODEL,
     CONF_CODE_EXECUTION,
     CONF_MAX_TOKENS,
+    CONF_PROMPT_CACHING,
     CONF_TEMPERATURE,
     CONF_THINKING_BUDGET,
     CONF_THINKING_EFFORT,
@@ -110,7 +110,9 @@ from .const import (
     NON_THINKING_MODELS,
     PROGRAMMATIC_TOOL_CALLING_UNSUPPORTED_MODELS,
     UNSUPPORTED_STRUCTURED_OUTPUT_MODELS,
+    PromptCaching,
 )
+from .coordinator import AnthropicConfigEntry, AnthropicCoordinator
 
 # Max number of back and forth with the LLM to generate a response
 MAX_TOOL_ITERATIONS = 10
@@ -658,7 +660,7 @@ def _create_token_stats(
     }
 
 
-class AnthropicBaseLLMEntity(Entity):
+class AnthropicBaseLLMEntity(CoordinatorEntity[AnthropicCoordinator]):
     """Anthropic base LLM entity."""
 
     _attr_has_entity_name = True
@@ -666,6 +668,7 @@ class AnthropicBaseLLMEntity(Entity):
 
     def __init__(self, entry: AnthropicConfigEntry, subentry: ConfigSubentry) -> None:
         """Initialize the entity."""
+        super().__init__(entry.runtime_data)
         self.entry = entry
         self.subentry = subentry
         self._attr_unique_id = subentry.subentry_id
@@ -677,7 +680,7 @@ class AnthropicBaseLLMEntity(Entity):
             entry_type=dr.DeviceEntryType.SERVICE,
         )
 
-    async def _async_handle_chat_log(
+    async def _async_handle_chat_log(  # noqa: C901
         self,
         chat_log: conversation.ChatLog,
         structure_name: str | None = None,
@@ -693,15 +696,6 @@ class AnthropicBaseLLMEntity(Entity):
                 translation_domain=DOMAIN, translation_key="system_message_not_found"
             )
 
-        # System prompt with caching enabled
-        system_prompt: list[TextBlockParam] = [
-            TextBlockParam(
-                type="text",
-                text=system.content,
-                cache_control={"type": "ephemeral"},
-            )
-        ]
-
         messages, container_id = _convert_content(chat_log.content[1:])
 
         model = options.get(CONF_CHAT_MODEL, DEFAULT[CONF_CHAT_MODEL])
@@ -710,10 +704,27 @@ class AnthropicBaseLLMEntity(Entity):
             model=model,
             messages=messages,
             max_tokens=options.get(CONF_MAX_TOKENS, DEFAULT[CONF_MAX_TOKENS]),
-            system=system_prompt,
+            system=system.content,
             stream=True,
             container=container_id,
         )
+
+        if (
+            options.get(CONF_PROMPT_CACHING, DEFAULT[CONF_PROMPT_CACHING])
+            == PromptCaching.PROMPT
+        ):
+            model_args["system"] = [
+                {
+                    "type": "text",
+                    "text": system.content,
+                    "cache_control": {"type": "ephemeral"},
+                }
+            ]
+        elif (
+            options.get(CONF_PROMPT_CACHING, DEFAULT[CONF_PROMPT_CACHING])
+            == PromptCaching.AUTOMATIC
+        ):
+            model_args["cache_control"] = {"type": "ephemeral"}
 
         if not model.startswith(tuple(NON_ADAPTIVE_THINKING_MODELS)):
             thinking_effort = options.get(
@@ -877,7 +888,8 @@ class AnthropicBaseLLMEntity(Entity):
         if tools:
             model_args["tools"] = tools
 
-        client = self.entry.runtime_data
+        coordinator = self.entry.runtime_data
+        client = coordinator.client
 
         # To prevent infinite loops, we limit the number of iterations
         for _iteration in range(max_iterations):
@@ -899,13 +911,24 @@ class AnthropicBaseLLMEntity(Entity):
                 )
                 messages.extend(new_messages)
             except anthropic.AuthenticationError as err:
-                self.entry.async_start_reauth(self.hass)
+                # Trigger coordinator to confirm the auth failure and trigger the reauth flow.
+                await coordinator.async_request_refresh()
                 raise HomeAssistantError(
                     translation_domain=DOMAIN,
                     translation_key="api_authentication_error",
                     translation_placeholders={"message": err.message},
                 ) from err
+            except anthropic.APIConnectionError as err:
+                LOGGER.info("Connection error while talking to Anthropic: %s", err)
+                coordinator.mark_connection_error()
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN,
+                    translation_key="api_error",
+                    translation_placeholders={"message": err.message},
+                ) from err
             except anthropic.AnthropicError as err:
+                # Non-connection error, mark connection as healthy
+                coordinator.async_set_updated_data(None)
                 raise HomeAssistantError(
                     translation_domain=DOMAIN,
                     translation_key="api_error",
@@ -917,6 +940,7 @@ class AnthropicBaseLLMEntity(Entity):
                 ) from err
 
             if not chat_log.unresponded_tool_results:
+                coordinator.async_set_updated_data(None)
                 break
 
 
