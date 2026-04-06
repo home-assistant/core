@@ -22,7 +22,9 @@ async def async_get_config_entry_diagnostics(
         "fast_coordinator_data": {
             "state": data.fast_coordinator.data.state.model_dump(),
             "sensor": data.fast_coordinator.data.sensor.model_dump(),
-            "dhw": data.fast_coordinator.data.dhw.model_dump(),
+            "dhw": data.fast_coordinator.data.dhw.model_dump()
+            if data.fast_coordinator.data.dhw
+            else None,
         },
         "static": data.static.model_dump() if data.static is not None else None,
     }
