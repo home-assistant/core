@@ -866,7 +866,7 @@
     }),
   ])
 # ---
-# name: test_history_conversion[content7]
+# name: test_history_conversion[content8]
   list([
     dict({
       'content': 'Set humidity to 50%',
