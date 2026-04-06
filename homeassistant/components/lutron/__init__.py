@@ -4,11 +4,20 @@ from dataclasses import dataclass
 import logging
 from typing import Any, cast
 
-from pylutron import Button, Keypad, Led, Lutron, OccupancyGroup, Output
+from pylutron import (
+    Button,
+    Keypad,
+    Led,
+    Lutron,
+    LutronException,
+    OccupancyGroup,
+    Output,
+)
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from .const import DOMAIN
@@ -57,8 +66,12 @@ async def async_setup_entry(
     pwd = config_entry.data[CONF_PASSWORD]
 
     lutron_client = Lutron(host, uid, pwd)
-    await hass.async_add_executor_job(lutron_client.load_xml_db)
-    lutron_client.connect()
+    try:
+        await hass.async_add_executor_job(lutron_client.load_xml_db)
+        lutron_client.connect()
+    except LutronException as ex:
+        raise ConfigEntryNotReady(f"Failed to connect to Lutron repeater: {ex}") from ex
+
     _LOGGER.debug("Connected to main repeater at %s", host)
 
     entity_registry = er.async_get(hass)
