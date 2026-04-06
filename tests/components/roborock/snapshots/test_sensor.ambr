@@ -671,7 +671,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '90',
   })
 # ---
 # name: test_sensors[sensor.roborock_q10_s5_main_brush_time_used-entry]
@@ -726,7 +726,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '81',
   })
 # ---
 # name: test_sensors[sensor.roborock_q10_s5_sensor_time_used-entry]
@@ -781,7 +781,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '28',
   })
 # ---
 # name: test_sensors[sensor.roborock_q10_s5_side_brush_time_used-entry]
@@ -836,7 +836,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '90',
   })
 # ---
 # name: test_sensors[sensor.roborock_q10_s5_status-entry]

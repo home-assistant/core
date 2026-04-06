@@ -1575,4 +1575,8 @@ Q10_STATUS = Q10Status(
     fan_level=YXFanLevel.BALANCED,
     water_level=YXWaterLevel.MEDIUM,
     clean_count=1,
+    main_brush_life=81,
+    side_brush_life=90,
+    filter_life=90,
+    sensor_life=28,
 )
