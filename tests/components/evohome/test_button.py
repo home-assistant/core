@@ -5,38 +5,47 @@ All evohome systems have a controller and at least one zone.
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from unittest.mock import MagicMock, patch
 
-from evohomeasync2 import EvohomeClient
+from evohomeasync2 import ControlSystem, EvohomeClient, Zone
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.util import slugify
 
 from .const import TEST_INSTALLS
 
 
 @pytest.fixture
-def system_button_id(evohome: MagicMock) -> str:
+def system_button_id(
+    evohome: MagicMock, entity_id: Callable[[Platform, str], str]
+) -> str:
     """Return the entity_id of the system reset button."""
 
     evo: EvohomeClient = evohome.return_value
-    ctl = evo.tcs
+    tcs: ControlSystem = evo.tcs
 
-    return f"{BUTTON_DOMAIN}.reset_{slugify(ctl.location.name)}"
+    return entity_id(Platform.BUTTON, f"{tcs.id}_reset")
 
 
 @pytest.fixture
-def zone_button_id(evohome: MagicMock) -> str:
+def zone_button_id(
+    evohome: MagicMock, entity_id: Callable[[Platform, str], str]
+) -> str:
     """Return the entity_id of the first zone's reset button."""
 
     evo: EvohomeClient = evohome.return_value
-    zone = evo.tcs.zones[0]
+    tcs: ControlSystem = evo.tcs
 
-    return f"{BUTTON_DOMAIN}.reset_{slugify(zone.name)}"
+    zone: Zone = evo.tcs.zones[0]
+
+    return entity_id(
+        Platform.BUTTON,
+        f"{zone.id}z_reset" if zone.id == tcs.id else f"{zone.id}_reset",
+    )
 
 
 @pytest.mark.parametrize("install", [*TEST_INSTALLS, "botched"])
