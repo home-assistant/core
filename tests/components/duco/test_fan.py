@@ -16,8 +16,6 @@ from homeassistant.components.fan import (
     DOMAIN as FAN_DOMAIN,
     SERVICE_SET_PERCENTAGE,
     SERVICE_SET_PRESET_MODE,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
 )
 from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
@@ -48,8 +46,6 @@ async def test_fan_entity_state(
         (SERVICE_SET_PERCENTAGE, {ATTR_PERCENTAGE: 66}, "CNT2"),
         (SERVICE_SET_PERCENTAGE, {ATTR_PERCENTAGE: 100}, "CNT3"),
         (SERVICE_SET_PRESET_MODE, {ATTR_PRESET_MODE: "auto"}, "AUTO"),
-        (SERVICE_TURN_ON, {}, "AUTO"),
-        (SERVICE_TURN_OFF, {}, "EMPT"),
     ],
 )
 async def test_fan_set_state(
