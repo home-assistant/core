@@ -2,10 +2,6 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
-from dataclasses import dataclass
-from typing import Any
-
 import evohomeasync2 as evo
 
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
@@ -16,23 +12,15 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import EVOHOME_DATA
 from .coordinator import EvoDataUpdateCoordinator
-from .entity import EvoChild, EvoEntity, is_valid_zone
+from .entity import EvoEntity, is_valid_zone
 
-
-@dataclass(frozen=True, kw_only=True)
-class EvoButtonEntityDescription(ButtonEntityDescription):
-    """Describes an Evohome button entity."""
-
-    press_fn: Callable[[EvoEntity | EvoChild], Any] | None = None
-
-
-BUTTON_DESCRIPTIONS: dict[str, EvoButtonEntityDescription] = {
-    "reset_system": EvoButtonEntityDescription(
+BUTTON_DESCRIPTIONS: dict[str, ButtonEntityDescription] = {
+    "reset_system": ButtonEntityDescription(
         key="reset_system_mode",
         translation_key="reset_system_mode",
         entity_category=EntityCategory.CONFIG,
     ),
-    "reset_zone": EvoButtonEntityDescription(
+    "reset_zone": ButtonEntityDescription(
         key="clear_zone_override",
         translation_key="clear_zone_override",
         entity_category=EntityCategory.CONFIG,
@@ -81,7 +69,7 @@ class EvoResetSystemButton(EvoEntity, ButtonEntity):
         self,
         coordinator: EvoDataUpdateCoordinator,
         evo_device: evo.ControlSystem,
-        description: EvoButtonEntityDescription,
+        description: ButtonEntityDescription,
     ) -> None:
         """Initialize the system reset button."""
         super().__init__(coordinator, evo_device)
@@ -93,8 +81,8 @@ class EvoResetSystemButton(EvoEntity, ButtonEntity):
     async def async_press(self) -> None:
         """Reset the system.
 
-        The system will enter auto mode, and the zones will revert to following their
-        schedules.
+        The controller will enter auto mode, and the zones will revert to following
+        their schedules.
         """
         await self.coordinator.call_client_api(self._evo_device.reset())
 
@@ -111,7 +99,7 @@ class EvoResetZoneButton(EvoEntity, ButtonEntity):
         self,
         coordinator: EvoDataUpdateCoordinator,
         evo_device: evo.Zone,
-        description: EvoButtonEntityDescription,
+        description: ButtonEntityDescription,
     ) -> None:
         """Initialize the zone reset button."""
         super().__init__(coordinator, evo_device)
