@@ -145,7 +145,7 @@ class ApSystemsDataCoordinator(DataUpdateCoordinator[ApSystemsSensorData]):
                     offgrid=False,
                     shortcircuit_1=False,
                     shortcircuit_2=False,
-                    operating=False,
+                    operating=True,
                 ),
             )
         self.inverter_connected = True
