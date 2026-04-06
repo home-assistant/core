@@ -19,12 +19,12 @@ class RadioThermUpdate:
     """An update from a Radio Thermostat device."""
 
     tstat: dict[str, Any]
-    humidity: float | None
+    humidity: int | None
 
 
 @dataclass
 class RadioThermInitData:
-    """Data needed to init the integration."""
+    """An data needed to init the integration."""
 
     tstat: CommonThermostat
     host: str
@@ -62,7 +62,7 @@ def _get_data(device: CommonThermostat) -> RadioThermUpdate:
     # thermostats tend to time out sometimes when they're actively
     # heating or cooling.
     tstat: dict[str, Any] = device.tstat["raw"]
-    humidity: float | None = None
+    humidity: int | None = None
     if isinstance(device, radiotherm.thermostat.CT80):
         humidity = device.humidity["raw"]
     return RadioThermUpdate(tstat, humidity)

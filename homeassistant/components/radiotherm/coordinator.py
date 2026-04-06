@@ -1,4 +1,4 @@
-"""Coordinator for Radio Thermostat."""
+"""Coordinator for radiotherm."""
 
 from __future__ import annotations
 
