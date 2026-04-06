@@ -66,6 +66,7 @@ class ApSystemsDataCoordinator(DataUpdateCoordinator[ApSystemsSensorData]):
         self.api.min_power = getattr(self.api, "min_power", 30)
         self.device_version = ""
         self.battery_system = False
+        self.inverter_connected = False
 
     async def _async_setup(self) -> None:
         try:
@@ -74,6 +75,7 @@ class ApSystemsDataCoordinator(DataUpdateCoordinator[ApSystemsSensorData]):
             # Inverter may be offline (e.g. nighttime). Allow setup to
             # continue so entities are created; device info will be
             # fetched on the first successful update instead.
+            self.inverter_connected = False
             LOGGER.debug("Inverter not reachable during setup, continuing anyway")
 
     async def _fetch_device_info(self) -> None:
@@ -115,6 +117,7 @@ class ApSystemsDataCoordinator(DataUpdateCoordinator[ApSystemsSensorData]):
             # is not producing. Energy values use last known data if available,
             # or None to avoid a false spike in TOTAL_INCREASING statistics
             # when the inverter comes back online with real values.
+            self.inverter_connected = False
             last = self.data
             if last:
                 LOGGER.debug(
@@ -145,4 +148,5 @@ class ApSystemsDataCoordinator(DataUpdateCoordinator[ApSystemsSensorData]):
                     operating=False,
                 ),
             )
+        self.inverter_connected = True
         return ApSystemsSensorData(output_data=output_data, alarm_info=alarm_info)
