@@ -421,6 +421,14 @@ DHCP: Final[list[dict[str, str | bool]]] = [
         "macaddress": "00D02D*",
     },
     {
+        "domain": "mitsubishi_comfort",
+        "macaddress": "24CD8D*",
+    },
+    {
+        "domain": "mitsubishi_comfort",
+        "macaddress": "7087A7*",
+    },
+    {
         "domain": "motion_blinds",
         "registered_devices": True,
     },

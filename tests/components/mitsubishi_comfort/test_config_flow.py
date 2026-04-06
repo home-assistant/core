@@ -18,7 +18,7 @@ MOCK_PASSWORD = "testpass"
 
 
 @pytest.fixture(autouse=True)
-def mock_setup_entry() -> Generator[AsyncMock, None, None]:
+def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
         "homeassistant.components.mitsubishi_comfort.async_setup_entry",

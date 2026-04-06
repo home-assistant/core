@@ -4261,6 +4261,12 @@
       "config_flow": false,
       "iot_class": "cloud_push"
     },
+    "mitsubishi_comfort": {
+      "name": "Mitsubishi Comfort",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "mjpeg": {
       "name": "MJPEG IP Camera",
       "integration_type": "hub",

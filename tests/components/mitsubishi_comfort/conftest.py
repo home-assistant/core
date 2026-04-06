@@ -73,7 +73,7 @@ def mock_device_status() -> DeviceStatus:
 
 
 @pytest.fixture
-def mock_cloud_account(mock_device_info: DeviceInfo) -> Generator[AsyncMock, None, None]:
+def mock_cloud_account(mock_device_info: DeviceInfo) -> Generator[AsyncMock]:
     """Mock MitsubishiCloudAccount."""
     with patch(
         "homeassistant.components.mitsubishi_comfort.MitsubishiCloudAccount"
