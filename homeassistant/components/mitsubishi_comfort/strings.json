@@ -15,8 +15,8 @@
           "username": "[%key:common::config_flow::data::username%]"
         },
         "data_description": {
-          "username": "The email address for your Kumo Cloud account.",
-          "password": "The password for your Kumo Cloud account."
+          "password": "The password for your Kumo Cloud account.",
+          "username": "The email address for your Kumo Cloud account."
         }
       }
     }
