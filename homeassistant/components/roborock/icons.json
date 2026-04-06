@@ -79,9 +79,6 @@
       "mop_life_time_left": {
         "default": "mdi:texture"
       },
-      "q7_status": {
-        "default": "mdi:information-outline"
-      },
       "sensor_time_left": {
         "default": "mdi:eye-outline"
       },
