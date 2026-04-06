@@ -1162,7 +1162,7 @@ imeon_inverter_api==0.4.0
 imgw_pib==2.0.2
 
 # homeassistant.components.incomfort
-incomfort-client==0.6.12
+incomfort-client==0.7.0
 
 # homeassistant.components.indevolt
 indevolt-api==1.2.3
