@@ -280,7 +280,7 @@ class RadioThermostat(RadioThermostatEntity, ClimateEntity):
         await self.coordinator.async_request_refresh()
 
     def _set_hvac_mode(self, hvac_mode: HVACMode) -> None:
-        """Set operation mode (auto, cool, heat, off)."""
+        """Set operation mode (off, heat, cool, heat_cool)."""
 
         if isinstance(self.device, radiotherm.thermostat.CT80):
             # Set the tmode directly.
