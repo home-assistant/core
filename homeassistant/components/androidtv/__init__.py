@@ -91,8 +91,8 @@ AndroidTVConfigEntry = ConfigEntry[AndroidTVRuntimeData]
 def get_androidtv_mac(dev_props: dict[str, Any]) -> str | None:
     """Return formatted mac from device properties."""
 
-# Prefer WiFi MAC over Ethernet MAC because some devices expose duplicate or
-# locally administered eth0 addresses, which can cause unique_id collisions.
+    # Prefer WiFi MAC over Ethernet MAC because some devices expose duplicate or
+    # locally administered eth0 addresses, which can cause unique_id collisions.
     for prop_mac in (PROP_WIFIMAC, PROP_ETHMAC):
         if if_mac := dev_props.get(prop_mac):
             mac = format_mac(if_mac)
