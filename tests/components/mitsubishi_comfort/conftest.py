@@ -76,7 +76,7 @@ def mock_device_status() -> DeviceStatus:
 def mock_cloud_account(mock_device_info: DeviceInfo) -> Generator[AsyncMock]:
     """Mock MitsubishiCloudAccount."""
     with patch(
-        "homeassistant.components.mitsubishi_comfort.MitsubishiCloudAccount"
+        "homeassistant.components.mitsubishi_comfort.config_flow.MitsubishiCloudAccount"
     ) as mock_cls:
         account = AsyncMock()
         account.login = AsyncMock(return_value=True)
