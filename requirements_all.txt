@@ -596,7 +596,7 @@ avea==1.6.1
 # avion==0.10
 
 # homeassistant.components.axis
-axis==67
+axis==68
 
 # homeassistant.components.fujitsu_fglair
 ayla-iot-unofficial==1.4.7
@@ -617,7 +617,7 @@ azure-servicebus==7.10.0
 azure-storage-blob==12.24.0
 
 # homeassistant.components.backblaze_b2
-b2sdk==2.10.1
+b2sdk==2.10.4
 
 # homeassistant.components.holiday
 babel==2.15.0
@@ -2206,7 +2206,7 @@ pyitachip2ir==0.0.7
 pyituran==0.1.5
 
 # homeassistant.components.jvc_projector
-pyjvcprojector==2.0.3
+pyjvcprojector==2.0.5
 
 # homeassistant.components.kaleidescape
 pykaleidescape==1.1.5
@@ -2263,7 +2263,7 @@ pylitterbot==2025.2.0
 pylutron-caseta==0.27.0
 
 # homeassistant.components.lutron
-pylutron==0.4.0
+pylutron==0.4.1
 
 # homeassistant.components.mailgun
 pymailgunner==1.4
@@ -2317,7 +2317,7 @@ pynina==1.0.2
 pynintendoauth==1.0.2
 
 # homeassistant.components.nintendo_parental_controls
-pynintendoparental==2.3.3
+pynintendoparental==2.3.4
 
 # homeassistant.components.nobo_hub
 pynobo==1.8.1
@@ -2424,7 +2424,7 @@ pyqwikswitch==0.93
 pyrail==0.4.1
 
 # homeassistant.components.rainbird
-pyrainbird==6.1.1
+pyrainbird==6.3.0
 
 # homeassistant.components.playstation_network
 pyrate-limiter==4.1.0
@@ -3235,6 +3235,9 @@ viaggiatreno_ha==0.2.4
 
 # homeassistant.components.victron_ble
 victron-ble-ha-parser==0.6.3
+
+# homeassistant.components.victron_gx
+victron-mqtt==2026.4.0
 
 # homeassistant.components.victron_remote_monitoring
 victron-vrm==0.1.8

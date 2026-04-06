@@ -773,6 +773,92 @@
     }),
   ])
 # ---
+# name: test_history_conversion[content7]
+  list([
+    dict({
+      'content': 'Set humidity to 50%',
+      'role': 'user',
+    }),
+    dict({
+      'content': list([
+        dict({
+          'signature': 'EuQBClkIDBE=',
+          'thinking': 'Let me search for a tool to set humidity.',
+          'type': 'thinking',
+        }),
+        dict({
+          'id': 'srvtoolu_015vXmtZNASLa7n9RsoDfcBC',
+          'input': dict({
+            'query': 'set humidity humidifier',
+          }),
+          'name': 'tool_search_tool_bm25',
+          'type': 'server_tool_use',
+        }),
+        dict({
+          'content': dict({
+            'tool_references': list([
+              dict({
+                'tool_name': 'HassHumidifierSetpoint',
+                'type': 'tool_reference',
+              }),
+              dict({
+                'tool_name': 'HassHumidifierMode',
+                'type': 'tool_reference',
+              }),
+              dict({
+                'tool_name': 'HassClimateSetTemperature',
+                'type': 'tool_reference',
+              }),
+              dict({
+                'tool_name': 'HassFanSetSpeed',
+                'type': 'tool_reference',
+              }),
+              dict({
+                'tool_name': 'HassSetVolume',
+                'type': 'tool_reference',
+              }),
+            ]),
+            'type': 'tool_search_tool_search_result',
+          }),
+          'tool_use_id': 'srvtoolu_015vXmtZNASLa7n9RsoDfcBC',
+          'type': 'tool_search_tool_result',
+        }),
+        dict({
+          'id': 'toolu_01KNRWb3ZFufCa7WXtzCakhc',
+          'input': dict({
+            'humidity': 50,
+            'name': 'Hygrostat',
+          }),
+          'name': 'HassHumidifierSetpoint',
+          'type': 'tool_use',
+        }),
+      ]),
+      'role': 'assistant',
+    }),
+    dict({
+      'content': list([
+        dict({
+          'content': '{"speech":{"plain":{"speech":"The Hygrostat is set to 50%","extra_data":null}},"response_type":"action_done","data":{"success":[],"failed":[]}}',
+          'tool_use_id': 'toolu_01KNRWb3ZFufCa7WXtzCakhc',
+          'type': 'tool_result',
+        }),
+      ]),
+      'role': 'user',
+    }),
+    dict({
+      'content': 'The Hygrostat humidity has been set to **50%**. ✅',
+      'role': 'assistant',
+    }),
+    dict({
+      'content': 'Are you sure?',
+      'role': 'user',
+    }),
+    dict({
+      'content': 'Yes, I am sure!',
+      'role': 'assistant',
+    }),
+  ])
+# ---
 # name: test_redacted_thinking
   list([
     dict({
@@ -1227,6 +1313,255 @@
         }),
         dict({
           'text': 'Done',
+          'type': 'text',
+        }),
+      ]),
+      'role': 'assistant',
+    }),
+  ])
+# ---
+# name: test_tool_search
+  list([
+    dict({
+      'attachments': None,
+      'content': 'Can you set humidifier setpoint?',
+      'created': HAFakeDatetime(2025, 10, 31, 12, 0, tzinfo=datetime.timezone.utc),
+      'role': 'user',
+    }),
+    dict({
+      'agent_id': 'conversation.claude_conversation',
+      'content': 'Sure, let me check that for you!',
+      'created': HAFakeDatetime(2025, 10, 31, 12, 0, tzinfo=datetime.timezone.utc),
+      'native': dict({
+        'citation_details': list([
+        ]),
+        'container': None,
+        'redacted_thinking': None,
+        'thinking_signature': 'ErUBCkYIARgCIkCYXaVNJShe3A86Hp7XUzh9YsCYBbJTbQsrklTAPtJ2sP/NoB6tSzpK/nTL6CjSo2R6n0KNBIg5MH6asM2R/kmaEgyB/X1FtZq5OQAC7jUaDEPWCdcwGQ4RaBy5wiIwmRxExIlDhoY6tILoVPnOExkC/0igZxHEwxK8RU/fmw0b+o+TwAarzUitwzbo21E5Kh3pa3I6yqVROf1t2F8rFocNUeCegsWV/ytwYV+ayA==',
+      }),
+      'role': 'assistant',
+      'thinking_content': 'I will fetch the available tools',
+      'tool_calls': list([
+        dict({
+          'external': True,
+          'id': 'srvtoolu_12345ABC',
+          'tool_args': dict({
+            'limit': 5,
+            'query': 'set humidifier humidity',
+          }),
+          'tool_name': 'tool_search_tool_bm25',
+        }),
+      ]),
+    }),
+    dict({
+      'agent_id': 'conversation.claude_conversation',
+      'created': HAFakeDatetime(2025, 10, 31, 12, 0, tzinfo=datetime.timezone.utc),
+      'role': 'tool_result',
+      'tool_call_id': 'srvtoolu_12345ABC',
+      'tool_name': 'tool_search',
+      'tool_result': dict({
+        'tool_references': list([
+          dict({
+            'tool_name': 'HassHumidifierSetpoint',
+            'type': 'tool_reference',
+          }),
+          dict({
+            'tool_name': 'HassHumidifierMode',
+            'type': 'tool_reference',
+          }),
+          dict({
+            'tool_name': 'HassClimateSetTemperature',
+            'type': 'tool_reference',
+          }),
+          dict({
+            'tool_name': 'HassFanSetSpeed',
+            'type': 'tool_reference',
+          }),
+          dict({
+            'tool_name': 'HassSetVolume',
+            'type': 'tool_reference',
+          }),
+        ]),
+        'type': 'tool_search_tool_search_result',
+      }),
+    }),
+    dict({
+      'agent_id': 'conversation.claude_conversation',
+      'content': 'Yes, I can!',
+      'created': HAFakeDatetime(2025, 10, 31, 12, 0, tzinfo=datetime.timezone.utc),
+      'native': dict({
+        'citation_details': list([
+        ]),
+        'container': None,
+        'redacted_thinking': None,
+        'thinking_signature': 'ErUBCkYIARgCIkCYXaVNJShe3A86Hp7XUzh9YsCYBbJTbQsrklTAPtJ2sP/NoB6tSzpK/nTL6CjSo2R6n0KNBIg5MH6asM2R/kmaEgyB/X1FtZq5OQAC7jUaDEPWCdcwGQ4RaBy5wiIwmRxExIlDhoY6tILoVPnOExkC/0igZxHEwxK8RU/fmw0b+o+TwAarzUitwzbo21E5Kh3pa3I6yqVROf1t2F8rFocNUeCegsWV/ytwYV+ayA==',
+      }),
+      'role': 'assistant',
+      'thinking_content': "Great! All clear, let's reply to the user!",
+      'tool_calls': None,
+    }),
+  ])
+# ---
+# name: test_tool_search.1
+  list([
+    dict({
+      'content': 'Can you set humidifier setpoint?',
+      'role': 'user',
+    }),
+    dict({
+      'content': list([
+        dict({
+          'signature': 'ErUBCkYIARgCIkCYXaVNJShe3A86Hp7XUzh9YsCYBbJTbQsrklTAPtJ2sP/NoB6tSzpK/nTL6CjSo2R6n0KNBIg5MH6asM2R/kmaEgyB/X1FtZq5OQAC7jUaDEPWCdcwGQ4RaBy5wiIwmRxExIlDhoY6tILoVPnOExkC/0igZxHEwxK8RU/fmw0b+o+TwAarzUitwzbo21E5Kh3pa3I6yqVROf1t2F8rFocNUeCegsWV/ytwYV+ayA==',
+          'thinking': 'I will fetch the available tools',
+          'type': 'thinking',
+        }),
+        dict({
+          'text': 'Sure, let me check that for you!',
+          'type': 'text',
+        }),
+        dict({
+          'id': 'srvtoolu_12345ABC',
+          'input': dict({
+            'limit': 5,
+            'query': 'set humidifier humidity',
+          }),
+          'name': 'tool_search_tool_bm25',
+          'type': 'server_tool_use',
+        }),
+        dict({
+          'content': dict({
+            'tool_references': list([
+              dict({
+                'tool_name': 'HassHumidifierSetpoint',
+                'type': 'tool_reference',
+              }),
+              dict({
+                'tool_name': 'HassHumidifierMode',
+                'type': 'tool_reference',
+              }),
+              dict({
+                'tool_name': 'HassClimateSetTemperature',
+                'type': 'tool_reference',
+              }),
+              dict({
+                'tool_name': 'HassFanSetSpeed',
+                'type': 'tool_reference',
+              }),
+              dict({
+                'tool_name': 'HassSetVolume',
+                'type': 'tool_reference',
+              }),
+            ]),
+            'type': 'tool_search_tool_search_result',
+          }),
+          'tool_use_id': 'srvtoolu_12345ABC',
+          'type': 'tool_search_tool_result',
+        }),
+        dict({
+          'signature': 'ErUBCkYIARgCIkCYXaVNJShe3A86Hp7XUzh9YsCYBbJTbQsrklTAPtJ2sP/NoB6tSzpK/nTL6CjSo2R6n0KNBIg5MH6asM2R/kmaEgyB/X1FtZq5OQAC7jUaDEPWCdcwGQ4RaBy5wiIwmRxExIlDhoY6tILoVPnOExkC/0igZxHEwxK8RU/fmw0b+o+TwAarzUitwzbo21E5Kh3pa3I6yqVROf1t2F8rFocNUeCegsWV/ytwYV+ayA==',
+          'thinking': "Great! All clear, let's reply to the user!",
+          'type': 'thinking',
+        }),
+        dict({
+          'text': 'Yes, I can!',
+          'type': 'text',
+        }),
+      ]),
+      'role': 'assistant',
+    }),
+  ])
+# ---
+# name: test_tool_search_error
+  list([
+    dict({
+      'attachments': None,
+      'content': 'Do you have a tool to launch a rocket to the moon?',
+      'created': HAFakeDatetime(2025, 10, 31, 12, 0, tzinfo=datetime.timezone.utc),
+      'role': 'user',
+    }),
+    dict({
+      'agent_id': 'conversation.claude_conversation',
+      'content': 'Sure, let me check that for you!',
+      'created': HAFakeDatetime(2025, 10, 31, 12, 0, tzinfo=datetime.timezone.utc),
+      'native': dict({
+        'citation_details': list([
+        ]),
+        'container': None,
+        'redacted_thinking': None,
+        'thinking_signature': 'ErUBCkYIARgCIkCYXaVNJShe3A86Hp7XUzh9YsCYBbJTbQsrklTAPtJ2sP/NoB6tSzpK/nTL6CjSo2R6n0KNBIg5MH6asM2R/kmaEgyB/X1FtZq5OQAC7jUaDEPWCdcwGQ4RaBy5wiIwmRxExIlDhoY6tILoVPnOExkC/0igZxHEwxK8RU/fmw0b+o+TwAarzUitwzbo21E5Kh3pa3I6yqVROf1t2F8rFocNUeCegsWV/ytwYV+ayA==',
+      }),
+      'role': 'assistant',
+      'thinking_content': 'I will fetch the available tools',
+      'tool_calls': list([
+        dict({
+          'external': True,
+          'id': 'srvtoolu_12345ABC',
+          'tool_args': dict({
+            'limit': 5,
+            'query': 'set humidifier humidity',
+          }),
+          'tool_name': 'tool_search_tool_bm25',
+        }),
+      ]),
+    }),
+    dict({
+      'agent_id': 'conversation.claude_conversation',
+      'created': HAFakeDatetime(2025, 10, 31, 12, 0, tzinfo=datetime.timezone.utc),
+      'role': 'tool_result',
+      'tool_call_id': 'srvtoolu_12345ABC',
+      'tool_name': 'tool_search',
+      'tool_result': dict({
+        'error_code': 'too_many_requests',
+        'type': 'tool_search_tool_result_error',
+      }),
+    }),
+    dict({
+      'agent_id': 'conversation.claude_conversation',
+      'content': 'I am unable to perform the tool search at this time.',
+      'created': HAFakeDatetime(2025, 10, 31, 12, 0, tzinfo=datetime.timezone.utc),
+      'native': None,
+      'role': 'assistant',
+      'thinking_content': None,
+      'tool_calls': None,
+    }),
+  ])
+# ---
+# name: test_tool_search_error.1
+  list([
+    dict({
+      'content': 'Do you have a tool to launch a rocket to the moon?',
+      'role': 'user',
+    }),
+    dict({
+      'content': list([
+        dict({
+          'signature': 'ErUBCkYIARgCIkCYXaVNJShe3A86Hp7XUzh9YsCYBbJTbQsrklTAPtJ2sP/NoB6tSzpK/nTL6CjSo2R6n0KNBIg5MH6asM2R/kmaEgyB/X1FtZq5OQAC7jUaDEPWCdcwGQ4RaBy5wiIwmRxExIlDhoY6tILoVPnOExkC/0igZxHEwxK8RU/fmw0b+o+TwAarzUitwzbo21E5Kh3pa3I6yqVROf1t2F8rFocNUeCegsWV/ytwYV+ayA==',
+          'thinking': 'I will fetch the available tools',
+          'type': 'thinking',
+        }),
+        dict({
+          'text': 'Sure, let me check that for you!',
+          'type': 'text',
+        }),
+        dict({
+          'id': 'srvtoolu_12345ABC',
+          'input': dict({
+            'limit': 5,
+            'query': 'set humidifier humidity',
+          }),
+          'name': 'tool_search_tool_bm25',
+          'type': 'server_tool_use',
+        }),
+        dict({
+          'content': dict({
+            'error_code': 'too_many_requests',
+            'type': 'tool_search_tool_result_error',
+          }),
+          'tool_use_id': 'srvtoolu_12345ABC',
+          'type': 'tool_search_tool_result',
+        }),
+        dict({
+          'text': 'I am unable to perform the tool search at this time.',
           'type': 'text',
         }),
       ]),

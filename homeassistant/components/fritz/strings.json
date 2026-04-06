@@ -169,6 +169,18 @@
     "switch": {
       "internet_access": {
         "name": "Internet access"
+      },
+      "wi_fi_guest": {
+        "name": "Guest"
+      },
+      "wi_fi_main_2_4ghz": {
+        "name": "Main 2.4 GHz"
+      },
+      "wi_fi_main_5ghz": {
+        "name": "Main 5 GHz"
+      },
+      "wi_fi_main_5ghz_high_6ghz": {
+        "name": "Main 5 GHz High / 6 GHz"
       }
     }
   },

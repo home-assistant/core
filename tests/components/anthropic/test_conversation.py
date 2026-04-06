@@ -16,6 +16,8 @@ from anthropic.types import (
     TextEditorCodeExecutionStrReplaceResultBlock,
     TextEditorCodeExecutionToolResultError,
     TextEditorCodeExecutionViewResultBlock,
+    ToolSearchToolResultError,
+    ToolSearchToolSearchResultBlock,
     Usage,
     WebSearchResultBlock,
     WebSearchToolResultError,
@@ -36,6 +38,7 @@ from homeassistant.components.anthropic.const import (
     CONF_PROMPT_CACHING,
     CONF_THINKING_BUDGET,
     CONF_THINKING_EFFORT,
+    CONF_TOOL_SEARCH,
     CONF_WEB_SEARCH,
     CONF_WEB_SEARCH_CITY,
     CONF_WEB_SEARCH_COUNTRY,
@@ -60,6 +63,7 @@ from . import (
     create_server_tool_use_block,
     create_text_editor_code_execution_result_block,
     create_thinking_block,
+    create_tool_search_result_block,
     create_tool_use_block,
     create_web_search_result_block,
 )
@@ -467,6 +471,7 @@ async def test_assist_api_tools_conversion(
         "vacuum",
         "cover",
         "weather",
+        "demo",
     ):
         assert await async_setup_component(hass, component, {})
 
@@ -1502,6 +1507,194 @@ async def test_text_editor_code_execution(
     assert mock_create_stream.call_args.kwargs["messages"] == snapshot
 
 
+@freeze_time("2025-10-31 12:00:00")
+async def test_tool_search(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_init_component,
+    mock_create_stream: AsyncMock,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test tool search."""
+    assert await async_setup_component(hass, "intent", {})
+    assert await async_setup_component(hass, "demo", {})
+    hass.config_entries.async_update_subentry(
+        mock_config_entry,
+        next(iter(mock_config_entry.subentries.values())),
+        data={
+            CONF_LLM_HASS_API: llm.LLM_API_ASSIST,
+            CONF_CHAT_MODEL: "claude-sonnet-4-6",
+            CONF_TOOL_SEARCH: True,
+        },
+    )
+
+    tool_search_result = ToolSearchToolSearchResultBlock(
+        type="tool_search_tool_search_result",
+        tool_references=[
+            {
+                "type": "tool_reference",
+                "tool_name": "HassHumidifierSetpoint",
+            },
+            {
+                "type": "tool_reference",
+                "tool_name": "HassHumidifierMode",
+            },
+            {
+                "type": "tool_reference",
+                "tool_name": "HassClimateSetTemperature",
+            },
+            {
+                "type": "tool_reference",
+                "tool_name": "HassFanSetSpeed",
+            },
+            {
+                "type": "tool_reference",
+                "tool_name": "HassSetVolume",
+            },
+        ],
+    )
+
+    mock_create_stream.return_value = [
+        (
+            *create_thinking_block(
+                0,
+                ["I will fetch the available", " tools"],
+            ),
+            *create_content_block(
+                1,
+                ["Sure, let me check that for you!"],
+            ),
+            *create_server_tool_use_block(
+                2,
+                "srvtoolu_12345ABC",
+                "tool_search_tool_bm25",
+                [
+                    '{"query": "s',
+                    "et humidi",
+                    "fier hum",
+                    'idity"',
+                    ', "limit"',
+                    ": 5}",
+                ],
+            ),
+            *create_tool_search_result_block(
+                3, "srvtoolu_12345ABC", tool_search_result
+            ),
+            *create_thinking_block(
+                4,
+                ["Great! All clear, let's reply to the user!"],
+            ),
+            *create_content_block(
+                5,
+                ["Yes, I can!"],
+            ),
+        )
+    ]
+
+    result = await conversation.async_converse(
+        hass,
+        "Can you set humidifier setpoint?",
+        None,
+        Context(),
+        agent_id="conversation.claude_conversation",
+    )
+
+    chat_log = hass.data.get(conversation.chat_log.DATA_CHAT_LOGS).get(
+        result.conversation_id
+    )
+    # Don't test the prompt because it's not deterministic
+    assert chat_log.content[1:] == snapshot
+    assert mock_create_stream.call_args.kwargs["messages"] == snapshot
+
+    tools = mock_create_stream.call_args.kwargs["tools"]
+    assert {
+        "type": "tool_search_tool_bm25_20251119",
+        "name": "tool_search_tool_bm25",
+    } in tools
+    for tool in tools:
+        if tool["name"] in (
+            "HassTurnOn",
+            "HassTurnOff",
+            "GetLiveContext",
+            "tool_search_tool_bm25",
+        ):
+            assert "defer_loading" not in tool
+        else:
+            assert tool["defer_loading"] is True
+
+
+@freeze_time("2025-10-31 12:00:00")
+async def test_tool_search_error(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_init_component,
+    mock_create_stream: AsyncMock,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test tool_search error."""
+    hass.config_entries.async_update_subentry(
+        mock_config_entry,
+        next(iter(mock_config_entry.subentries.values())),
+        data={
+            CONF_LLM_HASS_API: llm.LLM_API_ASSIST,
+            CONF_CHAT_MODEL: "claude-sonnet-4-6",
+            CONF_TOOL_SEARCH: True,
+        },
+    )
+
+    tool_search_result = ToolSearchToolResultError(
+        type="tool_search_tool_result_error",
+        error_code="too_many_requests",
+    )
+    mock_create_stream.return_value = [
+        (
+            *create_thinking_block(
+                0,
+                ["I will fetch the available", " tools"],
+            ),
+            *create_content_block(
+                1,
+                ["Sure, let me check that for you!"],
+            ),
+            *create_server_tool_use_block(
+                2,
+                "srvtoolu_12345ABC",
+                "tool_search_tool_bm25",
+                [
+                    '{"query": "s',
+                    "et humidi",
+                    "fier hum",
+                    'idity"',
+                    ', "limit"',
+                    ": 5}",
+                ],
+            ),
+            *create_tool_search_result_block(
+                3, "srvtoolu_12345ABC", tool_search_result
+            ),
+            *create_content_block(
+                4,
+                ["I am unable to perform the tool search at this time."],
+            ),
+        )
+    ]
+
+    result = await conversation.async_converse(
+        hass,
+        "Do you have a tool to launch a rocket to the moon?",
+        None,
+        Context(),
+        agent_id="conversation.claude_conversation",
+    )
+
+    chat_log = hass.data.get(conversation.chat_log.DATA_CHAT_LOGS).get(
+        result.conversation_id
+    )
+    # Don't test the prompt because it's not deterministic
+    assert chat_log.content[1:] == snapshot
+    assert mock_create_stream.call_args.kwargs["messages"] == snapshot
+
+
 async def test_container_reused(
     hass: HomeAssistant,
     mock_config_entry_with_assist: MockConfigEntry,
@@ -1745,6 +1938,76 @@ async def test_container_reused(
             conversation.chat_log.AssistantContent(
                 agent_id="conversation.claude_conversation",
                 content="It is currently 2:30 PM.",
+            ),
+        ],
+        [
+            conversation.chat_log.SystemContent(
+                "You are a voice assistant for Home Assistant."
+            ),
+            conversation.chat_log.UserContent("Set humidity to 50%"),
+            conversation.chat_log.AssistantContent(
+                agent_id="conversation.claude_conversation",
+                thinking_content="Let me search for a tool to set humidity.",
+                tool_calls=[
+                    llm.ToolInput(
+                        tool_name="tool_search_tool_bm25",
+                        tool_args={"query": "set humidity humidifier"},
+                        id="srvtoolu_015vXmtZNASLa7n9RsoDfcBC",
+                        external=True,
+                    )
+                ],
+                native=ContentDetails(thinking_signature="EuQBClkIDBE="),
+            ),
+            conversation.chat_log.ToolResultContent(
+                agent_id="conversation.claude_conversation",
+                tool_call_id="srvtoolu_015vXmtZNASLa7n9RsoDfcBC",
+                tool_name="tool_search",
+                tool_result={
+                    "tool_references": [
+                        {
+                            "tool_name": "HassHumidifierSetpoint",
+                            "type": "tool_reference",
+                        },
+                        {"tool_name": "HassHumidifierMode", "type": "tool_reference"},
+                        {
+                            "tool_name": "HassClimateSetTemperature",
+                            "type": "tool_reference",
+                        },
+                        {"tool_name": "HassFanSetSpeed", "type": "tool_reference"},
+                        {"tool_name": "HassSetVolume", "type": "tool_reference"},
+                    ],
+                    "type": "tool_search_tool_search_result",
+                },
+            ),
+            conversation.chat_log.AssistantContent(
+                agent_id="conversation.claude_conversation",
+                tool_calls=[
+                    llm.ToolInput(
+                        tool_name="HassHumidifierSetpoint",
+                        tool_args={"name": "Hygrostat", "humidity": 50},
+                        id="toolu_01KNRWb3ZFufCa7WXtzCakhc",
+                        external=False,
+                    )
+                ],
+            ),
+            conversation.chat_log.ToolResultContent(
+                agent_id="conversation.claude_conversation",
+                tool_call_id="toolu_01KNRWb3ZFufCa7WXtzCakhc",
+                tool_name="HassHumidifierSetpoint",
+                tool_result={
+                    "speech": {
+                        "plain": {
+                            "speech": "The Hygrostat is set to 50%",
+                            "extra_data": None,
+                        }
+                    },
+                    "response_type": "action_done",
+                    "data": {"success": [], "failed": []},
+                },
+            ),
+            conversation.chat_log.AssistantContent(
+                agent_id="conversation.claude_conversation",
+                content="The Hygrostat humidity has been set to **50%**. ✅",
             ),
         ],
     ],

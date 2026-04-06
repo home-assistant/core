@@ -6,6 +6,7 @@
       "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
     },
     "error": {
+      "bad_request": "The Backblaze B2 API rejected the request: {error_message}",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_bucket_name": "[%key:component::backblaze_b2::exceptions::invalid_bucket_name::message%]",
       "invalid_capability": "[%key:component::backblaze_b2::exceptions::invalid_capability::message%]",
@@ -60,6 +61,9 @@
     }
   },
   "exceptions": {
+    "bad_request": {
+      "message": "The Backblaze B2 API rejected the request: {error_message}"
+    },
     "cannot_connect": {
       "message": "Cannot connect to endpoint"
     },
