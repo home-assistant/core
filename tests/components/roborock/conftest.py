@@ -33,7 +33,6 @@ from roborock.data import (
     ZeoError,
     ZeoState,
 )
-from roborock.data.b01_q10.b01_q10_code_mappings import B01_Q10_DP
 from roborock.devices.device import RoborockDevice
 from roborock.devices.device_manager import DeviceManager
 from roborock.devices.traits.b01.q10.status import StatusTrait as Q10StatusTrait
@@ -184,37 +183,7 @@ def create_b01_q10_trait() -> Mock:
     q10_trait.vacuum = AsyncMock()
     q10_trait.command = AsyncMock()
 
-    def _raw_value(value: Any) -> Any:
-        return (
-            value.code
-            if hasattr(value, "code")
-            else value.value
-            if hasattr(value, "value")
-            else value
-        )
-
-    async def refresh_side_effect() -> None:
-        """Simulate a device push via the public Q10 DPS update API with new data."""
-        # Mutate clean_count to simulate a new cleaning cycle
-        status.clean_count += 1
-        dps: dict[B01_Q10_DP, Any] = {
-            B01_Q10_DP.STATUS: _raw_value(status.status),
-            B01_Q10_DP.BATTERY: status.battery,
-            B01_Q10_DP.FAN_LEVEL: _raw_value(status.fan_level),
-            B01_Q10_DP.WATER_LEVEL: _raw_value(status.water_level),
-            B01_Q10_DP.CLEAN_COUNT: status.clean_count,
-            B01_Q10_DP.CLEAN_TIME: status.clean_time,
-            B01_Q10_DP.CLEAN_AREA: status.clean_area,
-        }
-        if hasattr(status, "child_lock"):
-            dps[B01_Q10_DP.CHILD_LOCK] = _raw_value(status.child_lock)
-        if hasattr(status, "not_disturb"):
-            dps[B01_Q10_DP.NOT_DISTURB] = _raw_value(status.not_disturb)
-        if hasattr(status, "dust_switch"):
-            dps[B01_Q10_DP.DUST_SWITCH] = _raw_value(status.dust_switch)
-        status.update_from_dps(dps)
-
-    q10_trait.refresh = AsyncMock(side_effect=refresh_side_effect)
+    q10_trait.refresh = AsyncMock()
     return q10_trait
 
 
