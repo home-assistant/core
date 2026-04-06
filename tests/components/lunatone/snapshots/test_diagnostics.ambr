@@ -178,7 +178,7 @@
       'node_red': False,
       'startup_mode': 'normal',
       'tier': 'basic',
-      'uid': None,
+      'uid': 'be37ca9c-47c2-4498-a38b-c62c7c711840',
       'version': 'v1.14.1/1.4.3',
     }),
   })

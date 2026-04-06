@@ -34,7 +34,11 @@ from homeassistant.components.vacuum import (
 )
 from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
+from homeassistant.exceptions import (
+    HomeAssistantError,
+    ServiceNotSupported,
+    ServiceValidationError,
+)
 from homeassistant.helpers import (
     device_registry as dr,
     entity_registry as er,
@@ -217,6 +221,31 @@ async def test_get_maps(
     assert response == snapshot
 
 
+@pytest.mark.parametrize(
+    "entity_id",
+    [
+        Q7_ENTITY_ID,
+        Q10_ENTITY_ID,
+    ],
+)
+async def test_get_maps_not_supported(
+    hass: HomeAssistant,
+    setup_entry: MockConfigEntry,
+    entity_id: str,
+) -> None:
+    """Test that unsupported vacuums raise ServiceNotSupported for get_maps."""
+    with pytest.raises(
+        ServiceNotSupported, match="does not support action roborock.get_maps"
+    ):
+        await hass.services.async_call(
+            DOMAIN,
+            GET_MAPS_SERVICE_NAME,
+            {ATTR_ENTITY_ID: entity_id},
+            blocking=True,
+            return_response=True,
+        )
+
+
 async def test_goto(
     hass: HomeAssistant,
     setup_entry: MockConfigEntry,
@@ -237,6 +266,31 @@ async def test_goto(
     assert vacuum_command.send.call_args == (
         call(RoborockCommand.APP_GOTO_TARGET, params=[25500, 25500])
     )
+
+
+@pytest.mark.parametrize(
+    "entity_id",
+    [
+        Q7_ENTITY_ID,
+        Q10_ENTITY_ID,
+    ],
+)
+async def test_goto_not_supported(
+    hass: HomeAssistant,
+    setup_entry: MockConfigEntry,
+    entity_id: str,
+) -> None:
+    """Test that unsupported vacuums raise ServiceNotSupported for goto."""
+    with pytest.raises(
+        ServiceNotSupported,
+        match="does not support action roborock.set_vacuum_goto_position",
+    ):
+        await hass.services.async_call(
+            DOMAIN,
+            SET_VACUUM_GOTO_POSITION_SERVICE_NAME,
+            {ATTR_ENTITY_ID: entity_id, "x": 25500, "y": 25500},
+            blocking=True,
+        )
 
 
 async def test_get_current_position(
@@ -300,6 +354,32 @@ async def test_get_current_position_no_robot_position(
             DOMAIN,
             GET_VACUUM_CURRENT_POSITION_SERVICE_NAME,
             {ATTR_ENTITY_ID: ENTITY_ID},
+            blocking=True,
+            return_response=True,
+        )
+
+
+@pytest.mark.parametrize(
+    "entity_id",
+    [
+        Q7_ENTITY_ID,
+        Q10_ENTITY_ID,
+    ],
+)
+async def test_get_current_position_not_supported(
+    hass: HomeAssistant,
+    setup_entry: MockConfigEntry,
+    entity_id: str,
+) -> None:
+    """Test that the current-position service raises ServiceNotSupported."""
+    with pytest.raises(
+        ServiceNotSupported,
+        match="does not support action roborock.get_vacuum_current_position",
+    ):
+        await hass.services.async_call(
+            DOMAIN,
+            GET_VACUUM_CURRENT_POSITION_SERVICE_NAME,
+            {ATTR_ENTITY_ID: entity_id},
             blocking=True,
             return_response=True,
         )
