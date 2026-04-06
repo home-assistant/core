@@ -4,11 +4,12 @@ from datetime import UTC, datetime, timedelta
 from unittest.mock import MagicMock
 
 from freezegun.api import FrozenDateTimeFactory
-from pymiele import MieleDevices
+from pymiele import MieleDevices, MieleTemperature
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.miele.const import DOMAIN
+from homeassistant.components.miele.sensor import _convert_temperature
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant, State
@@ -836,3 +837,36 @@ async def test_elapsed_time_sensor_restored(
     state = hass.states.get(entity_id_abs)
     assert state is not None
     assert state.state == "2025-05-31T14:15:00+00:00"
+
+
+def _core_temperature_entry(value_raw: object | None) -> MieleTemperature:
+    """Build a MieleTemperature like the API returns for core/zone readings."""
+    return MieleTemperature({"value_raw": value_raw})
+
+
+@pytest.mark.parametrize(
+    ("entries", "index", "expected"),
+    [
+        ([], 0, None),
+        ([_core_temperature_entry(2200)], 1, None),
+        ([_core_temperature_entry(None)], 0, None),
+        ([_core_temperature_entry(-32768)], 0, None),
+        ([_core_temperature_entry(-32766)], 0, None),
+        ([_core_temperature_entry(-3276800)], 0, None),
+        ([_core_temperature_entry(-3276600)], 0, None),
+        ([_core_temperature_entry(2150)], 0, 21.5),
+    ],
+)
+def test_convert_temperature(
+    entries: list[MieleTemperature],
+    index: int,
+    expected: float | None,
+) -> None:
+    """Cover _convert_temperature branches (sentinels, scaling, bounds, valid values)."""
+    assert _convert_temperature(entries, index) == expected
+
+
+def test_convert_temperature_invalid_raw_types() -> None:
+    """int() must not raise: bad API payloads become unknown."""
+    assert _convert_temperature([_core_temperature_entry("n/a")], 0) is None
+    assert _convert_temperature([_core_temperature_entry([1])], 0) is None
