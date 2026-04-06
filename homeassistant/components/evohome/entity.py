@@ -1,4 +1,4 @@
-"""Base for evohome entity."""
+"""Support for entities of the Evohome integration."""
 
 from collections.abc import Mapping
 from datetime import UTC, datetime
