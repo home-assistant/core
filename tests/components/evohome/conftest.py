@@ -245,7 +245,10 @@ def dhw_id(evohome: MagicMock, entity_id: Callable[[Platform, str], str]) -> str
 
 
 @pytest.fixture
-def entity_id(hass: HomeAssistant, entity_registry: er.EntityRegistry) -> Callable[[Platform, str], str]:
+def entity_id(
+    hass: HomeAssistant,
+    entity registry: er.EntityRegistry,
+) -> Callable[[Platform, str], str]:
     """Return a helper to lookup an entity_id from platform and unique_id."""
 
     def get_entity_id(platform: Platform, unique_id: str) -> str:
