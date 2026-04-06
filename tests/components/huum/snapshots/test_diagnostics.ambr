@@ -1,0 +1,40 @@
+# serializer version: 1
+# name: test_diagnostics
+  dict({
+    'coordinator': dict({
+      'last_exception': None,
+      'last_update_success': True,
+    }),
+    'data': dict({
+      'config': 3,
+      'door_closed': True,
+      'duration': None,
+      'end_date': None,
+      'humidity': 0,
+      'is_private': None,
+      'light': 1,
+      'payment_end_date': None,
+      'remote_safety_state': None,
+      'sauna_config': dict({
+        'child_lock': 'OFF',
+        'max_heating_time': 3,
+        'max_temp': 110,
+        'max_timer': 0,
+        'min_heating_time': 0,
+        'min_temp': 40,
+        'min_timer': 0,
+      }),
+      'sauna_name': '**REDACTED**',
+      'show_modal': None,
+      'start_date': None,
+      'status': 232,
+      'steamer_error': None,
+      'target_humidity': 5,
+      'target_temperature': 80,
+      'temperature': 30,
+    }),
+    'entry': dict({
+      'version': 1,
+    }),
+  })
+# ---

@@ -19,9 +19,13 @@ LIGHT = "light"
 LIGHT_ON = 1
 LIGHT_OFF = 2
 
+# API "no reading" sentinels. Most temperatures use centidegrees (-32768 -> -327.68 °C).
+# Some devices report the int16 minimum already in degrees after scaling (-3276800 raw -> -32768 °C).
 DISABLED_TEMP_ENTITIES = (
     -32768 / 100,
     -32766 / 100,
+    -32768.0,
+    -32766.0,
 )
 
 
@@ -270,6 +274,7 @@ class ProgramPhaseOven(MieleEnum, missing_to_none=True):
     process_finished = 3078
     searing = 3080
     roasting = 3081
+    cooling_down = 3083
     energy_save = 3084
     pre_heating = 3099
 
@@ -439,6 +444,7 @@ class WashingMachineProgramId(MieleEnum, missing_to_none=True):
 
     no_program = 0, -1
     cottons = 1, 10001
+    normal = 2
     minimum_iron = 3
     delicates = 4, 10022
     woollens = 8, 10040
@@ -452,6 +458,7 @@ class WashingMachineProgramId(MieleEnum, missing_to_none=True):
     proofing = 27, 10057
     sportswear = 29, 10052
     automatic_plus = 31
+    table_linen = 33
     outerwear = 37
     pillows = 39
     cool_air = 45  # washer-dryer
@@ -500,6 +507,7 @@ class DishWasherProgramId(MieleEnum, missing_to_none=True):
     pasta_paela = 14
     tall_items = 17, 42
     glasses_warm = 19
+    quick_intense = 21
     normal = 30
     power_wash = 44, 204
     comfort_wash = 203
@@ -585,6 +593,7 @@ class OvenProgramId(MieleEnum, missing_to_none=True):
     microwave_fan_grill = 23
     conventional_heat = 24
     top_heat = 25
+    booster = 27
     fan_grill = 29
     bottom_heat = 31
     moisture_plus_auto_roast = 35, 48
@@ -593,6 +602,7 @@ class OvenProgramId(MieleEnum, missing_to_none=True):
     moisture_plus_conventional_heat = 51, 76
     popcorn = 53
     quick_microwave = 54
+    airfry = 95
     custom_program_1 = 97
     custom_program_2 = 98
     custom_program_3 = 99
@@ -616,8 +626,10 @@ class OvenProgramId(MieleEnum, missing_to_none=True):
     pyrolytic = 323
     descale = 326
     evaporate_water = 327
+    rinse = 333
     shabbat_program = 335
     yom_tov = 336
+    hydroclean = 341
     drying = 357, 2028
     heat_crockery = 358
     prove_dough = 359, 2023
@@ -722,7 +734,7 @@ class OvenProgramId(MieleEnum, missing_to_none=True):
     belgian_sponge_cake = 624
     goose_unstuffed = 625
     rack_of_lamb_with_vegetables = 634
-    yorkshire_pudding = 635
+    yorkshire_pudding = 635, 2352
     meat_loaf = 636
     defrost_meat = 647
     defrost_vegetables = 654
@@ -1122,7 +1134,7 @@ class OvenProgramId(MieleEnum, missing_to_none=True):
     wholegrain_rice = 3376
     parboiled_rice_steam_cooking = 3380
     parboiled_rice_rapid_steam_cooking = 3381
-    basmati_rice_steam_cooking = 3383
+    basmati_rice_steam_cooking = 3382, 3383
     basmati_rice_rapid_steam_cooking = 3384
     jasmine_rice_steam_cooking = 3386
     jasmine_rice_rapid_steam_cooking = 3387
@@ -1130,7 +1142,7 @@ class OvenProgramId(MieleEnum, missing_to_none=True):
     huanghuanian_rapid_steam_cooking = 3390
     simiao_steam_cooking = 3392
     simiao_rapid_steam_cooking = 3393
-    long_grain_rice_general_steam_cooking = 3395
+    long_grain_rice_general_steam_cooking = 3394, 3395
     long_grain_rice_general_rapid_steam_cooking = 3396
     chongming_steam_cooking = 3398
     chongming_rapid_steam_cooking = 3399

@@ -5,7 +5,6 @@ from __future__ import annotations
 from datetime import timedelta
 from typing import Any
 
-from homeassistant import config_entries
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
@@ -20,14 +19,13 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN
-from .coordinator import QnapCoordinator
+from .coordinator import QnapConfigEntry, QnapCoordinator
 
 ATTR_DRIVE = "Drive"
 ATTR_IP = "IP Address"
@@ -247,14 +245,11 @@ SENSOR_KEYS: list[str] = [
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: config_entries.ConfigEntry,
+    config_entry: QnapConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up entry."""
-    coordinator = QnapCoordinator(hass, config_entry)
-    await coordinator.async_refresh()
-    if not coordinator.last_update_success:
-        raise PlatformNotReady
+    coordinator = config_entry.runtime_data
     uid = config_entry.unique_id
     assert uid is not None
     sensors: list[QNAPSensor] = []
