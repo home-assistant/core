@@ -2538,7 +2538,7 @@ pyswitchbee==1.8.3
 pytautulli==23.1.1
 
 # homeassistant.components.teleinfo
-pyteleinfo==0.3.1
+pyteleinfo==0.4.0
 
 # homeassistant.components.thinkingcleaner
 pythinkingcleaner==0.0.3
