@@ -22,6 +22,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 
 from . import DOMAIN
+from .const import ATTR_ALTITUDE
 
 
 async def async_setup_entry(
@@ -56,7 +57,6 @@ async def async_setup_entry(
         async_add_entities([entity])
 
     hass.data[DOMAIN]["context"].set_async_see(_receive_data)
-
     async_add_entities(entities)
 
 
@@ -85,7 +85,12 @@ class OwnTracksEntity(TrackerEntity, RestoreEntity):
     @property
     def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return device specific attributes."""
-        return self._data.get("attributes")
+        # TrackerEntity.state_attributes is @final and does not include altitude,
+        # so altitude must be exposed via extra_state_attributes instead.
+        attr = dict(self._data.get("attributes") or {})
+        if self._data.get("altitude") is not None:
+            attr[ATTR_ALTITUDE] = self._data["altitude"]
+        return attr or None
 
     @property
     def location_accuracy(self) -> float:
@@ -98,7 +103,6 @@ class OwnTracksEntity(TrackerEntity, RestoreEntity):
         # Check with "get" instead of "in" because value can be None
         if self._data.get("gps"):
             return self._data["gps"][0]
-
         return None
 
     @property
@@ -107,7 +111,6 @@ class OwnTracksEntity(TrackerEntity, RestoreEntity):
         # Check with "get" instead of "in" because value can be None
         if self._data.get("gps"):
             return self._data["gps"][1]
-
         return None
 
     @property
@@ -140,12 +143,14 @@ class OwnTracksEntity(TrackerEntity, RestoreEntity):
             return
 
         attr = state.attributes
+
         self._data = {
             "host_name": state.name,
             "gps": (attr.get(ATTR_LATITUDE), attr.get(ATTR_LONGITUDE)),
             "gps_accuracy": attr.get(ATTR_GPS_ACCURACY),
             "battery": attr.get(ATTR_BATTERY_LEVEL),
             "source_type": attr.get(ATTR_SOURCE_TYPE),
+            "altitude": attr.get(ATTR_ALTITUDE),
         }
 
     @callback

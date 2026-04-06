@@ -392,6 +392,12 @@ def assert_location_source_type(hass: HomeAssistant, source_type: str) -> None:
     assert state.attributes.get("source_type") == source_type
 
 
+def assert_location_altitude(hass: HomeAssistant, altitude: float) -> None:
+    """Test the assertion of a location altitude."""
+    state = hass.states.get(DEVICE_TRACKER_STATE)
+    assert state.attributes.get("altitude") == altitude
+
+
 def assert_mobile_tracker_state(
     hass: HomeAssistant, location: str, beacon: str = IBEACON_DEVICE
 ) -> None:
@@ -436,6 +442,21 @@ async def test_location_update(hass: HomeAssistant) -> None:
     assert_location_latitude(hass, LOCATION_MESSAGE["lat"])
     assert_location_accuracy(hass, LOCATION_MESSAGE["acc"])
     assert_location_state(hass, "outer")
+
+
+@pytest.mark.usefixtures("context")
+async def test_location_altitude(hass: HomeAssistant) -> None:
+    """Test that altitude from OwnTracks message appears in entity attributes."""
+    await send_message(hass, LOCATION_TOPIC, LOCATION_MESSAGE)
+    assert_location_altitude(hass, LOCATION_MESSAGE["alt"])
+
+
+@pytest.mark.usefixtures("context")
+async def test_location_altitude_zero(hass: HomeAssistant) -> None:
+    """Test that altitude=0 (sea level) is correctly passed through and not dropped."""
+    message = build_message({"alt": 0}, LOCATION_MESSAGE)
+    await send_message(hass, LOCATION_TOPIC, message)
+    assert_location_altitude(hass, 0)
 
 
 @pytest.mark.usefixtures("context")
@@ -878,46 +899,24 @@ async def test_event_region_entry_exit_wrong_order(hass: HomeAssistant) -> None:
 @pytest.mark.usefixtures("context")
 async def test_event_beacon_unknown_zone_no_location(hass: HomeAssistant) -> None:
     """Test the event for unknown zone."""
-    # A beacon which does not match a HA zone is the
-    # definition of a mobile beacon. In this case, "unknown"
-    # will be turned into device_tracker.beacon_unknown and
-    # that will be tracked at my current location. Except
-    # in this case my Device hasn't had a location message
-    # yet so it's in an odd state where it has state.state
-    # None and no GPS coords to set the beacon to.
     hass.states.async_set(DEVICE_TRACKER_STATE, None)
 
     message = build_message({"desc": "unknown"}, REGION_BEACON_ENTER_MESSAGE)
     await send_message(hass, EVENT_TOPIC, message)
 
-    # My current state is None because I haven't seen a
-    # location message or a GPS or Region # Beacon event
-    # message. None is the state the test harness set for
-    # the Device during test case setup.
     assert_location_state(hass, "None")
-
-    # We have had no location yet, so the beacon status
-    # set to unknown.
     assert_mobile_tracker_state(hass, "unknown", "unknown")
 
 
 @pytest.mark.usefixtures("context")
 async def test_event_beacon_unknown_zone(hass: HomeAssistant) -> None:
     """Test the event for unknown zone."""
-    # A beacon which does not match a HA zone is the
-    # definition of a mobile beacon. In this case, "unknown"
-    # will be turned into device_tracker.beacon_unknown and
-    # that will be tracked at my current location. First I
-    # set my location so that my state is 'outer'
-
     await send_message(hass, LOCATION_TOPIC, LOCATION_MESSAGE)
     assert_location_state(hass, "outer")
 
     message = build_message({"desc": "unknown"}, REGION_BEACON_ENTER_MESSAGE)
     await send_message(hass, EVENT_TOPIC, message)
 
-    # My state is still outer and now the unknown beacon
-    # has joined me at outer.
     assert_location_state(hass, "outer")
     assert_mobile_tracker_state(hass, "outer", "unknown")
 
@@ -925,9 +924,6 @@ async def test_event_beacon_unknown_zone(hass: HomeAssistant) -> None:
 @pytest.mark.usefixtures("context")
 async def test_event_beacon_entry_zone_loading_dash(hass: HomeAssistant) -> None:
     """Test the event for beacon zone landing."""
-    # Make sure the leading - is ignored
-    # Owntracks uses this to switch on hold
-
     message = build_message({"desc": "-inner"}, REGION_BEACON_ENTER_MESSAGE)
     await send_message(hass, EVENT_TOPIC, message)
     assert_location_state(hass, "inner")
@@ -938,18 +934,12 @@ async def test_event_beacon_entry_zone_loading_dash(hass: HomeAssistant) -> None
 @pytest.mark.usefixtures("context")
 async def test_mobile_enter_move_beacon(hass: HomeAssistant) -> None:
     """Test the movement of a beacon."""
-    # I am in the outer zone.
     await send_message(hass, LOCATION_TOPIC, LOCATION_MESSAGE)
-
-    # I see the 'keys' beacon. I set the location of the
-    # beacon_keys tracker to my current device location.
     await send_message(hass, EVENT_TOPIC, MOBILE_BEACON_ENTER_EVENT_MESSAGE)
 
     assert_mobile_tracker_latitude(hass, LOCATION_MESSAGE["lat"])
     assert_mobile_tracker_state(hass, "outer")
 
-    # Location update to outside of defined zones.
-    # I am now 'not home' and neither are my keys.
     await send_message(hass, LOCATION_TOPIC, LOCATION_MESSAGE_NOT_HOME)
 
     assert_location_state(hass, STATE_NOT_HOME)
@@ -963,22 +953,15 @@ async def test_mobile_enter_move_beacon(hass: HomeAssistant) -> None:
 @pytest.mark.usefixtures("context")
 async def test_mobile_enter_exit_region_beacon(hass: HomeAssistant) -> None:
     """Test the enter and the exit of a mobile beacon."""
-    # I am in the outer zone.
     await send_message(hass, LOCATION_TOPIC, LOCATION_MESSAGE)
-
-    # I see a new mobile beacon
     await send_message(hass, EVENT_TOPIC, MOBILE_BEACON_ENTER_EVENT_MESSAGE)
     assert_mobile_tracker_latitude(hass, OUTER_ZONE["latitude"])
     assert_mobile_tracker_state(hass, "outer")
 
-    # GPS enter message should move beacon
     await send_message(hass, EVENT_TOPIC, REGION_GPS_ENTER_MESSAGE)
-
     assert_mobile_tracker_latitude(hass, INNER_ZONE["latitude"])
     assert_mobile_tracker_state(hass, REGION_GPS_ENTER_MESSAGE["desc"])
 
-    # Exit inner zone to outer zone should move beacon to
-    # center of outer zone
     await send_message(hass, EVENT_TOPIC, REGION_GPS_LEAVE_MESSAGE)
     assert_mobile_tracker_latitude(hass, REGION_GPS_LEAVE_MESSAGE["lat"])
     assert_mobile_tracker_state(hass, "outer")
@@ -987,21 +970,15 @@ async def test_mobile_enter_exit_region_beacon(hass: HomeAssistant) -> None:
 @pytest.mark.usefixtures("context")
 async def test_mobile_exit_move_beacon(hass: HomeAssistant) -> None:
     """Test the exit move of a beacon."""
-    # I am in the outer zone.
     await send_message(hass, LOCATION_TOPIC, LOCATION_MESSAGE)
-
-    # I see a new mobile beacon
     await send_message(hass, EVENT_TOPIC, MOBILE_BEACON_ENTER_EVENT_MESSAGE)
     assert_mobile_tracker_latitude(hass, OUTER_ZONE["latitude"])
     assert_mobile_tracker_state(hass, "outer")
 
-    # Exit mobile beacon, should set location
     await send_message(hass, EVENT_TOPIC, MOBILE_BEACON_LEAVE_EVENT_MESSAGE)
-
     assert_mobile_tracker_latitude(hass, OUTER_ZONE["latitude"])
     assert_mobile_tracker_state(hass, "outer")
 
-    # Move after exit should do nothing
     await send_message(hass, LOCATION_TOPIC, LOCATION_MESSAGE_NOT_HOME)
     assert_mobile_tracker_latitude(hass, OUTER_ZONE["latitude"])
     assert_mobile_tracker_state(hass, "outer")
@@ -1011,7 +988,6 @@ async def test_mobile_multiple_async_enter_exit(
     hass: HomeAssistant, context: OwnTracksContextFactory
 ) -> None:
     """Test the multiple entering."""
-    # Test race condition
     for _ in range(20):
         async_fire_mqtt_message(
             hass, EVENT_TOPIC, json.dumps(MOBILE_BEACON_ENTER_EVENT_MESSAGE)
@@ -1043,11 +1019,9 @@ async def test_mobile_multiple_enter_exit(
 @pytest.mark.usefixtures("context")
 async def test_complex_movement(hass: HomeAssistant) -> None:
     """Test a complex sequence representative of real-world use."""
-    # I am in the outer zone.
     await send_message(hass, LOCATION_TOPIC, LOCATION_MESSAGE)
     assert_location_state(hass, "outer")
 
-    # gps to inner location and event, as actually happens with OwnTracks
     location_message = build_message(
         {
             "lat": REGION_GPS_ENTER_MESSAGE["lat"],
@@ -1060,8 +1034,6 @@ async def test_complex_movement(hass: HomeAssistant) -> None:
     assert_location_latitude(hass, INNER_ZONE["latitude"])
     assert_location_state(hass, "inner")
 
-    # region beacon enter inner event and location as actually happens
-    # with OwnTracks
     location_message = build_message(
         {
             "lat": location_message["lat"] + FIVE_M,
@@ -1074,7 +1046,6 @@ async def test_complex_movement(hass: HomeAssistant) -> None:
     assert_location_latitude(hass, INNER_ZONE["latitude"])
     assert_location_state(hass, "inner")
 
-    # see keys mobile beacon and location message as actually happens
     location_message = build_message(
         {
             "lat": location_message["lat"] + FIVE_M,
@@ -1089,13 +1060,6 @@ async def test_complex_movement(hass: HomeAssistant) -> None:
     assert_location_state(hass, "inner")
     assert_mobile_tracker_state(hass, "inner")
 
-    # Slightly odd, I leave the location by gps before I lose
-    # sight of the region beacon. This is also a little odd in
-    # that my GPS coords are now in the 'outer' zone but I did not
-    # "enter" that zone when I started up so my location is not
-    # the center of OUTER_ZONE, but rather just my GPS location.
-
-    # gps out of inner event and location
     location_message = build_message(
         {
             "lat": REGION_GPS_LEAVE_MESSAGE["lat"],
@@ -1110,7 +1074,6 @@ async def test_complex_movement(hass: HomeAssistant) -> None:
     assert_location_state(hass, "outer")
     assert_mobile_tracker_state(hass, "outer")
 
-    # region beacon leave inner
     location_message = build_message(
         {
             "lat": location_message["lat"] - FIVE_M,
@@ -1125,7 +1088,6 @@ async def test_complex_movement(hass: HomeAssistant) -> None:
     assert_location_state(hass, "outer")
     assert_mobile_tracker_state(hass, "outer")
 
-    # lose keys mobile beacon
     lost_keys_location_message = build_message(
         {
             "lat": location_message["lat"] - FIVE_M,
@@ -1140,7 +1102,6 @@ async def test_complex_movement(hass: HomeAssistant) -> None:
     assert_location_state(hass, "outer")
     assert_mobile_tracker_state(hass, "outer")
 
-    # gps leave outer
     await send_message(hass, LOCATION_TOPIC, LOCATION_MESSAGE_NOT_HOME)
     await send_message(hass, EVENT_TOPIC, REGION_GPS_LEAVE_MESSAGE_OUTER)
     assert_location_latitude(hass, LOCATION_MESSAGE_NOT_HOME["lat"])
@@ -1148,7 +1109,6 @@ async def test_complex_movement(hass: HomeAssistant) -> None:
     assert_location_state(hass, "not_home")
     assert_mobile_tracker_state(hass, "outer")
 
-    # location move not home
     location_message = build_message(
         {
             "lat": LOCATION_MESSAGE_NOT_HOME["lat"] - FIVE_M,
@@ -1166,11 +1126,9 @@ async def test_complex_movement(hass: HomeAssistant) -> None:
 @pytest.mark.usefixtures("context")
 async def test_complex_movement_sticky_keys_beacon(hass: HomeAssistant) -> None:
     """Test a complex sequence which was previously broken."""
-    # I am not_home
     await send_message(hass, LOCATION_TOPIC, LOCATION_MESSAGE)
     assert_location_state(hass, "outer")
 
-    # gps to inner location and event, as actually happens with OwnTracks
     location_message = build_message(
         {
             "lat": REGION_GPS_ENTER_MESSAGE["lat"],
@@ -1183,7 +1141,6 @@ async def test_complex_movement_sticky_keys_beacon(hass: HomeAssistant) -> None:
     assert_location_latitude(hass, INNER_ZONE["latitude"])
     assert_location_state(hass, "inner")
 
-    # see keys mobile beacon and location message as actually happens
     location_message = build_message(
         {
             "lat": location_message["lat"] + FIVE_M,
@@ -1198,8 +1155,6 @@ async def test_complex_movement_sticky_keys_beacon(hass: HomeAssistant) -> None:
     assert_location_state(hass, "inner")
     assert_mobile_tracker_state(hass, "inner")
 
-    # region beacon enter inner event and location as actually happens
-    # with OwnTracks
     location_message = build_message(
         {
             "lat": location_message["lat"] + FIVE_M,
@@ -1212,10 +1167,6 @@ async def test_complex_movement_sticky_keys_beacon(hass: HomeAssistant) -> None:
     assert_location_latitude(hass, INNER_ZONE["latitude"])
     assert_location_state(hass, "inner")
 
-    # This sequence of moves would cause keys to follow
-    # greg_phone around even after the OwnTracks sent
-    # a mobile beacon 'leave' event for the keys.
-    # leave keys
     await send_message(hass, LOCATION_TOPIC, location_message)
     await send_message(hass, EVENT_TOPIC, MOBILE_BEACON_LEAVE_EVENT_MESSAGE)
     assert_location_latitude(hass, INNER_ZONE["latitude"])
@@ -1223,14 +1174,12 @@ async def test_complex_movement_sticky_keys_beacon(hass: HomeAssistant) -> None:
     assert_mobile_tracker_state(hass, "inner")
     assert_mobile_tracker_latitude(hass, INNER_ZONE["latitude"])
 
-    # leave inner region beacon
     await send_message(hass, EVENT_TOPIC, REGION_BEACON_LEAVE_MESSAGE)
     await send_message(hass, LOCATION_TOPIC, location_message)
     assert_location_state(hass, "inner")
     assert_mobile_tracker_state(hass, "inner")
     assert_mobile_tracker_latitude(hass, INNER_ZONE["latitude"])
 
-    # enter inner region beacon
     await send_message(hass, EVENT_TOPIC, REGION_BEACON_ENTER_MESSAGE)
     await send_message(hass, LOCATION_TOPIC, location_message)
     assert_location_latitude(hass, INNER_ZONE["latitude"])
@@ -1238,29 +1187,24 @@ async def test_complex_movement_sticky_keys_beacon(hass: HomeAssistant) -> None:
     assert_mobile_tracker_state(hass, "inner")
     assert_mobile_tracker_latitude(hass, INNER_ZONE["latitude"])
 
-    # enter keys
     await send_message(hass, EVENT_TOPIC, MOBILE_BEACON_ENTER_EVENT_MESSAGE)
     await send_message(hass, LOCATION_TOPIC, location_message)
     assert_location_state(hass, "inner")
     assert_mobile_tracker_state(hass, "inner")
     assert_mobile_tracker_latitude(hass, INNER_ZONE["latitude"])
 
-    # leave keys
     await send_message(hass, LOCATION_TOPIC, location_message)
     await send_message(hass, EVENT_TOPIC, MOBILE_BEACON_LEAVE_EVENT_MESSAGE)
     assert_location_state(hass, "inner")
     assert_mobile_tracker_state(hass, "inner")
     assert_mobile_tracker_latitude(hass, INNER_ZONE["latitude"])
 
-    # leave inner region beacon
     await send_message(hass, EVENT_TOPIC, REGION_BEACON_LEAVE_MESSAGE)
     await send_message(hass, LOCATION_TOPIC, location_message)
     assert_location_state(hass, "inner")
     assert_mobile_tracker_state(hass, "inner")
     assert_mobile_tracker_latitude(hass, INNER_ZONE["latitude"])
 
-    # GPS leave inner region, I'm in the 'outer' region now
-    # but on GPS coords
     leave_location_message = build_message(
         {
             "lat": REGION_GPS_LEAVE_MESSAGE["lat"],
@@ -1281,7 +1225,6 @@ async def test_waypoint_import_simple(hass: HomeAssistant) -> None:
     """Test a simple import of list of waypoints."""
     waypoints_message = WAYPOINTS_EXPORTED_MESSAGE.copy()
     await send_message(hass, WAYPOINTS_TOPIC, waypoints_message)
-    # Check if it made it into states
     wayp = hass.states.get(WAYPOINT_ENTITY_NAMES[0])
     assert wayp is not None
     wayp = hass.states.get(WAYPOINT_ENTITY_NAMES[1])
@@ -1293,7 +1236,6 @@ async def test_waypoint_import_block(hass: HomeAssistant) -> None:
     """Test import of list of waypoints for blocked user."""
     waypoints_message = WAYPOINTS_EXPORTED_MESSAGE.copy()
     await send_message(hass, WAYPOINTS_TOPIC_BLOCKED, waypoints_message)
-    # Check if it made it into states
     wayp = hass.states.get(WAYPOINT_ENTITY_NAMES[2])
     assert wayp is None
     wayp = hass.states.get(WAYPOINT_ENTITY_NAMES[3])
@@ -1313,7 +1255,6 @@ async def test_waypoint_import_no_whitelist(hass: HomeAssistant, setup_comp) -> 
 
     waypoints_message = WAYPOINTS_EXPORTED_MESSAGE.copy()
     await send_message(hass, WAYPOINTS_TOPIC_BLOCKED, waypoints_message)
-    # Check if it made it into states
     wayp = hass.states.get(WAYPOINT_ENTITY_NAMES[2])
     assert wayp is not None
     wayp = hass.states.get(WAYPOINT_ENTITY_NAMES[3])
@@ -1325,7 +1266,6 @@ async def test_waypoint_import_bad_json(hass: HomeAssistant) -> None:
     """Test importing a bad JSON payload."""
     waypoints_message = WAYPOINTS_EXPORTED_MESSAGE.copy()
     await send_message(hass, WAYPOINTS_TOPIC, waypoints_message, True)
-    # Check if it made it into states
     wayp = hass.states.get(WAYPOINT_ENTITY_NAMES[2])
     assert wayp is None
     wayp = hass.states.get(WAYPOINT_ENTITY_NAMES[3])
@@ -1337,9 +1277,7 @@ async def test_waypoint_import_existing(hass: HomeAssistant) -> None:
     """Test importing a zone that exists."""
     waypoints_message = WAYPOINTS_EXPORTED_MESSAGE.copy()
     await send_message(hass, WAYPOINTS_TOPIC, waypoints_message)
-    # Get the first waypoint exported
     wayp = hass.states.get(WAYPOINT_ENTITY_NAMES[0])
-    # Send an update
     waypoints_message = WAYPOINTS_UPDATED_MESSAGE.copy()
     await send_message(hass, WAYPOINTS_TOPIC, waypoints_message)
     new_wayp = hass.states.get(WAYPOINT_ENTITY_NAMES[0])
@@ -1381,9 +1319,6 @@ async def test_unsupported_message(hass: HomeAssistant) -> None:
 
 def generate_ciphers(secret):
     """Generate test ciphers for the DEFAULT_LOCATION_MESSAGE."""
-    # PyNaCl ciphertext generation will fail if the module
-    # cannot be imported. However, the test for decryption
-    # also relies on this library and won't be run without it.
     keylen = SecretBox.KEY_SIZE
     key = secret.encode("utf-8")
     key = key[:keylen]
@@ -1409,13 +1344,11 @@ TEST_SECRET_KEY = "s3cretkey"
 CIPHERTEXT, MOCK_CIPHERTEXT = generate_ciphers(TEST_SECRET_KEY)
 
 ENCRYPTED_LOCATION_MESSAGE = {
-    # Encrypted version of LOCATION_MESSAGE using libsodium and TEST_SECRET_KEY
     "_type": "encrypted",
     "data": CIPHERTEXT,
 }
 
 MOCK_ENCRYPTED_LOCATION_MESSAGE = {
-    # Mock-encrypted version of LOCATION_MESSAGE using pickle
     "_type": "encrypted",
     "data": MOCK_CIPHERTEXT,
 }
@@ -1613,6 +1546,7 @@ async def test_restore_state(
     assert state_1.attributes["longitude"] == state_2.attributes["longitude"]
     assert state_1.attributes["battery_level"] == state_2.attributes["battery_level"]
     assert state_1.attributes["source_type"] == state_2.attributes["source_type"]
+    assert state_1.attributes["altitude"] == state_2.attributes["altitude"]
 
 
 async def test_returns_empty_friends(
@@ -1650,7 +1584,6 @@ async def test_returns_array_friends(
     await hass.config_entries.async_setup(otracks.entry_id)
     await hass.async_block_till_done()
 
-    # Setup device_trackers
     assert await async_setup_component(
         hass,
         "person",
