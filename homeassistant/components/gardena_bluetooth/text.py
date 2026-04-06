@@ -38,7 +38,6 @@ DESCRIPTIONS = (
             char=getattr(AquaContourPosition, f"position_name_{i}"),
             native_max=20,
             entity_category=EntityCategory.CONFIG,
-            icon="mdi:map-marker-radius",
         )
         for i in range(1, 6)
     ),
@@ -51,7 +50,6 @@ DESCRIPTIONS = (
             char=getattr(AquaContourContours, f"contour_name_{i}"),
             native_max=20,
             entity_category=EntityCategory.CONFIG,
-            icon="mdi:vector-polygon",
         )
         for i in range(1, 6)
     ),
