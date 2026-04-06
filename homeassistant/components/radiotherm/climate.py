@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import json
 import time
 from typing import Any
 
@@ -281,16 +280,20 @@ class RadioThermostat(RadioThermostatEntity, ClimateEntity):
         await self.coordinator.async_request_refresh()
 
     def _set_hvac_mode(self, hvac_mode: HVACMode) -> None:
-        """Set operation mode (off, heat, cool, heat_cool)."""
-        # Get the current hold and use it when setting tmode.
-        # However, this is not always respected on a tmode change.
-        current_hold = self.data.tstat["hold"]
+        """Set operation mode (auto, cool, heat, off)."""
 
-        # Set both in the same POST.
-        payload = json.dumps(
-            {"tmode": TEMP_MODE_TO_CODE[hvac_mode], "hold": current_hold}
-        ).encode("utf-8")
-        self.device.post("/tstat", payload)
+        if isinstance(self.device, radiotherm.thermostat.CT80):
+            # Set the tmode directly.
+            self.device.tmode = TEMP_MODE_TO_CODE[hvac_mode]
+            return
+
+        if hvac_mode in (HVACMode.OFF, HVACMode.HEAT_COOL):
+            self.device.tmode = TEMP_MODE_TO_CODE[hvac_mode]
+        # Setting t_cool or t_heat automatically changes tmode.
+        elif hvac_mode == HVACMode.COOL:
+            self.device.t_cool = self.target_temperature
+        elif hvac_mode == HVACMode.HEAT:
+            self.device.t_heat = self.target_temperature
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set Preset mode (Home, Alternate, Away, Holiday)."""
