@@ -23,6 +23,7 @@ from homeassistant.const import (
     UnitOfElectricPotential,
     UnitOfEnergy,
     UnitOfEnergyDistance,
+    UnitOfFrequency,
     UnitOfInformation,
     UnitOfLength,
     UnitOfMass,
@@ -53,6 +54,7 @@ from homeassistant.util.unit_conversion import (
     ElectricPotentialConverter,
     EnergyConverter,
     EnergyDistanceConverter,
+    FrequencyConverter,
     InformationConverter,
     MassConverter,
     MassVolumeConcentrationConverter,
@@ -92,6 +94,7 @@ _ALL_CONVERTERS: dict[type[BaseUnitConverter], list[str | None]] = {
         ElectricCurrentConverter,
         ElectricPotentialConverter,
         EnergyConverter,
+        FrequencyConverter,
         InformationConverter,
         MassConverter,
         ApparentPowerConverter,
@@ -159,6 +162,7 @@ _GET_UNIT_RATIO: dict[type[BaseUnitConverter], tuple[str | None, str | None, flo
         UnitOfEnergyDistance.KM_PER_KILO_WATT_HOUR,
         0.621371,
     ),
+    FrequencyConverter: (UnitOfFrequency.HERTZ, UnitOfFrequency.KILOHERTZ, 1000),
     InformationConverter: (UnitOfInformation.BITS, UnitOfInformation.BYTES, 8),
     MassConverter: (UnitOfMass.STONES, UnitOfMass.KILOGRAMS, 0.157473),
     MassVolumeConcentrationConverter: (
@@ -731,6 +735,11 @@ _CONVERTED_VALUE: dict[
             10,
             UnitOfEnergyDistance.MILES_PER_KILO_WATT_HOUR,
         ),
+    ],
+    FrequencyConverter: [
+        (5000, UnitOfFrequency.HERTZ, 5, UnitOfFrequency.KILOHERTZ),
+        (5, UnitOfFrequency.HERTZ, 5000, UnitOfFrequency.MILLIHERTZ),
+        (5, UnitOfFrequency.GIGAHERTZ, 5000, UnitOfFrequency.MEGAHERTZ),
     ],
     InformationConverter: [
         (8e3, UnitOfInformation.BITS, 8, UnitOfInformation.KILOBITS),
