@@ -11,9 +11,13 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.duco.const import SCAN_INTERVAL
 from homeassistant.components.fan import (
+    ATTR_PERCENTAGE,
     ATTR_PRESET_MODE,
     DOMAIN as FAN_DOMAIN,
+    SERVICE_SET_PERCENTAGE,
     SERVICE_SET_PRESET_MODE,
+    SERVICE_TURN_OFF,
+    SERVICE_TURN_ON,
 )
 from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
@@ -21,6 +25,8 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
+
+_FAN_ENTITY = "fan.living_ventilation"
 
 
 @pytest.mark.usefixtures("init_integration")
@@ -36,29 +42,31 @@ async def test_fan_entity_state(
 
 @pytest.mark.usefixtures("init_integration")
 @pytest.mark.parametrize(
-    ("preset_mode", "expected_duco_state"),
+    ("service", "service_data", "expected_duco_state"),
     [
-        ("high", "MAN3"),
-        ("medium_forced", "CNT2"),
-        ("away", "EMPT"),
+        (SERVICE_SET_PERCENTAGE, {ATTR_PERCENTAGE: 33}, "CNT1"),
+        (SERVICE_SET_PERCENTAGE, {ATTR_PERCENTAGE: 66}, "CNT2"),
+        (SERVICE_SET_PERCENTAGE, {ATTR_PERCENTAGE: 100}, "CNT3"),
+        (SERVICE_SET_PRESET_MODE, {ATTR_PRESET_MODE: "auto"}, "AUTO"),
+        (SERVICE_SET_PRESET_MODE, {ATTR_PRESET_MODE: "away"}, "EMPT"),
+        (SERVICE_TURN_ON, {}, "CNT2"),
+        (SERVICE_TURN_OFF, {}, "AUTO"),
     ],
 )
-async def test_fan_set_preset_mode(
+async def test_fan_set_state(
     hass: HomeAssistant,
     mock_duco_client: AsyncMock,
-    preset_mode: str,
+    service: str,
+    service_data: dict,
     expected_duco_state: str,
 ) -> None:
-    """Test setting a ventilation preset mode maps to the correct Duco state."""
+    """Test that fan service calls map to the correct Duco ventilation state."""
     mock_duco_client.async_set_ventilation_state = AsyncMock()
 
     await hass.services.async_call(
         FAN_DOMAIN,
-        SERVICE_SET_PRESET_MODE,
-        {
-            ATTR_ENTITY_ID: "fan.living_ventilation",
-            ATTR_PRESET_MODE: preset_mode,
-        },
+        service,
+        {ATTR_ENTITY_ID: _FAN_ENTITY, **service_data},
         blocking=True,
     )
 
@@ -72,7 +80,7 @@ async def test_fan_set_preset_mode(
     "exception",
     [DucoConnectionError("Connection refused"), DucoError("Unexpected error")],
 )
-async def test_fan_set_preset_error(
+async def test_fan_set_state_error(
     hass: HomeAssistant,
     mock_duco_client: AsyncMock,
     exception: Exception,
@@ -83,11 +91,8 @@ async def test_fan_set_preset_error(
     with pytest.raises(HomeAssistantError, match="Failed to set ventilation state"):
         await hass.services.async_call(
             FAN_DOMAIN,
-            SERVICE_SET_PRESET_MODE,
-            {
-                ATTR_ENTITY_ID: "fan.living_ventilation",
-                ATTR_PRESET_MODE: "low",
-            },
+            SERVICE_SET_PERCENTAGE,
+            {ATTR_ENTITY_ID: _FAN_ENTITY, ATTR_PERCENTAGE: 100},
             blocking=True,
         )
 
@@ -107,6 +112,6 @@ async def test_coordinator_update_marks_unavailable(
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    state = hass.states.get("fan.living_ventilation")
+    state = hass.states.get(_FAN_ENTITY)
     assert state is not None
     assert state.state == STATE_UNAVAILABLE

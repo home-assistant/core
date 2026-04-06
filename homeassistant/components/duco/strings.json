@@ -26,13 +26,7 @@
           "preset_mode": {
             "state": {
               "auto": "[%key:common::state::auto%]",
-              "away": "Away",
-              "high": "[%key:common::state::high%]",
-              "high_forced": "High (permanent)",
-              "low": "[%key:common::state::low%]",
-              "low_forced": "Low (permanent)",
-              "medium": "[%key:common::state::medium%]",
-              "medium_forced": "Medium (permanent)"
+              "away": "Away"
             }
           }
         }
