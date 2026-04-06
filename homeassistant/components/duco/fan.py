@@ -37,9 +37,6 @@ _STATE_TO_PRESET: dict[VentilationState, str] = {
     VentilationState.AUT3: PRESET_AUTO,
 }
 
-# States in which the fan is considered "off" (away/minimum ventilation).
-_OFF_STATES: frozenset[VentilationState] = frozenset({VentilationState.EMPT})
-
 # Maps any active ventilation state (CNT and timed MAN variants) to its
 # equivalent speed percentage, so the entity correctly reflects externally
 # set timed modes as a speed level.
@@ -97,11 +94,8 @@ class DucoVentilationFanEntity(DucoEntity, FanEntity):
 
     @property
     def is_on(self) -> bool:
-        """Return False when in away mode (EMPT), True otherwise."""
-        node = self._node
-        if node.ventilation is None:
-            return False
-        return node.ventilation.state not in _OFF_STATES
+        """Return True; this device always ventilates and cannot be turned off."""
+        return self._node.ventilation is not None
 
     @property
     def percentage(self) -> int | None:
@@ -121,6 +115,9 @@ class DucoVentilationFanEntity(DucoEntity, FanEntity):
 
     async def async_set_percentage(self, percentage: int) -> None:
         """Set the fan speed as a percentage (maps to low/medium/high)."""
+        if percentage == 0:
+            await self._async_set_state(VentilationState.AUTO)
+            return
         state = percentage_to_ordered_list_item(ORDERED_NAMED_FAN_SPEEDS, percentage)
         await self._async_set_state(state)
 
@@ -137,4 +134,4 @@ class DucoVentilationFanEntity(DucoEntity, FanEntity):
             )
         except DucoError as err:
             raise HomeAssistantError(f"Failed to set ventilation state: {err}") from err
-        await self.coordinator.async_request_refresh()
+        await self.coordinator.async_refresh()

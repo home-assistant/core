@@ -42,6 +42,7 @@ async def test_fan_entity_state(
 @pytest.mark.parametrize(
     ("service", "service_data", "expected_duco_state"),
     [
+        (SERVICE_SET_PERCENTAGE, {ATTR_PERCENTAGE: 0}, "AUTO"),
         (SERVICE_SET_PERCENTAGE, {ATTR_PERCENTAGE: 33}, "CNT1"),
         (SERVICE_SET_PERCENTAGE, {ATTR_PERCENTAGE: 66}, "CNT2"),
         (SERVICE_SET_PERCENTAGE, {ATTR_PERCENTAGE: 100}, "CNT3"),
