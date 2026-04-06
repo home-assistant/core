@@ -614,7 +614,6 @@ class HomeConnectProgramSensor(HomeConnectSensor):
     @callback
     def _handle_operation_state_event(self) -> None:
         """Update status when an event for the entity is received."""
-        self.__dict__.pop("program_running", None)
         if not self.program_running:
             # reset the value when the program is not running, paused or finished
             self._attr_native_value = None
