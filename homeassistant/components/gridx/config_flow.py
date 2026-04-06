@@ -41,6 +41,7 @@ async def _validate_credentials(
     Raises:
         PermissionError: On authentication failure.
         ConnectionError: On network / timeout issues.
+        httpx.HTTPError: On HTTP errors from the underlying client.
     """
     config = _load_oem_config(oem, username, password)
     httpx_client = create_async_httpx_client(
@@ -48,7 +49,11 @@ async def _validate_credentials(
         auto_cleanup=False,
         base_url="https://api.gridx.de",
     )
-    connector = await async_create_connector(config, httpx_client)
+    try:
+        connector = await async_create_connector(config, httpx_client)
+    except BaseException:
+        await httpx_client.aclose()
+        raise
     try:
         data = await connector.retrieve_live_data()
     finally:
@@ -135,7 +140,7 @@ class GridxConfigFlow(ConfigFlow, domain=DOMAIN):
                 await _validate_credentials(
                     self.hass,
                     entry.data[CONF_OEM],
-                    user_input[CONF_USERNAME],
+                    entry.data[CONF_USERNAME],
                     user_input[CONF_PASSWORD],
                 )
             except PermissionError:
@@ -155,17 +160,11 @@ class GridxConfigFlow(ConfigFlow, domain=DOMAIN):
             else:
                 return self.async_update_reload_and_abort(
                     entry,
-                    data_updates={
-                        CONF_USERNAME: user_input[CONF_USERNAME],
-                        CONF_PASSWORD: user_input[CONF_PASSWORD],
-                    },
+                    data_updates={CONF_PASSWORD: user_input[CONF_PASSWORD]},
                 )
 
         schema = vol.Schema(
             {
-                vol.Required(
-                    CONF_USERNAME, default=entry.data.get(CONF_USERNAME, "")
-                ): str,
                 vol.Required(CONF_PASSWORD): str,
             }
         )
@@ -205,10 +204,14 @@ class GridxConfigFlow(ConfigFlow, domain=DOMAIN):
                 LOGGER.exception("Unexpected error during GridX reconfiguration")
                 errors["base"] = "unknown"
             else:
+                new_username = user_input[CONF_USERNAME]
+                if new_username.lower() != entry.unique_id:
+                    await self.async_set_unique_id(new_username.lower())
+                    self._abort_if_unique_id_configured()
                 return self.async_update_reload_and_abort(
                     entry,
                     data_updates={
-                        CONF_USERNAME: user_input[CONF_USERNAME],
+                        CONF_USERNAME: new_username,
                         CONF_PASSWORD: user_input[CONF_PASSWORD],
                         CONF_OEM: user_input[CONF_OEM],
                     },

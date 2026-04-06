@@ -25,6 +25,7 @@ async def setup_integration(
         domain=DOMAIN,
         data={CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD, CONF_OEM: OEM},
         title=USERNAME,
+        unique_id=USERNAME.lower(),
     )
     entry.add_to_hass(hass)
 

@@ -140,7 +140,7 @@ async def test_reauth_success(hass: HomeAssistant) -> None:
 
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {CONF_USERNAME: USERNAME, CONF_PASSWORD: "new-password"},
+            {CONF_PASSWORD: "new-password"},
         )
 
     assert result["type"] is FlowResultType.ABORT
@@ -167,7 +167,7 @@ async def test_reauth_invalid_auth(hass: HomeAssistant) -> None:
         result = await entry.start_reauth_flow(hass)
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {CONF_USERNAME: USERNAME, CONF_PASSWORD: "wrong"},
+            {CONF_PASSWORD: "wrong"},
         )
 
     assert result["type"] is FlowResultType.FORM

@@ -13,12 +13,10 @@
     "step": {
       "reauth_confirm": {
         "data": {
-          "password": "[%key:common::config_flow::data::password%]",
-          "username": "[%key:common::config_flow::data::username%]"
+          "password": "[%key:common::config_flow::data::password%]"
         },
         "data_description": {
-          "password": "Your GridX app password",
-          "username": "Your e-mail address from the GridX app"
+          "password": "Your GridX app password"
         },
         "description": "The GridX integration needs to re-authenticate your account.",
         "title": "Re-authenticate GridX"
