@@ -60,7 +60,6 @@ async def test_temperature_unit(
     """Test temperature unit is Celsius."""
     state = hass.states.get(ENTITY_ID)
     assert state is not None
-    assert state.attributes.get("temperature_unit") is None or True
     # Verify via direct entity access
     entity: MitsubishiComfortClimate = hass.data["entity_components"][
         "climate"
