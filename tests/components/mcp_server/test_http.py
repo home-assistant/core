@@ -45,6 +45,7 @@ _LOGGER = logging.getLogger(__name__)
 
 TEST_ENTITY = "light.kitchen"
 SNAPSHOT_RESOURCE_URI = "homeassistant://assist/context-snapshot"
+TEST_LLM_API_ID = "test-api"
 INITIALIZE_MESSAGE = {
     "jsonrpc": "2.0",
     "id": "request-id-1",
@@ -65,6 +66,21 @@ EXPECTED_PROMPT_SUFFIX = """
   domain: light
   areas: Kitchen
 """
+
+
+class MockLLMAPI(llm.API):
+    """Test LLM API that does not expose any tools."""
+
+    async def async_get_api_instance(
+        self, llm_context: llm.LLMContext
+    ) -> llm.APIInstance:
+        """Return a test API instance."""
+        return llm.APIInstance(
+            api=self,
+            api_prompt="Test prompt",
+            llm_context=llm_context,
+            tools=[],
+        )
 
 
 @pytest.fixture
@@ -550,6 +566,34 @@ async def test_mcp_resource_read_unknown_resource(
     async with mcp_client(hass, mcp_url, hass_supervisor_access_token) as session:
         with pytest.raises(McpError, match="Unknown resource"):
             await session.read_resource(unknown_uri)
+
+
+@pytest.mark.parametrize("llm_hass_api", [TEST_LLM_API_ID])
+async def test_mcp_resources_unavailable_without_live_context_tool(
+    hass: HomeAssistant,
+    setup_integration: None,
+    mcp_url: str,
+    mcp_client: Any,
+    hass_supervisor_access_token: str,
+) -> None:
+    """Test resources are unavailable when the selected API exposes no live context."""
+
+    llm.async_register_api(
+        hass, MockLLMAPI(hass=hass, id=TEST_LLM_API_ID, name="Test API")
+    )
+
+    resource_uri = mcp.types.Resource(
+        uri=SNAPSHOT_RESOURCE_URI,
+        name="assist_context_snapshot",
+    ).uri
+
+    async with mcp_client(hass, mcp_url, hass_supervisor_access_token) as session:
+        result = await session.list_resources()
+
+        assert result.resources == []
+
+        with pytest.raises(McpError, match="Unknown resource"):
+            await session.read_resource(resource_uri)
 
 
 @pytest.mark.parametrize("llm_hass_api", [llm.LLM_API_ASSIST])
