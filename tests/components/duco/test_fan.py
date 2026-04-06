@@ -11,8 +11,10 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.duco.const import SCAN_INTERVAL
 from homeassistant.components.fan import (
+    ATTR_PERCENTAGE,
     ATTR_PRESET_MODE,
     DOMAIN as FAN_DOMAIN,
+    SERVICE_SET_PERCENTAGE,
     SERVICE_SET_PRESET_MODE,
 )
 from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE
@@ -40,10 +42,10 @@ async def test_fan_entity_state(
 @pytest.mark.parametrize(
     ("service", "service_data", "expected_duco_state"),
     [
+        (SERVICE_SET_PERCENTAGE, {ATTR_PERCENTAGE: 33}, "CNT1"),
+        (SERVICE_SET_PERCENTAGE, {ATTR_PERCENTAGE: 66}, "CNT2"),
+        (SERVICE_SET_PERCENTAGE, {ATTR_PERCENTAGE: 100}, "CNT3"),
         (SERVICE_SET_PRESET_MODE, {ATTR_PRESET_MODE: "auto"}, "AUTO"),
-        (SERVICE_SET_PRESET_MODE, {ATTR_PRESET_MODE: "low"}, "CNT1"),
-        (SERVICE_SET_PRESET_MODE, {ATTR_PRESET_MODE: "medium"}, "CNT2"),
-        (SERVICE_SET_PRESET_MODE, {ATTR_PRESET_MODE: "high"}, "CNT3"),
     ],
 )
 async def test_fan_set_state(
@@ -84,8 +86,8 @@ async def test_fan_set_state_error(
     with pytest.raises(HomeAssistantError, match="Failed to set ventilation state"):
         await hass.services.async_call(
             FAN_DOMAIN,
-            SERVICE_SET_PRESET_MODE,
-            {ATTR_ENTITY_ID: _FAN_ENTITY, ATTR_PRESET_MODE: "high"},
+            SERVICE_SET_PERCENTAGE,
+            {ATTR_ENTITY_ID: _FAN_ENTITY, ATTR_PERCENTAGE: 100},
             blocking=True,
         )
 
