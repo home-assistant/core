@@ -1310,7 +1310,7 @@ imeon_inverter_api==0.4.0
 imgw_pib==2.0.2
 
 # homeassistant.components.incomfort
-incomfort-client==0.6.12
+incomfort-client==0.7.0
 
 # homeassistant.components.indevolt
 indevolt-api==1.2.3
@@ -2400,7 +2400,7 @@ pyplaato==0.0.19
 pypoint==3.0.0
 
 # homeassistant.components.portainer
-pyportainer==1.0.36
+pyportainer==1.0.37
 
 # homeassistant.components.probe_plus
 pyprobeplus==1.1.2
@@ -3240,7 +3240,7 @@ viaggiatreno_ha==0.2.4
 victron-ble-ha-parser==0.6.3
 
 # homeassistant.components.victron_gx
-victron-mqtt==2026.4.0
+victron-mqtt==2026.4.1
 
 # homeassistant.components.victron_remote_monitoring
 victron-vrm==0.1.8

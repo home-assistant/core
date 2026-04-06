@@ -714,6 +714,8 @@
           "predicted_path": "Predicted path",
           "room_names": "Room names",
           "show_background": "Show background",
+          "show_rooms": "Show rooms",
+          "show_walls": "Show walls",
           "vacuum_position": "Vacuum position",
           "virtual_walls": "Virtual walls",
           "zones": "Zones"
@@ -734,6 +736,8 @@
           "predicted_path": "Show the predicted path on the map.",
           "room_names": "Show room names on the map.",
           "show_background": "Add a background to the map.",
+          "show_rooms": "Show the rooms on the map.",
+          "show_walls": "Show the walls on the map.",
           "vacuum_position": "Show the vacuum position on the map.",
           "virtual_walls": "Show virtual walls on the map.",
           "zones": "Show zones on the map."
