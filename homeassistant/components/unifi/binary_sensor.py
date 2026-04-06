@@ -69,17 +69,15 @@ def async_device_wan_status_is_on_fn(
 
 
 @dataclass(frozen=True, kw_only=True)
-class UnifiBinarySensorEntityDescription[
-    HandlerT: APIHandler, ApiItemT: ApiItem
-](BinarySensorEntityDescription, UnifiEntityDescription[HandlerT, ApiItemT]):
+class UnifiBinarySensorEntityDescription[HandlerT: APIHandler, ApiItemT: ApiItem](
+    BinarySensorEntityDescription, UnifiEntityDescription[HandlerT, ApiItemT]
+):
     """Class describing UniFi binary sensor entity."""
 
     is_on_fn: Callable[[UnifiHub, ApiItemT], bool | None]
 
 
-def make_wan_status_sensors() -> (
-    tuple[UnifiBinarySensorEntityDescription, ...]
-):
+def make_wan_status_sensors() -> tuple[UnifiBinarySensorEntityDescription, ...]:
     """Create WAN status binary sensors."""
     sensors: list[UnifiBinarySensorEntityDescription] = []
 
@@ -102,9 +100,7 @@ def make_wan_status_sensors() -> (
                 is_on_fn=partial(async_device_wan_status_is_on_fn, wan_name),
                 name_fn=partial(_wan_status_name_fn, wan_name),
                 object_fn=lambda api, obj_id: api.devices[obj_id],
-                supported_fn=partial(
-                    async_device_wan_status_supported_fn, wan_name
-                ),
+                supported_fn=partial(async_device_wan_status_supported_fn, wan_name),
                 unique_id_fn=partial(_wan_status_unique_id_fn, wan_slug),
             )
         )
