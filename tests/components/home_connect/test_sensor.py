@@ -42,6 +42,10 @@ EVENT_PROG_DELAYED_START = {
     EventType.STATUS: {
         EventKey.BSH_COMMON_STATUS_OPERATION_STATE: "BSH.Common.EnumType.OperationState.DelayedStart",
     },
+    EventType.EVENT: {
+        EventKey.BSH_COMMON_OPTION_REMAINING_PROGRAM_TIME: 30,
+        EventKey.BSH_COMMON_OPTION_PROGRAM_PROGRESS: 0,
+    },
 }
 
 
@@ -292,20 +296,20 @@ ENTITY_ID_STATES = {
         "ready",
     ),
     "sensor.dishwasher_program_finish_time": (
-        "unavailable",
+        "2021-01-09T12:00:30+00:00",
         "2021-01-09T12:00:00+00:00",
         "2021-01-09T12:00:00+00:00",
         "2021-01-09T12:00:20+00:00",
         STATE_UNKNOWN,
-        "unavailable",
+        STATE_UNAVAILABLE,
     ),
     "sensor.dishwasher_program_progress": (
-        "unavailable",
+        "0",
         "60",
         "80",
         "99",
         "99",
-        "unavailable",
+        STATE_UNAVAILABLE,
     ),
 }
 
@@ -460,10 +464,10 @@ PROGRAM_SEQUENCE_EDGE_CASE = [
 
 # Expected state at each sequence.
 ENTITY_ID_EDGE_CASE_STATES = [
-    "unavailable",
+    "2021-01-09T12:00:30+00:00",
     "2021-01-09T12:00:01+00:00",
-    "unavailable",
-    "unavailable",
+    STATE_UNAVAILABLE,
+    STATE_UNAVAILABLE,
 ]
 
 
