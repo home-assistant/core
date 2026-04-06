@@ -24,11 +24,9 @@ USER_DATA: Final = "user_data"
 SCAN_INTERVAL_DEFAULT: Final = timedelta(seconds=300)
 SCAN_INTERVAL_MINIMUM: Final = timedelta(seconds=60)
 
-# These are kwargs and named args for API calls
-EVO_DURATION: Final = "duration"  # number of minutes, <24h
-EVO_MODE: Final = "mode"  # EvoSystemMode or EvoZoneMode
-EVO_PERIOD: Final = "period"  # number of days
-EVO_SETPOINT: Final = "setpoint"
+ATTR_DURATION: Final = "duration"  # number of minutes, <24h
+ATTR_PERIOD: Final = "period"  # number of days, 0-99
+ATTR_SETPOINT: Final = "setpoint"
 
 
 @unique

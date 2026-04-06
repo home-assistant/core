@@ -29,14 +29,19 @@ from homeassistant.components.climate import (
     ClimateEntityFeature,
     HVACMode,
 )
-from homeassistant.const import ATTR_TEMPERATURE, PRECISION_TENTHS, UnitOfTemperature
+from homeassistant.const import (
+    ATTR_MODE,
+    ATTR_TEMPERATURE,
+    PRECISION_TENTHS,
+    UnitOfTemperature,
+)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import dt as dt_util
 
-from .const import DOMAIN, EVO_DURATION, EVO_MODE, EVO_PERIOD, EVOHOME_DATA, EvoService
+from .const import ATTR_DURATION, ATTR_PERIOD, DOMAIN, EVOHOME_DATA, EvoService
 from .coordinator import EvoDataUpdateCoordinator
 from .entity import EvoChild, EvoEntity
 
@@ -364,14 +369,14 @@ class EvoController(EvoClimateEntity):
             await self.coordinator.call_client_api(self._evo_device.reset())
             return
 
-        mode = data[EVO_MODE]  # otherwise it is EvoService.SET_SYSTEM_MODE
+        mode = data[ATTR_MODE]  # otherwise it is EvoService.SET_SYSTEM_MODE
 
-        if EVO_PERIOD in data:
+        if ATTR_PERIOD in data:
             until = dt_util.start_of_local_day()
-            until += data[EVO_PERIOD]
+            until += data[ATTR_PERIOD]
 
-        elif EVO_DURATION in data:
-            until = dt_util.now() + data[EVO_DURATION]
+        elif ATTR_DURATION in data:
+            until = dt_util.now() + data[ATTR_DURATION]
 
         else:
             until = None
