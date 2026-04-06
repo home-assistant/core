@@ -90,11 +90,9 @@ AndroidTVConfigEntry = ConfigEntry[AndroidTVRuntimeData]
 
 def get_androidtv_mac(dev_props: dict[str, Any]) -> str | None:
     """Return formatted mac from device properties."""
-# Prefer WiFi MAC over Ethernet MAC.
-# Some devices (e.g. Sonoff NSPanel Pro) expose identical or locally administered
-# eth0 MAC addresses across multiple units, which causes unique_id collisions.
-# WiFi MAC is unique and already supported, so we prioritize it.
-# Changed the line below from (PROP_ETHMAC, PROP_WIFIMAC) to:   
+
+# Prefer WiFi MAC over Ethernet MAC because some devices expose duplicate or
+# locally administered eth0 addresses, which can cause unique_id collisions.
     for prop_mac in (PROP_WIFIMAC, PROP_ETHMAC):
         if if_mac := dev_props.get(prop_mac):
             mac = format_mac(if_mac)
