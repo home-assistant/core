@@ -724,6 +724,7 @@ class AnthropicBaseLLMEntity(CoordinatorEntity[AnthropicCoordinator]):
             "GetLiveContext",
             "code_execution",
             "web_search",
+            "web_fetch",
         ]
 
         system = chat_log.content[0]
