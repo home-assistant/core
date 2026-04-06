@@ -1,6 +1,6 @@
 {
   "ventilation": {
-    "fanSpeed": 0
+    "fanSpeed": 1
   },
   "lamp": {
     "lampBrightness": 2
