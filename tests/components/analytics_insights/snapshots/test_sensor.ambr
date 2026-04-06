@@ -53,7 +53,7 @@
     'state': '76357',
   })
 # ---
-# name: test_all_entities[sensor.homeassistant_analytics_hacs_custom-entry]
+# name: test_all_entities[sensor.homeassistant_analytics_hacs_community-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -69,7 +69,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.homeassistant_analytics_hacs_custom',
+    'entity_id': 'sensor.homeassistant_analytics_hacs_community',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -77,12 +77,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'hacs (custom)',
+    'object_id_base': 'hacs (community)',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'hacs (custom)',
+    'original_name': 'hacs (community)',
     'platform': 'analytics_insights',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -92,15 +92,15 @@
     'unit_of_measurement': 'active installations',
   })
 # ---
-# name: test_all_entities[sensor.homeassistant_analytics_hacs_custom-state]
+# name: test_all_entities[sensor.homeassistant_analytics_hacs_community-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Homeassistant Analytics hacs (custom)',
+      'friendly_name': 'Homeassistant Analytics hacs (community)',
       'state_class': <SensorStateClass.TOTAL: 'total'>,
       'unit_of_measurement': 'active installations',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.homeassistant_analytics_hacs_custom',
+    'entity_id': 'sensor.homeassistant_analytics_hacs_community',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
