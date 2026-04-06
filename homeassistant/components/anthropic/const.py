@@ -18,6 +18,7 @@ CONF_PROMPT_CACHING = "prompt_caching"
 CONF_TEMPERATURE = "temperature"
 CONF_THINKING_BUDGET = "thinking_budget"
 CONF_THINKING_EFFORT = "thinking_effort"
+CONF_TOOL_SEARCH = "tool_search"
 CONF_WEB_SEARCH = "web_search"
 CONF_WEB_SEARCH_USER_LOCATION = "user_location"
 CONF_WEB_SEARCH_MAX_USES = "web_search_max_uses"
@@ -43,6 +44,7 @@ DEFAULT = {
     CONF_TEMPERATURE: 1.0,
     CONF_THINKING_BUDGET: 0,
     CONF_THINKING_EFFORT: "low",
+    CONF_TOOL_SEARCH: False,
     CONF_WEB_SEARCH: False,
     CONF_WEB_SEARCH_USER_LOCATION: False,
     CONF_WEB_SEARCH_MAX_USES: 5,
@@ -91,6 +93,11 @@ PROGRAMMATIC_TOOL_CALLING_UNSUPPORTED_MODELS = [
     "claude-sonnet-4-0",
     "claude-sonnet-4-20250514",
     "claude-3-haiku",
+]
+
+TOOL_SEARCH_UNSUPPORTED_MODELS = [
+    "claude-3",
+    "claude-haiku",
 ]
 
 DEPRECATED_MODELS = [
