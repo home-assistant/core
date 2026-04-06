@@ -12,9 +12,9 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
-from homeassistant.components.evohome import DOMAIN
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
+from homeassistant.util import slugify
 
 from .const import TEST_INSTALLS
 
@@ -26,7 +26,7 @@ def system_button_id(evohome: MagicMock) -> str:
     evo: EvohomeClient = evohome.return_value
     ctl = evo.tcs
 
-    return f"{BUTTON_DOMAIN}.{DOMAIN}_{ctl.id}_reset_system"
+    return f"{BUTTON_DOMAIN}.reset_{slugify(ctl.location.name)}"
 
 
 @pytest.fixture
@@ -36,10 +36,7 @@ def zone_button_id(evohome: MagicMock) -> str:
     evo: EvohomeClient = evohome.return_value
     zone = evo.tcs.zones[0]
 
-    if zone.id == zone.tcs.id:
-        return f"{BUTTON_DOMAIN}.{DOMAIN}_{zone.id}z_reset_override"
-
-    return f"{BUTTON_DOMAIN}.{DOMAIN}_{zone.id}_reset_override"
+    return f"{BUTTON_DOMAIN}.reset_{slugify(zone.name)}"
 
 
 @pytest.mark.parametrize("install", [*TEST_INSTALLS, "botched"])
