@@ -2399,6 +2399,9 @@ pypoint==3.0.0
 # homeassistant.components.portainer
 pyportainer==1.0.33
 
+# homeassistant.components.powerwall
+pypowerwall==0.14.10
+
 # homeassistant.components.probe_plus
 pyprobeplus==1.1.2
 
@@ -3086,9 +3089,6 @@ temperusb==1.6.1
 # homeassistant.components.teslemetry
 # homeassistant.components.tessie
 tesla-fleet-api==1.4.5
-
-# homeassistant.components.powerwall
-pypowerwall==0.14.10
 
 # homeassistant.components.tesla_wall_connector
 tesla-wall-connector==1.1.0

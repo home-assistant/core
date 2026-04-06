@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -22,6 +21,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.typing import StateType
 
 from .const import POWERWALL_COORDINATOR
 from .coordinator import (
@@ -37,7 +37,7 @@ from .entity import PowerWallEntity
 class PowerwallSensorEntityDescription(SensorEntityDescription):
     """Describes a Powerwall sensor entity."""
 
-    value_fn: Callable[[PowerwallData], Any]
+    value_fn: Callable[[PowerwallData], StateType]
 
 
 def _get_meter_power(meter_name: str) -> Callable[[PowerwallData], float | None]:
@@ -290,6 +290,6 @@ class PowerWallSensor(PowerWallEntity, SensorEntity):
         self._attr_unique_id = f"{self.base_unique_id}_{description.key}"
 
     @property
-    def native_value(self) -> Any:
+    def native_value(self) -> StateType:
         """Return the sensor value."""
         return self.entity_description.value_fn(self.data)

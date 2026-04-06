@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 import logging
 from typing import Any
 
@@ -134,7 +135,9 @@ class PowerwallConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def async_step_reauth(self, entry_data: dict[str, Any]) -> ConfigFlowResult:
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
         """Handle reauth flow."""
         self.ip_address = entry_data[CONF_IP_ADDRESS]
         return await self.async_step_reauth_confirm()
