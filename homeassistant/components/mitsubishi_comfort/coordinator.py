@@ -16,7 +16,7 @@ _LOGGER = logging.getLogger(__name__)
 MAX_FAILURES_BEFORE_UNAVAILABLE = 3
 
 
-class MitsubishiComfortCoordinator(DataUpdateCoordinator[None]):
+class MitsubishiComfortCoordinator(DataUpdateCoordinator[IndoorUnit | KumoStation]):
     """Coordinator to poll a single Mitsubishi device."""
 
     def __init__(
@@ -32,6 +32,7 @@ class MitsubishiComfortCoordinator(DataUpdateCoordinator[None]):
             update_interval=DEFAULT_SCAN_INTERVAL,
         )
         self.device = device
+        self.data = device
         self._consecutive_failures = 0
 
     @property
@@ -39,7 +40,8 @@ class MitsubishiComfortCoordinator(DataUpdateCoordinator[None]):
         """Return True if the device is available."""
         return self._consecutive_failures < MAX_FAILURES_BEFORE_UNAVAILABLE
 
-    async def _async_update_data(self) -> None:
+    async def _async_update_data(self) -> IndoorUnit | KumoStation:
+        """Poll the device and return it."""
         success = await self.device.update_status()
         if success:
             self._consecutive_failures = 0
@@ -55,3 +57,4 @@ class MitsubishiComfortCoordinator(DataUpdateCoordinator[None]):
                     f"Device {self.device.name} unavailable after "
                     f"{self._consecutive_failures} failures"
                 )
+        return self.device

@@ -20,19 +20,5 @@
         }
       }
     }
-  },
-  "options": {
-    "step": {
-      "init": {
-        "data": {
-          "connect_timeout": "Connection timeout (seconds)",
-          "response_timeout": "Response timeout (seconds)"
-        },
-        "data_description": {
-          "connect_timeout": "Seconds to wait when establishing a connection to the device.",
-          "response_timeout": "Seconds to wait for a response from the device."
-        }
-      }
-    }
   }
 }

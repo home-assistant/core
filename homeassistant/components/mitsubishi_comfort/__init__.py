@@ -10,7 +10,6 @@ from mitsubishi_comfort import (
     IndoorUnit,
     KumoStation,
     MitsubishiCloudAccount,
-    probe_candidate_ips,
 )
 
 from homeassistant.config_entries import ConfigEntry
@@ -20,7 +19,7 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.json import save_json
 from homeassistant.util.json import load_json
 
-from .const import CONF_CONNECT_TIMEOUT, CONF_RESPONSE_TIMEOUT, DOMAIN, PLATFORMS
+from .const import DEFAULT_CONNECT_TIMEOUT, DEFAULT_RESPONSE_TIMEOUT, PLATFORMS
 from .coordinator import MitsubishiComfortCoordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -173,20 +172,10 @@ async def async_setup_entry(
                 ", ".join(devices[s].label for s in updated),
             )
 
-        missing_addr = {s: d for s, d in devices.items() if not d.address}
-        if missing_addr:
-            dhcp_ips = hass.data.get(f"{DOMAIN}_dhcp_discovered", {})
-            if dhcp_ips:
-                matched = await probe_candidate_ips(
-                    missing_addr, list(dhcp_ips.values()), timeout=3.0
-                )
-                for serial, ip in matched.items():
-                    devices[serial].address = ip
-
         await hass.async_add_executor_job(_save_credentials, hass, devices)
 
-        connect_timeout = float(entry.options.get(CONF_CONNECT_TIMEOUT, 1.2))
-        response_timeout = float(entry.options.get(CONF_RESPONSE_TIMEOUT, 8.0))
+        connect_timeout = DEFAULT_CONNECT_TIMEOUT
+        response_timeout = DEFAULT_RESPONSE_TIMEOUT
 
         coordinators: dict[str, MitsubishiComfortCoordinator] = {}
         incomplete_serials: list[str] = []

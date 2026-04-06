@@ -42,3 +42,91 @@ rules:
     status: done
   unique-config-entry:
     status: done
+
+  # Silver
+  config-entry-unloading:
+    status: done
+  log-when-unavailable:
+    status: done
+    comment: Coordinator logs warnings on consecutive failures.
+  entity-unavailable:
+    status: done
+  action-exceptions:
+    status: exempt
+    comment: No service actions registered.
+  reauthentication-flow:
+    status: todo
+  parallel-updates:
+    status: todo
+  test-coverage:
+    status: todo
+  integration-owner:
+    status: done
+  docs-installation-parameters:
+    status: exempt
+    comment: Companion PR pending.
+  docs-configuration-parameters:
+    status: exempt
+    comment: This integration has no options flow.
+
+  # Gold
+  entity-translations:
+    status: todo
+  entity-device-class:
+    status: todo
+  devices:
+    status: done
+  entity-category:
+    status: exempt
+    comment: Single climate entity per device, no diagnostic entities yet.
+  entity-disabled-by-default:
+    status: exempt
+    comment: Single climate entity per device, should be enabled.
+  discovery:
+    status: todo
+  stale-devices:
+    status: todo
+  diagnostics:
+    status: todo
+  exception-translations:
+    status: todo
+  icon-translations:
+    status: todo
+  reconfiguration-flow:
+    status: todo
+  dynamic-devices:
+    status: todo
+  discovery-update-info:
+    status: todo
+  repair-issues:
+    status: todo
+  docs-use-cases:
+    status: exempt
+    comment: Companion PR pending.
+  docs-supported-devices:
+    status: exempt
+    comment: Companion PR pending.
+  docs-supported-functions:
+    status: exempt
+    comment: Companion PR pending.
+  docs-troubleshooting:
+    status: exempt
+    comment: Companion PR pending.
+  docs-data-update:
+    status: exempt
+    comment: Companion PR pending.
+  docs-known-limitations:
+    status: exempt
+    comment: Companion PR pending.
+  docs-examples:
+    status: exempt
+    comment: Companion PR pending.
+
+  # Platinum
+  async-dependency:
+    status: done
+  inject-websession:
+    status: exempt
+    comment: This integration does not use web sessions.
+  strict-typing:
+    status: todo

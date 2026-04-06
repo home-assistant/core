@@ -72,7 +72,7 @@ def mock_config_entry() -> MockConfigEntry:
             CONF_USERNAME: MOCK_USERNAME,
             CONF_PASSWORD: MOCK_PASSWORD,
         },
-        unique_id=DOMAIN,
+        unique_id=MOCK_USERNAME,
     )
 
 

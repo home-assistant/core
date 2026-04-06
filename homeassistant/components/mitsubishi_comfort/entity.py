@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from mitsubishi_comfort import IndoorUnit, KumoStation
+
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -17,7 +19,11 @@ class MitsubishiComfortEntity(CoordinatorEntity[MitsubishiComfortCoordinator]):
     def __init__(self, coordinator: MitsubishiComfortCoordinator) -> None:
         """Initialize."""
         super().__init__(coordinator)
-        self._device = coordinator.device
+
+    @property
+    def _device(self) -> IndoorUnit | KumoStation:
+        """Return the underlying device from coordinator data."""
+        return self.coordinator.data
 
     @property
     def available(self) -> bool:

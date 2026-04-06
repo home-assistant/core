@@ -197,57 +197,6 @@ async def test_unload_entry(
     mock_device.close.assert_awaited_once()
 
 
-async def test_setup_entry_with_dhcp_discovery(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_device_info: DeviceInfo,
-    mock_indoor_unit: MagicMock,
-) -> None:
-    """Test setup with DHCP-discovered IPs for devices missing addresses."""
-    mock_config_entry.add_to_hass(hass)
-
-    mock_device_info.address = ""
-    hass.data[f"{DOMAIN}_dhcp_discovered"] = {"AA:BB:CC:DD:EE:FF": "192.168.1.200"}
-
-    mock_account = AsyncMock()
-    mock_account.login = AsyncMock(return_value=True)
-    mock_account.discover_devices = AsyncMock(
-        return_value={"SERIAL001": mock_device_info}
-    )
-
-    with (
-        patch(
-            "homeassistant.components.mitsubishi_comfort.MitsubishiCloudAccount",
-            return_value=mock_account,
-        ),
-        patch(
-            "homeassistant.components.mitsubishi_comfort.load_json",
-            return_value={},
-        ),
-        patch(
-            "homeassistant.components.mitsubishi_comfort.save_json",
-        ),
-        patch(
-            "homeassistant.components.mitsubishi_comfort.probe_candidate_ips",
-            return_value={"SERIAL001": "192.168.1.200"},
-        ) as mock_probe,
-        patch(
-            "homeassistant.components.mitsubishi_comfort.IndoorUnit",
-            return_value=mock_indoor_unit,
-        ),
-        patch(
-            "homeassistant.components.mitsubishi_comfort.KumoStation",
-            return_value=mock_indoor_unit,
-        ),
-    ):
-        await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
-
-    assert mock_config_entry.state is ConfigEntryState.LOADED
-    mock_probe.assert_awaited_once()
-    assert mock_device_info.address == "192.168.1.200"
-
-
 async def test_load_cached_credentials_returns_cached(
     hass: HomeAssistant,
 ) -> None:
@@ -574,64 +523,6 @@ async def test_merge_cached_ignores_unknown_serials(
     assert updated == []
 
 
-async def test_setup_entry_with_options(
-    hass: HomeAssistant,
-    mock_device_info: DeviceInfo,
-    mock_indoor_unit: MagicMock,
-) -> None:
-    """Test setup uses connect/response timeout from options."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={
-            "username": MOCK_USERNAME,
-            "password": MOCK_PASSWORD,
-        },
-        options={
-            "connect_timeout": 2.5,
-            "response_timeout": 10.0,
-        },
-        unique_id=DOMAIN,
-    )
-    entry.add_to_hass(hass)
-
-    mock_account = AsyncMock()
-    mock_account.login = AsyncMock(return_value=True)
-    mock_account.discover_devices = AsyncMock(
-        return_value={"SERIAL001": mock_device_info}
-    )
-
-    with (
-        patch(
-            "homeassistant.components.mitsubishi_comfort.MitsubishiCloudAccount",
-            return_value=mock_account,
-        ),
-        patch(
-            "homeassistant.components.mitsubishi_comfort.load_json",
-            return_value={},
-        ),
-        patch(
-            "homeassistant.components.mitsubishi_comfort.save_json",
-        ),
-        patch(
-            "homeassistant.components.mitsubishi_comfort.IndoorUnit",
-            return_value=mock_indoor_unit,
-        ) as mock_indoor_cls,
-        patch(
-            "homeassistant.components.mitsubishi_comfort.KumoStation",
-            return_value=mock_indoor_unit,
-        ),
-    ):
-        await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
-
-    assert entry.state is ConfigEntryState.LOADED
-    # Verify the IndoorUnit constructor was called with our custom timeouts
-    mock_indoor_cls.assert_called_once()
-    call_kwargs = mock_indoor_cls.call_args
-    assert call_kwargs.kwargs.get("connect_timeout") == 2.5
-    assert call_kwargs.kwargs.get("response_timeout") == 10.0
-
-
 async def test_setup_entry_mixed_complete_incomplete(
     hass: HomeAssistant,
     mock_indoor_unit: MagicMock,
@@ -647,7 +538,7 @@ async def test_setup_entry_mixed_complete_incomplete(
             "username": MOCK_USERNAME,
             "password": MOCK_PASSWORD,
         },
-        unique_id=DOMAIN,
+        unique_id=MOCK_USERNAME,
     )
     entry.add_to_hass(hass)
 
@@ -723,7 +614,7 @@ async def test_retry_incomplete_devices_success(
     entry = MockConfigEntry(
         domain=DOMAIN,
         data={"username": MOCK_USERNAME, "password": MOCK_PASSWORD},
-        unique_id=DOMAIN,
+        unique_id=MOCK_USERNAME,
     )
     entry.add_to_hass(hass)
     # Simulate loaded state with runtime_data
