@@ -14,6 +14,8 @@ from homeassistant.data_entry_flow import FlowResultType
 
 from .conftest import TEST_MAC, USER_INPUT
 
+from tests.common import MockConfigEntry
+
 
 async def test_user_flow_success(
     hass: HomeAssistant,
@@ -77,14 +79,10 @@ async def test_user_flow_error(
 async def test_user_flow_duplicate(
     hass: HomeAssistant,
     mock_duco_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test that a duplicate config entry is aborted."""
-    # First config entry
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}
-    )
-    await hass.config_entries.flow.async_configure(result["flow_id"], USER_INPUT)
-    await hass.async_block_till_done()
+    mock_config_entry.add_to_hass(hass)
 
     # Second attempt for the same device
     result = await hass.config_entries.flow.async_init(

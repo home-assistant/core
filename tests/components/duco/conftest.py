@@ -104,9 +104,9 @@ def mock_duco_client(
         ),
     ):
         client = mock_class.return_value
-        client.async_get_board_info = AsyncMock(return_value=mock_board_info)
-        client.async_get_lan_info = AsyncMock(return_value=mock_lan_info)
-        client.async_get_nodes = AsyncMock(return_value=mock_nodes)
+        client.async_get_board_info.return_value = mock_board_info
+        client.async_get_lan_info.return_value = mock_lan_info
+        client.async_get_nodes.return_value = mock_nodes
         yield client
 
 
