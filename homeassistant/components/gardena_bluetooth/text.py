@@ -86,4 +86,3 @@ class GardenaBluetoothTextEntity(GardenaBluetoothDescriptorEntity, TextEntity):
         """Change the text."""
         char = self.entity_description.char
         await self.coordinator.write(char, value)
-        self.async_write_ha_state()
