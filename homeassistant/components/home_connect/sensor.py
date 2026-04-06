@@ -6,7 +6,6 @@ import logging
 from typing import cast
 
 from aiohomeconnect.model import EventKey, StatusKey
-from propcache.api import cached_property
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -621,7 +620,7 @@ class HomeConnectProgramSensor(HomeConnectSensor):
             self._attr_native_value = None
         self.async_write_ha_state()
 
-    @cached_property
+    @property
     def program_running(self) -> bool:
         """Return whether a program is running, paused or finished."""
         status = self.appliance.status.get(StatusKey.BSH_COMMON_OPERATION_STATE)
