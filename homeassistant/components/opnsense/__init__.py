@@ -2,14 +2,17 @@
 
 import logging
 
-from aiohttp import (
-    ClientConnectorDNSError,
-    ClientError,
-    ClientResponseError,
-    ClientSSLError,
+from aiopnsense import (
+    OPNsenseBelowMinFirmware,
+    OPNsenseClient,
+    OPNsenseConnectionError,
+    OPNsenseInvalidAuth,
+    OPNsenseInvalidURL,
+    OPNsensePrivilegeMissing,
+    OPNsenseSSLError,
+    OPNsenseTimeoutError,
+    OPNsenseUnknownFirmware,
 )
-from aiopnsense import OPNsenseClient
-import awesomeversion
 import voluptuous as vol
 
 from homeassistant.const import CONF_API_KEY, CONF_URL, CONF_VERIFY_SSL, Platform
@@ -64,57 +67,50 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         api_secret,
         session,
         opts={"verify_ssl": verify_ssl},
-        throw_errors=True,
     )
     try:
-        fw_ver = client.get_host_firmware_version()
-        _LOGGER.debug("OPNsense Firmware %s", fw_ver)
-        if awesomeversion.AwesomeVersion(fw_ver) < awesomeversion.AwesomeVersion(
-            "25.7"
-        ):
-            _LOGGER.error("OPNsense Integration requires OPNsense Firmware >= 25.7")
-            return False
-    except (
-        awesomeversion.exceptions.AwesomeVersionCompareException,
-        TypeError,
-        ValueError,
-    ):
+        await client.validate()
+    except OPNsenseUnknownFirmware:
         _LOGGER.exception("Error checking the OPNsense firmware version at %s", url)
         return False
-    except ClientConnectorDNSError:
+    except OPNsenseBelowMinFirmware:
         _LOGGER.exception(
-            "DNS failure while connecting to OPNsense API endpoint at %s", url
+            "OPNsense Firmware is below the minimum supported version at %s", url
         )
         return False
-    except ClientSSLError:
+    except OPNsenseInvalidURL:
+        _LOGGER.exception(
+            "Invalid URL while connecting to OPNsense API endpoint at %s", url
+        )
+        return False
+    except OPNsenseTimeoutError:
+        _LOGGER.exception(
+            "Timeout while connecting to OPNsense API endpoint at %s", url
+        )
+        return False
+    except OPNsenseSSLError:
         _LOGGER.exception(
             "Unable to verify SSL while connecting to OPNsense API endpoint at %s", url
         )
         return False
-    except ClientResponseError as e:
-        if e.status == 401:
-            _LOGGER.exception(
-                "Authentication failure while connecting to OPNsense API endpoint at %s",
-                url,
-            )
-        elif e.status == 403:
-            _LOGGER.exception(
-                "Invalid Permissions while connecting to OPNsense API endpoint at %s",
-                url,
-            )
-        else:
-            _LOGGER.exception(
-                "Connection failure while connecting to OPNsense API endpoint at %s",
-                url,
-            )
-        return False
-    except ClientError:
+    except OPNsenseInvalidAuth:
         _LOGGER.exception(
-            "Client failure while connecting to OPNsense API endpoint at %s", url
+            "Authentication failure while connecting to OPNsense API endpoint at %s",
+            url,
         )
         return False
-
-    client.toggle_throwing_errors(False)
+    except OPNsensePrivilegeMissing:
+        _LOGGER.exception(
+            "Invalid Permissions while connecting to OPNsense API endpoint at %s",
+            url,
+        )
+        return False
+    except OPNsenseConnectionError:
+        _LOGGER.exception(
+            "Connection failure while connecting to OPNsense API endpoint at %s",
+            url,
+        )
+        return False
 
     if tracker_interfaces:
         interfaces_resp = await client.get_interfaces()
