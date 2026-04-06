@@ -76,7 +76,8 @@ class ECCameraEntity(CoordinatorEntity[ECDataUpdateCoordinator[ECRadar]], Camera
         }
         return self.radar_object.image
 
-    async def async_set_radar_type(self, radar_type: str):
+    async def async_set_radar_type(self, radar_type: str) -> None:
         """Set the type of radar to retrieve."""
+        self.radar_object.clear_cache()
         self.radar_object.precip_type = radar_type.lower()
         await self.radar_object.update()

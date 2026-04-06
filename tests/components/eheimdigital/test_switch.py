@@ -56,6 +56,10 @@ async def test_setup(
     [
         ("classic_vario_mock", "switch.mock_classicvario", "filterActive"),
         ("filter_mock", "switch.mock_filter", "active"),
+        ("reeflex_mock", "switch.mock_reeflex", "isActive"),
+        ("reeflex_mock", "switch.mock_reeflex_pause", "pause"),
+        ("reeflex_mock", "switch.mock_reeflex_booster", "booster"),
+        ("reeflex_mock", "switch.mock_reeflex_expert_mode", "expert"),
     ],
 )
 async def test_turn_on_off(
@@ -126,6 +130,67 @@ async def test_turn_on_off(
                     "switch.mock_filter",
                     "filter_data",
                     "filterActive",
+                    0,
+                    "off",
+                ),
+            ],
+        ),
+        (
+            "reeflex_mock",
+            [
+                (
+                    "switch.mock_reeflex",
+                    "reeflex_data",
+                    "isActive",
+                    1,
+                    "on",
+                ),
+                (
+                    "switch.mock_reeflex",
+                    "reeflex_data",
+                    "isActive",
+                    0,
+                    "off",
+                ),
+                (
+                    "switch.mock_reeflex_pause",
+                    "reeflex_data",
+                    "pause",
+                    1,
+                    "on",
+                ),
+                (
+                    "switch.mock_reeflex_pause",
+                    "reeflex_data",
+                    "pause",
+                    0,
+                    "off",
+                ),
+                (
+                    "switch.mock_reeflex_booster",
+                    "reeflex_data",
+                    "booster",
+                    1,
+                    "on",
+                ),
+                (
+                    "switch.mock_reeflex_booster",
+                    "reeflex_data",
+                    "booster",
+                    0,
+                    "off",
+                ),
+                (
+                    "switch.mock_reeflex_expert_mode",
+                    "reeflex_data",
+                    "expert",
+                    1,
+                    "on",
+                ),
+                (
+                    "switch.mock_reeflex_expert_mode",
+                    "reeflex_data",
+                    "expert",
                     0,
                     "off",
                 ),

@@ -41,17 +41,20 @@ async def async_setup_entry(
     coordinator_devices = config_entry.runtime_data.coordinator_devices
     dali_line_broadcasts = config_entry.runtime_data.dali_line_broadcasts
 
+    assert config_entry.unique_id is not None
+
     entities: list[LightEntity] = [
         LunatoneLineBroadcastLight(
-            coordinator_info, coordinator_devices, dali_line_broadcast
+            coordinator_info,
+            coordinator_devices,
+            dali_line_broadcast,
+            config_entry.unique_id,
         )
         for dali_line_broadcast in dali_line_broadcasts
     ]
     entities.extend(
         [
-            LunatoneLight(
-                coordinator_devices, device_id, coordinator_info.data.device.serial
-            )
+            LunatoneLight(coordinator_devices, device_id, config_entry.unique_id)
             for device_id in coordinator_devices.data
         ]
     )
@@ -76,14 +79,14 @@ class LunatoneLight(
         self,
         coordinator: LunatoneDevicesDataUpdateCoordinator,
         device_id: int,
-        interface_serial_number: int,
+        config_entry_unique_id: str,
     ) -> None:
         """Initialize a Lunatone light."""
         super().__init__(coordinator)
         self._device_id = device_id
-        self._interface_serial_number = interface_serial_number
-        self._device = self.coordinator.data[self._device_id]
-        self._attr_unique_id = f"{interface_serial_number}-device{device_id}"
+        self._config_entry_unique_id = config_entry_unique_id
+        self._device = self.coordinator.data[device_id]
+        self._attr_unique_id = f"{config_entry_unique_id}-device{device_id}"
 
     @property
     def device_info(self) -> DeviceInfo:
@@ -94,7 +97,7 @@ class LunatoneLight(
             name=self._device.name,
             via_device=(
                 DOMAIN,
-                f"{self._interface_serial_number}-line{self._device.data.line}",
+                f"{self._config_entry_unique_id}-line{self._device.data.line}",
             ),
         )
 
@@ -109,14 +112,18 @@ class LunatoneLight(
         return self._device is not None and self._device.is_on
 
     @property
-    def brightness(self) -> int:
+    def brightness(self) -> int | None:
         """Return the brightness of this light between 0..255."""
-        return value_to_brightness(self.BRIGHTNESS_SCALE, self._device.brightness)
+        return (
+            value_to_brightness(self.BRIGHTNESS_SCALE, self._device.brightness)
+            if self._device.brightness is not None
+            else None
+        )
 
     @property
     def color_mode(self) -> ColorMode:
         """Return the color mode of the light."""
-        if self._device is not None and self._device.is_dimmable:
+        if self._device is not None and self._device.brightness is not None:
             return ColorMode.BRIGHTNESS
         return ColorMode.ONOFF
 
@@ -149,7 +156,8 @@ class LunatoneLight(
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Instruct the light to turn off."""
         if brightness_supported(self.supported_color_modes):
-            self._last_brightness = self.brightness
+            if self.brightness:
+                self._last_brightness = self.brightness
             await self._device.fade_to_brightness(0)
         else:
             await self._device.switch_off()
@@ -174,6 +182,7 @@ class LunatoneLineBroadcastLight(
         coordinator_info: LunatoneInfoDataUpdateCoordinator,
         coordinator_devices: LunatoneDevicesDataUpdateCoordinator,
         broadcast: DALIBroadcast,
+        config_entry_unique_id: str,
     ) -> None:
         """Initialize a Lunatone line broadcast light."""
         super().__init__(coordinator_info)
@@ -182,7 +191,7 @@ class LunatoneLineBroadcastLight(
 
         line = broadcast.line
 
-        self._attr_unique_id = f"{coordinator_info.data.device.serial}-line{line}"
+        self._attr_unique_id = f"{config_entry_unique_id}-line{line}"
 
         line_device = self.coordinator.data.lines[str(line)].device
         extra_info: dict = {}
@@ -197,7 +206,7 @@ class LunatoneLineBroadcastLight(
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self.unique_id)},
             name=f"DALI Line {line}",
-            via_device=(DOMAIN, str(coordinator_info.data.device.serial)),
+            via_device=(DOMAIN, config_entry_unique_id),
             **extra_info,
         )
 

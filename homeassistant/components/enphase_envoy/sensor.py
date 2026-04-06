@@ -405,8 +405,13 @@ CT_SENSORS = (
         )
         for cttype, key in (
             (CtType.NET_CONSUMPTION, "lifetime_net_consumption"),
-            # Production CT energy_delivered is not used
+            (CtType.PRODUCTION, "production_ct_energy_delivered"),
             (CtType.STORAGE, "lifetime_battery_discharged"),
+            (CtType.TOTAL_CONSUMPTION, "total_consumption_ct_energy_delivered"),
+            (CtType.BACKFEED, "backfeed_ct_energy_delivered"),
+            (CtType.LOAD, "load_ct_energy_delivered"),
+            (CtType.EVSE, "evse_ct_energy_delivered"),
+            (CtType.PV3P, "pv3p_ct_energy_delivered"),
         )
     ]
     + [
@@ -423,8 +428,13 @@ CT_SENSORS = (
         )
         for cttype, key in (
             (CtType.NET_CONSUMPTION, "lifetime_net_production"),
-            # Production CT energy_received is not used
+            (CtType.PRODUCTION, "production_ct_energy_received"),
             (CtType.STORAGE, "lifetime_battery_charged"),
+            (CtType.TOTAL_CONSUMPTION, "total_consumption_ct_energy_received"),
+            (CtType.BACKFEED, "backfeed_ct_energy_received"),
+            (CtType.LOAD, "load_ct_energy_received"),
+            (CtType.EVSE, "evse_ct_energy_received"),
+            (CtType.PV3P, "pv3p_ct_energy_received"),
         )
     ]
     + [
@@ -441,8 +451,13 @@ CT_SENSORS = (
         )
         for cttype, key in (
             (CtType.NET_CONSUMPTION, "net_consumption"),
-            # Production CT active_power is not used
+            (CtType.PRODUCTION, "production_ct_power"),
             (CtType.STORAGE, "battery_discharge"),
+            (CtType.TOTAL_CONSUMPTION, "total_consumption_ct_power"),
+            (CtType.BACKFEED, "backfeed_ct_power"),
+            (CtType.LOAD, "load_ct_power"),
+            (CtType.EVSE, "evse_ct_power"),
+            (CtType.PV3P, "pv3p_ct_power"),
         )
     ]
     + [
@@ -461,6 +476,11 @@ CT_SENSORS = (
             (CtType.NET_CONSUMPTION, "frequency", "net_ct_frequency"),
             (CtType.PRODUCTION, "production_ct_frequency", ""),
             (CtType.STORAGE, "storage_ct_frequency", ""),
+            (CtType.TOTAL_CONSUMPTION, "total_consumption_ct_frequency", ""),
+            (CtType.BACKFEED, "backfeed_ct_frequency", ""),
+            (CtType.LOAD, "load_ct_frequency", ""),
+            (CtType.EVSE, "evse_ct_frequency", ""),
+            (CtType.PV3P, "pv3p_ct_frequency", ""),
         )
     ]
     + [
@@ -480,6 +500,11 @@ CT_SENSORS = (
             (CtType.NET_CONSUMPTION, "voltage", "net_ct_voltage"),
             (CtType.PRODUCTION, "production_ct_voltage", ""),
             (CtType.STORAGE, "storage_voltage", "storage_ct_voltage"),
+            (CtType.TOTAL_CONSUMPTION, "total_consumption_ct_voltage", ""),
+            (CtType.BACKFEED, "backfeed_ct_voltage", ""),
+            (CtType.LOAD, "load_ct_voltage", ""),
+            (CtType.EVSE, "evse_ct_voltage", ""),
+            (CtType.PV3P, "pv3p_ct_voltage", ""),
         )
     ]
     + [
@@ -499,6 +524,11 @@ CT_SENSORS = (
             (CtType.NET_CONSUMPTION, "net_ct_current"),
             (CtType.PRODUCTION, "production_ct_current"),
             (CtType.STORAGE, "storage_ct_current"),
+            (CtType.TOTAL_CONSUMPTION, "total_consumption_ct_current"),
+            (CtType.BACKFEED, "backfeed_ct_current"),
+            (CtType.LOAD, "load_ct_current"),
+            (CtType.EVSE, "evse_ct_current"),
+            (CtType.PV3P, "pv3p_ct_current"),
         )
     ]
     + [
@@ -516,6 +546,11 @@ CT_SENSORS = (
             (CtType.NET_CONSUMPTION, "net_ct_powerfactor"),
             (CtType.PRODUCTION, "production_ct_powerfactor"),
             (CtType.STORAGE, "storage_ct_powerfactor"),
+            (CtType.TOTAL_CONSUMPTION, "total_consumption_ct_powerfactor"),
+            (CtType.BACKFEED, "backfeed_ct_powerfactor"),
+            (CtType.LOAD, "load_ct_powerfactor"),
+            (CtType.EVSE, "evse_ct_powerfactor"),
+            (CtType.PV3P, "pv3p_ct_powerfactor"),
         )
     ]
     + [
@@ -537,6 +572,11 @@ CT_SENSORS = (
             ),
             (CtType.PRODUCTION, "production_ct_metering_status", ""),
             (CtType.STORAGE, "storage_ct_metering_status", ""),
+            (CtType.TOTAL_CONSUMPTION, "total_consumption_ct_metering_status", ""),
+            (CtType.BACKFEED, "backfeed_ct_metering_status", ""),
+            (CtType.LOAD, "load_ct_metering_status", ""),
+            (CtType.EVSE, "evse_ct_metering_status", ""),
+            (CtType.PV3P, "pv3p_ct_metering_status", ""),
         )
     ]
     + [
@@ -557,6 +597,11 @@ CT_SENSORS = (
             ),
             (CtType.PRODUCTION, "production_ct_status_flags", ""),
             (CtType.STORAGE, "storage_ct_status_flags", ""),
+            (CtType.TOTAL_CONSUMPTION, "total_consumption_ct_status_flags", ""),
+            (CtType.BACKFEED, "backfeed_ct_status_flags", ""),
+            (CtType.LOAD, "load_ct_status_flags", ""),
+            (CtType.EVSE, "evse_ct_status_flags", ""),
+            (CtType.PV3P, "pv3p_ct_status_flags", ""),
         )
     ]
 )

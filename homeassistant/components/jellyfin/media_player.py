@@ -6,7 +6,9 @@ import logging
 from typing import Any
 
 from homeassistant.components.media_player import (
+    ATTR_MEDIA_ENQUEUE,
     BrowseMedia,
+    MediaPlayerEnqueue,
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
     MediaPlayerState,
@@ -150,7 +152,9 @@ class JellyfinMediaPlayer(JellyfinClientEntity, MediaPlayerEntity):
 
         self._attr_state = state
         self._attr_is_volume_muted = volume_muted
-        self._attr_volume_level = volume_level
+        # Only update volume_level if the API provides it, otherwise preserve current value
+        if volume_level is not None:
+            self._attr_volume_level = volume_level
         self._attr_media_content_type = media_content_type
         self._attr_media_content_id = media_content_id
         self._attr_media_title = media_title
@@ -190,7 +194,9 @@ class JellyfinMediaPlayer(JellyfinClientEntity, MediaPlayerEntity):
         )
         features = MediaPlayerEntityFeature(0)
 
-        if "PlayMediaSource" in commands:
+        if "PlayMediaSource" in commands or self.capabilities.get(
+            "SupportsMediaControl", False
+        ):
             features |= (
                 MediaPlayerEntityFeature.BROWSE_MEDIA
                 | MediaPlayerEntityFeature.PLAY_MEDIA
@@ -199,12 +205,13 @@ class JellyfinMediaPlayer(JellyfinClientEntity, MediaPlayerEntity):
                 | MediaPlayerEntityFeature.STOP
                 | MediaPlayerEntityFeature.SEEK
                 | MediaPlayerEntityFeature.SEARCH_MEDIA
+                | MediaPlayerEntityFeature.MEDIA_ENQUEUE
             )
 
-            if "Mute" in commands:
+            if "Mute" in commands and "Unmute" in commands:
                 features |= MediaPlayerEntityFeature.VOLUME_MUTE
 
-            if "VolumeSet" in commands:
+            if "VolumeSet" in commands or "SetVolume" in commands:
                 features |= MediaPlayerEntityFeature.VOLUME_SET
 
         return features
@@ -219,11 +226,13 @@ class JellyfinMediaPlayer(JellyfinClientEntity, MediaPlayerEntity):
         """Send pause command."""
         self.coordinator.api_client.jellyfin.remote_pause(self.session_id)
         self._attr_state = MediaPlayerState.PAUSED
+        self.schedule_update_ha_state()
 
     def media_play(self) -> None:
         """Send play command."""
         self.coordinator.api_client.jellyfin.remote_unpause(self.session_id)
         self._attr_state = MediaPlayerState.PLAYING
+        self.schedule_update_ha_state()
 
     def media_play_pause(self) -> None:
         """Send the PlayPause command to the session."""
@@ -233,13 +242,26 @@ class JellyfinMediaPlayer(JellyfinClientEntity, MediaPlayerEntity):
         """Send stop command."""
         self.coordinator.api_client.jellyfin.remote_stop(self.session_id)
         self._attr_state = MediaPlayerState.IDLE
+        self.schedule_update_ha_state()
 
     def play_media(
         self, media_type: MediaType | str, media_id: str, **kwargs: Any
     ) -> None:
         """Play a piece of media."""
+        command = "PlayNow"
+        enqueue = kwargs.get(ATTR_MEDIA_ENQUEUE)
+        if enqueue == MediaPlayerEnqueue.NEXT:
+            command = "PlayNext"
+        elif enqueue == MediaPlayerEnqueue.ADD:
+            command = "PlayLast"
         self.coordinator.api_client.jellyfin.remote_play_media(
-            self.session_id, [media_id]
+            self.session_id, [media_id], command
+        )
+
+    def play_media_shuffle(self, media_content_id: str) -> None:
+        """Play a piece of media on shuffle."""
+        self.coordinator.api_client.jellyfin.remote_play_media(
+            self.session_id, [media_content_id], "PlayShuffle"
         )
 
     def set_volume_level(self, volume: float) -> None:
@@ -247,6 +269,8 @@ class JellyfinMediaPlayer(JellyfinClientEntity, MediaPlayerEntity):
         self.coordinator.api_client.jellyfin.remote_set_volume(
             self.session_id, int(volume * 100)
         )
+        self._attr_volume_level = volume
+        self.schedule_update_ha_state()
 
     def mute_volume(self, mute: bool) -> None:
         """Mute the volume."""
@@ -254,6 +278,8 @@ class JellyfinMediaPlayer(JellyfinClientEntity, MediaPlayerEntity):
             self.coordinator.api_client.jellyfin.remote_mute(self.session_id)
         else:
             self.coordinator.api_client.jellyfin.remote_unmute(self.session_id)
+        self._attr_is_volume_muted = mute
+        self.schedule_update_ha_state()
 
     async def async_browse_media(
         self,
@@ -274,7 +300,6 @@ class JellyfinMediaPlayer(JellyfinClientEntity, MediaPlayerEntity):
             self.hass,
             self.coordinator.api_client,
             self.coordinator.user_id,
-            media_content_type,
             media_content_id,
         )
 

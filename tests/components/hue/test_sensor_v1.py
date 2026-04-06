@@ -337,10 +337,10 @@ async def test_sensors(
     assert presence_sensor_1.state == "on"
     assert light_level_sensor_1 is not None
     assert light_level_sensor_1.state == "1.0"
-    assert light_level_sensor_1.name == "Living room sensor light level"
+    assert light_level_sensor_1.name == "Living room sensor Light level"
     assert temperature_sensor_1 is not None
     assert temperature_sensor_1.state == "17.75"
-    assert temperature_sensor_1.name == "Living room sensor temperature"
+    assert temperature_sensor_1.name == "Living room sensor Temperature"
 
     presence_sensor_2 = hass.states.get("binary_sensor.kitchen_sensor_motion")
     light_level_sensor_2 = hass.states.get("sensor.kitchen_sensor_light_level")
@@ -349,15 +349,15 @@ async def test_sensors(
     assert presence_sensor_2.state == "off"
     assert light_level_sensor_2 is not None
     assert light_level_sensor_2.state == "10.0"
-    assert light_level_sensor_2.name == "Kitchen sensor light level"
+    assert light_level_sensor_2.name == "Kitchen sensor Light level"
     assert temperature_sensor_2 is not None
     assert temperature_sensor_2.state == "18.75"
-    assert temperature_sensor_2.name == "Kitchen sensor temperature"
+    assert temperature_sensor_2.name == "Kitchen sensor Temperature"
 
     battery_remote_1 = hass.states.get("sensor.hue_dimmer_switch_1_battery_level")
     assert battery_remote_1 is not None
     assert battery_remote_1.state == "100"
-    assert battery_remote_1.name == "Hue dimmer switch 1 battery level"
+    assert battery_remote_1.name == "Hue dimmer switch 1 Battery level"
 
     assert (
         entity_registry.async_get(

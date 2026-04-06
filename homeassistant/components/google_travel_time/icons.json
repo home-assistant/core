@@ -1,0 +1,10 @@
+{
+  "services": {
+    "get_transit_times": {
+      "service": "mdi:bus"
+    },
+    "get_travel_times": {
+      "service": "mdi:routes"
+    }
+  }
+}

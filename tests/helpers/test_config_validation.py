@@ -172,6 +172,7 @@ def test_url_no_path() -> None:
     for value in (
         "https://localhost/test/index.html",
         "http://home-assistant.io/test/",
+        "http://invalid-port.local:999999",
     ):
         with pytest.raises(vol.MultipleInvalid):
             schema(value)

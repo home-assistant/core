@@ -19,6 +19,8 @@ from homeassistant.exceptions import (
     ConfigEntryAuthFailed,
     ConfigEntryError,
     ConfigEntryNotReady,
+    OAuth2TokenRequestError,
+    OAuth2TokenRequestReauthError,
 )
 from homeassistant.helpers import frame, update_coordinator
 from homeassistant.util.dt import utcnow
@@ -322,6 +324,84 @@ async def test_refresh_fail_unknown(
     assert "Unexpected error fetching test data" in caplog.text
 
 
+@pytest.mark.parametrize(
+    ("exception", "expected_exception"),
+    [(OAuth2TokenRequestReauthError, ConfigEntryAuthFailed)],
+)
+async def test_oauth_token_request_refresh_errors(
+    crd: update_coordinator.DataUpdateCoordinator[int],
+    exception: type[OAuth2TokenRequestError],
+    expected_exception: type[Exception],
+) -> None:
+    """Test OAuth2 token request errors are mapped during refresh."""
+    request_info = Mock()
+    request_info.real_url = "http://example.com/token"
+    request_info.method = "POST"
+
+    oauth_exception = exception(
+        request_info=request_info,
+        history=(),
+        status=400,
+        message="OAuth 2.0 token refresh failed",
+        domain="domain",
+    )
+
+    crd.update_method = AsyncMock(side_effect=oauth_exception)
+
+    with pytest.raises(expected_exception) as err:
+        # Raise on auth failed, needs to be set
+        await crd._async_refresh(raise_on_auth_failed=True)
+
+    # Check thoroughly the chain
+    assert isinstance(err.value, expected_exception)
+    assert isinstance(err.value.__cause__, exception)
+    assert isinstance(err.value.__cause__, OAuth2TokenRequestError)
+
+
+@pytest.mark.parametrize(
+    ("exception", "expected_exception"),
+    [
+        (OAuth2TokenRequestReauthError, ConfigEntryAuthFailed),
+        (OAuth2TokenRequestError, ConfigEntryNotReady),
+    ],
+)
+async def test_token_request_setup_errors(
+    hass: HomeAssistant,
+    exception: type[OAuth2TokenRequestError],
+    expected_exception: type[Exception],
+) -> None:
+    """Test OAuth2 token request errors raised from setup."""
+    entry = MockConfigEntry()
+    entry._async_set_state(
+        hass, config_entries.ConfigEntryState.SETUP_IN_PROGRESS, "For testing, duh"
+    )
+    crd = get_crd(hass, DEFAULT_UPDATE_INTERVAL, entry)
+
+    # Patch the underlying request info to raise ClientResponseError
+    request_info = Mock()
+    request_info.real_url = "http://example.com/token"
+    request_info.method = "POST"
+    oauth_exception = exception(
+        request_info=request_info,
+        history=(),
+        status=400,
+        message="OAuth 2.0 token refresh failed",
+        domain="domain",
+    )
+
+    crd.setup_method = AsyncMock(side_effect=oauth_exception)
+
+    with pytest.raises(expected_exception) as err:
+        await crd.async_config_entry_first_refresh()
+
+    assert crd.last_update_success is False
+
+    # Check thoroughly the chain
+    assert isinstance(err.value, expected_exception)
+    assert isinstance(err.value.__cause__, exception)
+    assert isinstance(err.value.__cause__, OAuth2TokenRequestError)
+
+
 async def test_refresh_no_update_method(
     crd: update_coordinator.DataUpdateCoordinator[int],
 ) -> None:
@@ -454,7 +534,7 @@ async def test_update_locks(
 
     # Add subscriber
     update_callback = Mock()
-    crd.async_add_listener(update_callback)
+    remove_callbacks = crd.async_add_listener(update_callback)
 
     assert crd.update_interval
 
@@ -497,6 +577,10 @@ async def test_update_locks(
 
     # Unblock queued update
     block.set()
+
+    # Remove callbacks to avoid lingering timers
+    remove_callbacks()
+    await crd.async_shutdown()
 
 
 async def test_refresh_recover(

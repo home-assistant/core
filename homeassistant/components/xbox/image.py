@@ -51,8 +51,9 @@ IMAGE_DESCRIPTIONS: tuple[XboxImageEntityDescription, ...] = (
         key=XboxImage.AVATAR,
         translation_key=XboxImage.AVATAR,
         image_url_fn=(
-            lambda person,
-            _: f"https://avatar-ssl.xboxlive.com/avatar/{person.gamertag}/avatar-body.png"
+            lambda person, _: (
+                f"https://avatar-ssl.xboxlive.com/avatar/{person.gamertag}/avatar-body.png"
+            )
         ),
     ),
 )

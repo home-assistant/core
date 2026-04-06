@@ -28,6 +28,8 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 from .const import DOMAIN, LOGGER
 
+type NibeHeatpumpConfigEntry = ConfigEntry[CoilCoordinator]
+
 
 class ContextCoordinator[_DataTypeT, _ContextTypeT](DataUpdateCoordinator[_DataTypeT]):
     """Update coordinator with context adjustments."""
@@ -73,12 +75,12 @@ class ContextCoordinator[_DataTypeT, _ContextTypeT](DataUpdateCoordinator[_DataT
 class CoilCoordinator(ContextCoordinator[dict[int, CoilData], int]):
     """Update coordinator for nibe heat pumps."""
 
-    config_entry: ConfigEntry
+    config_entry: NibeHeatpumpConfigEntry
 
     def __init__(
         self,
         hass: HomeAssistant,
-        config_entry: ConfigEntry,
+        config_entry: NibeHeatpumpConfigEntry,
         heatpump: HeatPump,
         connection: Connection,
     ) -> None:

@@ -10,9 +10,9 @@ from homeassistant.components.calendar import CalendarEntity, CalendarEvent
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import DOMAIN
+from .coordinator import ReCollectWasteDataUpdateCoordinator
 from .entity import ReCollectWasteEntity
 from .util import async_get_pickup_type_names
 
@@ -40,9 +40,7 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up ReCollect Waste sensors based on a config entry."""
-    coordinator: DataUpdateCoordinator[list[PickupEvent]] = hass.data[DOMAIN][
-        entry.entry_id
-    ]
+    coordinator: ReCollectWasteDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
 
     async_add_entities([ReCollectWasteCalendar(coordinator, entry)])
 
@@ -55,7 +53,7 @@ class ReCollectWasteCalendar(ReCollectWasteEntity, CalendarEntity):
 
     def __init__(
         self,
-        coordinator: DataUpdateCoordinator[list[PickupEvent]],
+        coordinator: ReCollectWasteDataUpdateCoordinator,
         entry: ConfigEntry,
     ) -> None:
         """Initialize the ReCollect Waste entity."""

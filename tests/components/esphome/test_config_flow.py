@@ -43,7 +43,7 @@ from homeassistant.helpers.service_info.mqtt import MqttServiceInfo
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from . import VALID_NOISE_PSK
-from .conftest import MockGenericDeviceEntryType
+from .conftest import MockESPHomeDeviceType, MockGenericDeviceEntryType
 
 from tests.common import MockConfigEntry
 
@@ -863,6 +863,79 @@ async def test_discovery_already_configured(hass: HomeAssistant) -> None:
         "name": "unknown",
         "mac": "11:22:33:44:55:aa",
     }
+
+
+@pytest.mark.usefixtures("mock_zeroconf")
+async def test_discovery_does_not_update_host_when_device_is_connected(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_esphome_device: MockESPHomeDeviceType,
+) -> None:
+    """Test zeroconf discovery does not update host when device is connected."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_HOST: "192.168.1.2",
+            CONF_PORT: 6053,
+            CONF_PASSWORD: "",
+        },
+        unique_id="11:22:33:44:55:aa",
+    )
+    entry.add_to_hass(hass)
+    await mock_esphome_device(mock_client=mock_client, entry=entry)
+
+    service_info = ZeroconfServiceInfo(
+        ip_address=ip_address("192.168.1.99"),
+        ip_addresses=[ip_address("192.168.1.99")],
+        hostname="test.local.",
+        name="mock_name",
+        port=6053,
+        properties={"mac": "1122334455aa"},
+        type="mock_type",
+    )
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_ZEROCONF}, data=service_info
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    # Host should NOT be updated since the device is currently connected
+    assert entry.data[CONF_HOST] == "192.168.1.2"
+
+
+@pytest.mark.usefixtures("mock_zeroconf")
+async def test_discovery_does_not_update_host_when_device_is_connected_dhcp(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_esphome_device: MockESPHomeDeviceType,
+) -> None:
+    """Test DHCP discovery does not update host when device is connected."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_HOST: "192.168.1.2",
+            CONF_PORT: 6053,
+            CONF_PASSWORD: "",
+        },
+        unique_id="11:22:33:44:55:aa",
+    )
+    entry.add_to_hass(hass)
+    await mock_esphome_device(mock_client=mock_client, entry=entry)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_DHCP},
+        data=DhcpServiceInfo(
+            ip="192.168.1.99",
+            macaddress="1122334455aa",
+            hostname="test",
+        ),
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    # Host should NOT be updated since the device is currently connected
+    assert entry.data[CONF_HOST] == "192.168.1.2"
 
 
 @pytest.mark.usefixtures("mock_client", "mock_setup_entry", "mock_zeroconf")

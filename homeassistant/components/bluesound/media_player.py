@@ -39,9 +39,7 @@ from .const import (
     ATTR_BLUESOUND_GROUP,
     ATTR_MASTER,
     DOMAIN,
-    SERVICE_CLEAR_TIMER,
     SERVICE_JOIN,
-    SERVICE_SET_TIMER,
     SERVICE_UNJOIN,
 )
 from .coordinator import BluesoundCoordinator
@@ -87,6 +85,7 @@ class BluesoundPlayer(CoordinatorEntity[BluesoundCoordinator], MediaPlayerEntity
     _attr_media_content_type = MediaType.MUSIC
     _attr_has_entity_name = True
     _attr_name = None
+    _attr_volume_step = 0.01
 
     def __init__(
         self,
@@ -603,42 +602,6 @@ class BluesoundPlayer(CoordinatorEntity[BluesoundCoordinator], MediaPlayerEntity
         """Remove follower to leader."""
         await self._player.remove_follower(host, port)
 
-    async def async_increase_timer(self) -> int:
-        """Increase sleep time on player."""
-        ir.async_create_issue(
-            self.hass,
-            DOMAIN,
-            f"deprecated_service_{SERVICE_SET_TIMER}",
-            is_fixable=False,
-            breaks_in_ha_version="2025.12.0",
-            issue_domain=DOMAIN,
-            severity=ir.IssueSeverity.WARNING,
-            translation_key="deprecated_service_set_sleep_timer",
-            translation_placeholders={
-                "name": slugify(self.sync_status.name),
-            },
-        )
-        return await self._player.sleep_timer()
-
-    async def async_clear_timer(self) -> None:
-        """Clear sleep timer on player."""
-        ir.async_create_issue(
-            self.hass,
-            DOMAIN,
-            f"deprecated_service_{SERVICE_CLEAR_TIMER}",
-            is_fixable=False,
-            breaks_in_ha_version="2025.12.0",
-            issue_domain=DOMAIN,
-            severity=ir.IssueSeverity.WARNING,
-            translation_key="deprecated_service_clear_sleep_timer",
-            translation_placeholders={
-                "name": slugify(self.sync_status.name),
-            },
-        )
-        sleep = 1
-        while sleep > 0:
-            sleep = await self._player.sleep_timer()
-
     async def async_set_shuffle(self, shuffle: bool) -> None:
         """Enable or disable shuffle mode."""
         await self._player.shuffle(shuffle)
@@ -725,24 +688,6 @@ class BluesoundPlayer(CoordinatorEntity[BluesoundCoordinator], MediaPlayerEntity
         url = async_process_play_media_url(self.hass, media_id)
 
         await self._player.play_url(url)
-
-    async def async_volume_up(self) -> None:
-        """Volume up the media player."""
-        if self.volume_level is None:
-            return
-
-        new_volume = self.volume_level + 0.01
-        new_volume = min(1, new_volume)
-        await self.async_set_volume_level(new_volume)
-
-    async def async_volume_down(self) -> None:
-        """Volume down the media player."""
-        if self.volume_level is None:
-            return
-
-        new_volume = self.volume_level - 0.01
-        new_volume = max(0, new_volume)
-        await self.async_set_volume_level(new_volume)
 
     async def async_set_volume_level(self, volume: float) -> None:
         """Send volume_up command to media player."""

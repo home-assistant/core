@@ -47,6 +47,7 @@ class HistoryStats:
         start: Template | None,
         end: Template | None,
         duration: datetime.timedelta | None,
+        min_state_duration: datetime.timedelta,
         preview: bool = False,
     ) -> None:
         """Init the history stats manager."""
@@ -58,6 +59,7 @@ class HistoryStats:
         self._has_recorder_data = False
         self._entity_states = set(entity_states)
         self._duration = duration
+        self._min_state_duration = min_state_duration.total_seconds()
         self._start = start
         self._end = end
         self._preview = preview
@@ -243,18 +245,38 @@ class HistoryStats:
                 )
                 break
 
-            if previous_state_matches:
-                elapsed += state_change_timestamp - last_state_change_timestamp
-            elif current_state_matches:
-                match_count += 1
+            if not previous_state_matches and current_state_matches:
+                # We are entering a matching state.
+                # This marks the start of a new candidate block that may later
+                # qualify if it lasts at least min_state_duration.
+                last_state_change_timestamp = max(
+                    start_timestamp, state_change_timestamp
+                )
+            elif previous_state_matches and not current_state_matches:
+                # We are leaving a matching state.
+                # This closes the current matching block and allows to
+                # evaluate its total duration.
+                block_duration = state_change_timestamp - last_state_change_timestamp
+                if block_duration >= self._min_state_duration:
+                    # The block lasted long enough so we increment match count
+                    # and accumulate its duration.
+                    elapsed += block_duration
+                    match_count += 1
 
             previous_state_matches = current_state_matches
-            last_state_change_timestamp = max(start_timestamp, state_change_timestamp)
 
         # Count time elapsed between last history state and end of measure
         if previous_state_matches:
+            # We are still inside a matching block at the end of the
+            # measurement window. This block has not been closed by a
+            # transition, so we evaluate it up to measure_end.
             measure_end = min(end_timestamp, now_timestamp)
-            elapsed += measure_end - last_state_change_timestamp
+            last_state_duration = max(0, measure_end - last_state_change_timestamp)
+            if last_state_duration >= self._min_state_duration:
+                # The open block lasted long enough so we increment match count
+                # and accumulate its duration.
+                elapsed += last_state_duration
+                match_count += 1
 
         # Save value in seconds
         seconds_matched = elapsed

@@ -92,6 +92,7 @@ class AnglianWaterUpdateCoordinator(DataUpdateCoordinator[None]):
                 _LOGGER.debug("Updating statistics for the first time")
                 usage_sum = 0.0
                 last_stats_time = None
+                allow_update_last_stored_hour = False
             else:
                 if not meter.readings or len(meter.readings) == 0:
                     _LOGGER.debug("No recent usage statistics found, skipping update")
@@ -107,6 +108,7 @@ class AnglianWaterUpdateCoordinator(DataUpdateCoordinator[None]):
                     continue
                 start = dt_util.as_local(parsed_read_at) - timedelta(hours=1)
                 _LOGGER.debug("Getting statistics at %s", start)
+                stats: dict[str, list[Any]] = {}
                 for end in (start + timedelta(seconds=1), None):
                     stats = await get_instance(self.hass).async_add_executor_job(
                         statistics_during_period,
@@ -127,15 +129,28 @@ class AnglianWaterUpdateCoordinator(DataUpdateCoordinator[None]):
                             "Not found, trying to find oldest statistic after %s",
                             start,
                         )
-                assert stats
 
-                def _safe_get_sum(records: list[Any]) -> float:
-                    if records and "sum" in records[0]:
-                        return float(records[0]["sum"])
-                    return 0.0
+                if not stats or not stats.get(usage_statistic_id):
+                    _LOGGER.debug(
+                        "Could not find existing statistics during period lookup for %s, "
+                        "falling back to last stored statistic",
+                        usage_statistic_id,
+                    )
+                    allow_update_last_stored_hour = True
+                    last_records = last_stat[usage_statistic_id]
+                    usage_sum = float(last_records[0].get("sum") or 0.0)
+                    last_stats_time = last_records[0]["start"]
+                else:
+                    allow_update_last_stored_hour = False
+                    records = stats[usage_statistic_id]
 
-                usage_sum = _safe_get_sum(stats.get(usage_statistic_id, []))
-                last_stats_time = stats[usage_statistic_id][0]["start"]
+                    def _safe_get_sum(records: list[Any]) -> float:
+                        if records and "sum" in records[0]:
+                            return float(records[0]["sum"])
+                        return 0.0
+
+                    usage_sum = _safe_get_sum(records)
+                    last_stats_time = records[0]["start"]
 
             usage_statistics = []
 
@@ -148,7 +163,13 @@ class AnglianWaterUpdateCoordinator(DataUpdateCoordinator[None]):
                     )
                     continue
                 start = dt_util.as_local(parsed_read_at) - timedelta(hours=1)
-                if last_stats_time is not None and start.timestamp() <= last_stats_time:
+                if last_stats_time is not None and (
+                    start.timestamp() < last_stats_time
+                    or (
+                        start.timestamp() == last_stats_time
+                        and not allow_update_last_stored_hour
+                    )
+                ):
                     continue
                 usage_state = max(0, read["consumption"] / 1000)
                 usage_sum = max(0, read["read"])

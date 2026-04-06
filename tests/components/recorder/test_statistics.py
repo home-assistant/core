@@ -39,6 +39,7 @@ from homeassistant.components.recorder.statistics import (
     get_metadata_with_session,
     get_short_term_statistics_run_cache,
     list_statistic_ids,
+    update_statistics_issues,
     validate_statistics,
 )
 from homeassistant.components.recorder.table_managers.statistics_meta import (
@@ -418,7 +419,7 @@ def mock_sensor_statistics():
             "stat": {"start": start},
         }
 
-    def get_fake_stats(_hass, session, start, _end):
+    def get_fake_stats(_hass, session, start, _end, _custom_equivalent_units):
         instance = recorder.get_instance(_hass)
         return statistics.PlatformCompiledStatistics(
             [
@@ -2469,6 +2470,244 @@ async def test_monthly_statistics_sum(
     assert stats == {}
 
 
+@pytest.mark.usefixtures("multiple_start_time_chunk_sizes")
+@pytest.mark.parametrize("timezone", ["America/Regina", "Europe/Vienna", "UTC"])
+@pytest.mark.freeze_time("2020-01-01 00:00:00+00:00")
+async def test_yearly_statistics_sum(
+    hass: HomeAssistant,
+    setup_recorder: None,
+    caplog: pytest.LogCaptureFixture,
+    timezone,
+) -> None:
+    """Test monthly statistics."""
+    await hass.config.async_set_time_zone(timezone)
+    await async_wait_recording_done(hass)
+    assert "Compiling statistics for" not in caplog.text
+    assert "Statistics already compiled" not in caplog.text
+
+    zero = dt_util.utcnow()
+    period1 = dt_util.as_utc(dt_util.parse_datetime("2020-01-01 00:00:00"))
+    period2 = dt_util.as_utc(dt_util.parse_datetime("2020-12-31 23:00:00"))
+    period3 = dt_util.as_utc(dt_util.parse_datetime("2021-01-01 00:00:00"))
+    period4 = dt_util.as_utc(dt_util.parse_datetime("2021-12-31 23:00:00"))
+    period5 = dt_util.as_utc(dt_util.parse_datetime("2022-01-01 00:00:00"))
+    period6 = dt_util.as_utc(dt_util.parse_datetime("2022-12-31 23:00:00"))
+
+    external_statistics = (
+        {
+            "start": period1,
+            "last_reset": None,
+            "state": 0,
+            "sum": 2,
+        },
+        {
+            "start": period2,
+            "last_reset": None,
+            "state": 1,
+            "sum": 3,
+        },
+        {
+            "start": period3,
+            "last_reset": None,
+            "state": 2,
+            "sum": 4,
+        },
+        {
+            "start": period4,
+            "last_reset": None,
+            "state": 3,
+            "sum": 5,
+        },
+        {
+            "start": period5,
+            "last_reset": None,
+            "state": 4,
+            "sum": 6,
+        },
+        {
+            "start": period6,
+            "last_reset": None,
+            "state": 5,
+            "sum": 7,
+        },
+    )
+    external_metadata = {
+        "has_sum": True,
+        "mean_type": StatisticMeanType.NONE,
+        "name": "Total imported energy",
+        "source": "test",
+        "statistic_id": "test:total_energy_import",
+        "unit_class": "energy",
+        "unit_of_measurement": "kWh",
+    }
+
+    async_add_external_statistics(hass, external_metadata, external_statistics)
+    await async_wait_recording_done(hass)
+    stats = statistics_during_period(
+        hass, zero, period="year", statistic_ids={"test:total_energy_import"}
+    )
+    yr2020_start = dt_util.as_utc(dt_util.parse_datetime("2020-01-01 00:00:00"))
+    yr2020_end = dt_util.as_utc(dt_util.parse_datetime("2021-01-01 00:00:00"))
+    yr2021_start = dt_util.as_utc(dt_util.parse_datetime("2021-01-01 00:00:00"))
+    yr2021_end = dt_util.as_utc(dt_util.parse_datetime("2022-01-01 00:00:00"))
+    yr2022_start = dt_util.as_utc(dt_util.parse_datetime("2022-01-01 00:00:00"))
+    yr2022_end = dt_util.as_utc(dt_util.parse_datetime("2023-01-01 00:00:00"))
+    expected_stats = {
+        "test:total_energy_import": [
+            {
+                "start": yr2020_start.timestamp(),
+                "end": yr2020_end.timestamp(),
+                "last_reset": None,
+                "state": pytest.approx(1.0),
+                "sum": pytest.approx(3.0),
+            },
+            {
+                "start": yr2021_start.timestamp(),
+                "end": yr2021_end.timestamp(),
+                "last_reset": None,
+                "state": pytest.approx(3.0),
+                "sum": pytest.approx(5.0),
+            },
+            {
+                "start": yr2022_start.timestamp(),
+                "end": yr2022_end.timestamp(),
+                "last_reset": None,
+                "state": 5.0,
+                "sum": 7.0,
+            },
+        ]
+    }
+    assert stats == expected_stats
+
+    # Get change
+    stats = statistics_during_period(
+        hass,
+        start_time=period1,
+        statistic_ids={"test:total_energy_import"},
+        period="year",
+        types={"change"},
+    )
+    assert stats == {
+        "test:total_energy_import": [
+            {
+                "start": yr2020_start.timestamp(),
+                "end": yr2020_end.timestamp(),
+                "change": 3.0,
+            },
+            {
+                "start": yr2021_start.timestamp(),
+                "end": yr2021_end.timestamp(),
+                "change": 2.0,
+            },
+            {
+                "start": yr2022_start.timestamp(),
+                "end": yr2022_end.timestamp(),
+                "change": 2.0,
+            },
+        ]
+    }
+    # Get data with start during the first period
+    stats = statistics_during_period(
+        hass,
+        start_time=period1 + timedelta(days=1),
+        statistic_ids={"test:total_energy_import"},
+        period="year",
+    )
+    assert stats == expected_stats
+
+    # Get data with end during the third period
+    stats = statistics_during_period(
+        hass,
+        start_time=zero,
+        end_time=period6 - timedelta(days=1),
+        statistic_ids={"test:total_energy_import"},
+        period="year",
+    )
+    assert stats == expected_stats
+
+    # Try to get data for entities which do not exist
+    stats = statistics_during_period(
+        hass,
+        start_time=zero,
+        statistic_ids={"not", "the", "same", "test:total_energy_import"},
+        period="year",
+    )
+    assert stats == expected_stats
+
+    # Get only sum
+    stats = statistics_during_period(
+        hass,
+        start_time=zero,
+        statistic_ids={"not", "the", "same", "test:total_energy_import"},
+        period="year",
+        types={"sum"},
+    )
+    assert stats == {
+        "test:total_energy_import": [
+            {
+                "start": yr2020_start.timestamp(),
+                "end": yr2020_end.timestamp(),
+                "sum": pytest.approx(3.0),
+            },
+            {
+                "start": yr2021_start.timestamp(),
+                "end": yr2021_end.timestamp(),
+                "sum": pytest.approx(5.0),
+            },
+            {
+                "start": yr2022_start.timestamp(),
+                "end": yr2022_end.timestamp(),
+                "sum": pytest.approx(7.0),
+            },
+        ]
+    }
+
+    # Get only sum + convert units
+    stats = statistics_during_period(
+        hass,
+        start_time=zero,
+        statistic_ids={"not", "the", "same", "test:total_energy_import"},
+        period="year",
+        types={"sum"},
+        units={"energy": "Wh"},
+    )
+    assert stats == {
+        "test:total_energy_import": [
+            {
+                "start": yr2020_start.timestamp(),
+                "end": yr2020_end.timestamp(),
+                "sum": pytest.approx(3000.0),
+            },
+            {
+                "start": yr2021_start.timestamp(),
+                "end": yr2021_end.timestamp(),
+                "sum": pytest.approx(5000.0),
+            },
+            {
+                "start": yr2022_start.timestamp(),
+                "end": yr2022_end.timestamp(),
+                "sum": pytest.approx(7000.0),
+            },
+        ]
+    }
+
+    # Use 5minute to ensure table switch works
+    stats = statistics_during_period(
+        hass,
+        start_time=zero,
+        statistic_ids=["test:total_energy_import", "with_other"],
+        period="5minute",
+    )
+    assert stats == {}
+
+    # Ensure future date has not data
+    future = dt_util.as_utc(dt_util.parse_datetime("2221-11-01 00:00:00"))
+    stats = statistics_during_period(
+        hass, start_time=future, end_time=future, period="year"
+    )
+    assert stats == {}
+
+
 def test_cache_key_for_generate_statistics_during_period_stmt() -> None:
     """Test cache key for _generate_statistics_during_period_stmt."""
     stmt = _generate_statistics_during_period_stmt(
@@ -3541,6 +3780,9 @@ async def test_recorder_platform_with_statistics(
     def _mock_compile_statistics(*args: Any) -> PlatformCompiledStatistics:
         return PlatformCompiledStatistics([], {})
 
+    def _mock_custom_equivalent_units(*args: Any) -> dict[str, dict[str | None, str]]:
+        return {}
+
     def _mock_list_statistic_ids(*args: Any, **kwargs: Any) -> dict:
         return {}
 
@@ -3549,6 +3791,7 @@ async def test_recorder_platform_with_statistics(
 
     recorder_platform = Mock(
         compile_statistics=Mock(wraps=_mock_compile_statistics),
+        async_custom_equivalent_units=Mock(wraps=_mock_custom_equivalent_units),
         list_statistic_ids=Mock(wraps=_mock_list_statistic_ids),
         update_statistics_issues=Mock(),
         validate_statistics=Mock(wraps=_mock_validate_statistics),
@@ -3561,6 +3804,7 @@ async def test_recorder_platform_with_statistics(
     assert recorder_data.recorder_platforms == {"some_domain": recorder_platform}
 
     recorder_platform.compile_statistics.assert_not_called()
+    recorder_platform.async_custom_equivalent_units.assert_not_called()
     recorder_platform.list_statistic_ids.assert_not_called()
     recorder_platform.update_statistics_issues.assert_not_called()
     recorder_platform.validate_statistics.assert_not_called()
@@ -3573,15 +3817,17 @@ async def test_recorder_platform_with_statistics(
     await async_wait_recording_done(hass)
 
     recorder_platform.compile_statistics.assert_called_once_with(
-        hass, ANY, zero, zero + timedelta(minutes=5)
+        hass, ANY, zero, zero + timedelta(minutes=5), {}
     )
-    recorder_platform.update_statistics_issues.assert_called_once_with(hass, ANY)
+    recorder_platform.async_custom_equivalent_units.assert_called_once()
+    recorder_platform.update_statistics_issues.assert_called_once_with(hass, ANY, {})
     recorder_platform.list_statistic_ids.assert_not_called()
     recorder_platform.validate_statistics.assert_not_called()
 
     # Test list statistic IDs
     await async_list_statistic_ids(hass)
     recorder_platform.compile_statistics.assert_called_once()
+    recorder_platform.async_custom_equivalent_units.assert_called_once()
     recorder_platform.list_statistic_ids.assert_called_once_with(
         hass, statistic_ids=None, statistic_type=None
     )
@@ -3596,7 +3842,7 @@ async def test_recorder_platform_with_statistics(
     recorder_platform.compile_statistics.assert_called_once()
     recorder_platform.list_statistic_ids.assert_called_once()
     recorder_platform.update_statistics_issues.assert_called_once()
-    recorder_platform.validate_statistics.assert_called_once_with(hass)
+    recorder_platform.validate_statistics.assert_called_once_with(hass, {})
 
 
 async def test_recorder_platform_without_statistics(
@@ -3685,6 +3931,296 @@ async def test_recorder_platform_with_partial_statistics_support(
 
     for meth in supported_methods:
         getattr(recorder_platform, meth).assert_called_once()
+
+
+async def test_recorder_platforms_with_custom_equivalent_units(
+    hass: HomeAssistant,
+    setup_recorder: None,
+) -> None:
+    """Test recorder platforms providing custom equivalent units are joined."""
+    instance = recorder.get_instance(hass)
+    recorder_data = hass.data["recorder"]
+    assert not recorder_data.recorder_platforms
+
+    def _mock_compile_statistics(*args: Any) -> PlatformCompiledStatistics:
+        return PlatformCompiledStatistics([], {})
+
+    custom_equivalent_units_recorder_platform_one = {
+        "sensor.test_sensor_1": {"custom_unitA": "unitA"}
+    }
+
+    def _mock_custom_equivalent_units_one(
+        *args: Any,
+    ) -> dict[str, dict[str | None, str]]:
+        return custom_equivalent_units_recorder_platform_one
+
+    def _mock_update_statistics_issues(*args: Any) -> None:
+        return
+
+    def _mock_validate_statistics(*args: Any) -> dict:
+        return {}
+
+    recorder_platform_one = Mock(
+        compile_statistics=Mock(wraps=_mock_compile_statistics),
+        async_custom_equivalent_units=Mock(wraps=_mock_custom_equivalent_units_one),
+        list_statistic_ids=None,
+        update_statistics_issues=Mock(wraps=_mock_update_statistics_issues),
+        validate_statistics=Mock(wraps=_mock_validate_statistics),
+    )
+
+    mock_platform(hass, "some_domain_one.recorder", recorder_platform_one)
+    assert await async_setup_component(hass, "some_domain_one", {})
+
+    custom_equivalent_units_recorder_platform_two = {
+        "sensor.test_sensor_2": {"custom_unitB": "unitB"},
+        # None is a valid unit, therefore we allow integrations to declare it equivalent to any other unit
+        "sensor.test_sensor_3": {None: ""},
+    }
+
+    def _mock_custom_equivalent_units_two(
+        *args: Any,
+    ) -> dict[str, dict[str | None, str]]:
+        return custom_equivalent_units_recorder_platform_two
+
+    recorder_platform_two = Mock(
+        compile_statistics=None,
+        async_custom_equivalent_units=Mock(wraps=_mock_custom_equivalent_units_two),
+        list_statistic_ids=None,
+        update_statistics_issues=None,
+        validate_statistics=None,
+    )
+
+    mock_platform(hass, "some_domain_two.recorder", recorder_platform_two)
+    assert await async_setup_component(hass, "some_domain_two", {})
+
+    # Wait for the recorder platforms to be added
+    await async_recorder_block_till_done(hass)
+    assert recorder_data.recorder_platforms == {
+        "some_domain_one": recorder_platform_one,
+        "some_domain_two": recorder_platform_two,
+    }
+
+    recorder_platform_one.compile_statistics.assert_not_called()
+    recorder_platform_one.async_custom_equivalent_units.assert_not_called()
+    recorder_platform_two.async_custom_equivalent_units.assert_not_called()
+
+    # Test compile statistics
+    zero = get_start_time(dt_util.utcnow()).replace(minute=50) + timedelta(hours=1)
+    do_adhoc_statistics(hass, start=zero)
+    await async_wait_recording_done(hass)
+
+    expected_custom_equivalent_units = {
+        **custom_equivalent_units_recorder_platform_one,
+        **custom_equivalent_units_recorder_platform_two,
+    }
+
+    recorder_platform_one.compile_statistics.assert_called_once_with(
+        hass, ANY, zero, zero + timedelta(minutes=5), expected_custom_equivalent_units
+    )
+    recorder_platform_one.update_statistics_issues.assert_called_once_with(
+        hass, ANY, expected_custom_equivalent_units
+    )
+    recorder_platform_one.async_custom_equivalent_units.assert_called_once()
+    recorder_platform_two.async_custom_equivalent_units.assert_called_once()
+
+    # Test update statistics issues
+    recorder_platform_one.update_statistics_issues.reset_mock()
+
+    await instance.async_add_executor_job(update_statistics_issues, hass)
+
+    recorder_platform_one.update_statistics_issues.assert_called_once_with(
+        hass, ANY, expected_custom_equivalent_units
+    )
+    assert recorder_platform_one.async_custom_equivalent_units.call_count == 2
+    assert recorder_platform_two.async_custom_equivalent_units.call_count == 2
+
+    # Test validate statistics
+    await instance.async_add_executor_job(validate_statistics, hass)
+
+    recorder_platform_one.validate_statistics.assert_called_once_with(
+        hass, expected_custom_equivalent_units
+    )
+    assert recorder_platform_one.async_custom_equivalent_units.call_count == 3
+    assert recorder_platform_two.async_custom_equivalent_units.call_count == 3
+
+
+async def test_recorder_platforms_with_custom_equivalent_units_continues_on_exception(
+    hass: HomeAssistant,
+    setup_recorder: None,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test recorder platforms providing custom equivalent units are skipped if they raise an exception."""
+    recorder_data = hass.data["recorder"]
+    assert not recorder_data.recorder_platforms
+
+    def _mock_compile_statistics(*args: Any) -> PlatformCompiledStatistics:
+        return PlatformCompiledStatistics([], {})
+
+    def _mock_custom_equivalent_units_one(
+        *args: Any,
+    ) -> dict[str, dict[str | None, str]]:
+        raise Exception("test error")  # noqa: TRY002
+
+    recorder_platform_one = Mock(
+        compile_statistics=Mock(wraps=_mock_compile_statistics),
+        async_custom_equivalent_units=Mock(wraps=_mock_custom_equivalent_units_one),
+        list_statistic_ids=None,
+        update_statistics_issues=None,
+        validate_statistics=None,
+    )
+
+    mock_platform(hass, "some_domain_one.recorder", recorder_platform_one)
+    assert await async_setup_component(hass, "some_domain_one", {})
+
+    custom_equivalent_units_recorder_platform_two = {
+        "sensor.test_sensor_2": {"custom_unitB": "unitB"},
+        # None is a valid unit, therefore we allow integrations to declare it equivalent to any other unit
+        "sensor.test_sensor_3": {None: ""},
+    }
+
+    def _mock_custom_equivalent_units_two(
+        *args: Any,
+    ) -> dict[str, dict[str | None, str]]:
+        return custom_equivalent_units_recorder_platform_two
+
+    recorder_platform_two = Mock(
+        compile_statistics=None,
+        async_custom_equivalent_units=Mock(wraps=_mock_custom_equivalent_units_two),
+        list_statistic_ids=None,
+        update_statistics_issues=None,
+        validate_statistics=None,
+    )
+
+    mock_platform(hass, "some_domain_two.recorder", recorder_platform_two)
+    assert await async_setup_component(hass, "some_domain_two", {})
+
+    # Wait for the recorder platforms to be added
+    await async_recorder_block_till_done(hass)
+    assert recorder_data.recorder_platforms == {
+        "some_domain_one": recorder_platform_one,
+        "some_domain_two": recorder_platform_two,
+    }
+
+    recorder_platform_one.compile_statistics.assert_not_called()
+    recorder_platform_one.async_custom_equivalent_units.assert_not_called()
+    recorder_platform_two.async_custom_equivalent_units.assert_not_called()
+
+    # Test compile statistics
+    zero = get_start_time(dt_util.utcnow()).replace(minute=50) + timedelta(hours=1)
+    do_adhoc_statistics(hass, start=zero)
+    await async_wait_recording_done(hass)
+
+    expected_custom_equivalent_units = custom_equivalent_units_recorder_platform_two
+
+    recorder_platform_one.compile_statistics.assert_called_once_with(
+        hass, ANY, zero, zero + timedelta(minutes=5), expected_custom_equivalent_units
+    )
+    recorder_platform_one.async_custom_equivalent_units.assert_called_once()
+    recorder_platform_two.async_custom_equivalent_units.assert_called_once()
+
+    assert (
+        "Error calling async_custom_equivalent_units for recorder platform domain some_domain_one: test error"
+        in caplog.text
+    )
+
+
+@pytest.mark.parametrize(
+    "invalid_custom_equivalent_units",
+    [
+        None,
+        {},
+        123,
+        {"invalid": "dict"},
+        {2: "dict"},
+        {"invalid": {"dict": 3}},
+        {"invalid": {"dict": b"four"}},
+        {"invalid": {"dict": {"five": "5"}}},
+    ],
+)
+async def test_recorder_platforms_with_custom_equivalent_units_continues_on_invalid_types(
+    hass: HomeAssistant,
+    setup_recorder: None,
+    caplog: pytest.LogCaptureFixture,
+    invalid_custom_equivalent_units: Any,
+) -> None:
+    """Test recorder platforms providing custom equivalent units are skipped if they are of invalid type."""
+    recorder_data = hass.data["recorder"]
+    assert not recorder_data.recorder_platforms
+
+    def _mock_compile_statistics(*args: Any) -> PlatformCompiledStatistics:
+        return PlatformCompiledStatistics([], {})
+
+    def _mock_custom_equivalent_units_one(
+        *args: Any,
+    ) -> dict[str, dict[str | None, str]]:
+        return invalid_custom_equivalent_units
+
+    recorder_platform_one = Mock(
+        compile_statistics=Mock(wraps=_mock_compile_statistics),
+        async_custom_equivalent_units=Mock(wraps=_mock_custom_equivalent_units_one),
+        list_statistic_ids=None,
+        update_statistics_issues=None,
+        validate_statistics=None,
+    )
+
+    mock_platform(hass, "some_domain_one.recorder", recorder_platform_one)
+    assert await async_setup_component(hass, "some_domain_one", {})
+
+    custom_equivalent_units_recorder_platform_two = {
+        "sensor.test_sensor_2": {"custom_unitB": "unitB"},
+        # None is a valid unit, therefore we allow integrations to declare it equivalent to any other unit
+        "sensor.test_sensor_3": {None: ""},
+    }
+
+    def _mock_custom_equivalent_units_two(
+        *args: Any,
+    ) -> dict[str, dict[str | None, str]]:
+        return custom_equivalent_units_recorder_platform_two
+
+    recorder_platform_two = Mock(
+        compile_statistics=None,
+        async_custom_equivalent_units=Mock(wraps=_mock_custom_equivalent_units_two),
+        list_statistic_ids=None,
+        update_statistics_issues=None,
+        validate_statistics=None,
+    )
+
+    mock_platform(hass, "some_domain_two.recorder", recorder_platform_two)
+    assert await async_setup_component(hass, "some_domain_two", {})
+
+    # Wait for the recorder platforms to be added
+    await async_recorder_block_till_done(hass)
+    assert recorder_data.recorder_platforms == {
+        "some_domain_one": recorder_platform_one,
+        "some_domain_two": recorder_platform_two,
+    }
+
+    recorder_platform_one.compile_statistics.assert_not_called()
+    recorder_platform_one.async_custom_equivalent_units.assert_not_called()
+    recorder_platform_two.async_custom_equivalent_units.assert_not_called()
+
+    # Test compile statistics
+    zero = get_start_time(dt_util.utcnow()).replace(minute=50) + timedelta(hours=1)
+    do_adhoc_statistics(hass, start=zero)
+    await async_wait_recording_done(hass)
+
+    expected_custom_equivalent_units = custom_equivalent_units_recorder_platform_two
+
+    recorder_platform_one.compile_statistics.assert_called_once_with(
+        hass, ANY, zero, zero + timedelta(minutes=5), expected_custom_equivalent_units
+    )
+    recorder_platform_one.async_custom_equivalent_units.assert_called_once()
+    recorder_platform_two.async_custom_equivalent_units.assert_called_once()
+
+    # If the dict is None or empty it will be skipped before validation
+    if invalid_custom_equivalent_units:
+        assert (
+            "Error processing result of async_custom_equivalent_units for recorder platform domain some_domain_one"
+            in caplog.text
+        )
+
+    # Reset domains for which warnings were shown
+    statistics._warn_custom_units_error.clear()
 
 
 @pytest.mark.parametrize(

@@ -81,5 +81,5 @@ def get_icon_from_type(type: str) -> str:
     """Return the right icon based on the type."""
     try:
         return DeviceType[type].value
-    except (ValueError, KeyError):
+    except ValueError, KeyError:
         return "mdi:lan-connect"

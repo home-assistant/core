@@ -1,5 +1,7 @@
 """Coordinator to fetch data from the Picnic API."""
 
+from __future__ import annotations
+
 import asyncio
 from contextlib import suppress
 import copy
@@ -17,17 +19,19 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 from .const import ADDRESS, CART_DATA, LAST_ORDER_DATA, NEXT_DELIVERY_DATA, SLOT_DATA
 
+type PicnicConfigEntry = ConfigEntry[PicnicUpdateCoordinator]
+
 
 class PicnicUpdateCoordinator(DataUpdateCoordinator):
     """The coordinator to fetch data from the Picnic API at a set interval."""
 
-    config_entry: ConfigEntry
+    config_entry: PicnicConfigEntry
 
     def __init__(
         self,
         hass: HomeAssistant,
         picnic_api_client: PicnicAPI,
-        config_entry: ConfigEntry,
+        config_entry: PicnicConfigEntry,
     ) -> None:
         """Initialize the coordinator with the given Picnic API client."""
         self.picnic_api_client = picnic_api_client
@@ -120,7 +124,7 @@ class PicnicUpdateCoordinator(DataUpdateCoordinator):
                 copy.deepcopy(next_deliveries[-1]) if next_deliveries else {}
             )
             last_order = copy.deepcopy(deliveries[0]) if deliveries else {}
-        except (KeyError, TypeError):
+        except KeyError, TypeError:
             # A KeyError or TypeError indicate that the response contains unexpected data
             return {}, {}
 

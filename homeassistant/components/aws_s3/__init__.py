@@ -5,11 +5,10 @@ from __future__ import annotations
 import logging
 from typing import cast
 
-from aiobotocore.client import AioBaseClient as S3Client
 from aiobotocore.session import AioSession
 from botocore.exceptions import ClientError, ConnectionError, ParamValidationError
 
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
 
@@ -21,9 +20,9 @@ from .const import (
     DATA_BACKUP_AGENT_LISTENERS,
     DOMAIN,
 )
+from .coordinator import S3ConfigEntry, S3DataUpdateCoordinator
 
-type S3ConfigEntry = ConfigEntry[S3Client]
-
+_PLATFORMS = (Platform.SENSOR,)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -64,7 +63,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: S3ConfigEntry) -> bool:
             translation_key="cannot_connect",
         ) from err
 
-    entry.runtime_data = client
+    coordinator = S3DataUpdateCoordinator(
+        hass,
+        entry=entry,
+        client=client,
+    )
+    await coordinator.async_config_entry_first_refresh()
+    entry.runtime_data = coordinator
 
     def notify_backup_listeners() -> None:
         for listener in hass.data.get(DATA_BACKUP_AGENT_LISTENERS, []):
@@ -72,11 +77,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: S3ConfigEntry) -> bool:
 
     entry.async_on_unload(entry.async_on_state_change(notify_backup_listeners))
 
+    await hass.config_entries.async_forward_entry_setups(entry, _PLATFORMS)
+
     return True
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: S3ConfigEntry) -> bool:
     """Unload a config entry."""
-    client = entry.runtime_data
-    await client.__aexit__(None, None, None)
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, _PLATFORMS)
+    if not unload_ok:
+        return False
+    coordinator = entry.runtime_data
+    await coordinator.client.__aexit__(None, None, None)
     return True

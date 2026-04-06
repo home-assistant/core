@@ -83,6 +83,43 @@ class HDFuryConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration."""
+        errors: dict[str, str] = {}
+        reconfigure_entry = self._get_reconfigure_entry()
+
+        if user_input is not None:
+            host = user_input[CONF_HOST]
+
+            serial = await self._validate_connection(host)
+            if serial is not None:
+                await self.async_set_unique_id(serial)
+                self._abort_if_unique_id_mismatch(reason="incorrect_device")
+                return self.async_update_reload_and_abort(
+                    self._get_reconfigure_entry(),
+                    data_updates=user_input,
+                )
+
+            errors["base"] = "cannot_connect"
+
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(
+                        CONF_HOST,
+                        default=reconfigure_entry.data.get(CONF_HOST),
+                    ): str
+                }
+            ),
+            description_placeholders={
+                "title": reconfigure_entry.title,
+            },
+            errors=errors,
+        )
+
     async def _validate_connection(self, host: str) -> str | None:
         """Try to fetch serial number to confirm it's a valid HDFury device."""
 

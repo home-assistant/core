@@ -4,7 +4,8 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from homeassistant.components.blink.const import DOMAIN, SERVICE_SEND_PIN
+from homeassistant.components.blink.const import DOMAIN
+from homeassistant.components.blink.services import SERVICE_SEND_PIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_CONFIG_ENTRY_ID, CONF_PIN
 from homeassistant.core import HomeAssistant

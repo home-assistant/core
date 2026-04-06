@@ -23,8 +23,9 @@
 # ---
 # name: test_platform_setup_and_discovery[event.bathroom_smart_switch_button_1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'event_types': list([
@@ -83,8 +84,9 @@
 # ---
 # name: test_platform_setup_and_discovery[event.bathroom_smart_switch_button_2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'event_types': list([
@@ -143,8 +145,9 @@
 # ---
 # name: test_platform_setup_and_discovery[event.bouton_tempo_exterieur_button_1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'event_types': list([
@@ -205,8 +208,9 @@
 # ---
 # name: test_platform_setup_and_discovery[event.burocam_doorbell_message-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'event_types': list([
@@ -264,8 +268,9 @@
 # ---
 # name: test_platform_setup_and_discovery[event.c9_doorbell_message-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'event_types': list([
@@ -323,8 +328,9 @@
 # ---
 # name: test_platform_setup_and_discovery[event.c9_doorbell_picture-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'event_types': list([
@@ -380,10 +386,131 @@
     'state': '2023-11-01T12:14:15.000+00:00',
   })
 # ---
+# name: test_platform_setup_and_discovery[event.dolni_vchod_zapad_doorbell_message-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'event_types': list([
+        'triggered',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'event',
+    'entity_category': None,
+    'entity_id': 'event.dolni_vchod_zapad_doorbell_message',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Doorbell message',
+    'options': dict({
+    }),
+    'original_device_class': <EventDeviceClass.DOORBELL: 'doorbell'>,
+    'original_icon': None,
+    'original_name': 'Doorbell message',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'doorbell_message',
+    'unique_id': 'tuya.o4hpbl5uarjfbzhepsalarm_message',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[event.dolni_vchod_zapad_doorbell_message-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'doorbell',
+      'event_type': 'triggered',
+      'event_types': list([
+        'triggered',
+      ]),
+      'friendly_name': 'Dolní vchod - západ Doorbell message',
+      'message': '',
+    }),
+    'context': <ANY>,
+    'entity_id': 'event.dolni_vchod_zapad_doorbell_message',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2023-11-01T12:14:15.000+00:00',
+  })
+# ---
+# name: test_platform_setup_and_discovery[event.dolni_vchod_zapad_doorbell_picture-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'event_types': list([
+        'triggered',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'event',
+    'entity_category': None,
+    'entity_id': 'event.dolni_vchod_zapad_doorbell_picture',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Doorbell picture',
+    'options': dict({
+    }),
+    'original_device_class': <EventDeviceClass.DOORBELL: 'doorbell'>,
+    'original_icon': None,
+    'original_name': 'Doorbell picture',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'doorbell_picture',
+    'unique_id': 'tuya.o4hpbl5uarjfbzhepsdoorbell_pic',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[event.dolni_vchod_zapad_doorbell_picture-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'doorbell',
+      'event_type': 'triggered',
+      'event_types': list([
+        'triggered',
+      ]),
+      'friendly_name': 'Dolní vchod - západ Doorbell picture',
+      'message': '',
+    }),
+    'context': <ANY>,
+    'entity_id': 'event.dolni_vchod_zapad_doorbell_picture',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2023-11-01T12:14:15.000+00:00',
+  })
+# ---
 # name: test_platform_setup_and_discovery[event.garage_camera_doorbell_message-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'event_types': list([
@@ -441,8 +568,9 @@
 # ---
 # name: test_platform_setup_and_discovery[event.intercom_doorbell_message-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'event_types': list([
@@ -500,8 +628,9 @@
 # ---
 # name: test_platform_setup_and_discovery[event.intercom_doorbell_picture-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'event_types': list([
@@ -559,8 +688,9 @@
 # ---
 # name: test_platform_setup_and_discovery[event.mirilla_puerta_doorbell_message-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'event_types': list([
@@ -618,8 +748,9 @@
 # ---
 # name: test_platform_setup_and_discovery[event.mirilla_puerta_doorbell_picture-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'event_types': list([

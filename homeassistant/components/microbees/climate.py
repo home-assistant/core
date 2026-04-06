@@ -7,13 +7,12 @@ from homeassistant.components.climate import (
     ClimateEntityFeature,
     HVACMode,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN
+from . import MicroBeesConfigEntry
 from .coordinator import MicroBeesUpdateCoordinator
 from .entity import MicroBeesActuatorEntity
 
@@ -27,13 +26,11 @@ THERMOVALVE_SENSOR_ID = 782
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: MicroBeesConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the microBees climate platform."""
-    coordinator: MicroBeesUpdateCoordinator = hass.data[DOMAIN][
-        entry.entry_id
-    ].coordinator
+    coordinator = entry.runtime_data.coordinator
     async_add_entities(
         MBClimate(
             coordinator,

@@ -4,6 +4,7 @@
   "codeowners": ["@h3l1o5"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/yardian",
+  "integration_type": "device",
   "iot_class": "local_polling",
   "requirements": ["pyyardian==1.1.1"]
 }

@@ -1,0 +1,101 @@
+# serializer version: 1
+# name: test_setup[binary_sensor.arcam_fmj_127_0_0_1_incoming_video_interlaced-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.arcam_fmj_127_0_0_1_incoming_video_interlaced',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Incoming video interlaced',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Incoming video interlaced',
+    'platform': 'arcam_fmj',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'incoming_video_interlaced',
+    'unique_id': '456789abcdef-1-incoming_video_interlaced',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_setup[binary_sensor.arcam_fmj_127_0_0_1_incoming_video_interlaced-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Arcam FMJ (127.0.0.1) Incoming video interlaced',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.arcam_fmj_127_0_0_1_incoming_video_interlaced',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_setup[binary_sensor.arcam_fmj_127_0_0_1_zone_2_incoming_video_interlaced-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.arcam_fmj_127_0_0_1_zone_2_incoming_video_interlaced',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Incoming video interlaced',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Incoming video interlaced',
+    'platform': 'arcam_fmj',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'incoming_video_interlaced',
+    'unique_id': '456789abcdef-2-incoming_video_interlaced',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_setup[binary_sensor.arcam_fmj_127_0_0_1_zone_2_incoming_video_interlaced-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Arcam FMJ (127.0.0.1) Zone 2 Incoming video interlaced',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.arcam_fmj_127_0_0_1_zone_2_incoming_video_interlaced',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---

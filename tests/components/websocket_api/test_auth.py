@@ -18,6 +18,7 @@ from homeassistant.components.websocket_api.const import (
     SIGNAL_WEBSOCKET_DISCONNECTED,
     URL,
 )
+from homeassistant.const import HASSIO_USER_NAME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.setup import async_setup_component
@@ -367,3 +368,43 @@ async def test_error_right_after_auth_disconnects(
             assert close_error_msg.type is WSMsgType.CLOSE
 
     assert "Received error message during command phase: explode" in caplog.text
+
+
+async def test_unix_socket_auth_bypass(
+    hass: HomeAssistant, hass_client_no_auth: ClientSessionGenerator
+) -> None:
+    """Test that Unix socket connections skip websocket auth phase."""
+    # Create the Supervisor system user
+    await hass.auth.async_create_system_user(
+        HASSIO_USER_NAME, group_ids=["system-admin"]
+    )
+
+    assert await async_setup_component(hass, "websocket_api", {})
+    await hass.async_block_till_done()
+
+    client = await hass_client_no_auth()
+
+    with (
+        patch(
+            "homeassistant.components.http.ban.is_supervisor_unix_socket_request",
+            return_value=True,
+        ),
+        patch(
+            "homeassistant.components.http.auth.is_supervisor_unix_socket_request",
+            return_value=True,
+        ),
+        patch(
+            "homeassistant.components.websocket_api.http.is_supervisor_unix_socket_request",
+            return_value=True,
+        ),
+    ):
+        async with client.ws_connect(URL) as ws:
+            # Should immediately receive auth_ok without sending a token
+            auth_msg = await ws.receive_json()
+            assert auth_msg["type"] == TYPE_AUTH_OK
+
+            # Verify the connection works by sending a ping
+            await ws.send_json({"id": 1, "type": "ping"})
+            pong_msg = await ws.receive_json()
+            assert pong_msg["type"] == "pong"
+            assert pong_msg["id"] == 1

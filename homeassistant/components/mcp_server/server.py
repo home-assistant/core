@@ -110,7 +110,7 @@ async def create_server(
         return [
             types.TextContent(
                 type="text",
-                text=json.dumps(tool_response),
+                text=json.dumps(tool_response, ensure_ascii=False),
             )
         ]
 

@@ -49,7 +49,7 @@ class PlaatoBinarySensor(PlaatoEntity, BinarySensorEntity):
             self._attr_device_class = BinarySensorDeviceClass.OPENING
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool:
         """Return true if the binary sensor is on."""
         if self._coordinator is not None:
             return self._coordinator.data.binary_sensors.get(self._sensor_type)

@@ -22,6 +22,8 @@ from homeassistant.exceptions import (
 )
 from homeassistant.helpers import config_entry_oauth2_flow
 
+from .const import DOMAIN
+
 _UPLOAD_AND_DOWNLOAD_TIMEOUT = 12 * 3600
 _UPLOAD_MAX_RETRIES = 20
 
@@ -61,14 +63,21 @@ class AsyncConfigEntryAuth(AbstractAuth):
             ):
                 if isinstance(ex, ClientResponseError) and 400 <= ex.status < 500:
                     raise ConfigEntryAuthFailed(
-                        "OAuth session is not valid, reauth required"
+                        translation_domain=DOMAIN,
+                        translation_key="authentication_not_valid",
                     ) from ex
-                raise ConfigEntryNotReady from ex
+                raise ConfigEntryNotReady(
+                    translation_domain=DOMAIN,
+                    translation_key="authentication_failed",
+                ) from ex
             if hasattr(ex, "status") and ex.status == 400:
                 self._oauth_session.config_entry.async_start_reauth(
                     self._oauth_session.hass
                 )
-            raise HomeAssistantError(ex) from ex
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="authentication_failed",
+            ) from ex
         return str(self._oauth_session.token[CONF_ACCESS_TOKEN])
 
 

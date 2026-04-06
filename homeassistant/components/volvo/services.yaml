@@ -1,0 +1,24 @@
+get_image_url:
+  fields:
+    entry:
+      required: true
+      selector:
+        config_entry:
+          integration: volvo
+    images:
+      required: false
+      selector:
+        select:
+          translation_key: service_param_image
+          multiple: true
+          sort: true
+          options:
+            - exterior_back
+            - exterior_back_left
+            - exterior_back_right
+            - exterior_front
+            - exterior_front_left
+            - exterior_front_right
+            - exterior_side_left
+            - exterior_side_right
+            - interior

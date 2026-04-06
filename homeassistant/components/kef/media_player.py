@@ -6,6 +6,7 @@ from datetime import timedelta
 from functools import partial
 import ipaddress
 import logging
+from typing import Any
 
 from aiokef import AsyncKefSpeaker
 from aiokef.aiokef import DSP_OPTION_MAPPING
@@ -346,7 +347,7 @@ class KefMediaPlayer(MediaPlayerEntity):
         self._update_dsp_task_remover = None
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the DSP settings of the KEF device."""
         return self._dsp or {}
 

@@ -93,7 +93,6 @@ class AirobotNumber(AirobotEntity, NumberEntity):
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
                 translation_key="set_value_failed",
-                translation_placeholders={"error": str(err)},
             ) from err
         else:
             await self.coordinator.async_request_refresh()

@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_media_player_with_and_without_sources[media_player.living_room-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'source_list': list([
@@ -45,6 +46,7 @@
       'device_class': 'tv',
       'friendly_name': 'Living Room',
       'is_volume_muted': False,
+      'last_non_buffering_state': <MediaPlayerState.ON: 'on'>,
       'source_list': list([
         'TV',
       ]),

@@ -1,0 +1,154 @@
+{
+  "airview": {
+    "enabled": 0
+  },
+  "derived": {
+    "access_point": false,
+    "fw_major": 6,
+    "mac": "YY:YY:YY:YY:YY:YY",
+    "mac_interface": "br0",
+    "mode": "point_to_point",
+    "ptmp": false,
+    "ptp": true,
+    "role": "station",
+    "sku": "LocoM5",
+    "station": true
+  },
+  "firewall": {
+    "eb6tables": false,
+    "ebtables": true,
+    "ip6tables": false,
+    "iptables": false
+  },
+  "genuine": "/images/genuine.png",
+  "host": {
+    "cpubusy": 11150046,
+    "cpuload": 5.65,
+    "cputotal": 197455604,
+    "devmodel": "NanoStation loco M5 ",
+    "freeram": 8753152,
+    "fwprefix": "XM",
+    "fwversion": "v6.3.16",
+    "hostname": "NanoStation loco M5 Client",
+    "netrole": "bridge",
+    "totalram": 30220288,
+    "uptime": 1974859
+  },
+  "interfaces": [
+    {
+      "enabled": true,
+      "hwaddr": "00:00:00:00:00:00",
+      "ifname": "lo",
+      "mtu": null,
+      "status": {
+        "cable_len": null,
+        "duplex": true,
+        "ip6addr": null,
+        "plugged": true,
+        "snr": null,
+        "speed": 0
+      }
+    },
+    {
+      "enabled": true,
+      "hwaddr": "YY:YY:YY:YY:YY:YY",
+      "ifname": "eth0",
+      "mtu": null,
+      "status": {
+        "cable_len": null,
+        "duplex": false,
+        "ip6addr": null,
+        "plugged": false,
+        "snr": null,
+        "speed": 0
+      }
+    },
+    {
+      "enabled": true,
+      "hwaddr": "YY:YY:YY:YY:YY:YY",
+      "ifname": "wifi0",
+      "mtu": null,
+      "status": {
+        "cable_len": null,
+        "duplex": true,
+        "ip6addr": null,
+        "plugged": true,
+        "snr": null,
+        "speed": 0
+      }
+    },
+    {
+      "enabled": true,
+      "hwaddr": "YY:YY:YY:YY:YY:YY",
+      "ifname": "ath0",
+      "mtu": null,
+      "status": {
+        "cable_len": null,
+        "duplex": true,
+        "ip6addr": null,
+        "plugged": true,
+        "snr": null,
+        "speed": 300
+      }
+    },
+    {
+      "enabled": true,
+      "hwaddr": "YY:YY:YY:YY:YY:YY",
+      "ifname": "br0",
+      "mtu": null,
+      "status": {
+        "cable_len": null,
+        "duplex": true,
+        "ip6addr": null,
+        "plugged": true,
+        "snr": null,
+        "speed": 0
+      }
+    }
+  ],
+  "services": {
+    "dhcpc": false,
+    "dhcpd": false,
+    "pppoe": false
+  },
+  "unms": {
+    "status": 0,
+    "timestamp": ""
+  },
+  "wireless": {
+    "ack": 28,
+    "antenna": "Built in - 13 dBi",
+    "antenna_gain": 13,
+    "apmac": "XX:XX:XX:XX:XX:XX",
+    "aprepeater": 0,
+    "cac_nol": 0,
+    "ccq": 738,
+    "chains": "2X2",
+    "chanbw": 40,
+    "channel": 140,
+    "countrycode": 616,
+    "dfs": 0,
+    "distance": 600,
+    "essid": "SOMETHING",
+    "frequency": 5700,
+    "hide_essid": 0,
+    "ieeemode": "11NAHT40MINUS",
+    "mode": "sta",
+    "noisef": -89,
+    "nol_chans": 0,
+    "opmode": "11naht40minus",
+    "qos": "No QoS",
+    "rssi": 50,
+    "rstatus": 5,
+    "rxrate": "180",
+    "security": "WPA2",
+    "signal": -46,
+    "throughput": {
+      "rx": 180,
+      "tx": 243
+    },
+    "txpower": 2,
+    "txrate": "243",
+    "wds": 1
+  }
+}

@@ -216,13 +216,13 @@ class PlexFlowHandler(ConfigFlow, domain=DOMAIN):
         except NoServersFound:
             _LOGGER.error("No servers linked to Plex account")
             errors["base"] = "no_servers"
-        except (plexapi.exceptions.BadRequest, plexapi.exceptions.Unauthorized):
+        except plexapi.exceptions.BadRequest, plexapi.exceptions.Unauthorized:
             _LOGGER.error("Invalid credentials provided, config not created")
             errors[CONF_TOKEN] = "faulty_credentials"
         except requests.exceptions.SSLError as error:
             _LOGGER.error("SSL certificate error: [%s]", error)
             errors["base"] = "ssl_error"
-        except (plexapi.exceptions.NotFound, requests.exceptions.ConnectionError):
+        except plexapi.exceptions.NotFound, requests.exceptions.ConnectionError:
             server_identifier = (
                 server_config.get(CONF_URL) or plex_server.server_choice or "Unknown"
             )

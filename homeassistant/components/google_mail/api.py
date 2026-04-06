@@ -2,8 +2,7 @@
 
 from functools import partial
 
-from aiohttp.client_exceptions import ClientError, ClientResponseError
-from google.auth.exceptions import RefreshError
+from aiohttp.client_exceptions import ClientError
 from google.oauth2.credentials import Credentials
 from googleapiclient.discovery import Resource, build
 
@@ -14,6 +13,8 @@ from homeassistant.exceptions import (
     ConfigEntryAuthFailed,
     ConfigEntryNotReady,
     HomeAssistantError,
+    OAuth2TokenRequestError,
+    OAuth2TokenRequestReauthError,
 )
 from homeassistant.helpers import config_entry_oauth2_flow
 
@@ -37,24 +38,26 @@ class AsyncConfigEntryAuth:
 
     async def check_and_refresh_token(self) -> str:
         """Check the token."""
+        setup_in_progress = (
+            self.oauth_session.config_entry.state is ConfigEntryState.SETUP_IN_PROGRESS
+        )
+
         try:
             await self.oauth_session.async_ensure_token_valid()
-        except (RefreshError, ClientResponseError, ClientError) as ex:
-            if (
-                self.oauth_session.config_entry.state
-                is ConfigEntryState.SETUP_IN_PROGRESS
-            ):
-                if isinstance(ex, ClientResponseError) and 400 <= ex.status < 500:
-                    raise ConfigEntryAuthFailed(
-                        "OAuth session is not valid, reauth required"
-                    ) from ex
+        except OAuth2TokenRequestReauthError as ex:
+            if setup_in_progress:
+                raise ConfigEntryAuthFailed(
+                    "OAuth session is not valid, reauth required"
+                ) from ex
+            self.oauth_session.config_entry.async_start_reauth(self.oauth_session.hass)
+            raise
+        except OAuth2TokenRequestError as ex:
+            if setup_in_progress:
                 raise ConfigEntryNotReady from ex
-            if isinstance(ex, RefreshError) or (
-                hasattr(ex, "status") and ex.status == 400
-            ):
-                self.oauth_session.config_entry.async_start_reauth(
-                    self.oauth_session.hass
-                )
+            raise
+        except ClientError as ex:
+            if setup_in_progress:
+                raise ConfigEntryNotReady from ex
             raise HomeAssistantError(ex) from ex
         return self.access_token
 

@@ -1,4 +1,4 @@
-"""The radiotherm component."""
+"""The Radio Thermostat integration."""
 
 from __future__ import annotations
 

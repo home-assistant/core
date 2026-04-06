@@ -7,7 +7,7 @@ from functools import partial
 import pypck
 
 from homeassistant.components.binary_sensor import (
-    DOMAIN as DOMAIN_BINARY_SENSOR,
+    DOMAIN as BINARY_SENSOR_DOMAIN,
     BinarySensorEntity,
 )
 from homeassistant.const import CONF_DOMAIN, CONF_ENTITIES, CONF_SOURCE
@@ -48,14 +48,14 @@ async def async_setup_entry(
     )
 
     config_entry.runtime_data.add_entities_callbacks.update(
-        {DOMAIN_BINARY_SENSOR: add_entities}
+        {BINARY_SENSOR_DOMAIN: add_entities}
     )
 
     add_entities(
         (
             entity_config
             for entity_config in config_entry.data[CONF_ENTITIES]
-            if entity_config[CONF_DOMAIN] == DOMAIN_BINARY_SENSOR
+            if entity_config[CONF_DOMAIN] == BINARY_SENSOR_DOMAIN
         ),
     )
 

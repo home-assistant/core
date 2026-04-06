@@ -16,7 +16,7 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from .const import DATA_RAINCLOUD, ICON_MAP
+from .const import DATA_RAINCLOUD
 from .entity import RainCloudEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -62,23 +62,20 @@ def setup_platform(
 class RainCloudBinarySensor(RainCloudEntity, BinarySensorEntity):
     """A sensor implementation for raincloud device."""
 
-    @property
-    def is_on(self):
-        """Return true if the binary sensor is on."""
-        return self._state
-
     def update(self) -> None:
         """Get the latest data and updates the state."""
-        _LOGGER.debug("Updating RainCloud sensor: %s", self._name)
-        self._state = getattr(self.data, self._sensor_type)
+        _LOGGER.debug("Updating RainCloud sensor: %s", self.name)
+        state = getattr(self.data, self._sensor_type)
         if self._sensor_type == "status":
-            self._state = self._state == "Online"
+            self._attr_is_on = state == "Online"
+        else:
+            self._attr_is_on = state
 
     @property
-    def icon(self):
+    def icon(self) -> str | None:
         """Return the icon of this device."""
         if self._sensor_type == "is_watering":
             return "mdi:water" if self.is_on else "mdi:water-off"
         if self._sensor_type == "status":
             return "mdi:pipe" if self.is_on else "mdi:pipe-disconnected"
-        return ICON_MAP.get(self._sensor_type)
+        return super().icon

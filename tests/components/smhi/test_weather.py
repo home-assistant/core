@@ -57,7 +57,7 @@ async def test_setup_hass(
     state = hass.states.get(ENTITY_ID)
 
     assert state
-    assert state.state == "fog"
+    assert state.state == "cloudy"
     assert state.attributes == snapshot
 
 
@@ -65,7 +65,7 @@ async def test_setup_hass(
     "to_load",
     [1],
 )
-@pytest.mark.freeze_time(datetime(2023, 8, 7, 1, tzinfo=dt_util.UTC))
+@pytest.mark.freeze_time(datetime(2026, 4, 3, 1, tzinfo=dt_util.UTC))
 async def test_clear_night(
     hass: HomeAssistant,
     mock_client: SMHIPointForecast,
@@ -134,7 +134,7 @@ async def test_properties_no_data(
 
     assert state
     assert state.name == "Test"
-    assert state.state == "fog"
+    assert state.state == "cloudy"
     assert ATTR_SMHI_THUNDER_PROBABILITY not in state.attributes
     assert state.attributes[ATTR_ATTRIBUTION] == "Swedish weather institute (SMHI)"
 
@@ -356,7 +356,7 @@ async def test_custom_speed_unit(
 
     assert state
     assert state.name == "Test"
-    assert state.attributes[ATTR_WEATHER_WIND_GUST_SPEED] == 22.32
+    assert state.attributes[ATTR_WEATHER_WIND_GUST_SPEED] == 24.48
 
     entity_registry.async_update_entity_options(
         state.entity_id,
@@ -367,7 +367,7 @@ async def test_custom_speed_unit(
     await hass.async_block_till_done()
 
     state = hass.states.get(ENTITY_ID)
-    assert state.attributes[ATTR_WEATHER_WIND_GUST_SPEED] == 6.2
+    assert state.attributes[ATTR_WEATHER_WIND_GUST_SPEED] == 6.8
 
 
 @pytest.mark.parametrize(
@@ -400,7 +400,7 @@ async def test_forecast_services(
     assert msg["type"] == "event"
     forecast1 = msg["event"]["forecast"]
 
-    assert len(forecast1) == 10
+    assert len(forecast1) == 11
     assert forecast1[0] == snapshot
     assert forecast1[6] == snapshot
 
@@ -421,7 +421,7 @@ async def test_forecast_services(
     assert msg["type"] == "event"
     forecast1 = msg["event"]["forecast"]
 
-    assert len(forecast1) == 52
+    assert len(forecast1) == 59
     assert forecast1[0] == snapshot
     assert forecast1[6] == snapshot
 

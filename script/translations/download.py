@@ -40,6 +40,7 @@ def run_download_docker() -> None:
             "file",
             "download",
             CORE_PROJECT_ID,
+            "--async",
             "--original-filenames=false",
             "--replace-breaks=false",
             "--filter-data",

@@ -65,38 +65,13 @@ class OpenHardwareMonitorDevice(SensorEntity):
 
     def __init__(self, data, name, path, unit_of_measurement):
         """Initialize an OpenHardwareMonitor sensor."""
-        self._name = name
+        self._attr_name = name
         self._data = data
         self.path = path
-        self.attributes = {}
-        self._unit_of_measurement = unit_of_measurement
-
-        self.value = None
-
-    @property
-    def name(self):
-        """Return the name of the device."""
-        return self._name
-
-    @property
-    def native_unit_of_measurement(self):
-        """Return the unit of measurement."""
-        return self._unit_of_measurement
-
-    @property
-    def native_value(self):
-        """Return the state of the device."""
-        if self.value == "-":
-            return None
-        return self.value
-
-    @property
-    def extra_state_attributes(self):
-        """Return the state attributes of the entity."""
-        return self.attributes
+        self._attr_native_unit_of_measurement = unit_of_measurement
 
     @classmethod
-    def parse_number(cls, string):
+    def parse_number(cls, string: str) -> str:
         """In some locales a decimal numbers uses ',' instead of '.'."""
         return string.replace(",", ".")
 
@@ -111,7 +86,8 @@ class OpenHardwareMonitorDevice(SensorEntity):
             values = array[path_number]
 
             if path_index == len(self.path) - 1:
-                self.value = self.parse_number(values[OHM_VALUE].split(" ")[0])
+                value = self.parse_number(values[OHM_VALUE].split(" ")[0])
+                self._attr_native_value = None if value == "-" else value
                 _attributes.update(
                     {
                         "name": values[OHM_NAME],
@@ -124,7 +100,7 @@ class OpenHardwareMonitorDevice(SensorEntity):
                     }
                 )
 
-                self.attributes = _attributes
+                self._attr_extra_state_attributes = _attributes
                 return
             array = array[path_number][OHM_CHILDREN]
             _attributes.update({f"level_{path_index}": values[OHM_NAME]})

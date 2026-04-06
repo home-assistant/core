@@ -53,6 +53,7 @@ class EheimDigitalUpdateCoordinator(
             main_device_added_event=self.main_device_added_event,
         )
         self.known_devices: set[str] = set()
+        self.incomplete_devices: set[str] = set()
         self.platform_callbacks: set[AsyncSetupDeviceEntitiesCallback] = set()
 
     def add_platform_callback(
@@ -70,11 +71,26 @@ class EheimDigitalUpdateCoordinator(
         This function is called from the library whenever a new device is added.
         """
 
-        if device_address not in self.known_devices:
+        if self.hub.devices[device_address].is_missing_data:
+            self.incomplete_devices.add(device_address)
+            return
+
+        if (
+            device_address not in self.known_devices
+            or device_address in self.incomplete_devices
+        ):
             for platform_callback in self.platform_callbacks:
                 platform_callback({device_address: self.hub.devices[device_address]})
+            if device_address in self.incomplete_devices:
+                self.incomplete_devices.remove(device_address)
 
     async def _async_receive_callback(self) -> None:
+        if any(self.incomplete_devices):
+            for device_address in self.incomplete_devices.copy():
+                if not self.hub.devices[device_address].is_missing_data:
+                    await self._async_device_found(
+                        device_address, EheimDeviceType.VERSION_UNDEFINED
+                    )
         self.async_set_updated_data(self.hub.devices)
 
     async def _async_setup(self) -> None:

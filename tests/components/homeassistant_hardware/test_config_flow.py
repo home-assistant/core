@@ -1,7 +1,7 @@
 """Test the Home Assistant hardware firmware config flow."""
 
 import asyncio
-from collections.abc import AsyncGenerator, Awaitable, Callable, Iterator, Sequence
+from collections.abc import AsyncGenerator, Awaitable, Callable, Iterator
 import contextlib
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, Mock, call, patch
@@ -14,9 +14,13 @@ from ha_silabs_firmware_client import (
     FirmwareUpdateClient,
 )
 import pytest
+from universal_silabs_flasher.flasher import DeviceSpecificFlasher, Zbt1Flasher
 from yarl import URL
 
-from homeassistant.components.homeassistant_hardware.const import Z2M_EMBER_DOCS_URL
+from homeassistant.components.homeassistant_hardware.const import (
+    DOMAIN,
+    Z2M_EMBER_DOCS_URL,
+)
 from homeassistant.components.homeassistant_hardware.firmware_config_flow import (
     STEP_PICK_FIRMWARE_THREAD,
     STEP_PICK_FIRMWARE_ZIGBEE,
@@ -26,7 +30,6 @@ from homeassistant.components.homeassistant_hardware.firmware_config_flow import
 from homeassistant.components.homeassistant_hardware.util import (
     ApplicationType,
     FirmwareInfo,
-    ResetTarget,
 )
 from homeassistant.config_entries import (
     SOURCE_IGNORE,
@@ -61,6 +64,8 @@ class FakeFirmwareConfigFlow(BaseFirmwareConfigFlow, domain=TEST_DOMAIN):
 
     VERSION = 1
     MINOR_VERSION = 2
+
+    _flasher_cls = Zbt1Flasher
 
     @staticmethod
     @callback
@@ -123,6 +128,8 @@ class FakeFirmwareConfigFlow(BaseFirmwareConfigFlow, domain=TEST_DOMAIN):
 
 class FakeFirmwareOptionsFlowHandler(BaseFirmwareOptionsFlow):
     """Options flow for `test_firmware_domain`."""
+
+    _flasher_cls = Zbt1Flasher
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         """Instantiate options flow."""
@@ -195,7 +202,7 @@ async def mock_test_firmware_platform(
     mock_integration(hass, mock_module)
     mock_platform(hass, f"{TEST_DOMAIN}.config_flow")
 
-    await async_setup_component(hass, "homeassistant_hardware", {})
+    await async_setup_component(hass, DOMAIN, {})
 
     with mock_config_flow(TEST_DOMAIN, FakeFirmwareConfigFlow):
         yield
@@ -295,9 +302,8 @@ def mock_firmware_info(
         hass: HomeAssistant,
         device: str,
         fw_data: bytes,
+        flasher_cls: type[DeviceSpecificFlasher],
         expected_installed_firmware_type: ApplicationType,
-        bootloader_reset_methods: Sequence[ResetTarget] = (),
-        application_probe_methods: Sequence[tuple[ApplicationType, int]] = (),
         progress_callback: Callable[[int, int], None] | None = None,
     ) -> FirmwareInfo:
         await asyncio.sleep(0)
@@ -903,7 +909,6 @@ async def test_config_flow_thread_addon_already_installed(
     }
 
 
-@pytest.mark.usefixtures("addon_not_installed")
 async def test_options_flow_zigbee_to_thread(
     hass: HomeAssistant,
     install_addon: AsyncMock,

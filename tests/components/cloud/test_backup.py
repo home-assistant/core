@@ -12,10 +12,12 @@ from hass_nabucasa.files import FilesError, StorageType
 import pytest
 
 from homeassistant.components.backup import (
+    DATA_MANAGER,
     DOMAIN as BACKUP_DOMAIN,
     AddonInfo,
     AgentBackup,
     Folder,
+    UploadBackupEvent,
 )
 from homeassistant.components.cloud import DOMAIN
 from homeassistant.components.cloud.backup import async_register_backup_agents_listener
@@ -353,12 +355,82 @@ async def test_agents_upload(
         base64md5hash=ANY,
         metadata=ANY,
         size=ANY,
+        on_progress=ANY,
     )
     metadata = cloud.files.upload.mock_calls[-1].kwargs["metadata"]
     assert metadata["backup_id"] == backup_id
 
     assert resp.status == 201
     assert f"Uploading backup {backup_id}" in caplog.text
+
+
+@pytest.mark.usefixtures("cloud_logged_in", "mock_list_files")
+async def test_agents_upload_on_progress(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    cloud: Mock,
+) -> None:
+    """Test agent upload backup emits UploadBackupEvent via on_progress."""
+    client = await hass_client()
+    backup_data = "test"
+    backup_id = "test-backup"
+    test_backup = AgentBackup(
+        addons=[AddonInfo(name="Test", slug="test", version="1.0.0")],
+        backup_id=backup_id,
+        database_included=True,
+        date="1970-01-01T00:00:00.000Z",
+        extra_metadata={},
+        folders=[Folder.MEDIA, Folder.SHARE],
+        homeassistant_included=True,
+        homeassistant_version="2024.12.0",
+        name="Test",
+        protected=True,
+        size=len(backup_data),
+    )
+
+    async def mock_upload(**kwargs: Any) -> None:
+        """Mock upload that calls on_progress."""
+        on_progress = kwargs["on_progress"]
+        on_progress(bytes_uploaded=2)
+        await hass.async_block_till_done()
+        on_progress(bytes_uploaded=4)
+        await hass.async_block_till_done()
+
+    cloud.files.upload.side_effect = mock_upload
+
+    manager = hass.data[DATA_MANAGER]
+    events: list[UploadBackupEvent] = []
+
+    def _collect(event: Any) -> None:
+        if isinstance(event, UploadBackupEvent):
+            events.append(event)
+
+    unsub = manager.async_subscribe_events(_collect)
+
+    with (
+        patch(
+            "homeassistant.components.backup.manager.BackupManager.async_get_backup",
+        ) as fetch_backup,
+        patch(
+            "homeassistant.components.backup.manager.read_backup",
+            return_value=test_backup,
+        ),
+        patch("pathlib.Path.open") as mocked_open,
+    ):
+        mocked_open.return_value.read = Mock(side_effect=[backup_data.encode(), b""])
+        fetch_backup.return_value = test_backup
+        resp = await client.post(
+            "/api/backup/upload?agent_id=cloud.cloud",
+            data={"file": StringIO(backup_data)},
+        )
+
+    unsub()
+
+    assert resp.status == 201
+    cloud_events = [e for e in events if e.agent_id == "cloud.cloud"]
+    assert len(cloud_events) >= 1
+    assert all(e.total_bytes == len(backup_data) for e in cloud_events)
+    assert cloud_events[-1].uploaded_bytes == len(backup_data)
 
 
 @pytest.mark.parametrize("side_effect", [FilesError("Boom!"), CloudError("Boom!")])

@@ -122,9 +122,12 @@ async def test_unknown_error(hass: HomeAssistant) -> None:
 
 async def test_zero_conf(hass: HomeAssistant) -> None:
     """Test the manual flow for zero config."""
-    with patch(
-        "homeassistant.components.radarr.config_flow.RadarrClient.async_try_zeroconf",
-        return_value=("v3", API_KEY, "/test"),
+    with (
+        patch(
+            "homeassistant.components.radarr.config_flow.RadarrClient.async_try_zeroconf",
+            return_value=("v3", API_KEY, "/test"),
+        ),
+        patch_async_setup_entry(),
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
@@ -139,9 +142,12 @@ async def test_zero_conf(hass: HomeAssistant) -> None:
 
 async def test_url_rewrite(hass: HomeAssistant) -> None:
     """Test auth flow url rewrite."""
-    with patch(
-        "homeassistant.components.radarr.config_flow.RadarrClient.async_try_zeroconf",
-        return_value=("v3", API_KEY, "/test"),
+    with (
+        patch(
+            "homeassistant.components.radarr.config_flow.RadarrClient.async_try_zeroconf",
+            return_value=("v3", API_KEY, "/test"),
+        ),
+        patch_async_setup_entry(),
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,

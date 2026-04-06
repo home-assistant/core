@@ -1,4 +1,4 @@
-"""The radiotherm integration base entity."""
+"""The Radio Thermostat integration base entity."""
 
 from abc import abstractmethod
 
@@ -12,7 +12,7 @@ from .data import RadioThermUpdate
 
 
 class RadioThermostatEntity(CoordinatorEntity[RadioThermUpdateCoordinator]):
-    """Base class for radiotherm entities."""
+    """Base class for Radio Thermostat entities."""
 
     _attr_has_entity_name = True
 

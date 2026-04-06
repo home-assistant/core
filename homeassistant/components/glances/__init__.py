@@ -1,4 +1,4 @@
-"""The Glances component."""
+"""The Glances integration."""
 
 import logging
 from typing import Any

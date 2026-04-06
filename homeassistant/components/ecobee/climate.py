@@ -490,14 +490,14 @@ class Thermostat(ClimateEntity):
         return None
 
     @property
-    def fan(self):
+    def fan(self) -> str:
         """Return the current fan status."""
         if "fan" in self.thermostat["equipmentStatus"]:
             return STATE_ON
         return STATE_OFF
 
     @property
-    def fan_mode(self):
+    def fan_mode(self) -> str:
         """Return the fan setting."""
         return self.thermostat["runtime"]["desiredFanMode"]
 
@@ -535,7 +535,7 @@ class Thermostat(ClimateEntity):
         return None
 
     @property
-    def hvac_mode(self):
+    def hvac_mode(self) -> HVACMode:
         """Return current operation."""
         return ECOBEE_HVAC_TO_HASS[self.settings["hvacMode"]]
 
@@ -548,7 +548,7 @@ class Thermostat(ClimateEntity):
             return None
 
     @property
-    def hvac_action(self):
+    def hvac_action(self) -> HVACAction:
         """Return current HVAC action.
 
         Ecobee returns a CSV string with different equipment that is active.
@@ -619,9 +619,7 @@ class Thermostat(ClimateEntity):
         return [
             {
                 "id": device.id,
-                "name_by_user": device.name_by_user
-                if device.name_by_user
-                else device.name,
+                "name_by_user": device.name_by_user or device.name,
             }
             for device in device_registry.devices.values()
             for sensor_info in sensors_info
@@ -924,7 +922,7 @@ class Thermostat(ClimateEntity):
         sensor_names = self._sensors_in_preset_mode(preset_mode)
         return sorted(
             [
-                device.name_by_user if device.name_by_user else device.name
+                device.name_by_user or device.name
                 for device in device_registry.devices.values()
                 for sensor_name in sensor_names
                 if device.name == sensor_name

@@ -5,6 +5,7 @@
       'current_position': 20,
       'device_class': 'blind',
       'friendly_name': 'Test',
+      'is_closed': False,
       'supported_features': <CoverEntityFeature: 7>,
     }),
     'context': <ANY>,
@@ -17,8 +18,9 @@
 # ---
 # name: test_cover.1
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,

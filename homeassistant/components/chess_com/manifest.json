@@ -1,0 +1,12 @@
+{
+  "domain": "chess_com",
+  "name": "Chess.com",
+  "codeowners": ["@joostlek"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/chess_com",
+  "integration_type": "service",
+  "iot_class": "cloud_polling",
+  "loggers": ["chess_com_api"],
+  "quality_scale": "bronze",
+  "requirements": ["chess-com-api==1.1.0"]
+}

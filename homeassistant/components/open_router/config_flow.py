@@ -27,6 +27,7 @@ from homeassistant.core import callback
 from homeassistant.helpers import llm
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.selector import (
+    BooleanSelector,
     SelectOptionDict,
     SelectSelector,
     SelectSelectorConfig,
@@ -34,7 +35,12 @@ from homeassistant.helpers.selector import (
     TemplateSelector,
 )
 
-from .const import CONF_PROMPT, DOMAIN, RECOMMENDED_CONVERSATION_OPTIONS
+from .const import (
+    CONF_PROMPT,
+    CONF_WEB_SEARCH,
+    DOMAIN,
+    RECOMMENDED_CONVERSATION_OPTIONS,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -43,6 +49,7 @@ class OpenRouterConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for OpenRouter."""
 
     VERSION = 1
+    MINOR_VERSION = 2
 
     @classmethod
     @callback
@@ -66,7 +73,7 @@ class OpenRouterConfigFlow(ConfigFlow, domain=DOMAIN):
                 user_input[CONF_API_KEY], async_get_clientsession(self.hass)
             )
             try:
-                await client.get_key_data()
+                key_data = await client.get_key_data()
             except OpenRouterError:
                 errors["base"] = "cannot_connect"
             except Exception:
@@ -74,7 +81,7 @@ class OpenRouterConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "unknown"
             else:
                 return self.async_create_entry(
-                    title="OpenRouter",
+                    title=key_data.label,
                     data=user_input,
                 )
         return self.async_show_form(
@@ -106,7 +113,7 @@ class OpenRouterSubentryFlowHandler(ConfigSubentryFlow):
 
 
 class ConversationFlowHandler(OpenRouterSubentryFlowHandler):
-    """Handle subentry flow."""
+    """Handle conversation subentry flow."""
 
     def __init__(self) -> None:
         """Initialize the subentry flow."""
@@ -208,13 +215,20 @@ class ConversationFlowHandler(OpenRouterSubentryFlowHandler):
                     ): SelectSelector(
                         SelectSelectorConfig(options=hass_apis, multiple=True)
                     ),
+                    vol.Optional(
+                        CONF_WEB_SEARCH,
+                        default=self.options.get(
+                            CONF_WEB_SEARCH,
+                            RECOMMENDED_CONVERSATION_OPTIONS[CONF_WEB_SEARCH],
+                        ),
+                    ): BooleanSelector(),
                 }
             ),
         )
 
 
 class AITaskDataFlowHandler(OpenRouterSubentryFlowHandler):
-    """Handle subentry flow."""
+    """Handle AI task subentry flow."""
 
     def __init__(self) -> None:
         """Initialize the subentry flow."""

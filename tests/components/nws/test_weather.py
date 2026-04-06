@@ -9,6 +9,10 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components import nws
+from homeassistant.components.homeassistant import (
+    DOMAIN as HOMEASSISTANT_DOMAIN,
+    SERVICE_UPDATE_ENTITY,
+)
 from homeassistant.components.nws.const import (
     DEFAULT_SCAN_INTERVAL,
     OBSERVATION_VALID_TIME,
@@ -69,7 +73,7 @@ async def test_imperial_metric(
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    state = hass.states.get("weather.abc")
+    state = hass.states.get("weather.nws_35_75_abc")
 
     assert state
     assert state.state == ATTR_CONDITION_SUNNY
@@ -92,7 +96,7 @@ async def test_night_clear(hass: HomeAssistant, mock_simple_nws, no_sensor) -> N
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    state = hass.states.get("weather.abc")
+    state = hass.states.get("weather.nws_35_75_abc")
     assert state.state == ATTR_CONDITION_CLEAR_NIGHT
 
 
@@ -110,7 +114,7 @@ async def test_none_values(hass: HomeAssistant, mock_simple_nws, no_sensor) -> N
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    state = hass.states.get("weather.abc")
+    state = hass.states.get("weather.nws_35_75_abc")
     assert state.state == STATE_UNKNOWN
     data = state.attributes
     for key in WEATHER_EXPECTED_OBSERVATION_IMPERIAL:
@@ -135,7 +139,7 @@ async def test_data_caching_error_observation(
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    state = hass.states.get("weather.abc")
+    state = hass.states.get("weather.nws_35_75_abc")
     assert state.state == "sunny"
 
     # data is still valid even when update fails
@@ -145,7 +149,7 @@ async def test_data_caching_error_observation(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    state = hass.states.get("weather.abc")
+    state = hass.states.get("weather.nws_35_75_abc")
     assert state.state == "sunny"
 
     assert (
@@ -158,7 +162,7 @@ async def test_data_caching_error_observation(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    state = hass.states.get("weather.abc")
+    state = hass.states.get("weather.nws_35_75_abc")
     assert state.state == STATE_UNAVAILABLE
 
     assert "Error fetching NWS observation station ABC data: Test" in caplog.text
@@ -237,7 +241,7 @@ async def test_none(hass: HomeAssistant, mock_simple_nws, no_sensor) -> None:
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    state = hass.states.get("weather.abc")
+    state = hass.states.get("weather.nws_35_75_abc")
     assert state
     assert state.state == STATE_UNKNOWN
 
@@ -260,14 +264,14 @@ async def test_error_station(hass: HomeAssistant, mock_simple_nws, no_sensor) ->
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    assert hass.states.get("weather.abc") is None
+    assert hass.states.get("weather.nws_35_75_abc") is None
 
 
 async def test_entity_refresh(hass: HomeAssistant, mock_simple_nws, no_sensor) -> None:
     """Test manual refresh."""
     instance = mock_simple_nws.return_value
 
-    await async_setup_component(hass, "homeassistant", {})
+    await async_setup_component(hass, HOMEASSISTANT_DOMAIN, {})
 
     entry = MockConfigEntry(
         domain=nws.DOMAIN,
@@ -281,9 +285,9 @@ async def test_entity_refresh(hass: HomeAssistant, mock_simple_nws, no_sensor) -
     instance.update_forecast_hourly.assert_called_once()
 
     await hass.services.async_call(
-        "homeassistant",
-        "update_entity",
-        {"entity_id": "weather.abc"},
+        HOMEASSISTANT_DOMAIN,
+        SERVICE_UPDATE_ENTITY,
+        {"entity_id": "weather.nws_35_75_abc"},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -310,7 +314,7 @@ async def test_error_observation(
 
     instance.update_observation.assert_called_once()
 
-    state = hass.states.get("weather.abc")
+    state = hass.states.get("weather.nws_35_75_abc")
     assert state
     assert state.state == STATE_UNAVAILABLE
 
@@ -367,7 +371,7 @@ async def test_forecast_service(
             WEATHER_DOMAIN,
             service,
             {
-                "entity_id": "weather.abc",
+                "entity_id": "weather.nws_35_75_abc",
                 "type": forecast_type,
             },
             blocking=True,
@@ -394,7 +398,7 @@ async def test_forecast_service(
             WEATHER_DOMAIN,
             service,
             {
-                "entity_id": "weather.abc",
+                "entity_id": "weather.nws_35_75_abc",
                 "type": forecast_type,
             },
             blocking=True,
@@ -417,7 +421,7 @@ async def test_forecast_service(
         WEATHER_DOMAIN,
         service,
         {
-            "entity_id": "weather.abc",
+            "entity_id": "weather.nws_35_75_abc",
             "type": "hourly",
         },
         blocking=True,
@@ -434,7 +438,7 @@ async def test_forecast_service(
         WEATHER_DOMAIN,
         service,
         {
-            "entity_id": "weather.abc",
+            "entity_id": "weather.nws_35_75_abc",
             "type": "hourly",
         },
         blocking=True,
@@ -445,7 +449,7 @@ async def test_forecast_service(
 
 @pytest.mark.parametrize(
     ("forecast_type", "entity_id"),
-    [("hourly", "weather.abc")],
+    [("hourly", "weather.nws_35_75_abc")],
 )
 async def test_forecast_subscription(
     hass: HomeAssistant,
@@ -512,7 +516,7 @@ async def test_forecast_subscription(
 
 @pytest.mark.parametrize(
     ("forecast_type", "entity_id"),
-    [("hourly", "weather.abc")],
+    [("hourly", "weather.nws_35_75_abc")],
 )
 async def test_forecast_subscription_with_failing_coordinator(
     hass: HomeAssistant,
@@ -586,7 +590,7 @@ async def test_detailed_forecast_service(
         nws.DOMAIN,
         "get_forecasts_extra",
         {
-            "entity_id": "weather.abc",
+            "entity_id": "weather.nws_35_75_abc",
             "type": forecast_type,
         },
         blocking=True,
@@ -627,7 +631,7 @@ async def test_detailed_forecast_service_no_data(
         nws.DOMAIN,
         "get_forecasts_extra",
         {
-            "entity_id": "weather.abc",
+            "entity_id": "weather.nws_35_75_abc",
             "type": forecast_type,
         },
         blocking=True,

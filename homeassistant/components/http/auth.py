@@ -11,7 +11,13 @@ import time
 from typing import Any, Final
 
 from aiohttp import hdrs
-from aiohttp.web import Application, Request, StreamResponse, middleware
+from aiohttp.web import (
+    Application,
+    HTTPInternalServerError,
+    Request,
+    StreamResponse,
+    middleware,
+)
 import jwt
 from jwt import api_jws
 from yarl import URL
@@ -20,6 +26,7 @@ from homeassistant.auth import jwt_wrapper
 from homeassistant.auth.const import GROUP_ID_READ_ONLY
 from homeassistant.auth.models import User
 from homeassistant.components import websocket_api
+from homeassistant.const import HASSIO_USER_NAME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.http import current_request
 from homeassistant.helpers.json import json_bytes
@@ -27,7 +34,12 @@ from homeassistant.helpers.network import is_cloud_connection
 from homeassistant.helpers.storage import Store
 from homeassistant.util.network import is_local
 
-from .const import KEY_AUTHENTICATED, KEY_HASS_REFRESH_TOKEN_ID, KEY_HASS_USER
+from .const import (
+    KEY_AUTHENTICATED,
+    KEY_HASS_REFRESH_TOKEN_ID,
+    KEY_HASS_USER,
+    is_supervisor_unix_socket_request,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -57,7 +69,9 @@ def async_sign_path(
     if refresh_token_id is None:
         if use_content_user:
             refresh_token_id = hass.data[STORAGE_KEY]
-        elif connection := websocket_api.current_connection.get():
+        elif (
+            connection := websocket_api.current_connection.get()
+        ) and connection.refresh_token_id:
             refresh_token_id = connection.refresh_token_id
         elif (
             request := current_request.get()
@@ -117,7 +131,7 @@ def async_user_not_allowed_do_auth(
     return "User cannot authenticate remotely"
 
 
-async def async_setup_auth(
+async def async_setup_auth(  # noqa: C901
     hass: HomeAssistant,
     app: Application,
 ) -> None:
@@ -207,6 +221,41 @@ async def async_setup_auth(
         request[KEY_HASS_REFRESH_TOKEN_ID] = refresh_token.id
         return True
 
+    supervisor_user_id: str | None = None
+
+    async def async_authenticate_supervisor_unix_socket(request: Request) -> bool:
+        """Authenticate a request from a Unix socket as the Supervisor user.
+
+        The Unix Socket is dedicated and only available to Supervisor. To
+        avoid the extra overhead and round trips for the authentication and
+        refresh tokens, we directly authenticate requests from the socket as
+        the Supervisor user.
+        """
+        nonlocal supervisor_user_id
+
+        # Fast path: use cached user ID
+        if supervisor_user_id is not None:
+            if user := await hass.auth.async_get_user(supervisor_user_id):
+                request[KEY_HASS_USER] = user
+                return True
+            supervisor_user_id = None
+
+        # Slow path: find the Supervisor user by name
+        for user in await hass.auth.async_get_users():
+            if user.system_generated and user.name == HASSIO_USER_NAME:
+                supervisor_user_id = user.id
+                # Not setting KEY_HASS_REFRESH_TOKEN_ID since Supervisor user
+                # doesn't use refresh tokens.
+                request[KEY_HASS_USER] = user
+                return True
+
+        # The Unix socket should not be serving before the hassio integration
+        # has created the Supervisor user. If we get here, something is wrong.
+        _LOGGER.error(
+            "Supervisor user not found; cannot authenticate Unix socket request"
+        )
+        raise HTTPInternalServerError
+
     @middleware
     async def auth_middleware(
         request: Request, handler: Callable[[Request], Awaitable[StreamResponse]]
@@ -214,7 +263,11 @@ async def async_setup_auth(
         """Authenticate as middleware."""
         authenticated = False
 
-        if hdrs.AUTHORIZATION in request.headers and async_validate_auth_header(
+        if is_supervisor_unix_socket_request(request):
+            authenticated = await async_authenticate_supervisor_unix_socket(request)
+            auth_type = "supervisor unix socket"
+
+        elif hdrs.AUTHORIZATION in request.headers and async_validate_auth_header(
             request
         ):
             authenticated = True
@@ -233,7 +286,7 @@ async def async_setup_auth(
         if authenticated and _LOGGER.isEnabledFor(logging.DEBUG):
             _LOGGER.debug(
                 "Authenticated %s for %s using %s",
-                request.remote,
+                request.remote or "unknown remote",
                 request.path,
                 auth_type,
             )

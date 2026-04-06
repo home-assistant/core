@@ -17,7 +17,7 @@ from .const import BRANDS_CONF_MAP, CONF_BRAND, DOMAIN, REGIONS_CONF_MAP
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS = [Platform.BINARY_SENSOR, Platform.CLIMATE, Platform.SENSOR]
+PLATFORMS = [Platform.BINARY_SENSOR, Platform.CLIMATE, Platform.SELECT, Platform.SENSOR]
 
 type WhirlpoolConfigEntry = ConfigEntry[AppliancesManager]
 
@@ -35,7 +35,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: WhirlpoolConfigEntry) ->
     try:
         await auth.do_auth(store=False)
     except (ClientError, TimeoutError) as ex:
-        raise ConfigEntryNotReady("Cannot connect") from ex
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN, translation_key="cannot_connect"
+        ) from ex
     except WhirlpoolAccountLocked as ex:
         raise ConfigEntryAuthFailed(
             translation_domain=DOMAIN, translation_key="account_locked"
@@ -43,7 +45,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: WhirlpoolConfigEntry) ->
 
     if not auth.is_access_token_valid():
         _LOGGER.error("Authentication failed")
-        raise ConfigEntryAuthFailed("Incorrect Password")
+        raise ConfigEntryAuthFailed(
+            translation_domain=DOMAIN, translation_key="invalid_auth"
+        )
 
     appliances_manager = AppliancesManager(backend_selector, auth, session)
     if not await appliances_manager.fetch_appliances():

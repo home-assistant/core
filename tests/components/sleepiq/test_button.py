@@ -14,19 +14,26 @@ async def test_button_calibrate(
     """Test the SleepIQ calibrate button."""
     await setup_platform(hass, BUTTON_DOMAIN)
 
-    state = hass.states.get(f"button.sleepnumber_{BED_NAME_LOWER}_calibrate")
+    state = hass.states.get(
+        f"button.{BED_NAME_LOWER}_sleepnumber_{BED_NAME_LOWER}_calibrate"
+    )
     assert (
-        state.attributes.get(ATTR_FRIENDLY_NAME) == f"SleepNumber {BED_NAME} Calibrate"
+        state.attributes.get(ATTR_FRIENDLY_NAME)
+        == f"{BED_NAME} SleepNumber {BED_NAME} Calibrate"
     )
 
-    entity = entity_registry.async_get(f"button.sleepnumber_{BED_NAME_LOWER}_calibrate")
+    entity = entity_registry.async_get(
+        f"button.{BED_NAME_LOWER}_sleepnumber_{BED_NAME_LOWER}_calibrate"
+    )
     assert entity
     assert entity.unique_id == f"{BED_ID}-calibrate"
 
     await hass.services.async_call(
         BUTTON_DOMAIN,
         "press",
-        {ATTR_ENTITY_ID: f"button.sleepnumber_{BED_NAME_LOWER}_calibrate"},
+        {
+            ATTR_ENTITY_ID: f"button.{BED_NAME_LOWER}_sleepnumber_{BED_NAME_LOWER}_calibrate"
+        },
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -40,19 +47,26 @@ async def test_button_stop_pump(
     """Test the SleepIQ stop pump button."""
     await setup_platform(hass, BUTTON_DOMAIN)
 
-    state = hass.states.get(f"button.sleepnumber_{BED_NAME_LOWER}_stop_pump")
+    state = hass.states.get(
+        f"button.{BED_NAME_LOWER}_sleepnumber_{BED_NAME_LOWER}_stop_pump"
+    )
     assert (
-        state.attributes.get(ATTR_FRIENDLY_NAME) == f"SleepNumber {BED_NAME} Stop Pump"
+        state.attributes.get(ATTR_FRIENDLY_NAME)
+        == f"{BED_NAME} SleepNumber {BED_NAME} Stop Pump"
     )
 
-    entity = entity_registry.async_get(f"button.sleepnumber_{BED_NAME_LOWER}_stop_pump")
+    entity = entity_registry.async_get(
+        f"button.{BED_NAME_LOWER}_sleepnumber_{BED_NAME_LOWER}_stop_pump"
+    )
     assert entity
     assert entity.unique_id == f"{BED_ID}-stop-pump"
 
     await hass.services.async_call(
         BUTTON_DOMAIN,
         "press",
-        {ATTR_ENTITY_ID: f"button.sleepnumber_{BED_NAME_LOWER}_stop_pump"},
+        {
+            ATTR_ENTITY_ID: f"button.{BED_NAME_LOWER}_sleepnumber_{BED_NAME_LOWER}_stop_pump"
+        },
         blocking=True,
     )
     await hass.async_block_till_done()

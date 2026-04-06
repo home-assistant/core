@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_alarm_control_panels[alarm_control_panel.direct_panel_https_1_1_1_1_443_api_v2_area_1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -54,8 +55,9 @@
 # ---
 # name: test_alarm_control_panels[alarm_control_panel.direct_panel_https_1_1_1_1_443_api_v2_area_2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -107,8 +109,9 @@
 # ---
 # name: test_alarm_control_panels[alarm_control_panel.direct_panel_https_1_1_1_1_443_api_v2_area_3-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,

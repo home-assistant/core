@@ -44,7 +44,6 @@ def account_meta(data: Account) -> Mapping[str, Any]:
         "display_name": data.display_name,
         "bio": data.note,
         "created": dt_util.as_local(data.created_at).date(),
-        **{f.name: f.value for f in data.fields},
     }
 
 
@@ -72,9 +71,9 @@ ENTITY_DESCRIPTIONS = (
         translation_key="last_post",
         device_class=SensorDeviceClass.TIMESTAMP,
         value_fn=(
-            lambda data, _: dt_util.as_local(data.last_status_at)
-            if data.last_status_at
-            else None
+            lambda data, _: (
+                dt_util.as_local(data.last_status_at) if data.last_status_at else None
+            )
         ),
     ),
     MastodonSensorEntityDescription(

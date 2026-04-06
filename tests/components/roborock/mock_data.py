@@ -18,6 +18,12 @@ from roborock.data import (
     ValleyElectricityTimer,
     WorkStatusMapping,
 )
+from roborock.data.b01_q10.b01_q10_code_mappings import (
+    YXDeviceState,
+    YXFanLevel,
+    YXWaterLevel,
+)
+from roborock.data.b01_q10.b01_q10_containers import Q10Status
 from vacuum_map_parser_base.config.image_config import ImageConfig
 from vacuum_map_parser_base.map_data import ImageData
 from vacuum_map_parser_roborock.map_data_parser import MapData
@@ -1054,6 +1060,39 @@ HOME_DATA_RAW = {
                 },
             ],
         },
+        {
+            "id": "q10_product_id",
+            "name": "Roborock Q10 S5+",
+            "model": "roborock.vacuum.ss07",
+            "category": "robot.vacuum.cleaner",
+            "capability": 0,
+            "schema": [
+                {
+                    "id": 121,
+                    "name": "设备状态",
+                    "code": "state",
+                    "mode": "ro",
+                    "type": "ENUM",
+                    "property": '{"range": []}',
+                },
+                {
+                    "id": 122,
+                    "name": "设备电量",
+                    "code": "battery",
+                    "mode": "ro",
+                    "type": "ENUM",
+                    "property": '{"range": []}',
+                },
+                {
+                    "id": 123,
+                    "name": "清扫模式",
+                    "code": "fan_level",
+                    "mode": "rw",
+                    "type": "ENUM",
+                    "property": '{"range": []}',
+                },
+            ],
+        },
     ],
     "devices": [
         {
@@ -1226,6 +1265,37 @@ HOME_DATA_RAW = {
             "shareType": "UNLIMITED_TIME",
         },
         {
+            "duid": "q10_duid",
+            "name": "Roborock Q10 S5+",
+            "localKey": "q10_local_key",
+            "productId": "q10_product_id",
+            "fv": "03.10.0",
+            "activeTime": 1767044247,
+            "timeZoneId": "America/Los_Angeles",
+            "iconUrl": "",
+            "share": True,
+            "shareTime": 1754789238,
+            "online": True,
+            "pv": "B01",
+            "tuyaMigrated": False,
+            "sn": "9FFC112EQAD843",
+            "deviceStatus": {
+                "121": 8,
+                "122": 100,
+                "123": 2,
+                "124": 1,
+                "135": 0,
+                "136": 1,
+                "137": 1,
+                "138": 0,
+                "139": 5,
+            },
+            "silentOtaSwitch": False,
+            "f": False,
+            "createTime": 1767044139,
+            "cid": "4C",
+        },
+        {
             "duid": "zeo_duid",
             "name": "Zeo One",
             "localKey": "zeo_local_key",
@@ -1389,6 +1459,7 @@ STATUS = S7Status.from_dict(
         "home_sec_enable_password": 0,
         "adbumper_status": [0, 0, 0],
         "water_shortage_status": 0,
+        "clean_fluid_status": 0,
         "dock_type": 3,
         "dust_collection_status": 0,
         "auto_dust_collection": 1,
@@ -1401,6 +1472,7 @@ STATUS = S7Status.from_dict(
         "charge_status": 1,
         "unsave_map_reason": 0,
         "unsave_map_flag": 0,
+        "dss": 20,
     }
 )
 
@@ -1492,4 +1564,15 @@ Q7_B01_PROPS = B01Props(
     main_sensor=500,
     mop_life=1200,
     real_clean_time=3000,
+    quantity=100,
+)
+
+Q10_STATUS = Q10Status(
+    clean_time=120,
+    clean_area=15,
+    battery=100,
+    status=YXDeviceState.CHARGING,
+    fan_level=YXFanLevel.BALANCED,
+    water_level=YXWaterLevel.MEDIUM,
+    clean_count=1,
 )

@@ -79,10 +79,7 @@ async def test_plug_mini_eu(
 
 @pytest.mark.parametrize(
     "device_model",
-    [
-        "Meter",
-        "Plug Mini (EU)",
-    ],
+    ["Meter", "Plug Mini (EU)", "Climate Panel", "WeatherStation"],
 )
 async def test_no_coordinator_data(
     hass: HomeAssistant,

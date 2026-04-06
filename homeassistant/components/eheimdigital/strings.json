@@ -33,6 +33,17 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "is_lighting": {
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "on": "[%key:common::state::on%]"
+        }
+      },
+      "is_uvc_connected": {
+        "name": "UVC lamp connected"
+      }
+    },
     "climate": {
       "heater": {
         "state_attributes": {
@@ -58,6 +69,12 @@
       }
     },
     "number": {
+      "booster_time": {
+        "name": "Booster duration"
+      },
+      "daily_burn_time": {
+        "name": "Daily burn duration"
+      },
       "day_speed": {
         "name": "Day speed"
       },
@@ -76,6 +93,7 @@
       "night_temperature_offset": {
         "name": "Night temperature offset"
       },
+      "pause_time": { "name": "Pause duration" },
       "system_led": {
         "name": "System LED brightness"
       },
@@ -108,6 +126,10 @@
       "manual_speed": {
         "name": "Manual speed"
       },
+      "mode": {
+        "name": "Operation mode",
+        "state": { "constant": "Constant", "daycycle": "Daycycle" }
+      },
       "night_speed": {
         "name": "Night speed"
       }
@@ -127,8 +149,17 @@
       "operating_time": {
         "name": "Operating time"
       },
+      "remaining_booster_time": {
+        "name": "Remaining booster time"
+      },
+      "remaining_pause_time": {
+        "name": "Remaining pause time"
+      },
       "service_hours": {
         "name": "Remaining hours until service"
+      },
+      "time_until_next_service": {
+        "name": "Time until next service"
       },
       "turn_feeding_time": {
         "name": "Remaining off time after feeding"
@@ -137,12 +168,26 @@
         "name": "Remaining off time"
       }
     },
+    "switch": {
+      "booster": {
+        "name": "Booster"
+      },
+      "expert": {
+        "name": "Expert mode"
+      },
+      "pause": {
+        "name": "Pause"
+      }
+    },
     "time": {
       "day_start_time": {
         "name": "Day start time"
       },
       "night_start_time": {
         "name": "Night start time"
+      },
+      "start_time": {
+        "name": "Start time"
       }
     }
   },

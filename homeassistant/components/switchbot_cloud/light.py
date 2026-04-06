@@ -58,6 +58,8 @@ class SwitchBotCloudLight(SwitchBotCloudEntity, LightEntity):
         """Return the default color mode."""
         if not self.supported_color_modes:
             return ColorMode.UNKNOWN
+        if ColorMode.BRIGHTNESS in self.supported_color_modes:
+            return ColorMode.BRIGHTNESS
         if ColorMode.RGB in self.supported_color_modes:
             return ColorMode.RGB
         if ColorMode.COLOR_TEMP in self.supported_color_modes:
@@ -79,9 +81,7 @@ class SwitchBotCloudLight(SwitchBotCloudEntity, LightEntity):
         self._attr_rgb_color: tuple | None = (
             (tuple(int(i) for i in color.split(":"))) if color else None
         )
-        self._attr_color_temp_kelvin: int | None = (
-            color_temperature if color_temperature else None
-        )
+        self._attr_color_temp_kelvin: int | None = color_temperature or None
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the light off."""
@@ -138,6 +138,7 @@ class SwitchBotCloudCandleWarmerLamp(SwitchBotCloudLight):
     # Brightness adjustment
 
     _attr_supported_color_modes = {ColorMode.BRIGHTNESS}
+    _attr_color_mode = ColorMode.BRIGHTNESS
 
 
 class SwitchBotCloudStripLight(SwitchBotCloudLight):
@@ -147,6 +148,7 @@ class SwitchBotCloudStripLight(SwitchBotCloudLight):
     # RGB color control
 
     _attr_supported_color_modes = {ColorMode.RGB}
+    _attr_color_mode = ColorMode.RGB
 
 
 class SwitchBotCloudRGBICLight(SwitchBotCloudLight):
@@ -156,6 +158,7 @@ class SwitchBotCloudRGBICLight(SwitchBotCloudLight):
     # RGB color control
 
     _attr_supported_color_modes = {ColorMode.RGB}
+    _attr_color_mode = ColorMode.RGB
 
     async def _send_rgb_color_command(self, rgb_color: tuple) -> None:
         """Send an RGB command."""
@@ -176,6 +179,7 @@ class SwitchBotCloudRGBWWLight(SwitchBotCloudLight):
     _attr_min_color_temp_kelvin = 2700
 
     _attr_supported_color_modes = {ColorMode.RGB, ColorMode.COLOR_TEMP}
+    _attr_color_mode = ColorMode.RGB
 
     async def _send_brightness_command(self, brightness: int) -> None:
         """Send a brightness command."""
@@ -202,6 +206,7 @@ class SwitchBotCloudCeilingLight(SwitchBotCloudLight):
     _attr_min_color_temp_kelvin = 2700
 
     _attr_supported_color_modes = {ColorMode.COLOR_TEMP}
+    _attr_color_mode = ColorMode.COLOR_TEMP
 
     async def _send_brightness_command(self, brightness: int) -> None:
         """Send a brightness command."""

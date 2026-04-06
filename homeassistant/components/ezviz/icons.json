@@ -23,6 +23,23 @@
       "alarm_sound_mode": {
         "default": "mdi:alarm"
       }
+    },
+    "sensor": {
+      "alarm_sound_mode": {
+        "default": "mdi:alarm"
+      },
+      "last_alarm_type_code": {
+        "default": "mdi:alarm"
+      },
+      "last_alarm_type_name": {
+        "default": "mdi:alarm"
+      },
+      "local_ip": {
+        "default": "mdi:ip"
+      },
+      "wan_ip": {
+        "default": "mdi:ip"
+      }
     }
   },
   "services": {

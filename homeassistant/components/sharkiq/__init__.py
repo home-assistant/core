@@ -16,7 +16,9 @@ from homeassistant import exceptions
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_REGION, CONF_USERNAME
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
+from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     API_TIMEOUT,
@@ -27,6 +29,9 @@ from .const import (
     SHARKIQ_REGION_EUROPE,
 )
 from .coordinator import SharkIqUpdateCoordinator
+from .services import async_setup_services
+
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 
 class CannotConnect(exceptions.HomeAssistantError):
@@ -46,6 +51,12 @@ async def async_connect_or_timeout(ayla_api: AylaApi) -> bool:
         LOGGER.error("Timeout expired")
         raise CannotConnect from exc
 
+    return True
+
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up the component."""
+    async_setup_services(hass)
     return True
 
 

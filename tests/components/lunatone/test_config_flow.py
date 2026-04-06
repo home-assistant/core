@@ -3,6 +3,7 @@
 from unittest.mock import AsyncMock
 
 import aiohttp
+from lunatone_rest_api_client.models import InfoData
 import pytest
 
 from homeassistant.components.lunatone.const import DOMAIN
@@ -11,15 +12,21 @@ from homeassistant.const import CONF_URL
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from . import BASE_URL, SERIAL_NUMBER
+from . import BASE_URL, INFO_DATA, LEGACY_INFO_DATA
 
 from tests.common import MockConfigEntry
 
 
+@pytest.mark.parametrize(("info_data"), [INFO_DATA, LEGACY_INFO_DATA])
 async def test_full_flow(
-    hass: HomeAssistant, mock_lunatone_info: AsyncMock, mock_setup_entry: AsyncMock
+    hass: HomeAssistant,
+    mock_lunatone_info: AsyncMock,
+    mock_setup_entry: AsyncMock,
+    info_data: InfoData,
 ) -> None:
     """Test full user flow."""
+    mock_lunatone_info.set_data(info_data)
+
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_USER},
@@ -32,16 +39,15 @@ async def test_full_flow(
         {CONF_URL: BASE_URL},
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == f"Test {SERIAL_NUMBER}"
+    assert result["title"] == BASE_URL
     assert result["data"] == {CONF_URL: BASE_URL}
 
 
 async def test_full_flow_fail_because_of_missing_device_infos(
-    hass: HomeAssistant,
-    mock_lunatone_info: AsyncMock,
+    hass: HomeAssistant, mock_lunatone_info: AsyncMock
 ) -> None:
     """Test full flow."""
-    mock_lunatone_info.data = None
+    mock_lunatone_info.serial_number = None
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -90,6 +96,7 @@ async def test_device_already_configured(
 async def test_user_step_fail_with_error(
     hass: HomeAssistant,
     mock_lunatone_info: AsyncMock,
+    mock_setup_entry: AsyncMock,
     exception: Exception,
     expected_error: str,
 ) -> None:
@@ -117,13 +124,14 @@ async def test_user_step_fail_with_error(
         {CONF_URL: BASE_URL},
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == f"Test {SERIAL_NUMBER}"
+    assert result["title"] == BASE_URL
     assert result["data"] == {CONF_URL: BASE_URL}
 
 
 async def test_reconfigure(
     hass: HomeAssistant,
     mock_lunatone_info: AsyncMock,
+    mock_setup_entry: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test reconfigure flow."""
@@ -153,6 +161,7 @@ async def test_reconfigure(
 async def test_reconfigure_fail_with_error(
     hass: HomeAssistant,
     mock_lunatone_info: AsyncMock,
+    mock_setup_entry: AsyncMock,
     mock_config_entry: MockConfigEntry,
     exception: Exception,
     expected_error: str,

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from datetime import timedelta
 import logging
+from typing import Any
 
 from requests import HTTPError
 from tmb import IBus
@@ -108,7 +109,7 @@ class TMBSensor(SensorEntity):
         return self._state
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes of the last update."""
         return {
             ATTR_BUS_STOP: self._stop,

@@ -36,7 +36,6 @@ GENERAL_SETTINGS: Final[dict[str, str]] = {
     "plugins": ", ".join(  # noqa: FLY002
         [
             "pydantic.mypy",
-            "pydantic.v1.mypy",
         ]
     ),
     "show_error_codes": "true",
@@ -51,7 +50,6 @@ GENERAL_SETTINGS: Final[dict[str, str]] = {
     "no_implicit_optional": "true",
     "warn_incomplete_stub": "true",
     "warn_redundant_casts": "true",
-    "warn_unused_configs": "true",
     "warn_unused_ignores": "true",
     "enable_error_code": ", ".join(  # noqa: FLY002
         [

@@ -97,7 +97,7 @@ class SamsungTVDevice(SamsungTVEntity, MediaPlayerEntity):
 
         self._attr_supported_features = SUPPORT_SAMSUNGTV
         if self._mac:
-            # (deprecated) add turn-on if mac is available
+            # Deprecated: Implicit Wake-On-LAN, will be removed in 2026.8.0
             # Triggers have not yet been registered so this is adjusted in the property
             self._attr_supported_features |= MediaPlayerEntityFeature.TURN_ON
         if self._ssdp_rendering_control_location:

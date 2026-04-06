@@ -3,13 +3,16 @@
 from datetime import timedelta
 from unittest.mock import AsyncMock
 
-import dateutil.parser
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components import automation, script
 from homeassistant.components.apcupsd.const import DEPRECATED_SENSORS, DOMAIN
 from homeassistant.components.apcupsd.coordinator import REQUEST_REFRESH_COOLDOWN
+from homeassistant.components.homeassistant import (
+    DOMAIN as HOMEASSISTANT_DOMAIN,
+    SERVICE_UPDATE_ENTITY,
+)
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     STATE_UNAVAILABLE,
@@ -102,7 +105,7 @@ async def test_manual_update_entity(
     assert state.state == "14.0"
 
     # Setup HASS for calling the update_entity service.
-    await async_setup_component(hass, "homeassistant", {})
+    await async_setup_component(hass, HOMEASSISTANT_DOMAIN, {})
 
     mock_request_status.return_value = MOCK_STATUS | {
         "LOADPCT": "15.0 Percent",
@@ -114,8 +117,8 @@ async def test_manual_update_entity(
     future = utcnow() + timedelta(seconds=REQUEST_REFRESH_COOLDOWN)
     async_fire_time_changed(hass, future)
     await hass.services.async_call(
-        "homeassistant",
-        "update_entity",
+        HOMEASSISTANT_DOMAIN,
+        SERVICE_UPDATE_ENTITY,
         {
             ATTR_ENTITY_ID: [
                 f"sensor.{device_slug}_load",
@@ -135,42 +138,64 @@ async def test_manual_update_entity(
     assert state.state == "15.0"
 
 
-@pytest.mark.parametrize("mock_request_status", [MOCK_MINIMAL_STATUS], indirect=True)
+@pytest.mark.parametrize(
+    ("mock_request_status", "entity_id", "known_status"),
+    [
+        pytest.param(
+            # Even though the "LASTSTEST" field is not available, we should still create the entity.
+            MOCK_MINIMAL_STATUS,
+            "sensor.apc_ups_last_self_test",
+            MOCK_MINIMAL_STATUS | {"LASTSTEST": "1970-01-01 00:00:00 +0000"},
+            id="last_self_test_missing",
+        ),
+        pytest.param(
+            MOCK_MINIMAL_STATUS | {"XOFFBATT": "N/A"},
+            "sensor.apc_ups_transfer_from_battery",
+            MOCK_MINIMAL_STATUS | {"XOFFBATT": "1970-01-01 00:00:00 +0000"},
+            id="xoffbatt_na",
+        ),
+        pytest.param(
+            MOCK_MINIMAL_STATUS | {"XOFFBATT": "invalid-time-string"},
+            "sensor.apc_ups_transfer_from_battery",
+            MOCK_MINIMAL_STATUS | {"XOFFBATT": "1970-01-01 00:00:00 +0000"},
+            id="xoffbatt_invalid_time_string",
+        ),
+    ],
+    indirect=["mock_request_status"],
+)
 async def test_sensor_unknown(
     hass: HomeAssistant,
     mock_request_status: AsyncMock,
+    entity_id: str,
+    known_status: dict[str, str],
 ) -> None:
-    """Test if our integration can properly mark certain sensors as unknown when it becomes so."""
-    ups_mode_id = "sensor.apc_ups_mode"
-    last_self_test_id = "sensor.apc_ups_last_self_test"
+    """Test if our integration can properly mark certain sensors as known/unknown when it becomes so."""
+    base_status = mock_request_status.return_value
 
-    assert hass.states.get(ups_mode_id).state == MOCK_MINIMAL_STATUS["UPSMODE"]
-    # Last self test sensor should be added even if our status does not report it initially (it is
-    # a sensor that appears only after a periodical or manual self test is performed).
-    assert hass.states.get(last_self_test_id) is not None
-    assert hass.states.get(last_self_test_id).state == STATE_UNKNOWN
+    # The state should be unknown initially.
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == STATE_UNKNOWN
 
-    # Simulate an event (a self test) such that "LASTSTEST" field is being reported, the state of
-    # the sensor should be properly updated with the corresponding value.
-    last_self_test_value = "1970-01-01 00:00:00 +0000"
-    mock_request_status.return_value = MOCK_MINIMAL_STATUS | {
-        "LASTSTEST": last_self_test_value
-    }
+    # Update to a payload that should make the entity known.
+    mock_request_status.return_value = known_status
     future = utcnow() + timedelta(minutes=2)
     async_fire_time_changed(hass, future)
     await hass.async_block_till_done()
-    assert (
-        hass.states.get(last_self_test_id).state
-        == dateutil.parser.parse(last_self_test_value).isoformat()
-    )
 
-    # Simulate another event (e.g., daemon restart) such that "LASTSTEST" is no longer reported.
-    mock_request_status.return_value = MOCK_MINIMAL_STATUS
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state != STATE_UNKNOWN
+
+    # Revert back to the initial status, and the state should now be unknown again.
+    mock_request_status.return_value = base_status
     future = utcnow() + timedelta(minutes=2)
     async_fire_time_changed(hass, future)
     await hass.async_block_till_done()
-    # The state should become unknown again.
-    assert hass.states.get(last_self_test_id).state == STATE_UNKNOWN
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == STATE_UNKNOWN
 
 
 @pytest.mark.parametrize(("entity_key", "issue_key"), DEPRECATED_SENSORS.items())

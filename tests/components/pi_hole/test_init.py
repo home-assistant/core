@@ -7,12 +7,12 @@ from hole.exceptions import HoleError
 import pytest
 
 from homeassistant.components import pi_hole, switch
-from homeassistant.components.pi_hole import PiHoleData
 from homeassistant.components.pi_hole.const import (
     CONF_STATISTICS_ONLY,
     SERVICE_DISABLE,
     SERVICE_DISABLE_ATTR_DURATION,
 )
+from homeassistant.components.pi_hole.coordinator import PiHoleData
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
     ATTR_ENTITY_ID,

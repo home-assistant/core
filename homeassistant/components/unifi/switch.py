@@ -208,8 +208,6 @@ async def async_traffic_rule_control_fn(
     """Control traffic rule state."""
     traffic_rule = hub.api.traffic_rules[obj_id].raw
     await hub.api.request(TrafficRuleEnableRequest.create(traffic_rule, target))
-    # Update the traffic rules so the UI is updated appropriately
-    await hub.api.traffic_rules.update()
 
 
 async def async_traffic_route_control_fn(
@@ -218,8 +216,6 @@ async def async_traffic_route_control_fn(
     """Control traffic route state."""
     traffic_route = hub.api.traffic_routes[obj_id].raw
     await hub.api.request(TrafficRouteSaveRequest.create(traffic_route, target))
-    # Update the traffic routes so the UI is updated appropriately
-    await hub.api.traffic_routes.update()
 
 
 async def async_wlan_control_fn(hub: UnifiHub, obj_id: str, target: bool) -> None:
@@ -447,10 +443,18 @@ class UnifiSwitchEntity[HandlerT: APIHandler, ApiItemT: ApiItem](
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on switch."""
         await self.entity_description.control_fn(self.hub, self._obj_id, True)
+        if coordinator := self.hub.entity_loader.get_data_update_coordinator(
+            self.entity_description.api_handler_fn(self.api)
+        ):
+            await coordinator.async_request_refresh()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off switch."""
         await self.entity_description.control_fn(self.hub, self._obj_id, False)
+        if coordinator := self.hub.entity_loader.get_data_update_coordinator(
+            self.entity_description.api_handler_fn(self.api)
+        ):
+            await coordinator.async_request_refresh()
 
     @callback
     def async_update_state(
@@ -464,7 +468,7 @@ class UnifiSwitchEntity[HandlerT: APIHandler, ApiItemT: ApiItem](
             return
 
         description = self.entity_description
-        obj = description.object_fn(self.api, self._obj_id)
+        obj = self.get_object()
         if (is_on := description.is_on_fn(self.hub, obj)) != self.is_on:
             self._attr_is_on = is_on
 

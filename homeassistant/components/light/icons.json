@@ -1,5 +1,8 @@
 {
   "conditions": {
+    "is_brightness": {
+      "condition": "mdi:lightbulb-on-50"
+    },
     "is_off": {
       "condition": "mdi:lightbulb-off"
     },

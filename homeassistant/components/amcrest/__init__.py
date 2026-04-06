@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import AsyncIterator, Callable
+from collections.abc import AsyncGenerator, Callable
 from contextlib import asynccontextmanager, suppress
 from dataclasses import dataclass
 from datetime import datetime, timedelta
@@ -202,7 +202,7 @@ class AmcrestChecker(ApiWrapper):
     @asynccontextmanager
     async def async_stream_command(
         self, *args: Any, **kwargs: Any
-    ) -> AsyncIterator[httpx.Response]:
+    ) -> AsyncGenerator[httpx.Response]:
         """amcrest.ApiWrapper.command wrapper to catch errors."""
         async with (
             self._async_command_wrapper(),
@@ -211,7 +211,7 @@ class AmcrestChecker(ApiWrapper):
             yield ret
 
     @asynccontextmanager
-    async def _async_command_wrapper(self) -> AsyncIterator[None]:
+    async def _async_command_wrapper(self) -> AsyncGenerator[None]:
         try:
             yield
         except LoginError as ex:

@@ -2,23 +2,30 @@
 
 from __future__ import annotations
 
+from tuya_device_handlers.definition.camera import (
+    TuyaCameraDefinition,
+    get_default_definition,
+)
 from tuya_sharing import CustomerDevice, Manager
 
 from homeassistant.components import ffmpeg
-from homeassistant.components.camera import Camera as CameraEntity, CameraEntityFeature
+from homeassistant.components.camera import (
+    Camera as CameraEntity,
+    CameraEntityDescription,
+    CameraEntityFeature,
+)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import TuyaConfigEntry
-from .const import TUYA_DISCOVERY_NEW, DeviceCategory, DPCode
+from .const import TUYA_DISCOVERY_NEW, DeviceCategory
 from .entity import TuyaEntity
-from .models import DeviceWrapper, DPCodeBooleanWrapper
 
-CAMERAS: tuple[DeviceCategory, ...] = (
-    DeviceCategory.DGHSXJ,
-    DeviceCategory.SP,
-)
+CAMERAS: dict[DeviceCategory, CameraEntityDescription] = {
+    DeviceCategory.DGHSXJ: CameraEntityDescription(key=""),
+    DeviceCategory.SP: CameraEntityDescription(key=""),
+}
 
 
 async def async_setup_entry(
@@ -35,17 +42,10 @@ async def async_setup_entry(
         entities: list[TuyaCameraEntity] = []
         for device_id in device_ids:
             device = manager.device_map[device_id]
-            if device.category in CAMERAS:
+            if description := CAMERAS.get(device.category):
                 entities.append(
                     TuyaCameraEntity(
-                        device,
-                        manager,
-                        motion_detection_switch=DPCodeBooleanWrapper.find_dpcode(
-                            device, DPCode.MOTION_SWITCH, prefer_function=True
-                        ),
-                        recording_status=DPCodeBooleanWrapper.find_dpcode(
-                            device, DPCode.RECORD_SWITCH
-                        ),
+                        device, manager, description, get_default_definition(device)
                     )
                 )
 
@@ -69,16 +69,15 @@ class TuyaCameraEntity(TuyaEntity, CameraEntity):
         self,
         device: CustomerDevice,
         device_manager: Manager,
-        *,
-        motion_detection_switch: DeviceWrapper[bool] | None = None,
-        recording_status: DeviceWrapper[bool] | None = None,
+        description: CameraEntityDescription,
+        definition: TuyaCameraDefinition,
     ) -> None:
         """Init Tuya Camera."""
-        super().__init__(device, device_manager)
+        super().__init__(device, device_manager, description)
         CameraEntity.__init__(self)
         self._attr_model = device.product_name
-        self._motion_detection_switch = motion_detection_switch
-        self._recording_status = recording_status
+        self._motion_detection_switch = definition.motion_detection_switch
+        self._recording_status = definition.recording_status
 
     @property
     def is_recording(self) -> bool:

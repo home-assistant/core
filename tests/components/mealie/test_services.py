@@ -31,6 +31,7 @@ from homeassistant.components.mealie.services import (
     SERVICE_GET_MEALPLAN,
     SERVICE_GET_RECIPE,
     SERVICE_GET_RECIPES,
+    SERVICE_GET_SHOPPING_LIST_ITEMS,
     SERVICE_IMPORT_RECIPE,
     SERVICE_SET_MEALPLAN,
     SERVICE_SET_RANDOM_MEALPLAN,
@@ -395,6 +396,47 @@ async def test_service_set_mealplan_invalid_entry_type(
     mock_mealie_client.set_mealplan.assert_not_called()
 
 
+async def test_service_get_shopping_list_items(
+    hass: HomeAssistant,
+    mock_mealie_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test the get_shopping_list_items service."""
+
+    await setup_integration(hass, mock_config_entry)
+
+    response = await hass.services.async_call(
+        DOMAIN,
+        SERVICE_GET_SHOPPING_LIST_ITEMS,
+        target={"entity_id": "todo.mealie_supermarket"},
+        blocking=True,
+        return_response=True,
+    )
+    assert response == snapshot
+
+
+async def test_service_get_shopping_list_items_connection_error(
+    hass: HomeAssistant,
+    mock_mealie_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test the get_shopping_list_items service with connection error."""
+
+    await setup_integration(hass, mock_config_entry)
+
+    mock_mealie_client.get_shopping_items.side_effect = MealieConnectionError
+
+    with pytest.raises(HomeAssistantError, match="Error connecting to Mealie instance"):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_GET_SHOPPING_LIST_ITEMS,
+            target={"entity_id": "todo.mealie_supermarket"},
+            blocking=True,
+            return_response=True,
+        )
+
+
 @pytest.mark.parametrize(
     ("service", "payload", "function", "exception", "raised_exception", "message"),
     [
@@ -542,7 +584,7 @@ async def test_service_entry_availability(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    with pytest.raises(ServiceValidationError, match="Mock Title is not loaded"):
+    with pytest.raises(ServiceValidationError) as err:
         await hass.services.async_call(
             DOMAIN,
             service,
@@ -550,10 +592,9 @@ async def test_service_entry_availability(
             blocking=True,
             return_response=True,
         )
+    assert err.value.translation_key == "service_config_entry_not_loaded"
 
-    with pytest.raises(
-        ServiceValidationError, match='Integration "mealie" not found in registry'
-    ):
+    with pytest.raises(ServiceValidationError) as err:
         await hass.services.async_call(
             DOMAIN,
             service,
@@ -561,3 +602,4 @@ async def test_service_entry_availability(
             blocking=True,
             return_response=True,
         )
+    assert err.value.translation_key == "service_config_entry_not_found"

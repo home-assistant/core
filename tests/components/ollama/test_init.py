@@ -1,14 +1,19 @@
 """Tests for the Ollama integration."""
 
 from typing import Any
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 from httpx import ConnectError
+from ollama import ResponseError
 import pytest
 
 from homeassistant.components import ollama
 from homeassistant.components.ollama.const import DOMAIN
-from homeassistant.config_entries import ConfigEntryDisabler, ConfigSubentryData
+from homeassistant.config_entries import (
+    ConfigEntryDisabler,
+    ConfigEntryState,
+    ConfigSubentryData,
+)
 from homeassistant.const import CONF_URL
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er, llm
@@ -21,7 +26,7 @@ from . import TEST_OPTIONS
 from tests.common import MockConfigEntry
 
 V1_TEST_USER_DATA = {
-    ollama.CONF_URL: "http://localhost:11434",
+    CONF_URL: "http://localhost:11434",
     ollama.CONF_MODEL: "test_model:latest",
 }
 
@@ -56,6 +61,74 @@ async def test_init_error(
         assert await async_setup_component(hass, ollama.DOMAIN, {})
         await hass.async_block_till_done()
         assert error in caplog.text
+
+
+@pytest.mark.parametrize("has_token", [True])
+async def test_init_with_api_key(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test initialization with API key - Authorization header should be set."""
+    # Create entry with API key in data (version 3.0 after migration)
+    mock_config_entry.add_to_hass(hass)
+
+    with patch("homeassistant.components.ollama.ollama.AsyncClient") as mock_client:
+        mock_client.return_value.list = AsyncMock(return_value={"models": []})
+
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+        assert any(
+            call.kwargs["headers"] == {"Authorization": "Bearer test_token"}
+            for call in mock_client.call_args_list
+        )
+
+
+async def test_init_without_api_key(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test initialization without API key - Authorization header should not be set."""
+    # Create entry without API key in data (version 3.0 after migration)
+    mock_config_entry.add_to_hass(hass)
+
+    with patch("homeassistant.components.ollama.ollama.AsyncClient") as mock_client:
+        mock_client.return_value.list = AsyncMock(return_value={"models": []})
+
+        assert await async_setup_component(hass, ollama.DOMAIN, {})
+        await hass.async_block_till_done()
+
+        assert all(
+            call.kwargs["headers"] is None for call in mock_client.call_args_list
+        )
+
+
+@pytest.mark.parametrize(
+    ("status_code", "entry_state"),
+    [
+        (401, ConfigEntryState.SETUP_ERROR),
+        (403, ConfigEntryState.SETUP_ERROR),
+        (500, ConfigEntryState.SETUP_RETRY),
+        (429, ConfigEntryState.SETUP_RETRY),
+        (400, ConfigEntryState.SETUP_ERROR),
+    ],
+)
+async def test_async_setup_entry_auth_failed_on_response_error(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    status_code: int,
+    entry_state: ConfigEntryState,
+) -> None:
+    """Test async_setup_entry raises auth failed on 401/403 response."""
+    mock_config_entry.add_to_hass(hass)
+
+    with patch("homeassistant.components.ollama.ollama.AsyncClient") as mock_client:
+        mock_client.return_value.list = AsyncMock(
+            side_effect=ResponseError(error="Unauthorized", status_code=status_code)
+        )
+
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+        assert mock_config_entry.state is entry_state
 
 
 async def test_migration_from_v1(
@@ -102,7 +175,7 @@ async def test_migration_from_v1(
     assert mock_config_entry.version == 3
     assert mock_config_entry.minor_version == 3
     # After migration, parent entry should only have URL
-    assert mock_config_entry.data == {ollama.CONF_URL: "http://localhost:11434"}
+    assert mock_config_entry.data == {CONF_URL: "http://localhost:11434"}
     assert mock_config_entry.options == {}
 
     assert len(mock_config_entry.subentries) == 2
@@ -748,7 +821,7 @@ async def test_migration_from_v2_2(hass: HomeAssistant) -> None:
     mock_config_entry = MockConfigEntry(
         domain=DOMAIN,
         data={
-            ollama.CONF_URL: "http://localhost:11434",
+            CONF_URL: "http://localhost:11434",
             ollama.CONF_MODEL: "test_model:latest",  # Model still in main data
         },
         version=2,
@@ -768,7 +841,7 @@ async def test_migration_from_v2_2(hass: HomeAssistant) -> None:
     assert mock_config_entry.minor_version == 3
 
     # Check that model was moved from main data to subentry
-    assert mock_config_entry.data == {ollama.CONF_URL: "http://localhost:11434"}
+    assert mock_config_entry.data == {CONF_URL: "http://localhost:11434"}
     assert len(mock_config_entry.subentries) == 2
 
     subentry = next(iter(mock_config_entry.subentries.values()))

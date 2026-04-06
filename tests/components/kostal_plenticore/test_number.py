@@ -41,6 +41,7 @@ async def test_setup_all_entries(
     assert (
         entity_registry.async_get("number.scb_battery_min_home_consumption") is not None
     )
+    assert entity_registry.async_get("number.scb_active_power_limitation") is not None
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
@@ -77,6 +78,7 @@ async def test_setup_no_entries(
 
     assert entity_registry.async_get("number.scb_battery_min_soc") is None
     assert entity_registry.async_get("number.scb_battery_min_home_consumption") is None
+    assert entity_registry.async_get("number.scb_active_power_limitation") is None
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")

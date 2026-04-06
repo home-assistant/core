@@ -1,4 +1,7 @@
 {
+  "common": {
+    "trigger_behavior_name": "Trigger when"
+  },
   "device_automation": {
     "action_type": {
       "toggle": "[%key:common::device_automation::action_type::toggle%]",
@@ -24,6 +27,15 @@
       "state": {
         "off": "[%key:common::state::off%]",
         "on": "[%key:common::state::on%]"
+      }
+    }
+  },
+  "selector": {
+    "trigger_behavior": {
+      "options": {
+        "any": "Any",
+        "first": "First",
+        "last": "Last"
       }
     }
   },
@@ -113,5 +125,25 @@
       "name": "[%key:common::action::turn_on%]"
     }
   },
-  "title": "Remote"
+  "title": "Remote",
+  "triggers": {
+    "turned_off": {
+      "description": "Triggers when one or more remotes turn off.",
+      "fields": {
+        "behavior": {
+          "name": "[%key:component::remote::common::trigger_behavior_name%]"
+        }
+      },
+      "name": "Remote turned off"
+    },
+    "turned_on": {
+      "description": "Triggers when one or more remotes turn on.",
+      "fields": {
+        "behavior": {
+          "name": "[%key:component::remote::common::trigger_behavior_name%]"
+        }
+      },
+      "name": "Remote turned on"
+    }
+  }
 }

@@ -1,14 +1,16 @@
 # serializer version: 1
 # name: test_sensor[sensor.river_name_station_name_hydrological_alert-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
         'no_alert',
         'hydrological_drought',
         'rapid_water_level_rise',
+        'exceeding_the_alarm_level',
         'exceeding_the_warning_level',
       ]),
     }),
@@ -53,6 +55,7 @@
         'no_alert',
         'hydrological_drought',
         'rapid_water_level_rise',
+        'exceeding_the_alarm_level',
         'exceeding_the_warning_level',
       ]),
       'probability': 80,
@@ -69,8 +72,9 @@
 # ---
 # name: test_sensor[sensor.river_name_station_name_water_flow-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -127,8 +131,9 @@
 # ---
 # name: test_sensor[sensor.river_name_station_name_water_level-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -185,8 +190,9 @@
 # ---
 # name: test_sensor[sensor.river_name_station_name_water_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,

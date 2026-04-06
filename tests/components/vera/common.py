@@ -16,7 +16,6 @@ from homeassistant.components.vera.const import (
     DOMAIN,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
 
@@ -39,7 +38,6 @@ class ComponentData(NamedTuple):
 class ConfigSource(Enum):
     """Source of configuration."""
 
-    FILE = "file"
     CONFIG_FLOW = "config_flow"
     CONFIG_ENTRY = "config_entry"
 
@@ -141,16 +139,6 @@ class ComponentFactory:
             controller_config.setup_callback(controller)
 
         self.vera_controller_class_mock.return_value = controller
-
-        hass_config = {}
-
-        # Setup component through config file import.
-        if controller_config.config_source == ConfigSource.FILE:
-            hass_config[DOMAIN] = component_config
-
-        # Setup Home Assistant.
-        assert await async_setup_component(hass, DOMAIN, hass_config)
-        await hass.async_block_till_done()
 
         # Setup component through config flow.
         if controller_config.config_source == ConfigSource.CONFIG_FLOW:

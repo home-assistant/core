@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_all_valves[valve.zone_one-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -41,6 +42,7 @@
       'attribution': 'Data provided by hydrawise.com',
       'device_class': 'water',
       'friendly_name': 'Zone One',
+      'is_closed': True,
       'supported_features': <ValveEntityFeature: 3>,
     }),
     'context': <ANY>,
@@ -53,8 +55,9 @@
 # ---
 # name: test_all_valves[valve.zone_two-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -93,6 +96,7 @@
       'attribution': 'Data provided by hydrawise.com',
       'device_class': 'water',
       'friendly_name': 'Zone Two',
+      'is_closed': False,
       'supported_features': <ValveEntityFeature: 3>,
     }),
     'context': <ANY>,

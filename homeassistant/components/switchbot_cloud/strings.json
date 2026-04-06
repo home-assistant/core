@@ -18,6 +18,25 @@
     }
   },
   "entity": {
+    "button": {
+      "art_frame_next_picture": {
+        "name": "Next"
+      },
+      "art_frame_previous_picture": {
+        "name": "Previous"
+      }
+    },
+    "climate": {
+      "smart_radiator_thermostat": {
+        "state_attributes": {
+          "preset_mode": {
+            "state": {
+              "schedule": "Schedule"
+            }
+          }
+        }
+      }
+    },
     "fan": {
       "air_purifier": {
         "state_attributes": {
@@ -48,6 +67,12 @@
         }
       }
     },
+    "image": {
+      "display": {
+        "name": "Display"
+      }
+    },
+
     "sensor": {
       "light_level": {
         "name": "Light level"

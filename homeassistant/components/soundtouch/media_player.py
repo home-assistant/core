@@ -333,9 +333,9 @@ class SoundTouchMediaPlayer(MediaPlayerEntity):
             self._device.add_zone_slave([slave.device for slave in slaves])
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return entity specific state attributes."""
-        attributes = {}
+        attributes: dict[str, Any] = {}
 
         if self._zone and "master" in self._zone:
             attributes[ATTR_SOUNDTOUCH_ZONE] = self._zone

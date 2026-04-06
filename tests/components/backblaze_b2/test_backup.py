@@ -955,3 +955,199 @@ async def test_upload_cancelled(
     # CancelledError propagates up and causes a 500 error
     assert resp.status == 500
     assert any("cancelled" in msg for msg in caplog.messages)
+
+
+async def test_metadata_download_timeout_during_list(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test that metadata download timeout during list is handled gracefully."""
+    client = await hass_ws_client(hass)
+
+    mock_metadata = Mock()
+    mock_metadata.file_name = "testprefix/slow.metadata.json"
+
+    mock_tar = Mock()
+    mock_tar.file_name = "testprefix/slow.tar"
+    mock_tar.size = TEST_BACKUP.size
+
+    def mock_ls(_self, _prefix=""):
+        return iter([(mock_metadata, None), (mock_tar, None)])
+
+    with (
+        patch.object(BucketSimulator, "ls", mock_ls),
+        patch(
+            "homeassistant.components.backblaze_b2.backup.asyncio.wait_for",
+            side_effect=TimeoutError,
+        ),
+        caplog.at_level(logging.WARNING),
+    ):
+        await client.send_json_auto_id({"type": "backup/info"})
+        response = await client.receive_json()
+
+    assert response["success"]
+    # The backup should not appear in the list due to timeout
+    assert len(response["result"]["backups"]) == 0
+    assert any("Timeout downloading metadata file" in msg for msg in caplog.messages)
+
+
+async def test_metadata_download_timeout_during_find_by_id(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test that metadata download timeout during find by ID is handled gracefully."""
+    client = await hass_ws_client(hass)
+
+    mock_metadata = Mock()
+    mock_metadata.file_name = f"testprefix/{TEST_BACKUP.backup_id}.metadata.json"
+
+    mock_tar = Mock()
+    mock_tar.file_name = f"testprefix/{TEST_BACKUP.backup_id}.tar"
+    mock_tar.size = TEST_BACKUP.size
+
+    def mock_ls(_self, _prefix=""):
+        return iter([(mock_metadata, None), (mock_tar, None)])
+
+    with (
+        patch.object(BucketSimulator, "ls", mock_ls),
+        patch(
+            "homeassistant.components.backblaze_b2.backup.asyncio.wait_for",
+            side_effect=TimeoutError,
+        ),
+        caplog.at_level(logging.WARNING),
+    ):
+        await client.send_json_auto_id(
+            {"type": "backup/details", "backup_id": TEST_BACKUP.backup_id}
+        )
+        response = await client.receive_json()
+
+    assert response["success"]
+    # The backup should not be found due to timeout
+    assert response["result"]["backup"] is None
+    assert any(
+        "Timeout downloading metadata file" in msg
+        and "while searching for backup" in msg
+        for msg in caplog.messages
+    )
+
+
+async def test_metadata_timeout_does_not_block_healthy_backups(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test that a timed out metadata download doesn't prevent listing other backups."""
+    client = await hass_ws_client(hass)
+
+    mock_hanging_metadata = Mock()
+    mock_hanging_metadata.file_name = "testprefix/hanging_backup.metadata.json"
+    mock_hanging_metadata.download = Mock(side_effect=B2Error("SSL failure"))
+
+    mock_hanging_tar = Mock()
+    mock_hanging_tar.file_name = "testprefix/hanging_backup.tar"
+    mock_hanging_tar.size = 1000
+
+    mock_healthy_metadata = Mock()
+    mock_healthy_metadata.file_name = (
+        f"testprefix/{TEST_BACKUP.backup_id}.metadata.json"
+    )
+    mock_healthy_download = Mock()
+    mock_healthy_response = Mock()
+    mock_healthy_response.content = json.dumps(BACKUP_METADATA).encode()
+    mock_healthy_download.response = mock_healthy_response
+    mock_healthy_metadata.download = Mock(return_value=mock_healthy_download)
+
+    mock_healthy_tar = Mock()
+    mock_healthy_tar.file_name = f"testprefix/{TEST_BACKUP.backup_id}.tar"
+    mock_healthy_tar.size = TEST_BACKUP.size
+
+    def mock_ls(_self, _prefix=""):
+        return iter(
+            [
+                (mock_hanging_metadata, None),
+                (mock_hanging_tar, None),
+                (mock_healthy_metadata, None),
+                (mock_healthy_tar, None),
+            ]
+        )
+
+    call_count = 0
+    original_wait_for = asyncio.wait_for
+
+    async def wait_for_first_timeout(coro, *, timeout=None):
+        nonlocal call_count
+        call_count += 1
+        if call_count == 1:
+            raise TimeoutError
+        return await original_wait_for(coro, timeout=timeout)
+
+    with (
+        patch.object(BucketSimulator, "ls", mock_ls),
+        patch(
+            "homeassistant.components.backblaze_b2.backup.asyncio.wait_for",
+            wait_for_first_timeout,
+        ),
+        caplog.at_level(logging.WARNING),
+    ):
+        await client.send_json_auto_id({"type": "backup/info"})
+        response = await client.receive_json()
+
+    assert response["success"]
+    backups = response["result"]["backups"]
+    assert len(backups) == 1
+    assert backups[0]["backup_id"] == TEST_BACKUP.backup_id
+    assert any("Timeout downloading metadata file" in msg for msg in caplog.messages)
+
+
+async def test_metadata_download_timeout_during_get_backup(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test timeout on metadata re-download after file is found."""
+    client = await hass_ws_client(hass)
+
+    mock_metadata = Mock()
+    mock_metadata.file_name = f"testprefix/{TEST_BACKUP.backup_id}.metadata.json"
+    mock_download = Mock()
+    mock_response = Mock()
+    mock_response.content = json.dumps(BACKUP_METADATA).encode()
+    mock_download.response = mock_response
+    mock_metadata.download = Mock(return_value=mock_download)
+
+    mock_tar = Mock()
+    mock_tar.file_name = f"testprefix/{TEST_BACKUP.backup_id}.tar"
+    mock_tar.size = TEST_BACKUP.size
+
+    def mock_ls(_self, _prefix=""):
+        return iter([(mock_metadata, None), (mock_tar, None)])
+
+    call_count = 0
+    original_wait_for = asyncio.wait_for
+
+    async def wait_for_second_timeout(coro, *, timeout=None):
+        nonlocal call_count
+        call_count += 1
+        if call_count >= 2:
+            raise TimeoutError
+        return await original_wait_for(coro, timeout=timeout)
+
+    with (
+        patch.object(BucketSimulator, "ls", mock_ls),
+        patch(
+            "homeassistant.components.backblaze_b2.backup.asyncio.wait_for",
+            wait_for_second_timeout,
+        ),
+        patch("homeassistant.components.backblaze_b2.backup.CACHE_TTL", 0),
+    ):
+        await client.send_json_auto_id(
+            {"type": "backup/details", "backup_id": TEST_BACKUP.backup_id}
+        )
+        response = await client.receive_json()
+
+    assert response["success"]
+    assert (
+        f"{DOMAIN}.{mock_config_entry.entry_id}" in response["result"]["agent_errors"]
+    )

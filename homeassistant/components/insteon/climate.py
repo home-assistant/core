@@ -168,7 +168,7 @@ class InsteonClimateEntity(InsteonEntity, ClimateEntity):
         return HVACAction.IDLE
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Provide attributes for display on device card."""
         attr = super().extra_state_attributes
         humidifier = "off"

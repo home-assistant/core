@@ -1,7 +1,8 @@
 .trigger_common: &trigger_common
   target:
     entity:
-      domain: switch
+      - domain: switch
+      - domain: input_boolean
   fields:
     behavior:
       required: true

@@ -3,7 +3,11 @@
 from unittest.mock import AsyncMock
 
 import pytest
-from pythonkuma import UptimeKumaAuthenticationException, UptimeKumaException
+from pythonkuma import (
+    UptimeKumaAuthenticationException,
+    UptimeKumaException,
+    UptimeKumaParseException,
+)
 
 from homeassistant.components.uptime_kuma.const import DOMAIN
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
@@ -37,6 +41,7 @@ async def test_entry_setup_unload(
     [
         (UptimeKumaAuthenticationException, ConfigEntryState.SETUP_ERROR),
         (UptimeKumaException, ConfigEntryState.SETUP_RETRY),
+        (UptimeKumaParseException, ConfigEntryState.SETUP_RETRY),
     ],
 )
 async def test_config_entry_not_ready(

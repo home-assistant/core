@@ -26,7 +26,7 @@ async def test_flow_no_discovered_stations(
 async def test_flow_invalid_station(hass: HomeAssistant, mock_get_stations) -> None:
     """Test config flow errors on invalid station."""
     mock_get_stations.return_value = [
-        {"label": "My station", "stationReference": "L12345"}
+        {"label": "My station", "stationReference": "L12345", "RLOIid": "R12345"}
     ]
 
     result = await hass.config_entries.flow.async_init(
@@ -45,10 +45,10 @@ async def test_flow_works(
 ) -> None:
     """Test config flow discovers no station."""
     mock_get_stations.return_value = [
-        {"label": "My station", "stationReference": "L12345"}
+        {"label": "My station", "stationReference": "L12345", "RLOIid": "R12345"}
     ]
     mock_get_station.return_value = [
-        {"label": "My station", "stationReference": "L12345"}
+        {"label": "My station", "stationReference": "L12345", "RLOIid": "R12345"}
     ]
 
     result = await hass.config_entries.flow.async_init(
@@ -58,11 +58,11 @@ async def test_flow_works(
 
     with patch("homeassistant.components.eafm.async_setup_entry", return_value=True):
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], user_input={"station": "My station"}
+            result["flow_id"], user_input={"station": "My station - R12345"}
         )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "My station"
+    assert result["title"] == "My station - R12345"
     assert result["data"] == {
         "station": "L12345",
     }

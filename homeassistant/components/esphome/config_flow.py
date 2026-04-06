@@ -28,6 +28,7 @@ from homeassistant.config_entries import (
     SOURCE_REAUTH,
     SOURCE_RECONFIGURE,
     ConfigEntry,
+    ConfigEntryState,
     ConfigFlow,
     ConfigFlowResult,
     FlowType,
@@ -363,6 +364,11 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
             # Don't probe to verify the mac is correct since
             # the host matches (and port matches if provided).
             raise AbortFlow("already_configured")
+        # If the entry is loaded and the device is currently connected,
+        # don't update the host. This prevents transient mDNS announcements
+        # (e.g., during WiFi mesh roaming) from overwriting a working connection.
+        if entry.state is ConfigEntryState.LOADED and entry.runtime_data.available:
+            raise AbortFlow("already_configured")
         configured_psk: str | None = entry.data.get(CONF_NOISE_PSK)
         await self._fetch_device_info(host, port or configured_port, configured_psk)
         updates: dict[str, Any] = {}
@@ -443,7 +449,7 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle DHCP discovery."""
         mac_address = format_mac(discovery_info.macaddress)
-        await self.async_set_unique_id(format_mac(mac_address))
+        await self.async_set_unique_id(mac_address)
         await self._async_validate_mac_abort_configured(
             mac_address, discovery_info.ip, None
         )

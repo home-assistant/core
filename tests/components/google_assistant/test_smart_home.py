@@ -141,11 +141,12 @@ async def test_sync_message(hass: HomeAssistant, registries) -> None:
         "light",
         "test",
         "unique-demo-light",
+        original_name="Demo Light",
         suggested_object_id="demo_light",
     )
     registries.entity.async_update_entity(
         entity.entity_id,
-        aliases={"Stay", "Healthy"},
+        aliases=[er.COMPUTED_NAME, "Stay", "Healthy"],
     )
 
     light = DemoLight(
@@ -279,6 +280,7 @@ async def test_sync_in_area(area_on_device, hass: HomeAssistant, registries) -> 
         model="Some model",
         sw_version="Some Version",
         connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+        name="Test Device",
     )
     registries.device.async_update_device(
         device.id, area_id=area.id if area_on_device else None
@@ -288,6 +290,7 @@ async def test_sync_in_area(area_on_device, hass: HomeAssistant, registries) -> 
         "light",
         "test",
         "1235",
+        original_name="Demo Light",
         suggested_object_id="demo_light",
         device_id=device.id,
     )
@@ -331,7 +334,7 @@ async def test_sync_in_area(area_on_device, hass: HomeAssistant, registries) -> 
             "devices": [
                 {
                     "id": "light.demo_light",
-                    "name": {"name": "Demo Light"},
+                    "name": {"name": "Test Device Demo Light"},
                     "traits": [
                         trait.TRAIT_BRIGHTNESS,
                         trait.TRAIT_ON_OFF,

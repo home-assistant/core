@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_allow_clip_sensors[config_entry_options0-sensor_payload0][sensor.clip_flur-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -51,8 +52,9 @@
 # ---
 # name: test_allow_clip_sensors[config_entry_options0-sensor_payload0][sensor.clip_light_level_sensor-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -105,8 +107,9 @@
 # ---
 # name: test_allow_clip_sensors[config_entry_options0-sensor_payload0][sensor.light_level_sensor-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -162,8 +165,9 @@
 # ---
 # name: test_allow_clip_sensors[config_entry_options0-sensor_payload0][sensor.light_level_sensor_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -219,8 +223,9 @@
 # ---
 # name: test_sensors[config_entry_options0-sensor_payload0-expected0][sensor.bosch_air_quality_sensor-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -268,8 +273,9 @@
 # ---
 # name: test_sensors[config_entry_options0-sensor_payload0-expected0][sensor.bosch_air_quality_sensor_ppb-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -321,8 +327,9 @@
 # ---
 # name: test_sensors[config_entry_options0-sensor_payload1-expected1][sensor.bosch_air_quality_sensor-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -370,8 +377,9 @@
 # ---
 # name: test_sensors[config_entry_options0-sensor_payload1-expected1][sensor.bosch_air_quality_sensor_ppb-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -423,8 +431,9 @@
 # ---
 # name: test_sensors[config_entry_options0-sensor_payload10-expected10][sensor.fsm_state_motion_stair-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -473,8 +482,9 @@
 # ---
 # name: test_sensors[config_entry_options0-sensor_payload11-expected11][sensor.mi_temperature_1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -531,8 +541,9 @@
 # ---
 # name: test_sensors[config_entry_options0-sensor_payload11-expected11][sensor.mi_temperature_1_battery-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -586,8 +597,9 @@
 # ---
 # name: test_sensors[config_entry_options0-sensor_payload12-expected12][sensor.soil_sensor-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -643,8 +655,9 @@
 # ---
 # name: test_sensors[config_entry_options0-sensor_payload12-expected12][sensor.soil_sensor_battery-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -698,8 +711,9 @@
 # ---
 # name: test_sensors[config_entry_options0-sensor_payload13-expected13][sensor.motion_sensor_4-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -755,8 +769,9 @@
 # ---
 # name: test_sensors[config_entry_options0-sensor_payload13-expected13][sensor.motion_sensor_4_battery-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -812,8 +827,9 @@
 # ---
 # name: test_sensors[config_entry_options0-sensor_payload14-expected14][sensor.starkvind_airpurifier_pm25-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -866,8 +882,9 @@
 # ---
 # name: test_sensors[config_entry_options0-sensor_payload15-expected15][sensor.power_16-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -926,8 +943,9 @@
 # ---
 # name: test_sensors[config_entry_options0-sensor_payload16-expected16][sensor.mi_temperature_1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -984,8 +1002,9 @@
 # ---
 # name: test_sensors[config_entry_options0-sensor_payload16-expected16][sensor.mi_temperature_1_battery-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1039,8 +1058,9 @@
 # ---
 # name: test_sensors[config_entry_options0-sensor_payload17-expected17][sensor.mi_temperature_1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1097,8 +1117,9 @@
 # ---
 # name: test_sensors[config_entry_options0-sensor_payload17-expected17][sensor.mi_temperature_1_battery-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1152,8 +1173,9 @@
 # ---
 # name: test_sensors[config_entry_options0-sensor_payload18-expected18][sensor.etrv_sejour-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1202,8 +1224,9 @@
 # ---
 # name: test_sensors[config_entry_options0-sensor_payload18-expected18][sensor.etrv_sejour_battery-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1257,8 +1280,9 @@
 # ---
 # name: test_sensors[config_entry_options0-sensor_payload19-expected19][sensor.alarm_10_battery-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1313,8 +1337,9 @@
 # ---
 # name: test_sensors[config_entry_options0-sensor_payload19-expected19][sensor.alarm_10_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1370,8 +1395,9 @@
 # ---
 # name: test_sensors[config_entry_options0-sensor_payload2-expected2][sensor.airquality_1_ch2o-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1424,8 +1450,9 @@
 # ---
 # name: test_sensors[config_entry_options0-sensor_payload2-expected2][sensor.airquality_1_co2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1478,8 +1505,9 @@
 # ---
 # name: test_sensors[config_entry_options0-sensor_payload2-expected2][sensor.airquality_1_pm25-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1532,8 +1560,9 @@
 # ---
 # name: test_sensors[config_entry_options0-sensor_payload2-expected2][sensor.airquality_1_ppb-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1585,8 +1614,9 @@
 # ---
 # name: test_sensors[config_entry_options0-sensor_payload20-expected20][sensor.dimmer_switch_3_battery-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1641,8 +1671,9 @@
 # ---
 # name: test_sensors[config_entry_options0-sensor_payload21-expected21][sensor.ikea_starkvind_filter_time-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1698,8 +1729,9 @@
 # ---
 # name: test_sensors[config_entry_options0-sensor_payload3-expected3][sensor.airquality_1_ch2o-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1752,8 +1784,9 @@
 # ---
 # name: test_sensors[config_entry_options0-sensor_payload3-expected3][sensor.airquality_1_co2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1806,8 +1839,9 @@
 # ---
 # name: test_sensors[config_entry_options0-sensor_payload3-expected3][sensor.airquality_1_pm25-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1860,8 +1894,9 @@
 # ---
 # name: test_sensors[config_entry_options0-sensor_payload3-expected3][sensor.airquality_1_ppb-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1913,8 +1948,9 @@
 # ---
 # name: test_sensors[config_entry_options0-sensor_payload4-expected4][sensor.airquality_1_ch2o-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1967,8 +2003,9 @@
 # ---
 # name: test_sensors[config_entry_options0-sensor_payload4-expected4][sensor.airquality_1_co2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -2021,8 +2058,9 @@
 # ---
 # name: test_sensors[config_entry_options0-sensor_payload4-expected4][sensor.airquality_1_pm25-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -2075,8 +2113,9 @@
 # ---
 # name: test_sensors[config_entry_options0-sensor_payload4-expected4][sensor.airquality_1_ppb-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -2128,8 +2167,9 @@
 # ---
 # name: test_sensors[config_entry_options0-sensor_payload5-expected5][sensor.fyrtur_block_out_roller_blind_battery-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -2183,8 +2223,9 @@
 # ---
 # name: test_sensors[config_entry_options0-sensor_payload6-expected6][sensor.carbondioxide_35-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -2237,8 +2278,9 @@
 # ---
 # name: test_sensors[config_entry_options0-sensor_payload7-expected7][sensor.consumption_15-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -2296,8 +2338,9 @@
 # ---
 # name: test_sensors[config_entry_options0-sensor_payload8-expected8][sensor.daylight-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2348,8 +2391,9 @@
 # ---
 # name: test_sensors[config_entry_options0-sensor_payload9-expected9][sensor.formaldehyde_34-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,

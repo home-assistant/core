@@ -49,6 +49,16 @@ VENDOR_LABELING_LIST: dict[int, dict[int, list[str] | None]] = {
         4: None,  # Inovelli VTM36
         16: ["label", "name", "button"],  # Inovelli VTM30
     },
+    65521: {  # Test/DIY devices
+        32768: ["ha_entitylabel"],
+        32769: ["ha_entitylabel"],
+        32770: ["ha_entitylabel"],
+    },
+    65522: {  # Test/DIY devices
+        32768: ["ha_entitylabel"],
+        32769: ["ha_entitylabel"],
+        32770: ["ha_entitylabel"],
+    },
 }
 
 
@@ -124,8 +134,13 @@ class MatterEntity(Entity):
             and ep.has_attribute(None, entity_info.primary_attribute)
         ):
             self._name_postfix = str(self._endpoint.endpoint_id)
-            if self._platform_translation_key and not self.translation_key:
-                self._attr_translation_key = self._platform_translation_key
+        # Always set translation_key for state_attributes translations.
+        # For primary entities (no postfix), suppress the translated name,
+        # so only the device name is used.
+        if self._platform_translation_key and not self.translation_key:
+            self._attr_translation_key = self._platform_translation_key
+            if not self._name_postfix:
+                self._attr_name = None
 
         # Matter labels can be used to modify the entity name
         # by appending the text.
@@ -280,9 +295,9 @@ class MatterEntity(Entity):
         self,
         command: ClusterCommand,
         **kwargs: Any,
-    ) -> None:
+    ) -> Any:
         """Send device command on the primary attribute's endpoint."""
-        await self.matter_client.send_device_command(
+        return await self.matter_client.send_device_command(
             node_id=self._endpoint.node.node_id,
             endpoint_id=self._endpoint.endpoint_id,
             command=command,

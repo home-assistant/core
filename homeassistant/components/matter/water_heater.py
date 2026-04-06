@@ -168,10 +168,15 @@ class MatterWaterHeater(MatterEntity, WaterHeaterEntity):
         self._attr_target_temperature = self._get_temperature_in_degrees(
             clusters.Thermostat.Attributes.OccupiedHeatingSetpoint
         )
+        system_mode = self.get_matter_attribute_value(
+            clusters.Thermostat.Attributes.SystemMode
+        )
         boost_state = self.get_matter_attribute_value(
             clusters.WaterHeaterManagement.Attributes.BoostState
         )
-        if boost_state == clusters.WaterHeaterManagement.Enums.BoostStateEnum.kActive:
+        if system_mode == clusters.Thermostat.Enums.SystemModeEnum.kOff:
+            self._attr_current_operation = STATE_OFF
+        elif boost_state == clusters.WaterHeaterManagement.Enums.BoostStateEnum.kActive:
             self._attr_current_operation = STATE_HIGH_DEMAND
         else:
             self._attr_current_operation = STATE_ECO
@@ -218,6 +223,7 @@ DISCOVERY_SCHEMAS = [
             clusters.Thermostat.Attributes.AbsMinHeatSetpointLimit,
             clusters.Thermostat.Attributes.AbsMaxHeatSetpointLimit,
             clusters.Thermostat.Attributes.LocalTemperature,
+            clusters.Thermostat.Attributes.SystemMode,
             clusters.WaterHeaterManagement.Attributes.FeatureMap,
         ),
         optional_attributes=(

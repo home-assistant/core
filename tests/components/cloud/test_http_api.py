@@ -1907,6 +1907,10 @@ async def test_download_support_package(
 
     cloud.remote.snitun_server = "us-west-1"
     cloud.remote.certificate_status = CertificateStatus.READY
+    cloud.remote.latency_by_location = {
+        "Earth": {"avg": 13.37},
+        "Moon": {"avg": None},
+    }
     cloud.expiration_date = dt_util.parse_datetime("2025-01-17T11:19:31.0+00:00")
 
     await cloud.client.async_system_message({"region": "xx-earth-616"})
@@ -2192,9 +2196,11 @@ async def test_download_support_package_integration_load_error(
         ),
         patch(
             "homeassistant.components.cloud.http_api.async_get_loaded_integration",
-            side_effect=lambda hass, domain: Exception("Integration load error")
-            if domain == "failing_integration"
-            else async_get_loaded_integration(hass, domain),
+            side_effect=lambda hass, domain: (
+                Exception("Integration load error")
+                if domain == "failing_integration"
+                else async_get_loaded_integration(hass, domain)
+            ),
         ),
         patch(
             "homeassistant.components.cloud.http_api.async_get_installed_packages",

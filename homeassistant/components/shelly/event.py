@@ -64,8 +64,8 @@ BLOCK_EVENT: Final = ShellyBlockEventDescription(
     key="input",
     translation_key="input",
     device_class=EventDeviceClass.BUTTON,
-    removal_condition=lambda settings, block: not is_block_momentary_input(
-        settings, block, True
+    removal_condition=lambda settings, block: (
+        not is_block_momentary_input(settings, block, True)
     ),
 )
 RPC_EVENT: Final = ShellyRpcEventDescription(
@@ -73,8 +73,8 @@ RPC_EVENT: Final = ShellyRpcEventDescription(
     translation_key="input",
     device_class=EventDeviceClass.BUTTON,
     event_types=list(RPC_INPUTS_EVENTS_TYPES),
-    removal_condition=lambda config, status, key: not is_rpc_momentary_input(
-        config, status, key
+    removal_condition=lambda config, status, key: (
+        not is_rpc_momentary_input(config, status, key)
     ),
 )
 SCRIPT_EVENT: Final = ShellyRpcEventDescription(

@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_all_entities[fan.model0_ventilation-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'preset_modes': list([
@@ -73,8 +74,9 @@
 # ---
 # name: test_all_entities[fan.model1_ventilation-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'preset_modes': list([
@@ -143,8 +145,9 @@
 # ---
 # name: test_all_entities[fan.model2_ventilation-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'preset_modes': list([

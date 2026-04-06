@@ -90,7 +90,7 @@ async def validate_input(hass: HomeAssistant, user_input: dict[str, Any]) -> Non
         password=user_input[CONF_PASSWORD],
     )
 
-    await pyload.login()
+    await pyload.get_status()
 
 
 class PyLoadConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -111,7 +111,7 @@ class PyLoadConfigFlow(ConfigFlow, domain=DOMAIN):
             self._async_abort_entries_match({CONF_URL: url})
             try:
                 await validate_input(self.hass, user_input)
-            except (CannotConnect, ParserError):
+            except CannotConnect, ParserError:
                 errors["base"] = "cannot_connect"
             except InvalidAuth:
                 errors["base"] = "invalid_auth"
@@ -154,7 +154,7 @@ class PyLoadConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             try:
                 await validate_input(self.hass, {**reauth_entry.data, **user_input})
-            except (CannotConnect, ParserError):
+            except CannotConnect, ParserError:
                 errors["base"] = "cannot_connect"
             except InvalidAuth:
                 errors["base"] = "invalid_auth"
@@ -190,7 +190,7 @@ class PyLoadConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             try:
                 await validate_input(self.hass, user_input)
-            except (CannotConnect, ParserError):
+            except CannotConnect, ParserError:
                 errors["base"] = "cannot_connect"
             except InvalidAuth:
                 errors["base"] = "invalid_auth"
@@ -206,7 +206,7 @@ class PyLoadConfigFlow(ConfigFlow, domain=DOMAIN):
                     },
                     reload_even_if_entry_is_unchanged=False,
                 )
-        suggested_values = user_input if user_input else reconfig_entry.data
+        suggested_values = user_input or reconfig_entry.data
         return self.async_show_form(
             step_id="reconfigure",
             data_schema=self.add_suggested_values_to_schema(
@@ -223,7 +223,7 @@ class PyLoadConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_hassio(
         self, discovery_info: HassioServiceInfo
     ) -> ConfigFlowResult:
-        """Prepare configuration for pyLoad add-on.
+        """Prepare configuration for pyLoad app.
 
         This flow is triggered by the discovery component.
         """
@@ -249,7 +249,7 @@ class PyLoadConfigFlow(ConfigFlow, domain=DOMAIN):
 
         try:
             await validate_input(self.hass, data)
-        except (CannotConnect, ParserError):
+        except CannotConnect, ParserError:
             _LOGGER.debug("Cannot connect", exc_info=True)
             errors["base"] = "cannot_connect"
         except InvalidAuth:

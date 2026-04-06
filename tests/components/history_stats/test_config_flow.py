@@ -17,6 +17,7 @@ from homeassistant.components.history_stats.const import (
     DOMAIN,
 )
 from homeassistant.components.recorder import Recorder
+from homeassistant.components.sensor import CONF_STATE_CLASS
 from homeassistant.const import CONF_ENTITY_ID, CONF_NAME, CONF_STATE, CONF_TYPE
 from homeassistant.core import HomeAssistant, State
 from homeassistant.data_entry_flow import FlowResultType
@@ -91,6 +92,7 @@ async def test_options_flow(
         user_input={
             CONF_END: "{{ utcnow() }}",
             CONF_DURATION: {"hours": 8, "minutes": 0, "seconds": 0, "days": 20},
+            CONF_STATE_CLASS: "total_increasing",
         },
     )
     await hass.async_block_till_done()
@@ -103,6 +105,7 @@ async def test_options_flow(
         CONF_TYPE: "count",
         CONF_END: "{{ utcnow() }}",
         CONF_DURATION: {"hours": 8, "minutes": 0, "seconds": 0, "days": 20},
+        CONF_STATE_CLASS: "total_increasing",
     }
 
     await hass.async_block_till_done()
@@ -387,6 +390,7 @@ async def test_options_flow_preview(
             CONF_STATE: ["on"],
             CONF_END: "{{ now() }}",
             CONF_START: "{{ today_at() }}",
+            CONF_STATE_CLASS: "measurement",
         },
         title=DEFAULT_NAME,
     )
@@ -422,6 +426,7 @@ async def test_options_flow_preview(
                         CONF_STATE: ["on"],
                         CONF_END: end,
                         CONF_START: "{{ today_at() }}",
+                        CONF_STATE_CLASS: "measurement",
                     },
                 }
             )

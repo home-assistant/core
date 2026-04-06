@@ -13,13 +13,15 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 from .const import CONF_SYSTEM_ID, DOMAIN, LOGGER, SCAN_INTERVAL
 
+type PvOutputConfigEntry = ConfigEntry[PVOutputDataUpdateCoordinator]
+
 
 class PVOutputDataUpdateCoordinator(DataUpdateCoordinator[Status]):
     """The PVOutput Data Update Coordinator."""
 
-    config_entry: ConfigEntry
+    config_entry: PvOutputConfigEntry
 
-    def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
+    def __init__(self, hass: HomeAssistant, entry: PvOutputConfigEntry) -> None:
         """Initialize the PVOutput coordinator."""
         self.pvoutput = PVOutput(
             api_key=entry.data[CONF_API_KEY],

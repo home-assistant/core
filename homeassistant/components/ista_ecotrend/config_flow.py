@@ -51,14 +51,13 @@ class IstaConfigFlow(ConfigFlow, domain=DOMAIN):
             ista = PyEcotrendIsta(
                 user_input[CONF_EMAIL],
                 user_input[CONF_PASSWORD],
-                _LOGGER,
             )
             try:
                 await self.hass.async_add_executor_job(ista.login)
                 info = ista.get_account()
             except ServerError:
                 errors["base"] = "cannot_connect"
-            except (LoginError, KeycloakError):
+            except LoginError, KeycloakError:
                 errors["base"] = "invalid_auth"
             except Exception:
                 _LOGGER.exception("Unexpected exception")
@@ -102,7 +101,6 @@ class IstaConfigFlow(ConfigFlow, domain=DOMAIN):
             ista = PyEcotrendIsta(
                 user_input[CONF_EMAIL],
                 user_input[CONF_PASSWORD],
-                _LOGGER,
             )
 
             def get_consumption_units() -> set[str]:
@@ -119,7 +117,7 @@ class IstaConfigFlow(ConfigFlow, domain=DOMAIN):
 
             except ServerError:
                 errors["base"] = "cannot_connect"
-            except (LoginError, KeycloakError):
+            except LoginError, KeycloakError:
                 errors["base"] = "invalid_auth"
             except Exception:
                 _LOGGER.exception("Unexpected exception")

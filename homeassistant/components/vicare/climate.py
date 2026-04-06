@@ -11,11 +11,8 @@ from PyViCare.PyViCareDeviceConfig import PyViCareDeviceConfig
 from PyViCare.PyViCareHeatingDevice import HeatingCircuit as PyViCareHeatingCircuit
 from PyViCare.PyViCareUtils import (
     PyViCareCommandError,
-    PyViCareInvalidDataError,
     PyViCareNotSupportedFeatureError,
-    PyViCareRateLimitError,
 )
-import requests
 import voluptuous as vol
 
 from homeassistant.components.climate import (
@@ -158,7 +155,7 @@ class ViCareClimate(ViCareEntity, ClimateEntity):
 
     def update(self) -> None:
         """Let HA know there has been an update from the ViCare API."""
-        try:
+        with self.vicare_api_handler():
             _room_temperature = None
             with suppress(PyViCareNotSupportedFeatureError):
                 self._attributes["room_temperature"] = _room_temperature = (
@@ -214,21 +211,12 @@ class ViCareClimate(ViCareEntity, ClimateEntity):
                         self._current_action or compressor.getActive()
                     )
 
-        except requests.exceptions.ConnectionError:
-            _LOGGER.error("Unable to retrieve data from ViCare server")
-        except PyViCareRateLimitError as limit_exception:
-            _LOGGER.error("Vicare API rate limit exceeded: %s", limit_exception)
-        except ValueError:
-            _LOGGER.error("Unable to decode data from ViCare server")
-        except PyViCareInvalidDataError as invalid_data_exception:
-            _LOGGER.error("Invalid data from Vicare server: %s", invalid_data_exception)
-
     @property
     def hvac_mode(self) -> HVACMode | None:
         """Return current hvac mode."""
         if self._current_mode is None:
             return None
-        return VICARE_TO_HA_HVAC_HEATING.get(self._current_mode, None)
+        return VICARE_TO_HA_HVAC_HEATING.get(self._current_mode)
 
     def set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set a new hvac mode on the ViCare API."""

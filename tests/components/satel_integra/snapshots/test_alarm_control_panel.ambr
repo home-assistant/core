@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_alarm_control_panel[alarm_control_panel.home-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -80,6 +81,6 @@
     'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
-    'via_device_id': None,
+    'via_device_id': <ANY>,
   })
 # ---

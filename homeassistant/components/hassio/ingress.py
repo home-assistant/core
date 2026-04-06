@@ -45,6 +45,7 @@ RESPONSE_HEADERS_FILTER = {
 }
 
 MIN_COMPRESSED_SIZE = 128
+MAX_WEBSOCKET_MESSAGE_SIZE = 16 * 1024 * 1024  # 16 MiB
 MAX_SIMPLE_RESPONSE_SIZE = 4194000
 
 DISABLED_TIMEOUT = ClientTimeout(total=None)
@@ -126,7 +127,10 @@ class HassIOIngress(HomeAssistantView):
             req_protocols = ()
 
         ws_server = web.WebSocketResponse(
-            protocols=req_protocols, autoclose=False, autoping=False
+            protocols=req_protocols,
+            autoclose=False,
+            autoping=False,
+            max_msg_size=MAX_WEBSOCKET_MESSAGE_SIZE,
         )
         await ws_server.prepare(request)
 
@@ -149,6 +153,7 @@ class HassIOIngress(HomeAssistantView):
                 protocols=req_protocols,
                 autoclose=False,
                 autoping=False,
+                max_msg_size=MAX_WEBSOCKET_MESSAGE_SIZE,
             ) as ws_client:
                 # Proxy requests
                 await asyncio.wait(
@@ -181,8 +186,7 @@ class HassIOIngress(HomeAssistantView):
             skip_auto_headers={hdrs.CONTENT_TYPE},
         ) as result:
             headers = _response_header(result)
-            content_length_int = 0
-            content_length = result.headers.get(hdrs.CONTENT_LENGTH, UNDEFINED)
+
             # Avoid parsing content_type in simple cases for better performance
             if maybe_content_type := result.headers.get(hdrs.CONTENT_TYPE):
                 content_type: str = (maybe_content_type.partition(";"))[0].strip()
@@ -190,17 +194,30 @@ class HassIOIngress(HomeAssistantView):
                 # default value according to RFC 2616
                 content_type = "application/octet-stream"
 
+            # Empty body responses (304, 204, HEAD, etc.) should not be streamed,
+            # otherwise aiohttp < 3.9.0 may generate an invalid "0\r\n\r\n" chunk
+            # This also avoids setting content_type for empty responses.
+            if must_be_empty_body(request.method, result.status):
+                # If upstream contains content-type, preserve it (e.g. for HEAD requests)
+                # Note: This still is omitting content-length. We can't simply forward
+                # the upstream length since the proxy might change the body length
+                # (e.g. due to compression).
+                if maybe_content_type:
+                    headers[hdrs.CONTENT_TYPE] = content_type
+                return web.Response(
+                    headers=headers,
+                    status=result.status,
+                )
+
             # Simple request
-            if (empty_body := must_be_empty_body(result.method, result.status)) or (
+            content_length_int = 0
+            content_length = result.headers.get(hdrs.CONTENT_LENGTH, UNDEFINED)
+            if (
                 content_length is not UNDEFINED
                 and (content_length_int := int(content_length))
                 <= MAX_SIMPLE_RESPONSE_SIZE
             ):
-                # Return Response
-                if empty_body:
-                    body = None
-                else:
-                    body = await result.read()
+                body = await result.read()
                 simple_response = web.Response(
                     headers=headers,
                     status=result.status,

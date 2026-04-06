@@ -3,19 +3,19 @@
 from __future__ import annotations
 
 from copy import deepcopy
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
 
 from .common import (
     COMMAND_OK,
+    ENERGY_HISTORY,
     LIVE_STATUS,
     PRODUCTS,
     SCOPES,
     SITE_INFO,
     TEST_STATE_OF_ALL_VEHICLES,
     TEST_VEHICLE_STATE_ONLINE,
-    TEST_VEHICLE_STATUS_AWAKE,
 )
 
 # Tessie
@@ -25,29 +25,21 @@ from .common import (
 def mock_get_state():
     """Mock get_state function."""
     with patch(
-        "homeassistant.components.tessie.coordinator.get_state",
-        return_value=TEST_VEHICLE_STATE_ONLINE,
+        "tesla_fleet_api.tessie.Vehicle.state",
+        new_callable=AsyncMock,
     ) as mock_get_state:
+        mock_get_state.return_value = TEST_VEHICLE_STATE_ONLINE
         yield mock_get_state
-
-
-@pytest.fixture(autouse=True)
-def mock_get_status():
-    """Mock get_status function."""
-    with patch(
-        "homeassistant.components.tessie.coordinator.get_status",
-        return_value=TEST_VEHICLE_STATUS_AWAKE,
-    ) as mock_get_status:
-        yield mock_get_status
 
 
 @pytest.fixture(autouse=True)
 def mock_get_state_of_all_vehicles():
     """Mock get_state_of_all_vehicles function."""
     with patch(
-        "homeassistant.components.tessie.get_state_of_all_vehicles",
-        return_value=TEST_STATE_OF_ALL_VEHICLES,
+        "tesla_fleet_api.tessie.Tessie.list_vehicles",
+        new_callable=AsyncMock,
     ) as mock_get_state_of_all_vehicles:
+        mock_get_state_of_all_vehicles.return_value = TEST_STATE_OF_ALL_VEHICLES
         yield mock_get_state_of_all_vehicles
 
 
@@ -99,3 +91,13 @@ def mock_site_info():
         side_effect=lambda: deepcopy(SITE_INFO),
     ) as mock_live_status:
         yield mock_live_status
+
+
+@pytest.fixture(autouse=True)
+def mock_energy_history():
+    """Mock Tesla Fleet API EnergySite energy_history method."""
+    with patch(
+        "tesla_fleet_api.tessie.EnergySite.energy_history",
+        side_effect=lambda *a, **kw: deepcopy(ENERGY_HISTORY),
+    ) as mock_energy_history:
+        yield mock_energy_history

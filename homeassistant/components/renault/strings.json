@@ -73,6 +73,12 @@
       }
     },
     "button": {
+      "flash_lights": {
+        "name": "Flash lights"
+      },
+      "sound_horn": {
+        "name": "Sound horn"
+      },
       "start_air_conditioner": {
         "name": "Start air conditioner"
       },
@@ -86,6 +92,14 @@
     "device_tracker": {
       "location": {
         "name": "[%key:common::config_flow::data::location%]"
+      }
+    },
+    "number": {
+      "charge_limit_min": {
+        "name": "Minimum charge level"
+      },
+      "charge_limit_target": {
+        "name": "Target charge level"
       }
     },
     "select": {
@@ -133,6 +147,14 @@
       },
       "charging_remaining_time": {
         "name": "Charging remaining time"
+      },
+      "charging_settings_mode": {
+        "name": "Charging mode",
+        "state": {
+          "always": "Always",
+          "delayed": "Delayed",
+          "scheduled": "Scheduled"
+        }
       },
       "front_left_pressure": {
         "name": "Front left tyre pressure"
@@ -185,6 +207,9 @@
     }
   },
   "exceptions": {
+    "battery_soc_unavailable": {
+      "message": "Battery state of charge data is currently unavailable"
+    },
     "invalid_device_id": {
       "message": "No device with ID {device_id} was found"
     },
@@ -251,6 +276,20 @@
         }
       },
       "name": "Update charge schedule"
+    },
+    "charge_start": {
+      "description": "Starts charging on vehicle.",
+      "fields": {
+        "vehicle": {
+          "description": "[%key:component::renault::services::ac_start::fields::vehicle::description%]",
+          "name": "Vehicle"
+        },
+        "when": {
+          "description": "Timestamp for charging to start (optional - defaults to now).",
+          "name": "When"
+        }
+      },
+      "name": "Start charging"
     }
   }
 }

@@ -1026,8 +1026,9 @@ async def _test_friendly_name(
         "expected_friendly_name",
     ),
     [
-        (False, "Entity Blu", "Device Bla", "Entity Blu"),
-        (False, None, "Device Bla", None),
+        (False, "Entity Blu", "Device Bla", "Device Bla Entity Blu"),
+        (False, "Device Bla Entity Blu", "Device Bla", "Device Bla Entity Blu"),
+        (False, None, "Device Bla", "Device Bla"),
         (True, "Entity Blu", "Device Bla", "Device Bla Entity Blu"),
         (True, None, "Device Bla", "Device Bla"),
         (True, "Entity Blu", UNDEFINED, "Entity Blu"),
@@ -1063,9 +1064,10 @@ async def test_friendly_name_attr(
 @pytest.mark.parametrize(
     ("has_entity_name", "entity_name", "expected_friendly_name"),
     [
-        (False, "Entity Blu", "Entity Blu"),
-        (False, None, None),
-        (False, UNDEFINED, None),
+        (False, "Entity Blu", "Device Bla Entity Blu"),
+        (False, "Device Bla Entity Blu", "Device Bla Entity Blu"),
+        (False, None, "Device Bla"),
+        (False, UNDEFINED, "Device Bla"),
         (True, "Entity Blu", "Device Bla Entity Blu"),
         (True, None, "Device Bla"),
         (True, UNDEFINED, "Device Bla"),
@@ -1100,9 +1102,10 @@ async def test_friendly_name_description(
 @pytest.mark.parametrize(
     ("has_entity_name", "entity_name", "expected_friendly_name"),
     [
-        (False, "Entity Blu", "Entity Blu"),
-        (False, None, None),
-        (False, UNDEFINED, None),
+        (False, "Entity Blu", "Device Bla Entity Blu"),
+        (False, "Device Bla Entity Blu", "Device Bla Entity Blu"),
+        (False, None, "Device Bla"),
+        (False, UNDEFINED, "Device Bla"),
         (True, "Entity Blu", "Device Bla Entity Blu"),
         (True, None, "Device Bla"),
         (True, UNDEFINED, "Device Bla English cls"),
@@ -1169,7 +1172,7 @@ async def test_friendly_name_description_device_class_name(
         "expected_friendly_name",
     ),
     [
-        (False, None, None, None, "Entity Blu"),
+        (False, None, None, None, "Device Bla Entity Blu"),
         (True, None, None, None, "Device Bla Entity Blu"),
         (
             True,
@@ -1367,9 +1370,10 @@ async def test_entity_name_translation_placeholder_errors(
 @pytest.mark.parametrize(
     ("has_entity_name", "entity_name", "expected_friendly_name"),
     [
-        (False, "Entity Blu", "Entity Blu"),
-        (False, None, None),
-        (False, UNDEFINED, None),
+        (False, "Entity Blu", "Device Bla Entity Blu"),
+        (False, "Device Bla Entity Blu", "Device Bla Entity Blu"),
+        (False, None, "Device Bla"),
+        (False, UNDEFINED, "Device Bla"),
         (True, "Entity Blu", "Device Bla Entity Blu"),
         (True, None, "Device Bla"),
         (True, UNDEFINED, "Device Bla"),
@@ -1403,9 +1407,10 @@ async def test_friendly_name_property(
 @pytest.mark.parametrize(
     ("has_entity_name", "entity_name", "expected_friendly_name"),
     [
-        (False, "Entity Blu", "Entity Blu"),
-        (False, None, None),
-        (False, UNDEFINED, None),
+        (False, "Entity Blu", "Device Bla Entity Blu"),
+        (False, "Device Bla Entity Blu", "Device Bla Entity Blu"),
+        (False, None, "Device Bla"),
+        (False, UNDEFINED, "Device Bla"),
         (True, "Entity Blu", "Device Bla Entity Blu"),
         (True, None, "Device Bla"),
         # Won't use the device class name because the entity overrides the name property
@@ -1464,7 +1469,7 @@ async def test_friendly_name_property_device_class_name(
 @pytest.mark.parametrize(
     ("has_entity_name", "expected_friendly_name"),
     [
-        (False, None),
+        (False, "Device Bla"),
         (True, "Device Bla English cls"),
     ],
 )

@@ -203,7 +203,7 @@ async def async_setup_entry(
 
     coordinator = entry.runtime_data
     # uuid was added in emoncms database 11.5.7
-    unique_id = entry.unique_id if entry.unique_id else entry.entry_id
+    unique_id = entry.unique_id or entry.entry_id
     elems = coordinator.data
     if not elems:
         return

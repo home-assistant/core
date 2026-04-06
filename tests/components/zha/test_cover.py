@@ -22,6 +22,7 @@ from homeassistant.components.cover import (
     SERVICE_SET_COVER_TILT_POSITION,
     SERVICE_STOP_COVER,
     SERVICE_STOP_COVER_TILT,
+    CoverEntityFeature,
     CoverState,
 )
 from homeassistant.components.zha.helpers import (
@@ -332,6 +333,70 @@ async def test_cover(
         assert cluster.request.call_args[1]["expect_reply"] is True
 
 
+async def test_cover_supported_features_runtime_update(
+    hass: HomeAssistant,
+    setup_zha: Callable[..., Coroutine[None]],
+    zigpy_device_mock: Callable[..., Device],
+) -> None:
+    """Test ZHA cover supported features update at runtime."""
+    await setup_zha()
+    gateway = get_zha_gateway(hass)
+    gateway_proxy: ZHAGatewayProxy = get_zha_gateway_proxy(hass)
+
+    zigpy_device = zigpy_device_mock(
+        {
+            1: {
+                SIG_EP_PROFILE: zha.PROFILE_ID,
+                SIG_EP_TYPE: zha.DeviceType.WINDOW_COVERING_DEVICE,
+                SIG_EP_INPUT: [closures.WindowCovering.cluster_id],
+                SIG_EP_OUTPUT: [],
+            }
+        },
+    )
+    cluster = zigpy_device.endpoints[1].window_covering
+    cluster.PLUGGED_ATTR_READS = {
+        WCAttrs.current_position_lift_percentage.name: 0,
+        WCAttrs.current_position_tilt_percentage.name: 100,
+        WCAttrs.window_covering_type.name: WCT.Tilt_blind_tilt_and_lift,
+        WCAttrs.config_status.name: WCCS(~WCCS.Open_up_commands_reversed),
+    }
+    update_attribute_cache(cluster)
+
+    gateway.get_or_create_device(zigpy_device)
+    await gateway.async_device_initialized(zigpy_device)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    zha_device_proxy: ZHADeviceProxy = gateway_proxy.get_device_proxy(zigpy_device.ieee)
+    entity_id = find_entity_id(Platform.COVER, zha_device_proxy, hass)
+    assert entity_id is not None
+
+    await async_update_entity(hass, entity_id)
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.attributes["supported_features"] == (
+        CoverEntityFeature.OPEN
+        | CoverEntityFeature.CLOSE
+        | CoverEntityFeature.SET_POSITION
+        | CoverEntityFeature.STOP
+        | CoverEntityFeature.OPEN_TILT
+        | CoverEntityFeature.CLOSE_TILT
+        | CoverEntityFeature.STOP_TILT
+        | CoverEntityFeature.SET_TILT_POSITION
+    )
+
+    await send_attributes_report(
+        hass, cluster, {WCAttrs.window_covering_type.id: WCT.Tilt_blind_tilt_only}
+    )
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.attributes["supported_features"] == (
+        CoverEntityFeature.OPEN_TILT
+        | CoverEntityFeature.CLOSE_TILT
+        | CoverEntityFeature.STOP_TILT
+        | CoverEntityFeature.SET_TILT_POSITION
+    )
+
+
 async def test_cover_failures(
     hass: HomeAssistant,
     setup_zha: Callable[..., Coroutine[None]],
@@ -369,11 +434,25 @@ async def test_cover_failures(
     assert entity_id is not None
 
     # test that the state has changed from unavailable to closed
-    await send_attributes_report(hass, cluster, {0: 0, 8: 100, 1: 1})
+    await send_attributes_report(
+        hass,
+        cluster,
+        {
+            WCAttrs.current_position_lift_percentage.id: 100,
+            WCAttrs.current_position_tilt_percentage.id: 100,
+        },
+    )
     assert hass.states.get(entity_id).state == CoverState.CLOSED
 
     # test that it opens
-    await send_attributes_report(hass, cluster, {0: 1, 8: 0, 1: 100})
+    await send_attributes_report(
+        hass,
+        cluster,
+        {
+            WCAttrs.current_position_lift_percentage.id: 0,
+            WCAttrs.current_position_tilt_percentage.id: 0,
+        },
+    )
     assert hass.states.get(entity_id).state == CoverState.OPEN
 
     # close from UI

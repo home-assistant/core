@@ -12,7 +12,6 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CURRENCY_EURO
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
@@ -23,7 +22,6 @@ from homeassistant.util import dt as dt_util
 
 from .const import (
     ATTRIBUTION,
-    CONF_COORDINATOR,
     DOMAIN,
     SENSOR_CART_ITEMS_COUNT,
     SENSOR_CART_TOTAL_PRICE,
@@ -42,7 +40,7 @@ from .const import (
     SENSOR_SELECTED_SLOT_MIN_ORDER_VALUE,
     SENSOR_SELECTED_SLOT_START,
 )
-from .coordinator import PicnicUpdateCoordinator
+from .coordinator import PicnicConfigEntry, PicnicUpdateCoordinator
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -202,11 +200,11 @@ SENSOR_TYPES: tuple[PicnicSensorEntityDescription, ...] = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: PicnicConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Picnic sensor entries."""
-    picnic_coordinator = hass.data[DOMAIN][config_entry.entry_id][CONF_COORDINATOR]
+    picnic_coordinator = config_entry.runtime_data
 
     # Add an entity for each sensor type
     async_add_entities(
@@ -225,7 +223,7 @@ class PicnicSensor(SensorEntity, CoordinatorEntity[PicnicUpdateCoordinator]):
     def __init__(
         self,
         coordinator: PicnicUpdateCoordinator,
-        config_entry: ConfigEntry,
+        config_entry: PicnicConfigEntry,
         description: PicnicSensorEntityDescription,
     ) -> None:
         """Init a Picnic sensor."""

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from .model import Config, Integration
+from .model import Config, Integration, IntegrationType
 from .serializer import format_python
 
 
@@ -12,12 +12,12 @@ def validate(integrations: dict[str, Integration], config: Config) -> None:
     if config.specific_integrations:
         return
 
-    int_type = "entity"
+    int_type = IntegrationType.ENTITY
 
     domains = [
         integration.domain
         for integration in integrations.values()
-        if integration.manifest.get("integration_type") == int_type
+        if integration.integration_type == int_type
         # Tag is type "entity" but has no entity platform
         and integration.domain != "tag"
     ]
@@ -36,7 +36,7 @@ def validate(integrations: dict[str, Integration], config: Config) -> None:
 
 def generate(integrations: dict[str, Integration], config: Config) -> None:
     """Generate integration file."""
-    int_type = "entity"
+    int_type = IntegrationType.ENTITY
     filename = "entity_platforms"
     platform_path = config.root / f"homeassistant/generated/{filename}.py"
     platform_path.write_text(config.cache[f"integrations_{int_type}"])

@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 from collections.abc import Callable
+from dataclasses import dataclass
+from datetime import UTC, datetime
 from typing import Any
 
 from homematicip.base.enums import FunctionalChannelType, ValveState
@@ -27,6 +29,8 @@ from homematicip.device import (
     PassageDetector,
     PresenceDetectorIndoor,
     RoomControlDeviceAnalog,
+    SmokeDetector,
+    SoilMoistureSensorInterface,
     SwitchMeasuring,
     TemperatureDifferenceSensor2,
     TemperatureHumiditySensorDisplay,
@@ -43,6 +47,7 @@ from homematicip.device import (
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
+    SensorEntityDescription,
     SensorStateClass,
 )
 from homeassistant.const import (
@@ -65,7 +70,70 @@ from homeassistant.helpers.typing import StateType
 
 from .entity import HomematicipGenericEntity
 from .hap import HomematicIPConfigEntry, HomematicipHAP
-from .helpers import get_channels_from_device
+from .helpers import get_channels_from_device, smoke_detector_channel_data_exists
+
+
+@dataclass(frozen=True, kw_only=True)
+class HmipSmokeDetectorSensorDescription(SensorEntityDescription):
+    """Describes HmIP smoke detector sensor entity."""
+
+    value_fn: Callable[[SmokeDetector], StateType | datetime]
+    channel_field: str  # Field name in the raw channel payload
+
+
+SMOKE_DETECTOR_SENSORS: tuple[HmipSmokeDetectorSensorDescription, ...] = (
+    HmipSmokeDetectorSensorDescription(
+        key="dirt_level",
+        translation_key="smoke_detector_dirt_level",
+        native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_registry_enabled_default=False,
+        channel_field="dirtLevel",
+        value_fn=lambda d: (
+            round(d.dirtLevel * 100, 1) if d.dirtLevel is not None else None
+        ),
+    ),
+    HmipSmokeDetectorSensorDescription(
+        key="smoke_alarm_counter",
+        translation_key="smoke_detector_alarm_counter",
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        entity_registry_enabled_default=False,
+        channel_field="smokeAlarmCounter",
+        value_fn=lambda d: d.smokeAlarmCounter,
+    ),
+    HmipSmokeDetectorSensorDescription(
+        key="smoke_test_counter",
+        translation_key="smoke_detector_test_counter",
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        entity_registry_enabled_default=False,
+        channel_field="smokeTestCounter",
+        value_fn=lambda d: d.smokeTestCounter,
+    ),
+    HmipSmokeDetectorSensorDescription(
+        key="last_smoke_alarm",
+        translation_key="smoke_detector_last_alarm",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        entity_registry_enabled_default=False,
+        channel_field="lastSmokeAlarmTimestamp",
+        value_fn=lambda d: (
+            datetime.fromtimestamp(d.lastSmokeAlarmTimestamp / 1000, tz=UTC)
+            if d.lastSmokeAlarmTimestamp
+            else None
+        ),
+    ),
+    HmipSmokeDetectorSensorDescription(
+        key="last_smoke_test",
+        translation_key="smoke_detector_last_test",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        entity_registry_enabled_default=False,
+        channel_field="lastSmokeTestTimestamp",
+        value_fn=lambda d: (
+            datetime.fromtimestamp(d.lastSmokeTestTimestamp / 1000, tz=UTC)
+            if d.lastSmokeTestTimestamp
+            else None
+        ),
+    ),
+)
 
 ATTR_ACCELERATION_SENSOR_NEUTRAL_POSITION = "acceleration_sensor_neutral_position"
 ATTR_ACCELERATION_SENSOR_TRIGGER_ANGLE = "acceleration_sensor_trigger_angle"
@@ -218,6 +286,10 @@ def get_device_handlers(hap: HomematicipHAP) -> dict[type, Callable]:
         EnergySensorsInterface: lambda device: _handle_energy_sensor_interface(
             hap, device
         ),
+        SoilMoistureSensorInterface: lambda device: [
+            HomematicipSoilMoistureSensor(hap, device),
+            HomematicipSoilTemperatureSensor(hap, device),
+        ],
     }
 
 
@@ -287,6 +359,15 @@ async def async_setup_entry(
         for channel in device.functionalChannels
         if isinstance(channel, FloorTerminalBlockMechanicChannel)
         and getattr(channel, "valvePosition", None) is not None
+    )
+
+    # Handle smoke detector extended sensors (e.g., HmIP-SWSD-2)
+    entities.extend(
+        HmipSmokeDetectorSensor(hap, device, description)
+        for device in hap.home.devices
+        if isinstance(device, SmokeDetector)
+        for description in SMOKE_DETECTOR_SENSORS
+        if smoke_detector_channel_data_exists(device, description.channel_field)
     )
 
     async_add_entities(entities)
@@ -546,6 +627,7 @@ class HomematicipAbsoluteHumiditySensor(HomematicipGenericEntity, SensorEntity):
 
     _attr_device_class = SensorDeviceClass.ABSOLUTE_HUMIDITY
     _attr_native_unit_of_measurement = CONCENTRATION_GRAMS_PER_CUBIC_METER
+    _attr_suggested_display_precision = 1
     _attr_suggested_unit_of_measurement = CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER
     _attr_state_class = SensorStateClass.MEASUREMENT
 
@@ -556,19 +638,11 @@ class HomematicipAbsoluteHumiditySensor(HomematicipGenericEntity, SensorEntity):
     @property
     def native_value(self) -> float | None:
         """Return the state."""
-        if self.functional_channel is None:
+        value = self._device.vaporAmount
+        if value is None or value == "":
             return None
 
-        value = self.functional_channel.vaporAmount
-
-        # Handle case where value might be None
-        if (
-            self.functional_channel.vaporAmount is None
-            or self.functional_channel.vaporAmount == ""
-        ):
-            return None
-
-        return round(value, 3)
+        return value
 
 
 class HomematicipIlluminanceSensor(HomematicipGenericEntity, SensorEntity):
@@ -934,6 +1008,75 @@ class HomematicipPassageDetectorDeltaCounter(HomematicipGenericEntity, SensorEnt
         state_attr[ATTR_RIGHT_COUNTER] = self._device.rightCounter
 
         return state_attr
+
+
+class HmipSmokeDetectorSensor(HomematicipGenericEntity, SensorEntity):
+    """Sensor for HomematicIP smoke detector extended properties."""
+
+    entity_description: HmipSmokeDetectorSensorDescription
+
+    def __init__(
+        self,
+        hap: HomematicipHAP,
+        device: SmokeDetector,
+        description: HmipSmokeDetectorSensorDescription,
+    ) -> None:
+        """Initialize the smoke detector sensor."""
+        super().__init__(hap, device, post=description.key)
+        self.entity_description = description
+        self._sensor_unique_id = f"{device.id}_{description.key}"
+
+    @property
+    def unique_id(self) -> str:
+        """Return a unique ID."""
+        return self._sensor_unique_id
+
+    @property
+    def native_value(self) -> StateType | datetime:
+        """Return the sensor value."""
+        return self.entity_description.value_fn(self._device)
+
+
+class HomematicipSoilMoistureSensor(HomematicipGenericEntity, SensorEntity):
+    """Representation of the HomematicIP soil moisture sensor."""
+
+    _attr_device_class = SensorDeviceClass.MOISTURE
+    _attr_native_unit_of_measurement = PERCENTAGE
+    _attr_state_class = SensorStateClass.MEASUREMENT
+
+    def __init__(self, hap: HomematicipHAP, device) -> None:
+        """Initialize the soil moisture sensor device."""
+        super().__init__(
+            hap, device, post="Soil Moisture", channel=1, is_multi_channel=True
+        )
+
+    @property
+    def native_value(self) -> int | None:
+        """Return the state."""
+        if self.functional_channel is None:
+            return None
+        return self.functional_channel.soilMoisture
+
+
+class HomematicipSoilTemperatureSensor(HomematicipGenericEntity, SensorEntity):
+    """Representation of the HomematicIP soil temperature sensor."""
+
+    _attr_device_class = SensorDeviceClass.TEMPERATURE
+    _attr_native_unit_of_measurement = UnitOfTemperature.CELSIUS
+    _attr_state_class = SensorStateClass.MEASUREMENT
+
+    def __init__(self, hap: HomematicipHAP, device) -> None:
+        """Initialize the soil temperature sensor device."""
+        super().__init__(
+            hap, device, post="Soil Temperature", channel=1, is_multi_channel=True
+        )
+
+    @property
+    def native_value(self) -> float | None:
+        """Return the state."""
+        if self.functional_channel is None:
+            return None
+        return self.functional_channel.soilTemperature
 
 
 def _get_wind_direction(wind_direction_degree: float) -> str:

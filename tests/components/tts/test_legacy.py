@@ -7,7 +7,7 @@ from pathlib import Path
 import pytest
 
 from homeassistant.components.media_player import (
-    DOMAIN as DOMAIN_MP,
+    DOMAIN as MP_DOMAIN,
     SERVICE_PLAY_MEDIA,
 )
 from homeassistant.components.tts import ATTR_MESSAGE, DOMAIN, Provider
@@ -146,7 +146,7 @@ async def test_service_without_cache_config(
     hass: HomeAssistant, mock_tts_cache_dir: Path, mock_tts
 ) -> None:
     """Set up a TTS platform without cache."""
-    calls = async_mock_service(hass, DOMAIN_MP, SERVICE_PLAY_MEDIA)
+    calls = async_mock_service(hass, MP_DOMAIN, SERVICE_PLAY_MEDIA)
 
     config = {DOMAIN: {"platform": "test", "cache": False}}
 

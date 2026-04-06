@@ -28,7 +28,7 @@ async def test_reboot(hass: HomeAssistant, router: Mock) -> None:
             BUTTON_DOMAIN,
             SERVICE_PRESS,
             service_data={
-                ATTR_ENTITY_ID: "button.reboot_freebox",
+                ATTR_ENTITY_ID: "button.freebox_server_r2_reboot_freebox",
             },
             blocking=True,
         )
@@ -54,7 +54,7 @@ async def test_mark_calls_as_read(hass: HomeAssistant, router: Mock) -> None:
             BUTTON_DOMAIN,
             SERVICE_PRESS,
             service_data={
-                ATTR_ENTITY_ID: "button.mark_calls_as_read",
+                ATTR_ENTITY_ID: "button.freebox_server_r2_mark_calls_as_read",
             },
             blocking=True,
         )

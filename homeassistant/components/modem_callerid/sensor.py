@@ -5,38 +5,28 @@ from __future__ import annotations
 from phone_modem import PhoneModem
 
 from homeassistant.components.sensor import RestoreSensor
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import EVENT_HOMEASSISTANT_STOP, STATE_IDLE
-from homeassistant.core import Event, HomeAssistant, callback
+from homeassistant.const import STATE_IDLE
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import CID, DATA_KEY_API, DOMAIN
+from . import ModemCallerIdConfigEntry
+from .const import CID, DOMAIN
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: ModemCallerIdConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Modem Caller ID sensor."""
-    api = hass.data[DOMAIN][entry.entry_id][DATA_KEY_API]
     async_add_entities(
         [
             ModemCalleridSensor(
-                api,
+                entry.runtime_data,
                 entry.entry_id,
             )
         ]
-    )
-
-    async def _async_on_hass_stop(event: Event) -> None:
-        """HA is shutting down, close modem port."""
-        if hass.data[DOMAIN][entry.entry_id][DATA_KEY_API]:
-            await hass.data[DOMAIN][entry.entry_id][DATA_KEY_API].close()
-
-    entry.async_on_unload(
-        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _async_on_hass_stop)
     )
 
 

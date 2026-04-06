@@ -56,8 +56,8 @@ async def test_setup_import(hass: HomeAssistant, router: Mock) -> None:
 async def test_unload_remove(hass: HomeAssistant, router: Mock) -> None:
     """Test unload and remove of integration."""
     entity_id_dt = f"{DT_DOMAIN}.freebox_server_r2"
-    entity_id_sensor = f"{SENSOR_DOMAIN}.freebox_download_speed"
-    entity_id_switch = f"{SWITCH_DOMAIN}.freebox_wifi"
+    entity_id_sensor = f"{SENSOR_DOMAIN}.freebox_server_r2_freebox_download_speed"
+    entity_id_switch = f"{SWITCH_DOMAIN}.freebox_server_r2_freebox_wifi"
 
     entry = MockConfigEntry(
         domain=DOMAIN,

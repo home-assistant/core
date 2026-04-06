@@ -36,6 +36,11 @@ SERVICE_AC_START_SCHEMA = SERVICE_VEHICLE_SCHEMA.extend(
         vol.Optional(ATTR_WHEN): cv.datetime,
     }
 )
+SERVICE_CHARGE_START_SCHEMA = SERVICE_VEHICLE_SCHEMA.extend(
+    {
+        vol.Optional(ATTR_WHEN): cv.datetime,
+    }
+)
 SERVICE_CHARGE_SET_SCHEDULE_DAY_SCHEMA = vol.Schema(
     {
         vol.Required("startTime"): cv.string,
@@ -92,17 +97,6 @@ SERVICE_AC_SET_SCHEDULES_SCHEMA = SERVICE_VEHICLE_SCHEMA.extend(
     }
 )
 
-SERVICE_AC_CANCEL = "ac_cancel"
-SERVICE_AC_START = "ac_start"
-SERVICE_CHARGE_SET_SCHEDULES = "charge_set_schedules"
-SERVICE_AC_SET_SCHEDULES = "ac_set_schedules"
-SERVICES = [
-    SERVICE_AC_CANCEL,
-    SERVICE_AC_START,
-    SERVICE_CHARGE_SET_SCHEDULES,
-    SERVICE_AC_SET_SCHEDULES,
-]
-
 
 async def ac_cancel(service_call: ServiceCall) -> None:
     """Cancel A/C."""
@@ -122,6 +116,16 @@ async def ac_start(service_call: ServiceCall) -> None:
     LOGGER.debug("A/C start attempt: %s / %s", temperature, when)
     result = await proxy.set_ac_start(temperature, when)
     LOGGER.debug("A/C start result: %s", result.raw_data)
+
+
+async def charge_start(service_call: ServiceCall) -> None:
+    """Start Charging with optional delay."""
+    when: datetime | None = service_call.data.get(ATTR_WHEN)
+    proxy = get_vehicle_proxy(service_call)
+
+    LOGGER.debug("Charge start attempt, when: %s", when)
+    result = await proxy.set_charge_start(when)
+    LOGGER.debug("Charge start result: %s", result.raw_data)
 
 
 async def charge_set_schedules(service_call: ServiceCall) -> None:
@@ -197,25 +201,31 @@ def async_setup_services(hass: HomeAssistant) -> None:
 
     hass.services.async_register(
         DOMAIN,
-        SERVICE_AC_CANCEL,
+        "ac_cancel",
         ac_cancel,
         schema=SERVICE_VEHICLE_SCHEMA,
     )
     hass.services.async_register(
         DOMAIN,
-        SERVICE_AC_START,
+        "ac_start",
         ac_start,
         schema=SERVICE_AC_START_SCHEMA,
     )
     hass.services.async_register(
         DOMAIN,
-        SERVICE_CHARGE_SET_SCHEDULES,
+        "charge_start",
+        charge_start,
+        schema=SERVICE_CHARGE_START_SCHEMA,
+    )
+    hass.services.async_register(
+        DOMAIN,
+        "charge_set_schedules",
         charge_set_schedules,
         schema=SERVICE_CHARGE_SET_SCHEDULES_SCHEMA,
     )
     hass.services.async_register(
         DOMAIN,
-        SERVICE_AC_SET_SCHEDULES,
+        "ac_set_schedules",
         ac_set_schedules,
         schema=SERVICE_AC_SET_SCHEDULES_SCHEMA,
     )

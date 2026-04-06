@@ -28,14 +28,11 @@ reset_system:
 refresh_system:
 
 set_zone_override:
+  target:
+    entity:
+      integration: evohome
+      domain: climate
   fields:
-    entity_id:
-      required: true
-      example: climate.bathroom
-      selector:
-        entity:
-          integration: evohome
-          domain: climate
     setpoint:
       required: true
       selector:
@@ -49,10 +46,7 @@ set_zone_override:
         object:
 
 clear_zone_override:
-  fields:
-    entity_id:
-      required: true
-      selector:
-        entity:
-          integration: evohome
-          domain: climate
+  target:
+    entity:
+      integration: evohome
+      domain: climate

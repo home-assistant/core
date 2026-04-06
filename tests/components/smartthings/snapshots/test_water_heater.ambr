@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_all_entities[da_ac_ehs_01001][water_heater.heat_pump-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max_temp': 69,
@@ -76,8 +77,9 @@
 # ---
 # name: test_all_entities[da_sac_ehs_000001_sub][water_heater.eco_heating_system-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max_temp': 60.0,
@@ -149,8 +151,9 @@
 # ---
 # name: test_all_entities[da_sac_ehs_000002_sub][water_heater.warmepumpe-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max_temp': 60.0,

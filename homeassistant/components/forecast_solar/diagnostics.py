@@ -28,6 +28,13 @@ async def async_get_config_entry_diagnostics(
             "title": entry.title,
             "data": async_redact_data(entry.data, TO_REDACT),
             "options": async_redact_data(entry.options, TO_REDACT),
+            "subentries": [
+                {
+                    "data": dict(subentry.data),
+                    "title": subentry.title,
+                }
+                for subentry in entry.subentries.values()
+            ],
         },
         "data": {
             "energy_production_today": coordinator.data.energy_production_today,

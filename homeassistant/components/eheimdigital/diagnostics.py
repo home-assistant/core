@@ -7,7 +7,7 @@ from homeassistant.core import HomeAssistant
 
 from .coordinator import EheimDigitalConfigEntry
 
-TO_REDACT = {"emailAddr", "usrName"}
+TO_REDACT = {"emailAddr", "usrName", "api_usrName", "api_password"}
 
 
 async def async_get_config_entry_diagnostics(

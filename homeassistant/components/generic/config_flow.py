@@ -213,7 +213,7 @@ async def async_test_still(
         )
         if err.response.status_code in [401, 403]:
             return {CONF_STILL_IMAGE_URL: "unable_still_load_auth"}, None
-        if err.response.status_code in [404]:
+        if err.response.status_code == 404:
             return {CONF_STILL_IMAGE_URL: "unable_still_load_not_found"}, None
         if err.response.status_code in [500, 503]:
             return {CONF_STILL_IMAGE_URL: "unable_still_load_server_error"}, None

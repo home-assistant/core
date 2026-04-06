@@ -141,5 +141,5 @@ def mock_hik_nvr(mock_hikcamera: MagicMock) -> MagicMock:
     camera = mock_hikcamera.return_value
     camera.get_type = "NVR"
     camera.current_event_states = {}
-    camera.get_event_triggers.return_value = {"Motion": [1, 2]}
+    camera.get_event_triggers.return_value = {"VMD": [1, 2]}
     return mock_hikcamera

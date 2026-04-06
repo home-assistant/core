@@ -106,8 +106,8 @@ class MqttSwitch(MqttEntity, SwitchEntity, RestoreEntity):
         state_on: str | None = config.get(CONF_STATE_ON)
         state_off: str | None = config.get(CONF_STATE_OFF)
         self._is_on_map = {
-            state_on if state_on else config[CONF_PAYLOAD_ON]: True,
-            state_off if state_off else config[CONF_PAYLOAD_OFF]: False,
+            state_on or config[CONF_PAYLOAD_ON]: True,
+            state_off or config[CONF_PAYLOAD_OFF]: False,
             PAYLOAD_NONE: None,
         }
         self._optimistic = (
