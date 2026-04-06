@@ -216,7 +216,8 @@ class PortainerCoordinator(DataUpdateCoordinator[dict[int, PortainerCoordinatorD
                 running_containers = [
                     container
                     for container in containers
-                    if container.state == ContainerState.RUNNING
+                    if container.state
+                    in (ContainerState.RUNNING, ContainerState.PAUSED)
                 ]
                 if running_containers:
                     container_stats = dict(

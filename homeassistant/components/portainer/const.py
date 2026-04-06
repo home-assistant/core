@@ -19,6 +19,7 @@ class ContainerState(StrEnum):
     """Portainer container state."""
 
     RUNNING = "running"
+    PAUSED = "paused"
 
 
 class StackStatus(IntEnum):
