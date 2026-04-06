@@ -23,7 +23,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import PortainerConfigEntry
-from .const import DOMAIN, StackStatus
+from .const import DOMAIN, ContainerState, StackStatus
 from .coordinator import (
     PortainerContainerData,
     PortainerCoordinator,
@@ -88,7 +88,9 @@ CONTAINER_SWITCHES: tuple[PortainerSwitchEntityDescription, ...] = (
         key="container",
         translation_key="container",
         device_class=SwitchDeviceClass.SWITCH,
-        is_on_fn=lambda data: data.container.state == "running",
+        is_on_fn=lambda data: (
+            data.container.state in (ContainerState.RUNNING, ContainerState.PAUSED)
+        ),
         turn_on_fn=lambda portainer: portainer.start_container,
         turn_off_fn=lambda portainer: portainer.stop_container,
     ),

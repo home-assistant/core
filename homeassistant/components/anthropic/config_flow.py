@@ -53,6 +53,7 @@ from .const import (
     CONF_TEMPERATURE,
     CONF_THINKING_BUDGET,
     CONF_THINKING_EFFORT,
+    CONF_TOOL_SEARCH,
     CONF_WEB_FETCH,
     CONF_WEB_FETCH_MAX_USES,
     CONF_WEB_SEARCH,
@@ -68,6 +69,7 @@ from .const import (
     DOMAIN,
     NON_ADAPTIVE_THINKING_MODELS,
     NON_THINKING_MODELS,
+    TOOL_SEARCH_UNSUPPORTED_MODELS,
     WEB_SEARCH_UNSUPPORTED_MODELS,
     PromptCaching,
 )
@@ -477,6 +479,16 @@ class ConversationSubentryFlowHandler(ConfigSubentryFlow):
         self.options.pop(CONF_WEB_SEARCH_REGION, None)
         self.options.pop(CONF_WEB_SEARCH_COUNTRY, None)
         self.options.pop(CONF_WEB_SEARCH_TIMEZONE, None)
+
+        if not model.startswith(tuple(TOOL_SEARCH_UNSUPPORTED_MODELS)):
+            step_schema[
+                vol.Optional(
+                    CONF_TOOL_SEARCH,
+                    default=DEFAULT[CONF_TOOL_SEARCH],
+                )
+            ] = bool
+        else:
+            self.options.pop(CONF_TOOL_SEARCH, None)
 
         if not step_schema:
             user_input = {}
