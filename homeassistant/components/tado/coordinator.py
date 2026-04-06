@@ -366,6 +366,6 @@ class TadoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, dict]]):
         except RequestException as exc:
             raise HomeAssistantError(f"Error setting Tado child lock: {exc}") from exc
 
-    async def get_rate_limit(self) -> dict[str, str]:
+    def get_rate_limit(self) -> dict[str, str]:
         """Get the current rate limit status from Tado."""
         return self._tado.rate_limit_info()
