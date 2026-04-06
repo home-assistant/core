@@ -13,11 +13,14 @@ from serial.tools.list_ports_common import ListPortInfo
 from homeassistant.helpers.service_info.usb import UsbServiceInfo
 from homeassistant.loader import USBMatcher
 
-from .models import USBDevice
+from .models import SerialDevice, USBDevice
 
 
 def usb_device_from_port(port: ListPortInfo) -> USBDevice:
     """Convert serial ListPortInfo to USBDevice."""
+    assert port.vid is not None
+    assert port.pid is not None
+
     return USBDevice(
         device=port.device,
         vid=f"{hex(port.vid)[2:]:0>4}".upper(),
@@ -28,8 +31,28 @@ def usb_device_from_port(port: ListPortInfo) -> USBDevice:
     )
 
 
-def scan_serial_ports() -> Sequence[USBDevice]:
-    """Scan serial ports for USB devices."""
+def serial_device_from_port(port: ListPortInfo) -> SerialDevice:
+    """Convert serial ListPortInfo to SerialDevice."""
+    return SerialDevice(
+        device=port.device,
+        serial_number=port.serial_number,
+        manufacturer=port.manufacturer,
+        description=port.description,
+    )
+
+
+def usb_serial_device_from_port(port: ListPortInfo) -> USBDevice | SerialDevice:
+    """Convert serial ListPortInfo to USBDevice or SerialDevice."""
+    if port.vid is not None or port.pid is not None:
+        assert port.vid is not None
+        assert port.pid is not None
+
+        return usb_device_from_port(port)
+    return serial_device_from_port(port)
+
+
+def scan_serial_ports() -> Sequence[USBDevice | SerialDevice]:
+    """Scan serial ports and return USB and other serial devices."""
 
     # Scan all symlinks first
     by_id = "/dev/serial/by-id"
@@ -41,15 +64,14 @@ def scan_serial_ports() -> Sequence[USBDevice]:
     serial_ports = []
 
     for port in comports():
-        if port.vid is not None or port.pid is not None:
-            usb_device = usb_device_from_port(port)
-            device_path = realpath_to_by_id.get(port.device, port.device)
+        device = usb_serial_device_from_port(port)
+        device_path = realpath_to_by_id.get(port.device, port.device)
 
-            if device_path != port.device:
-                # Prefer the unique /dev/serial/by-id/ path if it exists
-                usb_device = dataclasses.replace(usb_device, device=device_path)
+        if device_path != port.device:
+            # Prefer the unique /dev/serial/by-id/ path if it exists
+            device = dataclasses.replace(device, device=device_path)
 
-            serial_ports.append(usb_device)
+        serial_ports.append(device)
 
     return serial_ports
 
@@ -60,6 +82,10 @@ def usb_device_from_path(device_path: str) -> USBDevice | None:
     device_path_real = os.path.realpath(device_path)
 
     for device in scan_serial_ports():
+        # Skip non-USB serial devices
+        if not isinstance(device, USBDevice):
+            continue
+
         if os.path.realpath(device.device) == device_path_real:
             return device
 

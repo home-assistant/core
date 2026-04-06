@@ -172,6 +172,8 @@ async def async_migrate_entry(
                         f"USB device {device} is missing, cannot migrate"
                     )
 
+                assert isinstance(usb_info, USBDevice)
+
                 hass.config_entries.async_update_entry(
                     config_entry,
                     data={
