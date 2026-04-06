@@ -138,6 +138,11 @@ class KaleidescapeMediaPlayer(KaleidescapeEntity, MediaPlayerEntity):
         return self._device.movie.cover
 
     @property
+    def extra_state_attributes(self) -> dict[str, str | None]:
+        """Return entity specific state attributes."""
+        return {"media_year": self._device.movie.year}
+
+    @property
     def media_title(self) -> str:
         """Title of current playing media."""
         return self._device.movie.title

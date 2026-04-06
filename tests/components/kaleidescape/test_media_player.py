@@ -88,6 +88,7 @@ async def test_update_state(hass: HomeAssistant, mock_device: MagicMock) -> None
     entity = hass.states.get(ENTITY_ID)
     assert entity is not None
     assert entity.state == STATE_PLAYING
+    assert entity.attributes["media_year"] == "year"
 
     # Devices pauses playing
     mock_device.movie.play_status = kaleidescape_const.PLAY_STATUS_PAUSED
