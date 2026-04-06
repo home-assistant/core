@@ -239,8 +239,7 @@ def dhw_id(evohome: MagicMock, entity_id: Callable[[Platform, str], str]) -> str
     evo: EvohomeClient = evohome.return_value
     dhw: HotWater | None = evo.tcs.hotwater
 
-    if dhw is None:
-        pytest.skip("Fixture has no DHW zone")
+    assert dhw is not None, "Fixture has no DHW zone"
 
     return entity_id(Platform.WATER_HEATER, dhw.id)
 
