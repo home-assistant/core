@@ -23,7 +23,6 @@ COPILOT_SPECIFIC_INSTRUCTIONS = """
 
 - Start review comments with a short, one-sentence summary of the suggested fix.
 - Do not add comments about code style, formatting or linting issues.
-- The main review status comment should be inside a collapsible section with the summary as title. No header sections outside of the collapsible section.
 """
 
 

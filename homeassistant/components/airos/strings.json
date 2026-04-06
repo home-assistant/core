@@ -206,6 +206,12 @@
     },
     "reboot_failed": {
       "message": "The device did not accept the reboot request. Try again, or check your device web interface for errors."
+    },
+    "update_connection_authentication_error": {
+      "message": "Authentication or connection failed during firmware update"
+    },
+    "update_error": {
+      "message": "Connection failed during firmware update"
     }
   }
 }

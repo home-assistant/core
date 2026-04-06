@@ -5,17 +5,18 @@ from __future__ import annotations
 from datetime import timedelta
 from typing import Any, Final
 
+from evohomeasync2 import ControlSystem
 from evohomeasync2.const import SZ_CAN_BE_TEMPORARY, SZ_SYSTEM_MODE, SZ_TIMING_MODE
 from evohomeasync2.schemas.const import (
     S2_DURATION as SZ_DURATION,
     S2_PERIOD as SZ_PERIOD,
-    SystemMode as EvoSystemMode,
 )
 import voluptuous as vol
 
 from homeassistant.components.climate import DOMAIN as CLIMATE_DOMAIN
 from homeassistant.const import ATTR_MODE
 from homeassistant.core import HomeAssistant, ServiceCall, callback
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import config_validation as cv, service
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.service import verify_domain_control
@@ -23,8 +24,19 @@ from homeassistant.helpers.service import verify_domain_control
 from .const import ATTR_DURATION, ATTR_PERIOD, ATTR_SETPOINT, DOMAIN, EvoService
 from .coordinator import EvoDataUpdateCoordinator
 
-# system mode schemas are built dynamically when the services are registered
-# because supported modes can vary for edge-case systems
+# System service schemas (registered as domain services)
+SET_SYSTEM_MODE_SCHEMA: Final[dict[str | vol.Marker, Any]] = {
+    # unsupported modes are rejected at runtime with ServiceValidationError
+    vol.Required(ATTR_MODE): cv.string,  # avoid vol.In(SystemMode)
+    vol.Exclusive(ATTR_DURATION, "temporary"): vol.All(
+        cv.time_period,
+        vol.Range(min=timedelta(hours=0), max=timedelta(hours=24)),
+    ),
+    vol.Exclusive(ATTR_PERIOD, "temporary"): vol.All(
+        cv.time_period,
+        vol.Range(min=timedelta(days=1), max=timedelta(days=99)),
+    ),
+}
 
 # Zone service schemas (registered as entity services)
 SET_ZONE_OVERRIDE_SCHEMA: Final[dict[str | vol.Marker, Any]] = {
@@ -59,16 +71,56 @@ def _register_zone_entity_services(hass: HomeAssistant) -> None:
     )
 
 
+def _validate_set_system_mode_params(tcs: ControlSystem, data: dict[str, Any]) -> None:
+    """Validate that a set_system_mode service call is properly formed."""
+
+    mode = data[ATTR_MODE]
+    tcs_modes = {m[SZ_SYSTEM_MODE]: m for m in tcs.allowed_system_modes}
+
+    # Validation occurs here, instead of in the library, because it uses a slightly
+    # different schema (until instead of duration/period) for the method invoked
+    # via this service call
+
+    if (mode_info := tcs_modes.get(mode)) is None:
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="mode_not_supported",
+            translation_placeholders={ATTR_MODE: mode},
+        )
+
+    # voluptuous schema ensures that duration and period are not both present
+
+    if not mode_info[SZ_CAN_BE_TEMPORARY]:
+        if ATTR_DURATION in data or ATTR_PERIOD in data:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="mode_cant_be_temporary",
+                translation_placeholders={ATTR_MODE: mode},
+            )
+        return
+
+    timing_mode = mode_info.get(SZ_TIMING_MODE)  # will not be None, as can_be_temporary
+
+    if timing_mode == SZ_DURATION and ATTR_PERIOD in data:
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="mode_cant_have_period",
+            translation_placeholders={ATTR_MODE: mode},
+        )
+
+    if timing_mode == SZ_PERIOD and ATTR_DURATION in data:
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="mode_cant_have_duration",
+            translation_placeholders={ATTR_MODE: mode},
+        )
+
+
 @callback
 def setup_service_functions(
     hass: HomeAssistant, coordinator: EvoDataUpdateCoordinator
 ) -> None:
-    """Set up the service handlers for the system/zone operating modes.
-
-    Not all Honeywell TCC-compatible systems support all operating modes. In addition,
-    each mode will require any of four distinct service schemas. This has to be
-    enumerated before registering the appropriate handlers.
-    """
+    """Set up the service handlers for Evohome systems."""
 
     @verify_domain_control(DOMAIN)
     async def force_refresh(call: ServiceCall) -> None:
@@ -77,7 +129,14 @@ def setup_service_functions(
 
     @verify_domain_control(DOMAIN)
     async def set_system_mode(call: ServiceCall) -> None:
-        """Set the system mode."""
+        """Set the Evohome system mode or reset the system."""
+
+        # No additional validation for RESET_SYSTEM here, as the library method invoked
+        # via that service call may be able to emulate the reset even if the system
+        # doesn't support AutoWithReset natively
+
+        if call.service == EvoService.SET_SYSTEM_MODE:
+            _validate_set_system_mode_params(coordinator.tcs, call.data)
 
         payload = {
             "unique_id": coordinator.tcs.id,
@@ -86,59 +145,14 @@ def setup_service_functions(
         }
         async_dispatcher_send(hass, DOMAIN, payload)
 
-    assert coordinator.tcs is not None  # mypy
-
     hass.services.async_register(DOMAIN, EvoService.REFRESH_SYSTEM, force_refresh)
     hass.services.async_register(DOMAIN, EvoService.RESET_SYSTEM, set_system_mode)
 
-    # Enumerate which operating modes are supported by this system
-    modes = list(coordinator.tcs.allowed_system_modes)
-
-    system_mode_schemas = []
-    modes = [m for m in modes if m[SZ_SYSTEM_MODE] != EvoSystemMode.AUTO_WITH_RESET]
-
-    # Permanent-only modes will use this schema
-    perm_modes = [m[SZ_SYSTEM_MODE] for m in modes if not m[SZ_CAN_BE_TEMPORARY]]
-    if perm_modes:  # any of: "Auto", "HeatingOff": permanent only
-        schema = vol.Schema({vol.Required(ATTR_MODE): vol.In(perm_modes)})
-        system_mode_schemas.append(schema)
-
-    modes = [m for m in modes if m[SZ_CAN_BE_TEMPORARY]]
-
-    # These modes are set for a number of hours (or indefinitely): use this schema
-    temp_modes = [m[SZ_SYSTEM_MODE] for m in modes if m[SZ_TIMING_MODE] == SZ_DURATION]
-    if temp_modes:  # any of: "AutoWithEco", permanent or for 0-24 hours
-        schema = vol.Schema(
-            {
-                vol.Required(ATTR_MODE): vol.In(temp_modes),
-                vol.Optional(ATTR_DURATION): vol.All(
-                    cv.time_period,
-                    vol.Range(min=timedelta(hours=0), max=timedelta(hours=24)),
-                ),
-            }
-        )
-        system_mode_schemas.append(schema)
-
-    # These modes are set for a number of days (or indefinitely): use this schema
-    temp_modes = [m[SZ_SYSTEM_MODE] for m in modes if m[SZ_TIMING_MODE] == SZ_PERIOD]
-    if temp_modes:  # any of: "Away", "Custom", "DayOff", permanent or for 1-99 days
-        schema = vol.Schema(
-            {
-                vol.Required(ATTR_MODE): vol.In(temp_modes),
-                vol.Optional(ATTR_PERIOD): vol.All(
-                    cv.time_period,
-                    vol.Range(min=timedelta(days=1), max=timedelta(days=99)),
-                ),
-            }
-        )
-        system_mode_schemas.append(schema)
-
-    if system_mode_schemas:
-        hass.services.async_register(
-            DOMAIN,
-            EvoService.SET_SYSTEM_MODE,
-            set_system_mode,
-            schema=vol.Schema(vol.Any(*system_mode_schemas)),
-        )
+    hass.services.async_register(
+        DOMAIN,
+        EvoService.SET_SYSTEM_MODE,
+        set_system_mode,
+        schema=vol.Schema(SET_SYSTEM_MODE_SCHEMA),
+    )
 
     _register_zone_entity_services(hass)

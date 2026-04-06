@@ -225,9 +225,9 @@ send_media_group:
           multiple: true
           label_field: url
           description_field: caption
+          translation_key: "media"
           fields:
             media_type:
-              label: Media type
               selector:
                 select:
                   options:
@@ -237,20 +237,16 @@ send_media_group:
                     - "video"
                   translation_key: "media_type"
             caption:
-              label: Caption
               selector:
                 text:
             url:
-              label: URL
               selector:
                 text:
                   type: url
             verify_ssl:
-              label: Verify SSL
               selector:
                 boolean:
             authentication:
-              label: Authentication
               selector:
                 select:
                   options:
@@ -259,16 +255,13 @@ send_media_group:
                     - "bearer_token"
                   translation_key: "authentication"
             username:
-              label: Username
               selector:
                 text:
             password:
-              label: Password
               selector:
                 text:
                   type: password
             file:
-              label: File
               selector:
                 text:
     parse_mode:

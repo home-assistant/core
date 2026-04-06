@@ -24,14 +24,16 @@ from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
+type QBittorrentConfigEntry = ConfigEntry[QBittorrentDataCoordinator]
+
 
 class QBittorrentDataCoordinator(DataUpdateCoordinator[SyncMainDataDictionary]):
     """Coordinator for updating QBittorrent data."""
 
-    config_entry: ConfigEntry
+    config_entry: QBittorrentConfigEntry
 
     def __init__(
-        self, hass: HomeAssistant, config_entry: ConfigEntry, client: Client
+        self, hass: HomeAssistant, config_entry: QBittorrentConfigEntry, client: Client
     ) -> None:
         """Initialize coordinator."""
         self.client = client
