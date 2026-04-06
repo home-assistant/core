@@ -73,7 +73,6 @@ class TadoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, dict]]):
             "geofence": {},
             "zone": {},
         }
-        self.ratelimit: dict[str, str] = {}
 
     @property
     def fallback(self) -> str:
@@ -92,8 +91,8 @@ class TadoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, dict]]):
             )
         except RequestException as err:
             _LOGGER.debug("Checking rate limit")
-            self.ratelimit = await self.get_rate_limit()
-            if self.ratelimit.get("remaining") == "0":
+            ratelimit = await self.get_rate_limit()
+            if ratelimit.get("remaining") == "0":
                 raise UpdateFailed(f"Tado API rate limit reached: {err}") from err
             raise UpdateFailed(f"Error during Tado setup: {err}") from err
 
