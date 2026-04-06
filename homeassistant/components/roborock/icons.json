@@ -46,6 +46,9 @@
       }
     },
     "sensor": {
+      "brush_remaining": {
+        "default": "mdi:brush"
+      },
       "clean_percent": {
         "default": "mdi:progress-check"
       },
@@ -54,6 +57,9 @@
       },
       "cleaning_brush_time_left": {
         "default": "mdi:brush"
+      },
+      "cleaning_time": {
+        "default": "mdi:clock-outline"
       },
       "countdown": {
         "default": "mdi:clock-outline"
@@ -73,6 +79,12 @@
       "main_brush_time_left": {
         "default": "mdi:brush"
       },
+      "mop_drying_remaining_time": {
+        "default": "mdi:clock-outline"
+      },
+      "mop_life_time_left": {
+        "default": "mdi:texture"
+      },
       "sensor_time_left": {
         "default": "mdi:eye-outline"
       },
@@ -84,6 +96,9 @@
       },
       "strainer_time_left": {
         "default": "mdi:filter-variant"
+      },
+      "times_after_clean": {
+        "default": "mdi:counter"
       },
       "total_cleaning_area": {
         "default": "mdi:texture-box"

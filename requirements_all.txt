@@ -1925,7 +1925,7 @@ pyRFXtrx==0.31.1
 pySDCP==1
 
 # homeassistant.components.tibber
-pyTibber==0.36.0
+pyTibber==0.37.0
 
 # homeassistant.components.dlink
 pyW215==0.8.0
@@ -2663,7 +2663,7 @@ python-rabbitair==0.0.8
 python-ripple-api==0.0.3
 
 # homeassistant.components.roborock
-python-roborock==5.3.0
+python-roborock==5.5.1
 
 # homeassistant.components.smarttub
 python-smarttub==0.0.47
