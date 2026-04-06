@@ -217,10 +217,8 @@ class RadioThermostat(RadioThermostatEntity, ClimateEntity):
         if isinstance(self.device, radiotherm.thermostat.CT80):
             # Try to safely get program_mode to set the preset_mode.
             preset_mode = data.get("program_mode")
-            if preset_mode in CODE_TO_TEMP_MODE:
+            if preset_mode in CODE_TO_PRESET_MODE:
                 self._attr_preset_mode = CODE_TO_PRESET_MODE[preset_mode]
-            else:
-                self._attr_preset_mode = 0
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
