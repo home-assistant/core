@@ -26,7 +26,7 @@ from .const import (
     BSH_OPERATION_STATE_RUN,
     UNIT_MAP,
 )
-from .coordinator import HomeConnectApplianceData, HomeConnectConfigEntry
+from .coordinator import HomeConnectApplianceCoordinator, HomeConnectConfigEntry
 from .entity import HomeConnectEntity, constraint_fetcher
 
 _LOGGER = logging.getLogger(__name__)
@@ -57,6 +57,7 @@ BSH_PROGRAM_SENSORS = (
             "CookProcessor",
             "Dishwasher",
             "Dryer",
+            "Microwave",
             "Hood",
             "Oven",
             "Washer",
@@ -198,7 +199,7 @@ EVENT_SENSORS = (
         options=EVENT_OPTIONS,
         default_value="off",
         translation_key="program_aborted",
-        appliance_types=("Dishwasher", "CleaningRobot", "CookProcessor"),
+        appliance_types=("Dishwasher", "Microwave", "CleaningRobot", "CookProcessor"),
     ),
     HomeConnectSensorEntityDescription(
         key=EventKey.BSH_COMMON_EVENT_PROGRAM_FINISHED,
@@ -211,6 +212,7 @@ EVENT_SENSORS = (
             "Dishwasher",
             "Washer",
             "Dryer",
+            "Microwave",
             "WasherDryer",
             "CleaningRobot",
             "CookProcessor",
@@ -508,26 +510,26 @@ EVENT_SENSORS = (
 
 
 def _get_entities_for_appliance(
-    entry: HomeConnectConfigEntry,
-    appliance: HomeConnectApplianceData,
+    appliance_coordinator: HomeConnectApplianceCoordinator,
 ) -> list[HomeConnectEntity]:
     """Get a list of entities."""
     return [
         *[
-            HomeConnectEventSensor(entry.runtime_data, appliance, description)
+            HomeConnectEventSensor(appliance_coordinator, description)
             for description in EVENT_SENSORS
             if description.appliance_types
-            and appliance.info.type in description.appliance_types
+            and appliance_coordinator.data.info.type in description.appliance_types
         ],
         *[
-            HomeConnectProgramSensor(entry.runtime_data, appliance, desc)
+            HomeConnectProgramSensor(appliance_coordinator, desc)
             for desc in BSH_PROGRAM_SENSORS
-            if desc.appliance_types and appliance.info.type in desc.appliance_types
+            if desc.appliance_types
+            and appliance_coordinator.data.info.type in desc.appliance_types
         ],
         *[
-            HomeConnectSensor(entry.runtime_data, appliance, description)
+            HomeConnectSensor(appliance_coordinator, description)
             for description in SENSORS
-            if description.key in appliance.status
+            if description.key in appliance_coordinator.data.status
         ],
     ]
 
@@ -607,7 +609,7 @@ class HomeConnectProgramSensor(HomeConnectSensor):
         self.async_on_remove(
             self.coordinator.async_add_listener(
                 self._handle_operation_state_event,
-                (self.appliance.info.ha_id, EventKey.BSH_COMMON_STATUS_OPERATION_STATE),
+                EventKey.BSH_COMMON_STATUS_OPERATION_STATE,
             )
         )
 

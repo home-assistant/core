@@ -9,6 +9,23 @@
     "type": "Switch",
     "category": "Config"
   },
+  "brightness": {
+    "value": 50,
+    "type": "Sensor",
+    "category": "Primary"
+  },
+  "hsv": {
+    "value": [10, 30, 5],
+    "type": "Sensor",
+    "category": "Primary"
+  },
+  "color_temp": {
+    "value": 4000,
+    "type": "Sensor",
+    "category": "Primary",
+    "minimum_value": 4000,
+    "maximum_value": 9000
+  },
   "auto_update_enabled": {
     "value": true,
     "type": "Switch",

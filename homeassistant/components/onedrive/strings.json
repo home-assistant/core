@@ -105,9 +105,6 @@
     "filename_does_not_exist": {
       "message": "`{filename}` does not exist"
     },
-    "integration_not_found": {
-      "message": "Integration \"{target}\" not found in registry."
-    },
     "no_access_to_path": {
       "message": "Cannot read {filename}, no access to path; `allowlist_external_dirs` may need to be adjusted in `configuration.yaml`"
     },

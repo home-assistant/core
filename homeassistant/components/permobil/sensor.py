@@ -23,7 +23,6 @@ from mypermobil import (
     USAGE_DISTANCE,
 )
 
-from homeassistant import config_entries
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
@@ -34,8 +33,8 @@ from homeassistant.const import PERCENTAGE, UnitOfEnergy, UnitOfLength, UnitOfTi
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import BATTERY_ASSUMED_VOLTAGE, DOMAIN, KM, MILES
-from .coordinator import MyPermobilCoordinator
+from .const import BATTERY_ASSUMED_VOLTAGE, KM, MILES
+from .coordinator import PermobilConfigEntry
 from .entity import PermobilEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -98,8 +97,9 @@ SENSOR_DESCRIPTIONS: tuple[PermobilSensorEntityDescription, ...] = (
     ),
     PermobilSensorEntityDescription(
         # Watt hours the battery can store given battery health
-        value_fn=lambda data: data.battery[BATTERY_MAX_AMPERE_HOURS[0]]
-        * BATTERY_ASSUMED_VOLTAGE,
+        value_fn=lambda data: (
+            data.battery[BATTERY_MAX_AMPERE_HOURS[0]] * BATTERY_ASSUMED_VOLTAGE
+        ),
         available_fn=lambda data: BATTERY_MAX_AMPERE_HOURS[0] in data.battery,
         key="max_watt_hours",
         translation_key="max_watt_hours",
@@ -109,8 +109,9 @@ SENSOR_DESCRIPTIONS: tuple[PermobilSensorEntityDescription, ...] = (
     ),
     PermobilSensorEntityDescription(
         # Current amount of watt hours in battery
-        value_fn=lambda data: data.battery[BATTERY_AMPERE_HOURS_LEFT[0]]
-        * BATTERY_ASSUMED_VOLTAGE,
+        value_fn=lambda data: (
+            data.battery[BATTERY_AMPERE_HOURS_LEFT[0]] * BATTERY_ASSUMED_VOLTAGE
+        ),
         available_fn=lambda data: BATTERY_AMPERE_HOURS_LEFT[0] in data.battery,
         key="watt_hours_left",
         translation_key="watt_hours_left",
@@ -174,12 +175,12 @@ DISTANCE_UNITS: dict[Any, UnitOfLength] = {
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: config_entries.ConfigEntry,
+    config_entry: PermobilConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Create sensors from a config entry created in the integrations UI."""
 
-    coordinator: MyPermobilCoordinator = hass.data[DOMAIN][config_entry.entry_id]
+    coordinator = config_entry.runtime_data
 
     async_add_entities(
         PermobilSensor(coordinator=coordinator, description=description)

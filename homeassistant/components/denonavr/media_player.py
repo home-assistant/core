@@ -17,6 +17,7 @@ from denonavr.const import (
     STATE_ON,
     STATE_PAUSED,
     STATE_PLAYING,
+    STATE_STOPPED,
 )
 from denonavr.exceptions import (
     AvrCommandError,
@@ -69,6 +70,7 @@ SUPPORT_MEDIA_MODES = (
     | MediaPlayerEntityFeature.NEXT_TRACK
     | MediaPlayerEntityFeature.VOLUME_SET
     | MediaPlayerEntityFeature.PLAY
+    | MediaPlayerEntityFeature.STOP
 )
 
 SCAN_INTERVAL = timedelta(seconds=10)
@@ -96,6 +98,7 @@ DENON_STATE_MAPPING = {
     STATE_OFF: MediaPlayerState.OFF,
     STATE_PLAYING: MediaPlayerState.PLAYING,
     STATE_PAUSED: MediaPlayerState.PAUSED,
+    STATE_STOPPED: MediaPlayerState.IDLE,
 }
 
 
@@ -403,6 +406,11 @@ class DenonDevice(MediaPlayerEntity):
     async def async_media_pause(self) -> None:
         """Send pause command."""
         await self._receiver.async_pause()
+
+    @async_log_errors
+    async def async_media_stop(self) -> None:
+        """Send stop command."""
+        await self._receiver.async_stop()
 
     @async_log_errors
     async def async_media_previous_track(self) -> None:

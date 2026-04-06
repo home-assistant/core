@@ -9,6 +9,7 @@ import pytest
 import tibber
 
 from homeassistant.components.application_credentials import (
+    DOMAIN as APPLICATION_CREDENTIALS_DOMAIN,
     ClientCredential,
     async_import_client_credential,
 )
@@ -182,7 +183,7 @@ def tibber_mock() -> AsyncGenerator[MagicMock]:
         tibber_mock.send_notification = AsyncMock()
         tibber_mock.rt_disconnect = AsyncMock()
         tibber_mock.get_homes = MagicMock(return_value=[])
-        tibber_mock.set_access_token = MagicMock()
+        tibber_mock.set_access_token = AsyncMock()
 
         data_api_mock = MagicMock()
         data_api_mock.get_all_devices = AsyncMock(return_value={})
@@ -216,7 +217,7 @@ async def mock_tibber_setup(
 @pytest.fixture
 async def setup_credentials(hass: HomeAssistant) -> None:
     """Set up application credentials for the OAuth flow."""
-    assert await async_setup_component(hass, "application_credentials", {})
+    assert await async_setup_component(hass, APPLICATION_CREDENTIALS_DOMAIN, {})
     await async_import_client_credential(
         hass,
         DOMAIN,

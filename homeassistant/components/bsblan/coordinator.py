@@ -1,12 +1,16 @@
-"""DataUpdateCoordinator for the BSB-Lan integration."""
+"""DataUpdateCoordinator for the BSB-LAN integration."""
+
+from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import timedelta
+from typing import TYPE_CHECKING
 
 from bsblan import (
     BSBLAN,
     BSBLANAuthError,
     BSBLANConnectionError,
+    BSBLANError,
     HotWaterConfig,
     HotWaterSchedule,
     HotWaterState,
@@ -14,7 +18,6 @@ from bsblan import (
     State,
 )
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
@@ -22,10 +25,18 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 from .const import DOMAIN, LOGGER, SCAN_INTERVAL_FAST, SCAN_INTERVAL_SLOW
 
+if TYPE_CHECKING:
+    from . import BSBLanConfigEntry
+
 # Filter lists for optimized API calls - only fetch parameters we actually use
 # This significantly reduces response time (~0.2s per parameter saved)
-STATE_INCLUDE = ["current_temperature", "target_temperature", "hvac_mode"]
-SENSOR_INCLUDE = ["current_temperature", "outside_temperature"]
+STATE_INCLUDE = [
+    "current_temperature",
+    "target_temperature",
+    "hvac_mode",
+    "hvac_action",
+]
+SENSOR_INCLUDE = ["current_temperature", "outside_temperature", "total_energy"]
 DHW_STATE_INCLUDE = [
     "operating_mode",
     "nominal_setpoint",
@@ -40,7 +51,7 @@ class BSBLanFastData:
 
     state: State
     sensor: Sensor
-    dhw: HotWaterState
+    dhw: HotWaterState | None = None
 
 
 @dataclass
@@ -52,19 +63,19 @@ class BSBLanSlowData:
 
 
 class BSBLanCoordinator[T](DataUpdateCoordinator[T]):
-    """Base BSB-Lan coordinator."""
+    """Base BSB-LAN coordinator."""
 
-    config_entry: ConfigEntry
+    config_entry: BSBLanConfigEntry
 
     def __init__(
         self,
         hass: HomeAssistant,
-        config_entry: ConfigEntry,
+        config_entry: BSBLanConfigEntry,
         client: BSBLAN,
         name: str,
         update_interval: timedelta,
     ) -> None:
-        """Initialize the BSB-Lan coordinator."""
+        """Initialize the BSB-LAN coordinator."""
         super().__init__(
             hass,
             logger=LOGGER,
@@ -76,15 +87,15 @@ class BSBLanCoordinator[T](DataUpdateCoordinator[T]):
 
 
 class BSBLanFastCoordinator(BSBLanCoordinator[BSBLanFastData]):
-    """The BSB-Lan fast update coordinator for frequently changing data."""
+    """The BSB-LAN fast update coordinator for frequently changing data."""
 
     def __init__(
         self,
         hass: HomeAssistant,
-        config_entry: ConfigEntry,
+        config_entry: BSBLanConfigEntry,
         client: BSBLAN,
     ) -> None:
-        """Initialize the BSB-Lan fast coordinator."""
+        """Initialize the BSB-LAN fast coordinator."""
         super().__init__(
             hass,
             config_entry,
@@ -94,24 +105,39 @@ class BSBLanFastCoordinator(BSBLanCoordinator[BSBLanFastData]):
         )
 
     async def _async_update_data(self) -> BSBLanFastData:
-        """Fetch fast-changing data from the BSB-Lan device."""
+        """Fetch fast-changing data from the BSB-LAN device."""
         try:
             # Client is already initialized in async_setup_entry
             # Use include filtering to only fetch parameters we actually use
             # This reduces response time significantly (~0.2s per parameter)
             state = await self.client.state(include=STATE_INCLUDE)
             sensor = await self.client.sensor(include=SENSOR_INCLUDE)
-            dhw = await self.client.hot_water_state(include=DHW_STATE_INCLUDE)
 
         except BSBLANAuthError as err:
             raise ConfigEntryAuthFailed(
-                "Authentication failed for BSB-Lan device"
+                translation_domain=DOMAIN,
+                translation_key="coordinator_auth_error",
             ) from err
         except BSBLANConnectionError as err:
             host = self.config_entry.data[CONF_HOST]
             raise UpdateFailed(
-                f"Error while establishing connection with BSB-Lan device at {host}"
+                translation_domain=DOMAIN,
+                translation_key="coordinator_connection_error",
+                translation_placeholders={"host": host},
             ) from err
+
+        # Fetch DHW state separately - device may not support hot water
+        dhw: HotWaterState | None = None
+        try:
+            dhw = await self.client.hot_water_state(include=DHW_STATE_INCLUDE)
+        except BSBLANError:
+            # Preserve last known DHW state if available (entity may depend on it)
+            if self.data:
+                dhw = self.data.dhw
+            LOGGER.debug(
+                "DHW (Domestic Hot Water) state not available on device at %s",
+                self.config_entry.data[CONF_HOST],
+            )
 
         return BSBLanFastData(
             state=state,
@@ -121,15 +147,15 @@ class BSBLanFastCoordinator(BSBLanCoordinator[BSBLanFastData]):
 
 
 class BSBLanSlowCoordinator(BSBLanCoordinator[BSBLanSlowData]):
-    """The BSB-Lan slow update coordinator for infrequently changing data."""
+    """The BSB-LAN slow update coordinator for infrequently changing data."""
 
     def __init__(
         self,
         hass: HomeAssistant,
-        config_entry: ConfigEntry,
+        config_entry: BSBLanConfigEntry,
         client: BSBLAN,
     ) -> None:
-        """Initialize the BSB-Lan slow coordinator."""
+        """Initialize the BSB-LAN slow coordinator."""
         super().__init__(
             hass,
             config_entry,
@@ -139,20 +165,13 @@ class BSBLanSlowCoordinator(BSBLanCoordinator[BSBLanSlowData]):
         )
 
     async def _async_update_data(self) -> BSBLanSlowData:
-        """Fetch slow-changing data from the BSB-Lan device."""
+        """Fetch slow-changing data from the BSB-LAN device."""
         try:
             # Client is already initialized in async_setup_entry
             # Use include filtering to only fetch parameters we actually use
             dhw_config = await self.client.hot_water_config(include=DHW_CONFIG_INCLUDE)
             dhw_schedule = await self.client.hot_water_schedule()
 
-        except AttributeError:
-            # Device does not support DHW functionality
-            LOGGER.debug(
-                "DHW (Domestic Hot Water) not available on device at %s",
-                self.config_entry.data[CONF_HOST],
-            )
-            return BSBLanSlowData()
         except (BSBLANConnectionError, BSBLANAuthError) as err:
             # If config update fails, keep existing data
             LOGGER.debug(
@@ -163,6 +182,13 @@ class BSBLanSlowCoordinator(BSBLanCoordinator[BSBLanSlowData]):
             if self.data:
                 return self.data
             # First fetch failed, return empty data
+            return BSBLanSlowData()
+        except BSBLANError, AttributeError:
+            # Device does not support DHW functionality
+            LOGGER.debug(
+                "DHW (Domestic Hot Water) not available on device at %s",
+                self.config_entry.data[CONF_HOST],
+            )
             return BSBLanSlowData()
 
         return BSBLanSlowData(

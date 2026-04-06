@@ -10,9 +10,11 @@
     "@sapuseven"
   ],
   "config_flow": true,
+  "dhcp": [{ "hostname": "levoit-*" }],
   "documentation": "https://www.home-assistant.io/integrations/vesync",
   "integration_type": "hub",
   "iot_class": "cloud_polling",
   "loggers": ["pyvesync"],
+  "quality_scale": "bronze",
   "requirements": ["pyvesync==3.4.1"]
 }

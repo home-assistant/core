@@ -79,8 +79,11 @@ async def async_setup_entry(
 
         if coordinator.data.device_type.category == DeviceCategory.POWER_PLUG:
             entities.append(SwitcherPowerPlugSwitchEntity(coordinator))
-        elif coordinator.data.device_type.category == DeviceCategory.WATER_HEATER:
-            entities.append(SwitcherWaterHeaterSwitchEntity(coordinator))
+        elif coordinator.data.device_type.category in [
+            DeviceCategory.WATER_HEATER,
+            DeviceCategory.HEATER,
+        ]:
+            entities.append(SwitcherHeaterSwitchEntity(coordinator))
         elif coordinator.data.device_type.category in (
             DeviceCategory.SHUTTER,
             DeviceCategory.SINGLE_SHUTTER_DUAL_LIGHT,
@@ -143,8 +146,8 @@ class SwitcherPowerPlugSwitchEntity(SwitcherBaseSwitchEntity):
     _attr_device_class = SwitchDeviceClass.OUTLET
 
 
-class SwitcherWaterHeaterSwitchEntity(SwitcherBaseSwitchEntity):
-    """Representation of a Switcher water heater switch entity."""
+class SwitcherHeaterSwitchEntity(SwitcherBaseSwitchEntity):
+    """Representation of a Switcher heater switch entity."""
 
     _attr_device_class = SwitchDeviceClass.SWITCH
 

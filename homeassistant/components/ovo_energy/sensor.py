@@ -7,7 +7,6 @@ import dataclasses
 from datetime import datetime, timedelta
 from typing import Final
 
-from ovoenergy import OVOEnergy
 from ovoenergy.models import OVODailyUsage
 
 from homeassistant.components.sensor import (
@@ -16,15 +15,14 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import UnitOfEnergy
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.util import dt as dt_util
 
-from .const import DATA_CLIENT, DATA_COORDINATOR, DOMAIN
+from .const import DOMAIN
+from .coordinator import OVOEnergyConfigEntry, OVOEnergyDataUpdateCoordinator
 from .entity import OVOEnergyDeviceEntity
 
 SCAN_INTERVAL = timedelta(seconds=300)
@@ -55,9 +53,11 @@ SENSOR_TYPES_ELECTRICITY: tuple[OVOEnergySensorEntityDescription, ...] = (
         translation_key=KEY_LAST_ELECTRICITY_COST,
         device_class=SensorDeviceClass.MONETARY,
         state_class=SensorStateClass.TOTAL,
-        value=lambda usage: usage.electricity[-1].cost.amount
-        if usage.electricity[-1].cost is not None
-        else None,
+        value=lambda usage: (
+            usage.electricity[-1].cost.amount
+            if usage.electricity[-1].cost is not None
+            else None
+        ),
     ),
     OVOEnergySensorEntityDescription(
         key="last_electricity_start_time",
@@ -89,9 +89,9 @@ SENSOR_TYPES_GAS: tuple[OVOEnergySensorEntityDescription, ...] = (
         translation_key=KEY_LAST_GAS_COST,
         device_class=SensorDeviceClass.MONETARY,
         state_class=SensorStateClass.TOTAL,
-        value=lambda usage: usage.gas[-1].cost.amount
-        if usage.gas[-1].cost is not None
-        else None,
+        value=lambda usage: (
+            usage.gas[-1].cost.amount if usage.gas[-1].cost is not None else None
+        ),
     ),
     OVOEnergySensorEntityDescription(
         key="last_gas_start_time",
@@ -112,14 +112,11 @@ SENSOR_TYPES_GAS: tuple[OVOEnergySensorEntityDescription, ...] = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: OVOEnergyConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up OVO Energy sensor based on a config entry."""
-    coordinator: DataUpdateCoordinator[OVODailyUsage] = hass.data[DOMAIN][
-        entry.entry_id
-    ][DATA_COORDINATOR]
-    client: OVOEnergy = hass.data[DOMAIN][entry.entry_id][DATA_CLIENT]
+    coordinator = entry.runtime_data
 
     entities = []
 
@@ -137,7 +134,7 @@ async def async_setup_entry(
                             coordinator.data.electricity[-1].cost.currency_unit
                         ),
                     )
-                entities.append(OVOEnergySensor(coordinator, description, client))
+                entities.append(OVOEnergySensor(coordinator, description))
         if coordinator.data.gas:
             for description in SENSOR_TYPES_GAS:
                 if (
@@ -151,7 +148,7 @@ async def async_setup_entry(
                             -1
                         ].cost.currency_unit,
                     )
-                entities.append(OVOEnergySensor(coordinator, description, client))
+                entities.append(OVOEnergySensor(coordinator, description))
 
     async_add_entities(entities, True)
 
@@ -159,18 +156,18 @@ async def async_setup_entry(
 class OVOEnergySensor(OVOEnergyDeviceEntity, SensorEntity):
     """Define a OVO Energy sensor."""
 
-    coordinator: DataUpdateCoordinator[DataUpdateCoordinator[OVODailyUsage]]
     entity_description: OVOEnergySensorEntityDescription
 
     def __init__(
         self,
-        coordinator: DataUpdateCoordinator[OVODailyUsage],
+        coordinator: OVOEnergyDataUpdateCoordinator,
         description: OVOEnergySensorEntityDescription,
-        client: OVOEnergy,
     ) -> None:
         """Initialize."""
-        super().__init__(coordinator, client)
-        self._attr_unique_id = f"{DOMAIN}_{client.account_id}_{description.key}"
+        super().__init__(coordinator)
+        self._attr_unique_id = (
+            f"{DOMAIN}_{coordinator.client.account_id}_{description.key}"
+        )
         self.entity_description = description
 
     @property

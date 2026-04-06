@@ -1,5 +1,7 @@
 """Common stuff for Fritz!Tools tests."""
 
+from typing import Any
+
 from fritzconnection.lib.fritzstatus import DefaultConnectionService
 
 from homeassistant.components.fritz.const import DOMAIN
@@ -54,7 +56,7 @@ MOCK_MESH_MASTER_WIFI1_MAC = "1C:ED:6F:12:34:12"
 MOCK_MESH_SLAVE_MAC = "1C:ED:6F:12:34:21"
 MOCK_MESH_SLAVE_WIFI1_MAC = "1C:ED:6F:12:34:22"
 
-MOCK_FB_SERVICES: dict[str, dict] = {
+MOCK_FB_SERVICES: dict[str, dict[str, Any]] = {
     "DeviceInfo1": {
         "GetInfo": {
             "NewSerialNumber": MOCK_MESH_MASTER_MAC,
@@ -192,6 +194,25 @@ MOCK_FB_SERVICES: dict[str, dict] = {
         },
         "GetSSID": {
             "NewSSID": "MyWifi",
+        },
+        "GetSecurityKeys": {"NewKeyPassphrase": "1234567890"},
+        "GetBeaconAdvertisement": {
+            "NewBeaconAdvertisementEnabled": True,
+        },
+    },
+    "WLANConfiguration2": {
+        "GetInfo": {
+            "NewEnable": True,
+            "NewStatus": "Up",
+            "NewSSID": "GuestWifi",
+            "NewBeaconType": "11iandWPA3",
+            "NewX_AVM-DE_PossibleBeaconTypes": "None,11i,11iandWPA3",
+            "NewStandard": "ax",
+            "NewBSSID": "1C:ED:6F:12:34:13",
+            "NewMACAddressControlEnabled": True,
+        },
+        "GetSSID": {
+            "NewSSID": "GuestWifi",
         },
         "GetSecurityKeys": {"NewKeyPassphrase": "1234567890"},
         "GetBeaconAdvertisement": {

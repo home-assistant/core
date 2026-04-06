@@ -578,13 +578,13 @@ class CalendarEntity(Entity):
         return STATE_OFF
 
     @callback
-    def async_write_ha_state(self) -> None:
+    def _async_write_ha_state(self) -> None:
         """Write the state to the state machine.
 
         This sets up listeners to handle state transitions for start or end of
         the current or upcoming event.
         """
-        super().async_write_ha_state()
+        super()._async_write_ha_state()
         if self._alarm_unsubs is None:
             self._alarm_unsubs = []
         _LOGGER.debug(
@@ -691,7 +691,7 @@ class CalendarEventView(http.HomeAssistantView):
         try:
             start_date = dt_util.parse_datetime(start)
             end_date = dt_util.parse_datetime(end)
-        except (ValueError, AttributeError):
+        except ValueError, AttributeError:
             return web.Response(status=HTTPStatus.BAD_REQUEST)
         if start_date is None or end_date is None:
             return web.Response(status=HTTPStatus.BAD_REQUEST)

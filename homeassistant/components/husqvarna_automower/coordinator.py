@@ -28,7 +28,7 @@ from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 MAX_WS_RECONNECT_TIME = 600
-SCAN_INTERVAL = timedelta(minutes=8)
+SCAN_INTERVAL = timedelta(minutes=1)
 DEFAULT_RECONNECT_TIME = 2  # Define a default reconnect time
 PING_INTERVAL = 60
 
@@ -184,10 +184,8 @@ class AutomowerDataUpdateCoordinator(DataUpdateCoordinator[MowerDictionary]):
             )
 
     def _should_poll(self) -> bool:
-        """Return True if at least one mower is connected and at least one is not OFF."""
-        return any(mower.metadata.connected for mower in self.data.values()) and any(
-            mower.mower.state != MowerStates.OFF for mower in self.data.values()
-        )
+        """Return True if at least one mower is not OFF."""
+        return any(mower.mower.state != MowerStates.OFF for mower in self.data.values())
 
     async def _pong_watchdog(self) -> None:
         """Watchdog to check for pong messages."""

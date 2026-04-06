@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "minor_version": 2,
+  "minor_version": 3,
   "key": "knx/config_store.json",
   "data": {
     "entities": {
@@ -46,6 +46,7 @@
           }
         }
       }
-    }
+    },
+    "time_server": {}
   }
 }

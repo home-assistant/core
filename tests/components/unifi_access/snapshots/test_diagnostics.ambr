@@ -1,0 +1,64 @@
+# serializer version: 1
+# name: test_diagnostics
+  dict({
+    'coordinator_data': dict({
+      'door_lock_rules': dict({
+        'door-001': dict({
+          'ended_time': 0,
+          'type': '',
+        }),
+        'door-002': dict({
+          'ended_time': 0,
+          'type': '',
+        }),
+      }),
+      'door_thumbnails': dict({
+        'door-001': dict({
+          'door_thumbnail_last_update': 1700000000,
+          'url': '/preview/front_door.png',
+        }),
+      }),
+      'doors': dict({
+        'door-001': dict({
+          'door_lock_relay_status': 'lock',
+          'door_position_status': 'close',
+          'door_thumbnail': '/preview/front_door.png',
+          'door_thumbnail_last_update': 1700000000,
+          'floor_id': '',
+          'full_name': '',
+          'id': 'door-001',
+          'is_bind_hub': False,
+          'lock_rule_status': None,
+          'name': 'Front Door',
+          'type': 'door',
+        }),
+        'door-002': dict({
+          'door_lock_relay_status': 'unlock',
+          'door_position_status': 'open',
+          'door_thumbnail': None,
+          'door_thumbnail_last_update': None,
+          'floor_id': '',
+          'full_name': '',
+          'id': 'door-002',
+          'is_bind_hub': False,
+          'lock_rule_status': None,
+          'name': 'Back Door',
+          'type': 'door',
+        }),
+      }),
+      'emergency': dict({
+        'evacuation': False,
+        'lockdown': False,
+      }),
+      'lock_rule_support_complete': True,
+      'supports_lock_rules': True,
+      'unconfirmed_lock_rule_doors': list([
+      ]),
+    }),
+    'entry_data': dict({
+      'api_token': '**REDACTED**',
+      'host': '192.168.1.1',
+      'verify_ssl': False,
+    }),
+  })
+# ---
