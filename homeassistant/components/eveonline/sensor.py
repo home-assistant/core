@@ -56,7 +56,7 @@ CHARACTER_SENSORS: tuple[EveOnlineSensorDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=2,
         value_fn=lambda data: (
-            round(data.wallet_balance.balance, 2) if data.wallet_balance else None
+            data.wallet_balance.balance if data.wallet_balance else None
         ),
     ),
     EveOnlineSensorDescription(

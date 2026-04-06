@@ -36,12 +36,16 @@ rules:
   integration-owner: done
   log-when-unavailable: done
   parallel-updates: done
-  reauthentication-flow: todo
+  reauthentication-flow:
+    status: todo
+    comment: Will be added in a follow-up PR.
   test-coverage: done
 
   # Gold
   devices: done
-  diagnostics: todo
+  diagnostics:
+    status: todo
+    comment: Will be added in a follow-up PR.
   discovery:
     status: exempt
     comment: Eve Online is a cloud service — no local discovery possible.
@@ -66,7 +70,9 @@ rules:
   entity-translations: done
   exception-translations: done
   icon-translations: done
-  reconfiguration-flow: todo
+  reconfiguration-flow:
+    status: todo
+    comment: Will be added in a follow-up PR.
   repair-issues:
     status: exempt
     comment: Integration does not raise repair issues.

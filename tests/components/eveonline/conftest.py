@@ -71,17 +71,17 @@ def mock_eveonline_client() -> Generator[AsyncMock]:
         autospec=True,
     ) as mock_client_class:
         client = mock_client_class.return_value
-        client.async_get_character_online = AsyncMock(return_value=None)
-        client.async_get_wallet_balance = AsyncMock(return_value=None)
-        client.async_get_skill_queue = AsyncMock(return_value=[])
-        client.async_get_character_location = AsyncMock(return_value=None)
-        client.async_get_character_ship = AsyncMock(return_value=None)
-        client.async_get_skills = AsyncMock(return_value=None)
-        client.async_get_mail_labels = AsyncMock(return_value=None)
-        client.async_get_industry_jobs = AsyncMock(return_value=[])
-        client.async_get_market_orders = AsyncMock(return_value=[])
-        client.async_get_jump_fatigue = AsyncMock(return_value=None)
-        client.async_resolve_names = AsyncMock(return_value=[])
+        client.async_get_character_online.return_value = None
+        client.async_get_wallet_balance.return_value = None
+        client.async_get_skill_queue.return_value = []
+        client.async_get_character_location.return_value = None
+        client.async_get_character_ship.return_value = None
+        client.async_get_skills.return_value = None
+        client.async_get_mail_labels.return_value = None
+        client.async_get_industry_jobs.return_value = []
+        client.async_get_market_orders.return_value = []
+        client.async_get_jump_fatigue.return_value = None
+        client.async_resolve_names.return_value = []
         yield client
 
 
