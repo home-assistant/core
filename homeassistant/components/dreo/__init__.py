@@ -6,8 +6,8 @@ from dataclasses import dataclass
 import logging
 from typing import Any
 
-from pydreo.client import DreoClient
-from pydreo.exceptions import DreoBusinessException, DreoException
+from pydreo import DreoBusinessException, DreoException
+from pydreo.cloud.client import DreoClient
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform

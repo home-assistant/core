@@ -7,8 +7,8 @@ from datetime import timedelta
 import logging
 from typing import Any
 
-from pydreo.client import DreoClient
-from pydreo.exceptions import DreoException
+from pydreo import DreoException
+from pydreo.cloud.client import DreoClient
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant

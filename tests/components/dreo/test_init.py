@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from unittest.mock import MagicMock, patch
 
-from pydreo.exceptions import DreoBusinessException, DreoException
+from pydreo import DreoBusinessException, DreoException
 import pytest
 
 from homeassistant.components.dreo.const import DOMAIN

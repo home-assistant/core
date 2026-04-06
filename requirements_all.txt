@@ -2058,7 +2058,7 @@ pydoods==1.0.2
 pydrawise==2026.3.0
 
 # homeassistant.components.dreo
-pydreo-cloud==0.0.6
+pydreo-client==1.0.2rc0
 
 # homeassistant.components.android_ip_webcam
 pydroid-ipcam==3.0.0

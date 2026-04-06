@@ -1,11 +1,10 @@
 """Config flow to configure Dreo."""
 
 from collections.abc import Mapping
-import hashlib
 from typing import Any
 
-from pydreo.client import DreoClient
-from pydreo.exceptions import DreoBusinessException, DreoException
+from pydreo import DreoBusinessException, DreoException
+from pydreo.cloud.client import DreoClient
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
@@ -24,11 +23,6 @@ class DreoFlowHandler(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    @staticmethod
-    def _hash_password(password: str) -> str:
-        """Hash password using MD5."""
-        return hashlib.md5(password.encode("UTF-8")).hexdigest()
-
     async def _validate_login(
         self, username: str, password: str
     ) -> tuple[bool, str | None]:
@@ -37,10 +31,10 @@ class DreoFlowHandler(ConfigFlow, domain=DOMAIN):
 
         try:
             await self.hass.async_add_executor_job(client.login)
-        except DreoException:
-            return False, "cannot_connect"
         except DreoBusinessException:
             return False, "invalid_auth"
+        except DreoException:
+            return False, "cannot_connect"
         return True, None
 
     async def async_step_reauth(
@@ -58,12 +52,12 @@ class DreoFlowHandler(ConfigFlow, domain=DOMAIN):
         username = reauth_entry.data[CONF_USERNAME]
 
         if user_input:
-            hashed_password = self._hash_password(user_input[CONF_PASSWORD])
-            is_valid, error = await self._validate_login(username, hashed_password)
+            password = user_input[CONF_PASSWORD]
+            is_valid, error = await self._validate_login(username, password)
             if is_valid:
                 return self.async_update_reload_and_abort(
                     reauth_entry,
-                    data_updates={CONF_PASSWORD: hashed_password},
+                    data_updates={CONF_PASSWORD: password},
                 )
             errors["base"] = error or "unknown"
 
@@ -81,16 +75,16 @@ class DreoFlowHandler(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
         if user_input is not None:
             username = user_input[CONF_USERNAME]
-            hashed_password = self._hash_password(user_input[CONF_PASSWORD])
+            password = user_input[CONF_PASSWORD]
 
             await self.async_set_unique_id(username.lower())
             self._abort_if_unique_id_configured()
 
-            is_valid, error = await self._validate_login(username, hashed_password)
+            is_valid, error = await self._validate_login(username, password)
             if is_valid:
                 return self.async_create_entry(
                     title=username,
-                    data={CONF_USERNAME: username, CONF_PASSWORD: hashed_password},
+                    data={CONF_USERNAME: username, CONF_PASSWORD: password},
                 )
             errors["base"] = error or "unknown"
         return self.async_show_form(

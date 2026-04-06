@@ -3,7 +3,7 @@
 from functools import partial
 from typing import Any
 
-from pydreo.exceptions import (
+from pydreo import (
     DreoAccessDeniedException,
     DreoBusinessException,
     DreoException,

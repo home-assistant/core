@@ -2,7 +2,7 @@
 
 from unittest.mock import MagicMock, patch
 
-from pydreo.exceptions import DreoException
+from pydreo import DreoException
 import pytest
 
 from homeassistant.components.dreo.fan import async_setup_entry
