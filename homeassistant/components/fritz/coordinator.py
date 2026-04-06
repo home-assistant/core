@@ -182,7 +182,6 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
         self._entity_update_functions: dict[
             str, Callable[[FritzStatus, StateType], Any]
         ] = {}
-        self._mac: str | None = None
 
     async def async_setup(self, options: Mapping[str, Any] | None = None) -> None:
         """Wrap up FritzboxTools class setup."""
@@ -240,10 +239,6 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
                 "NewSerialNumber": "***omitted***",
             },
         )
-
-        if not self._mac:
-            device_info = self.fritz_hosts.get_specific_host_entry_by_ip(self.host)
-            self._mac = device_info.get("NewMACAddress")
 
         if not self._unique_id:
             self._unique_id = info.serial_number
@@ -382,9 +377,11 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
     @property
     def mac(self) -> str:
         """Return device Mac address."""
-        if not self._mac:
+        if not self._unique_id:
             raise ClassSetupMissing
-        return dr.format_mac(self._mac)
+        # Unique ID is the serial number of the device
+        # which is the MAC of the device without the colons
+        return dr.format_mac(self._unique_id)
 
     @property
     def devices(self) -> dict[str, FritzDevice]:
