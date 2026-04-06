@@ -70,6 +70,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     )
     try:
         await client.validate()
+        if tracker_interfaces:
+            interfaces_resp = await client.get_interfaces()
     except OPNsenseUnknownFirmware:
         _LOGGER.exception("Error checking the OPNsense firmware version at %s", url)
         return False
@@ -111,10 +113,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             url,
         )
         return False
-
-    if tracker_interfaces:
-        interfaces_resp = await client.get_interfaces()
-    await client.get_arp_table()
 
     if tracker_interfaces:
         # Verify that specified tracker interfaces are valid
