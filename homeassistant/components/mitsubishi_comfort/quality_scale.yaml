@@ -70,10 +70,13 @@ rules:
     comment: No service actions registered.
   reauthentication-flow:
     status: todo
+    comment: Not yet implemented.
   parallel-updates:
     status: todo
+    comment: Not yet implemented.
   test-coverage:
     status: todo
+    comment: Not yet at 95% coverage.
   integration-owner:
     status: done
     comment: "@nikolairahimi is listed as codeowner."
@@ -87,8 +90,10 @@ rules:
   # Gold
   entity-translations:
     status: todo
+    comment: Not yet implemented.
   entity-device-class:
     status: todo
+    comment: Not yet implemented.
   devices:
     status: done
     comment: Each physical unit is registered as a device.
@@ -100,22 +105,31 @@ rules:
     comment: Single climate entity per device, should be enabled.
   discovery:
     status: todo
+    comment: Not yet implemented.
   stale-devices:
     status: todo
+    comment: Not yet implemented.
   diagnostics:
     status: todo
+    comment: Not yet implemented.
   exception-translations:
     status: todo
+    comment: Not yet implemented.
   icon-translations:
     status: todo
+    comment: Not yet implemented.
   reconfiguration-flow:
     status: todo
+    comment: Not yet implemented.
   dynamic-devices:
     status: todo
+    comment: Not yet implemented.
   discovery-update-info:
     status: todo
+    comment: Not yet implemented.
   repair-issues:
     status: todo
+    comment: Not yet implemented.
   docs-use-cases:
     status: exempt
     comment: Companion PR pending.
@@ -147,3 +161,4 @@ rules:
     comment: Library manages its own aiohttp sessions.
   strict-typing:
     status: todo
+    comment: Not yet implemented.
