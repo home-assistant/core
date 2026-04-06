@@ -26,6 +26,7 @@ from anthropic.types import (
     TextEditorCodeExecutionToolResultBlock,
     ThinkingBlock,
     ThinkingDelta,
+    ToolSearchToolResultBlock,
     ToolUseBlock,
     WebSearchResultBlock,
     WebSearchToolResultBlock,
@@ -34,6 +35,9 @@ from anthropic.types import (
 from anthropic.types.server_tool_use_block import Caller
 from anthropic.types.text_editor_code_execution_tool_result_block import (
     Content as TextEditorCodeExecutionToolResultBlockContent,
+)
+from anthropic.types.tool_search_tool_result_block import (
+    Content as ToolSearchToolResultBlockContent,
 )
 
 
@@ -268,6 +272,26 @@ def create_text_editor_code_execution_result_block(
                 type="text_editor_code_execution_tool_result",
                 content=content,
                 tool_use_id=id,
+            ),
+            index=index,
+        ),
+        RawContentBlockStopEvent(index=index, type="content_block_stop"),
+    ]
+
+
+def create_tool_search_result_block(
+    index: int,
+    id: str,
+    results: ToolSearchToolResultBlockContent,
+) -> list[RawMessageStreamEvent]:
+    """Create a server tool result block for tool search results."""
+    return [
+        RawContentBlockStartEvent(
+            type="content_block_start",
+            content_block=ToolSearchToolResultBlock(
+                type="tool_search_tool_result",
+                tool_use_id=id,
+                content=results,
             ),
             index=index,
         ),
