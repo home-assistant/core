@@ -82,7 +82,7 @@ async def async_setup_entry(
 class DucoVentilationFanEntity(DucoEntity, FanEntity):
     """Fan entity for the ventilation control of a Duco node."""
 
-    _attr_translation_key = "ventilation"
+    _attr_translation_key = "manual_control"
     _attr_preset_modes = [PRESET_AUTO]
     _attr_supported_features = (
         FanEntityFeature.SET_SPEED
