@@ -25,7 +25,10 @@
         "state_attributes": {
           "preset_mode": {
             "state": {
-              "auto": "[%key:common::state::auto%]"
+              "auto": "[%key:common::state::auto%]",
+              "high": "[%key:common::state::high%]",
+              "low": "[%key:common::state::low%]",
+              "medium": "[%key:common::state::medium%]"
             }
           }
         }

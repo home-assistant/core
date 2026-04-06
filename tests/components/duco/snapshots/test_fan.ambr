@@ -8,6 +8,9 @@
     'capabilities': dict({
       'preset_modes': list([
         'auto',
+        'low',
+        'medium',
+        'high',
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -34,7 +37,7 @@
     'platform': 'duco',
     'previous_unique_id': None,
     'suggested_object_id': None,
-    'supported_features': <FanEntityFeature: 9>,
+    'supported_features': <FanEntityFeature: 8>,
     'translation_key': 'ventilation',
     'unique_id': 'aa:bb:cc:dd:ee:ff_1',
     'unit_of_measurement': None,
@@ -44,13 +47,14 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Living Ventilation',
-      'percentage': None,
-      'percentage_step': 33.333333333333336,
       'preset_mode': 'auto',
       'preset_modes': list([
         'auto',
+        'low',
+        'medium',
+        'high',
       ]),
-      'supported_features': <FanEntityFeature: 9>,
+      'supported_features': <FanEntityFeature: 8>,
     }),
     'context': <ANY>,
     'entity_id': 'fan.living_ventilation',
