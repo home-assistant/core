@@ -52,20 +52,13 @@ rules:
   discovery:
     status: exempt
     comment: Integration does not support network discovery
-  docs-data-update:
-    status: todo
-  docs-examples:
-    status: todo
-  docs-known-limitations:
-    status: todo
-  docs-supported-devices:
-    status: todo
-  docs-supported-functions:
-    status: todo
-  docs-troubleshooting:
-    status: todo
-  docs-use-cases:
-    status: todo
+  docs-data-update: todo
+  docs-examples: todo
+  docs-known-limitations: todo
+  docs-supported-devices: todo
+  docs-supported-functions: todo
+  docs-troubleshooting: todo
+  docs-use-cases: todo
   dynamic-devices:
     status: exempt
     comment: Integration represents a single device, not a hub with multiple devices
@@ -73,10 +66,8 @@ rules:
   entity-device-class: done
   entity-disabled-by-default: done
   entity-translations: done
-  exception-translations:
-    status: todo
-  icon-translations:
-    status: todo
+  exception-translations: todo
+  icon-translations: todo
   reconfiguration-flow: done
   repair-issues:
     status: exempt
@@ -88,5 +79,4 @@ rules:
   # Platinum
   async-dependency: done
   inject-websession: done
-  strict-typing:
-    status: todo
+  strict-typing: todo

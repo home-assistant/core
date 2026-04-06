@@ -2172,7 +2172,7 @@ SCHEMA = vol.Schema(
                     vol.Schema(
                         {
                             vol.Required("status"): vol.In(["todo", "done"]),
-                            vol.Optional("comment"): str,
+                            vol.Required("comment"): str,
                         }
                     ),
                     vol.Schema(
