@@ -50,13 +50,16 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the receiver from a config entry."""
-    client = config_entry.runtime_data.receiver
-    device_info = config_entry.runtime_data.device_info
+    runtime_data = config_entry.runtime_data
 
     async_add_entities(
         [
-            LyngdorfMainDevice(client, config_entry, device_info),
-            LyngdorfZoneBDevice(client, config_entry, device_info),
+            LyngdorfMainDevice(
+                runtime_data.receiver, config_entry, runtime_data.device_info
+            ),
+            LyngdorfZoneBDevice(
+                runtime_data.receiver, config_entry, runtime_data.zone_b_device_info
+            ),
         ]
     )
 
@@ -83,14 +86,13 @@ class LyngdorfDevice(LyngdorfEntity, MediaPlayerEntity):
         receiver: Receiver,
         config_entry: LyngdorfConfigEntry,
         device_info: DeviceInfo,
-        translation_key: str,
+        translation_key: str | None,
         entity_id_suffix: str,
         features: MediaPlayerEntityFeature = MediaPlayerEntityFeature(0),
     ) -> None:
         """Initialize the device."""
-        super().__init__(receiver)
+        super().__init__(receiver, device_info)
         assert config_entry.unique_id
-        self._attr_device_info = device_info
         self._attr_unique_id = f"{config_entry.unique_id}_{entity_id_suffix}"
         self._attr_translation_key = translation_key
         self._attr_supported_features = features
@@ -110,7 +112,7 @@ class LyngdorfZoneBDevice(LyngdorfDevice):
             receiver,
             config_entry,
             device_info,
-            "zone_b",
+            None,
             "zone_b",
             FEATURES_ZONE_B,
         )

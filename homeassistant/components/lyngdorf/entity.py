@@ -7,6 +7,7 @@ import logging
 from lyngdorf.device import Receiver
 
 from homeassistant.core import callback
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
@@ -19,10 +20,11 @@ class LyngdorfEntity(Entity):
     _attr_available = True
     _attr_should_poll = False
 
-    def __init__(self, receiver: Receiver) -> None:
+    def __init__(self, receiver: Receiver, device_info: DeviceInfo) -> None:
         """Initialize the entity."""
         self._receiver = receiver
-        self._was_connected: bool = True
+        self._attr_device_info = device_info
+        self._was_connected: bool = receiver.connected
 
     async def async_added_to_hass(self) -> None:
         """Register notification callback when added to hass."""

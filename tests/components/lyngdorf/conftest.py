@@ -98,6 +98,16 @@ def mock_receiver() -> Generator[MagicMock]:
 
 
 @pytest.fixture
+def mock_get_device_serial() -> Generator[AsyncMock]:
+    """Return a mocked async_get_device_serial function."""
+    with patch(
+        "homeassistant.components.lyngdorf.config_flow.async_get_device_serial",
+        new=AsyncMock(return_value="0050c27c76b2"),
+    ) as serial_mock:
+        yield serial_mock
+
+
+@pytest.fixture
 def mock_find_receiver_model() -> Generator[AsyncMock]:
     """Return a mocked async_find_receiver_model function."""
     with patch(

@@ -16,6 +16,7 @@ class LyngdorfRuntimeData:
 
     receiver: Receiver
     device_info: DeviceInfo
+    zone_b_device_info: DeviceInfo
 
 
 type LyngdorfConfigEntry = ConfigEntry[LyngdorfRuntimeData]

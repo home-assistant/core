@@ -6,7 +6,7 @@ from lyngdorf.device import async_create_receiver, lookup_receiver_model
 
 from homeassistant.const import CONF_HOST, CONF_MODEL, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import Event, HomeAssistant
-from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.device_registry import DeviceInfo
 
 from .const import CONF_SERIAL_NUMBER, DOMAIN, PLATFORMS
@@ -18,12 +18,6 @@ async def async_setup_entry(
 ) -> bool:
     """Set up Lyngdorf from a config entry."""
     lyngdorf_model = lookup_receiver_model(config_entry.data[CONF_MODEL])
-    if not lyngdorf_model:
-        raise ConfigEntryError(
-            translation_domain=DOMAIN,
-            translation_key="unsupported_model",
-            translation_placeholders={"model": config_entry.data[CONF_MODEL]},
-        )
 
     try:
         receiver = await async_create_receiver(
@@ -46,15 +40,29 @@ async def async_setup_entry(
     assert config_entry.unique_id
     device_info = DeviceInfo(
         identifiers={(DOMAIN, config_entry.unique_id)},
-        manufacturer=lyngdorf_model.manufacturer,
-        name=config_entry.title,
+        manufacturer=lyngdorf_model.manufacturer if lyngdorf_model else "Lyngdorf",
         serial_number=config_entry.data.get(CONF_SERIAL_NUMBER),
-        model=lyngdorf_model.model_name,
+        model=lyngdorf_model.model_name
+        if lyngdorf_model
+        else config_entry.data[CONF_MODEL],
+    )
+
+    zone_b_device_info = DeviceInfo(
+        identifiers={(DOMAIN, f"{config_entry.unique_id}_zone_b")},
+        manufacturer=lyngdorf_model.manufacturer if lyngdorf_model else "Lyngdorf",
+        serial_number=config_entry.data.get(CONF_SERIAL_NUMBER),
+        model=lyngdorf_model.model_name
+        if lyngdorf_model
+        else config_entry.data[CONF_MODEL],
+        translation_key="zone_b",
+        translation_placeholders={"device_name": config_entry.title},
+        via_device=(DOMAIN, config_entry.unique_id),
     )
 
     config_entry.runtime_data = LyngdorfRuntimeData(
         receiver=receiver,
         device_info=device_info,
+        zone_b_device_info=zone_b_device_info,
     )
 
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
