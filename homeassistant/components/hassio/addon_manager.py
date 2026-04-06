@@ -36,17 +36,10 @@ type _ReturnFuncType[_T, **_P, _R] = Callable[
 
 def api_error[_AddonManagerT: AddonManager, **_P, _R](
     error_message: str,
-    *,
-    include_error_detail: bool = True,
 ) -> Callable[
     [_FuncType[_AddonManagerT, _P, _R]], _ReturnFuncType[_AddonManagerT, _P, _R]
 ]:
-    """Handle `SupervisorError` and raise a specific `AddonError`.
-
-    When `include_error_detail` is `True` (default), append the original
-    Supervisor exception text to the formatted message for debugging.
-    Set it to `False` when the raised detail may include sensitive data.
-    """
+    """Handle SupervisorError and raise a specific AddonError."""
 
     def handle_supervisor_error(
         func: _FuncType[_AddonManagerT, _P, _R],
@@ -61,13 +54,9 @@ def api_error[_AddonManagerT: AddonManager, **_P, _R](
             try:
                 return_value = await func(self, *args, **kwargs)
             except SupervisorError as err:
-                if include_error_detail:
-                    message = (
-                        f"{error_message.format(addon_name=self.addon_name)}: {err}"
-                    )
-                else:
-                    message = error_message.format(addon_name=self.addon_name)
-                raise AddonError(message) from err
+                raise AddonError(
+                    f"{error_message.format(addon_name=self.addon_name)}: {err}"
+                ) from err
 
             return return_value
 
@@ -201,8 +190,8 @@ class AddonManager:
             version=addon_info.version,
         )
 
-    @api_error("Failed to set the {addon_name} app options", include_error_detail=False)
-    async def async_set_addon_options(self, config: dict[str, Any]) -> None:
+    @api_error("Failed to set the {addon_name} app options")
+    async def async_set_addon_options(self, config: dict) -> None:
         """Set manager add-on options."""
         await self._supervisor_client.addons.set_addon_options(
             self.addon_slug, AddonsOptions(config=config)
