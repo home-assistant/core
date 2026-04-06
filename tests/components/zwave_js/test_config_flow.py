@@ -2542,13 +2542,23 @@ async def test_addon_installed_failures(
 
 
 @pytest.mark.usefixtures("supervisor", "addon_installed", "addon_info")
-@pytest.mark.parametrize("set_addon_options_side_effect", [SupervisorError()])
+@pytest.mark.parametrize(
+    "set_addon_options_side_effect",
+    [
+        SupervisorError(
+            "not a valid value for dictionary value @ data['options']. "
+            "Got {'s0_legacy_key': '00112233445566778899AABBCCDDEEFF'}"
+        )
+    ],
+)
 async def test_addon_installed_set_options_failure(
     hass: HomeAssistant,
     set_addon_options: AsyncMock,
     start_addon: AsyncMock,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test all failures when add-on is installed."""
+    secret = "00112233445566778899AABBCCDDEEFF"
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -2622,6 +2632,8 @@ async def test_addon_installed_set_options_failure(
     assert result["reason"] == "addon_set_config_failed"
 
     assert start_addon.call_count == 0
+    assert "Failed to set the Z-Wave JS app options" in caplog.text
+    assert secret not in caplog.text
 
 
 @pytest.mark.usefixtures("supervisor", "addon_installed")
