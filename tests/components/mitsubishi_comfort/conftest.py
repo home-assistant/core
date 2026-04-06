@@ -8,6 +8,7 @@ import pytest
 
 from homeassistant.components.mitsubishi_comfort.const import DOMAIN
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+
 from tests.common import MockConfigEntry
 
 MOCK_USERNAME = "test@test.com"

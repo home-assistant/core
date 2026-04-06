@@ -19,7 +19,8 @@ from homeassistant.components.mitsubishi_comfort import (
 from homeassistant.components.mitsubishi_comfort.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
-from tests.common import MockConfigEntry  # noqa: TID251
+
+from tests.common import MockConfigEntry
 
 
 @pytest.fixture(autouse=True)
