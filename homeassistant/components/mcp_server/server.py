@@ -27,9 +27,9 @@ from .const import STATELESS_LLM_API
 
 _LOGGER = logging.getLogger(__name__)
 
-LIVE_CONTEXT_RESOURCE_URI = "homeassistant://assist/live-context"
-LIVE_CONTEXT_RESOURCE_URL = AnyUrl(LIVE_CONTEXT_RESOURCE_URI)
-LIVE_CONTEXT_RESOURCE_MIME_TYPE = "text/plain"
+SNAPSHOT_RESOURCE_URI = "homeassistant://assist/context-snapshot"
+SNAPSHOT_RESOURCE_URL = AnyUrl(SNAPSHOT_RESOURCE_URI)
+SNAPSHOT_RESOURCE_MIME_TYPE = "text/plain"
 LIVE_CONTEXT_TOOL_NAME = "GetLiveContext"
 
 
@@ -110,20 +110,20 @@ async def create_server(
 
         return [
             types.Resource(
-                uri=LIVE_CONTEXT_RESOURCE_URL,
-                name="assist_live_context",
-                title="Assist live context",
+                uri=SNAPSHOT_RESOURCE_URL,
+                name="assist_context_snapshot",
+                title="Assist context snapshot",
                 description=(
-                    "A snapshot of the current Assist live context, matching"
-                    " the existing GetLiveContext tool output."
+                    "A snapshot of the current Assist context, matching the"
+                    " existing GetLiveContext tool output."
                 ),
-                mimeType=LIVE_CONTEXT_RESOURCE_MIME_TYPE,
+                mimeType=SNAPSHOT_RESOURCE_MIME_TYPE,
             )
         ]
 
     @server.read_resource()  # type: ignore[no-untyped-call,untyped-decorator]
     async def handle_read_resource(uri: AnyUrl) -> Sequence[ReadResourceContents]:
-        if str(uri) != LIVE_CONTEXT_RESOURCE_URI:
+        if str(uri) != SNAPSHOT_RESOURCE_URI:
             raise ValueError(f"Unknown resource: {uri}")
 
         llm_api = await get_api_instance()
@@ -139,7 +139,7 @@ async def create_server(
         return [
             ReadResourceContents(
                 content=cast(str, tool_response["result"]),
-                mime_type=LIVE_CONTEXT_RESOURCE_MIME_TYPE,
+                mime_type=SNAPSHOT_RESOURCE_MIME_TYPE,
             )
         ]
 

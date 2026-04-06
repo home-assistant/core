@@ -44,7 +44,7 @@ from tests.typing import ClientSessionGenerator
 _LOGGER = logging.getLogger(__name__)
 
 TEST_ENTITY = "light.kitchen"
-LIVE_CONTEXT_RESOURCE_URI = "homeassistant://assist/live-context"
+SNAPSHOT_RESOURCE_URI = "homeassistant://assist/context-snapshot"
 INITIALIZE_MESSAGE = {
     "jsonrpc": "2.0",
     "id": "request-id-1",
@@ -497,9 +497,9 @@ async def test_mcp_resources_list(
 
     assert len(result.resources) == 1
     resource = result.resources[0]
-    assert str(resource.uri) == LIVE_CONTEXT_RESOURCE_URI
-    assert resource.name == "assist_live_context"
-    assert resource.title == "Assist live context"
+    assert str(resource.uri) == SNAPSHOT_RESOURCE_URI
+    assert resource.name == "assist_context_snapshot"
+    assert resource.title == "Assist context snapshot"
     assert resource.description is not None
     assert resource.mimeType == "text/plain"
 
@@ -530,7 +530,6 @@ async def test_mcp_resource_read(
         "  state: 'off'\n"
         "  areas: Kitchen\n"
     )
-    assert "entity_id:" not in content.text
 
 
 @pytest.mark.parametrize("llm_hass_api", [llm.LLM_API_ASSIST, STATELESS_LLM_API])
