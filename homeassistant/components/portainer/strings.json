@@ -121,8 +121,14 @@
       "cpu_total": {
         "name": "Total CPU"
       },
+      "cpu_usage_kernel_mode": {
+        "name": "CPU usage kernel mode"
+      },
       "cpu_usage_total": {
         "name": "CPU usage total"
+      },
+      "cpu_usage_user_mode": {
+        "name": "CPU usage user mode"
       },
       "docker_version": {
         "name": "Docker version"

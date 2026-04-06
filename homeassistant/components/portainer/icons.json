@@ -45,7 +45,13 @@
       "cpu_total": {
         "default": "mdi:cpu-64-bit"
       },
+      "cpu_usage_kernel_mode": {
+        "default": "mdi:cpu-64-bit"
+      },
       "cpu_usage_total": {
+        "default": "mdi:cpu-64-bit"
+      },
+      "cpu_usage_user_mode": {
         "default": "mdi:cpu-64-bit"
       },
       "docker_version": {

@@ -137,6 +137,64 @@ CONTAINER_SENSORS: tuple[PortainerContainerSensorEntityDescription, ...] = (
         suggested_display_precision=2,
         state_class=SensorStateClass.MEASUREMENT,
     ),
+    PortainerContainerSensorEntityDescription(
+        key="cpu_usage_kernel_mode",
+        translation_key="cpu_usage_kernel_mode",
+        value_fn=lambda data: (
+            (kernel_delta / system_delta) * data.stats.cpu_stats.online_cpus * 100.0
+            if data.stats is not None
+            and (prev := data.stats_pre) is not None
+            and (
+                system_delta := (
+                    data.stats.cpu_stats.system_cpu_usage
+                    - prev.cpu_stats.system_cpu_usage
+                )
+            )
+            > 0
+            and (
+                kernel_delta := (
+                    data.stats.cpu_stats.cpu_usage.usage_in_kernelmode
+                    - prev.cpu_stats.cpu_usage.usage_in_kernelmode
+                )
+            )
+            >= 0
+            and data.stats.cpu_stats.online_cpus > 0
+            else 0.0
+        ),
+        native_unit_of_measurement=PERCENTAGE,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        suggested_display_precision=2,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    PortainerContainerSensorEntityDescription(
+        key="cpu_usage_user_mode",
+        translation_key="cpu_usage_user_mode",
+        value_fn=lambda data: (
+            (user_delta / system_delta) * data.stats.cpu_stats.online_cpus * 100.0
+            if data.stats is not None
+            and (prev := data.stats_pre) is not None
+            and (
+                system_delta := (
+                    data.stats.cpu_stats.system_cpu_usage
+                    - prev.cpu_stats.system_cpu_usage
+                )
+            )
+            > 0
+            and (
+                user_delta := (
+                    data.stats.cpu_stats.cpu_usage.usage_in_usermode
+                    - prev.cpu_stats.cpu_usage.usage_in_usermode
+                )
+            )
+            >= 0
+            and data.stats.cpu_stats.online_cpus > 0
+            else 0.0
+        ),
+        native_unit_of_measurement=PERCENTAGE,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        suggested_display_precision=2,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
 )
 ENDPOINT_SENSORS: tuple[PortainerEndpointSensorEntityDescription, ...] = (
     PortainerEndpointSensorEntityDescription(
