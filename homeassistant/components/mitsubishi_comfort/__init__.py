@@ -155,76 +155,82 @@ async def async_setup_entry(
     password = entry.data[CONF_PASSWORD]
 
     account = MitsubishiCloudAccount(username, password)
-    if not await account.login():
-        raise ConfigEntryNotReady("Failed to authenticate with Mitsubishi cloud")
+    account_handed_off = False
+    try:
+        if not await account.login():
+            raise ConfigEntryNotReady("Failed to authenticate with Mitsubishi cloud")
 
-    cached = await hass.async_add_executor_job(_load_cached_credentials, hass)
+        cached = await hass.async_add_executor_job(_load_cached_credentials, hass)
 
-    devices = await account.discover_devices(cached_credentials=cached)
-    if not devices:
-        raise ConfigEntryNotReady("No devices discovered")
+        devices = await account.discover_devices(cached_credentials=cached)
+        if not devices:
+            raise ConfigEntryNotReady("No devices discovered")
 
-    updated = _merge_cached_into_devices(devices, cached)
-    if updated:
-        _LOGGER.info(
-            "Restored cached credentials for: %s",
-            ", ".join(devices[s].label for s in updated),
-        )
-
-    missing_addr = {s: d for s, d in devices.items() if not d.address}
-    if missing_addr:
-        dhcp_ips = hass.data.get(f"{DOMAIN}_dhcp_discovered", {})
-        if dhcp_ips:
-            matched = await probe_candidate_ips(
-                missing_addr, list(dhcp_ips.values()), timeout=3.0
+        updated = _merge_cached_into_devices(devices, cached)
+        if updated:
+            _LOGGER.info(
+                "Restored cached credentials for: %s",
+                ", ".join(devices[s].label for s in updated),
             )
-            for serial, ip in matched.items():
-                devices[serial].address = ip
 
-    await hass.async_add_executor_job(_save_credentials, hass, devices)
+        missing_addr = {s: d for s, d in devices.items() if not d.address}
+        if missing_addr:
+            dhcp_ips = hass.data.get(f"{DOMAIN}_dhcp_discovered", {})
+            if dhcp_ips:
+                matched = await probe_candidate_ips(
+                    missing_addr, list(dhcp_ips.values()), timeout=3.0
+                )
+                for serial, ip in matched.items():
+                    devices[serial].address = ip
 
-    connect_timeout = float(entry.options.get(CONF_CONNECT_TIMEOUT, 1.2))
-    response_timeout = float(entry.options.get(CONF_RESPONSE_TIMEOUT, 8.0))
+        await hass.async_add_executor_job(_save_credentials, hass, devices)
 
-    coordinators: dict[str, MitsubishiComfortCoordinator] = {}
-    incomplete_serials: list[str] = []
-    for serial, info in devices.items():
-        if not info.address or not info.password or not info.crypto_serial:
-            incomplete_serials.append(serial)
-            _LOGGER.warning(
-                "Device %s missing credentials (addr=%s, pw=%s, crypto=%s)"
-                " — will retry in background",
-                info.label,
-                bool(info.address),
-                bool(info.password),
-                bool(info.crypto_serial),
+        connect_timeout = float(entry.options.get(CONF_CONNECT_TIMEOUT, 1.2))
+        response_timeout = float(entry.options.get(CONF_RESPONSE_TIMEOUT, 8.0))
+
+        coordinators: dict[str, MitsubishiComfortCoordinator] = {}
+        incomplete_serials: list[str] = []
+        for serial, info in devices.items():
+            if not info.address or not info.password or not info.crypto_serial:
+                incomplete_serials.append(serial)
+                _LOGGER.warning(
+                    "Device %s missing credentials (addr=%s, pw=%s, crypto=%s)"
+                    " — will retry in background",
+                    info.label,
+                    bool(info.address),
+                    bool(info.password),
+                    bool(info.crypto_serial),
+                )
+                continue
+
+            device = _make_device(info, serial, connect_timeout, response_timeout)
+            coordinators[serial] = MitsubishiComfortCoordinator(hass, device)
+
+        if not coordinators:
+            raise ConfigEntryNotReady("No devices have complete credentials yet")
+
+        entry.runtime_data = coordinators
+
+        await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+
+        if incomplete_serials:
+            account_handed_off = True
+            hass.async_create_task(
+                _retry_incomplete_devices(
+                    hass,
+                    entry,
+                    account,
+                    devices,
+                    incomplete_serials,
+                    connect_timeout,
+                    response_timeout,
+                )
             )
-            continue
 
-        device = _make_device(info, serial, connect_timeout, response_timeout)
-        coordinators[serial] = MitsubishiComfortCoordinator(hass, device)
-
-    if not coordinators:
-        raise ConfigEntryNotReady("No devices have complete credentials yet")
-
-    entry.runtime_data = coordinators
-
-    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-
-    if incomplete_serials:
-        hass.async_create_task(
-            _retry_incomplete_devices(
-                hass,
-                entry,
-                account,
-                devices,
-                incomplete_serials,
-                connect_timeout,
-                response_timeout,
-            )
-        )
-
-    return True
+        return True
+    finally:
+        if not account_handed_off:
+            await account.close()
 
 
 async def _retry_incomplete_devices(
@@ -237,50 +243,53 @@ async def _retry_incomplete_devices(
     response_timeout: float,
 ) -> None:
     """Retry credential retrieval for devices that were missing passwords."""
-    for attempt in range(3):
-        await asyncio.sleep(30 * (attempt + 1))
+    try:
+        for attempt in range(3):
+            await asyncio.sleep(30 * (attempt + 1))
 
-        if not hasattr(entry, "runtime_data"):
+            if not hasattr(entry, "runtime_data"):
+                return
+
+            _LOGGER.info(
+                "Background retry %d/3 for %d incomplete devices",
+                attempt + 1,
+                len(incomplete_serials),
+            )
+
+            passwords = await account.get_passwords_via_websocket(
+                incomplete_serials, timeout_secs=60
+            )
+
+            newly_complete = []
+            for serial in list(incomplete_serials):
+                info = devices[serial]
+                if serial in passwords and not info.password:
+                    info.password = passwords[serial]
+                if info.address and info.password and info.crypto_serial:
+                    newly_complete.append(serial)
+
+            if not newly_complete:
+                continue
+
+            coordinators = entry.runtime_data
+            for serial in newly_complete:
+                info = devices[serial]
+                incomplete_serials.remove(serial)
+                _LOGGER.info("Device %s now has complete credentials", info.label)
+                device = _make_device(info, serial, connect_timeout, response_timeout)
+                coordinators[serial] = MitsubishiComfortCoordinator(hass, device)
+
+            await hass.async_add_executor_job(_save_credentials, hass, devices)
+            await hass.config_entries.async_reload(entry.entry_id)
             return
 
-        _LOGGER.info(
-            "Background retry %d/3 for %d incomplete devices",
-            attempt + 1,
-            len(incomplete_serials),
-        )
-
-        passwords = await account.get_passwords_via_websocket(
-            incomplete_serials, timeout_secs=60
-        )
-
-        newly_complete = []
-        for serial in list(incomplete_serials):
-            info = devices[serial]
-            if serial in passwords and not info.password:
-                info.password = passwords[serial]
-            if info.address and info.password and info.crypto_serial:
-                newly_complete.append(serial)
-
-        if not newly_complete:
-            continue
-
-        coordinators = entry.runtime_data
-        for serial in newly_complete:
-            info = devices[serial]
-            incomplete_serials.remove(serial)
-            _LOGGER.info("Device %s now has complete credentials", info.label)
-            device = _make_device(info, serial, connect_timeout, response_timeout)
-            coordinators[serial] = MitsubishiComfortCoordinator(hass, device)
-
-        await hass.async_add_executor_job(_save_credentials, hass, devices)
-        await hass.config_entries.async_reload(entry.entry_id)
-        return
-
-    if incomplete_serials:
-        _LOGGER.warning(
-            "Could not retrieve credentials for: %s — restart to retry",
-            ", ".join(devices[s].label for s in incomplete_serials),
-        )
+        if incomplete_serials:
+            _LOGGER.warning(
+                "Could not retrieve credentials for: %s — restart to retry",
+                ", ".join(devices[s].label for s in incomplete_serials),
+            )
+    finally:
+        await account.close()
 
 
 async def async_unload_entry(
