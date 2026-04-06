@@ -60,6 +60,7 @@ async def async_setup_platform(
 class EvoResetSystemButton(EvoEntity, ButtonEntity):
     """Button entity for system reset."""
 
+    _attr_has_entity_name = True
     _attr_icon = "mdi:thermostat-box-auto"
 
     _evo_device: evo.ControlSystem
@@ -74,8 +75,9 @@ class EvoResetSystemButton(EvoEntity, ButtonEntity):
         """Initialize the system reset button."""
         super().__init__(coordinator, evo_device)
 
-        self._attr_name = f"Reset {evo_device.location.name}"
+        self._attr_translation_placeholders = {"device_name": evo_device.location.name}
         self._attr_unique_id = f"{evo_device.id}_reset"
+
         self.entity_description = description
 
     async def async_press(self) -> None:
@@ -90,6 +92,7 @@ class EvoResetSystemButton(EvoEntity, ButtonEntity):
 class EvoResetZoneButton(EvoEntity, ButtonEntity):
     """Button entity for zone override reset."""
 
+    _attr_has_entity_name = True
     _attr_icon = "mdi:thermostat-auto"
 
     _evo_device: evo.Zone
@@ -104,6 +107,8 @@ class EvoResetZoneButton(EvoEntity, ButtonEntity):
         """Initialize the zone reset button."""
         super().__init__(coordinator, evo_device)
 
+        self._attr_translation_placeholders = {"device_name": evo_device.name}
+
         if evo_device.id == evo_device.tcs.id:
             # this system does not have a distinct ID for the zone
             self._attr_unique_id = f"{evo_device.id}z_reset"
@@ -111,11 +116,6 @@ class EvoResetZoneButton(EvoEntity, ButtonEntity):
             self._attr_unique_id = f"{evo_device.id}_reset"
 
         self.entity_description = description
-
-    @property
-    def name(self) -> str | None:
-        """Return the name of the evohome entity."""
-        return f"Reset {self._evo_device.name}"
 
     async def async_press(self) -> None:
         """Clear the zone override, if any.

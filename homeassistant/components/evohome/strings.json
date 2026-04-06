@@ -2,10 +2,10 @@
   "entity": {
     "button": {
       "clear_zone_override": {
-        "name": "Reset zone"
+        "name": "Reset {device_name}"
       },
       "reset_system_mode": {
-        "name": "Reset system"
+        "name": "Reset {device_name}"
       }
     }
   },
