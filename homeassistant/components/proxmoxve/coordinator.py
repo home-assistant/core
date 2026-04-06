@@ -6,7 +6,7 @@ from collections.abc import Callable
 from dataclasses import dataclass, field
 from datetime import timedelta
 import logging
-from typing import Any, NamedTuple
+from typing import Any
 
 from proxmoxer import AuthenticationError, ProxmoxAPI
 from proxmoxer.core import ResourceException
@@ -43,7 +43,8 @@ DEFAULT_UPDATE_INTERVAL = timedelta(seconds=60)
 _LOGGER = logging.getLogger(__name__)
 
 
-class NodeResources(NamedTuple):
+@dataclass(slots=True, kw_only=True)
+class NodeResources:
     """Raw API resources fetched for a single Proxmox node."""
 
     vms: list[dict[str, Any]]
