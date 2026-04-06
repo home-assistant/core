@@ -47,6 +47,128 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "alternator_mode": {
+        "name": "Mode"
+      },
+      "dcdc_mode": {
+        "name": "Mode"
+      },
+      "digitalinput_settings_invert_translation": {
+        "name": "Invert digital input"
+      },
+      "evcharger_charge": {
+        "name": "EV charging"
+      },
+      "evcharger_connected": {
+        "name": "Connected"
+      },
+      "generator_autorun": {
+        "name": "Auto-start enabled"
+      },
+      "generator_gen_id_quiet_hours_enabled": {
+        "name": "Generator quiet hours enabled"
+      },
+      "generator_gen_id_start_on_soc_enabled": {
+        "name": "Generator start on SOC enabled"
+      },
+      "generator_gen_id_start_on_temp_enabled": {
+        "name": "Generator start on high temp enabled"
+      },
+      "generator_gen_id_start_on_voltage_enabled": {
+        "name": "Generator start on voltage enabled"
+      },
+      "generator_manual_start": {
+        "name": "Manual start"
+      },
+      "gps_connected": {
+        "name": "Connected"
+      },
+      "gps_fix": {
+        "name": "Fix"
+      },
+      "inverter_alarm_high_temperature": {
+        "name": "High temperature alarm"
+      },
+      "inverter_alarm_high_voltage": {
+        "name": "High voltage alarm"
+      },
+      "inverter_alarm_high_voltage_ac_out": {
+        "name": "High voltage AC-out alarm"
+      },
+      "inverter_alarm_low_temperature": {
+        "name": "Low temperature alarm"
+      },
+      "inverter_alarm_low_voltage": {
+        "name": "Low voltage alarm"
+      },
+      "inverter_alarm_low_voltage_ac_out": {
+        "name": "Low voltage AC-out alarm"
+      },
+      "inverter_alarm_overload": {
+        "name": "Overload alarm"
+      },
+      "inverter_alarm_ripple": {
+        "name": "Ripple alarm"
+      },
+      "multi_disable_charge": {
+        "name": "ESS disable charge"
+      },
+      "multi_disable_feed_in": {
+        "name": "ESS disable feed-in"
+      },
+      "multi_relay0_state": {
+        "name": "Relay on Multi RS state"
+      },
+      "solarcharger_load_state": {
+        "name": "Load state"
+      },
+      "solarcharger_mode": {
+        "name": "Mode"
+      },
+      "solarcharger_relay_state": {
+        "name": "Relay state"
+      },
+      "switch_output_state": {
+        "name": "Switch {output} state"
+      },
+      "switchable_output_output_state": {
+        "name": "Switchable output {output} state"
+      },
+      "system_dynamicess_active": {
+        "name": "Dynamic ESS active"
+      },
+      "system_dynamicess_allow_gridfeedin": {
+        "name": "Dynamic ESS allow grid feed-in"
+      },
+      "system_dynamicess_available": {
+        "name": "Dynamic ESS available"
+      },
+      "system_ess_battery_use": {
+        "name": "ESS only critical loads from battery"
+      },
+      "system_ess_schedule_charge_slot_enabled": {
+        "name": "ESS BatteryLife schedule charge {slot} enabled"
+      },
+      "system_relay_relay": {
+        "name": "Relay {relay} state"
+      },
+      "system_settings_overvoltage_feedin": {
+        "name": "PV DC overvoltage feed-in"
+      },
+      "vebus_device_device_number_power_assist_enabled": {
+        "name": "{device_number} PowerAssist enabled"
+      },
+      "vebus_inverter_connected": {
+        "name": "Connected"
+      },
+      "vebus_inverter_ignoreacin1_onoff_control": {
+        "name": "Control ignore AC-in-1"
+      },
+      "vebus_inverter_setting_alarm_grid_lost": {
+        "name": "Grid lost alarm setting"
+      }
+    },
     "sensor": {
       "acload_current": {
         "name": "Load current"
