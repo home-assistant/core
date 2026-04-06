@@ -69,16 +69,17 @@ async def test_coordinator_update_after_reboot_relogin_fails(
         unique_id="any",
     )
     entry.add_to_hass(hass)
-    fritz().update_devices.side_effect = ["", HTTPError()]
-    # Initial login succeeds; re-login fails with ConnectionError (box went offline)
-    fritz().login.side_effect = [None, ConnectionError()]
+    fritz().update_devices.side_effect = ["", HTTPError(), ""]
+    # Initial login succeeds; re-login fails with ConnectionError (box went offline);
+    # login after schedule_reload succeeds
+    fritz().login.side_effect = [None, ConnectionError(), None]
 
     assert await hass.config_entries.async_setup(entry.entry_id)
 
     async_fire_time_changed(hass, utcnow() + timedelta(seconds=35))
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    assert entry.state is ConfigEntryState.SETUP_RETRY
+    assert entry.state is ConfigEntryState.LOADED
 
 
 async def test_coordinator_update_after_password_change(
