@@ -182,7 +182,6 @@ def create_b01_q10_trait() -> Mock:
 
     q10_trait.vacuum = AsyncMock()
     q10_trait.command = AsyncMock()
-
     q10_trait.refresh = AsyncMock()
     return q10_trait
 
