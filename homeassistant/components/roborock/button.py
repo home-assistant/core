@@ -32,7 +32,6 @@ from .entity import (
     RoborockEntity,
     RoborockEntityV1,
 )
-from .models import DeviceState
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -95,20 +94,6 @@ CONSUMABLE_BUTTON_DESCRIPTIONS = [
 ]
 
 
-_DOCK_CONSUMABLE_FIELD_MAP: dict[str, str] = {
-    "reset_dock_strainer_consumable": "strainer_work_times",
-    "reset_dock_cleaning_brush_consumable": "cleaning_brush_work_times",
-}
-
-
-def _dock_consumable_supported(
-    data: DeviceState, desc: RoborockButtonDescription
-) -> bool:
-    """Return True if the dock reports the consumable field for this button."""
-    field = _DOCK_CONSUMABLE_FIELD_MAP.get(desc.key)
-    return field is not None and getattr(data.consumable, field, None) is not None
-
-
 @dataclass(frozen=True, kw_only=True)
 class RoborockButtonDescriptionA01(ButtonEntityDescription):
     """Describes a Roborock A01 button entity."""
@@ -162,13 +147,6 @@ async def async_setup_entry(
                 for coordinator in config_entry.runtime_data.v1
                 for description in CONSUMABLE_BUTTON_DESCRIPTIONS
                 if isinstance(coordinator, RoborockDataUpdateCoordinator)
-                and (
-                    not description.is_dock_entity
-                    or (
-                        coordinator.data is not None
-                        and _dock_consumable_supported(coordinator.data, description)
-                    )
-                )
             ),
             (
                 RoborockRoutineButtonEntity(
