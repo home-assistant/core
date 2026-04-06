@@ -24,11 +24,11 @@ async def test_successful_update_resets_failures(
     device.update_status = AsyncMock(return_value=True)
 
     coordinator = MitsubishiComfortCoordinator(hass, device)
-    coordinator._consecutive_failures = 2  # noqa: SLF001
+    coordinator._consecutive_failures = 2
 
-    await coordinator._async_update_data()  # noqa: SLF001
+    await coordinator._async_update_data()
 
-    assert coordinator._consecutive_failures == 0  # noqa: SLF001
+    assert coordinator._consecutive_failures == 0
     assert coordinator.available is True
 
 
@@ -43,9 +43,9 @@ async def test_failed_update_increments_failures(
 
     coordinator = MitsubishiComfortCoordinator(hass, device)
 
-    await coordinator._async_update_data()  # noqa: SLF001
+    await coordinator._async_update_data()
 
-    assert coordinator._consecutive_failures == 1  # noqa: SLF001
+    assert coordinator._consecutive_failures == 1
     assert coordinator.available is True
 
 
@@ -59,12 +59,12 @@ async def test_unavailable_after_max_failures(
     device.update_status = AsyncMock(return_value=False)
 
     coordinator = MitsubishiComfortCoordinator(hass, device)
-    coordinator._consecutive_failures = MAX_FAILURES_BEFORE_UNAVAILABLE - 1  # noqa: SLF001
+    coordinator._consecutive_failures = MAX_FAILURES_BEFORE_UNAVAILABLE - 1
 
     with pytest.raises(UpdateFailed):
-        await coordinator._async_update_data()  # noqa: SLF001
+        await coordinator._async_update_data()
 
-    assert coordinator._consecutive_failures == MAX_FAILURES_BEFORE_UNAVAILABLE  # noqa: SLF001
+    assert coordinator._consecutive_failures == MAX_FAILURES_BEFORE_UNAVAILABLE
     assert coordinator.available is False
 
 
@@ -78,12 +78,12 @@ async def test_recovery_after_failures(
     device.update_status = AsyncMock(return_value=True)
 
     coordinator = MitsubishiComfortCoordinator(hass, device)
-    coordinator._consecutive_failures = MAX_FAILURES_BEFORE_UNAVAILABLE  # noqa: SLF001
+    coordinator._consecutive_failures = MAX_FAILURES_BEFORE_UNAVAILABLE
     assert coordinator.available is False
 
-    await coordinator._async_update_data()  # noqa: SLF001
+    await coordinator._async_update_data()
 
-    assert coordinator._consecutive_failures == 0  # noqa: SLF001
+    assert coordinator._consecutive_failures == 0
     assert coordinator.available is True
 
 
@@ -99,11 +99,11 @@ async def test_available_boundary(
     coordinator = MitsubishiComfortCoordinator(hass, device)
 
     # Just below threshold - still available
-    coordinator._consecutive_failures = MAX_FAILURES_BEFORE_UNAVAILABLE - 1  # noqa: SLF001
+    coordinator._consecutive_failures = MAX_FAILURES_BEFORE_UNAVAILABLE - 1
     assert coordinator.available is True
 
     # At threshold - unavailable
-    coordinator._consecutive_failures = MAX_FAILURES_BEFORE_UNAVAILABLE  # noqa: SLF001
+    coordinator._consecutive_failures = MAX_FAILURES_BEFORE_UNAVAILABLE
     assert coordinator.available is False
 
 

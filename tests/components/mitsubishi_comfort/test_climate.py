@@ -765,7 +765,7 @@ async def test_set_hvac_mode(hass: HomeAssistant) -> None:
     await entity.async_set_hvac_mode(HVACMode.HEAT)
 
     device.set_mode.assert_awaited_once_with(Mode.HEAT)
-    assert entity._optimistic_mode == "heat"  # noqa: SLF001
+    assert entity._optimistic_mode == "heat"
     entity.async_write_ha_state.assert_called_once()
 
 
@@ -777,7 +777,7 @@ async def test_set_hvac_mode_unsupported(hass: HomeAssistant) -> None:
 
     device.set_mode = AsyncMock(return_value=CommandResult(success=False))
     await entity.async_set_hvac_mode(HVACMode.COOL)
-    assert entity._optimistic_mode is None  # noqa: SLF001
+    assert entity._optimistic_mode is None
     entity.async_write_ha_state.assert_not_called()
 
 
@@ -809,7 +809,7 @@ async def test_set_temperature_cool_mode(hass: HomeAssistant) -> None:
     await entity.async_set_temperature(**{ATTR_TEMPERATURE: 22.0})
 
     device.set_cool_setpoint.assert_awaited_once_with(22.0)
-    assert entity._optimistic_cool_setpoint == 22.0  # noqa: SLF001
+    assert entity._optimistic_cool_setpoint == 22.0
     entity.async_write_ha_state.assert_called_once()
 
 
@@ -850,7 +850,7 @@ async def test_set_temperature_heat_mode(hass: HomeAssistant) -> None:
     await entity.async_set_temperature(**{ATTR_TEMPERATURE: 20.0})
 
     device.set_heat_setpoint.assert_awaited_once_with(20.0)
-    assert entity._optimistic_heat_setpoint == 20.0  # noqa: SLF001
+    assert entity._optimistic_heat_setpoint == 20.0
 
 
 async def test_set_temperature_high_low(hass: HomeAssistant) -> None:
@@ -869,8 +869,8 @@ async def test_set_temperature_high_low(hass: HomeAssistant) -> None:
 
     device.set_cool_setpoint.assert_awaited_once_with(25.0)
     device.set_heat_setpoint.assert_awaited_once_with(19.0)
-    assert entity._optimistic_cool_setpoint == 25.0  # noqa: SLF001
-    assert entity._optimistic_heat_setpoint == 19.0  # noqa: SLF001
+    assert entity._optimistic_cool_setpoint == 25.0
+    assert entity._optimistic_heat_setpoint == 19.0
 
 
 async def test_set_temperature_failed_command(hass: HomeAssistant) -> None:
@@ -882,7 +882,7 @@ async def test_set_temperature_failed_command(hass: HomeAssistant) -> None:
 
     await entity.async_set_temperature(**{ATTR_TEMPERATURE: 22.0})
 
-    assert entity._optimistic_cool_setpoint is None  # noqa: SLF001
+    assert entity._optimistic_cool_setpoint is None
     entity.async_write_ha_state.assert_not_called()
 
 
@@ -910,7 +910,7 @@ async def test_set_fan_mode(hass: HomeAssistant) -> None:
     await entity.async_set_fan_mode("quiet")
 
     device.set_fan_speed.assert_awaited_once_with(FanSpeed.QUIET)
-    assert entity._optimistic_fan_speed == "quiet"  # noqa: SLF001
+    assert entity._optimistic_fan_speed == "quiet"
     entity.async_write_ha_state.assert_called_once()
 
 
@@ -934,7 +934,7 @@ async def test_set_fan_mode_failed(hass: HomeAssistant) -> None:
 
     await entity.async_set_fan_mode("quiet")
 
-    assert entity._optimistic_fan_speed is None  # noqa: SLF001
+    assert entity._optimistic_fan_speed is None
     entity.async_write_ha_state.assert_not_called()
 
 
@@ -950,7 +950,7 @@ async def test_set_swing_mode(hass: HomeAssistant) -> None:
     await entity.async_set_swing_mode("swing")
 
     device.set_vane_direction.assert_awaited_once_with(VaneDirection.SWING)
-    assert entity._optimistic_vane_direction == "swing"  # noqa: SLF001
+    assert entity._optimistic_vane_direction == "swing"
     entity.async_write_ha_state.assert_called_once()
 
 
@@ -974,7 +974,7 @@ async def test_set_swing_mode_failed(hass: HomeAssistant) -> None:
 
     await entity.async_set_swing_mode("swing")
 
-    assert entity._optimistic_vane_direction is None  # noqa: SLF001
+    assert entity._optimistic_vane_direction is None
     entity.async_write_ha_state.assert_not_called()
 
 
@@ -988,7 +988,7 @@ async def test_turn_off(hass: HomeAssistant) -> None:
     await entity.async_turn_off()
 
     device.set_mode.assert_awaited_once_with(Mode.OFF)
-    assert entity._optimistic_mode == "off"  # noqa: SLF001
+    assert entity._optimistic_mode == "off"
 
 
 # -- Optimistic state tests --
@@ -1000,7 +1000,7 @@ async def test_optimistic_mode_used_for_hvac_mode(hass: HomeAssistant) -> None:
     _, entity = _make_coordinator_and_entity(hass, device)
 
     # Device says cool, but we optimistically set heat
-    entity._optimistic_mode = "heat"  # noqa: SLF001
+    entity._optimistic_mode = "heat"
     assert entity.hvac_mode is HVACMode.HEAT
 
 
@@ -1009,7 +1009,7 @@ async def test_optimistic_cool_setpoint(hass: HomeAssistant) -> None:
     device = _make_mock_device()
     _, entity = _make_coordinator_and_entity(hass, device)
 
-    entity._optimistic_cool_setpoint = 22.0  # noqa: SLF001
+    entity._optimistic_cool_setpoint = 22.0
     assert entity.target_temperature == 22.0
 
 
@@ -1043,21 +1043,21 @@ async def test_optimistic_heat_setpoint(hass: HomeAssistant) -> None:
     )
     _, entity = _make_coordinator_and_entity(hass, device)
 
-    entity._optimistic_heat_setpoint = 19.0  # noqa: SLF001
+    entity._optimistic_heat_setpoint = 19.0
     assert entity.target_temperature == 19.0
 
 
 async def test_optimistic_fan_speed(hass: HomeAssistant) -> None:
     """Test that optimistic fan speed overrides device value."""
     _, entity = _make_coordinator_and_entity(hass)
-    entity._optimistic_fan_speed = "quiet"  # noqa: SLF001
+    entity._optimistic_fan_speed = "quiet"
     assert entity.fan_mode == "quiet"
 
 
 async def test_optimistic_vane_direction(hass: HomeAssistant) -> None:
     """Test that optimistic vane direction overrides device value."""
     _, entity = _make_coordinator_and_entity(hass)
-    entity._optimistic_vane_direction = "swing"  # noqa: SLF001
+    entity._optimistic_vane_direction = "swing"
     assert entity.swing_mode == "swing"
 
 
@@ -1066,19 +1066,19 @@ async def test_coordinator_update_clears_optimistic(hass: HomeAssistant) -> None
     _, entity = _make_coordinator_and_entity(hass)
     entity.async_write_ha_state = MagicMock()
 
-    entity._optimistic_mode = "heat"  # noqa: SLF001
-    entity._optimistic_cool_setpoint = 22.0  # noqa: SLF001
-    entity._optimistic_heat_setpoint = 19.0  # noqa: SLF001
-    entity._optimistic_fan_speed = "quiet"  # noqa: SLF001
-    entity._optimistic_vane_direction = "swing"  # noqa: SLF001
+    entity._optimistic_mode = "heat"
+    entity._optimistic_cool_setpoint = 22.0
+    entity._optimistic_heat_setpoint = 19.0
+    entity._optimistic_fan_speed = "quiet"
+    entity._optimistic_vane_direction = "swing"
 
-    entity._handle_coordinator_update()  # noqa: SLF001
+    entity._handle_coordinator_update()
 
-    assert entity._optimistic_mode is None  # noqa: SLF001
-    assert entity._optimistic_cool_setpoint is None  # noqa: SLF001
-    assert entity._optimistic_heat_setpoint is None  # noqa: SLF001
-    assert entity._optimistic_fan_speed is None  # noqa: SLF001
-    assert entity._optimistic_vane_direction is None  # noqa: SLF001
+    assert entity._optimistic_mode is None
+    assert entity._optimistic_cool_setpoint is None
+    assert entity._optimistic_heat_setpoint is None
+    assert entity._optimistic_fan_speed is None
+    assert entity._optimistic_vane_direction is None
     entity.async_write_ha_state.assert_called_once()
 
 
@@ -1112,8 +1112,8 @@ async def test_optimistic_temp_high_low_in_auto(hass: HomeAssistant) -> None:
     )
     _, entity = _make_coordinator_and_entity(hass, device)
 
-    entity._optimistic_cool_setpoint = 26.0  # noqa: SLF001
-    entity._optimistic_heat_setpoint = 18.0  # noqa: SLF001
+    entity._optimistic_cool_setpoint = 26.0
+    entity._optimistic_heat_setpoint = 18.0
 
     assert entity.target_temperature_high == 26.0
     assert entity.target_temperature_low == 18.0
@@ -1128,7 +1128,7 @@ async def test_unique_id(hass: HomeAssistant) -> None:
 async def test_entity_name_is_none(hass: HomeAssistant) -> None:
     """Test entity name is None (uses device name)."""
     _, entity = _make_coordinator_and_entity(hass)
-    assert entity._attr_name is None  # noqa: SLF001
+    assert entity._attr_name is None
 
 
 # -- Entity base class tests --
@@ -1139,7 +1139,7 @@ async def test_entity_available(hass: HomeAssistant) -> None:
     coordinator, entity = _make_coordinator_and_entity(hass)
     assert entity.available is True
 
-    coordinator._consecutive_failures = 5  # noqa: SLF001
+    coordinator._consecutive_failures = 5
     assert entity.available is False
 
 
@@ -1155,7 +1155,7 @@ async def test_entity_device_info(hass: HomeAssistant) -> None:
 async def test_entity_has_entity_name(hass: HomeAssistant) -> None:
     """Test entity has entity_name attribute set."""
     _, entity = _make_coordinator_and_entity(hass)
-    assert entity._attr_has_entity_name is True  # noqa: SLF001
+    assert entity._attr_has_entity_name is True
 
 
 # -- Platform setup test --
@@ -1230,7 +1230,7 @@ async def test_set_temperature_auto_cool_mode(hass: HomeAssistant) -> None:
     await entity.async_set_temperature(**{ATTR_TEMPERATURE: 22.0})
 
     device.set_cool_setpoint.assert_awaited_once_with(22.0)
-    assert entity._optimistic_cool_setpoint == 22.0  # noqa: SLF001
+    assert entity._optimistic_cool_setpoint == 22.0
 
 
 async def test_set_temperature_auto_heat_mode(hass: HomeAssistant) -> None:
@@ -1270,4 +1270,4 @@ async def test_set_temperature_auto_heat_mode(hass: HomeAssistant) -> None:
     await entity.async_set_temperature(**{ATTR_TEMPERATURE: 20.0})
 
     device.set_heat_setpoint.assert_awaited_once_with(20.0)
-    assert entity._optimistic_heat_setpoint == 20.0  # noqa: SLF001
+    assert entity._optimistic_heat_setpoint == 20.0
