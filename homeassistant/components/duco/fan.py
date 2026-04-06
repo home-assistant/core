@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import Any
+
 from duco.exceptions import DucoError
 from duco.models import Node, VentilationState
 
@@ -82,7 +84,12 @@ class DucoVentilationFanEntity(DucoEntity, FanEntity):
 
     _attr_translation_key = "ventilation"
     _attr_preset_modes = [PRESET_AUTO]
-    _attr_supported_features = FanEntityFeature.SET_SPEED | FanEntityFeature.PRESET_MODE
+    _attr_supported_features = (
+        FanEntityFeature.SET_SPEED
+        | FanEntityFeature.PRESET_MODE
+        | FanEntityFeature.TURN_ON
+        | FanEntityFeature.TURN_OFF
+    )
     _attr_speed_count = len(ORDERED_NAMED_FAN_SPEEDS)
 
     def __init__(self, coordinator: DucoCoordinator, node: Node) -> None:
@@ -117,9 +124,27 @@ class DucoVentilationFanEntity(DucoEntity, FanEntity):
         await self._async_set_state(state)
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
-        """Set the ventilation preset mode (auto or away)."""
+        """Set the ventilation preset mode."""
         self._valid_preset_mode_or_raise(preset_mode)
         await self._async_set_state(_PRESET_TO_STATE[preset_mode])
+
+    async def async_turn_on(
+        self,
+        percentage: int | None = None,
+        preset_mode: str | None = None,
+        **kwargs: Any,
+    ) -> None:
+        """Turn on: set a specific speed/preset, or default to AUTO."""
+        if preset_mode is not None:
+            await self.async_set_preset_mode(preset_mode)
+        elif percentage is not None:
+            await self.async_set_percentage(percentage)
+        else:
+            await self._async_set_state(VentilationState.AUTO)
+
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        """Turn off: hand control back to Duco (AUTO)."""
+        await self._async_set_state(VentilationState.AUTO)
 
     async def _async_set_state(self, state: VentilationState) -> None:
         """Send the ventilation state to the device and refresh coordinator."""

@@ -34,7 +34,7 @@
     'platform': 'duco',
     'previous_unique_id': None,
     'suggested_object_id': None,
-    'supported_features': <FanEntityFeature: 9>,
+    'supported_features': <FanEntityFeature: 57>,
     'translation_key': 'ventilation',
     'unique_id': 'aa:bb:cc:dd:ee:ff_1',
     'unit_of_measurement': None,
@@ -50,7 +50,7 @@
       'preset_modes': list([
         'auto',
       ]),
-      'supported_features': <FanEntityFeature: 9>,
+      'supported_features': <FanEntityFeature: 57>,
     }),
     'context': <ANY>,
     'entity_id': 'fan.living_ventilation',
