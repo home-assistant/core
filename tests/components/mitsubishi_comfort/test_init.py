@@ -19,9 +19,10 @@ from homeassistant.components.mitsubishi_comfort import (
 from homeassistant.components.mitsubishi_comfort.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
-from tests.common import MockConfigEntry
 
 from .conftest import MOCK_PASSWORD, MOCK_USERNAME
+
+from tests.common import MockConfigEntry
 
 
 async def test_setup_entry_success(

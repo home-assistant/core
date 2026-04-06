@@ -22,9 +22,9 @@ from homeassistant.const import ATTR_ENTITY_ID, ATTR_TEMPERATURE, UnitOfTemperat
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 
-from tests.common import MockConfigEntry
-
 from .conftest import _make_device_status
+
+from tests.common import MockConfigEntry
 
 ENTITY_ID = "climate.living_room"
 
