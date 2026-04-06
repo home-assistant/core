@@ -33,6 +33,16 @@ from .entity import (
 from .hub import UnifiHub
 
 
+def _wan_status_name_fn(wan_name: str, _device: Device) -> str:
+    """Return the name for a WAN status sensor."""
+    return f"{wan_name} Status"
+
+
+def _wan_status_unique_id_fn(wan_slug: str, _hub: UnifiHub, obj_id: str) -> str:
+    """Return the unique ID for a WAN status sensor."""
+    return f"wan_status-{wan_slug}-{obj_id}"
+
+
 @callback
 def async_device_wan_status_supported_fn(
     wan_name: str,
@@ -90,14 +100,12 @@ def make_wan_status_sensors() -> (
                 available_fn=async_device_available_fn,
                 device_info_fn=async_device_device_info_fn,
                 is_on_fn=partial(async_device_wan_status_is_on_fn, wan_name),
-                name_fn=lambda device, _wn=wan_name: f"{_wn} Status",
+                name_fn=partial(_wan_status_name_fn, wan_name),
                 object_fn=lambda api, obj_id: api.devices[obj_id],
                 supported_fn=partial(
                     async_device_wan_status_supported_fn, wan_name
                 ),
-                unique_id_fn=lambda hub, obj_id, _ws=wan_slug: (
-                    f"wan_status-{_ws}-{obj_id}"
-                ),
+                unique_id_fn=partial(_wan_status_unique_id_fn, wan_slug),
             )
         )
 
