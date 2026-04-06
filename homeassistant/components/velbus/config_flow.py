@@ -93,13 +93,20 @@ class VelbusConfigFlow(ConfigFlow, domain=DOMAIN):
             if self.source == SOURCE_RECONFIGURE:
                 current = self._get_reconfigure_entry().data.get(CONF_PORT, "")
                 tls = current.startswith("tls://")
-                host_port = current.removeprefix("tls://").split("@")[-1]
+                current = current.removeprefix("tls://")
+                if "@" in current:
+                    password, host_port = current.split("@", 1)
+                else:
+                    password = ""
+                    host_port = current
                 host, _, port = host_port.rpartition(":")
                 user_input = {
                     CONF_TLS: tls,
                     CONF_HOST: host,
                     CONF_PORT: int(port) if port.isdigit() else 27015,
                 }
+                if password:
+                    user_input[CONF_PASSWORD] = password
             else:
                 user_input = {
                     CONF_TLS: True,
