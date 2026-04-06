@@ -9,6 +9,8 @@ from datetime import timedelta
 import logging
 
 from pyportainer import (
+    DockerContainerState,
+    EndpointStatus,
     Portainer,
     PortainerAuthenticationError,
     PortainerConnectionError,
@@ -29,7 +31,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DOMAIN, ContainerState, EndpointStatus
+from .const import DOMAIN
 
 type PortainerConfigEntry = ConfigEntry[PortainerCoordinator]
 
@@ -217,7 +219,7 @@ class PortainerCoordinator(DataUpdateCoordinator[dict[int, PortainerCoordinatorD
                     container
                     for container in containers
                     if container.state
-                    in (ContainerState.RUNNING, ContainerState.PAUSED)
+                    in (DockerContainerState.RUNNING, DockerContainerState.PAUSED)
                 ]
                 if running_containers:
                     container_stats = dict(
