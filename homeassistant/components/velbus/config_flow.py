@@ -89,29 +89,28 @@ class VelbusConfigFlow(ConfigFlow, domain=DOMAIN):
             if await self._test_connection():
                 return await self.async_step_vlp()
             step_errors[CONF_HOST] = "cannot_connect"
-        else:
-            if self.source == SOURCE_RECONFIGURE:
-                current = self._get_reconfigure_entry().data.get(CONF_PORT, "")
-                tls = current.startswith("tls://")
-                current = current.removeprefix("tls://")
-                if "@" in current:
-                    password, host_port = current.split("@", 1)
-                else:
-                    password = ""
-                    host_port = current
-                host, _, port = host_port.rpartition(":")
-                user_input = {
-                    CONF_TLS: tls,
-                    CONF_HOST: host,
-                    CONF_PORT: int(port) if port.isdigit() else 27015,
-                }
-                if password:
-                    user_input[CONF_PASSWORD] = password
+        elif self.source == SOURCE_RECONFIGURE:
+            current = self._get_reconfigure_entry().data.get(CONF_PORT, "")
+            tls = current.startswith("tls://")
+            current = current.removeprefix("tls://")
+            if "@" in current:
+                password, host_port = current.split("@", 1)
             else:
-                user_input = {
-                    CONF_TLS: True,
-                    CONF_PORT: 27015,
-                }
+                password = ""
+                host_port = current
+            host, _, port = host_port.rpartition(":")
+            user_input = {
+                CONF_TLS: tls,
+                CONF_HOST: host,
+                CONF_PORT: int(port) if port.isdigit() else 27015,
+            }
+            if password:
+                user_input[CONF_PASSWORD] = password
+        else:
+            user_input = {
+                CONF_TLS: True,
+                CONF_PORT: 27015,
+            }
 
         return self.async_show_form(
             step_id="network",
