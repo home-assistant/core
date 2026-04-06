@@ -41,7 +41,9 @@ async def test_victron_time(
 
     assert len(entities) == 1
     entity = entities[0]
-    assert entity.entity_id == "time.victron_venus"
+    assert (
+        entity.entity_id == "time.victron_venus_ess_batterylife_schedule_charge_0_start"
+    )
     assert (
         entity.unique_id
         == f"{MOCK_INSTALLATION_ID}_system_0_system_ess_schedule_charge_0_start"

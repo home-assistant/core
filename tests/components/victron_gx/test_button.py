@@ -37,7 +37,7 @@ async def test_victron_button(
 
     assert len(entities) == 1
     entity = entities[0]
-    assert entity.entity_id == "button.victron_venus"
+    assert entity.entity_id == "button.victron_venus_device_reboot"
     assert entity.unique_id == f"{MOCK_INSTALLATION_ID}_system_0_platform_device_reboot"
     assert entity.translation_key == "platform_device_reboot"
 

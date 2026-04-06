@@ -37,7 +37,7 @@ async def test_victron_switch(
 
     assert len(entities) == 1
     entity = entities[0]
-    assert entity.entity_id == "switch.ev_charging_station"
+    assert entity.entity_id == "switch.ev_charging_station_ev_charging"
     assert entity.unique_id == f"{MOCK_INSTALLATION_ID}_evcharger_0_evcharger_charge"
     assert entity.translation_key == "evcharger_charge"
 

@@ -38,7 +38,7 @@ async def test_victron_number_with_step(
     )
     assert len(entities) == 1
     entity = entities[0]
-    assert entity.entity_id == "number.victron_venus_voltage"
+    assert entity.entity_id == "number.victron_venus_ess_max_charge_voltage"
     assert (
         entity.unique_id
         == f"{MOCK_INSTALLATION_ID}_system_0_system_ess_max_charge_voltage"

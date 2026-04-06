@@ -37,7 +37,7 @@ async def test_victron_binary_sensor(
 
     assert len(entities) == 1
     entity = entities[0]
-    assert entity.entity_id == "binary_sensor.ev_charging_station"
+    assert entity.entity_id == "binary_sensor.ev_charging_station_connected"
     assert entity.unique_id == f"{MOCK_INSTALLATION_ID}_evcharger_0_evcharger_connected"
     assert entity.translation_key == "evcharger_connected"
 
