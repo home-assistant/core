@@ -49,7 +49,6 @@ from .const import (
     CONF_SSDP_RENDERING_CONTROL_LOCATION,
     DEFAULT_MANUFACTURER,
     DOMAIN,
-    LEGACY_ENCRYPTED_PORT,
     LOGGER,
     METHOD_ENCRYPTED_WEBSOCKET,
     METHOD_LEGACY,
@@ -67,11 +66,12 @@ from .const import (
 DATA_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_HOST): str,
-        vol.Optional(CONF_METHOD): vol.In(
+        vol.Optional(CONF_METHOD, default=METHOD_WEBSOCKET): vol.In(
             [METHOD_WEBSOCKET, METHOD_ENCRYPTED_WEBSOCKET, METHOD_LEGACY]
         ),
     }
 )
+RECONFIGURE_SCHEMA = vol.Schema({vol.Required(CONF_HOST): str})
 
 
 def _strip_uuid(udn: str) -> str:
@@ -322,7 +322,7 @@ class SamsungTVConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id=SOURCE_RECONFIGURE,
             data_schema=self.add_suggested_values_to_schema(
-                DATA_SCHEMA,
+                RECONFIGURE_SCHEMA,
                 suggested_values,
             ),
             errors=errors,
@@ -368,7 +368,7 @@ class SamsungTVConfigFlow(ConfigFlow, domain=DOMAIN):
                 return self.async_create_entry(
                     data={
                         **self._base_config_entry(
-                            METHOD_ENCRYPTED_WEBSOCKET, LEGACY_ENCRYPTED_PORT
+                            METHOD_ENCRYPTED_WEBSOCKET, self._port
                         ),
                         CONF_TOKEN: token,
                         CONF_SESSION_ID: session_id,
