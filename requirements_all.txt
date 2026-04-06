@@ -357,7 +357,7 @@ aiooui==0.1.9
 aiopegelonline==0.1.1
 
 # homeassistant.components.opnsense
-aiopnsense==1.0.5
+aiopnsense==1.0.8
 
 # homeassistant.components.acmeda
 aiopulse==0.4.6
