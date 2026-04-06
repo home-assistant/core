@@ -1568,7 +1568,7 @@ Q7_B01_PROPS = B01Props(
 )
 
 Q10_STATUS = Q10Status(
-    clean_time=120,
+    clean_time=1800,
     clean_area=15,
     battery=100,
     status=YXDeviceState.CHARGING,

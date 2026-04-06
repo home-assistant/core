@@ -444,8 +444,8 @@ Q10_B01_SENSOR_DESCRIPTIONS = [
         translation_key="cleaning_time",
         value_fn=lambda data: data.clean_time,
         entity_category=EntityCategory.DIAGNOSTIC,
-        native_unit_of_measurement=UnitOfTime.MINUTES,
-        suggested_unit_of_measurement=UnitOfTime.HOURS,
+        native_unit_of_measurement=UnitOfTime.SECONDS,
+        suggested_unit_of_measurement=UnitOfTime.MINUTES,
         device_class=SensorDeviceClass.DURATION,
     ),
     RoborockSensorDescriptionQ10(
