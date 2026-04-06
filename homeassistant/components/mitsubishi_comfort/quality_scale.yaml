@@ -5,17 +5,22 @@ rules:
     comment: No service actions registered.
   appropriate-polling:
     status: done
+    comment: Polls devices every 60 seconds via DataUpdateCoordinator.
   brands:
     status: exempt
     comment: Companion PR pending.
   common-modules:
     status: done
+    comment: Uses coordinator, entity, and const modules.
   config-flow:
     status: done
+    comment: UI-based setup with username/password.
   config-flow-test-coverage:
     status: done
+    comment: Full test coverage for all config flow steps.
   dependency-transparency:
     status: done
+    comment: mitsubishi-comfort library is MIT-licensed with public CI.
   docs-actions:
     status: exempt
     comment: No service actions.
@@ -30,27 +35,36 @@ rules:
     comment: Companion PR pending.
   entity-event-setup:
     status: done
+    comment: Entities subscribe to coordinator updates via CoordinatorEntity.
   entity-unique-id:
     status: done
+    comment: Uses device serial as unique ID.
   has-entity-name:
     status: done
+    comment: All entities set _attr_has_entity_name = True.
   runtime-data:
     status: done
+    comment: Uses ConfigEntry.runtime_data to store coordinators.
   test-before-configure:
     status: done
+    comment: Config flow validates cloud login and device discovery.
   test-before-setup:
     status: done
+    comment: async_setup_entry verifies login and device discovery.
   unique-config-entry:
     status: done
+    comment: Uses username as unique ID to prevent duplicates.
 
   # Silver
   config-entry-unloading:
     status: done
+    comment: Unloads platforms and closes device sessions.
   log-when-unavailable:
     status: done
     comment: Coordinator logs warnings on consecutive failures.
   entity-unavailable:
     status: done
+    comment: Entities delegate availability to coordinator.
   action-exceptions:
     status: exempt
     comment: No service actions registered.
@@ -62,6 +76,7 @@ rules:
     status: todo
   integration-owner:
     status: done
+    comment: "@nikolairahimi is listed as codeowner."
   docs-installation-parameters:
     status: exempt
     comment: Companion PR pending.
@@ -76,6 +91,7 @@ rules:
     status: todo
   devices:
     status: done
+    comment: Each physical unit is registered as a device.
   entity-category:
     status: exempt
     comment: Single climate entity per device, no diagnostic entities yet.
@@ -125,8 +141,9 @@ rules:
   # Platinum
   async-dependency:
     status: done
+    comment: mitsubishi-comfort library is fully async (aiohttp).
   inject-websession:
     status: exempt
-    comment: This integration does not use web sessions.
+    comment: Library manages its own aiohttp sessions.
   strict-typing:
     status: todo
