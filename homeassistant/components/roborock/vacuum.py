@@ -19,7 +19,11 @@ from homeassistant.components.vacuum import (
     VacuumEntityFeature,
 )
 from homeassistant.core import HomeAssistant, ServiceResponse, callback
-from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
+from homeassistant.exceptions import (
+    HomeAssistantError,
+    ServiceNotSupported,
+    ServiceValidationError,
+)
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN
@@ -484,6 +488,18 @@ class RoborockQ7Vacuum(RoborockCoordinatedEntityB01Q7, StateVacuumEntity):
                 },
             ) from err
 
+    async def get_maps(self) -> ServiceResponse:
+        """Get map information such as map id and room ids."""
+        raise ServiceNotSupported(DOMAIN, "get_maps", self.entity_id)
+
+    async def get_vacuum_current_position(self) -> ServiceResponse:
+        """Get the current position of the vacuum from the map."""
+        raise ServiceNotSupported(DOMAIN, "get_vacuum_current_position", self.entity_id)
+
+    async def async_set_vacuum_goto_position(self, x: int, y: int) -> None:
+        """Set the vacuum to go to a specific position."""
+        raise ServiceNotSupported(DOMAIN, "set_vacuum_goto_position", self.entity_id)
+
 
 class RoborockQ10Vacuum(RoborockCoordinatedEntityB01Q10, StateVacuumEntity):
     """Representation of a Roborock Q10 vacuum."""
@@ -654,3 +670,15 @@ class RoborockQ10Vacuum(RoborockCoordinatedEntityB01Q10, StateVacuumEntity):
                     "command": command,
                 },
             ) from err
+
+    async def get_maps(self) -> ServiceResponse:
+        """Get map information such as map id and room ids."""
+        raise ServiceNotSupported(DOMAIN, "get_maps", self.entity_id)
+
+    async def get_vacuum_current_position(self) -> ServiceResponse:
+        """Get the current position of the vacuum from the map."""
+        raise ServiceNotSupported(DOMAIN, "get_vacuum_current_position", self.entity_id)
+
+    async def async_set_vacuum_goto_position(self, x: int, y: int) -> None:
+        """Set the vacuum to go to a specific position."""
+        raise ServiceNotSupported(DOMAIN, "set_vacuum_goto_position", self.entity_id)
