@@ -2145,3 +2145,333 @@ async def test_multilevel_switch_cover_v3_no_moving_state_unsupervised(
     )
     state = hass.states.get(WINDOW_COVER_ENTITY)
     assert state.state == CoverState.CLOSED
+
+
+async def test_on_value_update_both_none_clears_moving_state(
+    hass: HomeAssistant,
+    client: MagicMock,
+    chain_actuator_zws12: Node,
+    integration: MockConfigEntry,
+) -> None:
+    """Test that on_value_update clears moving state when both current and target are None.
+
+    When neither currentValue nor targetValue is known, the cover is not moving —
+    flags must be cleared regardless of any previous state.
+    """
+    node = chain_actuator_zws12
+    state = hass.states.get(WINDOW_COVER_ENTITY)
+    assert state
+    assert state.state == CoverState.CLOSED
+
+    # Simulate a targetValue=None event (value removed / not yet reported).
+    node.receive_event(
+        Event(
+            type="value updated",
+            data={
+                "source": "node",
+                "event": "value updated",
+                "nodeId": node.node_id,
+                "args": {
+                    "commandClassName": "Multilevel Switch",
+                    "commandClass": 38,
+                    "endpoint": 0,
+                    "property": "targetValue",
+                    "newValue": None,
+                    "prevValue": None,
+                    "propertyName": "targetValue",
+                },
+            },
+        )
+    )
+
+    # Simulate a currentValue=None event.
+    node.receive_event(
+        Event(
+            type="value updated",
+            data={
+                "source": "node",
+                "event": "value updated",
+                "nodeId": node.node_id,
+                "args": {
+                    "commandClassName": "Multilevel Switch",
+                    "commandClass": 38,
+                    "endpoint": 0,
+                    "property": "currentValue",
+                    "newValue": None,
+                    "prevValue": 0,
+                    "propertyName": "currentValue",
+                },
+            },
+        )
+    )
+
+    # Both values are None → target == current (None == None), flags must be cleared.
+    state = hass.states.get(WINDOW_COVER_ENTITY)
+    assert state.state == STATE_UNKNOWN
+    assert not state.attributes.get("is_opening")
+    assert not state.attributes.get("is_closing")
+
+
+async def test_on_value_update_current_none_target_fully_open(
+    hass: HomeAssistant,
+    client: MagicMock,
+    chain_actuator_zws12: Node,
+    integration: MockConfigEntry,
+) -> None:
+    """Test that OPENING is set when current is None but target is fully open position.
+
+    Devices that don't report intermediate positions (currentValue=None while moving)
+    can still declare a clear opening intent via targetValue=99.
+    """
+    node = chain_actuator_zws12
+    state = hass.states.get(WINDOW_COVER_ENTITY)
+    assert state
+    assert state.state == CoverState.CLOSED
+
+    # Wipe currentValue so it is unknown.
+    node.receive_event(
+        Event(
+            type="value updated",
+            data={
+                "source": "node",
+                "event": "value updated",
+                "nodeId": node.node_id,
+                "args": {
+                    "commandClassName": "Multilevel Switch",
+                    "commandClass": 38,
+                    "endpoint": 0,
+                    "property": "currentValue",
+                    "newValue": None,
+                    "prevValue": 0,
+                    "propertyName": "currentValue",
+                },
+            },
+        )
+    )
+
+    # Driver sets targetValue=99 (fully open) — direction is unambiguous.
+    node.receive_event(
+        Event(
+            type="value updated",
+            data={
+                "source": "node",
+                "event": "value updated",
+                "nodeId": node.node_id,
+                "args": {
+                    "commandClassName": "Multilevel Switch",
+                    "commandClass": 38,
+                    "endpoint": 0,
+                    "property": "targetValue",
+                    "newValue": 99,
+                    "prevValue": None,
+                    "propertyName": "targetValue",
+                },
+            },
+        )
+    )
+
+    state = hass.states.get(WINDOW_COVER_ENTITY)
+    assert state.state == CoverState.OPENING
+
+
+async def test_on_value_update_current_none_target_fully_closed(
+    hass: HomeAssistant,
+    client: MagicMock,
+    chain_actuator_zws12: Node,
+    integration: MockConfigEntry,
+) -> None:
+    """Test that CLOSING is set when current is None but target is fully closed position.
+
+    Symmetrical counterpart to the OPENING test above.
+    """
+    node = chain_actuator_zws12
+
+    # First open the cover so we have a non-closed starting state.
+    node.receive_event(
+        Event(
+            type="value updated",
+            data={
+                "source": "node",
+                "event": "value updated",
+                "nodeId": node.node_id,
+                "args": {
+                    "commandClassName": "Multilevel Switch",
+                    "commandClass": 38,
+                    "endpoint": 0,
+                    "property": "targetValue",
+                    "newValue": 99,
+                    "prevValue": 0,
+                    "propertyName": "targetValue",
+                },
+            },
+        )
+    )
+    node.receive_event(
+        Event(
+            type="value updated",
+            data={
+                "source": "node",
+                "event": "value updated",
+                "nodeId": node.node_id,
+                "args": {
+                    "commandClassName": "Multilevel Switch",
+                    "commandClass": 38,
+                    "endpoint": 0,
+                    "property": "currentValue",
+                    "newValue": 99,
+                    "prevValue": 0,
+                    "propertyName": "currentValue",
+                },
+            },
+        )
+    )
+
+    state = hass.states.get(WINDOW_COVER_ENTITY)
+    assert state.state == CoverState.OPEN
+
+    # Wipe currentValue — position unknown while closing.
+    node.receive_event(
+        Event(
+            type="value updated",
+            data={
+                "source": "node",
+                "event": "value updated",
+                "nodeId": node.node_id,
+                "args": {
+                    "commandClassName": "Multilevel Switch",
+                    "commandClass": 38,
+                    "endpoint": 0,
+                    "property": "currentValue",
+                    "newValue": None,
+                    "prevValue": 99,
+                    "propertyName": "currentValue",
+                },
+            },
+        )
+    )
+
+    # Driver sets targetValue=0 (fully closed) — direction is unambiguous.
+    node.receive_event(
+        Event(
+            type="value updated",
+            data={
+                "source": "node",
+                "event": "value updated",
+                "nodeId": node.node_id,
+                "args": {
+                    "commandClassName": "Multilevel Switch",
+                    "commandClass": 38,
+                    "endpoint": 0,
+                    "property": "targetValue",
+                    "newValue": 0,
+                    "prevValue": 99,
+                    "propertyName": "targetValue",
+                },
+            },
+        )
+    )
+
+    state = hass.states.get(WINDOW_COVER_ENTITY)
+    assert state.state == CoverState.CLOSING
+
+
+async def test_on_value_update_current_none_target_intermediate_no_change(
+    hass: HomeAssistant,
+    client: MagicMock,
+    chain_actuator_zws12: Node,
+    integration: MockConfigEntry,
+) -> None:
+    """Test that moving flags stay unchanged when current is None and target is intermediate.
+
+    When current position is unknown and target is neither 0 nor 99, the direction
+    is ambiguous — on_value_update must leave is_opening / is_closing untouched.
+    """
+    node = chain_actuator_zws12
+
+    # Put the cover in OPENING state via a known-good sequence first.
+    node.receive_event(
+        Event(
+            type="value updated",
+            data={
+                "source": "node",
+                "event": "value updated",
+                "nodeId": node.node_id,
+                "args": {
+                    "commandClassName": "Multilevel Switch",
+                    "commandClass": 38,
+                    "endpoint": 0,
+                    "property": "targetValue",
+                    "newValue": 99,
+                    "prevValue": 0,
+                    "propertyName": "targetValue",
+                },
+            },
+        )
+    )
+    node.receive_event(
+        Event(
+            type="value updated",
+            data={
+                "source": "node",
+                "event": "value updated",
+                "nodeId": node.node_id,
+                "args": {
+                    "commandClassName": "Multilevel Switch",
+                    "commandClass": 38,
+                    "endpoint": 0,
+                    "property": "currentValue",
+                    "newValue": 50,
+                    "prevValue": 0,
+                    "propertyName": "currentValue",
+                },
+            },
+        )
+    )
+
+    state = hass.states.get(WINDOW_COVER_ENTITY)
+    assert state.state == CoverState.OPENING
+
+    # Now currentValue becomes None (device stopped reporting intermediate values)
+    # while targetValue changes to an intermediate value (ambiguous direction).
+    node.receive_event(
+        Event(
+            type="value updated",
+            data={
+                "source": "node",
+                "event": "value updated",
+                "nodeId": node.node_id,
+                "args": {
+                    "commandClassName": "Multilevel Switch",
+                    "commandClass": 38,
+                    "endpoint": 0,
+                    "property": "currentValue",
+                    "newValue": None,
+                    "prevValue": 50,
+                    "propertyName": "currentValue",
+                },
+            },
+        )
+    )
+    node.receive_event(
+        Event(
+            type="value updated",
+            data={
+                "source": "node",
+                "event": "value updated",
+                "nodeId": node.node_id,
+                "args": {
+                    "commandClassName": "Multilevel Switch",
+                    "commandClass": 38,
+                    "endpoint": 0,
+                    "property": "targetValue",
+                    "newValue": 50,
+                    "prevValue": 99,
+                    "propertyName": "targetValue",
+                },
+            },
+        )
+    )
+
+    # Direction is ambiguous — flags must remain unchanged (still OPENING).
+    state = hass.states.get(WINDOW_COVER_ENTITY)
+    assert state.state == CoverState.OPENING
