@@ -19,10 +19,9 @@ from .entity import DucoEntity
 PARALLEL_UPDATES = 1
 
 PRESET_AUTO = "auto"
-PRESET_AWAY = "away"
 
 # Fan speed levels mapped to permanent (CNT) ventilation states.
-# Low = 33%, Medium = 67%, High = 100%.
+# Low = 33%, Medium = 66%, High = 100%.
 ORDERED_NAMED_FAN_SPEEDS: list[VentilationState] = [
     VentilationState.CNT1,
     VentilationState.CNT2,
@@ -31,7 +30,6 @@ ORDERED_NAMED_FAN_SPEEDS: list[VentilationState] = [
 
 _PRESET_TO_STATE: dict[str, VentilationState] = {
     PRESET_AUTO: VentilationState.AUTO,
-    PRESET_AWAY: VentilationState.EMPT,
 }
 
 _STATE_TO_PRESET: dict[VentilationState, str] = {
@@ -39,8 +37,10 @@ _STATE_TO_PRESET: dict[VentilationState, str] = {
     VentilationState.AUT1: PRESET_AUTO,
     VentilationState.AUT2: PRESET_AUTO,
     VentilationState.AUT3: PRESET_AUTO,
-    VentilationState.EMPT: PRESET_AWAY,
 }
+
+# States in which the fan is considered "off" (away/minimum ventilation).
+_OFF_STATES: frozenset[VentilationState] = frozenset({VentilationState.EMPT})
 
 # Maps any active ventilation state (CNT and timed MAN variants) to its
 # equivalent speed percentage, so the entity correctly reflects externally
@@ -88,7 +88,7 @@ class DucoVentilationFanEntity(DucoEntity, FanEntity):
     """Fan entity for the ventilation control of a Duco node."""
 
     _attr_translation_key = "ventilation"
-    _attr_preset_modes = [PRESET_AUTO, PRESET_AWAY]
+    _attr_preset_modes = [PRESET_AUTO]
     _attr_supported_features = (
         FanEntityFeature.SET_SPEED
         | FanEntityFeature.PRESET_MODE
@@ -104,8 +104,11 @@ class DucoVentilationFanEntity(DucoEntity, FanEntity):
 
     @property
     def is_on(self) -> bool:
-        """Return True always; the fan is always running physically."""
-        return True
+        """Return False when in away mode (EMPT), True otherwise."""
+        node = self._node
+        if node.ventilation is None:
+            return False
+        return node.ventilation.state not in _OFF_STATES
 
     @property
     def percentage(self) -> int | None:
@@ -139,17 +142,17 @@ class DucoVentilationFanEntity(DucoEntity, FanEntity):
         preset_mode: str | None = None,
         **kwargs: Any,
     ) -> None:
-        """Turn on the fan (set to medium speed by default)."""
+        """Turn on the fan (returns to automatic mode by default)."""
         if preset_mode is not None:
             await self.async_set_preset_mode(preset_mode)
         elif percentage is not None:
             await self.async_set_percentage(percentage)
         else:
-            await self._async_set_state(VentilationState.CNT2)
+            await self._async_set_state(VentilationState.AUTO)
 
     async def async_turn_off(self, **kwargs: Any) -> None:
-        """Turn off the fan (returns to automatic mode)."""
-        await self._async_set_state(VentilationState.AUTO)
+        """Turn off the fan (sets to away/minimum ventilation mode)."""
+        await self._async_set_state(VentilationState.EMPT)
 
     async def _async_set_state(self, state: VentilationState) -> None:
         """Send the ventilation state to the device and refresh coordinator."""

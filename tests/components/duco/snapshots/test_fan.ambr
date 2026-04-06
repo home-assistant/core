@@ -8,7 +8,6 @@
     'capabilities': dict({
       'preset_modes': list([
         'auto',
-        'away',
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -50,7 +49,6 @@
       'preset_mode': 'auto',
       'preset_modes': list([
         'auto',
-        'away',
       ]),
       'supported_features': <FanEntityFeature: 57>,
     }),
