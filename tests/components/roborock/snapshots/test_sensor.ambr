@@ -619,7 +619,7 @@
     'state': '2.0',
   })
 # ---
-# name: test_sensors[sensor.roborock_q10_s5_filter_remaining_life-entry]
+# name: test_sensors[sensor.roborock_q10_s5_filter_time_used-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -633,7 +633,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.roborock_q10_s5_filter_remaining_life',
+    'entity_id': 'sensor.roborock_q10_s5_filter_time_used',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -641,36 +641,40 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Filter remaining life',
+    'object_id_base': 'Filter time used',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
-    'original_name': 'Filter remaining life',
+    'original_name': 'Filter time used',
     'platform': 'roborock',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'filter_life',
     'unique_id': 'filter_life_q10_duid',
-    'unit_of_measurement': '%',
+    'unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
   })
 # ---
-# name: test_sensors[sensor.roborock_q10_s5_filter_remaining_life-state]
+# name: test_sensors[sensor.roborock_q10_s5_filter_time_used-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Roborock Q10 S5+ Filter remaining life',
-      'unit_of_measurement': '%',
+      'device_class': 'duration',
+      'friendly_name': 'Roborock Q10 S5+ Filter time used',
+      'unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.roborock_q10_s5_filter_remaining_life',
+    'entity_id': 'sensor.roborock_q10_s5_filter_time_used',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_sensors[sensor.roborock_q10_s5_main_brush_remaining_life-entry]
+# name: test_sensors[sensor.roborock_q10_s5_main_brush_time_used-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -684,7 +688,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.roborock_q10_s5_main_brush_remaining_life',
+    'entity_id': 'sensor.roborock_q10_s5_main_brush_time_used',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -692,36 +696,40 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Main brush remaining life',
+    'object_id_base': 'Main brush time used',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
-    'original_name': 'Main brush remaining life',
+    'original_name': 'Main brush time used',
     'platform': 'roborock',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'main_brush_life',
     'unique_id': 'main_brush_life_q10_duid',
-    'unit_of_measurement': '%',
+    'unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
   })
 # ---
-# name: test_sensors[sensor.roborock_q10_s5_main_brush_remaining_life-state]
+# name: test_sensors[sensor.roborock_q10_s5_main_brush_time_used-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Roborock Q10 S5+ Main brush remaining life',
-      'unit_of_measurement': '%',
+      'device_class': 'duration',
+      'friendly_name': 'Roborock Q10 S5+ Main brush time used',
+      'unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.roborock_q10_s5_main_brush_remaining_life',
+    'entity_id': 'sensor.roborock_q10_s5_main_brush_time_used',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_sensors[sensor.roborock_q10_s5_sensor_remaining_life-entry]
+# name: test_sensors[sensor.roborock_q10_s5_sensor_time_used-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -735,7 +743,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.roborock_q10_s5_sensor_remaining_life',
+    'entity_id': 'sensor.roborock_q10_s5_sensor_time_used',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -743,36 +751,40 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Sensor remaining life',
+    'object_id_base': 'Sensor time used',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
-    'original_name': 'Sensor remaining life',
+    'original_name': 'Sensor time used',
     'platform': 'roborock',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'sensor_life',
     'unique_id': 'sensor_life_q10_duid',
-    'unit_of_measurement': '%',
+    'unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
   })
 # ---
-# name: test_sensors[sensor.roborock_q10_s5_sensor_remaining_life-state]
+# name: test_sensors[sensor.roborock_q10_s5_sensor_time_used-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Roborock Q10 S5+ Sensor remaining life',
-      'unit_of_measurement': '%',
+      'device_class': 'duration',
+      'friendly_name': 'Roborock Q10 S5+ Sensor time used',
+      'unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.roborock_q10_s5_sensor_remaining_life',
+    'entity_id': 'sensor.roborock_q10_s5_sensor_time_used',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_sensors[sensor.roborock_q10_s5_side_brush_remaining_life-entry]
+# name: test_sensors[sensor.roborock_q10_s5_side_brush_time_used-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -786,7 +798,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.roborock_q10_s5_side_brush_remaining_life',
+    'entity_id': 'sensor.roborock_q10_s5_side_brush_time_used',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -794,29 +806,33 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Side brush remaining life',
+    'object_id_base': 'Side brush time used',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
-    'original_name': 'Side brush remaining life',
+    'original_name': 'Side brush time used',
     'platform': 'roborock',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'side_brush_life',
     'unique_id': 'side_brush_life_q10_duid',
-    'unit_of_measurement': '%',
+    'unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
   })
 # ---
-# name: test_sensors[sensor.roborock_q10_s5_side_brush_remaining_life-state]
+# name: test_sensors[sensor.roborock_q10_s5_side_brush_time_used-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Roborock Q10 S5+ Side brush remaining life',
-      'unit_of_measurement': '%',
+      'device_class': 'duration',
+      'friendly_name': 'Roborock Q10 S5+ Side brush time used',
+      'unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.roborock_q10_s5_side_brush_remaining_life',
+    'entity_id': 'sensor.roborock_q10_s5_side_brush_time_used',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

@@ -369,7 +369,7 @@
         }
       },
       "filter_life": {
-        "name": "Filter remaining life"
+        "name": "Filter time used"
       },
       "filter_time_left": {
         "name": "Filter time left"
@@ -381,7 +381,7 @@
         "name": "Last clean begin"
       },
       "main_brush_life": {
-        "name": "Main brush remaining life"
+        "name": "Main brush time used"
       },
       "main_brush_time_left": {
         "name": "Main brush time left"
@@ -409,13 +409,13 @@
         }
       },
       "sensor_life": {
-        "name": "Sensor remaining life"
+        "name": "Sensor time used"
       },
       "sensor_time_left": {
         "name": "Sensor time left"
       },
       "side_brush_life": {
-        "name": "Side brush remaining life"
+        "name": "Side brush time used"
       },
       "side_brush_time_left": {
         "name": "Side brush time left"
