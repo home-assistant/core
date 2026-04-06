@@ -195,6 +195,39 @@ def async_setup_sonos(
     return _wrapper
 
 
+@pytest.fixture
+def async_setup_two_sonos_speakers(
+    hass: HomeAssistant,
+    soco_factory: SoCoMockFactory,
+    alarm_event: SonosMockEvent,
+) -> Callable[[], Coroutine[Any, Any, None]]:
+    """Return a coroutine to set up two grouped Sonos speakers on demand."""
+    soco_lr = soco_factory.cache_mock(MockSoCo(), "10.10.10.1", "Living Room")
+    soco_br = soco_factory.cache_mock(MockSoCo(), "10.10.10.2", "Bedroom")
+
+    async def _wrapper() -> None:
+        reset_sonos_alarms(alarm_event)
+        await async_setup_component(
+            hass,
+            DOMAIN,
+            {
+                DOMAIN: {
+                    "media_player": {
+                        "interface_addr": "127.0.0.1",
+                        "hosts": ["10.10.10.1", "10.10.10.2"],
+                    }
+                }
+            },
+        )
+        await hass.async_block_till_done(wait_background_tasks=True)
+        await soco_lr.zoneGroupTopology.subscribe.return_value.wait_for_callback_to_be_set()
+        await soco_br.zoneGroupTopology.subscribe.return_value.wait_for_callback_to_be_set()
+        group_speakers(soco_lr, soco_br)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    return _wrapper
+
+
 @pytest.fixture(name="config_entry")
 def config_entry_fixture() -> MockConfigEntry:
     """Create a mock Sonos config entry."""

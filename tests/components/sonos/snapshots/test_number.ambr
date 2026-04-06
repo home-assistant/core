@@ -1,9 +1,8 @@
 # serializer version: 1
 # name: test_group_volume_number_metadata[number.zone_a_group_volume-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
+    'aliases': set({
+    }),
     'area_id': None,
     'capabilities': dict({
       'max': 100,

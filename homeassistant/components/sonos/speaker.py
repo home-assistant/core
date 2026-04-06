@@ -28,7 +28,7 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_send,
     dispatcher_send,
 )
-from homeassistant.helpers.event import async_track_time_interval
+from homeassistant.helpers.event import async_call_later, async_track_time_interval
 from homeassistant.util import dt as dt_util
 
 from .alarms import SonosAlarms
@@ -139,6 +139,7 @@ class SonosSpeaker:
 
         # Scheduled callback handles
         self._poll_timer: Callable | None = None
+        self._group_volume_unsub: Callable[[], None] | None = None
 
         # Dispatcher handles
         self.dispatchers: list[Callable] = []
@@ -156,6 +157,7 @@ class SonosSpeaker:
         self.bass: int | None = None
         self.treble: int | None = None
         self.loudness: bool | None = None
+        self.group_volume: int | None = None
 
         # Home theater
         self.audio_delay: int | None = None
@@ -631,6 +633,9 @@ class SonosSpeaker:
                         "Invalid value for %s %s", enum_var, variables[enum_var]
                     )
 
+        coordinator = self.coordinator or self
+        coordinator.schedule_group_volume_refresh()
+
         self.async_write_entity_states()
 
     #
@@ -714,6 +719,10 @@ class SonosSpeaker:
         if self._poll_timer:
             self._poll_timer()
             self._poll_timer = None
+
+        if self._group_volume_unsub is not None:
+            self._group_volume_unsub()
+            self._group_volume_unsub = None
 
         await self.async_unsubscribe()
 
@@ -982,7 +991,14 @@ class SonosSpeaker:
             self.coordinator = None
             self.sonos_group = sonos_group
             self.sonos_group_entities = sonos_group_entities
+            for speaker in sonos_group:
+                speaker.group_volume = None
             self.async_write_entity_states()
+            self.hass.async_create_background_task(
+                self._async_update_group_volume(),
+                "sonos group volume update",
+                eager_start=True,
+            )
 
             for joined_uid in group[1:]:
                 if joined_speaker := self.data.discovered.get(joined_uid):
@@ -1022,6 +1038,8 @@ class SonosSpeaker:
             entity_registry.async_get_entity_id(MP_DOMAIN, DOMAIN, self.uid),
         )
         self.sonos_group_entities = [speaker_entity_id]
+        self.group_volume = None
+        self.schedule_group_volume_refresh()
         self.async_write_entity_states()
 
     @soco_error()
@@ -1290,6 +1308,45 @@ class SonosSpeaker:
         """Update information about current volume settings."""
         self.volume = self.soco.volume
         self.muted = self.soco.mute
+
+    @soco_error()
+    def update_group_volume(self) -> None:
+        """Read and cache the current group or player volume."""
+        if len(self.sonos_group) > 1:
+            self.group_volume = int(self.soco.group.volume)
+        else:
+            self.group_volume = self.volume
+
+    @soco_error()
+    def set_group_volume(self, level: int) -> None:
+        """Write group or player volume; must be called from executor."""
+        if len(self.sonos_group) > 1:
+            self.soco.group.volume = level
+        else:
+            self.soco.volume = level
+
+    @callback
+    def schedule_group_volume_refresh(self) -> None:
+        """Cancel any pending group volume refresh and schedule a new one."""
+        if self._group_volume_unsub is not None:
+            self._group_volume_unsub()
+
+        async def _do_update(now: datetime.datetime) -> None:
+            self._group_volume_unsub = None
+            await self._async_update_group_volume()
+
+        self._group_volume_unsub = async_call_later(self.hass, 0.5, _do_update)
+
+    async def _async_update_group_volume(self) -> None:
+        """Read group volume in executor and push entity states."""
+        try:
+            await self.hass.async_add_executor_job(self.update_group_volume)
+        except SonosUpdateError as err:
+            _LOGGER.debug(
+                "Failed to update group volume for %s: %s", self.zone_name, err
+            )
+            self.group_volume = None
+        self.async_write_entity_states()
 
     _event_dispatchers = {
         "AlarmClock": async_dispatch_alarms,

@@ -1,21 +1,15 @@
 """Entity representing a Sonos number control."""
 
-from collections.abc import Callable, Sequence
-from datetime import datetime
 import logging
-import time
 from typing import cast
-
-from soco.exceptions import SoCoException
 
 from homeassistant.components.number import NumberEntity, NumberMode
 from homeassistant.const import EntityCategory
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.event import async_call_later
 
-from .const import SONOS_CREATE_LEVELS, SONOS_SPEAKER_ACTIVITY, SONOS_STATE_UPDATED
+from .const import SONOS_CREATE_LEVELS
 from .entity import SonosEntity
 from .helpers import SonosConfigEntry, soco_error
 from .speaker import SonosSpeaker
@@ -30,9 +24,6 @@ LEVEL_TYPES = {
     "surround_level": (-15, 15),
     "music_surround_level": (-15, 15),
 }
-
-# seconds to coalesce group-volume refresh after events
-GROUP_VOLUME_REFRESH_DELAY = 0.5
 
 type SocoFeatures = list[tuple[str, tuple[int, int]]]
 
@@ -173,87 +164,14 @@ class SonosGroupVolumeEntity(SonosEntity, NumberEntity):
         super().__init__(speaker, config_entry)
         self._attr_unique_id = f"{self.soco.uid}-group_volume"
 
-        self._unsubscribe_activity: Callable[[], None] | None = None
-        self._unsubscribe_member: Callable[[], None] | None = None
-        self._delay_unsubscribe: Callable[[], None] | None = None
+    async def _async_fallback_poll(self) -> None:
+        """Poll the value if subscriptions are not working."""
+        await self.hass.async_add_executor_job(self.poll_state)
 
-        self._value: int | None = None
-        self._last_refresh_ts: float = 0.0
-
-        # Track last known role so we can update availability/value efficiently.
-        self._is_coord: bool = False
-
-    @callback
-    def _schedule_delayed_refresh(
-        self, seconds: float = GROUP_VOLUME_REFRESH_DELAY
-    ) -> None:
-        """Schedule a short delayed refresh; must be called from the event loop."""
-        if self._delay_unsubscribe is not None:
-            self._delay_unsubscribe()
-            self._delay_unsubscribe = None
-
-        async def _delayed_refresh(_now: datetime) -> None:
-            self._delay_unsubscribe = None
-            await self._async_refresh_from_device()
-
-        self._delay_unsubscribe = async_call_later(self.hass, seconds, _delayed_refresh)
-
-    def _get_group_or_player_volume_safe(self) -> int | None:
-        """Return the current volume for this speaker’s coordinator, handling SoCo/OSError exceptions."""
-        try:
-            coord = (self.speaker.coordinator or self.speaker).soco
-            group = getattr(coord, "group", None)
-            members_any = getattr(group, "members", None) if group is not None else None
-            members = cast(Sequence[object] | None, members_any)
-            grouped = members is not None and len(members) > 1
-
-            if grouped:
-                return int(coord.group.volume)
-
-            # Ungrouped: mirror player volume semantics
-            return int(self.soco.volume)
-        except (SoCoException, OSError) as err:
-            _LOGGER.debug(
-                "Failed to read group/player volume for %s: %s",
-                self.speaker.zone_name,
-                err,
-            )
-            return None
-
-    async def _async_refresh_from_device(self) -> None:
-        """Read the current volume and update availability/value."""
-        now = time.monotonic()
-        # Coalesce refreshes to avoid churn when activity/state signals arrive in bursts.
-        if (now - self._last_refresh_ts) < GROUP_VOLUME_REFRESH_DELAY:
-            return
-        self._last_refresh_ts = now
-
-        is_coord = self.speaker.is_coordinator
-
-        # Non-coordinators: visible but unavailable.
-        if not is_coord:
-            if self._is_coord or self._value is not None:
-                self._is_coord = False
-                self._value = None
-                self.async_write_ha_state()
-            return
-
-        # Coordinator: available; read volume in executor to avoid blocking the loop.
-        vol = await self.hass.async_add_executor_job(
-            self._get_group_or_player_volume_safe
-        )
-
-        self._is_coord = True
-
-        if vol is None:
-            if self._value is not None:
-                self._value = None
-                self.async_write_ha_state()
-            return
-
-        if self._value != vol:
-            self._value = vol
-            self.async_write_ha_state()
+    @soco_error()
+    def poll_state(self) -> None:
+        """Poll the device for the current state."""
+        self.speaker.update_group_volume()
 
     @property
     def available(self) -> bool:
@@ -263,89 +181,16 @@ class SonosGroupVolumeEntity(SonosEntity, NumberEntity):
     @property
     def native_value(self) -> float | None:
         """Return the current group volume (0–100) or None if unknown."""
-        return None if self._value is None else float(self._value)
+        value = self.speaker.group_volume
+        return None if value is None else float(value)
 
     @soco_error()
     def set_native_value(self, value: float) -> None:
         """Set the group volume (0–100), or player volume when ungrouped."""
-        level = int(value + 0.5)
-
-        try:
-            coord_soco = (self.speaker.coordinator or self.speaker).soco
-            group = getattr(coord_soco, "group", None)
-            members_any = getattr(group, "members", None) if group is not None else None
-            members = cast(Sequence[object] | None, members_any)
-            grouped = members is not None and len(members) > 1
-        except SoCoException, OSError:
-            # If we can't determine grouping, do not attempt a write.
-            return
-
-        if grouped:
-            coord_soco.group.volume = level
-        else:
-            self.soco.volume = level
+        self.speaker.set_group_volume(int(value + 0.5))
 
     async def async_set_native_value(self, value: float) -> None:
-        """Optimistically update state, run the blocking write in an executor, then schedule refresh."""
-        self._value = int(value + 0.5)
+        """Optimistically update state, then write in executor."""
+        self.speaker.group_volume = int(value + 0.5)
         self.async_write_ha_state()
         await self.hass.async_add_executor_job(self.set_native_value, value)
-        self._schedule_delayed_refresh(GROUP_VOLUME_REFRESH_DELAY)
-
-    async def async_update(self) -> None:
-        """Update the entity state.
-
-        Called by Home Assistant when polling is required, including
-        async_update_ha_state(force_refresh=True) in tests.
-
-        Bypass coalescing here so a forced refresh actually refreshes.
-        """
-        self._last_refresh_ts = 0.0
-        await self._async_refresh_from_device()
-
-    async def _async_fallback_poll(self) -> None:
-        """Fallback polling path when event subscriptions are unavailable."""
-        await self._async_refresh_from_device()
-
-    async def async_added_to_hass(self) -> None:
-        """Bind signals, perform initial populate/refresh, and start subscriptions."""
-        await super().async_added_to_hass()
-
-        # Listen for any speaker activity
-        self._unsubscribe_activity = async_dispatcher_connect(
-            self.hass,
-            f"{SONOS_SPEAKER_ACTIVITY}-{self.speaker.uid}",
-            self._on_any_activity,
-        )
-        self.async_on_remove(self._unsubscribe_activity)
-
-        # Always ensure we listen to our own member state
-        self._unsubscribe_member = async_dispatcher_connect(
-            self.hass,
-            f"{SONOS_STATE_UPDATED}-{self.speaker.uid}",
-            self._on_member_state_updated,
-        )
-        self.async_on_remove(self._unsubscribe_member)
-
-        # Bootstrap: refresh once, then schedule a delayed settle refresh
-        await self._async_refresh_from_device()
-        self._schedule_delayed_refresh(GROUP_VOLUME_REFRESH_DELAY)
-
-    async def async_will_remove_from_hass(self) -> None:
-        """Cancel any pending delayed refresh on removal."""
-        await super().async_will_remove_from_hass()
-
-        # Cancel any pending delayed refresh
-        if self._delay_unsubscribe is not None:
-            self._delay_unsubscribe()
-            self._delay_unsubscribe = None
-
-    @callback
-    def _on_member_state_updated(self, *_: object) -> None:
-        """Member state changed; schedule refresh."""
-        self._schedule_delayed_refresh(GROUP_VOLUME_REFRESH_DELAY)
-
-    @callback
-    def _on_any_activity(self, *_: object) -> None:
-        """Any speaker activity — schedule refresh."""
-        self._schedule_delayed_refresh(GROUP_VOLUME_REFRESH_DELAY)

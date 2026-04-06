@@ -5,10 +5,7 @@
       'RINCON_test': dict({
         '_group_members_missing': list([
         ]),
-        '_last_activity': -1200.0,
         '_last_event_cache': dict({
-        }),
-        'activity_stats': dict({
         }),
         'available': True,
         'battery_info': dict({
@@ -98,10 +95,7 @@
   dict({
     '_group_members_missing': list([
     ]),
-    '_last_activity': -1200.0,
     '_last_event_cache': dict({
-    }),
-    'activity_stats': dict({
     }),
     'available': True,
     'battery_info': dict({
