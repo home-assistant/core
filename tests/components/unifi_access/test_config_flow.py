@@ -2,7 +2,8 @@
 
 from __future__ import annotations
 
-from unittest.mock import AsyncMock, MagicMock
+import ssl
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 from unifi_access_api import ApiAuthError, ApiConnectionError
@@ -361,3 +362,39 @@ async def test_reconfigure_flow_errors(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
+
+
+@pytest.mark.parametrize(
+    ("verify_ssl", "expected_ssl_context_type"),
+    [
+        (False, ssl.SSLContext),
+        (True, type(None)),
+    ],
+)
+async def test_user_flow_ssl_context(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_client: MagicMock,
+    verify_ssl: bool,
+    expected_ssl_context_type: type,
+) -> None:
+    """Test that a pre-warmed no-verify SSL context is passed when verify_ssl is False."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    with patch(
+        "homeassistant.components.unifi_access.config_flow.UnifiAccessApiClient",
+        wraps=lambda **kwargs: mock_client,
+    ) as patched_client:
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={
+                CONF_HOST: MOCK_HOST,
+                CONF_API_TOKEN: MOCK_API_TOKEN,
+                CONF_VERIFY_SSL: verify_ssl,
+            },
+        )
+
+    _, call_kwargs = patched_client.call_args
+    assert isinstance(call_kwargs["ssl_context"], expected_ssl_context_type)
