@@ -877,7 +877,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'q10_status',
+    'translation_key': 'status',
     'unique_id': 'status_q10_duid',
     'unit_of_measurement': None,
   })

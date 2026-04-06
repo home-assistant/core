@@ -85,9 +85,6 @@
       "mop_life_time_left": {
         "default": "mdi:texture"
       },
-      "q10_status": {
-        "default": "mdi:information-outline"
-      },
       "q7_status": {
         "default": "mdi:information-outline"
       },
