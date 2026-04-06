@@ -130,7 +130,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ShellyConfigEntry) -> bo
 
     # The community integration for Shelly devices uses Shelly domain as well as Core
     # integration. If the user removes the community integration but doesn't remove
-    # the config entry, core integration will try to configure that config entry with
+    # the config entry, Core integration will try to configure that config entry with
     # an error. The config entry data for this community integration doesn't contain
     # host value, so if host isn't present, config entry will not be configured.
     if not entry.data.get(CONF_HOST):
