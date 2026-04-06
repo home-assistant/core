@@ -23,6 +23,7 @@ async def setup_integration(
         domain=DOMAIN,
         data={CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD, CONF_OEM: OEM},
         title=USERNAME,
+        unique_id=USERNAME.lower(),
     )
     entry.add_to_hass(hass)
 
@@ -58,7 +59,7 @@ async def test_live_sensor_values(
     # Entity names depend on translation; check via unique_id pattern
     registry = er.async_get(hass)
     entity = registry.async_get_entity_id(
-        "sensor", DOMAIN, f"{entry.entry_id}_photovoltaic"
+        "sensor", DOMAIN, f"{entry.unique_id}_photovoltaic"
     )
     assert entity is not None
     state = hass.states.get(entity)
@@ -73,7 +74,7 @@ async def test_battery_sensor_present(
     entry = setup_integration
     registry = er.async_get(hass)
     entity = registry.async_get_entity_id(
-        "sensor", DOMAIN, f"{entry.entry_id}_battery_stateOfCharge"
+        "sensor", DOMAIN, f"{entry.unique_id}_battery_stateOfCharge"
     )
     assert entity is not None
     state = hass.states.get(entity)
@@ -98,6 +99,7 @@ async def test_battery_sensor_none_without_battery(
             CONF_OEM: OEM,
         },
         title="other@example.com",
+        unique_id="other@example.com",
     )
     entry.add_to_hass(hass)
     await hass.config_entries.async_setup(entry.entry_id)
@@ -105,7 +107,7 @@ async def test_battery_sensor_none_without_battery(
 
     registry = er.async_get(hass)
     entity = registry.async_get_entity_id(
-        "sensor", DOMAIN, f"{entry.entry_id}_battery_stateOfCharge"
+        "sensor", DOMAIN, f"{entry.unique_id}_battery_stateOfCharge"
     )
     assert entity is not None
     state = hass.states.get(entity)
@@ -121,7 +123,7 @@ async def test_grid_meter_ws_to_wh_conversion(
     entry = setup_integration
     registry = er.async_get(hass)
     entity = registry.async_get_entity_id(
-        "sensor", DOMAIN, f"{entry.entry_id}_gridMeterReadingPositive"
+        "sensor", DOMAIN, f"{entry.unique_id}_gridMeterReadingPositive"
     )
     assert entity is not None
     state = hass.states.get(entity)

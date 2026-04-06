@@ -145,7 +145,6 @@ LIVE_BASE_DESCRIPTIONS: tuple[GridxSensorEntityDescription, ...] = (
         key="directConsumptionRate",
         translation_key="direct_consumption_rate",
         native_unit_of_measurement=PERCENTAGE,
-        device_class=SensorDeviceClass.POWER_FACTOR,
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda d: (
             round(float(d["directConsumptionRate"]) * 100, 2)
@@ -157,7 +156,6 @@ LIVE_BASE_DESCRIPTIONS: tuple[GridxSensorEntityDescription, ...] = (
         key="selfConsumptionRate",
         translation_key="self_consumption_rate",
         native_unit_of_measurement=PERCENTAGE,
-        device_class=SensorDeviceClass.POWER_FACTOR,
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda d: (
             round(float(d["selfConsumptionRate"]) * 100, 2)
@@ -169,7 +167,6 @@ LIVE_BASE_DESCRIPTIONS: tuple[GridxSensorEntityDescription, ...] = (
         key="selfSufficiencyRate",
         translation_key="self_sufficiency_rate",
         native_unit_of_measurement=PERCENTAGE,
-        device_class=SensorDeviceClass.POWER_FACTOR,
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda d: (
             round(float(d["selfSufficiencyRate"]) * 100, 2)
@@ -508,7 +505,6 @@ HIST_BASE_DESCRIPTIONS: tuple[GridxSensorEntityDescription, ...] = (
         key="hist_selfConsumptionRate",
         translation_key="hist_self_consumption_rate",
         native_unit_of_measurement=PERCENTAGE,
-        device_class=SensorDeviceClass.POWER_FACTOR,
         state_class=SensorStateClass.MEASUREMENT,
         coordinator_type="hist",
         value_fn=lambda d: (
@@ -521,7 +517,6 @@ HIST_BASE_DESCRIPTIONS: tuple[GridxSensorEntityDescription, ...] = (
         key="hist_selfSufficiencyRate",
         translation_key="hist_self_sufficiency_rate",
         native_unit_of_measurement=PERCENTAGE,
-        device_class=SensorDeviceClass.POWER_FACTOR,
         state_class=SensorStateClass.MEASUREMENT,
         coordinator_type="hist",
         value_fn=lambda d: (
@@ -588,9 +583,9 @@ class GridxLiveSensorEntity(CoordinatorEntity[GridxLiveCoordinator], SensorEntit
         """Initialize the live sensor."""
         super().__init__(coordinator)
         self.entity_description: GridxSensorEntityDescription = description
-        self._attr_unique_id = f"{entry.entry_id}_{description.key}"
+        self._attr_unique_id = f"{entry.unique_id}_{description.key}"
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, entry.entry_id)},
+            identifiers={(DOMAIN, str(entry.unique_id))},
             name="GridX GridBox",
             manufacturer="gridX / Viessmann",
             model="GridBox",
@@ -621,9 +616,9 @@ class GridxHistoricalSensorEntity(
         """Initialize the historical sensor."""
         super().__init__(coordinator)
         self.entity_description: GridxSensorEntityDescription = description
-        self._attr_unique_id = f"{entry.entry_id}_{description.key}"
+        self._attr_unique_id = f"{entry.unique_id}_{description.key}"
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, entry.entry_id)},
+            identifiers={(DOMAIN, str(entry.unique_id))},
             name="GridX GridBox",
             manufacturer="gridX / Viessmann",
             model="GridBox",

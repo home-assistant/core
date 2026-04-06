@@ -10,7 +10,7 @@ import httpx
 
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.httpx_client import create_async_httpx_client
 
 from .client import async_create_connector
@@ -47,26 +47,34 @@ async def async_setup_entry(hass: HomeAssistant, entry: GridxConfigEntry) -> boo
     try:
         connector = await async_create_connector(config, httpx_client)
     except PermissionError as err:
+        await httpx_client.aclose()
         LOGGER.error("GridX authentication failed: %s", err)
-        raise ConfigEntryNotReady(
+        raise ConfigEntryAuthFailed(
             translation_domain=DOMAIN,
             translation_key="invalid_auth",
         ) from err
     except httpx.HTTPStatusError as err:
+        await httpx_client.aclose()
         status = err.response.status_code if err.response else None
-        key = "invalid_auth" if status in (401, 403) else "cannot_connect"
         LOGGER.error("Error connecting to GridX: %s", err)
+        if status in (401, 403):
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN,
+                translation_key="invalid_auth",
+            ) from err
         raise ConfigEntryNotReady(
             translation_domain=DOMAIN,
-            translation_key=key,
+            translation_key="cannot_connect",
         ) from err
     except httpx.HTTPError as err:
+        await httpx_client.aclose()
         LOGGER.error("Error connecting to GridX: %s", err)
         raise ConfigEntryNotReady(
             translation_domain=DOMAIN,
             translation_key="cannot_connect",
         ) from err
     except (RuntimeError, TypeError, ValueError) as err:
+        await httpx_client.aclose()
         LOGGER.error("Error connecting to GridX: %s", err)
         raise ConfigEntryNotReady(
             translation_domain=DOMAIN,

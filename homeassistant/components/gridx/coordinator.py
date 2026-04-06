@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timedelta
+from datetime import timedelta
 from typing import TYPE_CHECKING, Any, TypedDict
 
 import httpx
@@ -10,6 +10,7 @@ import httpx
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.util import dt as dt_util
 
 from .client import GridxConnector
 from .const import DOMAIN, HIST_UPDATE_INTERVAL, LIVE_UPDATE_INTERVAL, LOGGER
@@ -36,11 +37,12 @@ async def _fetch_live(connector: GridxConnector) -> dict[str, Any]:
         ) from err
     except httpx.HTTPStatusError as err:
         status = err.response.status_code if err.response else None
-        key = "invalid_auth" if status in (401, 403) else "cannot_connect"
-        raise ConfigEntryAuthFailed(
-            translation_domain=DOMAIN,
-            translation_key=key,
-        ) from err
+        if status in (401, 403):
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN,
+                translation_key="invalid_auth",
+            ) from err
+        raise UpdateFailed(f"Error fetching GridX live data: {err}") from err
     except httpx.HTTPError as err:
         raise UpdateFailed(f"Error fetching GridX live data: {err}") from err
     except (RuntimeError, TypeError, ValueError) as err:
@@ -53,8 +55,7 @@ async def _fetch_live(connector: GridxConnector) -> dict[str, Any]:
 
 async def _fetch_historical(connector: GridxConnector) -> GridxHistoricalData:
     """Fetch today's historical totals."""
-    now = datetime.now().astimezone()
-    midnight = now.replace(hour=0, minute=0, second=0, microsecond=0)
+    midnight = dt_util.start_of_local_day()
     tomorrow = midnight + timedelta(days=1)
 
     try:
@@ -70,11 +71,12 @@ async def _fetch_historical(connector: GridxConnector) -> GridxHistoricalData:
         ) from err
     except httpx.HTTPStatusError as err:
         status = err.response.status_code if err.response else None
-        key = "invalid_auth" if status in (401, 403) else "cannot_connect"
-        raise ConfigEntryAuthFailed(
-            translation_domain=DOMAIN,
-            translation_key=key,
-        ) from err
+        if status in (401, 403):
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN,
+                translation_key="invalid_auth",
+            ) from err
+        raise UpdateFailed(f"Error fetching GridX historical data: {err}") from err
     except httpx.HTTPError as err:
         raise UpdateFailed(f"Error fetching GridX historical data: {err}") from err
     except (RuntimeError, TypeError, ValueError) as err:
