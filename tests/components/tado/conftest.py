@@ -27,6 +27,10 @@ def mock_tado_api() -> Generator[MagicMock]:
         client.device_activation_status.return_value = DeviceActivationStatus.COMPLETED
         client.get_me.return_value = load_json_object_fixture("me.json", DOMAIN)
         client.get_refresh_token.return_value = "refresh"
+        client.rate_limit_info.return_value = {
+            "limit": "1000",
+            "remaining": "999",
+        }
         yield client
 
 
@@ -115,6 +119,10 @@ async def init_integration(hass: HomeAssistant):
         m.get(
             "https://my.tado.com/api/v2/homes/1/weather",
             text=await async_load_fixture(hass, weather_fixture, DOMAIN),
+            headers={
+                "RateLimit-Policy": '"perday";q=20000;w=86400',
+                "RateLimit": '"perday";r=15211',
+            },
         )
         m.get(
             "https://my.tado.com/api/v2/homes/1/state",
