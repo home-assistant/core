@@ -29,10 +29,12 @@ class DeprecatedFanSpeedRepairFlow(RepairsFlow):
     ) -> data_entry_flow.FlowResult:
         """Handle the confirm step of a fix flow."""
         if user_input is not None:
-            er.async_get(self.hass).async_update_entity(
-                self.entity_id,
-                disabled_by=er.RegistryEntryDisabler.USER,
-            )
+            entity_registry = er.async_get(self.hass)
+            if entity_registry.async_get(self.entity_id):
+                entity_registry.async_update_entity(
+                    self.entity_id,
+                    disabled_by=er.RegistryEntryDisabler.USER,
+                )
             return self.async_create_entry(data={})
 
         return self.async_show_form(
