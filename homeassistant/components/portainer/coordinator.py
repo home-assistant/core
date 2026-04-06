@@ -212,19 +212,19 @@ class PortainerCoordinator(DataUpdateCoordinator[dict[int, PortainerCoordinatorD
                         else None,
                     )
 
-                # Separately fetch stats for running containers
-                running_containers = [
+                # Separately fetch stats for active containers
+                active_containers = [
                     container
                     for container in containers
                     if container.state
                     in (ContainerState.RUNNING, ContainerState.PAUSED)
                 ]
-                if running_containers:
+                if active_containers:
                     container_stats = dict(
                         zip(
                             (
                                 self._get_container_name(container.names[0])
-                                for container in running_containers
+                                for container in active_containers
                             ),
                             await asyncio.gather(
                                 *(
@@ -232,7 +232,7 @@ class PortainerCoordinator(DataUpdateCoordinator[dict[int, PortainerCoordinatorD
                                         endpoint_id=endpoint.id,
                                         container_id=container.id,
                                     )
-                                    for container in running_containers
+                                    for container in active_containers
                                 )
                             ),
                             strict=False,
