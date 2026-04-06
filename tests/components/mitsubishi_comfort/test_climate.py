@@ -21,6 +21,7 @@ from homeassistant.components.mitsubishi_comfort.climate import MitsubishiComfor
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
+
 from tests.common import MockConfigEntry
 
 from .conftest import _make_device_status
