@@ -94,7 +94,7 @@
         "name": "Reset air filter consumable"
       },
       "reset_dock_cleaning_brush_consumable": {
-        "name": "Reset dock maintenance brush consumable"
+        "name": "Reset dock cleaning brush consumable"
       },
       "reset_dock_strainer_consumable": {
         "name": "Reset dock strainer consumable"
