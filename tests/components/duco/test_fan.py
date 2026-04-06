@@ -26,7 +26,7 @@ from homeassistant.helpers import entity_registry as er
 
 from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
-_FAN_ENTITY = "fan.living"
+_FAN_ENTITY = "fan.living_manual_control"
 
 
 @pytest.mark.usefixtures("init_fan_integration")
@@ -47,9 +47,9 @@ async def test_fan_entity_state(
         (SERVICE_SET_PERCENTAGE, {ATTR_PERCENTAGE: 33}, "CNT1"),
         (SERVICE_SET_PERCENTAGE, {ATTR_PERCENTAGE: 66}, "CNT2"),
         (SERVICE_SET_PERCENTAGE, {ATTR_PERCENTAGE: 100}, "CNT3"),
-        (SERVICE_SET_PRESET_MODE, {ATTR_PRESET_MODE: "auto"}, "AUTO"),
-        (SERVICE_TURN_ON, {}, "AUTO"),
+        (SERVICE_TURN_ON, {}, "CNT2"),
         (SERVICE_TURN_OFF, {}, "AUTO"),
+        (SERVICE_SET_PRESET_MODE, {ATTR_PRESET_MODE: "auto"}, "AUTO"),
     ],
 )
 async def test_fan_set_state(
