@@ -461,12 +461,14 @@ async def test_reconfigure_step_password_preserved(
     assert result.get("type") is FlowResultType.FORM
     assert result.get("step_id") == "network"
     # Verify the password is pre-filled in the suggested values
-    assert result["data_schema"]({
-        CONF_TLS: True,
-        CONF_HOST: "192.168.0.1",
-        CONF_PORT: 27015,
-        CONF_PASSWORD: "secret",
-    })
+    assert result["data_schema"](
+        {
+            CONF_TLS: True,
+            CONF_HOST: "192.168.0.1",
+            CONF_PORT: 27015,
+            CONF_PASSWORD: "secret",
+        }
+    )
 
     # Submit without changing the password
     result = await hass.config_entries.flow.async_configure(
