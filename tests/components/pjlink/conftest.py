@@ -3,6 +3,7 @@
 from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
+from aiopjlink import Power, Sources
 import pytest
 
 from homeassistant.components.pjlink.const import DOMAIN
@@ -31,13 +32,40 @@ def mock_config_entry() -> MockConfigEntry:
 
 
 @pytest.fixture
-def mock_projector() -> Generator[MagicMock]:
+def mock_pjlink() -> Generator[MagicMock]:
     """Mock the PJLink Projector in the config flow."""
-    with patch(
-        "homeassistant.components.pjlink.config_flow.Projector",
-        autospec=True,
-    ) as mock_projector:
-        mock_instance = mock_projector.from_address.return_value
-        mock_instance.get_name.return_value = "test name"
-        mock_instance.__enter__.return_value = mock_instance
-        yield mock_projector
+
+    with (
+        patch("homeassistant.components.pjlink.PJLink") as mock_init,
+        patch("homeassistant.components.pjlink.config_flow.PJLink") as mock_config,
+    ):
+        instance = MagicMock()
+        instance.__aenter__ = AsyncMock(return_value=instance)
+        instance.__aexit__ = AsyncMock(return_value=None)
+
+        instance.info = MagicMock()
+        instance.info.projector_name = AsyncMock(return_value="test name")
+
+        instance.power = MagicMock()
+        instance.power.get = AsyncMock(return_value=Power.State.OFF)
+        instance.power.turn_off = AsyncMock()
+        instance.power.turn_on = AsyncMock()
+
+        instance.sources = MagicMock()
+        instance.sources.get = AsyncMock(return_value=(Sources.Mode.DIGITAL, 1))
+        instance.sources.available = AsyncMock(
+            return_value=[
+                (Sources.Mode.DIGITAL, 1),
+                (Sources.Mode.DIGITAL, 2),
+                (Sources.Mode.VIDEO, 1),
+            ]
+        )
+        instance.sources.set = AsyncMock()
+
+        instance.mute = MagicMock()
+        instance.mute.status = AsyncMock(return_value=(False, True))
+        instance.mute.audio = AsyncMock()
+
+        mock_init.return_value = instance
+        mock_config.return_value = instance
+        yield instance

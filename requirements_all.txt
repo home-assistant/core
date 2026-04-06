@@ -356,6 +356,9 @@ aiooui==0.1.9
 # homeassistant.components.pegel_online
 aiopegelonline==0.1.1
 
+# homeassistant.components.pjlink
+aiopjlink2==1.0.7
+
 # homeassistant.components.acmeda
 aiopulse==0.4.6
 
@@ -2386,9 +2389,6 @@ pypck==0.9.11
 
 # homeassistant.components.pglab
 pypglab==0.0.5
-
-# homeassistant.components.pjlink
-pypjlink2==1.2.1
 
 # homeassistant.components.plaato
 pyplaato==0.0.19
