@@ -16,8 +16,6 @@ from evohomeasync2.const import (
 from evohomeasync2.schemas.const import (
     SystemMode as EvoSystemMode,
     ZoneMode as EvoZoneMode,
-    ZoneModelType as EvoZoneModelType,
-    ZoneType as EvoZoneType,
 )
 
 from homeassistant.components.climate import (
@@ -43,7 +41,7 @@ from homeassistant.util import dt as dt_util
 
 from .const import ATTR_DURATION, ATTR_PERIOD, DOMAIN, EVOHOME_DATA, EvoService
 from .coordinator import EvoDataUpdateCoordinator
-from .entity import EvoChild, EvoEntity
+from .entity import EvoChild, EvoEntity, is_valid_zone
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -70,16 +68,16 @@ HA_PRESET_TO_EVO = {v: k for k, v in EVO_PRESET_TO_HA.items()}
 
 async def async_setup_platform(
     hass: HomeAssistant,
-    config: ConfigType,
+    _: ConfigType,
     async_add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
-    """Create the evohome Controller, and its Zones, if any."""
+    """Set up the climate platform for Evohome."""
+
     if discovery_info is None:
         return
 
     coordinator = hass.data[EVOHOME_DATA].coordinator
-    loc_idx = hass.data[EVOHOME_DATA].loc_idx
     tcs = hass.data[EVOHOME_DATA].tcs
 
     _LOGGER.debug(
@@ -87,16 +85,13 @@ async def async_setup_platform(
         tcs.model,
         tcs.id,
         tcs.location.name,
-        loc_idx,
+        coordinator.loc_idx,
     )
 
     entities: list[EvoController | EvoZone] = [EvoController(coordinator, tcs)]
 
     for zone in tcs.zones:
-        if (
-            zone.model == EvoZoneModelType.HEATING_ZONE
-            or zone.type == EvoZoneType.THERMOSTAT
-        ):
+        if is_valid_zone(zone):
             _LOGGER.debug(
                 "Adding: %s (%s), id=%s, name=%s",
                 zone.type,
@@ -154,6 +149,7 @@ class EvoClimateEntity(EvoEntity, ClimateEntity):
 class EvoZone(EvoChild, EvoClimateEntity):
     """Base for any evohome-compatible heating zone."""
 
+    _attr_icon = "mdi:thermostat"
     _attr_preset_modes = list(HA_PRESET_TO_EVO)
 
     _evo_device: evo.Zone
@@ -330,7 +326,7 @@ class EvoController(EvoClimateEntity):
     It is assumed there is only one TCS per location, and they are thus synonymous.
     """
 
-    _attr_icon = "mdi:thermostat"
+    _attr_icon = "mdi:thermostat-box"
     _attr_precision = PRECISION_TENTHS
 
     _evo_device: evo.ControlSystem

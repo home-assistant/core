@@ -1,0 +1,491 @@
+# serializer version: 1
+# name: test_setup_platform[botched][button.evohome_3432521_reset_override-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'status': dict({
+      }),
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.evohome_3432521_reset_override',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_setup_platform[botched][button.evohome_3432522_reset_system-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'status': dict({
+      }),
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.evohome_3432522_reset_system',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_setup_platform[botched][button.evohome_3432576_reset_override-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'status': dict({
+      }),
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.evohome_3432576_reset_override',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_setup_platform[botched][button.evohome_3432577_reset_override-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'status': dict({
+      }),
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.evohome_3432577_reset_override',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_setup_platform[botched][button.evohome_3432578_reset_override-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'status': dict({
+      }),
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.evohome_3432578_reset_override',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_setup_platform[botched][button.evohome_3432579_reset_override-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'status': dict({
+      }),
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.evohome_3432579_reset_override',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_setup_platform[botched][button.evohome_3432580_reset_override-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'status': dict({
+      }),
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.evohome_3432580_reset_override',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_setup_platform[botched][button.evohome_3449703_reset_override-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'status': dict({
+      }),
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.evohome_3449703_reset_override',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_setup_platform[default][button.evohome_3432521_reset_override-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'status': dict({
+      }),
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.evohome_3432521_reset_override',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_setup_platform[default][button.evohome_3432522_reset_system-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'status': dict({
+      }),
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.evohome_3432522_reset_system',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_setup_platform[default][button.evohome_3432576_reset_override-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'status': dict({
+      }),
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.evohome_3432576_reset_override',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_setup_platform[default][button.evohome_3432577_reset_override-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'status': dict({
+      }),
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.evohome_3432577_reset_override',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_setup_platform[default][button.evohome_3432578_reset_override-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'status': dict({
+      }),
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.evohome_3432578_reset_override',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_setup_platform[default][button.evohome_3432579_reset_override-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'status': dict({
+      }),
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.evohome_3432579_reset_override',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_setup_platform[default][button.evohome_3432580_reset_override-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'status': dict({
+      }),
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.evohome_3432580_reset_override',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_setup_platform[default][button.evohome_3449703_reset_override-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'status': dict({
+      }),
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.evohome_3449703_reset_override',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_setup_platform[default][button.evohome_3450733_reset_override-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'status': dict({
+      }),
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.evohome_3450733_reset_override',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_setup_platform[h032585][button.evohome_416856_reset_system-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'status': dict({
+      }),
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.evohome_416856_reset_system',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_setup_platform[h032585][button.evohome_416856z_reset_override-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'status': dict({
+      }),
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.evohome_416856z_reset_override',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_setup_platform[h099625][button.evohome_8557535_reset_system-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'status': dict({
+      }),
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.evohome_8557535_reset_system',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_setup_platform[h099625][button.evohome_8557539_reset_override-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'status': dict({
+      }),
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.evohome_8557539_reset_override',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_setup_platform[h099625][button.evohome_8557541_reset_override-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'status': dict({
+      }),
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.evohome_8557541_reset_override',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_setup_platform[h139906][button.evohome_3454854_reset_override-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'status': dict({
+      }),
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.evohome_3454854_reset_override',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_setup_platform[h139906][button.evohome_3454855_reset_override-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'status': dict({
+      }),
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.evohome_3454855_reset_override',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_setup_platform[h139906][button.evohome_3454856_reset_system-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'status': dict({
+      }),
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.evohome_3454856_reset_system',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_setup_platform[h157546][button.evohome_10090505_reset_override-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'status': dict({
+      }),
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.evohome_10090505_reset_override',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_setup_platform[h157546][button.evohome_10090506_reset_override-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'status': dict({
+      }),
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.evohome_10090506_reset_override',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_setup_platform[h157546][button.evohome_10090507_reset_override-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'status': dict({
+      }),
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.evohome_10090507_reset_override',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_setup_platform[h157546][button.evohome_10090508_reset_override-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'status': dict({
+      }),
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.evohome_10090508_reset_override',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_setup_platform[h157546][button.evohome_10090509_reset_override-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'status': dict({
+      }),
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.evohome_10090509_reset_override',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_setup_platform[h157546][button.evohome_10090510_reset_system-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'status': dict({
+      }),
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.evohome_10090510_reset_system',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_setup_platform[minimal][button.evohome_3432522_reset_system-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'status': dict({
+      }),
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.evohome_3432522_reset_system',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_setup_platform[minimal][button.evohome_3432576_reset_override-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'status': dict({
+      }),
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.evohome_3432576_reset_override',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_setup_platform[sys_004][button.evohome_4187768_reset_override-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'status': dict({
+      }),
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.evohome_4187768_reset_override',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_setup_platform[sys_004][button.evohome_4187769_reset_system-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'status': dict({
+      }),
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.evohome_4187769_reset_system',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---

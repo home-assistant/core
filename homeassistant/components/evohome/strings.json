@@ -1,4 +1,14 @@
 {
+  "entity": {
+    "button": {
+      "clear_zone_override": {
+        "name": "Reset zone"
+      },
+      "reset_system_mode": {
+        "name": "Reset system"
+      }
+    }
+  },
   "exceptions": {
     "invalid_system_mode": {
       "message": "The requested system mode is not supported: {error}"

@@ -6,6 +6,10 @@ import logging
 from typing import Any
 
 import evohomeasync2 as evo
+from evohomeasync2.schemas.const import (
+    ZoneModelType as EvoZoneModelType,
+    ZoneType as EvoZoneType,
+)
 from evohomeasync2.schemas.typedefs import DayOfWeekDhwT
 
 from homeassistant.core import callback
@@ -18,6 +22,14 @@ from .coordinator import EvoDataUpdateCoordinator
 _LOGGER = logging.getLogger(__name__)
 
 
+def is_valid_zone(zone: evo.Zone) -> bool:
+    """Check if an Evohome zone should have climate and button entities."""
+    return (
+        zone.model == EvoZoneModelType.HEATING_ZONE
+        or zone.type == EvoZoneType.THERMOSTAT
+    )
+
+
 class EvoEntity(CoordinatorEntity[EvoDataUpdateCoordinator]):
     """Base for any evohome-compatible entity (controller, DHW, zone).
 
@@ -27,7 +39,7 @@ class EvoEntity(CoordinatorEntity[EvoDataUpdateCoordinator]):
 
     _evo_device: evo.ControlSystem | evo.HotWater | evo.Zone
     _evo_id_attr: str
-    _evo_state_attr_names: tuple[str, ...]
+    _evo_state_attr_names: tuple[str, ...] = ()
 
     def __init__(
         self,
