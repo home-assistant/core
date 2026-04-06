@@ -13,6 +13,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util.percentage import percentage_to_ordered_list_item
 
+from .const import DOMAIN
 from .coordinator import DucoConfigEntry, DucoCoordinator
 from .entity import DucoEntity
 
@@ -149,5 +150,9 @@ class DucoVentilationFanEntity(DucoEntity, FanEntity):
                 self._node_id, state
             )
         except DucoError as err:
-            raise HomeAssistantError(f"Failed to set ventilation state: {err}") from err
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="failed_to_set_state",
+                translation_placeholders={"error": repr(err)},
+            ) from err
         await self.coordinator.async_request_refresh()

@@ -18,9 +18,10 @@ from .const import DOMAIN, SCAN_INTERVAL
 _LOGGER = logging.getLogger(__name__)
 
 type DucoConfigEntry = ConfigEntry[DucoCoordinator]
+type DucoData = dict[int, Node]
 
 
-class DucoCoordinator(DataUpdateCoordinator[dict[int, Node]]):
+class DucoCoordinator(DataUpdateCoordinator[DucoData]):
     """Coordinator for the Duco integration."""
 
     config_entry: DucoConfigEntry
@@ -47,16 +48,28 @@ class DucoCoordinator(DataUpdateCoordinator[dict[int, Node]]):
         try:
             self.board_info = await self.client.async_get_board_info()
         except DucoConnectionError as err:
-            raise UpdateFailed(f"Cannot connect to Duco box: {err}") from err
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="cannot_connect",
+                translation_placeholders={"error": repr(err)},
+            ) from err
         except DucoError as err:
             raise ConfigEntryError(f"Duco API error: {err}") from err
 
-    async def _async_update_data(self) -> dict[int, Node]:
+    async def _async_update_data(self) -> DucoData:
         """Fetch node data from the Duco box."""
         try:
             nodes = await self.client.async_get_nodes()
         except DucoConnectionError as err:
-            raise UpdateFailed(f"Cannot connect to Duco box: {err}") from err
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="cannot_connect",
+                translation_placeholders={"error": repr(err)},
+            ) from err
         except DucoError as err:
-            raise UpdateFailed(f"Duco API error: {err}") from err
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="cannot_connect",
+                translation_placeholders={"error": repr(err)},
+            ) from err
         return {node.node_id: node for node in nodes}
