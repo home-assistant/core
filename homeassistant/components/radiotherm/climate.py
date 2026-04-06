@@ -47,10 +47,17 @@ PRESET_MODES = [
     PRESET_HOLIDAY,
 ]
 
+# HVAC operation list per model.
 CT30_OPERATION_LIST = [HVACMode.OFF, HVACMode.HEAT, HVACMode.COOL]
-CT30_FAN_OPERATION_LIST = [FAN_ON, FAN_AUTO]
-OPERATION_LIST = [HVACMode.OFF, HVACMode.HEAT, HVACMode.COOL, HVACMode.HEAT_COOL]
-FAN_OPERATION_LIST = [FAN_ON, STATE_CIRCULATE, FAN_AUTO]
+CT50_80_OPERATION_LIST = [
+    HVACMode.OFF,
+    HVACMode.HEAT,
+    HVACMode.COOL,
+    HVACMode.HEAT_COOL,
+]
+# Fan operation list per model.
+CT30_50_FAN_OPERATION_LIST = [FAN_ON, FAN_AUTO]
+CT80_FAN_OPERATION_LIST = [FAN_ON, STATE_CIRCULATE, FAN_AUTO]
 
 # Mappings from radiotherm json data codes to and from Home Assistant state
 # flags.  CODE is the thermostat integer code and these map to and
@@ -140,13 +147,16 @@ class RadioThermostat(RadioThermostatEntity, ClimateEntity):
             self._attr_preset_modes = PRESET_MODES
             self._attr_supported_features |= ClimateEntityFeature.PRESET_MODE
 
-        # Set hvac and fan modes for CT30 vs others.
+        # Set hvac and fan modes depending on model.
         if isinstance(self.device, radiotherm.thermostat.CT30):
             self._attr_hvac_modes = CT30_OPERATION_LIST
-            self._attr_fan_modes = CT30_FAN_OPERATION_LIST
+            self._attr_fan_modes = CT30_50_FAN_OPERATION_LIST
+        elif isinstance(self.device, radiotherm.thermostat.CT50):
+            self._attr_hvac_modes = CT50_80_OPERATION_LIST
+            self._attr_fan_modes = CT30_50_FAN_OPERATION_LIST
         else:
-            self._attr_hvac_modes = OPERATION_LIST
-            self._attr_fan_modes = FAN_OPERATION_LIST
+            self._attr_hvac_modes = CT50_80_OPERATION_LIST
+            self._attr_fan_modes = CT80_FAN_OPERATION_LIST
             self._attr_supported_features |= (
                 ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
             )
