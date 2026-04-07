@@ -579,15 +579,18 @@ class CalendarEntity(Entity):
         if (event := self.event) is None:
             return None
 
-        return {
+        attributes = {
             "message": event.summary,
             "all_day": event.all_day,
             "start_time": event.start_datetime_local.strftime(DATE_STR_FORMAT),
             "end_time": event.end_datetime_local.strftime(DATE_STR_FORMAT),
             "location": event.location or "",
-            "geo": event.geo.state_attributes if event.geo is not None else {},
             "description": event.description or "",
         }
+        if event.geo:
+            attributes["geo"] = event.geo.state_attributes
+
+        return attributes
 
     @final
     @property
