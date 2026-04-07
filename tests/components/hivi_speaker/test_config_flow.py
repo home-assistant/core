@@ -2,6 +2,8 @@
 
 from unittest.mock import AsyncMock, patch
 
+import pytest
+
 from homeassistant import config_entries
 from homeassistant.components.hivi_speaker.const import DOMAIN
 from homeassistant.core import HomeAssistant
@@ -30,6 +32,7 @@ async def test_user_flow(
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_single_instance_allowed(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,

@@ -19,6 +19,7 @@ def mock_config_entry() -> MockConfigEntry:
         domain=DOMAIN,
         title="HiVi Speaker",
         data={},
+        unique_id=DOMAIN,
     )
 
 

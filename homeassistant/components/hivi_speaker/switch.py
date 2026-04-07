@@ -421,8 +421,7 @@ async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
-) -> bool:
+) -> None:
     """Set up switch entities."""
     device_manager = hass.data[DOMAIN][config_entry.entry_id]["device_manager"]
     device_manager.set_add_entities_callback("switch", async_add_entities)
-    return True

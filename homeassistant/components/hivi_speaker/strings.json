@@ -11,6 +11,9 @@
         "data": {
           "confirm_refresh": "Confirm to refresh"
         },
+        "data_description": {
+          "confirm_refresh": "When enabled, runs an immediate device discovery refresh."
+        },
         "description": "Confirm to refresh device discovery?"
       },
       "success": {
