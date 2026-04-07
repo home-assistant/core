@@ -3544,7 +3544,7 @@ async def test_restore_backup_file_error(
         ),
     ],
 )
-async def test_initiate_backup_per_agent_encryption(  # TODO: Real backup
+async def test_initiate_backup_per_agent_encryption(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     generate_backup_id: MagicMock,
