@@ -1,15 +1,28 @@
 """Tests for the HiVi Speaker config flow."""
 
+import logging
 from unittest.mock import AsyncMock, patch
 
 import pytest
 
 from homeassistant import config_entries
+from homeassistant.components.hivi_speaker.config_flow import (
+    HIVISpeakerConfigFlow,
+    HIVISpeakerOptionsFlow,
+)
 from homeassistant.components.hivi_speaker.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from tests.common import MockConfigEntry
+
+
+def test_config_flow_async_get_options_flow(
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test static callback returns options flow instance (covers ConfigFlow bridge)."""
+    flow = HIVISpeakerConfigFlow.async_get_options_flow(mock_config_entry)
+    assert isinstance(flow, HIVISpeakerOptionsFlow)
 
 
 async def test_user_flow(
@@ -44,7 +57,9 @@ async def test_second_flow_aborts_when_unique_id_configured(
     with patch(
         "homeassistant.helpers.translation.async_get_translations",
         new_callable=AsyncMock,
-        return_value={"config.abort.already_configured": "Already configured."},
+        return_value={
+            "config.abort.already_configured": "Already configured."
+        },
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
@@ -99,6 +114,38 @@ async def test_options_flow_skip_refresh(
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["data"] == {}
     mock_dm.refresh_discovery.assert_not_called()
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_options_flow_confirm_refresh_skips_when_no_device_manager(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Confirm refresh when device_manager is missing logs warning and still shows success."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.async_block_till_done()
+    # Ensure no device_manager (setup may have run async; entry data must be empty for this branch)
+    hass.data.setdefault(DOMAIN, {})
+    hass.data[DOMAIN][mock_config_entry.entry_id] = {}
+
+    result = await hass.config_entries.options.async_init(
+        mock_config_entry.entry_id,
+        data=None,
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "init"
+
+    caplog.clear()
+    with caplog.at_level(logging.WARNING):
+        result2 = await hass.config_entries.options.async_configure(
+            result["flow_id"],
+            user_input={"confirm_refresh": True},
+        )
+
+    assert result2["type"] is FlowResultType.FORM
+    assert result2["step_id"] == "success"
+    assert "Device manager not available" in caplog.text
 
 
 async def test_options_flow_confirm_refresh_then_success(
