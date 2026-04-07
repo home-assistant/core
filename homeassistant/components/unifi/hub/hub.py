@@ -147,6 +147,13 @@ class UnifiHub:
             CONF_VERIFY_SSL: "ssl_context",
         }
         for key, value in check_keys.items():
+            if key == CONF_VERIFY_SSL:
+                # ssl_context is either False or a SSLContext object, so we need to compare it differently
+                if config_entry.data[CONF_VERIFY_SSL] != bool(
+                    getattr(hub.config, value)
+                ):
+                    hass.config_entries.async_schedule_reload(config_entry.entry_id)
+                    return
             if config_entry.data[key] != getattr(hub.config, value):
                 hass.config_entries.async_schedule_reload(config_entry.entry_id)
                 return
