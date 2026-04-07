@@ -26,7 +26,7 @@ class ProxmoxNodeUpdateEntityDescription(UpdateEntityDescription):
     """Describes Proxmox node update entity."""
 
     installed_version: Callable[[ProxmoxNodeData], str]
-    update_info: Callable[[ProxmoxNodeData], ProxmoxUpdateInfo]
+    update_info: Callable[[ProxmoxNodeData], ProxmoxUpdateInfo | bool]
 
 
 NODE_UPDATES: tuple[ProxmoxNodeUpdateEntityDescription, ...] = (
@@ -37,7 +37,7 @@ NODE_UPDATES: tuple[ProxmoxNodeUpdateEntityDescription, ...] = (
         installed_version=lambda node_data: node_data.version.get("version", "unknown"),
         update_info=lambda node_data: update_version(
             node_data.version.get("version", "unknown"),
-            node_data.update if isinstance(node_data.update, list) else [],
+            node_data.update,
         ),
     ),
 )
@@ -85,19 +85,30 @@ class ProxmoxNodeUpdateEntity(ProxmoxNodeEntity, UpdateEntity):
     @property
     def latest_version(self) -> str | None:
         """Return latest version."""
-        return self.entity_description.update_info(
-            self.coordinator.data[self.device_name]
-        ).latest_version_id
+        update_info = self._update_info()
+        return update_info.latest_version_id if update_info else None
 
     @property
     def release_summary(self) -> str | None:
         """Return the release summary for the update."""
-        update_info = self.entity_description.update_info(
-            self.coordinator.data[self.device_name]
-        )
         url = self.device_info.get("configuration_url") if self.device_info else None
-        return f"A total of {update_info.total_updates} package update(s) are pending installation: of these {update_info.proxmox_updates} relate to Proxmox and {update_info.other_updates} to other updates. Please visit the [Proxmox VE node]({url}) for details on the pending updates and to upgrade to {update_info.latest_version}."
+        update_info = self._update_info()
+        if update_info:
+            return f"A total of {update_info.total_updates} package update(s) are pending installation: of these {update_info.proxmox_updates} relate to Proxmox and {update_info.other_updates} to other updates. Please visit the [Proxmox VE node]({url}) for details on the pending updates and to upgrade to {update_info.latest_version}."
+        return None
+
+    @property
+    def available(self) -> bool:
+        """Return if the update platform is available."""
+        return self._update_info() is not None
 
     def release_notes(self) -> str | None:
         """Return the release notes for the update."""
         return self.release_summary
+
+    def _update_info(self) -> ProxmoxUpdateInfo | None:
+        """Return update info or None if unavailable."""
+        info = self.entity_description.update_info(
+            self.coordinator.data[self.device_name]
+        )
+        return info if isinstance(info, ProxmoxUpdateInfo) else None
