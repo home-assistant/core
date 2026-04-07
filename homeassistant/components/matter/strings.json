@@ -323,7 +323,7 @@
         "name": "Power saving",
         "state": {
           "hibernation": "Hibernation",
-          "keepalive": "Keepalive"
+          "keepalive": "Keep-alive"
         }
       },
       "mode": {
