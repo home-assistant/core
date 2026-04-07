@@ -6,6 +6,7 @@ import datetime as dt
 from datetime import datetime
 from typing import TYPE_CHECKING, Any, Final
 
+import aiohttp
 import tibber
 import voluptuous as vol
 
@@ -16,7 +17,7 @@ from homeassistant.core import (
     SupportsResponse,
     callback,
 )
-from homeassistant.exceptions import ServiceValidationError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN
@@ -72,7 +73,33 @@ async def __get_prices(call: ServiceCall) -> ServiceResponse:
 
     for tibber_home in tibber_connection.get_homes(only_active=True):
         if not _has_valid_prices(tibber_home):
-            await tibber_home.update_info_and_price_info()
+            try:
+                await tibber_home.update_info_and_price_info()
+            except TimeoutError as err:
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN,
+                    translation_key="get_prices_timeout",
+                ) from err
+            except tibber.InvalidLoginError as err:
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN,
+                    translation_key="get_prices_invalid_login",
+                ) from err
+            except (
+                tibber.RetryableHttpExceptionError,
+                tibber.FatalHttpExceptionError,
+            ) as err:
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN,
+                    translation_key="get_prices_communication_failed",
+                    translation_placeholders={"detail": str(err.status)},
+                ) from err
+            except aiohttp.ClientError as err:
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN,
+                    translation_key="get_prices_communication_failed",
+                    translation_placeholders={"detail": str(err)},
+                ) from err
         home_nickname = tibber_home.name
 
         price_data = [

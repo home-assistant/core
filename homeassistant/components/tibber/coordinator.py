@@ -5,6 +5,7 @@ from __future__ import annotations
 import asyncio
 from datetime import datetime, timedelta
 import logging
+import random
 from typing import TYPE_CHECKING, TypedDict, cast
 
 from aiohttp.client_exceptions import ClientError
@@ -271,6 +272,7 @@ class TibberPriceCoordinator(DataUpdateCoordinator[dict[str, TibberHomeData]]):
             name=f"{DOMAIN} price",
             update_interval=timedelta(minutes=1),
         )
+        self._tomorrow_price_poll_threshold_seconds = random.uniform(0, 3600 * 10)
 
     def _time_until_next_15_minute(self) -> timedelta:
         """Return time until the next 15-minute boundary (0, 15, 30, 45) in UTC."""
@@ -295,6 +297,8 @@ class TibberPriceCoordinator(DataUpdateCoordinator[dict[str, TibberHomeData]]):
 
         today_start = dt_util.start_of_local_day()
         today_end = today_start + timedelta(days=1)
+        tomorrow_start = today_end
+        tomorrow_end = tomorrow_start + timedelta(days=1)
 
         def _has_prices_today(home: tibber.TibberHome) -> bool:
             """Return True if the home has any prices today."""
@@ -304,7 +308,28 @@ class TibberPriceCoordinator(DataUpdateCoordinator[dict[str, TibberHomeData]]):
                     return True
             return False
 
-        homes_to_update = [home for home in active_homes if not _has_prices_today(home)]
+        def _has_prices_tomorrow(home: tibber.TibberHome) -> bool:
+            """Return True if the home has any prices tomorrow."""
+            for start in home.price_total:
+                start_dt = dt_util.as_local(datetime.fromisoformat(str(start)))
+                if tomorrow_start <= start_dt < tomorrow_end:
+                    return True
+            return False
+
+        def _needs_update(home: tibber.TibberHome) -> bool:
+            """Return True if the home needs to be updated."""
+            if not _has_prices_today(home):
+                return True
+            if _has_prices_tomorrow(home):
+                return False
+            if (today_end - dt_util.now()).total_seconds() < (
+                self._tomorrow_price_poll_threshold_seconds
+            ):
+                _LOGGER.error("Updating tomorrow's price for %s", home.name)
+                return True
+            return False
+
+        homes_to_update = [home for home in active_homes if _needs_update(home)]
 
         try:
             if homes_to_update:
