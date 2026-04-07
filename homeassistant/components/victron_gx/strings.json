@@ -48,8 +48,6 @@
   },
   "entity": {
     "binary_sensor": {
-      "alternator_mode": {},
-      "dcdc_mode": {},
       "digitalinput_settings_invert_translation": {
         "name": "Invert digital input"
       },
@@ -119,7 +117,6 @@
       "solarcharger_load_state": {
         "name": "Load state"
       },
-      "solarcharger_mode": {},
       "solarcharger_relay_state": {
         "name": "Relay state"
       },
