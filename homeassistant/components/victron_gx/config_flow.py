@@ -55,6 +55,16 @@ STEP_SSDP_AUTH_DATA_SCHEMA = vol.Schema(
     }
 )
 
+STEP_REAUTH_DATA_SCHEMA = vol.Schema(
+    {
+        vol.Optional(CONF_USERNAME, default=""): selector.TextSelector(),
+        vol.Optional(CONF_PASSWORD, default=""): selector.TextSelector(
+            selector.TextSelectorConfig(type=selector.TextSelectorType.PASSWORD)
+        ),
+        vol.Optional(CONF_SSL): selector.BooleanSelector(),
+    }
+)
+
 
 async def validate_input(data: dict[str, Any]) -> str:
     """Validate the user input allows us to connect.
@@ -288,11 +298,12 @@ class VictronGXConfigFlow(ConfigFlow, domain=DOMAIN):
         reauth_entry = self._get_reauth_entry()
 
         if user_input is not None:
+            ssl = user_input.get(CONF_SSL, reauth_entry.data.get(CONF_SSL, False))
             data = {
                 **reauth_entry.data,
                 CONF_USERNAME: user_input.get(CONF_USERNAME) or None,
                 CONF_PASSWORD: user_input.get(CONF_PASSWORD) or None,
-                CONF_SSL: user_input.get(CONF_SSL, False),
+                CONF_SSL: ssl,
             }
             try:
                 await validate_input(data)
@@ -309,7 +320,7 @@ class VictronGXConfigFlow(ConfigFlow, domain=DOMAIN):
                     data_updates={
                         CONF_USERNAME: user_input.get(CONF_USERNAME) or None,
                         CONF_PASSWORD: user_input.get(CONF_PASSWORD) or None,
-                        CONF_SSL: user_input.get(CONF_SSL, False),
+                        CONF_SSL: ssl,
                     },
                 )
 
@@ -319,7 +330,7 @@ class VictronGXConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="reauth_confirm",
             data_schema=self.add_suggested_values_to_schema(
-                STEP_SSDP_AUTH_DATA_SCHEMA, suggested_values
+                STEP_REAUTH_DATA_SCHEMA, suggested_values
             ),
             description_placeholders={"host": reauth_entry.data[CONF_HOST]},
             errors=errors,
