@@ -9,6 +9,8 @@ from datetime import timedelta
 import logging
 
 from pyportainer import (
+    DockerContainerState,
+    EndpointStatus,
     Portainer,
     PortainerAuthenticationError,
     PortainerConnectionError,
@@ -26,10 +28,10 @@ from pyportainer.models.stacks import Stack
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_URL
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DOMAIN, ContainerState, EndpointStatus
+from .const import DOMAIN
 
 type PortainerConfigEntry = ConfigEntry[PortainerCoordinator]
 
@@ -118,13 +120,13 @@ class PortainerCoordinator(DataUpdateCoordinator[dict[int, PortainerCoordinatorD
                 translation_placeholders={"error": repr(err)},
             ) from err
         except PortainerConnectionError as err:
-            raise ConfigEntryNotReady(
+            raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="cannot_connect",
                 translation_placeholders={"error": repr(err)},
             ) from err
         except PortainerTimeoutError as err:
-            raise ConfigEntryNotReady(
+            raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="timeout_connect",
                 translation_placeholders={"error": repr(err)},
@@ -216,7 +218,8 @@ class PortainerCoordinator(DataUpdateCoordinator[dict[int, PortainerCoordinatorD
                 running_containers = [
                     container
                     for container in containers
-                    if container.state == ContainerState.RUNNING
+                    if container.state
+                    in (DockerContainerState.RUNNING, DockerContainerState.PAUSED)
                 ]
                 if running_containers:
                     container_stats = dict(

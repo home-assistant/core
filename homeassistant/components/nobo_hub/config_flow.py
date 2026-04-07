@@ -9,7 +9,6 @@ from pynobo import nobo
 import voluptuous as vol
 
 from homeassistant.config_entries import (
-    ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
     OptionsFlowWithReload,
@@ -18,6 +17,7 @@ from homeassistant.const import CONF_IP_ADDRESS
 from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
 
+from . import NoboHubConfigEntry
 from .const import (
     CONF_AUTO_DISCOVERED,
     CONF_OVERRIDE_TYPE,
@@ -172,7 +172,7 @@ class NoboHubConfigFlow(ConfigFlow, domain=DOMAIN):
     @staticmethod
     @callback
     def async_get_options_flow(
-        config_entry: ConfigEntry,
+        config_entry: NoboHubConfigEntry,
     ) -> OptionsFlowHandler:
         """Get the options flow for this handler."""
         return OptionsFlowHandler()
