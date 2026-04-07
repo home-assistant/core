@@ -1,24 +1,24 @@
 {
   "config": {
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]"
+      "already_configured": "Account is already configured"
     },
     "error": {
-      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "cannot_connect": "Failed to connect",
+      "invalid_auth": "Invalid authentication",
       "invalid_url": "Invalid URL",
       "invalid_url_schema_override_mqtt_url": "Invalid MQTT URL scheme.\nThe URL should start with `mqtt://` or `mqtts://`.",
       "invalid_url_schema_override_rest_url": "Invalid REST URL scheme.\nThe URL should start with `http://` or `https://`.",
-      "unknown": "[%key:common::config_flow::error::unknown%]"
+      "unknown": "Unexpected error"
     },
     "step": {
       "auth": {
         "data": {
-          "country": "[%key:common::config_flow::data::country%]",
+          "country": "Country",
           "override_mqtt_url": "MQTT URL",
           "override_rest_url": "REST URL",
-          "password": "[%key:common::config_flow::data::password%]",
-          "username": "[%key:common::config_flow::data::username%]",
+          "password": "Password",
+          "username": "Username",
           "verify_mqtt_certificate": "Verify MQTT SSL certificate"
         },
         "data_description": {
@@ -28,7 +28,7 @@
       },
       "user": {
         "data": {
-          "mode": "[%key:common::config_flow::data::mode%]"
+          "mode": "Mode"
         },
         "data_description": {
           "mode": "Select the mode you want to use to connect to Ecovacs. If you are unsure, select **Cloud**.\n\nSelect **Self-hosted** only if you have a working self-hosted instance."
@@ -92,11 +92,6 @@
         "name": "Empty dustbin"
       }
     },
-    "camera": {
-      "camera": {
-        "name": "Camera"
-      }
-    },
     "event": {
       "last_job": {
         "name": "Last job",
@@ -145,11 +140,11 @@
         }
       },
       "water_amount": {
-        "name": "[%key:component::ecovacs::entity::number::water_amount::name%]",
+        "name": "Water flow level",
         "state": {
-          "high": "[%key:common::state::high%]",
-          "low": "[%key:common::state::low%]",
-          "medium": "[%key:common::state::medium%]",
+          "high": "High",
+          "low": "Low",
+          "medium": "Medium",
           "ultrahigh": "Ultrahigh"
         }
       },
@@ -194,7 +189,7 @@
         "name": "Lens brush lifespan"
       },
       "lifespan_main_brush": {
-        "name": "[%key:component::ecovacs::entity::sensor::lifespan_brush::name%]"
+        "name": "Main brush lifespan"
       },
       "lifespan_round_mop": {
         "name": "Round mop lifespan"
@@ -222,7 +217,7 @@
         "state": {
           "drying_mop": "Drying mop",
           "emptying_dustbin": "Emptying dustbin",
-          "idle": "[%key:common::state::idle%]",
+          "idle": "Idle",
           "washing_mop": "Washing mop"
         }
       },
@@ -252,9 +247,6 @@
       "border_switch": {
         "name": "Border switch"
       },
-      "camera_stream_switch": {
-        "name": "Camera stream"
-      },
       "carpet_auto_fan_boost": {
         "name": "Carpet auto-boost suction"
       },
@@ -278,6 +270,9 @@
       },
       "true_detect": {
         "name": "True detect"
+      },
+      "camera_stream_switch": {
+        "name": "Camera stream"
       }
     },
     "vacuum": {
@@ -287,7 +282,7 @@
             "state": {
               "max": "Max",
               "max_plus": "Max+",
-              "normal": "[%key:common::state::normal%]",
+              "normal": "Normal",
               "quiet": "Quiet"
             }
           },
@@ -295,6 +290,11 @@
             "name": "Rooms"
           }
         }
+      }
+    },
+    "camera": {
+      "camera": {
+        "name": "Camera"
       }
     }
   },
@@ -309,23 +309,6 @@
       "message": "Params are required for the command: {command}"
     }
   },
-  "options": {
-    "error": {
-      "invalid_camera_pin": "Camera PIN must contain digits only"
-    },
-    "step": {
-      "camera_pins": {
-        "data": {
-          "camera_pin": "Camera PIN (digits only)"
-        },
-        "data_description": {
-          "camera_pin": "The numeric PIN to access the robot camera stream. Leave empty if the camera has no PIN set."
-        },
-        "description": "Set a PIN for each robot with a camera. Leave blank if no PIN is required.",
-        "title": "Camera PIN settings"
-      }
-    }
-  },
   "selector": {
     "installation_mode": {
       "options": {
@@ -338,6 +321,23 @@
     "raw_get_positions": {
       "description": "Retrieves a raw response containing the positions of the chargers and the device itself.",
       "name": "Get raw positions"
+    }
+  },
+  "options": {
+    "step": {
+      "camera_pins": {
+        "title": "Camera PIN settings",
+        "description": "Set a PIN for each robot with a camera. Leave blank if no PIN is required.",
+        "data": {
+          "camera_pin": "Camera PIN (digits only)"
+        },
+        "data_description": {
+          "camera_pin": "The numeric PIN to access the robot camera stream. Leave empty if the camera has no PIN set."
+        }
+      }
+    },
+    "error": {
+      "invalid_camera_pin": "Camera PIN must contain digits only"
     }
   }
 }

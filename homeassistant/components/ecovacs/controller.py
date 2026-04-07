@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Mapping
+from collections.abc import Callable, Mapping
 from functools import partial
 import logging
 import ssl
@@ -30,6 +30,7 @@ from .const import (
     CONF_OVERRIDE_REST_URL,
     CONF_VERIFY_MQTT_CERTIFICATE,
 )
+from .kvs_mqtt import KvsMqttListener
 from .util import get_client_device_id
 
 _LOGGER = logging.getLogger(__name__)
@@ -75,6 +76,17 @@ class EcovacsController:
         self._mqtt_client: MqttClient | None = None
 
         self._added_legacy_entities: set[str] = set()
+
+        # Global KVS MQTT listener shared by all camera entities.
+        # Started lazily when the first camera entity is enabled (async_acquire_kvs_mqtt)
+        # and stopped when the last one is removed (async_release_kvs_mqtt).
+        self._kvs_mqtt_listener: KvsMqttListener | None = None
+        self._kvs_p2p_handlers: dict[str, Callable[[str, dict], None]] = {}
+        self._kvs_mqtt_ref_count: int = 0
+        self._kvs_mqtt_lock: asyncio.Lock = asyncio.Lock()
+
+        # Camera entity registry: did -> EcovacsCameraEntity (populated on entity setup)
+        self._camera_entities: dict[str, Any] = {}
 
     async def initialize(self) -> None:
         """Init controller."""
@@ -133,7 +145,83 @@ class EcovacsController:
             await self._hass.async_add_executor_job(legacy_device.disconnect)
         if self._mqtt_client is not None:
             await self._mqtt_client.disconnect()
+        if self._kvs_mqtt_listener is not None:
+            await self._kvs_mqtt_listener.stop()
         await self._authenticator.teardown()
+
+    def _dispatch_kvs_p2p_req(self, topic: str, payload: dict) -> None:
+        """Route an incoming KVS P2P request to the correct camera entity handler."""
+        parts = topic.split("/")
+        # topic format: iot/p2p/{cmd}/{from_id}/{from_class}/{from_res}/...
+        if len(parts) >= 4:
+            from_did = parts[3]
+            handler = self._kvs_p2p_handlers.get(from_did)
+            if handler:
+                handler(topic, payload)
+
+    def register_kvs_p2p_handler(
+        self, did: str, handler: Callable[[str, dict], None]
+    ) -> None:
+        """Register a per-robot P2P message handler for the global KVS MQTT listener."""
+        self._kvs_p2p_handlers[did] = handler
+
+    def unregister_kvs_p2p_handler(self, did: str) -> None:
+        """Remove the P2P handler for the given robot DID."""
+        self._kvs_p2p_handlers.pop(did, None)
+
+    async def async_acquire_kvs_mqtt(self) -> None:
+        """Start the shared KVS MQTT listener if this is the first camera entity.
+
+        ref_count is incremented ONLY after a successful start, so callers can
+        always pair every acquire with a release without risking a negative counter.
+        """
+        async with self._kvs_mqtt_lock:
+            if self._kvs_mqtt_listener is None:
+                try:
+                    credentials = await self._authenticator.authenticate()
+                    self._kvs_mqtt_listener = KvsMqttListener(
+                        authenticator=self._authenticator,
+                        user_id=credentials.user_id,
+                        user_resource=self._device_id,
+                        on_p2p_req=self._dispatch_kvs_p2p_req,
+                        continent=self._continent,
+                    )
+                    await self._kvs_mqtt_listener.start()
+                except Exception as err:  # noqa: BLE001
+                    self._kvs_mqtt_listener = None
+                    _LOGGER.warning("Failed to start KVS MQTT listener: %s", err)
+                    return  # do NOT increment ref_count — no pairing release needed
+            self._kvs_mqtt_ref_count += 1
+            _LOGGER.debug(
+                "KVS MQTT listener acquired (ref_count=%d)", self._kvs_mqtt_ref_count
+            )
+
+    async def async_release_kvs_mqtt(self) -> None:
+        """Stop the shared KVS MQTT listener when the last camera entity is removed."""
+        async with self._kvs_mqtt_lock:
+            if self._kvs_mqtt_ref_count > 0:
+                self._kvs_mqtt_ref_count -= 1
+            if self._kvs_mqtt_ref_count == 0 and self._kvs_mqtt_listener is not None:
+                await self._kvs_mqtt_listener.stop()
+                self._kvs_mqtt_listener = None
+                _LOGGER.debug("KVS MQTT listener stopped (no active camera entities)")
+
+    def register_camera_entity(self, did: str, entity: Any) -> None:
+        """Register a camera entity so the stream switch can call it."""
+        self._camera_entities[did] = entity
+
+    def unregister_camera_entity(self, did: str) -> None:
+        """Remove the camera entity registration."""
+        self._camera_entities.pop(did, None)
+
+    def get_camera_entity(self, did: str) -> Any | None:
+        """Return the camera entity for the given robot DID, or None."""
+        return self._camera_entities.get(did)
+
+    @property
+    def kvs_mqtt_listener(self) -> KvsMqttListener | None:
+        """Return the global KVS MQTT listener (None if not yet initialized)."""
+        return self._kvs_mqtt_listener
 
     def add_legacy_entity(self, device: VacBot, component: str) -> None:
         """Add legacy entity."""
@@ -152,6 +240,16 @@ class EcovacsController:
             self._mqtt_client = mqtt
 
         return self._mqtt_client
+
+    @property
+    def authenticator(self) -> Authenticator:
+        """Return the authenticator."""
+        return self._authenticator
+
+    @property
+    def client_device_id(self) -> str:
+        """Return the client device ID used as user_resource in MQTT."""
+        return self._device_id
 
     @property
     def devices(self) -> list[Device]:

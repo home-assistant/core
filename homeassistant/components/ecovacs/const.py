@@ -1,6 +1,7 @@
 """Ecovacs constants."""
 
 from enum import StrEnum
+from typing import Final
 
 from deebot_client.commands import StationAction
 from deebot_client.events import LifeSpan
@@ -11,6 +12,7 @@ CONF_CONTINENT = "continent"
 CONF_OVERRIDE_REST_URL = "override_rest_url"
 CONF_OVERRIDE_MQTT_URL = "override_mqtt_url"
 CONF_VERIFY_MQTT_CERTIFICATE = "verify_mqtt_certificate"
+CONF_CAMERA_PINS = "camera_pins"
 
 SUPPORTED_LIFESPANS = (
     LifeSpan.AIR_FRESHENER,
@@ -45,3 +47,9 @@ class InstanceMode(StrEnum):
 
     CLOUD = "cloud"
     SELF_HOSTED = "self_hosted"
+
+
+# Dispatcher signal fired when a camera stream starts or stops.
+# Format: CAMERA_STREAM_STATE_SIGNAL.format(did=device_did)
+# Payload: bool (True = stream started, False = stream stopped)
+CAMERA_STREAM_STATE_SIGNAL: Final = "ecovacs_camera_stream_state_{did}"
