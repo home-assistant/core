@@ -124,27 +124,28 @@ class AidotLight(CoordinatorEntity[AidotDeviceUpdateCoordinator], LightEntity):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the light on."""
-        self.coordinator.data.on = True
-        self._attr_is_on = True
         if ATTR_BRIGHTNESS in kwargs:
-            await self.coordinator.device_client.async_set_brightness(
-                kwargs.get(ATTR_BRIGHTNESS, 255)
-            )
+            brightness = kwargs.get(ATTR_BRIGHTNESS, 255)
+            await self.coordinator.device_client.async_set_brightness(brightness)
+            self.coordinator.data.brightness = brightness
         elif ATTR_COLOR_TEMP_KELVIN in kwargs:
+            color_temp_kelvin = kwargs.get(ATTR_COLOR_TEMP_KELVIN)
+            await self.coordinator.device_client.async_set_cct(color_temp_kelvin)
+            self.coordinator.data.cct = color_temp_kelvin
             self._attr_color_mode = ColorMode.COLOR_TEMP
-            await self.coordinator.device_client.async_set_cct(
-                kwargs.get(ATTR_COLOR_TEMP_KELVIN)
-            )
         elif ATTR_RGBW_COLOR in kwargs:
+            rgbw_color = kwargs.get(ATTR_RGBW_COLOR)
+            await self.coordinator.device_client.async_set_rgbw(rgbw_color)
+            self.coordinator.data.rgbw = rgbw_color
             self._attr_color_mode = ColorMode.RGBW
-            await self.coordinator.device_client.async_set_rgbw(
-                kwargs.get(ATTR_RGBW_COLOR)
-            )
         else:
             await self.coordinator.device_client.async_turn_on()
 
+        self.coordinator.data.on = True
+        self._attr_is_on = True
+
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the light off."""
+        await self.coordinator.device_client.async_turn_off()
         self.coordinator.data.on = False
         self._attr_is_on = False
-        await self.coordinator.device_client.async_turn_off()
