@@ -20,18 +20,20 @@ from .const import LOGGER
 
 DEFAULT_DEBOUNCER_COOLDOWN_SECONDS = 15 * 60
 
+type OpenUvConfigEntry = ConfigEntry[dict[str, OpenUvCoordinator]]
+
 
 class OpenUvCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """Define an OpenUV data coordinator."""
 
-    config_entry: ConfigEntry
+    config_entry: OpenUvConfigEntry
     update_method: Callable[[], Awaitable[dict[str, Any]]]
 
     def __init__(
         self,
         hass: HomeAssistant,
         *,
-        entry: ConfigEntry,
+        entry: OpenUvConfigEntry,
         name: str,
         latitude: str,
         longitude: str,

@@ -212,6 +212,7 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "bluetooth",
     "bluetooth_adapters",
     "bluetooth_le_tracker",
+    "bmw_connected_drive",
     "bond",
     "bosch_shc",
     "braviatv",
@@ -1183,6 +1184,7 @@ INTEGRATIONS_WITHOUT_SCALE = [
     "bluetooth",
     "bluetooth_adapters",
     "bluetooth_le_tracker",
+    "bmw_connected_drive",
     "bond",
     "bosch_shc",
     "braviatv",
@@ -2170,7 +2172,7 @@ SCHEMA = vol.Schema(
                     vol.Schema(
                         {
                             vol.Required("status"): vol.In(["todo", "done"]),
-                            vol.Optional("comment"): str,
+                            vol.Required("comment"): str,
                         }
                     ),
                     vol.Schema(

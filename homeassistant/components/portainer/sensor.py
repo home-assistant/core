@@ -5,6 +5,8 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 
+from pyportainer import StackType
+
 from homeassistant.components.sensor import (
     EntityCategory,
     SensorDeviceClass,
@@ -17,7 +19,6 @@ from homeassistant.const import PERCENTAGE, UnitOfInformation
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import StackType
 from .coordinator import (
     PortainerConfigEntry,
     PortainerContainerData,

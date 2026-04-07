@@ -58,6 +58,8 @@ from anthropic.types import (
     ToolChoiceAutoParam,
     ToolChoiceToolParam,
     ToolParam,
+    ToolSearchToolBm25_20251119Param,
+    ToolSearchToolResultBlock,
     ToolUnionParam,
     ToolUseBlock,
     ToolUseBlockParam,
@@ -74,6 +76,9 @@ from anthropic.types.message_create_params import MessageCreateParamsStreaming
 from anthropic.types.text_editor_code_execution_tool_result_block_param import (
     Content as TextEditorCodeExecutionToolResultBlockParamContentParam,
 )
+from anthropic.types.tool_search_tool_result_block_param import (
+    Content as ToolSearchToolResultBlockParamContentParam,
+)
 import voluptuous as vol
 from voluptuous_openapi import convert
 
@@ -82,19 +87,20 @@ from homeassistant.config_entries import ConfigSubentry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, llm
-from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.json import json_dumps
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import slugify
 from homeassistant.util.json import JsonObjectType
 
-from . import AnthropicConfigEntry
 from .const import (
     CONF_CHAT_MODEL,
     CONF_CODE_EXECUTION,
     CONF_MAX_TOKENS,
+    CONF_PROMPT_CACHING,
     CONF_TEMPERATURE,
     CONF_THINKING_BUDGET,
     CONF_THINKING_EFFORT,
+    CONF_TOOL_SEARCH,
     CONF_WEB_SEARCH,
     CONF_WEB_SEARCH_CITY,
     CONF_WEB_SEARCH_COUNTRY,
@@ -110,7 +116,9 @@ from .const import (
     NON_THINKING_MODELS,
     PROGRAMMATIC_TOOL_CALLING_UNSUPPORTED_MODELS,
     UNSUPPORTED_STRUCTURED_OUTPUT_MODELS,
+    PromptCaching,
 )
+from .coordinator import AnthropicConfigEntry, AnthropicCoordinator
 
 # Max number of back and forth with the LLM to generate a response
 MAX_TOOL_ITERATIONS = 10
@@ -202,7 +210,7 @@ class ContentDetails:
         ]
 
 
-def _convert_content(
+def _convert_content(  # noqa: C901
     chat_content: Iterable[conversation.Content],
 ) -> tuple[list[MessageParam], str | None]:
     """Transform HA chat_log content into Anthropic API format."""
@@ -252,6 +260,15 @@ def _convert_content(
                     "tool_use_id": content.tool_call_id,
                     "content": cast(
                         TextEditorCodeExecutionToolResultBlockParamContentParam,
+                        content.tool_result,
+                    ),
+                }
+            elif content.tool_name == "tool_search":
+                tool_result_block = {
+                    "type": "tool_search_tool_result",
+                    "tool_use_id": content.tool_call_id,
+                    "content": cast(
+                        ToolSearchToolResultBlockParamContentParam,
                         content.tool_result,
                     ),
                 }
@@ -385,6 +402,7 @@ def _convert_content(
                                     "code_execution",
                                     "bash_code_execution",
                                     "text_editor_code_execution",
+                                    "tool_search_tool_bm25",
                                 ],
                                 tool_call.tool_name,
                             ),
@@ -397,6 +415,7 @@ def _convert_content(
                             "code_execution",
                             "bash_code_execution",
                             "text_editor_code_execution",
+                            "tool_search_tool_bm25",
                         ]
                         else ToolUseBlockParam(
                             type="tool_use",
@@ -558,6 +577,7 @@ async def _transform_stream(  # noqa: C901 - This is complex, but better to have
                     CodeExecutionToolResultBlock,
                     BashCodeExecutionToolResultBlock,
                     TextEditorCodeExecutionToolResultBlock,
+                    ToolSearchToolResultBlock,
                 ),
             ):
                 if content_details:
@@ -658,7 +678,7 @@ def _create_token_stats(
     }
 
 
-class AnthropicBaseLLMEntity(Entity):
+class AnthropicBaseLLMEntity(CoordinatorEntity[AnthropicCoordinator]):
     """Anthropic base LLM entity."""
 
     _attr_has_entity_name = True
@@ -666,6 +686,7 @@ class AnthropicBaseLLMEntity(Entity):
 
     def __init__(self, entry: AnthropicConfigEntry, subentry: ConfigSubentry) -> None:
         """Initialize the entity."""
+        super().__init__(entry.runtime_data)
         self.entry = entry
         self.subentry = subentry
         self._attr_unique_id = subentry.subentry_id
@@ -677,7 +698,7 @@ class AnthropicBaseLLMEntity(Entity):
             entry_type=dr.DeviceEntryType.SERVICE,
         )
 
-    async def _async_handle_chat_log(
+    async def _async_handle_chat_log(  # noqa: C901
         self,
         chat_log: conversation.ChatLog,
         structure_name: str | None = None,
@@ -687,20 +708,19 @@ class AnthropicBaseLLMEntity(Entity):
         """Generate an answer for the chat log."""
         options = self.subentry.data
 
+        preloaded_tools = [
+            "HassTurnOn",
+            "HassTurnOff",
+            "GetLiveContext",
+            "code_execution",
+            "web_search",
+        ]
+
         system = chat_log.content[0]
         if not isinstance(system, conversation.SystemContent):
             raise HomeAssistantError(
                 translation_domain=DOMAIN, translation_key="system_message_not_found"
             )
-
-        # System prompt with caching enabled
-        system_prompt: list[TextBlockParam] = [
-            TextBlockParam(
-                type="text",
-                text=system.content,
-                cache_control={"type": "ephemeral"},
-            )
-        ]
 
         messages, container_id = _convert_content(chat_log.content[1:])
 
@@ -710,10 +730,27 @@ class AnthropicBaseLLMEntity(Entity):
             model=model,
             messages=messages,
             max_tokens=options.get(CONF_MAX_TOKENS, DEFAULT[CONF_MAX_TOKENS]),
-            system=system_prompt,
+            system=system.content,
             stream=True,
             container=container_id,
         )
+
+        if (
+            options.get(CONF_PROMPT_CACHING, DEFAULT[CONF_PROMPT_CACHING])
+            == PromptCaching.PROMPT
+        ):
+            model_args["system"] = [
+                {
+                    "type": "text",
+                    "text": system.content,
+                    "cache_control": {"type": "ephemeral"},
+                }
+            ]
+        elif (
+            options.get(CONF_PROMPT_CACHING, DEFAULT[CONF_PROMPT_CACHING])
+            == PromptCaching.AUTOMATIC
+        ):
+            model_args["cache_control"] = {"type": "ephemeral"}
 
         if not model.startswith(tuple(NON_ADAPTIVE_THINKING_MODELS)):
             thinking_effort = options.get(
@@ -873,11 +910,27 @@ class AnthropicBaseLLMEntity(Entity):
                         ),
                     )
                 )
+                preloaded_tools.append(structure_name)
 
         if tools:
+            if (
+                options.get(CONF_TOOL_SEARCH, DEFAULT[CONF_TOOL_SEARCH])
+                and len(tools) > len(preloaded_tools) + 1
+            ):
+                for tool in tools:
+                    if not tool["name"].endswith(tuple(preloaded_tools)):
+                        tool["defer_loading"] = True
+                tools.append(
+                    ToolSearchToolBm25_20251119Param(
+                        type="tool_search_tool_bm25_20251119",
+                        name="tool_search_tool_bm25",
+                    )
+                )
+
             model_args["tools"] = tools
 
-        client = self.entry.runtime_data
+        coordinator = self.entry.runtime_data
+        client = coordinator.client
 
         # To prevent infinite loops, we limit the number of iterations
         for _iteration in range(max_iterations):
@@ -899,13 +952,25 @@ class AnthropicBaseLLMEntity(Entity):
                 )
                 messages.extend(new_messages)
             except anthropic.AuthenticationError as err:
-                self.entry.async_start_reauth(self.hass)
+                # Trigger coordinator to confirm the auth failure and trigger the reauth flow.
+                await coordinator.async_request_refresh()
                 raise HomeAssistantError(
                     translation_domain=DOMAIN,
                     translation_key="api_authentication_error",
                     translation_placeholders={"message": err.message},
                 ) from err
+            except anthropic.APIConnectionError as err:
+                LOGGER.info("Connection error while talking to Anthropic: %s", err)
+                coordinator.mark_connection_error()
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN,
+                    translation_key="api_error",
+                    translation_placeholders={"message": err.message},
+                ) from err
             except anthropic.AnthropicError as err:
+                # Non-connection error, mark connection as healthy
+                coordinator.async_set_updated_data(None)
+                LOGGER.error("Error while talking to Anthropic: %s", err)
                 raise HomeAssistantError(
                     translation_domain=DOMAIN,
                     translation_key="api_error",
@@ -917,6 +982,7 @@ class AnthropicBaseLLMEntity(Entity):
                 ) from err
 
             if not chat_log.unresponded_tool_results:
+                coordinator.async_set_updated_data(None)
                 break
 
 

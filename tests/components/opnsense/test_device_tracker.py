@@ -7,13 +7,42 @@ from homeassistant.core import HomeAssistant
 
 from . import setup_mock_diagnostics
 
-from tests.common import MockConfigEntry
+@pytest.fixture(name="mocked_opnsense")
+def mocked_opnsense():
+    """Mock for aiopnsense.OPNsenseClient."""
+    with mock.patch.object(opnsense, "OPNsenseClient") as mocked_opn:
+        yield mocked_opn
 
 
 async def test_get_scanner(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> None:
     """Test creating an opnsense scanner."""
+    opnsense_client = mock.AsyncMock()
+    mocked_opnsense.return_value = opnsense_client
+    opnsense_client.get_arp_table.return_value = [
+        {
+            "hostname": "",
+            "intf": "igb1",
+            "intf_description": "LAN",
+            "ip": "192.168.0.123",
+            "mac": "ff:ff:ff:ff:ff:ff",
+            "manufacturer": "",
+        },
+        {
+            "hostname": "Desktop",
+            "intf": "igb1",
+            "intf_description": "LAN",
+            "ip": "192.168.0.167",
+            "mac": "ff:ff:ff:ff:ff:fe",
+            "manufacturer": "OEM",
+        },
+    ]
+
+    opnsense_client.get_interfaces.return_value = {
+        "wan": {"name": "WAN"},
+        "lan": {"name": "LAN"},
+    }
 
     with patch("homeassistant.components.opnsense.diagnostics") as mock_diagnostics:
         setup_mock_diagnostics(mock_diagnostics)
