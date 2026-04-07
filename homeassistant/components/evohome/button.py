@@ -69,7 +69,28 @@ async def async_setup_platform(
     async_add_entities(entities)
 
 
-class EvoResetSystemButton(EvoEntity, ButtonEntity):
+class EvoResetButtonBase(EvoEntity, ButtonEntity):
+    """Button entity for system reset."""
+
+    def __init__(
+        self,
+        coordinator: EvoDataUpdateCoordinator,
+        evo_device: evo.ControlSystem | evo.HotWater | evo.Zone,
+        description: ButtonEntityDescription,
+    ) -> None:
+        """Initialize the system reset button."""
+        super().__init__(coordinator, evo_device)
+
+        self._attr_unique_id = f"{evo_device.id}_reset"
+
+        self.entity_description = description
+
+    async def async_press(self) -> None:
+        """Reset the Evohome entity to its base operating mode."""
+        await self.coordinator.call_client_api(self._evo_device.reset())
+
+
+class EvoResetSystemButton(EvoResetButtonBase):
     """Button entity for system reset."""
 
     _evo_device: evo.ControlSystem
@@ -82,23 +103,12 @@ class EvoResetSystemButton(EvoEntity, ButtonEntity):
         description: ButtonEntityDescription,
     ) -> None:
         """Initialize the system reset button."""
-        super().__init__(coordinator, evo_device)
+        super().__init__(coordinator, evo_device, description)
 
         self._attr_translation_placeholders = {"device_name": evo_device.location.name}
-        self._attr_unique_id = f"{evo_device.id}_reset"
-
-        self.entity_description = description
-
-    async def async_press(self) -> None:
-        """Reset the system.
-
-        The controller will enter auto mode, and the zones will revert to following
-        their schedules.
-        """
-        await self.coordinator.call_client_api(self._evo_device.reset())
 
 
-class EvoResetDhwButton(EvoEntity, ButtonEntity):
+class EvoResetDhwButton(EvoResetButtonBase):
     """Button entity for DHW override reset."""
 
     _evo_device: evo.HotWater
@@ -111,22 +121,12 @@ class EvoResetDhwButton(EvoEntity, ButtonEntity):
         description: ButtonEntityDescription,
     ) -> None:
         """Initialize the DHW reset button."""
-        super().__init__(coordinator, evo_device)
+        super().__init__(coordinator, evo_device, description)
 
         self._attr_translation_placeholders = {"device_name": evo_device.name}
-        self._attr_unique_id = f"{evo_device.id}_reset"
-
-        self.entity_description = description
-
-    async def async_press(self) -> None:
-        """Clear the DHW override, if any.
-
-        The DHW will revert to following its schedule.
-        """
-        await self.coordinator.call_client_api(self._evo_device.reset())
 
 
-class EvoResetZoneButton(EvoEntity, ButtonEntity):
+class EvoResetZoneButton(EvoResetButtonBase):
     """Button entity for zone override reset."""
 
     _evo_device: evo.Zone
@@ -139,7 +139,7 @@ class EvoResetZoneButton(EvoEntity, ButtonEntity):
         description: ButtonEntityDescription,
     ) -> None:
         """Initialize the zone reset button."""
-        super().__init__(coordinator, evo_device)
+        super().__init__(coordinator, evo_device, description)
 
         self._attr_translation_placeholders = {"device_name": evo_device.name}
 
@@ -148,12 +148,3 @@ class EvoResetZoneButton(EvoEntity, ButtonEntity):
             self._attr_unique_id = f"{evo_device.id}z_reset"
         else:
             self._attr_unique_id = f"{evo_device.id}_reset"
-
-        self.entity_description = description
-
-    async def async_press(self) -> None:
-        """Clear the zone override, if any.
-
-        The zone will revert to following its schedule.
-        """
-        await self.coordinator.call_client_api(self._evo_device.reset())
