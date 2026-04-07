@@ -79,8 +79,8 @@
         "state": {
           "charger_only": "Charger only",
           "inverter_only": "Inverter only",
-          "off": "Off",
-          "on": "On",
+          "off": "[%key:common::state::off%]",
+          "on": "[%key:common::state::on%]",
           "passthrough": "Passthrough"
         }
       },
@@ -119,7 +119,7 @@
           "float": "Float",
           "inverting": "Inverting",
           "low_power": "Low Power",
-          "off": "Off",
+          "off": "[%key:common::state::off%]",
           "passthrough": "Passthrough",
           "power_assist": "Power Assist",
           "power_supply": "Power Supply",
@@ -376,7 +376,7 @@
           "float": "Float",
           "inverting": "Inverting",
           "low_power": "Low Power",
-          "off": "Off",
+          "off": "[%key:common::state::off%]",
           "passthrough": "Passthrough",
           "power_assist": "Power Assist",
           "power_supply": "Power Supply",
@@ -478,9 +478,9 @@
           "high": "High",
           "low": "Low",
           "no": "No",
-          "off": "Off",
+          "off": "[%key:common::state::off%]",
           "ok": "Ok",
-          "on": "On",
+          "on": "[%key:common::state::on%]",
           "open": "Open",
           "running": "Running",
           "stopped": "Stopped",
@@ -799,7 +799,7 @@
           "float": "Float",
           "inverting": "Inverting",
           "low_power": "Low Power",
-          "off": "Off",
+          "off": "[%key:common::state::off%]",
           "passthrough": "Passthrough",
           "power_assist": "Power Assist",
           "power_supply": "Power Supply",
@@ -939,7 +939,7 @@
           "float": "Float",
           "inverting": "Inverting",
           "low_power": "Low Power",
-          "off": "Off",
+          "off": "[%key:common::state::off%]",
           "passthrough": "Passthrough",
           "power_assist": "Power Assist",
           "power_supply": "Power Supply",
@@ -1080,7 +1080,7 @@
           "float": "Float",
           "inverting": "Inverting",
           "low_power": "Low Power",
-          "off": "Off",
+          "off": "[%key:common::state::off%]",
           "passthrough": "Passthrough",
           "power_assist": "Power Assist",
           "power_supply": "Power Supply",
@@ -1377,13 +1377,13 @@
           "disabled_weekdays": "Disabled (Weekdays)",
           "disabled_weekend": "Disabled (Weekends)",
           "every_day": "Every day",
-          "friday": "Friday",
-          "monday": "Monday",
-          "saturday": "Saturday",
-          "sunday": "Sunday",
-          "thursday": "Thursday",
-          "tuesday": "Tuesday",
-          "wednesday": "Wednesday",
+          "friday": "[%key:common::time::friday%]",
+          "monday": "[%key:common::time::monday%]",
+          "saturday": "[%key:common::time::saturday%]",
+          "sunday": "[%key:common::time::sunday%]",
+          "thursday": "[%key:common::time::thursday%]",
+          "tuesday": "[%key:common::time::tuesday%]",
+          "wednesday": "[%key:common::time::wednesday%]",
           "weekdays": "Weekdays",
           "weekends": "Weekends"
         }
@@ -1447,7 +1447,7 @@
           "float": "Float",
           "inverting": "Inverting",
           "low_power": "Low Power",
-          "off": "Off",
+          "off": "[%key:common::state::off%]",
           "passthrough": "Passthrough",
           "power_assist": "Power Assist",
           "power_supply": "Power Supply",
@@ -1692,8 +1692,8 @@
       "vebus_inverter_ignoreacin1_state": {
         "name": "State of ignore AC-in-1",
         "state": {
-          "off": "Off",
-          "on": "On"
+          "off": "[%key:common::state::off%]",
+          "on": "[%key:common::state::on%]"
         }
       },
       "vebus_inverter_input_apparent_power_phase": {
@@ -1715,8 +1715,8 @@
         "state": {
           "charger_only": "Charger Only",
           "inverter_only": "Inverter Only",
-          "off": "Off",
-          "on": "On"
+          "off": "[%key:common::state::off%]",
+          "on": "[%key:common::state::on%]"
         }
       },
       "vebus_inverter_output_apparent_power_phase": {
@@ -1748,7 +1748,7 @@
           "float": "Float",
           "inverting": "Inverting",
           "low_power": "Low Power",
-          "off": "Off",
+          "off": "[%key:common::state::off%]",
           "passthrough": "Passthrough",
           "power_assist": "Power Assist",
           "power_supply": "Power Supply",
