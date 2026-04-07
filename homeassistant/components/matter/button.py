@@ -161,7 +161,7 @@ DISCOVERY_SCHEMAS = [
         entity_description=MatterButtonEntityDescription(
             key="SmokeCoAlarmTemporaryMuteRequest",
             translation_key="temporary_mute_request",
-            entity_category=EntityCategory.DIAGNOSTIC,
+            entity_category=EntityCategory.CONFIG,
             command=HeimanCluster.Commands.MutingSensor,
         ),
         entity_class=MatterCommandButton,
