@@ -11,6 +11,7 @@ from homeassistant.components.infrared import (
 from homeassistant.components.lg_infrared.const import (
     CONF_DEVICE_TYPE,
     CONF_INFRARED_ENTITY_ID,
+    CONF_INFRARED_RECEIVER_ENTITY_ID,
     DOMAIN,
     LGDeviceType,
 )
@@ -20,7 +21,12 @@ from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
-from .conftest import MOCK_INFRARED_ENTITY_ID, MockInfraredEntity
+from .conftest import (
+    MOCK_INFRARED_ENTITY_ID,
+    MOCK_INFRARED_RECEIVER_ENTITY_ID,
+    MockInfraredEntity,
+    MockInfraredReceiverEntity,
+)
 
 from tests.common import MockConfigEntry
 
@@ -35,6 +41,22 @@ async def setup_infrared(
 
     component = hass.data[INFRARED_DATA_COMPONENT]
     await component.async_add_entities([mock_infrared_entity])
+
+
+@pytest.fixture
+async def setup_infrared_with_receiver(
+    hass: HomeAssistant,
+    mock_infrared_entity: MockInfraredEntity,
+    mock_infrared_receiver_entity: MockInfraredReceiverEntity,
+) -> None:
+    """Set up the infrared component with emitter and receiver entities."""
+    assert await async_setup_component(hass, INFRARED_DOMAIN, {})
+    await hass.async_block_till_done()
+
+    component = hass.data[INFRARED_DATA_COMPONENT]
+    await component.async_add_entities(
+        [mock_infrared_entity, mock_infrared_receiver_entity]
+    )
 
 
 @pytest.mark.usefixtures("setup_infrared")
@@ -134,3 +156,89 @@ async def test_user_flow_title_from_entity_name(
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == expected_title
+
+
+@pytest.mark.usefixtures("setup_infrared")
+async def test_user_flow_no_receiver_field_without_receivers(
+    hass: HomeAssistant,
+) -> None:
+    """Test receiver field is not shown when no receivers exist."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    schema_keys = [key.schema for key in result["data_schema"].schema]
+    assert CONF_INFRARED_RECEIVER_ENTITY_ID not in schema_keys
+
+
+@pytest.mark.usefixtures("setup_infrared_with_receiver")
+async def test_user_flow_receiver_field_shown_with_receivers(
+    hass: HomeAssistant,
+) -> None:
+    """Test receiver field is shown when receivers exist."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    schema_keys = [key.schema for key in result["data_schema"].schema]
+    assert CONF_INFRARED_RECEIVER_ENTITY_ID in schema_keys
+
+
+@pytest.mark.usefixtures("setup_infrared_with_receiver")
+async def test_user_flow_success_with_receiver(
+    hass: HomeAssistant,
+) -> None:
+    """Test successful user config flow with receiver selected."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_DEVICE_TYPE: LGDeviceType.TV,
+            CONF_INFRARED_ENTITY_ID: MOCK_INFRARED_ENTITY_ID,
+            CONF_INFRARED_RECEIVER_ENTITY_ID: MOCK_INFRARED_RECEIVER_ENTITY_ID,
+        },
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "LG TV via Test IR transmitter"
+    assert result["data"] == {
+        CONF_DEVICE_TYPE: LGDeviceType.TV,
+        CONF_INFRARED_ENTITY_ID: MOCK_INFRARED_ENTITY_ID,
+        CONF_INFRARED_RECEIVER_ENTITY_ID: MOCK_INFRARED_RECEIVER_ENTITY_ID,
+    }
+    assert result["result"].unique_id == f"lg_ir_tv_{MOCK_INFRARED_ENTITY_ID}"
+
+
+@pytest.mark.usefixtures("setup_infrared_with_receiver")
+async def test_user_flow_success_without_receiver_when_available(
+    hass: HomeAssistant,
+) -> None:
+    """Test successful user config flow without selecting optional receiver."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_DEVICE_TYPE: LGDeviceType.TV,
+            CONF_INFRARED_ENTITY_ID: MOCK_INFRARED_ENTITY_ID,
+        },
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"] == {
+        CONF_DEVICE_TYPE: LGDeviceType.TV,
+        CONF_INFRARED_ENTITY_ID: MOCK_INFRARED_ENTITY_ID,
+    }

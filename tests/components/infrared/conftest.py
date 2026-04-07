@@ -3,7 +3,10 @@
 from infrared_protocols import Command as InfraredCommand
 import pytest
 
-from homeassistant.components.infrared import InfraredEntity
+from homeassistant.components.infrared import (
+    InfraredEmitterEntity,
+    InfraredReceiverEntity,
+)
 from homeassistant.components.infrared.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
@@ -16,11 +19,11 @@ async def init_integration(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
 
 
-class MockInfraredEntity(InfraredEntity):
-    """Mock infrared entity for testing."""
+class MockInfraredEmitterEntity(InfraredEmitterEntity):
+    """Mock infrared emitter entity for testing."""
 
     _attr_has_entity_name = True
-    _attr_name = "Test IR transmitter"
+    _attr_name = "Test IR emitter"
 
     def __init__(self, unique_id: str) -> None:
         """Initialize mock entity."""
@@ -33,6 +36,24 @@ class MockInfraredEntity(InfraredEntity):
 
 
 @pytest.fixture
-def mock_infrared_entity() -> MockInfraredEntity:
-    """Return a mock infrared entity."""
-    return MockInfraredEntity("test_ir_transmitter")
+def mock_infrared_emitter_entity() -> MockInfraredEmitterEntity:
+    """Return a mock infrared emitter entity."""
+    return MockInfraredEmitterEntity("test_ir_emitter")
+
+
+class MockInfraredReceiverEntity(InfraredReceiverEntity):
+    """Mock infrared receiver entity for testing."""
+
+    _attr_has_entity_name = True
+    _attr_name = "Test IR receiver"
+
+    def __init__(self, unique_id: str) -> None:
+        """Initialize mock receiver entity."""
+        super().__init__()
+        self._attr_unique_id = unique_id
+
+
+@pytest.fixture
+def mock_infrared_receiver_entity() -> MockInfraredReceiverEntity:
+    """Return a mock infrared receiver entity."""
+    return MockInfraredReceiverEntity("test_ir_receiver")

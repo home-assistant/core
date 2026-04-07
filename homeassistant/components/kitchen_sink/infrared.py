@@ -5,7 +5,7 @@ from __future__ import annotations
 import infrared_protocols
 
 from homeassistant.components import persistent_notification
-from homeassistant.components.infrared import InfraredEntity
+from homeassistant.components.infrared import InfraredEmitterEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -33,7 +33,7 @@ async def async_setup_entry(
     )
 
 
-class DemoInfrared(InfraredEntity):
+class DemoInfrared(InfraredEmitterEntity):
     """Representation of a demo infrared entity."""
 
     _attr_has_entity_name = True

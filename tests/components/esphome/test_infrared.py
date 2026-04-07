@@ -33,29 +33,30 @@ async def _mock_ir_device(
 
 
 @pytest.mark.parametrize(
-    ("capabilities", "entity_created"),
+    ("capabilities", "emitter_created", "receiver_created"),
     [
-        (InfraredCapability.TRANSMITTER, True),
-        (InfraredCapability.RECEIVER, False),
-        (InfraredCapability.TRANSMITTER | InfraredCapability.RECEIVER, True),
-        (InfraredCapability(0), False),
+        (InfraredCapability.TRANSMITTER, True, False),
+        (InfraredCapability.RECEIVER, False, True),
+        (InfraredCapability.TRANSMITTER | InfraredCapability.RECEIVER, True, True),
+        (InfraredCapability(0), False, False),
     ],
 )
-async def test_infrared_entity_transmitter(
+async def test_infrared_entity_capabilities(
     hass: HomeAssistant,
     mock_client: APIClient,
     mock_esphome_device: MockESPHomeDeviceType,
     capabilities: InfraredCapability,
-    entity_created: bool,
+    emitter_created: bool,
+    receiver_created: bool,
 ) -> None:
-    """Test infrared entity with transmitter capability is created."""
+    """Test infrared entities are created based on capabilities."""
     await _mock_ir_device(mock_esphome_device, mock_client, capabilities)
 
-    state = hass.states.get(ENTITY_ID)
-    assert (state is not None) == entity_created
-
     emitters = infrared.async_get_emitters(hass)
-    assert (len(emitters) == 1) == entity_created
+    assert (len(emitters) == 1) == emitter_created
+
+    receivers = infrared.async_get_receivers(hass)
+    assert (len(receivers) == 1) == receiver_created
 
 
 async def test_infrared_multiple_entities_mixed_capabilities(
@@ -90,13 +91,19 @@ async def test_infrared_multiple_entities_mixed_capabilities(
         states=[],
     )
 
-    # Only transmitter and transceiver should be created
+    # Emitter entities for transmitter and transceiver
     assert hass.states.get("infrared.test_ir_transmitter") is not None
-    assert hass.states.get("infrared.test_ir_receiver") is None
     assert hass.states.get("infrared.test_ir_transceiver") is not None
 
     emitters = infrared.async_get_emitters(hass)
     assert len(emitters) == 2
+
+    # Receiver entities for receiver and transceiver
+    assert hass.states.get("infrared.test_ir_receiver") is not None
+    assert hass.states.get("infrared.test_ir_transceiver_2") is not None
+
+    receivers = infrared.async_get_receivers(hass)
+    assert len(receivers) == 2
 
 
 async def test_infrared_send_command_success(
