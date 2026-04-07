@@ -59,7 +59,7 @@
       "party_mode": {
         "name": "Party mode",
         "state": {
-          "master": "Master",
+          "master": "Leader",
           "off": "[%key:common::state::off%]",
           "on": "[%key:common::state::on%]"
         }
