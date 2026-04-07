@@ -86,9 +86,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         )
         return False
     except OPNsenseTimeoutError:
-        _LOGGER.error(
-            "Timeout while connecting to OPNsense API endpoint at %s", url
-        )
+        _LOGGER.error("Timeout while connecting to OPNsense API endpoint at %s", url)
         return False
     except OPNsenseSSLError:
         _LOGGER.error(
