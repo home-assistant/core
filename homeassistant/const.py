@@ -590,6 +590,7 @@ class UnitOfLength(StrEnum):
 class UnitOfFrequency(StrEnum):
     """Frequency units."""
 
+    MILLIHERTZ = "mHz"
     HERTZ = "Hz"
     KILOHERTZ = "kHz"
     MEGAHERTZ = "MHz"

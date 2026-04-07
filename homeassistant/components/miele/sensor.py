@@ -93,7 +93,14 @@ def _convert_temperature(
     """Convert temperature object to readable value."""
     if index >= len(value_list):
         return None
-    raw_value = cast(int, value_list[index].temperature) / 100.0
+    raw = value_list[index].temperature
+    if raw is None:
+        return None
+    try:
+        raw_centi = int(raw)
+    except TypeError, ValueError:
+        return None
+    raw_value = raw_centi / 100.0
     if raw_value in DISABLED_TEMP_ENTITIES:
         return None
     return raw_value
@@ -639,6 +646,7 @@ SENSOR_TYPES: Final[tuple[MieleSensorDefinition[MieleDevice], ...]] = (
             MieleAppliance.OVEN,
             MieleAppliance.OVEN_MICROWAVE,
             MieleAppliance.STEAM_OVEN_COMBI,
+            MieleAppliance.STEAM_OVEN_MK2,
         ),
         description=MieleSensorDescription(
             key="state_core_temperature",
@@ -840,9 +848,9 @@ async def async_setup_entry(
             and definition.description.value_fn(device) is None
             and definition.description.zone != 1
         ):
-            # all appliances supporting temperature have at least zone 1, for other zones
-            # don't create entity if API signals that datapoint is disabled, unless the sensor
-            # already appeared in the past (= it provided a valid value)
+            # Optional temperature datapoints (extra fridge zones, oven food probe): only
+            # create the entity after the API first reports a valid reading, then keep it
+            # so state can return to unknown when the datapoint is inactive.
             return _is_entity_registered(unique_id)
         if (
             definition.description.key == "state_plate_step"
