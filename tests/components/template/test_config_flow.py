@@ -78,18 +78,8 @@ BINARY_SENSOR_OPTIONS = {
             "on",
             {"one": "on", "two": "off"},
             {},
-            {
-                "advanced_options": {
-                    "delay_on": {"seconds": 5},
-                    "delay_off": {"seconds": 10},
-                }
-            },
-            {
-                "advanced_options": {
-                    "delay_on": {"seconds": 5},
-                    "delay_off": {"seconds": 10},
-                }
-            },
+            {},
+            {},
             {},
         ),
         (
@@ -327,12 +317,6 @@ async def test_config_flow(
     assert result["step_id"] == template_type
 
     availability = {"advanced_options": {"availability": "{{ True }}"}}
-    # Merge advanced_options from extra_input if present
-    if "advanced_options" in extra_input:
-        availability["advanced_options"].update(extra_input.pop("advanced_options"))
-        if "advanced_options" in extra_options:
-            extra_options = extra_options.copy()
-            extra_options.pop("advanced_options")
 
     with patch(
         "homeassistant.components.template.async_setup_entry", wraps=async_setup_entry
@@ -388,18 +372,8 @@ async def test_config_flow(
         (
             "binary_sensor",
             {"state": "{{ false }}"},
-            {
-                "advanced_options": {
-                    "delay_on": {"seconds": 5},
-                    "delay_off": {"seconds": 10},
-                }
-            },
-            {
-                "advanced_options": {
-                    "delay_on": {"seconds": 5},
-                    "delay_off": {"seconds": 10},
-                }
-            },
+            {},
+            {},
         ),
         (
             "switch",
@@ -602,13 +576,8 @@ async def test_config_flow_device(
             },
             ["on", "off"],
             {"one": "on", "two": "off"},
-            {"advanced_options": {"delay_on": {"seconds": 5}}},
-            {
-                "advanced_options": {
-                    "delay_on": {"seconds": 10},
-                    "delay_off": {"seconds": 10},
-                }
-            },
+            {},
+            {},
             "state",
         ),
         (
