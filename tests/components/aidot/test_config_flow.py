@@ -65,7 +65,7 @@ async def test_config_flow_login_user_password_incorrect(
             CONF_PASSWORD: "ErrorPassword",
         },
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {"base": "invalid_auth"}
 
