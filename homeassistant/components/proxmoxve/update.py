@@ -95,4 +95,9 @@ class ProxmoxNodeUpdateEntity(ProxmoxNodeEntity, UpdateEntity):
         update_info = self.entity_description.update_info(
             self.coordinator.data[self.device_name]
         )
-        return f"A total of {update_info.total_updates} update(s) is/are pending installation. There is/are {update_info.proxmox_updates} Proxmox VE update(s) and {update_info.other_updates} other update(s) pending. If you run the update, all pending updates will be installed. Proxmox will be updated to version {update_info.latest_version}. Please check the Proxmox VE node for details on the pending updates."
+        url = self.device_info.get("configuration_url") if self.device_info else None
+        return f"A total of {update_info.total_updates} package update(s) are pending installation: of these {update_info.proxmox_updates} relate to Proxmox and {update_info.other_updates} to other updates. Please visit the [Proxmox VE node]({url}) for details on the pending updates and to upgrade to {update_info.latest_version}."
+
+    def release_notes(self) -> str | None:
+        """Return the release notes for the update."""
+        return self.release_summary
