@@ -16,7 +16,6 @@ from aidot.device_client import DeviceClient, DeviceStatusData
 from aidot.exceptions import AidotAuthFailed, AidotUserOrPassIncorrect
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryError
 from homeassistant.helpers import device_registry as dr
@@ -105,9 +104,9 @@ class AidotDeviceManagerCoordinator(DataUpdateCoordinator[None]):
             raise ConfigEntryError from error
         filter_device_list = [
             device
-            for device in data.get(CONF_DEVICE_LIST)
+            for device in data[CONF_DEVICE_LIST]
             if (
-                device[CONF_TYPE] == Platform.LIGHT
+                device[CONF_TYPE] == "light"
                 and CONF_AES_KEY in device
                 and device[CONF_AES_KEY][0] is not None
             )
@@ -147,10 +146,7 @@ class AidotDeviceManagerCoordinator(DataUpdateCoordinator[None]):
     async def async_auto_login(self) -> None:
         """Async auto login."""
         if self.client.login_info.get(CONF_ACCESS_TOKEN) is None:
-            try:
-                await self.client.async_post_login()
-            except AidotUserOrPassIncorrect as error:
-                raise AidotUserOrPassIncorrect from error
+            await self.client.async_post_login()
 
     def _purge_deleted_lists(self) -> None:
         """Purge device entries of deleted lists."""

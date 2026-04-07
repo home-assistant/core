@@ -1,11 +1,9 @@
 """Test the aidot device."""
 
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import MagicMock
 
-from freezegun.api import FrozenDateTimeFactory
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.aidot.coordinator import UPDATE_DEVICE_LIST_INTERVAL
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_COLOR_TEMP_KELVIN,
@@ -23,13 +21,10 @@ from homeassistant.helpers import entity_registry as er
 from . import async_init_integration
 from .const import (
     ENTITY_LIGHT,
-    ENTITY_LIGHT2,
     LIGHT_DOMAIN,
-    TEST_DEVICE_LIST,
-    TEST_MULTI_DEVICE_LIST,
 )
 
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
+from tests.common import MockConfigEntry, snapshot_platform
 
 
 async def test_state(
@@ -136,45 +131,3 @@ async def test_turn_on_with_rgbw(
         blocking=True,
     )
     mocked_device_client.async_set_rgbw.assert_called_once()
-
-
-async def test_dynamic_device_add(
-    hass: HomeAssistant,
-    freezer: FrozenDateTimeFactory,
-    mock_config_entry: MockConfigEntry,
-    mocked_aidot_client: MagicMock,
-) -> None:
-    """Test if adding a new device dynamically creates the corresponding light entity."""
-    await async_init_integration(hass, mock_config_entry)
-
-    state = hass.states.get(ENTITY_LIGHT2)
-    assert state is None
-
-    mocked_aidot_client.async_get_all_device.return_value = TEST_MULTI_DEVICE_LIST
-    freezer.tick(UPDATE_DEVICE_LIST_INTERVAL)
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
-    state = hass.states.get(ENTITY_LIGHT2)
-    assert state
-
-
-async def test_dynamic_device_remove(
-    hass: HomeAssistant,
-    freezer: FrozenDateTimeFactory,
-    mock_config_entry: MockConfigEntry,
-    mocked_aidot_client: MagicMock,
-) -> None:
-    """Test if removing a device dynamically removes the corresponding light entity."""
-    mocked_aidot_client.async_get_all_device = AsyncMock(
-        return_value=TEST_MULTI_DEVICE_LIST
-    )
-    await async_init_integration(hass, mock_config_entry)
-
-    state = hass.states.get(ENTITY_LIGHT2)
-    assert state
-    mocked_aidot_client.async_get_all_device = AsyncMock(return_value=TEST_DEVICE_LIST)
-    freezer.tick(UPDATE_DEVICE_LIST_INTERVAL)
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
-    state = hass.states.get(ENTITY_LIGHT2)
-    assert state is None

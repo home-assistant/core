@@ -48,7 +48,6 @@
     'attributes': ReadOnlyDict({
       'brightness': 255,
       'color_mode': <ColorMode.RGBW: 'rgbw'>,
-      'color_temp': None,
       'color_temp_kelvin': None,
       'friendly_name': 'Test Light',
       'hs_color': tuple(
