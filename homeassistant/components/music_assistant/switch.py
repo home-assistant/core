@@ -105,7 +105,7 @@ class MusicAssistantPlayerConfigSwitch(MusicAssistantPlayerOptionEntity, SwitchE
 
     @catch_musicassistant_error
     async def async_turn_off(self, **kwargs: Any) -> None:
-        """Handle turn on command."""
+        """Handle turn off command."""
         await self.mass.players.set_option(self.player_id, self.mass_option_key, False)
 
     def on_player_option_update(self, player_option: PlayerOption) -> None:
