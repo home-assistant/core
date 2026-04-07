@@ -234,6 +234,9 @@ class BSBLANFlowHandler(ConfigFlow, domain=DOMAIN):
         # it gets the unique ID from the device info when it validates credentials
         self._abort_if_unique_id_mismatch()
 
+        # Rediscover circuits in case hardware changed
+        await self._discover_circuits()
+
         return self.async_update_reload_and_abort(
             existing_entry,
             data_updates={**user_input, CONF_HEATING_CIRCUITS: self.circuits},

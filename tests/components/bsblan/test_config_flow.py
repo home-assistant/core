@@ -1147,6 +1147,7 @@ async def test_reconfigure_flow_success(
     assert mock_config_entry.data[CONF_PASSKEY] == "new_passkey"
     assert mock_config_entry.data[CONF_USERNAME] == "new_admin"
     assert mock_config_entry.data[CONF_PASSWORD] == "new_password"
+    assert mock_config_entry.data[CONF_HEATING_CIRCUITS] == [1]
 
 
 @pytest.mark.parametrize(
@@ -1208,6 +1209,7 @@ async def test_reconfigure_flow_error_recovery(
     assert mock_config_entry.data[CONF_PASSKEY] == "new_passkey"
     assert mock_config_entry.data[CONF_USERNAME] == "new_admin"
     assert mock_config_entry.data[CONF_PASSWORD] == "new_password"
+    assert mock_config_entry.data[CONF_HEATING_CIRCUITS] == [1]
 
 
 async def test_reconfigure_flow_unique_id_mismatch(
