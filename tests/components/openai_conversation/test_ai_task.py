@@ -10,6 +10,7 @@ import voluptuous as vol
 
 from homeassistant.components import ai_task, media_source
 from homeassistant.components.openai_conversation import DOMAIN
+from homeassistant.components.openai_conversation.const import CONF_STORE_RESPONSES
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er, issue_registry as ir, selector
@@ -20,11 +21,13 @@ from tests.common import MockConfigEntry
 
 
 @pytest.mark.usefixtures("mock_init_component")
+@pytest.mark.parametrize("expected_store", [False, True])
 async def test_generate_data(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_create_stream: AsyncMock,
     entity_registry: er.EntityRegistry,
+    expected_store: bool,
 ) -> None:
     """Test AI Task data generation."""
     entity_id = "ai_task.openai_ai_task"
@@ -38,6 +41,12 @@ async def test_generate_data(
             if entry.subentry_type == "ai_task_data"
         )
     )
+    hass.config_entries.async_update_subentry(
+        mock_config_entry,
+        ai_task_entry,
+        data={**ai_task_entry.data, CONF_STORE_RESPONSES: expected_store},
+    )
+    await hass.async_block_till_done()
     assert entity_entry is not None
     assert entity_entry.config_entry_id == mock_config_entry.entry_id
     assert entity_entry.config_subentry_id == ai_task_entry.subentry_id
@@ -55,6 +64,8 @@ async def test_generate_data(
     )
 
     assert result.data == "The test data"
+    assert mock_create_stream.call_args is not None
+    assert mock_create_stream.call_args.kwargs["store"] is expected_store
 
 
 @pytest.mark.usefixtures("mock_init_component")
@@ -212,6 +223,7 @@ async def test_generate_data_with_attachments(
 
 @pytest.mark.usefixtures("mock_init_component")
 @pytest.mark.freeze_time("2025-06-14 22:59:00")
+@pytest.mark.parametrize("configured_store", [False, True])
 @pytest.mark.parametrize(
     "image_model", ["gpt-image-1.5", "gpt-image-1", "gpt-image-1-mini"]
 )
@@ -222,6 +234,7 @@ async def test_generate_image(
     entity_registry: er.EntityRegistry,
     issue_registry: ir.IssueRegistry,
     image_model: str,
+    configured_store: bool,
 ) -> None:
     """Test AI Task image generation."""
     entity_id = "ai_task.openai_ai_task"
@@ -238,7 +251,11 @@ async def test_generate_image(
     hass.config_entries.async_update_subentry(
         mock_config_entry,
         ai_task_entry,
-        data={"image_model": image_model},
+        data={
+            **ai_task_entry.data,
+            "image_model": image_model,
+            CONF_STORE_RESPONSES: configured_store,
+        },
     )
     await hass.async_block_till_done()
     assert entity_entry is not None
@@ -277,6 +294,8 @@ async def test_generate_image(
     assert result["model"] == image_model
 
     mock_upload_media.assert_called_once()
+    assert mock_create_stream.call_args is not None
+    assert mock_create_stream.call_args.kwargs["store"] is True
     image_data = mock_upload_media.call_args[0][1]
     assert image_data.file.getvalue() == b"A"
     assert image_data.content_type == "image/png"

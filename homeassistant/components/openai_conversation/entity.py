@@ -75,6 +75,7 @@ from .const import (
     CONF_REASONING_EFFORT,
     CONF_REASONING_SUMMARY,
     CONF_SERVICE_TIER,
+    CONF_STORE_RESPONSES,
     CONF_TEMPERATURE,
     CONF_TOP_P,
     CONF_VERBOSITY,
@@ -94,6 +95,7 @@ from .const import (
     RECOMMENDED_REASONING_EFFORT,
     RECOMMENDED_REASONING_SUMMARY,
     RECOMMENDED_SERVICE_TIER,
+    RECOMMENDED_STORE_RESPONSES,
     RECOMMENDED_STT_MODEL,
     RECOMMENDED_TEMPERATURE,
     RECOMMENDED_TOP_P,
@@ -508,7 +510,7 @@ class OpenAIBaseLLMEntity(Entity):
             max_output_tokens=options.get(CONF_MAX_TOKENS, RECOMMENDED_MAX_TOKENS),
             user=chat_log.conversation_id,
             service_tier=options.get(CONF_SERVICE_TIER, RECOMMENDED_SERVICE_TIER),
-            store=False,
+            store=options.get(CONF_STORE_RESPONSES, RECOMMENDED_STORE_RESPONSES),
             stream=True,
         )
 
@@ -611,8 +613,10 @@ class OpenAIBaseLLMEntity(Entity):
             if image_model != "gpt-image-1-mini":
                 image_tool["input_fidelity"] = "high"
             tools.append(image_tool)
+            # Keep image state on OpenAI so follow-up prompts can continue by
+            # conversation ID without resending the generated image data.
+            model_args["store"] = True
             model_args["tool_choice"] = ToolChoiceTypesParam(type="image_generation")
-            model_args["store"] = True  # Avoid sending image data back and forth
 
         if tools:
             model_args["tools"] = tools
