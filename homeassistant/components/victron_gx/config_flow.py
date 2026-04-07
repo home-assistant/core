@@ -298,8 +298,7 @@ class VictronGXConfigFlow(ConfigFlow, domain=DOMAIN):
         reauth_entry = self._get_reauth_entry()
 
         if user_input is not None:
-            data = {
-                **reauth_entry.data,
+            updates = {
                 CONF_USERNAME: user_input.get(CONF_USERNAME) or None,
                 CONF_PASSWORD: user_input.get(CONF_PASSWORD) or None,
                 CONF_SSL: user_input.get(
@@ -307,7 +306,7 @@ class VictronGXConfigFlow(ConfigFlow, domain=DOMAIN):
                 ),
             }
             try:
-                await validate_input(data)
+                await validate_input({**reauth_entry.data, **updates})
             except AuthenticationError:
                 errors["base"] = "invalid_auth"
             except CannotConnectError:
@@ -318,13 +317,7 @@ class VictronGXConfigFlow(ConfigFlow, domain=DOMAIN):
             else:
                 return self.async_update_reload_and_abort(
                     reauth_entry,
-                    data_updates={
-                        CONF_USERNAME: user_input.get(CONF_USERNAME) or None,
-                        CONF_PASSWORD: user_input.get(CONF_PASSWORD) or None,
-                        CONF_SSL: user_input.get(
-                            CONF_SSL, reauth_entry.data.get(CONF_SSL, False)
-                        ),
-                    },
+                    data_updates=updates,
                 )
 
         suggested_values = user_input or {
