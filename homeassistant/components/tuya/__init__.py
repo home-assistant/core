@@ -82,7 +82,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: TuyaConfigEntry) -> bool
     entry.runtime_data = HomeAssistantTuyaData(manager=manager, listener=listener)
 
     # Cleanup device registry
-    cleanup_device_registry(hass, manager, entry)
+    await cleanup_device_registry(hass, manager, entry)
 
     # Register known device IDs
     device_registry = dr.async_get(hass)
@@ -143,7 +143,7 @@ def _register_device_in_registry(
         )
 
 
-def cleanup_device_registry(
+async def cleanup_device_registry(
     hass: HomeAssistant, device_manager: Manager, entry: TuyaConfigEntry
 ) -> None:
     """Unlink device registry entry if there are no remaining entities."""
