@@ -26,11 +26,6 @@ class MitsubishiComfortEntity(CoordinatorEntity[MitsubishiComfortCoordinator]):
         return self.coordinator.data
 
     @property
-    def available(self) -> bool:
-        """Return True if entity is available."""
-        return self.coordinator.available
-
-    @property
     def device_info(self) -> DeviceInfo:
         """Return device information."""
         return DeviceInfo(

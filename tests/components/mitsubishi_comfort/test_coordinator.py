@@ -6,112 +6,70 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
+from mitsubishi_comfort import IndoorUnit
+
 from homeassistant.components.mitsubishi_comfort.coordinator import (
-    MAX_FAILURES_BEFORE_UNAVAILABLE,
     MitsubishiComfortCoordinator,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import UpdateFailed
 
 
-async def test_successful_update_resets_failures(
-    hass: HomeAssistant,
-) -> None:
-    """Test that a successful update resets the failure counter."""
-    device = MagicMock()
-    device.serial = "SERIAL001"
-    device.name = "Living Room"
+async def test_update_success(hass: HomeAssistant) -> None:
+    """Test successful update returns the device."""
+    device = MagicMock(spec=IndoorUnit)
+    device.serial = "S001"
+    device.name = "Test"
     device.update_status = AsyncMock(return_value=True)
 
     coordinator = MitsubishiComfortCoordinator(hass, device)
-    coordinator._consecutive_failures = 2
+    result = await coordinator._async_update_data()
 
-    await coordinator._async_update_data()
-
-    assert coordinator._consecutive_failures == 0
-    assert coordinator.available is True
+    assert result is device
+    device.update_status.assert_awaited_once()
 
 
-async def test_failed_update_increments_failures(
-    hass: HomeAssistant,
-) -> None:
-    """Test that a failed update increments the failure counter."""
-    device = MagicMock()
-    device.serial = "SERIAL001"
-    device.name = "Living Room"
+async def test_update_failure_raises(hass: HomeAssistant) -> None:
+    """Test failed update raises UpdateFailed."""
+    device = MagicMock(spec=IndoorUnit)
+    device.serial = "S001"
+    device.name = "Test"
     device.update_status = AsyncMock(return_value=False)
 
     coordinator = MitsubishiComfortCoordinator(hass, device)
 
-    await coordinator._async_update_data()
-
-    assert coordinator._consecutive_failures == 1
-    assert coordinator.available is True
-
-
-async def test_unavailable_after_max_failures(
-    hass: HomeAssistant,
-) -> None:
-    """Test that device becomes unavailable after MAX_FAILURES_BEFORE_UNAVAILABLE."""
-    device = MagicMock()
-    device.serial = "SERIAL001"
-    device.name = "Living Room"
-    device.update_status = AsyncMock(return_value=False)
-
-    coordinator = MitsubishiComfortCoordinator(hass, device)
-    coordinator._consecutive_failures = MAX_FAILURES_BEFORE_UNAVAILABLE - 1
-
-    with pytest.raises(UpdateFailed):
+    with pytest.raises(UpdateFailed, match="returned no data"):
         await coordinator._async_update_data()
 
-    assert coordinator._consecutive_failures == MAX_FAILURES_BEFORE_UNAVAILABLE
-    assert coordinator.available is False
 
-
-async def test_recovery_after_failures(
-    hass: HomeAssistant,
-) -> None:
-    """Test that device recovers after failures when update succeeds."""
-    device = MagicMock()
-    device.serial = "SERIAL001"
-    device.name = "Living Room"
-    device.update_status = AsyncMock(return_value=True)
-
-    coordinator = MitsubishiComfortCoordinator(hass, device)
-    coordinator._consecutive_failures = MAX_FAILURES_BEFORE_UNAVAILABLE
-    assert coordinator.available is False
-
-    await coordinator._async_update_data()
-
-    assert coordinator._consecutive_failures == 0
-    assert coordinator.available is True
-
-
-async def test_available_boundary(
-    hass: HomeAssistant,
-) -> None:
-    """Test the boundary condition for availability."""
-    device = MagicMock()
-    device.serial = "SERIAL001"
-    device.name = "Living Room"
-    device.update_status = AsyncMock(return_value=False)
+async def test_update_exception_raises(hass: HomeAssistant) -> None:
+    """Test exception during update raises UpdateFailed."""
+    device = MagicMock(spec=IndoorUnit)
+    device.serial = "S001"
+    device.name = "Test"
+    device.update_status = AsyncMock(side_effect=TimeoutError("timeout"))
 
     coordinator = MitsubishiComfortCoordinator(hass, device)
 
-    # Just below threshold - still available
-    coordinator._consecutive_failures = MAX_FAILURES_BEFORE_UNAVAILABLE - 1
-    assert coordinator.available is True
-
-    # At threshold - unavailable
-    coordinator._consecutive_failures = MAX_FAILURES_BEFORE_UNAVAILABLE
-    assert coordinator.available is False
+    with pytest.raises(UpdateFailed, match="Error communicating"):
+        await coordinator._async_update_data()
 
 
-async def test_coordinator_name(
-    hass: HomeAssistant,
-) -> None:
+async def test_coordinator_stores_device(hass: HomeAssistant) -> None:
+    """Test coordinator stores device as data."""
+    device = MagicMock(spec=IndoorUnit)
+    device.serial = "S001"
+    device.name = "Test"
+
+    coordinator = MitsubishiComfortCoordinator(hass, device)
+
+    assert coordinator.device is device
+    assert coordinator.data is device
+
+
+async def test_coordinator_name(hass: HomeAssistant) -> None:
     """Test coordinator name includes device serial."""
-    device = MagicMock()
+    device = MagicMock(spec=IndoorUnit)
     device.serial = "SERIAL001"
     device.name = "Living Room"
 

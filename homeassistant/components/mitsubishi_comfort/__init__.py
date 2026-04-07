@@ -95,9 +95,7 @@ def _parse_kumo_cache(hass: HomeAssistant) -> dict[str, str]:
     return addresses
 
 
-def _make_device(
-    info: DeviceInfo, serial: str, connect_timeout: float, response_timeout: float
-) -> IndoorUnit | KumoStation:
+def _make_device(info: DeviceInfo, serial: str) -> IndoorUnit | KumoStation:
     """Create the appropriate device instance from DeviceInfo."""
     cls = IndoorUnit if info.is_indoor_unit else KumoStation
     return cls(
@@ -106,8 +104,8 @@ def _make_device(
         password_b64=info.password,
         crypto_serial_hex=info.crypto_serial,
         serial=serial,
-        connect_timeout=connect_timeout,
-        response_timeout=response_timeout,
+        connect_timeout=DEFAULT_CONNECT_TIMEOUT,
+        response_timeout=DEFAULT_RESPONSE_TIMEOUT,
     )
 
 
@@ -174,9 +172,6 @@ async def async_setup_entry(
 
         await hass.async_add_executor_job(_save_credentials, hass, devices)
 
-        connect_timeout = DEFAULT_CONNECT_TIMEOUT
-        response_timeout = DEFAULT_RESPONSE_TIMEOUT
-
         coordinators: dict[str, MitsubishiComfortCoordinator] = {}
         incomplete_serials: list[str] = []
         for serial, info in devices.items():
@@ -192,7 +187,7 @@ async def async_setup_entry(
                 )
                 continue
 
-            device = _make_device(info, serial, connect_timeout, response_timeout)
+            device = _make_device(info, serial)
             coordinators[serial] = MitsubishiComfortCoordinator(hass, device)
 
         if not coordinators:
@@ -211,8 +206,6 @@ async def async_setup_entry(
                     account,
                     devices,
                     incomplete_serials,
-                    connect_timeout,
-                    response_timeout,
                 )
             )
 
@@ -228,8 +221,6 @@ async def _retry_incomplete_devices(
     account: MitsubishiCloudAccount,
     devices: dict[str, DeviceInfo],
     incomplete_serials: list[str],
-    connect_timeout: float,
-    response_timeout: float,
 ) -> None:
     """Retry credential retrieval for devices that were missing passwords."""
     try:
@@ -265,7 +256,7 @@ async def _retry_incomplete_devices(
                 info = devices[serial]
                 incomplete_serials.remove(serial)
                 _LOGGER.info("Device %s now has complete credentials", info.label)
-                device = _make_device(info, serial, connect_timeout, response_timeout)
+                device = _make_device(info, serial)
                 coordinators[serial] = MitsubishiComfortCoordinator(hass, device)
 
             await hass.async_add_executor_job(_save_credentials, hass, devices)

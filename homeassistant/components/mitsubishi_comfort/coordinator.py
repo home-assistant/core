@@ -13,8 +13,6 @@ from .const import DEFAULT_SCAN_INTERVAL
 
 _LOGGER = logging.getLogger(__name__)
 
-MAX_FAILURES_BEFORE_UNAVAILABLE = 3
-
 
 class MitsubishiComfortCoordinator(DataUpdateCoordinator[IndoorUnit | KumoStation]):
     """Coordinator to poll a single Mitsubishi device."""
@@ -33,28 +31,13 @@ class MitsubishiComfortCoordinator(DataUpdateCoordinator[IndoorUnit | KumoStatio
         )
         self.device = device
         self.data = device
-        self._consecutive_failures = 0
-
-    @property
-    def available(self) -> bool:
-        """Return True if the device is available."""
-        return self._consecutive_failures < MAX_FAILURES_BEFORE_UNAVAILABLE
 
     async def _async_update_data(self) -> IndoorUnit | KumoStation:
         """Poll the device and return it."""
-        success = await self.device.update_status()
-        if success:
-            self._consecutive_failures = 0
-        else:
-            self._consecutive_failures += 1
-            _LOGGER.warning(
-                "Device %s poll failed (%d consecutive)",
-                self.device.name,
-                self._consecutive_failures,
-            )
-            if self._consecutive_failures >= MAX_FAILURES_BEFORE_UNAVAILABLE:
-                raise UpdateFailed(
-                    f"Device {self.device.name} unavailable after "
-                    f"{self._consecutive_failures} failures"
-                )
+        try:
+            success = await self.device.update_status()
+        except Exception as err:
+            raise UpdateFailed(f"Error communicating with {self.device.name}") from err
+        if not success:
+            raise UpdateFailed(f"Device {self.device.name} returned no data")
         return self.device

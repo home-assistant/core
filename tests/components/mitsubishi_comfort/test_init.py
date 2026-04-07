@@ -16,7 +16,11 @@ from homeassistant.components.mitsubishi_comfort import (
     _retry_incomplete_devices,
     _save_credentials,
 )
-from homeassistant.components.mitsubishi_comfort.const import DOMAIN
+from homeassistant.components.mitsubishi_comfort.const import (
+    DEFAULT_CONNECT_TIMEOUT,
+    DEFAULT_RESPONSE_TIMEOUT,
+    DOMAIN,
+)
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
@@ -408,15 +412,15 @@ async def test_make_device_indoor_unit(
     assert mock_device_info.is_indoor_unit is True
 
     with patch("homeassistant.components.mitsubishi_comfort.IndoorUnit") as mock_cls:
-        _make_device(mock_device_info, "SERIAL001", 1.2, 8.0)
+        _make_device(mock_device_info, "SERIAL001")
         mock_cls.assert_called_once_with(
             name=mock_device_info.label,
             address=mock_device_info.address,
             password_b64=mock_device_info.password,
             crypto_serial_hex=mock_device_info.crypto_serial,
             serial="SERIAL001",
-            connect_timeout=1.2,
-            response_timeout=8.0,
+            connect_timeout=DEFAULT_CONNECT_TIMEOUT,
+            response_timeout=DEFAULT_RESPONSE_TIMEOUT,
         )
 
 
@@ -434,15 +438,15 @@ async def test_make_device_kumo_station() -> None:
     assert headless_info.is_indoor_unit is False
 
     with patch("homeassistant.components.mitsubishi_comfort.KumoStation") as mock_cls:
-        _make_device(headless_info, "SERIAL002", 1.2, 8.0)
+        _make_device(headless_info, "SERIAL002")
         mock_cls.assert_called_once_with(
             name="Kumo Station",
             address="192.168.1.200",
             password_b64="cHdk",
             crypto_serial_hex="aabbccdd",
             serial="SERIAL002",
-            connect_timeout=1.2,
-            response_timeout=8.0,
+            connect_timeout=DEFAULT_CONNECT_TIMEOUT,
+            response_timeout=DEFAULT_RESPONSE_TIMEOUT,
         )
 
 
@@ -658,7 +662,7 @@ async def test_retry_incomplete_devices_success(
         ) as mock_reload,
     ):
         await _retry_incomplete_devices(
-            hass, entry, mock_account, devices, incomplete_serials, 1.2, 8.0
+            hass, entry, mock_account, devices, incomplete_serials
         )
 
     assert incomplete_info.password == "bmV3cGFzcw=="
@@ -679,7 +683,7 @@ async def test_retry_incomplete_devices_no_runtime_data(
 
     with patch("asyncio.sleep", new_callable=AsyncMock):
         await _retry_incomplete_devices(
-            hass, entry, mock_account, devices, incomplete_serials, 1.2, 8.0
+            hass, entry, mock_account, devices, incomplete_serials
         )
 
     # get_passwords_via_websocket should not have been called
@@ -712,7 +716,7 @@ async def test_retry_incomplete_devices_all_attempts_fail(
 
     with patch("asyncio.sleep", new_callable=AsyncMock):
         await _retry_incomplete_devices(
-            hass, entry, mock_account, devices, incomplete_serials, 1.2, 8.0
+            hass, entry, mock_account, devices, incomplete_serials
         )
 
     # After 3 failed attempts, the device should still be incomplete

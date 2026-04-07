@@ -890,14 +890,12 @@ async def test_entity_available(
     hass: HomeAssistant,
     setup_climate: MagicMock,
 ) -> None:
-    """Test entity availability delegates to coordinator."""
+    """Test entity availability delegates to CoordinatorEntity."""
     entity: MitsubishiComfortClimate = hass.data["entity_components"][
         "climate"
     ].get_entity(ENTITY_ID)  # type: ignore[assignment]
+    # After successful setup, entity should be available
     assert entity.available is True
-
-    entity.coordinator._consecutive_failures = 5
-    assert entity.available is False
 
 
 async def test_entity_device_info(
