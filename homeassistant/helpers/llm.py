@@ -331,7 +331,6 @@ class IntentResponseDict(dict):
         result = intent_response.as_dict()
         del result["language"]
         del result["card"]
-        result["speech"] = result["speech"].copy()
         super().__init__(result)
         self.original = intent_response
 

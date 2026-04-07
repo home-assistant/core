@@ -1440,7 +1440,7 @@ class IntentResponse:
     def as_dict(self) -> dict[str, Any]:
         """Return a dictionary representation of an intent response."""
         response_dict: dict[str, Any] = {
-            "speech": self.speech,
+            "speech": self.speech.copy(),
             "card": self.card,
             "language": self.language,
             "response_type": self.response_type.value,
