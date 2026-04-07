@@ -182,15 +182,11 @@ class LunatoneLight(
             if ATTR_RGB_COLOR in kwargs:
                 status_update_delay *= 4
                 await self._device.fade_to_rgbw_color(
-                    tuple(
-                        (color / 255 for color in kwargs[ATTR_RGB_COLOR]),
-                    )
+                    tuple(color / 255 for color in kwargs[ATTR_RGB_COLOR])
                 )
             if ATTR_RGBW_COLOR in kwargs:
                 status_update_delay *= 7.5
-                rgbw_color = tuple(
-                    (color / 255 for color in kwargs[ATTR_RGBW_COLOR]),
-                )
+                rgbw_color = tuple(color / 255 for color in kwargs[ATTR_RGBW_COLOR])
                 await self._device.fade_to_rgbw_color(rgbw_color[:-1], rgbw_color[-1])
             if ATTR_BRIGHTNESS in kwargs or not self.is_on:
                 await self._device.fade_to_brightness(
