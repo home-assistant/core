@@ -1304,7 +1304,7 @@ async def test_async_scan_serial_ports_no_vid_pid(hass: HomeAssistant) -> None:
     mock_port.pid = None
     mock_port.serial_number = None
     mock_port.manufacturer = None
-    mock_port.description = None
+    mock_port.product = None
 
     with patch(
         "homeassistant.components.usb.utils.list_serial_ports",
