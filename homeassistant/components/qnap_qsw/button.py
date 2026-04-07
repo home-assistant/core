@@ -13,13 +13,12 @@ from homeassistant.components.button import (
     ButtonEntity,
     ButtonEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN, QSW_COORD_DATA, QSW_REBOOT
-from .coordinator import QswDataCoordinator
+from .const import QSW_REBOOT
+from .coordinator import QnapQswConfigEntry, QswDataCoordinator
 from .entity import QswDataEntity
 
 
@@ -42,11 +41,11 @@ BUTTON_TYPES: Final[tuple[QswButtonDescription, ...]] = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: QnapQswConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Add QNAP QSW buttons from a config_entry."""
-    coordinator: QswDataCoordinator = hass.data[DOMAIN][entry.entry_id][QSW_COORD_DATA]
+    coordinator = entry.runtime_data.data_coordinator
     async_add_entities(
         QswButton(coordinator, description, entry) for description in BUTTON_TYPES
     )
@@ -63,7 +62,7 @@ class QswButton(QswDataEntity, ButtonEntity):
         self,
         coordinator: QswDataCoordinator,
         description: QswButtonDescription,
-        entry: ConfigEntry,
+        entry: QnapQswConfigEntry,
     ) -> None:
         """Initialize."""
         super().__init__(coordinator, entry)
