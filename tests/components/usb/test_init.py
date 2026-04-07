@@ -7,6 +7,7 @@ import os
 from unittest.mock import MagicMock, Mock, call, patch, sentinel
 
 import pytest
+from serialx import SerialPortInfo
 
 from homeassistant import config_entries
 from homeassistant.components import usb
@@ -1298,13 +1299,18 @@ async def test_register_port_event_callback_failure(
 
 async def test_async_scan_serial_ports_no_vid_pid(hass: HomeAssistant) -> None:
     """Test async_scan_serial_ports returns devices without VID:PID."""
-    mock_port = MagicMock()
-    mock_port.device = "/dev/ttyAMA1"
-    mock_port.vid = None
-    mock_port.pid = None
-    mock_port.serial_number = None
-    mock_port.manufacturer = None
-    mock_port.product = None
+    mock_port = SerialPortInfo(
+        device="/dev/ttyAMA1",
+        resolved_device="/dev/ttyAMA1",
+        vid=None,
+        pid=None,
+        serial_number=None,
+        manufacturer=None,
+        product=None,
+        bcd_device=None,
+        interface_description=None,
+        interface_num=None,
+    )
 
     with patch(
         "homeassistant.components.usb.utils.list_serial_ports",
