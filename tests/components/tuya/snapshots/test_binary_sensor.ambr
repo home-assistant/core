@@ -32,7 +32,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'tuya.iks13mcaiyie3rryjb2occo2_state',
+    'unique_id': 'iks13mcaiyie3rryjb2oc.co2_state',
     'unit_of_measurement': None,
   })
 # ---
@@ -83,7 +83,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'tuya.7obpyhy8scmdoorcontact_state',
+    'unique_id': '7obpyhy8scm.doorcontact_state',
     'unit_of_measurement': None,
   })
 # ---
@@ -134,7 +134,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'tuya.rirsc4vhpbv2whkp2gwcharge_state',
+    'unique_id': 'rirsc4vhpbv2whkp2gw.charge_state',
     'unit_of_measurement': None,
   })
 # ---
@@ -185,7 +185,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'feeding',
-    'unique_id': 'tuya.igkrtodqg14xvfxlqswwcfeed_state',
+    'unique_id': 'igkrtodqg14xvfxlqswwc.feed_state',
     'unit_of_measurement': None,
   })
 # ---
@@ -235,7 +235,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'tuya.iomszlsve0yyzkfwqswwccharge_state',
+    'unique_id': 'iomszlsve0yyzkfwqswwc.charge_state',
     'unit_of_measurement': None,
   })
 # ---
@@ -286,7 +286,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'tankfull',
-    'unique_id': 'tuya.giqs1xhsekjelfibscfault_water_full',
+    'unique_id': 'giqs1xhsekjelfibsc.fault_water_full',
     'unit_of_measurement': None,
   })
 # ---
@@ -337,7 +337,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'defrost',
-    'unique_id': 'tuya.ifzgvpgoodrfw2akscdefrost',
+    'unique_id': 'ifzgvpgoodrfw2aksc.defrost',
     'unit_of_measurement': None,
   })
 # ---
@@ -388,7 +388,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'tankfull',
-    'unique_id': 'tuya.ifzgvpgoodrfw2aksctankfull',
+    'unique_id': 'ifzgvpgoodrfw2aksc.tankfull',
     'unit_of_measurement': None,
   })
 # ---
@@ -439,7 +439,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'defrost',
-    'unique_id': 'tuya.2myxayqtud9aqbizscdefrost',
+    'unique_id': '2myxayqtud9aqbizsc.defrost',
     'unit_of_measurement': None,
   })
 # ---
@@ -490,7 +490,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'tankfull',
-    'unique_id': 'tuya.2myxayqtud9aqbizsctankfull',
+    'unique_id': '2myxayqtud9aqbizsc.tankfull',
     'unit_of_measurement': None,
   })
 # ---
@@ -541,7 +541,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'wet',
-    'unique_id': 'tuya.2myxayqtud9aqbizscwet',
+    'unique_id': '2myxayqtud9aqbizsc.wet',
     'unit_of_measurement': None,
   })
 # ---
@@ -592,7 +592,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'tuya.bFFsO8HimyAJGIj7scmswitch',
+    'unique_id': 'bFFsO8HimyAJGIj7scm.switch',
     'unit_of_measurement': None,
   })
 # ---
@@ -643,7 +643,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'tuya.yuanswy6scmdoorcontact_state',
+    'unique_id': 'yuanswy6scm.doorcontact_state',
     'unit_of_measurement': None,
   })
 # ---
@@ -694,7 +694,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'tuya.yuanswy6scmtemper_alarm',
+    'unique_id': 'yuanswy6scm.temper_alarm',
     'unit_of_measurement': None,
   })
 # ---
@@ -745,7 +745,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'tuya.3uqk1csjqplf3uxqscmdoorcontact_state',
+    'unique_id': '3uqk1csjqplf3uxqscm.doorcontact_state',
     'unit_of_measurement': None,
   })
 # ---
@@ -796,7 +796,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'tuya.cwwk68dyfsh2eqi4jbqrgas_sensor_status',
+    'unique_id': 'cwwk68dyfsh2eqi4jbqr.gas_sensor_status',
     'unit_of_measurement': None,
   })
 # ---
@@ -847,7 +847,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'tuya.mpowx36sgqexmtes2gwmaster_state',
+    'unique_id': 'mpowx36sgqexmtes2gw.master_state',
     'unit_of_measurement': None,
   })
 # ---
@@ -898,7 +898,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'tuya.sdq2flqkq0lblcah2gwmaster_state',
+    'unique_id': 'sdq2flqkq0lblcah2gw.master_state',
     'unit_of_measurement': None,
   })
 # ---
@@ -949,7 +949,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'tuya.kxwleaa2sphpresence_state',
+    'unique_id': 'kxwleaa2sph.presence_state',
     'unit_of_measurement': None,
   })
 # ---
@@ -1000,7 +1000,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'tuya.qwExlkou9h2USezrjswatersensor_state',
+    'unique_id': 'qwExlkou9h2USezrjs.watersensor_state',
     'unit_of_measurement': None,
   })
 # ---
@@ -1051,7 +1051,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'bag_full',
-    'unique_id': 'tuya.yohkwjjdjlzludd3psmfault_full_fault',
+    'unique_id': 'yohkwjjdjlzludd3psm.fault_full_fault',
     'unit_of_measurement': None,
   })
 # ---
@@ -1102,7 +1102,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'cover_off',
-    'unique_id': 'tuya.yohkwjjdjlzludd3psmfault_box_out',
+    'unique_id': 'yohkwjjdjlzludd3psm.fault_box_out',
     'unit_of_measurement': None,
   })
 # ---
@@ -1153,7 +1153,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'tuya.ingdwog22gwmaster_state',
+    'unique_id': 'ingdwog22gw.master_state',
     'unit_of_measurement': None,
   })
 # ---
@@ -1204,7 +1204,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'tuya.s3zzjdcfrippir',
+    'unique_id': 's3zzjdcfrip.pir',
     'unit_of_measurement': None,
   })
 # ---
@@ -1255,7 +1255,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'tuya.s3zzjdcfriptemper_alarm',
+    'unique_id': 's3zzjdcfrip.temper_alarm',
     'unit_of_measurement': None,
   })
 # ---
@@ -1306,7 +1306,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'tuya.kkgbskmfejn67l1orippir',
+    'unique_id': 'kkgbskmfejn67l1orip.pir',
     'unit_of_measurement': None,
   })
 # ---
@@ -1357,7 +1357,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'tuya.zoytcemodrn39zqwrippir',
+    'unique_id': 'zoytcemodrn39zqwrip.pir',
     'unit_of_measurement': None,
   })
 # ---
@@ -1408,7 +1408,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'tuya.hkm4px9ohzozxma3rippir',
+    'unique_id': 'hkm4px9ohzozxma3rip.pir',
     'unit_of_measurement': None,
   })
 # ---
@@ -1459,7 +1459,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'tuya.hkm4px9ohzozxma3riptemper_alarm',
+    'unique_id': 'hkm4px9ohzozxma3rip.temper_alarm',
     'unit_of_measurement': None,
   })
 # ---
@@ -1510,7 +1510,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'tuya.o71einxvuuktuljcjbwysmoke_sensor_status',
+    'unique_id': 'o71einxvuuktuljcjbwy.smoke_sensor_status',
     'unit_of_measurement': None,
   })
 # ---
@@ -1561,7 +1561,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'tuya.t5zosev6h6wmwyrajbwysmoke_sensor_status',
+    'unique_id': 't5zosev6h6wmwyrajbwy.smoke_sensor_status',
     'unit_of_measurement': None,
   })
 # ---
@@ -1612,7 +1612,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'tuya.okwwus27jhqqe2mijbgscharge_state',
+    'unique_id': 'okwwus27jhqqe2mijbgs.charge_state',
     'unit_of_measurement': None,
   })
 # ---
@@ -1663,7 +1663,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'tuya.okwwus27jhqqe2mijbgstemper_alarm',
+    'unique_id': 'okwwus27jhqqe2mijbgs.temper_alarm',
     'unit_of_measurement': None,
   })
 # ---
@@ -1714,7 +1714,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'valve',
-    'unique_id': 'tuya.sb3zdertrw50bgogkwvalve_state',
+    'unique_id': 'sb3zdertrw50bgogkw.valve_state',
     'unit_of_measurement': None,
   })
 # ---
@@ -1764,7 +1764,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'tuya.swhtzki3qrz5ydchjbocco_status',
+    'unique_id': 'swhtzki3qrz5ydchjboc.co_status',
     'unit_of_measurement': None,
   })
 # ---
@@ -1815,7 +1815,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'tuya.p8xoxccrjbwysmoke_sensor_status',
+    'unique_id': 'p8xoxccrjbwy.smoke_sensor_status',
     'unit_of_measurement': None,
   })
 # ---
@@ -1866,7 +1866,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'tuya.jfydgffzmhjed9fgjbwysmoke_sensor_status',
+    'unique_id': 'jfydgffzmhjed9fgjbwy.smoke_sensor_status',
     'unit_of_measurement': None,
   })
 # ---
@@ -1917,7 +1917,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'tuya.oqyhsaqwsphpresence_state',
+    'unique_id': 'oqyhsaqwsph.presence_state',
     'unit_of_measurement': None,
   })
 # ---
@@ -1968,7 +1968,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'tuya.gvxxy4jitzltz5xhscmdoorcontact_state',
+    'unique_id': 'gvxxy4jitzltz5xhscm.doorcontact_state',
     'unit_of_measurement': None,
   })
 # ---
@@ -2019,7 +2019,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'tuya.codvtvgtjswatersensor_state',
+    'unique_id': 'codvtvgtjs.watersensor_state',
     'unit_of_measurement': None,
   })
 # ---
@@ -2070,7 +2070,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'tuya.tvgoe1s3fabebcskjbwysmoke_sensor_status',
+    'unique_id': 'tvgoe1s3fabebcskjbwy.smoke_sensor_status',
     'unit_of_measurement': None,
   })
 # ---
@@ -2121,7 +2121,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'tuya.9c1vlsxoscmdoorcontact_state',
+    'unique_id': '9c1vlsxoscm.doorcontact_state',
     'unit_of_measurement': None,
   })
 # ---
@@ -2172,7 +2172,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'tuya.orotles4ucq8rxwn2gwmaster_state',
+    'unique_id': 'orotles4ucq8rxwn2gw.master_state',
     'unit_of_measurement': None,
   })
 # ---

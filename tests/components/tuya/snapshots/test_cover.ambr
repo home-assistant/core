@@ -32,7 +32,7 @@
     'suggested_object_id': None,
     'supported_features': <CoverEntityFeature: 15>,
     'translation_key': 'curtain',
-    'unique_id': 'tuya.thdfxdqqlccontrol',
+    'unique_id': 'thdfxdqqlc.control',
     'unit_of_measurement': None,
   })
 # ---
@@ -86,7 +86,7 @@
     'suggested_object_id': None,
     'supported_features': <CoverEntityFeature: 15>,
     'translation_key': 'curtain',
-    'unique_id': 'tuya.nr26obpclccontrol',
+    'unique_id': 'nr26obpclc.control',
     'unit_of_measurement': None,
   })
 # ---
@@ -140,7 +140,7 @@
     'suggested_object_id': None,
     'supported_features': <CoverEntityFeature: 15>,
     'translation_key': 'curtain',
-    'unique_id': 'tuya.slkkzcxa7yjqmetqlccontrol',
+    'unique_id': 'slkkzcxa7yjqmetqlc.control',
     'unit_of_measurement': None,
   })
 # ---
@@ -194,7 +194,7 @@
     'suggested_object_id': None,
     'supported_features': <CoverEntityFeature: 11>,
     'translation_key': 'curtain',
-    'unique_id': 'tuya.gtcinipmdp5rgx3nlccontrol',
+    'unique_id': 'gtcinipmdp5rgx3nlc.control',
     'unit_of_measurement': None,
   })
 # ---
@@ -247,7 +247,7 @@
     'suggested_object_id': None,
     'supported_features': <CoverEntityFeature: 15>,
     'translation_key': 'curtain',
-    'unique_id': 'tuya.7xpq8plg06p46j7ygklccontrol',
+    'unique_id': '7xpq8plg06p46j7ygklc.control',
     'unit_of_measurement': None,
   })
 # ---
@@ -301,7 +301,7 @@
     'suggested_object_id': None,
     'supported_features': <CoverEntityFeature: 3>,
     'translation_key': 'indexed_door',
-    'unique_id': 'tuya.q3iie9vjd4wfqyy1qzkmkcswitch_1',
+    'unique_id': 'q3iie9vjd4wfqyy1qzkmkc.switch_1',
     'unit_of_measurement': None,
   })
 # ---
@@ -354,7 +354,7 @@
     'suggested_object_id': None,
     'supported_features': <CoverEntityFeature: 11>,
     'translation_key': 'curtain',
-    'unique_id': 'tuya.xR2ASpOQgAAqu7Drlccontrol',
+    'unique_id': 'xR2ASpOQgAAqu7Drlc.control',
     'unit_of_measurement': None,
   })
 # ---
@@ -407,7 +407,7 @@
     'suggested_object_id': None,
     'supported_features': <CoverEntityFeature: 15>,
     'translation_key': 'blind',
-    'unique_id': 'tuya.ftvxinxevpy21tbelcswitch_1',
+    'unique_id': 'ftvxinxevpy21tbelc.switch_1',
     'unit_of_measurement': None,
   })
 # ---
@@ -461,7 +461,7 @@
     'suggested_object_id': None,
     'supported_features': <CoverEntityFeature: 15>,
     'translation_key': 'curtain',
-    'unique_id': 'tuya.dke76hazlccontrol',
+    'unique_id': 'dke76hazlc.control',
     'unit_of_measurement': None,
   })
 # ---
@@ -515,7 +515,7 @@
     'suggested_object_id': None,
     'supported_features': <CoverEntityFeature: 15>,
     'translation_key': 'curtain',
-    'unique_id': 'tuya.g1efxsqnp33cg8r3lccontrol',
+    'unique_id': 'g1efxsqnp33cg8r3lc.control',
     'unit_of_measurement': None,
   })
 # ---
@@ -569,7 +569,7 @@
     'suggested_object_id': None,
     'supported_features': <CoverEntityFeature: 15>,
     'translation_key': 'curtain',
-    'unique_id': 'tuya.shga3pmbkwhthvqxgklccontrol',
+    'unique_id': 'shga3pmbkwhthvqxgklc.control',
     'unit_of_measurement': None,
   })
 # ---
@@ -623,7 +623,7 @@
     'suggested_object_id': None,
     'supported_features': <CoverEntityFeature: 15>,
     'translation_key': 'curtain',
-    'unique_id': 'tuya.ikbbdbnqsd70pc1glccontrol',
+    'unique_id': 'ikbbdbnqsd70pc1glc.control',
     'unit_of_measurement': None,
   })
 # ---
@@ -677,7 +677,7 @@
     'suggested_object_id': None,
     'supported_features': <CoverEntityFeature: 15>,
     'translation_key': 'curtain',
-    'unique_id': 'tuya.aiag5pku0x39rkfllccontrol',
+    'unique_id': 'aiag5pku0x39rkfllc.control',
     'unit_of_measurement': None,
   })
 # ---
@@ -731,7 +731,7 @@
     'suggested_object_id': None,
     'supported_features': <CoverEntityFeature: 15>,
     'translation_key': 'curtain',
-    'unique_id': 'tuya.jzpap0inhkykqtlwgklccontrol',
+    'unique_id': 'jzpap0inhkykqtlwgklc.control',
     'unit_of_measurement': None,
   })
 # ---
@@ -785,7 +785,7 @@
     'suggested_object_id': None,
     'supported_features': <CoverEntityFeature: 15>,
     'translation_key': 'curtain',
-    'unique_id': 'tuya.2w46jyhngklccontrol',
+    'unique_id': '2w46jyhngklc.control',
     'unit_of_measurement': None,
   })
 # ---
@@ -839,7 +839,7 @@
     'suggested_object_id': None,
     'supported_features': <CoverEntityFeature: 15>,
     'translation_key': 'curtain',
-    'unique_id': 'tuya.4hbnivc4w2rsw966lccontrol',
+    'unique_id': '4hbnivc4w2rsw966lc.control',
     'unit_of_measurement': None,
   })
 # ---

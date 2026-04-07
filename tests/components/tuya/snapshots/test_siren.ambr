@@ -32,7 +32,7 @@
     'suggested_object_id': None,
     'supported_features': <SirenEntityFeature: 3>,
     'translation_key': None,
-    'unique_id': 'tuya.iks13mcaiyie3rryjb2ocalarm_switch',
+    'unique_id': 'iks13mcaiyie3rryjb2oc.alarm_switch',
     'unit_of_measurement': None,
   })
 # ---
@@ -83,7 +83,7 @@
     'suggested_object_id': None,
     'supported_features': <SirenEntityFeature: 3>,
     'translation_key': None,
-    'unique_id': 'tuya.svjjuwykgijjedurpssiren_switch',
+    'unique_id': 'svjjuwykgijjedurps.siren_switch',
     'unit_of_measurement': None,
   })
 # ---
@@ -134,7 +134,7 @@
     'suggested_object_id': None,
     'supported_features': <SirenEntityFeature: 3>,
     'translation_key': None,
-    'unique_id': 'tuya.fjdyw5ld2f5f5ddspssiren_switch',
+    'unique_id': 'fjdyw5ld2f5f5ddsps.siren_switch',
     'unit_of_measurement': None,
   })
 # ---
@@ -185,7 +185,7 @@
     'suggested_object_id': None,
     'supported_features': <SirenEntityFeature: 3>,
     'translation_key': None,
-    'unique_id': 'tuya.kjr0pqg7eunn4vlujbgsalarm_switch',
+    'unique_id': 'kjr0pqg7eunn4vlujbgs.alarm_switch',
     'unit_of_measurement': None,
   })
 # ---

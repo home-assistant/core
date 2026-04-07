@@ -15,7 +15,7 @@ from tuya_sharing import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.dispatcher import dispatcher_send
 
 from .const import (
@@ -64,7 +64,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: TuyaConfigEntry) -> bool
     # with args ('.system', 'urllib3.contrib.resolver')
     manager = await hass.async_add_executor_job(_create_manager, entry, token_listener)
 
-    listener = DeviceListener(hass, manager)
+    listener = DeviceListener(hass, manager, entry.entry_id)
     manager.add_device_listener(listener)
 
     # Get all devices from Tuya
@@ -82,29 +82,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: TuyaConfigEntry) -> bool
     entry.runtime_data = HomeAssistantTuyaData(manager=manager, listener=listener)
 
     # Cleanup device registry
-    await cleanup_device_registry(hass, manager, entry)
+    cleanup_device_registry(hass, manager, entry)
 
     # Register known device IDs
     device_registry = dr.async_get(hass)
+    entity_registry = er.async_get(hass)
     for device in manager.device_map.values():
-        LOGGER.debug(
-            "Register device %s (online: %s): %s (function: %s, status range: %s)",
-            device.id,
-            device.online,
-            device.status,
-            device.function,
-            device.status_range,
-        )
-        device_registry.async_get_or_create(
-            config_entry_id=entry.entry_id,
-            identifiers={(DOMAIN, device.id)},
-            manufacturer="Tuya",
-            name=device.name,
-            # Note: the model is overridden via entity.device_info property
-            # when the entity is created. If no entities are generated, it will
-            # stay as unsupported
-            model=f"{device.product_name} (unsupported)",
-            model_id=device.product_id,
+        _register_device_in_registry(
+            device_registry, entity_registry, device, entry.entry_id
         )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
@@ -114,7 +99,59 @@ async def async_setup_entry(hass: HomeAssistant, entry: TuyaConfigEntry) -> bool
     return True
 
 
-async def cleanup_device_registry(
+def _register_device_in_registry(
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    device: CustomerDevice,
+    config_entry_id: str,
+) -> None:
+    """Register a device in the device registry."""
+    LOGGER.debug(
+        "Register device %s (online: %s): %s (function: %s, status range: %s)",
+        device.id,
+        device.online,
+        device.status,
+        device.function,
+        device.status_range,
+    )
+    device_entry = device_registry.async_get_or_create(
+        config_entry_id=config_entry_id,
+        identifiers={(DOMAIN, device.id)},
+        manufacturer="Tuya",
+        name=device.name,
+        # Note: the model is overridden via entity.device_info property
+        # when the entity is created. If no entities are generated, it will
+        # stay as unsupported
+        model=f"{device.product_name} (unsupported)",
+        model_id=device.product_id,
+    )
+
+    # Migrate entity registry unique IDs
+    _migrate_entity_unique_ids(entity_registry, device_entry, device.id)
+
+
+def _migrate_entity_unique_ids(
+    entity_registry: er.EntityRegistry,
+    device_entry: dr.DeviceEntry,
+    tuya_device_id: str,
+) -> None:
+    """Migrate unique_id from old format to new format."""
+    for entity_entry in er.async_entries_for_device(
+        entity_registry, device_entry.id, include_disabled_entities=True
+    ):
+        old_prefix = f"tuya.{tuya_device_id}"
+        if not entity_entry.unique_id.startswith(old_prefix):
+            continue
+        old_suffix = entity_entry.unique_id[len(old_prefix) :]
+        new_unique_id = tuya_device_id
+        if old_suffix:
+            new_unique_id += f".{old_suffix}"
+        entity_registry.async_update_entity(
+            entity_entry.entity_id, new_unique_id=new_unique_id
+        )
+
+
+def cleanup_device_registry(
     hass: HomeAssistant, device_manager: Manager, entry: TuyaConfigEntry
 ) -> None:
     """Unlink device registry entry if there are no remaining entities."""
@@ -162,10 +199,12 @@ class DeviceListener(SharingDeviceListener):
         self,
         hass: HomeAssistant,
         manager: Manager,
+        config_entry_id: str,
     ) -> None:
         """Init DeviceListener."""
         self.hass = hass
         self.manager = manager
+        self.config_entry_id = config_entry_id
 
     def update_device(
         self,
@@ -192,8 +231,12 @@ class DeviceListener(SharingDeviceListener):
 
     def add_device(self, device: CustomerDevice) -> None:
         """Add device added listener."""
+
+    @callback
+    def async_add_device(self, device: CustomerDevice) -> None:
+        """Add device to Home Assistant."""
         # Ensure the device isn't present stale
-        self.hass.add_job(self.async_remove_device, device.id)
+        self.async_remove_device(device.id)
 
         LOGGER.debug(
             "Add device %s (online: %s): %s (function: %s, status range: %s)",
@@ -203,7 +246,12 @@ class DeviceListener(SharingDeviceListener):
             device.function,
             device.status_range,
         )
-
+        _register_device_in_registry(
+            dr.async_get(self.hass),
+            er.async_get(self.hass),
+            device,
+            self.config_entry_id,
+        )
         dispatcher_send(self.hass, TUYA_DISCOVERY_NEW, [device.id])
 
     def remove_device(self, device_id: str) -> None:

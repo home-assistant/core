@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from unittest.mock import patch
 
+import pytest
 from syrupy.assertion import SnapshotAssertion
 from tuya_sharing import CustomerDevice, Manager
 
@@ -132,6 +133,53 @@ async def test_device_registry(
                 include_disabled_entities=True,
             )
         )
+
+
+@pytest.mark.parametrize(
+    ("mock_device_code", "entity_id", "old_unique_id", "new_unique_id"),
+    [
+        (
+            # With suffix
+            "mcs_8yhypbo7",
+            "sensor.boite_aux_lettres_arriere_battery",
+            "tuya.7obpyhy8scmbattery_percentage",
+            "7obpyhy8scm.battery_percentage",
+        ),
+        (
+            # Without suffix
+            "sp_rudejjigkywujjvs",
+            "camera.burocam",
+            "tuya.svjjuwykgijjedurps",
+            "svjjuwykgijjedurps",
+        ),
+    ],
+)
+async def test_entity_unique_id_migration(
+    hass: HomeAssistant,
+    mock_manager: Manager,
+    mock_config_entry: MockConfigEntry,
+    mock_device: CustomerDevice,
+    entity_registry: er.EntityRegistry,
+    entity_id: str,
+    old_unique_id: str,
+    new_unique_id: str,
+) -> None:
+    """Validate entity unique ID migration."""
+
+    # Create entities
+    await initialize_entry(hass, mock_manager, mock_config_entry, mock_device)
+    await hass.config_entries.async_unload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    # Ensure entities have old unique IDs
+    entity_registry.async_update_entity(entity_id, new_unique_id=old_unique_id)
+    assert entity_registry.async_get(entity_id).unique_id == old_unique_id
+
+    # Reload entity and ensure unique IDs are migrated
+    with patch("homeassistant.components.tuya.Manager", return_value=mock_manager):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+    assert entity_registry.async_get(entity_id).unique_id == new_unique_id
 
 
 async def test_fixtures_valid(hass: HomeAssistant) -> None:

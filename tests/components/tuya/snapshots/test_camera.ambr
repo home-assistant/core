@@ -32,7 +32,7 @@
     'suggested_object_id': None,
     'supported_features': <CameraEntityFeature: 2>,
     'translation_key': None,
-    'unique_id': 'tuya.svjjuwykgijjedurps',
+    'unique_id': 'svjjuwykgijjedurps',
     'unit_of_measurement': None,
   })
 # ---
@@ -88,7 +88,7 @@
     'suggested_object_id': None,
     'supported_features': <CameraEntityFeature: 2>,
     'translation_key': None,
-    'unique_id': 'tuya.fjdyw5ld2f5f5ddsps',
+    'unique_id': 'fjdyw5ld2f5f5ddsps',
     'unit_of_measurement': None,
   })
 # ---
@@ -144,7 +144,7 @@
     'suggested_object_id': None,
     'supported_features': <CameraEntityFeature: 2>,
     'translation_key': None,
-    'unique_id': 'tuya.mgcpxpmovasazerdps',
+    'unique_id': 'mgcpxpmovasazerdps',
     'unit_of_measurement': None,
   })
 # ---
@@ -200,7 +200,7 @@
     'suggested_object_id': None,
     'supported_features': <CameraEntityFeature: 2>,
     'translation_key': None,
-    'unique_id': 'tuya.uBLyTOvlhoRWXKjrps',
+    'unique_id': 'uBLyTOvlhoRWXKjrps',
     'unit_of_measurement': None,
   })
 # ---
@@ -255,7 +255,7 @@
     'suggested_object_id': None,
     'supported_features': <CameraEntityFeature: 2>,
     'translation_key': None,
-    'unique_id': 'tuya.o4hpbl5uarjfbzheps',
+    'unique_id': 'o4hpbl5uarjfbzheps',
     'unit_of_measurement': None,
   })
 # ---
@@ -309,7 +309,7 @@
     'suggested_object_id': None,
     'supported_features': <CameraEntityFeature: 2>,
     'translation_key': None,
-    'unique_id': 'tuya.53fnjncm3jywuaznps',
+    'unique_id': '53fnjncm3jywuaznps',
     'unit_of_measurement': None,
   })
 # ---
@@ -364,7 +364,7 @@
     'suggested_object_id': None,
     'supported_features': <CameraEntityFeature: 2>,
     'translation_key': None,
-    'unique_id': 'tuya.qt0o5jlatiqf2rscps',
+    'unique_id': 'qt0o5jlatiqf2rscps',
     'unit_of_measurement': None,
   })
 # ---
@@ -419,7 +419,7 @@
     'suggested_object_id': None,
     'supported_features': <CameraEntityFeature: 2>,
     'translation_key': None,
-    'unique_id': 'tuya.i6xywcsymer1kmb6ps',
+    'unique_id': 'i6xywcsymer1kmb6ps',
     'unit_of_measurement': None,
   })
 # ---

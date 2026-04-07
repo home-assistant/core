@@ -139,6 +139,8 @@ async def mock_device(hass: HomeAssistant, mock_device_code: str) -> CustomerDev
 
 
 @pytest.fixture
-def mock_listener(hass: HomeAssistant, mock_manager: Manager) -> MockDeviceListener:
+def mock_listener(
+    hass: HomeAssistant, mock_manager: Manager, mock_config_entry: MockConfigEntry
+) -> MockDeviceListener:
     """Fixture for Tuya DeviceListener."""
-    return create_listener(hass, mock_manager)
+    return create_listener(hass, mock_manager, mock_config_entry.entry_id)

@@ -32,7 +32,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'factory_reset',
-    'unique_id': 'tuya.yohkwjjdjlzludd3psmfactory_reset',
+    'unique_id': 'yohkwjjdjlzludd3psm.factory_reset',
     'unit_of_measurement': None,
   })
 # ---
@@ -82,7 +82,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'manual_clean',
-    'unique_id': 'tuya.yohkwjjdjlzludd3psmmanual_clean',
+    'unique_id': 'yohkwjjdjlzludd3psm.manual_clean',
     'unit_of_measurement': None,
   })
 # ---
@@ -132,7 +132,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'factory_reset',
-    'unique_id': 'tuya.nyriu7sjgj9oruzmpsmfactory_reset',
+    'unique_id': 'nyriu7sjgj9oruzmpsm.factory_reset',
     'unit_of_measurement': None,
   })
 # ---
@@ -182,7 +182,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'manual_clean',
-    'unique_id': 'tuya.nyriu7sjgj9oruzmpsmmanual_clean',
+    'unique_id': 'nyriu7sjgj9oruzmpsm.manual_clean',
     'unit_of_measurement': None,
   })
 # ---
@@ -232,7 +232,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'reset_duster_cloth',
-    'unique_id': 'tuya.zrrraytdoanz33rldsreset_duster_cloth',
+    'unique_id': 'zrrraytdoanz33rlds.reset_duster_cloth',
     'unit_of_measurement': None,
   })
 # ---
@@ -282,7 +282,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'reset_edge_brush',
-    'unique_id': 'tuya.zrrraytdoanz33rldsreset_edge_brush',
+    'unique_id': 'zrrraytdoanz33rlds.reset_edge_brush',
     'unit_of_measurement': None,
   })
 # ---
@@ -332,7 +332,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'reset_filter',
-    'unique_id': 'tuya.zrrraytdoanz33rldsreset_filter',
+    'unique_id': 'zrrraytdoanz33rlds.reset_filter',
     'unit_of_measurement': None,
   })
 # ---
@@ -382,7 +382,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'reset_map',
-    'unique_id': 'tuya.zrrraytdoanz33rldsreset_map',
+    'unique_id': 'zrrraytdoanz33rlds.reset_map',
     'unit_of_measurement': None,
   })
 # ---
@@ -432,7 +432,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'reset_roll_brush',
-    'unique_id': 'tuya.zrrraytdoanz33rldsreset_roll_brush',
+    'unique_id': 'zrrraytdoanz33rlds.reset_roll_brush',
     'unit_of_measurement': None,
   })
 # ---

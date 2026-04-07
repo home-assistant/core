@@ -142,9 +142,11 @@ async def create_device(hass: HomeAssistant, mock_device_code: str) -> CustomerD
     return device
 
 
-def create_listener(hass: HomeAssistant, manager: Manager) -> MockDeviceListener:
+def create_listener(
+    hass: HomeAssistant, manager: Manager, entry_id: str
+) -> MockDeviceListener:
     """Create a DeviceListener for testing."""
-    listener = MockDeviceListener(hass, manager)
+    listener = MockDeviceListener(hass, manager, entry_id)
     manager.add_device_listener(listener)
     return listener
 
