@@ -7,6 +7,7 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any
 
 from chip.clusters import Objects as clusters
+from matter_server.common.custom_clusters import HeimanCluster
 
 from homeassistant.components.button import (
     ButtonDeviceClass,
@@ -21,7 +22,6 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from .entity import MatterEntity, MatterEntityDescription
 from .helpers import get_matter
 from .models import MatterDiscoverySchema
-from matter_server.common.custom_clusters import HeimanCluster
 
 
 async def async_setup_entry(
