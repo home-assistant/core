@@ -8,7 +8,7 @@ from tuya_device_handlers.device_wrapper.service_feeder_schedule import FeederSc
 from tuya_sharing import CustomerDevice, Manager
 
 from homeassistant.components.tuya.const import DOMAIN
-from homeassistant.components.tuya.services import Service, _get_tuya_device
+from homeassistant.components.tuya.services import Service
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import device_registry as dr
@@ -194,7 +194,7 @@ async def test_get_tuya_device_error_cases(
     mock_config_entry: MockConfigEntry,
     mock_device: CustomerDevice,
 ) -> None:
-    """Test _get_tuya_device error handling paths."""
+    """Test service error handling paths."""
     await initialize_entry(hass, mock_manager, mock_config_entry, mock_device)
 
     # Case 1: Device ID not found
@@ -202,7 +202,13 @@ async def test_get_tuya_device_error_cases(
         ServiceValidationError,
         match="Feeder with ID invalid_device_id could not be found",
     ):
-        _get_tuya_device(hass, "invalid_device_id")
+        await hass.services.async_call(
+            DOMAIN,
+            Service.GET_FEEDER_MEAL_PLAN,
+            {"device_id": "invalid_device_id"},
+            blocking=True,
+            return_response=True,
+        )
 
     # Case 2: Device exists but is not a Tuya device
     device_registry = dr.async_get(hass)
@@ -215,7 +221,13 @@ async def test_get_tuya_device_error_cases(
         ServiceValidationError,
         match=f"Device with ID {non_tuya_device.id} is not a Tuya feeder",
     ):
-        _get_tuya_device(hass, non_tuya_device.id)
+        await hass.services.async_call(
+            DOMAIN,
+            Service.GET_FEEDER_MEAL_PLAN,
+            {"device_id": non_tuya_device.id},
+            blocking=True,
+            return_response=True,
+        )
 
     # Case 3: Tuya device exists in registry but not in manager.device_map
     tuya_device = device_registry.async_get_or_create(
@@ -227,4 +239,10 @@ async def test_get_tuya_device_error_cases(
         ServiceValidationError,
         match=f"Feeder with ID {tuya_device.id} could not be found",
     ):
-        _get_tuya_device(hass, tuya_device.id)
+        await hass.services.async_call(
+            DOMAIN,
+            Service.GET_FEEDER_MEAL_PLAN,
+            {"device_id": tuya_device.id},
+            blocking=True,
+            return_response=True,
+        )
