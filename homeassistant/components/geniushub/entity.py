@@ -11,7 +11,7 @@ from homeassistant.util import dt as dt_util
 from . import ATTR_DURATION, ATTR_ZONE_MODE, DOMAIN, SVC_SET_ZONE_OVERRIDE
 
 # temperature is repeated here, as it gives access to high-precision temps
-GH_ZONE_ATTRS = ["mode", "temperature", "type", "occupied", "override"]
+GH_ZONE_ATTRS = ["mode", "temperature", "type", "occupied", "override", "output"]
 GH_DEVICE_ATTRS = {
     "luminance": "luminance",
     "measuredTemperature": "measured_temperature",
