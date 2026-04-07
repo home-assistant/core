@@ -78,7 +78,7 @@ class LunatoneConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle a flow initialized by zeroconf discovery."""
         url = URL.build(scheme="http", host=discovery_info.host)
-        uid: str = discovery_info.properties["uid"]
+        uid = discovery_info.properties["uid"]
         await self.async_set_unique_id(uid.replace("-", ""))
         self._abort_if_unique_id_configured(updates={CONF_URL: url.human_repr()})
 
