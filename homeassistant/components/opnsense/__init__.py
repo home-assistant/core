@@ -73,42 +73,42 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         if tracker_interfaces:
             interfaces_resp = await client.get_interfaces()
     except OPNsenseUnknownFirmware:
-        _LOGGER.exception("Error checking the OPNsense firmware version at %s", url)
+        _LOGGER.error("Error checking the OPNsense firmware version at %s", url)
         return False
     except OPNsenseBelowMinFirmware:
-        _LOGGER.exception(
+        _LOGGER.error(
             "OPNsense Firmware is below the minimum supported version at %s", url
         )
         return False
     except OPNsenseInvalidURL:
-        _LOGGER.exception(
+        _LOGGER.error(
             "Invalid URL while connecting to OPNsense API endpoint at %s", url
         )
         return False
     except OPNsenseTimeoutError:
-        _LOGGER.exception(
+        _LOGGER.error(
             "Timeout while connecting to OPNsense API endpoint at %s", url
         )
         return False
     except OPNsenseSSLError:
-        _LOGGER.exception(
+        _LOGGER.error(
             "Unable to verify SSL while connecting to OPNsense API endpoint at %s", url
         )
         return False
     except OPNsenseInvalidAuth:
-        _LOGGER.exception(
+        _LOGGER.error(
             "Authentication failure while connecting to OPNsense API endpoint at %s",
             url,
         )
         return False
     except OPNsensePrivilegeMissing:
-        _LOGGER.exception(
+        _LOGGER.error(
             "Invalid Permissions while connecting to OPNsense API endpoint at %s",
             url,
         )
         return False
     except OPNsenseConnectionError:
-        _LOGGER.exception(
+        _LOGGER.error(
             "Connection failure while connecting to OPNsense API endpoint at %s",
             url,
         )
