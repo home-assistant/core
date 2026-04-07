@@ -212,6 +212,43 @@ async def test_reconfigure_success(hass: HomeAssistant) -> None:
     assert updated_entry.data[CONF_OEM] == OEM
 
 
+async def test_reconfigure_updates_unique_id_on_username_change(
+    hass: HomeAssistant,
+) -> None:
+    """Test that reconfigure updates unique_id and title when username changes."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD, CONF_OEM: OEM},
+        unique_id=USERNAME.lower(),
+        title=USERNAME,
+    )
+    entry.add_to_hass(hass)
+
+    new_username = "changed@example.com"
+    with patch(
+        "homeassistant.components.gridx.config_flow._validate_credentials",
+        new=AsyncMock(),
+    ):
+        result = await entry.start_reconfigure_flow(hass)
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_USERNAME: new_username,
+                CONF_PASSWORD: "new-password",
+                CONF_OEM: OEM,
+            },
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+
+    updated_entry = hass.config_entries.async_get_entry(entry.entry_id)
+    assert updated_entry is not None
+    assert updated_entry.unique_id == new_username.lower()
+    assert updated_entry.title == new_username
+    assert updated_entry.data[CONF_USERNAME] == new_username
+
+
 async def test_reconfigure_cannot_connect(hass: HomeAssistant) -> None:
     """Test reconfiguration flow error handling for connectivity failures."""
     entry = MockConfigEntry(

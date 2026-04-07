@@ -194,11 +194,14 @@ class GridxConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "unknown"
             else:
                 new_username = user_input[CONF_USERNAME]
-                if new_username.lower() != entry.unique_id:
-                    await self.async_set_unique_id(new_username.lower())
+                new_unique_id = new_username.lower()
+                if new_unique_id != entry.unique_id:
+                    await self.async_set_unique_id(new_unique_id)
                     self._abort_if_unique_id_configured()
                 return self.async_update_reload_and_abort(
                     entry,
+                    unique_id=new_unique_id,
+                    title=new_username,
                     data_updates={
                         CONF_USERNAME: new_username,
                         CONF_PASSWORD: user_input[CONF_PASSWORD],
