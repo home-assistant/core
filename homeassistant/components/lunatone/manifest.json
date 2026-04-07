@@ -12,7 +12,8 @@
     {
       "properties": {
         "manufacturer": "lunatone industrielle elektronik gmbh",
-        "type": "dali-2-*"
+        "type": "dali-2-*",
+        "uid": "*"
       },
       "type": "_http._tcp.local."
     }

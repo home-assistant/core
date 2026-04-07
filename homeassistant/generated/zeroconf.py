@@ -620,6 +620,7 @@ ZEROCONF = {
             "properties": {
                 "manufacturer": "lunatone industrielle elektronik gmbh",
                 "type": "dali-2-*",
+                "uid": "*",
             },
         },
         {
