@@ -127,23 +127,15 @@ def _register_device_in_registry(
     )
 
     # Migrate entity registry unique IDs
-    _migrate_entity_unique_ids(entity_registry, device_entry, device.id)
-
-
-def _migrate_entity_unique_ids(
-    entity_registry: er.EntityRegistry,
-    device_entry: dr.DeviceEntry,
-    tuya_device_id: str,
-) -> None:
-    """Migrate unique_id from old format to new format."""
+    # Added in 2026.5, can be removed in 2026.12
     for entity_entry in er.async_entries_for_device(
         entity_registry, device_entry.id, include_disabled_entities=True
     ):
-        old_prefix = f"tuya.{tuya_device_id}"
+        old_prefix = f"tuya.{device.id}"
         if not entity_entry.unique_id.startswith(old_prefix):
             continue
 
-        new_unique_id = tuya_device_id
+        new_unique_id = device.id
         if old_suffix := entity_entry.unique_id[len(old_prefix) :]:
             new_unique_id += f".{old_suffix}"
         entity_registry.async_update_entity(
