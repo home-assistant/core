@@ -8,6 +8,7 @@ import voluptuous as vol
 
 from homeassistant.components.notify import ATTR_DATA, ATTR_MESSAGE, ATTR_TARGET
 from homeassistant.core import HomeAssistant, ServiceCall, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 
 from .const import (
@@ -60,13 +61,19 @@ SERVICE_SCHEMA_REACT = vol.Schema(
 
 async def _handle_send_message(call: ServiceCall) -> None:
     """Handle the send_message service call."""
-    matrix_bot: MatrixBot = call.hass.data[DOMAIN]
+    entries = call.hass.config_entries.async_entries(DOMAIN)
+    if not entries:
+        raise HomeAssistantError("Matrix is not configured")
+    matrix_bot: MatrixBot = entries[0].runtime_data
     await matrix_bot.handle_send_message(call)
 
 
 async def _handle_react(call: ServiceCall) -> None:
     """Handle the react service call."""
-    matrix_bot: MatrixBot = call.hass.data[DOMAIN]
+    entries = call.hass.config_entries.async_entries(DOMAIN)
+    if not entries:
+        raise HomeAssistantError("Matrix is not configured")
+    matrix_bot: MatrixBot = entries[0].runtime_data
     await matrix_bot.handle_send_reaction(call)
 
 

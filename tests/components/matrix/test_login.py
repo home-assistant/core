@@ -1,11 +1,12 @@
 """Test MatrixBot._login."""
 
 from dataclasses import dataclass
+from unittest.mock import AsyncMock, patch
 
 import pytest
 
 from homeassistant.components.matrix import MatrixBot
-from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
+from homeassistant.exceptions import ConfigEntryAuthFailed
 
 from .conftest import TEST_DEVICE_ID, TEST_MXID, TEST_PASSWORD, TEST_TOKEN
 
@@ -101,14 +102,18 @@ async def test_login(
     assert set(caplog.messages).issuperset(params.expected_caplog_messages)
 
 
-async def test_get_auth_tokens(matrix_bot: MatrixBot, mock_load_json) -> None:
-    """Test loading access_tokens from a mocked file."""
+async def test_get_auth_tokens(matrix_bot: MatrixBot) -> None:
+    """Test loading access_tokens from mocked storage."""
 
-    # Test loading good tokens.
+    # Test loading good tokens (mock_store fixture already primes these).
     loaded_tokens = await matrix_bot._get_auth_tokens()
     assert loaded_tokens == {TEST_MXID: TEST_TOKEN}
 
-    # Test miscellaneous error from hass.
-    mock_load_json.side_effect = HomeAssistantError()
-    loaded_tokens = await matrix_bot._get_auth_tokens()
-    assert loaded_tokens == {}
+    # Test returning empty dict when storage has no data.
+    with patch(
+        "homeassistant.components.matrix.Store.async_load",
+        new_callable=AsyncMock,
+        return_value=None,
+    ):
+        loaded_tokens = await matrix_bot._get_auth_tokens()
+        assert loaded_tokens == {}
