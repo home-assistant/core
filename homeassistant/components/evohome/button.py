@@ -54,6 +54,13 @@ class EvoResetButtonBase(EvoEntity, ButtonEntity):
         """Initialize the system reset button."""
         super().__init__(coordinator, evo_device)
 
+        if isinstance(evo_device, evo.ControlSystem):
+            name = evo_device.location.name
+        else:
+            name = evo_device.name
+
+        self._attr_suggested_object_id = f"{name}_reset"
+        self._attr_translation_placeholders = {"device_name": name}
         self._attr_unique_id = f"{evo_device.id}_reset"
 
     async def async_press(self) -> None:
@@ -69,16 +76,6 @@ class EvoResetSystemButton(EvoResetButtonBase):
     _evo_device: evo.ControlSystem
     _evo_id_attr = "system_id"
 
-    def __init__(
-        self,
-        coordinator: EvoDataUpdateCoordinator,
-        evo_device: evo.ControlSystem,
-    ) -> None:
-        """Initialize the system reset button."""
-        super().__init__(coordinator, evo_device)
-
-        self._attr_translation_placeholders = {"device_name": evo_device.location.name}
-
 
 class EvoResetDhwButton(EvoResetButtonBase):
     """Button entity for DHW override reset."""
@@ -87,16 +84,6 @@ class EvoResetDhwButton(EvoResetButtonBase):
 
     _evo_device: evo.HotWater
     _evo_id_attr = "dhw_id"
-
-    def __init__(
-        self,
-        coordinator: EvoDataUpdateCoordinator,
-        evo_device: evo.HotWater,
-    ) -> None:
-        """Initialize the DHW reset button."""
-        super().__init__(coordinator, evo_device)
-
-        self._attr_translation_placeholders = {"device_name": evo_device.name}
 
 
 class EvoResetZoneButton(EvoResetButtonBase):
@@ -115,8 +102,6 @@ class EvoResetZoneButton(EvoResetButtonBase):
         """Initialize the zone reset button."""
         super().__init__(coordinator, evo_device)
 
-        self._attr_translation_placeholders = {"device_name": evo_device.name}
-
         if evo_device.id == evo_device.tcs.id:
             # this system does not have a distinct ID for the zone
             self._attr_unique_id = f"{evo_device.id}z_reset"
@@ -125,6 +110,6 @@ class EvoResetZoneButton(EvoResetButtonBase):
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
 
-        # zone names are not fixed
+        # zone names are not immutable
         self._attr_translation_placeholders = {"device_name": self._evo_device.name}
         super()._handle_coordinator_update()
