@@ -15,7 +15,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
-from .const import CONF_PASSKEY, DEFAULT_PORT, DOMAIN
+from .const import CONF_HEATING_CIRCUITS, CONF_PASSKEY, DEFAULT_PORT, DOMAIN, LOGGER
 
 
 class BSBLANFlowHandler(ConfigFlow, domain=DOMAIN):
@@ -28,6 +28,7 @@ class BSBLANFlowHandler(ConfigFlow, domain=DOMAIN):
         self.host: str = ""
         self.port: int = DEFAULT_PORT
         self.mac: str | None = None
+        self.circuits: list[int] = [1]
         self.passkey: str | None = None
         self.username: str | None = None
         self.password: str | None = None
@@ -77,7 +78,7 @@ class BSBLANFlowHandler(ConfigFlow, domain=DOMAIN):
             # Try to get device info without authentication to minimize discovery popup
             config = BSBLANConfig(host=self.host, port=self.port)
             session = async_get_clientsession(self.hass)
-            bsblan = BSBLAN(config, session)
+            bsblan = BSBLAN(config=config, session=session)
             try:
                 device = await bsblan.device()
             except BSBLANError:
@@ -123,6 +124,8 @@ class BSBLANFlowHandler(ConfigFlow, domain=DOMAIN):
             )
 
         if not self._auth_required:
+            # Discover available heating circuits
+            await self._discover_circuits()
             return self._async_create_entry()
 
         self.passkey = user_input.get(CONF_PASSKEY)
@@ -137,6 +140,7 @@ class BSBLANFlowHandler(ConfigFlow, domain=DOMAIN):
         """Validate device connection and create entry."""
         try:
             await self._get_bsblan_info()
+            await self._discover_circuits()
         except BSBLANAuthError:
             if is_discovery:
                 return self.async_show_form(
@@ -232,7 +236,7 @@ class BSBLANFlowHandler(ConfigFlow, domain=DOMAIN):
 
         return self.async_update_reload_and_abort(
             existing_entry,
-            data_updates=user_input,
+            data_updates={**user_input, CONF_HEATING_CIRCUITS: self.circuits},
             reason="reconfigure_successful",
         )
 
@@ -316,13 +320,14 @@ class BSBLANFlowHandler(ConfigFlow, domain=DOMAIN):
     def _async_create_entry(self) -> ConfigFlowResult:
         """Create the config entry."""
         return self.async_create_entry(
-            title=format_mac(self.mac),
+            title="BSB-LAN",
             data={
                 CONF_HOST: self.host,
                 CONF_PORT: self.port,
                 CONF_PASSKEY: self.passkey,
                 CONF_USERNAME: self.username,
                 CONF_PASSWORD: self.password,
+                CONF_HEATING_CIRCUITS: self.circuits,
             },
         )
 
@@ -340,7 +345,7 @@ class BSBLANFlowHandler(ConfigFlow, domain=DOMAIN):
             password=self.password,
         )
         session = async_get_clientsession(self.hass)
-        bsblan = BSBLAN(config, session)
+        bsblan = BSBLAN(config=config, session=session)
         device = await bsblan.device()
         retrieved_mac = device.MAC
 
@@ -362,3 +367,27 @@ class BSBLANFlowHandler(ConfigFlow, domain=DOMAIN):
                     CONF_PORT: self.port,
                 }
             )
+
+    async def _discover_circuits(self) -> None:
+        """Discover available heating circuits."""
+        config = BSBLANConfig(
+            host=self.host,
+            passkey=self.passkey,
+            port=self.port,
+            username=self.username,
+            password=self.password,
+        )
+        session = async_get_clientsession(self.hass)
+        bsblan = BSBLAN(config=config, session=session)
+        try:
+            await bsblan.initialize()
+            self.circuits = await bsblan.get_available_circuits()
+        except (
+            BSBLANError,
+            TimeoutError,
+        ):
+            LOGGER.debug(
+                "Circuit discovery not available for %s, defaulting to single circuit",
+                self.host,
+            )
+            self.circuits = [1]
