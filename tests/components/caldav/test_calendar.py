@@ -10,6 +10,7 @@ import zoneinfo
 from caldav.objects import Event
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+import voluptuous as vol
 
 from homeassistant.components.calendar import CalendarEntityFeature
 from homeassistant.const import STATE_OFF, STATE_ON, Platform
@@ -471,7 +472,10 @@ async def test_ongoing_event(
         "start_time": "2017-11-27 17:00:00",
         "end_time": "2017-11-27 18:00:00",
         "location": "Hamburg",
-        "geo": "53.537999;9.989934",
+        "geo": {
+            "latitude": "53.537999",
+            "longitude": "9.989934",
+        },
         "description": "Surprisingly rainy",
         "supported_features": CalendarEntityFeature.CREATE_EVENT,
     }
@@ -497,7 +501,10 @@ async def test_just_ended_event(
         "start_time": "2017-11-27 17:00:00",
         "end_time": "2017-11-27 18:00:00",
         "location": "Hamburg",
-        "geo": "53.537999;9.989934",
+        "geo": {
+            "latitude": "53.537999",
+            "longitude": "9.989934",
+        },
         "description": "Surprisingly rainy",
         "supported_features": CalendarEntityFeature.CREATE_EVENT,
     }
@@ -523,7 +530,10 @@ async def test_ongoing_event_different_tz(
         "start_time": "2017-11-27 16:30:00",
         "description": "Sunny day",
         "end_time": "2017-11-27 17:30:00",
-        "geo": "37.735817;-122.453273",
+        "geo": {
+            "latitude": "37.735817",
+            "longitude": "-122.453273",
+        },
         "location": "San Francisco",
         "supported_features": CalendarEntityFeature.CREATE_EVENT,
     }
@@ -549,7 +559,10 @@ async def test_ongoing_floating_event_returned(
         "start_time": "2017-11-27 19:00:00",
         "end_time": "2017-11-27 20:00:00",
         "location": "Hamburg",
-        "geo": "53.537999;9.989934",
+        "geo": {
+            "latitude": "53.537999",
+            "longitude": "9.989934",
+        },
         "description": "What a day",
         "supported_features": CalendarEntityFeature.CREATE_EVENT,
     }
@@ -575,7 +588,10 @@ async def test_ongoing_event_with_offset(
         "start_time": "2017-11-27 10:00:00",
         "end_time": "2017-11-27 11:00:00",
         "location": "Hamburg",
-        "geo": "53.537999;9.989934",
+        "geo": {
+            "latitude": "53.537999",
+            "longitude": "9.989934",
+        },
         "description": "Surprisingly shiny",
         "supported_features": CalendarEntityFeature.CREATE_EVENT,
     }
@@ -617,7 +633,10 @@ async def test_matching_filter(
         "start_time": "2017-11-27 17:00:00",
         "end_time": "2017-11-27 18:00:00",
         "location": "Hamburg",
-        "geo": "53.537999;9.989934",
+        "geo": {
+            "latitude": "53.537999",
+            "longitude": "9.989934",
+        },
         "description": "Surprisingly rainy",
         "supported_features": CalendarEntityFeature.CREATE_EVENT,
     }
@@ -660,7 +679,10 @@ async def test_matching_filter_real_regexp(
         "start_time": "2017-11-27 17:00:00",
         "end_time": "2017-11-27 18:00:00",
         "location": "Hamburg",
-        "geo": "53.537999;9.989934",
+        "geo": {
+            "latitude": "53.537999",
+            "longitude": "9.989934",
+        },
         "description": "Surprisingly rainy",
         "supported_features": CalendarEntityFeature.CREATE_EVENT,
     }
@@ -781,7 +803,10 @@ async def test_all_day_event(
         "start_time": "2017-11-27 00:00:00",
         "end_time": "2017-11-28 00:00:00",
         "location": "Hamburg",
-        "geo": "53.537999;9.989934",
+        "geo": {
+            "latitude": "53.537999",
+            "longitude": "9.989934",
+        },
         "description": "What a beautiful day",
         "supported_features": CalendarEntityFeature.CREATE_EVENT,
     }
@@ -807,7 +832,10 @@ async def test_event_rrule(
         "start_time": "2017-11-27 22:00:00",
         "end_time": "2017-11-27 22:30:00",
         "location": "Hamburg",
-        "geo": "53.537999;9.989934",
+        "geo": {
+            "latitude": "53.537999",
+            "longitude": "9.989934",
+        },
         "description": "Every day for a while",
         "supported_features": CalendarEntityFeature.CREATE_EVENT,
     }
@@ -833,7 +861,10 @@ async def test_event_rrule_ongoing(
         "start_time": "2017-11-27 22:00:00",
         "end_time": "2017-11-27 22:30:00",
         "location": "Hamburg",
-        "geo": "53.537999;9.989934",
+        "geo": {
+            "latitude": "53.537999",
+            "longitude": "9.989934",
+        },
         "description": "Every day for a while",
         "supported_features": CalendarEntityFeature.CREATE_EVENT,
     }
@@ -859,7 +890,10 @@ async def test_event_rrule_duration(
         "start_time": "2017-11-27 23:00:00",
         "end_time": "2017-11-27 23:30:00",
         "location": "Hamburg",
-        "geo": "53.537999;9.989934",
+        "geo": {
+            "latitude": "53.537999",
+            "longitude": "9.989934",
+        },
         "description": "Every day for a while as well",
         "supported_features": CalendarEntityFeature.CREATE_EVENT,
     }
@@ -885,7 +919,10 @@ async def test_event_rrule_duration_ongoing(
         "start_time": "2017-11-27 23:00:00",
         "end_time": "2017-11-27 23:30:00",
         "location": "Hamburg",
-        "geo": "53.537999;9.989934",
+        "geo": {
+            "latitude": "53.537999",
+            "longitude": "9.989934",
+        },
         "description": "Every day for a while as well",
         "supported_features": CalendarEntityFeature.CREATE_EVENT,
     }
@@ -911,7 +948,10 @@ async def test_event_rrule_endless(
         "start_time": "2017-11-27 23:45:00",
         "end_time": "2017-11-27 23:59:59",
         "location": "Hamburg",
-        "geo": "53.537999;9.989934",
+        "geo": {
+            "latitude": "53.537999",
+            "longitude": "9.989934",
+        },
         "description": "Every day forever",
         "supported_features": CalendarEntityFeature.CREATE_EVENT,
     }
@@ -969,7 +1009,10 @@ async def test_event_rrule_all_day_early(
         "start_time": "2016-12-01 00:00:00",
         "end_time": "2016-12-02 00:00:00",
         "location": "Hamburg",
-        "geo": "53.537999;9.989934",
+        "geo": {
+            "latitude": "53.537999",
+            "longitude": "9.989934",
+        },
         "description": "Groundhog Day",
         "supported_features": CalendarEntityFeature.CREATE_EVENT,
     }
@@ -995,7 +1038,10 @@ async def test_event_rrule_hourly_on_first(
         "start_time": "2015-11-27 00:00:00",
         "end_time": "2015-11-27 00:30:00",
         "location": "Hamburg",
-        "geo": "53.537999;9.989934",
+        "geo": {
+            "latitude": "53.537999",
+            "longitude": "9.989934",
+        },
         "description": "The bell tolls for thee",
         "supported_features": CalendarEntityFeature.CREATE_EVENT,
     }
@@ -1021,7 +1067,10 @@ async def test_event_rrule_hourly_on_last(
         "start_time": "2015-11-27 11:00:00",
         "end_time": "2015-11-27 11:30:00",
         "location": "Hamburg",
-        "geo": "53.537999;9.989934",
+        "geo": {
+            "latitude": "53.537999",
+            "longitude": "9.989934",
+        },
         "description": "The bell tolls for thee",
         "supported_features": CalendarEntityFeature.CREATE_EVENT,
     }
@@ -1094,7 +1143,10 @@ async def test_get_events_custom_calendars(
             "start": {"dateTime": "2017-11-27T09:00:00-08:00"},
             "summary": "This is a normal event",
             "location": "Hamburg",
-            "geo": "53.537999;9.989934",
+            "geo": {
+                "latitude": "53.537999",
+                "longitude": "9.989934",
+            },
             "description": "Surprisingly rainy",
             "uid": None,
             "recurrence_id": None,
@@ -1156,7 +1208,10 @@ async def test_setup_config_entry(
         "start_time": "2017-11-27 00:00:00",
         "end_time": "2017-11-28 00:00:00",
         "location": "Hamburg",
-        "geo": "53.537999;9.989934",
+        "geo": {
+            "latitude": "53.537999",
+            "longitude": "9.989934",
+        },
         "description": "What a beautiful day",
         "supported_features": CalendarEntityFeature.CREATE_EVENT,
     }
@@ -1268,6 +1323,27 @@ async def test_config_entry_supported_components(
                 ),
             },
         ),
+        # Event with geo field
+        (
+            {
+                "summary": "Geo Event",
+                "start_date_time": "2025-08-06T10:00:00+00:00",
+                "end_date_time": "2025-08-06T11:00:00+00:00",
+                "location": "Hamburg",
+                "geo": {"latitude": 53.537999, "longitude": 9.989934},
+            },
+            {
+                "summary": "Geo Event",
+                "dtstart": datetime.datetime(
+                    2025, 8, 6, 10, 0, tzinfo=zoneinfo.ZoneInfo(key="UTC")
+                ),
+                "dtend": datetime.datetime(
+                    2025, 8, 6, 11, 0, tzinfo=zoneinfo.ZoneInfo(key="UTC")
+                ),
+                "location": "Hamburg",
+                "geo": (53.537999, 9.989934),
+            },
+        ),
         # Rrule is not supported in API (async_call) calls.
     ],
 )
@@ -1294,3 +1370,37 @@ async def test_add_vevent(
     calendars[0].add_event.assert_called_once()
     assert calendars[0].add_event.call_args
     assert calendars[0].add_event.call_args[1] == expected_ics_fields
+
+
+@pytest.mark.parametrize("tz", [UTC])
+@pytest.mark.parametrize(
+    "geo",
+    [
+        {"latitude": 91.0, "longitude": 9.0},
+        {"latitude": -91.0, "longitude": 9.0},
+        {"latitude": 53.0, "longitude": 181.0},
+        {"latitude": 53.0, "longitude": -181.0},
+    ],
+)
+async def test_add_vevent_invalid_geo(
+    hass: HomeAssistant,
+    setup_platform_cb: Callable[[], Awaitable[None]],
+    calendars: list[Mock],
+    geo: dict[str, float],
+) -> None:
+    """Test that invalid geo coordinates are rejected."""
+    await setup_platform_cb()
+
+    with pytest.raises(vol.Invalid):
+        await hass.services.async_call(
+            "calendar",
+            "create_event",
+            {
+                "summary": "Invalid Geo",
+                "start_date_time": "2025-08-06T10:00:00+00:00",
+                "end_date_time": "2025-08-06T11:00:00+00:00",
+                "geo": geo,
+            },
+            target={"entity_id": TEST_ENTITY},
+            blocking=True,
+        )

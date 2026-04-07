@@ -93,15 +93,15 @@
           "name": "End time"
         },
         "geo": {
-          "description": "The geolocation coordinates of the event, separated by a semicolon.",
-          "name": "Geo"
+          "description": "The geographic coordinates of the event.",
+          "name": "Geographic position"
         },
         "in": {
           "description": "Days or weeks that you want to create the event in.",
           "name": "In"
         },
         "location": {
-          "description": "The location of the event.",
+          "description": "Friendly name for the location of the event.",
           "name": "Location"
         },
         "start_date": {

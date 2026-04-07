@@ -225,7 +225,8 @@ class WebDavCalendarEntity(CoordinatorEntity[CalDavUpdateCoordinator], CalendarE
         if location := kwargs.get("location"):
             item_data["location"] = location
         if geo := kwargs.get("geo"):
-            item_data["geo"] = geo
+            # The caldav package expects a tuple of (latitude, longitude)
+            item_data["geo"] = (geo["latitude"], geo["longitude"])
         if rrule := kwargs.get("rrule"):
             item_data["rrule"] = rrule
 

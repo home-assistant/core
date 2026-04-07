@@ -80,7 +80,7 @@ class CalDavUpdateCoordinator(DataUpdateCoordinator[CalendarEvent | None]):
                     start=self.to_local(vevent.dtstart.value),
                     end=self.to_local(self.get_end_date(vevent)),
                     location=get_attr_value(vevent, "location"),
-                    geo=get_attr_value(vevent, "geo"),
+                    geo=self.to_structured_geolocation(get_attr_value(vevent, "geo")),
                     description=get_attr_value(vevent, "description"),
                 )
             )
@@ -176,7 +176,7 @@ class CalDavUpdateCoordinator(DataUpdateCoordinator[CalendarEvent | None]):
             start=self.to_local(vevent.dtstart.value),
             end=self.to_local(self.get_end_date(vevent)),
             location=get_attr_value(vevent, "location"),
-            geo=get_attr_value(vevent, "geo"),
+            geo=self.to_structured_geolocation(get_attr_value(vevent, "geo")),
             description=get_attr_value(vevent, "description"),
         )
 
@@ -246,3 +246,23 @@ class CalDavUpdateCoordinator(DataUpdateCoordinator[CalendarEvent | None]):
             enddate += timedelta(days=1)
 
         return enddate
+
+    @staticmethod
+    def to_structured_geolocation(obj: str | None) -> CalendarEvent.Geolocation | None:
+        """Return the structured `Geolocation` object for the string.
+
+        Per RFC 5545, the geolocation must be specified as a semicolon separated string,
+        with float coordinates given in the order `<latitude>;<longitude>`.
+        """
+
+        if not obj:
+            return None
+
+        values = obj.split(sep=";")
+        if len(values) != 2:
+            return None
+
+        return CalendarEvent.Geolocation(
+            latitude=values[0],
+            longitude=values[1],
+        )
