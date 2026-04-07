@@ -1,17 +1,16 @@
 """Support for Fluss Devices."""
 
+from __future__ import annotations
+
 from fluss_api import FlussApiClientError
 
 from homeassistant.components.button import ButtonEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .coordinator import FlussDataUpdateCoordinator
+from .coordinator import FlussConfigEntry
 from .entity import FlussEntity
-
-type FlussConfigEntry = ConfigEntry[FlussDataUpdateCoordinator]
 
 PARALLEL_UPDATES = 1
 

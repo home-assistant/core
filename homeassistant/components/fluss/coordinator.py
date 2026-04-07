@@ -26,6 +26,8 @@ type FlussConfigEntry = ConfigEntry[FlussDataUpdateCoordinator]
 class FlussDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """Manages fetching Fluss device data on a schedule."""
 
+    config_entry: FlussConfigEntry
+
     def __init__(
         self, hass: HomeAssistant, config_entry: FlussConfigEntry, api_key: str
     ) -> None:

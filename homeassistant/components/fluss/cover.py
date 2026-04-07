@@ -11,15 +11,12 @@ from homeassistant.components.cover import (
     CoverEntity,
     CoverEntityFeature,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .coordinator import FlussDataUpdateCoordinator
+from .coordinator import FlussConfigEntry, FlussDataUpdateCoordinator
 from .entity import FlussEntity
-
-type FlussConfigEntry = ConfigEntry[FlussDataUpdateCoordinator]
 
 PARALLEL_UPDATES = 1
 
