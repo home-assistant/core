@@ -1,4 +1,4 @@
-"""Support for Russound RIO select entities ."""
+"""Support for Russound RIO select entities."""
 
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
