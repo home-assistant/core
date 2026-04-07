@@ -3,6 +3,7 @@
 from unittest.mock import MagicMock
 
 from aidot.const import CONF_ACCESS_TOKEN, CONF_LOGIN_INFO
+from aidot.exceptions import AidotUserOrPassIncorrect
 
 from homeassistant.components.aidot.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
@@ -35,8 +36,6 @@ async def test_async_setup_entry_auth_failed(
     mocked_aidot_client: MagicMock,
 ) -> None:
     """Test setup fails with auth error."""
-    from aidot.exceptions import AidotUserOrPassIncorrect
-
     mocked_aidot_client.async_post_login.side_effect = AidotUserOrPassIncorrect()
     # Remove access token to trigger login
     mock_config_entry.data[CONF_LOGIN_INFO].pop(CONF_ACCESS_TOKEN, None)

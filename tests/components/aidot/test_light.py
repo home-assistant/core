@@ -2,6 +2,7 @@
 
 from unittest.mock import AsyncMock, MagicMock, Mock
 
+from aidot.const import CONF_DEVICE_LIST
 from aidot.device_client import DeviceStatusData
 from aidot.exceptions import AidotAuthFailed
 from freezegun.api import FrozenDateTimeFactory
@@ -191,8 +192,6 @@ async def test_coordinator_device_removal(
     assert hass.states.get(ENTITY_LIGHT) is not None
 
     # Return empty device list
-    from aidot.const import CONF_DEVICE_LIST
-
     mocked_aidot_client.async_get_all_device.return_value = {CONF_DEVICE_LIST: []}
     freezer.tick(UPDATE_DEVICE_LIST_INTERVAL)
     async_fire_time_changed(hass)
