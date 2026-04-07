@@ -10,6 +10,7 @@ from homeassistant.components.light import (
     LightEntity,
 )
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.device_registry import (
     CONNECTION_NETWORK_MAC,
     DeviceInfo,
@@ -39,8 +40,9 @@ async def async_setup_entry(
             device_coordinator.device_client.device_id
             for device_coordinator in coordinator.device_coordinators.values()
         }
+        added_device_ids = new_lists - lists_added
 
-        if new_lists - lists_added:
+        if added_device_ids:
             async_add_entities(
                 AidotLight(hass, coordinator.device_coordinators[device_id])
                 for device_id in new_lists
