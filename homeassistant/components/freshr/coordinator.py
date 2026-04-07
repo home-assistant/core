@@ -114,6 +114,11 @@ class FreshrReadingsCoordinator(DataUpdateCoordinator[DeviceReadings]):
         self._client = client
 
     @property
+    def device(self) -> DeviceSummary:
+        """Return the device summary."""
+        return self._device
+
+    @property
     def device_id(self) -> str:
         """Return the device ID."""
         return self._device.id
