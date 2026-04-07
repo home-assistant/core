@@ -30,12 +30,6 @@ CAMERAS: dict[DeviceCategory, CameraEntityDescription] = {
 }
 
 
-def _get_quirk_entity_description(
-    entity_quirk: CameraQuirk,
-) -> CameraEntityDescription:
-    return CameraEntityDescription(key=entity_quirk.key)
-
-
 def _get_quirk_entities(
     manager: Manager, device: CustomerDevice
 ) -> list[TuyaCameraEntity] | None:
@@ -44,12 +38,7 @@ def _get_quirk_entities(
     ) is None:
         return None
     return [
-        TuyaCameraEntity(
-            device,
-            manager,
-            _get_quirk_entity_description(entity_quirk),
-            definition,
-        )
+        TuyaCameraEntity(device, manager, definition, quirk=entity_quirk)
         for entity_quirk in entity_quirks
         if (definition := entity_quirk.definition_fn(device))
     ]
@@ -75,7 +64,7 @@ async def async_setup_entry(
             if description := CAMERAS.get(device.category):
                 entities.append(
                     TuyaCameraEntity(
-                        device, manager, description, get_default_definition(device)
+                        device, manager, get_default_definition(device), description
                     )
                 )
 
@@ -99,8 +88,10 @@ class TuyaCameraEntity(TuyaEntity, CameraEntity):
         self,
         device: CustomerDevice,
         device_manager: Manager,
-        description: CameraEntityDescription,
         definition: TuyaCameraDefinition,
+        description: CameraEntityDescription | None = None,
+        *,
+        quirk: CameraQuirk | None = None,
     ) -> None:
         """Init Tuya Camera."""
         super().__init__(device, device_manager, description)
@@ -108,6 +99,8 @@ class TuyaCameraEntity(TuyaEntity, CameraEntity):
         self._attr_model = device.product_name
         self._motion_detection_switch = definition.motion_detection_switch
         self._recording_status = definition.recording_status
+        if quirk and quirk.key:
+            self._attr_unique_id = f"tuya.{device.id}_{quirk.key}"
 
     @property
     def is_recording(self) -> bool:
