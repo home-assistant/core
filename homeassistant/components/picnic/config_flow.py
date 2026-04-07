@@ -6,8 +6,12 @@ from collections.abc import Mapping
 import logging
 from typing import Any
 
-from python_picnic_api2 import Picnic2FAError, Picnic2FARequired, PicnicAPI
-from python_picnic_api2.session import PicnicAuthError
+from python_picnic_api2 import PicnicAPI
+from python_picnic_api2.session import (
+    Picnic2FAError,
+    Picnic2FARequired,
+    PicnicAuthError,
+)
 import requests
 import voluptuous as vol
 

@@ -126,7 +126,7 @@ async def test_form_2fa_required(hass: HomeAssistant, picnic_api) -> None:
 
 
 async def test_form_2fa_channel_cannot_connect(hass: HomeAssistant, picnic_api) -> None:
-    """Test we handle connection errors."""
+    """Test we handle connection errors in the first 2fa step."""
     picnic_api.return_value.login.side_effect = Picnic2FARequired
     picnic_api.return_value.generate_2fa_code.side_effect = (
         requests.exceptions.ConnectionError
@@ -162,7 +162,7 @@ async def test_form_2fa_channel_cannot_connect(hass: HomeAssistant, picnic_api) 
 
 
 async def test_form_2fa_channel_exception(hass: HomeAssistant, picnic_api) -> None:
-    """Test we handle connection errors."""
+    """Test we handle random exceptions in the first 2fa step."""
     picnic_api.return_value.login.side_effect = Picnic2FARequired
     picnic_api.return_value.generate_2fa_code.side_effect = Exception
 
@@ -196,7 +196,7 @@ async def test_form_2fa_channel_exception(hass: HomeAssistant, picnic_api) -> No
 
 
 async def test_form_2fa_wrong_code(hass: HomeAssistant, picnic_api) -> None:
-    """Test the full 2FA flow."""
+    """Test the full 2FA flow with incorrect code."""
     picnic_api.return_value.login.side_effect = Picnic2FARequired
     picnic_api.return_value.verify_2fa_code.side_effect = Picnic2FAError
 
@@ -237,7 +237,7 @@ async def test_form_2fa_wrong_code(hass: HomeAssistant, picnic_api) -> None:
 
 
 async def test_form_2fa_cannot_connect(hass: HomeAssistant, picnic_api) -> None:
-    """Test we handle connection errors."""
+    """Test we handle connection errors in the last 2fa step."""
     picnic_api.return_value.login.side_effect = Picnic2FARequired
     picnic_api.return_value.verify_2fa_code.side_effect = (
         requests.exceptions.ConnectionError
@@ -280,7 +280,7 @@ async def test_form_2fa_cannot_connect(hass: HomeAssistant, picnic_api) -> None:
 
 
 async def test_form_2fa_exception(hass: HomeAssistant, picnic_api) -> None:
-    """Test we handle connection errors."""
+    """Test we handle random exceptions in the last 2fa step."""
     picnic_api.return_value.login.side_effect = Picnic2FARequired
     picnic_api.return_value.verify_2fa_code.side_effect = Exception
 
