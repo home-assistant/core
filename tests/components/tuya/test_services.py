@@ -132,7 +132,7 @@ async def test_get_feeder_meal_plan(
     mock_device.status.pop("meal_plan", None)
     with pytest.raises(
         ServiceValidationError,
-        match="invalid_meal_plan_data",
+        match="Invalid meal plan data provided",
     ):
         await hass.services.async_call(
             DOMAIN,
@@ -174,7 +174,7 @@ async def test_set_feeder_meal_plan(
     mock_device.product_id = "unsupported_product"
     with pytest.raises(
         ServiceValidationError,
-        match="device_not_support_meal_plan_function",
+        match=f"Feeder with ID {mock_device.id} does not support meal plan functionality",
     ):
         await hass.services.async_call(
             DOMAIN,
@@ -198,7 +198,10 @@ async def test_get_tuya_device_error_cases(
     await initialize_entry(hass, mock_manager, mock_config_entry, mock_device)
 
     # Case 1: Device ID not found
-    with pytest.raises(ServiceValidationError, match="device_not_found"):
+    with pytest.raises(
+        ServiceValidationError,
+        match="Feeder with ID invalid_device_id could not be found",
+    ):
         _get_tuya_device(hass, "invalid_device_id")
 
     # Case 2: Device exists but is not a Tuya device
@@ -208,7 +211,10 @@ async def test_get_tuya_device_error_cases(
         identifiers={("other_domain", "some_id")},
         name="Non-Tuya Device",
     )
-    with pytest.raises(ServiceValidationError, match="device_not_tuya_device"):
+    with pytest.raises(
+        ServiceValidationError,
+        match=f"Device with ID {non_tuya_device.id} is not a Tuya feeder",
+    ):
         _get_tuya_device(hass, non_tuya_device.id)
 
     # Case 3: Tuya device exists in registry but not in manager.device_map
@@ -217,5 +223,8 @@ async def test_get_tuya_device_error_cases(
         identifiers={(DOMAIN, "unknown_tuya_id")},
         name="Unknown Tuya Device",
     )
-    with pytest.raises(ServiceValidationError, match="device_not_found"):
+    with pytest.raises(
+        ServiceValidationError,
+        match=f"Feeder with ID {tuya_device.id} could not be found",
+    ):
         _get_tuya_device(hass, tuya_device.id)

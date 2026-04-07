@@ -1,6 +1,7 @@
 """Services for Tuya integration."""
 
 from enum import StrEnum
+from typing import Any
 
 from tuya_device_handlers.device_wrapper.service_feeder_schedule import (
     FeederSchedule,
@@ -8,7 +9,6 @@ from tuya_device_handlers.device_wrapper.service_feeder_schedule import (
 )
 from tuya_sharing import CustomerDevice, Manager
 import voluptuous as vol
-from typing import Any
 
 from homeassistant.const import ATTR_DEVICE_ID
 from homeassistant.core import HomeAssistant, ServiceCall, SupportsResponse
