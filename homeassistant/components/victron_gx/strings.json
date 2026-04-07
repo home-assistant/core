@@ -421,7 +421,7 @@
           "float": "Float",
           "inverting": "Inverting",
           "low_power": "Low Power",
-          "off": "Off",
+          "off": "[%key:common::state::off%]",
           "passthrough": "Passthrough",
           "power_assist": "Power Assist",
           "power_supply": "Power Supply",
@@ -764,7 +764,7 @@
         "state": {
           "eco": "Eco",
           "inverter": "Inverter",
-          "off": "Off"
+          "off": "[%key:common::state::off%]"
         }
       },
       "inverter_output_apparent_power_phase": {
@@ -899,7 +899,7 @@
         "state": {
           "mppt_active": "MPPT active",
           "not_available": "Not available",
-          "off": "Off",
+          "off": "[%key:common::state::off%]",
           "voltage_current_limited": "Voltage/current limited"
         }
       },
@@ -1062,7 +1062,7 @@
         "state": {
           "mppt_active": "MPPT active",
           "not_available": "Not available",
-          "off": "Off",
+          "off": "[%key:common::state::off%]",
           "voltage_current_limited": "Voltage/current limited"
         }
       },
@@ -1116,7 +1116,7 @@
         "state": {
           "mppt_active": "MPPT active",
           "not_available": "Not available",
-          "off": "Off",
+          "off": "[%key:common::state::off%]",
           "voltage_current_limited": "Voltage/current limited"
         }
       },
@@ -1429,7 +1429,7 @@
           "auto_vrm": "Auto / VRM",
           "buy": "Buy",
           "node_red": "Node-RED",
-          "off": "Off",
+          "off": "[%key:common::state::off%]",
           "sell": "Sell"
         }
       },
