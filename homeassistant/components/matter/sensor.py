@@ -312,9 +312,10 @@ class MatterConcentrationSensor(MatterSensor):
     def matter_measurement_unit(self) -> int | None:
         """Return the MeasurementUnit value from the device, if available."""
         if len(self._entity_info.attributes_to_watch) > 1:
-            return self.get_matter_attribute_value(
+            value: int | None = self.get_matter_attribute_value(
                 self._entity_info.attributes_to_watch[1]
             )
+            return value
         return None
 
     @callback
