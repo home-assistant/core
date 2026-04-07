@@ -267,7 +267,7 @@ aioharmony==0.5.3
 aiohasupervisor==0.4.3
 
 # homeassistant.components.home_connect
-aiohomeconnect==0.33.0
+aiohomeconnect==0.34.0
 
 # homeassistant.components.homekit_controller
 aiohomekit==3.2.20
@@ -340,6 +340,9 @@ aiooui==0.1.9
 
 # homeassistant.components.pegel_online
 aiopegelonline==0.1.1
+
+# homeassistant.components.opnsense
+aiopnsense==1.0.8
 
 # homeassistant.components.acmeda
 aiopulse==0.4.6
@@ -1090,7 +1093,7 @@ hole==0.9.0
 
 # homeassistant.components.holiday
 # homeassistant.components.workday
-holidays==0.93
+holidays==0.94
 
 # homeassistant.components.frontend
 home-assistant-frontend==20260325.6
@@ -1162,7 +1165,7 @@ imeon_inverter_api==0.4.0
 imgw_pib==2.0.2
 
 # homeassistant.components.incomfort
-incomfort-client==0.6.12
+incomfort-client==0.7.0
 
 # homeassistant.components.indevolt
 indevolt-api==1.2.3
@@ -1668,7 +1671,7 @@ pyHomee==1.3.8
 pyRFXtrx==0.31.1
 
 # homeassistant.components.tibber
-pyTibber==0.36.0
+pyTibber==0.37.0
 
 # homeassistant.components.dlink
 pyW215==0.8.0
@@ -1982,7 +1985,7 @@ pynina==1.0.2
 pynintendoauth==1.0.2
 
 # homeassistant.components.nintendo_parental_controls
-pynintendoparental==2.3.3
+pynintendoparental==2.3.4
 
 # homeassistant.components.nobo_hub
 pynobo==1.8.1
@@ -2013,9 +2016,6 @@ pyopenuv==2023.02.0
 
 # homeassistant.components.openweathermap
 pyopenweathermap==0.2.2
-
-# homeassistant.components.opnsense
-pyopnsense==0.4.0
 
 # homeassistant.components.osoenergy
 pyosoenergyapi==1.2.4
@@ -2053,7 +2053,7 @@ pyplaato==0.0.19
 pypoint==3.0.0
 
 # homeassistant.components.portainer
-pyportainer==1.0.36
+pyportainer==1.0.37
 
 # homeassistant.components.probe_plus
 pyprobeplus==1.1.2
@@ -2250,7 +2250,7 @@ python-otbr-api==2.9.0
 python-overseerr==0.9.0
 
 # homeassistant.components.picnic
-python-picnic-api2==1.3.1
+python-picnic-api2==1.3.4
 
 # homeassistant.components.pooldose
 python-pooldose==0.9.0
@@ -2262,7 +2262,7 @@ python-qube-heatpump==1.8.0
 python-rabbitair==0.0.8
 
 # homeassistant.components.roborock
-python-roborock==5.3.0
+python-roborock==5.5.1
 
 # homeassistant.components.smarttub
 python-smarttub==0.0.47
@@ -2455,7 +2455,7 @@ satel-integra==1.1.0
 screenlogicpy==0.10.2
 
 # homeassistant.components.backup
-securetar==2026.2.0
+securetar==2026.4.0
 
 # homeassistant.components.emulated_kasa
 # homeassistant.components.sense
@@ -2739,6 +2739,9 @@ venstarcolortouch==0.21
 # homeassistant.components.victron_ble
 victron-ble-ha-parser==0.6.3
 
+# homeassistant.components.victron_gx
+victron-mqtt==2026.4.2
+
 # homeassistant.components.victron_remote_monitoring
 victron-vrm==0.1.8
 
@@ -2859,7 +2862,7 @@ yt-dlp[default]==2026.03.17
 zamg==0.3.6
 
 # homeassistant.components.zimi
-zcc-helper==3.7
+zcc-helper==3.8
 
 # homeassistant.components.zeroconf
 zeroconf==0.148.0

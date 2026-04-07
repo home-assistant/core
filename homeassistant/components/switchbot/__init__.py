@@ -110,10 +110,26 @@ PLATFORMS_BY_TYPE = {
         Platform.LOCK,
         Platform.SENSOR,
     ],
-    SupportedModels.AIR_PURIFIER_JP.value: [Platform.FAN, Platform.SENSOR],
-    SupportedModels.AIR_PURIFIER_US.value: [Platform.FAN, Platform.SENSOR],
-    SupportedModels.AIR_PURIFIER_TABLE_JP.value: [Platform.FAN, Platform.SENSOR],
-    SupportedModels.AIR_PURIFIER_TABLE_US.value: [Platform.FAN, Platform.SENSOR],
+    SupportedModels.AIR_PURIFIER_JP.value: [
+        Platform.FAN,
+        Platform.SENSOR,
+        Platform.BUTTON,
+    ],
+    SupportedModels.AIR_PURIFIER_US.value: [
+        Platform.FAN,
+        Platform.SENSOR,
+        Platform.BUTTON,
+    ],
+    SupportedModels.AIR_PURIFIER_TABLE_JP.value: [
+        Platform.FAN,
+        Platform.SENSOR,
+        Platform.BUTTON,
+    ],
+    SupportedModels.AIR_PURIFIER_TABLE_US.value: [
+        Platform.FAN,
+        Platform.SENSOR,
+        Platform.BUTTON,
+    ],
     SupportedModels.EVAPORATIVE_HUMIDIFIER.value: [
         Platform.HUMIDIFIER,
         Platform.SENSOR,
