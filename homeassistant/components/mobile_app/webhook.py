@@ -803,6 +803,10 @@ async def webhook_scan_tag(
     return empty_okay_response()
 
 
+# The two webhooks below are iOS-specific. "live_activity" refers to
+# ActivityKit Live Activities, an iOS-only feature. This is distinct from
+# Android's live_update mechanism even though both are triggered by the
+# cross-platform live_update: true notification key.
 @WEBHOOK_COMMANDS.register("mobile_app_live_activity_token")
 @validate_schema(
     {

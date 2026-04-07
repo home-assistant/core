@@ -232,6 +232,9 @@ class MobileAppNotificationService(BaseNotificationService):
         Returns None if this is a normal notification (not a Live Activity).
         """
         notification_data = data.get(ATTR_DATA) or {}
+        # live_update is the cross-platform YAML key shared with Android.
+        # On iOS it maps to starting or updating an ActivityKit Live Activity;
+        # on Android it maps to a different mechanism (progress notifications).
         if not notification_data.get(ATTR_LIVE_UPDATE):
             return None
 
