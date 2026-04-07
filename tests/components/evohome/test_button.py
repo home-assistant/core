@@ -8,7 +8,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from unittest.mock import MagicMock, patch
 
-from evohomeasync2 import ControlSystem, EvohomeClient, Zone
+from evohomeasync2 import ControlSystem, EvohomeClient, HotWater, Zone
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -29,6 +29,18 @@ def system_button_id(
     tcs: ControlSystem = evo.tcs
 
     return entity_id(Platform.BUTTON, f"{tcs.id}_reset")
+
+
+@pytest.fixture
+def dhw_button_id(evohome: MagicMock, entity_id: Callable[[Platform, str], str]) -> str:
+    """Return the entity_id of the DHW reset button."""
+
+    evo: EvohomeClient = evohome.return_value
+    dhw: HotWater | None = evo.tcs.hotwater
+
+    assert dhw is not None, "Fixture has no DHW zone"
+
+    return entity_id(Platform.BUTTON, f"{dhw.id}_reset")
 
 
 @pytest.fixture
@@ -96,6 +108,25 @@ async def test_zone_reset_button_press(
             BUTTON_DOMAIN,
             SERVICE_PRESS,
             {ATTR_ENTITY_ID: zone_button_id},
+            blocking=True,
+        )
+
+        mock_fcn.assert_awaited_once_with()
+
+
+@pytest.mark.parametrize("install", ["default"])
+@pytest.mark.usefixtures("evohome")
+async def test_dhw_reset_button_press(
+    hass: HomeAssistant,
+    dhw_button_id: str,
+) -> None:
+    """Test SERVICE_PRESS on the DHW reset button."""
+
+    with patch("evohomeasync2.hotwater.HotWater.reset") as mock_fcn:
+        await hass.services.async_call(
+            BUTTON_DOMAIN,
+            SERVICE_PRESS,
+            {ATTR_ENTITY_ID: dhw_button_id},
             blocking=True,
         )
 

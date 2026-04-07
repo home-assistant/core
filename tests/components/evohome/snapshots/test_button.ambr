@@ -1,4 +1,19 @@
 # serializer version: 1
+# name: test_setup_platform[botched][button.evohome_3933910_reset-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'icon': 'mdi:water-boiler-auto',
+      'status': dict({
+      }),
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.evohome_3933910_reset',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
 # name: test_setup_platform[botched][button.reset_bathroom_dn-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
@@ -121,6 +136,21 @@
     }),
     'context': <ANY>,
     'entity_id': 'button.reset_my_home',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_setup_platform[default][button.evohome_3933910_reset-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'icon': 'mdi:water-boiler-auto',
+      'status': dict({
+      }),
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.evohome_3933910_reset',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

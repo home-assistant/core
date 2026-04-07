@@ -20,6 +20,11 @@ BUTTON_DESCRIPTIONS: dict[str, ButtonEntityDescription] = {
         translation_key="reset_system_mode",
         entity_category=EntityCategory.CONFIG,
     ),
+    "reset_dhw": ButtonEntityDescription(
+        key="clear_dhw_override",
+        translation_key="clear_dhw_override",
+        entity_category=EntityCategory.CONFIG,
+    ),
     "reset_zone": ButtonEntityDescription(
         key="clear_zone_override",
         translation_key="clear_zone_override",
@@ -45,6 +50,13 @@ async def async_setup_platform(
     entities: list[ButtonEntity] = [
         EvoResetSystemButton(coordinator, tcs, BUTTON_DESCRIPTIONS["reset_system"])
     ]
+
+    if tcs.hotwater is not None:
+        entities.append(
+            EvoResetDhwButton(
+                coordinator, tcs.hotwater, BUTTON_DESCRIPTIONS["reset_dhw"]
+            )
+        )
 
     entities.extend(
         [
@@ -85,6 +97,37 @@ class EvoResetSystemButton(EvoEntity, ButtonEntity):
 
         The controller will enter auto mode, and the zones will revert to following
         their schedules.
+        """
+        await self.coordinator.call_client_api(self._evo_device.reset())
+
+
+class EvoResetDhwButton(EvoEntity, ButtonEntity):
+    """Button entity for DHW override reset."""
+
+    _attr_has_entity_name = True
+    _attr_icon = "mdi:water-boiler-auto"
+
+    _evo_device: evo.HotWater
+    _evo_id_attr = "dhw_id"
+
+    def __init__(
+        self,
+        coordinator: EvoDataUpdateCoordinator,
+        evo_device: evo.HotWater,
+        description: ButtonEntityDescription,
+    ) -> None:
+        """Initialize the DHW reset button."""
+        super().__init__(coordinator, evo_device)
+
+        self._attr_translation_placeholders = {"device_name": evo_device.name}
+        self._attr_unique_id = f"{evo_device.id}_reset"
+
+        self.entity_description = description
+
+    async def async_press(self) -> None:
+        """Clear the DHW override, if any.
+
+        The DHW will revert to following its schedule.
         """
         await self.coordinator.call_client_api(self._evo_device.reset())
 

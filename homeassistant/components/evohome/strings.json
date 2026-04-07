@@ -1,6 +1,9 @@
 {
   "entity": {
     "button": {
+      "clear_dhw_override": {
+        "name": "Reset {device_name}"
+      },
       "clear_zone_override": {
         "name": "Reset {device_name}"
       },
