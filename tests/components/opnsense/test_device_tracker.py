@@ -14,8 +14,8 @@ from homeassistant.setup import async_setup_component
 
 @pytest.fixture(name="mocked_opnsense")
 def mocked_opnsense():
-    """Mock for pyopnense.diagnostics."""
-    with mock.patch.object(opnsense, "diagnostics") as mocked_opn:
+    """Mock for aiopnsense.OPNsenseClient."""
+    with mock.patch.object(opnsense, "OPNsenseClient") as mocked_opn:
         yield mocked_opn
 
 
@@ -23,9 +23,9 @@ async def test_get_scanner(
     hass: HomeAssistant, mocked_opnsense, mock_device_tracker_conf: list[legacy.Device]
 ) -> None:
     """Test creating an opnsense scanner."""
-    interface_client = mock.MagicMock()
-    mocked_opnsense.InterfaceClient.return_value = interface_client
-    interface_client.get_arp.return_value = [
+    opnsense_client = mock.AsyncMock()
+    mocked_opnsense.return_value = opnsense_client
+    opnsense_client.get_arp_table.return_value = [
         {
             "hostname": "",
             "intf": "igb1",
@@ -43,9 +43,11 @@ async def test_get_scanner(
             "manufacturer": "OEM",
         },
     ]
-    network_insight_client = mock.MagicMock()
-    mocked_opnsense.NetworkInsightClient.return_value = network_insight_client
-    network_insight_client.get_interfaces.return_value = {"igb0": "WAN", "igb1": "LAN"}
+
+    opnsense_client.get_interfaces.return_value = {
+        "wan": {"name": "WAN"},
+        "lan": {"name": "LAN"},
+    }
 
     result = await async_setup_component(
         hass,

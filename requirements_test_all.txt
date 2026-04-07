@@ -341,6 +341,9 @@ aiooui==0.1.9
 # homeassistant.components.pegel_online
 aiopegelonline==0.1.1
 
+# homeassistant.components.opnsense
+aiopnsense==1.0.8
+
 # homeassistant.components.acmeda
 aiopulse==0.4.6
 
@@ -2013,9 +2016,6 @@ pyopenuv==2023.02.0
 
 # homeassistant.components.openweathermap
 pyopenweathermap==0.2.2
-
-# homeassistant.components.opnsense
-pyopnsense==0.4.0
 
 # homeassistant.components.osoenergy
 pyosoenergyapi==1.2.4
