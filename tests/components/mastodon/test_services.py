@@ -1,21 +1,39 @@
 """Tests for the Mastodon services."""
 
 from datetime import timedelta
+from pathlib import Path
 from unittest.mock import AsyncMock, Mock, patch
 
-from mastodon.Mastodon import MastodonAPIError, MastodonNotFoundError, MediaAttachment
+from mastodon.Mastodon import (
+    MastodonAPIError,
+    MastodonNotFoundError,
+    MastodonUnauthorizedError,
+    MediaAttachment,
+)
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.components import camera, image, media_source
 from homeassistant.components.mastodon.const import (
     ATTR_ACCOUNT_NAME,
+    ATTR_ATTRIBUTION_DOMAINS,
+    ATTR_AVATAR,
+    ATTR_AVATAR_MIME_TYPE,
+    ATTR_BOT,
     ATTR_CONTENT_WARNING,
+    ATTR_DISCOVERABLE,
+    ATTR_DISPLAY_NAME,
     ATTR_DURATION,
+    ATTR_FIELDS,
+    ATTR_HEADER,
+    ATTR_HEADER_MIME_TYPE,
     ATTR_HIDE_NOTIFICATIONS,
     ATTR_IDEMPOTENCY_KEY,
     ATTR_LANGUAGE,
+    ATTR_LOCKED,
     ATTR_MEDIA,
     ATTR_MEDIA_DESCRIPTION,
+    ATTR_NOTE,
     ATTR_STATUS,
     ATTR_VISIBILITY,
     DOMAIN,
@@ -25,10 +43,13 @@ from homeassistant.components.mastodon.services import (
     SERVICE_MUTE_ACCOUNT,
     SERVICE_POST,
     SERVICE_UNMUTE_ACCOUNT,
+    SERVICE_UPDATE_PROFILE,
 )
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_CONFIG_ENTRY_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
+from homeassistant.setup import async_setup_component
 
 from . import setup_integration
 
@@ -651,3 +672,207 @@ async def test_service_entry_availability(
             return_response=False,
         )
     assert err.value.translation_key == "service_config_entry_not_found"
+
+
+@pytest.mark.parametrize(
+    ("payload", "kwargs"),
+    [
+        (
+            {ATTR_DISPLAY_NAME: "Test User"},
+            {ATTR_DISPLAY_NAME: "Test User"},
+        ),
+        (
+            {ATTR_NOTE: "bio"},
+            {ATTR_NOTE: "bio"},
+        ),
+        (
+            {ATTR_LOCKED: True},
+            {ATTR_LOCKED: True},
+        ),
+        (
+            {ATTR_BOT: False},
+            {ATTR_BOT: False},
+        ),
+        (
+            {ATTR_DISCOVERABLE: True},
+            {ATTR_DISCOVERABLE: True},
+        ),
+        (
+            {ATTR_FIELDS: [{"name": "Pronouns", "value": "He/Him, They/Them"}]},
+            {ATTR_FIELDS: [("Pronouns", "He/Him, They/Them")]},
+        ),
+        (
+            {ATTR_ATTRIBUTION_DOMAINS: ["example.com", "test.com"]},
+            {ATTR_ATTRIBUTION_DOMAINS: ["example.com", "test.com"]},
+        ),
+        (
+            {
+                ATTR_AVATAR: {
+                    "media_content_id": "media-source://camera/camera.demo_camera",
+                    "media_content_type": "image/jpeg",
+                }
+            },
+            {ATTR_AVATAR: b"I play the sax\n", ATTR_AVATAR_MIME_TYPE: "image/jpeg"},
+        ),
+        (
+            {
+                ATTR_AVATAR: {
+                    "media_content_id": "media-source://media_source/local/screenshot.jpg",
+                    "media_content_type": "image/png",
+                }
+            },
+            {
+                ATTR_AVATAR: Path(
+                    "tests/testing_config/media/screenshot.jpg"
+                ).resolve(),
+                ATTR_AVATAR_MIME_TYPE: "image/jpeg",
+            },
+        ),
+        (
+            {
+                ATTR_AVATAR: {
+                    "media_content_id": "media-source://image/image.test",
+                    "media_content_type": "image/png",
+                }
+            },
+            {ATTR_AVATAR: b"\x89PNG", ATTR_AVATAR_MIME_TYPE: "image/png"},
+        ),
+        (
+            {
+                ATTR_HEADER: {
+                    "media_content_id": "media-source://camera/camera.demo_camera",
+                    "media_content_type": "image/jpeg",
+                }
+            },
+            {ATTR_HEADER: b"I play the sax\n", ATTR_HEADER_MIME_TYPE: "image/jpeg"},
+        ),
+        (
+            {
+                ATTR_HEADER: {
+                    "media_content_id": "media-source://image/image.test",
+                    "media_content_type": "image/png",
+                }
+            },
+            {ATTR_HEADER: b"\x89PNG", ATTR_HEADER_MIME_TYPE: "image/png"},
+        ),
+        (
+            {
+                ATTR_HEADER: {
+                    "media_content_id": "media-source://media_source/local/screenshot.jpg",
+                    "media_content_type": "image/png",
+                }
+            },
+            {
+                ATTR_HEADER: Path(
+                    "tests/testing_config/media/screenshot.jpg"
+                ).resolve(),
+                ATTR_HEADER_MIME_TYPE: "image/jpeg",
+            },
+        ),
+    ],
+)
+async def test_service_update_profile(
+    hass: HomeAssistant,
+    mock_mastodon_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    payload: dict[str, str],
+    kwargs: dict[str, str | None],
+) -> None:
+    """Test the update profile service."""
+    assert await async_setup_component(hass, "media_source", {})
+    await setup_integration(hass, mock_config_entry)
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    with (
+        patch(
+            "homeassistant.components.camera.async_get_image",
+            return_value=camera.Image("image/jpeg", b"I play the sax\n"),
+        ),
+        patch(
+            "homeassistant.components.image.async_get_image",
+            return_value=image.Image(content_type="image/png", content=b"\x89PNG"),
+        ),
+    ):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_UPDATE_PROFILE,
+            {ATTR_CONFIG_ENTRY_ID: mock_config_entry.entry_id, **payload},
+            blocking=True,
+            return_response=True,
+        )
+
+    mock_mastodon_client.account_update_credentials.assert_called_with(**kwargs)
+
+
+@pytest.mark.parametrize(
+    ("exception", "translation_key"),
+    [
+        (MastodonAPIError, "unable_to_update_profile"),
+        (MastodonUnauthorizedError, "auth_failed"),
+    ],
+)
+async def test_service_update_profile_exceptions(
+    hass: HomeAssistant,
+    mock_mastodon_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    exception: type[Exception],
+    translation_key: str,
+) -> None:
+    """Test the update profile service exceptions."""
+    await setup_integration(hass, mock_config_entry)
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+
+    mock_mastodon_client.account_update_credentials.side_effect = exception
+
+    with pytest.raises(HomeAssistantError) as err:
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_UPDATE_PROFILE,
+            {
+                ATTR_CONFIG_ENTRY_ID: mock_config_entry.entry_id,
+                ATTR_DISPLAY_NAME: "Test User",
+            },
+            blocking=True,
+            return_response=True,
+        )
+
+    assert err.value.translation_key == translation_key
+
+
+@pytest.mark.usefixtures("mock_mastodon_client")
+async def test_service_update_profile_media_source_not_supported(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test the update profile service with unsupported media source."""
+    assert await async_setup_component(hass, "tts", {})
+    await setup_integration(hass, mock_config_entry)
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+
+    with (
+        patch(
+            "homeassistant.components.mastodon.services.async_resolve_media",
+            return_value=media_source.PlayMedia(
+                url="/api/tts_proxy/WDyphPCh3sAoO3koDY87ew.mp3",
+                mime_type="audio/mpeg",
+                path=None,
+            ),
+        ),
+        pytest.raises(HomeAssistantError) as err,
+    ):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_UPDATE_PROFILE,
+            {
+                ATTR_CONFIG_ENTRY_ID: mock_config_entry.entry_id,
+                ATTR_AVATAR: {
+                    "media_content_id": "media-source://tts/demo?message=Hello+world%21&language=en",
+                    "media_content_type": "audio/mp3",
+                },
+            },
+            blocking=True,
+            return_response=True,
+        )
+    assert err.value.translation_key == "media_source_not_supported"

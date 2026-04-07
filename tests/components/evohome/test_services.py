@@ -6,7 +6,6 @@ from datetime import UTC, datetime
 from typing import Any
 from unittest.mock import patch
 
-from evohomeasync2 import EvohomeClient
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 
@@ -25,10 +24,8 @@ from .const import TEST_INSTALLS
 
 
 @pytest.mark.parametrize("install", ["default"])
-async def test_refresh_system(
-    hass: HomeAssistant,
-    evohome: EvohomeClient,
-) -> None:
+@pytest.mark.usefixtures("evohome")
+async def test_refresh_system(hass: HomeAssistant) -> None:
     """Test Evohome's refresh_system service (for all temperature control systems)."""
 
     # EvoService.REFRESH_SYSTEM
@@ -43,10 +40,10 @@ async def test_refresh_system(
         mock_fcn.assert_awaited_once_with()
 
 
-@pytest.mark.parametrize("install", TEST_INSTALLS)  # not all TCSs support AutoWithReset
+@pytest.mark.parametrize("install", TEST_INSTALLS)  # some don't support AutoWithReset
+@pytest.mark.usefixtures("evohome")
 async def test_reset_system(
     hass: HomeAssistant,
-    ctl_id: str,
 ) -> None:
     """Test Evohome's reset_system service (for a temperature control system)."""
 
@@ -63,9 +60,9 @@ async def test_reset_system(
 
 
 @pytest.mark.parametrize("install", ["default"])
+@pytest.mark.usefixtures("ctl_id")
 async def test_set_system_mode(
     hass: HomeAssistant,
-    ctl_id: str,
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test Evohome's set_system_mode service (for a temperature control system)."""
@@ -270,3 +267,52 @@ async def test_zone_services_with_ctl_id(
 
     assert exc_info.value.translation_key == "zone_only_service"
     assert exc_info.value.translation_placeholders == {"service": service}
+
+
+_SET_SYSTEM_MODE_VALIDATOR_PARAMS = [
+    (
+        {ATTR_MODE: "NotARealMode"},
+        "mode_not_supported",
+    ),
+    (
+        {ATTR_MODE: "Auto", ATTR_DURATION: {"hours": 1}},
+        "mode_cant_be_temporary",
+    ),
+    (
+        {ATTR_MODE: "AutoWithEco", ATTR_PERIOD: {"days": 1}},
+        "mode_cant_have_period",
+    ),
+    (
+        {ATTR_MODE: "DayOff", ATTR_DURATION: {"hours": 1}},
+        "mode_cant_have_duration",
+    ),
+]
+
+
+@pytest.mark.parametrize("install", ["default"])
+@pytest.mark.usefixtures("evohome")
+@pytest.mark.parametrize(
+    ("service_data", "expected_translation_key"),
+    _SET_SYSTEM_MODE_VALIDATOR_PARAMS,
+    ids=[k for _, k in _SET_SYSTEM_MODE_VALIDATOR_PARAMS],
+)
+async def test_set_system_mode_validator(
+    hass: HomeAssistant,
+    service_data: dict[str, Any],
+    expected_translation_key: str,
+) -> None:
+    """Test ServiceValidationError for all controller system mode validation cases."""
+
+    with pytest.raises(ServiceValidationError) as exc_info:
+        await hass.services.async_call(
+            DOMAIN,
+            EvoService.SET_SYSTEM_MODE,
+            service_data,
+            target={},
+            blocking=True,
+        )
+
+    assert exc_info.value.translation_key == expected_translation_key
+    assert exc_info.value.translation_placeholders == {
+        ATTR_MODE: service_data[ATTR_MODE]
+    }

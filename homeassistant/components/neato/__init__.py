@@ -24,11 +24,13 @@ from homeassistant.helpers.config_entry_oauth2_flow import (
 from homeassistant.helpers.typing import ConfigType
 
 from . import api
-from .const import DOMAIN, NEATO_LOGIN
+from .const import DOMAIN
 from .hub import NeatoHub
 from .services import async_setup_services
 
 _LOGGER = logging.getLogger(__name__)
+
+type NeatoConfigEntry = ConfigEntry[NeatoHub]
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 PLATFORMS = [
@@ -46,9 +48,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: NeatoConfigEntry) -> bool:
     """Set up config entry."""
-    hass.data.setdefault(DOMAIN, {})
     if CONF_TOKEN not in entry.data:
         raise ConfigEntryAuthFailed
 
@@ -69,7 +70,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         raise ConfigEntryNotReady from ex
 
     neato_session = api.ConfigEntryAuth(hass, entry, implementation)
-    hass.data[DOMAIN][entry.entry_id] = neato_session
     hub = NeatoHub(hass, Account(neato_session))
 
     await hub.async_update_entry_unique_id(entry)
@@ -80,17 +80,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         _LOGGER.debug("Failed to connect to Neato API")
         raise ConfigEntryNotReady from ex
 
-    hass.data[NEATO_LOGIN] = hub
+    entry.runtime_data = hub
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: NeatoConfigEntry) -> bool:
     """Unload config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-    if unload_ok:
-        hass.data[DOMAIN].pop(entry.entry_id)
-
-    return unload_ok
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
