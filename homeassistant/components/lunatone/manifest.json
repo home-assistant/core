@@ -12,21 +12,7 @@
     {
       "properties": {
         "manufacturer": "lunatone industrielle elektronik gmbh",
-        "type": "dali-2-display"
-      },
-      "type": "_http._tcp.local."
-    },
-    {
-      "properties": {
-        "manufacturer": "lunatone industrielle elektronik gmbh",
-        "type": "dali-2-iot"
-      },
-      "type": "_http._tcp.local."
-    },
-    {
-      "properties": {
-        "manufacturer": "lunatone industrielle elektronik gmbh",
-        "type": "dali-2-iot4"
+        "type": "dali-2-*"
       },
       "type": "_http._tcp.local."
     }
