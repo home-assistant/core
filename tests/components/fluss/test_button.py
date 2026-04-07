@@ -27,9 +27,9 @@ async def test_buttons(
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test button entities are created for devices without openCloseStatus."""
-    # Override: no valid openCloseStatus → button fallback
+    # Return status with no openCloseStatus → button fallback
     mock_api_client.async_get_device_status.side_effect = None
-    mock_api_client.async_get_device_status.return_value = {}
+    mock_api_client.async_get_device_status.return_value = {"status": {}}
 
     await setup_integration(hass, mock_config_entry, [Platform.BUTTON])
 
@@ -43,7 +43,7 @@ async def test_button_press(
 ) -> None:
     """Test successful button press."""
     mock_api_client.async_get_device_status.side_effect = None
-    mock_api_client.async_get_device_status.return_value = {}
+    mock_api_client.async_get_device_status.return_value = {"status": {}}
 
     await setup_integration(hass, mock_config_entry, [Platform.BUTTON])
 
@@ -64,7 +64,7 @@ async def test_button_press_error(
 ) -> None:
     """Test button press with API error."""
     mock_api_client.async_get_device_status.side_effect = None
-    mock_api_client.async_get_device_status.return_value = {}
+    mock_api_client.async_get_device_status.return_value = {"status": {}}
 
     await setup_integration(hass, mock_config_entry, [Platform.BUTTON])
 

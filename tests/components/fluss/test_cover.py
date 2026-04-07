@@ -141,7 +141,7 @@ async def test_cover_state_unknown_when_status_unavailable(
     mock_api_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test cover reports unknown state when status API fails."""
+    """Test no covers created when status API fails."""
     mock_api_client.async_get_device_status.side_effect = FlussApiClientError(
         "Status unavailable"
     )
@@ -159,7 +159,7 @@ async def test_no_cover_when_status_missing(
 ) -> None:
     """Test that covers are not created when openCloseStatus is missing."""
     mock_api_client.async_get_device_status.side_effect = None
-    mock_api_client.async_get_device_status.return_value = {}
+    mock_api_client.async_get_device_status.return_value = {"status": {}}
 
     await setup_integration(hass, mock_config_entry, [Platform.COVER])
 

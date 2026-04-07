@@ -65,6 +65,9 @@ def mock_api_client() -> Generator[AsyncMock]:
 
     Device 1: openCloseStatus=Closed → creates a cover entity
     Device 2: openCloseStatus=Open → creates a cover entity
+
+    Status responses use the real API format: {"status": {<fields>}}
+    The coordinator unwraps the nested "status" key automatically.
     """
     with (
         patch(
@@ -79,9 +82,21 @@ def mock_api_client() -> Generator[AsyncMock]:
         client = mock_client.return_value
         client.async_get_devices.return_value = MOCK_DEVICES
         client.async_get_device_status.side_effect = lambda device_id: {
-            "2a303030sdj1": {"openCloseStatus": "Closed"},
-            "ape93k9302j2": {"openCloseStatus": "Open"},
-        }.get(device_id, {})
+            "2a303030sdj1": {
+                "status": {
+                    "deviceId": "2a303030sdj1",
+                    "openCloseStatus": "Closed",
+                    "internetConnected": True,
+                }
+            },
+            "ape93k9302j2": {
+                "status": {
+                    "deviceId": "ape93k9302j2",
+                    "openCloseStatus": "Open",
+                    "internetConnected": True,
+                }
+            },
+        }.get(device_id, {"status": {}})
         client.async_trigger_device.return_value = None
         client.async_open_device.return_value = None
         client.async_close_device.return_value = None

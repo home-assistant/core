@@ -50,3 +50,4 @@ class FlussButton(FlussEntity, ButtonEntity):
                 translation_key="trigger_failed",
                 translation_placeholders={"error": str(err)},
             ) from err
+        await self.coordinator.async_request_refresh()

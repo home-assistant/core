@@ -100,9 +100,17 @@ class FlussDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         }
 
     async def _async_get_device_status(self, device_id: str) -> dict[str, Any] | None:
-        """Fetch status for a single device, returning None on failure."""
+        """Fetch status for a single device, returning None on failure.
+
+        The API returns {"status": {<fields>}}. We unwrap the inner dict
+        so callers can access fields like openCloseStatus directly.
+        """
         try:
-            return await self.api.async_get_device_status(device_id)
+            response = await self.api.async_get_device_status(device_id)
         except FlussApiClientError as err:
             LOGGER.debug("Failed to get status for device %s: %s", device_id, err)
             return None
+        # Unwrap the nested "status" key from the API response
+        if isinstance(response, dict):
+            return response.get("status", response)
+        return response
