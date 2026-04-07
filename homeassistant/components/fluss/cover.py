@@ -27,8 +27,6 @@ PARALLEL_UPDATES = 1
 
 STATUS_REFRESH_DELAY = 10  # seconds to wait before polling status after open/close
 
-ATTR_OPEN_CLOSE_STATUS = "open_close_status"
-
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -71,16 +69,6 @@ class FlussCover(FlussEntity, CoverEntity):
         if self.is_closed is None:
             return self._base_icon
         return self._base_icon
-
-    @property
-    def extra_state_attributes(self) -> dict[str, Any]:
-        """Return the device state attributes."""
-        status = self.device.get("status") or {}
-        open_close = status.get("openCloseStatus")
-        attrs: dict[str, Any] = {}
-        if open_close is not None:
-            attrs[ATTR_OPEN_CLOSE_STATUS] = open_close
-        return attrs
 
     @property
     def is_closed(self) -> bool | None:
