@@ -223,6 +223,7 @@ class DeviceListener(SharingDeviceListener):
 
     def add_device(self, device: CustomerDevice) -> None:
         """Add device added listener."""
+        self.hass.add_job(self.async_add_device, device)
 
     @callback
     def async_add_device(self, device: CustomerDevice) -> None:
