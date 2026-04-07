@@ -62,8 +62,12 @@ class FlussCover(FlussEntity, CoverEntity):
     @property
     def icon(self) -> str:
         """Return the icon based on configured icon type and current state."""
+        if self.is_opening or self.is_closing:
+            return self._alert_icon
         if self.is_closed is False:
             return self._open_icon
+        if self.is_closed is None:
+            return self._base_icon
         return self._base_icon
 
     @property

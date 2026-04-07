@@ -5,7 +5,13 @@ from __future__ import annotations
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import CONF_ICON_TYPE, DEFAULT_ICON_TYPE, ICON_TYPE_MAP, ICON_TYPE_OPEN_MAP
+from .const import (
+    CONF_ICON_TYPE,
+    DEFAULT_ICON_TYPE,
+    ICON_TYPE_ALERT_MAP,
+    ICON_TYPE_MAP,
+    ICON_TYPE_OPEN_MAP,
+)
 from .coordinator import FlussDataUpdateCoordinator
 
 
@@ -60,3 +66,8 @@ class FlussEntity(CoordinatorEntity[FlussDataUpdateCoordinator]):
     def _open_icon(self) -> str:
         """Return the open-state mdi icon string for the configured icon type."""
         return ICON_TYPE_OPEN_MAP.get(self._icon_type, "mdi:garage-open")
+
+    @property
+    def _alert_icon(self) -> str:
+        """Return the transitioning-state mdi icon string for the configured icon type."""
+        return ICON_TYPE_ALERT_MAP.get(self._icon_type, "mdi:garage-alert")

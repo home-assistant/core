@@ -29,3 +29,11 @@ ICON_TYPE_OPEN_MAP: Final[dict[str, str]] = {
     "boom_gate": "mdi:boom-gate-up",
     "barrier": "mdi:barrier",
 }
+
+ICON_TYPE_ALERT_MAP: Final[dict[str, str]] = {
+    "garage": "mdi:garage-alert",
+    "gate": "mdi:gate-arrow-right",
+    "door": "mdi:door-open",
+    "boom_gate": "mdi:boom-gate-up",
+    "barrier": "mdi:barrier",
+}
