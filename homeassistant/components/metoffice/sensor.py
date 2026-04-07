@@ -13,7 +13,6 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     DEGREE,
     PERCENTAGE,
@@ -30,15 +29,12 @@ from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import get_device_info
-from .const import (
-    ATTRIBUTION,
-    CONDITION_MAP,
-    DOMAIN,
-    METOFFICE_COORDINATES,
-    METOFFICE_HOURLY_COORDINATOR,
-    METOFFICE_NAME,
+from .const import ATTRIBUTION, CONDITION_MAP, DOMAIN
+from .coordinator import (
+    MetOfficeConfigEntry,
+    MetOfficeRuntimeData,
+    MetOfficeUpdateCoordinator,
 )
-from .coordinator import MetOfficeUpdateCoordinator
 from .helpers import get_attribute
 
 ATTR_LAST_UPDATE = "last_update"
@@ -172,19 +168,19 @@ SENSOR_TYPES: tuple[MetOfficeSensorEntityDescription, ...] = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: MetOfficeConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Met Office weather sensor platform."""
     entity_registry = er.async_get(hass)
-    hass_data = hass.data[DOMAIN][entry.entry_id]
+    hass_data = entry.runtime_data
 
     # Remove daily entities from legacy config entries
     for description in SENSOR_TYPES:
         if entity_id := entity_registry.async_get_entity_id(
             SENSOR_DOMAIN,
             DOMAIN,
-            f"{description.key}_{hass_data[METOFFICE_COORDINATES]}_daily",
+            f"{description.key}_{hass_data.coordinates}_daily",
         ):
             entity_registry.async_remove(entity_id)
 
@@ -192,20 +188,20 @@ async def async_setup_entry(
     if entity_id := entity_registry.async_get_entity_id(
         SENSOR_DOMAIN,
         DOMAIN,
-        f"visibility_distance_{hass_data[METOFFICE_COORDINATES]}_daily",
+        f"visibility_distance_{hass_data.coordinates}_daily",
     ):
         entity_registry.async_remove(entity_id)
     if entity_id := entity_registry.async_get_entity_id(
         SENSOR_DOMAIN,
         DOMAIN,
-        f"visibility_distance_{hass_data[METOFFICE_COORDINATES]}",
+        f"visibility_distance_{hass_data.coordinates}",
     ):
         entity_registry.async_remove(entity_id)
 
     async_add_entities(
         [
             MetOfficeCurrentSensor(
-                hass_data[METOFFICE_HOURLY_COORDINATOR],
+                hass_data.hourly_coordinator,
                 hass_data,
                 description,
             )
@@ -228,7 +224,7 @@ class MetOfficeCurrentSensor(
     def __init__(
         self,
         coordinator: MetOfficeUpdateCoordinator,
-        hass_data: dict[str, Any],
+        hass_data: MetOfficeRuntimeData,
         description: MetOfficeSensorEntityDescription,
     ) -> None:
         """Initialize the sensor."""
@@ -237,9 +233,9 @@ class MetOfficeCurrentSensor(
         self.entity_description = description
 
         self._attr_device_info = get_device_info(
-            coordinates=hass_data[METOFFICE_COORDINATES], name=hass_data[METOFFICE_NAME]
+            coordinates=hass_data.coordinates, name=hass_data.name
         )
-        self._attr_unique_id = f"{description.key}_{hass_data[METOFFICE_COORDINATES]}"
+        self._attr_unique_id = f"{description.key}_{hass_data.coordinates}"
 
     @property
     def native_value(self) -> StateType:

@@ -9,6 +9,8 @@ from datetime import timedelta
 import logging
 
 from pyportainer import (
+    DockerContainerState,
+    EndpointStatus,
     Portainer,
     PortainerAuthenticationError,
     PortainerConnectionError,
@@ -26,10 +28,10 @@ from pyportainer.models.stacks import Stack
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_URL
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import CONTAINER_STATE_RUNNING, DOMAIN, ENDPOINT_STATUS_DOWN
+from .const import DOMAIN
 
 type PortainerConfigEntry = ConfigEntry[PortainerCoordinator]
 
@@ -118,13 +120,13 @@ class PortainerCoordinator(DataUpdateCoordinator[dict[int, PortainerCoordinatorD
                 translation_placeholders={"error": repr(err)},
             ) from err
         except PortainerConnectionError as err:
-            raise ConfigEntryNotReady(
+            raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="cannot_connect",
                 translation_placeholders={"error": repr(err)},
             ) from err
         except PortainerTimeoutError as err:
-            raise ConfigEntryNotReady(
+            raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="timeout_connect",
                 translation_placeholders={"error": repr(err)},
@@ -154,7 +156,7 @@ class PortainerCoordinator(DataUpdateCoordinator[dict[int, PortainerCoordinatorD
 
         mapped_endpoints: dict[int, PortainerCoordinatorData] = {}
         for endpoint in endpoints:
-            if endpoint.status == ENDPOINT_STATUS_DOWN:
+            if endpoint.status == EndpointStatus.DOWN:
                 _LOGGER.debug(
                     "Skipping offline endpoint: %s (ID: %d)",
                     endpoint.name,
@@ -196,6 +198,7 @@ class PortainerCoordinator(DataUpdateCoordinator[dict[int, PortainerCoordinatorD
                     # Check if container belongs to a stack via docker compose label
                     stack_name: str | None = (
                         container.labels.get("com.docker.compose.project")
+                        or container.labels.get("com.docker.stack.namespace")
                         if container.labels
                         else None
                     )
@@ -215,7 +218,8 @@ class PortainerCoordinator(DataUpdateCoordinator[dict[int, PortainerCoordinatorD
                 running_containers = [
                     container
                     for container in containers
-                    if container.state == CONTAINER_STATE_RUNNING
+                    if container.state
+                    in (DockerContainerState.RUNNING, DockerContainerState.PAUSED)
                 ]
                 if running_containers:
                     container_stats = dict(
@@ -275,10 +279,16 @@ class PortainerCoordinator(DataUpdateCoordinator[dict[int, PortainerCoordinatorD
     ) -> None:
         """Add new endpoints, remove non-existing endpoints."""
         current_endpoints = {endpoint.id for endpoint in mapped_endpoints.values()}
+        self.known_endpoints &= current_endpoints
         new_endpoints = current_endpoints - self.known_endpoints
         if new_endpoints:
             _LOGGER.debug("New endpoints found: %s", new_endpoints)
             self.known_endpoints.update(new_endpoints)
+            new_endpoint_data = [
+                mapped_endpoints[endpoint_id] for endpoint_id in new_endpoints
+            ]
+            for endpoint_callback in self.new_endpoints_callbacks:
+                endpoint_callback(new_endpoint_data)
 
         # Surprise, we also handle containers here :)
         current_containers = {
@@ -286,10 +296,22 @@ class PortainerCoordinator(DataUpdateCoordinator[dict[int, PortainerCoordinatorD
             for endpoint in mapped_endpoints.values()
             for container_name in endpoint.containers
         }
+        # Prune departed containers so a recreated container is detected as new
+        # and its entity is rebuilt with the fresh (ephemeral) Docker container ID.
+        self.known_containers &= current_containers
         new_containers = current_containers - self.known_containers
         if new_containers:
             _LOGGER.debug("New containers found: %s", new_containers)
             self.known_containers.update(new_containers)
+            new_container_data = [
+                (
+                    mapped_endpoints[endpoint_id],
+                    mapped_endpoints[endpoint_id].containers[name],
+                )
+                for endpoint_id, name in new_containers
+            ]
+            for container_callback in self.new_containers_callbacks:
+                container_callback(new_container_data)
 
         # Stack management
         current_stacks = {
@@ -297,10 +319,21 @@ class PortainerCoordinator(DataUpdateCoordinator[dict[int, PortainerCoordinatorD
             for endpoint in mapped_endpoints.values()
             for stack_name in endpoint.stacks
         }
+
+        self.known_stacks &= current_stacks
         new_stacks = current_stacks - self.known_stacks
         if new_stacks:
             _LOGGER.debug("New stacks found: %s", new_stacks)
             self.known_stacks.update(new_stacks)
+            new_stack_data = [
+                (
+                    mapped_endpoints[endpoint_id],
+                    mapped_endpoints[endpoint_id].stacks[name],
+                )
+                for endpoint_id, name in new_stacks
+            ]
+            for stack_callback in self.new_stacks_callbacks:
+                stack_callback(new_stack_data)
 
     def _get_container_name(self, container_name: str) -> str:
         """Sanitize to get a proper container name."""
