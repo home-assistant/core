@@ -6,15 +6,14 @@ from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from mitsubishi_comfort import DeviceInfo
+import pytest
 
 from homeassistant.components.mitsubishi_comfort import (
-    _extract_addresses_from_zone_table,
-    _load_cached_credentials,
+    CONF_DEVICES,
+    _devices_to_cache,
     _make_device,
     _merge_cached_into_devices,
-    _parse_kumo_cache,
     _retry_incomplete_devices,
-    _save_credentials,
 )
 from homeassistant.components.mitsubishi_comfort.const import (
     DEFAULT_CONNECT_TIMEOUT,
@@ -41,8 +40,22 @@ async def test_setup_entry_success(
     await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
-    # runtime_data should contain a coordinator keyed by serial
     assert "SERIAL001" in mock_config_entry.runtime_data
+
+
+async def test_setup_entry_persists_credentials(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_setup_integration: tuple[AsyncMock, MagicMock],
+) -> None:
+    """Test setup persists discovered credentials in entry.data."""
+    mock_config_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert CONF_DEVICES in mock_config_entry.data
+    assert "SERIAL001" in mock_config_entry.data[CONF_DEVICES]
 
 
 async def test_setup_entry_login_failure(
@@ -54,6 +67,7 @@ async def test_setup_entry_login_failure(
 
     mock_account = AsyncMock()
     mock_account.login = AsyncMock(return_value=False)
+    mock_account.close = AsyncMock()
 
     with patch(
         "homeassistant.components.mitsubishi_comfort.MitsubishiCloudAccount",
@@ -75,16 +89,11 @@ async def test_setup_entry_no_devices(
     mock_account = AsyncMock()
     mock_account.login = AsyncMock(return_value=True)
     mock_account.discover_devices = AsyncMock(return_value={})
+    mock_account.close = AsyncMock()
 
-    with (
-        patch(
-            "homeassistant.components.mitsubishi_comfort.MitsubishiCloudAccount",
-            return_value=mock_account,
-        ),
-        patch(
-            "homeassistant.components.mitsubishi_comfort.load_json",
-            return_value={},
-        ),
+    with patch(
+        "homeassistant.components.mitsubishi_comfort.MitsubishiCloudAccount",
+        return_value=mock_account,
     ):
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
@@ -108,19 +117,11 @@ async def test_setup_entry_incomplete_credentials(
         return_value={"SERIAL001": mock_device_info}
     )
     mock_account.get_passwords_via_websocket = AsyncMock(return_value={})
+    mock_account.close = AsyncMock()
 
-    with (
-        patch(
-            "homeassistant.components.mitsubishi_comfort.MitsubishiCloudAccount",
-            return_value=mock_account,
-        ),
-        patch(
-            "homeassistant.components.mitsubishi_comfort.load_json",
-            return_value={},
-        ),
-        patch(
-            "homeassistant.components.mitsubishi_comfort.save_json",
-        ),
+    with patch(
+        "homeassistant.components.mitsubishi_comfort.MitsubishiCloudAccount",
+        return_value=mock_account,
     ):
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
@@ -130,15 +131,10 @@ async def test_setup_entry_incomplete_credentials(
 
 async def test_setup_entry_with_cached_credentials(
     hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
     mock_device_info: DeviceInfo,
     mock_indoor_unit: MagicMock,
 ) -> None:
     """Test setup merges cached credentials into discovered devices."""
-    mock_config_entry.add_to_hass(hass)
-
-    # Device discovered without password
-    mock_device_info.password = ""
     cached: dict[str, dict[str, Any]] = {
         "SERIAL001": {
             "address": "192.168.1.100",
@@ -147,23 +143,31 @@ async def test_setup_entry_with_cached_credentials(
         }
     }
 
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            "username": MOCK_USERNAME,
+            "password": MOCK_PASSWORD,
+            CONF_DEVICES: cached,
+        },
+        unique_id=MOCK_USERNAME,
+    )
+    entry.add_to_hass(hass)
+
+    # Device discovered without password
+    mock_device_info.password = ""
+
     mock_account = AsyncMock()
     mock_account.login = AsyncMock(return_value=True)
     mock_account.discover_devices = AsyncMock(
         return_value={"SERIAL001": mock_device_info}
     )
+    mock_account.close = AsyncMock()
 
     with (
         patch(
             "homeassistant.components.mitsubishi_comfort.MitsubishiCloudAccount",
             return_value=mock_account,
-        ),
-        patch(
-            "homeassistant.components.mitsubishi_comfort.load_json",
-            return_value=cached,
-        ),
-        patch(
-            "homeassistant.components.mitsubishi_comfort.save_json",
         ),
         patch(
             "homeassistant.components.mitsubishi_comfort.IndoorUnit",
@@ -174,10 +178,10 @@ async def test_setup_entry_with_cached_credentials(
             return_value=mock_indoor_unit,
         ),
     ):
-        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
-    assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert entry.state is ConfigEntryState.LOADED
     assert mock_device_info.password == "dGVzdHBhc3M="
 
 
@@ -199,210 +203,6 @@ async def test_unload_entry(
 
     assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
     mock_device.close.assert_awaited_once()
-
-
-async def test_load_cached_credentials_returns_cached(
-    hass: HomeAssistant,
-) -> None:
-    """Test _load_cached_credentials returns cached data."""
-    cached = {"SERIAL001": {"address": "192.168.1.100", "password": "pw"}}
-    with patch(
-        "homeassistant.components.mitsubishi_comfort.load_json",
-        return_value=cached,
-    ):
-        result = _load_cached_credentials(hass)
-
-    assert result == cached
-
-
-async def test_load_cached_credentials_falls_back_to_kumo_cache(
-    hass: HomeAssistant,
-) -> None:
-    """Test _load_cached_credentials falls back to legacy kumo_cache.json."""
-    kumo_data = [
-        {},
-        {},
-        {
-            "children": [
-                {
-                    "zoneTable": {
-                        "SERIAL001": {"address": "192.168.1.100"},
-                    }
-                }
-            ]
-        },
-    ]
-
-    def mock_load(path: str) -> dict | list:
-        if "kumo_cache" in path:
-            return kumo_data
-        return {}
-
-    with patch(
-        "homeassistant.components.mitsubishi_comfort.load_json",
-        side_effect=mock_load,
-    ):
-        result = _load_cached_credentials(hass)
-
-    assert result == {"SERIAL001": {"address": "192.168.1.100"}}
-
-
-async def test_load_cached_credentials_empty_on_error(
-    hass: HomeAssistant,
-) -> None:
-    """Test _load_cached_credentials returns empty on errors."""
-    with patch(
-        "homeassistant.components.mitsubishi_comfort.load_json",
-        side_effect=OSError("File not found"),
-    ):
-        result = _load_cached_credentials(hass)
-
-    assert result == {}
-
-
-async def test_parse_kumo_cache_with_grandchildren(
-    hass: HomeAssistant,
-) -> None:
-    """Test _parse_kumo_cache handles nested grandchildren."""
-    kumo_data = [
-        {},
-        {},
-        {
-            "children": [
-                {
-                    "zoneTable": {},
-                    "children": [
-                        {
-                            "zoneTable": {
-                                "SERIAL002": {"address": "192.168.1.200"},
-                            }
-                        }
-                    ],
-                }
-            ]
-        },
-    ]
-
-    with patch(
-        "homeassistant.components.mitsubishi_comfort.load_json",
-        return_value=kumo_data,
-    ):
-        result = _parse_kumo_cache(hass)
-
-    assert result == {"SERIAL002": "192.168.1.200"}
-
-
-async def test_parse_kumo_cache_skips_invalid_addresses(
-    hass: HomeAssistant,
-) -> None:
-    """Test _parse_kumo_cache skips N/A and empty addresses."""
-    kumo_data = [
-        {},
-        {},
-        {
-            "children": [
-                {
-                    "zoneTable": {
-                        "S1": {"address": "N/A"},
-                        "S2": {"address": "empty"},
-                        "S3": {"address": ""},
-                        "S4": {"address": "192.168.1.1"},
-                    }
-                }
-            ]
-        },
-    ]
-
-    with patch(
-        "homeassistant.components.mitsubishi_comfort.load_json",
-        return_value=kumo_data,
-    ):
-        result = _parse_kumo_cache(hass)
-
-    assert result == {"S4": "192.168.1.1"}
-
-
-async def test_parse_kumo_cache_malformed_data(
-    hass: HomeAssistant,
-) -> None:
-    """Test _parse_kumo_cache handles various malformed inputs."""
-    # Not a list
-    with patch(
-        "homeassistant.components.mitsubishi_comfort.load_json",
-        return_value={"not": "a list"},
-    ):
-        result = _parse_kumo_cache(hass)
-    assert result == {}
-
-    # List too short
-    with patch(
-        "homeassistant.components.mitsubishi_comfort.load_json",
-        return_value=[{}, {}],
-    ):
-        result = _parse_kumo_cache(hass)
-    assert result == {}
-
-    # Entry not a dict
-    with patch(
-        "homeassistant.components.mitsubishi_comfort.load_json",
-        return_value=[{}, {}, "not a dict"],
-    ):
-        result = _parse_kumo_cache(hass)
-    assert result == {}
-
-    # Children not a list
-    with patch(
-        "homeassistant.components.mitsubishi_comfort.load_json",
-        return_value=[{}, {}, {"children": "not a list"}],
-    ):
-        result = _parse_kumo_cache(hass)
-    assert result == {}
-
-    # Child not a dict
-    with patch(
-        "homeassistant.components.mitsubishi_comfort.load_json",
-        return_value=[{}, {}, {"children": ["not a dict"]}],
-    ):
-        result = _parse_kumo_cache(hass)
-    assert result == {}
-
-    # Grandchildren not a list
-    with patch(
-        "homeassistant.components.mitsubishi_comfort.load_json",
-        return_value=[
-            {},
-            {},
-            {"children": [{"zoneTable": {}, "children": "not a list"}]},
-        ],
-    ):
-        result = _parse_kumo_cache(hass)
-    assert result == {}
-
-    # Grandchild not a dict
-    with patch(
-        "homeassistant.components.mitsubishi_comfort.load_json",
-        return_value=[
-            {},
-            {},
-            {"children": [{"zoneTable": {}, "children": ["not a dict"]}]},
-        ],
-    ):
-        result = _parse_kumo_cache(hass)
-    assert result == {}
-
-
-async def test_extract_addresses_from_zone_table() -> None:
-    """Test _extract_addresses_from_zone_table extracts valid addresses."""
-    addresses: dict[str, str] = {}
-    zone_table = {
-        "S1": {"address": "192.168.1.1"},
-        "S2": {"address": "N/A"},
-        "S3": {"address": "empty"},
-        "S4": {"address": ""},
-        "S5": {},
-    }
-    _extract_addresses_from_zone_table(zone_table, addresses)
-    assert addresses == {"S1": "192.168.1.1"}
 
 
 async def test_make_device_indoor_unit(
@@ -450,18 +250,16 @@ async def test_make_device_kumo_station() -> None:
         )
 
 
-async def test_save_credentials(
-    hass: HomeAssistant,
+async def test_devices_to_cache(
     mock_device_info: DeviceInfo,
 ) -> None:
-    """Test _save_credentials saves device data to JSON."""
-    with patch("homeassistant.components.mitsubishi_comfort.save_json") as mock_save:
-        _save_credentials(hass, {"SERIAL001": mock_device_info})
+    """Test _devices_to_cache serializes device credentials."""
+    result = _devices_to_cache({"SERIAL001": mock_device_info})
 
-    mock_save.assert_called_once()
-    saved_data = mock_save.call_args[0][1]
-    assert "SERIAL001" in saved_data
-    assert saved_data["SERIAL001"]["address"] == mock_device_info.address
+    assert "SERIAL001" in result
+    assert result["SERIAL001"]["address"] == mock_device_info.address
+    assert result["SERIAL001"]["password"] == mock_device_info.password
+    assert result["SERIAL001"]["label"] == mock_device_info.label
 
 
 async def test_merge_cached_into_devices(
@@ -531,11 +329,7 @@ async def test_setup_entry_mixed_complete_incomplete(
     hass: HomeAssistant,
     mock_indoor_unit: MagicMock,
 ) -> None:
-    """Test setup with one complete and one incomplete device.
-
-    The complete device should get a coordinator, the incomplete one triggers
-    a background retry task.
-    """
+    """Test setup with one complete and one incomplete device."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         data={
@@ -574,18 +368,12 @@ async def test_setup_entry_mixed_complete_incomplete(
         }
     )
     mock_account.get_passwords_via_websocket = AsyncMock(return_value={})
+    mock_account.close = AsyncMock()
 
     with (
         patch(
             "homeassistant.components.mitsubishi_comfort.MitsubishiCloudAccount",
             return_value=mock_account,
-        ),
-        patch(
-            "homeassistant.components.mitsubishi_comfort.load_json",
-            return_value={},
-        ),
-        patch(
-            "homeassistant.components.mitsubishi_comfort.save_json",
         ),
         patch(
             "homeassistant.components.mitsubishi_comfort.IndoorUnit",
@@ -603,10 +391,8 @@ async def test_setup_entry_mixed_complete_incomplete(
         await hass.async_block_till_done()
 
     assert entry.state is ConfigEntryState.LOADED
-    # Only the complete device should have a coordinator
     assert "SERIAL001" in entry.runtime_data
     assert "SERIAL002" not in entry.runtime_data
-    # Background retry should have been called
     mock_retry.assert_called_once()
 
 
@@ -621,7 +407,6 @@ async def test_retry_incomplete_devices_success(
         unique_id=MOCK_USERNAME,
     )
     entry.add_to_hass(hass)
-    # Simulate loaded state with runtime_data
     entry.runtime_data = {"SERIAL001": MagicMock()}
 
     incomplete_info = DeviceInfo(
@@ -638,15 +423,13 @@ async def test_retry_incomplete_devices_success(
     mock_account.get_passwords_via_websocket = AsyncMock(
         return_value={"SERIAL002": "bmV3cGFzcw=="}
     )
+    mock_account.close = AsyncMock()
 
     devices = {"SERIAL002": incomplete_info}
     incomplete_serials = ["SERIAL002"]
 
     with (
         patch("asyncio.sleep", new_callable=AsyncMock),
-        patch(
-            "homeassistant.components.mitsubishi_comfort.save_json",
-        ),
         patch(
             "homeassistant.components.mitsubishi_comfort.IndoorUnit",
             return_value=mock_indoor_unit,
@@ -667,6 +450,7 @@ async def test_retry_incomplete_devices_success(
 
     assert incomplete_info.password == "bmV3cGFzcw=="
     mock_reload.assert_awaited_once_with(entry.entry_id)
+    mock_account.close.assert_awaited_once()
 
 
 async def test_retry_incomplete_devices_no_runtime_data(
@@ -674,10 +458,10 @@ async def test_retry_incomplete_devices_no_runtime_data(
 ) -> None:
     """Test _retry_incomplete_devices exits early if entry has no runtime_data."""
     entry = MagicMock()
-    # Simulate entry without runtime_data
     del entry.runtime_data
 
     mock_account = AsyncMock()
+    mock_account.close = AsyncMock()
     devices: dict[str, DeviceInfo] = {}
     incomplete_serials = ["SERIAL002"]
 
@@ -686,8 +470,8 @@ async def test_retry_incomplete_devices_no_runtime_data(
             hass, entry, mock_account, devices, incomplete_serials
         )
 
-    # get_passwords_via_websocket should not have been called
     mock_account.get_passwords_via_websocket.assert_not_awaited()
+    mock_account.close.assert_awaited_once()
 
 
 async def test_retry_incomplete_devices_all_attempts_fail(
@@ -708,8 +492,8 @@ async def test_retry_incomplete_devices_all_attempts_fail(
     )
 
     mock_account = AsyncMock()
-    # Return empty passwords on every attempt
     mock_account.get_passwords_via_websocket = AsyncMock(return_value={})
+    mock_account.close = AsyncMock()
 
     devices = {"SERIAL002": incomplete_info}
     incomplete_serials = ["SERIAL002"]
@@ -719,6 +503,6 @@ async def test_retry_incomplete_devices_all_attempts_fail(
             hass, entry, mock_account, devices, incomplete_serials
         )
 
-    # After 3 failed attempts, the device should still be incomplete
     assert incomplete_info.password == ""
     assert "SERIAL002" in incomplete_serials
+    mock_account.close.assert_awaited_once()

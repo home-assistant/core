@@ -181,13 +181,6 @@ def mock_setup_integration(
             return_value=mock_account,
         ),
         patch(
-            "homeassistant.components.mitsubishi_comfort.load_json",
-            return_value={},
-        ),
-        patch(
-            "homeassistant.components.mitsubishi_comfort.save_json",
-        ),
-        patch(
             "homeassistant.components.mitsubishi_comfort.IndoorUnit",
             return_value=mock_indoor_unit,
         ),

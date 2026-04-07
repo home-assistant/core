@@ -16,83 +16,15 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers.json import save_json
-from homeassistant.util.json import load_json
 
 from .const import DEFAULT_CONNECT_TIMEOUT, DEFAULT_RESPONSE_TIMEOUT, PLATFORMS
 from .coordinator import MitsubishiComfortCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
-CREDENTIAL_CACHE = "mitsubishi_comfort_devices.json"
+CONF_DEVICES = "devices"
 
 type MitsubishiComfortConfigEntry = ConfigEntry[dict[str, MitsubishiComfortCoordinator]]
-
-
-def _load_cached_credentials(hass: HomeAssistant) -> dict[str, dict]:
-    """Load cached device credentials.
-
-    Returns dict of serial -> {address, password, crypto_serial, label, ...}.
-    Also imports from legacy kumo_cache.json on first run.
-    """
-    try:
-        cached = load_json(hass.config.path(CREDENTIAL_CACHE))
-        if isinstance(cached, dict) and cached:
-            _LOGGER.info("Loaded credentials for %d devices from cache", len(cached))
-            return cached  # type: ignore[return-value]
-    except OSError, ValueError, TypeError, KeyError:
-        pass
-
-    addresses = _parse_kumo_cache(hass)
-
-    if addresses:
-        _LOGGER.info("Imported %d addresses from legacy kumo cache", len(addresses))
-        return {serial: {"address": addr} for serial, addr in addresses.items()}
-
-    return {}
-
-
-def _extract_addresses_from_zone_table(
-    zone_table: dict, addresses: dict[str, str]
-) -> None:
-    """Extract valid addresses from a zone table."""
-    for serial, unit in zone_table.items():
-        addr = unit.get("address", "")
-        if addr and addr not in ("N/A", "empty"):
-            addresses[serial] = addr
-
-
-def _parse_kumo_cache(hass: HomeAssistant) -> dict[str, str]:
-    """Parse legacy kumo_cache.json for device addresses."""
-    addresses: dict[str, str] = {}
-    try:
-        kumo = load_json(hass.config.path("kumo_cache.json"))
-        if not isinstance(kumo, list) or len(kumo) < 3:
-            return addresses
-        entry = kumo[2]
-        if not isinstance(entry, dict):
-            return addresses
-        children = entry.get("children")
-        if not isinstance(children, list):
-            return addresses
-        for child in children:
-            if not isinstance(child, dict):
-                continue
-            zone_table = child.get("zoneTable")
-            if isinstance(zone_table, dict):
-                _extract_addresses_from_zone_table(zone_table, addresses)
-            grandchildren = child.get("children")
-            if not isinstance(grandchildren, list):
-                continue
-            for grandchild in grandchildren:
-                if not isinstance(grandchild, dict):
-                    continue
-                gc_zone_table = grandchild.get("zoneTable")
-                if isinstance(gc_zone_table, dict):
-                    _extract_addresses_from_zone_table(gc_zone_table, addresses)
-    except OSError, ValueError, TypeError, KeyError:
-        pass
-    return addresses
 
 
 def _make_device(info: DeviceInfo, serial: str) -> IndoorUnit | KumoStation:
@@ -109,11 +41,10 @@ def _make_device(info: DeviceInfo, serial: str) -> IndoorUnit | KumoStation:
     )
 
 
-def _save_credentials(hass: HomeAssistant, devices: dict[str, DeviceInfo]) -> None:
-    """Save device credentials to cache."""
-    cache = {}
-    for serial, info in devices.items():
-        cache[serial] = {
+def _devices_to_cache(devices: dict[str, DeviceInfo]) -> dict[str, dict]:
+    """Serialize device credentials for storage in config entry data."""
+    return {
+        serial: {
             "address": info.address,
             "password": info.password,
             "crypto_serial": info.crypto_serial,
@@ -121,8 +52,8 @@ def _save_credentials(hass: HomeAssistant, devices: dict[str, DeviceInfo]) -> No
             "mac": info.mac,
             "unit_type": info.unit_type,
         }
-    save_json(hass.config.path(CREDENTIAL_CACHE), cache)
-    _LOGGER.info("Saved credentials for %d devices to cache", len(cache))
+        for serial, info in devices.items()
+    }
 
 
 def _merge_cached_into_devices(
@@ -157,7 +88,7 @@ async def async_setup_entry(
         if not await account.login():
             raise ConfigEntryNotReady("Failed to authenticate with Mitsubishi cloud")
 
-        cached = await hass.async_add_executor_job(_load_cached_credentials, hass)
+        cached: dict[str, dict] = entry.data.get(CONF_DEVICES, {})
 
         devices = await account.discover_devices(cached_credentials=cached)
         if not devices:
@@ -170,7 +101,11 @@ async def async_setup_entry(
                 ", ".join(devices[s].label for s in updated),
             )
 
-        await hass.async_add_executor_job(_save_credentials, hass, devices)
+        # Persist credentials in config entry for next restart
+        hass.config_entries.async_update_entry(
+            entry,
+            data={**entry.data, CONF_DEVICES: _devices_to_cache(devices)},
+        )
 
         coordinators: dict[str, MitsubishiComfortCoordinator] = {}
         incomplete_serials: list[str] = []
@@ -259,7 +194,11 @@ async def _retry_incomplete_devices(
                 device = _make_device(info, serial)
                 coordinators[serial] = MitsubishiComfortCoordinator(hass, device)
 
-            await hass.async_add_executor_job(_save_credentials, hass, devices)
+            # Persist updated credentials
+            hass.config_entries.async_update_entry(
+                entry,
+                data={**entry.data, CONF_DEVICES: _devices_to_cache(devices)},
+            )
             await hass.config_entries.async_reload(entry.entry_id)
             return
 
