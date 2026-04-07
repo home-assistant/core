@@ -1,7 +1,5 @@
 """Services for Tuya integration."""
 
-from __future__ import annotations
-
 from enum import StrEnum
 
 from tuya_device_handlers.device_wrapper.service_feeder_schedule import (
