@@ -179,7 +179,7 @@ async def test_historical_sensor_value_fn_value_error(
 async def test_historical_sensor_last_reset_no_data(
     hass: HomeAssistant, setup_integration: MockConfigEntry
 ) -> None:
-    """last_reset returns None when historical coordinator has no data."""
+    """last_reset attribute is absent when historical coordinator has no data."""
     entry = setup_integration
     # Empty dict is falsy → 'if not data: return None' in last_reset property
     entry.runtime_data.hist_coordinator.async_set_updated_data({})
@@ -190,12 +190,15 @@ async def test_historical_sensor_last_reset_no_data(
         "sensor", DOMAIN, f"{entry.unique_id}_hist_selfConsumptionRate"
     )
     assert entity_id is not None
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.attributes.get("last_reset") is None
 
 
 async def test_historical_sensor_last_reset_missing_key(
     hass: HomeAssistant, setup_integration: MockConfigEntry
 ) -> None:
-    """last_reset returns None when data has no last_reset key."""
+    """last_reset attribute is absent when data has no last_reset key."""
     entry = setup_integration
     # No 'last_reset' key → KeyError caught → returns None
     data_no_reset = {"total": MOCK_HIST_DATA[0]["total"]}
@@ -207,3 +210,6 @@ async def test_historical_sensor_last_reset_missing_key(
         "sensor", DOMAIN, f"{entry.unique_id}_hist_selfConsumptionRate"
     )
     assert entity_id is not None
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.attributes.get("last_reset") is None
