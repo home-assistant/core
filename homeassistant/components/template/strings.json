@@ -466,7 +466,6 @@
           "select": "[%key:component::select::title%]",
           "sensor": "[%key:component::sensor::title%]",
           "switch": "[%key:component::switch::title%]",
-          "text": "[%key:component::text::title%]",
           "update": "[%key:component::update::title%]",
           "vacuum": "[%key:component::vacuum::title%]",
           "weather": "[%key:component::weather::title%]"
