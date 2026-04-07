@@ -4,8 +4,10 @@ from __future__ import annotations
 
 from aiohue.v2 import HueBridgeV2
 from aiohue.v2.controllers.events import EventType
+from aiohue.v2.models.room import Room
 from aiohue.v2.models.scene import Scene as HueScene
 from aiohue.v2.models.smart_scene import SmartScene as HueSmartScene
+from aiohue.v2.models.zone import Zone
 
 from homeassistant.components.select import SelectEntity
 from homeassistant.core import HomeAssistant, callback
@@ -222,7 +224,7 @@ async def async_setup_entry(
             async_add_entities(entities)
 
         @callback
-        def _on_group_added(event_type: EventType, group) -> None:
+        def _on_group_added(event_type: EventType, group: Room | Zone) -> None:
             async_add_entities(
                 [
                     HueSceneSelectEntity(bridge, manager, group.id),
