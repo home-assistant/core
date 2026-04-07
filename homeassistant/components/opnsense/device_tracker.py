@@ -63,7 +63,7 @@ class OPNsenseDeviceScanner(DeviceScanner):
         """Return the name of the given device or None if we don't know."""
         if device not in self.last_results:
             return None
-        hostname = self.last_results[device].get("hostname")
+        hostname: str | None = self.last_results[device].get("hostname")
         if not hostname or hostname == "?":
             return None
         return hostname
