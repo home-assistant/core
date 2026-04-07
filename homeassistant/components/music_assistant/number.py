@@ -17,7 +17,6 @@ from .const import PLAYER_OPTIONS_TRANSLATION_KEY_PREFIX
 from .entity import MusicAssistantPlayerOptionEntity
 from .helpers import catch_musicassistant_error
 
-# translation keys for player option number entities
 PLAYER_OPTIONS_TRANSLATION_KEYS_NUMBER: Final[list[str]] = [
     "bass",
     "dialogue_level",
