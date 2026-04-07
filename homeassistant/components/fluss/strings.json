@@ -45,8 +45,8 @@
   },
   "entity": {
     "button": {
-      "open_main": {
-        "name": "Open main"
+      "trigger": {
+        "name": "Trigger"
       }
     }
   },

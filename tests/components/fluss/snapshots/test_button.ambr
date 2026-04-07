@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_buttons[button.device_1_open_main-entry]
+# name: test_buttons[button.device_1_trigger-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -13,7 +13,7 @@
     'disabled_by': None,
     'domain': 'button',
     'entity_category': None,
-    'entity_id': 'button.device_1_open_main',
+    'entity_id': 'button.device_1_trigger',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -21,36 +21,36 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Open main',
+    'object_id_base': 'Trigger',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': 'mdi:gate-open',
-    'original_name': 'Open main',
+    'original_name': 'Trigger',
     'platform': 'fluss',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'open_main',
-    'unique_id': '2a303030sdj1_open_main',
+    'translation_key': 'trigger',
+    'unique_id': '2a303030sdj1',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_buttons[button.device_1_open_main-state]
+# name: test_buttons[button.device_1_trigger-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Device 1 Open main',
+      'friendly_name': 'Device 1 Trigger',
       'icon': 'mdi:gate-open',
     }),
     'context': <ANY>,
-    'entity_id': 'button.device_1_open_main',
+    'entity_id': 'button.device_1_trigger',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_buttons[button.device_2_open_main-entry]
+# name: test_buttons[button.device_2_trigger-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -64,7 +64,7 @@
     'disabled_by': None,
     'domain': 'button',
     'entity_category': None,
-    'entity_id': 'button.device_2_open_main',
+    'entity_id': 'button.device_2_trigger',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -72,29 +72,29 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Open main',
+    'object_id_base': 'Trigger',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': 'mdi:gate-open',
-    'original_name': 'Open main',
+    'original_name': 'Trigger',
     'platform': 'fluss',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'open_main',
-    'unique_id': 'ape93k9302j2_open_main',
+    'translation_key': 'trigger',
+    'unique_id': 'ape93k9302j2',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_buttons[button.device_2_open_main-state]
+# name: test_buttons[button.device_2_trigger-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Device 2 Open main',
+      'friendly_name': 'Device 2 Trigger',
       'icon': 'mdi:gate-open',
     }),
     'context': <ANY>,
-    'entity_id': 'button.device_2_open_main',
+    'entity_id': 'button.device_2_trigger',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

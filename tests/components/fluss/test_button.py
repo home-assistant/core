@@ -32,22 +32,22 @@ async def test_buttons(
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
-async def test_button_open_main(
+async def test_button_press(
     hass: HomeAssistant,
     mock_api_client: FlussApiClient,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test successful open main button press."""
+    """Test successful button press."""
     await setup_integration(hass, mock_config_entry, [Platform.BUTTON])
 
     await hass.services.async_call(
         BUTTON_DOMAIN,
         SERVICE_PRESS,
-        {ATTR_ENTITY_ID: "button.device_1_open_main"},
+        {ATTR_ENTITY_ID: "button.device_1_trigger"},
         blocking=True,
     )
 
-    mock_api_client.async_open_device.assert_called_once_with("2a303030sdj1")
+    mock_api_client.async_trigger_device.assert_called_once_with("2a303030sdj1")
 
 
 async def test_button_press_error(
@@ -58,14 +58,12 @@ async def test_button_press_error(
     """Test button press with API error."""
     await setup_integration(hass, mock_config_entry, [Platform.BUTTON])
 
-    mock_api_client.async_open_device.side_effect = FlussApiClientError("API Boom")
+    mock_api_client.async_trigger_device.side_effect = FlussApiClientError("API Boom")
 
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             BUTTON_DOMAIN,
             SERVICE_PRESS,
-            {ATTR_ENTITY_ID: "button.device_1_open_main"},
+            {ATTR_ENTITY_ID: "button.device_1_trigger"},
             blocking=True,
         )
-
-
