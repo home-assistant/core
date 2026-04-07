@@ -121,6 +121,7 @@ async def test_cover_state_closed(
     state = hass.states.get("cover.device_1")
     assert state is not None
     assert state.state == "closed"
+    assert state.attributes["open_close_status"] == "Closed"
 
 
 async def test_cover_state_open(
@@ -134,6 +135,7 @@ async def test_cover_state_open(
     state = hass.states.get("cover.device_2")
     assert state is not None
     assert state.state == "open"
+    assert state.attributes["open_close_status"] == "Open"
 
 
 async def test_cover_state_unknown_when_status_unavailable(
