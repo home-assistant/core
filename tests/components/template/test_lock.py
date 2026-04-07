@@ -119,7 +119,7 @@ async def setup_state_lock_with_extra_config(
     state_template: str,
     extra_config: dict,
 ):
-    """Do setup of cover integration using a state template."""
+    """Do setup of lock integration using a state template."""
     await setup_entity(
         hass, TEST_LOCK, style, count, OPTIMISTIC_LOCK, state_template, extra_config
     )
