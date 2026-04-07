@@ -303,6 +303,14 @@
     }
   },
   "issues": {
+    "deprecated_legacy_door_open_state": {
+      "description": "The binary sensor `{entity_id}` is deprecated because it has been replaced with the binary sensor `{replacement_entity_id}`.\n\nThe entity was found in the following automations or scripts:\n{items}\n\nPlease update the above automations or scripts to use the binary sensor `{replacement_entity_id}` and disable the binary sensor `{entity_id}` and then restart Home Assistant, to fix this issue.\n\nNote that `{replacement_entity_id}` is on when the door or window is open or tilted.",
+      "title": "Deprecation: {entity_name}"
+    },
+    "deprecated_legacy_door_tilt_state": {
+      "description": "The binary sensor `{entity_id}` is deprecated because it has been replaced with the binary sensor `{replacement_entity_id}`.\n\nThe entity was found in the following automations or scripts:\n{items}\n\nPlease update the above automations or scripts to use the binary sensor `{replacement_entity_id}` and disable the binary sensor `{entity_id}` and then restart Home Assistant, to fix this issue.\n\nNote that `{replacement_entity_id}` is on only when the door or window is tilted.",
+      "title": "Deprecation: {entity_name}"
+    },
     "device_config_file_changed": {
       "fix_flow": {
         "abort": {

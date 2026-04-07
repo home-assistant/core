@@ -80,7 +80,6 @@ class GoveeLight(CoordinatorEntity[GoveeLocalApiCoordinator], LightEntity):
 
         super().__init__(coordinator)
         self._device = device
-        device.set_update_callback(self._update_callback)
 
         self._attr_unique_id = device.fingerprint
 
@@ -194,9 +193,20 @@ class GoveeLight(CoordinatorEntity[GoveeLocalApiCoordinator], LightEntity):
         await self.coordinator.turn_off(self._device)
         self.async_write_ha_state()
 
+    async def async_added_to_hass(self) -> None:
+        """Register update callback when entity is added."""
+        await super().async_added_to_hass()
+        self._device.set_update_callback(self._update_callback)
+
+    async def async_will_remove_from_hass(self) -> None:
+        """Unregister update callback when entity is removed."""
+        self._device.set_update_callback(None)
+        await super().async_will_remove_from_hass()
+
     @callback
     def _update_callback(self, device: GoveeDevice) -> None:
-        self.async_write_ha_state()
+        if self.hass:
+            self.async_write_ha_state()
 
     def _save_last_color_state(self) -> None:
         color_mode = self.color_mode

@@ -95,6 +95,12 @@ class BackupReaderWriterError(BackupError):
     error_code = "backup_reader_writer_error"
 
 
+class InvalidBackupFilename(BackupManagerError):
+    """Raised when a backup filename is invalid."""
+
+    error_code = "invalid_backup_filename"
+
+
 class BackupNotFound(BackupAgentError, BackupManagerError):
     """Raised when a backup is not found."""
 

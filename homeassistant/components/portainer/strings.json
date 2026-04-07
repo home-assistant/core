@@ -66,8 +66,20 @@
       "images_prune": {
         "name": "Prune unused images"
       },
+      "kill_container": {
+        "name": "Kill container"
+      },
+      "pause_container": {
+        "name": "Pause container"
+      },
       "restart_container": {
         "name": "Restart container"
+      },
+      "resume_container": {
+        "name": "Resume container"
+      },
+      "volumes_prune": {
+        "name": "Prune unused volumes"
       }
     },
     "sensor": {

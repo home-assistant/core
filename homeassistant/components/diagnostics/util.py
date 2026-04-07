@@ -48,7 +48,11 @@ def async_redact_data[_T](data: _T, to_redact: Iterable[Any]) -> _T:
 
 
 def _entity_entry_filter(a: attr.Attribute, _: Any) -> bool:
-    return a.name != "_cache"
+    return a.name not in (
+        "_cache",
+        "compat_aliases",
+        "original_name_unprefixed",
+    )
 
 
 @callback

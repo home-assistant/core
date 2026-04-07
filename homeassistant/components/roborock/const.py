@@ -11,8 +11,11 @@ CONF_ENTRY_CODE = "code"
 CONF_BASE_URL = "base_url"
 CONF_USER_DATA = "user_data"
 CONF_SHOW_BACKGROUND = "show_background"
+CONF_SHOW_WALLS = "show_walls"
+CONF_SHOW_ROOMS = "show_rooms"
 CONF_REGION = "region"
 REGION_OPTIONS = ["auto", "us", "eu", "ru", "cn"]
+
 # Option Flow steps
 DRAWABLES = "drawables"
 
@@ -59,6 +62,7 @@ MAP_FILENAME_SUFFIX = ".png"
 
 
 A01_UPDATE_INTERVAL = timedelta(minutes=1)
+Q10_UPDATE_INTERVAL = timedelta(minutes=1)
 V1_CLOUD_IN_CLEANING_INTERVAL = timedelta(seconds=30)
 V1_CLOUD_NOT_CLEANING_INTERVAL = timedelta(minutes=1)
 V1_LOCAL_IN_CLEANING_INTERVAL = timedelta(seconds=15)

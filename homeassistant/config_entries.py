@@ -625,6 +625,14 @@ class ConfigEntry[_DataT = Any]:
             )
         return self._supported_subentry_types or {}
 
+    def get_subentries_of_type(self, subentry_type: str) -> list[ConfigSubentry]:
+        """Return subentries of a specified subentry type."""
+        return [
+            subentry
+            for subentry in self.subentries.values()
+            if subentry.subentry_type == subentry_type
+        ]
+
     def clear_state_cache(self) -> None:
         """Clear cached properties that are included in as_json_fragment."""
         self.__dict__.pop("as_json_fragment", None)

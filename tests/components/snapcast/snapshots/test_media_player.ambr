@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_state[media_player.test_client_1_snapcast_client-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'source_list': list([
@@ -50,6 +51,7 @@
         'media_player.test_client_1_snapcast_client',
       ]),
       'is_volume_muted': False,
+      'last_non_buffering_state': <MediaPlayerState.PLAYING: 'playing'>,
       'latency': 6,
       'media_album_artist': 'Test Album Artist 1, Test Album Artist 2',
       'media_album_name': 'Test Album',
@@ -77,8 +79,9 @@
 # ---
 # name: test_state[media_player.test_client_2_snapcast_client-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'source_list': list([
@@ -125,6 +128,7 @@
         'media_player.test_client_2_snapcast_client',
       ]),
       'is_volume_muted': False,
+      'last_non_buffering_state': <MediaPlayerState.IDLE: 'idle'>,
       'latency': 6,
       'media_content_type': <MediaType.MUSIC: 'music'>,
       'source': 'test_stream_2',
