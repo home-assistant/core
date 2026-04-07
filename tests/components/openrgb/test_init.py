@@ -349,3 +349,76 @@ async def test_normal_update_without_errors(
     state = hass.states.get("light.ene_dram")
     assert state
     assert state.state == STATE_ON
+
+
+async def test_device_key_stable_across_hid_reconnect(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_openrgb_client: MagicMock,
+    mock_openrgb_device: MagicMock,
+) -> None:
+    """Test that device key does not change when HID location changes on reconnect."""
+    mock_config_entry.add_to_hass(hass)
+
+    # Set HID location (like a USB keyboard)
+    mock_openrgb_device.metadata.location = "HID: DevSrvsID:4295213270"
+    mock_openrgb_device.metadata.serial = ""
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    coordinator = mock_config_entry.runtime_data
+    key_before = coordinator._get_device_key(mock_openrgb_device)
+
+    # Simulate reconnect with changed location
+    mock_openrgb_device.metadata.location = "HID: DevSrvsID:4295217216"
+    key_after = coordinator._get_device_key(mock_openrgb_device)
+
+    assert key_before == key_after
+
+
+async def test_device_key_uses_serial_ignores_location(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_openrgb_client: MagicMock,
+    mock_openrgb_device: MagicMock,
+) -> None:
+    """Test that device key uses serial and ignores location when serial is present."""
+    mock_config_entry.add_to_hass(hass)
+
+    mock_openrgb_device.metadata.serial = "ABC123"
+    mock_openrgb_device.metadata.location = "HID: DevSrvsID:111"
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    coordinator = mock_config_entry.runtime_data
+    key1 = coordinator._get_device_key(mock_openrgb_device)
+
+    mock_openrgb_device.metadata.location = "HID: DevSrvsID:222"
+    key2 = coordinator._get_device_key(mock_openrgb_device)
+
+    assert key1 == key2
+    assert "ABC123" in key1
+    assert "DevSrvsID" not in key1
+
+
+async def test_device_key_includes_location_for_i2c(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_openrgb_client: MagicMock,
+    mock_openrgb_device: MagicMock,
+) -> None:
+    """Test that device key includes location for non-HID devices without serial."""
+    mock_config_entry.add_to_hass(hass)
+
+    mock_openrgb_device.metadata.serial = ""
+    mock_openrgb_device.metadata.location = "I2C: PIIX4, address 0x70"
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    coordinator = mock_config_entry.runtime_data
+    key = coordinator._get_device_key(mock_openrgb_device)
+
+    assert "I2C: PIIX4, address 0x70" in key
