@@ -11,7 +11,7 @@ from homeassistant.components.bsblan.const import CONF_PASSKEY, DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
@@ -209,6 +209,7 @@ async def test_coordinator_fast_no_dhw_support(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_bsblan: MagicMock,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test fast coordinator when device does not support DHW."""
     mock_bsblan.hot_water_state.side_effect = BSBLANError(
@@ -225,8 +226,15 @@ async def test_coordinator_fast_no_dhw_support(
     # DHW data should be None in the fast coordinator
     assert mock_config_entry.runtime_data.fast_coordinator.data.dhw is None
 
-    # Water heater entity should not be created
-    assert hass.states.get("water_heater.bsb_lan") is None
+    # No water heater entities should be registered for this config entry
+    water_heater_entities = [
+        entry
+        for entry in er.async_entries_for_config_entry(
+            entity_registry, mock_config_entry.entry_id
+        )
+        if entry.domain == "water_heater"
+    ]
+    assert not water_heater_entities
 
 
 async def test_coordinator_fast_dhw_fails_on_refresh_preserves_state(
