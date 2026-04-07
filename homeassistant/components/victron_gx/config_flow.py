@@ -281,7 +281,7 @@ class VictronGXConfigFlow(ConfigFlow, domain=DOMAIN):
                 STEP_SSDP_AUTH_DATA_SCHEMA, user_input
             ),
             errors=errors,
-            description_placeholders={"host": self.hostname},
+            description_placeholders={CONF_HOST: self.hostname},
         )
 
     async def async_step_reauth(
@@ -298,12 +298,13 @@ class VictronGXConfigFlow(ConfigFlow, domain=DOMAIN):
         reauth_entry = self._get_reauth_entry()
 
         if user_input is not None:
-            ssl = user_input.get(CONF_SSL, reauth_entry.data.get(CONF_SSL, False))
             data = {
                 **reauth_entry.data,
                 CONF_USERNAME: user_input.get(CONF_USERNAME) or None,
                 CONF_PASSWORD: user_input.get(CONF_PASSWORD) or None,
-                CONF_SSL: ssl,
+                CONF_SSL: user_input.get(
+                    CONF_SSL, reauth_entry.data.get(CONF_SSL, False)
+                ),
             }
             try:
                 await validate_input(data)
@@ -320,18 +321,20 @@ class VictronGXConfigFlow(ConfigFlow, domain=DOMAIN):
                     data_updates={
                         CONF_USERNAME: user_input.get(CONF_USERNAME) or None,
                         CONF_PASSWORD: user_input.get(CONF_PASSWORD) or None,
-                        CONF_SSL: ssl,
+                        CONF_SSL: user_input.get(
+                            CONF_SSL, reauth_entry.data.get(CONF_SSL, False)
+                        ),
                     },
                 )
 
         suggested_values = user_input or {
-            CONF_SSL: reauth_entry.data.get(CONF_SSL, False),
+            CONF_SSL: reauth_entry.data[CONF_SSL],
         }
         return self.async_show_form(
             step_id="reauth_confirm",
             data_schema=self.add_suggested_values_to_schema(
                 STEP_REAUTH_DATA_SCHEMA, suggested_values
             ),
-            description_placeholders={"host": reauth_entry.data[CONF_HOST]},
+            description_placeholders={CONF_HOST: reauth_entry.data[CONF_HOST]},
             errors=errors,
         )
