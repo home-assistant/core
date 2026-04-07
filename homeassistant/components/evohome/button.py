@@ -77,8 +77,6 @@ class EvoResetSystemButton(EvoResetButtonBase):
         """Initialize the system reset button."""
         super().__init__(coordinator, evo_device)
 
-        # TCS have no names; location names are fixed
-        self._attr_name = evo_device.location.name
         self._attr_translation_placeholders = {"device_name": evo_device.location.name}
 
 
@@ -98,8 +96,6 @@ class EvoResetDhwButton(EvoResetButtonBase):
         """Initialize the DHW reset button."""
         super().__init__(coordinator, evo_device)
 
-        # DHW names are fixed
-        self._attr_name = evo_device.name
         self._attr_translation_placeholders = {"device_name": evo_device.name}
 
 
@@ -127,14 +123,10 @@ class EvoResetZoneButton(EvoResetButtonBase):
         else:
             self._attr_unique_id = f"{evo_device.id}_reset"
 
-    @property
-    def name(self) -> str:
-        """Return the name of the evohome entity."""
-        return self._evo_device.name  # zones can be renamed
-
     @callback
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         super()._handle_coordinator_update()
 
-        self._attr_translation_placeholders = {"device_name": self.name}
+        # zone names are not fixed
+        self._attr_translation_placeholders = {"device_name": self._evo_device.name}
