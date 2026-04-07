@@ -7,6 +7,7 @@ import pytest
 
 from homeassistant.components.device_tracker import (
     ATTR_HOST_NAME,
+    ATTR_IN_ZONES,
     ATTR_IP,
     ATTR_MAC,
     ATTR_SOURCE_TYPE,
@@ -384,6 +385,7 @@ async def test_load_unload_entry(
             {
                 ATTR_SOURCE_TYPE: SourceType.GPS,
                 ATTR_GPS_ACCURACY: 0,
+                ATTR_IN_ZONES: [],
                 ATTR_LATITUDE: 1.0,
                 ATTR_LONGITUDE: 2.0,
             },
@@ -397,6 +399,7 @@ async def test_load_unload_entry(
             {
                 ATTR_SOURCE_TYPE: SourceType.GPS,
                 ATTR_GPS_ACCURACY: 0,
+                ATTR_IN_ZONES: ["zone.home"],
                 ATTR_LATITUDE: 50.0,
                 ATTR_LONGITUDE: 60.0,
             },
@@ -410,6 +413,7 @@ async def test_load_unload_entry(
             {
                 ATTR_SOURCE_TYPE: SourceType.GPS,
                 ATTR_GPS_ACCURACY: 0,
+                ATTR_IN_ZONES: ["zone.other_zone", "zone.other_zone_larger"],
                 ATTR_LATITUDE: -50.0,
                 ATTR_LONGITUDE: -60.0,
             },
@@ -422,6 +426,7 @@ async def test_load_unload_entry(
             "zen_zone",
             {
                 ATTR_SOURCE_TYPE: SourceType.GPS,
+                ATTR_IN_ZONES: [],
             },
         ),
         (
@@ -430,7 +435,10 @@ async def test_load_unload_entry(
             None,
             None,
             STATE_UNKNOWN,
-            {ATTR_SOURCE_TYPE: SourceType.GPS},
+            {
+                ATTR_SOURCE_TYPE: SourceType.GPS,
+                ATTR_IN_ZONES: [],
+            },
         ),
         (
             100,
@@ -438,7 +446,11 @@ async def test_load_unload_entry(
             None,
             None,
             STATE_UNKNOWN,
-            {ATTR_BATTERY_LEVEL: 100, ATTR_SOURCE_TYPE: SourceType.GPS},
+            {
+                ATTR_BATTERY_LEVEL: 100,
+                ATTR_SOURCE_TYPE: SourceType.GPS,
+                ATTR_IN_ZONES: [],
+            },
         ),
     ],
 )
@@ -462,6 +474,11 @@ async def test_tracker_entity_state(
         "zone.other_zone",
         "0",
         {ATTR_LATITUDE: -50.0, ATTR_LONGITUDE: -60.0, ATTR_RADIUS: 300},
+    )
+    hass.states.async_set(
+        "zone.other_zone_larger",
+        "0",
+        {ATTR_LATITUDE: -50.0, ATTR_LONGITUDE: -60.0, ATTR_RADIUS: 500},
     )
     await hass.async_block_till_done()
     # Write state again to ensure the zone state is taken into account.
@@ -810,3 +827,39 @@ async def test_entity_has_device_info(
         entity_registry.entities[f"{DOMAIN}.test_device"].config_entry_id
         == config_entry.entry_id
     )
+
+
+async def test_tracker_entity_unavailable(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    entity_id: str,
+) -> None:
+    """Test unavailable tracker entity does not fail on bad latitude/longitude."""
+
+    class _MockTrackerEntity(MockTrackerEntity):
+        """Test tracker entity that starts with unavailable state."""
+
+        _attr_available = False
+
+        @property
+        def latitude(self) -> float | None:
+            """Return latitude value of the device."""
+            raise ValueError("Upstream error")
+
+        @property
+        def longitude(self) -> float | None:
+            """Return longitude value of the device."""
+            raise ValueError("Upstream error")
+
+    tracker_entity = _MockTrackerEntity()
+    tracker_entity.entity_id = entity_id
+
+    config_entry = await create_mock_platform(hass, config_entry, [tracker_entity])
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == "unavailable"
+    assert state.attributes == {}
