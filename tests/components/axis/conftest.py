@@ -68,8 +68,8 @@ class RtspEventMock(Protocol):
 
 
 class _RtspClientMock(Protocol):
-    async def __call__(
-        self, data: dict[str, Any] | None = None, state: str = ""
+    def __call__(
+        self, data: bytes | None = None, state: Signal | None = None
     ) -> None: ...
 
 
@@ -337,14 +337,16 @@ def fixture_axis_rtsp_client() -> Generator[_RtspClientMock]:
 
         rtsp_client_mock.return_value.stop = stop_stream
 
-        def make_rtsp_call(data: dict[str, Any] | None = None, state: str = "") -> None:
+        def make_rtsp_call(
+            data: bytes | None = None, state: Signal | None = None
+        ) -> None:
             """Generate a RTSP call."""
             axis_streammanager_session_callback = rtsp_client_mock.call_args[0][4]
 
-            if data:
-                rtsp_client_mock.return_value.rtp.data = data
+            if data is not None:
+                rtsp_client_mock.return_value.data = data
                 axis_streammanager_session_callback(signal=Signal.DATA)
-            elif state:
+            elif state is not None:
                 axis_streammanager_session_callback(signal=state)
             else:
                 raise NotImplementedError
