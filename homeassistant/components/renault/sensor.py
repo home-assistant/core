@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime
-from typing import TYPE_CHECKING, Any, cast
+from typing import Any
 
 from renault_api.kamereon.models import (
     KamereonVehicleBatteryStatusData,
@@ -98,54 +98,6 @@ class RenaultSensor[T: KamereonVehicleDataAttributes](
         return self.entity_description.value_lambda(self)
 
 
-def _get_charging_power(
-    entity: RenaultSensor[KamereonVehicleBatteryStatusData],
-) -> StateType:
-    """Return the charging_power of this entity."""
-    return cast(float, entity.data) / 1000
-
-
-def _get_charge_state_formatted(
-    entity: RenaultSensor[KamereonVehicleBatteryStatusData],
-) -> str | None:
-    """Return the charging_status of this entity."""
-    charging_status = entity.coordinator.data.get_charging_status()
-    return charging_status.name.lower() if charging_status else None
-
-
-def _get_plug_state_formatted(
-    entity: RenaultSensor[KamereonVehicleBatteryStatusData],
-) -> str | None:
-    """Return the plug_status of this entity."""
-    plug_status = entity.coordinator.data.get_plug_status()
-    return plug_status.name.lower() if plug_status else None
-
-
-def _get_rounded_value[T: KamereonVehicleDataAttributes](
-    entity: RenaultSensor[T],
-) -> float:
-    """Return the rounded value of this entity."""
-    return round(cast(float, entity.data))
-
-
-def _get_utc_value[T: KamereonVehicleDataAttributes](
-    entity: RenaultSensor[T],
-) -> datetime:
-    """Return the UTC value of this entity."""
-    original_dt = parse_datetime(cast(str, entity.data))
-    if TYPE_CHECKING:
-        assert original_dt is not None
-    return as_utc(original_dt)
-
-
-def _get_charging_settings_mode_formatted(
-    entity: RenaultSensor[KamereonVehicleChargingSettingsData],
-) -> str | None:
-    """Return the charging_settings mode of this entity."""
-    charging_mode = entity.coordinator.data.mode
-    return charging_mode.lower() if charging_mode else None
-
-
 SENSOR_TYPES: tuple[RenaultSensorEntityDescription[Any], ...] = (
     RenaultSensorEntityDescription[KamereonVehicleBatteryStatusData](
         key="battery_level",
@@ -171,7 +123,11 @@ SENSOR_TYPES: tuple[RenaultSensorEntityDescription[Any], ...] = (
             "charge_error",
             "unavailable",
         ],
-        value_lambda=_get_charge_state_formatted,
+        value_lambda=lambda e: (
+            charging_status.name.lower()
+            if (charging_status := e.coordinator.data.get_charging_status())
+            else None
+        ),
     ),
     RenaultSensorEntityDescription[KamereonVehicleBatteryStatusData](
         key="charging_remaining_time",
@@ -205,7 +161,11 @@ SENSOR_TYPES: tuple[RenaultSensorEntityDescription[Any], ...] = (
         device_class=SensorDeviceClass.POWER,
         native_unit_of_measurement=UnitOfPower.KILO_WATT,
         state_class=SensorStateClass.MEASUREMENT,
-        value_lambda=_get_charging_power,
+        value_lambda=lambda e: (
+            power / 1000
+            if (power := e.coordinator.data.chargingInstantaneousPower) is not None
+            else None
+        ),
         translation_key="charging_power",
     ),
     RenaultSensorEntityDescription[KamereonVehicleBatteryStatusData](
@@ -221,7 +181,11 @@ SENSOR_TYPES: tuple[RenaultSensorEntityDescription[Any], ...] = (
             "plug_error",
             "plug_unknown",
         ],
-        value_lambda=_get_plug_state_formatted,
+        value_lambda=lambda e: (
+            plug_status.name.lower()
+            if (plug_status := e.coordinator.data.get_plug_status())
+            else None
+        ),
     ),
     RenaultSensorEntityDescription[KamereonVehicleBatteryStatusData](
         key="battery_autonomy",
@@ -256,7 +220,11 @@ SENSOR_TYPES: tuple[RenaultSensorEntityDescription[Any], ...] = (
         device_class=SensorDeviceClass.TIMESTAMP,
         data_key="timestamp",
         entity_registry_enabled_default=False,
-        value_lambda=_get_utc_value,
+        value_lambda=lambda e: (
+            as_utc(dt)
+            if (ts := e.coordinator.data.timestamp) and (dt := parse_datetime(ts))
+            else None
+        ),
         translation_key="battery_last_activity",
     ),
     RenaultSensorEntityDescription[KamereonVehicleCockpitData](
@@ -266,7 +234,11 @@ SENSOR_TYPES: tuple[RenaultSensorEntityDescription[Any], ...] = (
         device_class=SensorDeviceClass.DISTANCE,
         native_unit_of_measurement=UnitOfLength.KILOMETERS,
         state_class=SensorStateClass.TOTAL_INCREASING,
-        value_lambda=_get_rounded_value,
+        value_lambda=lambda e: (
+            round(mileage)
+            if (mileage := e.coordinator.data.totalMileage) is not None
+            else None
+        ),
         translation_key="mileage",
     ),
     RenaultSensorEntityDescription[KamereonVehicleCockpitData](
@@ -277,7 +249,11 @@ SENSOR_TYPES: tuple[RenaultSensorEntityDescription[Any], ...] = (
         native_unit_of_measurement=UnitOfLength.KILOMETERS,
         state_class=SensorStateClass.MEASUREMENT,
         requires_fuel=True,
-        value_lambda=_get_rounded_value,
+        value_lambda=lambda e: (
+            round(fuel_autonomy)
+            if (fuel_autonomy := e.coordinator.data.fuelAutonomy) is not None
+            else None
+        ),
         translation_key="fuel_autonomy",
     ),
     RenaultSensorEntityDescription[KamereonVehicleCockpitData](
@@ -288,7 +264,11 @@ SENSOR_TYPES: tuple[RenaultSensorEntityDescription[Any], ...] = (
         native_unit_of_measurement=UnitOfVolume.LITERS,
         state_class=SensorStateClass.TOTAL,
         requires_fuel=True,
-        value_lambda=_get_rounded_value,
+        value_lambda=lambda e: (
+            round(fuel_quantity)
+            if (fuel_quantity := e.coordinator.data.fuelQuantity) is not None
+            else None
+        ),
         translation_key="fuel_quantity",
     ),
     RenaultSensorEntityDescription[KamereonVehicleHvacStatusData](
@@ -314,7 +294,11 @@ SENSOR_TYPES: tuple[RenaultSensorEntityDescription[Any], ...] = (
         data_key="lastUpdateTime",
         entity_registry_enabled_default=False,
         translation_key="hvac_last_activity",
-        value_lambda=_get_utc_value,
+        value_lambda=lambda e: (
+            as_utc(dt)
+            if (ts := e.coordinator.data.lastUpdateTime) and (dt := parse_datetime(ts))
+            else None
+        ),
     ),
     RenaultSensorEntityDescription[KamereonVehicleLocationData](
         key="location_last_activity",
@@ -323,7 +307,11 @@ SENSOR_TYPES: tuple[RenaultSensorEntityDescription[Any], ...] = (
         data_key="lastUpdateTime",
         entity_registry_enabled_default=False,
         translation_key="location_last_activity",
-        value_lambda=_get_utc_value,
+        value_lambda=lambda e: (
+            as_utc(dt)
+            if (ts := e.coordinator.data.lastUpdateTime) and (dt := parse_datetime(ts))
+            else None
+        ),
     ),
     RenaultSensorEntityDescription[KamereonVehicleResStateData](
         key="res_state",
@@ -349,7 +337,11 @@ SENSOR_TYPES: tuple[RenaultSensorEntityDescription[Any], ...] = (
             "delayed",
             "scheduled",
         ],
-        value_lambda=_get_charging_settings_mode_formatted,
+        value_lambda=lambda e: (
+            charging_mode.lower()
+            if (charging_mode := e.coordinator.data.mode)
+            else None
+        ),
     ),
     RenaultSensorEntityDescription[KamereonVehicleTyrePressureData](
         key="front_left_pressure",
