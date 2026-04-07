@@ -1,4 +1,4 @@
-"""Shared manager for tracking active Hue scenes per group.
+"""Manager for tracking active Hue scenes per group.
 
 This centralizes listening to raw scene events and keeps lightweight
 dataclasses with the current active regular scene / smart scene and
@@ -22,9 +22,6 @@ from aiohue.v2.models.smart_scene import SmartScene as HueSmartScene, SmartScene
 
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
-
-from ..bridge import HueConfigEntry
-from ..const import DOMAIN
 
 UpdateListener = Callable[[str], None]
 
@@ -160,22 +157,3 @@ class HueSceneActivityManager:
                 group_state.active_smart_scene_name = None
                 return True
         return False
-
-
-def get_or_create_scene_activity_manager(
-    hass: HomeAssistant, api: HueBridgeV2, config_entry: HueConfigEntry
-) -> HueSceneActivityManager:
-    """Return a shared manager instance, cleaned up on entry unload."""
-    key = f"{DOMAIN}_scene_activity_{config_entry.entry_id}"
-    if (mgr := hass.data.get(key)) is None:
-        mgr = HueSceneActivityManager(hass, api)
-        mgr.start()
-        hass.data[key] = mgr
-
-        @callback
-        def _cleanup() -> None:
-            mgr.stop()
-            hass.data.pop(key, None)
-
-        config_entry.async_on_unload(_cleanup)
-    return mgr

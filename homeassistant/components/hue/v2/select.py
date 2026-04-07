@@ -15,10 +15,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from ..bridge import HueBridge, HueConfigEntry
 from ..const import DOMAIN
 from .entity import HueBaseEntity
-from .scene_activity import (
-    HueSceneActivityManager,
-    get_or_create_scene_activity_manager,
-)
+from .scene_activity import HueSceneActivityManager
 
 PARALLEL_UPDATES = 0
 
@@ -212,7 +209,7 @@ async def async_setup_entry(
     """Set up Hue scene select entities from a config entry."""
     bridge = config_entry.runtime_data
     api: HueBridgeV2 = bridge.api
-    manager = get_or_create_scene_activity_manager(hass, api, config_entry)
+    assert (manager := bridge.scene_activity_manager) is not None
 
     @callback
     def _add_group_entities(group_controller) -> None:

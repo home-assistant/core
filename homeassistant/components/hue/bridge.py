@@ -22,6 +22,7 @@ from .const import DOMAIN
 from .v1.sensor_base import SensorManager
 from .v2.device import async_setup_devices
 from .v2.hue_event import async_setup_hue_events
+from .v2.scene_activity import HueSceneActivityManager
 
 # How long should we sleep if the hub is busy
 HUB_BUSY_SLEEP = 0.5
@@ -51,6 +52,7 @@ class HueBridge:
         # Jobs to be executed when API is reset.
         self.reset_jobs: list[core.CALLBACK_TYPE] = []
         self.sensor_manager: SensorManager | None = None
+        self.scene_activity_manager: HueSceneActivityManager | None = None
         self.logger = logging.getLogger(__name__)
         # store actual api connection to bridge as api
         app_key: str = self.config_entry.data[CONF_API_KEY]
@@ -116,6 +118,9 @@ class HueBridge:
         else:
             await async_setup_devices(self)
             await async_setup_hue_events(self)
+            self.scene_activity_manager = HueSceneActivityManager(self.hass, self.api)
+            self.scene_activity_manager.start()
+            self.reset_jobs.append(self.scene_activity_manager.stop)
             await self.hass.config_entries.async_forward_entry_setups(
                 self.config_entry, PLATFORMS_v2
             )
