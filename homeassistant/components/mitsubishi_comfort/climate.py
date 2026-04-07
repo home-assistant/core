@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-import logging
 from typing import Any
 
 from mitsubishi_comfort import FanSpeed, IndoorUnit, Mode, VaneDirection
@@ -21,8 +20,6 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from . import MitsubishiComfortConfigEntry
 from .coordinator import MitsubishiComfortCoordinator
 from .entity import MitsubishiComfortEntity
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
