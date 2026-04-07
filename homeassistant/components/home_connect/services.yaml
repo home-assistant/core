@@ -37,6 +37,8 @@ set_program_and_options:
             - consumer_products_coffee_maker_program_beverage_caffe_latte
             - consumer_products_coffee_maker_program_beverage_milk_froth
             - consumer_products_coffee_maker_program_beverage_warm_milk
+            - consumer_products_coffee_maker_program_cleaning_modes_appliance_off_rinsing
+            - consumer_products_coffee_maker_program_cleaning_modes_appliance_on_rinsing
             - consumer_products_coffee_maker_program_coffee_world_kleiner_brauner
             - consumer_products_coffee_maker_program_coffee_world_grosser_brauner
             - consumer_products_coffee_maker_program_coffee_world_verlaengerter
