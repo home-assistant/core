@@ -2,6 +2,8 @@
 
 from unittest.mock import MagicMock
 
+from syrupy.assertion import SnapshotAssertion
+
 from homeassistant.components.kiosker.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
@@ -43,6 +45,7 @@ async def test_device_info(
     mock_config_entry: MockConfigEntry,
     mock_kiosker_api: MagicMock,
     device_registry: dr.DeviceRegistry,
+    snapshot: SnapshotAssertion,
 ) -> None:
     """Test device registry integration."""
     await setup_integration(hass, mock_config_entry)
@@ -51,38 +54,4 @@ async def test_device_info(
         identifiers={(DOMAIN, "A98BE1CE-5FE7-4A8D-B2C3-123456789ABC")}
     )
     assert device_entry is not None
-    assert device_entry.name == "Kiosker A98BE1CE"
-    assert device_entry.manufacturer == "Top North"
-    assert device_entry.model == "Kiosker"
-    assert device_entry.sw_version == "25.1.1"
-    assert device_entry.hw_version == "iPad Pro (18.0)"
-    assert device_entry.serial_number == "A98BE1CE-5FE7-4A8D-B2C3-123456789ABC"
-
-
-async def test_device_identifiers_and_info(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_kiosker_api: MagicMock,
-    device_registry: dr.DeviceRegistry,
-) -> None:
-    """Test device identifiers and device info are set correctly."""
-    mock_status = mock_kiosker_api.status.return_value
-    mock_status.device_id = "TEST_DEVICE_123"
-    mock_status.model = "iPad Mini"
-    mock_status.os_version = "17.5"
-    mock_status.app_name = "Kiosker"
-    mock_status.app_version = "24.1.0"
-
-    await setup_integration(hass, mock_config_entry)
-
-    device_entry = device_registry.async_get_device(
-        identifiers={(DOMAIN, "TEST_DEVICE_123")}
-    )
-    assert device_entry is not None
-    assert device_entry.name == "Kiosker TEST_DEV"
-    assert device_entry.manufacturer == "Top North"
-    assert device_entry.model == "Kiosker"
-    assert device_entry.sw_version == "24.1.0"
-    assert device_entry.hw_version == "iPad Mini (17.5)"
-    assert device_entry.serial_number == "TEST_DEVICE_123"
-    assert device_entry.identifiers == {(DOMAIN, "TEST_DEVICE_123")}
+    assert device_entry == snapshot

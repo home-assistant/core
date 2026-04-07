@@ -1,9 +1,17 @@
 """Test the Kiosker config flow."""
 
 from ipaddress import ip_address
-from unittest.mock import AsyncMock, MagicMock, Mock, patch
+from unittest.mock import AsyncMock, MagicMock
 
-from kiosker import ConnectionError
+from kiosker import (
+    AuthenticationError,
+    BadRequestError,
+    ConnectionError,
+    IPAuthenticationError,
+    PingError,
+    TLSVerificationError,
+)
+import pytest
 
 from homeassistant import config_entries
 from homeassistant.components.kiosker.config_flow import validate_input
@@ -75,56 +83,62 @@ async def test_user_flow_creates_entry(
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_form_invalid_host(hass: HomeAssistant) -> None:
-    """Test we handle invalid host."""
+@pytest.mark.parametrize(
+    ("exception", "error"),
+    [
+        (ConnectionError(), "cannot_connect"),
+        (AuthenticationError(), "invalid_auth"),
+        (IPAuthenticationError(), "invalid_ip_auth"),
+        (TLSVerificationError(), "tls_error"),
+        (BadRequestError(), "bad_request"),
+        (PingError(), "cannot_connect"),
+        (Exception(), "unknown"),
+    ],
+)
+async def test_user_flow_errors_and_recovery(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_kiosker_api: MagicMock,
+    exception: Exception,
+    error: str,
+) -> None:
+    """Test user flow handles all validation errors and can recover."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    with patch(
-        "homeassistant.components.kiosker.config_flow.validate_input",
-        return_value=({"base": "cannot_connect"}, None),
-    ):
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                CONF_HOST: "192.168.1.100",
-                CONF_API_TOKEN: "test-token",
-                CONF_SSL: False,
-                CONF_VERIFY_SSL: False,
-            },
-        )
-
-    assert result2["type"] is FlowResultType.FORM
-    assert result2["errors"] == {"base": "cannot_connect"}
-
-
-async def test_form_unexpected_exception(hass: HomeAssistant) -> None:
-    """Test we handle unknown errors from validation."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    mock_kiosker_api.status.side_effect = exception
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_HOST: "192.168.1.100",
+            CONF_API_TOKEN: "test-token",
+            CONF_SSL: False,
+            CONF_VERIFY_SSL: False,
+        },
     )
-
-    with patch(
-        "homeassistant.components.kiosker.config_flow.validate_input",
-        return_value=({"base": "unknown"}, None),
-    ):
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                CONF_HOST: "192.168.1.100",
-                CONF_API_TOKEN: "test-token",
-                CONF_SSL: False,
-                CONF_VERIFY_SSL: False,
-            },
-        )
-
     assert result2["type"] is FlowResultType.FORM
-    assert result2["errors"] == {"base": "unknown"}
+    assert result2["errors"] == {"base": error}
+
+    # Test that the flow recovers on retry
+    mock_kiosker_api.status.side_effect = None
+    result3 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_HOST: "192.168.1.100",
+            CONF_API_TOKEN: "test-token",
+            CONF_SSL: False,
+            CONF_VERIFY_SSL: False,
+        },
+    )
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
 
 
-async def test_zeroconf(hass: HomeAssistant) -> None:
-    """Test zeroconf discovery."""
+async def test_zeroconf(
+    hass: HomeAssistant,
+    mock_kiosker_api: MagicMock,
+) -> None:
+    """Test the full zeroconf discovery flow creates a config entry."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
@@ -132,11 +146,43 @@ async def test_zeroconf(hass: HomeAssistant) -> None:
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "zeroconf_confirm"
-    # Check description placeholders instead of context
     assert result["description_placeholders"] == {
         "name": "Kiosker (A98BE1CE)",
         "host": "192.168.1.39",
     }
+    schema_keys = list(result["data_schema"].schema.keys())
+    assert any(key.schema == CONF_API_TOKEN for key in schema_keys)
+
+    # Test error handling
+    mock_kiosker_api.status.side_effect = ConnectionError()
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_API_TOKEN: "test-token",
+            CONF_VERIFY_SSL: False,
+        },
+    )
+    assert result2["type"] is FlowResultType.FORM
+    assert result2["errors"] == {"base": "cannot_connect"}
+
+    # Test recovery
+    mock_kiosker_api.status.side_effect = None
+    result3 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_API_TOKEN: "test-token",
+            CONF_VERIFY_SSL: False,
+        },
+    )
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
+    assert result3["title"] == "Kiosker A98BE1CE"
+    assert result3["data"] == {
+        CONF_HOST: "192.168.1.39",
+        CONF_API_TOKEN: "test-token",
+        CONF_SSL: True,
+        CONF_VERIFY_SSL: False,
+    }
+    assert result3["result"].unique_id == "A98BE1CE-5FE7-4A8D-B2C3-123456789ABC"
 
 
 async def test_zeroconf_no_uuid(hass: HomeAssistant) -> None:
@@ -150,89 +196,10 @@ async def test_zeroconf_no_uuid(hass: HomeAssistant) -> None:
     assert result["reason"] == "cannot_connect"
 
 
-async def test_zeroconf_confirm(hass: HomeAssistant) -> None:
-    """Test zeroconf confirmation step shows form for API token."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_ZEROCONF},
-        data=DISCOVERY_INFO,
-    )
-
-    result_confirm = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input=None
-    )
-    assert result_confirm["type"] is FlowResultType.FORM
-    assert result_confirm["step_id"] == "zeroconf_confirm"
-    # Check that the form includes API token field
-    schema_keys = list(result_confirm["data_schema"].schema.keys())
-    assert any(key.schema == CONF_API_TOKEN for key in schema_keys)
-
-
-async def test_zeroconf_discovery_confirm(hass: HomeAssistant) -> None:
-    """Test zeroconf discovery confirmation with token."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_ZEROCONF},
-        data=DISCOVERY_INFO,
-    )
-
-    with (
-        patch(
-            "homeassistant.components.kiosker.config_flow.validate_input"
-        ) as mock_validate,
-        patch(
-            "homeassistant.components.kiosker.async_setup_entry", return_value=True
-        ) as mock_setup_entry,
-    ):
-        mock_validate.return_value = (
-            {},
-            "A98BE1CE-5FE7-4A8D-B2C3-123456789ABC",
-        )
-
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                CONF_API_TOKEN: "test-token",
-                CONF_VERIFY_SSL: False,
-            },
-        )
-
-    assert result2["type"] is FlowResultType.CREATE_ENTRY
-    assert result2["title"] == "Kiosker A98BE1CE"
-    assert result2["data"] == {
-        CONF_HOST: "192.168.1.39",
-        CONF_API_TOKEN: "test-token",
-        CONF_SSL: True,
-        CONF_VERIFY_SSL: False,
-    }
-    assert len(mock_setup_entry.mock_calls) == 1
-
-
-async def test_zeroconf_discovery_confirm_cannot_connect(hass: HomeAssistant) -> None:
-    """Test zeroconf discovery confirmation with connection error."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_ZEROCONF},
-        data=DISCOVERY_INFO,
-    )
-
-    with patch(
-        "homeassistant.components.kiosker.config_flow.validate_input",
-        return_value=({"base": "cannot_connect"}, None),
-    ):
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                CONF_API_TOKEN: "test-token",
-                CONF_VERIFY_SSL: False,
-            },
-        )
-    assert result2["type"] is FlowResultType.FORM
-    assert result2["errors"] == {"base": "cannot_connect"}
-
-
 async def test_abort_if_already_configured(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_kiosker_api: MagicMock,
 ) -> None:
     """Test we abort if already configured."""
     mock_config_entry.add_to_hass(hass)
@@ -241,37 +208,31 @@ async def test_abort_if_already_configured(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    with (
-        patch(
-            "homeassistant.components.kiosker.config_flow.validate_input"
-        ) as mock_validate,
-        patch(
-            "homeassistant.components.kiosker.config_flow.KioskerAPI"
-        ) as mock_api_class,
-    ):
-        mock_status = Mock()
-        mock_status.device_id = "A98BE1CE-5FE7-4A8D-B2C3-123456789ABC"
-        mock_api = Mock()
-        mock_api.status.return_value = mock_status
-        mock_api_class.return_value = mock_api
+    mock_kiosker_api.status.side_effect = ConnectionError()
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_HOST: "192.168.1.200",
+            CONF_API_TOKEN: "test-token",
+            CONF_SSL: False,
+            CONF_VERIFY_SSL: False,
+        },
+    )
+    assert result2["type"] is FlowResultType.FORM
+    assert result2["errors"] == {"base": "cannot_connect"}
 
-        mock_validate.return_value = (
-            {},
-            "A98BE1CE-5FE7-4A8D-B2C3-123456789ABC",
-        )
-
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                CONF_HOST: "192.168.1.200",
-                CONF_API_TOKEN: "test-token",
-                CONF_SSL: False,
-                CONF_VERIFY_SSL: False,
-            },
-        )
-
-    assert result2["type"] is FlowResultType.ABORT
-    assert result2["reason"] == "already_configured"
+    mock_kiosker_api.status.side_effect = None
+    result3 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_HOST: "192.168.1.200",
+            CONF_API_TOKEN: "test-token",
+            CONF_SSL: False,
+            CONF_VERIFY_SSL: False,
+        },
+    )
+    assert result3["type"] is FlowResultType.ABORT
+    assert result3["reason"] == "already_configured"
 
 
 async def test_zeroconf_abort_if_already_configured(
@@ -290,68 +251,15 @@ async def test_zeroconf_abort_if_already_configured(
     assert result["reason"] == "already_configured"
 
 
-async def test_manual_setup_with_device_id_fallback(hass: HomeAssistant) -> None:
-    """Test manual setup returns cannot_connect when device_id unavailable."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-
-    with (
-        patch(
-            "homeassistant.components.kiosker.config_flow.validate_input",
-            return_value=({"base": "cannot_connect"}, None),
-        ),
-        patch(
-            "homeassistant.components.kiosker.config_flow.KioskerAPI"
-        ) as mock_api_class,
-    ):
-        # Mock API that fails to get status
-        mock_api = Mock()
-        mock_api.status.side_effect = Exception("Connection failed")
-        mock_api_class.return_value = mock_api
-
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                CONF_HOST: "192.168.1.100",
-                CONF_API_TOKEN: "test-token",
-                CONF_SSL: False,
-                CONF_VERIFY_SSL: False,
-            },
-        )
-
-    assert result2["type"] is FlowResultType.FORM
-    assert result2["errors"] == {"base": "cannot_connect"}
-
-
-async def test_validate_input_success(
+async def test_validate_input_no_device_id(
     hass: HomeAssistant,
-    mock_kiosker_api: Mock,
+    mock_kiosker_api: MagicMock,
 ) -> None:
-    """Test validate_input with successful connection."""
+    """Test validate_input returns cannot_connect when device has no device_id."""
+    mock_kiosker_api.status.return_value.device_id = None
 
     data = {
         CONF_HOST: "10.0.1.5",
-        CONF_API_TOKEN: "test_token",
-        CONF_SSL: False,
-        CONF_VERIFY_SSL: False,
-    }
-
-    errors, device_id = await validate_input(hass, data)
-    assert errors == {}
-    assert device_id == "A98BE1CE-5FE7-4A8D-B2C3-123456789ABC"
-
-
-async def test_validate_input_connection_error(
-    hass: HomeAssistant,
-    mock_kiosker_api: Mock,
-) -> None:
-    """Test validate_input with connection error."""
-
-    mock_kiosker_api.status.side_effect = ConnectionError("Connection failed")
-
-    data = {
-        CONF_HOST: "192.168.1.100",
         CONF_API_TOKEN: "test_token",
         CONF_SSL: False,
         CONF_VERIFY_SSL: False,
