@@ -223,7 +223,7 @@ async def test_generate_data_with_attachments(
 
 @pytest.mark.usefixtures("mock_init_component")
 @pytest.mark.freeze_time("2025-06-14 22:59:00")
-@pytest.mark.parametrize("expected_store", [False, True])
+@pytest.mark.parametrize("configured_store", [False, True])
 @pytest.mark.parametrize(
     "image_model", ["gpt-image-1.5", "gpt-image-1", "gpt-image-1-mini"]
 )
@@ -234,7 +234,7 @@ async def test_generate_image(
     entity_registry: er.EntityRegistry,
     issue_registry: ir.IssueRegistry,
     image_model: str,
-    expected_store: bool,
+    configured_store: bool,
 ) -> None:
     """Test AI Task image generation."""
     entity_id = "ai_task.openai_ai_task"
@@ -254,7 +254,7 @@ async def test_generate_image(
         data={
             **ai_task_entry.data,
             "image_model": image_model,
-            CONF_STORE_RESPONSES: expected_store,
+            CONF_STORE_RESPONSES: configured_store,
         },
     )
     await hass.async_block_till_done()
@@ -295,7 +295,7 @@ async def test_generate_image(
 
     mock_upload_media.assert_called_once()
     assert mock_create_stream.call_args is not None
-    assert mock_create_stream.call_args.kwargs["store"] is expected_store
+    assert mock_create_stream.call_args.kwargs["store"] is True
     image_data = mock_upload_media.call_args[0][1]
     assert image_data.file.getvalue() == b"A"
     assert image_data.content_type == "image/png"

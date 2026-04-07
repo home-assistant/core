@@ -309,14 +309,7 @@ async def test_init_auth_error(
         assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
 
 
-@pytest.mark.parametrize(
-    ("mock_conversation_subentry_data", "expected_store"),
-    [
-        ({}, False),
-        ({CONF_STORE_RESPONSES: True}, True),
-    ],
-    indirect=["mock_conversation_subentry_data"],
-)
+@pytest.mark.parametrize("store_responses", [False, True])
 @pytest.mark.parametrize(
     ("service_data", "expected_args", "number_of_files"),
     [
@@ -413,24 +406,23 @@ async def test_generate_content_service(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_init_component,
-    expected_store: bool,
+    store_responses: bool,
     service_data,
     expected_args,
     number_of_files,
 ) -> None:
     """Test generate content service."""
-    if expected_store:
-        conversation_subentry = next(
-            sub
-            for sub in mock_config_entry.subentries.values()
-            if sub.subentry_type == "conversation"
-        )
-        hass.config_entries.async_update_subentry(
-            mock_config_entry,
-            conversation_subentry,
-            data={**conversation_subentry.data, CONF_STORE_RESPONSES: expected_store},
-        )
-        await hass.async_block_till_done()
+    conversation_subentry = next(
+        sub
+        for sub in mock_config_entry.subentries.values()
+        if sub.subentry_type == "conversation"
+    )
+    hass.config_entries.async_update_subentry(
+        mock_config_entry,
+        conversation_subentry,
+        data={**conversation_subentry.data, CONF_STORE_RESPONSES: store_responses},
+    )
+    await hass.async_block_till_done()
 
     service_data["config_entry"] = mock_config_entry.entry_id
     expected_args["model"] = "gpt-4o-mini"
@@ -438,7 +430,7 @@ async def test_generate_content_service(
     expected_args["top_p"] = 1.0
     expected_args["temperature"] = 1.0
     expected_args["user"] = None
-    expected_args["store"] = expected_store
+    expected_args["store"] = store_responses
     expected_args["input"][0]["type"] = "message"
     expected_args["input"][0]["role"] = "user"
 

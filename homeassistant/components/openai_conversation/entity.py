@@ -613,6 +613,9 @@ class OpenAIBaseLLMEntity(Entity):
             if image_model != "gpt-image-1-mini":
                 image_tool["input_fidelity"] = "high"
             tools.append(image_tool)
+            # Keep image state on OpenAI so follow-up prompts can continue by
+            # conversation ID without resending the generated image data.
+            model_args["store"] = True
             model_args["tool_choice"] = ToolChoiceTypesParam(type="image_generation")
 
         if tools:

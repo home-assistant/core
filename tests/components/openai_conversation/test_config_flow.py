@@ -540,6 +540,7 @@ async def test_form_invalid_auth(hass: HomeAssistant, side_effect, error) -> Non
                 CONF_CHAT_MODEL: "o1-pro",
                 CONF_TOP_P: RECOMMENDED_TOP_P,
                 CONF_MAX_TOKENS: 10000,
+                CONF_STORE_RESPONSES: False,
                 CONF_REASONING_EFFORT: "high",
                 CONF_CODE_INTERPRETER: True,
             },
@@ -576,6 +577,7 @@ async def test_form_invalid_auth(hass: HomeAssistant, side_effect, error) -> Non
                 CONF_CHAT_MODEL: RECOMMENDED_CHAT_MODEL,
                 CONF_TOP_P: RECOMMENDED_TOP_P,
                 CONF_MAX_TOKENS: RECOMMENDED_MAX_TOKENS,
+                CONF_STORE_RESPONSES: False,
                 CONF_SERVICE_TIER: "auto",
                 CONF_WEB_SEARCH: True,
                 CONF_WEB_SEARCH_CONTEXT_SIZE: "low",
@@ -593,6 +595,7 @@ async def test_form_invalid_auth(hass: HomeAssistant, side_effect, error) -> Non
                 CONF_CHAT_MODEL: "gpt-4o",
                 CONF_TOP_P: 0.9,
                 CONF_MAX_TOKENS: 1000,
+                CONF_STORE_RESPONSES: True,
                 CONF_WEB_SEARCH: True,
                 CONF_WEB_SEARCH_CONTEXT_SIZE: "low",
                 CONF_WEB_SEARCH_USER_LOCATION: True,
@@ -614,6 +617,7 @@ async def test_form_invalid_auth(hass: HomeAssistant, side_effect, error) -> Non
                     CONF_CHAT_MODEL: "gpt-4o",
                     CONF_TOP_P: 0.9,
                     CONF_MAX_TOKENS: 1000,
+                    CONF_STORE_RESPONSES: True,
                 },
                 {
                     CONF_WEB_SEARCH: True,
@@ -631,6 +635,7 @@ async def test_form_invalid_auth(hass: HomeAssistant, side_effect, error) -> Non
                 CONF_CHAT_MODEL: "gpt-4o",
                 CONF_TOP_P: 0.9,
                 CONF_MAX_TOKENS: 1000,
+                CONF_STORE_RESPONSES: True,
                 CONF_SERVICE_TIER: "default",
                 CONF_WEB_SEARCH: True,
                 CONF_WEB_SEARCH_CONTEXT_SIZE: "low",
@@ -687,6 +692,7 @@ async def test_form_invalid_auth(hass: HomeAssistant, side_effect, error) -> Non
                 CONF_CHAT_MODEL: "gpt-5",
                 CONF_TOP_P: 0.9,
                 CONF_MAX_TOKENS: 1000,
+                CONF_STORE_RESPONSES: False,
                 CONF_REASONING_EFFORT: "minimal",
                 CONF_REASONING_SUMMARY: RECOMMENDED_REASONING_SUMMARY,
                 CONF_CODE_INTERPRETER: False,
@@ -800,6 +806,7 @@ async def test_form_invalid_auth(hass: HomeAssistant, side_effect, error) -> Non
                 CONF_CHAT_MODEL: "o3-mini",
                 CONF_TOP_P: 0.9,
                 CONF_MAX_TOKENS: 1000,
+                CONF_STORE_RESPONSES: False,
                 CONF_REASONING_EFFORT: "low",
                 CONF_CODE_INTERPRETER: True,
             },
@@ -845,6 +852,7 @@ async def test_form_invalid_auth(hass: HomeAssistant, side_effect, error) -> Non
                 CONF_CHAT_MODEL: "gpt-4o",
                 CONF_TOP_P: 0.9,
                 CONF_MAX_TOKENS: 1000,
+                CONF_STORE_RESPONSES: False,
                 CONF_SERVICE_TIER: "priority",
                 CONF_WEB_SEARCH: True,
                 CONF_WEB_SEARCH_CONTEXT_SIZE: "high",
@@ -897,6 +905,7 @@ async def test_form_invalid_auth(hass: HomeAssistant, side_effect, error) -> Non
                 CONF_CHAT_MODEL: "gpt-5-pro",
                 CONF_TOP_P: 0.9,
                 CONF_MAX_TOKENS: 1000,
+                CONF_STORE_RESPONSES: False,
                 CONF_REASONING_SUMMARY: RECOMMENDED_REASONING_SUMMARY,
                 CONF_VERBOSITY: "medium",
                 CONF_WEB_SEARCH: True,
@@ -916,7 +925,11 @@ async def test_subentry_switching(
     expected_options,
 ) -> None:
     """Test the subentry form."""
-    subentry = next(iter(mock_config_entry.subentries.values()))
+    subentry = next(
+        sub
+        for sub in mock_config_entry.subentries.values()
+        if sub.subentry_type == "conversation"
+    )
     hass.config_entries.async_update_subentry(
         mock_config_entry, subentry, data=current_options
     )
@@ -950,11 +963,6 @@ async def test_subentry_switching(
 
     assert subentry_flow["type"] is FlowResultType.ABORT
     assert subentry_flow["reason"] == "reconfigure_successful"
-    if not expected_options.get(CONF_RECOMMENDED, False):
-        expected_options = {
-            CONF_STORE_RESPONSES: False,
-            **expected_options,
-        }
     assert subentry.data == expected_options
 
 
@@ -966,7 +974,11 @@ async def test_subentry_web_search_user_location(
     store_responses: bool,
 ) -> None:
     """Test fetching user location."""
-    subentry = next(iter(mock_config_entry.subentries.values()))
+    subentry = next(
+        sub
+        for sub in mock_config_entry.subentries.values()
+        if sub.subentry_type == "conversation"
+    )
     subentry_flow = await mock_config_entry.start_subentry_reconfigure_flow(
         hass, subentry.subentry_id
     )
