@@ -69,13 +69,13 @@
           "advanced_options": {
             "data": {
               "availability": "[%key:component::template::common::availability%]",
-              "delay_on": "Delay on",
-              "delay_off": "Delay off"
+              "delay_off": "Delay off",
+              "delay_on": "Delay on"
             },
             "data_description": {
               "availability": "[%key:component::template::common::availability_description%]",
-              "delay_on": "The amount of time the template state must be met before this sensor's state changes to on.",
-              "delay_off": "The amount of time the template state must be unmet before this sensor's state changes to off."
+              "delay_off": "The amount of time the template state must be unmet before this sensor's state changes to off.",
+              "delay_on": "The amount of time the template state must be met before this sensor's state changes to on."
             },
             "name": "[%key:component::template::common::advanced_options%]"
           }
@@ -624,13 +624,13 @@
           "advanced_options": {
             "data": {
               "availability": "[%key:component::template::common::availability%]",
-              "delay_on": "[%key:component::template::config::step::binary_sensor::sections::advanced_options::data::delay_on%]",
-              "delay_off": "[%key:component::template::config::step::binary_sensor::sections::advanced_options::data::delay_off%]"
+              "delay_off": "[%key:component::template::config::step::binary_sensor::sections::advanced_options::data::delay_off%]",
+              "delay_on": "[%key:component::template::config::step::binary_sensor::sections::advanced_options::data::delay_on%]"
             },
             "data_description": {
               "availability": "[%key:component::template::common::availability_description%]",
-              "delay_on": "[%key:component::template::config::step::binary_sensor::sections::advanced_options::data_description::delay_on%]",
-              "delay_off": "[%key:component::template::config::step::binary_sensor::sections::advanced_options::data_description::delay_off%]"
+              "delay_off": "[%key:component::template::config::step::binary_sensor::sections::advanced_options::data_description::delay_off%]",
+              "delay_on": "[%key:component::template::config::step::binary_sensor::sections::advanced_options::data_description::delay_on%]"
             },
             "name": "[%key:component::template::common::advanced_options%]"
           }
