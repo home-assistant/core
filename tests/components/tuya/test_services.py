@@ -17,7 +17,6 @@ from . import initialize_entry
 
 from tests.common import MockConfigEntry
 
-
 DECODED_MEAL_PLAN: list[FeederSchedule] = [
     {
         "days": [
