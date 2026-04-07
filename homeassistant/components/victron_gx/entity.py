@@ -35,10 +35,14 @@ class VictronBaseEntity(Entity):
         self._attr_device_info = device_info
         self._attr_unique_id = f"{installation_id}_{metric.unique_id}"
         self._attr_suggested_display_precision = metric.precision
-        self._attr_translation_key = metric.generic_short_id.replace("{", "").replace(
-            "}", ""
-        )
-        self._attr_translation_placeholders = metric.key_values
+        # When main_topic is set, omit translation_key/name so HA uses the device name (via _attr_has_entity_name).
+        if metric.main_topic:
+            self._attr_name = None
+        else:
+            self._attr_translation_key = metric.generic_short_id.replace(
+                "{", ""
+            ).replace("}", "")
+            self._attr_translation_placeholders = metric.key_values
 
         self._attr_entity_category = (
             EntityCategory.DIAGNOSTIC

@@ -601,8 +601,6 @@ class HomeConnectSensor(HomeConnectEntity, SensorEntity):
 class HomeConnectProgramSensor(HomeConnectSensor):
     """Sensor class for Home Connect sensors that reports information related to the running program."""
 
-    program_running: bool = False
-
     async def async_added_to_hass(self) -> None:
         """Register listener."""
         await super().async_added_to_hass()
@@ -616,17 +614,20 @@ class HomeConnectProgramSensor(HomeConnectSensor):
     @callback
     def _handle_operation_state_event(self) -> None:
         """Update status when an event for the entity is received."""
-        self.program_running = (
-            status := self.appliance.status.get(StatusKey.BSH_COMMON_OPERATION_STATE)
-        ) is not None and status.value in [
-            BSH_OPERATION_STATE_RUN,
-            BSH_OPERATION_STATE_PAUSE,
-            BSH_OPERATION_STATE_FINISHED,
-        ]
         if not self.program_running:
             # reset the value when the program is not running, paused or finished
             self._attr_native_value = None
         self.async_write_ha_state()
+
+    @property
+    def program_running(self) -> bool:
+        """Return whether a program is running, paused or finished."""
+        status = self.appliance.status.get(StatusKey.BSH_COMMON_OPERATION_STATE)
+        return status is not None and status.value in [
+            BSH_OPERATION_STATE_RUN,
+            BSH_OPERATION_STATE_PAUSE,
+            BSH_OPERATION_STATE_FINISHED,
+        ]
 
     @property
     def available(self) -> bool:
@@ -637,13 +638,6 @@ class HomeConnectProgramSensor(HomeConnectSensor):
 
     def update_native_value(self) -> None:
         """Update the program sensor's status."""
-        self.program_running = (
-            status := self.appliance.status.get(StatusKey.BSH_COMMON_OPERATION_STATE)
-        ) is not None and status.value in [
-            BSH_OPERATION_STATE_RUN,
-            BSH_OPERATION_STATE_PAUSE,
-            BSH_OPERATION_STATE_FINISHED,
-        ]
         event = self.appliance.events.get(cast(EventKey, self.bsh_key))
         if event:
             self._update_native_value(event.value)
