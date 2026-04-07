@@ -4,9 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from tuya_device_handlers import TUYA_QUIRKS_REGISTRY
 from tuya_device_handlers.definition.fan import (
-    FanQuirk,
     TuyaFanDefinition,
     get_default_definition,
 )
@@ -46,31 +44,6 @@ _HA_TO_TUYA_DIRECTION_MAPPINGS = {
 }
 
 
-def _get_quirk_entity_description(
-    entity_quirk: FanQuirk,
-) -> FanEntityDescription:
-    return FanEntityDescription(key=entity_quirk.key)
-
-
-def _get_quirk_entities(
-    manager: Manager, device: CustomerDevice
-) -> list[TuyaFanEntity] | None:
-    if (quirk := TUYA_QUIRKS_REGISTRY.get_quirk_for_device(device)) is None or (
-        entity_quirks := quirk.fan_quirks
-    ) is None:
-        return None
-    return [
-        TuyaFanEntity(
-            device,
-            manager,
-            _get_quirk_entity_description(entity_quirk),
-            definition,
-        )
-        for entity_quirk in entity_quirks
-        if (definition := entity_quirk.definition_fn(device))
-    ]
-
-
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: TuyaConfigEntry,
@@ -85,9 +58,6 @@ async def async_setup_entry(
         entities: list[TuyaFanEntity] = []
         for device_id in device_ids:
             device = manager.device_map[device_id]
-            if (quirk_entities := _get_quirk_entities(manager, device)) is not None:
-                entities.extend(quirk_entities)
-                continue
             if (description := FANS.get(device.category)) and (
                 definition := get_default_definition(device)
             ):
