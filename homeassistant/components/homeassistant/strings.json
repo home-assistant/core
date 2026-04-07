@@ -148,7 +148,7 @@
         },
         "step": {
           "init": {
-            "description": "The integration `{domain}` could not be found. This happens when a (custom) integration was removed from Home Assistant, but there are still configurations for this `integration`. Please use the buttons below to either remove the previous configurations for `{domain}` or ignore this.",
+            "description": "The integration `{domain}` could not be found. This happens when a (community) integration was removed from Home Assistant, but there are still configurations for this `integration`. Please use the buttons below to either remove the previous configurations for `{domain}` or ignore this.",
             "menu_options": {
               "confirm": "Remove previous configurations",
               "ignore": "Ignore"
@@ -236,7 +236,7 @@
       "description": "Restarts Home Assistant.",
       "fields": {
         "safe_mode": {
-          "description": "Disable custom integrations and custom cards.",
+          "description": "Disable community integrations and community cards.",
           "name": "Safe mode"
         }
       },

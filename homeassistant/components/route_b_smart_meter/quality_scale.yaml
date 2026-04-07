@@ -4,8 +4,7 @@ rules:
     status: exempt
     comment: |
       The integration does not provide any additional actions.
-  appropriate-polling:
-    status: done
+  appropriate-polling: done
   brands:
     status: exempt
     comment: |

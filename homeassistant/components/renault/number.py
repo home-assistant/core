@@ -4,9 +4,12 @@ from __future__ import annotations
 
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
-from typing import Any, cast
+from typing import Any
 
-from renault_api.kamereon.models import KamereonVehicleBatterySocData
+from renault_api.kamereon.models import (
+    KamereonVehicleBatterySocData,
+    KamereonVehicleDataAttributes,
+)
 
 from homeassistant.components.number import (
     NumberDeviceClass,
@@ -29,16 +32,18 @@ PARALLEL_UPDATES = 1
 
 
 @dataclass(frozen=True, kw_only=True)
-class RenaultNumberEntityDescription(
+class RenaultNumberEntityDescription[T: KamereonVehicleDataAttributes](
     NumberEntityDescription, RenaultDataEntityDescription
 ):
     """Class describing Renault number entities."""
 
-    data_key: str
-    update_fn: Callable[[RenaultNumberEntity, float], Coroutine[Any, Any, None]]
+    value_fn: Callable[[RenaultNumberEntity[T]], float | None]
+    update_fn: Callable[[RenaultNumberEntity[T], float], Coroutine[Any, Any, None]]
 
 
-async def _set_charge_limit_min(entity: RenaultNumberEntity, value: float) -> None:
+async def _set_charge_limit_min(
+    entity: RenaultNumberEntity[KamereonVehicleBatterySocData], value: float
+) -> None:
     """Set the minimum SOC.
 
     The target SOC is required to set the minimum SOC, so we need to fetch it first.
@@ -51,7 +56,9 @@ async def _set_charge_limit_min(entity: RenaultNumberEntity, value: float) -> No
     await _set_charge_limits(entity, min_soc=round(value), target_soc=target_soc)
 
 
-async def _set_charge_limit_target(entity: RenaultNumberEntity, value: float) -> None:
+async def _set_charge_limit_target(
+    entity: RenaultNumberEntity[KamereonVehicleBatterySocData], value: float
+) -> None:
     """Set the target SOC.
 
     The minimum SOC is required to set the target SOC, so we need to fetch it first.
@@ -65,7 +72,9 @@ async def _set_charge_limit_target(entity: RenaultNumberEntity, value: float) ->
 
 
 async def _set_charge_limits(
-    entity: RenaultNumberEntity, min_soc: int, target_soc: int
+    entity: RenaultNumberEntity[KamereonVehicleBatterySocData],
+    min_soc: int,
+    target_soc: int,
 ) -> None:
     """Set the minimum and target SOC.
 
@@ -95,17 +104,17 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class RenaultNumberEntity(
-    RenaultDataEntity[KamereonVehicleBatterySocData], NumberEntity
+class RenaultNumberEntity[T: KamereonVehicleDataAttributes](
+    RenaultDataEntity[T], NumberEntity
 ):
     """Mixin for number specific attributes."""
 
-    entity_description: RenaultNumberEntityDescription
+    entity_description: RenaultNumberEntityDescription[T]
 
     @property
     def native_value(self) -> float | None:
         """Return the entity value to represent the entity state."""
-        return cast(float | None, self._get_data_attr(self.entity_description.data_key))
+        return self.entity_description.value_fn(self)
 
     async def async_set_native_value(self, value: float) -> None:
         """Update the current value."""
@@ -113,10 +122,9 @@ class RenaultNumberEntity(
 
 
 NUMBER_TYPES: tuple[RenaultNumberEntityDescription, ...] = (
-    RenaultNumberEntityDescription(
+    RenaultNumberEntityDescription[KamereonVehicleBatterySocData](
         key="charge_limit_min",
         coordinator="battery_soc",
-        data_key="socMin",
         update_fn=_set_charge_limit_min,
         device_class=NumberDeviceClass.BATTERY,
         native_min_value=15,
@@ -125,11 +133,11 @@ NUMBER_TYPES: tuple[RenaultNumberEntityDescription, ...] = (
         native_unit_of_measurement=PERCENTAGE,
         mode=NumberMode.SLIDER,
         translation_key="charge_limit_min",
+        value_fn=lambda entity: entity.coordinator.data.socMin,
     ),
-    RenaultNumberEntityDescription(
+    RenaultNumberEntityDescription[KamereonVehicleBatterySocData](
         key="charge_limit_target",
         coordinator="battery_soc",
-        data_key="socTarget",
         update_fn=_set_charge_limit_target,
         device_class=NumberDeviceClass.BATTERY,
         native_min_value=55,
@@ -138,5 +146,6 @@ NUMBER_TYPES: tuple[RenaultNumberEntityDescription, ...] = (
         native_unit_of_measurement=PERCENTAGE,
         mode=NumberMode.SLIDER,
         translation_key="charge_limit_target",
+        value_fn=lambda entity: entity.coordinator.data.socTarget,
     ),
 )

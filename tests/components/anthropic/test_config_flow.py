@@ -332,7 +332,7 @@ async def test_subentry_web_search_user_location(
         "recommended": False,
         "region": "California",
         "temperature": 1.0,
-        "thinking_budget": 0,
+        "thinking_budget": 1024,
         "timezone": "America/Los_Angeles",
         "tool_search": False,
         "user_location": True,
@@ -495,7 +495,7 @@ async def test_model_list_error(
                 CONF_TEMPERATURE: 1.0,
                 CONF_CHAT_MODEL: "claude-haiku-4-5",
                 CONF_MAX_TOKENS: DEFAULT[CONF_MAX_TOKENS],
-                CONF_THINKING_BUDGET: 0,
+                CONF_THINKING_BUDGET: DEFAULT[CONF_THINKING_BUDGET],
                 CONF_WEB_FETCH: False,
                 CONF_WEB_FETCH_MAX_USES: 7,
                 CONF_WEB_SEARCH: False,
@@ -636,7 +636,7 @@ async def test_model_list_error(
                 CONF_TEMPERATURE: 0.3,
                 CONF_CHAT_MODEL: DEFAULT[CONF_CHAT_MODEL],
                 CONF_MAX_TOKENS: DEFAULT[CONF_MAX_TOKENS],
-                CONF_THINKING_BUDGET: 0,
+                CONF_THINKING_BUDGET: DEFAULT[CONF_THINKING_BUDGET],
                 CONF_WEB_FETCH: False,
                 CONF_WEB_FETCH_MAX_USES: 5,
                 CONF_WEB_SEARCH: False,
@@ -814,7 +814,7 @@ async def test_creating_ai_task_subentry_advanced(
         result["flow_id"],
         {
             CONF_CHAT_MODEL: "claude-sonnet-4-5",
-            CONF_MAX_TOKENS: 200,
+            CONF_MAX_TOKENS: 1200,
             CONF_TEMPERATURE: 0.5,
         },
     )
@@ -835,7 +835,7 @@ async def test_creating_ai_task_subentry_advanced(
     assert result4.get("data") == {
         CONF_RECOMMENDED: False,
         CONF_CHAT_MODEL: "claude-sonnet-4-5",
-        CONF_MAX_TOKENS: 200,
+        CONF_MAX_TOKENS: 1200,
         CONF_TEMPERATURE: 0.5,
         CONF_TOOL_SEARCH: False,
         CONF_WEB_FETCH: False,
@@ -843,7 +843,7 @@ async def test_creating_ai_task_subentry_advanced(
         CONF_WEB_SEARCH: False,
         CONF_WEB_SEARCH_MAX_USES: 5,
         CONF_WEB_SEARCH_USER_LOCATION: False,
-        CONF_THINKING_BUDGET: 0,
+        CONF_THINKING_BUDGET: 1024,
         CONF_CODE_EXECUTION: False,
         CONF_PROMPT_CACHING: "prompt",
     }
