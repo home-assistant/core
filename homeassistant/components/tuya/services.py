@@ -102,9 +102,6 @@ async def async_get_feeder_meal_plan(
         raise ServiceValidationError(
             translation_domain=DOMAIN,
             translation_key="invalid_meal_plan_data",
-            translation_placeholders={
-                "device_id": device.id,
-            },
         )
 
     return {"data": meal_plan}
