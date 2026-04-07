@@ -10,7 +10,7 @@ from radiotherm.validate import RadiothermTstatError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .data import RadioThermInitData, RadioThermUpdate, async_get_data
 
