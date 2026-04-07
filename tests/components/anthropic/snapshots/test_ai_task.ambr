@@ -47,9 +47,9 @@
         'type': 'text',
       }),
     ]),
-    'temperature': 1.0,
     'thinking': dict({
-      'type': 'disabled',
+      'budget_tokens': 1024,
+      'type': 'enabled',
     }),
   })
 # ---
