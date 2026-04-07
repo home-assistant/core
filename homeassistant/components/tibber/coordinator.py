@@ -325,7 +325,6 @@ class TibberPriceCoordinator(DataUpdateCoordinator[dict[str, TibberHomeData]]):
             if (today_end - dt_util.now()).total_seconds() < (
                 self._tomorrow_price_poll_threshold_seconds
             ):
-                _LOGGER.error("Updating tomorrow's price for %s", home.name)
                 return True
             return False
 
