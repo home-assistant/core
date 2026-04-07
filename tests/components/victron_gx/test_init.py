@@ -186,3 +186,27 @@ async def test_hub_stop(
 
     # Verify hub is disconnected by checking config entry state
     assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
+
+
+@pytest.mark.usefixtures("mock_victron_hub_library")
+async def test_hub_stop_disconnect_error(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_victron_hub_library: MagicMock,
+) -> None:
+    """Test hub stop gracefully handles disconnect errors."""
+    mock_config_entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+
+    # Make disconnect raise an error
+    mock_victron_hub_library.return_value.disconnect.side_effect = Exception(
+        "disconnect failed"
+    )
+
+    assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
