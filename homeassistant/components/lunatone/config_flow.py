@@ -12,7 +12,7 @@ from homeassistant.config_entries import (
     ConfigFlow,
     ConfigFlowResult,
 )
-from homeassistant.const import CONF_URL
+from homeassistant.const import CONF_NAME, CONF_URL
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
@@ -106,11 +106,10 @@ class LunatoneConfigFlow(ConfigFlow, domain=DOMAIN):
             return await self.async_step_user(user_input)
 
         entry = self._get_reconfigure_entry()
-        suggested_values = {CONF_URL: entry.data[CONF_URL]}
-
         return self.async_show_form(
             step_id="reconfigure",
-            data_schema=self.add_suggested_values_to_schema(
-                vol.Schema({vol.Required(CONF_URL): cv.string}), suggested_values
+            data_schema=vol.Schema(
+                {vol.Required(CONF_URL, default=entry.data[CONF_URL]): cv.string},
             ),
+            description_placeholders={CONF_NAME: entry.title},
         )
