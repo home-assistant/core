@@ -46,7 +46,7 @@
       'in_progress': False,
       'installed_version': '9.1.6',
       'latest_version': '9.1.9-p4-d1',
-      'release_summary': 'A total of 5 update(s) is/are pending installation. There is/are 4 Proxmox VE update(s) and 1 other update(s) pending. If you run the update, all pending updates will be installed. Proxmox will be updated to version 9.1.9. Please check the Proxmox VE node',
+      'release_summary': 'A total of 5 package update(s) are pending installation: of these 4 relate to Proxmox and 1 to other updates. Please visit the [Proxmox VE node](https://127.0.0.1:8006/#v1:0:=node/pve1) for details on the pending updates and to upgrade to 9.1.9.',
       'release_url': None,
       'skipped_version': None,
       'supported_features': <UpdateEntityFeature: 16>,
