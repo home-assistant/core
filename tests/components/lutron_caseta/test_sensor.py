@@ -9,8 +9,9 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_component import async_update_entity
 from homeassistant.util import dt as dt_util
 
-from tests.common import async_fire_time_changed
 from . import MockBridge, async_setup_integration
+
+from tests.common import async_fire_time_changed
 
 
 async def test_battery_sensor_is_attached_to_shade_device(
