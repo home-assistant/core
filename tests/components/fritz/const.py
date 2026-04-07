@@ -13,7 +13,6 @@ from homeassistant.const import (
     CONF_SSL,
     CONF_USERNAME,
 )
-from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.service_info.ssdp import (
     ATTR_UPNP_FRIENDLY_NAME,
     ATTR_UPNP_UDN,
@@ -49,10 +48,15 @@ MOCK_FIRMWARE_AVAILABLE = "7.50"
 MOCK_FIRMWARE_RELEASE_URL = (
     "http://download.avm.de/fritzbox/fritzbox-7530-ax/deutschland/fritz.os/info_de.txt"
 )
+
+# The serial number needs to be in sync with the MAC address of the router
+# because the second is computed from the first one in the code.
 MOCK_SERIAL_NUMBER = "1CED6F123411"
+MOCK_MESH_MASTER_MAC = "1C:ED:6F:12:34:11"
+
 MOCK_FIRMWARE_INFO = [True, "1.1.1", "some-release-url"]
 MOCK_MESH_SSID = "TestSSID"
-MOCK_MESH_MASTER_MAC = dr.format_mac(MOCK_SERIAL_NUMBER)
+
 MOCK_MESH_MASTER_WIFI1_MAC = "1C:ED:6F:12:34:12"
 MOCK_MESH_SLAVE_MAC = "1C:ED:6F:12:34:21"
 MOCK_MESH_SLAVE_WIFI1_MAC = "1C:ED:6F:12:34:22"
