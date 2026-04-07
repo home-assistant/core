@@ -172,16 +172,6 @@ class MatterFan(MatterEntity, FanEntity):
         """Update from device."""
         self._calculate_features()
 
-        # Update speed_count from SpeedMax on every update since SpeedMax can
-        # initially be NullValue and become available or change later.
-        if self._feature_map and self._feature_map & FanControlFeature.kMultiSpeed:
-            speed_max_attr = self.get_matter_attribute_value(
-                clusters.FanControl.Attributes.SpeedMax
-            )
-            speed_max = int(speed_max_attr) if speed_max_attr is not None else 0
-            if speed_max > 0:
-                self._attr_speed_count = speed_max
-
         if self.get_matter_attribute_value(clusters.OnOff.Attributes.OnOff) is False:
             # special case: the appliance has a dedicated Power switch on the OnOff cluster
             # if the mains power is off - treat it as if the fan mode is off
@@ -264,14 +254,24 @@ class MatterFan(MatterEntity, FanEntity):
             return
         self._feature_map = feature_map
         self._attr_supported_features = FanEntityFeature(0)
-        # Reset speed_count to the FanEntity default (100 = 1% steps); updated
-        # in _update_from_device if kMultiSpeed is present and SpeedMax is available.
+        # Reset speed_count to the FanEntity default (100 = 1% steps); re-set below
+        # if kMultiSpeed is present in the current feature map.
         self._attr_speed_count = 100
 
         # NOTE: PercentSetting/PercentCurrent are mandatory on all FanControl clusters
         # per the Matter specification, so enable SET_SPEED unconditionally so the
         # percentage slider is always shown regardless of whether kMultiSpeed is set.
         self._attr_supported_features |= FanEntityFeature.SET_SPEED
+
+        if feature_map & FanControlFeature.kMultiSpeed:
+            # kMultiSpeed devices expose SpeedMax for step granularity.
+            # SpeedMax is a fixed attribute per the Matter spec.
+            speed_max_attr = self.get_matter_attribute_value(
+                clusters.FanControl.Attributes.SpeedMax
+            )
+            speed_max = int(speed_max_attr) if speed_max_attr is not None else 0
+            if speed_max > 0:
+                self._attr_speed_count = speed_max
 
         if feature_map & FanControlFeature.kRocking:
             # NOTE: the Matter model allows that a device can have multiple/different
