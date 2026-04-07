@@ -1111,6 +1111,9 @@
     },
     "device_not_tuya_device": {
       "message": "Device with ID {device_id} is not a Tuya feeder."
+    },
+    "invalid_meal_plan_data": {
+      "message": "Invalid meal plan data provided."
     }
   },
   "selector": {
