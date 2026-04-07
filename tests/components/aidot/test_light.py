@@ -19,10 +19,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import async_init_integration
-from .const import (
-    ENTITY_LIGHT,
-    LIGHT_DOMAIN,
-)
+from .const import ENTITY_LIGHT, LIGHT_DOMAIN
 
 from tests.common import MockConfigEntry, snapshot_platform
 

@@ -121,7 +121,7 @@ def mocked_aidot_client(mocked_device_client: MagicMock) -> MagicMock:
 @pytest.fixture(autouse=True)
 def patch_aidot_client(
     mocked_aidot_client: MagicMock,
-) -> Generator[None, None, None]:
+) -> Generator[None]:
     """Patch AidotClient."""
     with (
         patch(
