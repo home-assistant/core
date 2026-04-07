@@ -24,7 +24,7 @@
     'object_id_base': None,
     'options': dict({
     }),
-    'original_device_class': <CoverDeviceClass.GATE: 'gate'>,
+    'original_device_class': <CoverDeviceClass.DOOR: 'door'>,
     'original_icon': 'mdi:garage',
     'original_name': None,
     'platform': 'fluss',
@@ -39,7 +39,7 @@
 # name: test_covers[cover.device_1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'gate',
+      'device_class': 'door',
       'friendly_name': 'Device 1',
       'icon': 'mdi:garage',
       'is_closed': True,
@@ -78,7 +78,7 @@
     'object_id_base': None,
     'options': dict({
     }),
-    'original_device_class': <CoverDeviceClass.GATE: 'gate'>,
+    'original_device_class': <CoverDeviceClass.DOOR: 'door'>,
     'original_icon': 'mdi:garage-open',
     'original_name': None,
     'platform': 'fluss',
@@ -93,7 +93,7 @@
 # name: test_covers[cover.device_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'gate',
+      'device_class': 'door',
       'friendly_name': 'Device 2',
       'icon': 'mdi:garage-open',
       'is_closed': False,

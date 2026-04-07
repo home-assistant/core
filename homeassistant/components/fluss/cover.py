@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 from typing import Any
 
 from fluss_api import FlussApiClientError
@@ -24,6 +25,8 @@ from .entity import FlussEntity
 
 PARALLEL_UPDATES = 1
 
+STATUS_REFRESH_DELAY = 10  # seconds to wait before polling status after open/close
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -43,7 +46,7 @@ async def async_setup_entry(
 class FlussCover(FlussEntity, CoverEntity):
     """Representation of a Fluss gate/door as a cover."""
 
-    _attr_device_class = CoverDeviceClass.GATE
+    _attr_device_class = CoverDeviceClass.DOOR
     _attr_supported_features = CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE
     _attr_name = None
 
@@ -76,6 +79,11 @@ class FlussCover(FlussEntity, CoverEntity):
             return False
         return None
 
+    async def _async_delayed_refresh(self) -> None:
+        """Wait then refresh coordinator to pick up new status."""
+        await asyncio.sleep(STATUS_REFRESH_DELAY)
+        await self.coordinator.async_request_refresh()
+
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the gate/door."""
         try:
@@ -86,7 +94,7 @@ class FlussCover(FlussEntity, CoverEntity):
                 translation_key="open_failed",
                 translation_placeholders={"error": str(err)},
             ) from err
-        await self.coordinator.async_request_refresh()
+        self.hass.async_create_task(self._async_delayed_refresh())
 
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close the gate/door."""
@@ -98,4 +106,4 @@ class FlussCover(FlussEntity, CoverEntity):
                 translation_key="close_failed",
                 translation_placeholders={"error": str(err)},
             ) from err
-        await self.coordinator.async_request_refresh()
+        self.hass.async_create_task(self._async_delayed_refresh())
