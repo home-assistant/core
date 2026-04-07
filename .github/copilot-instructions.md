@@ -31,3 +31,8 @@ Prefer concrete types (for example, `HomeAssistant`, `MockConfigEntry`, etc.) ov
 ## Good practices
 
 Integrations with Platinum or Gold level in the Integration Quality Scale reflect a high standard of code quality and maintainability. When looking for examples of something, these are good places to start. The level is indicated in the manifest.json of the integration.
+
+
+# Skills
+
+- Home Assistant Integration knowledge: .claude/skills/integrations/SKILL.md
