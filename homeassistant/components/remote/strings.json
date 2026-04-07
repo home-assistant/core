@@ -108,11 +108,11 @@
     },
     "toggle": {
       "description": "Sends the toggle command.",
-      "name": "Remote toggle"
+      "name": "Toggle via remote"
     },
     "turn_off": {
       "description": "Sends the turn off command.",
-      "name": "Remote turn off"
+      "name": "Turn off via remote"
     },
     "turn_on": {
       "description": "Sends the turn on command.",
@@ -122,7 +122,7 @@
           "name": "Activity"
         }
       },
-      "name": "Remote turn on"
+      "name": "Turn on via remote"
     }
   },
   "title": "Remote",
