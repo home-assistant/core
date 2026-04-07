@@ -37,6 +37,8 @@ class EvoEntity(CoordinatorEntity[EvoDataUpdateCoordinator]):
     DHW controller.
     """
 
+    _attr_has_entity_name = True
+
     _evo_device: evo.ControlSystem | evo.HotWater | evo.Zone
     _evo_id_attr: str
     _evo_state_attr_names: tuple[str, ...] = ()
