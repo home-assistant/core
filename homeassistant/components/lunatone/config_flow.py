@@ -52,14 +52,17 @@ class LunatoneConfigFlow(ConfigFlow, domain=DOMAIN):
                 if info_api.serial_number is None:
                     errors["base"] = "missing_device_info"
                 else:
-                    await self.async_set_unique_id(str(info_api.serial_number))
+                    unique_id = str(info_api.serial_number)
+                    if info_api.uid is not None:
+                        unique_id = info_api.uid.replace("-", "")
+                    await self.async_set_unique_id(unique_id)
                     if self.source == SOURCE_RECONFIGURE:
                         self._abort_if_unique_id_mismatch()
                         return self.async_update_reload_and_abort(
                             self._get_reconfigure_entry(), data_updates=data, title=url
                         )
                     self._abort_if_unique_id_configured()
-                    return self.async_create_entry(title=url, data={CONF_URL: url})
+                    return self.async_create_entry(title=url, data=data)
         return self.async_show_form(
             step_id="user",
             data_schema=DATA_SCHEMA,
