@@ -313,10 +313,13 @@ class VictronGXConfigFlow(ConfigFlow, domain=DOMAIN):
                     },
                 )
 
+        suggested_values = user_input or {
+            CONF_SSL: reauth_entry.data.get(CONF_SSL, False),
+        }
         return self.async_show_form(
             step_id="reauth_confirm",
             data_schema=self.add_suggested_values_to_schema(
-                STEP_SSDP_AUTH_DATA_SCHEMA, user_input
+                STEP_SSDP_AUTH_DATA_SCHEMA, suggested_values
             ),
             description_placeholders={"host": reauth_entry.data[CONF_HOST]},
             errors=errors,

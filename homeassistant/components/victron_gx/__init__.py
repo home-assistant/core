@@ -12,7 +12,6 @@ from .hub import Hub, VictronGxConfigEntry
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS: list[Platform] = [
-    Platform.BINARY_SENSOR,
     Platform.SENSOR,
 ]
 

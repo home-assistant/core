@@ -657,5 +657,3 @@ async def test_reauth_flow_error_and_recover(
     assert mock_config_entry.data[CONF_USERNAME] == "new-user"
     assert mock_config_entry.data[CONF_PASSWORD] == "new-password"
     assert mock_config_entry.data[CONF_SSL] is True
-    assert mock_config_entry.data[CONF_USERNAME] == "new-user"
-    assert mock_config_entry.data[CONF_PASSWORD] == "new-password"
