@@ -49,7 +49,7 @@ jobs:
 
       - name: Get information
         id: info
-        uses: home-assistant/actions/helpers/info@master # zizmor: ignore[unpinned-uses]
+        uses: home-assistant/actions/helpers/info@5752577ea7cc5aefb064b0b21432f18fe4d6ba90 # zizmor: ignore[unpinned-uses]
 
       - name: Get version
         id: version
@@ -342,7 +342,7 @@ jobs:
         registry: ["ghcr.io/home-assistant", "docker.io/homeassistant"]
     steps:
       - name: Install Cosign
-        uses: sigstore/cosign-installer@ba7bc0a3fef59531c69a25acd34668d6d3fe6f22 # v4.1.0
+        uses: sigstore/cosign-installer@cad07c2e89fa2edd6e2d7bab4c1aa38e53f76003 # v4.1.1
         with:
           cosign-release: "v2.5.3"
 
