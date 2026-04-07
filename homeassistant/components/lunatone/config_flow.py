@@ -40,7 +40,7 @@ class LunatoneConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle a flow initialized by the user."""
         errors: dict[str, str] = {}
         if user_input is not None:
-            url = user_input[CONF_URL]
+            url = URL(user_input[CONF_URL]).human_repr()[:-1]
             data = {CONF_URL: url}
             self._async_abort_entries_match(data)
             auth_api = Auth(
@@ -77,12 +77,25 @@ class LunatoneConfigFlow(ConfigFlow, domain=DOMAIN):
         self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
         """Handle a flow initialized by zeroconf discovery."""
-        url = URL.build(scheme="http", host=discovery_info.host)
+        url = URL.build(scheme="http", host=discovery_info.host).human_repr()[:-1]
         uid = discovery_info.properties["uid"]
         await self.async_set_unique_id(uid.replace("-", ""))
-        self._abort_if_unique_id_configured(updates={CONF_URL: url.human_repr()})
+        self._abort_if_unique_id_configured(updates={CONF_URL: url})
 
-        self._data[CONF_URL] = url.human_repr()
+        auth_api = Auth(
+            session=async_get_clientsession(self.hass),
+            base_url=url,
+        )
+        info_api = Info(auth_api)
+
+        try:
+            await info_api.async_update()
+        except aiohttp.InvalidUrlClientError:
+            return self.async_abort(reason="invalid_url")
+        except aiohttp.ClientConnectionError:
+            return self.async_abort(reason="cannot_connect")
+
+        self._data[CONF_URL] = url
 
         return await self.async_step_discovery_confirm()
 
@@ -90,12 +103,11 @@ class LunatoneConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Confirm the discovered device."""
-        data = {CONF_URL: self._data[CONF_URL]}
         if user_input is not None:
-            return await self.async_step_user(data)
+            return self.async_create_entry(title=self._data[CONF_URL], data=self._data)
         return self.async_show_form(
             step_id="discovery_confirm",
-            description_placeholders=data,
+            description_placeholders=self._data,
         )
 
     async def async_step_reconfigure(
