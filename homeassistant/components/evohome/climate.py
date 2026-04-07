@@ -209,9 +209,9 @@ class EvoZone(EvoChild, EvoClimateEntity):
         )
 
     @property
-    def name(self) -> str | None:
+    def name(self) -> str:
         """Return the name of the evohome entity."""
-        return self._evo_device.name  # zones can be easily renamed
+        return self._evo_device.name  # zones can be renamed
 
     @property
     def hvac_mode(self) -> HVACMode | None:

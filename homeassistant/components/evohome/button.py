@@ -6,7 +6,7 @@ import evohomeasync2 as evo
 
 from homeassistant.components.button import ButtonEntity
 from homeassistant.const import EntityCategory
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
@@ -119,8 +119,6 @@ class EvoResetZoneButton(EvoResetButtonBase):
         """Initialize the zone reset button."""
         super().__init__(coordinator, evo_device)
 
-        # zone names can change
-        self._attr_name = evo_device.name
         self._attr_translation_placeholders = {"device_name": evo_device.name}
 
         if evo_device.id == evo_device.tcs.id:
@@ -128,3 +126,15 @@ class EvoResetZoneButton(EvoResetButtonBase):
             self._attr_unique_id = f"{evo_device.id}z_reset"
         else:
             self._attr_unique_id = f"{evo_device.id}_reset"
+
+    @property
+    def name(self) -> str:
+        """Return the name of the evohome entity."""
+        return self._evo_device.name  # zones can be renamed
+
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        super()._handle_coordinator_update()
+
+        self._attr_translation_placeholders = {"device_name": self.name}
