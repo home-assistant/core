@@ -71,8 +71,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: GridxConfigEntry) -> boo
     live_coordinator = GridxLiveCoordinator(hass, entry, connector)
     hist_coordinator = GridxHistoricalCoordinator(hass, entry, connector)
 
-    await live_coordinator.async_config_entry_first_refresh()
-    await hist_coordinator.async_config_entry_first_refresh()
+    try:
+        await live_coordinator.async_config_entry_first_refresh()
+        await hist_coordinator.async_config_entry_first_refresh()
+    except Exception:
+        await connector.close()
+        raise
 
     entry.runtime_data = GridxData(
         connector=connector,
