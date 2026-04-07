@@ -12,6 +12,7 @@ from homeassistant.components.mitsubishi_comfort.const import DOMAIN
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+
 from tests.common import MockConfigEntry
 
 MOCK_USERNAME = "test@test.com"
