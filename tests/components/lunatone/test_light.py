@@ -240,7 +240,7 @@ async def test_line_broadcast_line_present(
 
 
 @pytest.mark.parametrize(
-    ("color_temp_kelvin"),
+    "color_temp_kelvin",
     [10000, 5000, 1000],
 )
 async def test_turn_on_with_color_temperature(
@@ -279,7 +279,7 @@ async def test_turn_on_with_color_temperature(
 
 
 @pytest.mark.parametrize(
-    ("rgb_color"),
+    "rgb_color",
     [(255, 128, 0), (0, 255, 128), (128, 0, 255)],
 )
 async def test_turn_on_with_rgb_color(
@@ -320,7 +320,7 @@ async def test_turn_on_with_rgb_color(
 
 
 @pytest.mark.parametrize(
-    ("rgbw_color"),
+    "rgbw_color",
     [(255, 128, 0, 255), (0, 255, 128, 128), (128, 0, 255, 0)],
 )
 async def test_turn_on_with_rgbw_color(
@@ -330,7 +330,7 @@ async def test_turn_on_with_rgbw_color(
     mock_config_entry: MockConfigEntry,
     rgbw_color: tuple[int, int, int, int],
 ) -> None:
-    """Test the RGB color of the light can be set."""
+    """Test the RGBW color of the light can be set."""
     device_id = 5
     entity_id = f"light.device_{device_id}"
 
