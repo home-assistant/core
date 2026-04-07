@@ -49,7 +49,7 @@ async def async_setup_entry(
 
 
 class RenaultSelectEntity[T: KamereonVehicleDataAttributes](
-    RenaultDataEntity[KamereonVehicleChargeModeData], SelectEntity
+    RenaultDataEntity[T], SelectEntity
 ):
     """Mixin for sensor specific attributes."""
 
@@ -66,7 +66,7 @@ class RenaultSelectEntity[T: KamereonVehicleDataAttributes](
 
 
 SENSOR_TYPES: tuple[RenaultSelectEntityDescription, ...] = (
-    RenaultSelectEntityDescription(
+    RenaultSelectEntityDescription[KamereonVehicleChargeModeData](
         key="charge_mode",
         coordinator="charge_mode",
         translation_key="charge_mode",
