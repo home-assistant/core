@@ -6,6 +6,6 @@ CONF_INSTALLATION_ID = "installation_id"
 CONF_MODEL = "model"
 CONF_SERIAL = "serial"
 
-# Not using GenericOnOff as some binary sensors use different enums.
-# It has to have id "on" to be on and "off" to be off.
-SWITCH_ON_ID = "on"
+# Binary sensor enum ids must be "on" for on and "off" for off.
+BINARY_SENSOR_ON_ID = "on"
+BINARY_SENSOR_OFF_ID = "off"

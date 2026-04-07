@@ -18,7 +18,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import SWITCH_ON_ID
+from .const import BINARY_SENSOR_OFF_ID, BINARY_SENSOR_ON_ID
 from .entity import VictronBaseEntity
 from .hub import VictronGxConfigEntry
 
@@ -76,8 +76,10 @@ class VictronBinarySensor(VictronBaseEntity, BinarySensorEntity):
     @staticmethod
     def _is_on(value: Any) -> bool | None:
         """Convert a Victron binary sensor enum value to a boolean."""
-        return (
-            value.id == SWITCH_ON_ID
-            if value is not None and isinstance(value, VictronEnum)
-            else None
-        )
+        if value is None or not isinstance(value, VictronEnum):
+            return None
+        if value.id == BINARY_SENSOR_ON_ID:
+            return True
+        if value.id == BINARY_SENSOR_OFF_ID:
+            return False
+        return None
