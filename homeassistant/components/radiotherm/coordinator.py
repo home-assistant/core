@@ -46,11 +46,15 @@ class RadioThermUpdateCoordinator(DataUpdateCoordinator[RadioThermUpdate]):
         try:
             return await async_get_data(self.hass, self.init_data.tstat)
         except RadiothermTstatError as ex:
-            msg = f"{self._description} was busy (invalid value returned): {ex}"
-            raise UpdateFailed(msg) from ex
+            _LOGGER.warning(
+                "%s was busy (invalid value returned): %s", self._description, ex
+            )
         except TimeoutError as ex:
-            msg = f"{self._description}) timed out waiting for a response: {ex}"
-            raise UpdateFailed(msg) from ex
+            _LOGGER.warning(
+                "%s timed out waiting for a response: %s", self._description, ex
+            )
         except (OSError, URLError) as ex:
-            msg = f"{self._description} connection error: {ex}"
-            raise UpdateFailed(msg) from ex
+            _LOGGER.error("%s connection error: %s", self._description, ex)
+
+        # If an error was raised, then pass the current state back.
+        return self.data
