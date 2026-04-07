@@ -284,9 +284,7 @@ class VictronGXConfigFlow(ConfigFlow, domain=DOMAIN):
             description_placeholders={CONF_HOST: self.hostname},
         )
 
-    async def async_step_reauth(
-        self, _: Mapping[str, Any]
-    ) -> ConfigFlowResult:
+    async def async_step_reauth(self, _: Mapping[str, Any]) -> ConfigFlowResult:
         """Handle reauthentication."""
         return await self.async_step_reauth_confirm()
 
