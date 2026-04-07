@@ -320,8 +320,9 @@ class VictronGXConfigFlow(ConfigFlow, domain=DOMAIN):
                     data_updates=updates,
                 )
 
-        suggested_values = user_input or {
+        suggested_values = {
             CONF_SSL: reauth_entry.data.get(CONF_SSL, False),
+            **(user_input or {}),
         }
         return self.async_show_form(
             step_id="reauth_confirm",
