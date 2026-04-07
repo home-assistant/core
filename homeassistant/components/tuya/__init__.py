@@ -142,9 +142,9 @@ def _migrate_entity_unique_ids(
         old_prefix = f"tuya.{tuya_device_id}"
         if not entity_entry.unique_id.startswith(old_prefix):
             continue
-        old_suffix = entity_entry.unique_id[len(old_prefix) :]
+
         new_unique_id = tuya_device_id
-        if old_suffix:
+        if old_suffix := entity_entry.unique_id[len(old_prefix) :]:
             new_unique_id += f".{old_suffix}"
         entity_registry.async_update_entity(
             entity_entry.entity_id, new_unique_id=new_unique_id
