@@ -1,5 +1,7 @@
 """Tests for the HiVi Speaker config flow."""
 
+from __future__ import annotations
+
 import logging
 from unittest.mock import AsyncMock, patch
 
@@ -57,9 +59,7 @@ async def test_second_flow_aborts_when_unique_id_configured(
     with patch(
         "homeassistant.helpers.translation.async_get_translations",
         new_callable=AsyncMock,
-        return_value={
-            "config.abort.already_configured": "Already configured."
-        },
+        return_value={"config.abort.already_configured": "Already configured."},
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,

@@ -58,7 +58,10 @@ async def test_setup_entry(
 
     assert DOMAIN in hass.data
     assert config_entry.entry_id in hass.data[DOMAIN]
-    assert hass.data[DOMAIN][config_entry.entry_id]["device_manager"] is mock_device_manager
+    assert (
+        hass.data[DOMAIN][config_entry.entry_id]["device_manager"]
+        is mock_device_manager
+    )
 
 
 async def test_unload_entry(

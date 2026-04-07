@@ -7,6 +7,10 @@ from unittest.mock import MagicMock
 import pytest
 
 from homeassistant.components.hivi_speaker.const import DOMAIN
+from homeassistant.components.hivi_speaker.switch import (
+    HIVISlaveControlSwitch,
+    async_setup_entry,
+)
 from homeassistant.components.hivi_speaker.switch_hub import HIVISlaveControlSwitchHub
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -45,8 +49,6 @@ async def test_switch_setup_entry(
         "device_manager": mock_device_manager,
     }
 
-    from homeassistant.components.hivi_speaker.switch import async_setup_entry
-
     async_add_entities: AddEntitiesCallback = MagicMock()
 
     await async_setup_entry(hass, config_entry, async_add_entities)
@@ -63,7 +65,6 @@ async def test_switch_entity_available_and_attributes(
     mock_device_manager: MagicMock,
 ) -> None:
     """Test switch entity: available and extra_state_attributes when master device exists."""
-    from homeassistant.components.hivi_speaker.switch import HIVISlaveControlSwitch
     master_id = "master-udn-1"
     slave_id = "slave-udn-2"
     master_device_dict = {
@@ -114,7 +115,6 @@ async def test_switch_entity_unavailable_when_no_master(
     mock_device_manager: MagicMock,
 ) -> None:
     """Test switch entity: available is False when master device is not in registry."""
-    from homeassistant.components.hivi_speaker.switch import HIVISlaveControlSwitch
     mock_device_manager.device_data_registry.get_device_dict_by_speaker_device_id = (
         MagicMock(return_value=None)
     )
