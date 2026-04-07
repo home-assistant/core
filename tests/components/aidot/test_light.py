@@ -171,9 +171,7 @@ async def test_coordinator_auth_failed(
     """Test coordinator handles auth failure during update."""
     await async_init_integration(hass, mock_config_entry)
 
-    mocked_aidot_client.async_get_all_device = AsyncMock(
-        side_effect=AidotAuthFailed()
-    )
+    mocked_aidot_client.async_get_all_device = AsyncMock(side_effect=AidotAuthFailed())
     freezer.tick(UPDATE_DEVICE_LIST_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
