@@ -319,13 +319,11 @@ class VictronGXConfigFlow(ConfigFlow, domain=DOMAIN):
                 )
 
         suggested_values = {
-            **(user_input or {}),
-            CONF_SSL: (
-                user_input[CONF_SSL]
-                if user_input is not None and CONF_SSL in user_input
-                else reauth_entry.data.get(CONF_SSL, False)
-            ),
+            CONF_USERNAME: reauth_entry.data.get(CONF_USERNAME, None),
+            CONF_SSL: reauth_entry.data.get(CONF_SSL, False),
         }
+        if user_input is not None:
+            suggested_values.update(user_input)
         return self.async_show_form(
             step_id="reauth_confirm",
             data_schema=self.add_suggested_values_to_schema(
