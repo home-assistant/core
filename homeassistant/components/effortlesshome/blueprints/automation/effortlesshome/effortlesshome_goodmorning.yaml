@@ -1,0 +1,64 @@
+blueprint:
+  name: Good Morning
+  description: At morning, disarm alarm and turn off sleeping sensor
+  domain: automation
+  author: EffortlessHome
+  input:
+    goodmorning_time:
+      name: What time of the day will goodmorning run
+      description: The time of day when this will run each day.
+      default: "07:00:00"
+      selector:
+        time: {}
+
+    securityalarm:
+      name: Security Alarm
+      description: The security alarm to disarm
+      default: alarm_control_panel.effortlesshome
+      selector:
+        entity:
+          filter:
+            - domain:
+                - alarm_control_panel
+          multiple: false
+    additional_actions:
+      name: Additional Actions
+      description: Add additional actions to execute (Optional)
+      default: []
+      selector:
+        action: {}
+    conditions:
+      name: Conditions
+      description: List of conditions that must be true for this automation to run. Each condition is a Home Assistant condition block. By default, checks that binary_sensor.someone_home_sensor is on.
+      default:
+        - condition: or
+          conditions:
+            - condition: state
+              entity_id: binary_sensor.someone_home_sensor
+              state: "on"
+            - condition: state
+              entity_id: switch.presence_simulation
+              state: "on"
+      selector:
+        condition: {}
+trigger:
+  - platform: time
+    at: !input goodmorning_time
+condition:
+  !input conditions
+action:
+  - action: switch.turn_off
+    metadata: {}
+    data: {}
+    target:
+      entity_id: switch.sleep_mode
+  - delay:
+      hours: 0
+      minutes: 1
+      seconds: 0
+      milliseconds: 0
+  - service: alarm_control_panel.alarm_disarm
+    data:
+      entity_id: !input securityalarm
+  - choose: []
+    default: !input additional_actions

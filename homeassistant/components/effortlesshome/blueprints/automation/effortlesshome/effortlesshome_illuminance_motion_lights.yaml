@@ -1,0 +1,135 @@
+blueprint:
+  name: Motion-activated Light with Illuminance
+  description:
+    Turn on a light when motion is detected and illuminance is below a
+    set Lux level. The light will dim before it is turned off to signal that it has
+    not detected motion in quite a while. There is also two timers, on for daytime
+    and one for nighttime. 
+  domain: automation
+  author: EffortlessHome
+  input:
+    motion_entity:
+      name: Motion Sensor
+      selector:
+        entity:
+          domain:
+            - binary_sensor
+            - group
+          multiple: false
+    lux_entity:
+      name: Illuminance Sensor
+      selector:
+        entity:
+          domain:
+            - sensor
+          #device_class:
+          #  - illuminance
+          multiple: false
+    lux_level:
+      name: Illuminance level
+      description:
+        If lux is below this value and motion is detected, the light will
+        turn on.
+      default: 100
+      selector:
+        number:
+          min: 0.0
+          max: 1000.0
+          step: 1.0
+          mode: slider
+    light_target:
+      name: Light
+      selector:
+        target:
+          entity:
+            - domain:
+                - light
+
+    no_motion_wait:
+      name: Wait time
+      description: Time to leave the light on after last motion is detected
+      default: 120
+      selector:
+        number:
+          min: 0.0
+          max: 600.0
+          unit_of_measurement: seconds
+          step: 1.0
+          mode: slider
+
+    wait_for_clear:
+      name: Wait for motion to clear
+      description: Wait for the motion sensor to return to 'off' state before turning off the light. Prevents re-triggering with sensitive sensors like cameras.
+      default: true
+      selector:
+        boolean: {}
+
+    conditions:
+      name: Conditions
+      description: List of conditions that must be true for this automation to run. Each condition is a Home Assistant condition block. By default, checks that binary_sensor.sleeping_sensor is off.
+      default:
+        - condition: state
+          entity_id: binary_sensor.sleeping_sensor
+          state: "off"
+      selector:
+        condition: {}
+
+    additional_actions:
+      name: Additional Actions
+      description: Add additional actions to execute (Optional)
+      default: []
+      selector:
+        action: {}
+
+mode: restart
+max_exceeded: silent
+
+trigger:
+  platform: state
+  entity_id: !input motion_entity
+  from: "off"
+  to: "on"
+
+action:
+
+  - choose:
+      - conditions:
+          - condition: numeric_state
+            entity_id: !input lux_entity
+            below: !input lux_level
+          - condition: and
+            conditions: !input conditions
+        sequence:
+          - service: light.turn_on
+            target: !input light_target
+
+         # - data:
+         #     scene_id: before_action_state
+         #     snapshot_entities:
+         #       - !input light_target
+         #   action: scene.create
+
+          - wait_for_trigger:
+              - entity_id: !input motion_entity
+                to: "off"
+                trigger: state
+                for: !input no_motion_wait
+
+          #dim the light before turning it off to signal that it has not detected motion in quite a while
+          #- service: light.turn_on
+          #  data:
+          #    brightness_pct: 20
+          #  target: !input light_target
+
+          #- delay: "00:00:05"
+
+          #- target:
+          #    entity_id: scene.before_action_state
+          #  action: scene.turn_on
+
+          - service: homeassistant.turn_off
+            target: !input light_target
+
+          - choose: []
+            default: !input additional_actions            
+    default: []

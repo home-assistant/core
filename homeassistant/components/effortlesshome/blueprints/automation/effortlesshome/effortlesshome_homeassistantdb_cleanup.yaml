@@ -1,0 +1,40 @@
+blueprint:
+  name: Home Assistant DB Cleanup
+  description:
+    Actions to take and timing for the Home Assistant Database Cleanup.
+    This includes steps such as sensor history to retain. Maintenance is required
+    to keep optimized performance.
+  domain: automation
+  author: EffortlessHome
+  input:
+    execution_time:
+      name: What time of the day will the Maintenance Job run
+      description:
+        The time of day when this will run each day. Strongly recommend
+        during a low usage time.
+      selector:
+        time: {}
+    age_sensor:
+      name: Age Sensor
+      description: The sensor that provides the age of items to keep.
+      default: sensor.config_dayshistorytokeep
+      selector:
+        entity:
+          domain: sensor
+    additional_actions:
+      name: Additional Actions
+      description: Add additional actions to execute (Optional)
+      default: []
+      selector:
+        action: {}
+trigger:
+  - platform: time
+    at: !input execution_time
+condition: []
+action:
+  - service: recorder.purge
+    data:
+      keep_days: !input age_sensor
+      repack: true
+  - choose: []
+    default: !input additional_actions

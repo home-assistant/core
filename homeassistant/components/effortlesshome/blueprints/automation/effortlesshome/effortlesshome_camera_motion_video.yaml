@@ -1,0 +1,109 @@
+blueprint:
+  name: Camera Motion Video Capture
+  description:
+    This automation blueprint creates a camera video if motion is detected,
+    or if a binary sensor's state turns 'off' to 'on', and sends a notification with the video clip. Clicking the navigation will navigate to dashboard
+    URL.
+  domain: automation
+  author: EffortlessHome
+  input:
+    sensor:
+      name: Motion or Binary Sensor
+      description: The sensor wich triggers the Video creation
+      selector:
+        entity:
+          domain:
+            - binary_sensor
+          multiple: false
+    camera:
+      name: Camera
+      description: The camera which creates the video capture
+      selector:
+        entity:
+          domain:
+            - camera
+          multiple: false
+
+    video_length:
+      name: Video Length
+      description: The length of the video to capture on motion (in seconds).
+      default: 5
+      selector:
+        number:
+          min: 1
+          max: 3000
+          unit_of_measurement: seconds
+          step: 1
+          mode: slider
+
+    notification_title:
+      name: Notification title
+      description: 'Default: "Motion detected!"'
+      default: Motion detected!
+    notification_message:
+      name: Notification message
+      description: 'Default: "{{ sensor_name }} detected movement! Video from {{
+        camera_name }} at {{ time }}."'
+      default: "{{ sensor_name }} detected movement! Video from {{ camera_name
+        }} at {{ time }}."
+
+    additional_actions:
+      name: Additional Actions
+      description: Add additional actions to execute (Optional)
+        else.
+      default: []
+      selector:
+        action: {}
+
+trigger:
+  - platform: state
+    entity_id: !input sensor
+    to: "on"
+
+variables:
+  sensor: !input sensor
+  sensor_name: "{{ states[sensor].name }}"
+
+  camera: !input camera
+  camera_name: "{{ states[camera].name }}"
+
+  time: '{{ now().strftime("%H:%M") }}'
+  date: '{{ now().strftime("%Y-%m-%d") }}'
+
+  notification_title: !input notification_title
+  notification_message: !input notification_message
+
+  snapshot_create_file_path: /media/snapshots/{{ camera_name }}/{{
+    now().strftime("%Y%m%d-%H%M%S") }}.mp4
+  snapshot_access_file_path:
+    "{{ snapshot_create_file_path | replace('/media','/media/local')
+    }}"
+
+  additional_actions: !input additional_actions
+
+action:
+  - service: camera.record
+    metadata: {}
+    data:
+      duration: !input video_length
+      lookback: 0
+      filename: "{{ snapshot_create_file_path }}"
+    target:
+      entity_id: !input camera
+
+  - condition: state
+    entity_id: switch.motion_notifications
+    state: "on"
+
+  - service: notify.effortlesshome
+    data:
+      title: !input notification_title
+      message: !input notification_message
+      data:
+        video: "{{ snapshot_access_file_path }}"
+        attachment:
+          url: "{{ snapshot_access_file_path }}"
+
+  - choose: []
+    default: !input additional_actions
+mode: parallel

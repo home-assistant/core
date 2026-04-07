@@ -1,0 +1,49 @@
+blueprint:
+  name: Carbon Monoxide Alarm Triggered
+  description: Set the actions to take when a carbon monoxide alarm is triggered
+  domain: automation
+  author: EffortlessHome
+  input:
+    carbonmonoxidealarm:
+      name: Carbon Monoxide Alarm Sensor
+      description: The triggering carbon monoxide alarm sensor(s)
+      default: binary_sensor.carbon_monoxide_group_sensor
+      selector:
+        entity:
+          filter:
+            - domain:
+                - binary_sensor
+                - group
+          multiple: true
+
+    notification_message:
+      name: Notification message
+      description: Carbon Monoxide Alarm Message
+      default: Carbon Monoxide Alarm Activated. Get to Safety and Check for CO immediately.
+    additional_actions:
+      name: Additional Actions After
+      description: Add additional actions to execute (Optional)
+      default: []
+      selector:
+        action: {}
+
+trigger:
+  - platform: state
+    entity_id: !input carbonmonoxidealarm
+    to: "On"
+action:
+
+  - service: notify.effortlesshome
+    data:
+      title: "Carbon Monoxide Alarm"
+      message: !input notification_message
+      data:
+        priority: high
+  - service: effortlesshome.create_alert_service
+    data:
+      alert_type: "Carbon Monoxide Alarm"
+      alert_description: !input notification_message
+      status: Active
+      
+  - choose: []
+    default: !input additional_actions

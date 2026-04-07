@@ -1,0 +1,52 @@
+{
+  "domain": "effortlesshome",
+  "name": "EffortlessHome",
+  "after_dependencies": [
+    "light",
+    "button",
+    "group",
+    "binary_sensor",
+    "sensor",
+    "mqtt",
+    "notify",
+    "assist_pipeline",
+    "intent"
+  ],
+  "codeowners": [
+    "@effortlesshome"
+  ],
+  "config_flow": true,
+  "dependencies": [
+    "http",
+    "panel_custom",
+    "recorder",
+    "light",
+    "button",
+    "group",
+    "binary_sensor",
+    "sensor",
+    "conversation"
+  ],
+  "documentation": "https://github.com/EffortlessHome/EffortlessHome",
+  "integration_type": "hub",
+  "iot_class": "cloud_polling",
+  "issue_tracker": "https://github.com/EffortlessHome/EffortlessHome/issues",
+  "loggers": [
+    "effortlesshome"
+  ],
+  "requirements": [
+    "oasira>=0.2.12",
+    "gcal-sync>=6.2.0",
+    "oauth2client>=4.1.3",
+    "google-auth>=2.28.0",
+    "google-auth-oauthlib>=1.2.0",
+    "google-auth-httplib2>=0.2.0",
+    "google-api-python-client>=2.126.0",
+    "gTTS>=2.5.0",
+    "google-genai==1.29.0",
+    "influxdb-client>=1.48.0",
+    "aiohttp",
+    "pyjwt"
+  ],
+  "version": "2.0.8"
+}

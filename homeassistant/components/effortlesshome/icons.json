@@ -1,0 +1,12 @@
+{
+  "entity": {
+    "light": {
+      "default": "mdi:ceiling-light-multiple-outline"
+    }
+  },
+  "entity_component": {
+    "light": {
+      "default": "mdi:ceiling-light-multiple-outline"
+    }
+  }
+}

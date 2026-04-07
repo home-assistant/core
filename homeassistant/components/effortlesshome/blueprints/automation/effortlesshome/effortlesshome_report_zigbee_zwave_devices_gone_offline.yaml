@@ -1,0 +1,73 @@
+blueprint:
+  name: Report offline smart devices
+  description: Works with Smart Plugs, ZWave, Zigbee etc.
+  domain: automation
+  author: EffortlessHome
+  input:
+    time:
+      name: Time to test on
+      description: Test is run at configured time
+      default: "10:00:00"
+      selector:
+        time: {}
+    exclude:
+      name: Excluded Sensors
+      description:
+        Battery sensors (e.g. smartphone) to exclude from detection. Only
+        entities are supported, devices must be expanded!
+      default:
+        entity_id: []
+      selector:
+        target:
+          entity:
+            - device_class:
+                - battery
+                - switch
+                - sensor
+                - lock
+                - light
+                - binary_sensor
+             
+    additional_actions:
+      name: Additional Actions
+      description: Add additional actions to execute (Optional)
+      default: []
+      selector:
+        action: {}
+
+variables:
+  exclude: !input exclude
+  offline_devices:
+    "{% set result = namespace(offline_devices=[]) %} {% for sensor
+    in states.sensor | selectattr('attributes.device_class', 'defined') | selectattr('attributes.device_class',
+    '==', 'battery') %}\n  {% if \"unavailable\" in sensor | string  and not sensor.entity_id
+    in exclude.entity_id %}\n    {% set result.offline_devices = result.offline_devices
+    + [device_attr(device_id(sensor.entity_id), \"name\")] %}\n  {% endif %}\n{% endfor
+    %} {% for binary_sensor in states.binary_sensor | selectattr('attributes.device_class',
+    'defined') | selectattr('attributes.device_class', '==', 'battery') %}\n  {% if
+    \"unavailable\" in binary_sensor | string and not binary_sensor.entity_id in exclude.entity_id
+    %}\n    {% set result.offline_devices = result.offline_devices + [device_attr(device_id(binary_sensor.entity_id),
+    \"name\")] %}\n  {% endif %}\n{% endfor %} {% for switch in states.switch | selectattr('state','eq','unavailable')
+    %}\n  {% if switch.entity_id not in exclude.entity_id %}\n    {% set result.offline_devices
+    = result.offline_devices + [device_attr(device_id(switch.entity_id), \"name\")]
+    %}\n  {% endif %}\n{% endfor %} {{result.offline_devices|sort|unique|join('\\n')}}"
+trigger:
+  - platform: time
+    at: !input time
+condition:
+  - "{{ offline_devices != '' }}"
+
+action:
+  - service: notify.effortlesshome
+    data:
+      message: 'Offline device(s) detected: {{ offline_devices }}'
+
+  - service: effortlesshome.create_alert_service
+    data:
+      alert_type: Offline device(s)
+      alert_description: Offline device(s) detected
+      status: Active
+  - choose: []
+    default: !input additional_actions
+
+mode: single

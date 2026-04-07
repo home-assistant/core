@@ -1,0 +1,69 @@
+blueprint:
+  name: Arrive Home
+  description: Set the actions to take when the first person to arrive home arrives
+  domain: automation
+  author: EffortlessHome
+  input:
+    trigger:
+      name: Arrival Trigger
+      description: The sensor that indicates someone has arrived home
+      default: binary_sensor.someone_home_sensor
+      selector:
+        entity:
+          domain:
+            - binary_sensor
+    on_target:
+      name: Lights and switches to turn on
+      description: Turn on these lights and switches (optional)
+      default: light.all_lights
+      selector:
+        target:
+          entity:
+            - domain:
+                - light
+                - switch
+    securityalarm:
+      name: Security Alarm
+      description: The security alarm to disarm
+      default: alarm_control_panel.effortlesshome
+      selector:
+        entity:
+          filter:
+            - domain:
+                - alarm_control_panel
+          multiple: false
+    doorlock:
+      name: Door Lock
+      description: The door lock to unlock
+      selector:
+        entity:
+          filter:
+            - domain:
+                - lock
+          multiple: false
+    additional_actions:
+      name: Additional Actions
+      description: Add additional actions to execute (Optional)
+      default: []
+      selector:
+        action: {}
+trigger:
+  - platform: state
+    entity_id: !input trigger
+    from: "off"
+    to: "on"
+action:
+  - service: alarm_control_panel.alarm_disarm
+    data:
+      entity_id: !input securityalarm
+  - service: lock.unlock
+    target:
+      entity_id: !input doorlock
+  - condition: sun
+    before: sunrise
+    after: sunset
+  - service: homeassistant.turn_on
+    data: {}
+    target: !input on_target
+  - choose: []
+    default: !input additional_actions

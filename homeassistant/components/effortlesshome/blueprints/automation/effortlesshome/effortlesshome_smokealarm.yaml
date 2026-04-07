@@ -1,0 +1,46 @@
+blueprint:
+  name: Smoke Alarm Triggered
+  description: Set the actions to take when a smoke alarm is triggered
+  domain: automation
+  author: EffortlessHome
+  input:
+    smokealarm:
+      name: Smoke Alarm Sensor
+      description: The triggering smoke alarm sensor(s)
+      default: binary_sensor.smoke_group_sensor
+      selector:
+        entity:
+          filter:
+            - domain:
+                - binary_sensor
+                - group
+          multiple: true
+
+    notification_message:
+      name: Notification message
+      description: Smoke Detector Activated Message
+      default: Smoke Alarm Activated. Check for fire immediately.
+
+    additional_actions:
+      name: Additional Actions
+      description: Add additional actions to execute (Optional)
+      default: []
+      selector:
+        action: {}
+trigger:
+  - platform: state
+    entity_id: !input smokealarm
+    to: "on"
+action:
+  - service: notify.effortlesshome
+    data:
+      message: !input notification_message
+      title: Smoke Alarm Activated
+
+  - service: effortlesshome.create_alert_service
+    data:
+      alert_type: Smoke Alarm Activated
+      alert_description: !input notification_message
+      status: Active
+  - choose: []
+    default: !input additional_actions
