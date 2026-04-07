@@ -11,7 +11,6 @@ from chip.clusters.ClusterObjects import ClusterAttributeDescriptor, ClusterComm
 from chip.clusters.Types import Nullable
 from matter_server.common.custom_clusters import HeimanCluster
 
-
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory, Platform
