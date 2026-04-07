@@ -68,10 +68,14 @@
         "sections": {
           "advanced_options": {
             "data": {
-              "availability": "[%key:component::template::common::availability%]"
+              "availability": "[%key:component::template::common::availability%]",
+              "delay_on": "Delay on",
+              "delay_off": "Delay off"
             },
             "data_description": {
-              "availability": "[%key:component::template::common::availability_description%]"
+              "availability": "[%key:component::template::common::availability_description%]",
+              "delay_on": "The amount of time the template state must be met before this sensor's state changes to on.",
+              "delay_off": "The amount of time the template state must be unmet before this sensor's state changes to off."
             },
             "name": "[%key:component::template::common::advanced_options%]"
           }
@@ -619,10 +623,14 @@
         "sections": {
           "advanced_options": {
             "data": {
-              "availability": "[%key:component::template::common::availability%]"
+              "availability": "[%key:component::template::common::availability%]",
+              "delay_on": "[%key:component::template::config::step::binary_sensor::sections::advanced_options::data::delay_on%]",
+              "delay_off": "[%key:component::template::config::step::binary_sensor::sections::advanced_options::data::delay_off%]"
             },
             "data_description": {
-              "availability": "[%key:component::template::common::availability_description%]"
+              "availability": "[%key:component::template::common::availability_description%]",
+              "delay_on": "[%key:component::template::config::step::binary_sensor::sections::advanced_options::data_description::delay_on%]",
+              "delay_off": "[%key:component::template::config::step::binary_sensor::sections::advanced_options::data_description::delay_off%]"
             },
             "name": "[%key:component::template::common::advanced_options%]"
           }
