@@ -117,7 +117,7 @@ async def test_setting_level(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert len(mocks) == 4
+    assert len(mocks) == 5
 
     assert len(mocks[""].orig_setLevel.mock_calls) == 1
     assert mocks[""].orig_setLevel.mock_calls[0][1][0] == LOGSEVERITY["WARNING"]
@@ -133,6 +133,8 @@ async def test_setting_level(hass: HomeAssistant) -> None:
         mocks["test.child.child"].orig_setLevel.mock_calls[0][1][0]
         == LOGSEVERITY["WARNING"]
     )
+
+    assert len(mocks["homeassistant.components.logger"].orig_setLevel.mock_calls) == 0
 
     # Test set default level
     with patch("logging.getLogger", mocks.__getitem__):
@@ -150,7 +152,7 @@ async def test_setting_level(hass: HomeAssistant) -> None:
             {"test.child": "info", "new_logger": "notset"},
             blocking=True,
         )
-    assert len(mocks) == 5
+    assert len(mocks) == 6
 
     assert len(mocks["test.child"].orig_setLevel.mock_calls) == 2
     assert mocks["test.child"].orig_setLevel.mock_calls[1][1][0] == LOGSEVERITY["INFO"]
