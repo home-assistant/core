@@ -19,6 +19,10 @@ from .const import CONF_OEM, DOMAIN, LOGGER, SUPPORTED_OEMS
 UNEXPECTED_AUTH_ERRORS = (RuntimeError, TypeError, ValueError)
 
 
+class _NoSystemsFoundError(Exception):
+    """Raised when authentication succeeds but no GridX systems are found."""
+
+
 async def _validate_credentials(
     hass: HomeAssistant,
     oem: str,
@@ -49,7 +53,7 @@ async def _validate_credentials(
         await connector.close()
 
     if not data:
-        raise ConnectionError("No systems found for this account")
+        raise _NoSystemsFoundError
 
 
 class GridxConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -84,6 +88,8 @@ class GridxConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "cannot_connect"
             except ConnectionError, TimeoutError, OSError:
                 errors["base"] = "cannot_connect"
+            except _NoSystemsFoundError:
+                errors["base"] = "no_systems"
             except UNEXPECTED_AUTH_ERRORS:
                 LOGGER.exception("Unexpected error during GridX credential validation")
                 errors["base"] = "unknown"
@@ -143,6 +149,8 @@ class GridxConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "cannot_connect"
             except ConnectionError, TimeoutError, OSError:
                 errors["base"] = "cannot_connect"
+            except _NoSystemsFoundError:
+                errors["base"] = "no_systems"
             except UNEXPECTED_AUTH_ERRORS:
                 LOGGER.exception("Unexpected error during GridX re-authentication")
                 errors["base"] = "unknown"
@@ -189,6 +197,8 @@ class GridxConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "cannot_connect"
             except ConnectionError, TimeoutError, OSError:
                 errors["base"] = "cannot_connect"
+            except _NoSystemsFoundError:
+                errors["base"] = "no_systems"
             except UNEXPECTED_AUTH_ERRORS:
                 LOGGER.exception("Unexpected error during GridX reconfiguration")
                 errors["base"] = "unknown"
