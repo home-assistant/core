@@ -20,5 +20,13 @@
         }
       }
     }
+  },
+  "exceptions": {
+    "communication_error": {
+      "message": "Error communicating with {device_name}"
+    },
+    "update_failed": {
+      "message": "{device_name} returned no data"
+    }
   }
 }

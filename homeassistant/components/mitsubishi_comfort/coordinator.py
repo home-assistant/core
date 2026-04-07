@@ -37,7 +37,15 @@ class MitsubishiComfortCoordinator(DataUpdateCoordinator[IndoorUnit | KumoStatio
         try:
             success = await self.device.update_status()
         except Exception as err:
-            raise UpdateFailed(f"Error communicating with {self.device.name}") from err
+            raise UpdateFailed(
+                translation_domain="mitsubishi_comfort",
+                translation_key="communication_error",
+                translation_placeholders={"device_name": self.device.name},
+            ) from err
         if not success:
-            raise UpdateFailed(f"Device {self.device.name} returned no data")
+            raise UpdateFailed(
+                translation_domain="mitsubishi_comfort",
+                translation_key="update_failed",
+                translation_placeholders={"device_name": self.device.name},
+            )
         return self.device
