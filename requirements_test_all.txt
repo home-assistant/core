@@ -2452,7 +2452,7 @@ satel-integra==1.0.0
 screenlogicpy==0.10.2
 
 # homeassistant.components.backup
-securetar==2026.2.0
+securetar==2026.4.0
 
 # homeassistant.components.emulated_kasa
 # homeassistant.components.sense
