@@ -16,7 +16,7 @@ from deebot_client.mqtt_client import MqttClient, create_mqtt_config
 from deebot_client.util import md5
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFlow
 from homeassistant.const import CONF_COUNTRY, CONF_MODE, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import aiohttp_client, selector
@@ -24,12 +24,14 @@ from homeassistant.helpers.typing import VolDictType
 from homeassistant.util.ssl import get_default_no_verify_context
 
 from .const import (
+    CONF_CAMERA_PINS,
     CONF_OVERRIDE_MQTT_URL,
     CONF_OVERRIDE_REST_URL,
     CONF_VERIFY_MQTT_CERTIFICATE,
     DOMAIN,
     InstanceMode,
 )
+from .kvs_api import encode_pin
 from .util import get_client_device_id
 
 _LOGGER = logging.getLogger(__name__)
@@ -135,6 +137,11 @@ class EcovacsConfigFlow(ConfigFlow, domain=DOMAIN):
 
     _mode: InstanceMode = InstanceMode.CLOUD
 
+    @staticmethod
+    def async_get_options_flow(config_entry: Any) -> OptionsFlow:
+        """Return the options flow."""
+        return EcovacsOptionsFlowHandler()
+
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -216,4 +223,92 @@ class EcovacsConfigFlow(ConfigFlow, domain=DOMAIN):
             ),
             errors=errors,
             last_step=True,
+        )
+
+
+def _device_pin_field_key(device_info: dict) -> str:
+    """Return a unique schema field key for a device PIN input.
+
+    Format: "Name [full-did] (PIN camera)" — the full DID guarantees
+    uniqueness even when two devices share the same display name.
+    """
+    label = (
+        device_info.get("nick")
+        or device_info.get("deviceName")
+        or device_info.get("name")
+        or ""
+    )
+    did = device_info["did"]
+    base = f"{label} [{did}]" if label else did
+    return f"{base} (PIN camera)"
+
+
+class EcovacsOptionsFlowHandler(OptionsFlow):
+    """Handle Ecovacs options — camera PIN per device."""
+
+    # Sentinel shown in the PIN field when a PIN is already configured.
+    # If the user submits this value unchanged, the existing PIN is preserved.
+    _PIN_ALREADY_SET = "••••••••"
+
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Entry point: delegate to the camera_pins step."""
+        return await self.async_step_camera_pins(user_input)
+
+    async def async_step_camera_pins(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Manage camera PIN options."""
+        controller = self.config_entry.runtime_data
+        devices = controller.devices
+        current_pins: dict[str, str] = self.config_entry.options.get(
+            CONF_CAMERA_PINS, {}
+        )
+
+        # Build a stable mapping: display_key → did.
+        key_to_did: dict[str, str] = {
+            _device_pin_field_key(d.device_info): d.device_info["did"] for d in devices
+        }
+
+        if user_input is not None:
+            errors: dict[str, str] = {}
+            new_pins: dict[str, str] = {}
+            for field_key, did in key_to_did.items():
+                raw_pin = (user_input.get(field_key) or "").strip()
+                if raw_pin and raw_pin != self._PIN_ALREADY_SET:
+                    if not raw_pin.isdigit():
+                        errors[field_key] = "invalid_camera_pin"
+                        continue
+                    new_pins[did] = encode_pin(raw_pin)
+                elif did in current_pins:
+                    new_pins[did] = current_pins[did]
+
+            if errors:
+                pass  # fall through to schema building below
+            else:
+                return self.async_create_entry(
+                    data={CONF_CAMERA_PINS: new_pins},
+                )
+
+        schema: dict[Any, Any] = {}
+        for field_key, did in key_to_did.items():
+            # Pre-fill with sentinel when a PIN is already configured so the
+            # user can see that a PIN is set and does not accidentally clear it.
+            suggested = self._PIN_ALREADY_SET if did in current_pins else ""
+            schema[
+                vol.Optional(
+                    field_key,
+                    description={"suggested_value": suggested},
+                )
+            ] = selector.TextSelector(
+                selector.TextSelectorConfig(
+                    type=selector.TextSelectorType.PASSWORD,
+                )
+            )
+
+        return self.async_show_form(
+            step_id="camera_pins",
+            data_schema=vol.Schema(schema),
+            errors=errors if user_input is not None else {},
         )

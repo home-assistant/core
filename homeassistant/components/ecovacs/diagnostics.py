@@ -9,7 +9,7 @@ from homeassistant.const import CONF_NAME, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 
 from . import EcovacsConfigEntry
-from .const import CONF_OVERRIDE_MQTT_URL, CONF_OVERRIDE_REST_URL
+from .const import CONF_CAMERA_PINS, CONF_OVERRIDE_MQTT_URL, CONF_OVERRIDE_REST_URL
 
 REDACT_CONFIG = {
     CONF_USERNAME,
@@ -17,6 +17,7 @@ REDACT_CONFIG = {
     "title",
     CONF_OVERRIDE_MQTT_URL,
     CONF_OVERRIDE_REST_URL,
+    CONF_CAMERA_PINS,
 }
 REDACT_DEVICE = {"did", CONF_NAME, "homeId"}
 

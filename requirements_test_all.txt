@@ -314,6 +314,9 @@ aiomealie==1.2.3
 # homeassistant.components.modern_forms
 aiomodernforms==0.1.8
 
+# homeassistant.components.ecovacs
+aiomqtt==2.5.1
+
 # homeassistant.components.yamaha_musiccast
 aiomusiccast==0.15.0
 
@@ -369,6 +372,9 @@ aiorecollect==2023.09.0
 
 # homeassistant.components.ridwell
 aioridwell==2025.09.0
+
+# homeassistant.components.ecovacs
+aiortc==1.14.0
 
 # homeassistant.components.ruckus_unleashed
 aioruckus==0.42
@@ -543,6 +549,7 @@ automower-ble==0.2.8
 # homeassistant.components.autoskope
 autoskope_client==1.4.1
 
+# homeassistant.components.ecovacs
 # homeassistant.components.generic
 # homeassistant.components.stream
 av==16.0.1
@@ -618,6 +625,11 @@ bosch-alarm-mode2==0.4.10
 
 # homeassistant.components.bosch_shc
 boschshcpy==0.2.107
+
+# homeassistant.components.amazon_polly
+# homeassistant.components.ecovacs
+# homeassistant.components.route53
+boto3==1.37.1
 
 # homeassistant.components.aws
 botocore==1.37.1

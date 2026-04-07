@@ -1,5 +1,10 @@
 {
   "entity": {
+    "camera": {
+      "camera": {
+        "default": "mdi:cctv"
+      }
+    },
     "binary_sensor": {
       "water_mop_attached": {
         "default": "mdi:water-off",
@@ -160,6 +165,9 @@
       }
     },
     "switch": {
+      "camera_stream_switch": {
+        "default": "mdi:video-switch"
+      },
       "advanced_mode": {
         "default": "mdi:tune"
       },
