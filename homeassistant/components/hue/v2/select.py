@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import logging
+
 from aiohue.v2 import HueBridgeV2
 from aiohue.v2.controllers.events import EventType
 from aiohue.v2.models.room import Room
@@ -18,6 +20,8 @@ from ..bridge import HueBridge, HueConfigEntry
 from ..const import DOMAIN
 from .entity import HueBaseEntity
 from .scene_activity import HueSceneActivityManager
+
+_LOGGER = logging.getLogger(__name__)
 
 PARALLEL_UPDATES = 0
 
@@ -109,6 +113,7 @@ class HueSceneSelectEntity(SceneActivityBaseEntity, SelectEntity):
             None,
         )
         if scene is None:
+            _LOGGER.debug("Scene '%s' not found in group %s", option, self._group_id)
             return
         await self.bridge.async_request_call(
             self.bridge.api.scenes.scene.recall,
@@ -179,6 +184,9 @@ class HueSmartSceneSelectEntity(SceneActivityBaseEntity, SelectEntity):
             None,
         )
         if scene is None:
+            _LOGGER.debug(
+                "Smart scene '%s' not found in group %s", option, self._group_id
+            )
             return
         await self.bridge.async_request_call(
             self.bridge.api.scenes.smart_scene.recall,
