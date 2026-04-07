@@ -432,7 +432,7 @@ class _CipherBackupStreamer:
 
     def size(self) -> int:
         """Return the maximum size of the decrypted or encrypted backup."""
-        return get_archive_max_ciphertext_size(
+        return get_archive_max_ciphertext_size(  # type: ignore[no-any-return]
             self._backup.size, SECURETAR_CREATE_VERSION, self._num_tar_files()
         )
 
