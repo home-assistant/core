@@ -92,6 +92,11 @@
         "name": "Empty dustbin"
       }
     },
+    "camera": {
+      "camera": {
+        "name": "Camera"
+      }
+    },
     "event": {
       "last_job": {
         "name": "Last job",
@@ -247,6 +252,9 @@
       "border_switch": {
         "name": "Border switch"
       },
+      "camera_stream_switch": {
+        "name": "Camera stream"
+      },
       "carpet_auto_fan_boost": {
         "name": "Carpet auto-boost suction"
       },
@@ -270,9 +278,6 @@
       },
       "true_detect": {
         "name": "True detect"
-      },
-      "camera_stream_switch": {
-        "name": "Camera stream"
       }
     },
     "vacuum": {
@@ -291,11 +296,6 @@
           }
         }
       }
-    },
-    "camera": {
-      "camera": {
-        "name": "Camera"
-      }
     }
   },
   "exceptions": {
@@ -307,6 +307,23 @@
     },
     "vacuum_send_command_params_required": {
       "message": "Params are required for the command: {command}"
+    }
+  },
+  "options": {
+    "error": {
+      "invalid_camera_pin": "Camera PIN must contain digits only"
+    },
+    "step": {
+      "camera_pins": {
+        "data": {
+          "camera_pin": "Camera PIN (digits only)"
+        },
+        "data_description": {
+          "camera_pin": "The numeric PIN to access the robot camera stream. Leave empty if the camera has no PIN set."
+        },
+        "description": "Set a PIN for each robot with a camera. Leave blank if no PIN is required.",
+        "title": "Camera PIN settings"
+      }
     }
   },
   "selector": {
@@ -321,23 +338,6 @@
     "raw_get_positions": {
       "description": "Retrieves a raw response containing the positions of the chargers and the device itself.",
       "name": "Get raw positions"
-    }
-  },
-  "options": {
-    "step": {
-      "camera_pins": {
-        "title": "Camera PIN settings",
-        "description": "Set a PIN for each robot with a camera. Leave blank if no PIN is required.",
-        "data": {
-          "camera_pin": "Camera PIN (digits only)"
-        },
-        "data_description": {
-          "camera_pin": "The numeric PIN to access the robot camera stream. Leave empty if the camera has no PIN set."
-        }
-      }
-    },
-    "error": {
-      "invalid_camera_pin": "Camera PIN must contain digits only"
     }
   }
 }

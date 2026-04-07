@@ -192,7 +192,7 @@ async def end_watch(
         ) as resp:
             _LOGGER.debug("end_watch HTTP %d", resp.status)
     except Exception as err:  # noqa: BLE001
-        _LOGGER.warning("end_watch failed: %s", err)
+        _LOGGER.warning("End_watch failed: %s", err)
 
 
 async def send_video_opened(

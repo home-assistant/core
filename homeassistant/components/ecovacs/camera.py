@@ -16,7 +16,6 @@ from __future__ import annotations
 
 import asyncio
 import contextlib
-from dataclasses import dataclass
 import logging
 
 from deebot_client.device import Device
@@ -64,16 +63,11 @@ _BLACK_JPEG: bytes = (
 )
 
 
-@dataclass(kw_only=True, frozen=True)
-class EcovacsCameraEntityDescription(CameraEntityDescription):
-    """Description for an Ecovacs camera entity."""
-
-    key: str = "camera"
-    translation_key: str = "camera"
-    entity_registry_enabled_default: bool = False
-
-
-_CAMERA_DESCRIPTION = EcovacsCameraEntityDescription()
+_CAMERA_DESCRIPTION = CameraEntityDescription(
+    key="camera",
+    translation_key="camera",
+    entity_registry_enabled_default=False,
+)
 
 
 async def async_setup_entry(
@@ -104,7 +98,7 @@ class EcovacsCameraEntity(Camera):
     _attr_should_poll = False
     _attr_supported_features: CameraEntityFeature = CameraEntityFeature.ON_OFF
 
-    entity_description: EcovacsCameraEntityDescription
+    entity_description: CameraEntityDescription
 
     def __init__(
         self,

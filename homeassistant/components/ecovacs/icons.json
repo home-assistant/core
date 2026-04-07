@@ -1,10 +1,5 @@
 {
   "entity": {
-    "camera": {
-      "camera": {
-        "default": "mdi:cctv"
-      }
-    },
     "binary_sensor": {
       "water_mop_attached": {
         "default": "mdi:water-off",
@@ -61,6 +56,11 @@
       },
       "station_action_empty_dustbin": {
         "default": "mdi:delete-restore"
+      }
+    },
+    "camera": {
+      "camera": {
+        "default": "mdi:cctv"
       }
     },
     "event": {
@@ -165,9 +165,6 @@
       }
     },
     "switch": {
-      "camera_stream_switch": {
-        "default": "mdi:video-switch"
-      },
       "advanced_mode": {
         "default": "mdi:tune"
       },
@@ -176,6 +173,9 @@
       },
       "border_switch": {
         "default": "mdi:land-fields"
+      },
+      "camera_stream_switch": {
+        "default": "mdi:video-switch"
       },
       "carpet_auto_fan_boost": {
         "default": "mdi:fan-auto"

@@ -217,7 +217,7 @@ class KvsMqttListener:
         """Respond to a robot p2pReq with a p2pDataResp."""
         parts = req_topic.split("/")
         if len(parts) < 12:
-            _LOGGER.warning("p2pDataResp: malformed request topic: %s", req_topic)
+            _LOGGER.warning("P2pDataResp: malformed request topic: %s", req_topic)
             return
 
         cmd = parts[2]
