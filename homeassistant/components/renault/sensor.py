@@ -117,7 +117,7 @@ def _get_rounded_value(value: float | None) -> int | None:
     """Return the rounded value of this entity."""
     if value is None:
         return None
-    return round(value) if value is not None else None
+    return round(value)
 
 
 def _get_utc_value(value: str | None) -> datetime | None:
