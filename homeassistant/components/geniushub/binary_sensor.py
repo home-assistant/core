@@ -2,15 +2,25 @@
 
 from __future__ import annotations
 
-from homeassistant.components.binary_sensor import BinarySensorEntity
+from homeassistant.components.binary_sensor import (
+    BinarySensorDeviceClass,
+    BinarySensorEntity,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import GeniusHubConfigEntry
-from .entity import GeniusDevice
+from .entity import GeniusDevice, GeniusZone
 
 GH_STATE_ATTR = "outputOnOff"
 GH_TYPE = "Receiver"
+
+GH_ZONES_WITH_DEMAND = [
+    "radiator",
+    "wet underfloor",
+    "on / off",
+    "hot water temperature",
+]
 
 
 async def async_setup_entry(
@@ -22,11 +32,18 @@ async def async_setup_entry(
 
     broker = entry.runtime_data
 
-    async_add_entities(
+    entities: list[GeniusBinarySensor | GeniusZoneDemand] = [
         GeniusBinarySensor(broker, d, GH_STATE_ATTR)
         for d in broker.client.device_objs
-        if GH_TYPE in d.data["type"]
+        if GH_TYPE in d.data.get("type", "")
+    ]
+    entities.extend(
+        GeniusZoneDemand(broker, z)
+        for z in broker.client.zone_objs
+        if z.data.get("type") in GH_ZONES_WITH_DEMAND
     )
+
+    async_add_entities(entities)
 
 
 class GeniusBinarySensor(GeniusDevice, BinarySensorEntity):
@@ -47,3 +64,21 @@ class GeniusBinarySensor(GeniusDevice, BinarySensorEntity):
     def is_on(self) -> bool:
         """Return the status of the sensor."""
         return self._device.data["state"][self._state_attr]
+
+
+class GeniusZoneDemand(GeniusZone, BinarySensorEntity):
+    """Representation of a Genius Hub zone demand binary sensor."""
+
+    _attr_device_class = BinarySensorDeviceClass.HEAT
+
+    def __init__(self, broker, zone) -> None:
+        """Initialize the zone demand binary sensor."""
+        super().__init__(broker, zone)
+
+        self._unique_id = f"{broker.hub_uid}_zone_{zone.id}_demand"
+        self._attr_name = f"{zone.name} Demand"
+
+    @property
+    def is_on(self) -> bool:
+        """Return true if the zone is calling for heat."""
+        return self._zone.data.get("output") == 1

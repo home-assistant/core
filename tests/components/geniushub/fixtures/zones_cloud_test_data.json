@@ -1065,5 +1065,16 @@
       },
       "footprint": {}
     }
+  },
+  {
+    "id": 10,
+    "name": "Hot Water",
+    "output": 1,
+    "type": "hot water temperature",
+    "mode": "override",
+    "temperature": 45.5,
+    "setpoint": 60,
+    "override": { "duration": 3600, "setpoint": 80 },
+    "schedule": { "timer": {}, "footprint": {} }
   }
 ]
