@@ -30,7 +30,7 @@ def mock_config_entry() -> MockConfigEntry:
             CONF_USERNAME: TEST_USERNAME,
             CONF_PASSWORD: TEST_PASSWORD,
         },
-        unique_id="USER-UUID",
+        unique_id="SERVER-UUID-USER-UUID",
     )
 
 
