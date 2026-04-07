@@ -79,6 +79,14 @@
       }
     }
   },
+  "device": {
+    "heating_circuit": {
+      "name": "Heating circuit {circuit}"
+    },
+    "water_heater": {
+      "name": "Water heater"
+    }
+  },
   "entity": {
     "button": {
       "sync_time": {
