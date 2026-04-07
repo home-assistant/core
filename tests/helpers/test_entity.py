@@ -1638,7 +1638,7 @@ async def test_repr(hass: HomeAssistant) -> None:
             """Return the state."""
             raise ValueError("Boom")
 
-    platform = MockEntityPlatform(hass, domain="hello")
+    platform = MockEntityPlatform(hass, domain="test")
     my_entity = MyEntity(entity_id="test.test", available=False)
 
     # Not yet added
