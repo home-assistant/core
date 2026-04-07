@@ -6,7 +6,7 @@ import asyncio
 import binascii
 from collections.abc import Awaitable, Callable
 import contextlib
-from datetime import datetime
+from datetime import UTC, datetime
 import logging
 from typing import Any
 
@@ -204,7 +204,7 @@ class HIVIGroupCoordinator:
                 "type": operation_data.get("type"),
                 "master": operation_data.get("master"),
                 "slave": operation_data.get("slave"),
-                "start_time": datetime.now(),
+                "start_time": datetime.now(tz=UTC),
                 "expected_state": operation_data.get("expected_state"),
                 "retry_count": 0,
                 "last_check": None,
@@ -228,7 +228,7 @@ class HIVIGroupCoordinator:
                         "status": "accepted",
                         "operation_id": operation_id,
                         "extra": {
-                            "timestamp": datetime.now().isoformat(),
+                            "timestamp": datetime.now(tz=UTC).isoformat(),
                         },
                     },
                 )
@@ -427,7 +427,7 @@ class HIVIGroupCoordinator:
                         "status": "executing",
                         "operation_id": operation_id,
                         "extra": {
-                            "timestamp": datetime.now().isoformat(),
+                            "timestamp": datetime.now(tz=UTC).isoformat(),
                         },
                     },
                 )
@@ -441,7 +441,7 @@ class HIVIGroupCoordinator:
                             "status": "execution_failed",
                             "operation_id": operation_id,
                             "extra": {
-                                "timestamp": datetime.now().isoformat(),
+                                "timestamp": datetime.now(tz=UTC).isoformat(),
                             },
                         },
                     )
@@ -454,7 +454,7 @@ class HIVIGroupCoordinator:
                         "status": "verifying",
                         "operation_id": operation_id,
                         "extra": {
-                            "timestamp": datetime.now().isoformat(),
+                            "timestamp": datetime.now(tz=UTC).isoformat(),
                         },
                     },
                 )
@@ -473,7 +473,7 @@ class HIVIGroupCoordinator:
                         "operation_id": operation_id,
                         "extra": {
                             "error": str(e),
-                            "timestamp": datetime.now().isoformat(),
+                            "timestamp": datetime.now(tz=UTC).isoformat(),
                         },
                     },
                 )
@@ -493,7 +493,7 @@ class HIVIGroupCoordinator:
         while operation_id in self._pending_operations:
             try:
                 time_since_start = (
-                    datetime.now() - operation["start_time"]
+                    datetime.now(tz=UTC) - operation["start_time"]
                 ).total_seconds()
                 if time_since_start > self._operation_timeout:
                     _LOGGER.warning(
@@ -509,7 +509,7 @@ class HIVIGroupCoordinator:
                                 "operation_id": operation_id,
                                 "extra": {
                                     "duration": time_since_start,
-                                    "timestamp": datetime.now().isoformat(),
+                                    "timestamp": datetime.now(tz=UTC).isoformat(),
                                 },
                             },
                         )
@@ -527,7 +527,7 @@ class HIVIGroupCoordinator:
                                 "operation_id": operation_id,
                                 "extra": {
                                     "retry_count": operation["retry_count"],
-                                    "timestamp": datetime.now().isoformat(),
+                                    "timestamp": datetime.now(tz=UTC).isoformat(),
                                 },
                             },
                         )
@@ -537,7 +537,7 @@ class HIVIGroupCoordinator:
 
                 operation["status"] = "verifying"
                 operation["retry_count"] += 1
-                operation["last_check"] = datetime.now()
+                operation["last_check"] = datetime.now(tz=UTC)
 
                 _LOGGER.debug(
                     "Polling operation %s (attempt %d/%d)",
@@ -554,7 +554,7 @@ class HIVIGroupCoordinator:
                             "extra": {
                                 "retry_count": operation["retry_count"],
                                 "max_retries": self._max_retries,
-                                "timestamp": datetime.now().isoformat(),
+                                "timestamp": datetime.now(tz=UTC).isoformat(),
                             },
                         },
                     )
@@ -578,7 +578,7 @@ class HIVIGroupCoordinator:
                                 "extra": {
                                     "retry_count": operation["retry_count"],
                                     "duration": time_since_start,
-                                    "timestamp": datetime.now().isoformat(),
+                                    "timestamp": datetime.now(tz=UTC).isoformat(),
                                 },
                             },
                         )
@@ -597,7 +597,7 @@ class HIVIGroupCoordinator:
                             "status": "cancelled",
                             "operation_id": operation_id,
                             "extra": {
-                                "timestamp": datetime.now().isoformat(),
+                                "timestamp": datetime.now(tz=UTC).isoformat(),
                             },
                         },
                     )
@@ -613,7 +613,7 @@ class HIVIGroupCoordinator:
                             "operation_id": operation_id,
                             "extra": {
                                 "error": str(e),
-                                "timestamp": datetime.now().isoformat(),
+                                "timestamp": datetime.now(tz=UTC).isoformat(),
                             },
                         },
                     )
@@ -706,7 +706,7 @@ class HIVIGroupCoordinator:
             return
 
         operation["status"] = "success"
-        operation["end_time"] = datetime.now()
+        operation["end_time"] = datetime.now(tz=UTC)
         duration = (operation["end_time"] - operation["start_time"]).total_seconds()
 
         _LOGGER.debug(
@@ -725,7 +725,7 @@ class HIVIGroupCoordinator:
                 "action": operation["type"],
                 "duration": duration,
                 "retry_count": operation["retry_count"],
-                "timestamp": datetime.now().isoformat(),
+                "timestamp": datetime.now(tz=UTC).isoformat(),
             },
         )
 
@@ -740,7 +740,7 @@ class HIVIGroupCoordinator:
             return
 
         operation["status"] = "timeout"
-        operation["end_time"] = datetime.now()
+        operation["end_time"] = datetime.now(tz=UTC)
 
         _LOGGER.warning("Operation timeout: %s", operation_id)
 
@@ -752,7 +752,7 @@ class HIVIGroupCoordinator:
                 "slave": operation["slave"],
                 "action": operation["type"],
                 "duration": self._operation_timeout,
-                "timestamp": datetime.now().isoformat(),
+                "timestamp": datetime.now(tz=UTC).isoformat(),
             },
         )
 
@@ -788,7 +788,7 @@ class HIVIGroupCoordinator:
         while operation_id in self._pending_operations:
             try:
                 time_since_start = (
-                    datetime.now() - operation["start_time"]
+                    datetime.now(tz=UTC) - operation["start_time"]
                 ).total_seconds()
                 if time_since_start > self._operation_timeout:
                     _LOGGER.warning(
@@ -806,7 +806,7 @@ class HIVIGroupCoordinator:
 
                 operation["status"] = "verifying"
                 operation["retry_count"] += 1
-                operation["last_check"] = datetime.now()
+                operation["last_check"] = datetime.now(tz=UTC)
 
                 _LOGGER.debug(
                     "Polling operation %s (attempt %d/%d)",
@@ -929,7 +929,7 @@ class HIVIGroupCoordinator:
             return
 
         operation["status"] = "failed"
-        operation["end_time"] = datetime.now()
+        operation["end_time"] = datetime.now(tz=UTC)
         operation["failure_reason"] = reason
 
         _LOGGER.error("Operation failed: %s (reason: %s)", operation_id, reason)
@@ -943,7 +943,7 @@ class HIVIGroupCoordinator:
                 "action": operation["type"],
                 "reason": reason,
                 "retry_count": operation["retry_count"],
-                "timestamp": datetime.now().isoformat(),
+                "timestamp": datetime.now(tz=UTC).isoformat(),
             },
         )
 
@@ -978,7 +978,7 @@ class HIVIGroupCoordinator:
 
         if "start_time" in result:
             start_time = result["start_time"]
-            end_time = result.get("end_time", datetime.now())
+            end_time = result.get("end_time", datetime.now(tz=UTC))
             result["duration"] = (end_time - start_time).total_seconds()
 
         result.pop("start_time", None)
@@ -1014,7 +1014,7 @@ class HIVIGroupCoordinator:
                 "master": operation["master"],
                 "slave": operation["slave"],
                 "action": operation["type"],
-                "timestamp": datetime.now().isoformat(),
+                "timestamp": datetime.now(tz=UTC).isoformat(),
             },
         )
 
