@@ -10,7 +10,10 @@ from syrupy.assertion import SnapshotAssertion
 import voluptuous as vol
 
 from homeassistant.components import ai_task, media_source
-from homeassistant.components.anthropic.const import CONF_CHAT_MODEL
+from homeassistant.components.anthropic.const import (
+    CONF_CHAT_MODEL,
+    CONF_THINKING_BUDGET,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er, selector
@@ -127,6 +130,7 @@ async def test_generate_structured_data_legacy(
             subentry,
             data={
                 CONF_CHAT_MODEL: "claude-sonnet-4-0",
+                CONF_THINKING_BUDGET: 0,
             },
         )
 
@@ -183,7 +187,11 @@ async def test_generate_structured_data_legacy_tools(
         hass.config_entries.async_update_subentry(
             mock_config_entry,
             subentry,
-            data={"chat_model": "claude-sonnet-4-0", "web_search": True},
+            data={
+                "chat_model": "claude-sonnet-4-0",
+                "web_search": True,
+                "thinking_budget": 0,
+            },
         )
 
     result = await ai_task.async_generate_data(
