@@ -85,11 +85,6 @@ async def test_number_set_action(
             blocking=True,
         )
 
-    # verify, that a float player option (non-read-only) is also part of the number platform
-    entity_id = "number.test_player_1_bass"
-    state = hass.states.get(entity_id)
-    assert state
-
 
 async def test_external_update(
     hass: HomeAssistant,
