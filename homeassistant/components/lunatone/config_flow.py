@@ -106,9 +106,11 @@ class LunatoneConfigFlow(ConfigFlow, domain=DOMAIN):
             return await self.async_step_user(user_input)
 
         entry = self._get_reconfigure_entry()
+        suggested_values = {CONF_URL: entry.data[CONF_URL]}
+
         return self.async_show_form(
             step_id="reconfigure",
-            data_schema=vol.Schema(
-                {vol.Required(CONF_URL, default=entry.data[CONF_URL]): cv.string},
+            data_schema=self.add_suggested_values_to_schema(
+                vol.Schema({vol.Required(CONF_URL): cv.string}), suggested_values
             ),
         )
