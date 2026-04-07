@@ -78,8 +78,18 @@ BINARY_SENSOR_OPTIONS = {
             "on",
             {"one": "on", "two": "off"},
             {},
-            {"advanced_options": {"delay_on": {"seconds": 5}, "delay_off": {"seconds": 10}}},
-            {"advanced_options": {"delay_on": {"seconds": 5}, "delay_off": {"seconds": 10}}},
+            {
+                "advanced_options": {
+                    "delay_on": {"seconds": 5},
+                    "delay_off": {"seconds": 10},
+                }
+            },
+            {
+                "advanced_options": {
+                    "delay_on": {"seconds": 5},
+                    "delay_off": {"seconds": 10},
+                }
+            },
             {},
         ),
         (
@@ -378,8 +388,18 @@ async def test_config_flow(
         (
             "binary_sensor",
             {"state": "{{ false }}"},
-            {"advanced_options": {"delay_on": {"seconds": 5}, "delay_off": {"seconds": 10}}},
-            {"advanced_options": {"delay_on": {"seconds": 5}, "delay_off": {"seconds": 10}}},
+            {
+                "advanced_options": {
+                    "delay_on": {"seconds": 5},
+                    "delay_off": {"seconds": 10},
+                }
+            },
+            {
+                "advanced_options": {
+                    "delay_on": {"seconds": 5},
+                    "delay_off": {"seconds": 10},
+                }
+            },
         ),
         (
             "switch",
@@ -583,7 +603,12 @@ async def test_config_flow_device(
             ["on", "off"],
             {"one": "on", "two": "off"},
             {"advanced_options": {"delay_on": {"seconds": 5}}},
-            {"advanced_options": {"delay_on": {"seconds": 10}, "delay_off": {"seconds": 10}}},
+            {
+                "advanced_options": {
+                    "delay_on": {"seconds": 10},
+                    "delay_off": {"seconds": 10},
+                }
+            },
             "state",
         ),
         (
