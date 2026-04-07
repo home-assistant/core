@@ -2926,7 +2926,7 @@ sentry-sdk==2.48.0
 serialx==1.1.1
 
 # homeassistant.components.usb
-serialx[esphome]==1.2.0
+serialx==1.2.0
 
 # homeassistant.components.sfr_box
 sfrbox-api==0.1.1
