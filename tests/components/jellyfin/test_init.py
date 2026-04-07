@@ -1,5 +1,6 @@
 """Tests for the Jellyfin integration."""
 
+from datetime import timedelta
 from unittest.mock import MagicMock
 
 from homeassistant.components.jellyfin.const import DOMAIN
@@ -7,10 +8,11 @@ from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.setup import async_setup_component
+from homeassistant.util.dt import utcnow
 
 from . import async_load_json_fixture
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
 from tests.typing import WebSocketGenerator
 
 
@@ -90,11 +92,12 @@ async def test_device_remove_devices(
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
+    # Active device (in current sessions) — cannot be removed.
     device_entry = device_registry.async_get_device(
         identifiers={
             (
                 DOMAIN,
-                "DEVICE-UUID",
+                "SERVER-UUID-USER-UUID-DEVICE-UUID",
             )
         },
     )
@@ -110,3 +113,49 @@ async def test_device_remove_devices(
         old_device_entry.id, mock_config_entry.entry_id
     )
     assert response["success"]
+
+
+async def test_device_remove_offline_device(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    mock_config_entry: MockConfigEntry,
+    mock_jellyfin: MagicMock,
+    mock_api: MagicMock,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test that offline devices can be removed and are purged from storage."""
+    assert await async_setup_component(hass, "config", {})
+
+    mock_config_entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    coordinator = mock_config_entry.runtime_data
+
+    # Confirm DEVICE-UUID is known.
+    assert "DEVICE-UUID" in coordinator.known_devices
+
+    # Take the device offline — return empty sessions.
+    mock_api.sessions.return_value = []
+
+    async_fire_time_changed(hass, utcnow() + timedelta(seconds=10))
+    await hass.async_block_till_done()
+
+    # Device is offline (not in coordinator.data) — removal should be allowed.
+    device_entry = device_registry.async_get_device(
+        identifiers={(DOMAIN, "SERVER-UUID-USER-UUID-DEVICE-UUID")}
+    )
+    assert device_entry is not None
+
+    ws_client = await hass_ws_client(hass)
+    response = await ws_client.remove_device(
+        device_entry.id, mock_config_entry.entry_id
+    )
+    assert response["success"]
+    await hass.async_block_till_done()
+
+    # Device must be purged from known_devices and entity tracking sets.
+    assert "DEVICE-UUID" not in coordinator.known_devices
+    assert "DEVICE-UUID" not in coordinator.device_player_ids
+    assert "DEVICE-UUID" not in coordinator.device_remote_ids

@@ -14,6 +14,7 @@ from homeassistant.components.remote import (
     RemoteEntity,
 )
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import LOGGER
@@ -31,16 +32,23 @@ async def async_setup_entry(
 
     @callback
     def handle_coordinator_update() -> None:
-        """Add remote per session."""
+        """Add remote per device that supports remote control."""
         entities: list[RemoteEntity] = []
-        for session_id, session_data in coordinator.data.items():
-            if (
-                session_id not in coordinator.remote_session_ids
-                and session_data["SupportsRemoteControl"]
+        for device_id, device_info in coordinator.known_devices.items():
+            if device_id not in coordinator.device_remote_ids and device_info.get(
+                "SupportsRemoteControl", False
             ):
-                entity = JellyfinRemote(coordinator, session_id)
-                LOGGER.debug("Creating remote for session: %s", session_id)
-                coordinator.remote_session_ids.add(session_id)
+                entity = JellyfinRemote(coordinator, device_id)
+                LOGGER.debug("Creating remote for device: %s", device_id)
+                coordinator.device_remote_ids.add(device_id)
+                entities.append(entity)
+        for device_id, device_info in coordinator.ephemeral_devices.items():
+            if device_id not in coordinator.device_remote_ids and device_info.get(
+                "SupportsRemoteControl", False
+            ):
+                entity = JellyfinRemote(coordinator, device_id)
+                LOGGER.debug("Creating ephemeral remote for device: %s", device_id)
+                coordinator.device_remote_ids.add(device_id)
                 entities.append(entity)
         async_add_entities(entities)
 
@@ -55,25 +63,28 @@ class JellyfinRemote(JellyfinClientEntity, RemoteEntity):
     def __init__(
         self,
         coordinator: JellyfinDataUpdateCoordinator,
-        session_id: str,
+        device_id: str,
     ) -> None:
         """Initialize the Jellyfin Remote entity."""
-        super().__init__(coordinator, session_id)
-        self._attr_unique_id = f"{coordinator.server_id}-{session_id}"
+        super().__init__(coordinator, device_id)
+        self._attr_unique_id = (
+            f"{coordinator.server_id}-{coordinator.user_id}-{device_id}"
+        )
 
     @property
     def is_on(self) -> bool:
-        """Return if the client is on."""
-        return self.session_data["IsActive"] if self.session_data else False
+        """Return True if the device has an active session."""
+        session = self.session_data
+        return bool(session and session.get("IsActive", False))
 
     def send_command(self, command: Iterable[str], **kwargs: Any) -> None:
         """Send a command to the client."""
+        if (sid := self.session_id) is None:
+            raise HomeAssistantError("Device is offline")
         num_repeats = kwargs.get(ATTR_NUM_REPEATS, DEFAULT_NUM_REPEATS)
         delay = kwargs.get(ATTR_DELAY_SECS, DEFAULT_DELAY_SECS)
 
         for _ in range(num_repeats):
             for single_command in command:
-                self.coordinator.api_client.jellyfin.command(
-                    self.session_id, single_command
-                )
+                self.coordinator.api_client.jellyfin.command(sid, single_command)
                 time.sleep(delay)

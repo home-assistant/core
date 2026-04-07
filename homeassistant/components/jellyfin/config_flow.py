@@ -83,7 +83,7 @@ class JellyfinConfigFlow(ConfigFlow, domain=DOMAIN):
                 if server_name := server_info.get("Name"):
                     entry_title = server_name
 
-                await self.async_set_unique_id(user_id)
+                await self.async_set_unique_id(f"{server_info['Id']}-{user_id}")
                 self._abort_if_unique_id_configured()
 
                 return self.async_create_entry(
