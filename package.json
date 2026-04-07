@@ -1,0 +1,5 @@
+{
+  "devDependencies": {
+    "prettier-plugin-sort-json": "^4.2.0"
+  }
+}
