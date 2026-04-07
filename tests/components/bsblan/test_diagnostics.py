@@ -50,4 +50,4 @@ async def test_diagnostics_without_static_values(
     assert "info" in diagnostics_data
     assert "device" in diagnostics_data
     assert "fast_coordinator_data" in diagnostics_data
-    assert diagnostics_data["static"] is None
+    assert diagnostics_data["static"] == {"1": None}

@@ -1,5 +1,6 @@
 """Tests for the BSBLan integration."""
 
+from datetime import timedelta
 from unittest.mock import MagicMock
 
 from bsblan import BSBLANAuthError, BSBLANConnectionError, BSBLANError
@@ -134,7 +135,7 @@ async def test_config_entry_setup_errors(
 
     assert mock_config_entry.state is expected_state
     if assert_static_fallback:
-        assert mock_config_entry.runtime_data.static is None
+        assert mock_config_entry.runtime_data.static == {1: None}
 
 
 async def test_coordinator_dhw_config_update_error(
@@ -226,6 +227,37 @@ async def test_coordinator_fast_no_dhw_support(
 
     # Water heater entity should not be created
     assert hass.states.get("water_heater.bsb_lan") is None
+
+
+async def test_coordinator_fast_dhw_fails_on_refresh_preserves_state(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_bsblan: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test fast coordinator preserves last DHW state when DHW fails on refresh."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+
+    # DHW should be available initially
+    coordinator = mock_config_entry.runtime_data.fast_coordinator
+    initial_dhw = coordinator.data.dhw
+    assert initial_dhw is not None
+
+    # Now make DHW fail on the next refresh
+    mock_bsblan.hot_water_state.side_effect = BSBLANError(
+        "None of the requested parameters are valid for this section"
+    )
+
+    freezer.tick(timedelta(seconds=15))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    # Last known DHW state should be preserved
+    assert coordinator.data.dhw is initial_dhw
 
 
 async def test_coordinator_slow_no_dhw_support(
