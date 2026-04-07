@@ -126,7 +126,7 @@ class EvoResetZoneButton(EvoResetButtonBase):
     @callback
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
-        super()._handle_coordinator_update()
 
         # zone names are not fixed
         self._attr_translation_placeholders = {"device_name": self._evo_device.name}
+        super()._handle_coordinator_update()
