@@ -196,3 +196,6 @@ async def test_coordinator_device_removal(
     freezer.tick(UPDATE_DEVICE_LIST_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
+
+    coordinator = mock_config_entry.runtime_data
+    assert len(coordinator.device_coordinators) == 0
