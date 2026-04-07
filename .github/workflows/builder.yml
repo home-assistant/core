@@ -47,10 +47,6 @@ jobs:
         with:
           python-version-file: ".python-version"
 
-      - name: Get information
-        id: info
-        uses: home-assistant/actions/helpers/info@master # zizmor: ignore[unpinned-uses]
-
       - name: Get version
         id: version
         uses: home-assistant/actions/helpers/version@master # zizmor: ignore[unpinned-uses]
