@@ -4,22 +4,28 @@ from collections.abc import Awaitable, Callable
 from dataclasses import dataclass, field
 import ssl
 from typing import Any
-from unittest.mock import AsyncMock, Mock, patch
+from unittest.mock import AsyncMock, Mock, PropertyMock, patch
 
 from aiohttp import ClientError
 from deebot_client.exceptions import InvalidAuthenticationError, MqttError
 from deebot_client.mqtt_client import create_mqtt_config
 import pytest
 
+from homeassistant.components.ecovacs.config_flow import (
+    EcovacsOptionsFlowHandler,
+    _device_pin_field_key,
+)
 from homeassistant.components.ecovacs.const import (
+    CONF_CAMERA_PINS,
     CONF_OVERRIDE_MQTT_URL,
     CONF_OVERRIDE_REST_URL,
     CONF_VERIFY_MQTT_CERTIFICATE,
     DOMAIN,
     InstanceMode,
 )
+from homeassistant.components.ecovacs.kvs_api import encode_pin
 from homeassistant.config_entries import SOURCE_USER
-from homeassistant.const import CONF_MODE, CONF_USERNAME
+from homeassistant.const import CONF_MODE, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -322,3 +328,150 @@ async def test_already_exists(
     assert result
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
+
+
+# ---------------------------------------------------------------------------
+# OptionsFlow tests
+# ---------------------------------------------------------------------------
+
+# Field key and DID derived from tests/components/ecovacs/fixtures/devices/yna5x1/device.json
+_OPTION_DEVICE_DID = "E1234567890000000001"
+_OPTION_DEVICE_FIELD = _device_pin_field_key(
+    {"nick": "Ozmo 950", "did": _OPTION_DEVICE_DID}
+)
+
+
+@pytest.fixture
+def platforms() -> Platform | list[Platform]:
+    """Only load the minimum platforms needed for options flow tests."""
+    return []
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_options_flow_show_form(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test options flow shows the camera PINs form with the device field."""
+    result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "camera_pins"
+    assert _OPTION_DEVICE_FIELD in result["data_schema"].schema
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_options_flow_no_devices(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test options flow with no devices creates entry with empty camera pins."""
+    controller = mock_config_entry.runtime_data
+    with patch.object(type(controller), "devices", new_callable=PropertyMock, return_value=[]):
+        result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "camera_pins"
+        assert not result["data_schema"].schema
+
+        result = await hass.config_entries.options.async_configure(
+            result["flow_id"],
+            user_input={},
+        )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"] == {CONF_CAMERA_PINS: {}}
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_options_flow_set_valid_pin(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test setting a valid numeric PIN is encoded and saved."""
+    result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={_OPTION_DEVICE_FIELD: "1234"},
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"][CONF_CAMERA_PINS][_OPTION_DEVICE_DID] == encode_pin("1234")
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_options_flow_invalid_pin(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test that a non-numeric PIN shows an error and re-displays the form."""
+    result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={_OPTION_DEVICE_FIELD: "abcd"},
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "camera_pins"
+    assert result["errors"] == {_OPTION_DEVICE_FIELD: "invalid_camera_pin"}
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_options_flow_sentinel_keeps_existing_pin(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test that submitting the sentinel value preserves the existing hashed PIN."""
+    existing_hash = encode_pin("5678")
+    hass.config_entries.async_update_entry(
+        mock_config_entry,
+        options={CONF_CAMERA_PINS: {_OPTION_DEVICE_DID: existing_hash}},
+    )
+
+    result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
+    assert result["type"] is FlowResultType.FORM
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={_OPTION_DEVICE_FIELD: EcovacsOptionsFlowHandler._PIN_ALREADY_SET},
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"][CONF_CAMERA_PINS][_OPTION_DEVICE_DID] == existing_hash
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_options_flow_empty_field_keeps_existing_pin(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test that leaving the PIN field blank preserves an existing hashed PIN."""
+    existing_hash = encode_pin("5678")
+    hass.config_entries.async_update_entry(
+        mock_config_entry,
+        options={CONF_CAMERA_PINS: {_OPTION_DEVICE_DID: existing_hash}},
+    )
+
+    result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={_OPTION_DEVICE_FIELD: ""},
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"][CONF_CAMERA_PINS][_OPTION_DEVICE_DID] == existing_hash
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_options_flow_empty_field_no_existing_pin(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test that leaving the PIN field blank when no PIN exists creates no entry for that device."""
+    result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={_OPTION_DEVICE_FIELD: ""},
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"][CONF_CAMERA_PINS] == {}
