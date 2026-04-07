@@ -40,12 +40,6 @@ def platforms() -> Platform | list[Platform]:
     return [Platform.LIGHT]
 
 
-MOCK_ULTIMA = Info(
-    MAC="AA:BB:CC:DD:EE:FF",
-    model="SLZB-Ultima3",
-)
-
-
 def _build_fire_sse_ambilight(
     hass: HomeAssistant, mock_smlight_client: MagicMock
 ) -> Callable[[dict[str, object]], Awaitable[None]]:
@@ -63,12 +57,10 @@ async def test_light_setup_ultima(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     mock_config_entry: MockConfigEntry,
-    mock_smlight_client: MagicMock,
+    mock_ultima_client: MagicMock,
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test light entity is created for Ultima devices."""
-    mock_smlight_client.get_info.side_effect = None
-    mock_smlight_client.get_info.return_value = MOCK_ULTIMA
     entry = await setup_integration(hass, mock_config_entry)
 
     await snapshot_platform(hass, entity_registry, snapshot, entry.entry_id)
@@ -96,20 +88,18 @@ async def test_light_not_created_non_ultima(
 async def test_light_turn_on_off(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_smlight_client: MagicMock,
+    mock_ultima_client: MagicMock,
 ) -> None:
     """Test turning light on and off."""
-    mock_smlight_client.get_info.side_effect = None
-    mock_smlight_client.get_info.return_value = MOCK_ULTIMA
     await setup_integration(hass, mock_config_entry)
 
     entity_id = "light.mock_title_ambilight"
     state = hass.states.get(entity_id)
     assert state.state != STATE_UNAVAILABLE
 
-    fire_ambi = _build_fire_sse_ambilight(hass, mock_smlight_client)
+    fire_ambi = _build_fire_sse_ambilight(hass, mock_ultima_client)
 
-    mock_smlight_client.actions.ambilight.reset_mock()
+    mock_ultima_client.actions.ambilight.reset_mock()
     await hass.services.async_call(
         LIGHT_DOMAIN,
         SERVICE_TURN_ON,
@@ -117,7 +107,7 @@ async def test_light_turn_on_off(
         blocking=True,
     )
 
-    mock_smlight_client.actions.ambilight.assert_called_once_with(
+    mock_ultima_client.actions.ambilight.assert_called_once_with(
         AmbilightPayload(ultLedMode=AmbiEffect.WSULT_SOLID)
     )
     await fire_ambi({"ultLedMode": 0, "ultLedBri": 158, "ultLedColor": 0x7FACFF})
@@ -125,7 +115,7 @@ async def test_light_turn_on_off(
     state = hass.states.get(entity_id)
     assert state.state == STATE_ON
 
-    mock_smlight_client.actions.ambilight.reset_mock()
+    mock_ultima_client.actions.ambilight.reset_mock()
     await hass.services.async_call(
         LIGHT_DOMAIN,
         SERVICE_TURN_OFF,
@@ -133,7 +123,7 @@ async def test_light_turn_on_off(
         blocking=True,
     )
 
-    mock_smlight_client.actions.ambilight.assert_called_once_with(
+    mock_ultima_client.actions.ambilight.assert_called_once_with(
         AmbilightPayload(ultLedMode=AmbiEffect.WSULT_OFF)
     )
     await fire_ambi({"ultLedMode": 1})
@@ -145,20 +135,18 @@ async def test_light_turn_on_off(
 async def test_light_brightness(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_smlight_client: MagicMock,
+    mock_ultima_client: MagicMock,
 ) -> None:
     """Test setting brightness."""
-    mock_smlight_client.get_info.side_effect = None
-    mock_smlight_client.get_info.return_value = MOCK_ULTIMA
     await setup_integration(hass, mock_config_entry)
 
     entity_id = "light.mock_title_ambilight"
 
-    fire_ambi = _build_fire_sse_ambilight(hass, mock_smlight_client)
+    fire_ambi = _build_fire_sse_ambilight(hass, mock_ultima_client)
 
     # Seed current state as on so brightness-only update does not force solid mode.
     await fire_ambi({"ultLedMode": 0, "ultLedBri": 158, "ultLedColor": 0x7FACFF})
-    mock_smlight_client.actions.ambilight.reset_mock()
+    mock_ultima_client.actions.ambilight.reset_mock()
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
@@ -167,7 +155,7 @@ async def test_light_brightness(
         blocking=True,
     )
 
-    mock_smlight_client.actions.ambilight.assert_called_once_with(
+    mock_ultima_client.actions.ambilight.assert_called_once_with(
         AmbilightPayload(ultLedBri=200)
     )
     await fire_ambi({"ultLedMode": 0, "ultLedBri": 200, "ultLedColor": 0x7FACFF})
@@ -180,18 +168,16 @@ async def test_light_brightness(
 async def test_light_rgb_color(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_smlight_client: MagicMock,
+    mock_ultima_client: MagicMock,
 ) -> None:
     """Test setting RGB color."""
-    mock_smlight_client.get_info.side_effect = None
-    mock_smlight_client.get_info.return_value = MOCK_ULTIMA
     await setup_integration(hass, mock_config_entry)
 
     entity_id = "light.mock_title_ambilight"
 
-    fire_ambi = _build_fire_sse_ambilight(hass, mock_smlight_client)
+    fire_ambi = _build_fire_sse_ambilight(hass, mock_ultima_client)
 
-    mock_smlight_client.actions.ambilight.reset_mock()
+    mock_ultima_client.actions.ambilight.reset_mock()
     await hass.services.async_call(
         LIGHT_DOMAIN,
         SERVICE_TURN_ON,
@@ -199,7 +185,7 @@ async def test_light_rgb_color(
         blocking=True,
     )
 
-    mock_smlight_client.actions.ambilight.assert_called_once_with(
+    mock_ultima_client.actions.ambilight.assert_called_once_with(
         AmbilightPayload(ultLedMode=AmbiEffect.WSULT_SOLID, ultLedColor="#ff8040")
     )
     await fire_ambi({"ultLedMode": 0, "ultLedColor": 0xFF8040})
@@ -212,19 +198,17 @@ async def test_light_rgb_color(
 async def test_light_effect(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_smlight_client: MagicMock,
+    mock_ultima_client: MagicMock,
 ) -> None:
     """Test setting effect."""
-    mock_smlight_client.get_info.side_effect = None
-    mock_smlight_client.get_info.return_value = MOCK_ULTIMA
     await setup_integration(hass, mock_config_entry)
 
     entity_id = "light.mock_title_ambilight"
 
-    fire_ambi = _build_fire_sse_ambilight(hass, mock_smlight_client)
+    fire_ambi = _build_fire_sse_ambilight(hass, mock_ultima_client)
 
     # Test Rainbow effect
-    mock_smlight_client.actions.ambilight.reset_mock()
+    mock_ultima_client.actions.ambilight.reset_mock()
     await hass.services.async_call(
         LIGHT_DOMAIN,
         SERVICE_TURN_ON,
@@ -232,13 +216,13 @@ async def test_light_effect(
         blocking=True,
     )
 
-    mock_smlight_client.actions.ambilight.assert_called_once_with(
+    mock_ultima_client.actions.ambilight.assert_called_once_with(
         AmbilightPayload(ultLedMode=AmbiEffect.WSULT_RAINBOW)
     )
     await fire_ambi({"ultLedMode": 3})
 
     # Test Blur effect
-    mock_smlight_client.actions.ambilight.reset_mock()
+    mock_ultima_client.actions.ambilight.reset_mock()
     await hass.services.async_call(
         LIGHT_DOMAIN,
         SERVICE_TURN_ON,
@@ -246,7 +230,7 @@ async def test_light_effect(
         blocking=True,
     )
 
-    mock_smlight_client.actions.ambilight.assert_called_once_with(
+    mock_ultima_client.actions.ambilight.assert_called_once_with(
         AmbilightPayload(ultLedMode=AmbiEffect.WSULT_BLUR)
     )
     await fire_ambi({"ultLedMode": 2})
@@ -259,16 +243,14 @@ async def test_light_effect(
 async def test_light_invalid_effect(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_smlight_client: MagicMock,
+    mock_ultima_client: MagicMock,
 ) -> None:
     """Test handling of invalid effect name is ignored."""
-    mock_smlight_client.get_info.side_effect = None
-    mock_smlight_client.get_info.return_value = MOCK_ULTIMA
     await setup_integration(hass, mock_config_entry)
 
     entity_id = "light.mock_title_ambilight"
 
-    mock_smlight_client.actions.ambilight.reset_mock()
+    mock_ultima_client.actions.ambilight.reset_mock()
     await hass.services.async_call(
         LIGHT_DOMAIN,
         SERVICE_TURN_ON,
@@ -276,25 +258,23 @@ async def test_light_invalid_effect(
         blocking=True,
     )
 
-    mock_smlight_client.actions.ambilight.assert_not_called()
+    mock_ultima_client.actions.ambilight.assert_not_called()
 
 
 async def test_light_turn_on_when_on_is_noop(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_smlight_client: MagicMock,
+    mock_ultima_client: MagicMock,
 ) -> None:
     """Test calling turn_on with no attributes does nothing when already on."""
-    mock_smlight_client.get_info.side_effect = None
-    mock_smlight_client.get_info.return_value = MOCK_ULTIMA
     await setup_integration(hass, mock_config_entry)
 
     entity_id = "light.mock_title_ambilight"
-    fire_ambi = _build_fire_sse_ambilight(hass, mock_smlight_client)
+    fire_ambi = _build_fire_sse_ambilight(hass, mock_ultima_client)
 
     await fire_ambi({"ultLedMode": 0})
 
-    mock_smlight_client.actions.ambilight.reset_mock()
+    mock_ultima_client.actions.ambilight.reset_mock()
     await hass.services.async_call(
         LIGHT_DOMAIN,
         SERVICE_TURN_ON,
@@ -302,21 +282,19 @@ async def test_light_turn_on_when_on_is_noop(
         blocking=True,
     )
 
-    mock_smlight_client.actions.ambilight.assert_not_called()
+    mock_ultima_client.actions.ambilight.assert_not_called()
 
 
 async def test_light_state_handles_invalid_attributes_from_sse(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_smlight_client: MagicMock,
+    mock_ultima_client: MagicMock,
 ) -> None:
     """Test state update gracefully handles invalid mode and invalid hex color."""
-    mock_smlight_client.get_info.side_effect = None
-    mock_smlight_client.get_info.return_value = MOCK_ULTIMA
     await setup_integration(hass, mock_config_entry)
 
     entity_id = "light.mock_title_ambilight"
-    fire_ambi = _build_fire_sse_ambilight(hass, mock_smlight_client)
+    fire_ambi = _build_fire_sse_ambilight(hass, mock_ultima_client)
 
     await fire_ambi({"ultLedMode": None, "ultLedColor": "#GG0000"})
 
@@ -335,18 +313,16 @@ async def test_light_state_handles_invalid_attributes_from_sse(
 async def test_ambilight_connection_error(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_smlight_client: MagicMock,
+    mock_ultima_client: MagicMock,
 ) -> None:
     """Test connection error handling."""
-    mock_smlight_client.get_info.side_effect = None
-    mock_smlight_client.get_info.return_value = MOCK_ULTIMA
     await setup_integration(hass, mock_config_entry)
 
     entity_id = "light.mock_title_ambilight"
     state = hass.states.get(entity_id)
     assert state.state != STATE_UNAVAILABLE
 
-    mock_smlight_client.actions.ambilight.side_effect = SmlightConnectionError
+    mock_ultima_client.actions.ambilight.side_effect = SmlightConnectionError
 
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
@@ -356,10 +332,10 @@ async def test_ambilight_connection_error(
             blocking=True,
         )
 
-    mock_smlight_client.actions.ambilight.side_effect = None
-    mock_smlight_client.actions.ambilight.reset_mock()
+    mock_ultima_client.actions.ambilight.side_effect = None
+    mock_ultima_client.actions.ambilight.reset_mock()
 
-    fire_ambi = _build_fire_sse_ambilight(hass, mock_smlight_client)
+    fire_ambi = _build_fire_sse_ambilight(hass, mock_ultima_client)
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
@@ -368,7 +344,7 @@ async def test_ambilight_connection_error(
         blocking=True,
     )
 
-    mock_smlight_client.actions.ambilight.assert_called_once_with(
+    mock_ultima_client.actions.ambilight.assert_called_once_with(
         AmbilightPayload(ultLedMode=AmbiEffect.WSULT_SOLID)
     )
 
