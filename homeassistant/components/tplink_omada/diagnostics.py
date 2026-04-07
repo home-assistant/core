@@ -107,7 +107,7 @@ async def async_get_config_entry_diagnostics(
         "entry": async_redact_data(entry.as_dict(), ENTRY_TO_REDACT),
         "runtime": {
             "devices": {
-                replacements.get(mac, mac): _redact_runtime_record(
+                replacements[mac]: _redact_runtime_record(
                     device.raw_data,
                     replacements,
                 )
