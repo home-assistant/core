@@ -41,7 +41,7 @@
   },
   "services": {
     "delete_command": {
-      "description": "Deletes a command or a list of commands from the database.",
+      "description": "Deletes a command or a list of commands from a remote's database.",
       "fields": {
         "command": {
           "description": "The single command or the list of commands to be deleted.",
@@ -52,10 +52,10 @@
           "name": "Device"
         }
       },
-      "name": "Delete command"
+      "name": "Delete remote command"
     },
     "learn_command": {
-      "description": "Learns a command or a list of commands from a device.",
+      "description": "Teaches a remote a command or list of commands from a device.",
       "fields": {
         "alternative": {
           "description": "If code must be stored as an alternative. This is useful for discrete codes. Discrete codes are used for toggles that only perform one function. For example, a code to only turn a device on. If it is on already, sending the code won't change the state.",
@@ -78,7 +78,7 @@
           "name": "Timeout"
         }
       },
-      "name": "Learn command"
+      "name": "Learn remote command"
     },
     "send_command": {
       "description": "Sends a command or a list of commands to a device.",
@@ -104,15 +104,15 @@
           "name": "Repeats"
         }
       },
-      "name": "Send command"
+      "name": "Send remote command"
     },
     "toggle": {
       "description": "Sends the toggle command.",
-      "name": "[%key:common::action::toggle%]"
+      "name": "Toggle via remote"
     },
     "turn_off": {
       "description": "Sends the turn off command.",
-      "name": "[%key:common::action::turn_off%]"
+      "name": "Turn off via remote"
     },
     "turn_on": {
       "description": "Sends the turn on command.",
@@ -122,7 +122,7 @@
           "name": "Activity"
         }
       },
-      "name": "[%key:common::action::turn_on%]"
+      "name": "Turn on via remote"
     }
   },
   "title": "Remote",
