@@ -10,6 +10,10 @@ from chip.clusters import Objects as clusters
 from chip.clusters.ClusterObjects import ClusterAttributeDescriptor, ClusterCommand
 from chip.clusters.Types import Nullable
 from matter_server.common.custom_clusters import HeimanCluster
+<<<<<<< HEAD
+=======
+
+>>>>>>> 909ad6a4f278d6df250751c3b394a49465b71587
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory, Platform
