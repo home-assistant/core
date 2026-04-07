@@ -1,0 +1,13 @@
+{
+  "domain": "homecast",
+  "name": "Homecast",
+  "codeowners": ["@parob"],
+  "config_flow": true,
+  "dependencies": ["application_credentials"],
+  "documentation": "https://www.home-assistant.io/integrations/homecast",
+  "integration_type": "hub",
+  "iot_class": "cloud_push",
+  "loggers": ["pyhomecast"],
+  "quality_scale": "bronze",
+  "requirements": ["pyhomecast==0.3.0"]
+}

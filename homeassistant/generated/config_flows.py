@@ -297,6 +297,7 @@ FLOWS = {
         "home_connect",
         "homeassistant_connect_zbt2",
         "homeassistant_sky_connect",
+        "homecast",
         "homee",
         "homekit",
         "homekit_controller",

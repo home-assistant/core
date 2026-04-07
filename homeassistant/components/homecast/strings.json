@@ -1,0 +1,46 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
+      "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "oauth_error": "[%key:common::config_flow::abort::oauth2_error%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "create_entry": {
+      "default": "Connected to Homecast. Your HomeKit devices will appear shortly."
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "step": {
+      "community": {
+        "data": {
+          "api_url": "Server URL"
+        },
+        "data_description": {
+          "api_url": "The URL of your local Homecast server (e.g. http://192.168.1.100:5656)."
+        },
+        "description": "Enter your Homecast server URL. You'll be asked to log in on your server.",
+        "title": "Connect to Homecast Community"
+      },
+      "pick_implementation": {
+        "title": "Connect to Homecast"
+      },
+      "reauth_confirm": {
+        "description": "Your Homecast session has expired. Please re-authenticate to continue controlling your devices.",
+        "title": "Re-authenticate with Homecast"
+      },
+      "user": {
+        "menu_options": {
+          "cloud": "Homecast Cloud",
+          "community": "Homecast Community"
+        },
+        "title": "Connect to Homecast"
+      }
+    }
+  }
+}

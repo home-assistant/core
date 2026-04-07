@@ -1849,6 +1849,9 @@ pyheos==1.0.6
 # homeassistant.components.hive
 pyhive-integration==1.0.8
 
+# homeassistant.components.homecast
+pyhomecast==0.3.0
+
 # homeassistant.components.homematic
 pyhomematic==0.1.77
 

@@ -721,6 +721,8 @@ build.json @home-assistant/supervisor
 /tests/components/homeassistant_sky_connect/ @home-assistant/core
 /homeassistant/components/homeassistant_yellow/ @home-assistant/core
 /tests/components/homeassistant_yellow/ @home-assistant/core
+/homeassistant/components/homecast/ @parob
+/tests/components/homecast/ @parob
 /homeassistant/components/homee/ @Taraman17
 /tests/components/homee/ @Taraman17
 /homeassistant/components/homekit/ @bdraco

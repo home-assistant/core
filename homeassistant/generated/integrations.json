@@ -2878,6 +2878,12 @@
       "config_flow": false,
       "single_config_entry": true
     },
+    "homecast": {
+      "name": "Homecast",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_push"
+    },
     "homee": {
       "name": "Homee",
       "integration_type": "hub",
