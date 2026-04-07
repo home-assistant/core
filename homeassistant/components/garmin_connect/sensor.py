@@ -11,15 +11,14 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.const import PERCENTAGE, UnitOfLength, UnitOfTime
+from homeassistant.const import PERCENTAGE, UnitOfEnergy, UnitOfLength, UnitOfTime
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import GarminConnectConfigEntry
 from .const import DOMAIN
-from .coordinator import CoreCoordinator
+from .coordinator import CoreCoordinator, GarminConnectConfigEntry
 
 # Limit parallel updates to prevent API rate limiting
 PARALLEL_UPDATES = 1
@@ -96,31 +95,37 @@ CALORIES_SENSORS: tuple[GarminConnectSensorEntityDescription, ...] = (
         key="totalKilocalories",
         translation_key="total_calories",
         state_class=SensorStateClass.TOTAL_INCREASING,
+        native_unit_of_measurement=UnitOfEnergy.KILO_CALORIE,
     ),
     GarminConnectSensorEntityDescription(
         key="activeKilocalories",
         translation_key="active_calories",
         state_class=SensorStateClass.TOTAL_INCREASING,
+        native_unit_of_measurement=UnitOfEnergy.KILO_CALORIE,
     ),
     GarminConnectSensorEntityDescription(
         key="bmrKilocalories",
         translation_key="bmr_calories",
         state_class=SensorStateClass.TOTAL,
+        native_unit_of_measurement=UnitOfEnergy.KILO_CALORIE,
     ),
     GarminConnectSensorEntityDescription(
         key="burnedKilocalories",
         translation_key="burned_calories",
         state_class=SensorStateClass.TOTAL_INCREASING,
+        native_unit_of_measurement=UnitOfEnergy.KILO_CALORIE,
     ),
     GarminConnectSensorEntityDescription(
         key="consumedKilocalories",
         translation_key="consumed_calories",
         state_class=SensorStateClass.TOTAL,
+        native_unit_of_measurement=UnitOfEnergy.KILO_CALORIE,
     ),
     GarminConnectSensorEntityDescription(
         key="remainingKilocalories",
         translation_key="remaining_calories",
         state_class=SensorStateClass.TOTAL,
+        native_unit_of_measurement=UnitOfEnergy.KILO_CALORIE,
     ),
 )
 
@@ -130,21 +135,25 @@ HEART_RATE_SENSORS: tuple[GarminConnectSensorEntityDescription, ...] = (
         key="restingHeartRate",
         translation_key="resting_heart_rate",
         state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement="bpm",
     ),
     GarminConnectSensorEntityDescription(
         key="maxHeartRate",
         translation_key="max_heart_rate",
         state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement="bpm",
     ),
     GarminConnectSensorEntityDescription(
         key="minHeartRate",
         translation_key="min_heart_rate",
         state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement="bpm",
     ),
     GarminConnectSensorEntityDescription(
         key="lastSevenDaysAvgRestingHeartRate",
         translation_key="last_7_days_avg_resting_heart_rate",
         state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement="bpm",
     ),
 )
 
@@ -589,7 +598,7 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Garmin Connect sensors."""
-    coordinator = entry.runtime_data.core
+    coordinator = entry.runtime_data
 
     async_add_entities(
         GarminConnectSensor(coordinator, description, entry.entry_id)

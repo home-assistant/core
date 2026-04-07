@@ -64,16 +64,27 @@ def mock_client() -> Generator[MagicMock]:
         client.fetch_core_data = AsyncMock(
             return_value={
                 "totalSteps": 10000,
-                "totalDistance": 8000.0,
-                "activeCalories": 500,
+                "totalDistanceMeters": 8000.0,
+                "activeKilocalories": 500,
                 "restingHeartRate": 60,
                 "minHeartRate": 50,
                 "maxHeartRate": 150,
                 "averageStressLevel": 30,
-                "bodyBatteryChargedValue": 80,
+                "bodyBatteryMostRecentValue": 80,
+                "bodyBatteryChargedValue": 40,
                 "bodyBatteryDrainedValue": 20,
                 "floorsAscended": 10,
                 "dailyStepGoal": 10000,
+                "sleepingMinutes": 480,
+                "deepSleepMinutes": 120,
+                "lightSleepMinutes": 240,
+                "remSleepMinutes": 120,
+                # Datetime fields - ha-garmin returns these as datetime objects
+                "lastSyncTimestamp": datetime(2026, 1, 24, 12, 0, 0, tzinfo=UTC),
+                "latestSpo2ReadingTime": datetime(2026, 1, 24, 5, 30, 0, tzinfo=UTC),
+                "latestRespirationTime": datetime(2026, 1, 24, 11, 0, 0, tzinfo=UTC),
+                "wellnessStartTime": datetime(2026, 1, 23, 23, 0, 0, tzinfo=UTC),
+                "wellnessEndTime": datetime(2026, 1, 24, 16, 0, 0, tzinfo=UTC),
             }
         )
         client.get_user_profile = AsyncMock(
@@ -113,7 +124,7 @@ def mock_sensor_data() -> dict:
         "deepSleepMinutes": 120,
         "lightSleepMinutes": 240,
         "remSleepMinutes": 120,
-        # Datetime fields - aiogarmin returns these as datetime objects
+        # Datetime fields - ha-garmin returns these as datetime objects
         "lastSyncTimestamp": datetime(2026, 1, 24, 12, 0, 0, tzinfo=UTC),
         "latestSpo2ReadingTime": datetime(2026, 1, 24, 5, 30, 0, tzinfo=UTC),
         "latestRespirationTime": datetime(2026, 1, 24, 11, 0, 0, tzinfo=UTC),

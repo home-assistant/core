@@ -7,12 +7,12 @@ from typing import Any
 from homeassistant.components.diagnostics import async_redact_data
 from homeassistant.core import HomeAssistant
 
-from . import GarminConnectConfigEntry
+from .coordinator import GarminConnectConfigEntry
 
 TO_REDACT = {
-    "di_token",
-    "di_refresh_token",
-    "di_client_id",
+    "token",
+    "refresh_token",
+    "client_id",
     "displayName",
     "fullName",
     "userName",
@@ -27,7 +27,7 @@ async def async_get_config_entry_diagnostics(
     hass: HomeAssistant, entry: GarminConnectConfigEntry
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
-    coordinator = entry.runtime_data.core
+    coordinator = entry.runtime_data
     data = coordinator.data or {}
     data_keys = list(data.keys())
 

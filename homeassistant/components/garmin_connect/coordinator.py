@@ -3,14 +3,14 @@
 from __future__ import annotations
 
 import asyncio
-from dataclasses import dataclass
 from datetime import timedelta
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 from ha_garmin import GarminAuth, GarminClient
 from ha_garmin.exceptions import GarminAPIError, GarminAuthError
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -23,17 +23,7 @@ from .const import (
     DOMAIN,
 )
 
-if TYPE_CHECKING:
-    from . import GarminConnectConfigEntry
-
 _LOGGER = logging.getLogger(__name__)
-
-
-@dataclass
-class GarminConnectCoordinators:
-    """Container for Garmin Connect coordinators."""
-
-    core: CoreCoordinator
 
 
 class CoreCoordinator(DataUpdateCoordinator[dict[str, Any]]):
@@ -89,3 +79,6 @@ class CoreCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         except GarminAPIError as err:
             raise UpdateFailed(f"Error fetching core data: {err}") from err
         return data
+
+
+type GarminConnectConfigEntry = ConfigEntry[CoreCoordinator]
