@@ -585,7 +585,7 @@ class CalendarEntity(Entity):
             "start_time": event.start_datetime_local.strftime(DATE_STR_FORMAT),
             "end_time": event.end_datetime_local.strftime(DATE_STR_FORMAT),
             "location": event.location or "",
-            "geo": event.geo.state_attributes if event.geo is not None else "",
+            "geo": event.geo.state_attributes if event.geo is not None else {},
             "description": event.description or "",
         }
 
