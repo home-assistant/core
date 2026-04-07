@@ -45,9 +45,9 @@ async def async_setup_entry(
         if added_device_ids:
             async_add_entities(
                 AidotLight(hass, coordinator.device_coordinators[device_id])
-                for device_id in new_lists
+                for device_id in added_device_ids
             )
-            lists_added |= new_lists
+            lists_added |= added_device_ids
         elif lists_added - new_lists:
             removed_device_ids = lists_added - new_lists
             for device_id in removed_device_ids:
