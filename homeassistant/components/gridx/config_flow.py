@@ -3,8 +3,6 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-from importlib.resources import files
-import json
 from typing import Any
 
 import httpx
@@ -15,19 +13,10 @@ from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.httpx_client import create_async_httpx_client
 
-from .client import async_create_connector
+from .client import async_create_connector, load_oem_config
 from .const import CONF_OEM, DOMAIN, LOGGER, SUPPORTED_OEMS
 
 UNEXPECTED_AUTH_ERRORS = (RuntimeError, TypeError, ValueError)
-
-
-def _load_oem_config(oem: str, username: str, password: str) -> dict[str, Any]:
-    """Load the OEM config file bundled with gridx-connector and inject credentials."""
-    config_path = files("gridx_connector").joinpath("config", f"{oem}.config.json")
-    config: dict[str, Any] = json.loads(config_path.read_text())
-    config["login"]["username"] = username
-    config["login"]["password"] = password
-    return config
 
 
 async def _validate_credentials(
@@ -43,7 +32,7 @@ async def _validate_credentials(
         ConnectionError: On network / timeout issues.
         httpx.HTTPError: On HTTP errors from the underlying client.
     """
-    config = _load_oem_config(oem, username, password)
+    config = load_oem_config(oem, username, password)
     httpx_client = create_async_httpx_client(
         hass,
         auto_cleanup=False,

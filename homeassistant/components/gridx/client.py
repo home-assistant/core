@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 from importlib import import_module
+from importlib.resources import files
+import json
 from typing import Any, Protocol
 
 import httpx
@@ -25,6 +27,15 @@ class GridxConnector(Protocol):
 
     async def close(self) -> None:
         """Close the connector and any owned clients."""
+
+
+def load_oem_config(oem: str, username: str, password: str) -> dict[str, Any]:
+    """Load OEM connector config and inject credentials."""
+    config_path = files("gridx_connector").joinpath("config", f"{oem}.config.json")
+    config: dict[str, Any] = json.loads(config_path.read_text())
+    config["login"]["username"] = username
+    config["login"]["password"] = password
+    return config
 
 
 async def async_create_connector(
