@@ -25,7 +25,9 @@ async def test_form(hass: HomeAssistant) -> None:
     assert result["errors"] == {}
 
 
-async def test_form_login_success(hass: HomeAssistant) -> None:
+async def test_form_login_success(
+    hass: HomeAssistant, mock_setup_entry: AsyncMock
+) -> None:
     """Test successful login without MFA."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -124,7 +126,9 @@ async def test_form_mfa_required(hass: HomeAssistant) -> None:
     assert result2["step_id"] == "mfa"
 
 
-async def test_form_mfa_complete(hass: HomeAssistant) -> None:
+async def test_form_mfa_complete(
+    hass: HomeAssistant, mock_setup_entry: AsyncMock
+) -> None:
     """Test completing MFA."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
