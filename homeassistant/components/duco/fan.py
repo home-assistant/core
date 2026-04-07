@@ -107,6 +107,7 @@ class DucoVentilationFanEntity(DucoEntity, FanEntity):
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set preset mode: 'auto' hands control back to Duco."""
+        self._valid_preset_mode_or_raise(preset_mode)
         await self._async_set_state(VentilationState.AUTO)
 
     async def async_set_percentage(self, percentage: int) -> None:

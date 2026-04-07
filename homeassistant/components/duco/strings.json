@@ -33,6 +33,9 @@
     }
   },
   "exceptions": {
+    "api_error": {
+      "message": "Unexpected error from the Duco API: {error}"
+    },
     "cannot_connect": {
       "message": "An error occurred while trying to connect to the Duco instance: {error}"
     },

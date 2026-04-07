@@ -69,7 +69,7 @@ class DucoCoordinator(DataUpdateCoordinator[DucoData]):
         except DucoError as err:
             raise UpdateFailed(
                 translation_domain=DOMAIN,
-                translation_key="cannot_connect",
+                translation_key="api_error",
                 translation_placeholders={"error": repr(err)},
             ) from err
         return {node.node_id: node for node in nodes}
