@@ -144,24 +144,30 @@ class LunatoneLight(
         return {self.color_mode}
 
     @property
-    def color_temp_kelvin(self) -> int:
+    def color_temp_kelvin(self) -> int | None:
         """Return the color temp of this light in kelvin."""
-        assert self._device.color_temperature
         return self._device.color_temperature
 
     @property
-    def rgb_color(self) -> tuple[int, int, int]:
+    def rgb_color(self) -> tuple[int, int, int] | None:
         """Return the RGB color of this light."""
-        assert self._device.rgb_color
-        r, g, b = self._device.rgb_color
-        return (round(r * 255), round(g * 255), round(b * 255))
+        rgb_color = self._device.rgb_color
+        return rgb_color and (
+            round(rgb_color[0] * 255),
+            round(rgb_color[1] * 255),
+            round(rgb_color[2] * 255),
+        )
 
     @property
-    def rgbw_color(self) -> tuple[int, int, int, int]:
+    def rgbw_color(self) -> tuple[int, int, int, int] | None:
         """Return the RGBW color of this light."""
-        assert self._device.rgbw_color
-        r, g, b, w = self._device.rgbw_color
-        return (round(r * 255), round(g * 255), round(b * 255), round(w * 255))
+        rgbw_color = self._device.rgbw_color
+        return rgbw_color and (
+            round(rgbw_color[0] * 255),
+            round(rgbw_color[1] * 255),
+            round(rgbw_color[2] * 255),
+            round(rgbw_color[3] * 255),
+        )
 
     @callback
     def _handle_coordinator_update(self) -> None:
