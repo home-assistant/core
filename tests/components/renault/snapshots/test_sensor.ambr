@@ -346,6 +346,8 @@
 # name: test_sensor_empty[zoe_40][sensor.reg_zoe_40_charging_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'dateTime': None,
+      'delay': None,
       'device_class': 'enum',
       'friendly_name': 'REG-ZOE-40 Charging mode',
       'options': list([
@@ -353,6 +355,11 @@
         'delayed',
         'scheduled',
       ]),
+      'schedules': tuple(
+        list([
+        ]),
+      ),
+      'startDateTime': None,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.reg_zoe_40_charging_mode',
@@ -2417,6 +2424,8 @@
 # name: test_sensors[captur_phev][sensor.reg_captur_phev_charging_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'dateTime': None,
+      'delay': None,
       'device_class': 'enum',
       'friendly_name': 'REG-CAPTUR_PHEV Charging mode',
       'options': list([
@@ -2424,6 +2433,11 @@
         'delayed',
         'scheduled',
       ]),
+      'schedules': tuple(
+        list([
+        ]),
+      ),
+      'startDateTime': None,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.reg_captur_phev_charging_mode',
@@ -3398,6 +3412,8 @@
 # name: test_sensors[megane_e_tech][sensor.reg_meg_0_charging_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'dateTime': None,
+      'delay': 300,
       'device_class': 'enum',
       'friendly_name': 'REG-MEG-0 Charging mode',
       'options': list([
@@ -3405,6 +3421,11 @@
         'delayed',
         'scheduled',
       ]),
+      'schedules': tuple(
+        list([
+        ]),
+      ),
+      'startDateTime': '2025-12-29T10:20:30Z',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.reg_meg_0_charging_mode',
@@ -4263,6 +4284,8 @@
 # name: test_sensors[twingo_3_electric][sensor.reg_twingo_iii_charging_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'dateTime': None,
+      'delay': None,
       'device_class': 'enum',
       'friendly_name': 'REG-TWINGO-III Charging mode',
       'options': list([
@@ -4270,6 +4293,11 @@
         'delayed',
         'scheduled',
       ]),
+      'schedules': tuple(
+        list([
+        ]),
+      ),
+      'startDateTime': None,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.reg_twingo_iii_charging_mode',
@@ -5070,6 +5098,8 @@
 # name: test_sensors[zoe_40][sensor.reg_zoe_40_charging_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'dateTime': None,
+      'delay': None,
       'device_class': 'enum',
       'friendly_name': 'REG-ZOE-40 Charging mode',
       'options': list([
@@ -5077,6 +5107,11 @@
         'delayed',
         'scheduled',
       ]),
+      'schedules': tuple(
+        list([
+        ]),
+      ),
+      'startDateTime': None,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.reg_zoe_40_charging_mode',
@@ -5942,6 +5977,8 @@
 # name: test_sensors[zoe_50][sensor.reg_zoe_50_charging_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'dateTime': None,
+      'delay': None,
       'device_class': 'enum',
       'friendly_name': 'REG-ZOE-50 Charging mode',
       'options': list([
@@ -5949,6 +5986,108 @@
         'delayed',
         'scheduled',
       ]),
+      'schedules': tuple(
+        list([
+          dict({
+            'activated': True,
+            'friday': dict({
+              'duration': 450,
+              'startTime': 'T00:00Z',
+            }),
+            'id': 1,
+            'monday': dict({
+              'duration': 450,
+              'startTime': 'T00:00Z',
+            }),
+            'saturday': dict({
+              'duration': 450,
+              'startTime': 'T00:00Z',
+            }),
+            'sunday': dict({
+              'duration': 450,
+              'startTime': 'T00:00Z',
+            }),
+            'thursday': dict({
+              'duration': 450,
+              'startTime': 'T00:00Z',
+            }),
+            'tuesday': dict({
+              'duration': 450,
+              'startTime': 'T00:00Z',
+            }),
+            'wednesday': dict({
+              'duration': 450,
+              'startTime': 'T00:00Z',
+            }),
+          }),
+          dict({
+            'activated': True,
+            'friday': dict({
+              'duration': 15,
+              'startTime': 'T23:30Z',
+            }),
+            'id': 2,
+            'monday': dict({
+              'duration': 15,
+              'startTime': 'T23:30Z',
+            }),
+            'saturday': dict({
+              'duration': 15,
+              'startTime': 'T23:30Z',
+            }),
+            'sunday': dict({
+              'duration': 15,
+              'startTime': 'T23:30Z',
+            }),
+            'thursday': dict({
+              'duration': 15,
+              'startTime': 'T23:30Z',
+            }),
+            'tuesday': dict({
+              'duration': 15,
+              'startTime': 'T23:30Z',
+            }),
+            'wednesday': dict({
+              'duration': 15,
+              'startTime': 'T23:30Z',
+            }),
+          }),
+          dict({
+            'activated': False,
+            'friday': None,
+            'id': 3,
+            'monday': None,
+            'saturday': None,
+            'sunday': None,
+            'thursday': None,
+            'tuesday': None,
+            'wednesday': None,
+          }),
+          dict({
+            'activated': False,
+            'friday': None,
+            'id': 4,
+            'monday': None,
+            'saturday': None,
+            'sunday': None,
+            'thursday': None,
+            'tuesday': None,
+            'wednesday': None,
+          }),
+          dict({
+            'activated': False,
+            'friday': None,
+            'id': 5,
+            'monday': None,
+            'saturday': None,
+            'sunday': None,
+            'thursday': None,
+            'tuesday': None,
+            'wednesday': None,
+          }),
+        ]),
+      ),
+      'startDateTime': None,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.reg_zoe_50_charging_mode',

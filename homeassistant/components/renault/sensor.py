@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from datetime import datetime
 from typing import Any
@@ -56,6 +56,7 @@ class RenaultSensorEntityDescription[T: KamereonVehicleDataAttributes](
     condition_lambda: Callable[[RenaultVehicleProxy], bool] | None = None
     requires_fuel: bool = False
     value_lambda: Callable[[RenaultSensor[T]], StateType | datetime]
+    attributes_lambda: Callable[[RenaultSensor[T]], Mapping[str, Any]] | None = None
 
 
 async def async_setup_entry(
@@ -81,11 +82,27 @@ class RenaultSensor[T: KamereonVehicleDataAttributes](
     """Mixin for sensor specific attributes."""
 
     entity_description: RenaultSensorEntityDescription[T]
+    # Do not store these attributes in the HA DB
+    _unrecorded_attributes = frozenset(
+        {
+            "schedules",
+            "startDateTime",
+            "dateTime",
+            "delay",
+        }
+    )
 
     @property
     def native_value(self) -> StateType | datetime:
         """Return the state of this entity."""
         return self.entity_description.value_lambda(self)
+
+    @property
+    def extra_state_attributes(self) -> Mapping[str, Any] | None:
+        """Return the attributes of this entity."""
+        if self.entity_description.attributes_lambda:
+            return self.entity_description.attributes_lambda(self)
+        return None
 
 
 def _get_charging_power(
@@ -133,6 +150,21 @@ def _get_charging_settings_mode_formatted(
     """Return the charging_settings mode of this entity."""
     charging_mode = entity.coordinator.data.mode
     return charging_mode.lower() if charging_mode else None
+
+
+def _get_charging_settings_attributes(
+    entity: RenaultSensor[KamereonVehicleChargingSettingsData],
+) -> Mapping[str, Any]:
+    """Return the charging_settings attributes."""
+    data = entity.coordinator.data
+    return {
+        "schedules": [schedule.for_json() for schedule in schedules]
+        if (schedules := data.schedules)
+        else None,
+        "dateTime": data.dateTime,
+        "startDateTime": data.startDateTime,
+        "delay": data.delay,
+    }
 
 
 SENSOR_TYPES: tuple[RenaultSensorEntityDescription[Any], ...] = (
@@ -329,6 +361,7 @@ SENSOR_TYPES: tuple[RenaultSensorEntityDescription[Any], ...] = (
             "scheduled",
         ],
         value_lambda=_get_charging_settings_mode_formatted,
+        attributes_lambda=_get_charging_settings_attributes,
     ),
     RenaultSensorEntityDescription[KamereonVehicleTyrePressureData](
         key="front_left_pressure",
