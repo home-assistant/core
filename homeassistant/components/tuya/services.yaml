@@ -1,5 +1,5 @@
 get_feeder_meal_plan:
-  target:
+  fields:
     device_id:
       required: true
       selector:
@@ -7,7 +7,7 @@ get_feeder_meal_plan:
           integration: tuya
 
 set_feeder_meal_plan:
-  target:
+  fields:
     device_id:
       required: true
       selector:
@@ -44,7 +44,6 @@ set_feeder_meal_plan:
                 number:
                   min: 0
                   max: 100
-                  step: 1
                   mode: box
                   unit_of_measurement: "g"
             enabled:
