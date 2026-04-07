@@ -99,7 +99,7 @@ async def test_set_feeder_meal_plan(
     mock_device: CustomerDevice,
     device_registry: dr.DeviceRegistry,
 ) -> None:
-    """Test GET_FEEDER_MEAL_PLAN normal and error cases using real device registry."""
+    """Test SET_FEEDER_MEAL_PLAN normal and error cases using real device registry."""
     await initialize_entry(hass, mock_manager, mock_config_entry, mock_device)
     device_entry = device_registry.async_get_device(
         identifiers={(DOMAIN, mock_device.id)}
