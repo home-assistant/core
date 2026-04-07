@@ -16,6 +16,21 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN
 
+DATA_SCHEMA = vol.Schema(
+    {
+        vol.Required(
+            CONF_COUNTRY_CODE,
+            default=DEFAULT_COUNTRY_CODE,
+        ): selector.CountrySelector(
+            selector.CountrySelectorConfig(
+                countries=SUPPORTED_COUNTRY_CODES,
+            )
+        ),
+        vol.Required(CONF_USERNAME): str,
+        vol.Required(CONF_PASSWORD): str,
+    }
+)
+
 
 class AidotConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle aidot config flow."""
@@ -46,21 +61,6 @@ class AidotConfigFlow(ConfigFlow, domain=DOMAIN):
                         CONF_LOGIN_INFO: login_info,
                     },
                 )
-
-        DATA_SCHEMA = vol.Schema(
-            {
-                vol.Required(
-                    CONF_COUNTRY_CODE,
-                    default=DEFAULT_COUNTRY_CODE,
-                ): selector.CountrySelector(
-                    selector.CountrySelectorConfig(
-                        countries=SUPPORTED_COUNTRY_CODES,
-                    )
-                ),
-                vol.Required(CONF_USERNAME): str,
-                vol.Required(CONF_PASSWORD): str,
-            }
-        )
 
         return self.async_show_form(
             step_id="user", data_schema=DATA_SCHEMA, errors=errors
