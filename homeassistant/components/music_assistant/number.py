@@ -100,10 +100,6 @@ class MusicAssistantPlayerConfigNumber(MusicAssistantPlayerOptionEntity, NumberE
         """Initialize MusicAssistantPlayerConfigNumber."""
         super().__init__(mass, player_id, player_option)
 
-        # we ensured in our discovery that the translation key is available and part of
-        # strings.json (see tests)
-        assert player_option.translation_key is not None
-
         self.entity_description = entity_description
 
     @catch_musicassistant_error
