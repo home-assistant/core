@@ -31,6 +31,7 @@ from aiohasupervisor.models import (
 )
 from aiohasupervisor.models.backups import LOCATION_CLOUD_BACKUP, LOCATION_LOCAL_STORAGE
 from aiohasupervisor.models.mounts import MountsInfo
+from aiohttp import FormData
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -685,6 +686,43 @@ async def test_agent_upload(
         event["uploaded_bytes"] <= event["total_bytes"]
         for event in upload_progress_events
     )
+
+
+@pytest.mark.parametrize(
+    "suggested_filename",
+    [
+        "../traversal.tar",
+        "../../etc/passwd",
+        "subdir/backup.tar",
+        ".",
+        "..",
+        "../..",
+        "..\\traversal.tar",
+        "C:\\fakepath\\backup.tar",
+    ],
+)
+@pytest.mark.usefixtures("hassio_client", "setup_backup_integration")
+async def test_agent_upload_path_traversal(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    suggested_filename: str,
+) -> None:
+    """Test agent upload rejects filenames with path traversal."""
+    client = await hass_client()
+
+    data = FormData(quote_fields=False)
+    data.add_field(
+        "file",
+        "test",
+        filename=suggested_filename,
+        content_type="application/octet-stream",
+    )
+    resp = await client.post(
+        "/api/backup/upload?agent_id=hassio.local",
+        data=data,
+    )
+
+    assert resp.status == 400
 
 
 @pytest.mark.usefixtures("hassio_client", "setup_backup_integration")

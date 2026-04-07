@@ -81,5 +81,4 @@ rules:
   inject-websession:
     status: exempt
     comment: Underlying huawei-lte-api does not use aiohttp or httpx, so this does not apply.
-  strict-typing:
-    status: done
+  strict-typing: done
