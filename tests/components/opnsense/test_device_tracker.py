@@ -2,6 +2,7 @@
 
 from unittest.mock import AsyncMock, patch
 
+from aiopnsense import OPNsenseError
 import pytest
 
 from homeassistant.components.device_tracker import legacy
@@ -72,3 +73,126 @@ async def test_get_scanner(
     assert device_1.state == "home"
     device_2 = hass.states.get("device_tracker.ff_ff_ff_ff_ff_ff")
     assert device_2.state == "home"
+
+
+async def test_get_scanner_with_interfaces(
+    hass: HomeAssistant,
+    mock_opnsense_client: AsyncMock,
+    mock_device_tracker_conf: list[legacy.Device],
+) -> None:
+    """Test creating an opnsense scanner with tracker interfaces."""
+    result = await async_setup_component(
+        hass,
+        DOMAIN,
+        {
+            DOMAIN: {
+                CONF_URL: "https://fake_host_fun/api",
+                CONF_API_KEY: "fake_key",
+                CONF_API_SECRET: "fake_secret",
+                CONF_VERIFY_SSL: False,
+                "tracker_interfaces": ["LAN"],
+            }
+        },
+    )
+    await hass.async_block_till_done()
+    assert result
+    # Both devices are on igb1 (LAN), so both should be tracked
+    device_1 = hass.states.get("device_tracker.desktop")
+    assert device_1 is not None
+    assert device_1.state == "home"
+    device_2 = hass.states.get("device_tracker.ff_ff_ff_ff_ff_ff")
+    assert device_2.state == "home"
+
+
+async def test_get_scanner_with_interfaces_filters(
+    hass: HomeAssistant,
+    mock_opnsense_client: AsyncMock,
+    mock_device_tracker_conf: list[legacy.Device],
+) -> None:
+    """Test that scanner filters devices by interface."""
+    result = await async_setup_component(
+        hass,
+        DOMAIN,
+        {
+            DOMAIN: {
+                CONF_URL: "https://fake_host_fun/api",
+                CONF_API_KEY: "fake_key",
+                CONF_API_SECRET: "fake_secret",
+                CONF_VERIFY_SSL: False,
+                "tracker_interfaces": ["WAN"],
+            }
+        },
+    )
+    await hass.async_block_till_done()
+    assert result
+    # Both devices are on igb1 (LAN), not WAN, so neither should be tracked
+    device_1 = hass.states.get("device_tracker.desktop")
+    assert device_1 is None
+    device_2 = hass.states.get("device_tracker.ff_ff_ff_ff_ff_ff")
+    assert device_2 is None
+
+
+async def test_setup_fails_on_connection_error(
+    hass: HomeAssistant,
+    mock_opnsense_client: AsyncMock,
+) -> None:
+    """Test setup fails gracefully on connection error."""
+    mock_opnsense_client.get_arp_table = AsyncMock(side_effect=OPNsenseError)
+
+    result = await async_setup_component(
+        hass,
+        DOMAIN,
+        {
+            DOMAIN: {
+                CONF_URL: "https://fake_host_fun/api",
+                CONF_API_KEY: "fake_key",
+                CONF_API_SECRET: "fake_secret",
+                CONF_VERIFY_SSL: False,
+            }
+        },
+    )
+    assert not result
+
+
+async def test_setup_fails_on_interface_error(
+    hass: HomeAssistant,
+    mock_opnsense_client: AsyncMock,
+) -> None:
+    """Test setup fails when interface retrieval fails."""
+    mock_opnsense_client.get_interfaces = AsyncMock(side_effect=OPNsenseError)
+
+    result = await async_setup_component(
+        hass,
+        DOMAIN,
+        {
+            DOMAIN: {
+                CONF_URL: "https://fake_host_fun/api",
+                CONF_API_KEY: "fake_key",
+                CONF_API_SECRET: "fake_secret",
+                CONF_VERIFY_SSL: False,
+                "tracker_interfaces": ["LAN"],
+            }
+        },
+    )
+    assert not result
+
+
+async def test_setup_fails_on_invalid_interface(
+    hass: HomeAssistant,
+    mock_opnsense_client: AsyncMock,
+) -> None:
+    """Test setup fails when a configured interface doesn't exist."""
+    result = await async_setup_component(
+        hass,
+        DOMAIN,
+        {
+            DOMAIN: {
+                CONF_URL: "https://fake_host_fun/api",
+                CONF_API_KEY: "fake_key",
+                CONF_API_SECRET: "fake_secret",
+                CONF_VERIFY_SSL: False,
+                "tracker_interfaces": ["NONEXISTENT"],
+            }
+        },
+    )
+    assert not result
