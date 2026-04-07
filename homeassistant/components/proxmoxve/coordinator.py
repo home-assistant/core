@@ -55,7 +55,7 @@ class NodeResources:
     storages: list[dict[str, Any]]
     backups: list[dict[str, Any]]
     version: dict[str, Any]
-    update: list[dict[str, Any]]
+    update: list[dict[str, Any]] | bool
 
 
 @dataclass(slots=True, kw_only=True)
@@ -68,7 +68,7 @@ class ProxmoxNodeData:
     storages: dict[str, dict[str, Any]] = field(default_factory=dict)
     backups: list[dict[str, Any]] = field(default_factory=list)
     version: dict[str, Any] = field(default_factory=dict)
-    update: list[dict[str, Any]] = field(default_factory=list)
+    update: list[dict[str, Any]] | bool = False
 
 
 def proxmox_base_url(coordinator: ProxmoxCoordinator) -> URL:
@@ -286,7 +286,7 @@ class ProxmoxCoordinator(DataUpdateCoordinator[dict[str, ProxmoxNodeData]]):
                 storages=[],
                 backups=[],
                 version={},
-                update=[],
+                update=False,
             )
 
         vms = self.proxmox.nodes(node[CONF_NODE]).qemu.get() or []
@@ -297,7 +297,7 @@ class ProxmoxCoordinator(DataUpdateCoordinator[dict[str, ProxmoxNodeData]]):
             or []
         )
         version = self.proxmox.nodes(node[CONF_NODE]).version.get() or {}
-        update: list = []
+        update: list | bool = False
         if is_granted(
             self.permissions,
             p_type="nodes",

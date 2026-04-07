@@ -12,11 +12,11 @@ from .const import ProxmoxPermission
 class ProxmoxUpdateInfo:
     """Describes Proxmox VE update information."""
 
-    latest_version: str
-    latest_version_id: str
-    total_updates: int
-    proxmox_updates: int
-    other_updates: int
+    latest_version: str | None = None
+    latest_version_id: str | None = None
+    total_updates: int = 0
+    proxmox_updates: int = 0
+    other_updates: int = 0
 
 
 def is_granted(
@@ -55,9 +55,12 @@ def latest_version(versions: list[str]) -> str:
 
 def update_version(
     current_version: str,
-    updates: list[dict[str, Any]],
-) -> ProxmoxUpdateInfo:
+    updates: list[dict[str, Any]] | bool,
+) -> ProxmoxUpdateInfo | bool:
     """Return the updated version based on the current version and updates."""
+
+    if isinstance(updates, bool):
+        return False
 
     count = len(updates)
     pve_count = sum(is_proxmox_package(u) for u in updates)
