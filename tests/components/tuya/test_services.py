@@ -18,92 +18,36 @@ from . import initialize_entry
 from tests.common import MockConfigEntry
 
 
-def find_device_id(mock_device: CustomerDevice, hass: HomeAssistant) -> str:
-    """Helper to find the Home Assistant device registry ID for a mock Tuya device."""
-    tuya_device_id = mock_device.id
-    device_registry = dr.async_get(hass)
-
-    for entry in device_registry.devices.values():
-        if (DOMAIN, tuya_device_id) in entry.identifiers:
-            return entry.id
-
-    raise ValueError(f"Device with Tuya ID {tuya_device_id} not found in registry")
-
-
-def decoded_meal_plan() -> list[FeederSchedule]:
-    """Return raw meal plan data for testing."""
-    return [
-        {
-            "days": [
-                "monday",
-                "tuesday",
-                "wednesday",
-                "thursday",
-                "friday",
-                "saturday",
-                "sunday",
-            ],
-            "time": "09:00",
-            "portion": 1,
-            "enabled": True,
-        },
-        {
-            "days": [
-                "monday",
-                "tuesday",
-                "wednesday",
-                "thursday",
-                "friday",
-                "saturday",
-                "sunday",
-            ],
-            "time": "09:30",
-            "portion": 1,
-            "enabled": True,
-        },
-        {
-            "days": [
-                "monday",
-                "tuesday",
-                "wednesday",
-                "thursday",
-                "friday",
-                "saturday",
-                "sunday",
-            ],
-            "time": "12:00",
-            "portion": 1,
-            "enabled": True,
-        },
-        {
-            "days": [
-                "monday",
-                "tuesday",
-                "wednesday",
-                "thursday",
-                "friday",
-                "saturday",
-                "sunday",
-            ],
-            "time": "15:00",
-            "portion": 2,
-            "enabled": True,
-        },
-        {
-            "days": [
-                "monday",
-                "tuesday",
-                "wednesday",
-                "thursday",
-                "friday",
-                "saturday",
-                "sunday",
-            ],
-            "time": "21:00",
-            "portion": 2,
-            "enabled": True,
-        },
-    ]
+DECODED_MEAL_PLAN: list[FeederSchedule] = [
+    {
+        "days": [
+            "monday",
+            "tuesday",
+            "wednesday",
+            "thursday",
+            "friday",
+            "saturday",
+            "sunday",
+        ],
+        "time": "09:00",
+        "portion": 1,
+        "enabled": True,
+    },
+    {
+        "days": [
+            "monday",
+            "tuesday",
+            "wednesday",
+            "thursday",
+            "friday",
+            "saturday",
+            "sunday",
+        ],
+        "time": "09:30",
+        "portion": 1,
+        "enabled": True,
+    },
+]
 
 
 @pytest.mark.parametrize("mock_device_code", ["cwwsq_wfkzyy0evslzsmoi"])
@@ -116,7 +60,12 @@ async def test_get_feeder_meal_plan(
 ) -> None:
     """Test GET_FEEDER_MEAL_PLAN normal and error cases using real device registry."""
     await initialize_entry(hass, mock_manager, mock_config_entry, mock_device)
-    device_id = find_device_id(mock_device, hass)
+    device_registry = dr.async_get(hass)
+    device_entry = device_registry.async_get_device(
+        identifiers={(DOMAIN, mock_device.id)}
+    )
+    assert device_entry is not None
+    device_id = device_entry.id
 
     # Normal case
     result = await hass.services.async_call(
@@ -152,7 +101,12 @@ async def test_set_feeder_meal_plan(
 ) -> None:
     """Test SET_FEEDER_MEAL_PLAN normal and error cases using real device registry."""
     await initialize_entry(hass, mock_manager, mock_config_entry, mock_device)
-    device_id = find_device_id(mock_device, hass)
+    device_registry = dr.async_get(hass)
+    device_entry = device_registry.async_get_device(
+        identifiers={(DOMAIN, mock_device.id)}
+    )
+    assert device_entry is not None
+    device_id = device_entry.id
 
     # Normal case
     await hass.services.async_call(
@@ -160,14 +114,14 @@ async def test_set_feeder_meal_plan(
         Service.SET_FEEDER_MEAL_PLAN,
         {
             "device_id": device_id,
-            "data": decoded_meal_plan(),
+            "data": DECODED_MEAL_PLAN,
         },
         blocking=True,
     )
     # We use mock_device.id since this is sent to the manager
     mock_manager.send_commands.assert_called_once_with(
         mock_device.id,
-        [{"code": "meal_plan", "value": "fwkAAQF/CR4BAX8MAAEBfw8AAgF/FQACAQ=="}],
+        [{"code": "meal_plan", "value": "fwkAAQF/CR4BAQ=="}],
     )
 
     # Error case: unsupported device (not in DEFAULT_PROFILE_DEVICES)
@@ -181,23 +135,22 @@ async def test_set_feeder_meal_plan(
             Service.SET_FEEDER_MEAL_PLAN,
             {
                 "device_id": device_id,
-                "data": decoded_meal_plan(),
+                "data": DECODED_MEAL_PLAN,
             },
             blocking=True,
         )
 
 
 @pytest.mark.parametrize("mock_device_code", ["cwwsq_wfkzyy0evslzsmoi"])
-async def test_get_tuya_device_error_cases(
+async def test_get_tuya_device_error_device_not_found(
     hass: HomeAssistant,
     mock_manager: Manager,
     mock_config_entry: MockConfigEntry,
     mock_device: CustomerDevice,
 ) -> None:
-    """Test service error handling paths."""
+    """Test service error when device ID does not exist."""
     await initialize_entry(hass, mock_manager, mock_config_entry, mock_device)
 
-    # Case 1: Device ID not found
     with pytest.raises(
         ServiceValidationError,
         match="Feeder with ID invalid_device_id could not be found",
@@ -210,7 +163,17 @@ async def test_get_tuya_device_error_cases(
             return_response=True,
         )
 
-    # Case 2: Device exists but is not a Tuya device
+
+@pytest.mark.parametrize("mock_device_code", ["cwwsq_wfkzyy0evslzsmoi"])
+async def test_get_tuya_device_error_non_tuya_device(
+    hass: HomeAssistant,
+    mock_manager: Manager,
+    mock_config_entry: MockConfigEntry,
+    mock_device: CustomerDevice,
+) -> None:
+    """Test service error when target device is not a Tuya device."""
+    await initialize_entry(hass, mock_manager, mock_config_entry, mock_device)
+
     device_registry = dr.async_get(hass)
     non_tuya_device = device_registry.async_get_or_create(
         config_entry_id=mock_config_entry.entry_id,
@@ -229,7 +192,18 @@ async def test_get_tuya_device_error_cases(
             return_response=True,
         )
 
-    # Case 3: Tuya device exists in registry but not in manager.device_map
+
+@pytest.mark.parametrize("mock_device_code", ["cwwsq_wfkzyy0evslzsmoi"])
+async def test_get_tuya_device_error_unknown_tuya_device(
+    hass: HomeAssistant,
+    mock_manager: Manager,
+    mock_config_entry: MockConfigEntry,
+    mock_device: CustomerDevice,
+) -> None:
+    """Test service error when Tuya identifier is not present in manager map."""
+    await initialize_entry(hass, mock_manager, mock_config_entry, mock_device)
+
+    device_registry = dr.async_get(hass)
     tuya_device = device_registry.async_get_or_create(
         config_entry_id=mock_config_entry.entry_id,
         identifiers={(DOMAIN, "unknown_tuya_id")},
