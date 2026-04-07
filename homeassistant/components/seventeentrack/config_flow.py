@@ -99,5 +99,5 @@ class SeventeenTrackConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @callback
     def _get_client(self):
-        session = aiohttp_client.async_get_clientsession(self.hass)
+        session = aiohttp_client.async_create_clientsession(self.hass)
         return SeventeenTrackClient(session=session)

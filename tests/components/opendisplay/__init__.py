@@ -24,6 +24,7 @@ V1_ADVERTISEMENT_DATA = b"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x82\x72\x
 
 TEST_ADDRESS = "AA:BB:CC:DD:EE:FF"
 TEST_TITLE = "OpenDisplay 1234"
+ENCRYPTION_KEY = "aabbccddee112233aabbccddee112233"  # 32 hex chars = 16 bytes
 
 # Firmware version response: major=1, minor=2, sha="abc123"
 FIRMWARE_VERSION = {"major": 1, "minor": 2, "sha": "abc123"}
