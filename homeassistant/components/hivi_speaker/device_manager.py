@@ -94,7 +94,9 @@ class HIVIDeviceManager:
             finally:
                 self._discovery_queue.task_done()
 
-    async def _handle_discovered_devices(self, discovered_devices: list[dict[str, Any]]):
+    async def _handle_discovered_devices(
+        self, discovered_devices: list[dict[str, Any]]
+    ):
         """Handle discovered devices."""
         _LOGGER.debug("discovered devices: %s", discovered_devices)
 
