@@ -2,10 +2,6 @@
 
 from __future__ import annotations
 
-from importlib.resources import files
-import json
-from typing import Any
-
 import httpx
 
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
@@ -13,7 +9,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.httpx_client import create_async_httpx_client
 
-from .client import async_create_connector
+from .client import async_create_connector, load_oem_config
 from .const import CONF_OEM, DOMAIN, LOGGER
 from .coordinator import GridxHistoricalCoordinator, GridxLiveCoordinator
 from .types import GridxConfigEntry, GridxData
@@ -22,22 +18,13 @@ PLATFORMS = [Platform.SENSOR]
 API_BASE_URL = "https://api.gridx.de"
 
 
-def _load_oem_config(oem: str, username: str, password: str) -> dict[str, Any]:
-    """Load OEM connector config and inject credentials."""
-    config_path = files("gridx_connector").joinpath("config", f"{oem}.config.json")
-    config: dict[str, Any] = json.loads(config_path.read_text())
-    config["login"]["username"] = username
-    config["login"]["password"] = password
-    return config
-
-
 async def async_setup_entry(hass: HomeAssistant, entry: GridxConfigEntry) -> bool:
     """Set up GridX from a config entry."""
     username: str = entry.data[CONF_USERNAME]
     password: str = entry.data[CONF_PASSWORD]
     oem: str = entry.data[CONF_OEM]
 
-    config = _load_oem_config(oem, username, password)
+    config = load_oem_config(oem, username, password)
     httpx_client = create_async_httpx_client(
         hass,
         auto_cleanup=False,

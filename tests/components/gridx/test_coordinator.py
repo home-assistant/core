@@ -2,6 +2,7 @@
 
 from unittest.mock import AsyncMock, MagicMock
 
+import httpx
 import pytest
 
 from homeassistant.components.gridx.const import CONF_OEM, DOMAIN
@@ -105,4 +106,110 @@ async def test_historical_coordinator_auth_error(
     )
 
     with pytest.raises(ConfigEntryAuthFailed):
+        await _fetch_historical(connector)
+
+
+async def test_live_coordinator_http_401(
+    hass: HomeAssistant, config_entry: MockConfigEntry
+) -> None:
+    """HTTPStatusError with 401 raises ConfigEntryAuthFailed in live coordinator."""
+    response = MagicMock()
+    response.status_code = 401
+    err = httpx.HTTPStatusError("401", request=MagicMock(), response=response)
+    connector = MagicMock()
+    connector.retrieve_live_data = AsyncMock(side_effect=err)
+
+    with pytest.raises(ConfigEntryAuthFailed):
+        await _fetch_live(connector)
+
+
+async def test_live_coordinator_http_status_500(
+    hass: HomeAssistant, config_entry: MockConfigEntry
+) -> None:
+    """HTTPStatusError with 500 raises UpdateFailed (not auth) in live coordinator."""
+    response = MagicMock()
+    response.status_code = 500
+    err = httpx.HTTPStatusError("500", request=MagicMock(), response=response)
+    connector = MagicMock()
+    connector.retrieve_live_data = AsyncMock(side_effect=err)
+
+    with pytest.raises(UpdateFailed):
+        await _fetch_live(connector)
+
+
+async def test_live_coordinator_http_error(
+    hass: HomeAssistant, config_entry: MockConfigEntry
+) -> None:
+    """httpx.HTTPError raises UpdateFailed in live coordinator."""
+    connector = MagicMock()
+    connector.retrieve_live_data = AsyncMock(
+        side_effect=httpx.HTTPError("connection failed")
+    )
+
+    with pytest.raises(UpdateFailed):
+        await _fetch_live(connector)
+
+
+async def test_live_coordinator_runtime_error(
+    hass: HomeAssistant, config_entry: MockConfigEntry
+) -> None:
+    """RuntimeError raises UpdateFailed in live coordinator."""
+    connector = MagicMock()
+    connector.retrieve_live_data = AsyncMock(side_effect=RuntimeError("unexpected"))
+
+    with pytest.raises(UpdateFailed):
+        await _fetch_live(connector)
+
+
+async def test_historical_coordinator_http_401(
+    hass: HomeAssistant, config_entry: MockConfigEntry
+) -> None:
+    """HTTPStatusError with 401 raises ConfigEntryAuthFailed in historical coordinator."""
+    response = MagicMock()
+    response.status_code = 401
+    err = httpx.HTTPStatusError("401", request=MagicMock(), response=response)
+    connector = MagicMock()
+    connector.retrieve_historical_data = AsyncMock(side_effect=err)
+
+    with pytest.raises(ConfigEntryAuthFailed):
+        await _fetch_historical(connector)
+
+
+async def test_historical_coordinator_http_status_500(
+    hass: HomeAssistant, config_entry: MockConfigEntry
+) -> None:
+    """HTTPStatusError with 500 raises UpdateFailed in historical coordinator."""
+    response = MagicMock()
+    response.status_code = 500
+    err = httpx.HTTPStatusError("500", request=MagicMock(), response=response)
+    connector = MagicMock()
+    connector.retrieve_historical_data = AsyncMock(side_effect=err)
+
+    with pytest.raises(UpdateFailed):
+        await _fetch_historical(connector)
+
+
+async def test_historical_coordinator_http_error(
+    hass: HomeAssistant, config_entry: MockConfigEntry
+) -> None:
+    """httpx.HTTPError raises UpdateFailed in historical coordinator."""
+    connector = MagicMock()
+    connector.retrieve_historical_data = AsyncMock(
+        side_effect=httpx.HTTPError("connection failed")
+    )
+
+    with pytest.raises(UpdateFailed):
+        await _fetch_historical(connector)
+
+
+async def test_historical_coordinator_runtime_error(
+    hass: HomeAssistant, config_entry: MockConfigEntry
+) -> None:
+    """RuntimeError raises UpdateFailed in historical coordinator."""
+    connector = MagicMock()
+    connector.retrieve_historical_data = AsyncMock(
+        side_effect=RuntimeError("unexpected")
+    )
+
+    with pytest.raises(UpdateFailed):
         await _fetch_historical(connector)
