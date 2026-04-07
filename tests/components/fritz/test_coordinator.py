@@ -40,7 +40,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr
 
 from .conftest import FritzConnectionMock, FritzServiceMock
-from .const import MOCK_MESH_MASTER_MAC, MOCK_STATUS_DEVICE_INFO_DATA, MOCK_USER_DATA
+from .const import MOCK_SERIAL_NUMBER, MOCK_STATUS_DEVICE_INFO_DATA, MOCK_USER_DATA
 
 from tests.common import MockConfigEntry
 
@@ -195,7 +195,7 @@ async def test_no_software_version(
     assert entry.state is ConfigEntryState.LOADED
 
     device = device_registry.async_get_device(
-        identifiers={(DOMAIN, MOCK_MESH_MASTER_MAC)}
+        identifiers={(DOMAIN, MOCK_SERIAL_NUMBER)}
     )
     assert device
     assert device.sw_version == "string_version_not_number"

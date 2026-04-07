@@ -32,7 +32,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'connection_uptime',
-    'unique_id': '1C:ED:6F:12:34:11-connection_uptime',
+    'unique_id': '1CED6F123411-connection_uptime',
     'unit_of_measurement': None,
   })
 # ---
@@ -88,7 +88,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'cpu_temperature',
-    'unique_id': '1C:ED:6F:12:34:11-cpu_temperature',
+    'unique_id': '1CED6F123411-cpu_temperature',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
@@ -146,7 +146,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'kb_s_received',
-    'unique_id': '1C:ED:6F:12:34:11-kb_s_received',
+    'unique_id': '1CED6F123411-kb_s_received',
     'unit_of_measurement': <UnitOfDataRate.KILOBYTES_PER_SECOND: 'kB/s'>,
   })
 # ---
@@ -199,7 +199,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'external_ip',
-    'unique_id': '1C:ED:6F:12:34:11-external_ip',
+    'unique_id': '1CED6F123411-external_ip',
     'unit_of_measurement': None,
   })
 # ---
@@ -249,7 +249,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'external_ipv6',
-    'unique_id': '1C:ED:6F:12:34:11-external_ipv6',
+    'unique_id': '1CED6F123411-external_ipv6',
     'unit_of_measurement': None,
   })
 # ---
@@ -304,7 +304,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'gb_received',
-    'unique_id': '1C:ED:6F:12:34:11-gb_received',
+    'unique_id': '1CED6F123411-gb_received',
     'unit_of_measurement': <UnitOfInformation.GIGABYTES: 'GB'>,
   })
 # ---
@@ -362,7 +362,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'gb_sent',
-    'unique_id': '1C:ED:6F:12:34:11-gb_sent',
+    'unique_id': '1CED6F123411-gb_sent',
     'unit_of_measurement': <UnitOfInformation.GIGABYTES: 'GB'>,
   })
 # ---
@@ -415,7 +415,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'device_uptime',
-    'unique_id': '1C:ED:6F:12:34:11-device_uptime',
+    'unique_id': '1CED6F123411-device_uptime',
     'unit_of_measurement': None,
   })
 # ---
@@ -466,7 +466,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'link_noise_margin_received',
-    'unique_id': '1C:ED:6F:12:34:11-link_noise_margin_received',
+    'unique_id': '1CED6F123411-link_noise_margin_received',
     'unit_of_measurement': 'dB',
   })
 # ---
@@ -517,7 +517,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'link_attenuation_received',
-    'unique_id': '1C:ED:6F:12:34:11-link_attenuation_received',
+    'unique_id': '1CED6F123411-link_attenuation_received',
     'unit_of_measurement': 'dB',
   })
 # ---
@@ -571,7 +571,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'link_kb_s_received',
-    'unique_id': '1C:ED:6F:12:34:11-link_kb_s_received',
+    'unique_id': '1CED6F123411-link_kb_s_received',
     'unit_of_measurement': <UnitOfDataRate.KILOBITS_PER_SECOND: 'kbit/s'>,
   })
 # ---
@@ -623,7 +623,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'link_noise_margin_sent',
-    'unique_id': '1C:ED:6F:12:34:11-link_noise_margin_sent',
+    'unique_id': '1CED6F123411-link_noise_margin_sent',
     'unit_of_measurement': 'dB',
   })
 # ---
@@ -674,7 +674,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'link_attenuation_sent',
-    'unique_id': '1C:ED:6F:12:34:11-link_attenuation_sent',
+    'unique_id': '1CED6F123411-link_attenuation_sent',
     'unit_of_measurement': 'dB',
   })
 # ---
@@ -728,7 +728,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'link_kb_s_sent',
-    'unique_id': '1C:ED:6F:12:34:11-link_kb_s_sent',
+    'unique_id': '1CED6F123411-link_kb_s_sent',
     'unit_of_measurement': <UnitOfDataRate.KILOBITS_PER_SECOND: 'kbit/s'>,
   })
 # ---
@@ -783,7 +783,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'max_kb_s_received',
-    'unique_id': '1C:ED:6F:12:34:11-max_kb_s_received',
+    'unique_id': '1CED6F123411-max_kb_s_received',
     'unit_of_measurement': <UnitOfDataRate.KILOBITS_PER_SECOND: 'kbit/s'>,
   })
 # ---
@@ -838,7 +838,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'max_kb_s_sent',
-    'unique_id': '1C:ED:6F:12:34:11-max_kb_s_sent',
+    'unique_id': '1CED6F123411-max_kb_s_sent',
     'unit_of_measurement': <UnitOfDataRate.KILOBITS_PER_SECOND: 'kbit/s'>,
   })
 # ---
@@ -895,7 +895,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'kb_s_sent',
-    'unique_id': '1C:ED:6F:12:34:11-kb_s_sent',
+    'unique_id': '1CED6F123411-kb_s_sent',
     'unit_of_measurement': <UnitOfDataRate.KILOBYTES_PER_SECOND: 'kB/s'>,
   })
 # ---
