@@ -73,7 +73,6 @@ class EvoResetSystemButton(EvoEntity, ButtonEntity):
     """Button entity for system reset."""
 
     _attr_has_entity_name = True
-    _attr_icon = "mdi:thermostat-box-auto"
 
     _evo_device: evo.ControlSystem
     _evo_id_attr = "system_id"
@@ -105,7 +104,6 @@ class EvoResetDhwButton(EvoEntity, ButtonEntity):
     """Button entity for DHW override reset."""
 
     _attr_has_entity_name = True
-    _attr_icon = "mdi:water-boiler-auto"
 
     _evo_device: evo.HotWater
     _evo_id_attr = "dhw_id"
@@ -136,7 +134,6 @@ class EvoResetZoneButton(EvoEntity, ButtonEntity):
     """Button entity for zone override reset."""
 
     _attr_has_entity_name = True
-    _attr_icon = "mdi:thermostat-auto"
 
     _evo_device: evo.Zone
     _evo_id_attr = "zone_id"
