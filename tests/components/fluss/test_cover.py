@@ -19,7 +19,6 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
-from .conftest import MOCK_DEVICES
 
 from tests.common import MockConfigEntry, snapshot_platform
 
@@ -31,7 +30,7 @@ async def test_covers(
     entity_registry: er.EntityRegistry,
     snapshot: SnapshotAssertion,
 ) -> None:
-    """Test cover entities are created for each device."""
+    """Test cover entities are created for devices with openCloseStatus."""
     await setup_integration(hass, mock_config_entry, [Platform.COVER])
 
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
@@ -116,7 +115,7 @@ async def test_cover_state_closed(
     mock_api_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test cover reports closed state."""
+    """Test cover reports closed state from openCloseStatus."""
     await setup_integration(hass, mock_config_entry, [Platform.COVER])
 
     state = hass.states.get("cover.device_1")
@@ -129,7 +128,7 @@ async def test_cover_state_open(
     mock_api_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test cover reports open state."""
+    """Test cover reports open state from openCloseStatus."""
     await setup_integration(hass, mock_config_entry, [Platform.COVER])
 
     state = hass.states.get("cover.device_2")
@@ -137,79 +136,32 @@ async def test_cover_state_open(
     assert state.state == "open"
 
 
-async def test_cover_state_opening(
-    hass: HomeAssistant,
-    mock_api_client: AsyncMock,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test cover reports opening state."""
-    mock_api_client.async_get_device_status.side_effect = lambda device_id: {
-        "2a303030sdj1": {"state": "opening"},
-        "ape93k9302j2": {"state": "open"},
-    }.get(device_id, {"state": "closed"})
-
-    await setup_integration(hass, mock_config_entry, [Platform.COVER])
-
-    state = hass.states.get("cover.device_1")
-    assert state is not None
-    assert state.state == "opening"
-
-
-async def test_cover_state_closing(
-    hass: HomeAssistant,
-    mock_api_client: AsyncMock,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test cover reports closing state."""
-    mock_api_client.async_get_device_status.side_effect = lambda device_id: {
-        "2a303030sdj1": {"state": "closing"},
-        "ape93k9302j2": {"state": "open"},
-    }.get(device_id, {"state": "closed"})
-
-    await setup_integration(hass, mock_config_entry, [Platform.COVER])
-
-    state = hass.states.get("cover.device_1")
-    assert state is not None
-    assert state.state == "closing"
-
-
 async def test_cover_state_unknown_when_status_unavailable(
     hass: HomeAssistant,
     mock_api_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test cover reports unknown state when device status is None."""
+    """Test cover reports unknown state when status API fails."""
     mock_api_client.async_get_device_status.side_effect = FlussApiClientError(
         "Status unavailable"
     )
 
     await setup_integration(hass, mock_config_entry, [Platform.COVER])
 
-    state = hass.states.get("cover.device_1")
-    assert state is not None
-    assert state.state == "unknown"
+    # No covers should be created since no valid openCloseStatus
+    assert hass.states.get("cover.device_1") is None
 
 
-async def test_no_cover_without_permissions(
+async def test_no_cover_when_status_missing(
     hass: HomeAssistant,
     mock_api_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test that covers are not created for devices without canViewState/canOperateSwitch."""
-    # Override with a device that lacks cover permissions
-    mock_api_client.async_get_devices.return_value = {
-        "devices": [
-            {
-                **MOCK_DEVICES["devices"][0],
-                "userPermissions": {
-                    **MOCK_DEVICES["devices"][0]["userPermissions"],
-                    "canViewState": False,
-                    "canOperateSwitch": False,
-                },
-            }
-        ]
-    }
+    """Test that covers are not created when openCloseStatus is missing."""
+    mock_api_client.async_get_device_status.side_effect = None
+    mock_api_client.async_get_device_status.return_value = {}
 
     await setup_integration(hass, mock_config_entry, [Platform.COVER])
 
     assert hass.states.get("cover.device_1") is None
+    assert hass.states.get("cover.device_2") is None

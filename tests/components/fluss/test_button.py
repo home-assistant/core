@@ -26,7 +26,11 @@ async def test_buttons(
     entity_registry: er.EntityRegistry,
     snapshot: SnapshotAssertion,
 ) -> None:
-    """Test setup with multiple devices."""
+    """Test button entities are created for devices without openCloseStatus."""
+    # Override: no valid openCloseStatus → button fallback
+    mock_api_client.async_get_device_status.side_effect = None
+    mock_api_client.async_get_device_status.return_value = {}
+
     await setup_integration(hass, mock_config_entry, [Platform.BUTTON])
 
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
@@ -38,6 +42,9 @@ async def test_button_press(
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test successful button press."""
+    mock_api_client.async_get_device_status.side_effect = None
+    mock_api_client.async_get_device_status.return_value = {}
+
     await setup_integration(hass, mock_config_entry, [Platform.BUTTON])
 
     await hass.services.async_call(
@@ -56,6 +63,9 @@ async def test_button_press_error(
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test button press with API error."""
+    mock_api_client.async_get_device_status.side_effect = None
+    mock_api_client.async_get_device_status.return_value = {}
+
     await setup_integration(hass, mock_config_entry, [Platform.BUTTON])
 
     mock_api_client.async_trigger_device.side_effect = FlussApiClientError("API Boom")
@@ -67,3 +77,16 @@ async def test_button_press_error(
             {ATTR_ENTITY_ID: "button.device_1_trigger"},
             blocking=True,
         )
+
+
+async def test_no_button_when_cover_status_available(
+    hass: HomeAssistant,
+    mock_api_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test that no button entities are created when openCloseStatus is present."""
+    # Default fixture has openCloseStatus → should produce covers, not buttons
+    await setup_integration(hass, mock_config_entry, [Platform.BUTTON])
+
+    assert hass.states.get("button.device_1_trigger") is None
+    assert hass.states.get("button.device_2_trigger") is None

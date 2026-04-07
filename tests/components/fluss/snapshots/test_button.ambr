@@ -25,7 +25,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:gate-open',
+    'original_icon': 'mdi:garage',
     'original_name': 'Trigger',
     'platform': 'fluss',
     'previous_unique_id': None,
@@ -40,7 +40,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Device 1 Trigger',
-      'icon': 'mdi:gate-open',
+      'icon': 'mdi:garage',
     }),
     'context': <ANY>,
     'entity_id': 'button.device_1_trigger',
@@ -76,7 +76,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:gate-open',
+    'original_icon': 'mdi:garage',
     'original_name': 'Trigger',
     'platform': 'fluss',
     'previous_unique_id': None,
@@ -91,7 +91,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Device 2 Trigger',
-      'icon': 'mdi:gate-open',
+      'icon': 'mdi:garage',
     }),
     'context': <ANY>,
     'entity_id': 'button.device_2_trigger',

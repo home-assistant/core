@@ -15,7 +15,11 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .coordinator import FlussConfigEntry, FlussDataUpdateCoordinator
+from .coordinator import (
+    FlussConfigEntry,
+    FlussDataUpdateCoordinator,
+    device_has_cover_status,
+)
 from .entity import FlussEntity
 
 PARALLEL_UPDATES = 1
@@ -26,20 +30,14 @@ async def async_setup_entry(
     entry: FlussConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up Fluss cover entities from a config entry."""
+    """Set up Fluss cover entities for devices with open/close status."""
     coordinator = entry.runtime_data
 
     async_add_entities(
         FlussCover(coordinator, device_id, device)
         for device_id, device in coordinator.data.items()
-        if _device_supports_cover(device)
+        if device_has_cover_status(device)
     )
-
-
-def _device_supports_cover(device: dict) -> bool:
-    """Return True if the device supports cover state and control."""
-    permissions = device.get("userPermissions", {})
-    return bool(permissions.get("canViewState") and permissions.get("canOperateSwitch"))
 
 
 class FlussCover(FlussEntity, CoverEntity):
@@ -61,12 +59,9 @@ class FlussCover(FlussEntity, CoverEntity):
     @property
     def icon(self) -> str:
         """Return the icon based on configured icon type and current state."""
-        base = self._base_icon
-        if self.is_closed:
-            return base
-        if self._icon_type in ("gate", "garage"):
-            return f"{base}-open"
-        return base
+        if self.is_closed is False:
+            return self._open_icon
+        return self._base_icon
 
     @property
     def is_closed(self) -> bool | None:
@@ -74,23 +69,12 @@ class FlussCover(FlussEntity, CoverEntity):
         status = self.device.get("status")
         if status is None:
             return None
-        return status.get("state") == "closed"
-
-    @property
-    def is_opening(self) -> bool | None:
-        """Return true if the cover is opening."""
-        status = self.device.get("status")
-        if status is None:
-            return None
-        return status.get("state") == "opening"
-
-    @property
-    def is_closing(self) -> bool | None:
-        """Return true if the cover is closing."""
-        status = self.device.get("status")
-        if status is None:
-            return None
-        return status.get("state") == "closing"
+        open_close = status.get("openCloseStatus")
+        if open_close == "Closed":
+            return True
+        if open_close == "Open":
+            return False
+        return None
 
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the gate/door."""

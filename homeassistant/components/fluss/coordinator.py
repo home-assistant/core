@@ -22,6 +22,16 @@ from .const import LOGGER, UPDATE_INTERVAL_TIMEDELTA
 
 type FlussConfigEntry = ConfigEntry[FlussDataUpdateCoordinator]
 
+VALID_OPEN_CLOSE_STATUSES = {"Open", "Closed"}
+
+
+def device_has_cover_status(device_data: dict[str, Any]) -> bool:
+    """Return True if the device status contains a valid openCloseStatus."""
+    status = device_data.get("status")
+    if status is None:
+        return False
+    return status.get("openCloseStatus") in VALID_OPEN_CLOSE_STATUSES
+
 
 class FlussDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """Manages fetching Fluss device data on a schedule."""
@@ -72,8 +82,7 @@ class FlussDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             removed = self._known_device_ids - current_ids
             for device_id in removed:
                 LOGGER.warning(
-                    "Device %s is no longer in the API response; "
-                    "access may have been revoked",
+                    "Fluss device %s no longer accessible",
                     device_id,
                 )
         self._known_device_ids = current_ids

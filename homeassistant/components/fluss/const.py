@@ -8,16 +8,24 @@ from typing import Final
 
 DOMAIN: Final = "fluss"
 LOGGER = logging.getLogger(__name__)
-UPDATE_INTERVAL = 60  # seconds
+UPDATE_INTERVAL = 30  # seconds
 UPDATE_INTERVAL_TIMEDELTA = timedelta(seconds=UPDATE_INTERVAL)
 
 CONF_ICON_TYPE: Final = "icon_type"
-DEFAULT_ICON_TYPE: Final = "gate"
+DEFAULT_ICON_TYPE: Final = "garage"
 
 ICON_TYPE_MAP: Final[dict[str, str]] = {
-    "gate": "mdi:gate",
     "garage": "mdi:garage",
+    "gate": "mdi:gate",
     "door": "mdi:door",
     "boom_gate": "mdi:boom-gate",
-    "barrier": "mdi:boom-gate-up",
+    "barrier": "mdi:barrier",
+}
+
+ICON_TYPE_OPEN_MAP: Final[dict[str, str]] = {
+    "garage": "mdi:garage-open",
+    "gate": "mdi:gate-open",
+    "door": "mdi:door-open",
+    "boom_gate": "mdi:boom-gate-up",
+    "barrier": "mdi:barrier",
 }

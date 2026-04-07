@@ -9,7 +9,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .coordinator import FlussConfigEntry
+from .coordinator import FlussConfigEntry, device_has_cover_status
 from .entity import FlussEntity
 
 PARALLEL_UPDATES = 1
@@ -20,33 +20,25 @@ async def async_setup_entry(
     entry: FlussConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up Fluss button entities from a config entry."""
+    """Set up Fluss button entities for devices without open/close status."""
     coordinator = entry.runtime_data
-    entities: list[ButtonEntity] = []
 
-    for device_id, device in coordinator.data.items():
-        permissions = device.get("userPermissions", {})
-
-        if permissions.get("canOpenMain"):
-            entities.append(
-                FlussButton(coordinator, device_id, device)
-            )
-
-    async_add_entities(entities)
+    async_add_entities(
+        FlussButton(coordinator, device_id, device)
+        for device_id, device in coordinator.data.items()
+        if not device_has_cover_status(device)
+    )
 
 
 class FlussButton(FlussEntity, ButtonEntity):
-    """Button to trigger a Fluss device."""
+    """Button to trigger a Fluss device (fallback when status unavailable)."""
 
     _attr_translation_key = "trigger"
 
     @property
     def icon(self) -> str:
-        """Return the icon based on configured icon type."""
-        base = self._base_icon
-        if self._icon_type in ("gate", "garage"):
-            return f"{base}-open"
-        return base
+        """Return the base icon for the configured icon type."""
+        return self._base_icon
 
     async def async_press(self) -> None:
         """Handle the button press."""
@@ -58,5 +50,3 @@ class FlussButton(FlussEntity, ButtonEntity):
                 translation_key="trigger_failed",
                 translation_placeholders={"error": str(err)},
             ) from err
-
-
