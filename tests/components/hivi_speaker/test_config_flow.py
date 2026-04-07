@@ -33,11 +33,11 @@ async def test_user_flow(
 
 
 @pytest.mark.usefixtures("mock_setup_entry")
-async def test_single_instance_allowed(
+async def test_second_flow_aborts_when_unique_id_configured(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test that a second config flow aborts with single_instance_allowed."""
+    """Test that a second user flow aborts: unique_id is already taken (_abort_if_unique_id_configured)."""
     mock_config_entry.add_to_hass(hass)
 
     # Ensure translation for abort reason is available (integration strings.json may not be loaded in test env)
@@ -45,7 +45,7 @@ async def test_single_instance_allowed(
         "homeassistant.helpers.translation.async_get_translations",
         new_callable=AsyncMock,
         return_value={
-            "config.abort.single_instance_allowed": "Only one instance allowed."
+            "config.abort.already_configured": "Already configured."
         },
     ):
         result = await hass.config_entries.flow.async_init(
@@ -54,7 +54,7 @@ async def test_single_instance_allowed(
         )
 
     assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "single_instance_allowed"
+    assert result["reason"] == "already_configured"
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
 
 
