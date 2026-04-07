@@ -134,7 +134,7 @@ async def setup_state_lock_with_attribute(
     attribute: str,
     attribute_template: str,
 ):
-    """Do setup of cover integration using a state template."""
+    """Do setup of lock integration using a state template."""
     await setup_entity(
         hass,
         TEST_LOCK,
