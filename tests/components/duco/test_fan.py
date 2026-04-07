@@ -26,7 +26,7 @@ from homeassistant.helpers import entity_registry as er
 
 from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
-_FAN_ENTITY = "fan.living_manual_control"
+_FAN_ENTITY = "fan.living_ventilation"
 
 
 @pytest.mark.usefixtures("init_fan_integration")

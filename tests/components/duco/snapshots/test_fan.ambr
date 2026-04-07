@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_fan_entity_state[fan.living_manual_control-entry]
+# name: test_fan_entity_state[fan.living_ventilation-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -17,7 +17,7 @@
     'disabled_by': None,
     'domain': 'fan',
     'entity_category': None,
-    'entity_id': 'fan.living_manual_control',
+    'entity_id': 'fan.living_ventilation',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -25,25 +25,25 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Manual control',
+    'object_id_base': 'Ventilation',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Manual control',
+    'original_name': 'Ventilation',
     'platform': 'duco',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': <FanEntityFeature: 57>,
-    'translation_key': 'manual_control',
+    'translation_key': 'ventilation',
     'unique_id': 'aa:bb:cc:dd:ee:ff_1',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_fan_entity_state[fan.living_manual_control-state]
+# name: test_fan_entity_state[fan.living_ventilation-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Living Manual control',
+      'friendly_name': 'Living Ventilation',
       'percentage': None,
       'percentage_step': 33.333333333333336,
       'preset_mode': 'auto',
@@ -53,10 +53,10 @@
       'supported_features': <FanEntityFeature: 57>,
     }),
     'context': <ANY>,
-    'entity_id': 'fan.living_manual_control',
+    'entity_id': 'fan.living_ventilation',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'off',
+    'state': 'on',
   })
 # ---

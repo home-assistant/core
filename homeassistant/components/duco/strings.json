@@ -30,18 +30,6 @@
           }
         }
       }
-    },
-    "sensor": {
-      "ventilation_level": {
-        "name": "Ventilation level",
-        "state": {
-          "1": "1",
-          "2": "2",
-          "3": "3",
-          "auto": "[%key:common::state::auto%]",
-          "off": "[%key:common::state::off%]"
-        }
-      }
     }
   },
   "exceptions": {
