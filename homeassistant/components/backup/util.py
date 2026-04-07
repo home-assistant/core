@@ -22,6 +22,7 @@ from securetar import (
     SecureTarFile,
     SecureTarReadError,
     SecureTarRootKeyContext,
+    get_archive_max_ciphertext_size,
 )
 
 from homeassistant.core import HomeAssistant
@@ -431,7 +432,9 @@ class _CipherBackupStreamer:
 
     def size(self) -> int:
         """Return the maximum size of the decrypted or encrypted backup."""
-        return self._backup.size + self._num_tar_files() * tarfile.RECORDSIZE
+        return get_archive_max_ciphertext_size(  # type: ignore[no-any-return]
+            self._backup.size, SECURETAR_CREATE_VERSION, self._num_tar_files()
+        )
 
     def _num_tar_files(self) -> int:
         """Return the number of inner tar files."""
