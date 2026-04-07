@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from collections.abc import Sequence
-import dataclasses
 import fnmatch
 import os
 
@@ -53,27 +52,7 @@ def usb_serial_device_from_port(port: SerialPortInfo) -> USBDevice | SerialDevic
 
 def scan_serial_ports() -> Sequence[USBDevice | SerialDevice]:
     """Scan serial ports and return USB and other serial devices."""
-
-    # Scan all symlinks first
-    by_id = "/dev/serial/by-id"
-    realpath_to_by_id: dict[str, str] = {}
-    if os.path.isdir(by_id):
-        for path in (entry.path for entry in os.scandir(by_id) if entry.is_symlink()):
-            realpath_to_by_id[os.path.realpath(path)] = path
-
-    serial_ports = []
-
-    for port in list_serial_ports():
-        device = usb_serial_device_from_port(port)
-        device_path = realpath_to_by_id.get(port.device, port.device)
-
-        if device_path != port.device:
-            # Prefer the unique /dev/serial/by-id/ path if it exists
-            device = dataclasses.replace(device, device=device_path)
-
-        serial_ports.append(device)
-
-    return serial_ports
+    return [usb_serial_device_from_port(port) for port in list_serial_ports()]
 
 
 async def async_scan_serial_ports(

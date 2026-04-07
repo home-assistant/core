@@ -1296,86 +1296,6 @@ async def test_register_port_event_callback_failure(
     assert "Failure 2" in caplog.text
 
 
-async def test_async_scan_serial_ports_with_unique_symlinks(
-    hass: HomeAssistant,
-) -> None:
-    """Test async_scan_serial_ports returns devices with unique /dev/serial/by-id paths."""
-    entry1 = MagicMock(spec_set=os.DirEntry)
-    entry1.is_symlink.return_value = True
-    entry1.path = "/dev/serial/by-id/usb-device1"
-
-    entry2 = MagicMock(spec_set=os.DirEntry)
-    entry2.is_symlink.return_value = True
-    entry2.path = "/dev/serial/by-id/usb-device2"
-
-    mock_port1 = MagicMock()
-    mock_port1.device = "/dev/ttyUSB0"
-    mock_port1.vid = 0x1234
-    mock_port1.pid = 0x5678
-    mock_port1.serial_number = "ABC123"
-    mock_port1.manufacturer = "Test Manufacturer"
-    mock_port1.description = "Test Device"
-
-    mock_port2 = MagicMock()
-    mock_port2.device = "/dev/ttyUSB1"
-    mock_port2.vid = 0xABCD
-    mock_port2.pid = 0xEF01
-    mock_port2.serial_number = "XYZ789"
-    mock_port2.manufacturer = "Another Manufacturer"
-    mock_port2.description = "Another Device"
-
-    def mock_realpath(path: str) -> str:
-        realpath_map = {
-            "/dev/serial/by-id/usb-device1": "/dev/ttyUSB0",
-            "/dev/serial/by-id/usb-device2": "/dev/ttyUSB1",
-        }
-        return realpath_map.get(path, path)
-
-    with (
-        patch("os.path.isdir", return_value=True),
-        patch("os.scandir", return_value=[entry1, entry2]),
-        patch("os.path.realpath", side_effect=mock_realpath),
-        patch(
-            "homeassistant.components.usb.utils.list_serial_ports",
-            return_value=[mock_port1, mock_port2],
-        ),
-    ):
-        devices = await async_scan_serial_ports(hass)
-
-    assert len(devices) == 2
-    assert devices[0].device == "/dev/serial/by-id/usb-device1"
-    assert devices[0].vid == "1234"
-    assert devices[1].device == "/dev/serial/by-id/usb-device2"
-    assert devices[1].vid == "ABCD"
-
-
-async def test_async_scan_serial_ports_without_unique_symlinks(
-    hass: HomeAssistant,
-) -> None:
-    """Test async_scan_serial_ports returns devices with original paths when no symlinks exist."""
-    mock_port = MagicMock()
-    mock_port.device = "/dev/ttyUSB0"
-    mock_port.vid = 0x1234
-    mock_port.pid = 0x5678
-    mock_port.serial_number = "ABC123"
-    mock_port.manufacturer = "Test Manufacturer"
-    mock_port.description = "Test Device"
-
-    with (
-        patch("os.path.isdir", return_value=False),
-        patch("os.path.realpath", side_effect=lambda x: x),
-        patch(
-            "homeassistant.components.usb.utils.list_serial_ports",
-            return_value=[mock_port],
-        ),
-    ):
-        devices = await async_scan_serial_ports(hass)
-
-    assert len(devices) == 1
-    assert devices[0].device == "/dev/ttyUSB0"
-    assert devices[0].vid == "1234"
-
-
 async def test_async_scan_serial_ports_no_vid_pid(hass: HomeAssistant) -> None:
     """Test async_scan_serial_ports returns devices without VID:PID."""
     mock_port = MagicMock()
@@ -1386,13 +1306,9 @@ async def test_async_scan_serial_ports_no_vid_pid(hass: HomeAssistant) -> None:
     mock_port.manufacturer = None
     mock_port.description = None
 
-    with (
-        patch("os.path.isdir", return_value=False),
-        patch("os.path.realpath", side_effect=lambda x: x),
-        patch(
-            "homeassistant.components.usb.utils.comports",
-            return_value=[mock_port],
-        ),
+    with patch(
+        "homeassistant.components.usb.utils.list_serial_ports",
+        return_value=[mock_port],
     ):
         devices = await async_scan_serial_ports(hass)
 
