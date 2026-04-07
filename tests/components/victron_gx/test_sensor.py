@@ -136,3 +136,5 @@ async def test_victron_main_topic_sensor(
     state = hass.states.get(entity.entity_id)
     assert state is not None
     assert state.state == "mppt_active"
+    # Entity uses device name only (no separate entity name)
+    assert state.attributes["friendly_name"] == "Multi RS Solar"
