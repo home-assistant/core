@@ -9,10 +9,11 @@ import pytest
 from ring_doorbell import Ring
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.components.event import DoorbellEventType
 from homeassistant.components.ring.binary_sensor import RingEvent
 from homeassistant.components.ring.coordinator import RingEventListener
 from homeassistant.const import Platform
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
 
 from .common import MockConfigEntry, setup_platform
@@ -96,3 +97,48 @@ async def test_event(
     state = hass.states.get(entity_id)
     assert state is not None
     assert state.state == start_time_str
+
+
+async def test_doorbell_ding_fires_standard_ring_event(
+    hass: HomeAssistant,
+    mock_ring_client: Ring,
+    mock_ring_event_listener_class: RingEventListener,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test that a doorbell ding fires both 'ring' and 'ding' events."""
+    await setup_platform(hass, Platform.EVENT)
+
+    start_time_str = "2024-09-04T15:32:53.892+00:00"
+    start_time = datetime.strptime(start_time_str, "%Y-%m-%dT%H:%M:%S.%f%z")
+    freezer.move_to(start_time)
+    on_event_cb = mock_ring_event_listener_class.return_value.add_notification_callback.call_args.args[
+        0
+    ]
+
+    entity_id = "event.front_door_ding"
+    event_types: list[str] = []
+
+    @callback
+    def state_listener(event: object) -> None:
+        state = hass.states.get(entity_id)
+        assert state
+        event_types.append(state.attributes["event_type"])
+
+    hass.bus.async_listen("state_changed", state_listener)
+
+    event = RingEvent(
+        1234546,
+        FRONT_DOOR_DEVICE_ID,
+        "Foo",
+        "Bar",
+        time.time(),
+        180,
+        kind="ding",
+        state=None,
+    )
+    mock_ring_client.active_alerts.return_value = [event]
+    on_event_cb(event)
+
+    # Both the standard "ring" and legacy "ding" events should have fired
+    assert DoorbellEventType.RING in event_types
+    assert "ding" in event_types
