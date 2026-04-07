@@ -14,7 +14,7 @@ import logging
 import random
 import string
 import time
-from typing import Any
+from typing import Any, cast
 import uuid
 
 from aiohttp import ClientSession, ClientTimeout
@@ -110,7 +110,7 @@ async def verify_video_pwd(
         except json.JSONDecodeError:
             data = {"raw": raw}
     _LOGGER.debug("verify_video_pwd ret=%s code=%s", data.get("ret"), data.get("code"))
-    return data
+    return cast(dict[str, Any], data)
 
 
 async def start_watch_v2(
@@ -159,7 +159,7 @@ async def start_watch_v2(
         _LOGGER.debug(
             "start_watch_v2 ret=%s session=%s", data.get("ret"), data.get("session")
         )
-    return data
+    return cast(dict[str, Any], data)
 
 
 async def end_watch(
@@ -261,7 +261,10 @@ async def _send_p2p_mqtt_cmd(
     req_id = uuid.uuid4().hex[:8]
     ts = str(int(time.time() * 1000))
     tz_offset = int(
-        _dt.datetime.now(_dt.UTC).astimezone().utcoffset().total_seconds() / 60
+        (
+            _dt.datetime.now(_dt.UTC).astimezone().utcoffset() or _dt.timedelta()
+        ).total_seconds()
+        / 60
     )
 
     payload = json.dumps(

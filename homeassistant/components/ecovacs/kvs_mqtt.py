@@ -237,7 +237,10 @@ class KvsMqttListener:
 
         ts = str(int(time.time() * 1000))
         tz_offset = int(
-            _dt.datetime.now(_dt.UTC).astimezone().utcoffset().total_seconds() / 60
+            (
+                _dt.datetime.now(_dt.UTC).astimezone().utcoffset() or _dt.timedelta()
+            ).total_seconds()
+            / 60
         )
         resp_payload = json.dumps(
             {

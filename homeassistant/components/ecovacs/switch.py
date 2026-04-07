@@ -1,7 +1,7 @@
 """Ecovacs switch module."""
 
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, cast
 
 from deebot_client.capabilities import CapabilitySetEnable
 from deebot_client.device import Device
@@ -120,8 +120,9 @@ async def async_setup_entry(
 ) -> None:
     """Add entities for passed config_entry in HA."""
     controller = config_entry.runtime_data
-    entities: list[EcovacsEntity | CameraStreamSwitch] = get_supported_entities(
-        controller, EcovacsSwitchEntity, ENTITY_DESCRIPTIONS
+    entities: list[EcovacsEntity[Any] | CameraStreamSwitch] = cast(
+        list[EcovacsEntity[Any] | CameraStreamSwitch],
+        get_supported_entities(controller, EcovacsSwitchEntity, ENTITY_DESCRIPTIONS),
     )
     # Add a camera stream switch for every device (disabled by default)
     entities.extend(

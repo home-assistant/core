@@ -81,14 +81,14 @@ class VoiceAudioTrack(AudioStreamTrack):
         """Initialize track with zero timestamp."""
         super().__init__()
         self._id = self._TRACK_ID
-        self._start: float | None = None
+        self._start: float = 0.0
         self._timestamp: int = 0
 
     async def recv(self) -> Any:
         """Return a silent PCM audio frame at the correct presentation timestamp."""
         if self.readyState != "live":
             raise MediaStreamError
-        if self._start is None:
+        if not self._start:
             self._start = _time.time()
         else:
             self._timestamp += _AUDIO_SAMPLES
@@ -387,6 +387,8 @@ class KvsStreamSession:
         pc.addTransceiver("video", direction="recvonly")
         video_tr = next(t for t in pc.getTransceivers() if t.kind == "video")
         caps = RTCRtpReceiver.getCapabilities("video")
+        if caps is None:
+            return pc
         h264 = [c for c in caps.codecs if c.mimeType == "video/H264"]
         h264.sort(
             key=lambda c: (
@@ -544,6 +546,7 @@ class KvsStreamSession:
 
     async def _handle_ice_state(self) -> None:
         """React to ICE connection state changes."""
+        assert self._pc is not None
         _LOGGER.info("ICE connectionState: %s", self._pc.iceConnectionState)
         if self._pc.iceConnectionState in ("connected", "completed"):
             task = asyncio.create_task(
@@ -568,6 +571,7 @@ class KvsStreamSession:
         region: str,
     ) -> None:
         """Manage the KVS WebSocket signaling session (offer/answer + ICE)."""
+        assert self._pc is not None
         signed_url = sign_wss_url(wss_ep, channel_arn, client_id, kvs_creds, region)
         ssl_ctx = await self._hass.async_add_executor_job(ssl.create_default_context)
         self._ice_queue = asyncio.Queue()
@@ -582,7 +586,7 @@ class KvsStreamSession:
             signed_url,
             ssl=ssl_ctx,
             heartbeat=None,
-            timeout=15,
+            timeout=aiohttp.ClientWSTimeout(ws_close=15.0),
         ) as ws:
             offer = await self._pc.createOffer()
             await self._pc.setLocalDescription(offer)
@@ -634,6 +638,7 @@ class KvsStreamSession:
 
     async def _handle_sdp_answer(self, payload_str: str) -> None:
         """Process an SDP_ANSWER message from the signaling channel."""
+        assert self._pc is not None
         try:
             payload = json.loads(payload_str)
         except json.JSONDecodeError as err:
@@ -656,6 +661,7 @@ class KvsStreamSession:
 
     async def _handle_ice_candidate(self, payload_str: str) -> None:
         """Process an ICE_CANDIDATE message from the signaling channel."""
+        assert self._pc is not None
         try:
             cand_data = json.loads(payload_str)
         except json.JSONDecodeError as err:
@@ -673,6 +679,7 @@ class KvsStreamSession:
         self, ws: ClientWebSocketResponse, client_id: str
     ) -> None:
         """Send local ICE candidates over the WebSocket signaling channel."""
+        assert self._pc is not None
         fallback = _parse_candidates_from_local_sdp(self._pc.localDescription.sdp)
         for cand_str, sdp_mid, sdp_mline_idx in fallback:
             if cand_str not in self._sent_candidates:

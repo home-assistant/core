@@ -22,13 +22,16 @@ import logging
 from deebot_client.device import Device
 from deebot_client.util.continents import get_continent
 
-from homeassistant.components.camera import Camera, CameraEntityFeature
+from homeassistant.components.camera import (
+    Camera,
+    CameraEntityDescription,
+    CameraEntityFeature,
+)
 from homeassistant.const import CONF_COUNTRY
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_send
-from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import EcovacsConfigEntry
@@ -62,7 +65,7 @@ _BLACK_JPEG: bytes = (
 
 
 @dataclass(kw_only=True, frozen=True)
-class EcovacsCameraEntityDescription(EntityDescription):
+class EcovacsCameraEntityDescription(CameraEntityDescription):
     """Description for an Ecovacs camera entity."""
 
     key: str = "camera"
@@ -128,7 +131,7 @@ class EcovacsCameraEntity(Camera):
         )
 
     @property
-    def device_info(self) -> DeviceInfo:  # type: ignore[override]
+    def device_info(self) -> DeviceInfo:
         """Return device info (mirrors EcovacsEntity pattern)."""
         device_info = self._device.device_info
         info = DeviceInfo(
