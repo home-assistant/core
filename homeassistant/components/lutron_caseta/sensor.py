@@ -13,7 +13,7 @@ from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .entity import LutronCasetaEntity
-from .models import LutronCasetaConfigEntry
+from .models import LutronCasetaConfigEntry, LutronCasetaData
 
 BATTERY_REFRESH_INTERVAL = timedelta(days=1)
 
@@ -41,7 +41,7 @@ class LutronCasetaBatterySensor(LutronCasetaEntity, SensorEntity):
     _attr_entity_category = EntityCategory.DIAGNOSTIC
     _attr_has_entity_name = True
 
-    def __init__(self, device: dict[str, Any], data) -> None:
+    def __init__(self, device: dict[str, Any], data: LutronCasetaData) -> None:
         """Initialize the battery sensor."""
         super().__init__(device, data)
         self._attr_name = "Battery"
