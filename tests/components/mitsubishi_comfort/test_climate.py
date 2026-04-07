@@ -21,10 +21,9 @@ from homeassistant.components.mitsubishi_comfort.climate import MitsubishiComfor
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
+from tests.common import MockConfigEntry
 
 from .conftest import _make_device_status
-
-from tests.common import MockConfigEntry
 
 ENTITY_ID = "climate.living_room"
 
@@ -982,3 +981,72 @@ async def test_set_swing_mode_unknown_direct(
     await entity.async_set_swing_mode("unknown_direction")
 
     device.set_vane_direction.assert_not_awaited()
+
+
+# -- Coordinator behavior (tested via entity state) --
+
+
+async def test_coordinator_update_failure_makes_unavailable(
+    hass: HomeAssistant,
+    setup_climate: MagicMock,
+) -> None:
+    """Test that a failed coordinator update makes the entity unavailable."""
+    device = setup_climate
+    device.update_status = AsyncMock(return_value=False)
+
+    entity: MitsubishiComfortClimate = hass.data["entity_components"][
+        "climate"
+    ].get_entity(ENTITY_ID)  # type: ignore[assignment]
+
+    await entity.coordinator.async_refresh()
+    await hass.async_block_till_done()
+
+    state = hass.states.get(ENTITY_ID)
+    assert state is not None
+    assert state.state == "unavailable"
+
+
+async def test_coordinator_update_exception_makes_unavailable(
+    hass: HomeAssistant,
+    setup_climate: MagicMock,
+) -> None:
+    """Test that an exception during update makes the entity unavailable."""
+    device = setup_climate
+    device.update_status = AsyncMock(side_effect=TimeoutError("timeout"))
+
+    entity: MitsubishiComfortClimate = hass.data["entity_components"][
+        "climate"
+    ].get_entity(ENTITY_ID)  # type: ignore[assignment]
+
+    await entity.coordinator.async_refresh()
+    await hass.async_block_till_done()
+
+    state = hass.states.get(ENTITY_ID)
+    assert state is not None
+    assert state.state == "unavailable"
+
+
+async def test_coordinator_recovery_restores_available(
+    hass: HomeAssistant,
+    setup_climate: MagicMock,
+) -> None:
+    """Test that a successful update after failure restores availability."""
+    device = setup_climate
+    entity: MitsubishiComfortClimate = hass.data["entity_components"][
+        "climate"
+    ].get_entity(ENTITY_ID)  # type: ignore[assignment]
+
+    # Fail first
+    device.update_status = AsyncMock(return_value=False)
+    await entity.coordinator.async_refresh()
+    await hass.async_block_till_done()
+    assert hass.states.get(ENTITY_ID).state == "unavailable"
+
+    # Recover
+    device.update_status = AsyncMock(return_value=True)
+    await entity.coordinator.async_refresh()
+    await hass.async_block_till_done()
+
+    state = hass.states.get(ENTITY_ID)
+    assert state is not None
+    assert state.state != "unavailable"

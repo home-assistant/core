@@ -6,7 +6,6 @@ from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from mitsubishi_comfort import DeviceInfo
-import pytest
 
 from homeassistant.components.mitsubishi_comfort import (
     CONF_DEVICES,
@@ -22,10 +21,9 @@ from homeassistant.components.mitsubishi_comfort.const import (
 )
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
+from tests.common import MockConfigEntry
 
 from .conftest import MOCK_PASSWORD, MOCK_USERNAME
-
-from tests.common import MockConfigEntry
 
 
 async def test_setup_entry_success(
