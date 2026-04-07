@@ -26,6 +26,7 @@ from .conftest import (
     TemplatePlatformSetup,
     async_get_flow_preview_state,
     async_trigger,
+    make_test_action,
     make_test_trigger,
     setup_and_test_nested_unique_id,
     setup_and_test_unique_id,
@@ -35,7 +36,6 @@ from .conftest import (
 from tests.common import MockConfigEntry, assert_setup_component
 from tests.typing import WebSocketGenerator
 
-TEST_OBJECT_ID = "test_template_lock"
 TEST_STATE_ENTITY_ID = "sensor.test_state"
 TEST_AVAILABILITY_ENTITY_ID = "availability_state.state"
 TEST_LOCK = TemplatePlatformSetup(
@@ -48,35 +48,13 @@ TEST_LOCK = TemplatePlatformSetup(
     ),
 )
 
-LOCK_ACTION = {
-    "lock": {
-        "service": "test.automation",
-        "data_template": {
-            "action": "lock",
-            "caller": "{{ this.entity_id }}",
-            "code": "{{ code if code is defined else None }}",
-        },
-    },
+
+CODE_DATA = {
+    "code": "{{ code if code is defined else None }}",
 }
-UNLOCK_ACTION = {
-    "unlock": {
-        "service": "test.automation",
-        "data_template": {
-            "action": "unlock",
-            "caller": "{{ this.entity_id }}",
-            "code": "{{ code if code is defined else None }}",
-        },
-    },
-}
-OPEN_ACTION = {
-    "open": {
-        "service": "test.automation",
-        "data_template": {
-            "action": "open",
-            "caller": "{{ this.entity_id }}",
-        },
-    },
-}
+LOCK_ACTION = make_test_action("lock", CODE_DATA)
+UNLOCK_ACTION = make_test_action("unlock", CODE_DATA)
+OPEN_ACTION = make_test_action("open")
 
 
 OPTIMISTIC_LOCK = {
@@ -196,7 +174,7 @@ async def test_template_state(hass: HomeAssistant) -> None:
     hass.states.async_set(TEST_STATE_ENTITY_ID, "None")
     await hass.async_block_till_done()
 
-    state = hass.states.get(TEST_ENTITY_ID)
+    state = hass.states.get(TEST_LOCK.entity_id)
     assert state.state == STATE_UNKNOWN
 
 
@@ -385,7 +363,7 @@ async def test_picture_template(hass: HomeAssistant, initial_state: str) -> None
 )
 @pytest.mark.usefixtures("setup_state_lock_with_attribute")
 async def test_icon_template(hass: HomeAssistant, initial_state: str) -> None:
-    """Test entity_picture template."""
+    """Test icon template."""
     state = hass.states.get(TEST_LOCK.entity_id)
     assert state.attributes.get("icon") == initial_state
 
@@ -880,7 +858,7 @@ async def test_legacy_unique_id(hass: HomeAssistant) -> None:
 async def test_unique_id(
     hass: HomeAssistant, style: ConfigurationStyle, config: ConfigType
 ) -> None:
-    """Test unique_id option only creates one vacuum per id."""
+    """Test unique_id option only creates one entity per id."""
     await setup_and_test_unique_id(hass, TEST_LOCK, style, config, "{{ 'on' }}")
 
 
@@ -894,7 +872,7 @@ async def test_nested_unique_id(
     config: ConfigType,
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """Test a template unique_id propagates to vacuum unique_ids."""
+    """Test a template unique_id propagates unique_ids."""
     await setup_and_test_nested_unique_id(
         hass, TEST_LOCK, style, entity_registry, config, "{{ 'on' }}"
     )
