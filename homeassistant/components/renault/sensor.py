@@ -161,9 +161,11 @@ def _get_charging_settings_attributes(
     """Return the charging_settings attributes."""
     data = entity.coordinator.data
     return {
-        "schedules": [schedule.for_json() for schedule in schedules]
-        if (schedules := data.schedules)
-        else [],
+        "schedules": (
+            [schedule.for_json() for schedule in schedules]
+            if (schedules := data.schedules)
+            else [],
+        ),
         "dateTime": data.dateTime,
         "startDateTime": data.startDateTime,
         "delay": data.delay,
