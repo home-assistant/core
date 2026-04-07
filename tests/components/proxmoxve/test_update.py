@@ -4,7 +4,7 @@ from unittest.mock import MagicMock, patch
 
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.const import STATE_UNAVAILABLE, Platform
+from homeassistant.const import STATE_OFF, STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -51,7 +51,27 @@ async def test_update_unavailable(
         await setup_integration(hass, mock_config_entry)
 
     state = hass.states.get(ENTITY_ID)
-    assert state.state is STATE_UNAVAILABLE
+    assert state.state == STATE_UNAVAILABLE
+
+
+async def test_update_up_to_date(
+    hass: HomeAssistant,
+    mock_proxmox_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test that updates are up to date when no updates are pending."""
+    mock_proxmox_client.access.permissions.get.return_value = MERGED_PERMISSIONS
+    mock_proxmox_client.nodes.return_value.apt.update.get.return_value = []
+
+    with patch(
+        "homeassistant.components.proxmoxve.PLATFORMS",
+        [Platform.UPDATE],
+    ):
+        await setup_integration(hass, mock_config_entry)
+
+    state = hass.states.get(ENTITY_ID)
+    assert state.attributes.get("latest_version") == "9.1.6"
+    assert state.state == STATE_OFF
 
 
 async def test_update_release_notes(
