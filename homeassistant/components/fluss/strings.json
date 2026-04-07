@@ -20,22 +20,45 @@
       }
     }
   },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "icon_type": "Device icon style"
+        },
+        "data_description": {
+          "icon_type": "Choose the icon that best represents your Fluss device."
+        }
+      }
+    }
+  },
+  "selector": {
+    "icon_type": {
+      "options": {
+        "gate": "Gate",
+        "garage": "Garage",
+        "door": "Door",
+        "boom_gate": "Boom gate",
+        "barrier": "Barrier"
+      }
+    }
+  },
   "entity": {
     "button": {
-      "trigger": {
-        "name": "Trigger"
+      "open_main": {
+        "name": "Open main"
       }
     }
   },
   "exceptions": {
-    "trigger_failed": {
-      "message": "Failed to trigger device: {error}"
+    "close_failed": {
+      "message": "Failed to close device: {error}"
     },
     "open_failed": {
       "message": "Failed to open device: {error}"
     },
-    "close_failed": {
-      "message": "Failed to close device: {error}"
+    "trigger_failed": {
+      "message": "Failed to trigger device: {error}"
     }
   }
 }

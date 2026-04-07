@@ -25,7 +25,7 @@
     'options': dict({
     }),
     'original_device_class': <CoverDeviceClass.GATE: 'gate'>,
-    'original_icon': None,
+    'original_icon': 'mdi:gate',
     'original_name': None,
     'platform': 'fluss',
     'previous_unique_id': None,
@@ -41,6 +41,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'gate',
       'friendly_name': 'Device 1',
+      'icon': 'mdi:gate',
       'is_closed': True,
       'supported_features': <CoverEntityFeature: 3>,
     }),
@@ -78,7 +79,7 @@
     'options': dict({
     }),
     'original_device_class': <CoverDeviceClass.GATE: 'gate'>,
-    'original_icon': None,
+    'original_icon': 'mdi:gate-open',
     'original_name': None,
     'platform': 'fluss',
     'previous_unique_id': None,
@@ -94,6 +95,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'gate',
       'friendly_name': 'Device 2',
+      'icon': 'mdi:gate-open',
       'is_closed': False,
       'supported_features': <CoverEntityFeature: 3>,
     }),

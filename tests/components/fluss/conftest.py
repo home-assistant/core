@@ -12,6 +12,33 @@ from homeassistant.const import CONF_API_KEY
 
 from tests.common import MockConfigEntry
 
+MOCK_DEVICES = {
+    "devices": [
+        {
+            "deviceId": "2a303030sdj1",
+            "deviceName": "Device 1",
+            "userPermissions": {
+                "canUseWiFi": True,
+                "canOpenMain": True,
+                "canOperateSwitch": True,
+                "canViewState": True,
+                "userType": "Owner",
+            },
+        },
+        {
+            "deviceId": "ape93k9302j2",
+            "deviceName": "Device 2",
+            "userPermissions": {
+                "canUseWiFi": True,
+                "canOpenMain": True,
+                "canOperateSwitch": True,
+                "canViewState": True,
+                "userType": "Full Access",
+            },
+        },
+    ]
+}
+
 
 @pytest.fixture
 def mock_config_entry() -> MockConfigEntry:
@@ -46,12 +73,7 @@ def mock_api_client() -> Generator[AsyncMock]:
         ),
     ):
         client = mock_client.return_value
-        client.async_get_devices.return_value = {
-            "devices": [
-                {"deviceId": "2a303030sdj1", "deviceName": "Device 1"},
-                {"deviceId": "ape93k9302j2", "deviceName": "Device 2"},
-            ]
-        }
+        client.async_get_devices.return_value = MOCK_DEVICES
         client.async_get_device_status.side_effect = lambda device_id: {
             "2a303030sdj1": {"state": "closed"},
             "ape93k9302j2": {"state": "open"},

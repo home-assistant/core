@@ -19,6 +19,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
+from .conftest import MOCK_DEVICES
 
 from tests.common import MockConfigEntry, snapshot_platform
 
@@ -187,3 +188,28 @@ async def test_cover_state_unknown_when_status_unavailable(
     state = hass.states.get("cover.device_1")
     assert state is not None
     assert state.state == "unknown"
+
+
+async def test_no_cover_without_permissions(
+    hass: HomeAssistant,
+    mock_api_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test that covers are not created for devices without canViewState/canOperateSwitch."""
+    # Override with a device that lacks cover permissions
+    mock_api_client.async_get_devices.return_value = {
+        "devices": [
+            {
+                **MOCK_DEVICES["devices"][0],
+                "userPermissions": {
+                    **MOCK_DEVICES["devices"][0]["userPermissions"],
+                    "canViewState": False,
+                    "canOperateSwitch": False,
+                },
+            }
+        ]
+    }
+
+    await setup_integration(hass, mock_config_entry, [Platform.COVER])
+
+    assert hass.states.get("cover.device_1") is None

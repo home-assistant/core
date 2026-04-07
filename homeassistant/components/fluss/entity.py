@@ -5,6 +5,7 @@ from __future__ import annotations
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
+from .const import CONF_ICON_TYPE, DEFAULT_ICON_TYPE, ICON_TYPE_MAP
 from .coordinator import FlussDataUpdateCoordinator
 
 
@@ -26,11 +27,12 @@ class FlussEntity(CoordinatorEntity[FlussDataUpdateCoordinator]):
         self._attr_unique_id = (
             f"{device_id}_{unique_id_suffix}" if unique_id_suffix else device_id
         )
+        user_type = device.get("userPermissions", {}).get("userType")
         self._attr_device_info = DeviceInfo(
             identifiers={("fluss", device_id)},
             name=device.get("deviceName"),
             manufacturer="Fluss",
-            model="Fluss+ Device",
+            model=user_type or "Fluss Device",
         )
 
     @property
@@ -42,3 +44,14 @@ class FlussEntity(CoordinatorEntity[FlussDataUpdateCoordinator]):
     def device(self) -> dict:
         """Return the stored device data."""
         return self.coordinator.data[self.device_id]
+
+    @property
+    def _icon_type(self) -> str:
+        """Return the configured icon type."""
+        options = self.coordinator.config_entry.options
+        return options.get(CONF_ICON_TYPE, DEFAULT_ICON_TYPE)
+
+    @property
+    def _base_icon(self) -> str:
+        """Return the base mdi icon string for the configured icon type."""
+        return ICON_TYPE_MAP.get(self._icon_type, "mdi:gate")

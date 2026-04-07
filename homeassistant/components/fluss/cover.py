@@ -28,12 +28,18 @@ async def async_setup_entry(
 ) -> None:
     """Set up Fluss cover entities from a config entry."""
     coordinator = entry.runtime_data
-    devices = coordinator.data
 
     async_add_entities(
         FlussCover(coordinator, device_id, device)
-        for device_id, device in devices.items()
+        for device_id, device in coordinator.data.items()
+        if _device_supports_cover(device)
     )
+
+
+def _device_supports_cover(device: dict) -> bool:
+    """Return True if the device supports cover state and control."""
+    permissions = device.get("userPermissions", {})
+    return bool(permissions.get("canViewState") and permissions.get("canOperateSwitch"))
 
 
 class FlussCover(FlussEntity, CoverEntity):
@@ -51,6 +57,16 @@ class FlussCover(FlussEntity, CoverEntity):
     ) -> None:
         """Initialize the cover entity."""
         super().__init__(coordinator, device_id, device, unique_id_suffix="cover")
+
+    @property
+    def icon(self) -> str:
+        """Return the icon based on configured icon type and current state."""
+        base = self._base_icon
+        if self.is_closed:
+            return base
+        if self._icon_type in ("gate", "garage"):
+            return f"{base}-open"
+        return base
 
     @property
     def is_closed(self) -> bool | None:
