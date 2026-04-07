@@ -56,7 +56,7 @@ async def test_get_feeder_meal_plan(
     mock_config_entry: MockConfigEntry,
     mock_device: CustomerDevice,
     snapshot: SnapshotAssertion,
-    device_regsitry: dr.DeviceRegistry,
+    device_registry: dr.DeviceRegistry,
 ) -> None:
     """Test GET_FEEDER_MEAL_PLAN normal and error cases using real device registry."""
     await initialize_entry(hass, mock_manager, mock_config_entry, mock_device)
