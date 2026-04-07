@@ -53,6 +53,35 @@
       "favorite_now_playing": {
         "name": "Favorite current song"
       }
+    },
+    "number": {
+      "bass": {
+        "name": "Bass"
+      },
+      "dialogue_level": {
+        "name": "Dialogue level"
+      },
+      "dialogue_lift": {
+        "name": "Dialogue lift"
+      },
+      "dts_dialogue_control": {
+        "name": "DTS dialogue control"
+      },
+      "equalizer_high": {
+        "name": "Equalizer high"
+      },
+      "equalizer_low": {
+        "name": "Equalizer low"
+      },
+      "equalizer_mid": {
+        "name": "Equalizer mid"
+      },
+      "subwoofer_volume": {
+        "name": "Subwoofer volume"
+      },
+      "treble": {
+        "name": "Treble"
+      }
     }
   },
   "issues": {

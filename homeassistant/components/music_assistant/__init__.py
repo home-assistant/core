@@ -49,7 +49,11 @@ if TYPE_CHECKING:
 
     from homeassistant.helpers.typing import ConfigType
 
-PLATFORMS = [Platform.BUTTON, Platform.MEDIA_PLAYER]
+PLATFORMS = [
+    Platform.BUTTON,
+    Platform.MEDIA_PLAYER,
+    Platform.NUMBER,
+]
 
 CONNECT_TIMEOUT = 10
 LISTEN_READY_TIMEOUT = 30
