@@ -23,7 +23,7 @@
         "data_description": {
           "url": "[%key:component::lunatone::config::step::user::data_description::url%]"
         },
-        "description": "Update configuration for {name}."
+        "description": "Update the configuration."
       },
       "user": {
         "data": {
