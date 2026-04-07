@@ -93,7 +93,7 @@ class ProxmoxNodeUpdateEntity(ProxmoxNodeEntity, UpdateEntity):
         """Return the release summary for the update."""
         url = self.device_info.get("configuration_url") if self.device_info else None
         update_info = self._update_info()
-        if update_info:
+        if update_info and update_info.total_updates > 0:
             return f"A total of {update_info.total_updates} package update(s) are pending installation: of these {update_info.proxmox_updates} relate to Proxmox and {update_info.other_updates} to other updates. Please visit the [Proxmox VE node]({url}) for details on the pending updates and to upgrade to {update_info.latest_version}."
         return None
 
