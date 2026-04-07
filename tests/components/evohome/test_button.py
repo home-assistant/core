@@ -56,7 +56,11 @@ async def test_setup_platform(
 ) -> None:
     """Test that button entities are created after setup of evohome."""
 
-    for x in hass.states.async_all(BUTTON_DOMAIN):
+    button_states = hass.states.async_all(BUTTON_DOMAIN)
+
+    assert button_states
+
+    for x in button_states:
         assert x == snapshot(name=f"{x.entity_id}-state")
 
 
