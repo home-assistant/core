@@ -61,7 +61,7 @@ class HIVIDeviceManager:
         self._add_entities_callbacks: dict[str, AddEntitiesCallback] = {}
 
         self._unsub_discovery = None
-        self._discovery_queue: asyncio.Queue[Any] = asyncio.Queue()
+        self._discovery_queue: asyncio.Queue[list[dict[str, Any]]] = asyncio.Queue()
         self._handle_discovery_worker = hass.async_create_task(
             self._handle_discovery_loop()
         )
@@ -81,7 +81,7 @@ class HIVIDeviceManager:
         await self.discovery_scheduler.async_start()
         await self.group_coordinator.async_start()
 
-    async def _discovery_enqueue(self, discovered_devices: dict):
+    async def _discovery_enqueue(self, discovered_devices: list[dict[str, Any]]):
         await self._discovery_queue.put(discovered_devices)
 
     async def _handle_discovery_loop(self):
@@ -94,7 +94,7 @@ class HIVIDeviceManager:
             finally:
                 self._discovery_queue.task_done()
 
-    async def _handle_discovered_devices(self, discovered_devices: list[dict]):
+    async def _handle_discovered_devices(self, discovered_devices: list[dict[str, Any]]):
         """Handle discovered devices."""
         _LOGGER.debug("discovered devices: %s", discovered_devices)
 
@@ -104,7 +104,7 @@ class HIVIDeviceManager:
         await self._update_device_entity_states()
         await self._device_offline_process()
 
-    async def _save_discovered_devices(self, discovered_devices: list[dict]):
+    async def _save_discovered_devices(self, discovered_devices: list[dict[str, Any]]):
         """Incrementally save discovered devices."""
         idx = 0
         for device_info in discovered_devices:
