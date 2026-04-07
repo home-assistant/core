@@ -2922,11 +2922,9 @@ sentence-stream==1.2.0
 sentry-sdk==2.48.0
 
 # homeassistant.components.homeassistant_hardware
+# homeassistant.components.usb
 # homeassistant.components.zha
 serialx==1.1.1
-
-# homeassistant.components.usb
-serialx==1.2.0
 
 # homeassistant.components.sfr_box
 sfrbox-api==0.1.1
