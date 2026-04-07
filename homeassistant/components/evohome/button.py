@@ -31,12 +31,12 @@ async def async_setup_platform(
 
     entities: list[ButtonEntity] = [EvoResetSystemButton(coordinator, tcs)]
 
-    if tcs.hotwater is not None:
-        entities.append(EvoResetDhwButton(coordinator, tcs.hotwater))
-
     entities.extend(
         [EvoResetZoneButton(coordinator, z) for z in tcs.zones if is_valid_zone(z)]
     )
+
+    if tcs.hotwater:
+        entities.append(EvoResetDhwButton(coordinator, tcs.hotwater))
 
     async_add_entities(entities)
 
