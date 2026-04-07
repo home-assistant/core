@@ -355,10 +355,7 @@
         'delayed',
         'scheduled',
       ]),
-      'schedules': tuple(
-        list([
-        ]),
-      ),
+      'schedules': None,
       'startDateTime': None,
     }),
     'context': <ANY>,
@@ -2433,10 +2430,7 @@
         'delayed',
         'scheduled',
       ]),
-      'schedules': tuple(
-        list([
-        ]),
-      ),
+      'schedules': None,
       'startDateTime': None,
     }),
     'context': <ANY>,
@@ -3421,10 +3415,7 @@
         'delayed',
         'scheduled',
       ]),
-      'schedules': tuple(
-        list([
-        ]),
-      ),
+      'schedules': None,
       'startDateTime': '2025-12-29T10:20:30Z',
     }),
     'context': <ANY>,
@@ -4293,10 +4284,7 @@
         'delayed',
         'scheduled',
       ]),
-      'schedules': tuple(
-        list([
-        ]),
-      ),
+      'schedules': None,
       'startDateTime': None,
     }),
     'context': <ANY>,
@@ -5107,10 +5095,7 @@
         'delayed',
         'scheduled',
       ]),
-      'schedules': tuple(
-        list([
-        ]),
-      ),
+      'schedules': None,
       'startDateTime': None,
     }),
     'context': <ANY>,
@@ -5986,107 +5971,105 @@
         'delayed',
         'scheduled',
       ]),
-      'schedules': tuple(
-        list([
-          dict({
-            'activated': True,
-            'friday': dict({
-              'duration': 450,
-              'startTime': 'T00:00Z',
-            }),
-            'id': 1,
-            'monday': dict({
-              'duration': 450,
-              'startTime': 'T00:00Z',
-            }),
-            'saturday': dict({
-              'duration': 450,
-              'startTime': 'T00:00Z',
-            }),
-            'sunday': dict({
-              'duration': 450,
-              'startTime': 'T00:00Z',
-            }),
-            'thursday': dict({
-              'duration': 450,
-              'startTime': 'T00:00Z',
-            }),
-            'tuesday': dict({
-              'duration': 450,
-              'startTime': 'T00:00Z',
-            }),
-            'wednesday': dict({
-              'duration': 450,
-              'startTime': 'T00:00Z',
-            }),
+      'schedules': list([
+        dict({
+          'activated': True,
+          'friday': dict({
+            'duration': 450,
+            'startTime': 'T00:00Z',
           }),
-          dict({
-            'activated': True,
-            'friday': dict({
-              'duration': 15,
-              'startTime': 'T23:30Z',
-            }),
-            'id': 2,
-            'monday': dict({
-              'duration': 15,
-              'startTime': 'T23:30Z',
-            }),
-            'saturday': dict({
-              'duration': 15,
-              'startTime': 'T23:30Z',
-            }),
-            'sunday': dict({
-              'duration': 15,
-              'startTime': 'T23:30Z',
-            }),
-            'thursday': dict({
-              'duration': 15,
-              'startTime': 'T23:30Z',
-            }),
-            'tuesday': dict({
-              'duration': 15,
-              'startTime': 'T23:30Z',
-            }),
-            'wednesday': dict({
-              'duration': 15,
-              'startTime': 'T23:30Z',
-            }),
+          'id': 1,
+          'monday': dict({
+            'duration': 450,
+            'startTime': 'T00:00Z',
           }),
-          dict({
-            'activated': False,
-            'friday': None,
-            'id': 3,
-            'monday': None,
-            'saturday': None,
-            'sunday': None,
-            'thursday': None,
-            'tuesday': None,
-            'wednesday': None,
+          'saturday': dict({
+            'duration': 450,
+            'startTime': 'T00:00Z',
           }),
-          dict({
-            'activated': False,
-            'friday': None,
-            'id': 4,
-            'monday': None,
-            'saturday': None,
-            'sunday': None,
-            'thursday': None,
-            'tuesday': None,
-            'wednesday': None,
+          'sunday': dict({
+            'duration': 450,
+            'startTime': 'T00:00Z',
           }),
-          dict({
-            'activated': False,
-            'friday': None,
-            'id': 5,
-            'monday': None,
-            'saturday': None,
-            'sunday': None,
-            'thursday': None,
-            'tuesday': None,
-            'wednesday': None,
+          'thursday': dict({
+            'duration': 450,
+            'startTime': 'T00:00Z',
           }),
-        ]),
-      ),
+          'tuesday': dict({
+            'duration': 450,
+            'startTime': 'T00:00Z',
+          }),
+          'wednesday': dict({
+            'duration': 450,
+            'startTime': 'T00:00Z',
+          }),
+        }),
+        dict({
+          'activated': True,
+          'friday': dict({
+            'duration': 15,
+            'startTime': 'T23:30Z',
+          }),
+          'id': 2,
+          'monday': dict({
+            'duration': 15,
+            'startTime': 'T23:30Z',
+          }),
+          'saturday': dict({
+            'duration': 15,
+            'startTime': 'T23:30Z',
+          }),
+          'sunday': dict({
+            'duration': 15,
+            'startTime': 'T23:30Z',
+          }),
+          'thursday': dict({
+            'duration': 15,
+            'startTime': 'T23:30Z',
+          }),
+          'tuesday': dict({
+            'duration': 15,
+            'startTime': 'T23:30Z',
+          }),
+          'wednesday': dict({
+            'duration': 15,
+            'startTime': 'T23:30Z',
+          }),
+        }),
+        dict({
+          'activated': False,
+          'friday': None,
+          'id': 3,
+          'monday': None,
+          'saturday': None,
+          'sunday': None,
+          'thursday': None,
+          'tuesday': None,
+          'wednesday': None,
+        }),
+        dict({
+          'activated': False,
+          'friday': None,
+          'id': 4,
+          'monday': None,
+          'saturday': None,
+          'sunday': None,
+          'thursday': None,
+          'tuesday': None,
+          'wednesday': None,
+        }),
+        dict({
+          'activated': False,
+          'friday': None,
+          'id': 5,
+          'monday': None,
+          'saturday': None,
+          'sunday': None,
+          'thursday': None,
+          'tuesday': None,
+          'wednesday': None,
+        }),
+      ]),
       'startDateTime': None,
     }),
     'context': <ANY>,
