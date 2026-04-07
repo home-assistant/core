@@ -72,7 +72,7 @@ async def async_setup_entry(
 class DucoVentilationFanEntity(DucoEntity, FanEntity):
     """Fan entity for the ventilation control of a Duco node."""
 
-    _attr_translation_key = "manual_control"
+    _attr_translation_key = "ventilation"
     _attr_supported_features = (
         FanEntityFeature.SET_SPEED
         | FanEntityFeature.PRESET_MODE
@@ -86,14 +86,6 @@ class DucoVentilationFanEntity(DucoEntity, FanEntity):
         """Initialize the fan entity."""
         super().__init__(coordinator, node)
         self._attr_unique_id = f"{coordinator.config_entry.unique_id}_{node.node_id}"
-
-    @property
-    def is_on(self) -> bool:
-        """Return True when manual control is active (CNT/MAN state), False when AUTO."""
-        node = self._node
-        if node.ventilation is None:
-            return False
-        return node.ventilation.state in _STATE_TO_PERCENTAGE
 
     @property
     def percentage(self) -> int | None:
@@ -155,4 +147,4 @@ class DucoVentilationFanEntity(DucoEntity, FanEntity):
                 translation_key="failed_to_set_state",
                 translation_placeholders={"error": repr(err)},
             ) from err
-        await self.coordinator.async_request_refresh()
+        await self.coordinator.async_refresh()

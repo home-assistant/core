@@ -38,3 +38,7 @@ Template scale file: `./script/scaffold/templates/integration/integration/qualit
 ## Testing Requirements
 
 - Tests should avoid interacting or mocking internal integration details. For more info, see https://developers.home-assistant.io/docs/development_testing/#writing-tests-for-integrations
+
+## Lessons Learned
+
+- **Always read the base class before writing an override.** Before overriding a property or method (e.g. `is_on`, `percentage`, `state`), read the default implementation in the HA base entity class. The default often already handles the case correctly — for example, `FanEntity.is_on` returns `True` when `preset_mode is not None`, which means an entity in AUTO preset mode is already considered on without any override.

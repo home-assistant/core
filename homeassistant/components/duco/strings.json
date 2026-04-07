@@ -20,8 +20,8 @@
   },
   "entity": {
     "fan": {
-      "manual_control": {
-        "name": "Manual control",
+      "ventilation": {
+        "name": "Ventilation",
         "state_attributes": {
           "preset_mode": {
             "state": {
