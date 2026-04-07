@@ -285,7 +285,6 @@ class MatterSensor(MatterEntity, SensorEntity):
 # Matter MeasurementUnitEnum -> HA unit of measurement
 # The enum and attribute ID are shared across all concentration measurement clusters.
 _MU = clusters.CarbonDioxideConcentrationMeasurement.Enums.MeasurementUnitEnum
-_MEASUREMENT_UNIT_ATTR_ID = clusters.CarbonDioxideConcentrationMeasurement.Attributes.MeasurementUnit.attribute_id
 _MEASUREMENT_UNIT_MAP: dict[int, str] = {
     _MU.kPpm: CONCENTRATION_PARTS_PER_MILLION,
     _MU.kPpb: CONCENTRATION_PARTS_PER_BILLION,
@@ -303,21 +302,30 @@ class MatterConcentrationSensor(MatterSensor):
 
     Reads the MeasurementUnit attribute to dynamically set the unit of measurement.
     Falls back to the statically defined unit when MeasurementUnit is not available.
+
+    Expected attributes_to_watch order:
+      [0] MeasuredValue (the only required_attributes entry)
+      [1] MeasurementUnit (must be first in optional_attributes)
     """
+
+    @property
+    def matter_measurement_unit(self) -> int | None:
+        """Return the MeasurementUnit value from the device, if available."""
+        if len(self._entity_info.attributes_to_watch) > 1:
+            return self.get_matter_attribute_value(
+                self._entity_info.attributes_to_watch[1]
+            )
+        return None
 
     @callback
     def _update_from_device(self) -> None:
         """Update from device."""
-        for attr in self._entity_info.attributes_to_watch:
-            if attr.attribute_id == _MEASUREMENT_UNIT_ATTR_ID:
-                unit_value = self.get_matter_attribute_value(attr)
-                if (
-                    unit_value is not None
-                    and (mapped_unit := _MEASUREMENT_UNIT_MAP.get(unit_value))
-                    is not None
-                ):
-                    self._attr_native_unit_of_measurement = mapped_unit
-                break
+        unit_value = self.matter_measurement_unit
+        if (
+            unit_value is not None
+            and (mapped_unit := _MEASUREMENT_UNIT_MAP.get(unit_value)) is not None
+        ):
+            self._attr_native_unit_of_measurement = mapped_unit
         super()._update_from_device()
 
 
@@ -337,20 +345,19 @@ class MatterTVOCConcentrationSensor(MatterConcentrationSensor):
     Extends MatterConcentrationSensor to also set the device class based on
     the MeasurementUnit, since TVOC uses different device classes depending
     on whether the unit is mass-based or parts-based.
+
+    Expected attributes_to_watch order: see MatterConcentrationSensor.
     """
 
     @callback
     def _update_from_device(self) -> None:
         """Update from device."""
-        for attr in self._entity_info.attributes_to_watch:
-            if attr.attribute_id == _MEASUREMENT_UNIT_ATTR_ID:
-                unit_value = self.get_matter_attribute_value(attr)
-                if (
-                    unit_value is not None
-                    and (dc := _TVOC_DEVICE_CLASS_MAP.get(unit_value)) is not None
-                ):
-                    self._attr_device_class = dc
-                break
+        unit_value = self.matter_measurement_unit
+        if (
+            unit_value is not None
+            and (dc := _TVOC_DEVICE_CLASS_MAP.get(unit_value)) is not None
+        ):
+            self._attr_device_class = dc
         super()._update_from_device()
 
 
