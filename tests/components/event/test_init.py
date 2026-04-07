@@ -10,6 +10,7 @@ from homeassistant.components.event import (
     ATTR_EVENT_TYPE,
     ATTR_EVENT_TYPES,
     DOMAIN,
+    DoorbellEventType,
     EventDeviceClass,
     EventEntity,
     EventEntityDescription,
@@ -344,3 +345,76 @@ async def test_name(hass: HomeAssistant) -> None:
         "device_class": "doorbell",
         "friendly_name": "Doorbell",
     }
+
+
+@pytest.mark.usefixtures("config_flow_fixture")
+async def test_doorbell_missing_ring_event_type(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test warning when a doorbell entity does not include the standard ring event type."""
+
+    async def async_setup_entry_init(
+        hass: HomeAssistant, config_entry: ConfigEntry
+    ) -> bool:
+        """Set up test config entry."""
+        await hass.config_entries.async_forward_entry_setups(
+            config_entry, [Platform.EVENT]
+        )
+        return True
+
+    mock_platform(hass, f"{TEST_DOMAIN}.config_flow")
+    mock_integration(
+        hass,
+        MockModule(
+            TEST_DOMAIN,
+            async_setup_entry=async_setup_entry_init,
+        ),
+    )
+
+    # Doorbell entity WITHOUT the standard "ring" event type
+    entity_without_ring = EventEntity()
+    entity_without_ring._attr_event_types = ["ding"]
+    entity_without_ring._attr_device_class = EventDeviceClass.DOORBELL
+    entity_without_ring._attr_has_entity_name = True
+    entity_without_ring.entity_id = "event.doorbell_without_ring"
+
+    # Doorbell entity WITH the standard "ring" event type
+    entity_with_ring = EventEntity()
+    entity_with_ring._attr_event_types = [DoorbellEventType.RING, "ding"]
+    entity_with_ring._attr_device_class = EventDeviceClass.DOORBELL
+    entity_with_ring._attr_has_entity_name = True
+    entity_with_ring.entity_id = "event.doorbell_with_ring"
+
+    # Non-doorbell entity should not warn
+    entity_button = EventEntity()
+    entity_button._attr_event_types = ["press"]
+    entity_button._attr_device_class = EventDeviceClass.BUTTON
+    entity_button._attr_has_entity_name = True
+    entity_button.entity_id = "event.button"
+
+    async def async_setup_entry_platform(
+        hass: HomeAssistant,
+        config_entry: ConfigEntry,
+        async_add_entities: AddConfigEntryEntitiesCallback,
+    ) -> None:
+        """Set up test event platform via config entry."""
+        async_add_entities([entity_without_ring, entity_with_ring, entity_button])
+
+    mock_platform(
+        hass,
+        f"{TEST_DOMAIN}.{DOMAIN}",
+        MockPlatform(async_setup_entry=async_setup_entry_platform),
+    )
+
+    config_entry = MockConfigEntry(domain=TEST_DOMAIN)
+    config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert (
+        "Entity event.doorbell_without_ring is a doorbell event entity "
+        "but does not support the 'ring' event type"
+    ) in caplog.text
+    assert "event.doorbell_with_ring" not in caplog.text
+    assert "event.button" not in caplog.text
