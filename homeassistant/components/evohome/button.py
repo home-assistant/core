@@ -120,8 +120,6 @@ class EvoResetZoneButton(EvoResetButtonBase):
         if evo_device.id == evo_device.tcs.id:
             # this system does not have a distinct ID for the zone
             self._attr_unique_id = f"{evo_device.id}z_reset"
-        else:
-            self._attr_unique_id = f"{evo_device.id}_reset"
 
     @callback
     def _handle_coordinator_update(self) -> None:
