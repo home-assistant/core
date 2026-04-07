@@ -13,13 +13,14 @@ from lunatone_rest_api_client.models import (
 )
 from lunatone_rest_api_client.models.common import Status
 from lunatone_rest_api_client.models.devices import DeviceStatus
+from yarl import URL
 
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
 
 BASE_IP: Final = "10.0.0.131"
-BASE_URL: Final = f"http://{BASE_IP}"
+BASE_URL: Final = URL.build(scheme="http", host=BASE_IP).human_repr()
 MANUFACTURER: Final = "Lunatone Industrielle Elektronik GmbH"
 PRODUCT_NAME: Final = "Test Product"
 SERIAL_NUMBER: Final = 12345

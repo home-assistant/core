@@ -5,6 +5,7 @@ from typing import Any, Final
 import aiohttp
 from lunatone_rest_api_client import Auth, Info
 import voluptuous as vol
+from yarl import URL
 
 from homeassistant.config_entries import (
     SOURCE_RECONFIGURE,
@@ -76,12 +77,12 @@ class LunatoneConfigFlow(ConfigFlow, domain=DOMAIN):
         self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
         """Handle a flow initialized by zeroconf discovery."""
-        url = f"http://{discovery_info.host}"
+        url = URL.build(scheme="http", host=discovery_info.host)
         uid: str = discovery_info.properties["uid"]
         await self.async_set_unique_id(uid.replace("-", ""))
-        self._abort_if_unique_id_configured(updates={CONF_URL: url})
+        self._abort_if_unique_id_configured(updates={CONF_URL: url.human_repr()})
 
-        self._data[CONF_URL] = url
+        self._data[CONF_URL] = url.human_repr()
 
         return await self.async_step_discovery_confirm()
 

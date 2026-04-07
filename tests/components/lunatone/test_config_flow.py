@@ -6,6 +6,7 @@ from unittest.mock import AsyncMock
 import aiohttp
 from lunatone_rest_api_client.models import InfoData
 import pytest
+from yarl import URL
 
 from homeassistant.components.lunatone.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER, SOURCE_ZEROCONF
@@ -196,7 +197,7 @@ async def test_reconfigure(
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test reconfigure flow."""
-    url = "http://10.0.0.100"
+    url = URL.build(scheme="http", host="10.0.0.100").human_repr()
 
     mock_config_entry.add_to_hass(hass)
 
@@ -228,7 +229,7 @@ async def test_reconfigure_fail_with_error(
     expected_error: str,
 ) -> None:
     """Test reconfigure flow with an error."""
-    url = "http://10.0.0.100"
+    url = URL.build(scheme="http", host="10.0.0.100").human_repr()
 
     mock_lunatone_info.async_update.side_effect = exception
 
