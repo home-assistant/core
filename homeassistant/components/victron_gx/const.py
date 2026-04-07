@@ -9,3 +9,4 @@ CONF_SERIAL = "serial"
 # Not using GenericOnOff as some switches use different enums.
 # It has to be with id "on" to be on and "off" to be off.
 SWITCH_ON_ID = "on"
+SWITCH_OFF_ID = "off"
