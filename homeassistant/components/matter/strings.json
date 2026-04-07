@@ -136,6 +136,9 @@
       "self_test_request": {
         "name": "Self-test"
       },
+      "temporary_mute_request": {
+        "name": "Temporaty mute"
+      },
       "start": {
         "name": "[%key:common::action::start%]"
       },

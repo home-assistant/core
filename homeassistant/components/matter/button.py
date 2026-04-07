@@ -21,6 +21,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from .entity import MatterEntity, MatterEntityDescription
 from .helpers import get_matter
 from .models import MatterDiscoverySchema
+from matter_server.common.custom_clusters import HeimanCluster
 
 
 async def async_setup_entry(
@@ -154,6 +155,18 @@ DISCOVERY_SCHEMAS = [
         entity_class=MatterCommandButton,
         required_attributes=(clusters.SmokeCoAlarm.Attributes.AcceptedCommandList,),
         value_contains=clusters.SmokeCoAlarm.Commands.SelfTestRequest.command_id,
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.BUTTON,
+        entity_description=MatterButtonEntityDescription(
+            key="SmokeCoAlarmTemporaryMuteRequest",
+            translation_key="temporary_mute_request",
+            entity_category=EntityCategory.DIAGNOSTIC,
+            command=HeimanCluster.Commands.MutingSensor,
+        ),
+        entity_class=MatterCommandButton,
+        required_attributes=(HeimanCluster.Attributes.AlarmMute,),
+        value_contains=HeimanCluster.Commands.MutingSensor.command_id,
     ),
     MatterDiscoverySchema(
         platform=Platform.BUTTON,
