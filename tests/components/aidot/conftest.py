@@ -120,7 +120,7 @@ def mocked_aidot_client(mocked_device_client: MagicMock) -> MagicMock:
 
 @pytest.fixture(autouse=True)
 def patch_aidot_client(mocked_aidot_client: MagicMock):
-    """Patch DeviceClient."""
+    """Patch AidotClient."""
     with (
         patch(
             "homeassistant.components.aidot.config_flow.AidotClient",
