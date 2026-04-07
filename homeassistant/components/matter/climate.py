@@ -132,6 +132,7 @@ SUPPORT_DRY_MODE_DEVICES: set[tuple[int, int]] = {
     (0x1209, 0x8027),
     (0x1209, 0x8028),
     (0x1209, 0x8029),
+    (0x138C, 0x0101),
 }
 
 SUPPORT_FAN_MODE_DEVICES: set[tuple[int, int]] = {
@@ -172,6 +173,7 @@ SUPPORT_FAN_MODE_DEVICES: set[tuple[int, int]] = {
     (0x1209, 0x8028),
     (0x1209, 0x8029),
     (0x131A, 0x1000),
+    (0x138C, 0x0101),
 }
 
 SystemModeEnum = clusters.Thermostat.Enums.SystemModeEnum
