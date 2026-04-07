@@ -94,8 +94,6 @@ async def async_check_ha_config_file(  # noqa: C901
     async_clear_install_history(hass)
 
     # Set up condition and trigger helpers needed for config validation.
-    # Avoid reinitializing helpers on a running instance, which would reset
-    # caches/subscriptions during reload or config-check flows.
     if condition.CONDITIONS not in hass.data:
         await condition.async_setup(hass)
     if trigger.TRIGGERS not in hass.data:
