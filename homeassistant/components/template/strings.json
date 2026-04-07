@@ -7,7 +7,6 @@
     "device_class": "Device class",
     "device_id_description": "Select a device to link to this entity.",
     "state": "State",
-    "text_template": "Text template",
     "turn_off": "Actions on turn off",
     "turn_on": "Actions on turn on",
     "unit_of_measurement": "Unit of measurement"
