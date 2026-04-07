@@ -53,6 +53,10 @@
   },
   "config_subentries": {
     "entity": {
+      "entry_type": "Sensor",
+      "initiate_flow": {
+        "user": "Add sensor"
+      },
       "step": {
         "user": {
           "data": {
