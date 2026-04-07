@@ -6,10 +6,14 @@ from victron_mqtt import (
     Device as VictronVenusDevice,
     Metric as VictronVenusMetric,
     MetricKind,
+    MetricType,
     VictronEnum,
 )
 
-from homeassistant.components.binary_sensor import BinarySensorEntity
+from homeassistant.components.binary_sensor import (
+    BinarySensorDeviceClass,
+    BinarySensorEntity,
+)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -19,6 +23,12 @@ from .entity import VictronBaseEntity
 from .hub import VictronGxConfigEntry
 
 PARALLEL_UPDATES = 0  # There is no I/O in the entity itself.
+
+METRIC_TYPE_TO_DEVICE_CLASS: dict[MetricType, BinarySensorDeviceClass] = {
+    MetricType.POWER: BinarySensorDeviceClass.POWER,
+    MetricType.PROBLEM: BinarySensorDeviceClass.PROBLEM,
+    MetricType.CONNECTIVITY: BinarySensorDeviceClass.CONNECTIVITY,
+}
 
 
 async def async_setup_entry(
@@ -55,6 +65,7 @@ class VictronBinarySensor(VictronBaseEntity, BinarySensorEntity):
     ) -> None:
         """Initialize the binary sensor."""
         super().__init__(device, metric, device_info, installation_id)
+        self._attr_device_class = METRIC_TYPE_TO_DEVICE_CLASS.get(metric.metric_type)
         self._attr_is_on = self._is_on(metric.value)
 
     @callback
