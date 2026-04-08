@@ -55,7 +55,7 @@ class TibberRuntimeData:
                 time_zone=dt_util.get_default_time_zone(),
                 ssl=ssl_util.get_default_context(),
             )
-        self._client.set_access_token(access_token)
+        await self._client.set_access_token(access_token)
         return self._client
 
 
