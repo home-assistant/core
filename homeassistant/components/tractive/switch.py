@@ -100,13 +100,11 @@ class TractiveSwitch(TractiveEntity, SwitchEntity):
     @callback
     def handle_status_update(self, event: dict[str, Any]) -> None:
         """Handle status update."""
-        if self.entity_description.key not in event:
-            return
+        if ATTR_POWER_SAVING in event:
+            self._attr_available = not event[ATTR_POWER_SAVING]
 
-        # We received an event, so the service is online and the switch entities should
-        #  be available.
-        self._attr_available = not event[ATTR_POWER_SAVING]
-        self._attr_is_on = event[self.entity_description.key]
+        if self.entity_description.key in event:
+            self._attr_is_on = event[self.entity_description.key]
 
         self.async_write_ha_state()
 

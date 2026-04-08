@@ -248,10 +248,7 @@ async def test_switch_unavailable(
 
     event = {
         "tracker_id": "device_id_123",
-        "buzzer_control": {"active": True},
-        "led_control": {"active": False},
-        "live_tracking": {"active": True},
-        "tracker_state_reason": "POWER_SAVING",
+        "hardware": {"power_saving_zone_id": "zone_id_123"},
     }
     mock_tractive_client.send_switch_event(mock_config_entry, event)
     await hass.async_block_till_done()
@@ -260,7 +257,9 @@ async def test_switch_unavailable(
     assert state
     assert state.state == STATE_UNAVAILABLE
 
-    mock_tractive_client.send_switch_event(mock_config_entry)
+    event["hardware"]["power_saving_zone_id"] = None
+
+    mock_tractive_client.send_switch_event(mock_config_entry, event)
     await hass.async_block_till_done()
 
     state = hass.states.get(entity_id)
