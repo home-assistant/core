@@ -48,10 +48,12 @@ from .const import (
     CONF_CODE_EXECUTION,
     CONF_MAX_TOKENS,
     CONF_PROMPT,
+    CONF_PROMPT_CACHING,
     CONF_RECOMMENDED,
     CONF_TEMPERATURE,
     CONF_THINKING_BUDGET,
     CONF_THINKING_EFFORT,
+    CONF_TOOL_SEARCH,
     CONF_WEB_SEARCH,
     CONF_WEB_SEARCH_CITY,
     CONF_WEB_SEARCH_COUNTRY,
@@ -65,7 +67,9 @@ from .const import (
     DOMAIN,
     NON_ADAPTIVE_THINKING_MODELS,
     NON_THINKING_MODELS,
+    TOOL_SEARCH_UNSUPPORTED_MODELS,
     WEB_SEARCH_UNSUPPORTED_MODELS,
+    PromptCaching,
 )
 
 if TYPE_CHECKING:
@@ -356,6 +360,16 @@ class ConversationSubentryFlowHandler(ConfigSubentryFlow):
                 CONF_TEMPERATURE,
                 default=DEFAULT[CONF_TEMPERATURE],
             ): NumberSelector(NumberSelectorConfig(min=0, max=1, step=0.05)),
+            vol.Optional(
+                CONF_PROMPT_CACHING,
+                default=DEFAULT[CONF_PROMPT_CACHING],
+            ): SelectSelector(
+                SelectSelectorConfig(
+                    options=[x.value for x in PromptCaching],
+                    translation_key=CONF_PROMPT_CACHING,
+                    mode=SelectSelectorMode.DROPDOWN,
+                )
+            ),
         }
 
         if user_input is not None:
@@ -453,6 +467,16 @@ class ConversationSubentryFlowHandler(ConfigSubentryFlow):
         self.options.pop(CONF_WEB_SEARCH_REGION, None)
         self.options.pop(CONF_WEB_SEARCH_COUNTRY, None)
         self.options.pop(CONF_WEB_SEARCH_TIMEZONE, None)
+
+        if not model.startswith(tuple(TOOL_SEARCH_UNSUPPORTED_MODELS)):
+            step_schema[
+                vol.Optional(
+                    CONF_TOOL_SEARCH,
+                    default=DEFAULT[CONF_TOOL_SEARCH],
+                )
+            ] = bool
+        else:
+            self.options.pop(CONF_TOOL_SEARCH, None)
 
         if not step_schema:
             user_input = {}
