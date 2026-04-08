@@ -54,12 +54,14 @@ async def async_setup_entry(
                 )
 
     active_unique_ids = {f"{coordinator.address}-{d.key}" for d in descriptions}
+    button_unique_id_prefix = f"{coordinator.address}-button_"
     entity_registry = er.async_get(hass)
     for entity_entry in er.async_entries_for_config_entry(
         entity_registry, entry.entry_id
     ):
         if (
             entity_entry.domain == "event"
+            and entity_entry.unique_id.startswith(button_unique_id_prefix)
             and entity_entry.unique_id not in active_unique_ids
         ):
             entity_registry.async_remove(entity_entry.entity_id)
@@ -87,5 +89,5 @@ class OpenDisplayEventEntity(OpenDisplayEntity, EventEntity):
                     and event.event_type in self.event_types
                 ):
                     self._trigger_event(event.event_type)
+                    self.async_write_ha_state()
             self._last_processed_data = data
-        self.async_write_ha_state()
