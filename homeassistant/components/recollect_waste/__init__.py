@@ -9,7 +9,7 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
 
-from .const import CONF_PLACE_ID, CONF_SERVICE_ID, DOMAIN, LOGGER  # noqa: F401
+from .const import CONF_PLACE_ID, CONF_SERVICE_ID, LOGGER
 from .coordinator import RecollectWasteConfigEntry, ReCollectWasteDataUpdateCoordinator
 
 PLATFORMS = [Platform.CALENDAR, Platform.SENSOR]
