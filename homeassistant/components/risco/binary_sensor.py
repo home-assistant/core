@@ -96,9 +96,10 @@ async def async_setup_entry(
 
         async_add_entities(chain(system_entities, zone_entities))
     elif cloud_data := risco_data.cloud_data:
+        coordinator = cloud_data.coordinator
         async_add_entities(
-            RiscoCloudBinarySensor(cloud_data.coordinator, zone_id, zone)
-            for zone_id, zone in cloud_data.coordinator.data.zones.items()
+            RiscoCloudBinarySensor(coordinator, zone_id, zone)
+            for zone_id, zone in coordinator.data.zones.items()
         )
 
 

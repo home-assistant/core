@@ -66,14 +66,12 @@ async def async_setup_entry(
             for partition_id, partition in local_data.system.partitions.items()
         )
     elif cloud_data := risco_data.cloud_data:
+        coordinator = cloud_data.coordinator
         async_add_entities(
             RiscoCloudAlarm(
-                cloud_data.coordinator,
-                partition_id,
-                config_entry.data[CONF_PIN],
-                options,
+                coordinator, partition_id, config_entry.data[CONF_PIN], options
             )
-            for partition_id in cloud_data.coordinator.data.partitions
+            for partition_id in coordinator.data.partitions
         )
 
 

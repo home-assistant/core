@@ -29,9 +29,10 @@ async def async_setup_entry(
             for zone_id, zone in local_data.system.zones.items()
         )
     elif cloud_data := risco_data.cloud_data:
+        coordinator = cloud_data.coordinator
         async_add_entities(
-            RiscoCloudSwitch(cloud_data.coordinator, zone_id, zone)
-            for zone_id, zone in cloud_data.coordinator.data.zones.items()
+            RiscoCloudSwitch(coordinator, zone_id, zone)
+            for zone_id, zone in coordinator.data.zones.items()
         )
 
 
