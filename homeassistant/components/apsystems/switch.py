@@ -34,6 +34,7 @@ class ApSystemsInverterSwitch(ApSystemsEntity, SwitchEntity):
     def __init__(self, data: ApSystemsData) -> None:
         """Initialize the switch."""
         super().__init__(data)
+        self._coordinator = data.coordinator
         self._api = data.coordinator.api
         self._attr_unique_id = f"{data.device_id}_inverter_status"
         if data.coordinator.battery_system:
@@ -41,6 +42,9 @@ class ApSystemsInverterSwitch(ApSystemsEntity, SwitchEntity):
 
     async def async_update(self) -> None:
         """Update switch status and availability."""
+        if self._coordinator.battery_system:
+            self._attr_available = False
+            return
         try:
             status = await self._api.get_device_power_status()
         except TimeoutError, ClientConnectionError, InverterReturnedError:
