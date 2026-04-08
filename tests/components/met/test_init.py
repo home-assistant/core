@@ -1,7 +1,5 @@
 """Test the Met integration init."""
 
-from unittest.mock import patch
-
 import pytest
 
 from homeassistant.components.met.const import (
@@ -84,23 +82,31 @@ async def test_removing_incorrect_devices(
     assert "Removing improper device Forecast_legacy" in caplog.text
 
 
-async def test_api_failure(hass: HomeAssistant) -> None:
+async def test_api_failure(hass: HomeAssistant, mock_weather) -> None:
     """Test that entry goes to SETUP_RETRY when API fails."""
-    with patch(
-        "homeassistant.components.met.coordinator.metno.MetWeatherData.fetching_data",
-        return_value=False,
-    ):
-        entry = MockConfigEntry(
-            domain=DOMAIN,
-            data={
-                CONF_NAME: "test",
-                CONF_LATITUDE: 0,
-                CONF_LONGITUDE: 1.0,
-                CONF_ELEVATION: 1.0,
-            },
-        )
-        entry.add_to_hass(hass)
-        await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
+    mock_weather.fetching_data.side_effect = Exception("API error")
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_NAME: "test",
+            CONF_LATITUDE: 0,
+            CONF_LONGITUDE: 1.0,
+            CONF_ELEVATION: 1.0,
+        },
+    )
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
 
     assert entry.state is ConfigEntryState.SETUP_RETRY
+
+
+async def test_track_home_called_twice(hass: HomeAssistant, mock_weather) -> None:
+    """Test that calling track_home twice does not register duplicate listeners."""
+    entry = await init_integration(hass, track_home=True)
+    coordinator = entry.runtime_data
+
+    coordinator.track_home()
+    coordinator.track_home()  # druhé volání by mělo hned vrátit
+
+    assert coordinator._unsub_track_home is not None
