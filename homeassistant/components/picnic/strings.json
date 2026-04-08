@@ -92,6 +92,14 @@
       }
     }
   },
+  "selector": {
+    "two_fa_channel": {
+      "options": {
+        "email": "Email",
+        "sms": "Text message (SMS)"
+      }
+    }
+  },
   "services": {
     "add_product": {
       "description": "Adds a product to the cart based on a search string or product ID. The search string and product ID are exclusive.",

@@ -22,8 +22,13 @@ from homeassistant.const import (
     CONF_PASSWORD,
     CONF_USERNAME,
 )
+from homeassistant.helpers.selector import (
+    SelectSelector,
+    SelectSelectorConfig,
+    SelectSelectorMode,
+)
 
-from .const import COUNTRY_CODES, DOMAIN
+from .const import COUNTRY_CODES, DOMAIN, TWO_FA_CHANNELS
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -42,7 +47,13 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 
 STEP_2FA_CHANNEL_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_2FA_CHANNEL, default="SMS"): vol.In(["SMS", "EMAIL"]),
+        vol.Required(CONF_2FA_CHANNEL, default=TWO_FA_CHANNELS[0]): SelectSelector(
+            SelectSelectorConfig(
+                options=TWO_FA_CHANNELS,
+                mode=SelectSelectorMode.LIST,
+                translation_key="two_fa_channel",
+            )
+        ),
     }
 )
 
@@ -120,7 +131,7 @@ class PicnicConfigFlow(ConfigFlow, domain=DOMAIN):
             )
 
         errors = {}
-        channel = user_input[CONF_2FA_CHANNEL]
+        channel = user_input[CONF_2FA_CHANNEL].upper()
         try:
             await self.hass.async_add_executor_job(
                 self._picnic.generate_2fa_code, channel

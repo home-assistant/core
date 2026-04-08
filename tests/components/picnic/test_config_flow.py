@@ -102,7 +102,7 @@ async def test_form_2fa_required(hass: HomeAssistant, picnic_api) -> None:
 
         result_step_2fa_channel = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {"two_fa_channel": "SMS"},
+            {"two_fa_channel": "sms"},
         )
         assert result_step_2fa_channel["type"] is FlowResultType.FORM
         assert result_step_2fa_channel["step_id"] == "2fa"
@@ -120,7 +120,7 @@ async def test_form_2fa_required(hass: HomeAssistant, picnic_api) -> None:
         CONF_COUNTRY_CODE: "NL",
     }
     assert picnic_api.return_value.generate_2fa_code.call_count == 1
-    assert picnic_api.return_value.generate_2fa_code.call_args[0] == ("SMS",)
+    assert picnic_api.return_value.generate_2fa_code.call_args[0] == ("sms",)
     assert picnic_api.return_value.verify_2fa_code.call_count == 1
     assert picnic_api.return_value.verify_2fa_code.call_args[0] == ("123456",)
 
@@ -153,7 +153,7 @@ async def test_form_2fa_channel_cannot_connect(hass: HomeAssistant, picnic_api) 
 
         result_step_2fa_channel = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {"two_fa_channel": "SMS"},
+            {"two_fa_channel": "sms"},
         )
         await hass.async_block_till_done()
 
@@ -187,7 +187,7 @@ async def test_form_2fa_channel_exception(hass: HomeAssistant, picnic_api) -> No
 
         result_step_2fa_channel = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {"two_fa_channel": "SMS"},
+            {"two_fa_channel": "sms"},
         )
         await hass.async_block_till_done()
 
@@ -221,7 +221,7 @@ async def test_form_2fa_wrong_code(hass: HomeAssistant, picnic_api) -> None:
 
         result_step_2fa_channel = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {"two_fa_channel": "SMS"},
+            {"two_fa_channel": "sms"},
         )
         assert result_step_2fa_channel["type"] is FlowResultType.FORM
         assert result_step_2fa_channel["step_id"] == "2fa"
@@ -264,7 +264,7 @@ async def test_form_2fa_cannot_connect(hass: HomeAssistant, picnic_api) -> None:
 
         result_step_2fa_channel = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {"two_fa_channel": "SMS"},
+            {"two_fa_channel": "sms"},
         )
         assert result_step_2fa_channel["type"] is FlowResultType.FORM
         assert result_step_2fa_channel["step_id"] == "2fa"
@@ -305,7 +305,7 @@ async def test_form_2fa_exception(hass: HomeAssistant, picnic_api) -> None:
 
         result_step_2fa_channel = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {"two_fa_channel": "SMS"},
+            {"two_fa_channel": "sms"},
         )
         assert result_step_2fa_channel["type"] is FlowResultType.FORM
         assert result_step_2fa_channel["step_id"] == "2fa"
