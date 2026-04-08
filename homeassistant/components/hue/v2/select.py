@@ -6,6 +6,7 @@ import logging
 
 from aiohue.v2 import HueBridgeV2
 from aiohue.v2.controllers.events import EventType
+from aiohue.v2.controllers.groups import RoomController, ZoneController
 from aiohue.v2.models.room import Room
 from aiohue.v2.models.scene import Scene as HueScene
 from aiohue.v2.models.smart_scene import SmartScene as HueSmartScene
@@ -222,7 +223,7 @@ async def async_setup_entry(
     assert (manager := bridge.scene_activity_manager) is not None
 
     @callback
-    def _add_group_entities(group_controller) -> None:
+    def _add_group_entities(group_controller: RoomController | ZoneController) -> None:
         """Create select entities for all groups in the given controller."""
         entities: list[SceneActivityBaseEntity] = []
         for group in group_controller:
