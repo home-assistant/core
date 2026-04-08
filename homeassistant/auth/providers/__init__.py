@@ -88,6 +88,11 @@ class AuthProvider:
         """Return whether user metadata should be refreshed at login."""
         return False
 
+    @callback
+    def should_update_local_only(self, credentials: Credentials) -> bool:
+        """Return whether local_only should be refreshed for credentials."""
+        return True
+
     async def async_credentials(self) -> list[Credentials]:
         """Return all credentials of this provider."""
         users = await self.store.async_get_users()

@@ -325,7 +325,11 @@ class AuthManager:
                 ):
                     updates["group_ids"] = [info.group]
 
-                if info.local_only is not None and info.local_only != user.local_only:
+                if (
+                    info.local_only is not None
+                    and auth_provider.should_update_local_only(credentials)
+                    and info.local_only != user.local_only
+                ):
                     updates["local_only"] = info.local_only
 
                 if updates:
