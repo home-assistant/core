@@ -7,7 +7,7 @@ from unittest.mock import PropertyMock, patch
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 
-from homeassistant.auth import auth_store
+from homeassistant.auth import auth_store, models as auth_models
 from homeassistant.core import HomeAssistant
 
 MOCK_STORAGE_DATA = {
@@ -193,6 +193,45 @@ async def test_system_groups_store_id_and_name(
         {"id": auth_store.GROUP_ID_USER, "name": auth_store.GROUP_NAME_USER},
         {"id": auth_store.GROUP_ID_READ_ONLY, "name": auth_store.GROUP_NAME_READ_ONLY},
     ]
+
+
+class _MutatingRefreshTokenDict(dict[str, auth_models.RefreshToken]):
+    """Dict that mutates while values() is iterated."""
+
+    def values(self):
+        """Return values that mutate the dict during iteration."""
+        parent = self
+        iterator = super().values().__iter__()
+
+        def _iter():
+            mutated = False
+            for token in iterator:
+                if not mutated:
+                    parent["inserted-during-iteration"] = token
+                    mutated = True
+                yield token
+
+        return _iter()
+
+    def copy(self) -> dict[str, auth_models.RefreshToken]:
+        """Return a plain dict snapshot."""
+        return dict(self.items())
+
+
+async def test_data_to_save_refresh_tokens_mutated_during_iteration(
+    hass: HomeAssistant,
+) -> None:
+    """Test _data_to_save tolerates refresh token mutation during iteration."""
+    store = auth_store.AuthStore(hass)
+    await store.async_load()
+    user = await store.async_create_user("Test User")
+    refresh_token = await store.async_create_refresh_token(user)
+    user.refresh_tokens = _MutatingRefreshTokenDict({refresh_token.id: refresh_token})
+
+    data = store._data_to_save()
+
+    assert len(data["refresh_tokens"]) == 1
+    assert data["refresh_tokens"][0]["id"] == refresh_token.id
 
 
 async def test_loading_only_once(hass: HomeAssistant) -> None:

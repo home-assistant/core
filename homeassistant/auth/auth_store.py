@@ -522,6 +522,12 @@ class AuthStore:
     @callback
     def _data_to_save(self) -> dict[str, list[dict[str, Any]]]:
         """Return the data to store."""
+        # This method is called by storage from an executor thread while auth
+        # data can still be updated on the event loop thread.
+        # Take snapshots to avoid iterating over dicts that may be mutated.
+        users_snapshot = tuple(self._users.copy().values())
+        groups_snapshot = tuple(self._groups.copy().values())
+
         users = [
             {
                 "id": user.id,
@@ -532,11 +538,11 @@ class AuthStore:
                 "system_generated": user.system_generated,
                 "local_only": user.local_only,
             }
-            for user in self._users.values()
+            for user in users_snapshot
         ]
 
         groups = []
-        for group in self._groups.values():
+        for group in groups_snapshot:
             g_dict: dict[str, Any] = {
                 "id": group.id,
                 # Name not read for sys groups. Kept here for backwards compat
@@ -556,8 +562,8 @@ class AuthStore:
                 "auth_provider_id": credential.auth_provider_id,
                 "data": credential.data,
             }
-            for user in self._users.values()
-            for credential in user.credentials
+            for user in users_snapshot
+            for credential in tuple(user.credentials)
         ]
 
         refresh_tokens = [
@@ -584,8 +590,8 @@ class AuthStore:
                 else None,
                 "version": refresh_token.version,
             }
-            for user in self._users.values()
-            for refresh_token in user.refresh_tokens.values()
+            for user in users_snapshot
+            for refresh_token in user.refresh_tokens.copy().values()
         ]
 
         return {
