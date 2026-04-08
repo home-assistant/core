@@ -74,12 +74,14 @@ def _patch_group_coordinator_datetime_for_poll():
 
 @pytest.fixture
 def coordinator(hass: HomeAssistant) -> HIVIGroupCoordinator:
+    """Coordinator with mocked DM/scheduler."""
     dm = MagicMock()
     ds = MagicMock()
     return HIVIGroupCoordinator(hass=hass, device_manager=dm, discovery_scheduler=ds)
 
 
 def test_generate_operation_id(coordinator: HIVIGroupCoordinator) -> None:
+    """Generate operation id."""
     oid = coordinator._generate_operation_id(
         {"type": "set_slave", "master": "m1", "slave": "s1"}
     )
@@ -87,6 +89,7 @@ def test_generate_operation_id(coordinator: HIVIGroupCoordinator) -> None:
 
 
 def test_check_conflicts_empty_pending(coordinator: HIVIGroupCoordinator) -> None:
+    """Check conflicts empty pending."""
     out = coordinator._check_conflicting_operations(
         {"type": "set_slave", "master": "a", "slave": "b"}
     )
@@ -96,6 +99,7 @@ def test_check_conflicts_empty_pending(coordinator: HIVIGroupCoordinator) -> Non
 def test_check_conflicts_master_is_existing_slave(
     coordinator: HIVIGroupCoordinator,
 ) -> None:
+    """Check conflicts master is existing slave."""
     coordinator._pending_operations["op1"] = {
         "master": "big",
         "slave": "small",
@@ -111,6 +115,7 @@ def test_check_conflicts_master_is_existing_slave(
 def test_check_conflicts_slave_is_existing_master(
     coordinator: HIVIGroupCoordinator,
 ) -> None:
+    """Check conflicts slave is existing master."""
     coordinator._pending_operations["op1"] = {
         "master": "big",
         "slave": "small",
@@ -126,6 +131,7 @@ def test_check_conflicts_slave_is_existing_master(
 def test_check_conflicts_slave_is_existing_slave(
     coordinator: HIVIGroupCoordinator,
 ) -> None:
+    """Check conflicts slave is existing slave."""
     coordinator._pending_operations["op1"] = {
         "master": "big",
         "slave": "small",
@@ -138,6 +144,7 @@ def test_check_conflicts_slave_is_existing_slave(
 
 
 def test_find_operation_helpers(coordinator: HIVIGroupCoordinator) -> None:
+    """Find operation helpers."""
     coordinator._pending_operations["a"] = {"master": "m", "slave": "s"}
     assert coordinator._find_operation_by_slave("s") == "a"
     assert coordinator._find_operation_by_device("m") == "a"
@@ -147,6 +154,7 @@ def test_find_operation_helpers(coordinator: HIVIGroupCoordinator) -> None:
 async def test_async_handle_discovery_request_accepts_and_invokes_callback(
     coordinator: HIVIGroupCoordinator,
 ) -> None:
+    """Async handle discovery request accepts and invokes callback."""
     cb = AsyncMock()
     data = {"type": "set_slave", "master": "m", "slave": "s", "expected_state": "slave"}
     out = await coordinator.async_handle_discovery_request(data, cb)
@@ -159,6 +167,7 @@ async def test_async_handle_discovery_request_accepts_and_invokes_callback(
 async def test_async_handle_discovery_request_rejects_duplicate(
     coordinator: HIVIGroupCoordinator,
 ) -> None:
+    """Async handle discovery request rejects duplicate."""
     data = {"type": "set_slave", "master": "m", "slave": "s"}
     await coordinator.async_handle_discovery_request(data, None)
     cb = AsyncMock()
@@ -171,6 +180,7 @@ async def test_async_handle_discovery_request_rejects_duplicate(
 async def test_async_handle_discovery_request_rejects_conflict(
     coordinator: HIVIGroupCoordinator,
 ) -> None:
+    """Async handle discovery request rejects conflict."""
     coordinator._pending_operations["x"] = {
         "type": "set_slave",
         "master": "m0",
@@ -191,6 +201,7 @@ async def test_async_set_slave_speaker_starts_processing(
     hass: HomeAssistant,
     coordinator: HIVIGroupCoordinator,
 ) -> None:
+    """Async set slave speaker starts processing."""
     with patch.object(hass, "async_create_task") as mock_ct:
         out = await coordinator.async_set_slave_speaker(
             {
@@ -209,6 +220,7 @@ async def test_async_remove_slave_speaker_starts_processing(
     hass: HomeAssistant,
     coordinator: HIVIGroupCoordinator,
 ) -> None:
+    """Async remove slave speaker starts processing."""
     with patch.object(hass, "async_create_task"):
         out = await coordinator.async_remove_slave_speaker("m", "s", None)
     assert out.get("accepted") is True
@@ -217,6 +229,7 @@ async def test_async_remove_slave_speaker_starts_processing(
 async def test_async_start_and_stop_wires_listeners(
     hass: HomeAssistant,
 ) -> None:
+    """Async start and stop wires listeners."""
     entry = MockConfigEntry(domain=DOMAIN, title="HiVi", data={})
     entry.add_to_hass(hass)
     dm = MagicMock()
@@ -240,6 +253,7 @@ async def test_async_start_and_stop_wires_listeners(
 
 
 async def test_async_stop_cancels_running_poll_tasks(hass: HomeAssistant) -> None:
+    """Async stop cancels running poll tasks."""
     dm = MagicMock()
     ds = MagicMock()
     coord = HIVIGroupCoordinator(hass, dm, ds)
@@ -258,18 +272,21 @@ async def test_async_stop_cancels_running_poll_tasks(hass: HomeAssistant) -> Non
 async def test_async_start_operation_processing_missing_op(
     coordinator: HIVIGroupCoordinator,
 ) -> None:
+    """Async start operation processing missing op."""
     await coordinator.async_start_operation_processing("nonexistent")
 
 
 async def test_log_detailed_conflict_analysis(
     coordinator: HIVIGroupCoordinator,
 ) -> None:
+    """Log detailed conflict analysis."""
     coordinator._pending_operations["p"] = {"master": "a", "slave": "b"}
     coordinator._log_detailed_conflict_analysis({"master": "b", "slave": "a"})
 
 
 @pytest.fixture
 def full_params() -> dict:
+    """Sample set_slave params."""
     return {
         "slave_ip": "192.168.1.10",
         "ssid": "wifi",
@@ -285,6 +302,7 @@ def full_params() -> dict:
 async def test_execute_operation_set_slave_missing_params(
     coordinator: HIVIGroupCoordinator,
 ) -> None:
+    """Execute operation set slave missing params."""
     op = {"type": "set_slave", "data": {"params": {"slave_ip": "only"}}}
     assert await coordinator._execute_operation(op) is False
 
@@ -292,6 +310,7 @@ async def test_execute_operation_set_slave_missing_params(
 async def test_execute_operation_remove_slave_missing_params(
     coordinator: HIVIGroupCoordinator,
 ) -> None:
+    """Execute operation remove slave missing params."""
     op = {"type": "remove_slave", "data": {"params": {}}}
     assert await coordinator._execute_operation(op) is False
 
@@ -299,6 +318,7 @@ async def test_execute_operation_remove_slave_missing_params(
 async def test_execute_operation_unknown_type(
     coordinator: HIVIGroupCoordinator,
 ) -> None:
+    """Execute operation unknown type."""
     assert await coordinator._execute_operation({"type": "nope", "data": {}}) is False
 
 
@@ -306,6 +326,7 @@ async def test_execute_operation_set_slave_success(
     coordinator: HIVIGroupCoordinator,
     full_params: dict,
 ) -> None:
+    """Execute operation set slave success."""
     inner = MagicMock()
     inner.connect_slave_to_master = AsyncMock()
     ctx = MagicMock()
@@ -324,6 +345,7 @@ async def test_execute_operation_set_slave_client_error(
     coordinator: HIVIGroupCoordinator,
     full_params: dict,
 ) -> None:
+    """Execute operation set slave client error."""
     inner = MagicMock()
     inner.connect_slave_to_master = AsyncMock(side_effect=OSError("fail"))
     ctx = MagicMock()
@@ -340,6 +362,7 @@ async def test_execute_operation_set_slave_client_error(
 async def test_execute_operation_remove_slave_success(
     coordinator: HIVIGroupCoordinator,
 ) -> None:
+    """Execute operation remove slave success."""
     inner = MagicMock()
     inner.remove_slave_from_group = AsyncMock()
     ctx = MagicMock()
@@ -360,6 +383,7 @@ async def test_async_start_operation_processing_execute_fails(
     coordinator: HIVIGroupCoordinator,
     full_params: dict,
 ) -> None:
+    """Async start operation processing execute fails."""
     op_id = coordinator._generate_operation_id(
         {"type": "set_slave", "master": "m1", "slave": "s1"}
     )
@@ -392,6 +416,7 @@ async def test_async_start_operation_processing_success_schedules_poll(
     coordinator: HIVIGroupCoordinator,
     full_params: dict,
 ) -> None:
+    """Async start operation processing success schedules poll."""
     op_id = coordinator._generate_operation_id(
         {"type": "set_slave", "master": "m2", "slave": "s2"}
     )
@@ -428,6 +453,7 @@ async def test_async_start_operation_processing_success_schedules_poll(
 async def test_handle_operation_success_calls_cleanup(
     coordinator: HIVIGroupCoordinator,
 ) -> None:
+    """Handle operation success calls cleanup."""
     op_id = "set_slave_master_mx_slave_sx"
     start = datetime(2020, 1, 1, 12, 0, 0, tzinfo=UTC)
     end = datetime(2020, 1, 1, 12, 0, 2, tzinfo=UTC)
@@ -462,6 +488,7 @@ async def test_handle_operation_success_calls_cleanup(
 async def test_handle_operation_timeout_calls_cleanup(
     coordinator: HIVIGroupCoordinator,
 ) -> None:
+    """Handle operation timeout calls cleanup."""
     op_id = "set_slave_master_my_slave_sy"
     coordinator._pending_operations[op_id] = {
         "type": "set_slave",
@@ -480,6 +507,7 @@ async def test_handle_operation_timeout_calls_cleanup(
 async def test_async_start_operation_processing_callback_raises_triggers_failed(
     coordinator: HIVIGroupCoordinator,
 ) -> None:
+    """Async start operation processing callback raises triggers failed."""
     op_id = "op_cb_runtime"
     # First await is "executing"; except block awaits again with status "error" — must not re-raise.
     cb = AsyncMock(
@@ -517,6 +545,7 @@ async def test_async_start_operation_processing_callback_raises_triggers_failed(
 async def test_poll_operation_status_success_set_slave(
     coordinator: HIVIGroupCoordinator,
 ) -> None:
+    """Poll operation status success set slave."""
     op_id = "poll_set_ok"
     coordinator._pending_operations[op_id] = {
         "type": "set_slave",
@@ -544,6 +573,7 @@ async def test_poll_operation_status_success_set_slave(
 async def test_poll_operation_status_remove_slave_sleeps_before_success(
     coordinator: HIVIGroupCoordinator,
 ) -> None:
+    """Poll operation status remove slave sleeps before success."""
     op_id = "poll_rm_ok"
     coordinator._pending_operations[op_id] = {
         "type": "remove_slave",
@@ -574,6 +604,7 @@ async def test_poll_operation_status_remove_slave_sleeps_before_success(
 async def test_poll_operation_status_polling_error_sleeps(
     coordinator: HIVIGroupCoordinator,
 ) -> None:
+    """Poll operation status polling error sleeps."""
     op_id = "poll_err"
     coordinator._pending_operations[op_id] = {
         "type": "set_slave",
@@ -607,6 +638,7 @@ async def test_cleanup_operation_removes_pending_and_poll_task(
     hass: HomeAssistant,
     coordinator: HIVIGroupCoordinator,
 ) -> None:
+    """Cleanup operation removes pending and poll task."""
     op_id = "op_clean"
     coordinator._pending_operations[op_id] = {"x": 1}
     coordinator._request_callbacks[op_id] = MagicMock()
@@ -623,6 +655,7 @@ async def test_cleanup_operation_removes_pending_and_poll_task(
 async def test_dispatcher_sync_group_operation_schedules_set_slave(
     hass: HomeAssistant,
 ) -> None:
+    """Dispatcher sync group operation schedules set slave."""
     dm = MagicMock()
     ds = MagicMock()
     coord = HIVIGroupCoordinator(hass, dm, ds)
@@ -648,6 +681,7 @@ async def test_dispatcher_sync_group_operation_schedules_set_slave(
 def test_check_conflicts_passes_when_pending_disjoint(
     coordinator: HIVIGroupCoordinator,
 ) -> None:
+    """Check conflicts passes when pending disjoint."""
     coordinator._pending_operations["o"] = {"master": "a", "slave": "b"}
     out = coordinator._check_conflicting_operations(
         {"type": "set_slave", "master": "c", "slave": "d"}
@@ -659,6 +693,7 @@ def test_check_conflicts_passes_when_pending_disjoint(
 def test_log_detailed_conflict_analysis_no_overlap(
     coordinator: HIVIGroupCoordinator,
 ) -> None:
+    """Log detailed conflict analysis no overlap."""
     coordinator._pending_operations["p"] = {"master": "a", "slave": "b"}
     coordinator._log_detailed_conflict_analysis({"master": "c", "slave": "d"})
 
@@ -666,6 +701,7 @@ def test_log_detailed_conflict_analysis_no_overlap(
 async def test_get_operation_status_includes_duration(
     coordinator: HIVIGroupCoordinator,
 ) -> None:
+    """Get operation status includes duration."""
     st = datetime(2020, 1, 1, 0, 0, 0, tzinfo=UTC)
     en = datetime(2020, 1, 1, 0, 0, 10, tzinfo=UTC)
     coordinator._pending_operations["op"] = {
@@ -682,6 +718,7 @@ async def test_get_operation_status_includes_duration(
 
 
 async def test_get_all_operations(coordinator: HIVIGroupCoordinator) -> None:
+    """Get all operations."""
     st = datetime(2020, 1, 1, 0, 0, 0, tzinfo=UTC)
     en = datetime(2020, 1, 1, 0, 0, 3, tzinfo=UTC)
     coordinator._pending_operations["a"] = {
@@ -699,12 +736,14 @@ async def test_get_all_operations(coordinator: HIVIGroupCoordinator) -> None:
 async def test_cancel_operation_unknown_returns_false(
     coordinator: HIVIGroupCoordinator,
 ) -> None:
+    """Cancel operation unknown returns false."""
     assert await coordinator.cancel_operation("missing") is False
 
 
 async def test_cancel_operation_invokes_cleanup(
     coordinator: HIVIGroupCoordinator,
 ) -> None:
+    """Cancel operation invokes cleanup."""
     coordinator._pending_operations["c"] = {
         "master": "m",
         "slave": "s",
@@ -722,6 +761,7 @@ async def test_cancel_operation_invokes_cleanup(
 def test_handle_operation_started_logs(
     coordinator: HIVIGroupCoordinator,
 ) -> None:
+    """Handle operation started logs."""
     ev = MagicMock()
     ev.data = {"operation_id": "oid"}
     coordinator._handle_operation_started(ev)
@@ -730,6 +770,7 @@ def test_handle_operation_started_logs(
 def test_handle_device_updated_logs_when_related(
     coordinator: HIVIGroupCoordinator,
 ) -> None:
+    """Handle device updated logs when related."""
     coordinator._pending_operations["x"] = {"master": "m1", "slave": "s1"}
     ev = MagicMock()
     ev.data = {"speaker_device_id": "m1"}
@@ -739,12 +780,14 @@ def test_handle_device_updated_logs_when_related(
 async def test_poll_operation_status_warns_when_operation_missing(
     coordinator: HIVIGroupCoordinator,
 ) -> None:
+    """Poll operation status warns when operation missing."""
     await coordinator._poll_operation_status("no-such-op")
 
 
 async def test_legacy_poll_operation_status_success(
     coordinator: HIVIGroupCoordinator,
 ) -> None:
+    """Legacy poll operation status success."""
     op_id = "leg_ok"
     coordinator._pending_operations[op_id] = {
         "type": "set_slave",
@@ -767,6 +810,7 @@ async def test_legacy_poll_operation_status_success(
 async def test_verify_operation_state_false_without_master_ip(
     coordinator: HIVIGroupCoordinator,
 ) -> None:
+    """Verify operation state false without master ip."""
     op = {"type": "set_slave", "slave": "u", "data": {"params": {}}}
     assert await coordinator._verify_operation_state(op) is False
 
@@ -774,6 +818,7 @@ async def test_verify_operation_state_false_without_master_ip(
 async def test_check_actual_state_timeout_returns_unknown(
     coordinator: HIVIGroupCoordinator,
 ) -> None:
+    """Check actual state timeout returns unknown."""
     mc = MagicMock()
     mc.state.async_get_slave_devices = AsyncMock(side_effect=TimeoutError)
     assert await coordinator._check_actual_state(mc, "u") == "unknown"
@@ -782,6 +827,7 @@ async def test_check_actual_state_timeout_returns_unknown(
 async def test_check_actual_state_oserror_returns_unknown(
     coordinator: HIVIGroupCoordinator,
 ) -> None:
+    """Check actual state oserror returns unknown."""
     mc = MagicMock()
     mc.state.async_get_slave_devices = AsyncMock(side_effect=OSError)
     assert await coordinator._check_actual_state(mc, "u") == "unknown"
@@ -790,6 +836,7 @@ async def test_check_actual_state_oserror_returns_unknown(
 async def test_check_actual_state_slave_standalone_unknown(
     coordinator: HIVIGroupCoordinator,
 ) -> None:
+    """Check actual state slave standalone unknown."""
     mc = MagicMock()
     mc.state.async_get_slave_devices = AsyncMock(return_value={"sid": {}})
     assert await coordinator._check_actual_state(mc, "sid") == "slave"
@@ -801,16 +848,19 @@ async def test_check_actual_state_slave_standalone_unknown(
 async def test_handle_operation_failed_noop_when_operation_missing(
     coordinator: HIVIGroupCoordinator,
 ) -> None:
+    """Handle operation failed noop when operation missing."""
     await coordinator._handle_operation_failed("gone", "reason")
 
 
 async def test_handle_operation_success_noop_when_operation_missing(
     coordinator: HIVIGroupCoordinator,
 ) -> None:
+    """Handle operation success noop when operation missing."""
     await coordinator._handle_operation_success("gone")
 
 
 async def test_handle_operation_timeout_noop_when_operation_missing(
     coordinator: HIVIGroupCoordinator,
 ) -> None:
+    """Handle operation timeout noop when operation missing."""
     await coordinator._handle_operation_timeout("gone")

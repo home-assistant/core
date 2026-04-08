@@ -34,6 +34,7 @@ from tests.common import MockConfigEntry
     ],
 )
 def test_is_safe_location_url(url: str, expected: bool) -> None:
+    """Is safe location url."""
     assert _is_safe_location_url(url) is expected
 
 
@@ -45,15 +46,18 @@ def test_is_safe_location_url(url: str, expected: bool) -> None:
     ],
 )
 async def test_parse_local_url_rejects_unsafe_or_non_http(url: str) -> None:
+    """Parse local url rejects unsafe or non http."""
     session = MagicMock()
     assert await parse_local_url(session, url) is None
     session.get.assert_not_called()
 
 
 async def test_parse_local_url_parses_device_xml() -> None:
+    """Parse local url parses device xml."""
     device_el = MagicMock()
 
     def _findtext(tag: str, default: str = "", ns=None) -> str:
+        """Return canned XML field values for the fake device element."""
         return {
             "device:manufacturer": "SWAN",
             "device:friendlyName": "Test",
@@ -85,6 +89,7 @@ async def test_parse_local_url_parses_device_xml() -> None:
 
 
 def _scheduler(hass: HomeAssistant, entry: MockConfigEntry) -> HIVIDiscoveryScheduler:
+    """HIVIDiscoveryScheduler with mocked device_manager (tests)."""
     dm = MagicMock()
     dm.device_data_registry.get_connection_status_counts = MagicMock(
         return_value=(2, 0)
@@ -100,6 +105,7 @@ def _scheduler(hass: HomeAssistant, entry: MockConfigEntry) -> HIVIDiscoverySche
 async def test_discovery_scheduler_async_start_idempotent(
     hass: HomeAssistant,
 ) -> None:
+    """Discovery scheduler async start idempotent."""
     entry = MockConfigEntry(domain=DOMAIN, title="HiVi", data={})
     entry.add_to_hass(hass)
     sched = _scheduler(hass, entry)
@@ -113,6 +119,7 @@ async def test_discovery_scheduler_async_start_idempotent(
 async def test_discovery_scheduler_async_stop_clears_timer(
     hass: HomeAssistant,
 ) -> None:
+    """Discovery scheduler async stop clears timer."""
     entry = MockConfigEntry(domain=DOMAIN, title="HiVi", data={})
     entry.add_to_hass(hass)
     sched = _scheduler(hass, entry)
@@ -128,6 +135,7 @@ async def test_discovery_scheduler_async_stop_clears_timer(
 async def test_postpone_discovery_returns_false_when_already_later(
     hass: HomeAssistant,
 ) -> None:
+    """Postpone discovery returns false when already later."""
     entry = MockConfigEntry(domain=DOMAIN, title="HiVi", data={})
     entry.add_to_hass(hass)
     sched = _scheduler(hass, entry)
@@ -142,6 +150,7 @@ async def test_postpone_discovery_returns_false_when_already_later(
 async def test_postpone_discovery_returns_true_and_reschedules(
     hass: HomeAssistant,
 ) -> None:
+    """Postpone discovery returns true and reschedules."""
     entry = MockConfigEntry(domain=DOMAIN, title="HiVi", data={})
     entry.add_to_hass(hass)
     sched = _scheduler(hass, entry)
@@ -156,6 +165,7 @@ async def test_postpone_discovery_returns_true_and_reschedules(
 async def test_schedule_immediate_discovery_force_creates_task(
     hass: HomeAssistant,
 ) -> None:
+    """Schedule immediate discovery force creates task."""
     entry = MockConfigEntry(domain=DOMAIN, title="HiVi", data={})
     entry.add_to_hass(hass)
     sched = _scheduler(hass, entry)
@@ -167,6 +177,7 @@ async def test_schedule_immediate_discovery_force_creates_task(
 async def test_schedule_immediate_discovery_updates_next_and_reschedules(
     hass: HomeAssistant,
 ) -> None:
+    """Schedule immediate discovery updates next and reschedules."""
     entry = MockConfigEntry(domain=DOMAIN, title="HiVi", data={})
     entry.add_to_hass(hass)
     sched = _scheduler(hass, entry)
@@ -179,6 +190,7 @@ async def test_schedule_immediate_discovery_updates_next_and_reschedules(
 
 
 async def test_reschedule_no_op_when_not_running(hass: HomeAssistant) -> None:
+    """Reschedule no op when not running."""
     entry = MockConfigEntry(domain=DOMAIN, title="HiVi", data={})
     entry.add_to_hass(hass)
     sched = _scheduler(hass, entry)
@@ -192,6 +204,7 @@ async def test_reschedule_no_op_when_not_running(hass: HomeAssistant) -> None:
 async def test_reschedule_immediate_when_delay_non_positive(
     hass: HomeAssistant,
 ) -> None:
+    """Reschedule immediate when delay non positive."""
     entry = MockConfigEntry(domain=DOMAIN, title="HiVi", data={})
     entry.add_to_hass(hass)
     sched = _scheduler(hass, entry)
@@ -205,6 +218,7 @@ async def test_reschedule_immediate_when_delay_non_positive(
 async def test_run_discovery_perform_adjust_reschedule(
     hass: HomeAssistant,
 ) -> None:
+    """Run discovery perform adjust reschedule."""
     entry = MockConfigEntry(domain=DOMAIN, title="HiVi", data={})
     entry.add_to_hass(hass)
     sched = _scheduler(hass, entry)
@@ -223,6 +237,7 @@ async def test_run_discovery_perform_adjust_reschedule(
 async def test_discover_all_devices_flattens_and_filters(
     hass: HomeAssistant,
 ) -> None:
+    """Discover all devices flattens and filters."""
     entry = MockConfigEntry(domain=DOMAIN, title="HiVi", data={})
     entry.add_to_hass(hass)
     sched = _scheduler(hass, entry)
@@ -241,6 +256,7 @@ async def test_discover_all_devices_flattens_and_filters(
 
 
 async def test_adjust_interval_offline_ratio_branches(hass: HomeAssistant) -> None:
+    """Adjust interval offline ratio branches."""
     entry = MockConfigEntry(domain=DOMAIN, title="HiVi", data={})
     entry.add_to_hass(hass)
     sched = _scheduler(hass, entry)
@@ -274,6 +290,7 @@ async def test_adjust_interval_offline_ratio_branches(hass: HomeAssistant) -> No
 async def test_perform_discovery_sends_signal_when_devices(
     hass: HomeAssistant,
 ) -> None:
+    """Perform discovery sends signal when devices."""
     entry = MockConfigEntry(domain=DOMAIN, title="HiVi", data={})
     entry.add_to_hass(hass)
     sched = _scheduler(hass, entry)
@@ -291,6 +308,7 @@ async def test_perform_discovery_sends_signal_when_devices(
 
 
 async def test_perform_discovery_swallows_client_errors(hass: HomeAssistant) -> None:
+    """Perform discovery swallows client errors."""
     entry = MockConfigEntry(domain=DOMAIN, title="HiVi", data={})
     entry.add_to_hass(hass)
     sched = _scheduler(hass, entry)
@@ -304,6 +322,7 @@ async def test_perform_discovery_swallows_client_errors(hass: HomeAssistant) -> 
 
 
 async def test_adjust_interval_swallows_registry_errors(hass: HomeAssistant) -> None:
+    """Adjust interval swallows registry errors."""
     entry = MockConfigEntry(domain=DOMAIN, title="HiVi", data={})
     entry.add_to_hass(hass)
     sched = _scheduler(hass, entry)
@@ -316,6 +335,7 @@ async def test_adjust_interval_swallows_registry_errors(hass: HomeAssistant) -> 
 
 
 async def test_reschedule_returns_when_no_next_discovery(hass: HomeAssistant) -> None:
+    """Reschedule returns when no next discovery."""
     entry = MockConfigEntry(domain=DOMAIN, title="HiVi", data={})
     entry.add_to_hass(hass)
     sched = _scheduler(hass, entry)
@@ -327,6 +347,7 @@ async def test_reschedule_returns_when_no_next_discovery(hass: HomeAssistant) ->
 
 
 async def test_reschedule_cancels_prior_timer(hass: HomeAssistant) -> None:
+    """Reschedule cancels prior timer."""
     entry = MockConfigEntry(domain=DOMAIN, title="HiVi", data={})
     entry.add_to_hass(hass)
     sched = _scheduler(hass, entry)
@@ -343,6 +364,7 @@ async def test_reschedule_cancels_prior_timer(hass: HomeAssistant) -> None:
 
 
 async def test_reschedule_unsub_cancel_raises(hass: HomeAssistant) -> None:
+    """Reschedule unsub cancel raises."""
     entry = MockConfigEntry(domain=DOMAIN, title="HiVi", data={})
     entry.add_to_hass(hass)
     sched = _scheduler(hass, entry)
@@ -360,6 +382,7 @@ async def test_reschedule_unsub_cancel_raises(hass: HomeAssistant) -> None:
 async def test_reschedule_immediate_path_create_task_raises(
     hass: HomeAssistant,
 ) -> None:
+    """Reschedule immediate path create task raises."""
     entry = MockConfigEntry(domain=DOMAIN, title="HiVi", data={})
     entry.add_to_hass(hass)
     sched = _scheduler(hass, entry)
@@ -370,6 +393,7 @@ async def test_reschedule_immediate_path_create_task_raises(
 
 
 async def test_reschedule_clamps_delay_below_point_one(hass: HomeAssistant) -> None:
+    """Reschedule clamps delay below point one."""
     entry = MockConfigEntry(domain=DOMAIN, title="HiVi", data={})
     entry.add_to_hass(hass)
     sched = _scheduler(hass, entry)
@@ -383,6 +407,7 @@ async def test_reschedule_clamps_delay_below_point_one(hass: HomeAssistant) -> N
 
 
 async def test_reschedule_registers_delayed_callback(hass: HomeAssistant) -> None:
+    """Reschedule registers delayed callback."""
     entry = MockConfigEntry(domain=DOMAIN, title="HiVi", data={})
     entry.add_to_hass(hass)
     sched = _scheduler(hass, entry)
@@ -398,6 +423,7 @@ async def test_reschedule_registers_delayed_callback(hass: HomeAssistant) -> Non
 
 
 async def test_reschedule_call_later_fails_then_backoff(hass: HomeAssistant) -> None:
+    """Reschedule call later fails then backoff."""
     entry = MockConfigEntry(domain=DOMAIN, title="HiVi", data={})
     entry.add_to_hass(hass)
     sched = _scheduler(hass, entry)
@@ -413,6 +439,7 @@ async def test_reschedule_call_later_fails_then_backoff(hass: HomeAssistant) -> 
 
 
 async def test_reschedule_backoff_callback_also_fails(hass: HomeAssistant) -> None:
+    """Reschedule backoff callback also fails."""
     entry = MockConfigEntry(domain=DOMAIN, title="HiVi", data={})
     entry.add_to_hass(hass)
     sched = _scheduler(hass, entry)
@@ -429,6 +456,7 @@ async def test_reschedule_backoff_callback_also_fails(hass: HomeAssistant) -> No
 async def test_run_discovery_sets_backoff_on_perform_error(
     hass: HomeAssistant,
 ) -> None:
+    """Run discovery sets backoff on perform error."""
     entry = MockConfigEntry(domain=DOMAIN, title="HiVi", data={})
     entry.add_to_hass(hass)
     sched = _scheduler(hass, entry)
@@ -443,6 +471,7 @@ async def test_run_discovery_sets_backoff_on_perform_error(
 
 
 async def test_discover_private_devices_executor_raises(hass: HomeAssistant) -> None:
+    """Discover private devices executor raises."""
     entry = MockConfigEntry(domain=DOMAIN, title="HiVi", data={})
     entry.add_to_hass(hass)
     sched = _scheduler(hass, entry)
@@ -454,6 +483,7 @@ async def test_discover_private_devices_executor_raises(hass: HomeAssistant) -> 
 
 
 async def test_discover_private_devices_no_raw_responses(hass: HomeAssistant) -> None:
+    """Discover private devices no raw responses."""
     entry = MockConfigEntry(domain=DOMAIN, title="HiVi", data={})
     entry.add_to_hass(hass)
     sched = _scheduler(hass, entry)
@@ -467,6 +497,7 @@ async def test_discover_private_devices_no_raw_responses(hass: HomeAssistant) ->
 async def test_discover_private_devices_parses_with_mocked_session(
     hass: HomeAssistant,
 ) -> None:
+    """Discover private devices parses with mocked session."""
     entry = MockConfigEntry(domain=DOMAIN, title="HiVi", data={})
     entry.add_to_hass(hass)
     sched = _scheduler(hass, entry)
@@ -503,6 +534,7 @@ async def test_discover_private_devices_parses_with_mocked_session(
 
 
 async def test_discover_private_parse_one_swallows_errors(hass: HomeAssistant) -> None:
+    """Discover private parse one swallows errors."""
     entry = MockConfigEntry(domain=DOMAIN, title="HiVi", data={})
     entry.add_to_hass(hass)
     sched = _scheduler(hass, entry)
@@ -526,6 +558,7 @@ async def test_discover_private_parse_one_swallows_errors(hass: HomeAssistant) -
 
 
 def test_scan_speaker_sync_mocked_socket() -> None:
+    """Scan speaker sync mocked socket."""
     mock_sock = MagicMock()
     mock_sock.recvfrom = MagicMock(side_effect=[TimeoutError(), OSError()])
     mock_sock.sendto = MagicMock()
@@ -536,6 +569,7 @@ def test_scan_speaker_sync_mocked_socket() -> None:
 
 
 async def test_parse_local_url_client_error_returns_none() -> None:
+    """Parse local url client error returns none."""
     session = MagicMock()
     session.get = MagicMock(side_effect=aiohttp.ClientConnectionError("down"))
     assert await parse_local_url(session, "http://192.168.30.1/d.xml") is None
@@ -544,6 +578,7 @@ async def test_parse_local_url_client_error_returns_none() -> None:
 async def test_reschedule_timer_callback_schedules_discovery(
     hass: HomeAssistant,
 ) -> None:
+    """Reschedule timer callback schedules discovery."""
     entry = MockConfigEntry(domain=DOMAIN, title="HiVi", data={})
     entry.add_to_hass(hass)
     sched = _scheduler(hass, entry)
@@ -578,6 +613,7 @@ async def test_reschedule_timer_callback_schedules_discovery(
 async def test_discover_private_skips_when_parse_local_returns_none(
     hass: HomeAssistant,
 ) -> None:
+    """Discover private skips when parse local returns none."""
     entry = MockConfigEntry(domain=DOMAIN, title="HiVi", data={})
     entry.add_to_hass(hass)
     sched = _scheduler(hass, entry)
@@ -603,6 +639,7 @@ async def test_discover_private_skips_when_parse_local_returns_none(
 
 
 async def test_discover_private_skips_when_udn_missing(hass: HomeAssistant) -> None:
+    """Discover private skips when udn missing."""
     entry = MockConfigEntry(domain=DOMAIN, title="HiVi", data={})
     entry.add_to_hass(hass)
     sched = _scheduler(hass, entry)
@@ -628,6 +665,7 @@ async def test_discover_private_skips_when_udn_missing(hass: HomeAssistant) -> N
 
 
 async def test_discover_private_deduplicates_same_udn(hass: HomeAssistant) -> None:
+    """Discover private deduplicates same udn."""
     entry = MockConfigEntry(domain=DOMAIN, title="HiVi", data={})
     entry.add_to_hass(hass)
     sched = _scheduler(hass, entry)
@@ -655,6 +693,7 @@ async def test_discover_private_deduplicates_same_udn(hass: HomeAssistant) -> No
 
 
 async def test_parse_local_url_xml_without_device_node() -> None:
+    """Parse local url xml without device node."""
     root = MagicMock()
     root.find = MagicMock(return_value=None)
     response = MagicMock()
@@ -673,7 +712,11 @@ async def test_parse_local_url_xml_without_device_node() -> None:
 
 
 def test_parse_ssdp_response_skips_line_when_split_raises_valueerror() -> None:
+    """Parse ssdp response skips line when split raises valueerror."""
+
     class _BadSsdpLine:
+        """Stub line; split on ':' raises so parse_ssdp skips that header."""
+
         __slots__ = ("_text",)
 
         def __init__(self, text: str) -> None:
@@ -687,9 +730,10 @@ def test_parse_ssdp_response_skips_line_when_split_raises_valueerror() -> None:
                 raise ValueError("forced")
             return self._text.split(sep, maxsplit)
 
-    # str + str-subclass yields a plain str, so the custom split is lost; fake
-    # response_text.split("\r\n") so the body line stays a _BadSsdpLine instance.
+    # Fake response_text.split("\r\n") so the body line stays a _BadSsdpLine.
     class _FakeResponse:
+        """Minimal response_text with custom CRLF split."""
+
         def split(self, sep, maxsplit=-1):
             if sep == "\r\n":
                 return ["HTTP/1.1 206 Partial", _BadSsdpLine("server: dropped")]
@@ -702,6 +746,7 @@ def test_parse_ssdp_response_skips_line_when_split_raises_valueerror() -> None:
 
 
 def test_scan_speaker_sync_sendto_oserror_exits_loop() -> None:
+    """Scan speaker sync sendto oserror exits loop."""
     mock_sock = MagicMock()
     mock_sock.sendto = MagicMock(side_effect=OSError("send fail"))
     mock_sock.recvfrom = MagicMock(side_effect=TimeoutError())
@@ -711,6 +756,7 @@ def test_scan_speaker_sync_sendto_oserror_exits_loop() -> None:
 
 
 def test_scan_speaker_sync_recvfrom_data_then_oserror() -> None:
+    """Scan speaker sync recvfrom data then oserror."""
     mock_sock = MagicMock()
     mock_sock.sendto = MagicMock()
     mock_sock.recvfrom = MagicMock(

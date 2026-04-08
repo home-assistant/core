@@ -39,6 +39,7 @@ def _swallow_discovery_worker_task(coro):
 
 @pytest.fixture
 def config_entry(hass: HomeAssistant) -> MockConfigEntry:
+    """Mock config entry."""
     entry = MockConfigEntry(domain=DOMAIN, title="HiVi", data={})
     entry.add_to_hass(hass)
     return entry
@@ -48,6 +49,7 @@ def config_entry(hass: HomeAssistant) -> MockConfigEntry:
 def device_manager(
     hass: HomeAssistant, config_entry: MockConfigEntry
 ) -> HIVIDeviceManager:
+    """Device manager; discovery task swallowed."""
     with patch.object(
         hass, "async_create_task", side_effect=_swallow_discovery_worker_task
     ):
@@ -55,6 +57,7 @@ def device_manager(
 
 
 def test_master_slave_list_contains_uuid() -> None:
+    """Master slave list contains uuid."""
     info = SlaveDeviceInfo(
         friendly_name="S",
         ssid="",
@@ -73,6 +76,7 @@ def test_master_slave_list_contains_uuid() -> None:
 
 
 def test_suggest_area_from_name(device_manager: HIVIDeviceManager) -> None:
+    """Suggest area from name."""
     assert (
         device_manager._suggest_area_from_name("Living room speaker") == "living room"
     )
@@ -83,6 +87,7 @@ def test_suggest_area_from_name(device_manager: HIVIDeviceManager) -> None:
 def test_create_device_obj_from_discovered_device_info(
     device_manager: HIVIDeviceManager,
 ) -> None:
+    """Create device obj from discovered device info."""
     obj = device_manager._create_device_obj_from_discovered_device_info(
         {
             "UDN": "uuid:1",
@@ -98,6 +103,7 @@ def test_create_device_obj_from_discovered_device_info(
 
 
 def test_set_add_entities_callback(device_manager: HIVIDeviceManager) -> None:
+    """Set add entities callback."""
     cb = MagicMock()
     device_manager.set_add_entities_callback("switch", cb)
     assert device_manager._add_entities_callbacks["switch"] is cb
@@ -107,6 +113,7 @@ async def test_async_setup_wires_registry_and_starts_children(
     hass: HomeAssistant,
     device_manager: HIVIDeviceManager,
 ) -> None:
+    """Async setup wires registry and starts children."""
     device_manager.device_data_registry.async_load = AsyncMock()
     device_manager.discovery_scheduler.async_start = AsyncMock()
     device_manager.group_coordinator.async_start = AsyncMock()
@@ -125,6 +132,7 @@ async def test_async_setup_wires_registry_and_starts_children(
 async def test_async_cleanup_stops_children_and_worker(
     device_manager: HIVIDeviceManager,
 ) -> None:
+    """Async cleanup stops children and worker."""
     device_manager.discovery_scheduler.async_stop = AsyncMock()
     device_manager.group_coordinator.async_stop = AsyncMock()
     device_manager.device_data_registry.async_shutdown = AsyncMock()
@@ -145,6 +153,7 @@ async def test_async_cleanup_stops_children_and_worker(
 async def test_async_manual_discovery_delegates(
     device_manager: HIVIDeviceManager,
 ) -> None:
+    """Async manual discovery delegates."""
     device_manager.discovery_scheduler.schedule_immediate_discovery = AsyncMock()
     await device_manager.async_manual_discovery()
     device_manager.discovery_scheduler.schedule_immediate_discovery.assert_awaited_once_with(
@@ -155,6 +164,7 @@ async def test_async_manual_discovery_delegates(
 async def test_refresh_and_postpone_discovery_delegate(
     device_manager: HIVIDeviceManager,
 ) -> None:
+    """Refresh and postpone discovery delegate."""
     device_manager.discovery_scheduler.schedule_immediate_discovery = AsyncMock()
     device_manager.discovery_scheduler.postpone_discovery = AsyncMock()
     await device_manager.refresh_discovery()
@@ -164,6 +174,7 @@ async def test_refresh_and_postpone_discovery_delegate(
 
 
 async def test_async_register_device(device_manager: HIVIDeviceManager) -> None:
+    """Async register device."""
     dev = HIVIDevice(speaker_device_id="spk1", friendly_name="Living HiVi")
     mock_reg = MagicMock()
     mock_reg.async_get_or_create = MagicMock(
@@ -179,6 +190,7 @@ async def test_async_register_device(device_manager: HIVIDeviceManager) -> None:
 
 
 async def test_discovery_enqueue(device_manager: HIVIDeviceManager) -> None:
+    """Discovery enqueue."""
     await device_manager._discovery_enqueue([{"UDN": "x"}])
     assert device_manager._discovery_queue.qsize() == 1
 
@@ -186,6 +198,7 @@ async def test_discovery_enqueue(device_manager: HIVIDeviceManager) -> None:
 async def test_handle_discovered_devices_runs_pipeline(
     device_manager: HIVIDeviceManager,
 ) -> None:
+    """Handle discovered devices runs pipeline."""
     with (
         patch.object(
             device_manager, "_save_discovered_devices", new_callable=AsyncMock
@@ -216,6 +229,7 @@ async def test_handle_discovered_devices_runs_pipeline(
 async def test_save_discovered_skips_missing_udn(
     device_manager: HIVIDeviceManager,
 ) -> None:
+    """Save discovered skips missing udn."""
     device_manager.device_data_registry.get_device_dict_by_speaker_device_id = (
         MagicMock(return_value=None)
     )
@@ -227,6 +241,7 @@ async def test_save_discovered_skips_missing_udn(
 async def test_save_discovered_updates_existing(
     device_manager: HIVIDeviceManager,
 ) -> None:
+    """Save discovered updates existing."""
     existing = HIVIDevice(
         speaker_device_id="uuid:old",
         ha_device_id="ha-1",
@@ -252,6 +267,7 @@ async def test_save_discovered_updates_existing(
 async def test_save_discovered_registers_new_when_missing_in_registry(
     device_manager: HIVIDeviceManager,
 ) -> None:
+    """Save discovered registers new when missing in registry."""
     device_manager.device_data_registry.get_device_dict_by_speaker_device_id = (
         MagicMock(return_value=None)
     )
@@ -273,6 +289,7 @@ async def test_save_discovered_registers_new_when_missing_in_registry(
 async def test_async_remove_entities_for_device_none(
     device_manager: HIVIDeviceManager,
 ) -> None:
+    """Async remove entities for device none."""
     ent_reg = MagicMock()
     ent_reg.entities.get_entries_for_device_id = MagicMock(return_value=[])
     with patch(
@@ -286,6 +303,7 @@ async def test_async_remove_entities_for_device_none(
 async def test_async_remove_entities_for_device_removes_each(
     device_manager: HIVIDeviceManager,
 ) -> None:
+    """Async remove entities for device removes each."""
     e1 = SimpleNamespace(entity_id="switch.a")
     ent_reg = MagicMock()
     ent_reg.entities.get_entries_for_device_id = MagicMock(return_value=[e1])
@@ -300,6 +318,7 @@ async def test_async_remove_entities_for_device_removes_each(
 async def test_async_remove_device_with_entities(
     device_manager: HIVIDeviceManager,
 ) -> None:
+    """Async remove device with entities."""
     with (
         patch.object(
             device_manager,
@@ -319,6 +338,7 @@ async def test_async_remove_device_with_entities(
 async def test_async_remove_device_with_entities_swallows_registry_error(
     device_manager: HIVIDeviceManager,
 ) -> None:
+    """Async remove device with entities swallows registry error."""
     mock_dr = MagicMock()
     mock_dr.async_remove_device = MagicMock(side_effect=RuntimeError("reg fail"))
     with (
@@ -338,6 +358,7 @@ async def test_async_remove_device_with_entities_swallows_registry_error(
 async def test_fetch_device_status_logs_non_dict_status(
     device_manager: HIVIDeviceManager,
 ) -> None:
+    """Fetch device status logs non dict status."""
     inner = MagicMock()
     inner.get_device_status = AsyncMock(return_value="not-a-dict")
     ctx = MagicMock()
@@ -356,6 +377,7 @@ async def test_fetch_device_status_logs_non_dict_status(
 async def test_fetch_slave_device_returns_payload(
     device_manager: HIVIDeviceManager,
 ) -> None:
+    """Fetch slave device returns payload."""
     payload = {"slaves": 0, "slave_list": []}
     inner = MagicMock()
     inner.get_slave_devices = AsyncMock(return_value=payload)
@@ -375,6 +397,7 @@ async def test_fetch_slave_device_returns_payload(
 async def test_remove_control_entities_by_speaker_device_id(
     device_manager: HIVIDeviceManager,
 ) -> None:
+    """Remove control entities by speaker device id."""
     ent = SimpleNamespace(entity_id="switch.m_slave_s1", unique_id="m_slave_s1")
     ent_reg = MagicMock()
     ent_reg.entities = MagicMock()
@@ -390,6 +413,7 @@ async def test_remove_control_entities_by_speaker_device_id(
 async def test_remove_control_entities_no_match_returns_early(
     device_manager: HIVIDeviceManager,
 ) -> None:
+    """Remove control entities no match returns early."""
     ent = SimpleNamespace(entity_id="switch.a", unique_id="m_slave_other")
     ent_reg = MagicMock()
     ent_reg.entities = MagicMock()
@@ -405,6 +429,7 @@ async def test_remove_control_entities_no_match_returns_early(
 async def test_remove_control_entities_swallows_registry_error(
     device_manager: HIVIDeviceManager,
 ) -> None:
+    """Remove control entities swallows registry error."""
     ent_reg = MagicMock()
     ent_reg.entities = MagicMock()
     ent_reg.entities.values = MagicMock(side_effect=RuntimeError("iter fail"))
@@ -418,6 +443,7 @@ async def test_remove_control_entities_swallows_registry_error(
 async def test_fetch_device_status_redacts_psk_in_logs(
     device_manager: HIVIDeviceManager,
 ) -> None:
+    """Fetch device status redacts psk in logs."""
     inner = MagicMock()
     inner.get_device_status = AsyncMock(return_value={"ssid": "x", "psk": "secret"})
     ctx = MagicMock()
@@ -438,6 +464,7 @@ async def test_get_devices_for_device_filters_domain(
     hass: HomeAssistant,
     device_manager: HIVIDeviceManager,
 ) -> None:
+    """Get devices for device filters domain."""
     d_ok = SimpleNamespace(identifiers={(DOMAIN, "u1")})
     d_other = SimpleNamespace(identifiers={("mqtt", "x")})
     mock_dr = MagicMock()
@@ -451,6 +478,7 @@ async def test_get_devices_for_device_filters_domain(
 
 
 async def test_get_entities_for_device(device_manager: HIVIDeviceManager) -> None:
+    """Get entities for device."""
     e1 = SimpleNamespace(device_id="d1", entity_id="x.y")
     e2 = SimpleNamespace(device_id="d2", entity_id="x.z")
     ent_reg = MagicMock()
@@ -485,6 +513,7 @@ async def test_discovery_worker_swallows_handler_errors(
 async def test_update_all_device_statuses_skips_missing_dict(
     device_manager: HIVIDeviceManager,
 ) -> None:
+    """Update all device statuses skips missing dict."""
     ha_dev = SimpleNamespace(id="d1", identifiers={(DOMAIN, "u1")}, name="N")
     with (
         patch.object(
@@ -505,6 +534,7 @@ async def test_update_all_device_statuses_skips_missing_dict(
 async def test_update_all_device_statuses_fetch_raises(
     device_manager: HIVIDeviceManager,
 ) -> None:
+    """Update all device statuses fetch raises."""
     dct = HIVIDevice(
         speaker_device_id="spk1",
         friendly_name="One",
@@ -537,6 +567,7 @@ async def test_update_all_device_statuses_fetch_raises(
 async def test_update_all_device_statuses_slave_group_branch(
     device_manager: HIVIDeviceManager,
 ) -> None:
+    """Update all device statuses slave group branch."""
     dct = HIVIDevice(
         speaker_device_id="spk1",
         friendly_name="One",
@@ -576,6 +607,7 @@ async def test_update_all_device_statuses_slave_group_branch(
 async def test_update_all_device_statuses_removes_slave_devices(
     device_manager: HIVIDeviceManager,
 ) -> None:
+    """Update all device statuses removes slave devices."""
     master = SimpleNamespace(id="dm", identifiers={(DOMAIN, "m")}, name="Master")
     orphan = SimpleNamespace(
         id="ds", identifiers={(DOMAIN, "orphan-slave")}, name="Orphan"
@@ -661,6 +693,7 @@ async def test_update_all_device_statuses_removes_slave_devices(
 async def test_update_all_fetch_slave_raises_sets_standalone(
     device_manager: HIVIDeviceManager,
 ) -> None:
+    """Update all fetch slave raises sets standalone."""
     dct = HIVIDevice(
         speaker_device_id="spk1",
         friendly_name="One",
@@ -708,6 +741,7 @@ async def test_update_all_fetch_slave_raises_sets_standalone(
 async def test_update_all_slave_num_zero_is_standalone(
     device_manager: HIVIDeviceManager,
 ) -> None:
+    """Update all slave num zero is standalone."""
     dct = HIVIDevice(
         speaker_device_id="spk1",
         friendly_name="One",
@@ -755,6 +789,7 @@ async def test_update_all_slave_num_zero_is_standalone(
 async def test_update_all_skips_second_pass_when_no_domain_identifier(
     device_manager: HIVIDeviceManager,
 ) -> None:
+    """Update all skips second pass when no domain identifier."""
     master = SimpleNamespace(id="dm", identifiers={(DOMAIN, "m")}, name="Master")
     no_domain = SimpleNamespace(id="dx", identifiers={("mqtt", "x")}, name="X")
     master_dict = HIVIDevice(
@@ -798,6 +833,7 @@ async def test_add_or_remove_switches_removes_invalid_slave_entity(
     hass: HomeAssistant,
     device_manager: HIVIDeviceManager,
 ) -> None:
+    """Add or remove switches removes invalid slave entity."""
     ha_dev = SimpleNamespace(id="d1", identifiers={(DOMAIN, "master1")}, name="M")
     bad_ent = SimpleNamespace(
         entity_id="switch.master1_slave_bad",
@@ -853,6 +889,7 @@ async def test_add_or_remove_switches_skips_incompatible_hardware(
     hass: HomeAssistant,
     device_manager: HIVIDeviceManager,
 ) -> None:
+    """Add or remove switches skips incompatible hardware."""
     ha_dev = SimpleNamespace(id="d1", identifiers={(DOMAIN, "master1")}, name="M")
     master_dict = HIVIDevice(
         speaker_device_id="master1",
@@ -902,6 +939,7 @@ async def test_add_or_remove_switches_skips_incompatible_hardware(
 async def test_add_or_remove_switches_no_platform_callback(
     device_manager: HIVIDeviceManager,
 ) -> None:
+    """Add or remove switches no platform callback."""
     ha_dev = SimpleNamespace(id="d1", identifiers={(DOMAIN, "master1")}, name="M")
     master_dict = HIVIDevice(
         speaker_device_id="master1",
@@ -948,6 +986,7 @@ async def test_add_or_remove_switches_no_platform_callback(
 async def test_add_or_remove_switches_skips_when_device_dict_missing(
     device_manager: HIVIDeviceManager,
 ) -> None:
+    """Add or remove switches skips when device dict missing."""
     ha_dev = SimpleNamespace(id="dmiss", identifiers={(DOMAIN, "x")}, name="X")
     with (
         patch.object(
@@ -975,6 +1014,7 @@ async def test_add_or_remove_keeps_orphan_slave_switch_when_on_master_roster(
     hass: HomeAssistant,
     device_manager: HIVIDeviceManager,
 ) -> None:
+    """Add or remove keeps orphan slave switch when on master roster."""
     ha_dev = SimpleNamespace(id="d1", identifiers={(DOMAIN, "master1")}, name="M")
     keep_uuid = "on-roster"
     orphan_ent = SimpleNamespace(
@@ -1044,6 +1084,7 @@ async def test_add_or_remove_same_non_swan_hardware_creates_switch(
     hass: HomeAssistant,
     device_manager: HIVIDeviceManager,
 ) -> None:
+    """Add or remove same non swan hardware creates switch."""
     ha_dev = SimpleNamespace(id="d1", identifiers={(DOMAIN, "master1")}, name="M")
     master_dict = HIVIDevice(
         speaker_device_id="master1",
@@ -1094,6 +1135,7 @@ async def test_add_or_remove_existing_switch_on_state_skips_duplicate(
     hass: HomeAssistant,
     device_manager: HIVIDeviceManager,
 ) -> None:
+    """Add or remove existing switch on state skips duplicate."""
     ha_dev = SimpleNamespace(id="d1", identifiers={(DOMAIN, "master1")}, name="M")
     existing = SimpleNamespace(
         entity_id="switch.master1_slave_slave1",
@@ -1149,6 +1191,7 @@ async def test_add_or_remove_from_slave_device_list_creates_switch(
     hass: HomeAssistant,
     device_manager: HIVIDeviceManager,
 ) -> None:
+    """Add or remove from slave device list creates switch."""
     ha_dev = SimpleNamespace(id="d1", identifiers={(DOMAIN, "master1")}, name="M")
     slave_info = SlaveDeviceInfo(
         friendly_name="Sub",
@@ -1204,6 +1247,7 @@ async def test_add_or_remove_from_slave_device_list_creates_switch(
 async def test_async_remove_entities_for_device_swallows_registry_error(
     device_manager: HIVIDeviceManager,
 ) -> None:
+    """Async remove entities for device swallows registry error."""
     ent_reg = MagicMock()
     ent_reg.entities.get_entries_for_device_id = MagicMock(
         side_effect=RuntimeError("registry broken")
@@ -1218,6 +1262,7 @@ async def test_async_remove_entities_for_device_swallows_registry_error(
 async def test_update_device_entity_states_toggles_switch(
     device_manager: HIVIDeviceManager,
 ) -> None:
+    """Update device entity states toggles switch."""
     ha_dev = SimpleNamespace(id="d1", identifiers={(DOMAIN, "m")}, name="M")
     ent_on = SimpleNamespace(
         entity_id="switch.m_slave_keep",
@@ -1273,6 +1318,7 @@ async def test_update_device_entity_states_toggles_switch(
 async def test_update_device_entity_states_skips_when_device_dict_missing(
     device_manager: HIVIDeviceManager,
 ) -> None:
+    """Update device entity states skips when device dict missing."""
     ha_dev = SimpleNamespace(id="d1", identifiers={(DOMAIN, "m")}, name="M")
     with (
         patch.object(
@@ -1301,6 +1347,7 @@ async def test_update_device_entity_states_skips_when_device_dict_missing(
 async def test_update_device_entity_states_turns_switch_off_when_slave_not_in_list(
     device_manager: HIVIDeviceManager,
 ) -> None:
+    """Update device entity states turns switch off when slave not in list."""
     ha_dev = SimpleNamespace(id="d1", identifiers={(DOMAIN, "m")}, name="M")
     ent = SimpleNamespace(entity_id="switch.m_slave_gone", unique_id="m_slave_gone")
     dct = HIVIDevice(
@@ -1340,6 +1387,7 @@ async def test_update_device_entity_states_turns_switch_off_when_slave_not_in_li
 async def test_update_device_entity_states_logs_when_hub_has_no_switch(
     device_manager: HIVIDeviceManager,
 ) -> None:
+    """Update device entity states logs when hub has no switch."""
     ha_dev = SimpleNamespace(id="d1", identifiers={(DOMAIN, "m")}, name="M")
     ent = SimpleNamespace(entity_id="switch.m_slave_x", unique_id="m_slave_x")
     dct = HIVIDevice(
@@ -1390,6 +1438,7 @@ async def test_update_device_entity_states_logs_when_hub_has_no_switch(
 async def test_device_offline_process_marks_offline_and_signals(
     device_manager: HIVIDeviceManager,
 ) -> None:
+    """Device offline process marks offline and signals."""
     old_seen = datetime.now(tz=UTC) - timedelta(seconds=DEVICE_OFFLINE_THRESHOLD + 50)
     dct = HIVIDevice(
         speaker_device_id="old",
@@ -1423,6 +1472,7 @@ async def test_device_offline_process_marks_offline_and_signals(
 async def test_device_offline_process_skips_when_device_dict_missing(
     device_manager: HIVIDeviceManager,
 ) -> None:
+    """Device offline process skips when device dict missing."""
     ha_dev = SimpleNamespace(id="d-miss", identifiers={(DOMAIN, "x")}, name="X")
     with (
         patch.object(
@@ -1448,6 +1498,7 @@ async def test_add_or_remove_switches_calls_platform_callback(
     hass: HomeAssistant,
     device_manager: HIVIDeviceManager,
 ) -> None:
+    """Add or remove switches calls platform callback."""
     ha_dev = SimpleNamespace(id="d1", identifiers={(DOMAIN, "master1")}, name="M")
     master_dict = HIVIDevice(
         speaker_device_id="master1",
@@ -1498,6 +1549,7 @@ async def test_add_or_remove_switches_calls_platform_callback(
 async def test_async_cleanup_await_worker_cancelled_error(
     device_manager: HIVIDeviceManager,
 ) -> None:
+    """Async cleanup await worker cancelled error."""
     device_manager.discovery_scheduler.async_stop = AsyncMock()
     device_manager.group_coordinator.async_stop = AsyncMock()
     device_manager.device_data_registry.async_shutdown = AsyncMock()
@@ -1512,6 +1564,7 @@ async def test_async_cleanup_await_worker_cancelled_error(
 async def test_save_discovered_warns_when_register_returns_no_id(
     device_manager: HIVIDeviceManager,
 ) -> None:
+    """Save discovered warns when register returns no id."""
     device_manager.device_data_registry.get_device_dict_by_speaker_device_id = (
         MagicMock(return_value=None)
     )
@@ -1524,5 +1577,6 @@ async def test_save_discovered_warns_when_register_returns_no_id(
 
 
 def test_suggest_area_bedroom_and_bathroom(device_manager: HIVIDeviceManager) -> None:
+    """Suggest area bedroom and bathroom."""
     assert device_manager._suggest_area_from_name("Bedroom speaker") == "bed room"
     assert device_manager._suggest_area_from_name("bathroom echo") == "bathroom"
