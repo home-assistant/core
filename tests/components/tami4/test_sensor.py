@@ -42,7 +42,9 @@ async def test_sensors_with_none_fields(
     assert uv_replacement is not None
     assert uv_replacement.state == STATE_UNKNOWN
 
-    filter_replacement = hass.states.get("sensor.drink_water_filter_upcoming_replacement")
+    filter_replacement = hass.states.get(
+        "sensor.drink_water_filter_upcoming_replacement"
+    )
     assert filter_replacement is not None
     assert filter_replacement.state == STATE_UNKNOWN
 
