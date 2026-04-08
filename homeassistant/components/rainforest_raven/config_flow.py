@@ -153,5 +153,5 @@ class RainforestRavenConfigFlow(ConfigFlow, domain=DOMAIN):
             else:
                 return await self.async_step_meters()
 
-        schema = vol.Schema({vol.Required(CONF_DEVICE): vol.In(port_map)})
+        schema = vol.Schema({vol.Required(CONF_DEVICE): vol.In(list(port_map))})
         return self.async_show_form(step_id="user", data_schema=schema, errors=errors)
