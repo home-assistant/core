@@ -29,10 +29,10 @@ async def test_sensors_with_valid_data(mock_api, hass: HomeAssistant) -> None:
 async def test_sensors_with_none_fields(
     mock_api_none_fields, hass: HomeAssistant
 ) -> None:
-    """Test sensors handle None water quality fields gracefully.
+    """Test sensors handle None upcoming_replacement dates gracefully.
 
     When the device is disconnected from the Strauss cloud, the API may
-    return None for upcoming_replacement dates and milliLittersPassed.
+    return None for upcoming_replacement dates.
     """
 
     entry = await create_config_entry(hass)

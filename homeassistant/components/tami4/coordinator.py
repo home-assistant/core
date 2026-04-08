@@ -31,9 +31,7 @@ class FlattenedWaterQuality:
         self.uv_installed = water_quality.uv.installed
         self.filter_upcoming_replacement = water_quality.filter.upcoming_replacement
         self.filter_installed = water_quality.filter.installed
-        self.filter_litters_passed = (
-            water_quality.filter.milli_litters_passed or 0
-        ) / 1000
+        self.filter_litters_passed = water_quality.filter.milli_litters_passed / 1000
 
 
 class Tami4EdgeCoordinator(DataUpdateCoordinator[FlattenedWaterQuality]):

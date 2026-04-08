@@ -130,10 +130,10 @@ def mock_get_device(
 def mock_get_device_none_fields(
     request: pytest.FixtureRequest,
 ) -> Generator[None]:
-    """Fixture to mock get_device with None water quality fields.
+    """Fixture to mock get_device with None upcoming_replacement dates.
 
     Simulates the API response when the device is disconnected from the cloud
-    and fields like upcoming_replacement and milliLittersPassed are absent.
+    and upcoming_replacement dates are absent.
     """
 
     side_effect = getattr(request, "param", None)
@@ -144,7 +144,7 @@ def mock_get_device_none_fields(
 
     _filter = MagicMock()
     _filter.upcoming_replacement = None
-    _filter.milli_litters_passed = None
+    _filter.milli_litters_passed = 0
     _filter.installed = False
 
     water_quality = WaterQuality(uv=uv, filter=_filter)

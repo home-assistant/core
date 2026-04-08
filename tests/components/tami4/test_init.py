@@ -52,9 +52,10 @@ async def test_init_error_raised(
 async def test_init_success_with_none_fields(
     mock_api_none_fields, hass: HomeAssistant
 ) -> None:
-    """Test setup succeeds when water quality fields are None.
+    """Test setup succeeds when upcoming_replacement dates are None.
 
-    The Strauss cloud API may omit fields when the device is disconnected.
+    The Strauss cloud API may return None for upcoming_replacement dates
+    when the device is disconnected.
     """
 
     entry = await create_config_entry(hass)
