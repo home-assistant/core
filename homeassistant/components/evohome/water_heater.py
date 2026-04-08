@@ -98,10 +98,6 @@ class EvoDHW(EvoChild, WaterHeaterEntity):
             PRECISION_TENTHS if coordinator.client_v1 else PRECISION_WHOLE
         )
 
-    async def async_clear_dhw_override(self) -> None:
-        """Clear the DHW override (if any) and return to following its schedule."""
-        await self.coordinator.call_client_api(self._evo_device.reset())
-
     async def async_set_dhw_override(
         self, state: EvoDhwState, duration: timedelta | None = None
     ) -> None:

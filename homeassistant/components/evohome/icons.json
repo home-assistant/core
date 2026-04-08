@@ -13,9 +13,6 @@
     }
   },
   "services": {
-    "clear_dhw_override": {
-      "service": "mdi:water-heater-off"
-    },
     "clear_zone_override": {
       "service": "mdi:motion-sensor-off"
     },

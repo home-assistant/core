@@ -20,10 +20,6 @@
     }
   },
   "services": {
-    "clear_dhw_override": {
-      "description": "Sets a DHW zone to follow its schedule.",
-      "name": "Clear DHW override"
-    },
     "clear_zone_override": {
       "description": "Sets a zone to follow its schedule.",
       "name": "Clear zone override"

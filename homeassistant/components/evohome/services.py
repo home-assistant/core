@@ -88,14 +88,6 @@ def _register_dhw_entity_services(hass: HomeAssistant) -> None:
     service.async_register_platform_entity_service(
         hass,
         DOMAIN,
-        EvoService.CLEAR_DHW_OVERRIDE,
-        entity_domain=WATER_HEATER_DOMAIN,
-        schema=None,
-        func="async_clear_dhw_override",
-    )
-    service.async_register_platform_entity_service(
-        hass,
-        DOMAIN,
         EvoService.SET_DHW_OVERRIDE,
         entity_domain=WATER_HEATER_DOMAIN,
         schema=SET_DHW_OVERRIDE_SCHEMA,

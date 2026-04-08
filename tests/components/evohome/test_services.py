@@ -366,26 +366,6 @@ async def test_set_system_mode_validator(
 
 
 @pytest.mark.parametrize("install", ["default"])
-async def test_clear_dhw_override(
-    hass: HomeAssistant,
-    dhw_id: str,
-) -> None:
-    """Test Evohome's clear_dhw_override service (for a DHW zone)."""
-
-    # EvoZoneMode.FOLLOW_SCHEDULE
-    with patch("evohomeasync2.hotwater.HotWater.reset") as mock_fcn:
-        await hass.services.async_call(
-            DOMAIN,
-            EvoService.CLEAR_DHW_OVERRIDE,
-            {},
-            target={ATTR_ENTITY_ID: dhw_id},
-            blocking=True,
-        )
-
-        mock_fcn.assert_awaited_once_with()
-
-
-@pytest.mark.parametrize("install", ["default"])
 async def test_set_dhw_override(
     hass: HomeAssistant,
     dhw_id: str,
