@@ -44,6 +44,7 @@ from homeassistant.helpers.service_info.hassio import HassioServiceInfo
 from homeassistant.helpers.service_info.usb import UsbServiceInfo
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
+from .common import TEST_SENSITIVE_NETWORK_KEY
 from tests.common import MockConfigEntry, async_capture_events
 
 ADDON_DISCOVERY_INFO = {
@@ -2548,7 +2549,7 @@ async def test_addon_installed_failures(
     [
         SupervisorError(
             "not a valid value for dictionary value @ data['options']. "
-            "Got {'s0_legacy_key': '00112233445566778899AABBCCDDEEFF'}"
+            f"Got {{'s0_legacy_key': '{TEST_SENSITIVE_NETWORK_KEY}'}}"
         )
     ],
 )
@@ -2559,7 +2560,7 @@ async def test_addon_installed_set_options_failure(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test all failures when add-on is installed."""
-    secret = "00112233445566778899AABBCCDDEEFF"
+    secret = TEST_SENSITIVE_NETWORK_KEY
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}

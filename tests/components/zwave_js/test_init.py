@@ -41,6 +41,7 @@ from .common import (
     AIR_TEMPERATURE_SENSOR,
     BULB_6_MULTI_COLOR_LIGHT_ENTITY,
     EATON_RF9640_ENTITY,
+    TEST_SENSITIVE_NETWORK_KEY,
 )
 
 from tests.common import (
@@ -940,7 +941,7 @@ async def test_start_addon(
     [
         SupervisorError(
             "not a valid value for dictionary value @ data['options']. "
-            "Got {'s0_legacy_key': '00112233445566778899AABBCCDDEEFF'}"
+            f"Got {{'s0_legacy_key': '{TEST_SENSITIVE_NETWORK_KEY}'}}"
         )
     ],
 )
@@ -953,7 +954,7 @@ async def test_start_addon_redacts_set_options_error(
 ) -> None:
     """Test startup redacts add-on options backend error details."""
     device = "/test"
-    secret = "00112233445566778899AABBCCDDEEFF"
+    secret = TEST_SENSITIVE_NETWORK_KEY
     entry = MockConfigEntry(
         domain=DOMAIN,
         title="Z-Wave JS",
