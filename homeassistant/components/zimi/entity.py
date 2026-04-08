@@ -7,6 +7,7 @@ import logging
 from zcc import ControlPoint
 from zcc.device import ControlPointDevice
 
+from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
 
@@ -44,8 +45,26 @@ class ZimiEntity(Entity):
 
     @property
     def available(self) -> bool:
-        """Return True if Home Assistant is able to read the state and control the underlying device."""
-        return self._device.is_connected
+        """Return True if Home Assistant is able to read the state and control the underlying device.
+
+        If the device is not connected then a repair is needed and should be flagged in UI.  (This can
+        be caused if a device has old firmware or is not responding to the API.)
+        """
+        if not self._device.is_connected:
+            ir.async_create_issue(
+                self.hass,
+                DOMAIN,
+                f"{self._device.identifier}_device_not_connected",
+                is_fixable=False,
+                severity=ir.IssueSeverity.ERROR,
+                translation_key="device_not_connected",
+                translation_placeholders={
+                    "device_name": self._device.name,
+                    "device_room": self._device.room,
+                },
+            )
+            return False
+        return True
 
     async def async_added_to_hass(self) -> None:
         """Subscribe to the events."""
