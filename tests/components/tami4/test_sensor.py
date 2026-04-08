@@ -38,15 +38,11 @@ async def test_sensors_with_none_fields(
     entry = await create_config_entry(hass)
     assert entry.state is ConfigEntryState.LOADED
 
-    uv_replacement = hass.states.get(
-        "sensor.drink_water_uv_upcoming_replacement"
-    )
+    uv_replacement = hass.states.get("sensor.drink_water_uv_upcoming_replacement")
     assert uv_replacement is not None
     assert uv_replacement.state == STATE_UNKNOWN
 
-    filter_replacement = hass.states.get(
-        "sensor.drink_water_filter_upcoming_replacement"
-    )
+    filter_replacement = hass.states.get("sensor.drink_water_filter_upcoming_replacement")
     assert filter_replacement is not None
     assert filter_replacement.state == STATE_UNKNOWN
 
