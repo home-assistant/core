@@ -154,6 +154,14 @@
       "state": {
         "name": "[%key:common::state::open%]"
       }
+    },
+    "text": {
+      "contour_name": {
+        "name": "Contour {number}"
+      },
+      "position_name": {
+        "name": "Position {number}"
+      }
     }
   }
 }
