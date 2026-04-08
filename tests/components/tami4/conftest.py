@@ -177,7 +177,7 @@ def mock_api_none_fields(
 ) -> None:
     """Fixture to mock all API calls with None water quality fields."""
 
-    yield
+    return
 
 
 @pytest.fixture
