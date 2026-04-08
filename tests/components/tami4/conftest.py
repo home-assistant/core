@@ -127,6 +127,55 @@ def mock_get_device(
 
 
 @pytest.fixture
+def mock_get_device_none_fields(
+    request: pytest.FixtureRequest,
+) -> Generator[None]:
+    """Fixture to mock get_device with None water quality fields.
+
+    Simulates the API response when the device is disconnected from the cloud
+    and fields like upcoming_replacement and milliLittersPassed are absent.
+    """
+
+    side_effect = getattr(request, "param", None)
+
+    uv = MagicMock()
+    uv.upcoming_replacement = None
+    uv.installed = False
+
+    _filter = MagicMock()
+    _filter.upcoming_replacement = None
+    _filter.milli_litters_passed = None
+    _filter.installed = False
+
+    water_quality = WaterQuality(uv=uv, filter=_filter)
+
+    device_metadata = DeviceMetadata(
+        id=1,
+        name="Drink Water",
+        connected=True,
+        psn="psn",
+        type="type",
+        device_firmware="v1.1",
+    )
+
+    device = Device(
+        water_quality=water_quality, device_metadata=device_metadata, drinks=[]
+    )
+
+    with patch(
+        "Tami4EdgeAPI.Tami4EdgeAPI.Tami4EdgeAPI.get_device",
+        return_value=device,
+        side_effect=side_effect,
+    ):
+        yield
+
+
+@pytest.fixture
+def mock_api_none_fields(mock__get_devices_metadata, mock_get_device_none_fields):
+    """Fixture to mock all API calls with None water quality fields."""
+
+
+@pytest.fixture
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Mock setting up a config entry."""
 
