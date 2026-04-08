@@ -301,13 +301,15 @@ async def test_extract_from_service_no_group_expand(hass: HomeAssistant) -> None
     """Test not expanding a group."""
     component = EntityComponent(_LOGGER, DOMAIN, hass)
     await component.async_setup({})
-    await component.async_add_entities([MockEntity(entity_id="group.test_group")])
+    await component.async_add_entities([MockEntity(entity_id="test_domain.test_group")])
 
-    call = ServiceCall(hass, "test", "service", {"entity_id": ["group.test_group"]})
+    call = ServiceCall(
+        hass, "test", "service", {"entity_id": ["test_domain.test_group"]}
+    )
 
     extracted = await component.async_extract_from_service(call, expand_group=False)
     assert len(extracted) == 1
-    assert extracted[0].entity_id == "group.test_group"
+    assert extracted[0].entity_id == "test_domain.test_group"
 
 
 async def test_setup_dependencies_platform(hass: HomeAssistant) -> None:
