@@ -59,7 +59,7 @@ class MyStromConfigFlow(ConfigFlow, domain=DOMAIN):
         self, discovery_info: DhcpServiceInfo
     ) -> ConfigFlowResult:
         """Handle DHCP discovery."""
-        mac_address = discovery_info.macaddress.upper().replace(":", "")
+        mac_address = discovery_info.macaddress.upper()
         await self.async_set_unique_id(mac_address)
         self._abort_if_unique_id_configured(updates={CONF_HOST: discovery_info.ip})
 
