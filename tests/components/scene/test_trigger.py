@@ -2,8 +2,8 @@
 
 import pytest
 
-from homeassistant.const import CONF_ENTITY_ID, STATE_UNAVAILABLE, STATE_UNKNOWN
-from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
+from homeassistant.core import HomeAssistant
 
 from tests.components.common import (
     TriggerStateDescription,
@@ -147,7 +147,6 @@ async def test_scene_triggers_gated_by_labs_flag(
 )
 async def test_scene_state_trigger(
     hass: HomeAssistant,
-    service_calls: list[ServiceCall],
     target_scenes: dict[str, list[str]],
     trigger_target_config: dict,
     entity_id: str,
@@ -156,6 +155,7 @@ async def test_scene_state_trigger(
     states: list[TriggerStateDescription],
 ) -> None:
     """Test that the scene state trigger fires when targeted scene state changes."""
+    calls: list[str] = []
     other_entity_ids = set(target_scenes["included_entities"]) - {entity_id}
 
     # Set all scenes, including the tested scene, to the initial state
@@ -163,20 +163,20 @@ async def test_scene_state_trigger(
         set_or_remove_state(hass, eid, states[0]["included_state"])
         await hass.async_block_till_done()
 
-    await arm_trigger(hass, trigger, None, trigger_target_config)
+    await arm_trigger(hass, trigger, None, trigger_target_config, calls)
 
     for state in states[1:]:
         included_state = state["included_state"]
         set_or_remove_state(hass, entity_id, included_state)
         await hass.async_block_till_done()
-        assert len(service_calls) == state["count"]
-        for service_call in service_calls:
-            assert service_call.data[CONF_ENTITY_ID] == entity_id
-        service_calls.clear()
+        assert len(calls) == state["count"]
+        for call in calls:
+            assert call == entity_id
+        calls.clear()
 
         # Check if changing other scenes also triggers
         for other_entity_id in other_entity_ids:
             set_or_remove_state(hass, other_entity_id, included_state)
             await hass.async_block_till_done()
-        assert len(service_calls) == (entities_in_target - 1) * state["count"]
-        service_calls.clear()
+        assert len(calls) == (entities_in_target - 1) * state["count"]
+        calls.clear()

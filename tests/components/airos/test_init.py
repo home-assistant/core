@@ -18,9 +18,14 @@ from homeassistant.components.airos.const import (
     DOMAIN,
     SECTION_ADVANCED_SETTINGS,
 )
+from homeassistant.components.airos.coordinator import async_fetch_airos_data
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
-from homeassistant.config_entries import SOURCE_USER, ConfigEntryState
+from homeassistant.config_entries import (
+    SOURCE_USER,
+    ConfigEntryAuthFailed,
+    ConfigEntryState,
+)
 from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
@@ -282,3 +287,11 @@ async def test_setup_entry_failure(
     result = await hass.config_entries.async_setup(mock_config_entry.entry_id)
     assert result is False
     assert mock_config_entry.state == state
+
+
+async def test_fetch_airos_data_auth_error(mock_airos_client: MagicMock) -> None:
+    """Test login auth error triggers ConfigEntryAuthFailed."""
+    mock_airos_client.login.side_effect = AirOSConnectionAuthenticationError
+
+    with pytest.raises(ConfigEntryAuthFailed):
+        await async_fetch_airos_data(mock_airos_client, mock_airos_client.status)

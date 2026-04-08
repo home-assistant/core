@@ -73,8 +73,8 @@ class SureBattery(SurePetcareEntity, SensorEntity):
         try:
             per_battery_voltage = state["battery"] / 4
             voltage_diff = per_battery_voltage - SURE_BATT_VOLTAGE_LOW
-            self._attr_native_value = min(
-                int(voltage_diff / SURE_BATT_VOLTAGE_DIFF * 100), 100
+            self._attr_native_value = max(
+                0, min(int(voltage_diff / SURE_BATT_VOLTAGE_DIFF * 100), 100)
             )
         except KeyError, TypeError:
             self._attr_native_value = None

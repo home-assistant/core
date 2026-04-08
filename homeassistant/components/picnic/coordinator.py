@@ -1,5 +1,7 @@
 """Coordinator to fetch data from the Picnic API."""
 
+from __future__ import annotations
+
 import asyncio
 from contextlib import suppress
 import copy
@@ -17,17 +19,19 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 from .const import ADDRESS, CART_DATA, LAST_ORDER_DATA, NEXT_DELIVERY_DATA, SLOT_DATA
 
+type PicnicConfigEntry = ConfigEntry[PicnicUpdateCoordinator]
+
 
 class PicnicUpdateCoordinator(DataUpdateCoordinator):
     """The coordinator to fetch data from the Picnic API at a set interval."""
 
-    config_entry: ConfigEntry
+    config_entry: PicnicConfigEntry
 
     def __init__(
         self,
         hass: HomeAssistant,
         picnic_api_client: PicnicAPI,
-        config_entry: ConfigEntry,
+        config_entry: PicnicConfigEntry,
     ) -> None:
         """Initialize the coordinator with the given Picnic API client."""
         self.picnic_api_client = picnic_api_client
@@ -45,8 +49,6 @@ class PicnicUpdateCoordinator(DataUpdateCoordinator):
     async def _async_update_data(self) -> dict:
         """Fetch data from API endpoint."""
         try:
-            # Note: TimeoutError and aiohttp.ClientError are already
-            # handled by the data update coordinator.
             async with asyncio.timeout(10):
                 data = await self.hass.async_add_executor_job(self.fetch_data)
 
@@ -56,6 +58,10 @@ class PicnicUpdateCoordinator(DataUpdateCoordinator):
             raise UpdateFailed(f"API response was malformed: {error}") from error
         except PicnicAuthError as error:
             raise ConfigEntryAuthFailed from error
+        except TimeoutError as error:
+            raise UpdateFailed(
+                "Timeout while connecting to the Picnic API", retry_after=120
+            ) from error
 
         # Return the fetched data
         return data

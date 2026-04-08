@@ -26,6 +26,131 @@
       "volume_level": 20,
       "volume_muted": false,
       "group_members": [],
+      "options": [
+        {
+          "key": "treble",
+          "name": "Treble",
+          "type": "integer",
+          "translation_key": "player_options.treble",
+          "translation_params": null,
+          "value": -6,
+          "read_only": false,
+          "min_value": -10,
+          "max_value": 10,
+          "step": 1,
+          "options": null
+        },
+        {
+          "key": "bass",
+          "name": "Bass",
+          "type": "float",
+          "translation_key": "player_options.bass",
+          "translation_params": null,
+          "value": -6.0,
+          "read_only": false,
+          "min_value": -10.0,
+          "max_value": 10.0,
+          "step": 1.0,
+          "options": null
+        },
+        {
+          "key": "treble_ro",
+          "name": "Treble RO",
+          "type": "integer",
+          "translation_key": "player_options.treble",
+          "translation_params": null,
+          "value": -6,
+          "read_only": true,
+          "min_value": null,
+          "max_value": null,
+          "step": null,
+          "options": null
+        },
+        {
+          "key": "enhancer",
+          "name": "Enhancer",
+          "type": "boolean",
+          "translation_key": "player_options.enhancer",
+          "translation_params": null,
+          "value": false,
+          "read_only": false,
+          "min_value": null,
+          "max_value": null,
+          "step": null,
+          "options": null
+        },
+        {
+          "key": "enhancer_ro",
+          "name": "Enhancer RO",
+          "type": "boolean",
+          "translation_key": "player_options.enhancer",
+          "translation_params": null,
+          "value": false,
+          "read_only": true,
+          "min_value": null,
+          "max_value": null,
+          "step": null,
+          "options": null
+        },
+        {
+          "key": "network_name",
+          "name": "Network Name",
+          "type": "string",
+          "translation_key": "player_options.network_name",
+          "translation_params": null,
+          "value": "receiver",
+          "read_only": false,
+          "min_value": null,
+          "max_value": null,
+          "step": null,
+          "options": null
+        },
+        {
+          "key": "network_name_ro",
+          "name": "Network Name RO",
+          "type": "string",
+          "translation_key": "player_options.network_name",
+          "translation_params": null,
+          "value": "receiver ro",
+          "read_only": true,
+          "min_value": null,
+          "max_value": null,
+          "step": null,
+          "options": null
+        },
+        {
+          "key": "link_audio_delay",
+          "name": "Link Audio Delay",
+          "type": "string",
+          "translation_key": "player_options.link_audio_delay",
+          "translation_params": null,
+          "value": "lip_sync",
+          "read_only": false,
+          "min_value": null,
+          "max_value": null,
+          "step": null,
+          "options": [
+            {
+              "key": "audio_sync",
+              "name": "audio_sync",
+              "type": "string",
+              "value": "audio_sync"
+            },
+            {
+              "key": "balanced",
+              "name": "balanced",
+              "type": "string",
+              "value": "balanced"
+            },
+            {
+              "key": "lip_sync",
+              "name": "lip_sync",
+              "type": "string",
+              "value": "lip_sync"
+            }
+          ]
+        }
+      ],
       "active_source": "00:00:00:00:00:01",
       "active_group": null,
       "current_media": null,

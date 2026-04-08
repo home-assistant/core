@@ -128,9 +128,8 @@ class RingCam(RingEntity[RingDoorBell], Camera):
         self._device = self._get_coordinator_data().get_video_device(
             self._device.device_api_id
         )
-
         history_data = self._device.last_history
-        if history_data and self._device.has_subscription:
+        if history_data:
             self._last_event = history_data[0]
             # will call async_update to update the attributes and get the
             # video url from the api
@@ -155,16 +154,13 @@ class RingCam(RingEntity[RingDoorBell], Camera):
         self, width: int | None = None, height: int | None = None
     ) -> bytes | None:
         """Return a still image response from the camera."""
-        if self._video_url is None:
-            if not self._device.has_subscription:
-                raise HomeAssistantError(
-                    translation_domain=DOMAIN,
-                    translation_key="no_subscription",
-                )
-            return None
+        # For live_view cameras, get a fresh snapshot
+        if self.entity_description.key == "live_view":
+            return await self._async_get_fresh_snapshot()
 
+        # For last_recording cameras, use the cached video frame
         key = (width, height)
-        if not (image := self._images.get(key)):
+        if not (image := self._images.get(key)) and self._video_url is not None:
             image = await ffmpeg.async_get_image(
                 self.hass,
                 self._video_url,
@@ -176,6 +172,11 @@ class RingCam(RingEntity[RingDoorBell], Camera):
                 self._images[key] = image
 
         return image
+
+    @exception_wrap
+    async def _async_get_fresh_snapshot(self) -> bytes | None:
+        """Get a fresh snapshot from the camera."""
+        return await self._device.async_get_snapshot()
 
     async def handle_async_mjpeg_stream(
         self, request: web.Request

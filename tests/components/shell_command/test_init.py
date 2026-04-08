@@ -10,9 +10,13 @@ from unittest.mock import AsyncMock, MagicMock, Mock, patch
 import pytest
 
 from homeassistant.components import shell_command
-from homeassistant.core import HomeAssistant
+from homeassistant.const import SERVICE_RELOAD
+from homeassistant.core import Context, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, TemplateError
+from homeassistant.helpers import issue_registry as ir
 from homeassistant.setup import async_setup_component
+
+from tests.common import MockUser
 
 
 def mock_process_creator(error: bool = False):
@@ -276,3 +280,80 @@ async def test_do_not_run_forever(
     mock_process.kill.assert_called_once()
     assert "Timed out" in caplog.text
     assert "mock_sleep 10000" in caplog.text
+
+
+async def test_reload_service(hass: HomeAssistant, hass_admin_user: MockUser) -> None:
+    """Test that the reload service re-registers commands from YAML."""
+    assert await async_setup_component(
+        hass,
+        shell_command.DOMAIN,
+        {shell_command.DOMAIN: {"initial_cmd": "echo initial"}},
+    )
+    await hass.async_block_till_done()
+
+    assert hass.services.has_service(shell_command.DOMAIN, "initial_cmd")
+
+    with patch(
+        "homeassistant.config.load_yaml_config_file",
+        autospec=True,
+        return_value={shell_command.DOMAIN: {"reloaded_cmd": "echo reloaded"}},
+    ):
+        await hass.services.async_call(
+            shell_command.DOMAIN,
+            SERVICE_RELOAD,
+            blocking=True,
+            context=Context(user_id=hass_admin_user.id),
+        )
+
+    assert not hass.services.has_service(shell_command.DOMAIN, "initial_cmd")
+    assert hass.services.has_service(shell_command.DOMAIN, "reloaded_cmd")
+
+
+async def test_repair_issue_on_reserved_reload_name(
+    hass: HomeAssistant, issue_registry: ir.IssueRegistry, hass_admin_user: MockUser
+) -> None:
+    """Test repair issue is created if 'reload' is used as a shell_command name."""
+    config = {shell_command.DOMAIN: {"reload": "echo should not work"}}
+    await async_setup_component(hass, shell_command.DOMAIN, config)
+    await hass.async_block_till_done()
+    issue = issue_registry.async_get_issue(shell_command.DOMAIN, "reserved_reload")
+    assert issue is not None
+    assert issue.translation_key == "reserved_reload_name"
+    assert issue.severity == ir.IssueSeverity.ERROR
+    assert issue.translation_placeholders["name"] == "reload"
+    with patch(
+        "homeassistant.config.load_yaml_config_file",
+        autospec=True,
+        return_value={shell_command.DOMAIN: {"reloaded_cmd": "echo reloaded"}},
+    ):
+        await hass.services.async_call(
+            shell_command.DOMAIN,
+            SERVICE_RELOAD,
+            blocking=True,
+            context=Context(user_id=hass_admin_user.id),
+        )
+    issue = issue_registry.async_get_issue(shell_command.DOMAIN, "reserved_reload")
+    assert issue is None
+
+
+async def test_repair_issue_on_reload_service_reload(
+    hass: HomeAssistant, issue_registry: ir.IssueRegistry, hass_admin_user: MockUser
+) -> None:
+    """Test repair issue is created if 'reload' is used in YAML and reload service is called."""
+    config = {shell_command.DOMAIN: {"test": "echo ok"}}
+    await async_setup_component(hass, shell_command.DOMAIN, config)
+    await hass.async_block_till_done()
+
+    with patch(
+        "homeassistant.config.load_yaml_config_file",
+        autospec=True,
+        return_value={shell_command.DOMAIN: {"reload": "echo reloaded"}},
+    ):
+        await hass.services.async_call(
+            shell_command.DOMAIN,
+            SERVICE_RELOAD,
+            blocking=True,
+            context=Context(user_id=hass_admin_user.id),
+        )
+    issue = issue_registry.async_get_issue(shell_command.DOMAIN, "reserved_reload")
+    assert issue is not None

@@ -1,15 +1,17 @@
 """Tests for the arcam_fmj component."""
 
-from collections.abc import AsyncGenerator
-from unittest.mock import Mock, patch
+from asyncio import CancelledError, Queue
+from collections.abc import AsyncGenerator, Generator
+from contextlib import contextmanager
+from unittest.mock import AsyncMock, Mock, patch
 
-from arcam.fmj.client import Client
+from arcam.fmj.client import Client, ResponsePacket
 from arcam.fmj.state import State
 import pytest
 
 from homeassistant.components.arcam_fmj.const import DEFAULT_NAME
 from homeassistant.const import CONF_HOST, CONF_PORT
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
@@ -28,12 +30,50 @@ MOCK_CONFIG_ENTRY = {CONF_HOST: MOCK_HOST, CONF_PORT: MOCK_PORT}
 
 
 @pytest.fixture(name="client")
-def client_fixture() -> Mock:
+def client_fixture() -> Generator[Mock]:
     """Get a mocked client."""
     client = Mock(Client)
     client.host = MOCK_HOST
     client.port = MOCK_PORT
-    return client
+
+    queue = Queue[BaseException | None]()
+    listeners = set()
+
+    async def _start():
+        client.connected = True
+
+    async def _process():
+        result = await queue.get()
+        client.connected = False
+        if isinstance(result, BaseException):
+            raise result
+
+    @contextmanager
+    def _listen(listener):
+        listeners.add(listener)
+        yield client
+        listeners.remove(listener)
+
+    @callback
+    def _notify_data_updated(zn=1):
+        packet = Mock(ResponsePacket)
+        packet.zn = zn
+        for listener in listeners:
+            listener(packet)
+
+    @callback
+    def _notify_connection(exception: Exception | None = None):
+        queue.put_nowait(exception)
+
+    client.start.side_effect = _start
+    client.process.side_effect = _process
+    client.listen.side_effect = _listen
+    client.notify_data_updated = _notify_data_updated
+    client.notify_connection = _notify_connection
+
+    yield client
+
+    queue.put_nowait(CancelledError())
 
 
 @pytest.fixture(name="state_1")
@@ -52,6 +92,8 @@ def state_1_fixture(client: Mock) -> State:
     state.get_mute.return_value = None
     state.get_decode_modes.return_value = []
     state.get_decode_mode.return_value = None
+    state.__aenter__ = AsyncMock()
+    state.__aexit__ = AsyncMock()
     return state
 
 
@@ -71,6 +113,8 @@ def state_2_fixture(client: Mock) -> State:
     state.get_mute.return_value = None
     state.get_decode_modes.return_value = []
     state.get_decode_mode.return_value = None
+    state.__aenter__ = AsyncMock()
+    state.__aexit__ = AsyncMock()
     return state
 
 
@@ -104,18 +148,6 @@ async def player_setup_fixture(
             return state_2
         raise ValueError(f"Unknown player zone: {zone}")
 
-    async def _mock_run_client(hass: HomeAssistant, runtime_data, interval):
-        coordinators = runtime_data.coordinators
-
-        def _notify_data_updated() -> None:
-            for coordinator in coordinators.values():
-                coordinator.async_notify_data_updated()
-
-        client.notify_data_updated = _notify_data_updated
-
-        for coordinator in coordinators.values():
-            coordinator.async_notify_connected()
-
     await async_setup_component(hass, "homeassistant", {})
 
     with (
@@ -123,10 +155,6 @@ async def player_setup_fixture(
         patch(
             "homeassistant.components.arcam_fmj.coordinator.State",
             side_effect=state_mock,
-        ),
-        patch(
-            "homeassistant.components.arcam_fmj._run_client",
-            side_effect=_mock_run_client,
         ),
     ):
         assert await hass.config_entries.async_setup(mock_config_entry.entry_id)

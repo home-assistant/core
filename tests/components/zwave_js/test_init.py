@@ -801,7 +801,7 @@ async def test_existing_node_not_replaced_when_not_ready(
     await hass.async_block_till_done()
     state = hass.states.get(custom_entity)
     assert state
-    assert state.name == "Custom Device Name Custom Entity Name"
+    assert state.name == "Custom Entity Name"
     assert not hass.states.get(motion_entity)
 
     node_state = deepcopy(zp3111_not_ready_state)
@@ -835,7 +835,7 @@ async def test_existing_node_not_replaced_when_not_ready(
 
     state = hass.states.get(custom_entity)
     assert state
-    assert state.name == "Custom Device Name Custom Entity Name"
+    assert state.name == "Custom Entity Name"
 
     event = Event(
         type="ready",
@@ -866,7 +866,7 @@ async def test_existing_node_not_replaced_when_not_ready(
     state = hass.states.get(custom_entity)
     assert state
     assert state.state != STATE_UNAVAILABLE
-    assert state.name == "Custom Device Name Custom Entity Name"
+    assert state.name == "Custom Entity Name"
 
 
 @pytest.mark.usefixtures("client")
@@ -1446,12 +1446,17 @@ async def test_node_removed(
     assert old_device
     assert old_device.id
 
+    node_events = integration.runtime_data.driver_events.controller_events.node_events
+    assert node.node_id in node_events.value_updates_disc_info
+
     event = {"node": node, "reason": 0}
 
     client.driver.controller.emit("node removed", event)
     await hass.async_block_till_done()
     # Assert device has been removed
     assert not device_registry.async_get(old_device.id)
+    # Assert value_updates_disc_info has been cleaned up
+    assert node.node_id not in node_events.value_updates_disc_info
 
 
 async def test_replace_same_node(
@@ -1852,7 +1857,7 @@ async def test_node_model_change(
     assert not hass.states.get(motion_entity)
     state = hass.states.get(custom_entity)
     assert state
-    assert state.name == "Custom Device Name Custom Entity Name"
+    assert state.name == "Custom Entity Name"
 
     # Unload the integration
     assert await hass.config_entries.async_unload(integration.entry_id)
@@ -1882,7 +1887,7 @@ async def test_node_model_change(
     assert not hass.states.get(motion_entity)
     state = hass.states.get(custom_entity)
     assert state
-    assert state.name == "Custom Device Name Custom Entity Name"
+    assert state.name == "Custom Entity Name"
 
 
 @pytest.mark.usefixtures("zp3111", "integration")
