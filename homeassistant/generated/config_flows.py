@@ -715,6 +715,7 @@ FLOWS = {
         "songpal",
         "sonos",
         "soundtouch",
+        "spaceapi",
         "speedtestdotnet",
         "splunk",
         "spotify",
