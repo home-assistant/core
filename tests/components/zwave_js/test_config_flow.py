@@ -45,6 +45,7 @@ from homeassistant.helpers.service_info.usb import UsbServiceInfo
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from .common import TEST_SENSITIVE_NETWORK_KEY
+
 from tests.common import MockConfigEntry, async_capture_events
 
 ADDON_DISCOVERY_INFO = {
