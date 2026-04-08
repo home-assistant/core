@@ -103,14 +103,13 @@ class EvoDHW(EvoChild, WaterHeaterEntity):
     ) -> None:
         """Override the DHW zone's state, either permanently or for a duration."""
 
-        if duration is not None:
-            if duration.total_seconds() == 0:
-                await self._update_schedule()
-                until = self.setpoints.get("next_sp_from")
-            else:
-                until = dt_util.now() + duration
+        if duration is None:
+            until = None  # indefinitely, aka permanent override
+        elif duration.total_seconds() == 0:
+            await self._update_schedule()
+            until = self.setpoints.get("next_sp_from")
         else:
-            until = None  # indefinitely
+            until = dt_util.now() + duration
 
         until = dt_util.as_utc(until) if until else None
 
