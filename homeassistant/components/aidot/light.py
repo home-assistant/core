@@ -10,7 +10,6 @@ from homeassistant.components.light import (
     LightEntity,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.device_registry import (
     CONNECTION_NETWORK_MAC,
     DeviceInfo,
@@ -30,36 +29,10 @@ async def async_setup_entry(
 ) -> None:
     """Set up Light."""
     coordinator = entry.runtime_data
-    lists_added: set[str] = set()
-
-    @callback
-    def add_entities() -> None:
-        """Add light entities."""
-        nonlocal lists_added
-        new_lists = {
-            device_coordinator.device_client.device_id
-            for device_coordinator in coordinator.device_coordinators.values()
-        }
-        added_device_ids = new_lists - lists_added
-
-        if added_device_ids:
-            async_add_entities(
-                AidotLight(hass, coordinator.device_coordinators[device_id])
-                for device_id in added_device_ids
-            )
-            lists_added |= added_device_ids
-        elif lists_added - new_lists:
-            removed_device_ids = lists_added - new_lists
-            for device_id in removed_device_ids:
-                entity_registry = er.async_get(hass)
-                if entity := entity_registry.async_get_entity_id(
-                    "light", DOMAIN, device_id
-                ):
-                    entity_registry.async_remove(entity)
-            lists_added = lists_added - removed_device_ids
-
-    coordinator.async_add_listener(add_entities)
-    add_entities()
+    async_add_entities(
+        AidotLight(device_coordinator)
+        for device_coordinator in coordinator.device_coordinators.values()
+    )
 
 
 class AidotLight(CoordinatorEntity[AidotDeviceUpdateCoordinator], LightEntity):
@@ -69,7 +42,7 @@ class AidotLight(CoordinatorEntity[AidotDeviceUpdateCoordinator], LightEntity):
     _attr_name = None
 
     def __init__(
-        self, hass: HomeAssistant, coordinator: AidotDeviceUpdateCoordinator
+        self, coordinator: AidotDeviceUpdateCoordinator
     ) -> None:
         """Initialize the light."""
         super().__init__(coordinator)

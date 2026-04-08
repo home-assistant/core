@@ -86,7 +86,6 @@ class AidotDeviceManagerCoordinator(DataUpdateCoordinator[None]):
         )
         self.client.set_token_fresh_cb(self.token_fresh_cb)
         self.device_coordinators: dict[str, AidotDeviceUpdateCoordinator] = {}
-        self.previous_lists: set[str] = set()
 
     async def _async_setup(self) -> None:
         """Set up the coordinator."""
@@ -102,29 +101,23 @@ class AidotDeviceManagerCoordinator(DataUpdateCoordinator[None]):
         except AidotAuthFailed as error:
             self.token_fresh_cb()
             raise ConfigEntryError from error
-        filter_device_list = [
-            device
+        current_devices = {
+            device[CONF_ID]: device
             for device in data[CONF_DEVICE_LIST]
             if (
                 device[CONF_TYPE] == "light"
                 and CONF_AES_KEY in device
                 and device[CONF_AES_KEY][0] is not None
             )
-        ]
+        }
 
-        delete_lists = self.previous_lists - (
-            current_lists := {device[CONF_ID] for device in filter_device_list}
-        )
-
-        for dev_id in delete_lists:
-            if dev_id in self.device_coordinators:
-                del self.device_coordinators[dev_id]
-        if delete_lists:
+        removed_ids = set(self.device_coordinators) - set(current_devices)
+        for dev_id in removed_ids:
+            del self.device_coordinators[dev_id]
+        if removed_ids:
             self._purge_deleted_lists()
-        self.previous_lists = current_lists
 
-        for device in filter_device_list:
-            dev_id = device.get(CONF_ID)
+        for dev_id, device in current_devices.items():
             if dev_id not in self.device_coordinators:
                 device_client = self.client.get_device_client(device)
                 device_coordinator = AidotDeviceUpdateCoordinator(
