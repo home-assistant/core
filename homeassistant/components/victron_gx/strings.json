@@ -76,7 +76,6 @@
         "name": "Voltage on {phase}"
       },
       "acsystem_mode": {
-        "name": "Mode",
         "state": {
           "charger_only": "Charger only",
           "inverter_only": "Inverter only",
@@ -762,7 +761,6 @@
         "name": "AC grid setpoint"
       },
       "inverter_mode": {
-        "name": "Mode",
         "state": {
           "eco": "Eco",
           "inverter": "Inverter",
@@ -898,7 +896,6 @@
         "name": "MPPT {mpptnumber} power"
       },
       "multi_mppt_mpptnumber_state": {
-        "name": "MPPT {mpptnumber} state",
         "state": {
           "mppt_active": "MPPT active",
           "not_available": "Not available",
@@ -1715,7 +1712,6 @@
         "name": "Input voltage {phase}"
       },
       "vebus_inverter_mode": {
-        "name": "Mode",
         "state": {
           "charger_only": "Charger Only",
           "inverter_only": "Inverter Only",

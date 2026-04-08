@@ -102,6 +102,9 @@
       }
     },
     "button": {
+      "light_sensor": {
+        "name": "Light sensor"
+      },
       "next_image": {
         "name": "Next image"
       },

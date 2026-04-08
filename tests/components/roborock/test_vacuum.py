@@ -1012,14 +1012,14 @@ async def test_q10_push_status_update(
     assert fake_q10_vacuum.b01_q10_properties is not None
     api = fake_q10_vacuum.b01_q10_properties
 
-    # Verify initial state is "docked" (from Q10_STATUS fixture: CHARGING_STATE)
+    # Verify initial state is "docked" (from Q10_STATUS fixture: CHARGING)
     vacuum = hass.states.get(Q10_ENTITY_ID)
     assert vacuum
     assert vacuum.state == "docked"
 
     # Simulate the device pushing a status change via DPS data
     # (e.g. user started cleaning from the Roborock app)
-    api.status.update_from_dps({B01_Q10_DP.STATUS: 5})  # CLEANING_STATE
+    api.status.update_from_dps({B01_Q10_DP.STATUS: 5})  # CLEANING
     await hass.async_block_till_done()
 
     # Verify the entity state updated to "cleaning"
@@ -1028,7 +1028,7 @@ async def test_q10_push_status_update(
     assert vacuum.state == "cleaning"
 
     # Simulate returning to dock
-    api.status.update_from_dps({B01_Q10_DP.STATUS: 6})  # TO_CHARGE_STATE
+    api.status.update_from_dps({B01_Q10_DP.STATUS: 6})  # RETURNING_HOME
     await hass.async_block_till_done()
 
     vacuum = hass.states.get(Q10_ENTITY_ID)
