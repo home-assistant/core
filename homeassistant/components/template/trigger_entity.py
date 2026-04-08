@@ -3,7 +3,10 @@
 from __future__ import annotations
 
 from collections.abc import Callable
+import logging
 from typing import Any
+
+import voluptuous as vol
 
 from homeassistant.const import CONF_VARIABLES
 from homeassistant.core import HomeAssistant, callback
@@ -21,6 +24,8 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import TriggerUpdateCoordinator
 from .entity import AbstractTemplateEntity
+
+_LOGGER = logging.getLogger(__name__)
 
 
 class TriggerEntity(  # pylint: disable=hass-enforce-class-module
@@ -211,11 +216,26 @@ class TriggerEntity(  # pylint: disable=hass-enforce-class-module
                 write_state = True
                 continue
 
-            value = (
-                entity_template.validator(rendered)
-                if entity_template.validator
-                else rendered
-            )
+            if entity_template.validator:
+                try:
+                    value = entity_template.validator(rendered)
+                except vol.Invalid as ex:
+                    _LOGGER.error(
+                        (
+                            "Error validating template result '%s' "
+                            "from template '%s' "
+                            "for attribute '%s' in entity %s "
+                            "validation message '%s'"
+                        ),
+                        rendered,
+                        entity_template.template,
+                        entity_template.attribute,
+                        self.entity_id,
+                        ex.msg,
+                    )
+                    value = None
+            else:
+                value = rendered
 
             if entity_template.on_update:
                 entity_template.on_update(value)
