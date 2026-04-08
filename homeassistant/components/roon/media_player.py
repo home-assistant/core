@@ -15,7 +15,6 @@ from homeassistant.components.media_player import (
     MediaType,
     RepeatMode,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import DEVICE_DEFAULT_NAME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -27,6 +26,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import convert
 from homeassistant.util.dt import utcnow
 
+from . import RoonConfigEntry
 from .const import DOMAIN
 from .media_browser import browse_media
 
@@ -45,11 +45,11 @@ REPEAT_MODE_MAPPING_TO_ROON = {
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: RoonConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Roon MediaPlayer from Config Entry."""
-    roon_server = hass.data[DOMAIN][config_entry.entry_id]
+    roon_server = config_entry.runtime_data
     media_players = set()
 
     @callback

@@ -332,7 +332,10 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
                 translation_placeholders={"error": str(ex)},
             ) from ex
 
-        _LOGGER.debug("enity_data: %s", entity_data)
+        _LOGGER.debug("entity_data: %s", entity_data)
+
+        await self.async_trigger_cleanup()
+
         return entity_data
 
     @property
@@ -376,6 +379,8 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
         """Return device Mac address."""
         if not self._unique_id:
             raise ClassSetupMissing
+        # Unique ID is the serial number of the device
+        # which is the MAC of the device without the colons
         return dr.format_mac(self._unique_id)
 
     @property

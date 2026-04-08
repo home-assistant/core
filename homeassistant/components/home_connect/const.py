@@ -77,7 +77,12 @@ AFFECTS_TO_SELECTED_PROGRAM = "selected_program"
 TRANSLATION_KEYS_PROGRAMS_MAP = {
     bsh_key_to_translation_key(program.value): program
     for program in ProgramKey
-    if program not in (ProgramKey.UNKNOWN, ProgramKey.BSH_COMMON_FAVORITE_001)
+    if program
+    not in (
+        ProgramKey.UNKNOWN,
+        ProgramKey.BSH_COMMON_FAVORITE_001,
+        ProgramKey.BSH_COMMON_FAVORITE_002,
+    )
 }
 
 PROGRAMS_TRANSLATION_KEYS_MAP = {

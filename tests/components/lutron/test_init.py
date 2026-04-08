@@ -3,7 +3,11 @@
 from typing import Any, cast
 from unittest.mock import MagicMock
 
+from pylutron import LutronException
+import pytest
+
 from homeassistant.components.lutron.const import DOMAIN
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
@@ -43,6 +47,24 @@ async def test_unload_entry(
 
     assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
     await hass.async_block_till_done()
+
+
+@pytest.mark.parametrize("method", ["load_xml_db", "connect"])
+async def test_setup_entry_not_ready(
+    hass: HomeAssistant,
+    mock_lutron: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    method: str,
+) -> None:
+    """Test setting up the integration when Lutron repeater is not ready."""
+    mock_config_entry.add_to_hass(hass)
+
+    getattr(mock_lutron, method).side_effect = LutronException(f"{method} failed")
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
 async def test_unique_id_migration(
