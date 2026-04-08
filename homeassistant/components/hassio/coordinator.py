@@ -336,7 +336,6 @@ class HassioStatsDataUpdateCoordinator(DataUpdateCoordinator):
                 hass, _LOGGER, cooldown=REQUEST_REFRESH_DELAY, immediate=False
             ),
         )
-        self.data: dict[str, Any] = {}
         self.supervisor_client = get_supervisor_client(hass)
         self._container_updates: defaultdict[str, dict[str, set[str]]] = defaultdict(
             lambda: defaultdict(set)
@@ -447,7 +446,6 @@ class HassioAddOnDataUpdateCoordinator(DataUpdateCoordinator):
             ),
         )
         self.hassio = hass.data[DATA_COMPONENT]
-        self.data: dict[str, Any] = {}
         self.entry_id = config_entry.entry_id
         self.dev_reg = dev_reg
         self._addon_info_subscriptions: defaultdict[str, set[str]] = defaultdict(set)
@@ -653,7 +651,6 @@ class HassioDataUpdateCoordinator(DataUpdateCoordinator):
             ),
         )
         self.hassio = hass.data[DATA_COMPONENT]
-        self.data: dict[str, Any] = {}
         self.entry_id = config_entry.entry_id
         self.dev_reg = dev_reg
         self.is_hass_os = (get_info(self.hass) or {}).get("hassos") is not None
