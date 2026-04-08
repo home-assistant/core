@@ -5128,7 +5128,7 @@ async def test_get_usb_ports_ignored_devices(hass: HomeAssistant) -> None:
             manufacturer="Nabu Casa",
             description="ZBT-2",
         ),
-        # ZBT-1, should be filtered
+        # SkyConnect, should be filtered
         USBDevice(
             device="/dev/ttyUSB1",
             vid="10C4",
@@ -5137,7 +5137,7 @@ async def test_get_usb_ports_ignored_devices(hass: HomeAssistant) -> None:
             manufacturer="Nabu Casa",
             description="SkyConnect v1.0",
         ),
-        # SkyConnect, should be filtered
+        # ZBT-1, should be filtered
         USBDevice(
             device="/dev/ttyUSB2",
             vid="10C4",
