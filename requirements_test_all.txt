@@ -2479,8 +2479,6 @@ sentence-stream==1.2.0
 sentry-sdk==2.48.0
 
 # homeassistant.components.homeassistant_hardware
-serialx==1.1.1
-
 # homeassistant.components.usb
 # homeassistant.components.zha
 serialx==1.2.1
