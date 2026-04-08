@@ -29,6 +29,63 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import dt as dt_util
 
+from .const import (
+    CONF_CACHE,
+    CONF_CACHE_SCHEDULE,
+    CONF_CAM,
+    CONF_CONTACT,
+    CONF_FACEBOOK,
+    CONF_FEED_BLOG,
+    CONF_FEED_CALENDAR,
+    CONF_FEED_FLICKER,
+    CONF_FEED_TYPE,
+    CONF_FEED_URL,
+    CONF_FEED_WIKI,
+    CONF_FEEDS,
+    CONF_FOURSQUARE,
+    CONF_ICON_CLOSED,
+    CONF_ICON_OPEN,
+    CONF_ICONS,
+    CONF_IDENTICA,
+    CONF_IRC,
+    CONF_ISSUE_MAIL,
+    CONF_ISSUE_REPORT_CHANNELS,
+    CONF_JABBER,
+    CONF_KEYMASTER_EMAIL,
+    CONF_KEYMASTER_IRC_NICK,
+    CONF_KEYMASTER_NAME,
+    CONF_KEYMASTER_PHONE,
+    CONF_KEYMASTER_TWITTER,
+    CONF_KEYMASTERS,
+    CONF_LOGO,
+    CONF_M4,
+    CONF_MJPEG,
+    CONF_ML,
+    CONF_PHONE,
+    CONF_PROJECTS,
+    CONF_RADIO_SHOW,
+    CONF_RADIO_SHOW_END,
+    CONF_RADIO_SHOW_NAME,
+    CONF_RADIO_SHOW_START,
+    CONF_RADIO_SHOW_TYPE,
+    CONF_RADIO_SHOW_URL,
+    CONF_SIP,
+    CONF_SPACE,
+    CONF_SPACEFED,
+    CONF_SPACENET,
+    CONF_SPACEPHONE,
+    CONF_SPACESAML,
+    CONF_STREAM,
+    CONF_TWITTER,
+    CONF_USTREAM,
+    DATA_SPACEAPI,
+    DOMAIN,
+    ISSUE_REPORT_CHANNELS,
+    SENSOR_TYPES,
+    SPACEAPI_VERSION,
+    URL_API_SPACEAPI,
+)
+
 ATTR_ADDRESS = "address"
 ATTR_SPACEFED = "spacefed"
 ATTR_CAM = "cam"
@@ -52,67 +109,6 @@ ATTR_UNIT = "unit"
 ATTR_URL = "url"
 ATTR_VALUE = "value"
 ATTR_SENSOR_LOCATION = "location"
-
-CONF_CONTACT = "contact"
-CONF_HUMIDITY = "humidity"
-CONF_ICON_CLOSED = "icon_closed"
-CONF_ICON_OPEN = "icon_open"
-CONF_ICONS = "icons"
-CONF_IRC = "irc"
-CONF_ISSUE_REPORT_CHANNELS = "issue_report_channels"
-CONF_SPACEFED = "spacefed"
-CONF_SPACENET = "spacenet"
-CONF_SPACESAML = "spacesaml"
-CONF_SPACEPHONE = "spacephone"
-CONF_CAM = "cam"
-CONF_STREAM = "stream"
-CONF_M4 = "m4"
-CONF_MJPEG = "mjpeg"
-CONF_USTREAM = "ustream"
-CONF_FEEDS = "feeds"
-CONF_FEED_BLOG = "blog"
-CONF_FEED_WIKI = "wiki"
-CONF_FEED_CALENDAR = "calendar"
-CONF_FEED_FLICKER = "flicker"
-CONF_FEED_TYPE = "type"
-CONF_FEED_URL = "url"
-CONF_CACHE = "cache"
-CONF_CACHE_SCHEDULE = "schedule"
-CONF_PROJECTS = "projects"
-CONF_RADIO_SHOW = "radio_show"
-CONF_RADIO_SHOW_NAME = "name"
-CONF_RADIO_SHOW_URL = "url"
-CONF_RADIO_SHOW_TYPE = "type"
-CONF_RADIO_SHOW_START = "start"
-CONF_RADIO_SHOW_END = "end"
-CONF_LOGO = "logo"
-CONF_PHONE = "phone"
-CONF_SIP = "sip"
-CONF_KEYMASTERS = "keymasters"
-CONF_KEYMASTER_NAME = "name"
-CONF_KEYMASTER_IRC_NICK = "irc_nick"
-CONF_KEYMASTER_PHONE = "phone"
-CONF_KEYMASTER_EMAIL = "email"
-CONF_KEYMASTER_TWITTER = "twitter"
-CONF_TWITTER = "twitter"
-CONF_FACEBOOK = "facebook"
-CONF_IDENTICA = "identica"
-CONF_FOURSQUARE = "foursquare"
-CONF_ML = "ml"
-CONF_JABBER = "jabber"
-CONF_ISSUE_MAIL = "issue_mail"
-CONF_SPACE = "space"
-CONF_TEMPERATURE = "temperature"
-
-DATA_SPACEAPI = "data_spaceapi"
-DOMAIN = "spaceapi"
-
-ISSUE_REPORT_CHANNELS = [CONF_EMAIL, CONF_ISSUE_MAIL, CONF_ML, CONF_TWITTER]
-
-SENSOR_TYPES = [CONF_HUMIDITY, CONF_TEMPERATURE]
-SPACEAPI_VERSION = "0.13"
-
-URL_API_SPACEAPI = "/api/spaceapi"
 
 LOCATION_SCHEMA = vol.Schema({vol.Optional(CONF_ADDRESS): cv.string})
 
