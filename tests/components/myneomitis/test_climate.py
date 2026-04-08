@@ -13,7 +13,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
-from tests.common import MockConfigEntry, snapshot_platform
+from tests.common import MockConfigEntry
 
 CLIMATE_DEVICE = {
     "_id": "climate1",
@@ -81,12 +81,19 @@ async def test_entities(
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
-    await snapshot_platform(
-        hass,
-        entity_registry,
-        snapshot,
-        mock_config_entry.entry_id,
+
+    entries = er.async_entries_for_config_entry(
+        entity_registry, mock_config_entry.entry_id
     )
+    assert len(entries) == 1
+    entry = entries[0]
+    assert entry.domain == "climate"
+    assert entry.entity_id == "climate.climate_device"
+    assert entry.unique_id == "climate1"
+
+    state = hass.states.get("climate.climate_device")
+    assert state is not None
+    assert state == snapshot(name="climate.climate_device-state")
 
 
 async def test_set_temperature(
