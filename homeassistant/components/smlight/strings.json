@@ -79,6 +79,11 @@
         "name": "Zigbee restart"
       }
     },
+    "infrared": {
+      "infrared_emitter": {
+        "name": "IR Emitter"
+      }
+    },
     "light": {
       "ambilight": {
         "name": "Ambilight"
