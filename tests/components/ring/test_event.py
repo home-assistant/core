@@ -138,6 +138,7 @@ async def test_doorbell_ding_fires_standard_ring_event(
     )
     mock_ring_client.active_alerts.return_value = [event]
     on_event_cb(event)
+    await hass.async_block_till_done()
 
     # Both the standard "ring" and legacy "ding" events should have fired
     assert DoorbellEventType.RING in event_types
