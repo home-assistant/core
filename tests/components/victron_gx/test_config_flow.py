@@ -565,7 +565,6 @@ async def test_reauth_flow_success(
             CONF_SSL: True,
         },
     )
-    await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
@@ -607,7 +606,6 @@ async def test_reauth_flow_preserves_ssl_when_omitted(
             CONF_PASSWORD: "new-password",
         },
     )
-    await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
@@ -635,7 +633,6 @@ async def test_reauth_flow_clears_credentials(
             CONF_SSL: False,
         },
     )
-    await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
@@ -692,7 +689,6 @@ async def test_reauth_flow_error_and_recover(
             CONF_SSL: True,
         },
     )
-    await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
