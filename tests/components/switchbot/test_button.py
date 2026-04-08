@@ -6,12 +6,21 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 
+from homeassistant.components.bluetooth import BluetoothServiceInfoBleak
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
-from . import ART_FRAME_INFO, DOMAIN, WOMETERTHPC_SERVICE_INFO
+from . import (
+    AIR_PURIFIER_JP_SERVICE_INFO,
+    AIR_PURIFIER_TABLE_JP_SERVICE_INFO,
+    AIR_PURIFIER_TABLE_US_SERVICE_INFO,
+    AIR_PURIFIER_US_SERVICE_INFO,
+    ART_FRAME_INFO,
+    DOMAIN,
+    WOMETERTHPC_SERVICE_INFO,
+)
 
 from tests.common import MockConfigEntry
 from tests.components.bluetooth import inject_bluetooth_service_info
@@ -167,3 +176,45 @@ async def test_meter_pro_co2_sync_datetime_button_with_timezone(
             utc_offset_hours=expected_utc_offset_hours,
             utc_offset_minutes=expected_utc_offset_minutes,
         )
+
+
+@pytest.mark.parametrize(
+    ("service_info", "sensor_type"),
+    [
+        (AIR_PURIFIER_JP_SERVICE_INFO, "air_purifier_jp"),
+        (AIR_PURIFIER_TABLE_JP_SERVICE_INFO, "air_purifier_table_jp"),
+        (AIR_PURIFIER_US_SERVICE_INFO, "air_purifier_us"),
+        (AIR_PURIFIER_TABLE_US_SERVICE_INFO, "air_purifier_table_us"),
+    ],
+)
+async def test_air_purifier_buttons(
+    hass: HomeAssistant,
+    mock_entry_encrypted_factory: Callable[[str], MockConfigEntry],
+    service_info: BluetoothServiceInfoBleak,
+    sensor_type: str,
+) -> None:
+    """Test pressing the air purifier buttons."""
+    inject_bluetooth_service_info(hass, service_info)
+
+    entry = mock_entry_encrypted_factory(sensor_type)
+    entry.add_to_hass(hass)
+
+    entity_id = "button.test_name_light_sensor"
+    mock_instance = AsyncMock(return_value=True)
+
+    with patch.multiple(
+        "homeassistant.components.switchbot.button.switchbot.SwitchbotAirPurifier",
+        update=AsyncMock(return_value=None),
+        get_basic_info=AsyncMock(return_value=None),
+        open_light_sensitive_switch=mock_instance,
+    ):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+        await hass.services.async_call(
+            BUTTON_DOMAIN,
+            SERVICE_PRESS,
+            {ATTR_ENTITY_ID: entity_id},
+            blocking=True,
+        )
+        mock_instance.assert_awaited_once()
