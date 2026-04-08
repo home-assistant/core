@@ -69,7 +69,6 @@ async def test_setup_platform(
     """Test that button entities are created after setup of evohome."""
 
     button_states = hass.states.async_all(BUTTON_DOMAIN)
-
     assert button_states
 
     for x in button_states:
