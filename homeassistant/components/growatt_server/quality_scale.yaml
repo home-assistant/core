@@ -36,10 +36,14 @@ rules:
   diagnostics: done
   discovery-update-info:
     status: exempt
-    comment: Integration connects to a cloud service, not local devices. No local device discovery is possible.
+    comment: >-
+      Growatt data loggers use a generic OUI and serial-number DHCP hostname,
+      making reliable local discovery not implementable.
   discovery:
     status: exempt
-    comment: Integration connects to Growatt cloud servers, not local inverter hardware. Discovery via local protocols is not applicable.
+    comment: >-
+      Growatt data loggers use a generic OUI and serial-number DHCP hostname,
+      making reliable local discovery not implementable.
   docs-data-update: done
   docs-examples: done
   docs-known-limitations: done
