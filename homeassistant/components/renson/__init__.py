@@ -2,18 +2,13 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
-
 from renson_endura_delta.renson import RensonVentilation
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 
-from .coordinator import RensonCoordinator
-
-type RensonConfigEntry = ConfigEntry[RensonData]
+from .coordinator import RensonConfigEntry, RensonCoordinator, RensonData
 
 PLATFORMS = [
     Platform.BINARY_SENSOR,
@@ -24,14 +19,6 @@ PLATFORMS = [
     Platform.SWITCH,
     Platform.TIME,
 ]
-
-
-@dataclass
-class RensonData:
-    """Renson data class."""
-
-    api: RensonVentilation
-    coordinator: RensonCoordinator
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: RensonConfigEntry) -> bool:

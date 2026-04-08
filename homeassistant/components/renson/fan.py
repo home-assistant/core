@@ -26,8 +26,7 @@ from homeassistant.util.percentage import (
 )
 from homeassistant.util.scaling import int_states_in_range
 
-from . import RensonConfigEntry
-from .coordinator import RensonCoordinator
+from .coordinator import RensonConfigEntry, RensonCoordinator
 from .entity import RensonEntity
 
 _LOGGER = logging.getLogger(__name__)

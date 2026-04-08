@@ -14,8 +14,7 @@ from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import RensonConfigEntry
-from .coordinator import RensonCoordinator
+from .coordinator import RensonConfigEntry, RensonCoordinator
 from .entity import RensonEntity
 
 
