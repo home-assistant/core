@@ -37,8 +37,10 @@
           }),
         }),
         'system': dict({
-          'name': 'Test System',
+          'links': dict({
+          }),
           'serial': '**REDACTED**',
+          'type': None,
         }),
       }),
     }),

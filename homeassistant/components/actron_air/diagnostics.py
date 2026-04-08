@@ -21,7 +21,9 @@ async def async_get_config_entry_diagnostics(
     coordinators: dict[int, Any] = {}
     for idx, coordinator in enumerate(entry.runtime_data.system_coordinators.values()):
         coordinators[idx] = {
-            "system": async_redact_data(coordinator.system, TO_REDACT),
+            "system": async_redact_data(
+                coordinator.system.model_dump(mode="json"), TO_REDACT
+            ),
             "status": async_redact_data(
                 coordinator.data.model_dump(mode="json"), TO_REDACT
             ),
