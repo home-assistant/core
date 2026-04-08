@@ -17,13 +17,11 @@ from homeassistant.components.climate import (
     HVACAction,
     HVACMode,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, PRECISION_HALVES, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import DOMAIN
-from .coordinator import RadioThermUpdateCoordinator
+from .coordinator import RadioThermConfigEntry, RadioThermUpdateCoordinator
 from .entity import RadioThermostatEntity
 
 ATTR_FAN_ACTION = "fan_action"
@@ -101,12 +99,11 @@ def round_temp(temperature):
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: RadioThermConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up climate for a radiotherm device."""
-    coordinator: RadioThermUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
-    async_add_entities([RadioThermostat(coordinator)])
+    async_add_entities([RadioThermostat(entry.runtime_data)])
 
 
 class RadioThermostat(RadioThermostatEntity, ClimateEntity):
