@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from datetime import datetime
 import logging
 from typing import Any
 
@@ -22,7 +23,7 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN, MANUFACTURER
+from .const import DEVICE_TIMEOUT, DOMAIN, MANUFACTURER
 from .coordinator import GoveeLocalApiCoordinator, GoveeLocalConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
@@ -119,6 +120,19 @@ class GoveeLight(CoordinatorEntity[GoveeLocalApiCoordinator], LightEntity):
         )
 
     @property
+    def available(self) -> bool:
+        """Return if the device is reachable.
+
+        The underlying library updates ``lastseen`` whenever the device
+        replies to a status request. The coordinator polls every
+        ``SCAN_INTERVAL``, so if we have not heard back within
+        ``DEVICE_TIMEOUT`` we consider the device offline.
+        """
+        if not super().available:
+            return False
+        return datetime.now() - self._device.lastseen < DEVICE_TIMEOUT
+
+    @property
     def is_on(self) -> bool:
         """Return true if device is on (brightness above 0)."""
         return self._device.on
@@ -205,8 +219,8 @@ class GoveeLight(CoordinatorEntity[GoveeLocalApiCoordinator], LightEntity):
 
     @callback
     def _update_callback(self, device: GoveeDevice) -> None:
-        if self.hass:
-            self.async_write_ha_state()
+        """Handle device state updates pushed by the library."""
+        self.async_write_ha_state()
 
     def _save_last_color_state(self) -> None:
         color_mode = self.color_mode
