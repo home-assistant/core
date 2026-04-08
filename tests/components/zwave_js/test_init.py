@@ -34,6 +34,7 @@ from homeassistant.helpers import (
     entity_registry as er,
     issue_registry as ir,
 )
+from homeassistant.helpers.redact import REDACTED
 from homeassistant.setup import async_setup_component
 
 from .common import (
@@ -968,6 +969,8 @@ async def test_start_addon_redacts_set_options_error(
     assert set_addon_options.call_count == 1
     assert start_addon.call_count == 0
     assert "Failed to set the Z-Wave JS app options" in caplog.text
+    assert "not a valid value for dictionary value" in caplog.text
+    assert REDACTED in caplog.text
     assert secret not in caplog.text
 
 
