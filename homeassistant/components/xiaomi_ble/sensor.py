@@ -48,6 +48,14 @@ SENSOR_DESCRIPTIONS = {
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
+    # Charging state for Wearable device
+    (ExtendedSensorDeviceClass.CHARGING_STATE, None): SensorEntityDescription(
+        key=str(ExtendedSensorDeviceClass.CHARGING_STATE),
+        device_class=SensorDeviceClass.ENUM,
+        icon="mdi:battery-charging",
+        options=["Charging", "Not Charging", "Full", "Unknown"],
+        name="Charging State",
+    ),
     (DeviceClass.CONDUCTIVITY, Units.CONDUCTIVITY): SensorEntityDescription(
         key=str(Units.CONDUCTIVITY),
         device_class=SensorDeviceClass.CONDUCTIVITY,

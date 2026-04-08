@@ -9,6 +9,7 @@ from homeassistant.components.bluetooth import (
 from homeassistant.components.xiaomi_ble.const import CONF_SLEEPY_DEVICE, DOMAIN
 from homeassistant.const import (
     ATTR_FRIENDLY_NAME,
+    ATTR_ICON,
     STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
@@ -463,5 +464,66 @@ async def test_sleepy_device_restore_state(hass: HomeAssistant) -> None:
 
     # Sleepy devices should keep their state over time and restore it
     assert opening_sensor.state == STATE_ON
+
+    assert entry.data[CONF_SLEEPY_DEVICE] is True
+
+
+async def test_xiaomi_m2456b1(hass: HomeAssistant) -> None:
+    """Test Xiaomi M2456B1 multiple advertisements.
+
+    This device has multiple advertisements before all sensors are visible.
+    """
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="04:34:C3:75:6F:6D",
+        data={"bindkey": "05eecf799ee981b3b73664e114b9373b"},
+    )
+    entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert len(hass.states.async_all()) == 0
+    inject_bluetooth_service_info_bleak(
+        hass,
+        make_advertisement(
+            "04:34:C3:75:6F:6D",
+            b"\x48\x59\xfc\x59\xda\x28\xbc\x61\xb4\x02\x00\x00\xd9\x35\xd0\x01",
+        ),
+    )
+    inject_bluetooth_service_info_bleak(
+        hass,
+        make_advertisement(
+            "04:34:C3:75:6F:6D",
+            b"\x48\x59\xfc\x59\xbf\x1c\x9f\xd5\x9b\x02\x00\x00\x08\x4a\x47\x40",
+        ),
+    )
+    await hass.async_block_till_done()
+    assert len(hass.states.async_all()) == 2
+
+    sleep_state = hass.states.get(
+        "binary_sensor.smart_band_10_ceramic_edition_6f6d_asleep"
+    )
+    sleep_state_attr = sleep_state.attributes
+    assert sleep_state.state == STATE_OFF
+    assert (
+        sleep_state_attr[ATTR_FRIENDLY_NAME]
+        == "Smart Band 10 Ceramic Edition 6F6D Asleep"
+    )
+    assert sleep_state_attr[ATTR_ICON] == "mdi:sleep"
+
+    wearing_status = hass.states.get(
+        "binary_sensor.smart_band_10_ceramic_edition_6f6d_wearing"
+    )
+    wearing_status_attr = wearing_status.attributes
+    assert wearing_status.state == STATE_OFF
+    assert (
+        wearing_status_attr[ATTR_FRIENDLY_NAME]
+        == "Smart Band 10 Ceramic Edition 6F6D Wearing"
+    )
+    assert wearing_status_attr[ATTR_ICON] == "mdi:watch-variant"
+
+    assert await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
 
     assert entry.data[CONF_SLEEPY_DEVICE] is True

@@ -121,6 +121,20 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "asleep": {
+        "state": {
+          "off": "Awake",
+          "on": "Asleep"
+        }
+      },
+      "wearing": {
+        "state": {
+          "off": "Not Wearing",
+          "on": "Wearing"
+        }
+      }
+    },
     "event": {
       "button": {
         "state_attributes": {

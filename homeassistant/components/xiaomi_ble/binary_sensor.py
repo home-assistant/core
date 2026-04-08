@@ -73,6 +73,12 @@ BINARY_SENSOR_DESCRIPTIONS = {
         key=ExtendedBinarySensorDeviceClass.ARMED,
         icon="mdi:shield-check",
     ),
+    ExtendedBinarySensorDeviceClass.ASLEEP: BinarySensorEntityDescription(
+        key=ExtendedBinarySensorDeviceClass.ASLEEP,
+        icon="mdi:sleep",
+        name="Asleep",
+        translation_key="asleep",
+    ),
     ExtendedBinarySensorDeviceClass.CHILDLOCK: BinarySensorEntityDescription(
         key=ExtendedBinarySensorDeviceClass.CHILDLOCK,
     ),
@@ -101,6 +107,12 @@ BINARY_SENSOR_DESCRIPTIONS = {
     ),
     ExtendedBinarySensorDeviceClass.TOOTHBRUSH: BinarySensorEntityDescription(
         key=ExtendedBinarySensorDeviceClass.TOOTHBRUSH,
+    ),
+    ExtendedBinarySensorDeviceClass.WEARING: BinarySensorEntityDescription(
+        key=ExtendedBinarySensorDeviceClass.WEARING,
+        icon="mdi:watch-variant",
+        name="Wearing",
+        translation_key="wearing",
     ),
 }
 

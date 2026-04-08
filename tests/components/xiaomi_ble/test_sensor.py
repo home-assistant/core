@@ -10,6 +10,7 @@ from homeassistant.components.sensor import ATTR_STATE_CLASS
 from homeassistant.components.xiaomi_ble.const import CONF_SLEEPY_DEVICE, DOMAIN
 from homeassistant.const import (
     ATTR_FRIENDLY_NAME,
+    ATTR_ICON,
     ATTR_UNIT_OF_MEASUREMENT,
     STATE_ON,
     STATE_UNAVAILABLE,
@@ -936,5 +937,45 @@ async def test_sleepy_device_restore_state(hass: HomeAssistant) -> None:
 
     # Sleepy devices should keep their state over time and restore it
     assert mass_non_stabilized_sensor.state == "86.55"
+
+    assert entry.data[CONF_SLEEPY_DEVICE] is True
+
+
+async def test_xiaomi_m2456b1(hass: HomeAssistant) -> None:
+    """Test Xiaomi M2456B1 Charging State."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="04:34:C3:75:6F:6D",
+        data={"bindkey": "05eecf799ee981b3b73664e114b9373b"},
+    )
+    entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert len(hass.states.async_all()) == 0
+    inject_bluetooth_service_info_bleak(
+        hass,
+        make_advertisement(
+            "04:34:C3:75:6F:6D",
+            b"\x48\x59\xfc\x59\xc3\x27\x05\xff\x45\x02\x00\x00\xd6\xd2\x91\xb3",
+        ),
+    )
+    await hass.async_block_till_done()
+    assert len(hass.states.async_all()) == 1
+
+    charging_state = hass.states.get(
+        "sensor.smart_band_10_ceramic_edition_6f6d_charging_state"
+    )
+    charging_state_attr = charging_state.attributes
+    assert charging_state.state == "Full"
+    assert (
+        charging_state_attr[ATTR_FRIENDLY_NAME]
+        == "Smart Band 10 Ceramic Edition 6F6D Charging State"
+    )
+    assert charging_state_attr[ATTR_ICON] == "mdi:battery-charging"
+
+    assert await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
 
     assert entry.data[CONF_SLEEPY_DEVICE] is True
