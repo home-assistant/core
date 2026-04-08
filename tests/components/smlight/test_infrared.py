@@ -52,7 +52,7 @@ async def test_infrared_setup_ultima(
     mock_smlight_client.get_info.return_value = MOCK_ULTIMA
     await setup_integration(hass, mock_config_entry)
 
-    state = hass.states.get("infrared.mock_title_ir_remote")
+    state = hass.states.get("infrared.mock_title_ir_emitter")
     assert state is not None
 
 
@@ -69,7 +69,7 @@ async def test_infrared_not_created_non_ultima(
     )
     await setup_integration(hass, mock_config_entry)
 
-    state = hass.states.get("infrared.mock_title_ir_remote")
+    state = hass.states.get("infrared.mock_title_ir_emitter")
     assert state is None
 
 
@@ -83,7 +83,7 @@ async def test_infrared_send_command(
     mock_smlight_client.get_info.return_value = MOCK_ULTIMA
     await setup_integration(hass, mock_config_entry)
 
-    entity_id = "infrared.mock_title_ir_remote"
+    entity_id = "infrared.mock_title_ir_emitter"
     state = hass.states.get(entity_id)
     assert state is not None
 
@@ -108,7 +108,7 @@ async def test_infrared_send_command_error(
     mock_smlight_client.get_info.return_value = MOCK_ULTIMA
     await setup_integration(hass, mock_config_entry)
 
-    entity_id = "infrared.mock_title_ir_remote"
+    entity_id = "infrared.mock_title_ir_emitter"
     state = hass.states.get(entity_id)
     assert state is not None
 
@@ -133,7 +133,7 @@ async def test_infrared_send_empty_command_error(
     mock_smlight_client.get_info.return_value = MOCK_ULTIMA
     await setup_integration(hass, mock_config_entry)
 
-    entity_id = "infrared.mock_title_ir_remote"
+    entity_id = "infrared.mock_title_ir_emitter"
     state = hass.states.get(entity_id)
     assert state is not None
 
@@ -159,7 +159,7 @@ async def test_infrared_state_updated_after_send(
     mock_smlight_client.get_info.return_value = MOCK_ULTIMA
     await setup_integration(hass, mock_config_entry)
 
-    entity_id = "infrared.mock_title_ir_remote"
+    entity_id = "infrared.mock_title_ir_emitter"
     state = hass.states.get(entity_id)
     assert state is not None
     assert state.state == STATE_UNKNOWN
