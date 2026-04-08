@@ -5,11 +5,9 @@ from __future__ import annotations
 import ssl
 from unittest.mock import AsyncMock, MagicMock, patch
 
-import aiohttp
 import pytest
 from unifi_access_api import ApiAuthError, ApiConnectionError
 
-from homeassistant.components.unifi_access.config_flow import PROTECT_META_INFO_PATH
 from homeassistant.components.unifi_access.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_API_TOKEN, CONF_HOST, CONF_VERIFY_SSL
@@ -19,7 +17,6 @@ from homeassistant.data_entry_flow import FlowResultType
 from .conftest import MOCK_API_TOKEN, MOCK_HOST
 
 from tests.common import MockConfigEntry
-from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 async def test_user_flow(
@@ -66,7 +63,6 @@ async def test_user_flow_errors(
     hass: HomeAssistant,
     mock_setup_entry: AsyncMock,
     mock_client: MagicMock,
-    aioclient_mock: AiohttpClientMocker,
     exception: Exception,
     error: str,
 ) -> None:
@@ -78,12 +74,6 @@ async def test_user_flow_errors(
     assert result["errors"] == {}
 
     mock_client.authenticate.side_effect = exception
-
-    # Mock Protect endpoint as unauthorized so it doesn't interfere
-    aioclient_mock.get(
-        f"https://{MOCK_HOST}{PROTECT_META_INFO_PATH}",
-        status=401,
-    )
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -198,7 +188,6 @@ async def test_reauth_flow_errors(
     mock_setup_entry: AsyncMock,
     mock_client: MagicMock,
     mock_config_entry: MockConfigEntry,
-    aioclient_mock: AiohttpClientMocker,
     exception: Exception,
     error: str,
 ) -> None:
@@ -210,12 +199,6 @@ async def test_reauth_flow_errors(
     assert result["step_id"] == "reauth_confirm"
 
     mock_client.authenticate.side_effect = exception
-
-    # Mock Protect endpoint as unauthorized so it doesn't interfere
-    aioclient_mock.get(
-        f"https://{MOCK_HOST}{PROTECT_META_INFO_PATH}",
-        status=401,
-    )
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -342,7 +325,6 @@ async def test_reconfigure_flow_errors(
     mock_setup_entry: AsyncMock,
     mock_client: MagicMock,
     mock_config_entry: MockConfigEntry,
-    aioclient_mock: AiohttpClientMocker,
     exception: Exception,
     error: str,
 ) -> None:
@@ -354,12 +336,6 @@ async def test_reconfigure_flow_errors(
     assert result["step_id"] == "reconfigure"
 
     mock_client.authenticate.side_effect = exception
-
-    # Mock Protect endpoint as unauthorized so it doesn't interfere
-    aioclient_mock.get(
-        f"https://10.0.0.1{PROTECT_META_INFO_PATH}",
-        status=401,
-    )
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -428,7 +404,6 @@ async def test_user_flow_protect_api_key(
     hass: HomeAssistant,
     mock_setup_entry: AsyncMock,
     mock_client: MagicMock,
-    aioclient_mock: AiohttpClientMocker,
 ) -> None:
     """Test user config flow shows specific error when a Protect API key is used."""
     result = await hass.config_entries.flow.async_init(
@@ -438,12 +413,7 @@ async def test_user_flow_protect_api_key(
     assert result["errors"] == {}
 
     mock_client.authenticate.side_effect = ApiAuthError()
-
-    # Mock the Protect API endpoint to return 200 (valid Protect key)
-    aioclient_mock.get(
-        f"https://{MOCK_HOST}{PROTECT_META_INFO_PATH}",
-        json={"version": "1.0"},
-    )
+    mock_client.is_protect_api_key.return_value = True
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -476,7 +446,6 @@ async def test_user_flow_protect_api_key_unreachable(
     hass: HomeAssistant,
     mock_setup_entry: AsyncMock,
     mock_client: MagicMock,
-    aioclient_mock: AiohttpClientMocker,
 ) -> None:
     """Test user config flow falls back to invalid_auth when Protect is unreachable."""
     result = await hass.config_entries.flow.async_init(
@@ -484,12 +453,7 @@ async def test_user_flow_protect_api_key_unreachable(
     )
 
     mock_client.authenticate.side_effect = ApiAuthError()
-
-    # Mock a connection failure so the Protect check cannot reach its endpoint
-    aioclient_mock.get(
-        f"https://{MOCK_HOST}{PROTECT_META_INFO_PATH}",
-        exc=aiohttp.ClientConnectionError(),
-    )
+    mock_client.is_protect_api_key.return_value = False
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -509,7 +473,6 @@ async def test_reauth_flow_protect_api_key(
     mock_setup_entry: AsyncMock,
     mock_client: MagicMock,
     mock_config_entry: MockConfigEntry,
-    aioclient_mock: AiohttpClientMocker,
 ) -> None:
     """Test reauth flow shows specific error when a Protect API key is used."""
     mock_config_entry.add_to_hass(hass)
@@ -519,11 +482,7 @@ async def test_reauth_flow_protect_api_key(
     assert result["step_id"] == "reauth_confirm"
 
     mock_client.authenticate.side_effect = ApiAuthError()
-
-    aioclient_mock.get(
-        f"https://{MOCK_HOST}{PROTECT_META_INFO_PATH}",
-        json={"version": "1.0"},
-    )
+    mock_client.is_protect_api_key.return_value = True
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -550,7 +509,6 @@ async def test_reconfigure_flow_protect_api_key(
     mock_setup_entry: AsyncMock,
     mock_client: MagicMock,
     mock_config_entry: MockConfigEntry,
-    aioclient_mock: AiohttpClientMocker,
 ) -> None:
     """Test reconfigure flow shows specific error when a Protect API key is used."""
     mock_config_entry.add_to_hass(hass)
@@ -560,11 +518,7 @@ async def test_reconfigure_flow_protect_api_key(
     assert result["step_id"] == "reconfigure"
 
     mock_client.authenticate.side_effect = ApiAuthError()
-
-    aioclient_mock.get(
-        f"https://10.0.0.1{PROTECT_META_INFO_PATH}",
-        json={"version": "1.0"},
-    )
+    mock_client.is_protect_api_key.return_value = True
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],

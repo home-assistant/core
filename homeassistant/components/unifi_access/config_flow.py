@@ -2,15 +2,12 @@
 
 from __future__ import annotations
 
-import asyncio
 from collections.abc import Mapping
 import logging
 from typing import Any
 
-import aiohttp
 from unifi_access_api import ApiAuthError, ApiConnectionError, UnifiAccessApiClient
 import voluptuous as vol
-from yarl import URL
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_API_TOKEN, CONF_HOST, CONF_VERIFY_SSL
@@ -21,44 +18,12 @@ from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-PROTECT_META_INFO_PATH = "/proxy/protect/integration/v1/meta/info"
-
 
 class UnifiAccessConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for UniFi Access."""
 
     VERSION = 1
     MINOR_VERSION = 1
-
-    async def _is_protect_api_key(self, user_input: dict[str, Any]) -> bool:
-        """Check if the API key is a valid UniFi Protect key."""
-        session = async_get_clientsession(
-            self.hass, verify_ssl=user_input[CONF_VERIFY_SSL]
-        )
-        host = user_input[CONF_HOST]
-        if "://" not in host:
-            host = f"https://{host}"
-        headers = {
-            "X-API-KEY": user_input[CONF_API_TOKEN],
-            "Accept": "application/json",
-        }
-        try:
-            # Strip any Access-specific port; Protect runs on default HTTPS port 443.
-            # Use yarl to correctly handle IPv6 addresses (brackets required in URLs).
-            parsed = URL(host)
-            url = str(
-                URL.build(
-                    scheme="https", host=parsed.host or "", path=PROTECT_META_INFO_PATH
-                )
-            )
-            async with asyncio.timeout(5):
-                resp = await session.get(url, headers=headers)
-                is_protect = resp.status == 200
-                resp.release()
-        except ValueError, TimeoutError, aiohttp.ClientError:
-            return False
-        else:
-            return is_protect
 
     async def _validate_input(self, user_input: dict[str, Any]) -> dict[str, str]:
         """Validate user input and return errors dict."""
@@ -79,7 +44,7 @@ class UnifiAccessConfigFlow(ConfigFlow, domain=DOMAIN):
         try:
             await client.authenticate()
         except ApiAuthError:
-            if await self._is_protect_api_key(user_input):
+            if await client.is_protect_api_key():
                 errors["base"] = "protect_api_key"
             else:
                 errors["base"] = "invalid_auth"
