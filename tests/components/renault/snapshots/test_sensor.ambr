@@ -5971,7 +5971,7 @@
         'delayed',
         'scheduled',
       ]),
-      'schedules': tuple(
+      'schedules': list([
         dict({
           'activated': True,
           'friday': dict({
@@ -6069,7 +6069,7 @@
           'tuesday': None,
           'wednesday': None,
         }),
-      ),
+      ]),
       'startDateTime': None,
     }),
     'context': <ANY>,
