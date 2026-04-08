@@ -6,14 +6,14 @@ from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers.automation import DomainSpec
 from homeassistant.helpers.trigger import (
     ENTITY_STATE_TRIGGER_SCHEMA,
-    StringEntityTriggerBase,
+    EntityTriggerBase,
     Trigger,
 )
 
 from .const import DOMAIN
 
 
-class TextChangedTrigger(StringEntityTriggerBase):
+class TextChangedTrigger(EntityTriggerBase):
     """Trigger for text and input_text entities when their content changes."""
 
     _domain_specs = {DOMAIN: DomainSpec(), INPUT_TEXT_DOMAIN: DomainSpec()}

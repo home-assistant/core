@@ -5,14 +5,14 @@ from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers.automation import DomainSpec
 from homeassistant.helpers.trigger import (
     ENTITY_STATE_TRIGGER_SCHEMA,
-    StringEntityTriggerBase,
+    EntityTriggerBase,
     Trigger,
 )
 
 from . import DOMAIN
 
 
-class SceneActivatedTrigger(StringEntityTriggerBase):
+class SceneActivatedTrigger(EntityTriggerBase):
     """Trigger for scene entity activations."""
 
     _domain_specs = {DOMAIN: DomainSpec()}

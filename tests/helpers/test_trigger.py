@@ -45,8 +45,8 @@ from homeassistant.helpers.trigger import (
     TRIGGERS,
     EntityNumericalStateChangedTriggerWithUnitBase,
     EntityNumericalStateCrossedThresholdTriggerWithUnitBase,
+    EntityTriggerBase,
     PluggableAction,
-    StringEntityTriggerBase,
     Trigger,
     TriggerActionRunner,
     TriggerConfig,
@@ -2790,10 +2790,10 @@ async def test_numerical_state_attribute_crossed_threshold_with_unit_error_handl
 
 def _make_trigger(
     hass: HomeAssistant, domain_specs: Mapping[str, DomainSpec]
-) -> StringEntityTriggerBase:
-    """Create a minimal StringEntityTriggerBase subclass with the given domain specs."""
+) -> EntityTriggerBase:
+    """Create a minimal EntityTriggerBase subclass with the given domain specs."""
 
-    class _SimpleTrigger(StringEntityTriggerBase):
+    class _SimpleTrigger(EntityTriggerBase):
         """Minimal concrete trigger for testing entity_filter."""
 
         _domain_specs = domain_specs
