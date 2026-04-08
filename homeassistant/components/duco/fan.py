@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from typing import Any
-
 from duco.exceptions import DucoError
 from duco.models import Node, VentilationState
 
@@ -73,12 +71,7 @@ class DucoVentilationFanEntity(DucoEntity, FanEntity):
     """Fan entity for the ventilation control of a Duco node."""
 
     _attr_translation_key = "ventilation"
-    _attr_supported_features = (
-        FanEntityFeature.SET_SPEED
-        | FanEntityFeature.PRESET_MODE
-        | FanEntityFeature.TURN_ON
-        | FanEntityFeature.TURN_OFF
-    )
+    _attr_supported_features = FanEntityFeature.SET_SPEED | FanEntityFeature.PRESET_MODE
     _attr_preset_modes = [PRESET_AUTO]
     _attr_speed_count = len(ORDERED_NAMED_FAN_SPEEDS)
 
@@ -113,28 +106,10 @@ class DucoVentilationFanEntity(DucoEntity, FanEntity):
     async def async_set_percentage(self, percentage: int) -> None:
         """Set the fan speed as a percentage (maps to low/medium/high)."""
         if percentage == 0:
-            await self.async_turn_off()
+            await self._async_set_state(VentilationState.AUTO)
             return
         state = percentage_to_ordered_list_item(ORDERED_NAMED_FAN_SPEEDS, percentage)
         await self._async_set_state(state)
-
-    async def async_turn_on(
-        self,
-        percentage: int | None = None,
-        preset_mode: str | None = None,
-        **kwargs: Any,
-    ) -> None:
-        """Turn on: set a specific speed, or default to medium (CNT2)."""
-        if percentage is not None:
-            await self.async_set_percentage(percentage)
-        elif preset_mode is not None:
-            await self.async_set_preset_mode(preset_mode)
-        else:
-            await self._async_set_state(VentilationState.CNT2)
-
-    async def async_turn_off(self, **kwargs: Any) -> None:
-        """Turn off: hand control back to Duco (AUTO)."""
-        await self._async_set_state(VentilationState.AUTO)
 
     async def _async_set_state(self, state: VentilationState) -> None:
         """Send the ventilation state to the device and refresh coordinator."""

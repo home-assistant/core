@@ -16,8 +16,6 @@ from homeassistant.components.fan import (
     DOMAIN as FAN_DOMAIN,
     SERVICE_SET_PERCENTAGE,
     SERVICE_SET_PRESET_MODE,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
 )
 from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
@@ -44,11 +42,10 @@ async def test_fan_entity_state(
 @pytest.mark.parametrize(
     ("service", "service_data", "expected_duco_state"),
     [
+        (SERVICE_SET_PERCENTAGE, {ATTR_PERCENTAGE: 0}, "AUTO"),
         (SERVICE_SET_PERCENTAGE, {ATTR_PERCENTAGE: 33}, "CNT1"),
         (SERVICE_SET_PERCENTAGE, {ATTR_PERCENTAGE: 66}, "CNT2"),
         (SERVICE_SET_PERCENTAGE, {ATTR_PERCENTAGE: 100}, "CNT3"),
-        (SERVICE_TURN_ON, {}, "CNT2"),
-        (SERVICE_TURN_OFF, {}, "AUTO"),
         (SERVICE_SET_PRESET_MODE, {ATTR_PRESET_MODE: "auto"}, "AUTO"),
     ],
 )
