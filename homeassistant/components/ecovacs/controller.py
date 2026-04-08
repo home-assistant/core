@@ -30,7 +30,7 @@ from .const import (
     CONF_OVERRIDE_REST_URL,
     CONF_VERIFY_MQTT_CERTIFICATE,
 )
-from .kvs_mqtt import KvsMqttListener
+from deebot_client.camera.mqtt import KvsMqttListener
 from .util import get_client_device_id
 
 _LOGGER = logging.getLogger(__name__)

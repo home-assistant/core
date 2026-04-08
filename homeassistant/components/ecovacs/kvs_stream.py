@@ -45,15 +45,20 @@ from aiortc.sdp import candidate_from_sdp
 import av
 import boto3
 
-from .kvs_api import end_watch, get_ma_gw, send_video_opened
-from .kvs_signaling import make_ice_msg, make_sdp_offer_msg, sign_wss_url
+from deebot_client.camera.api import (
+    end_watch,
+    generate_video_track_id,
+    get_ma_gw,
+    send_video_opened,
+    start_watch_v2,
+)
+from deebot_client.camera.signaling import make_ice_msg, make_sdp_offer_msg, sign_wss_url
 
 if TYPE_CHECKING:
     from aiohttp import ClientSession, ClientWebSocketResponse
 
+    from deebot_client.camera.mqtt import KvsMqttListener
     from homeassistant.core import HomeAssistant
-
-    from .kvs_mqtt import KvsMqttListener
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -104,6 +109,35 @@ class VoiceAudioTrack(AudioStreamTrack):
         return frame
 
 
+def _make_stun_error_suppressor(
+    original: asyncio.AbstractEventLoop | None,
+) -> Any:
+    """Return an asyncio exception handler that demotes TransactionFailed to DEBUG.
+
+    ``aioice`` spawns background tasks for STUN/TURN ICE checks. When a STUN
+    server responds with 403 Forbidden (common during ICE candidate filtering),
+    the task raises ``TransactionFailed`` which asyncio logs at ERROR level as
+    "Task exception was never retrieved". The error is harmless — ICE still
+    selects a working candidate path — but it pollutes the HA logs.
+
+    This handler intercepts those exceptions and moves them to DEBUG, delegating
+    everything else to the previous handler.
+    """
+
+    def _handler(loop: asyncio.AbstractEventLoop, context: dict) -> None:
+        exc = context.get("exception")
+        if exc is not None and type(exc).__name__ == "TransactionFailed":
+            _LOGGER.debug("ICE STUN transaction failed (expected during ICE): %s", exc)
+            return
+        if original is not None:
+            original(loop, context)
+        else:
+            loop.default_exception_handler(context)
+
+    _handler._is_stun_suppressor = True  # type: ignore[attr-defined]
+    return _handler
+
+
 class KvsStreamSession:
     """Manages a single KVS WebRTC camera session.
 
@@ -123,6 +157,7 @@ class KvsStreamSession:
         did: str,
         mid: str,
         res: str,
+        pin_hash: str,
         kvs_creds: dict[str, str],
         region: str,
         channel_name: str,
@@ -143,6 +178,7 @@ class KvsStreamSession:
         self._did = did
         self._mid = mid
         self._res = res
+        self._pin_hash = pin_hash
         self._kvs_creds = kvs_creds
         self._region = region
         self._channel_name = channel_name
@@ -155,6 +191,7 @@ class KvsStreamSession:
         self._on_first_frame = on_first_frame
 
         self.latest_jpeg: bytes | None = None
+        self.connection_state: str = "connecting"
         self._done = asyncio.Event()
         self._task: asyncio.Task | None = None
 
@@ -171,8 +208,15 @@ class KvsStreamSession:
         """Return True if the session has finished."""
         return self._done.is_set()
 
+
     async def start(self) -> None:
         """Start the WebRTC session task."""
+        # Install a one-time asyncio exception handler to demote harmless
+        # STUN TransactionFailed errors from ERROR to DEBUG (idempotent).
+        loop = asyncio.get_running_loop()
+        existing = loop.get_exception_handler()
+        if not getattr(existing, "_is_stun_suppressor", False):
+            loop.set_exception_handler(_make_stun_error_suppressor(existing))
         self._done.clear()
         self._task = asyncio.create_task(self._run_with_retry())
 
@@ -197,8 +241,15 @@ class KvsStreamSession:
         for attempt in range(3):
             if self._done.is_set():
                 break
-            if attempt > 0:
-                _LOGGER.info("KVS retry attempt %d/3", attempt + 1)
+            if attempt == 0:
+                self.connection_state = "connecting"
+            else:
+                self.connection_state = f"retrying_{attempt + 1}/3"
+                _LOGGER.warning(
+                    "KVS camera: 0 frames on attempt %d, starting retry %d/3",
+                    attempt,
+                    attempt + 1,
+                )
             try:
                 frame_count = await self._run_session(
                     kvs_creds=kvs_creds,
@@ -216,8 +267,14 @@ class KvsStreamSession:
             if frame_count > 0 or self._done.is_set():
                 break
 
-            # Refresh KVS credentials for the retry
-            _LOGGER.debug("0 frames received — refreshing KVS session for retry")
+            # End the current server-side session and start a new one for the retry.
+            # The robot requires a fresh start_watch_v2 call to accept the next
+            # WebRTC connection — reusing the same session_id after end_watch causes
+            # the robot to ignore videoOpened/setAudioCallState MQTT messages.
+            _LOGGER.warning(
+                "KVS camera: 0 frames received — ending session %s and requesting fresh session",
+                session_id,
+            )
             await end_watch(
                 self._http_session,
                 token=self._token,
@@ -227,8 +284,32 @@ class KvsStreamSession:
                 country=self._country,
                 ma_gw=self._ma_gw,
             )
+            video_track_id = generate_video_track_id()
+            watch_result = await start_watch_v2(
+                self._http_session,
+                token=self._token,
+                user_id=self._user_id,
+                did=self._did,
+                mid=self._mid,
+                res=self._res,
+                pin_hash=self._pin_hash,
+                video_track_id=video_track_id,
+                country=self._country,
+                ma_gw=self._ma_gw,
+            )
+            if watch_result.get("ret") != "ok":
+                _LOGGER.warning(
+                    "KVS start_watch_v2 failed on retry %d: %s", attempt + 1, watch_result
+                )
+                break
+            kvs_creds = watch_result.get("credentials", kvs_creds)
+            client_id = watch_result.get("client_id", client_id)
+            session_id = watch_result.get("session", session_id)
+            region = watch_result.get("region", region)
+            channel_name = watch_result.get("channel", channel_name)
 
         if not self._done.is_set():
+            self.connection_state = "failed"
             self._done.set()
 
     async def _run_session(
@@ -451,6 +532,7 @@ class KvsStreamSession:
         """React to RTCPeerConnection state changes."""
         _LOGGER.info("WebRTC connectionState: %s", pc.connectionState)
         if pc.connectionState == "connected":
+            self.connection_state = "connected"
             video_tr = next(
                 (t for t in pc.getTransceivers() if t.kind == "video"), None
             )

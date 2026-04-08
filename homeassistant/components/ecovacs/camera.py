@@ -15,6 +15,7 @@ the last one is removed, so no connection is opened for disabled entities.
 from __future__ import annotations
 
 import asyncio
+import base64
 import contextlib
 import logging
 
@@ -35,7 +36,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import EcovacsConfigEntry
 from .const import CAMERA_STREAM_STATE_SIGNAL, CONF_CAMERA_PINS
-from .kvs_api import (
+from deebot_client.camera.api import (
     generate_video_track_id,
     get_ma_gw,
     start_watch_v2,
@@ -60,6 +61,39 @@ _BLACK_JPEG: bytes = (
     b"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\xff\xc0\x00"
     b'\x11\x08\x00\x02\x00\x02\x03\x01"\x00\x02\x11\x00\x03\x11\x00\xff\xda'
     b"\x00\x0c\x03\x01\x00\x02\x11\x03\x11\x00?\x00\x9f\xc0\x01\xff\xd9"
+)
+
+# 320x240 dark-gray placeholder shown while the KVS WebRTC session is connecting
+# or retrying. Generated with Pillow (dark background + subtle dot pattern).
+# No runtime Pillow dependency — bytes are pre-encoded at development time.
+_CONNECTING_JPEG: bytes = base64.b64decode(
+    "/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDABALDA4MChAODQ4SERATGCgaGBYWGDEjJR0o"
+    "OjM9PDkzODdASFxOQERXRTc4UG1RV19iZ2hnPk1xeXBkeFxlZ2P/2wBDARESEhgVGC8a"
+    "Gi9jQjhCY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2Nj"
+    "Y2NjY2P/wAARCADwAUADASIAAhEBAxEB/8QAHwAAAQUBAQEBAQEAAAAAAAAAAAECAwQFBg"
+    "cICQoL/8QAtRAAAgEDAwIEAwUFBAQAAAF9AQIDAAQRBRIhMUEGE1FhByJxFDKBkaEII0Kx"
+    "wRVS0fAkM2JyggkKFhcYGRolJicoKSo0NTY3ODk6Q0RFRkdISUpTVFVWV1hZWmNkZWZn"
+    "aGlqc3R1dnd4eXqDhIWGh4iJipKTlJWWl5iZmqKjpKWmp6ipqrKztLW2t7i5usLDxMXG"
+    "x8jJytLT1NXW19jZ2uHi4+Tl5ufo6erx8vP09fb3+Pn6/8QAHwEAAwEBAQEBAQEBAQAA"
+    "AAAAAAECAwQFBgcICQoL/8QAtREAAgECBAQDBAcFBAQAAQJ3AAECAxEEBSExBhJBUQdhcR"
+    "MiMoEIFEKRobHBCSMzUvAVYnLRChYkNOEl8RcYGRomJygpKjU2Nzg5OkNERUZHSElKU1"
+    "RVVldYWVpjZGVmZ2hpanN0dXZ3eHl6goOEhYaHiImKkpOUlZaXmJmaoqOkpaanqKmqsr"
+    "O0tba3uLm6wsPExcbHyMnK0tPU1dbX2Nna4uPk5ebn6Onq8vP09fb3+Pn6/9oADAMBAAIR"
+    "AxEAPwDkp5pEmZVbAHtUf2mX+/8AoKLn/Xt+H8qioAl+0y/3/wBBR9pl/v8A6CoqKAJf"
+    "tMv9/wDQUfaZf7/6CoqKAJftMv8Af/QUfaZf7/6CoqKAJftMv9/9BR9pl/v/AKCoqKAJ"
+    "ftMv9/8AQUfaZf7/AOgqKigCX7TL/f8A0FH2mX+/+gqKigCX7TL/AH/0FH2mX+/+gqKi"
+    "gCX7TL/f/QUfaZf7/wCgqKigCX7TL/f/AEFH2mX+/wDoKiooAl+0y/3/ANBR9pl/v/oK"
+    "iooAl+0y/wB/9BR9pl/v/oKiooAl+0y/3/0FH2mX+/8AoKiooAl+0y/3/wBBR9pl/v8A"
+    "6CoqKAJftMv9/wDQUfaZf7/6CoqKAJftMv8Af/QUfaZf7/6CoqKAJftMv9/9BR9pl/v/"
+    "AKCoqKAJftMv9/8AQUfaZf7/AOgqKigCX7TL/f8A0FH2mX+/+gqKigCX7TL/AH/0FSQTs"
+    "1IyEuTkHHtVat2yWMxbmVS2epHNAGC6lTgggjsaQLk4AJJ7CrtxFGZ22ooBxwPakghjE"
+    "mSqhfXHSgCsEY9FJ/CoqvzQxhCVVQfbFUKACtGxiSaEO6gkdj0rOq/YzJFCV3KrZ6k+l"
+    "AEF1Esczqo4B4qIAk4AJJ9KfO6yTMy9M9KjXOcDOaAHFGHVSPwooyd2cnn1ooAlt/9ev"
+    "4/yqWpbf/Xr+P8qloALn/Xt+H8qiqW5/17fh/KoqACiiigAooooAKKKKACiiigAooooA"
+    "KKKvWVvHJGHcAnPr0oAoUVJcxLDMUUcD1qOgAooooAKKKKACiiigAooooAKKKKACiiig"
+    "AqW2/16/j/KoqltfuH8f5UAFN/i/AUtN/i/AUALRRRQAUUUUAFFFFABRRRQAUUUUAFFFF"
+    "ABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAV"
+    "Lbf69fx/lUVS23+vX8f5UAFz/r2/D+VRVLc/wCvb8P5VFQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAVLbf69fx/lUVS23+vX8f5UAFz/r2/D+VRVLc/wCvb8P5VFQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAVLbf69fx/lUVS23+vX8f5UAFz/r2/D+VRVLc/wCvb8P5VFQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAVLbf69fx/lUVS23+vX8f5UAFz/r2/D+VRVLc/wCvb8P5VFQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAVLbf69fx/lUVS23+vX8f5UAFz/r2/D+VRVLc/wCvb8P5VFQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAVLbf69fx/lUVS23+vX8f5UAFz/r2/D+VRVLc/wCvb8P5VFQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAVLbf69fx/lUVS23+vX8f5UAFz/r2/D+VRVZnhkeZmVcg+9R/Zpf7n6igCKipfs0v9z9RR9ml/ufqKAIqKl+zS/3P1FH2aX+5+ooAioqX7NL/AHP1FH2aX+5+ooAioqX7NL/c/UUfZpf7n6igCKipfs0v9z9RR9ml/ufqKAIqKl+zS/3P1FH2aX+5+ooAioqX7NL/AHP1FH2aX+5+ooAioqX7NL/c/UUfZpf7n6igCKipfs0v9z9RR9ml/ufqKAIqKl+zS/3P1FH2aX+5+ooAioqX7NL/AHP1FH2aX+5+ooAioqX7NL/c/UUfZpf7n6igCKipfs0v9z9RR9ml/ufqKAIqKl+zS/3P1FH2aX+5+ooAioqX7NL/AHP1FH2aX+5+ooAioqX7NL/c/UUfZpf7n6igCKipfs0v9z9RR9ml/ufqKAIqKl+zS/3P1FH2aX+5+ooAiqW2/wBev4/yo+zS/wBz9RUkEMiTKzLgD3oA/9k="
 )
 
 
@@ -143,6 +177,13 @@ class EcovacsCameraEntity(Camera):
             info["connections"] = {(CONNECTION_NETWORK_MAC, mac)}
         return info
 
+    @property
+    def extra_state_attributes(self) -> dict[str, str]:
+        """Expose the KVS connection state as an attribute."""
+        if self._session is not None:
+            return {"connection_state": self._session.connection_state}
+        return {"connection_state": "idle"}
+
     async def async_added_to_hass(self) -> None:
         """Called when added to hass: register entity and start shared MQTT if needed."""
         await super().async_added_to_hass()
@@ -194,12 +235,17 @@ class EcovacsCameraEntity(Camera):
     ) -> bytes | None:
         """Return the latest JPEG frame.
 
-        - While stream is active: return the latest frame (or last captured if not yet available).
+        - While stream is active: return the latest frame; if no frame yet, return
+          the connecting placeholder (dark gray) to indicate the session is being
+          established (ICE negotiation can take up to 90 seconds on first retry).
         - While stream is stopped: return the last captured frame so the entity stays visible.
         - If no frame was ever captured: return the black placeholder.
         """
         session = self._session
         if session is None:
+            # Stream started but session not yet created (async setup in progress)
+            if self._stream_started:
+                return self._last_jpeg or _CONNECTING_JPEG
             return self._last_jpeg or _BLACK_JPEG
         if session.is_done():
             # Session ended unexpectedly — stop cleanly
@@ -212,7 +258,9 @@ class EcovacsCameraEntity(Camera):
         frame = session.latest_jpeg
         if frame:
             self._last_jpeg = frame
-        return frame or self._last_jpeg or _BLACK_JPEG
+        # Return the last captured frame, or the connecting placeholder while the
+        # session is being established (no previous frame and none received yet).
+        return frame or self._last_jpeg or _CONNECTING_JPEG
 
     # ── Session lifecycle ─────────────────────────────────────────────────────
 
@@ -348,6 +396,7 @@ class EcovacsCameraEntity(Camera):
             did=did,
             mid=mid,
             res=res,
+            pin_hash=pin_hash,
             kvs_creds=kvs_creds,
             region=region,
             channel_name=channel_name,

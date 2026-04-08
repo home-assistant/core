@@ -36,7 +36,7 @@ from .const import (
     DOMAIN,
     InstanceMode,
 )
-from .kvs_api import encode_pin
+from deebot_client.camera.api import encode_pin
 from .util import get_client_device_id
 
 _LOGGER = logging.getLogger(__name__)
