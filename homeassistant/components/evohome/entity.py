@@ -89,6 +89,10 @@ class EvoEntity(CoordinatorEntity[EvoDataUpdateCoordinator]):
 
         super()._handle_coordinator_update()
 
+    async def update_attrs(self) -> None:
+        """Update the entity's extra state attrs."""
+        self._handle_coordinator_update()
+
 
 class EvoChild(EvoEntity):
     """Base for any evohome-compatible child entity (DHW, zone).
@@ -193,4 +197,4 @@ class EvoChild(EvoEntity):
     async def update_attrs(self) -> None:
         """Update the entity's extra state attrs."""
         await self._update_schedule()
-        self._handle_coordinator_update()
+        await super().update_attrs()

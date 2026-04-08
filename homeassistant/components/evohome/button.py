@@ -29,7 +29,7 @@ async def async_setup_platform(
     coordinator = hass.data[EVOHOME_DATA].coordinator
     tcs = hass.data[EVOHOME_DATA].tcs
 
-    entities: list[ButtonEntity] = [EvoResetSystemButton(coordinator, tcs)]
+    entities: list[EvoResetButtonBase] = [EvoResetSystemButton(coordinator, tcs)]
 
     entities.extend(
         [EvoResetZoneButton(coordinator, z) for z in tcs.zones if is_valid_zone(z)]
@@ -39,6 +39,9 @@ async def async_setup_platform(
         entities.append(EvoResetDhwButton(coordinator, tcs.hotwater))
 
     async_add_entities(entities)
+
+    for entity in entities:
+        await entity.update_attrs()
 
 
 class EvoResetButtonBase(EvoEntity, ButtonEntity):
