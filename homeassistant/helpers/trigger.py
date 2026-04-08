@@ -456,13 +456,13 @@ class EntityTriggerBase(Trigger):
 class StringEntityTriggerBase(EntityTriggerBase):
     """Trigger for string based entity state changes."""
 
-    def _get_tracked_value(self, state: State) -> str | None:
+    def _get_tracked_value(self, state: State) -> bool | str | None:
         """Get the tracked value from a state based on the DomainSpec."""
         domain_spec = self._domain_specs[state.domain]
         if domain_spec.value_source is None:
             return state.state
         value = state.attributes.get(domain_spec.value_source)
-        if not isinstance(value, str):
+        if not isinstance(value, (bool, str)):
             return None
         return value
 
