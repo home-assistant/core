@@ -265,7 +265,7 @@ async def test_bad_config_entry_fixing(hass: HomeAssistant) -> None:
     fixable_entry.add_to_hass(hass)
 
     with patch(
-        "homeassistant.components.homeassistant_sky_connect.scan_serial_ports",
+        "homeassistant.components.homeassistant_sky_connect.async_scan_serial_ports",
         return_value=[
             USBDevice(
                 device="/dev/serial/by-id/usb-Nabu_Casa_SkyConnect_v1.0_4f5f3b26d59f8714a78b599690741999-if00-port0",

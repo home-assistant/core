@@ -26,7 +26,11 @@ from homeassistant.components.homeassistant_hardware.firmware_config_flow import
     ZigbeeFlowStrategy,
 )
 from homeassistant.components.homeassistant_yellow import hardware as yellow_hardware
-from homeassistant.components.usb import SerialDevice, USBDevice, scan_serial_ports
+from homeassistant.components.usb import (
+    SerialDevice,
+    USBDevice,
+    async_scan_serial_ports,
+)
 from homeassistant.config_entries import (
     SOURCE_IGNORE,
     SOURCE_ZEROCONF,
@@ -155,7 +159,7 @@ def _format_serial_port_choice(
 async def list_serial_ports(hass: HomeAssistant) -> list[USBDevice | SerialDevice]:
     """List all serial ports, including the Yellow radio and the multi-PAN addon."""
     ports: list[USBDevice | SerialDevice] = []
-    ports.extend(await hass.async_add_executor_job(scan_serial_ports))
+    ports.extend(await async_scan_serial_ports(hass))
 
     # Add useful info to the Yellow's serial port selection screen
     try:

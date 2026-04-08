@@ -12,7 +12,10 @@ from homeassistant import config_entries
 from homeassistant.components import usb
 from homeassistant.components.usb import DOMAIN
 from homeassistant.components.usb.models import SerialDevice, USBDevice
-from homeassistant.components.usb.utils import scan_serial_ports, usb_device_from_path
+from homeassistant.components.usb.utils import (
+    async_scan_serial_ports,
+    usb_device_from_path,
+)
 from homeassistant.const import EVENT_HOMEASSISTANT_STARTED, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
@@ -1293,8 +1296,10 @@ async def test_register_port_event_callback_failure(
     assert "Failure 2" in caplog.text
 
 
-def test_scan_serial_ports_with_unique_symlinks() -> None:
-    """Test scan_serial_ports returns devices with unique /dev/serial/by-id paths."""
+async def test_async_scan_serial_ports_with_unique_symlinks(
+    hass: HomeAssistant,
+) -> None:
+    """Test async_scan_serial_ports returns devices with unique /dev/serial/by-id paths."""
     entry1 = MagicMock(spec_set=os.DirEntry)
     entry1.is_symlink.return_value = True
     entry1.path = "/dev/serial/by-id/usb-device1"
@@ -1335,7 +1340,7 @@ def test_scan_serial_ports_with_unique_symlinks() -> None:
             return_value=[mock_port1, mock_port2],
         ),
     ):
-        devices = scan_serial_ports()
+        devices = await async_scan_serial_ports(hass)
 
     assert len(devices) == 2
     assert devices[0].device == "/dev/serial/by-id/usb-device1"
@@ -1344,8 +1349,10 @@ def test_scan_serial_ports_with_unique_symlinks() -> None:
     assert devices[1].vid == "ABCD"
 
 
-def test_scan_serial_ports_without_unique_symlinks() -> None:
-    """Test scan_serial_ports returns devices with original paths when no symlinks exist."""
+async def test_async_scan_serial_ports_without_unique_symlinks(
+    hass: HomeAssistant,
+) -> None:
+    """Test async_scan_serial_ports returns devices with original paths when no symlinks exist."""
     mock_port = MagicMock()
     mock_port.device = "/dev/ttyUSB0"
     mock_port.vid = 0x1234
@@ -1362,15 +1369,15 @@ def test_scan_serial_ports_without_unique_symlinks() -> None:
             return_value=[mock_port],
         ),
     ):
-        devices = scan_serial_ports()
+        devices = await async_scan_serial_ports(hass)
 
     assert len(devices) == 1
     assert devices[0].device == "/dev/ttyUSB0"
     assert devices[0].vid == "1234"
 
 
-def test_scan_serial_ports_no_vid_pid() -> None:
-    """Test scan_serial_ports returns devices without VID:PID."""
+async def test_async_scan_serial_ports_no_vid_pid(hass: HomeAssistant) -> None:
+    """Test async_scan_serial_ports returns devices without VID:PID."""
     mock_port = MagicMock()
     mock_port.device = "/dev/ttyAMA1"
     mock_port.vid = None
@@ -1387,7 +1394,7 @@ def test_scan_serial_ports_no_vid_pid() -> None:
             return_value=[mock_port],
         ),
     ):
-        devices = scan_serial_ports()
+        devices = await async_scan_serial_ports(hass)
 
     assert len(devices) == 1
     assert isinstance(devices[0], SerialDevice)
