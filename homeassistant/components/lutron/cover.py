@@ -45,24 +45,62 @@ async def async_setup_entry(
 class LutronCover(LutronDevice, CoverEntity):
     """Representation of a Lutron shade."""
 
-    _attr_supported_features = (
-        CoverEntityFeature.OPEN
-        | CoverEntityFeature.CLOSE
-        | CoverEntityFeature.SET_POSITION
-    )
     _lutron_device: Output
     _attr_name = None
 
+    @property
+    def supported_features(self) -> CoverEntityFeature:
+        """Flag supported features based on output type."""
+        if self._lutron_device.type == "MOTOR":
+            return (
+                CoverEntityFeature.OPEN
+                | CoverEntityFeature.CLOSE
+                | CoverEntityFeature.STOP
+            )
+        return (
+            CoverEntityFeature.OPEN
+            | CoverEntityFeature.CLOSE
+            | CoverEntityFeature.SET_POSITION
+        )
+
     def close_cover(self, **kwargs: Any) -> None:
         """Close the cover."""
+        if self._lutron_device.type == "MOTOR":
+            # Compatibility: older pylutron exposes MOTOR as Shade with
+            # start_lower/start_raise/stop instead of open/close/stop.
+            if hasattr(self._lutron_device, "close"):
+                self._lutron_device.close()
+            elif hasattr(self._lutron_device, "start_lower"):
+                self._lutron_device.start_lower()
+            else:
+                self._lutron_device.level = 0
+            return
         self._lutron_device.level = 0
 
     def open_cover(self, **kwargs: Any) -> None:
         """Open the cover."""
+        if self._lutron_device.type == "MOTOR":
+            # Compatibility: older pylutron exposes MOTOR as Shade with
+            # start_lower/start_raise/stop instead of open/close/stop.
+            if hasattr(self._lutron_device, "open"):
+                self._lutron_device.open()
+            elif hasattr(self._lutron_device, "start_raise"):
+                self._lutron_device.start_raise()
+            else:
+                self._lutron_device.level = 100
+            return
         self._lutron_device.level = 100
+
+    def stop_cover(self, **kwargs: Any) -> None:
+        """Stop the cover."""
+        if self._lutron_device.type == "MOTOR":
+            if hasattr(self._lutron_device, "stop"):
+                self._lutron_device.stop()
 
     def set_cover_position(self, **kwargs: Any) -> None:
         """Move the shade to a specific position."""
+        if self._lutron_device.type == "MOTOR":
+            return
         if ATTR_POSITION in kwargs:
             position = kwargs[ATTR_POSITION]
             self._lutron_device.level = position
