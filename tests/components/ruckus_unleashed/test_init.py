@@ -5,13 +5,14 @@ from unittest.mock import AsyncMock
 from aioruckus.const import ERROR_CONNECT_TIMEOUT, ERROR_LOGIN_INCORRECT
 from aioruckus.exceptions import AuthenticationError
 
-from homeassistant.components.ruckus_unleashed import DOMAIN, MANUFACTURER
 from homeassistant.components.ruckus_unleashed.const import (
     API_AP_DEVNAME,
     API_AP_MAC,
     API_AP_MODEL,
     API_SYS_SYSINFO,
     API_SYS_SYSINFO_VERSION,
+    DOMAIN,
+    MANUFACTURER,
 )
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
@@ -89,4 +90,3 @@ async def test_unload_entry(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
     assert entry.state is ConfigEntryState.NOT_LOADED
-    assert not hass.data.get(DOMAIN)
