@@ -70,10 +70,6 @@ class ThreemaConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Generate keys for a new Gateway ID."""
         if user_input is not None:
-            if user_input.get(CONF_PRIVATE_KEY):
-                self._private_key = user_input[CONF_PRIVATE_KEY]
-            if user_input.get(CONF_PUBLIC_KEY):
-                self._public_key = user_input[CONF_PUBLIC_KEY]
             return await self.async_step_credentials()
 
         try:
@@ -89,12 +85,10 @@ class ThreemaConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="setup_new",
-            data_schema=vol.Schema(
-                {
-                    vol.Optional(CONF_PUBLIC_KEY, default=public_key): str,
-                    vol.Optional(CONF_PRIVATE_KEY, default=private_key): str,
-                }
-            ),
+            description_placeholders={
+                "public_key": public_key,
+                "private_key": private_key,
+            },
         )
 
     async def async_step_credentials(

@@ -28,15 +28,7 @@
         "title": "Gateway credentials"
       },
       "setup_new": {
-        "data": {
-          "private_key": "Private key",
-          "public_key": "Public key"
-        },
-        "data_description": {
-          "private_key": "Your generated private key. Store it securely.",
-          "public_key": "Your generated public key. Use when registering at gateway.threema.ch."
-        },
-        "description": "Save your keys now! When registering at gateway.threema.ch, paste only the hex part of your public key (without the 'public:' prefix). Save your private key securely.",
+        "description": "Your keys have been generated. Save them now before continuing!\n\nPublic key: `{public_key}`\nPrivate key: `{private_key}`\n\nWhen registering at gateway.threema.ch, paste only the hex part of the public key (without the `public:` prefix). Store the private key securely.",
         "title": "Keys generated"
       },
       "user": {

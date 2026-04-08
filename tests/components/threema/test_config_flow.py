@@ -133,10 +133,7 @@ async def test_user_flow_new_gateway(
 
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            user_input={
-                "public_key": "public:generated_public_key_hex",
-                "private_key": "private:generated_private_key_hex",
-            },
+            user_input={},
         )
         assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "credentials"
