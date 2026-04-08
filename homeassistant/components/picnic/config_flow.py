@@ -115,7 +115,7 @@ class PicnicConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
         )
 
-    def _start_login(self, username, password, country_code) -> None:
+    def _start_login(self, username: str, password: str, country_code: str) -> None:
         self._picnic = PicnicAPI(country_code=country_code)
         self._picnic.login(username, password)
 
