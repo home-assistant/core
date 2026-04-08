@@ -56,7 +56,6 @@ async def test_binary_sensors_no_auth(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
     entity_registry: er.EntityRegistry,
-    system_get_info: SystemInfo,
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test for SFR Box binary sensors."""
