@@ -28,15 +28,6 @@ def config_entry(hass: HomeAssistant) -> MockConfigEntry:
     return entry
 
 
-@pytest.mark.parametrize(
-    "ignore_missing_translations",
-    [
-        [
-            "component.homeassistant.issues.config_entry_reauth.title",
-            "component.homeassistant.issues.config_entry_reauth.description",
-        ]
-    ],
-)
 async def test_setup_permission_error(
     hass: HomeAssistant, config_entry: MockConfigEntry
 ) -> None:
@@ -51,15 +42,6 @@ async def test_setup_permission_error(
     assert config_entry.state is ConfigEntryState.SETUP_ERROR
 
 
-@pytest.mark.parametrize(
-    "ignore_missing_translations",
-    [
-        [
-            "component.homeassistant.issues.config_entry_reauth.title",
-            "component.homeassistant.issues.config_entry_reauth.description",
-        ]
-    ],
-)
 async def test_setup_http_status_401(
     hass: HomeAssistant, config_entry: MockConfigEntry
 ) -> None:
