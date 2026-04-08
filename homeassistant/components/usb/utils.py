@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Sequence
+from collections.abc import Awaitable, Sequence
 import dataclasses
 import fnmatch
 import os
@@ -10,6 +10,7 @@ import os
 from serial.tools.list_ports import comports
 from serial.tools.list_ports_common import ListPortInfo
 
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.service_info.usb import UsbServiceInfo
 from homeassistant.loader import USBMatcher
 
@@ -74,6 +75,14 @@ def scan_serial_ports() -> Sequence[USBDevice | SerialDevice]:
         serial_ports.append(device)
 
     return serial_ports
+
+
+@callback
+def async_scan_serial_ports(
+    hass: HomeAssistant,
+) -> Awaitable[Sequence[USBDevice | SerialDevice]]:
+    """Scan serial ports and return USB and other serial devices, async."""
+    return hass.async_add_executor_job(scan_serial_ports)
 
 
 def usb_device_from_path(device_path: str) -> USBDevice | None:
