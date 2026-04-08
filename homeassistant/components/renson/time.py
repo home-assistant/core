@@ -54,8 +54,7 @@ async def async_setup_entry(
 
     coordinator = config_entry.runtime_data.coordinator
     entities = [
-        RensonTime(description, coordinator)
-        for description in ENTITY_DESCRIPTIONS
+        RensonTime(description, coordinator) for description in ENTITY_DESCRIPTIONS
     ]
 
     async_add_entities(entities)
