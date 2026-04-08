@@ -19,18 +19,12 @@ if TYPE_CHECKING:
 type RiscoConfigEntry = ConfigEntry[RiscoData]
 
 
+@dataclass
 class RiscoData:
     """Runtime data for the Risco integration."""
 
-    def __init__(
-        self,
-        *,
-        local_data: LocalData | None = None,
-        cloud_data: CloudData | None = None,
-    ) -> None:
-        """Initialize the Risco data."""
-        self.local_data = local_data
-        self.cloud_data = cloud_data
+    local_data: LocalData | None = None
+    cloud_data: CloudData | None = None
 
 
 @dataclass
