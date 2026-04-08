@@ -19,8 +19,8 @@ def actron_air_command[_EntityT: ActronAirEntity, **_P](
 ) -> Callable[Concatenate[_EntityT, _P], Coroutine[Any, Any, None]]:
     """Decorator for Actron Air API calls.
 
-    Handles ActronAirAPIError exceptions, and requests an coordinator update
-    to update status of the devices asap.
+    Handles ActronAirAPIError exceptions, and requests a coordinator update
+    to update the status of the devices as soon as possible.
     """
 
     @wraps(func)

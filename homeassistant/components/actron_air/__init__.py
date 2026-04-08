@@ -1,11 +1,7 @@
 """The Actron Air integration."""
 
-from actron_neo_api import (
-    ActronAirACSystem,
-    ActronAirAPI,
-    ActronAirAPIError,
-    ActronAirAuthError,
-)
+from actron_neo_api import ActronAirAPI, ActronAirAPIError, ActronAirAuthError
+from actron_neo_api.models.system import ActronAirSystemInfo
 
 from homeassistant.const import CONF_API_TOKEN, Platform
 from homeassistant.core import HomeAssistant
@@ -25,7 +21,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ActronAirConfigEntry) ->
     """Set up Actron Air integration from a config entry."""
 
     api = ActronAirAPI(refresh_token=entry.data[CONF_API_TOKEN])
-    systems: list[ActronAirACSystem] = []
+    systems: list[ActronAirSystemInfo] = []
 
     try:
         systems = await api.get_ac_systems()

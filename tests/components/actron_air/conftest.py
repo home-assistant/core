@@ -4,6 +4,8 @@ import asyncio
 from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
+from actron_neo_api.models.auth import ActronAirDeviceCode
+from actron_neo_api.models.system import ActronAirSystemInfo
 import pytest
 
 from homeassistant.components.actron_air.const import DOMAIN
@@ -31,12 +33,14 @@ def mock_actron_api() -> Generator[AsyncMock]:
         api = mock_api.return_value
 
         # Mock device code request
-        api.request_device_code.return_value = {
-            "device_code": "test_device_code",
-            "user_code": "ABC123",
-            "verification_uri_complete": "https://example.com/device",
-            "expires_in": 1800,
-        }
+        api.request_device_code.return_value = ActronAirDeviceCode(
+            device_code="test_device_code",
+            user_code="ABC123",
+            verification_uri="https://example.com",
+            verification_uri_complete="https://example.com/device",
+            expires_in=1800,
+            interval=5,
+        )
 
         # Mock successful token polling (with a small delay to test progress)
         async def slow_poll_for_token(device_code):
@@ -58,7 +62,7 @@ def mock_actron_api() -> Generator[AsyncMock]:
 
         # Mock get_ac_systems
         api.get_ac_systems = AsyncMock(
-            return_value=[{"serial": "123456", "name": "Test System"}]
+            return_value=[ActronAirSystemInfo(serial="123456")]
         )
 
         # Mock state manager
