@@ -120,7 +120,7 @@ async def test_form_2fa_required(hass: HomeAssistant, picnic_api) -> None:
         CONF_COUNTRY_CODE: "NL",
     }
     assert picnic_api.return_value.generate_2fa_code.call_count == 1
-    assert picnic_api.return_value.generate_2fa_code.call_args[0] == ("sms",)
+    assert picnic_api.return_value.generate_2fa_code.call_args[0] == ("SMS",)
     assert picnic_api.return_value.verify_2fa_code.call_count == 1
     assert picnic_api.return_value.verify_2fa_code.call_args[0] == ("123456",)
 
