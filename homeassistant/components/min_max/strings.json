@@ -1,5 +1,8 @@
 {
   "config": {
+    "abort": {
+      "migrated_to_groups": "The min/max integration has been migrated to use groups. Please use the group integration instead."
+    },
     "step": {
       "user": {
         "data": {
@@ -14,6 +17,12 @@
         "description": "Create a sensor that calculates a min, max, mean, median or sum from a list of input sensors.",
         "title": "[%key:component::min_max::title%]"
       }
+    }
+  },
+  "issues": {
+    "yaml_deprecated": {
+      "description": "The min/max integration has been migrated to use group sensor.\n\nReplace your Min/MaxYAML configuration with this converted configuration:\n{yaml_config}\n\nTo use the new configuration and replace your sensor with a group sensor, restart your Home Assistant.\n\nGroup sensors have more configuration possibilities, refer to the documentation by clicking on learn more.",
+      "title": "Min/Max YAML configuration is deprecated"
     }
   },
   "options": {
