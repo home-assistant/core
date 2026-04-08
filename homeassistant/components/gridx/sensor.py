@@ -181,8 +181,9 @@ LIVE_BASE_DESCRIPTIONS: tuple[GridxSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
+        suggested_display_precision=2,
         value_fn=lambda d: (
-            round(d["gridMeterReadingPositive"] / 3600, 2)
+            d["gridMeterReadingPositive"] / 3600
             if d.get("gridMeterReadingPositive") is not None
             else None
         ),
@@ -193,8 +194,9 @@ LIVE_BASE_DESCRIPTIONS: tuple[GridxSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
+        suggested_display_precision=2,
         value_fn=lambda d: (
-            round(d["gridMeterReadingNegative"] / 3600, 2)
+            d["gridMeterReadingNegative"] / 3600
             if d.get("gridMeterReadingNegative") is not None
             else None
         ),
