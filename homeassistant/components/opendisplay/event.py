@@ -89,5 +89,5 @@ class OpenDisplayEventEntity(OpenDisplayEntity, EventEntity):
                     and event.event_type in self.event_types
                 ):
                     self._trigger_event(event.event_type)
-                    self.async_write_ha_state()
             self._last_processed_data = data
+            self.async_write_ha_state()

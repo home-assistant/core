@@ -2,7 +2,6 @@
 
 from unittest.mock import MagicMock
 
-from homeassistant.components.bluetooth import BluetoothChange
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -14,6 +13,7 @@ from . import (
 )
 
 from tests.common import MockConfigEntry
+from tests.components.bluetooth import inject_bluetooth_service_info
 
 
 async def test_no_entities_without_binary_inputs(
@@ -134,27 +134,25 @@ async def test_stale_entities_removed_on_config_change(
 async def test_button_down_event_fired(
     hass: HomeAssistant,
     mock_button_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """A 'button_down' event fires when the button transitions to the down state."""
     mock_button_config_entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(mock_button_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    coordinator = mock_button_config_entry.runtime_data.coordinator
-
     # First advertisement — seeds tracker state (no events emitted)
-    coordinator._async_handle_bluetooth_event(
-        make_v1_service_info(), BluetoothChange.ADVERTISEMENT
-    )
+    inject_bluetooth_service_info(hass, make_v1_service_info())
     await hass.async_block_till_done()
 
-    entity_id = "event.opendisplay_1234_button_1"
+    entity_id = entity_registry.async_get_entity_id(
+        "event", "opendisplay", f"{TEST_ADDRESS}-button_0_0"
+    )
+    assert entity_id is not None
     state_before = hass.states.get(entity_id)
 
     # Second advertisement — byte 0: pressed=True, button_id=0 → raw=0x80
-    coordinator._async_handle_bluetooth_event(
-        make_v1_service_info(b"\x80" + b"\x00" * 10), BluetoothChange.ADVERTISEMENT
-    )
+    inject_bluetooth_service_info(hass, make_v1_service_info(b"\x80" + b"\x00" * 10))
     await hass.async_block_till_done()
 
     state_after = hass.states.get(entity_id)
@@ -166,27 +164,27 @@ async def test_button_down_event_fired(
 async def test_button_up_event_fired(
     hass: HomeAssistant,
     mock_button_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """A 'button_up' event fires when the button transitions from down to up."""
     mock_button_config_entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(mock_button_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    coordinator = mock_button_config_entry.runtime_data.coordinator
+    entity_id = entity_registry.async_get_entity_id(
+        "event", "opendisplay", f"{TEST_ADDRESS}-button_0_0"
+    )
+    assert entity_id is not None
 
     # Seed with pressed state (pressed=True, button_id=0 → raw=0x80)
-    coordinator._async_handle_bluetooth_event(
-        make_v1_service_info(b"\x80" + b"\x00" * 10), BluetoothChange.ADVERTISEMENT
-    )
+    inject_bluetooth_service_info(hass, make_v1_service_info(b"\x80" + b"\x00" * 10))
     await hass.async_block_till_done()
 
     # Transition to released (pressed=False, button_id=0 → raw=0x00)
-    coordinator._async_handle_bluetooth_event(
-        make_v1_service_info(), BluetoothChange.ADVERTISEMENT
-    )
+    inject_bluetooth_service_info(hass, make_v1_service_info())
     await hass.async_block_till_done()
 
-    state = hass.states.get("event.opendisplay_1234_button_1")
+    state = hass.states.get(entity_id)
     assert state is not None
     assert state.attributes.get("event_type") == "button_up"
 
@@ -194,26 +192,24 @@ async def test_button_up_event_fired(
 async def test_no_event_for_wrong_button_id(
     hass: HomeAssistant,
     mock_two_button_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Entity watching button_id=1 does not fire when button_id=0 changes."""
     mock_two_button_config_entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(mock_two_button_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    coordinator = mock_two_button_config_entry.runtime_data.coordinator
-
-    coordinator._async_handle_bluetooth_event(
-        make_v1_service_info(), BluetoothChange.ADVERTISEMENT
-    )
+    inject_bluetooth_service_info(hass, make_v1_service_info())
     await hass.async_block_till_done()
 
-    entity_id = "event.opendisplay_1234_button_2"
+    entity_id = entity_registry.async_get_entity_id(
+        "event", "opendisplay", f"{TEST_ADDRESS}-button_0_1"
+    )
+    assert entity_id is not None
     state_before = hass.states.get(entity_id)
 
     # Press button_id=0 only (raw=0x80: pressed=True, button_id=0)
-    coordinator._async_handle_bluetooth_event(
-        make_v1_service_info(b"\x80" + b"\x00" * 10), BluetoothChange.ADVERTISEMENT
-    )
+    inject_bluetooth_service_info(hass, make_v1_service_info(b"\x80" + b"\x00" * 10))
     await hass.async_block_till_done()
 
     assert hass.states.get(entity_id) == state_before
