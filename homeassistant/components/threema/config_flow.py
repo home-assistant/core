@@ -80,11 +80,12 @@ class ThreemaConfigFlow(ConfigFlow, domain=DOMAIN):
             private_key, public_key = await self.hass.async_add_executor_job(
                 generate_key_pair
             )
-            self._private_key = private_key
-            self._public_key = public_key
         except Exception:
             _LOGGER.exception("Failed to generate key pair")
             return self.async_abort(reason="key_generation_failed")
+
+        self._private_key = private_key
+        self._public_key = public_key
 
         return self.async_show_form(
             step_id="setup_new",
