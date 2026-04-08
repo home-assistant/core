@@ -149,7 +149,6 @@ class EvoClimateEntity(EvoEntity, ClimateEntity):
 class EvoZone(EvoChild, EvoClimateEntity):
     """Base for any evohome-compatible heating zone."""
 
-    _attr_icon = "mdi:thermostat"
     _attr_preset_modes = list(HA_PRESET_TO_EVO)
 
     _evo_device: evo.Zone
