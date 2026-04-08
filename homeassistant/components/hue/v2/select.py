@@ -121,23 +121,6 @@ class HueSceneSelectEntity(SceneActivityBaseEntity, SelectEntity):
             scene.id,
         )
 
-    async def async_added_to_hass(self) -> None:
-        """Subscribe to scene resource events to keep options list current."""
-        await super().async_added_to_hass()
-
-        @callback
-        def _on_scene_event(
-            event_type: EventType, scene: HueScene | HueSmartScene
-        ) -> None:
-            if not isinstance(scene, HueScene):
-                return
-            if scene.group.rid != self._group_id:
-                return
-            self._refresh_options()
-            self.async_write_ha_state()
-
-        self.async_on_remove(self.bridge.api.scenes.subscribe(_on_scene_event))
-
 
 # pylint: disable-next=hass-enforce-class-module
 class HueSmartSceneSelectEntity(SceneActivityBaseEntity, SelectEntity):
@@ -194,23 +177,6 @@ class HueSmartSceneSelectEntity(SceneActivityBaseEntity, SelectEntity):
             scene.id,
         )
 
-    async def async_added_to_hass(self) -> None:
-        """Subscribe to smart scene resource events to keep options list current."""
-        await super().async_added_to_hass()
-
-        @callback
-        def _on_scene_event(
-            event_type: EventType, scene: HueScene | HueSmartScene
-        ) -> None:
-            if not isinstance(scene, HueSmartScene):
-                return
-            if scene.group.rid != self._group_id:
-                return
-            self._refresh_options()
-            self.async_write_ha_state()
-
-        self.async_on_remove(self.bridge.api.scenes.subscribe(_on_scene_event))
-
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -222,24 +188,44 @@ async def async_setup_entry(
     api: HueBridgeV2 = bridge.api
     assert (manager := bridge.scene_activity_manager) is not None
 
+    scene_entities: dict[str, HueSceneSelectEntity] = {}
+    smart_scene_entities: dict[str, HueSmartSceneSelectEntity] = {}
+
+    @callback
+    def _on_scene_event(event_type: EventType, scene: HueScene) -> None:
+        if entity := scene_entities.get(scene.group.rid):
+            entity._refresh_options()
+            entity.async_write_ha_state()
+
+    @callback
+    def _on_smart_scene_event(event_type: EventType, scene: HueSmartScene) -> None:
+        if entity := smart_scene_entities.get(scene.group.rid):
+            entity._refresh_options()
+            entity.async_write_ha_state()
+
+    config_entry.async_on_unload(api.scenes.scene.subscribe(_on_scene_event))
+    config_entry.async_on_unload(api.scenes.smart_scene.subscribe(_on_smart_scene_event))
+
     @callback
     def _add_group_entities(group_controller: RoomController | ZoneController) -> None:
         """Create select entities for all groups in the given controller."""
         entities: list[SceneActivityBaseEntity] = []
         for group in group_controller:
-            entities.append(HueSceneSelectEntity(bridge, manager, group.id))
-            entities.append(HueSmartSceneSelectEntity(bridge, manager, group.id))
+            scene_entity = HueSceneSelectEntity(bridge, manager, group.id)
+            smart_scene_entity = HueSmartSceneSelectEntity(bridge, manager, group.id)
+            scene_entities[group.id] = scene_entity
+            smart_scene_entities[group.id] = smart_scene_entity
+            entities.extend([scene_entity, smart_scene_entity])
         if entities:
             async_add_entities(entities)
 
         @callback
         def _on_group_added(event_type: EventType, group: Room | Zone) -> None:
-            async_add_entities(
-                [
-                    HueSceneSelectEntity(bridge, manager, group.id),
-                    HueSmartSceneSelectEntity(bridge, manager, group.id),
-                ]
-            )
+            scene_entity = HueSceneSelectEntity(bridge, manager, group.id)
+            smart_scene_entity = HueSmartSceneSelectEntity(bridge, manager, group.id)
+            scene_entities[group.id] = scene_entity
+            smart_scene_entities[group.id] = smart_scene_entity
+            async_add_entities([scene_entity, smart_scene_entity])
 
         config_entry.async_on_unload(
             group_controller.subscribe(
