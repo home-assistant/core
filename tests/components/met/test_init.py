@@ -1,5 +1,7 @@
 """Test the Met integration init."""
 
+from unittest.mock import MagicMock
+
 import pytest
 
 from homeassistant.components.met.const import (
@@ -82,7 +84,7 @@ async def test_removing_incorrect_devices(
     assert "Removing improper device Forecast_legacy" in caplog.text
 
 
-async def test_api_failure(hass: HomeAssistant, mock_weather) -> None:
+async def test_api_failure(hass: HomeAssistant, mock_weather: MagicMock) -> None:
     """Test that entry goes to SETUP_RETRY when API fails."""
     mock_weather.fetching_data.side_effect = Exception("API error")
     entry = MockConfigEntry(
@@ -101,7 +103,9 @@ async def test_api_failure(hass: HomeAssistant, mock_weather) -> None:
     assert entry.state is ConfigEntryState.SETUP_RETRY
 
 
-async def test_track_home_called_twice(hass: HomeAssistant, mock_weather) -> None:
+async def test_track_home_called_twice(
+    hass: HomeAssistant, mock_weather: MagicMock
+) -> None:
     """Test that calling track_home twice does not register duplicate listeners."""
     entry = await init_integration(hass, track_home=True)
     coordinator = entry.runtime_data
