@@ -35,6 +35,7 @@ from tests.common import (
     mock_platform,
     mock_restore_cache,
     mock_restore_cache_with_extra_data,
+    setup_test_component_platform,
 )
 
 
@@ -393,20 +394,12 @@ async def test_doorbell_missing_ring_event_type(
     entity_button._attr_has_entity_name = True
     entity_button.entity_id = "event.button"
 
-    async def async_setup_entry_platform(
-        hass: HomeAssistant,
-        config_entry: ConfigEntry,
-        async_add_entities: AddConfigEntryEntitiesCallback,
-    ) -> None:
-        """Set up test event platform via config entry."""
-        async_add_entities([entity_without_ring, entity_with_ring, entity_button])
-
-    mock_platform(
+    setup_test_component_platform(
         hass,
-        f"{TEST_DOMAIN}.{DOMAIN}",
-        MockPlatform(async_setup_entry=async_setup_entry_platform),
+        DOMAIN,
+        [entity_without_ring, entity_with_ring, entity_button],
+        from_config_entry=True,
     )
-
     config_entry = MockConfigEntry(domain=TEST_DOMAIN)
     config_entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(config_entry.entry_id)
