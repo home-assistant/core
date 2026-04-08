@@ -626,9 +626,9 @@ async def _async_setup_graphql_sensors(
             _LOGGER.error("Error connecting to Tibber home: %s ", err)
             raise PlatformNotReady from err
 
-        if price_coordinator is not None:
+        if price_coordinator is not None and home.has_active_subscription:
             entities.append(TibberSensorElPrice(price_coordinator, home))
-        if coordinator is not None:
+        if coordinator is not None and home.has_active_subscription:
             entities.extend(
                 TibberDataSensor(home, coordinator, entity_description)
                 for entity_description in SENSORS
