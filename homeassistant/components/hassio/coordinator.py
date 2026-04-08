@@ -362,9 +362,9 @@ class HassioStatsDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
         # Fetch core and supervisor stats
         updates: dict[str, Awaitable] = {}
-        if CONTAINER_STATS in container_updates[CORE_CONTAINER]:
+        if container_updates.get(CORE_CONTAINER, {}).get(CONTAINER_STATS):
             updates[DATA_CORE_STATS] = client.homeassistant.stats()
-        if CONTAINER_STATS in container_updates[SUPERVISOR_CONTAINER]:
+        if container_updates.get(SUPERVISOR_CONTAINER, {}).get(CONTAINER_STATS):
             updates[DATA_SUPERVISOR_STATS] = client.supervisor.stats()
 
         if updates:
@@ -392,7 +392,7 @@ class HassioStatsDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 *[
                     self._update_addon_stats(slug)
                     for slug in started_addons
-                    if CONTAINER_STATS in container_updates.get(slug, {})
+                    if container_updates.get(slug, {}).get(CONTAINER_STATS)
                 ]
             )
         )
@@ -419,7 +419,11 @@ class HassioStatsDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         @callback
         def _remove() -> None:
             for key in types:
-                enabled_updates[key].remove(entity_id)
+                enabled_updates[key].discard(entity_id)
+                if not enabled_updates[key]:
+                    del enabled_updates[key]
+            if not enabled_updates:
+                self._container_updates.pop(slug, None)
 
         return _remove
 
@@ -587,6 +591,8 @@ class HassioAddOnDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         @callback
         def _remove() -> None:
             self._addon_info_subscriptions[slug].discard(entity_id)
+            if not self._addon_info_subscriptions[slug]:
+                del self._addon_info_subscriptions[slug]
 
         return _remove
 
