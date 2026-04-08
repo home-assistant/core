@@ -52,8 +52,9 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Renson time platform."""
 
+    coordinator = config_entry.runtime_data.coordinator
     entities = [
-        RensonTime(description, config_entry.runtime_data.coordinator)
+        RensonTime(description, coordinator)
         for description in ENTITY_DESCRIPTIONS
     ]
 
