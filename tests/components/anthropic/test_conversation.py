@@ -4,7 +4,7 @@ import datetime
 from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
 
-from anthropic import AuthenticationError, RateLimitError
+from anthropic import RateLimitError
 from anthropic.types import (
     CitationsWebSearchResultLocation,
     CitationWebSearchResultLocationParam,
@@ -16,6 +16,8 @@ from anthropic.types import (
     TextEditorCodeExecutionStrReplaceResultBlock,
     TextEditorCodeExecutionToolResultError,
     TextEditorCodeExecutionViewResultBlock,
+    ToolSearchToolResultError,
+    ToolSearchToolSearchResultBlock,
     Usage,
     WebSearchResultBlock,
     WebSearchToolResultError,
@@ -33,8 +35,10 @@ from homeassistant.components import conversation
 from homeassistant.components.anthropic.const import (
     CONF_CHAT_MODEL,
     CONF_CODE_EXECUTION,
+    CONF_PROMPT_CACHING,
     CONF_THINKING_BUDGET,
     CONF_THINKING_EFFORT,
+    CONF_TOOL_SEARCH,
     CONF_WEB_SEARCH,
     CONF_WEB_SEARCH_CITY,
     CONF_WEB_SEARCH_COUNTRY,
@@ -42,10 +46,8 @@ from homeassistant.components.anthropic.const import (
     CONF_WEB_SEARCH_REGION,
     CONF_WEB_SEARCH_TIMEZONE,
     CONF_WEB_SEARCH_USER_LOCATION,
-    DOMAIN,
 )
 from homeassistant.components.anthropic.entity import CitationDetails, ContentDetails
-from homeassistant.config_entries import SOURCE_REAUTH
 from homeassistant.const import CONF_LLM_HASS_API
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -61,6 +63,7 @@ from . import (
     create_server_tool_use_block,
     create_text_editor_code_execution_result_block,
     create_thinking_block,
+    create_tool_search_result_block,
     create_tool_use_block,
     create_web_search_result_block,
 )
@@ -129,38 +132,6 @@ async def test_error_handling(
     assert result.response.error_code == "unknown", result
 
 
-async def test_auth_error_handling(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_init_component,
-    mock_create_stream: AsyncMock,
-) -> None:
-    """Test reauth after authentication error during conversation."""
-    mock_create_stream.side_effect = AuthenticationError(
-        message="Invalid API key",
-        response=Response(status_code=403, request=Request(method="POST", url=URL())),
-        body=None,
-    )
-
-    result = await conversation.async_converse(
-        hass, "hello", None, Context(), agent_id="conversation.claude_conversation"
-    )
-
-    assert result.response.response_type == intent.IntentResponseType.ERROR
-    assert result.response.error_code == "unknown", result
-
-    await hass.async_block_till_done()
-    flows = hass.config_entries.flow.async_progress()
-    assert len(flows) == 1
-
-    flow = flows[0]
-    assert flow["step_id"] == "reauth_confirm"
-    assert flow["handler"] == DOMAIN
-    assert "context" in flow
-    assert flow["context"]["source"] == SOURCE_REAUTH
-    assert flow["context"]["entry_id"] == mock_config_entry.entry_id
-
-
 async def test_template_error(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
@@ -202,6 +173,7 @@ async def test_template_variables(
         mock_config_entry,
         subentry,
         data={
+            "prompt_caching": "off",
             "prompt": (
                 "The user name is {{ user_name }}. "
                 "The user id is {{ llm_context.context.user_id }}."
@@ -228,12 +200,10 @@ async def test_template_variables(
         == "Okay, let me take care of that for you."
     )
 
-    system = mock_create_stream.call_args.kwargs["system"]
-    assert isinstance(system, list)
-    system_text = " ".join(block["text"] for block in system if "text" in block)
-
-    assert "The user name is Test User." in system_text
-    assert "The user id is 12345." in system_text
+    assert (
+        "The user name is Test User." in mock_create_stream.call_args.kwargs["system"]
+    )
+    assert "The user id is 12345." in mock_create_stream.call_args.kwargs["system"]
 
 
 async def test_conversation_agent(
@@ -246,9 +216,10 @@ async def test_conversation_agent(
     assert agent.supported_languages == "*"
 
 
-async def test_system_prompt_uses_text_block_with_cache_control(
+async def test_prompt_caching_system_prompt(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
+    mock_init_component: None,
     mock_create_stream: AsyncMock,
 ) -> None:
     """Ensure system prompt is sent as TextBlockParam with cache_control."""
@@ -258,16 +229,13 @@ async def test_system_prompt_uses_text_block_with_cache_control(
         create_content_block(0, ["ok"]),
     ]
 
-    with patch("anthropic.resources.models.AsyncModels.list", new_callable=AsyncMock):
-        await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
-        await conversation.async_converse(
-            hass,
-            "hello",
-            None,
-            context,
-            agent_id="conversation.claude_conversation",
-        )
+    await conversation.async_converse(
+        hass,
+        "hello",
+        None,
+        context,
+        agent_id="conversation.claude_conversation",
+    )
 
     system = mock_create_stream.call_args.kwargs["system"]
     assert isinstance(system, list)
@@ -276,6 +244,41 @@ async def test_system_prompt_uses_text_block_with_cache_control(
     assert block["type"] == "text"
     assert "Home Assistant" in block["text"]
     assert block["cache_control"] == {"type": "ephemeral"}
+    assert "cache_control" not in mock_create_stream.call_args.kwargs
+
+
+async def test_prompt_caching_automatic(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_init_component: None,
+    mock_create_stream: AsyncMock,
+) -> None:
+    """Ensure model args include cache_control."""
+    hass.config_entries.async_update_subentry(
+        mock_config_entry,
+        next(iter(mock_config_entry.subentries.values())),
+        data={
+            CONF_PROMPT_CACHING: "automatic",
+        },
+    )
+
+    context = Context()
+
+    mock_create_stream.return_value = [
+        create_content_block(0, ["ok"]),
+    ]
+
+    await conversation.async_converse(
+        hass,
+        "hello",
+        None,
+        context,
+        agent_id="conversation.claude_conversation",
+    )
+
+    assert mock_create_stream.call_args.kwargs["cache_control"] == {"type": "ephemeral"}
+    system = mock_create_stream.call_args.kwargs["system"]
+    assert isinstance(system, str)
 
 
 @patch("homeassistant.components.anthropic.entity.llm.AssistAPI._async_get_tools")
@@ -468,6 +471,7 @@ async def test_assist_api_tools_conversion(
         "vacuum",
         "cover",
         "weather",
+        "demo",
     ):
         assert await async_setup_component(hass, component, {})
 
@@ -702,6 +706,21 @@ async def test_extended_thinking(
     assert call_args == snapshot
 
 
+@pytest.mark.parametrize(
+    "subentry_data",
+    [
+        {
+            CONF_LLM_HASS_API: "assist",
+            CONF_CHAT_MODEL: "claude-haiku-4-5",
+            CONF_THINKING_BUDGET: 0,
+        },
+        {
+            CONF_LLM_HASS_API: "assist",
+            CONF_CHAT_MODEL: "claude-opus-4-6",
+            CONF_THINKING_EFFORT: "none",
+        },
+    ],
+)
 @freeze_time("2024-05-24 12:00:00")
 async def test_disabled_thinking(
     hass: HomeAssistant,
@@ -709,16 +728,13 @@ async def test_disabled_thinking(
     mock_init_component,
     mock_create_stream: AsyncMock,
     snapshot: SnapshotAssertion,
+    subentry_data: dict[str, Any],
 ) -> None:
     """Test conversation with thinking effort disabled."""
     hass.config_entries.async_update_subentry(
         mock_config_entry,
         next(iter(mock_config_entry.subentries.values())),
-        data={
-            CONF_LLM_HASS_API: "assist",
-            CONF_CHAT_MODEL: "claude-opus-4-6",
-            CONF_THINKING_EFFORT: "none",
-        },
+        data=subentry_data,
     )
 
     mock_create_stream.return_value = [
@@ -1503,6 +1519,194 @@ async def test_text_editor_code_execution(
     assert mock_create_stream.call_args.kwargs["messages"] == snapshot
 
 
+@freeze_time("2025-10-31 12:00:00")
+async def test_tool_search(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_init_component,
+    mock_create_stream: AsyncMock,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test tool search."""
+    assert await async_setup_component(hass, "intent", {})
+    assert await async_setup_component(hass, "demo", {})
+    hass.config_entries.async_update_subentry(
+        mock_config_entry,
+        next(iter(mock_config_entry.subentries.values())),
+        data={
+            CONF_LLM_HASS_API: llm.LLM_API_ASSIST,
+            CONF_CHAT_MODEL: "claude-sonnet-4-6",
+            CONF_TOOL_SEARCH: True,
+        },
+    )
+
+    tool_search_result = ToolSearchToolSearchResultBlock(
+        type="tool_search_tool_search_result",
+        tool_references=[
+            {
+                "type": "tool_reference",
+                "tool_name": "HassHumidifierSetpoint",
+            },
+            {
+                "type": "tool_reference",
+                "tool_name": "HassHumidifierMode",
+            },
+            {
+                "type": "tool_reference",
+                "tool_name": "HassClimateSetTemperature",
+            },
+            {
+                "type": "tool_reference",
+                "tool_name": "HassFanSetSpeed",
+            },
+            {
+                "type": "tool_reference",
+                "tool_name": "HassSetVolume",
+            },
+        ],
+    )
+
+    mock_create_stream.return_value = [
+        (
+            *create_thinking_block(
+                0,
+                ["I will fetch the available", " tools"],
+            ),
+            *create_content_block(
+                1,
+                ["Sure, let me check that for you!"],
+            ),
+            *create_server_tool_use_block(
+                2,
+                "srvtoolu_12345ABC",
+                "tool_search_tool_bm25",
+                [
+                    '{"query": "s',
+                    "et humidi",
+                    "fier hum",
+                    'idity"',
+                    ', "limit"',
+                    ": 5}",
+                ],
+            ),
+            *create_tool_search_result_block(
+                3, "srvtoolu_12345ABC", tool_search_result
+            ),
+            *create_thinking_block(
+                4,
+                ["Great! All clear, let's reply to the user!"],
+            ),
+            *create_content_block(
+                5,
+                ["Yes, I can!"],
+            ),
+        )
+    ]
+
+    result = await conversation.async_converse(
+        hass,
+        "Can you set humidifier setpoint?",
+        None,
+        Context(),
+        agent_id="conversation.claude_conversation",
+    )
+
+    chat_log = hass.data.get(conversation.chat_log.DATA_CHAT_LOGS).get(
+        result.conversation_id
+    )
+    # Don't test the prompt because it's not deterministic
+    assert chat_log.content[1:] == snapshot
+    assert mock_create_stream.call_args.kwargs["messages"] == snapshot
+
+    tools = mock_create_stream.call_args.kwargs["tools"]
+    assert {
+        "type": "tool_search_tool_bm25_20251119",
+        "name": "tool_search_tool_bm25",
+    } in tools
+    for tool in tools:
+        if tool["name"] in (
+            "HassTurnOn",
+            "HassTurnOff",
+            "GetLiveContext",
+            "tool_search_tool_bm25",
+        ):
+            assert "defer_loading" not in tool
+        else:
+            assert tool["defer_loading"] is True
+
+
+@freeze_time("2025-10-31 12:00:00")
+async def test_tool_search_error(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_init_component,
+    mock_create_stream: AsyncMock,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test tool_search error."""
+    hass.config_entries.async_update_subentry(
+        mock_config_entry,
+        next(iter(mock_config_entry.subentries.values())),
+        data={
+            CONF_LLM_HASS_API: llm.LLM_API_ASSIST,
+            CONF_CHAT_MODEL: "claude-sonnet-4-6",
+            CONF_TOOL_SEARCH: True,
+        },
+    )
+
+    tool_search_result = ToolSearchToolResultError(
+        type="tool_search_tool_result_error",
+        error_code="too_many_requests",
+    )
+    mock_create_stream.return_value = [
+        (
+            *create_thinking_block(
+                0,
+                ["I will fetch the available", " tools"],
+            ),
+            *create_content_block(
+                1,
+                ["Sure, let me check that for you!"],
+            ),
+            *create_server_tool_use_block(
+                2,
+                "srvtoolu_12345ABC",
+                "tool_search_tool_bm25",
+                [
+                    '{"query": "s',
+                    "et humidi",
+                    "fier hum",
+                    'idity"',
+                    ', "limit"',
+                    ": 5}",
+                ],
+            ),
+            *create_tool_search_result_block(
+                3, "srvtoolu_12345ABC", tool_search_result
+            ),
+            *create_content_block(
+                4,
+                ["I am unable to perform the tool search at this time."],
+            ),
+        )
+    ]
+
+    result = await conversation.async_converse(
+        hass,
+        "Do you have a tool to launch a rocket to the moon?",
+        None,
+        Context(),
+        agent_id="conversation.claude_conversation",
+    )
+
+    chat_log = hass.data.get(conversation.chat_log.DATA_CHAT_LOGS).get(
+        result.conversation_id
+    )
+    # Don't test the prompt because it's not deterministic
+    assert chat_log.content[1:] == snapshot
+    assert mock_create_stream.call_args.kwargs["messages"] == snapshot
+
+
 async def test_container_reused(
     hass: HomeAssistant,
     mock_config_entry_with_assist: MockConfigEntry,
@@ -1746,6 +1950,76 @@ async def test_container_reused(
             conversation.chat_log.AssistantContent(
                 agent_id="conversation.claude_conversation",
                 content="It is currently 2:30 PM.",
+            ),
+        ],
+        [
+            conversation.chat_log.SystemContent(
+                "You are a voice assistant for Home Assistant."
+            ),
+            conversation.chat_log.UserContent("Set humidity to 50%"),
+            conversation.chat_log.AssistantContent(
+                agent_id="conversation.claude_conversation",
+                thinking_content="Let me search for a tool to set humidity.",
+                tool_calls=[
+                    llm.ToolInput(
+                        tool_name="tool_search_tool_bm25",
+                        tool_args={"query": "set humidity humidifier"},
+                        id="srvtoolu_015vXmtZNASLa7n9RsoDfcBC",
+                        external=True,
+                    )
+                ],
+                native=ContentDetails(thinking_signature="EuQBClkIDBE="),
+            ),
+            conversation.chat_log.ToolResultContent(
+                agent_id="conversation.claude_conversation",
+                tool_call_id="srvtoolu_015vXmtZNASLa7n9RsoDfcBC",
+                tool_name="tool_search",
+                tool_result={
+                    "tool_references": [
+                        {
+                            "tool_name": "HassHumidifierSetpoint",
+                            "type": "tool_reference",
+                        },
+                        {"tool_name": "HassHumidifierMode", "type": "tool_reference"},
+                        {
+                            "tool_name": "HassClimateSetTemperature",
+                            "type": "tool_reference",
+                        },
+                        {"tool_name": "HassFanSetSpeed", "type": "tool_reference"},
+                        {"tool_name": "HassSetVolume", "type": "tool_reference"},
+                    ],
+                    "type": "tool_search_tool_search_result",
+                },
+            ),
+            conversation.chat_log.AssistantContent(
+                agent_id="conversation.claude_conversation",
+                tool_calls=[
+                    llm.ToolInput(
+                        tool_name="HassHumidifierSetpoint",
+                        tool_args={"name": "Hygrostat", "humidity": 50},
+                        id="toolu_01KNRWb3ZFufCa7WXtzCakhc",
+                        external=False,
+                    )
+                ],
+            ),
+            conversation.chat_log.ToolResultContent(
+                agent_id="conversation.claude_conversation",
+                tool_call_id="toolu_01KNRWb3ZFufCa7WXtzCakhc",
+                tool_name="HassHumidifierSetpoint",
+                tool_result={
+                    "speech": {
+                        "plain": {
+                            "speech": "The Hygrostat is set to 50%",
+                            "extra_data": None,
+                        }
+                    },
+                    "response_type": "action_done",
+                    "data": {"success": [], "failed": []},
+                },
+            ),
+            conversation.chat_log.AssistantContent(
+                agent_id="conversation.claude_conversation",
+                content="The Hygrostat humidity has been set to **50%**. ✅",
             ),
         ],
     ],

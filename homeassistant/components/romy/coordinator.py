@@ -8,14 +8,16 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import DOMAIN, LOGGER, UPDATE_INTERVAL
 
+type RomyConfigEntry = ConfigEntry[RomyVacuumCoordinator]
+
 
 class RomyVacuumCoordinator(DataUpdateCoordinator[None]):
     """ROMY Vacuum Coordinator."""
 
-    config_entry: ConfigEntry
+    config_entry: RomyConfigEntry
 
     def __init__(
-        self, hass: HomeAssistant, config_entry: ConfigEntry, romy: RomyRobot
+        self, hass: HomeAssistant, config_entry: RomyConfigEntry, romy: RomyRobot
     ) -> None:
         """Initialize."""
         super().__init__(

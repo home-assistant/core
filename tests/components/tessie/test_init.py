@@ -1,13 +1,18 @@
 """Test the Tessie init."""
 
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
-from tesla_fleet_api.exceptions import TeslaFleetError
+from tesla_fleet_api.exceptions import (
+    InvalidRequest,
+    InvalidToken,
+    ServiceUnavailable,
+    TeslaFleetError,
+)
 
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
-from .common import ERROR_AUTH, ERROR_CONNECTION, ERROR_UNKNOWN, setup_platform
+from .common import setup_platform
 
 
 async def test_load_unload(hass: HomeAssistant) -> None:
@@ -20,32 +25,40 @@ async def test_load_unload(hass: HomeAssistant) -> None:
     assert entry.state is ConfigEntryState.NOT_LOADED
 
 
+async def test_runtime_vehicle_api_handle_is_optional(hass: HomeAssistant) -> None:
+    """Test the runtime vehicle API handle remains optional during migration."""
+
+    entry = await setup_platform(hass)
+    assert all(vehicle.api is None for vehicle in entry.runtime_data.vehicles)
+
+
 async def test_auth_failure(
-    hass: HomeAssistant, mock_get_state_of_all_vehicles
+    hass: HomeAssistant, mock_get_state_of_all_vehicles: AsyncMock
 ) -> None:
     """Test init with an authentication error."""
 
-    mock_get_state_of_all_vehicles.side_effect = ERROR_AUTH
+    mock_get_state_of_all_vehicles.side_effect = InvalidToken()
     entry = await setup_platform(hass)
     assert entry.state is ConfigEntryState.SETUP_ERROR
 
 
 async def test_unknown_failure(
-    hass: HomeAssistant, mock_get_state_of_all_vehicles
+    hass: HomeAssistant, mock_get_state_of_all_vehicles: AsyncMock
 ) -> None:
-    """Test init with an client response error."""
+    """Test init with a non-retryable fleet API error."""
 
-    mock_get_state_of_all_vehicles.side_effect = ERROR_UNKNOWN
+    mock_get_state_of_all_vehicles.side_effect = InvalidRequest()
     entry = await setup_platform(hass)
     assert entry.state is ConfigEntryState.SETUP_ERROR
+    assert entry.reason == "Failed to connect"
 
 
-async def test_connection_failure(
-    hass: HomeAssistant, mock_get_state_of_all_vehicles
+async def test_retryable_api_failure(
+    hass: HomeAssistant, mock_get_state_of_all_vehicles: AsyncMock
 ) -> None:
-    """Test init with a network connection error."""
+    """Test init with a retryable fleet API error."""
 
-    mock_get_state_of_all_vehicles.side_effect = ERROR_CONNECTION
+    mock_get_state_of_all_vehicles.side_effect = ServiceUnavailable()
     entry = await setup_platform(hass)
     assert entry.state is ConfigEntryState.SETUP_RETRY
 

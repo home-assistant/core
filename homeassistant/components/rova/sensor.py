@@ -9,14 +9,13 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
-from .coordinator import RovaCoordinator
+from .coordinator import RovaConfigEntry, RovaCoordinator
 
 ISSUE_PLACEHOLDER = {"url": "/config/integrations/dashboard/add?domain=rova"}
 
@@ -42,11 +41,11 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: RovaConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Add Rova entry."""
-    coordinator: RovaCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
 
     assert entry.unique_id
     unique_id = entry.unique_id

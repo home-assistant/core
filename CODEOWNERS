@@ -37,6 +37,13 @@ build.json @home-assistant/supervisor
 # Other code
 /homeassistant/scripts/check_config.py @kellerza
 
+# Agent Configurations
+AGENTS.md @home-assistant/core
+CLAUDE.md @home-assistant/core
+/.agent/ @home-assistant/core
+/.claude/ @home-assistant/core
+/.gemini/ @home-assistant/core
+
 # Integrations
 /homeassistant/components/abode/ @shred86
 /tests/components/abode/ @shred86
@@ -401,6 +408,8 @@ build.json @home-assistant/supervisor
 /tests/components/dremel_3d_printer/ @tkdrob
 /homeassistant/components/drop_connect/ @ChandlerSystems @pfrazer
 /tests/components/drop_connect/ @ChandlerSystems @pfrazer
+/homeassistant/components/dropbox/ @bdr99
+/tests/components/dropbox/ @bdr99
 /homeassistant/components/droplet/ @sarahseidman
 /tests/components/droplet/ @sarahseidman
 /homeassistant/components/dsmr/ @Robbie1221
@@ -1256,8 +1265,8 @@ build.json @home-assistant/supervisor
 /tests/components/openuv/ @bachya
 /homeassistant/components/openweathermap/ @fabaff @freekode @nzapponi @wittypluck
 /tests/components/openweathermap/ @fabaff @freekode @nzapponi @wittypluck
-/homeassistant/components/opnsense/ @mtreinish
-/tests/components/opnsense/ @mtreinish
+/homeassistant/components/opnsense/ @HarlemSquirrel @Snuffy2
+/tests/components/opnsense/ @HarlemSquirrel @Snuffy2
 /homeassistant/components/opower/ @tronikos
 /tests/components/opower/ @tronikos
 /homeassistant/components/oralb/ @bdraco @Lash-L
@@ -1301,6 +1310,8 @@ build.json @home-assistant/supervisor
 /tests/components/pi_hole/ @shenxn
 /homeassistant/components/picnic/ @corneyl @codesalatdev
 /tests/components/picnic/ @corneyl @codesalatdev
+/homeassistant/components/picotts/ @rooggiieerr
+/tests/components/picotts/ @rooggiieerr
 /homeassistant/components/ping/ @jpbede
 /tests/components/ping/ @jpbede
 /homeassistant/components/plaato/ @JohNan
@@ -1866,6 +1877,8 @@ build.json @home-assistant/supervisor
 /tests/components/vicare/ @CFenner
 /homeassistant/components/victron_ble/ @rajlaud
 /tests/components/victron_ble/ @rajlaud
+/homeassistant/components/victron_gx/ @tomer-w
+/tests/components/victron_gx/ @tomer-w
 /homeassistant/components/victron_remote_monitoring/ @AndyTempel
 /tests/components/victron_remote_monitoring/ @AndyTempel
 /homeassistant/components/vilfo/ @ManneW

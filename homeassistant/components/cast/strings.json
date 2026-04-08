@@ -44,10 +44,10 @@
   },
   "services": {
     "show_lovelace_view": {
-      "description": "Shows a dashboard view on a Chromecast device.",
+      "description": "Shows a dashboard view on a Google Cast device.",
       "fields": {
         "dashboard_path": {
-          "description": "The URL path of the dashboard to show, defaults to lovelace if not specified.",
+          "description": "The URL path of the dashboard to show, defaults to `lovelace` if not specified.",
           "name": "Dashboard path"
         },
         "entity_id": {
@@ -59,7 +59,7 @@
           "name": "View path"
         }
       },
-      "name": "Show dashboard view"
+      "name": "Show dashboard view via Google Cast"
     }
   }
 }

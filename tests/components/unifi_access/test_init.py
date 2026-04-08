@@ -3,7 +3,8 @@
 from __future__ import annotations
 
 from collections.abc import Awaitable, Callable
-from unittest.mock import MagicMock
+import ssl
+from unittest.mock import MagicMock, patch
 
 import pytest
 from unifi_access_api import (
@@ -25,6 +26,7 @@ from unifi_access_api.models.websocket import (
 
 from homeassistant.components.unifi_access.const import DOMAIN
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
+from homeassistant.const import CONF_VERIFY_SSL
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
@@ -58,6 +60,44 @@ async def test_setup_entry(
     assert mock_config_entry.state is ConfigEntryState.LOADED
     mock_client.authenticate.assert_awaited_once()
     mock_client.get_doors.assert_awaited_once()
+
+
+@pytest.mark.parametrize(
+    ("verify_ssl", "expected_ssl_context_type"),
+    [
+        (False, ssl.SSLContext),
+        (True, type(None)),
+    ],
+)
+async def test_setup_entry_ssl_context(
+    hass: HomeAssistant,
+    mock_client: MagicMock,
+    verify_ssl: bool,
+    expected_ssl_context_type: type,
+) -> None:
+    """Test that a pre-warmed no-verify SSL context is passed when verify_ssl is False."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="UniFi Access",
+        data={
+            "host": "192.168.1.1",
+            "api_token": "test-token",
+            CONF_VERIFY_SSL: verify_ssl,
+        },
+        version=1,
+        minor_version=1,
+    )
+    entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.unifi_access.UnifiAccessApiClient",
+        wraps=lambda **kwargs: mock_client,
+    ) as patched_client:
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    _, call_kwargs = patched_client.call_args
+    assert isinstance(call_kwargs["ssl_context"], expected_ssl_context_type)
 
 
 @pytest.mark.parametrize(
