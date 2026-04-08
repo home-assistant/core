@@ -10,7 +10,7 @@ from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import config_validation as cv, service
 
 from .const import DOMAIN, SERVICE_SET_TIME, TYPE_LOCAL
-from .models import LocalData
+from .models import RiscoData
 
 
 async def async_setup_services(hass: HomeAssistant) -> None:
@@ -33,9 +33,10 @@ async def async_setup_services(hass: HomeAssistant) -> None:
         if time is None:
             time_to_send = datetime.now()
 
-        local_data: LocalData = entry.runtime_data
+        risco_data: RiscoData = entry.runtime_data
+        assert risco_data.local_data
 
-        await local_data.system.set_time(time_to_send)
+        await risco_data.local_data.system.set_time(time_to_send)
 
     hass.services.async_register(
         domain=DOMAIN,

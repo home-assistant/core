@@ -16,7 +16,21 @@ if TYPE_CHECKING:
         RiscoEventsDataUpdateCoordinator,
     )
 
-type RiscoConfigEntry = ConfigEntry[LocalData | CloudData]
+type RiscoConfigEntry = ConfigEntry[RiscoData]
+
+
+class RiscoData:
+    """Runtime data for the Risco integration."""
+
+    def __init__(
+        self,
+        *,
+        local_data: LocalData | None = None,
+        cloud_data: CloudData | None = None,
+    ) -> None:
+        """Initialize the Risco data."""
+        self.local_data = local_data
+        self.cloud_data = cloud_data
 
 
 @dataclass

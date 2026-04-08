@@ -11,10 +11,9 @@ from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import is_local
 from .coordinator import RiscoDataUpdateCoordinator
 from .entity import RiscoCloudZoneEntity, RiscoLocalZoneEntity
-from .models import CloudData, LocalData, RiscoConfigEntry
+from .models import RiscoConfigEntry
 
 
 async def async_setup_entry(
@@ -23,14 +22,13 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Risco switch."""
-    if is_local(config_entry):
-        local_data: LocalData = config_entry.runtime_data  # type: ignore[assignment]
+    risco_data = config_entry.runtime_data
+    if local_data := risco_data.local_data:
         async_add_entities(
             RiscoLocalSwitch(local_data.system.id, zone_id, zone)
             for zone_id, zone in local_data.system.zones.items()
         )
-    else:
-        cloud_data: CloudData = config_entry.runtime_data  # type: ignore[assignment]
+    elif cloud_data := risco_data.cloud_data:
         async_add_entities(
             RiscoCloudSwitch(cloud_data.coordinator, zone_id, zone)
             for zone_id, zone in cloud_data.coordinator.data.zones.items()

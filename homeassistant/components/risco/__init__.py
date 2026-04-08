@@ -32,7 +32,7 @@ from .const import (
     TYPE_LOCAL,
 )
 from .coordinator import RiscoDataUpdateCoordinator, RiscoEventsDataUpdateCoordinator
-from .models import CloudData, LocalData, RiscoConfigEntry
+from .models import CloudData, LocalData, RiscoConfigEntry, RiscoData
 from .services import async_setup_services
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
@@ -120,7 +120,7 @@ async def _async_setup_local_entry(
 
     entry.async_on_unload(entry.add_update_listener(_update_listener))
 
-    entry.runtime_data = local_data
+    entry.runtime_data = RiscoData(local_data=local_data)
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
@@ -144,9 +144,11 @@ async def _async_setup_cloud_entry(
 
     entry.async_on_unload(entry.add_update_listener(_update_listener))
 
-    entry.runtime_data = CloudData(
-        coordinator=coordinator,
-        events_coordinator=events_coordinator,
+    entry.runtime_data = RiscoData(
+        cloud_data=CloudData(
+            coordinator=coordinator,
+            events_coordinator=events_coordinator,
+        )
     )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
@@ -158,8 +160,7 @@ async def _async_setup_cloud_entry(
 async def async_unload_entry(hass: HomeAssistant, entry: RiscoConfigEntry) -> bool:
     """Unload a config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-    if unload_ok and is_local(entry):
-        local_data: LocalData = entry.runtime_data  # type: ignore[assignment]
+    if unload_ok and (local_data := entry.runtime_data.local_data):
         await local_data.system.disconnect()
 
     return unload_ok

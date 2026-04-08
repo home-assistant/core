@@ -16,11 +16,10 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import dt as dt_util
 
-from . import is_local
 from .const import DOMAIN
 from .coordinator import RiscoEventsDataUpdateCoordinator
 from .entity import zone_unique_id
-from .models import CloudData, RiscoConfigEntry
+from .models import RiscoConfigEntry
 
 CATEGORIES = {
     2: "Alarm",
@@ -49,11 +48,10 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up sensors for device."""
-    if is_local(config_entry):
+    if not (cloud_data := config_entry.runtime_data.cloud_data):
         # no events in local comm
         return
 
-    cloud_data: CloudData = config_entry.runtime_data  # type: ignore[assignment]
     coordinator = cloud_data.events_coordinator
     sensors = [
         RiscoSensor(coordinator, category_id, [], name, config_entry.entry_id)

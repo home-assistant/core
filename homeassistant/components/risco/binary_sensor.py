@@ -20,11 +20,10 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import is_local
 from .const import DOMAIN, SYSTEM_UPDATE_SIGNAL
 from .coordinator import RiscoDataUpdateCoordinator
 from .entity import RiscoCloudZoneEntity, RiscoLocalZoneEntity
-from .models import CloudData, LocalData, RiscoConfigEntry
+from .models import RiscoConfigEntry
 
 SYSTEM_ENTITY_DESCRIPTIONS = [
     BinarySensorEntityDescription(
@@ -76,8 +75,8 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Risco alarm control panel."""
-    if is_local(config_entry):
-        local_data: LocalData = config_entry.runtime_data  # type: ignore[assignment]
+    risco_data = config_entry.runtime_data
+    if local_data := risco_data.local_data:
         zone_entities = (
             entity
             for zone_id, zone in local_data.system.zones.items()
@@ -96,8 +95,7 @@ async def async_setup_entry(
         )
 
         async_add_entities(chain(system_entities, zone_entities))
-    else:
-        cloud_data: CloudData = config_entry.runtime_data  # type: ignore[assignment]
+    elif cloud_data := risco_data.cloud_data:
         async_add_entities(
             RiscoCloudBinarySensor(cloud_data.coordinator, zone_id, zone)
             for zone_id, zone in cloud_data.coordinator.data.zones.items()
