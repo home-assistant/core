@@ -8,6 +8,7 @@ import statistics
 from typing import Any
 
 import voluptuous as vol
+import yaml
 
 from homeassistant.components.sensor import (
     PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
@@ -15,11 +16,11 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_UNIT_OF_MEASUREMENT,
     CONF_NAME,
+    CONF_PLATFORM,
     CONF_TYPE,
     CONF_UNIQUE_ID,
     STATE_UNAVAILABLE,
@@ -27,13 +28,11 @@ from homeassistant.const import (
 )
 from homeassistant.core import Event, EventStateChangedData, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import config_validation as cv, entity_registry as er
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity import get_device_class
-from homeassistant.helpers.entity_platform import (
-    AddConfigEntryEntitiesCallback,
-    AddEntitiesCallback,
-)
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_state_change_event
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.reload import async_setup_reload_service
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, StateType
 
@@ -52,6 +51,8 @@ ATTR_LAST = "last"
 ATTR_LAST_ENTITY_ID = "last_entity_id"
 ATTR_RANGE = "range"
 ATTR_SUM = "sum"
+
+CONF_ENTITIES = "entities"
 
 ICON = "mdi:calculator"
 
@@ -79,29 +80,27 @@ PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
 )
 
 
-async def async_setup_entry(
-    hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddConfigEntryEntitiesCallback,
-) -> None:
-    """Initialize min/max/mean config entry."""
-    registry = er.async_get(hass)
-    entity_ids = er.async_validate_entity_ids(
-        registry, config_entry.options[CONF_ENTITY_IDS]
-    )
-    sensor_type = config_entry.options[CONF_TYPE]
-    round_digits = int(config_entry.options[CONF_ROUND_DIGITS])
-
-    async_add_entities(
-        [
-            MinMaxSensor(
-                entity_ids,
-                config_entry.title,
-                sensor_type,
-                round_digits,
-                config_entry.entry_id,
-            )
-        ]
+async def yaml_deprecation_notice(hass: HomeAssistant, config: ConfigType) -> None:
+    """Raise repair issue for YAML configuration deprecation."""
+    platform_config = config.copy()
+    platform_config[CONF_ENTITIES] = platform_config.pop(CONF_ENTITY_IDS)
+    platform_config.pop(CONF_ROUND_DIGITS)
+    platform_config.pop(CONF_PLATFORM)
+    if CONF_NAME not in platform_config:
+        platform_config[CONF_NAME] = f"{platform_config[CONF_TYPE]} sensor".capitalize()
+    yaml_config = yaml.dump(platform_config)
+    yaml_config = yaml_config.replace("\n", "\n    ")
+    yaml_config = "```yaml\nsensor:\n  - platform: group\n    " + yaml_config + "\n```"
+    async_create_issue(
+        hass,
+        DOMAIN,
+        "yaml_deprecated",
+        breaks_in_ha_version="2026.12.0",
+        is_fixable=False,
+        severity=IssueSeverity.WARNING,
+        learn_more_url="https://www.home-assistant.io/integrations/group/",
+        translation_key="yaml_deprecated",
+        translation_placeholders={"yaml_config": yaml_config},
     )
 
 
@@ -119,6 +118,7 @@ async def async_setup_platform(
     unique_id = config.get(CONF_UNIQUE_ID)
 
     await async_setup_reload_service(hass, DOMAIN, PLATFORMS)
+    await yaml_deprecation_notice(hass, config)
 
     async_add_entities(
         [MinMaxSensor(entity_ids, name, sensor_type, round_digits, unique_id)]
