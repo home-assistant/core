@@ -209,7 +209,7 @@ async def test_set_zone_override_advance(
     zone_id: str,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test Evohome's set_zone_override service with no duration.
+    """Test Evohome's set_zone_override service with duration=0.
 
     The override is temporary until the next schedule change.
     """
@@ -413,7 +413,7 @@ async def test_set_dhw_override_advance(
     dhw_id: str,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test Evohome's set_dhw_override service with no duration.
+    """Test Evohome's set_dhw_override service with duration=0.
 
     The override is temporary until the next schedule change.
     """
