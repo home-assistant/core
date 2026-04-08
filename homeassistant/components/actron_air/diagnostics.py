@@ -25,7 +25,8 @@ async def async_get_config_entry_diagnostics(
                 coordinator.system.model_dump(mode="json"), TO_REDACT
             ),
             "status": async_redact_data(
-                coordinator.data.model_dump(mode="json"), TO_REDACT
+                coordinator.data.model_dump(mode="json", exclude={"last_known_state"}),
+                TO_REDACT,
             ),
         }
     return {
