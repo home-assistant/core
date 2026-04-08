@@ -443,6 +443,29 @@ DISCOVERY_SCHEMAS = [
     ),
     MatterDiscoverySchema(
         platform=Platform.NUMBER,
+        entity_description=MatterRangeNumberEntityDescription(
+            key="BooleanStateConfigurationCurrentSensitivityLevel",
+            entity_category=EntityCategory.CONFIG,
+            translation_key="sensitivity_level",
+            native_min_value=0,
+            native_step=1,
+            format_max_value=lambda x: x - 1,
+            max_attribute=(
+                clusters.BooleanStateConfiguration.Attributes.SupportedSensitivityLevels
+            ),
+            mode=NumberMode.SLIDER,
+        ),
+        entity_class=MatterRangeNumber,
+        required_attributes=(
+            clusters.BooleanStateConfiguration.Attributes.CurrentSensitivityLevel,
+            clusters.BooleanStateConfiguration.Attributes.SupportedSensitivityLevels,
+        ),
+        featuremap_contains=(
+            clusters.BooleanStateConfiguration.Bitmaps.Feature.kSensitivityLevel
+        ),
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.NUMBER,
         entity_description=MatterNumberEntityDescription(
             key="ValveConfigurationAndControlDefaultOpenDuration",
             entity_category=EntityCategory.CONFIG,
