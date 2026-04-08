@@ -468,6 +468,32 @@ async def test_user_flow_protect_api_key_unreachable(
     assert result["errors"] == {"base": "invalid_auth"}
 
 
+async def test_user_flow_protect_api_key_check_raises(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_client: MagicMock,
+) -> None:
+    """Test user config flow falls back to invalid_auth when protect check raises."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    mock_client.authenticate.side_effect = ApiAuthError()
+    mock_client.is_protect_api_key.side_effect = Exception("unexpected")
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_HOST: MOCK_HOST,
+            CONF_API_TOKEN: MOCK_API_TOKEN,
+            CONF_VERIFY_SSL: False,
+        },
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "invalid_auth"}
+
+
 async def test_reauth_flow_protect_api_key(
     hass: HomeAssistant,
     mock_setup_entry: AsyncMock,
