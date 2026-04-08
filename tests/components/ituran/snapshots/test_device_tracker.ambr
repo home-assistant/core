@@ -41,6 +41,8 @@
     'attributes': ReadOnlyDict({
       'friendly_name': 'mock model',
       'gps_accuracy': 0,
+      'in_zones': list([
+      ]),
       'latitude': 25.0,
       'longitude': -71.0,
       'source_type': <SourceType.GPS: 'gps'>,
