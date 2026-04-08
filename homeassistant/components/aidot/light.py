@@ -41,9 +41,7 @@ class AidotLight(CoordinatorEntity[AidotDeviceUpdateCoordinator], LightEntity):
     _attr_has_entity_name = True
     _attr_name = None
 
-    def __init__(
-        self, coordinator: AidotDeviceUpdateCoordinator
-    ) -> None:
+    def __init__(self, coordinator: AidotDeviceUpdateCoordinator) -> None:
         """Initialize the light."""
         super().__init__(coordinator)
         self._attr_unique_id = coordinator.device_client.info.dev_id
