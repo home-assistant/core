@@ -1,10 +1,10 @@
 {
   "domain": "insteon",
   "name": "Insteon",
-  "after_dependencies": ["panel_custom", "usb"],
+  "after_dependencies": ["panel_custom"],
   "codeowners": ["@teharris1"],
   "config_flow": true,
-  "dependencies": ["http", "websocket_api"],
+  "dependencies": ["http", "usb", "websocket_api"],
   "dhcp": [
     {
       "macaddress": "000EF3*"
