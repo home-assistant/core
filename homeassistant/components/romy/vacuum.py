@@ -53,9 +53,7 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up ROMY vacuum cleaner."""
-
-    coordinator = config_entry.runtime_data
-    async_add_entities([RomyVacuumEntity(coordinator)])
+    async_add_entities([RomyVacuumEntity(config_entry.runtime_data)])
 
 
 class RomyVacuumEntity(RomyEntity, StateVacuumEntity):
