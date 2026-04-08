@@ -33,7 +33,7 @@ async def async_setup_services(hass: HomeAssistant) -> None:
         if time is None:
             time_to_send = datetime.now()
 
-        local_data: LocalData = hass.data[DOMAIN][entry.entry_id]
+        local_data: LocalData = entry.runtime_data
 
         await local_data.system.set_time(time_to_send)
 
