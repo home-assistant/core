@@ -295,6 +295,7 @@ class TibberPriceCoordinator(DataUpdateCoordinator[dict[str, TibberHomeData]]):
         )
         active_homes = tibber_connection.get_homes(only_active=True)
 
+        now = dt_util.now()
         today_start = dt_util.start_of_local_day()
         today_end = today_start + timedelta(days=1)
         tomorrow_start = today_end
@@ -322,7 +323,7 @@ class TibberPriceCoordinator(DataUpdateCoordinator[dict[str, TibberHomeData]]):
                 return True
             if _has_prices_tomorrow(home):
                 return False
-            if (today_end - dt_util.now()).total_seconds() < (
+            if (today_end - now).total_seconds() < (
                 self._tomorrow_price_poll_threshold_seconds
             ):
                 return True
