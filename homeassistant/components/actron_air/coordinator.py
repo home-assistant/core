@@ -57,7 +57,7 @@ class ActronAirSystemCoordinator(DataUpdateCoordinator[ActronAirACSystem]):
             config_entry=entry,
         )
         self.system = system
-        self.serial_number = system["serial"]
+        self.serial_number = system.serial
         self.api = api
         self.status = self.api.state_manager.get_status(self.serial_number)
         self.last_seen = dt_util.utcnow()

@@ -14,10 +14,14 @@ from .const import DOMAIN
 from .coordinator import ActronAirSystemCoordinator
 
 
-def handle_actron_api_errors[_EntityT: ActronAirEntity, **_P](
+def actron_air_command[_EntityT: ActronAirEntity, **_P](
     func: Callable[Concatenate[_EntityT, _P], Coroutine[Any, Any, Any]],
 ) -> Callable[Concatenate[_EntityT, _P], Coroutine[Any, Any, None]]:
-    """Decorate Actron Air API calls to handle ActronAirAPIError exceptions."""
+    """Decorator for Actron Air API calls.
+
+    Handles ActronAirAPIError exceptions, and requests an coordinator update
+    to update status of the devices asap.
+    """
 
     @wraps(func)
     async def wrapper(self: _EntityT, *args: _P.args, **kwargs: _P.kwargs) -> None:
@@ -30,6 +34,7 @@ def handle_actron_api_errors[_EntityT: ActronAirEntity, **_P](
                 translation_key="api_error",
                 translation_placeholders={"error": str(err)},
             ) from err
+        self.coordinator.async_set_updated_data(self.coordinator.data)
 
     return wrapper
 

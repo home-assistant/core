@@ -44,9 +44,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ActronAirConfigEntry) ->
     system_coordinators: dict[str, ActronAirSystemCoordinator] = {}
     for system in systems:
         coordinator = ActronAirSystemCoordinator(hass, entry, api, system)
-        _LOGGER.debug("Setting up coordinator for system: %s", system["serial"])
+        _LOGGER.debug("Setting up coordinator for system: %s", system.serial)
         await coordinator.async_config_entry_first_refresh()
-        system_coordinators[system["serial"]] = coordinator
+        system_coordinators[system.serial] = coordinator
 
     entry.runtime_data = ActronAirRuntimeData(
         api=api,
