@@ -67,7 +67,11 @@ class CommandLineAuthProvider(AuthProvider):
 
     @callback
     def should_update_local_only(self, credentials: Credentials) -> bool:
-        """Return whether local_only should be refreshed for credentials."""
+        """Return whether local_only should be refreshed for credentials.
+
+        This relies on async_validate_login storing metadata in _user_meta for
+        the username before async_get_or_create_user calls this hook.
+        """
         meta = self._user_meta.get(credentials.data["username"], {})
         return "local_only" in meta
 

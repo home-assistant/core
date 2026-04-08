@@ -7,6 +7,7 @@ from collections import OrderedDict
 from collections.abc import Mapping
 from datetime import datetime, timedelta
 from functools import partial
+import logging
 import time
 from typing import Any, cast
 
@@ -33,6 +34,8 @@ from .providers.homeassistant import HassAuthProvider
 EVENT_USER_ADDED = "user_added"
 EVENT_USER_UPDATED = "user_updated"
 EVENT_USER_REMOVED = "user_removed"
+
+_LOGGER = logging.getLogger(__name__)
 
 type _MfaModuleDict = dict[str, MultiFactorAuthModule]
 type _ProviderKey = tuple[str, str | None]
@@ -307,37 +310,48 @@ class AuthManager:
         self, credentials: models.Credentials
     ) -> models.User:
         """Get or create a user."""
+        auth_provider = self._async_get_auth_provider(credentials)
+
         if not credentials.is_new:
             user = await self.async_get_user_by_credentials(credentials)
             if user is None:
                 raise ValueError("Unable to find the user.")
 
-            auth_provider = self._async_get_auth_provider(credentials)
             if auth_provider is not None and auth_provider.refresh_user_meta:
-                info = await auth_provider.async_user_meta_for_credentials(credentials)
-                updates: dict[str, Any] = {}
+                try:
+                    info = await auth_provider.async_user_meta_for_credentials(
+                        credentials
+                    )
+                except Exception:
+                    _LOGGER.exception(
+                        "Error while refreshing user metadata from auth provider %s",
+                        auth_provider.type,
+                    )
+                else:
+                    updates: dict[str, Any] = {}
 
-                if info.name is not None and info.name != user.name:
-                    updates["name"] = info.name
+                    if info.name is not None and info.name != user.name:
+                        updates["name"] = info.name
 
-                if info.group is not None and (
-                    len(user.groups) != 1 or user.groups[0].id != info.group
-                ):
-                    updates["group_ids"] = [info.group]
+                    if info.group is not None and (
+                        len(user.groups) != 1 or user.groups[0].id != info.group
+                    ):
+                        updates["group_ids"] = [info.group]
 
-                if (
-                    info.local_only is not None
-                    and auth_provider.should_update_local_only(credentials)
-                    and info.local_only != user.local_only
-                ):
-                    updates["local_only"] = info.local_only
+                    # local_only is optional in provider output and may be coerced
+                    # to a bool by providers; use the provider hook to avoid
+                    # clobbering the current value when that field was not supplied.
+                    if (
+                        info.local_only is not None
+                        and auth_provider.should_update_local_only(credentials)
+                        and info.local_only != user.local_only
+                    ):
+                        updates["local_only"] = info.local_only
 
-                if updates:
-                    await self.async_update_user(user, **updates)
+                    if updates:
+                        await self.async_update_user(user, **updates)
 
             return user
-
-        auth_provider = self._async_get_auth_provider(credentials)
 
         if auth_provider is None:
             raise RuntimeError("Credential with unknown provider encountered")

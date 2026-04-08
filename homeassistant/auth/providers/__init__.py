@@ -90,7 +90,12 @@ class AuthProvider:
 
     @callback
     def should_update_local_only(self, credentials: Credentials) -> bool:
-        """Return whether local_only should be refreshed for credentials."""
+        """Return whether local_only should be refreshed for credentials.
+
+        This hook exists because UserMeta.local_only cannot always distinguish
+        between "field not provided" and "provided as False" for all providers.
+        Providers can use this side channel to explicitly skip local_only updates.
+        """
         return True
 
     async def async_credentials(self) -> list[Credentials]:

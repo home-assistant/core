@@ -1,14 +1,14 @@
 """Tests for the command_line auth provider."""
 
 import os
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, patch
 import uuid
 
 import pytest
 
 from homeassistant import data_entry_flow
 from homeassistant.auth import AuthManager, auth_store, models as auth_models
-from homeassistant.auth.providers import command_line
+from homeassistant.auth.providers import AuthProvider, command_line
 from homeassistant.const import CONF_TYPE
 from homeassistant.core import HomeAssistant
 
@@ -123,6 +123,14 @@ async def test_good_auth_with_meta(
     assert user.local_only
 
 
+async def test_auth_provider_refresh_user_meta_default(
+    hass: HomeAssistant, store: auth_store.AuthStore
+) -> None:
+    """Test the base auth provider does not refresh user metadata by default."""
+    provider = AuthProvider(hass, store, {CONF_TYPE: "test_provider"})
+    assert not provider.refresh_user_meta
+
+
 async def test_existing_user_syncs_meta(
     manager: AuthManager,
     provider: command_line.CommandLineAuthProvider,
@@ -169,12 +177,13 @@ async def test_existing_user_unchanged_meta_does_not_update_user(
         group_ids=["system-users"],
         local_only=True,
     )
-    manager.async_update_user = AsyncMock(wraps=manager.async_update_user)
+    with patch.object(
+        manager, "async_update_user", wraps=manager.async_update_user
+    ) as mock_update:
+        await provider.async_validate_login("good-user", "good-pass")
+        await manager.async_get_or_create_user(credentials)
 
-    await provider.async_validate_login("good-user", "good-pass")
-    await manager.async_get_or_create_user(credentials)
-
-    assert manager.async_update_user.call_count == 0
+    assert mock_update.call_count == 0
 
 
 async def test_existing_user_partial_meta_update_only_updates_changed_fields(
@@ -194,13 +203,14 @@ async def test_existing_user_partial_meta_update_only_updates_changed_fields(
         group_ids=["system-users"],
         local_only=True,
     )
-    manager.async_update_user = AsyncMock(wraps=manager.async_update_user)
+    with patch.object(
+        manager, "async_update_user", wraps=manager.async_update_user
+    ) as mock_update:
+        await provider.async_validate_login("good-user", "good-pass")
+        updated_user = await manager.async_get_or_create_user(credentials)
 
-    await provider.async_validate_login("good-user", "good-pass")
-    updated_user = await manager.async_get_or_create_user(credentials)
-
-    assert manager.async_update_user.call_count == 1
-    assert manager.async_update_user.call_args.kwargs == {"name": "Bob"}
+    assert mock_update.call_count == 1
+    assert mock_update.call_args.kwargs == {"name": "Bob"}
     assert updated_user.name == "Bob"
     assert updated_user.groups[0].id == "system-users"
     assert updated_user.local_only
@@ -223,13 +233,14 @@ async def test_existing_user_missing_local_only_preserves_existing_value(
         group_ids=["system-users"],
         local_only=True,
     )
-    manager.async_update_user = AsyncMock(wraps=manager.async_update_user)
+    with patch.object(
+        manager, "async_update_user", wraps=manager.async_update_user
+    ) as mock_update:
+        await provider.async_validate_login("good-user", "good-pass")
+        provider._user_meta["good-user"].pop("local_only", None)
+        updated_user = await manager.async_get_or_create_user(credentials)
 
-    await provider.async_validate_login("good-user", "good-pass")
-    provider._user_meta["good-user"].pop("local_only", None)
-    updated_user = await manager.async_get_or_create_user(credentials)
-
-    assert manager.async_update_user.call_count == 0
+    assert mock_update.call_count == 0
     assert updated_user.local_only
 
 
