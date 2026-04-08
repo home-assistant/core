@@ -84,7 +84,7 @@
           "self_consumption_soc_below_min": "Self consumption, SoC is below minimum SoC",
           "self_consumption_soc_exceeds_85": "Self consumption, SoC exceeds 85%",
           "soc_below_battery_life_dynamic_soc_limit": "SoC below BatteryLife dynamic SoC limit",
-          "soc_below_soc_limit_24_hours": "SoC has been below SoC limit for more than 24 hours. Charging with battery with 5amps",
+          "soc_below_soc_limit_24_hours": "SoC has been below SoC limit for more than 24 hours. Charging battery with 5 amps",
           "sustain": "Multi/Quattro is in sustain",
           "with_battery_life": "Optimized mode with BatteryLife"
         }
@@ -1426,7 +1426,7 @@
           "self_consumption_soc_below_min": "Self consumption, SoC is below minimum SoC",
           "self_consumption_soc_exceeds_85": "Self consumption, SoC exceeds 85%",
           "soc_below_battery_life_dynamic_soc_limit": "SoC below BatteryLife dynamic SoC limit",
-          "soc_below_soc_limit_24_hours": "SoC has been below SoC limit for more than 24 hours. Charging with battery with 5amps",
+          "soc_below_soc_limit_24_hours": "SoC has been below SoC limit for more than 24 hours. Charging battery with 5 amps",
           "sustain": "Multi/Quattro is in sustain",
           "with_battery_life": "Optimized mode with BatteryLife"
         }

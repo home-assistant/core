@@ -2,7 +2,14 @@
 
 from __future__ import annotations
 
-from victron_mqtt import Hub as VictronVenusHub
+from unittest.mock import MagicMock
+
+import pytest
+from victron_mqtt import (
+    Hub as VictronVenusHub,
+    Metric as VictronVenusMetric,
+    MetricKind,
+)
 from victron_mqtt.testing import finalize_injection, inject_message
 
 from homeassistant.components.victron_gx.const import DOMAIN
@@ -93,3 +100,30 @@ async def test_victron_select_actions(
         {"entity_id": entity_id, "option": "auto"},
         blocking=True,
     )
+
+
+async def test_victron_select_skips_non_writable_metric(
+    hass: HomeAssistant,
+    init_integration: tuple[VictronVenusHub, MockConfigEntry],
+    entity_registry: er.EntityRegistry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test that non-writable metrics are skipped with a warning."""
+    _, mock_config_entry = init_integration
+    hub = mock_config_entry.runtime_data
+
+    callback = hub.new_metric_callbacks[MetricKind.SELECT]
+
+    mock_device = MagicMock()
+    mock_device.unique_id = "test_device_0"
+    mock_metric = MagicMock(spec=VictronVenusMetric)
+    mock_device_info = MagicMock()
+
+    callback(mock_device, mock_metric, mock_device_info, MOCK_INSTALLATION_ID)
+
+    assert "Skipping non-writable metric for device test_device_0" in caplog.text
+
+    entities = er.async_entries_for_config_entry(
+        entity_registry, mock_config_entry.entry_id
+    )
+    assert len(entities) == 0

@@ -39,7 +39,12 @@ async def async_setup_entry(
         installation_id: str,
     ) -> None:
         """Handle new select metric discovery."""
-        assert isinstance(metric, VictronVenusWritableMetric)
+        if not isinstance(metric, VictronVenusWritableMetric):
+            _LOGGER.warning(
+                "Skipping non-writable metric for device %s",
+                device.unique_id,
+            )
+            return
         async_add_entities(
             [VictronSelect(device, metric, device_info, installation_id)]
         )
