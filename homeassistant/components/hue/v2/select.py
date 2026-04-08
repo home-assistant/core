@@ -203,8 +203,19 @@ async def async_setup_entry(
             entity._refresh_options()
             entity.async_write_ha_state()
 
-    config_entry.async_on_unload(api.scenes.scene.subscribe(_on_scene_event))
-    config_entry.async_on_unload(api.scenes.smart_scene.subscribe(_on_smart_scene_event))
+    scene_event_filter = (
+        EventType.RESOURCE_ADDED,
+        EventType.RESOURCE_UPDATED,
+        EventType.RESOURCE_DELETED,
+    )
+    config_entry.async_on_unload(
+        api.scenes.scene.subscribe(_on_scene_event, event_filter=scene_event_filter)
+    )
+    config_entry.async_on_unload(
+        api.scenes.smart_scene.subscribe(
+            _on_smart_scene_event, event_filter=scene_event_filter
+        )
+    )
 
     @callback
     def _add_group_entities(group_controller: RoomController | ZoneController) -> None:
