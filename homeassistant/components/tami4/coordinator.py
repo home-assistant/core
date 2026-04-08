@@ -3,6 +3,7 @@
 from dataclasses import dataclass
 from datetime import date, timedelta
 import logging
+from typing import Optional
 
 from Tami4EdgeAPI import Tami4EdgeAPI, exceptions
 from Tami4EdgeAPI.water_quality import WaterQuality
@@ -18,9 +19,9 @@ _LOGGER = logging.getLogger(__name__)
 class FlattenedWaterQuality:
     """Flattened WaterQuality dataclass."""
 
-    uv_upcoming_replacement: date
+    uv_upcoming_replacement: Optional[date]
     uv_installed: bool
-    filter_upcoming_replacement: date
+    filter_upcoming_replacement: Optional[date]
     filter_installed: bool
     filter_litters_passed: float
 
@@ -31,7 +32,9 @@ class FlattenedWaterQuality:
         self.uv_installed = water_quality.uv.installed
         self.filter_upcoming_replacement = water_quality.filter.upcoming_replacement
         self.filter_installed = water_quality.filter.installed
-        self.filter_litters_passed = water_quality.filter.milli_litters_passed / 1000
+        self.filter_litters_passed = (
+            water_quality.filter.milli_litters_passed or 0
+        ) / 1000
 
 
 class Tami4EdgeCoordinator(DataUpdateCoordinator[FlattenedWaterQuality]):
