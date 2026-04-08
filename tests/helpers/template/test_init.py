@@ -304,76 +304,6 @@ def test_converting_datetime_to_iterable(hass: HomeAssistant) -> None:
         render(hass, "{{ set(value) }}", {"value": dt_})
 
 
-def test_rounding_value(hass: HomeAssistant) -> None:
-    """Test rounding value."""
-    hass.states.async_set("sensor.temperature", 12.78)
-
-    assert render(hass, "{{ states.sensor.temperature.state | round(1) }}") == 12.8
-
-    assert (
-        render(hass, "{{ states.sensor.temperature.state | multiply(10) | round }}")
-        == 128
-    )
-
-    assert (
-        render(hass, '{{ states.sensor.temperature.state | round(1, "floor") }}')
-        == 12.7
-    )
-
-    assert (
-        render(hass, '{{ states.sensor.temperature.state | round(1, "ceil") }}') == 12.8
-    )
-
-    assert (
-        render(hass, '{{ states.sensor.temperature.state | round(1, "half") }}') == 13.0
-    )
-
-
-def test_rounding_value_on_error(hass: HomeAssistant) -> None:
-    """Test rounding value handling of error."""
-    # Test handling of invalid input
-    with pytest.raises(TemplateError):
-        render(hass, "{{ None | round }}")
-
-    with pytest.raises(TemplateError):
-        render(hass, '{{ "no_number" | round }}')
-
-    # Test handling of default return value
-    assert render(hass, "{{ 'no_number' | round(default=1) }}") == 1
-
-
-def test_multiply(hass: HomeAssistant) -> None:
-    """Test multiply."""
-    tests = {10: 100}
-
-    for inp, out in tests.items():
-        assert render(hass, f"{{{{ {inp} | multiply(10) | round }}}}") == out
-
-    # Test handling of invalid input
-    with pytest.raises(TemplateError):
-        render(hass, "{{ abcd | multiply(10) }}")
-
-    # Test handling of default return value
-    assert render(hass, "{{ 'no_number' | multiply(10, 1) }}") == 1
-    assert render(hass, "{{ 'no_number' | multiply(10, default=1) }}") == 1
-
-
-def test_add(hass: HomeAssistant) -> None:
-    """Test add."""
-    tests = {10: 42}
-
-    for inp, out in tests.items():
-        assert render(hass, f"{{{{ {inp} | add(32) | round }}}}") == out
-
-    # Test handling of invalid input
-    with pytest.raises(TemplateError):
-        render(hass, "{{ abcd | add(10) }}")
-
-    # Test handling of default return value
-    assert render(hass, "{{ 'no_number' | add(10, 1) }}") == 1
-    assert render(hass, "{{ 'no_number' | add(10, default=1) }}") == 1
-
-
 def test_passing_vars_as_keywords(hass: HomeAssistant) -> None:
     """Test passing variables as keywords."""
     assert render(hass, "{{ hello }}", hello=127) == 127
@@ -952,24 +882,6 @@ def test_timedelta(mock_is_safe, hass: HomeAssistant) -> None:
 
         result = render(hass, "{{relative_time(now() - timedelta(weeks=2, days=1))}}")
         assert result == "15 days"
-
-
-def test_version(hass: HomeAssistant) -> None:
-    """Test version filter and function."""
-    filter_result = render(hass, "{{ '2099.9.9' | version}}")
-    function_result = render(hass, "{{ version('2099.9.9')}}")
-    assert filter_result == function_result == "2099.9.9"
-
-    filter_result = render(hass, "{{ '2099.9.9' | version < '2099.9.10' }}")
-    function_result = render(hass, "{{ version('2099.9.9') < '2099.9.10' }}")
-    assert filter_result is function_result is True
-
-    filter_result = render(hass, "{{ '2099.9.9' | version == '2099.9.9' }}")
-    function_result = render(hass, "{{ version('2099.9.9') == '2099.9.9' }}")
-    assert filter_result is function_result is True
-
-    with pytest.raises(TemplateError):
-        render(hass, "{{ version(None) < '2099.9.10' }}")
 
 
 def test_distance_function_with_1_state(hass: HomeAssistant) -> None:

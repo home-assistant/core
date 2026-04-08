@@ -8,13 +8,11 @@ from aioridwell.errors import RidwellError
 from aioridwell.model import EventState, RidwellAccount
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN
-from .coordinator import RidwellDataUpdateCoordinator
+from .coordinator import RidwellConfigEntry, RidwellDataUpdateCoordinator
 from .entity import RidwellEntity
 
 SWITCH_DESCRIPTION = SwitchEntityDescription(
@@ -25,11 +23,11 @@ SWITCH_DESCRIPTION = SwitchEntityDescription(
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: RidwellConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Ridwell sensors based on a config entry."""
-    coordinator: RidwellDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
 
     async_add_entities(
         RidwellSwitch(coordinator, account, SWITCH_DESCRIPTION)
