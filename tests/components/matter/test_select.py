@@ -280,6 +280,7 @@ async def test_microwave_oven(
         ),
     )
 
+
 @pytest.mark.parametrize("node_fixture", ["secuyou_smart_lock"])
 async def test_door_lock_operating_mode_select(
     hass: HomeAssistant,
