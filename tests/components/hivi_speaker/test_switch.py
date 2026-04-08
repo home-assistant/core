@@ -757,7 +757,9 @@ async def test_async_turn_on_slave_ip_missing_aborts(
         create_type="from_standalone_device",
     )
     with (
-        patch.object(switch, "get_slave_device_ip_addr_by_standalone", return_value=None),
+        patch.object(
+            switch, "get_slave_device_ip_addr_by_standalone", return_value=None
+        ),
         patch.object(switch, "async_write_ha_state"),
         patch(
             "homeassistant.components.hivi_speaker.switch.async_dispatcher_send"

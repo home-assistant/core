@@ -210,9 +210,7 @@ async def test_run_discovery_perform_adjust_reschedule(
     sched = _scheduler(hass, entry)
     sched._discovery_running = True
     with (
-        patch.object(
-            sched, "_perform_discovery", new_callable=AsyncMock
-        ) as mock_perf,
+        patch.object(sched, "_perform_discovery", new_callable=AsyncMock) as mock_perf,
         patch.object(sched, "_adjust_interval", new_callable=AsyncMock) as mock_adj,
         patch.object(sched, "_reschedule", new_callable=AsyncMock) as mock_rs,
     ):
