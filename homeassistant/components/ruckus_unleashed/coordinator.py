@@ -48,6 +48,7 @@ class RuckusDataUpdateCoordinator(DataUpdateCoordinator):
 
     async def async_shutdown(self) -> None:
         """Close the Ruckus session on shutdown."""
+        await super().async_shutdown()
         await self.ruckus.close()
 
     async def _async_update_data(self) -> dict:
