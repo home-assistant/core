@@ -7,13 +7,12 @@ from typing import Any
 
 from rabbitair import Model
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_MAC
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
-from .coordinator import RabbitAirDataUpdateCoordinator
+from .coordinator import RabbitAirConfigEntry, RabbitAirDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -31,7 +30,7 @@ class RabbitAirBaseEntity(CoordinatorEntity[RabbitAirDataUpdateCoordinator]):
     def __init__(
         self,
         coordinator: RabbitAirDataUpdateCoordinator,
-        entry: ConfigEntry,
+        entry: RabbitAirConfigEntry,
     ) -> None:
         """Initialize the entity."""
         super().__init__(coordinator)
