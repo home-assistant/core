@@ -26,7 +26,7 @@ class _GroupCoordinatorAsyncioProxy:
 
     __slots__ = ("_sleep",)
 
-    def __init__(self, sleep_impl):
+    def __init__(self, sleep_impl) -> None:
         self._sleep = sleep_impl
 
     @property
@@ -44,9 +44,7 @@ def _patch_group_coordinator_asyncio_sleep(sleep_impl):
     Do not use patch(..., 'group_coordinator.asyncio.sleep') — that mutates stdlib
     asyncio and can deadlock HA's event loop.
     """
-    with patch.object(
-        gc_module, "asyncio", _GroupCoordinatorAsyncioProxy(sleep_impl)
-    ):
+    with patch.object(gc_module, "asyncio", _GroupCoordinatorAsyncioProxy(sleep_impl)):
         yield
 
 
@@ -95,7 +93,9 @@ def test_check_conflicts_empty_pending(coordinator: HIVIGroupCoordinator) -> Non
     assert out["has_conflict"] is False
 
 
-def test_check_conflicts_master_is_existing_slave(coordinator: HIVIGroupCoordinator) -> None:
+def test_check_conflicts_master_is_existing_slave(
+    coordinator: HIVIGroupCoordinator,
+) -> None:
     coordinator._pending_operations["op1"] = {
         "master": "big",
         "slave": "small",
@@ -108,7 +108,9 @@ def test_check_conflicts_master_is_existing_slave(coordinator: HIVIGroupCoordina
     assert out["conflict_type"] == "master_is_existing_slave"
 
 
-def test_check_conflicts_slave_is_existing_master(coordinator: HIVIGroupCoordinator) -> None:
+def test_check_conflicts_slave_is_existing_master(
+    coordinator: HIVIGroupCoordinator,
+) -> None:
     coordinator._pending_operations["op1"] = {
         "master": "big",
         "slave": "small",
@@ -121,7 +123,9 @@ def test_check_conflicts_slave_is_existing_master(coordinator: HIVIGroupCoordina
     assert "master" in out["conflict_reason"]
 
 
-def test_check_conflicts_slave_is_existing_slave(coordinator: HIVIGroupCoordinator) -> None:
+def test_check_conflicts_slave_is_existing_slave(
+    coordinator: HIVIGroupCoordinator,
+) -> None:
     coordinator._pending_operations["op1"] = {
         "master": "big",
         "slave": "small",
@@ -257,7 +261,9 @@ async def test_async_start_operation_processing_missing_op(
     await coordinator.async_start_operation_processing("nonexistent")
 
 
-async def test_log_detailed_conflict_analysis(coordinator: HIVIGroupCoordinator) -> None:
+async def test_log_detailed_conflict_analysis(
+    coordinator: HIVIGroupCoordinator,
+) -> None:
     coordinator._pending_operations["p"] = {"master": "a", "slave": "b"}
     coordinator._log_detailed_conflict_analysis({"master": "b", "slave": "a"})
 
@@ -290,7 +296,9 @@ async def test_execute_operation_remove_slave_missing_params(
     assert await coordinator._execute_operation(op) is False
 
 
-async def test_execute_operation_unknown_type(coordinator: HIVIGroupCoordinator) -> None:
+async def test_execute_operation_unknown_type(
+    coordinator: HIVIGroupCoordinator,
+) -> None:
     assert await coordinator._execute_operation({"type": "nope", "data": {}}) is False
 
 
@@ -373,9 +381,7 @@ async def test_async_start_operation_processing_execute_fails(
         "request_callback": AsyncMock(),
     }
     with (
-        patch.object(
-            coordinator, "_execute_operation", AsyncMock(return_value=False)
-        ),
+        patch.object(coordinator, "_execute_operation", AsyncMock(return_value=False)),
         patch.object(coordinator, "_handle_operation_failed", new_callable=AsyncMock),
     ):
         await coordinator.async_start_operation_processing(op_id)
@@ -441,7 +447,9 @@ async def test_handle_operation_success_calls_cleanup(
         "start_time": start,
     }
     with (
-        patch.object(coordinator, "_cleanup_operation", new_callable=AsyncMock) as mock_clean,
+        patch.object(
+            coordinator, "_cleanup_operation", new_callable=AsyncMock
+        ) as mock_clean,
         patch(
             "homeassistant.components.hivi_speaker.group_coordinator.datetime",
             _DatetimeModule,
@@ -462,7 +470,9 @@ async def test_handle_operation_timeout_calls_cleanup(
         "retry_count": 0,
         "start_time": datetime.now(tz=UTC),
     }
-    with patch.object(coordinator, "_cleanup_operation", new_callable=AsyncMock) as mock_clean:
+    with patch.object(
+        coordinator, "_cleanup_operation", new_callable=AsyncMock
+    ) as mock_clean:
         await coordinator._handle_operation_timeout(op_id)
     mock_clean.assert_awaited_once_with(op_id)
 
@@ -495,7 +505,9 @@ async def test_async_start_operation_processing_callback_raises_triggers_failed(
         },
         "request_callback": cb,
     }
-    with patch.object(coordinator, "_handle_operation_failed", new_callable=AsyncMock) as mock_fail:
+    with patch.object(
+        coordinator, "_handle_operation_failed", new_callable=AsyncMock
+    ) as mock_fail:
         await coordinator.async_start_operation_processing(op_id)
     mock_fail.assert_awaited_once()
     err_calls = [c for c in cb.await_args_list if c.args[0].get("status") == "error"]
@@ -517,9 +529,13 @@ async def test_poll_operation_status_success_set_slave(
     # Keep instant sleep: failure/exception paths use asyncio.sleep(poll_interval); real 2s*retries can hit pytest-timeout.
     with (
         _patch_group_coordinator_datetime_for_poll(),
-        patch.object(coordinator, "_verify_operation_state", AsyncMock(return_value=True)),
+        patch.object(
+            coordinator, "_verify_operation_state", AsyncMock(return_value=True)
+        ),
         _patch_group_coordinator_asyncio_sleep(_gc_sleep_zero),
-        patch.object(coordinator, "_handle_operation_success", new_callable=AsyncMock) as mock_ok,
+        patch.object(
+            coordinator, "_handle_operation_success", new_callable=AsyncMock
+        ) as mock_ok,
     ):
         await coordinator._poll_operation_status_with_callback(op_id)
     mock_ok.assert_awaited_once_with(op_id)
@@ -545,7 +561,9 @@ async def test_poll_operation_status_remove_slave_sleeps_before_success(
 
     with (
         _patch_group_coordinator_datetime_for_poll(),
-        patch.object(coordinator, "_verify_operation_state", AsyncMock(return_value=True)),
+        patch.object(
+            coordinator, "_verify_operation_state", AsyncMock(return_value=True)
+        ),
         _patch_group_coordinator_asyncio_sleep(_track_sleep),
         patch.object(coordinator, "_handle_operation_success", new_callable=AsyncMock),
     ):
@@ -576,7 +594,9 @@ async def test_poll_operation_status_polling_error_sleeps(
         _patch_group_coordinator_datetime_for_poll(),
         patch.object(coordinator, "_verify_operation_state", verify),
         _patch_group_coordinator_asyncio_sleep(_track_sleep),
-        patch.object(coordinator, "_handle_operation_success", new_callable=AsyncMock) as mock_ok,
+        patch.object(
+            coordinator, "_handle_operation_success", new_callable=AsyncMock
+        ) as mock_ok,
     ):
         await coordinator._poll_operation_status_with_callback(op_id)
     assert coordinator._poll_interval in recorded_delays
@@ -609,7 +629,9 @@ async def test_dispatcher_sync_group_operation_schedules_set_slave(
     with patch.object(EventBus, "async_listen"):
         await coord.async_start()
     try:
-        with patch.object(coord, "async_set_slave_speaker", new_callable=AsyncMock) as mock_ass:
+        with patch.object(
+            coord, "async_set_slave_speaker", new_callable=AsyncMock
+        ) as mock_ass:
             async_dispatcher_send(
                 hass,
                 f"{DOMAIN}_sync_group_operation",
@@ -689,7 +711,9 @@ async def test_cancel_operation_invokes_cleanup(
         "type": "set_slave",
         "retry_count": 0,
     }
-    with patch.object(coordinator, "_cleanup_operation", new_callable=AsyncMock) as mock_c:
+    with patch.object(
+        coordinator, "_cleanup_operation", new_callable=AsyncMock
+    ) as mock_c:
         ok = await coordinator.cancel_operation("c")
     assert ok is True
     mock_c.assert_awaited_once_with("c")
@@ -732,7 +756,9 @@ async def test_legacy_poll_operation_status_success(
     with (
         _patch_group_coordinator_datetime_for_poll(),
         _patch_group_coordinator_asyncio_sleep(_gc_sleep_zero),
-        patch.object(coordinator, "_verify_operation_state", AsyncMock(return_value=True)),
+        patch.object(
+            coordinator, "_verify_operation_state", AsyncMock(return_value=True)
+        ),
         patch.object(coordinator, "_handle_operation_success", new_callable=AsyncMock),
     ):
         await coordinator._poll_operation_status(op_id)

@@ -20,8 +20,12 @@ from homeassistant.components.hivi_speaker.device import (
     HIVIDevice,
     SyncGroupStatus,
 )
-from homeassistant.components.hivi_speaker.device_data_registry import DeviceDataRegistry
-from homeassistant.components.hivi_speaker.discovery_scheduler import parse_ssdp_response
+from homeassistant.components.hivi_speaker.device_data_registry import (
+    DeviceDataRegistry,
+)
+from homeassistant.components.hivi_speaker.discovery_scheduler import (
+    parse_ssdp_response,
+)
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
@@ -278,7 +282,9 @@ async def test_unload_entry_device_manager_cleanup_raises(
     """async_cleanup exception is logged; unload still follows unload_ok path."""
     config_entry.add_to_hass(hass)
     mock_device_manager = AsyncMock()
-    mock_device_manager.async_cleanup = AsyncMock(side_effect=RuntimeError("cleanup failed"))
+    mock_device_manager.async_cleanup = AsyncMock(
+        side_effect=RuntimeError("cleanup failed")
+    )
     hass.data.setdefault(DOMAIN, {})[config_entry.entry_id] = {
         "device_manager": mock_device_manager,
     }
@@ -471,7 +477,9 @@ async def test_async_load_with_data(hass: HomeAssistant) -> None:
         ):
             await registry.async_load()
 
-        assert registry.get_device_data("ha1")["device_dict"]["speaker_device_id"] == "s1"
+        assert (
+            registry.get_device_data("ha1")["device_dict"]["speaker_device_id"] == "s1"
+        )
 
 
 async def test_async_load_empty(hass: HomeAssistant) -> None:
@@ -520,8 +528,14 @@ async def test_set_device_dict_and_getters(hass: HomeAssistant) -> None:
                 {"speaker_device_id": "spk1", "friendly_name": "One"},
             )
 
-        assert registry.get_device_dict_by_ha_device_id("ha_x")["speaker_device_id"] == "spk1"
-        assert registry.get_device_dict_by_speaker_device_id("spk1")["friendly_name"] == "One"
+        assert (
+            registry.get_device_dict_by_ha_device_id("ha_x")["speaker_device_id"]
+            == "spk1"
+        )
+        assert (
+            registry.get_device_dict_by_speaker_device_id("spk1")["friendly_name"]
+            == "One"
+        )
         assert registry.get_ha_device_id_by_speaker_device_id("spk1") == "ha_x"
         assert registry.get_device_dict_by_ha_device_id("missing") is None
         assert registry.get_device_dict_by_ha_device_id("missing", default={}) == {}
@@ -604,7 +618,9 @@ async def test_async_remove_device_data(hass: HomeAssistant) -> None:
     """Removing known ha_device_id deletes and saves."""
     async with _device_registry(hass) as registry:
         registry._device_data = {"ha1": {"x": 1}}
-        with patch.object(registry._store, "async_save", new_callable=AsyncMock) as mock_save:
+        with patch.object(
+            registry._store, "async_save", new_callable=AsyncMock
+        ) as mock_save:
             await registry.async_remove_device_data("ha1")
 
         assert "ha1" not in registry._device_data

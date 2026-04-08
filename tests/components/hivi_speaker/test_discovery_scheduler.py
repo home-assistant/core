@@ -8,8 +8,8 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import aiohttp
 import pytest
 
-from homeassistant.components.hivi_speaker.const import DOMAIN
 from homeassistant.components.hivi_speaker import discovery_scheduler as ds_module
+from homeassistant.components.hivi_speaker.const import DOMAIN
 from homeassistant.components.hivi_speaker.discovery_scheduler import (
     HIVIDiscoveryScheduler,
     _is_safe_location_url,
@@ -459,7 +459,9 @@ async def test_discover_private_devices_no_raw_responses(hass: HomeAssistant) ->
     entry = MockConfigEntry(domain=DOMAIN, title="HiVi", data={})
     entry.add_to_hass(hass)
     sched = _scheduler(hass, entry)
-    with patch.object(hass, "async_add_executor_job", new_callable=AsyncMock, return_value=[]):
+    with patch.object(
+        hass, "async_add_executor_job", new_callable=AsyncMock, return_value=[]
+    ):
         out = await sched._discover_private_devices()
     assert out == []
 
@@ -478,7 +480,9 @@ async def test_discover_private_devices_parses_with_mocked_session(
     ]
     session = MagicMock()
     with (
-        patch.object(hass, "async_add_executor_job", new_callable=AsyncMock, return_value=raw),
+        patch.object(
+            hass, "async_add_executor_job", new_callable=AsyncMock, return_value=raw
+        ),
         patch(
             "homeassistant.components.hivi_speaker.discovery_scheduler.async_get_clientsession",
             return_value=session,
@@ -505,13 +509,19 @@ async def test_discover_private_parse_one_swallows_errors(hass: HomeAssistant) -
     entry.add_to_hass(hass)
     sched = _scheduler(hass, entry)
     raw = [("bad", ("10.0.0.1", 1900))]
-    with patch.object(hass, "async_add_executor_job", new_callable=AsyncMock, return_value=raw), patch(
-        "homeassistant.components.hivi_speaker.discovery_scheduler.async_get_clientsession",
-        return_value=MagicMock(),
-    ), patch(
-        "homeassistant.components.hivi_speaker.discovery_scheduler.parse_local_url",
-        new_callable=AsyncMock,
-        side_effect=RuntimeError("parse boom"),
+    with (
+        patch.object(
+            hass, "async_add_executor_job", new_callable=AsyncMock, return_value=raw
+        ),
+        patch(
+            "homeassistant.components.hivi_speaker.discovery_scheduler.async_get_clientsession",
+            return_value=MagicMock(),
+        ),
+        patch(
+            "homeassistant.components.hivi_speaker.discovery_scheduler.parse_local_url",
+            new_callable=AsyncMock,
+            side_effect=RuntimeError("parse boom"),
+        ),
     ):
         out = await sched._discover_private_devices()
     assert out == []
@@ -533,7 +543,9 @@ async def test_parse_local_url_client_error_returns_none() -> None:
     assert await parse_local_url(session, "http://192.168.30.1/d.xml") is None
 
 
-async def test_reschedule_timer_callback_schedules_discovery(hass: HomeAssistant) -> None:
+async def test_reschedule_timer_callback_schedules_discovery(
+    hass: HomeAssistant,
+) -> None:
     entry = MockConfigEntry(domain=DOMAIN, title="HiVi", data={})
     entry.add_to_hass(hass)
     sched = _scheduler(hass, entry)
@@ -571,9 +583,13 @@ async def test_discover_private_skips_when_parse_local_returns_none(
     entry = MockConfigEntry(domain=DOMAIN, title="HiVi", data={})
     entry.add_to_hass(hass)
     sched = _scheduler(hass, entry)
-    raw = [("HTTP/1.1 200\r\nlocation: http://192.168.1.1/d.xml\r\n", ("10.0.0.1", 1900))]
+    raw = [
+        ("HTTP/1.1 200\r\nlocation: http://192.168.1.1/d.xml\r\n", ("10.0.0.1", 1900))
+    ]
     with (
-        patch.object(hass, "async_add_executor_job", new_callable=AsyncMock, return_value=raw),
+        patch.object(
+            hass, "async_add_executor_job", new_callable=AsyncMock, return_value=raw
+        ),
         patch(
             "homeassistant.components.hivi_speaker.discovery_scheduler.async_get_clientsession",
             return_value=MagicMock(),
@@ -592,9 +608,13 @@ async def test_discover_private_skips_when_udn_missing(hass: HomeAssistant) -> N
     entry = MockConfigEntry(domain=DOMAIN, title="HiVi", data={})
     entry.add_to_hass(hass)
     sched = _scheduler(hass, entry)
-    raw = [("HTTP/1.1 200\r\nlocation: http://192.168.1.1/d.xml\r\n", ("10.0.0.1", 1900))]
+    raw = [
+        ("HTTP/1.1 200\r\nlocation: http://192.168.1.1/d.xml\r\n", ("10.0.0.1", 1900))
+    ]
     with (
-        patch.object(hass, "async_add_executor_job", new_callable=AsyncMock, return_value=raw),
+        patch.object(
+            hass, "async_add_executor_job", new_callable=AsyncMock, return_value=raw
+        ),
         patch(
             "homeassistant.components.hivi_speaker.discovery_scheduler.async_get_clientsession",
             return_value=MagicMock(),
@@ -619,7 +639,9 @@ async def test_discover_private_deduplicates_same_udn(hass: HomeAssistant) -> No
     ]
     dev = {"UDN": "uuid:same", "friendly_name": "F"}
     with (
-        patch.object(hass, "async_add_executor_job", new_callable=AsyncMock, return_value=raw),
+        patch.object(
+            hass, "async_add_executor_job", new_callable=AsyncMock, return_value=raw
+        ),
         patch(
             "homeassistant.components.hivi_speaker.discovery_scheduler.async_get_clientsession",
             return_value=MagicMock(),
@@ -653,18 +675,26 @@ async def test_parse_local_url_xml_without_device_node() -> None:
 
 
 def test_parse_ssdp_response_skips_line_when_split_raises_valueerror() -> None:
-    class _BadLine(str):
-        def split(self, sep, maxsplit=-1):
+    class _BadSsdpLine:
+        __slots__ = ("_text",)
+
+        def __init__(self, text: str) -> None:
+            self._text = text
+
+        def __contains__(self, item: object) -> bool:
+            return item in self._text
+
+        def split(self, sep: str, maxsplit: int = -1) -> list[str]:
             if sep == ":":
                 raise ValueError("forced")
-            return str.split(self, sep, maxsplit)
+            return self._text.split(sep, maxsplit)
 
     # str + str-subclass yields a plain str, so the custom split is lost; fake
-    # response_text.split("\r\n") so the body line stays a _BadLine instance.
+    # response_text.split("\r\n") so the body line stays a _BadSsdpLine instance.
     class _FakeResponse:
         def split(self, sep, maxsplit=-1):
             if sep == "\r\n":
-                return ["HTTP/1.1 206 Partial", _BadLine("server: dropped")]
+                return ["HTTP/1.1 206 Partial", _BadSsdpLine("server: dropped")]
             return []
 
     out = parse_ssdp_response(_FakeResponse(), ("10.0.0.5", 1900))

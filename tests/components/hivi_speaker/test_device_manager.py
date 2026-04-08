@@ -4,8 +4,8 @@ from __future__ import annotations
 
 import asyncio
 import contextlib
-import inspect
 from datetime import UTC, datetime, timedelta
+import inspect
 from types import SimpleNamespace
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -45,8 +45,12 @@ def config_entry(hass: HomeAssistant) -> MockConfigEntry:
 
 
 @pytest.fixture
-def device_manager(hass: HomeAssistant, config_entry: MockConfigEntry) -> HIVIDeviceManager:
-    with patch.object(hass, "async_create_task", side_effect=_swallow_discovery_worker_task):
+def device_manager(
+    hass: HomeAssistant, config_entry: MockConfigEntry
+) -> HIVIDeviceManager:
+    with patch.object(
+        hass, "async_create_task", side_effect=_swallow_discovery_worker_task
+    ):
         return HIVIDeviceManager(hass, config_entry)
 
 
@@ -69,7 +73,9 @@ def test_master_slave_list_contains_uuid() -> None:
 
 
 def test_suggest_area_from_name(device_manager: HIVIDeviceManager) -> None:
-    assert device_manager._suggest_area_from_name("Living room speaker") == "living room"
+    assert (
+        device_manager._suggest_area_from_name("Living room speaker") == "living room"
+    )
     assert device_manager._suggest_area_from_name("Kitchen SWAN") == "kitchen"
     assert device_manager._suggest_area_from_name("random") is None
 
@@ -136,7 +142,9 @@ async def test_async_cleanup_stops_children_and_worker(
     assert device_manager._handle_discovery_worker is None
 
 
-async def test_async_manual_discovery_delegates(device_manager: HIVIDeviceManager) -> None:
+async def test_async_manual_discovery_delegates(
+    device_manager: HIVIDeviceManager,
+) -> None:
     device_manager.discovery_scheduler.schedule_immediate_discovery = AsyncMock()
     await device_manager.async_manual_discovery()
     device_manager.discovery_scheduler.schedule_immediate_discovery.assert_awaited_once_with(
@@ -411,9 +419,7 @@ async def test_fetch_device_status_redacts_psk_in_logs(
     device_manager: HIVIDeviceManager,
 ) -> None:
     inner = MagicMock()
-    inner.get_device_status = AsyncMock(
-        return_value={"ssid": "x", "psk": "secret"}
-    )
+    inner.get_device_status = AsyncMock(return_value={"ssid": "x", "psk": "secret"})
     ctx = MagicMock()
     ctx.__aenter__ = AsyncMock(return_value=inner)
     ctx.__aexit__ = AsyncMock(return_value=None)
@@ -465,7 +471,9 @@ async def test_discovery_worker_swallows_handler_errors(
     """_handle_discovery_loop logs and continues when _handle_discovered_devices fails."""
     mgr = HIVIDeviceManager(hass, config_entry)
     try:
-        mgr._handle_discovered_devices = AsyncMock(side_effect=RuntimeError("handler boom"))
+        mgr._handle_discovered_devices = AsyncMock(
+            side_effect=RuntimeError("handler boom")
+        )
         await mgr._discovery_queue.put([{"UDN": "any"}])
         await asyncio.wait_for(mgr._discovery_queue.join(), timeout=5.0)
     finally:
@@ -569,7 +577,9 @@ async def test_update_all_device_statuses_removes_slave_devices(
     device_manager: HIVIDeviceManager,
 ) -> None:
     master = SimpleNamespace(id="dm", identifiers={(DOMAIN, "m")}, name="Master")
-    orphan = SimpleNamespace(id="ds", identifiers={(DOMAIN, "orphan-slave")}, name="Orphan")
+    orphan = SimpleNamespace(
+        id="ds", identifiers={(DOMAIN, "orphan-slave")}, name="Orphan"
+    )
     master_dict = HIVIDevice(
         speaker_device_id="m",
         friendly_name="M",
@@ -610,6 +620,7 @@ async def test_update_all_device_statuses_removes_slave_devices(
         "WifiChannel": "6",
         "ssid": "w",
     }
+
     def _dict_for_device(ha_device_id: str):
         return master_dict if ha_device_id == "dm" else None
 
@@ -763,7 +774,9 @@ async def test_update_all_skips_second_pass_when_no_domain_identifier(
         patch.object(
             device_manager.device_data_registry,
             "get_device_dict_by_ha_device_id",
-            side_effect=lambda ha_device_id: master_dict if ha_device_id == "dm" else None,
+            side_effect=lambda ha_device_id: (
+                master_dict if ha_device_id == "dm" else None
+            ),
         ),
         patch.object(
             device_manager,
@@ -1272,7 +1285,9 @@ async def test_update_device_entity_states_skips_when_device_dict_missing(
             device_manager,
             "_get_entities_for_device",
             new_callable=AsyncMock,
-            return_value=[SimpleNamespace(entity_id="switch.m_slave_x", unique_id="m_slave_x")],
+            return_value=[
+                SimpleNamespace(entity_id="switch.m_slave_x", unique_id="m_slave_x")
+            ],
         ),
         patch.object(
             device_manager.device_data_registry,
