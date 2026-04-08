@@ -6746,7 +6746,7 @@
     "spaceapi": {
       "name": "SpaceAPI",
       "integration_type": "service",
-      "config_flow": false,
+      "config_flow": true,
       "iot_class": "calculated"
     },
     "spc": {

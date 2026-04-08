@@ -2,7 +2,7 @@
   "domain": "spaceapi",
   "name": "SpaceAPI",
   "codeowners": ["@fabaff"],
-  "config_flow": false,
+  "config_flow": true,
   "dependencies": ["http"],
   "documentation": "https://www.home-assistant.io/integrations/spaceapi",
   "integration_type": "service",

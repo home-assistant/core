@@ -1,6 +1,7 @@
 """Support for the SpaceAPI."""
 
 from contextlib import suppress
+from dataclasses import dataclass
 import math
 from typing import Any
 
@@ -9,6 +10,7 @@ import voluptuous as vol
 
 from homeassistant import core as ha
 from homeassistant.components.http import KEY_HASS, HomeAssistantView
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_ICON,
@@ -234,12 +236,55 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
+@dataclass
+class SpaceAPIData:
+    """Runtime data for the SpaceAPI integration."""
+
+    config: dict[str, Any]
+
+
+type SpaceAPIConfigEntry = ConfigEntry[SpaceAPIData]
+
+
+def _merge_config(entry: SpaceAPIConfigEntry) -> dict[str, Any]:
+    """Deep-merge entry.data and entry.options into a single config dict."""
+    config: dict[str, Any] = dict(entry.data)
+    for key, value in entry.options.items():
+        if key in config and isinstance(config[key], dict) and isinstance(value, dict):
+            config[key] = {**config[key], **value}
+        else:
+            config[key] = value
+    return config
+
+
 def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Register the SpaceAPI with the HTTP interface."""
+    if DOMAIN not in config:
+        return True
     hass.data[DATA_SPACEAPI] = config[DOMAIN]
-    hass.http.register_view(APISpaceApiView)
+    hass.http.register_view(APISpaceApiView())
 
     return True
+
+
+async def async_setup_entry(hass: HomeAssistant, entry: SpaceAPIConfigEntry) -> bool:
+    """Set up SpaceAPI from a config entry."""
+    entry.runtime_data = SpaceAPIData(config=_merge_config(entry))
+    hass.http.register_view(APISpaceApiView(entry.entry_id))
+    entry.async_on_unload(entry.add_update_listener(_async_update_listener))
+    return True
+
+
+async def async_unload_entry(hass: HomeAssistant, entry: SpaceAPIConfigEntry) -> bool:
+    """Unload a SpaceAPI config entry."""
+    return True
+
+
+async def _async_update_listener(
+    hass: HomeAssistant, entry: SpaceAPIConfigEntry
+) -> None:
+    """Handle options update."""
+    entry.runtime_data = SpaceAPIData(config=_merge_config(entry))
 
 
 class APISpaceApiView(HomeAssistantView):
@@ -248,10 +293,11 @@ class APISpaceApiView(HomeAssistantView):
     url = URL_API_SPACEAPI
     name = "api:spaceapi"
 
-    def __init__(self) -> None:
-        """Initialize SpaceAPI view."""
+    def __init__(self, entry_id: str | None = None) -> None:
+        """Initialize the SpaceAPI view."""
         self.requires_auth = False
         self.cors_allowed = True
+        self._entry_id = entry_id
 
     @staticmethod
     def get_sensor_data(
@@ -285,7 +331,14 @@ class APISpaceApiView(HomeAssistantView):
     def get(self, request: web.Request) -> web.Response:
         """Get SpaceAPI data."""
         hass = request.app[KEY_HASS]
-        spaceapi: dict[str, Any] = hass.data[DATA_SPACEAPI]
+
+        if self._entry_id is not None:
+            entry = hass.config_entries.async_get_entry(self._entry_id)
+            if entry is None:
+                return self.json_message("Entry not found", 404)
+            spaceapi: dict[str, Any] = entry.runtime_data.config
+        else:
+            spaceapi = hass.data[DATA_SPACEAPI]
 
         location = {
             ATTR_LAT: hass.config.latitude,
