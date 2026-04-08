@@ -9,6 +9,7 @@ from victron_mqtt import (
     Hub as VictronVenusHub,
     Metric as VictronVenusMetric,
     MetricKind,
+    WritableMetric as VictronVenusWritableMetric,
 )
 from victron_mqtt.testing import finalize_injection, inject_message
 
@@ -77,7 +78,7 @@ async def test_victron_select_actions(
     init_integration: tuple[VictronVenusHub, MockConfigEntry],
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """Test select same-value skip and select_option service call."""
+    """Test select_option service call."""
     victron_hub, mock_config_entry = init_integration
 
     await inject_message(
@@ -93,13 +94,22 @@ async def test_victron_select_actions(
     )
     entity_id = entities[0].entity_id
 
-    # Call select_option service to cover select_option()
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == "manual"
+
+    # Call select_option service and verify the entity updates.
     await hass.services.async_call(
         "select",
         "select_option",
         {"entity_id": entity_id, "option": "auto"},
         blocking=True,
     )
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == "auto"
 
 
 async def test_victron_select_skips_non_writable_metric(
@@ -127,3 +137,70 @@ async def test_victron_select_skips_non_writable_metric(
         entity_registry, mock_config_entry.entry_id
     )
     assert len(entities) == 0
+
+
+async def test_victron_select_skips_missing_enum_values(
+    hass: HomeAssistant,
+    init_integration: tuple[VictronVenusHub, MockConfigEntry],
+    entity_registry: er.EntityRegistry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test that writable metrics without enum values are skipped."""
+    _, mock_config_entry = init_integration
+    hub = mock_config_entry.runtime_data
+
+    cb = hub.new_metric_callbacks[MetricKind.SELECT]
+
+    mock_device = MagicMock()
+    mock_device.unique_id = "test_device_1"
+    mock_metric = MagicMock(spec=VictronVenusWritableMetric)
+    mock_metric.enum_values = None
+    mock_device_info = MagicMock()
+
+    cb(mock_device, mock_metric, mock_device_info, MOCK_INSTALLATION_ID)
+
+    assert (
+        "Skipping select metric without enum values for device test_device_1"
+        in caplog.text
+    )
+
+    entities = er.async_entries_for_config_entry(
+        entity_registry, mock_config_entry.entry_id
+    )
+    assert len(entities) == 0
+
+
+async def test_victron_select_option_non_writable_metric(
+    hass: HomeAssistant,
+    init_integration: tuple[VictronVenusHub, MockConfigEntry],
+    entity_registry: er.EntityRegistry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test that select_option logs error for non-writable metric."""
+    victron_hub, mock_config_entry = init_integration
+
+    await inject_message(
+        victron_hub,
+        f"N/{MOCK_INSTALLATION_ID}/evcharger/0/Mode",
+        '{"value": 0}',
+    )
+    await finalize_injection(victron_hub)
+    await hass.async_block_till_done()
+
+    entities = er.async_entries_for_config_entry(
+        entity_registry, mock_config_entry.entry_id
+    )
+    entity_id = entities[0].entity_id
+
+    # Patch the entity's _metric to a non-writable type
+    entity = hass.data["entity_components"]["select"].get_entity(entity_id)
+    entity._metric = MagicMock(spec=VictronVenusMetric)
+
+    await hass.services.async_call(
+        "select",
+        "select_option",
+        {"entity_id": entity_id, "option": "auto"},
+        blocking=True,
+    )
+
+    assert "Cannot set option for non-writable metric" in caplog.text
