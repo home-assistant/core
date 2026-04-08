@@ -7,19 +7,17 @@ import datetime
 from aiorecollect.client import PickupEvent
 
 from homeassistant.components.calendar import CalendarEntity, CalendarEvent
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN
-from .coordinator import ReCollectWasteDataUpdateCoordinator
+from .coordinator import RecollectWasteConfigEntry, ReCollectWasteDataUpdateCoordinator
 from .entity import ReCollectWasteEntity
 from .util import async_get_pickup_type_names
 
 
 @callback
 def async_get_calendar_event_from_pickup_event(
-    entry: ConfigEntry, pickup_event: PickupEvent
+    entry: RecollectWasteConfigEntry, pickup_event: PickupEvent
 ) -> CalendarEvent:
     """Get a HASS CalendarEvent from an aiorecollect PickupEvent."""
     pickup_type_string = ", ".join(
@@ -36,13 +34,11 @@ def async_get_calendar_event_from_pickup_event(
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: RecollectWasteConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up ReCollect Waste sensors based on a config entry."""
-    coordinator: ReCollectWasteDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
-
-    async_add_entities([ReCollectWasteCalendar(coordinator, entry)])
+    async_add_entities([ReCollectWasteCalendar(entry.runtime_data, entry)])
 
 
 class ReCollectWasteCalendar(ReCollectWasteEntity, CalendarEntity):
@@ -54,7 +50,7 @@ class ReCollectWasteCalendar(ReCollectWasteEntity, CalendarEntity):
     def __init__(
         self,
         coordinator: ReCollectWasteDataUpdateCoordinator,
-        entry: ConfigEntry,
+        entry: RecollectWasteConfigEntry,
     ) -> None:
         """Initialize the ReCollect Waste entity."""
         super().__init__(coordinator, entry)
