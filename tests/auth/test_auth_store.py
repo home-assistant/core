@@ -201,7 +201,7 @@ class _MutatingRefreshTokenDict(dict[str, auth_models.RefreshToken]):
     def values(self):
         """Return values that mutate the dict during iteration."""
         parent = self
-        iterator = super().values().__iter__()
+        iterator = iter(super().values())
 
         def _iter():
             mutated = False
