@@ -28,6 +28,29 @@ from .coordinator import TeleinfoConfigEntry, TeleinfoCoordinator
 
 PARALLEL_UPDATES = 0
 
+# PTEC (Période Tarifaire en Cours) raw protocol values → clean option keys
+PTEC_OPTIONS: dict[str, str] = {
+    "TH..": "all_hours",
+    "HC..": "off_peak",
+    "HP..": "peak",
+    "HN..": "normal_hours",
+    "PM..": "mobile_peak",
+    "HCJB": "off_peak_blue_day",
+    "HCJW": "off_peak_white_day",
+    "HCJR": "off_peak_red_day",
+    "HPJB": "peak_blue_day",
+    "HPJW": "peak_white_day",
+    "HPJR": "peak_red_day",
+}
+
+# DEMAIN (Couleur du lendemain) raw protocol values → clean option keys
+DEMAIN_OPTIONS: dict[str, str] = {
+    "BLEU": "blue",
+    "BLAN": "white",
+    "ROUG": "red",
+    "----": "undetermined",
+}
+
 
 @dataclass(frozen=True, kw_only=True)
 class TeleinfoSensorEntityDescription(SensorEntityDescription):
@@ -63,8 +86,10 @@ SENSOR_DESCRIPTIONS: tuple[TeleinfoSensorEntityDescription, ...] = (
     TeleinfoSensorEntityDescription(
         key="current_tariff_period",
         translation_key="current_tariff_period",
+        device_class=SensorDeviceClass.ENUM,
+        options=list(PTEC_OPTIONS.values()),
         required_label="PTEC",
-        value_fn=lambda data: data["PTEC"],
+        value_fn=lambda data: PTEC_OPTIONS.get(data["PTEC"]),
     ),
     # ------------------------------------------------------------------
     # BASE contract (OPTARIF = "BASE")
@@ -190,9 +215,11 @@ SENSOR_DESCRIPTIONS: tuple[TeleinfoSensorEntityDescription, ...] = (
     TeleinfoSensorEntityDescription(
         key="tomorrow_color",
         translation_key="tomorrow_color",
+        device_class=SensorDeviceClass.ENUM,
+        options=list(DEMAIN_OPTIONS.values()),
         entity_registry_enabled_default=False,
         required_label="DEMAIN",
-        value_fn=lambda data: data["DEMAIN"],
+        value_fn=lambda data: DEMAIN_OPTIONS.get(data["DEMAIN"]),
     ),
 )
 

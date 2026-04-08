@@ -114,6 +114,10 @@ def mock_teleinfo() -> Generator[MagicMock]:
             "homeassistant.components.teleinfo.coordinator.decode",
             mock_module.decode,
         ),
+        patch(
+            "homeassistant.components.teleinfo.config_flow.decode",
+            mock_module.decode,
+        ),
     ):
         yield mock_module
 

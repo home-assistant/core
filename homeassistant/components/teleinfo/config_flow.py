@@ -49,9 +49,7 @@ class TeleinfoConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
         try:
             frame = await self.hass.async_add_executor_job(read_frame, serial_port)
-            decoded_data: dict[str, str] = await self.hass.async_add_executor_job(
-                decode, frame
-            )
+            decoded_data: dict[str, str] = decode(frame)
         except serial.SerialException:
             errors["base"] = "cannot_connect"
             return errors, None
@@ -90,32 +88,6 @@ class TeleinfoConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def async_step_reconfigure(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Handle reconfiguration of the serial port."""
-        errors: dict[str, str] = {}
-        entry = self._get_reconfigure_entry()
-
-        if user_input is not None:
-            errors, _decoded_data = await self._validate_serial_port(
-                user_input[CONF_SERIAL_PORT]
-            )
-            if not errors:
-                return self.async_update_reload_and_abort(
-                    entry,
-                    data_updates=user_input,
-                )
-
-        return self.async_show_form(
-            step_id="reconfigure",
-            data_schema=self.add_suggested_values_to_schema(
-                data_schema=STEP_USER_DATA_SCHEMA,
-                suggested_values=user_input or dict(entry.data),
-            ),
-            errors=errors,
-        )
-
     async def async_step_usb(self, discovery_info: UsbServiceInfo) -> ConfigFlowResult:
         """Handle USB discovery."""
         unique_id = usb_unique_id_from_service_info(discovery_info)
@@ -135,7 +107,7 @@ class TeleinfoConfigFlow(ConfigFlow, domain=DOMAIN):
         # Validate by reading a real Teleinfo frame — silent abort on failure
         try:
             frame = await self.hass.async_add_executor_job(read_frame, dev_path)
-            await self.hass.async_add_executor_job(decode, frame)
+            decode(frame)
         except Exception:  # noqa: BLE001
             return self.async_abort(reason="not_teleinfo_device")
 

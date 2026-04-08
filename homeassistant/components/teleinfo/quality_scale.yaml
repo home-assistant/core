@@ -49,7 +49,7 @@ rules:
 
   # Gold
   devices: done
-  diagnostics: done
+  diagnostics: todo
   discovery-update-info: done
   discovery: done
   docs-data-update: done
@@ -74,7 +74,7 @@ rules:
   icon-translations:
     status: done
     comment: icons.json provides icons for sensors without device class defaults.
-  reconfiguration-flow: done
+  reconfiguration-flow: todo
   repair-issues:
     status: exempt
     comment: Read-only serial device with no user-actionable repair scenarios. Failures are transient I/O errors handled by UpdateFailed.

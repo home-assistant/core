@@ -63,7 +63,21 @@
       None,
     ]),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'options': list([
+        'all_hours',
+        'off_peak',
+        'peak',
+        'normal_hours',
+        'mobile_peak',
+        'off_peak_blue_day',
+        'off_peak_white_day',
+        'off_peak_red_day',
+        'peak_blue_day',
+        'peak_white_day',
+        'peak_red_day',
+      ]),
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -82,7 +96,7 @@
     'object_id_base': 'Current tariff period',
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Current tariff period',
     'platform': 'teleinfo',
@@ -97,14 +111,28 @@
 # name: test_all_entities[sensor.teleinfo_021861348497_current_tariff_period-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'device_class': 'enum',
       'friendly_name': 'Teleinfo 021861348497 Current tariff period',
+      'options': list([
+        'all_hours',
+        'off_peak',
+        'peak',
+        'normal_hours',
+        'mobile_peak',
+        'off_peak_blue_day',
+        'off_peak_white_day',
+        'off_peak_red_day',
+        'peak_blue_day',
+        'peak_white_day',
+        'peak_red_day',
+      ]),
     }),
     'context': <ANY>,
     'entity_id': 'sensor.teleinfo_021861348497_current_tariff_period',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'HCJB',
+    'state': 'off_peak_blue_day',
   })
 # ---
 # name: test_all_entities[sensor.teleinfo_021861348497_index_blue_day_off_peak-entry]
@@ -519,7 +547,14 @@
       None,
     ]),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'options': list([
+        'blue',
+        'white',
+        'red',
+        'undetermined',
+      ]),
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -538,7 +573,7 @@
     'object_id_base': 'Tomorrow color',
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Tomorrow color',
     'platform': 'teleinfo',
@@ -553,13 +588,20 @@
 # name: test_all_entities[sensor.teleinfo_021861348497_tomorrow_color-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'device_class': 'enum',
       'friendly_name': 'Teleinfo 021861348497 Tomorrow color',
+      'options': list([
+        'blue',
+        'white',
+        'red',
+        'undetermined',
+      ]),
     }),
     'context': <ANY>,
     'entity_id': 'sensor.teleinfo_021861348497_tomorrow_color',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'ROUG',
+    'state': 'red',
   })
 # ---

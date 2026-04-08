@@ -54,7 +54,7 @@ class TeleinfoCoordinator(DataUpdateCoordinator[dict[str, str]]):
             ) from err
 
         try:
-            return await self.hass.async_add_executor_job(decode, frame)
+            return decode(frame)
         except Exception as err:
             raise UpdateFailed(
                 translation_domain=DOMAIN,

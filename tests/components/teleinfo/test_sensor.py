@@ -60,7 +60,7 @@ async def test_sensor_setup_tempo(
         f"{ADCO}_red_day_off_peak_index": "860118",
         f"{ADCO}_red_day_peak_index": "844115",
         f"{ADCO}_apparent_power": "2830",
-        f"{ADCO}_current_tariff_period": "HCJB",
+        f"{ADCO}_current_tariff_period": "off_peak_blue_day",
     }
 
     # These sensors are disabled by default; verify they are registered but have no state
@@ -162,7 +162,7 @@ async def test_sensor_setup_hc(
         f"{ADCO}_off_peak_index": "25643781",
         f"{ADCO}_peak_index": "31285904",
         f"{ADCO}_apparent_power": "2830",
-        f"{ADCO}_current_tariff_period": "HC..",
+        f"{ADCO}_current_tariff_period": "off_peak",
     }
     for unique_id, expected_state in expected_values.items():
         entity_id = entity_registry.async_get_entity_id("sensor", DOMAIN, unique_id)
@@ -202,7 +202,7 @@ async def test_sensor_setup_ejp(
         f"{ADCO}_normal_hours_index": "38912456",
         f"{ADCO}_peak_mobile_hours_index": "7654321",
         f"{ADCO}_apparent_power": "2830",
-        f"{ADCO}_current_tariff_period": "HN..",
+        f"{ADCO}_current_tariff_period": "normal_hours",
     }
     for unique_id, expected_state in expected_values.items():
         entity_id = entity_registry.async_get_entity_id("sensor", DOMAIN, unique_id)
