@@ -10,7 +10,7 @@ import voluptuous as vol
 
 from homeassistant import core as ha
 from homeassistant.components.http import KEY_HASS, HomeAssistantView
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_ICON,
@@ -26,8 +26,9 @@ from homeassistant.const import (
     CONF_STATE,
     CONF_URL,
 )
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers import config_validation as cv, issue_registry as ir
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import dt as dt_util
 
@@ -257,14 +258,57 @@ def _merge_config(entry: SpaceAPIConfigEntry) -> dict[str, Any]:
     return config
 
 
-def setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Register the SpaceAPI with the HTTP interface."""
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up SpaceAPI from YAML config (import path)."""
     if DOMAIN not in config:
         return True
-    hass.data[DATA_SPACEAPI] = config[DOMAIN]
-    hass.http.register_view(APISpaceApiView())
 
+    hass.async_create_task(_async_import_yaml(hass, config[DOMAIN]))
     return True
+
+
+async def _async_import_yaml(hass: HomeAssistant, conf: dict[str, Any]) -> None:
+    """Import YAML config and create deprecation issues."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_IMPORT},
+        data=conf,
+    )
+
+    if result.get("type") is FlowResultType.ABORT and result.get("reason") not in (
+        "already_configured",
+        "single_instance_allowed",
+    ):
+        ir.async_create_issue(
+            hass,
+            DOMAIN,
+            f"deprecated_yaml_import_issue_{result.get('reason')}",
+            breaks_in_ha_version="2026.12.0",
+            is_fixable=False,
+            issue_domain=DOMAIN,
+            severity=ir.IssueSeverity.WARNING,
+            translation_key=f"deprecated_yaml_import_issue_{result.get('reason')}",
+            translation_placeholders={
+                "domain": DOMAIN,
+                "integration_title": "SpaceAPI",
+            },
+        )
+        return
+
+    ir.async_create_issue(
+        hass,
+        HOMEASSISTANT_DOMAIN,
+        f"deprecated_yaml_{DOMAIN}",
+        breaks_in_ha_version="2026.12.0",
+        is_fixable=False,
+        issue_domain=DOMAIN,
+        severity=ir.IssueSeverity.WARNING,
+        translation_key="deprecated_yaml",
+        translation_placeholders={
+            "domain": DOMAIN,
+            "integration_title": "SpaceAPI",
+        },
+    )
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: SpaceAPIConfigEntry) -> bool:

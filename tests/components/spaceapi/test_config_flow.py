@@ -4,6 +4,7 @@ from unittest.mock import AsyncMock
 
 from homeassistant import config_entries
 from homeassistant.components.spaceapi.const import DOMAIN
+from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -16,6 +17,25 @@ USER_INPUT = {
     "entity_id": "binary_sensor.front_door",
     "email": "hello@home-assistant.io",
     "issue_report_channels": ["email"],
+}
+
+YAML_CONFIG = {
+    "space": "Home",
+    "logo": "https://home-assistant.io/logo.png",
+    "url": "https://home-assistant.io",
+    "location": {"address": "In your Home"},
+    "contact": {"email": "hello@home-assistant.io"},
+    "issue_report_channels": ["email"],
+    "state": {
+        "entity_id": "test.test_door",
+        "icon_open": "https://home-assistant.io/open.png",
+        "icon_closed": "https://home-assistant.io/close.png",
+    },
+    "sensors": {
+        "temperature": ["test.temp1"],
+        "humidity": ["test.hum1"],
+    },
+    "spacefed": {"spacenet": True, "spacesaml": False, "spacephone": True},
 }
 
 
@@ -72,6 +92,68 @@ async def test_user_flow_already_configured(
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         USER_INPUT,
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert len(mock_setup_entry.mock_calls) == 0
+
+
+async def test_import_flow(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
+    """Test importing full YAML config splits data and options correctly."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_IMPORT},
+        data=YAML_CONFIG,
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "Home"
+    assert result["data"] == {
+        "space": "Home",
+        "logo": "https://home-assistant.io/logo.png",
+        "url": "https://home-assistant.io",
+        "state": {"entity_id": "test.test_door"},
+        "contact": {"email": "hello@home-assistant.io"},
+        "issue_report_channels": ["email"],
+    }
+    assert result["options"] == {
+        "state": {
+            "icon_open": "https://home-assistant.io/open.png",
+            "icon_closed": "https://home-assistant.io/close.png",
+        },
+        "sensors": {
+            "temperature": ["test.temp1"],
+            "humidity": ["test.hum1"],
+        },
+        "spacefed": {"spacenet": True, "spacesaml": False, "spacephone": True},
+        "location": {"address": "In your Home"},
+    }
+    assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_import_flow_already_configured(
+    hass: HomeAssistant, mock_setup_entry: AsyncMock
+) -> None:
+    """Test import flow aborts when an entry already exists."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            "space": "Existing",
+            "logo": "https://example.com/logo.png",
+            "url": "https://example.com",
+            "state": {"entity_id": "binary_sensor.door"},
+            "contact": {"email": "test@example.com"},
+            "issue_report_channels": ["email"],
+        },
+    )
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_IMPORT},
+        data=YAML_CONFIG,
     )
 
     assert result["type"] is FlowResultType.ABORT
