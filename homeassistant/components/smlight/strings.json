@@ -80,8 +80,8 @@
       }
     },
     "infrared": {
-      "infrared": {
-        "name": "IR Remote"
+      "infrared_emitter": {
+        "name": "IR Emitter"
       }
     },
     "light": {

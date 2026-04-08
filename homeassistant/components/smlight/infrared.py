@@ -32,12 +32,12 @@ async def async_setup_entry(
 class SmInfraredEntity(SmEntity, InfraredEntity):
     """Representation of a SLZB-Ultima infrared."""
 
-    _attr_translation_key = "infrared"
+    _attr_translation_key = "infrared_emitter"
 
     def __init__(self, coordinator: SmDataUpdateCoordinator) -> None:
         """Initialize the SLZB-Ultima infrared."""
         super().__init__(coordinator)
-        self._attr_unique_id = f"{coordinator.unique_id}-infrared"
+        self._attr_unique_id = f"{coordinator.unique_id}-infrared-emitter"
 
     async def async_send_command(self, command: InfraredCommand) -> None:
         """Send an IR command."""
