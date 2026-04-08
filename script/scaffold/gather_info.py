@@ -4,6 +4,7 @@ import json
 
 from homeassistant.util import slugify
 from script.hassfest.manifest import SUPPORTED_IOT_CLASSES
+from script.hassfest.model import IntegrationType
 
 from .const import COMPONENT_DIR
 from .error import ExitApp
@@ -120,10 +121,20 @@ More info @ https://developers.home-assistant.io/docs/creating_integration_manif
                     "default": "no",
                     **YES_NO,
                 },
-                "helper": {
-                    "prompt": "Is this a helper integration? (yes/no)",
-                    "default": "no",
-                    **YES_NO,
+                "integration_type": {
+                    "prompt": f"""What is the integration type?
+
+Valid types are {", ".join(IntegrationType)}.
+You may leave it empty here, but it is recommended to provide one. Also note that it might even be required.
+
+More info @ https://developers.home-assistant.io/docs/creating_integration_manifest/#integration-type
+""",
+                    "validators": [
+                        [
+                            f"You need to leave it empty or pick one of {', '.join(IntegrationType)}",
+                            lambda value: value == "" or value in IntegrationType,
+                        ]
+                    ],
                 },
                 "oauth2": {
                     "prompt": "Can the user authenticate the device using OAuth2? (yes/no)",
