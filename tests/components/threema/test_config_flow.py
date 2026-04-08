@@ -22,7 +22,7 @@ from homeassistant.components.threema.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType, InvalidData
 
-from .conftest import MOCK_API_SECRET, MOCK_GATEWAY_ID
+from .conftest import MOCK_API_SECRET, MOCK_GATEWAY_ID, MOCK_RECIPIENT_ID
 
 from tests.common import MockConfigEntry
 
@@ -57,7 +57,6 @@ async def test_user_flow_existing_gateway(
             CONF_API_SECRET: MOCK_API_SECRET,
         },
     )
-    await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == f"Threema {MOCK_GATEWAY_ID}"
@@ -91,7 +90,6 @@ async def test_user_flow_existing_with_keys(
             CONF_PUBLIC_KEY: "public:1234567890abcdef",
         },
     )
-    await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"][CONF_PRIVATE_KEY] == "private:abcdef1234567890"
@@ -145,7 +143,6 @@ async def test_user_flow_new_gateway(
                 CONF_API_SECRET: MOCK_API_SECRET,
             },
         )
-        await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"][CONF_PRIVATE_KEY] == "private:generated_private_key_hex"
@@ -289,6 +286,17 @@ async def test_credentials_error(
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": expected_error}
 
+    mock_connection.get_credits.side_effect = None
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_GATEWAY_ID: MOCK_GATEWAY_ID,
+            CONF_API_SECRET: MOCK_API_SECRET,
+        },
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
 
 async def test_subentry_add_recipient(
     hass: HomeAssistant,
@@ -310,13 +318,13 @@ async def test_subentry_add_recipient(
 
     result = await hass.config_entries.subentries.async_configure(
         result["flow_id"],
-        user_input={CONF_RECIPIENT: "ABCD1234"},
+        user_input={CONF_RECIPIENT: "EFGH5678"},
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "ABCD1234"
-    assert result["data"] == {CONF_RECIPIENT: "ABCD1234"}
-    assert result["unique_id"] == "ABCD1234"
+    assert result["title"] == "EFGH5678"
+    assert result["data"] == {CONF_RECIPIENT: "EFGH5678"}
+    assert result["unique_id"] == "EFGH5678"
 
 
 async def test_subentry_add_recipient_with_name(
@@ -337,13 +345,13 @@ async def test_subentry_add_recipient_with_name(
 
     result = await hass.config_entries.subentries.async_configure(
         result["flow_id"],
-        user_input={CONF_RECIPIENT: "ABCD1234", "name": "Dad"},
+        user_input={CONF_RECIPIENT: "EFGH5678", "name": "Dad"},
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "Dad (ABCD1234)"
-    assert result["data"] == {CONF_RECIPIENT: "ABCD1234"}
-    assert result["unique_id"] == "ABCD1234"
+    assert result["title"] == "Dad (EFGH5678)"
+    assert result["data"] == {CONF_RECIPIENT: "EFGH5678"}
+    assert result["unique_id"] == "EFGH5678"
 
 
 @pytest.mark.parametrize(
@@ -377,40 +385,23 @@ async def test_subentry_invalid_recipient_id(
 
 async def test_subentry_duplicate_recipient(
     hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
     mock_connection: MagicMock,
     mock_send: tuple[MagicMock, MagicMock],
 ) -> None:
     """Test subentry flow rejects duplicate recipient."""
-    entry = MockConfigEntry(
-        title=f"Threema {MOCK_GATEWAY_ID}",
-        domain=DOMAIN,
-        data={
-            CONF_GATEWAY_ID: MOCK_GATEWAY_ID,
-            CONF_API_SECRET: MOCK_API_SECRET,
-        },
-        unique_id=MOCK_GATEWAY_ID,
-        subentries_data=[
-            {
-                "data": {CONF_RECIPIENT: "ABCD1234"},
-                "subentry_id": "mock_subentry_id",
-                "subentry_type": SUBENTRY_TYPE_RECIPIENT,
-                "title": "ABCD1234",
-                "unique_id": "ABCD1234",
-            },
-        ],
-    )
-    entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(entry.entry_id)
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
     result = await hass.config_entries.subentries.async_init(
-        (entry.entry_id, SUBENTRY_TYPE_RECIPIENT),
+        (mock_config_entry.entry_id, SUBENTRY_TYPE_RECIPIENT),
         context={"source": config_entries.SOURCE_USER},
     )
 
     result = await hass.config_entries.subentries.async_configure(
         result["flow_id"],
-        user_input={CONF_RECIPIENT: "ABCD1234"},
+        user_input={CONF_RECIPIENT: MOCK_RECIPIENT_ID},
     )
 
     assert result["type"] is FlowResultType.ABORT

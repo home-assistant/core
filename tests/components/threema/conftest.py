@@ -12,7 +12,9 @@ from homeassistant.components.threema.const import (
     CONF_GATEWAY_ID,
     CONF_PRIVATE_KEY,
     CONF_PUBLIC_KEY,
+    CONF_RECIPIENT,
     DOMAIN,
+    SUBENTRY_TYPE_RECIPIENT,
 )
 from homeassistant.config_entries import ConfigSubentryDataWithId
 
@@ -29,11 +31,19 @@ MOCK_PUBLIC_KEY = (
 MOCK_RECIPIENT_ID = "ABCD1234"
 MOCK_SUBENTRY_ID = "mock_subentry_id"
 
+RECIPIENT_SUBENTRY: ConfigSubentryDataWithId = {
+    "data": {CONF_RECIPIENT: MOCK_RECIPIENT_ID},
+    "subentry_id": MOCK_SUBENTRY_ID,
+    "subentry_type": SUBENTRY_TYPE_RECIPIENT,
+    "title": MOCK_RECIPIENT_ID,
+    "unique_id": MOCK_RECIPIENT_ID,
+}
+
 
 @pytest.fixture
 def mock_subentries() -> list[ConfigSubentryDataWithId]:
-    """Fixture for subentries, override in tests that need recipients."""
-    return []
+    """Fixture providing one recipient subentry by default; override to []  when not needed."""
+    return [RECIPIENT_SUBENTRY]
 
 
 @pytest.fixture
@@ -54,7 +64,9 @@ def mock_config_entry(
 
 
 @pytest.fixture
-def mock_config_entry_with_keys() -> MockConfigEntry:
+def mock_config_entry_with_keys(
+    mock_subentries: list[ConfigSubentryDataWithId],
+) -> MockConfigEntry:
     """Return a mocked config entry for E2E encrypted mode."""
     return MockConfigEntry(
         title=f"Threema {MOCK_GATEWAY_ID}",
@@ -66,6 +78,7 @@ def mock_config_entry_with_keys() -> MockConfigEntry:
             CONF_PUBLIC_KEY: MOCK_PUBLIC_KEY,
         },
         unique_id=MOCK_GATEWAY_ID,
+        subentries_data=[*mock_subentries],
     )
 
 
