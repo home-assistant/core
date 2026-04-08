@@ -85,6 +85,42 @@ async def test_historical_coordinator_success(
     assert "last_reset" in coord.data
 
 
+async def test_historical_coordinator_aggregates_multiple_systems(
+    hass: HomeAssistant, config_entry: MockConfigEntry
+) -> None:
+    """Aggregate historical totals across multiple systems."""
+    connector = MagicMock()
+    connector.retrieve_historical_data = AsyncMock(
+        return_value=[
+            {
+                "total": {
+                    "photovoltaic": 100,
+                    "gridMeterReadingPositive": 1.5,
+                    "unit": "Wh",
+                    "mode": "single",
+                }
+            },
+            {
+                "total": {
+                    "photovoltaic": 250,
+                    "gridMeterReadingPositive": 2.5,
+                    "mode": 1,
+                }
+            },
+            {"total": "invalid"},
+        ]
+    )
+
+    data = await _fetch_historical(connector)
+
+    assert data["total"]["photovoltaic"] == 350
+    assert data["total"]["gridMeterReadingPositive"] == pytest.approx(4.0)
+    assert data["total"]["unit"] == "Wh"
+    # Non-numeric first value should not be overwritten by later numeric values.
+    assert data["total"]["mode"] == "single"
+    assert "last_reset" in data
+
+
 async def test_historical_coordinator_empty_response(
     hass: HomeAssistant, config_entry: MockConfigEntry
 ) -> None:
