@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from typing import Any
 
 from autoskope_client.api import AutoskopeApi
@@ -19,6 +20,14 @@ from homeassistant.helpers.selector import (
 )
 
 from .const import DEFAULT_HOST, DOMAIN, SECTION_ADVANCED_SETTINGS
+
+STEP_REAUTH_DATA_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_PASSWORD): TextSelector(
+            TextSelectorConfig(type=TextSelectorType.PASSWORD)
+        ),
+    }
+)
 
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
@@ -44,6 +53,45 @@ class AutoskopeConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Autoskope."""
 
     VERSION = 1
+
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
+        """Handle initiation of re-authentication."""
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle re-authentication with new credentials."""
+        errors: dict[str, str] = {}
+
+        if user_input is not None:
+            reauth_entry = self._get_reauth_entry()
+            password = user_input[CONF_PASSWORD]
+
+            try:
+                async with AutoskopeApi(
+                    host=reauth_entry.data[CONF_HOST],
+                    username=reauth_entry.data[CONF_USERNAME],
+                    password=password,
+                ):
+                    pass
+            except CannotConnect:
+                errors["base"] = "cannot_connect"
+            except InvalidAuth:
+                errors["base"] = "invalid_auth"
+            else:
+                return self.async_update_reload_and_abort(
+                    reauth_entry,
+                    data_updates={CONF_PASSWORD: password},
+                )
+
+        return self.async_show_form(
+            step_id="reauth_confirm",
+            data_schema=STEP_REAUTH_DATA_SCHEMA,
+            errors=errors,
+        )
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
