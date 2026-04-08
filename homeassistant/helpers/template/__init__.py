@@ -18,7 +18,6 @@ from types import CodeType
 from typing import TYPE_CHECKING, Any, Concatenate, Literal, NoReturn, Self, overload
 import weakref
 
-from awesomeversion import AwesomeVersion
 import jinja2
 from jinja2 import pass_context, pass_eval_context
 from jinja2.runtime import AsyncLoopContext, LoopContext
@@ -1456,11 +1455,6 @@ def add(value, amount, default=_SENTINEL):
         return default
 
 
-def version(value):
-    """Filter and function to get version object of the value."""
-    return AwesomeVersion(value)
-
-
 def make_logging_undefined(
     strict: bool | None, log_fn: Callable[[int, str], None] | None
 ) -> type[jinja2.Undefined]:
@@ -1611,13 +1605,11 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.add_extension(
             "homeassistant.helpers.template.extensions.TypeCastExtension"
         )
-
-        self.globals["version"] = version
+        self.add_extension("homeassistant.helpers.template.extensions.VersionExtension")
 
         self.filters["add"] = add
         self.filters["multiply"] = multiply
         self.filters["round"] = forgiving_round
-        self.filters["version"] = version
 
         if hass is None:
             return
