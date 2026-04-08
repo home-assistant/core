@@ -319,7 +319,7 @@ def async_remove_devices_from_dev_reg(
             dev_reg.async_remove_device(dev.id)
 
 
-class HassioStatsDataUpdateCoordinator(DataUpdateCoordinator):
+class HassioStatsDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """Class to retrieve Hass.io container stats."""
 
     config_entry: ConfigEntry
@@ -424,7 +424,7 @@ class HassioStatsDataUpdateCoordinator(DataUpdateCoordinator):
         return _remove
 
 
-class HassioAddOnDataUpdateCoordinator(DataUpdateCoordinator):
+class HassioAddOnDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """Class to retrieve Hass.io Add-on status."""
 
     config_entry: ConfigEntry
@@ -629,7 +629,7 @@ class HassioAddOnDataUpdateCoordinator(DataUpdateCoordinator):
             _LOGGER.warning("Could not refresh info for %s: %s", addon_slug, err)
 
 
-class HassioDataUpdateCoordinator(DataUpdateCoordinator):
+class HassioDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """Class to retrieve Hass.io status."""
 
     config_entry: ConfigEntry
