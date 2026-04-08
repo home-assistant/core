@@ -111,5 +111,10 @@
         }),
       }),
     }),
+    'rate_limit': dict({
+      'per-day': '20000',
+      'remaining': '15211',
+      'window-seconds': '86400',
+    }),
   })
 # ---
