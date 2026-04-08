@@ -1,5 +1,6 @@
 """Test hue_ble setup process."""
 
+import logging
 from unittest.mock import patch
 
 from bleak.backends.device import BLEDevice
@@ -67,6 +68,8 @@ async def test_setup_error(
     message: str,
 ) -> None:
     """Test that ConfigEntryNotReady is raised if there is an error condition."""
+
+    caplog.set_level(logging.DEBUG)
 
     entry = MockConfigEntry(domain=DOMAIN, unique_id="abcd", data={})
     entry.add_to_hass(hass)
