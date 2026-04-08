@@ -33,7 +33,7 @@ async def async_setup_entry(
 class FlussButton(FlussEntity, ButtonEntity):
     """Button to trigger a Fluss device (fallback when status unavailable)."""
 
-    _attr_translation_key = "trigger"
+    _attr_name = None
 
     @property
     def icon(self) -> str:

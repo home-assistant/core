@@ -50,7 +50,7 @@ async def test_button_press(
     await hass.services.async_call(
         BUTTON_DOMAIN,
         SERVICE_PRESS,
-        {ATTR_ENTITY_ID: "button.device_1_trigger"},
+        {ATTR_ENTITY_ID: "button.device_1"},
         blocking=True,
     )
 
@@ -74,7 +74,7 @@ async def test_button_press_error(
         await hass.services.async_call(
             BUTTON_DOMAIN,
             SERVICE_PRESS,
-            {ATTR_ENTITY_ID: "button.device_1_trigger"},
+            {ATTR_ENTITY_ID: "button.device_1"},
             blocking=True,
         )
 
@@ -88,5 +88,5 @@ async def test_no_button_when_cover_status_available(
     # Default fixture has openCloseStatus → should produce covers, not buttons
     await setup_integration(hass, mock_config_entry, [Platform.BUTTON])
 
-    assert hass.states.get("button.device_1_trigger") is None
-    assert hass.states.get("button.device_2_trigger") is None
+    assert hass.states.get("button.device_1") is None
+    assert hass.states.get("button.device_2") is None
