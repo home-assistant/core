@@ -33,12 +33,11 @@ class FlussEntity(CoordinatorEntity[FlussDataUpdateCoordinator]):
         self._attr_unique_id = (
             f"{device_id}_{unique_id_suffix}" if unique_id_suffix else device_id
         )
-        user_type = device.get("userPermissions", {}).get("userType")
         self._attr_device_info = DeviceInfo(
             identifiers={("fluss", device_id)},
             name=device.get("deviceName"),
             manufacturer="Fluss",
-            model=user_type or "Fluss Device",
+            model="Fluss+ Device",
         )
 
     @property

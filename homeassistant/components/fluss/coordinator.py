@@ -33,7 +33,7 @@ def device_has_cover_status(device_data: dict[str, Any]) -> bool:
     return status.get("openCloseStatus") in VALID_OPEN_CLOSE_STATUSES
 
 
-class FlussDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
+class FlussDataUpdateCoordinator(DataUpdateCoordinator[dict[str, dict[str, Any]]]):
     """Manages fetching Fluss device data on a schedule."""
 
     config_entry: FlussConfigEntry
@@ -112,7 +112,20 @@ class FlussDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         except FlussApiClientError as err:
             LOGGER.debug("Failed to get status for device %s: %s", device_id, err)
             return None
+        if not isinstance(response, dict):
+            LOGGER.debug(
+                "Unexpected status response type for device %s: %s",
+                device_id,
+                type(response).__name__,
+            )
+            return None
         # Unwrap the nested "status" key from the API response
-        if isinstance(response, dict):
-            return response.get("status", response)
-        return response
+        status = response.get("status", response)
+        if isinstance(status, dict):
+            return status
+        LOGGER.debug(
+            "Unexpected nested status type for device %s: %s",
+            device_id,
+            type(status).__name__,
+        )
+        return None

@@ -150,6 +150,7 @@ async def test_cover_state_unknown_when_status_unavailable(
 
     # No covers should be created since no valid openCloseStatus
     assert hass.states.get("cover.device_1") is None
+    assert hass.states.get("cover.device_2") is None
 
 
 async def test_no_cover_when_status_missing(

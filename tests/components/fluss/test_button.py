@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from unittest.mock import AsyncMock
 
-from fluss_api import FlussApiClient, FlussApiClientError
+from fluss_api import FlussApiClientError
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -38,7 +38,7 @@ async def test_buttons(
 
 async def test_button_press(
     hass: HomeAssistant,
-    mock_api_client: FlussApiClient,
+    mock_api_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test successful button press."""
@@ -59,7 +59,7 @@ async def test_button_press(
 
 async def test_button_press_error(
     hass: HomeAssistant,
-    mock_api_client: FlussApiClient,
+    mock_api_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test button press with API error."""

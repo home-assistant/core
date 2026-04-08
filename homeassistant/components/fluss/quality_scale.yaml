@@ -45,10 +45,7 @@ rules:
   stale-devices: todo
   diagnostics: todo
   exception-translations: done
-  icon-translations:
-    status: exempt
-    comment: |
-      No icons used
+  icon-translations: todo
   reconfiguration-flow: todo
   dynamic-devices: todo
   discovery-update-info: todo
