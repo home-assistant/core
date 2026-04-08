@@ -189,6 +189,14 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ProxmoxConfigEntry) ->
     # Migration for additional configuration options added to support API tokens
     if entry.version < 3:
         data = dict(entry.data)
+        # If CONF_REALM wasn't there yet, extract from username
+        if CONF_REALM not in data:
+            data[CONF_REALM] = DEFAULT_REALM
+            if "@" in data.get(CONF_USERNAME, ""):
+                username, realm = data[CONF_USERNAME].split("@", 1)
+                data[CONF_USERNAME] = username
+                data[CONF_REALM] = realm.lower()
+
         realm = data[CONF_REALM].lower()
 
         # If the realm is one of the base providers, set the provider to match the realm.

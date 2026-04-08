@@ -281,6 +281,33 @@ async def test_migration_v2_to_v3(
     assert entry.data[CONF_REALM] == AUTH_PAM
 
 
+async def test_migration_v2_to_v3_without_realm(
+    hass: HomeAssistant,
+) -> None:
+    """Test migration from version 2 to 3."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        version=2,
+        unique_id="1",
+        data={
+            CONF_HOST: "http://test_host",
+            CONF_PORT: 8006,
+            CONF_USERNAME: "test_user@pam",
+            CONF_PASSWORD: "test_password",
+            CONF_VERIFY_SSL: True,
+        },
+    )
+    entry.add_to_hass(hass)
+    assert entry.version == 2
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert entry.version == 3
+    assert entry.data[CONF_AUTH_METHOD] == AUTH_PAM
+    assert entry.data[CONF_REALM] == AUTH_PAM
+
+
 async def test_new_vm_creates_entity(
     hass: HomeAssistant,
     mock_proxmox_client: MagicMock,
