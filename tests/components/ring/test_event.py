@@ -9,6 +9,7 @@ import pytest
 from ring_doorbell import Ring
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.components.event import ATTR_EVENT_TYPE, DoorbellEventType
 from homeassistant.components.ring.binary_sensor import RingEvent
 from homeassistant.components.ring.coordinator import RingEventListener
 from homeassistant.const import Platform
@@ -35,26 +36,38 @@ async def test_states(
 
 
 @pytest.mark.parametrize(
-    ("device_id", "device_name", "alert_kind", "device_class"),
+    ("device_id", "device_name", "alert_kind", "device_class", "event_type"),
     [
         pytest.param(
             FRONT_DOOR_DEVICE_ID,
             "front_door",
             "motion",
             "motion",
+            "motion",
             id="front_door_motion",
         ),
         pytest.param(
-            FRONT_DOOR_DEVICE_ID, "front_door", "ding", "doorbell", id="front_door_ding"
+            FRONT_DOOR_DEVICE_ID,
+            "front_door",
+            "ding",
+            "doorbell",
+            DoorbellEventType.RING,
+            id="front_door_ding",
         ),
         pytest.param(
-            INGRESS_DEVICE_ID, "ingress", "ding", "doorbell", id="ingress_ding"
+            INGRESS_DEVICE_ID,
+            "ingress",
+            "ding",
+            "doorbell",
+            DoorbellEventType.RING,
+            id="ingress_ding",
         ),
         pytest.param(
             INGRESS_DEVICE_ID,
             "ingress",
             "intercom_unlock",
             "button",
+            "intercom_unlock",
             id="ingress_unlock",
         ),
     ],
@@ -68,6 +81,7 @@ async def test_event(
     device_name: str,
     alert_kind: str,
     device_class: str,
+    event_type: str,
 ) -> None:
     """Test the Ring event platforms."""
 
@@ -96,3 +110,4 @@ async def test_event(
     state = hass.states.get(entity_id)
     assert state is not None
     assert state.state == start_time_str
+    assert state.attributes[ATTR_EVENT_TYPE] == event_type
