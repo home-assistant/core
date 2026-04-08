@@ -123,7 +123,7 @@ class RainforestRavenConfigFlow(ConfigFlow, domain=DOMAIN):
         existing_devices = [
             entry.data[CONF_DEVICE] for entry in self._async_current_entries()
         ]
-        unused_ports = [
+        port_map = {
             usb.human_readable_device_name(
                 port.device,
                 port.serial_number,
@@ -131,16 +131,16 @@ class RainforestRavenConfigFlow(ConfigFlow, domain=DOMAIN):
                 port.description,
                 port.vid if isinstance(port, usb.USBDevice) else None,
                 port.pid if isinstance(port, usb.USBDevice) else None,
-            )
+            ): port
             for port in ports
             if port.device not in existing_devices
-        ]
-        if not unused_ports:
+        }
+        if not port_map:
             return self.async_abort(reason="no_devices_found")
 
         errors = {}
         if user_input is not None and user_input.get(CONF_DEVICE, "").strip():
-            port = ports[unused_ports.index(str(user_input[CONF_DEVICE]))]
+            port = port_map[user_input[CONF_DEVICE]]
             dev_path = port.device
             unique_id = _generate_unique_id(port)
             await self.async_set_unique_id(unique_id)
@@ -153,5 +153,5 @@ class RainforestRavenConfigFlow(ConfigFlow, domain=DOMAIN):
             else:
                 return await self.async_step_meters()
 
-        schema = vol.Schema({vol.Required(CONF_DEVICE): vol.In(unused_ports)})
+        schema = vol.Schema({vol.Required(CONF_DEVICE): vol.In(port_map)})
         return self.async_show_form(step_id="user", data_schema=schema, errors=errors)
