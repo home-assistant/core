@@ -38,10 +38,10 @@ class ActronAirConfigFlow(ConfigFlow, domain=DOMAIN):
                 _LOGGER.error("OAuth2 flow failed: %s", err)
                 return self.async_abort(reason="oauth2_error")
 
-            self._device_code = device_code_response["device_code"]
-            self._user_code = device_code_response["user_code"]
-            self._verification_uri = device_code_response["verification_uri_complete"]
-            self._expires_minutes = str(device_code_response["expires_in"] // 60)
+            self._device_code = device_code_response.device_code
+            self._user_code = device_code_response.user_code
+            self._verification_uri = device_code_response.verification_uri_complete
+            self._expires_minutes = str(device_code_response.expires_in // 60)
 
         async def _wait_for_authorization() -> None:
             """Wait for the user to authorize the device."""

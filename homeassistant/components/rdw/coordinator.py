@@ -11,13 +11,15 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import CONF_LICENSE_PLATE, DOMAIN, LOGGER, SCAN_INTERVAL
 
+type RDWConfigEntry = ConfigEntry[RDWDataUpdateCoordinator]
+
 
 class RDWDataUpdateCoordinator(DataUpdateCoordinator[Vehicle]):
     """Class to manage fetching RDW data."""
 
-    config_entry: ConfigEntry
+    config_entry: RDWConfigEntry
 
-    def __init__(self, hass: HomeAssistant, config_entry: ConfigEntry) -> None:
+    def __init__(self, hass: HomeAssistant, config_entry: RDWConfigEntry) -> None:
         """Initialize the coordinator."""
         super().__init__(
             hass,
