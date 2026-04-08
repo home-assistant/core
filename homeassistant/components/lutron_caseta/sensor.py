@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import timedelta
+from datetime import datetime, timedelta
 from typing import Any
 
 from homeassistant.components.cover import DOMAIN as COVER_DOMAIN
@@ -63,7 +63,7 @@ class LutronCasetaBatterySensor(LutronCasetaEntity, SensorEntity):
             )
         )
 
-    async def _async_schedule_refresh(self, _now) -> None:
+    async def _async_schedule_refresh(self, _now: datetime) -> None:
         """Refresh the battery sensor on a long interval."""
         await self.async_update_ha_state(True)
 
