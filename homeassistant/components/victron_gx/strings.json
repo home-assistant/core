@@ -76,8 +76,8 @@
         "name": "ESS BatteryLife state",
         "state": {
           "keep_batteries_charged": "'Keep batteries charged' mode enabled",
-          "recharge": "Recharge, SOC dropped 5% or more below MinSOC",
-          "recharge_no_battery_life": "Recharge, SOC dropped 5% or more below MinSOC (No BatteryLife)",
+          "recharge": "Recharge, SoC dropped 5% or more below minimum SoC",
+          "recharge_no_battery_life": "Recharge, SoC dropped 5% or more below minimum SoC (No BatteryLife)",
           "self_consumption": "Self-consumption",
           "self_consumption_soc_above_min": "Self-consumption, SoC at or above minimum SoC",
           "self_consumption_soc_at_100": "Self-consumption, SoC at 100%",
