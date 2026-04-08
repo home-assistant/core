@@ -6,8 +6,6 @@ from collections.abc import Callable
 import logging
 from typing import Any
 
-import voluptuous as vol
-
 from homeassistant.const import CONF_VARIABLES
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import TemplateError
@@ -35,6 +33,8 @@ class TriggerEntity(  # pylint: disable=hass-enforce-class-module
 ):
     """Template entity based on trigger data."""
 
+    skip_validation: tuple[str, ...] | None
+
     def __init__(
         self,
         hass: HomeAssistant,
@@ -49,6 +49,10 @@ class TriggerEntity(  # pylint: disable=hass-enforce-class-module
         self._entity_variables: ScriptVariables | None = config.get(CONF_VARIABLES)
         self._rendered_entity_variables: dict | None = None
         self._state_render_error = False
+
+        self._skip_rendered_validation: list[str] = []
+        if self.skip_validation is not None:
+            self._skip_rendered_validation.extend(self.skip_validation)
 
     async def async_added_to_hass(self) -> None:
         """Handle being added to Home Assistant."""
@@ -209,6 +213,9 @@ class TriggerEntity(  # pylint: disable=hass-enforce-class-module
             return True
 
         for option, entity_template in self._templates.items():
+            if option in self._skip_rendered_validation:
+                continue
+
             # Capture templates that did not render a result due to an exception and
             # ensure the state object updates. _SENTINEL is used to differentiate
             # templates that render None.
@@ -216,26 +223,11 @@ class TriggerEntity(  # pylint: disable=hass-enforce-class-module
                 write_state = True
                 continue
 
-            if entity_template.validator:
-                try:
-                    value = entity_template.validator(rendered)
-                except vol.Invalid as ex:
-                    _LOGGER.error(
-                        (
-                            "Error validating template result '%s' "
-                            "from template '%s' "
-                            "for attribute '%s' in entity %s "
-                            "validation message '%s'"
-                        ),
-                        rendered,
-                        entity_template.template,
-                        entity_template.attribute,
-                        self.entity_id,
-                        ex.msg,
-                    )
-                    value = None
-            else:
-                value = rendered
+            value = (
+                entity_template.validator(rendered)
+                if entity_template.validator
+                else rendered
+            )
 
             if entity_template.on_update:
                 entity_template.on_update(value)
