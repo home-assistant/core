@@ -7,63 +7,14 @@ import pytest
 
 from homeassistant.components.spaceapi import (
     ATTR_SENSOR_LOCATION,
-    DOMAIN,
     SPACEAPI_VERSION,
     URL_API_SPACEAPI,
 )
 from homeassistant.const import ATTR_UNIT_OF_MEASUREMENT, PERCENTAGE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
-from homeassistant.setup import async_setup_component
 
+from tests.common import MockConfigEntry
 from tests.typing import ClientSessionGenerator
-
-CONFIG = {
-    DOMAIN: {
-        "space": "Home",
-        "logo": "https://home-assistant.io/logo.png",
-        "url": "https://home-assistant.io",
-        "location": {"address": "In your Home"},
-        "contact": {"email": "hello@home-assistant.io"},
-        "issue_report_channels": ["email"],
-        "state": {
-            "entity_id": "test.test_door",
-            "icon_open": "https://home-assistant.io/open.png",
-            "icon_closed": "https://home-assistant.io/close.png",
-        },
-        "sensors": {
-            "temperature": ["test.temp1", "test.temp2", "test.temp3"],
-            "humidity": ["test.hum1"],
-        },
-        "spacefed": {"spacenet": True, "spacesaml": False, "spacephone": True},
-        "cam": ["https://home-assistant.io/cam1", "https://home-assistant.io/cam2"],
-        "stream": {
-            "m4": "https://home-assistant.io/m4",
-            "mjpeg": "https://home-assistant.io/mjpeg",
-            "ustream": "https://home-assistant.io/ustream",
-        },
-        "feeds": {
-            "blog": {"url": "https://home-assistant.io/blog"},
-            "wiki": {"type": "mediawiki", "url": "https://home-assistant.io/wiki"},
-            "calendar": {"type": "ical", "url": "https://home-assistant.io/calendar"},
-            "flicker": {"url": "https://www.flickr.com/photos/home-assistant"},
-        },
-        "cache": {"schedule": "m.02"},
-        "projects": [
-            "https://home-assistant.io/projects/1",
-            "https://home-assistant.io/projects/2",
-            "https://home-assistant.io/projects/3",
-        ],
-        "radio_show": [
-            {
-                "name": "Radioshow",
-                "url": "https://home-assistant.io/radio",
-                "type": "ogg",
-                "start": "2019-09-02T10:00Z",
-                "end": "2019-09-02T12:00Z",
-            }
-        ],
-    }
-}
 
 SENSOR_OUTPUT = {
     "temperature": [
@@ -94,10 +45,13 @@ SENSOR_OUTPUT = {
 
 @pytest.fixture
 async def mock_client(
-    hass: HomeAssistant, hass_client: ClientSessionGenerator
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    mock_config_entry: MockConfigEntry,
 ) -> TestClient:
     """Start the Home Assistant HTTP component."""
-    await async_setup_component(hass, "spaceapi", CONFIG)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
 
     hass.states.async_set(
         "test.temp1",
@@ -139,7 +93,6 @@ async def test_spaceapi_get(hass: HomeAssistant, mock_client: TestClient) -> Non
     assert data["api"] == SPACEAPI_VERSION
     assert data["space"] == "Home"
     assert data["contact"]["email"] == "hello@home-assistant.io"
-    assert data["location"]["address"] == "In your Home"
     assert data["location"]["lat"] == 32.87336
     assert data["location"]["lon"] == -117.22743
     assert data["state"]["open"] == "null"

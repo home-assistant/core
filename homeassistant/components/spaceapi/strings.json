@@ -1,0 +1,38 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "email": "Contact email",
+          "entity_id": "State entity",
+          "issue_report_channels": "Issue report channels",
+          "logo": "Logo URL",
+          "space": "Space name",
+          "url": "Website URL"
+        },
+        "data_description": {
+          "email": "Contact email address for the space.",
+          "entity_id": "Entity that represents the open/closed state of the space.",
+          "issue_report_channels": "Channels for reporting issues.",
+          "logo": "URL to the logo of your hackerspace.",
+          "space": "The name of your hackerspace.",
+          "url": "URL to the website of your hackerspace."
+        }
+      }
+    }
+  },
+  "selector": {
+    "issue_report_channels": {
+      "options": {
+        "email": "Email",
+        "issue_mail": "Issue mail",
+        "ml": "Mailing list",
+        "twitter": "Twitter"
+      }
+    }
+  }
+}
