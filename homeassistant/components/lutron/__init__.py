@@ -36,7 +36,9 @@ _LOGGER = logging.getLogger(__name__)
 
 # Attribute on events that indicates what action was taken with the button.
 ATTR_ACTION = "action"
+ATTR_BUTTON_SUBTYPE = "button_subtype"
 ATTR_FULL_ID = "full_id"
+ATTR_KEYPAD_UUID = "keypad_uuid"
 ATTR_UUID = "uuid"
 
 type LutronConfigEntry = ConfigEntry[LutronData]
@@ -54,6 +56,26 @@ class LutronData:
     lights: list[tuple[str, Output]]
     scenes: list[tuple[str, Keypad, Button, Led | None]]
     switches: list[tuple[str, Output]]
+
+
+def button_subtype(keypad: Keypad, button: Button) -> str:
+    """Return the device-trigger subtype for a keypad button.
+
+    Pico remotes use protocol-defined component numbers that map cleanly to
+    stable semantic positions. Other keypads keep the generic numbered mapping.
+    """
+    if keypad.type == "PICO_KEYPAD":
+        pico_subtypes = {
+            2: "top",
+            3: "favorite",
+            4: "bottom",
+            5: "raise",
+            6: "lower",
+        }
+        if subtype := pico_subtypes.get(button.number):
+            return subtype
+
+    return f"button_{button.number}"
 
 
 async def async_setup_entry(
@@ -94,7 +116,7 @@ async def async_setup_entry(
         for output in area.outputs:
             platform = None
             _LOGGER.debug("Working on output %s", output.type)
-            if output.type == "SYSTEM_SHADE":
+            if output.type in ("SYSTEM_SHADE", "MOTOR"):
                 entry_data.covers.append((area.name, output))
                 platform = Platform.COVER
             elif output.type == "CEILING_FAN_TYPE":
