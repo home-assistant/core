@@ -26,15 +26,13 @@ from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     CONF_CONCURRENCY,
-    DATA_COORDINATOR,
     DEFAULT_CONCURRENCY,
     DOMAIN,
-    EVENTS_COORDINATOR,
     SYSTEM_UPDATE_SIGNAL,
     TYPE_LOCAL,
 )
 from .coordinator import RiscoDataUpdateCoordinator, RiscoEventsDataUpdateCoordinator
-from .models import LocalData
+from .models import CloudData, LocalData, RiscoConfigEntry, RiscoData
 from .services import async_setup_services
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
@@ -58,7 +56,7 @@ def zone_update_signal(zone_id: int) -> str:
     return f"risco_zone_update_{zone_id}"
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: RiscoConfigEntry) -> bool:
     """Set up Risco from a config entry."""
     if is_local(entry):
         return await _async_setup_local_entry(hass, entry)
@@ -66,7 +64,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return await _async_setup_cloud_entry(hass, entry)
 
 
-async def _async_setup_local_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def _async_setup_local_entry(
+    hass: HomeAssistant, entry: RiscoConfigEntry
+) -> bool:
     data = entry.data
     concurrency = entry.options.get(CONF_CONCURRENCY, DEFAULT_CONCURRENCY)
     risco = RiscoLocal(
@@ -120,14 +120,15 @@ async def _async_setup_local_entry(hass: HomeAssistant, entry: ConfigEntry) -> b
 
     entry.async_on_unload(entry.add_update_listener(_update_listener))
 
-    hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN][entry.entry_id] = local_data
+    entry.runtime_data = RiscoData(local_data=local_data)
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 
 
-async def _async_setup_cloud_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def _async_setup_cloud_entry(
+    hass: HomeAssistant, entry: RiscoConfigEntry
+) -> bool:
     data = entry.data
     risco = RiscoCloud(data[CONF_USERNAME], data[CONF_PASSWORD], data[CONF_PIN])
     try:
@@ -143,11 +144,12 @@ async def _async_setup_cloud_entry(hass: HomeAssistant, entry: ConfigEntry) -> b
 
     entry.async_on_unload(entry.add_update_listener(_update_listener))
 
-    hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN][entry.entry_id] = {
-        DATA_COORDINATOR: coordinator,
-        EVENTS_COORDINATOR: events_coordinator,
-    }
+    entry.runtime_data = RiscoData(
+        cloud_data=CloudData(
+            coordinator=coordinator,
+            events_coordinator=events_coordinator,
+        )
+    )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     await events_coordinator.async_refresh()
@@ -155,20 +157,16 @@ async def _async_setup_cloud_entry(hass: HomeAssistant, entry: ConfigEntry) -> b
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: RiscoConfigEntry) -> bool:
     """Unload a config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-    if unload_ok:
-        if is_local(entry):
-            local_data: LocalData = hass.data[DOMAIN][entry.entry_id]
-            await local_data.system.disconnect()
-
-        hass.data[DOMAIN].pop(entry.entry_id)
+    if unload_ok and (local_data := entry.runtime_data.local_data):
+        await local_data.system.disconnect()
 
     return unload_ok
 
 
-async def _update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
+async def _update_listener(hass: HomeAssistant, entry: RiscoConfigEntry) -> None:
     """Handle options update."""
     await hass.config_entries.async_reload(entry.entry_id)
 

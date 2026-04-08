@@ -10,17 +10,16 @@ from pyrisco.cloud.event import Event
 
 from homeassistant.components.binary_sensor import DOMAIN as BS_DOMAIN
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import dt as dt_util
 
-from . import is_local
-from .const import DOMAIN, EVENTS_COORDINATOR
+from .const import DOMAIN
 from .coordinator import RiscoEventsDataUpdateCoordinator
 from .entity import zone_unique_id
+from .models import RiscoConfigEntry
 
 CATEGORIES = {
     2: "Alarm",
@@ -45,17 +44,15 @@ EVENT_ATTRIBUTES = [
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: RiscoConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up sensors for device."""
-    if is_local(config_entry):
+    if not (cloud_data := config_entry.runtime_data.cloud_data):
         # no events in local comm
         return
 
-    coordinator: RiscoEventsDataUpdateCoordinator = hass.data[DOMAIN][
-        config_entry.entry_id
-    ][EVENTS_COORDINATOR]
+    coordinator = cloud_data.events_coordinator
     sensors = [
         RiscoSensor(coordinator, category_id, [], name, config_entry.entry_id)
         for category_id, name in CATEGORIES.items()
