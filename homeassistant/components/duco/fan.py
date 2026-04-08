@@ -71,6 +71,7 @@ class DucoVentilationFanEntity(DucoEntity, FanEntity):
     """Fan entity for the ventilation control of a Duco node."""
 
     _attr_translation_key = "ventilation"
+    _attr_name = None
     _attr_supported_features = FanEntityFeature.SET_SPEED | FanEntityFeature.PRESET_MODE
     _attr_preset_modes = [PRESET_AUTO]
     _attr_speed_count = len(ORDERED_NAMED_FAN_SPEEDS)

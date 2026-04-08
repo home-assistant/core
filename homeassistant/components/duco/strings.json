@@ -21,7 +21,6 @@
   "entity": {
     "fan": {
       "ventilation": {
-        "name": "Ventilation",
         "state_attributes": {
           "preset_mode": {
             "state": {

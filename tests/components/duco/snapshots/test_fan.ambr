@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_fan_entity_state[fan.living_ventilation-entry]
+# name: test_fan_entity_state[fan.living-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -17,7 +17,7 @@
     'disabled_by': None,
     'domain': 'fan',
     'entity_category': None,
-    'entity_id': 'fan.living_ventilation',
+    'entity_id': 'fan.living',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -25,12 +25,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Ventilation',
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Ventilation',
+    'original_name': None,
     'platform': 'duco',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -40,10 +40,10 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_fan_entity_state[fan.living_ventilation-state]
+# name: test_fan_entity_state[fan.living-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Living Ventilation',
+      'friendly_name': 'Living',
       'percentage': None,
       'percentage_step': 33.333333333333336,
       'preset_mode': 'auto',
@@ -53,7 +53,7 @@
       'supported_features': <FanEntityFeature: 9>,
     }),
     'context': <ANY>,
-    'entity_id': 'fan.living_ventilation',
+    'entity_id': 'fan.living',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
