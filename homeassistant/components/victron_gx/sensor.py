@@ -6,20 +6,16 @@ from victron_mqtt import (
     Device as VictronVenusDevice,
     Metric as VictronVenusMetric,
     MetricKind,
-    MetricNature,
     MetricType,
     VictronEnum,
 )
 
-from homeassistant.components.sensor import (
-    SensorDeviceClass,
-    SensorEntity,
-    SensorStateClass,
-)
+from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from .const import METRIC_NATURE_TO_STATE_CLASS
 from .entity import VictronBaseEntity
 from .hub import VictronGxConfigEntry
 
@@ -38,12 +34,6 @@ METRIC_TYPE_TO_DEVICE_CLASS: dict[MetricType, SensorDeviceClass] = {
     MetricType.LIQUID_VOLUME: SensorDeviceClass.VOLUME_STORAGE,
     MetricType.DURATION: SensorDeviceClass.DURATION,
     MetricType.ENUM: SensorDeviceClass.ENUM,
-}
-
-METRIC_NATURE_TO_STATE_CLASS: dict[MetricNature, SensorStateClass] = {
-    MetricNature.MEASUREMENT: SensorStateClass.MEASUREMENT,
-    MetricNature.TOTAL: SensorStateClass.TOTAL,
-    MetricNature.TOTAL_INCREASING: SensorStateClass.TOTAL_INCREASING,
 }
 
 
