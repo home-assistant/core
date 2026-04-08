@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 from datetime import date
 from decimal import Decimal
 import logging
@@ -10,6 +11,12 @@ from typing import Any
 import sqlalchemy
 from sqlalchemy import lambda_stmt
 from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy.ext.asyncio import (
+    AsyncSession,
+    async_scoped_session,
+    async_sessionmaker,
+    create_async_engine,
+)
 from sqlalchemy.orm import Session, scoped_session, sessionmaker
 from sqlalchemy.sql.lambdas import StatementLambdaElement
 from sqlalchemy.util import LRUCache
@@ -28,6 +35,7 @@ from .models import SQLData
 
 _LOGGER = logging.getLogger(__name__)
 
+_SQL_SELECT_DUMMY = sqlalchemy.text("SELECT 1;")
 _SQL_LAMBDA_CACHE: LRUCache = LRUCache(1000)
 
 
@@ -58,7 +66,9 @@ def validate_sql_select(value: Template) -> Template:
 
 async def async_create_sessionmaker(
     hass: HomeAssistant, db_url: str
-) -> tuple[scoped_session | None, bool, bool]:
+) -> tuple[
+    async_scoped_session[AsyncSession] | scoped_session[Session] | None, bool, bool
+]:
     """Create a session maker for the given db_url.
 
     This function gets or creates a SQLAlchemy `scoped_session` for the given
@@ -86,7 +96,7 @@ async def async_create_sessionmaker(
         uses_recorder_db = False
     else:
         uses_recorder_db = db_url == instance.db_url
-    sessmaker: scoped_session | None
+    sessmaker: async_scoped_session[AsyncSession] | scoped_session[Session] | None
     sql_data = _async_get_or_init_domain_data(hass)
     use_database_executor = False
     if uses_recorder_db and instance.dialect_name == SupportedDialect.SQLITE:
@@ -101,8 +111,8 @@ async def async_create_sessionmaker(
     # for every sensor.
     elif db_url in sql_data.session_makers_by_db_url:
         sessmaker = sql_data.session_makers_by_db_url[db_url]
-    elif sessmaker := await hass.async_add_executor_job(
-        _validate_and_get_session_maker_for_db_url, db_url
+    elif sessmaker := await _async_validate_and_get_session_maker_for_db_url(
+        hass, db_url
     ):
         sql_data.session_makers_by_db_url[db_url] = sessmaker
     else:
@@ -176,7 +186,9 @@ def _async_get_or_init_domain_data(hass: HomeAssistant) -> SQLData:
         sql_data: SQLData = hass.data[DOMAIN]
         return sql_data
 
-    session_makers_by_db_url: dict[str, scoped_session] = {}
+    session_makers_by_db_url: dict[
+        str, async_scoped_session[AsyncSession] | scoped_session[Session]
+    ] = {}
 
     #
     # Ensure we dispose of all engines at shutdown
@@ -185,10 +197,13 @@ def _async_get_or_init_domain_data(hass: HomeAssistant) -> SQLData:
     # Shutdown all sessions in the executor since they will
     # do blocking I/O
     #
-    def _shutdown_db_engines(event: Event) -> None:
+    async def _shutdown_db_engines(_: Event) -> None:
         """Shutdown all database engines."""
         for sessmaker in session_makers_by_db_url.values():
-            sessmaker.connection().engine.dispose()
+            if isinstance(sessmaker, async_scoped_session):
+                await (await sessmaker.connection()).engine.dispose()
+            else:
+                sessmaker.connection().engine.dispose()
 
     cancel_shutdown = hass.bus.async_listen_once(
         EVENT_HOMEASSISTANT_STOP, _shutdown_db_engines
@@ -199,31 +214,47 @@ def _async_get_or_init_domain_data(hass: HomeAssistant) -> SQLData:
     return sql_data
 
 
-def _validate_and_get_session_maker_for_db_url(db_url: str) -> scoped_session | None:
-    """Validate the db_url and return a session maker.
-
-    This does I/O and should be run in the executor.
-    """
-    sess: Session | None = None
+async def _async_validate_and_get_session_maker_for_db_url(
+    hass: HomeAssistant, db_url: str
+) -> async_scoped_session[AsyncSession] | scoped_session[Session] | None:
+    """Validate the db_url and return a session maker."""
     try:
-        engine = sqlalchemy.create_engine(db_url, future=True)
-        sessmaker = scoped_session(sessionmaker(bind=engine, future=True))
-        # Run a dummy query just to test the db_url
-        sess = sessmaker()
-        sess.execute(sqlalchemy.text("SELECT 1;"))
+        if "+aiomysql" in db_url or "+aiosqlite" in db_url or "+asyncpg" in db_url:
+            maker = async_scoped_session(
+                async_sessionmaker(
+                    bind=create_async_engine(db_url, future=True), future=True
+                ),
+                scopefunc=asyncio.current_task,
+            )
+            # Run a dummy query just to test the db_url
+            async with maker() as session:
+                await session.execute(_SQL_SELECT_DUMMY)
+            return maker
 
+        def _get_session_maker_for_db_url() -> scoped_session[Session] | None:
+            """Validate the db_url and return a session maker.
+
+            This does I/O and should be run in the executor.
+            """
+            maker = scoped_session(
+                sessionmaker(
+                    bind=sqlalchemy.create_engine(db_url, future=True), future=True
+                )
+            )
+            # Run a dummy query just to test the db_url
+            with maker() as session:
+                session.execute(_SQL_SELECT_DUMMY)
+            return maker
+
+        return await hass.async_add_executor_job(_get_session_maker_for_db_url)
     except SQLAlchemyError as err:
         _LOGGER.error(
             "Couldn't connect using %s DB_URL: %s",
             redact_credentials(db_url),
             redact_credentials(str(err)),
         )
-        return None
-    else:
-        return sessmaker
-    finally:
-        if sess:
-            sess.close()
+
+    return None
 
 
 def generate_lambda_stmt(query: str) -> StatementLambdaElement:

@@ -2,10 +2,12 @@
 
 from __future__ import annotations
 
+import copy
 from datetime import timedelta
 from pathlib import Path
 import sqlite3
-from typing import Any
+import types
+from typing import Any, Self
 from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
@@ -268,16 +270,30 @@ async def test_query_on_disk_sqlite_no_result(
 
 
 @pytest.mark.parametrize(
-    ("url", "expected_patterns", "not_expected_patterns"),
+    ("patch_create", "url", "expected_patterns", "not_expected_patterns"),
     [
         (
+            "homeassistant.components.sql.util.sqlalchemy.create_engine",
             "sqlite://homeassistant:hunter2@homeassistant.local",
             ["sqlite://****:****@homeassistant.local"],
             ["sqlite://homeassistant:hunter2@homeassistant.local"],
         ),
         (
+            "homeassistant.components.sql.util.sqlalchemy.create_engine",
             "sqlite://homeassistant.local",
             ["sqlite://homeassistant.local"],
+            [],
+        ),
+        (
+            "homeassistant.components.sql.util.create_async_engine",
+            "sqlite+aiosqlite://homeassistant:hunter2@homeassistant.local",
+            ["sqlite+aiosqlite://****:****@homeassistant.local"],
+            ["sqlite+aiosqlite://homeassistant:hunter2@homeassistant.local"],
+        ),
+        (
+            "homeassistant.components.sql.util.create_async_engine",
+            "sqlite+aiosqlite://homeassistant.local",
+            ["sqlite+aiosqlite://homeassistant.local"],
             [],
         ),
     ],
@@ -286,6 +302,7 @@ async def test_invalid_url_setup(
     recorder_mock: Recorder,
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
+    patch_create: str,
     url: str,
     expected_patterns: str,
     not_expected_patterns: str,
@@ -307,10 +324,7 @@ async def test_invalid_url_setup(
 
     entry.add_to_hass(hass)
 
-    with patch(
-        "homeassistant.components.sql.util.sqlalchemy.create_engine",
-        side_effect=SQLAlchemyError(url),
-    ):
+    with patch(patch_create, side_effect=SQLAlchemyError(url)):
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
@@ -334,9 +348,23 @@ async def test_invalid_url_on_update(
     class MockSession:
         """Mock session."""
 
+        def __enter__(self) -> Self:
+            return self
+
+        def __exit__(
+            self,
+            type: type[BaseException] | None,
+            value: BaseException | None,
+            traceback: types.TracebackType | None,
+        ) -> None:
+            pass
+
         def execute(self, query: Any) -> None:
             """Execute the query."""
             raise SQLAlchemyError("sqlite://homeassistant:hunter2@homeassistant.local")
+
+        def rollback(self) -> None:
+            pass
 
     with patch(
         "homeassistant.components.sql.util.scoped_session",
@@ -352,10 +380,19 @@ async def test_invalid_url_on_update(
     assert "sqlite://****:****@homeassistant.local" in caplog.text
 
 
-async def test_query_from_yaml(recorder_mock: Recorder, hass: HomeAssistant) -> None:
+@pytest.mark.parametrize("async_driver", [False, True])
+async def test_query_from_yaml(
+    recorder_mock: Recorder, hass: HomeAssistant, async_driver: bool
+) -> None:
     """Test the SQL sensor from yaml config."""
 
-    assert await async_setup_component(hass, DOMAIN, YAML_CONFIG)
+    config = YAML_CONFIG
+
+    if async_driver:
+        config = copy.deepcopy(YAML_CONFIG)
+        config["sql"][CONF_DB_URL] = "sqlite+aiosqlite://"
+
+    assert await async_setup_component(hass, DOMAIN, config)
     await hass.async_block_till_done()
 
     state = hass.states.get("sensor.get_value")
@@ -451,16 +488,30 @@ async def test_config_from_old_yaml(
 
 
 @pytest.mark.parametrize(
-    ("url", "expected_patterns", "not_expected_patterns"),
+    ("patch_create", "url", "expected_patterns", "not_expected_patterns"),
     [
         (
+            "homeassistant.components.sql.util.sqlalchemy.create_engine",
             "sqlite://homeassistant:hunter2@homeassistant.local",
             ["sqlite://****:****@homeassistant.local"],
             ["sqlite://homeassistant:hunter2@homeassistant.local"],
         ),
         (
+            "homeassistant.components.sql.util.sqlalchemy.create_engine",
             "sqlite://homeassistant.local",
             ["sqlite://homeassistant.local"],
+            [],
+        ),
+        (
+            "homeassistant.components.sql.util.create_async_engine",
+            "sqlite+aiosqlite://homeassistant:hunter2@homeassistant.local",
+            ["sqlite+aiosqlite://****:****@homeassistant.local"],
+            ["sqlite+aiosqlite://homeassistant:hunter2@homeassistant.local"],
+        ),
+        (
+            "homeassistant.components.sql.util.create_async_engine",
+            "sqlite+aiosqlite://homeassistant.local",
+            ["sqlite+aiosqlite://homeassistant.local"],
             [],
         ),
     ],
@@ -469,6 +520,7 @@ async def test_invalid_url_setup_from_yaml(
     recorder_mock: Recorder,
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
+    patch_create: str,
     url: str,
     expected_patterns: str,
     not_expected_patterns: str,
@@ -483,11 +535,9 @@ async def test_invalid_url_setup_from_yaml(
         }
     }
 
-    with patch(
-        "homeassistant.components.sql.util.sqlalchemy.create_engine",
-        side_effect=SQLAlchemyError(url),
-    ):
+    with patch(patch_create, side_effect=SQLAlchemyError(url)):
         assert await async_setup_component(hass, DOMAIN, config)
+
     await hass.async_block_till_done()
 
     for pattern in not_expected_patterns:
@@ -636,6 +686,53 @@ async def test_multiple_sensors_using_same_db(
         await hass.async_stop()
 
 
+async def test_multiple_sensors_using_same_external_db(
+    recorder_mock: Recorder, hass: HomeAssistant, tmp_path: Path
+) -> None:
+    """Test multiple sensors using the same external db."""
+    db_path = tmp_path / "test.db"
+
+    # Create and populate the external database
+    conn = sqlite3.connect(db_path)
+    conn.execute("CREATE TABLE users (name TEXT, age INTEGER)")
+    conn.execute("INSERT INTO users (name, age) VALUES ('Alice', 30), ('Bob', 25)")
+    conn.commit()
+    conn.close()
+
+    config = {CONF_DB_URL: f"sqlite:///{db_path}"}
+    config2 = {CONF_DB_URL: f"sqlite:///{db_path}"}
+    options = {
+        CONF_QUERY: "SELECT name FROM users ORDER BY age LIMIT 1",
+        CONF_COLUMN_NAME: "name",
+    }
+    options2 = {
+        CONF_QUERY: "SELECT name FROM users ORDER BY age DESC LIMIT 1",
+        CONF_COLUMN_NAME: "name",
+    }
+
+    await init_integration(
+        hass, title="Select name SQL query", config=config, options=options
+    )
+
+    assert hass.data["sql"]
+    assert len(hass.data["sql"].session_makers_by_db_url) == 1
+    assert hass.states.get("sensor.select_name_sql_query").state == "Bob"
+
+    await init_integration(
+        hass,
+        title="Select name SQL query 2",
+        config=config2,
+        options=options2,
+        entry_id="2",
+    )
+
+    assert len(hass.data["sql"].session_makers_by_db_url) == 1
+    assert hass.states.get("sensor.select_name_sql_query_2").state == "Alice"
+
+    with patch("sqlalchemy.engine.base.Engine.dispose"):
+        await hass.async_stop()
+
+
 async def test_engine_is_disposed_at_stop(
     recorder_mock: Recorder, hass: HomeAssistant
 ) -> None:
@@ -705,6 +802,56 @@ async def test_attributes_from_entry_config(
     assert state.attributes[CONF_UNIT_OF_MEASUREMENT] == "MiB"
     assert CONF_DEVICE_CLASS not in state.attributes
     assert CONF_STATE_CLASS not in state.attributes
+
+
+@pytest.mark.parametrize(
+    ("config", "patch_rollback"),
+    [
+        (
+            {},
+            "sqlalchemy.orm.session.Session.rollback",
+        ),
+        (
+            {CONF_DB_URL: "sqlite+aiosqlite:///"},
+            "sqlalchemy.ext.asyncio.session.AsyncSession.rollback",
+        ),
+    ],
+)
+async def test_session_rollback_on_error(
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
+    config: dict[str, Any],
+    patch_rollback: str,
+) -> None:
+    """Test the SQL sensor."""
+    options = {
+        CONF_QUERY: "SELECT 5 as value",
+        CONF_COLUMN_NAME: "value",
+        CONF_UNIQUE_ID: "very_unique_id",
+    }
+    await init_integration(
+        hass, title="Select value SQL query", config=config, options=options
+    )
+
+    state = hass.states.get("sensor.select_value_sql_query")
+    assert state.state == "5"
+    assert state.attributes["value"] == 5
+
+    with (
+        patch(
+            "homeassistant.components.sql.sensor.generate_lambda_stmt",
+            return_value=generate_lambda_stmt("Faulty syntax create operational issue"),
+        ),
+        patch(patch_rollback) as mock_rollback,
+    ):
+        freezer.tick(timedelta(minutes=1))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
+        assert "sqlite3.OperationalError" in caplog.text
+
+    assert mock_rollback.call_count == 1
 
 
 async def test_query_recover_from_rollback(
