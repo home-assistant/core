@@ -47,6 +47,103 @@
     }
   },
   "entity": {
+    "select": {
+      "acsystem_mode": {
+        "name": "Mode",
+        "state": {
+          "charger_only": "Charger only",
+          "inverter_only": "Inverter only",
+          "off": "Off",
+          "on": "On",
+          "passthrough": "Passthrough"
+        }
+      },
+      "evcharger_mode": {
+        "name": "Mode",
+        "state": {
+          "auto": "Auto",
+          "manual": "Manual",
+          "scheduled_charge": "Scheduled Charge"
+        }
+      },
+      "inverter_mode": {
+        "name": "Mode",
+        "state": {
+          "eco": "Eco",
+          "inverter": "Inverter",
+          "off": "Off"
+        }
+      },
+      "system_ess_batterylife_state": {
+        "name": "ESS BatteryLife state",
+        "state": {
+          "keep_batteries_charged": "'Keep batteries charged' mode enabled",
+          "recharge": "Recharge, SOC dropped 5% or more below MinSOC",
+          "recharge_no_battery_life": "Recharge, SOC dropped 5% or more below MinSOC (No BatteryLife)",
+          "self_consumption": "Self consumption",
+          "self_consumption_soc_above_min": "Self consumption, SoC at or above minimum SoC",
+          "self_consumption_soc_at_100": "Self consumption, SoC at 100%",
+          "self_consumption_soc_below_min": "Self consumption, SoC is below minimum SoC",
+          "self_consumption_soc_exceeds_85": "Self consumption, SoC exceeds 85%",
+          "soc_below_battery_life_dynamic_soc_limit": "SoC below BatteryLife dynamic SoC limit",
+          "soc_below_soc_limit_24_hours": "SoC has been below SoC limit for more than 24 hours. Charging with battery with 5amps",
+          "sustain": "Multi/Quattro is in sustain",
+          "with_battery_life": "Optimized mode with BatteryLife"
+        }
+      },
+      "system_ess_mode": {
+        "name": "ESS mode (Hub4)",
+        "state": {
+          "external_control": "External control",
+          "phase_compensation_disabled": "Optimized mode or 'keep batteries charged' and phase compensation disabled",
+          "phase_compensation_enabled": "Optimized mode or 'keep batteries charged' and phase compensation enabled"
+        }
+      },
+      "system_ess_schedule_charge_slot_days": {
+        "name": "ESS BatteryLife schedule charge {slot} days",
+        "state": {
+          "disabled_every_day": "Disabled (Every day)",
+          "disabled_friday": "Disabled (Friday)",
+          "disabled_monday": "Disabled (Monday)",
+          "disabled_saturday": "Disabled (Saturday)",
+          "disabled_sunday": "Disabled (Sunday)",
+          "disabled_thursday": "Disabled (Thursday)",
+          "disabled_tuesday": "Disabled (Tuesday)",
+          "disabled_wednesday": "Disabled (Wednesday)",
+          "disabled_weekdays": "Disabled (Weekdays)",
+          "disabled_weekend": "Disabled (Weekends)",
+          "every_day": "Every day",
+          "friday": "Friday",
+          "monday": "Monday",
+          "saturday": "Saturday",
+          "sunday": "Sunday",
+          "thursday": "Thursday",
+          "tuesday": "Tuesday",
+          "wednesday": "Wednesday",
+          "weekdays": "Weekdays",
+          "weekends": "Weekends"
+        }
+      },
+      "system_settings_dess_mode": {
+        "name": "DESS mode",
+        "state": {
+          "auto_vrm": "Auto / VRM",
+          "buy": "Buy",
+          "node_red": "Node-RED",
+          "off": "Off",
+          "sell": "Sell"
+        }
+      },
+      "vebus_inverter_mode": {
+        "name": "Mode",
+        "state": {
+          "charger_only": "Charger Only",
+          "inverter_only": "Inverter Only",
+          "off": "Off",
+          "on": "On"
+        }
+      }
+    },
     "sensor": {
       "acload_current": {
         "name": "Load current"
