@@ -46,6 +46,10 @@ class RuckusDataUpdateCoordinator(DataUpdateCoordinator):
         _LOGGER.debug("fetched %d active clients", len(clients))
         return {client[API_CLIENT_MAC]: client for client in clients}
 
+    async def async_shutdown(self) -> None:
+        """Close the Ruckus session on shutdown."""
+        await self.ruckus.close()
+
     async def _async_update_data(self) -> dict:
         """Fetch Ruckus data."""
         try:
