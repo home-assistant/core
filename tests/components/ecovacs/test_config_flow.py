@@ -23,7 +23,7 @@ from homeassistant.components.ecovacs.const import (
     DOMAIN,
     InstanceMode,
 )
-from homeassistant.components.ecovacs.kvs_api import encode_pin
+from deebot_client.camera.api import encode_pin
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_MODE, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant

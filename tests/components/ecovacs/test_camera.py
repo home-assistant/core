@@ -11,7 +11,7 @@ from syrupy.assertion import SnapshotAssertion
 from homeassistant.components.camera import async_get_image
 from homeassistant.components.ecovacs.config_flow import _device_pin_field_key
 from homeassistant.components.ecovacs.const import CONF_CAMERA_PINS, DOMAIN
-from homeassistant.components.ecovacs.kvs_api import encode_pin
+from deebot_client.camera.api import encode_pin
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
