@@ -45,7 +45,7 @@ async def test_victron_select(
 
     assert len(entities) == 1
     entity = entities[0]
-    assert entity.entity_id == "select.ev_charging_station"
+    assert entity.entity_id == "select.ev_charging_station_mode"
     assert entity.unique_id == f"{MOCK_INSTALLATION_ID}_evcharger_0_evcharger_mode"
 
     state = hass.states.get(entity.entity_id)
