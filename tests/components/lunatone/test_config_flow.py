@@ -36,9 +36,9 @@ ZEROCONF_DISCOVERY = ZeroconfServiceInfo(
     type="_http._tcp.local.",
     properties={
         "path": "/",
-        "manufacturer": MANUFACTURER,
-        "device": "DALI-2 Display",
-        "uid": UUID,
+        "manufacturer": MANUFACTURER.lower(),
+        "device": "dali-2 display",
+        "uid": UUID.lower(),
         "type": "dali-2-display",
     },
 )
@@ -190,6 +190,39 @@ async def test_zeroconf_flow_abort_duplicate(
     assert result["reason"] == "already_configured"
 
 
+@pytest.mark.parametrize(
+    ("exception", "expected_error"),
+    [
+        (aiohttp.InvalidUrlClientError(BASE_URL), "invalid_url"),
+        (aiohttp.ClientConnectionError(), "cannot_connect"),
+    ],
+)
+async def test_zeroconf_flow_abort_with_error(
+    hass: HomeAssistant,
+    mock_lunatone_devices: AsyncMock,
+    mock_lunatone_info: AsyncMock,
+    exception: Exception,
+    expected_error: str,
+) -> None:
+    """Test zeroconf flow aborts with error."""
+
+    mock_lunatone_info.async_update.side_effect = exception
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_ZEROCONF}, data=ZEROCONF_DISCOVERY
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == expected_error
+
+    mock_lunatone_info.async_update.side_effect = None
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_ZEROCONF}, data=ZEROCONF_DISCOVERY
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "discovery_confirm"
+
+
 async def test_reconfigure(
     hass: HomeAssistant,
     mock_lunatone_info: AsyncMock,
@@ -197,7 +230,7 @@ async def test_reconfigure(
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test reconfigure flow."""
-    url = URL.build(scheme="http", host="10.0.0.100").human_repr()
+    url = URL.build(scheme="http", host="10.0.0.100").human_repr()[:-1]
 
     mock_config_entry.add_to_hass(hass)
 
@@ -229,7 +262,7 @@ async def test_reconfigure_fail_with_error(
     expected_error: str,
 ) -> None:
     """Test reconfigure flow with an error."""
-    url = URL.build(scheme="http", host="10.0.0.100").human_repr()
+    url = URL.build(scheme="http", host="10.0.0.100").human_repr()[:-1]
 
     mock_lunatone_info.async_update.side_effect = exception
 

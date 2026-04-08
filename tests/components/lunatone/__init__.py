@@ -20,7 +20,7 @@ from homeassistant.core import HomeAssistant
 from tests.common import MockConfigEntry
 
 BASE_IP: Final = "10.0.0.131"
-BASE_URL: Final = URL.build(scheme="http", host=BASE_IP).human_repr()
+BASE_URL: Final = URL.build(scheme="http", host=BASE_IP).human_repr()[:-1]
 MANUFACTURER: Final = "Lunatone Industrielle Elektronik GmbH"
 PRODUCT_NAME: Final = "Test Product"
 SERIAL_NUMBER: Final = 12345
