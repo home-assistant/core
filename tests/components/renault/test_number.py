@@ -132,12 +132,19 @@ async def test_number_action(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
     service_data: dict[str, Any],
-    expected_min: int,
-    expected_target: int,
+    expected_min: str,
+    expected_target: str,
 ) -> None:
     """Test that service invokes renault_api with correct data for min charge limit."""
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
+
+    min_charge_level = hass.states.get("number.reg_zoe_40_minimum_charge_level")
+    target_charge_level = hass.states.get("number.reg_zoe_40_target_charge_level")
+    assert min_charge_level.state == "15"
+    assert target_charge_level.state == "80"
+    assert not min_charge_level.attributes.get("assumed_state")
+    assert not target_charge_level.attributes.get("assumed_state")
 
     with patch(
         "renault_api.renault_vehicle.RenaultVehicle.set_battery_soc",
@@ -157,12 +164,12 @@ async def test_number_action(
     mock_action.assert_awaited_once_with(min=expected_min, target=expected_target)
 
     # Verify optimistic update of coordinator data
-    assert hass.states.get("number.reg_zoe_40_minimum_charge_level").state == str(
-        expected_min
-    )
-    assert hass.states.get("number.reg_zoe_40_target_charge_level").state == str(
-        expected_target
-    )
+    min_charge_level = hass.states.get("number.reg_zoe_40_minimum_charge_level")
+    target_charge_level = hass.states.get("number.reg_zoe_40_target_charge_level")
+    assert min_charge_level.state == str(expected_min)
+    assert target_charge_level.state == str(expected_target)
+    assert min_charge_level.attributes.get("assumed_state")
+    assert target_charge_level.attributes.get("assumed_state")
 
 
 @pytest.mark.usefixtures("fixtures_with_no_data")
