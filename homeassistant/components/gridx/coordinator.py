@@ -85,7 +85,17 @@ async def _fetch_historical(connector: GridxConnector) -> GridxHistoricalData:
     if not results:
         raise UpdateFailed("GridX returned no historical data")
 
-    total = results[0].get("total", {})
+    total: dict[str, Any] = {}
+    for result in results:
+        result_total = result.get("total", {})
+        if not isinstance(result_total, dict):
+            continue
+        for key, value in result_total.items():
+            current = total.get(key)
+            if isinstance(value, int | float) and isinstance(current, int | float):
+                total[key] = current + value
+            elif key not in total:
+                total[key] = value
     return GridxHistoricalData(total=total, last_reset=midnight.isoformat())
 
 
