@@ -267,9 +267,7 @@ class MatterFan(MatterEntity, FanEntity):
             # kMultiSpeed devices expose SpeedMax for step granularity.
             # SpeedMax is a fixed, non-nullable attribute per the Matter spec.
             speed_max = int(
-                self.get_matter_attribute_value(
-                    clusters.FanControl.Attributes.SpeedMax
-                )
+                self.get_matter_attribute_value(clusters.FanControl.Attributes.SpeedMax)
             )
             if speed_max > 0:
                 self._attr_speed_count = speed_max
