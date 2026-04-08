@@ -10,7 +10,6 @@ from datetime import datetime, timedelta
 from enum import Enum
 from functools import cache, lru_cache, partial, wraps
 import logging
-import math
 import pathlib
 import re
 import sys
@@ -67,7 +66,7 @@ from .context import (
     template_context_manager,
     template_cv,
 )
-from .helpers import raise_no_default, result_as_boolean as result_as_boolean
+from .helpers import result_as_boolean as result_as_boolean
 from .render_info import RenderInfo, render_info_cv
 
 if TYPE_CHECKING:
@@ -1411,50 +1410,6 @@ def has_value(hass: HomeAssistant, entity_id: str) -> bool:
     )
 
 
-def forgiving_round(value, precision=0, method="common", default=_SENTINEL):
-    """Filter to round a value."""
-    try:
-        # support rounding methods like jinja
-        multiplier = float(10**precision)
-        if method == "ceil":
-            value = math.ceil(float(value) * multiplier) / multiplier
-        elif method == "floor":
-            value = math.floor(float(value) * multiplier) / multiplier
-        elif method == "half":
-            value = round(float(value) * 2) / 2
-        else:
-            # if method is common or something else, use common rounding
-            value = round(float(value), precision)
-        return int(value) if precision == 0 else value
-    except ValueError, TypeError:
-        # If value can't be converted to float
-        if default is _SENTINEL:
-            raise_no_default("round", value)
-        return default
-
-
-def multiply(value, amount, default=_SENTINEL):
-    """Filter to convert value to float and multiply it."""
-    try:
-        return float(value) * amount
-    except ValueError, TypeError:
-        # If value can't be converted to float
-        if default is _SENTINEL:
-            raise_no_default("multiply", value)
-        return default
-
-
-def add(value, amount, default=_SENTINEL):
-    """Filter to convert value to float and add it."""
-    try:
-        return float(value) + amount
-    except ValueError, TypeError:
-        # If value can't be converted to float
-        if default is _SENTINEL:
-            raise_no_default("add", value)
-        return default
-
-
 def make_logging_undefined(
     strict: bool | None, log_fn: Callable[[int, str], None] | None
 ) -> type[jinja2.Undefined]:
@@ -1606,10 +1561,6 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
             "homeassistant.helpers.template.extensions.TypeCastExtension"
         )
         self.add_extension("homeassistant.helpers.template.extensions.VersionExtension")
-
-        self.filters["add"] = add
-        self.filters["multiply"] = multiply
-        self.filters["round"] = forgiving_round
 
         if hass is None:
             return
