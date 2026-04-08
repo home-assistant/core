@@ -58,6 +58,8 @@ async def test_event_single_press(
     # Check bus event
     assert len(events) == 1
     assert events[0].data["action"] == "single"
+    assert events[0].data["button_subtype"] == "button_1"
+    assert events[0].data["keypad_uuid"] == "keypad_uuid"
     assert events[0].data["uuid"] == "button_uuid"
 
 
@@ -93,3 +95,29 @@ async def test_event_press_release(
 
     assert len(events) == 2
     assert events[1].data["action"] == "released"
+
+
+async def test_pico_event_uses_semantic_button_subtype(
+    hass: HomeAssistant, mock_lutron: MagicMock, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test Pico button events expose semantic subtypes."""
+    mock_config_entry.add_to_hass(hass)
+
+    keypad = mock_lutron.areas[0].keypads[0]
+    keypad.type = "PICO_KEYPAD"
+
+    button = keypad.buttons[0]
+    button.number = 2
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    events = async_capture_events(hass, "lutron_event")
+
+    for call in button.subscribe.call_args_list:
+        callback = call[0][0]
+        callback(button, None, Button.Event.PRESSED, None)
+    await hass.async_block_till_done()
+
+    assert len(events) == 1
+    assert events[0].data["button_subtype"] == "top"

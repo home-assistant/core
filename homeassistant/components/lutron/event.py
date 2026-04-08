@@ -11,7 +11,15 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import slugify
 
-from . import ATTR_ACTION, ATTR_FULL_ID, ATTR_UUID, LutronConfigEntry
+from . import (
+    ATTR_ACTION,
+    ATTR_BUTTON_SUBTYPE,
+    ATTR_FULL_ID,
+    ATTR_KEYPAD_UUID,
+    ATTR_UUID,
+    LutronConfigEntry,
+    button_subtype,
+)
 from .entity import LutronKeypad
 
 
@@ -71,6 +79,8 @@ class LutronEventEntity(LutronKeypad, EventEntity):
 
         self._full_id = slugify(f"{area_name} {name}")
         self._id = slugify(name)
+        self._keypad_uuid = keypad.uuid or keypad.legacy_uuid
+        self._button_subtype = button_subtype(keypad, button)
 
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
@@ -96,8 +106,10 @@ class LutronEventEntity(LutronKeypad, EventEntity):
             data = {
                 ATTR_ID: self._id,
                 ATTR_ACTION: LEGACY_EVENT_TYPES[action],
+                ATTR_BUTTON_SUBTYPE: self._button_subtype,
                 ATTR_FULL_ID: self._full_id,
-                ATTR_UUID: button.uuid,
+                ATTR_KEYPAD_UUID: self._keypad_uuid,
+                ATTR_UUID: button.uuid or button.legacy_uuid,
             }
             self.hass.bus.fire("lutron_event", data)
             self._trigger_event(action)
