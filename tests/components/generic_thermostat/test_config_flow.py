@@ -18,7 +18,10 @@ from homeassistant.components.generic_thermostat.const import (
     CONF_MIN_DUR,
     CONF_PRESETS,
     CONF_SENSOR,
+    CONF_SENSOR_ERROR_ACTION,
     DOMAIN,
+    SENSOR_ERROR_ACTION_FORCE_ON,
+    SENSOR_ERROR_ACTION_KEEP,
 )
 from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.config_entries import SOURCE_USER
@@ -57,6 +60,7 @@ async def test_config_flow(hass: HomeAssistant, snapshot: SnapshotAssertion) -> 
                 CONF_AC_MODE: False,
                 CONF_COLD_TOLERANCE: 0.3,
                 CONF_HOT_TOLERANCE: 0.3,
+                CONF_SENSOR_ERROR_ACTION: SENSOR_ERROR_ACTION_KEEP,
             },
         )
         assert result == snapshot(name="presets", include=SNAPSHOT_FLOW_PROPS)
@@ -92,6 +96,7 @@ async def test_options(hass: HomeAssistant, snapshot: SnapshotAssertion) -> None
             CONF_COLD_TOLERANCE: 0.3,
             CONF_HOT_TOLERANCE: 0.3,
             CONF_KEEP_ALIVE: {"seconds": 60},
+            CONF_SENSOR_ERROR_ACTION: SENSOR_ERROR_ACTION_KEEP,
             CONF_PRESETS[PRESET_AWAY]: 20,
         },
         title="My dehumidifier",
@@ -126,6 +131,7 @@ async def test_options(hass: HomeAssistant, snapshot: SnapshotAssertion) -> None
             CONF_AC_MODE: False,
             CONF_COLD_TOLERANCE: 0.3,
             CONF_HOT_TOLERANCE: 0.3,
+            CONF_SENSOR_ERROR_ACTION: SENSOR_ERROR_ACTION_KEEP,
         },
     )
     assert result == snapshot(name="presets", include=SNAPSHOT_FLOW_PROPS)
@@ -163,6 +169,7 @@ async def test_config_flow_preset_accepts_float(
                 CONF_AC_MODE: False,
                 CONF_COLD_TOLERANCE: 0.3,
                 CONF_HOT_TOLERANCE: 0.3,
+                CONF_SENSOR_ERROR_ACTION: SENSOR_ERROR_ACTION_KEEP,
             },
         )
         assert result == snapshot(name="presets", include=SNAPSHOT_FLOW_PROPS)
@@ -185,6 +192,7 @@ async def test_config_flow_preset_accepts_float(
         "heater": "switch.run",
         "hot_tolerance": 0.3,
         "name": "My thermostat",
+        "sensor_error_action": "keep",
         "target_sensor": "sensor.temperature",
     }
 
@@ -210,6 +218,7 @@ async def test_config_flow_with_keep_alive(hass: HomeAssistant) -> None:
                 CONF_COLD_TOLERANCE: 0.3,
                 CONF_HOT_TOLERANCE: 0.3,
                 CONF_KEEP_ALIVE: {"seconds": 60},
+                CONF_SENSOR_ERROR_ACTION: SENSOR_ERROR_ACTION_FORCE_ON,
             },
         )
 
@@ -227,6 +236,9 @@ async def test_config_flow_with_keep_alive(hass: HomeAssistant) -> None:
         assert val is not None
         assert isinstance(val, dict)
         assert val == {"seconds": 60}
+        assert (
+            result["options"][CONF_SENSOR_ERROR_ACTION] == SENSOR_ERROR_ACTION_FORCE_ON
+        )
 
         await hass.async_block_till_done()
         assert len(mock_setup_entry.mock_calls) == 1
