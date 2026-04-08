@@ -5,9 +5,9 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from homeassistant.components.opendisplay.const import DOMAIN
+from homeassistant.components.opendisplay.const import CONF_ENCRYPTION_KEY, DOMAIN
 
-from . import DEVICE_CONFIG, FIRMWARE_VERSION, TEST_ADDRESS, TEST_TITLE
+from . import DEVICE_CONFIG, ENCRYPTION_KEY, FIRMWARE_VERSION, TEST_ADDRESS, TEST_TITLE
 
 from tests.common import MockConfigEntry
 from tests.components.bluetooth import generate_ble_device
@@ -39,29 +39,35 @@ def mock_ble_device() -> Generator[None]:
         yield
 
 
-@pytest.fixture(autouse=True)
-def mock_opendisplay_device() -> Generator[MagicMock]:
-    """Mock the OpenDisplayDevice for setup entry."""
+@pytest.fixture
+def mock_opendisplay_device_class() -> Generator[MagicMock]:
+    """Yield the OpenDisplayDevice class mock (for asserting constructor args)."""
     with (
         patch(
             "homeassistant.components.opendisplay.OpenDisplayDevice",
             autospec=True,
-        ) as mock_device_init,
+        ) as mock_class,
         patch(
             "homeassistant.components.opendisplay.config_flow.OpenDisplayDevice",
-            new=mock_device_init,
+            new=mock_class,
         ),
         patch(
             "homeassistant.components.opendisplay.services.OpenDisplayDevice",
-            new=mock_device_init,
+            new=mock_class,
         ),
     ):
-        mock_device = mock_device_init.return_value
+        mock_device = mock_class.return_value
         mock_device.__aenter__.return_value = mock_device
         mock_device.read_firmware_version.return_value = FIRMWARE_VERSION
         mock_device.config = DEVICE_CONFIG
         mock_device.is_flex = True
-        yield mock_device
+        yield mock_class
+
+
+@pytest.fixture(autouse=True)
+def mock_opendisplay_device(mock_opendisplay_device_class: MagicMock) -> MagicMock:
+    """Mock the OpenDisplayDevice for setup entry; yields the instance mock."""
+    return mock_opendisplay_device_class.return_value
 
 
 @pytest.fixture
@@ -72,4 +78,15 @@ def mock_config_entry() -> MockConfigEntry:
         unique_id=TEST_ADDRESS,
         title=TEST_TITLE,
         data={},
+    )
+
+
+@pytest.fixture
+def mock_encrypted_config_entry() -> MockConfigEntry:
+    """Create a mock config entry with an encryption key."""
+    return MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=TEST_ADDRESS,
+        title=TEST_TITLE,
+        data={CONF_ENCRYPTION_KEY: ENCRYPTION_KEY},
     )

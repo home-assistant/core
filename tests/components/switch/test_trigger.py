@@ -6,7 +6,7 @@ import pytest
 
 from homeassistant.components.switch import DOMAIN
 from homeassistant.const import CONF_ENTITY_ID, STATE_OFF, STATE_ON
-from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.core import HomeAssistant
 
 from tests.components.common import (
     TriggerStateDescription,
@@ -74,7 +74,6 @@ async def test_switch_triggers_gated_by_labs_flag(
 )
 async def test_switch_state_trigger_behavior_any(
     hass: HomeAssistant,
-    service_calls: list[ServiceCall],
     target_switches: dict[str, list[str]],
     trigger_target_config: dict,
     entity_id: str,
@@ -86,7 +85,6 @@ async def test_switch_state_trigger_behavior_any(
     """Test that the switch state trigger fires when any switch state changes to a specific state."""
     await assert_trigger_behavior_any(
         hass,
-        service_calls=service_calls,
         target_entities=target_switches,
         trigger_target_config=trigger_target_config,
         entity_id=entity_id,
@@ -108,7 +106,6 @@ async def test_switch_state_trigger_behavior_any(
 )
 async def test_switch_state_trigger_behavior_first(
     hass: HomeAssistant,
-    service_calls: list[ServiceCall],
     target_switches: dict[str, list[str]],
     trigger_target_config: dict,
     entity_id: str,
@@ -120,7 +117,6 @@ async def test_switch_state_trigger_behavior_first(
     """Test that the switch state trigger fires when the first switch changes to a specific state."""
     await assert_trigger_behavior_first(
         hass,
-        service_calls=service_calls,
         target_entities=target_switches,
         trigger_target_config=trigger_target_config,
         entity_id=entity_id,
@@ -142,7 +138,6 @@ async def test_switch_state_trigger_behavior_first(
 )
 async def test_switch_state_trigger_behavior_last(
     hass: HomeAssistant,
-    service_calls: list[ServiceCall],
     target_switches: dict[str, list[str]],
     trigger_target_config: dict,
     entity_id: str,
@@ -154,7 +149,6 @@ async def test_switch_state_trigger_behavior_last(
     """Test that the switch state trigger fires when the last switch changes to a specific state."""
     await assert_trigger_behavior_last(
         hass,
-        service_calls=service_calls,
         target_entities=target_switches,
         trigger_target_config=trigger_target_config,
         entity_id=entity_id,
@@ -179,7 +173,6 @@ async def test_switch_state_trigger_behavior_last(
 )
 async def test_input_boolean_state_trigger_behavior_any(
     hass: HomeAssistant,
-    service_calls: list[ServiceCall],
     target_input_booleans: dict[str, list[str]],
     trigger_target_config: dict,
     entity_id: str,
@@ -191,7 +184,6 @@ async def test_input_boolean_state_trigger_behavior_any(
     """Test that the switch trigger fires when any input_boolean state changes."""
     await assert_trigger_behavior_any(
         hass,
-        service_calls=service_calls,
         target_entities=target_input_booleans,
         trigger_target_config=trigger_target_config,
         entity_id=entity_id,
@@ -213,7 +205,6 @@ async def test_input_boolean_state_trigger_behavior_any(
 )
 async def test_input_boolean_state_trigger_behavior_first(
     hass: HomeAssistant,
-    service_calls: list[ServiceCall],
     target_input_booleans: dict[str, list[str]],
     trigger_target_config: dict,
     entity_id: str,
@@ -225,7 +216,6 @@ async def test_input_boolean_state_trigger_behavior_first(
     """Test that the switch trigger fires when the first input_boolean changes."""
     await assert_trigger_behavior_first(
         hass,
-        service_calls=service_calls,
         target_entities=target_input_booleans,
         trigger_target_config=trigger_target_config,
         entity_id=entity_id,
@@ -247,7 +237,6 @@ async def test_input_boolean_state_trigger_behavior_first(
 )
 async def test_input_boolean_state_trigger_behavior_last(
     hass: HomeAssistant,
-    service_calls: list[ServiceCall],
     target_input_booleans: dict[str, list[str]],
     trigger_target_config: dict,
     entity_id: str,
@@ -259,7 +248,6 @@ async def test_input_boolean_state_trigger_behavior_last(
     """Test that the switch trigger fires when the last input_boolean changes."""
     await assert_trigger_behavior_last(
         hass,
-        service_calls=service_calls,
         target_entities=target_input_booleans,
         trigger_target_config=trigger_target_config,
         entity_id=entity_id,
@@ -276,9 +264,9 @@ async def test_input_boolean_state_trigger_behavior_last(
 @pytest.mark.usefixtures("enable_labs_preview_features")
 async def test_switch_trigger_fires_for_both_domains(
     hass: HomeAssistant,
-    service_calls: list[ServiceCall],
 ) -> None:
     """Test that the switch trigger fires for both switch and input_boolean entities."""
+    calls: list[str] = []
     entity_id_switch = "switch.test_switch"
     entity_id_input_boolean = "input_boolean.test_input_boolean"
 
@@ -291,18 +279,19 @@ async def test_switch_trigger_fires_for_both_domains(
         "switch.turned_on",
         {},
         {CONF_ENTITY_ID: [entity_id_switch, entity_id_input_boolean]},
+        calls,
     )
 
     # switch entity changes - should trigger
     hass.states.async_set(entity_id_switch, STATE_ON)
     await hass.async_block_till_done()
-    assert len(service_calls) == 1
-    assert service_calls[0].data[CONF_ENTITY_ID] == entity_id_switch
-    service_calls.clear()
+    assert len(calls) == 1
+    assert calls[0] == entity_id_switch
+    calls.clear()
 
     # input_boolean entity changes - should also trigger
     hass.states.async_set(entity_id_input_boolean, STATE_ON)
     await hass.async_block_till_done()
-    assert len(service_calls) == 1
-    assert service_calls[0].data[CONF_ENTITY_ID] == entity_id_input_boolean
-    service_calls.clear()
+    assert len(calls) == 1
+    assert calls[0] == entity_id_input_boolean
+    calls.clear()

@@ -42,16 +42,17 @@ from homeassistant.helpers import (
 )
 from homeassistant.helpers.automation import (
     DomainSpec,
-    NumericalDomainSpec,
     move_top_level_schema_fields_to_options,
 )
 from homeassistant.helpers.condition import (
     ATTR_BEHAVIOR,
     BEHAVIOR_ALL,
     BEHAVIOR_ANY,
+    CONDITIONS,
     Condition,
     ConditionChecker,
     EntityNumericalConditionWithUnitBase,
+    _async_get_condition_platform,
     async_validate_condition_config,
     make_entity_numerical_condition,
     make_entity_numerical_condition_with_unit,
@@ -2277,6 +2278,57 @@ async def test_platform_backwards_compatibility_for_new_style_configs(
     assert result == config_old_style
 
 
+async def test_get_condition_platform_registers_conditions(
+    hass: HomeAssistant,
+) -> None:
+    """Test _async_get_condition_platform registers conditions and notifies subscribers."""
+
+    class MockCondition(Condition):
+        """Mock condition."""
+
+        @classmethod
+        async def async_validate_config(
+            cls, hass: HomeAssistant, config: ConfigType
+        ) -> ConfigType:
+            return config
+
+        async def async_get_checker(self) -> ConditionChecker:
+            return lambda **kwargs: True
+
+    async def async_get_conditions(
+        hass: HomeAssistant,
+    ) -> dict[str, type[Condition]]:
+        return {"cond_a": MockCondition, "cond_b": MockCondition}
+
+    mock_integration(hass, MockModule("test"))
+    mock_platform(
+        hass, "test.condition", Mock(async_get_conditions=async_get_conditions)
+    )
+
+    subscriber_events: list[set[str]] = []
+
+    async def subscriber(new_conditions: set[str]) -> None:
+        subscriber_events.append(new_conditions)
+
+    condition.async_subscribe_platform_events(hass, subscriber)
+
+    assert "test.cond_a" not in hass.data[CONDITIONS]
+    assert "test.cond_b" not in hass.data[CONDITIONS]
+
+    # First call registers all conditions from the platform and notifies subscribers
+    await _async_get_condition_platform(hass, "test.cond_a")
+
+    assert hass.data[CONDITIONS]["test.cond_a"] == "test"
+    assert hass.data[CONDITIONS]["test.cond_b"] == "test"
+    assert len(subscriber_events) == 1
+    assert subscriber_events[0] == {"test.cond_a", "test.cond_b"}
+
+    # Subsequent calls are idempotent — no re-registration or re-notification
+    await _async_get_condition_platform(hass, "test.cond_a")
+    await _async_get_condition_platform(hass, "test.cond_b")
+    assert len(subscriber_events) == 1
+
+
 @pytest.mark.parametrize("enabled_value", [True, "{{ 1 == 1 }}"])
 async def test_enabled_condition(
     hass: HomeAssistant, enabled_value: bool | str
@@ -2541,6 +2593,10 @@ async def test_async_get_all_descriptions(
           target:
             entity:
               domain: light
+        is_brightness:
+          target:
+            entity:
+              domain: light
         """
 
     ws_client = await hass_ws_client(hass)
@@ -2726,6 +2782,18 @@ async def test_async_get_all_descriptions(
                 ],
             },
         },
+        "light.is_brightness": {
+            "fields": {},
+            "target": {
+                "entity": [
+                    {
+                        "domain": [
+                            "light",
+                        ],
+                    },
+                ],
+            },
+        },
     }
 
     # Verify the cache returns the same object
@@ -2761,6 +2829,8 @@ async def test_async_get_all_descriptions(
 
     # Verify the cache returns the same object
     assert await condition.async_get_all_descriptions(hass) is new_descriptions
+
+    await hass.data["entity_components"][SUN_DOMAIN]._async_reset()
 
 
 @pytest.mark.parametrize(
@@ -2802,6 +2872,8 @@ async def test_async_get_all_descriptions_with_yaml_error(
 
     assert expected_message in caplog.text
 
+    await hass.data["entity_components"][SUN_DOMAIN]._async_reset()
+
 
 async def test_async_get_all_descriptions_with_bad_description(
     hass: HomeAssistant,
@@ -2835,6 +2907,8 @@ async def test_async_get_all_descriptions_with_bad_description(
         "Unable to parse conditions.yaml for the sun integration: "
         "expected a dictionary for dictionary value @ data['_']['fields']"
     ) in caplog.text
+
+    await hass.data["entity_components"][SUN_DOMAIN]._async_reset()
 
 
 async def test_invalid_condition_platform(
@@ -2893,13 +2967,15 @@ async def test_subscribe_conditions(
     assert condition_events == [{"sun"}]
     assert "Error while notifying condition platform listener" in caplog.text
 
+    await hass.data["entity_components"][SUN_DOMAIN]._async_reset()
+
 
 @patch("annotatedyaml.loader.load_yaml")
 @patch.object(Integration, "has_conditions", return_value=True)
 @pytest.mark.parametrize(
     ("new_triggers_conditions_enabled", "expected_events"),
     [
-        (True, [{"light.is_off", "light.is_on"}]),
+        (True, [{"light.is_off", "light.is_on", "light.is_brightness"}]),
         (False, []),
     ],
 )
@@ -3610,7 +3686,7 @@ async def test_numerical_condition_with_unit_attribute_value_source(
     test = await _setup_numerical_condition_with_unit(
         hass,
         domain_specs={
-            "test": NumericalDomainSpec(value_source="temperature"),
+            "test": DomainSpec(value_source="temperature"),
         },
         condition_options={
             "threshold": {
@@ -3656,7 +3732,7 @@ async def test_numerical_condition_with_unit_get_entity_unit_override(
     class CustomCondition(EntityNumericalConditionWithUnitBase):
         """Condition that always reports entities as °F regardless of attributes."""
 
-        _domain_specs = {"test": NumericalDomainSpec(value_source="temperature")}
+        _domain_specs = {"test": DomainSpec(value_source="temperature")}
         _base_unit = UnitOfTemperature.CELSIUS
         _unit_converter = TemperatureConverter
 

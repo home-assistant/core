@@ -15,6 +15,7 @@ from homeassistant.components.fan import (
     DIRECTION_FORWARD,
     DIRECTION_REVERSE,
     FanEntity,
+    FanEntityDescription,
     FanEntityFeature,
 )
 from homeassistant.core import HomeAssistant, callback
@@ -25,13 +26,13 @@ from . import TuyaConfigEntry
 from .const import TUYA_DISCOVERY_NEW, DeviceCategory
 from .entity import TuyaEntity
 
-TUYA_SUPPORT_TYPE: set[DeviceCategory] = {
-    DeviceCategory.CS,
-    DeviceCategory.FS,
-    DeviceCategory.FSD,
-    DeviceCategory.FSKG,
-    DeviceCategory.KJ,
-    DeviceCategory.KS,
+FANS: dict[DeviceCategory, FanEntityDescription] = {
+    DeviceCategory.CS: FanEntityDescription(key=""),
+    DeviceCategory.FS: FanEntityDescription(key=""),
+    DeviceCategory.FSD: FanEntityDescription(key=""),
+    DeviceCategory.FSKG: FanEntityDescription(key=""),
+    DeviceCategory.KJ: FanEntityDescription(key=""),
+    DeviceCategory.KS: FanEntityDescription(key=""),
 }
 
 _TUYA_TO_HA_DIRECTION_MAPPINGS = {
@@ -57,10 +58,10 @@ async def async_setup_entry(
         entities: list[TuyaFanEntity] = []
         for device_id in device_ids:
             device = manager.device_map[device_id]
-            if device.category in TUYA_SUPPORT_TYPE and (
+            if (description := FANS.get(device.category)) and (
                 definition := get_default_definition(device)
             ):
-                entities.append(TuyaFanEntity(device, manager, definition))
+                entities.append(TuyaFanEntity(device, manager, description, definition))
         async_add_entities(entities)
 
     async_discover_device([*manager.device_map])
@@ -79,10 +80,11 @@ class TuyaFanEntity(TuyaEntity, FanEntity):
         self,
         device: CustomerDevice,
         device_manager: Manager,
+        description: FanEntityDescription,
         definition: TuyaFanDefinition,
     ) -> None:
         """Init Tuya Fan Device."""
-        super().__init__(device, device_manager)
+        super().__init__(device, device_manager, description)
         self._direction_wrapper = definition.direction_wrapper
         self._mode_wrapper = definition.mode_wrapper
         self._oscillate_wrapper = definition.oscillate_wrapper

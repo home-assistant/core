@@ -230,19 +230,23 @@ async def _register_condition_platform(
     from homeassistant.components import automation  # noqa: PLC0415
 
     new_conditions: set[str] = set()
+    conditions = hass.data[CONDITIONS]
 
     if hasattr(platform, "async_get_conditions"):
-        for condition_key in await platform.async_get_conditions(hass):
+        all_conditions = await platform.async_get_conditions(hass)
+        for condition_key in all_conditions:
             condition_key = get_absolute_description_key(
                 integration_domain, condition_key
             )
-            hass.data[CONDITIONS][condition_key] = integration_domain
-            new_conditions.add(condition_key)
+            if condition_key not in conditions:
+                conditions[condition_key] = integration_domain
+                new_conditions.add(condition_key)
         if not new_conditions:
-            _LOGGER.debug(
-                "Integration %s returned no conditions in async_get_conditions",
-                integration_domain,
-            )
+            if not all_conditions:
+                _LOGGER.debug(
+                    "Integration %s returned no conditions in async_get_conditions",
+                    integration_domain,
+                )
             return
     else:
         _LOGGER.debug(
@@ -342,10 +346,10 @@ ENTITY_STATE_CONDITION_SCHEMA_ANY_ALL = vol.Schema(
 )
 
 
-class EntityConditionBase[DomainSpecT: DomainSpec = DomainSpec](Condition):
+class EntityConditionBase(Condition):
     """Base class for entity conditions."""
 
-    _domain_specs: Mapping[str, DomainSpecT]
+    _domain_specs: Mapping[str, DomainSpec]
     _schema: vol.Schema = ENTITY_STATE_CONDITION_SCHEMA_ANY_ALL
 
     @override
@@ -421,7 +425,7 @@ class EntityConditionBase[DomainSpecT: DomainSpec = DomainSpec](Condition):
 class EntityStateConditionBase(EntityConditionBase):
     """State condition."""
 
-    _states: set[str]
+    _states: set[str | bool]
 
     def is_valid_state(self, entity_state: State) -> bool:
         """Check if the state matches the expected state(s)."""
@@ -439,7 +443,7 @@ def _normalize_domain_specs(
 
 def make_entity_state_condition(
     domain_specs: Mapping[str, DomainSpec] | str,
-    states: str | set[str],
+    states: str | bool | set[str | bool],
 ) -> type[EntityStateConditionBase]:
     """Create a condition for entity state changes to specific state(s).
 
@@ -448,8 +452,8 @@ def make_entity_state_condition(
     """
     specs = _normalize_domain_specs(domain_specs)
 
-    if isinstance(states, str):
-        states_set = {states}
+    if isinstance(states, (str, bool)):
+        states_set: set[str | bool] = {states}
     else:
         states_set = states
 
@@ -462,19 +466,13 @@ def make_entity_state_condition(
     return CustomCondition
 
 
-NUMERICAL_CONDITION_SCHEMA = vol.Schema(
+NUMERICAL_CONDITION_SCHEMA = ENTITY_STATE_CONDITION_SCHEMA_ANY_ALL.extend(
     {
-        vol.Required(CONF_TARGET): cv.TARGET_FIELDS,
-        vol.Required(CONF_OPTIONS): vol.All(
-            {
-                vol.Required(ATTR_BEHAVIOR, default=BEHAVIOR_ANY): vol.In(
-                    [BEHAVIOR_ANY, BEHAVIOR_ALL]
-                ),
-                vol.Required("threshold"): NumericThresholdSelector(
-                    NumericThresholdSelectorConfig(mode=NumericThresholdMode.IS)
-                ),
-            },
-        ),
+        vol.Required(CONF_OPTIONS): {
+            vol.Required("threshold"): NumericThresholdSelector(
+                NumericThresholdSelectorConfig(mode=NumericThresholdMode.IS)
+            ),
+        },
     }
 )
 
@@ -588,22 +586,16 @@ def _make_numerical_condition_with_unit_schema(
     unit_converter: type[BaseUnitConverter],
 ) -> vol.Schema:
     """Factory for numerical condition schema with unit option."""
-    return vol.Schema(
+    return ENTITY_STATE_CONDITION_SCHEMA_ANY_ALL.extend(
         {
-            vol.Required(CONF_TARGET): cv.TARGET_FIELDS,
-            vol.Required(CONF_OPTIONS): vol.All(
-                {
-                    vol.Required(ATTR_BEHAVIOR, default=BEHAVIOR_ANY): vol.In(
-                        [BEHAVIOR_ANY, BEHAVIOR_ALL]
-                    ),
-                    vol.Required("threshold"): NumericThresholdSelector(
-                        NumericThresholdSelectorConfig(
-                            mode=NumericThresholdMode.IS,
-                            unit_of_measurement=list(unit_converter.VALID_UNITS),
-                        )
-                    ),
-                },
-            ),
+            vol.Required(CONF_OPTIONS): {
+                vol.Required("threshold"): NumericThresholdSelector(
+                    NumericThresholdSelectorConfig(
+                        mode=NumericThresholdMode.IS,
+                        unit_of_measurement=list(unit_converter.VALID_UNITS),
+                    )
+                ),
+            },
         }
     )
 
@@ -833,11 +825,16 @@ async def _async_get_condition_platform(
             f'Invalid condition "{condition_key}" specified'
         ) from None
     try:
-        return platform, await integration.async_get_platform("condition")
+        platform_module = await integration.async_get_platform("condition")
     except ImportError:
         raise HomeAssistantError(
             f"Integration '{platform}' does not provide condition support"
         ) from None
+
+    # Ensure conditions are registered so descriptions can be loaded
+    await _register_condition_platform(hass, platform, platform_module)
+
+    return platform, platform_module
 
 
 async def _async_get_checker(condition: Condition) -> ConditionCheckerType:
