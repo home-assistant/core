@@ -172,7 +172,7 @@ def mock_get_device_none_fields(
 
 @pytest.fixture
 def mock_api_none_fields(
-    mock__get_devices_metadata: MagicMock,
+    mock__get_devices_metadata: None,
     mock_get_device_none_fields: None,
 ) -> Generator[None]:
     """Fixture to mock all API calls with None water quality fields."""
