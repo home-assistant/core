@@ -20,6 +20,7 @@ from tests.common import MockConfigEntry
 async def test_user_flow_success(
     hass: HomeAssistant,
     mock_duco_client: AsyncMock,
+    mock_setup_entry: AsyncMock,
 ) -> None:
     """Test a successful user flow."""
     result = await hass.config_entries.flow.async_init(
@@ -32,7 +33,6 @@ async def test_user_flow_success(
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], USER_INPUT
     )
-    await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "SILENT_CONNECT"
@@ -50,6 +50,7 @@ async def test_user_flow_success(
 async def test_user_flow_error(
     hass: HomeAssistant,
     mock_duco_client: AsyncMock,
+    mock_setup_entry: AsyncMock,
     exception: Exception,
     expected_error: str,
 ) -> None:
@@ -71,7 +72,6 @@ async def test_user_flow_error(
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], USER_INPUT
     )
-    await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
 

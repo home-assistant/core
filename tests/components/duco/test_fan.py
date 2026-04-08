@@ -29,7 +29,7 @@ from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_plat
 _FAN_ENTITY = "fan.living_ventilation"
 
 
-@pytest.mark.usefixtures("init_fan_integration")
+@pytest.mark.usefixtures("init_integration")
 async def test_fan_entity_state(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
