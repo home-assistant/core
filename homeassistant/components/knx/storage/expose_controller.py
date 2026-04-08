@@ -50,10 +50,6 @@ def validate_expose_template_no_coerce(value: str) -> str:
         raise vol.Invalid(
             "Static templates are not supported. Template should start with '{{' and end with '}}'"
         )
-    if "value" not in value:
-        raise vol.Invalid(
-            "Expose value template must contain 'value' variable, e.g. '{{ value | int * 2 }}'"
-        )
     return value  # return original string for storage and later template creation
 
 
