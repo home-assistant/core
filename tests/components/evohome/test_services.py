@@ -16,12 +16,11 @@ from homeassistant.components.evohome.const import (
     ATTR_PERIOD,
     ATTR_SETPOINT,
     DOMAIN,
-    EVO_STATE,
     EvoService,
 )
 from homeassistant.components.evohome.water_heater import EvoDHW
 from homeassistant.components.water_heater import DOMAIN as WATER_HEATER_DOMAIN
-from homeassistant.const import ATTR_ENTITY_ID, ATTR_MODE
+from homeassistant.const import ATTR_ENTITY_ID, ATTR_MODE, ATTR_STATE
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.entity_platform import DATA_DOMAIN_PLATFORM_ENTITIES
@@ -402,7 +401,7 @@ async def test_set_dhw_override(
             DOMAIN,
             EvoService.SET_DHW_OVERRIDE,
             {
-                EVO_STATE: "Off",
+                ATTR_STATE: "Off",
             },
             target={ATTR_ENTITY_ID: dhw_id},
             blocking=True,
@@ -416,7 +415,7 @@ async def test_set_dhw_override(
             DOMAIN,
             EvoService.SET_DHW_OVERRIDE,
             {
-                EVO_STATE: "On",
+                ATTR_STATE: "On",
                 ATTR_DURATION: {"minutes": 135},
             },
             target={ATTR_ENTITY_ID: dhw_id},
@@ -458,7 +457,7 @@ async def test_set_dhw_override_advance(
             DOMAIN,
             EvoService.SET_DHW_OVERRIDE,
             {
-                EVO_STATE: "On",
+                ATTR_STATE: "On",
                 ATTR_DURATION: {"minutes": 0},
             },
             target={ATTR_ENTITY_ID: dhw_id},

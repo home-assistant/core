@@ -16,21 +16,14 @@ import voluptuous as vol
 
 from homeassistant.components.climate import DOMAIN as CLIMATE_DOMAIN
 from homeassistant.components.water_heater import DOMAIN as WATER_HEATER_DOMAIN
-from homeassistant.const import ATTR_MODE
+from homeassistant.const import ATTR_MODE, ATTR_STATE
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import config_validation as cv, service
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.service import verify_domain_control
 
-from .const import (
-    ATTR_DURATION,
-    ATTR_PERIOD,
-    ATTR_SETPOINT,
-    DOMAIN,
-    EVO_STATE,
-    EvoService,
-)
+from .const import ATTR_DURATION, ATTR_PERIOD, ATTR_SETPOINT, DOMAIN, EvoService
 from .coordinator import EvoDataUpdateCoordinator
 
 # System service schemas (registered as domain services)
@@ -60,7 +53,7 @@ SET_ZONE_OVERRIDE_SCHEMA: Final[dict[str | vol.Marker, Any]] = {
 
 # DHW service schemas (registered as entity services)
 SET_DHW_OVERRIDE_SCHEMA: Final[dict[str | vol.Marker, Any]] = {
-    vol.Required(EVO_STATE): vol.Coerce(EvoDhwState),
+    vol.Required(ATTR_STATE): vol.Coerce(EvoDhwState),
     vol.Optional(ATTR_DURATION): vol.All(
         cv.time_period,
         vol.Range(min=timedelta(days=0), max=timedelta(days=1)),
