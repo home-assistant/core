@@ -282,7 +282,7 @@ class TriggerBinarySensorEntity(TriggerEntity, AbstractTemplateBinarySensor):
     domain = BINARY_SENSOR_DOMAIN
 
     # delay on and delay off are validated when the state is validated.
-    skip_validation = (CONF_DELAY_ON, CONF_DELAY_OFF)
+    skip_rendered_result = (CONF_DELAY_ON, CONF_DELAY_OFF)
 
     def __init__(
         self,

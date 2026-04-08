@@ -33,7 +33,7 @@ class TriggerEntity(  # pylint: disable=hass-enforce-class-module
 ):
     """Template entity based on trigger data."""
 
-    skip_validation: tuple[str, ...] | None
+    skip_rendered_result: tuple[str, ...] | None
 
     def __init__(
         self,
@@ -50,9 +50,9 @@ class TriggerEntity(  # pylint: disable=hass-enforce-class-module
         self._rendered_entity_variables: dict | None = None
         self._state_render_error = False
 
-        self._skip_rendered_validation: list[str] = []
-        if self.skip_validation is not None:
-            self._skip_rendered_validation.extend(self.skip_validation)
+        self._skip_rendered_result: list[str] = []
+        if self.skip_rendered_result is not None:
+            self._skip_rendered_result.extend(self.skip_rendered_result)
 
     async def async_added_to_hass(self) -> None:
         """Handle being added to Home Assistant."""
@@ -213,7 +213,7 @@ class TriggerEntity(  # pylint: disable=hass-enforce-class-module
             return True
 
         for option, entity_template in self._templates.items():
-            if option in self._skip_rendered_validation:
+            if option in self._skip_rendered_result:
                 continue
 
             # Capture templates that did not render a result due to an exception and
