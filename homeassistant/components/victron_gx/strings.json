@@ -52,16 +52,16 @@
         "state": {
           "charger_only": "Charger only",
           "inverter_only": "Inverter only",
-          "off": "Off",
-          "on": "On",
+          "off": "[%key:common::state::off%]",
+          "on": "[%key:common::state::on%]",
           "passthrough": "Passthrough"
         }
       },
       "evcharger_mode": {
         "name": "Mode",
         "state": {
-          "auto": "Auto",
-          "manual": "Manual",
+          "auto": "[%key:common::state::auto%]",
+          "manual": "[%key:common::state::manual%]",
           "scheduled_charge": "Scheduled Charge"
         }
       },
@@ -69,7 +69,7 @@
         "state": {
           "eco": "Eco",
           "inverter": "Inverter",
-          "off": "Off"
+          "off": "[%key:common::state::off%]"
         }
       },
       "system_ess_batterylife_state": {
@@ -111,13 +111,13 @@
           "disabled_weekdays": "Disabled (Weekdays)",
           "disabled_weekend": "Disabled (Weekends)",
           "every_day": "Every day",
-          "friday": "Friday",
-          "monday": "Monday",
-          "saturday": "Saturday",
-          "sunday": "Sunday",
-          "thursday": "Thursday",
-          "tuesday": "Tuesday",
-          "wednesday": "Wednesday",
+          "friday": "[%key:common::time::friday%]",
+          "monday": "[%key:common::time::monday%]",
+          "saturday": "[%key:common::time::saturday%]",
+          "sunday": "[%key:common::time::sunday%]",
+          "thursday": "[%key:common::time::thursday%]",
+          "tuesday": "[%key:common::time::tuesday%]",
+          "wednesday": "[%key:common::time::wednesday%]",
           "weekdays": "Weekdays",
           "weekends": "Weekends"
         }
@@ -128,7 +128,7 @@
           "auto_vrm": "Auto / VRM",
           "buy": "Buy",
           "node_red": "Node-RED",
-          "off": "Off",
+          "off": "[%key:common::state::off%]",
           "sell": "Sell"
         }
       },
@@ -136,8 +136,8 @@
         "state": {
           "charger_only": "Charger Only",
           "inverter_only": "Inverter Only",
-          "off": "Off",
-          "on": "On"
+          "off": "[%key:common::state::off%]",
+          "on": "[%key:common::state::on%]"
         }
       }
     },
@@ -173,8 +173,8 @@
         "state": {
           "charger_only": "Charger only",
           "inverter_only": "Inverter only",
-          "off": "Off",
-          "on": "On",
+          "off": "[%key:common::state::off%]",
+          "on": "[%key:common::state::on%]",
           "passthrough": "Passthrough"
         }
       },
@@ -206,14 +206,14 @@
           "auto_equalize": "Auto Equalize / Recondition",
           "battery_safe": "Battery Safe",
           "bulk": "Bulk",
-          "discharging": "Discharging",
+          "discharging": "[%key:common::state::discharging%]",
           "equalize": "Equalize",
           "external_control": "External Control",
-          "fault": "Fault",
+          "fault": "[%key:common::state::fault%]",
           "float": "Float",
           "inverting": "Inverting",
           "low_power": "Low Power",
-          "off": "Off",
+          "off": "[%key:common::state::off%]",
           "passthrough": "Passthrough",
           "power_assist": "Power Assist",
           "power_supply": "Power Supply",
@@ -463,14 +463,14 @@
           "auto_equalize": "Auto Equalize / Recondition",
           "battery_safe": "Battery Safe",
           "bulk": "Bulk",
-          "discharging": "Discharging",
+          "discharging": "[%key:common::state::discharging%]",
           "equalize": "Equalize",
           "external_control": "External Control",
-          "fault": "Fault",
+          "fault": "[%key:common::state::fault%]",
           "float": "Float",
           "inverting": "Inverting",
           "low_power": "Low Power",
-          "off": "Off",
+          "off": "[%key:common::state::off%]",
           "passthrough": "Passthrough",
           "power_assist": "Power Assist",
           "power_supply": "Power Supply",
@@ -508,14 +508,14 @@
           "auto_equalize": "Auto Equalize / Recondition",
           "battery_safe": "Battery Safe",
           "bulk": "Bulk",
-          "discharging": "Discharging",
+          "discharging": "[%key:common::state::discharging%]",
           "equalize": "Equalize",
           "external_control": "External Control",
-          "fault": "Fault",
+          "fault": "[%key:common::state::fault%]",
           "float": "Float",
           "inverting": "Inverting",
           "low_power": "Low Power",
-          "off": "Off",
+          "off": "[%key:common::state::off%]",
           "passthrough": "Passthrough",
           "power_assist": "Power Assist",
           "power_supply": "Power Supply",
@@ -568,17 +568,17 @@
         "name": "State",
         "state": {
           "alarm": "Alarm",
-          "closed": "Closed",
-          "high": "High",
-          "low": "Low",
-          "no": "No",
-          "off": "Off",
+          "closed": "[%key:common::state::closed%]",
+          "high": "[%key:common::state::high%]",
+          "low": "[%key:common::state::low%]",
+          "no": "[%key:common::state::no%]",
+          "off": "[%key:common::state::off%]",
           "ok": "Ok",
-          "on": "On",
-          "open": "Open",
+          "on": "[%key:common::state::on%]",
+          "open": "[%key:common::state::open%]",
           "running": "Running",
-          "stopped": "Stopped",
-          "yes": "Yes"
+          "stopped": "[%key:common::state::stopped%]",
+          "yes": "[%key:common::state::yes%]"
         }
       },
       "digitalinput_type": {
@@ -588,7 +588,7 @@
           "bilge_pump": "Bilge pump",
           "burglar_alarm": "Burglar alarm",
           "co2_alarm": "CO2 alarm",
-          "disabled": "Disabled",
+          "disabled": "[%key:common::state::disabled%]",
           "door_alarm": "Door alarm",
           "fire_alarm": "Fire alarm",
           "generator": "Generator",
@@ -609,8 +609,8 @@
       "evcharger_mode": {
         "name": "Mode",
         "state": {
-          "auto": "Auto",
-          "manual": "Manual",
+          "auto": "[%key:common::state::auto%]",
+          "manual": "[%key:common::state::manual%]",
           "scheduled_charge": "Scheduled Charge"
         }
       },
@@ -644,11 +644,11 @@
         "name": "Status",
         "state": {
           "charged": "Charged",
-          "charging": "Charging",
+          "charging": "[%key:common::state::charging%]",
           "charging_limit": "Charging limit",
-          "connected": "Connected",
+          "connected": "[%key:common::state::connected%]",
           "cp_input_test_error": "CP input test error",
-          "disconnected": "Disconnected",
+          "disconnected": "[%key:common::state::disconnected%]",
           "ground_test_error": "Ground test error",
           "low_soc": "Low SOC",
           "overheating_detected": "Overheating detected",
@@ -735,10 +735,10 @@
           "inv_overload": "Inv Overload",
           "inv_temp": "Inv Temp",
           "lost_comms": "Lost Comms",
-          "manual": "Manual",
+          "manual": "[%key:common::state::manual%]",
           "soc": "SOC",
           "stop_on_ac1": "Stop On AC1",
-          "stopped": "Stopped",
+          "stopped": "[%key:common::state::stopped%]",
           "test_run": "Test Run"
         }
       },
@@ -858,7 +858,7 @@
         "state": {
           "eco": "Eco",
           "inverter": "Inverter",
-          "off": "Off"
+          "off": "[%key:common::state::off%]"
         }
       },
       "inverter_output_apparent_power_phase": {
@@ -886,14 +886,14 @@
           "auto_equalize": "Auto Equalize / Recondition",
           "battery_safe": "Battery Safe",
           "bulk": "Bulk",
-          "discharging": "Discharging",
+          "discharging": "[%key:common::state::discharging%]",
           "equalize": "Equalize",
           "external_control": "External Control",
-          "fault": "Fault",
+          "fault": "[%key:common::state::fault%]",
           "float": "Float",
           "inverting": "Inverting",
           "low_power": "Low Power",
-          "off": "Off",
+          "off": "[%key:common::state::off%]",
           "passthrough": "Passthrough",
           "power_assist": "Power Assist",
           "power_supply": "Power Supply",
@@ -947,7 +947,7 @@
         "state": {
           "ac_input_1": "AC Input 1",
           "ac_input_2": "AC Input 2",
-          "disconnected": "Disconnected"
+          "disconnected": "[%key:common::state::disconnected%]"
         }
       },
       "multi_ess_ac_power_setpoint": {
@@ -993,7 +993,7 @@
         "state": {
           "mppt_active": "MPPT active",
           "not_available": "Not available",
-          "off": "Off",
+          "off": "[%key:common::state::off%]",
           "voltage_current_limited": "Voltage/current limited"
         }
       },
@@ -1026,14 +1026,14 @@
           "auto_equalize": "Auto Equalize / Recondition",
           "battery_safe": "Battery Safe",
           "bulk": "Bulk",
-          "discharging": "Discharging",
+          "discharging": "[%key:common::state::discharging%]",
           "equalize": "Equalize",
           "external_control": "External Control",
-          "fault": "Fault",
+          "fault": "[%key:common::state::fault%]",
           "float": "Float",
           "inverting": "Inverting",
           "low_power": "Low Power",
-          "off": "Off",
+          "off": "[%key:common::state::off%]",
           "passthrough": "Passthrough",
           "power_assist": "Power Assist",
           "power_supply": "Power Supply",
@@ -1156,7 +1156,7 @@
         "state": {
           "mppt_active": "MPPT active",
           "not_available": "Not available",
-          "off": "Off",
+          "off": "[%key:common::state::off%]",
           "voltage_current_limited": "Voltage/current limited"
         }
       },
@@ -1167,14 +1167,14 @@
           "auto_equalize": "Auto Equalize / Recondition",
           "battery_safe": "Battery Safe",
           "bulk": "Bulk",
-          "discharging": "Discharging",
+          "discharging": "[%key:common::state::discharging%]",
           "equalize": "Equalize",
           "external_control": "External Control",
-          "fault": "Fault",
+          "fault": "[%key:common::state::fault%]",
           "float": "Float",
           "inverting": "Inverting",
           "low_power": "Low Power",
-          "off": "Off",
+          "off": "[%key:common::state::off%]",
           "passthrough": "Passthrough",
           "power_assist": "Power Assist",
           "power_supply": "Power Supply",
@@ -1210,7 +1210,7 @@
         "state": {
           "mppt_active": "MPPT active",
           "not_available": "Not available",
-          "off": "Off",
+          "off": "[%key:common::state::off%]",
           "voltage_current_limited": "Voltage/current limited"
         }
       },
@@ -1314,9 +1314,9 @@
       "system_dc_battery_state": {
         "name": "DC battery state",
         "state": {
-          "charging": "Charging",
-          "discharging": "Discharging",
-          "idle": "Idle"
+          "charging": "[%key:common::state::charging%]",
+          "discharging": "[%key:common::state::discharging%]",
+          "idle": "[%key:common::state::idle%]"
         }
       },
       "system_dc_battery_voltage": {
@@ -1471,13 +1471,13 @@
           "disabled_weekdays": "Disabled (Weekdays)",
           "disabled_weekend": "Disabled (Weekends)",
           "every_day": "Every day",
-          "friday": "Friday",
-          "monday": "Monday",
-          "saturday": "Saturday",
-          "sunday": "Sunday",
-          "thursday": "Thursday",
-          "tuesday": "Tuesday",
-          "wednesday": "Wednesday",
+          "friday": "[%key:common::time::friday%]",
+          "monday": "[%key:common::time::monday%]",
+          "saturday": "[%key:common::time::saturday%]",
+          "sunday": "[%key:common::time::sunday%]",
+          "thursday": "[%key:common::time::thursday%]",
+          "tuesday": "[%key:common::time::tuesday%]",
+          "wednesday": "[%key:common::time::wednesday%]",
           "weekdays": "Weekdays",
           "weekends": "Weekends"
         }
@@ -1523,7 +1523,7 @@
           "auto_vrm": "Auto / VRM",
           "buy": "Buy",
           "node_red": "Node-RED",
-          "off": "Off",
+          "off": "[%key:common::state::off%]",
           "sell": "Sell"
         }
       },
@@ -1534,14 +1534,14 @@
           "auto_equalize": "Auto Equalize / Recondition",
           "battery_safe": "Battery Safe",
           "bulk": "Bulk",
-          "discharging": "Discharging",
+          "discharging": "[%key:common::state::discharging%]",
           "equalize": "Equalize",
           "external_control": "External Control",
-          "fault": "Fault",
+          "fault": "[%key:common::state::fault%]",
           "float": "Float",
           "inverting": "Inverting",
           "low_power": "Low Power",
-          "off": "Off",
+          "off": "[%key:common::state::off%]",
           "passthrough": "Passthrough",
           "power_assist": "Power Assist",
           "power_supply": "Power Supply",
@@ -1605,7 +1605,7 @@
       "temperature_status": {
         "name": "Sensor status",
         "state": {
-          "disconnected": "Disconnected",
+          "disconnected": "[%key:common::state::disconnected%]",
           "ok": "Ok",
           "reverse_polarity": "Reverse polarity",
           "short_circuited": "Short circuited",
@@ -1786,8 +1786,8 @@
       "vebus_inverter_ignoreacin1_state": {
         "name": "State of ignore AC-in-1",
         "state": {
-          "off": "Off",
-          "on": "On"
+          "off": "[%key:common::state::off%]",
+          "on": "[%key:common::state::on%]"
         }
       },
       "vebus_inverter_input_apparent_power_phase": {
@@ -1809,8 +1809,8 @@
         "state": {
           "charger_only": "Charger Only",
           "inverter_only": "Inverter Only",
-          "off": "Off",
-          "on": "On"
+          "off": "[%key:common::state::off%]",
+          "on": "[%key:common::state::on%]"
         }
       },
       "vebus_inverter_output_apparent_power_phase": {
@@ -1835,14 +1835,14 @@
           "auto_equalize": "Auto Equalize / Recondition",
           "battery_safe": "Battery Safe",
           "bulk": "Bulk",
-          "discharging": "Discharging",
+          "discharging": "[%key:common::state::discharging%]",
           "equalize": "Equalize",
           "external_control": "External Control",
-          "fault": "Fault",
+          "fault": "[%key:common::state::fault%]",
           "float": "Float",
           "inverting": "Inverting",
           "low_power": "Low Power",
-          "off": "Off",
+          "off": "[%key:common::state::off%]",
           "passthrough": "Passthrough",
           "power_assist": "Power Assist",
           "power_supply": "Power Supply",
