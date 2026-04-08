@@ -59,7 +59,6 @@ class EvoResetButtonBase(EvoEntity, ButtonEntity):
         else:
             name = evo_device.name
 
-        self._attr_suggested_object_id = f"{name}_reset"
         self._attr_translation_placeholders = {"device_name": name}
         self._attr_unique_id = f"{evo_device.id}_reset"
 
