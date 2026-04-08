@@ -72,7 +72,7 @@ def _parse_enum(enum_cls: type[EnumT], raw: object | None) -> EnumT | None:
 
     try:
         return enum_cls(str(raw))
-    except ValueError, TypeError:
+    except (ValueError, TypeError):
         return None
 
 
