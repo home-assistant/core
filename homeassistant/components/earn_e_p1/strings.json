@@ -1,7 +1,7 @@
 {
   "config": {
     "abort": {
-      "already_configured": "This EARN-E P1 meter is already configured.",
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "cannot_connect": "Cannot connect — no data received from the device."
     },
     "error": {
@@ -15,7 +15,7 @@
       },
       "user": {
         "data": {
-          "host": "IP address"
+          "host": "[%key:common::config_flow::data::ip%]"
         },
         "data_description": {
           "host": "The local IP address of your EARN-E P1 meter (e.g. 192.168.1.100)."
