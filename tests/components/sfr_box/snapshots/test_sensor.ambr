@@ -931,3 +931,22 @@
     'state': 'adsl_routed',
   })
 # ---
+# name: test_sensors_no_auth
+  list([
+    'sensor.sfr_box_dsl_attenuation_down',
+    'sensor.sfr_box_dsl_attenuation_up',
+    'sensor.sfr_box_dsl_connect_count',
+    'sensor.sfr_box_dsl_crc_error_count',
+    'sensor.sfr_box_dsl_line_mode',
+    'sensor.sfr_box_dsl_line_status',
+    'sensor.sfr_box_dsl_noise_down',
+    'sensor.sfr_box_dsl_noise_up',
+    'sensor.sfr_box_dsl_rate_down',
+    'sensor.sfr_box_dsl_rate_up',
+    'sensor.sfr_box_dsl_training',
+    'sensor.sfr_box_network_infrastructure',
+    'sensor.sfr_box_temperature',
+    'sensor.sfr_box_voltage',
+    'sensor.sfr_box_wan_mode',
+  ])
+# ---

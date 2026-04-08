@@ -52,11 +52,11 @@ async def test_sensors_no_auth(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
     entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
 ) -> None:
     """Test for SFR Box sensors."""
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
     # Ensure auth-only entities are not registered
-    for entity_id in entity_registry.entities:
-        assert entity_registry.entities[entity_id].translation_key != "voip_infra"
+    assert sorted(entity_registry.entities) == snapshot

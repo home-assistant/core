@@ -505,3 +505,9 @@
     'state': 'on',
   })
 # ---
+# name: test_binary_sensors_no_auth
+  list([
+    'binary_sensor.sfr_box_dsl_status',
+    'binary_sensor.sfr_box_wan_status',
+  ])
+# ---
