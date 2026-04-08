@@ -10,9 +10,7 @@ from homeassistant.core import HomeAssistant
 
 from .coordinator import ActronAirConfigEntry
 
-TO_REDACT_CONFIG = {CONF_API_TOKEN}
-TO_REDACT_STATUS = {"master_serial", "serial_number"}
-TO_REDACT_SYSTEM = {"serial"}
+TO_REDACT = {CONF_API_TOKEN, "master_serial", "serial_number", "serial"}
 
 
 async def async_get_config_entry_diagnostics(
@@ -23,12 +21,12 @@ async def async_get_config_entry_diagnostics(
     coordinators: dict[int, Any] = {}
     for idx, coordinator in enumerate(entry.runtime_data.system_coordinators.values()):
         coordinators[idx] = {
-            "system": async_redact_data(coordinator.system, TO_REDACT_SYSTEM),
+            "system": async_redact_data(coordinator.system, TO_REDACT),
             "status": async_redact_data(
-                coordinator.data.model_dump(mode="json"), TO_REDACT_STATUS
+                coordinator.data.model_dump(mode="json"), TO_REDACT
             ),
         }
     return {
-        "entry_data": async_redact_data(entry.data, TO_REDACT_CONFIG),
+        "entry_data": async_redact_data(entry.data, TO_REDACT),
         "coordinators": coordinators,
     }
