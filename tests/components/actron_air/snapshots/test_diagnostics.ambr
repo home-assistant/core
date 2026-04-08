@@ -2,10 +2,10 @@
 # name: test_diagnostics
   dict({
     'coordinators': dict({
-      '123456': dict({
+      '0': dict({
         'status': dict({
           'ac_system': dict({
-            'master_serial': '123456',
+            'master_serial': '**REDACTED**',
             'master_wc_firmware_version': '1.0.0',
             'master_wc_model': 'Test Model',
             'system_name': 'Test System',
@@ -22,7 +22,7 @@
           ]),
           'remote_zone_info': list([
           ]),
-          'serial_number': '123456',
+          'serial_number': '**REDACTED**',
           'user_aircon_settings': dict({
             'away_mode': False,
             'enabled_zones': list([
@@ -38,7 +38,7 @@
         }),
         'system': dict({
           'name': 'Test System',
-          'serial': '123456',
+          'serial': '**REDACTED**',
         }),
       }),
     }),
