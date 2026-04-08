@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from collections.abc import Callable
-import logging
 from typing import Any
 
 from homeassistant.const import CONF_VARIABLES
@@ -23,8 +22,6 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from . import TriggerUpdateCoordinator
 from .entity import AbstractTemplateEntity
 
-_LOGGER = logging.getLogger(__name__)
-
 
 class TriggerEntity(  # pylint: disable=hass-enforce-class-module
     TriggerBaseEntity,
@@ -33,7 +30,7 @@ class TriggerEntity(  # pylint: disable=hass-enforce-class-module
 ):
     """Template entity based on trigger data."""
 
-    skip_rendered_result: tuple[str, ...] | None
+    skip_rendered_result: tuple[str, ...] | None = None
 
     def __init__(
         self,
