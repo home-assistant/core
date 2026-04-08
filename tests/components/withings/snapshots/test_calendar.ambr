@@ -14,6 +14,7 @@
       'end': dict({
         'dateTime': '2023-08-29T12:15:13-07:00',
       }),
+      'geo': None,
       'location': None,
       'recurrence_id': None,
       'rrule': None,
@@ -28,6 +29,7 @@
       'end': dict({
         'dateTime': '2023-08-31T01:18:44-07:00',
       }),
+      'geo': None,
       'location': None,
       'recurrence_id': None,
       'rrule': None,
@@ -42,6 +44,7 @@
       'end': dict({
         'dateTime': '2023-08-04T09:15:19-07:00',
       }),
+      'geo': None,
       'location': None,
       'recurrence_id': None,
       'rrule': None,
@@ -56,6 +59,7 @@
       'end': dict({
         'dateTime': '2023-09-22T16:51:01-07:00',
       }),
+      'geo': None,
       'location': None,
       'recurrence_id': None,
       'rrule': None,
@@ -70,6 +74,7 @@
       'end': dict({
         'dateTime': '2023-09-14T11:31:46-07:00',
       }),
+      'geo': None,
       'location': None,
       'recurrence_id': None,
       'rrule': None,
@@ -84,6 +89,7 @@
       'end': dict({
         'dateTime': '2023-09-22T16:58:13-07:00',
       }),
+      'geo': None,
       'location': None,
       'recurrence_id': None,
       'rrule': None,
@@ -98,6 +104,7 @@
       'end': dict({
         'dateTime': '2023-09-14T11:15:27-07:00',
       }),
+      'geo': None,
       'location': None,
       'recurrence_id': None,
       'rrule': None,
@@ -112,6 +119,7 @@
       'end': dict({
         'dateTime': '2023-10-09T00:16:07-07:00',
       }),
+      'geo': None,
       'location': None,
       'recurrence_id': None,
       'rrule': None,
@@ -126,6 +134,7 @@
       'end': dict({
         'dateTime': '2023-10-09T02:43:58-07:00',
       }),
+      'geo': None,
       'location': None,
       'recurrence_id': None,
       'rrule': None,
@@ -140,6 +149,7 @@
       'end': dict({
         'dateTime': '2023-10-09T02:17:12-07:00',
       }),
+      'geo': None,
       'location': None,
       'recurrence_id': None,
       'rrule': None,
@@ -154,6 +164,7 @@
       'end': dict({
         'dateTime': '2023-10-09T02:17:12-07:00',
       }),
+      'geo': None,
       'location': None,
       'recurrence_id': None,
       'rrule': None,

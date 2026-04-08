@@ -38,6 +38,7 @@
       'end': dict({
         'date': '2024-01-23',
       }),
+      'geo': None,
       'location': None,
       'recurrence_id': None,
       'rrule': None,
@@ -52,6 +53,7 @@
       'end': dict({
         'date': '2024-01-24',
       }),
+      'geo': None,
       'location': None,
       'recurrence_id': None,
       'rrule': None,
@@ -66,6 +68,7 @@
       'end': dict({
         'date': '2024-01-24',
       }),
+      'geo': None,
       'location': None,
       'recurrence_id': None,
       'rrule': None,
@@ -80,6 +83,7 @@
       'end': dict({
         'date': '2024-01-23',
       }),
+      'geo': None,
       'location': None,
       'recurrence_id': None,
       'rrule': None,
@@ -94,6 +98,7 @@
       'end': dict({
         'date': '2024-01-24',
       }),
+      'geo': None,
       'location': None,
       'recurrence_id': None,
       'rrule': None,
@@ -108,6 +113,7 @@
       'end': dict({
         'date': '2024-01-24',
       }),
+      'geo': None,
       'location': None,
       'recurrence_id': None,
       'rrule': None,
@@ -122,6 +128,7 @@
       'end': dict({
         'date': '2024-01-22',
       }),
+      'geo': None,
       'location': None,
       'recurrence_id': None,
       'rrule': None,

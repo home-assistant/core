@@ -6,6 +6,7 @@
       'end': dict({
         'dateTime': '2024-04-26T15:00:00-06:00',
       }),
+      'geo': None,
       'location': '',
       'recurrence_id': None,
       'rrule': None,

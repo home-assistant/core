@@ -22,6 +22,7 @@
       'end': dict({
         'date': '2024-09-22',
       }),
+      'geo': None,
       'location': None,
       'recurrence_id': None,
       'rrule': 'FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR,SA,SU',
@@ -36,6 +37,7 @@
       'end': dict({
         'date': '2024-09-22',
       }),
+      'geo': None,
       'location': None,
       'recurrence_id': None,
       'rrule': 'FREQ=WEEKLY;BYDAY=WE,SA,SU',
@@ -50,6 +52,7 @@
       'end': dict({
         'date': '2024-09-23',
       }),
+      'geo': None,
       'location': None,
       'recurrence_id': None,
       'rrule': 'FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR,SA,SU',
@@ -64,6 +67,7 @@
       'end': dict({
         'date': '2024-09-23',
       }),
+      'geo': None,
       'location': None,
       'recurrence_id': None,
       'rrule': 'FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR,SA,SU',
@@ -78,6 +82,7 @@
       'end': dict({
         'date': '2024-09-23',
       }),
+      'geo': None,
       'location': None,
       'recurrence_id': None,
       'rrule': 'FREQ=WEEKLY;BYDAY=WE,SA,SU',
@@ -92,6 +97,7 @@
       'end': dict({
         'date': '2024-09-23',
       }),
+      'geo': None,
       'location': None,
       'recurrence_id': None,
       'rrule': 'FREQ=MONTHLY;BYSETPOS=4;BYDAY=SU',
@@ -106,6 +112,7 @@
       'end': dict({
         'date': '2024-09-24',
       }),
+      'geo': None,
       'location': None,
       'recurrence_id': None,
       'rrule': 'FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR,SA,SU',
@@ -120,6 +127,7 @@
       'end': dict({
         'date': '2024-09-24',
       }),
+      'geo': None,
       'location': None,
       'recurrence_id': None,
       'rrule': 'FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR,SA,SU',
@@ -134,6 +142,7 @@
       'end': dict({
         'date': '2024-09-25',
       }),
+      'geo': None,
       'location': None,
       'recurrence_id': None,
       'rrule': 'FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR,SA,SU',
@@ -148,6 +157,7 @@
       'end': dict({
         'date': '2024-09-25',
       }),
+      'geo': None,
       'location': None,
       'recurrence_id': None,
       'rrule': 'FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR,SA,SU',
@@ -162,6 +172,7 @@
       'end': dict({
         'date': '2024-09-26',
       }),
+      'geo': None,
       'location': None,
       'recurrence_id': None,
       'rrule': 'FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR,SA,SU',
@@ -176,6 +187,7 @@
       'end': dict({
         'date': '2024-09-26',
       }),
+      'geo': None,
       'location': None,
       'recurrence_id': None,
       'rrule': 'FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR,SA,SU',
@@ -190,6 +202,7 @@
       'end': dict({
         'date': '2024-09-26',
       }),
+      'geo': None,
       'location': None,
       'recurrence_id': None,
       'rrule': 'FREQ=WEEKLY;BYDAY=WE,SA,SU',
@@ -204,6 +217,7 @@
       'end': dict({
         'date': '2024-09-27',
       }),
+      'geo': None,
       'location': None,
       'recurrence_id': None,
       'rrule': 'FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR,SA,SU',
@@ -218,6 +232,7 @@
       'end': dict({
         'date': '2024-09-27',
       }),
+      'geo': None,
       'location': None,
       'recurrence_id': None,
       'rrule': 'FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR,SA,SU',
@@ -232,6 +247,7 @@
       'end': dict({
         'date': '2024-09-28',
       }),
+      'geo': None,
       'location': None,
       'recurrence_id': None,
       'rrule': 'FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR,SA,SU',
@@ -246,6 +262,7 @@
       'end': dict({
         'date': '2024-09-28',
       }),
+      'geo': None,
       'location': None,
       'recurrence_id': None,
       'rrule': 'FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR,SA,SU',
@@ -260,6 +277,7 @@
       'end': dict({
         'date': '2024-09-29',
       }),
+      'geo': None,
       'location': None,
       'recurrence_id': None,
       'rrule': 'FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR,SA,SU',
@@ -274,6 +292,7 @@
       'end': dict({
         'date': '2024-09-29',
       }),
+      'geo': None,
       'location': None,
       'recurrence_id': None,
       'rrule': 'FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR,SA,SU',
@@ -288,6 +307,7 @@
       'end': dict({
         'date': '2024-09-29',
       }),
+      'geo': None,
       'location': None,
       'recurrence_id': None,
       'rrule': 'FREQ=WEEKLY;BYDAY=WE,SA,SU',
@@ -302,6 +322,7 @@
       'end': dict({
         'date': '2024-09-30',
       }),
+      'geo': None,
       'location': None,
       'recurrence_id': None,
       'rrule': 'FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR,SA,SU',
@@ -316,6 +337,7 @@
       'end': dict({
         'date': '2024-09-30',
       }),
+      'geo': None,
       'location': None,
       'recurrence_id': None,
       'rrule': 'FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR,SA,SU',
@@ -330,6 +352,7 @@
       'end': dict({
         'date': '2024-09-30',
       }),
+      'geo': None,
       'location': None,
       'recurrence_id': None,
       'rrule': 'FREQ=WEEKLY;BYDAY=WE,SA,SU',
@@ -344,6 +367,7 @@
       'end': dict({
         'date': '2024-10-01',
       }),
+      'geo': None,
       'location': None,
       'recurrence_id': None,
       'rrule': 'FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR,SA,SU',
@@ -358,6 +382,7 @@
       'end': dict({
         'date': '2024-10-01',
       }),
+      'geo': None,
       'location': None,
       'recurrence_id': None,
       'rrule': 'FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR,SA,SU',
@@ -372,6 +397,7 @@
       'end': dict({
         'date': '2024-10-02',
       }),
+      'geo': None,
       'location': None,
       'recurrence_id': None,
       'rrule': 'FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR,SA,SU',
@@ -386,6 +412,7 @@
       'end': dict({
         'date': '2024-10-02',
       }),
+      'geo': None,
       'location': None,
       'recurrence_id': None,
       'rrule': 'FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR,SA,SU',
@@ -400,6 +427,7 @@
       'end': dict({
         'date': '2024-10-03',
       }),
+      'geo': None,
       'location': None,
       'recurrence_id': None,
       'rrule': 'FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR,SA,SU',
@@ -414,6 +442,7 @@
       'end': dict({
         'date': '2024-10-03',
       }),
+      'geo': None,
       'location': None,
       'recurrence_id': None,
       'rrule': 'FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR,SA,SU',
@@ -428,6 +457,7 @@
       'end': dict({
         'date': '2024-10-03',
       }),
+      'geo': None,
       'location': None,
       'recurrence_id': None,
       'rrule': 'FREQ=WEEKLY;BYDAY=WE,SA,SU',
@@ -442,6 +472,7 @@
       'end': dict({
         'date': '2024-10-04',
       }),
+      'geo': None,
       'location': None,
       'recurrence_id': None,
       'rrule': 'FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR,SA,SU',
@@ -456,6 +487,7 @@
       'end': dict({
         'date': '2024-10-04',
       }),
+      'geo': None,
       'location': None,
       'recurrence_id': None,
       'rrule': 'FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR,SA,SU',
@@ -470,6 +502,7 @@
       'end': dict({
         'date': '2024-10-05',
       }),
+      'geo': None,
       'location': None,
       'recurrence_id': None,
       'rrule': 'FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR,SA,SU',
@@ -484,6 +517,7 @@
       'end': dict({
         'date': '2024-10-05',
       }),
+      'geo': None,
       'location': None,
       'recurrence_id': None,
       'rrule': 'FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR,SA,SU',
@@ -498,6 +532,7 @@
       'end': dict({
         'date': '2024-10-06',
       }),
+      'geo': None,
       'location': None,
       'recurrence_id': None,
       'rrule': 'FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR,SA,SU',
@@ -512,6 +547,7 @@
       'end': dict({
         'date': '2024-10-06',
       }),
+      'geo': None,
       'location': None,
       'recurrence_id': None,
       'rrule': 'FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR,SA,SU',
@@ -526,6 +562,7 @@
       'end': dict({
         'date': '2024-10-06',
       }),
+      'geo': None,
       'location': None,
       'recurrence_id': None,
       'rrule': 'FREQ=WEEKLY;BYDAY=WE,SA,SU',
@@ -540,6 +577,7 @@
       'end': dict({
         'date': '2024-10-07',
       }),
+      'geo': None,
       'location': None,
       'recurrence_id': None,
       'rrule': 'FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR,SA,SU',
@@ -554,6 +592,7 @@
       'end': dict({
         'date': '2024-10-07',
       }),
+      'geo': None,
       'location': None,
       'recurrence_id': None,
       'rrule': 'FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR,SA,SU',
@@ -568,6 +607,7 @@
       'end': dict({
         'date': '2024-10-07',
       }),
+      'geo': None,
       'location': None,
       'recurrence_id': None,
       'rrule': 'FREQ=WEEKLY;BYDAY=WE,SA,SU',
@@ -582,6 +622,7 @@
       'end': dict({
         'date': '2024-10-07',
       }),
+      'geo': None,
       'location': None,
       'recurrence_id': None,
       'rrule': 'FREQ=MONTHLY;BYSETPOS=1;BYDAY=SU',
@@ -596,6 +637,7 @@
       'end': dict({
         'date': '2024-10-08',
       }),
+      'geo': None,
       'location': None,
       'recurrence_id': None,
       'rrule': 'FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR,SA,SU',
@@ -610,6 +652,7 @@
       'end': dict({
         'date': '2024-10-08',
       }),
+      'geo': None,
       'location': None,
       'recurrence_id': None,
       'rrule': 'FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR,SA,SU',
@@ -628,6 +671,7 @@
       'end': dict({
         'dateTime': '2024-09-21T21:00:00+02:00',
       }),
+      'geo': None,
       'location': None,
       'recurrence_id': None,
       'rrule': None,
@@ -642,6 +686,7 @@
       'end': dict({
         'dateTime': '2024-09-22T21:00:00+02:00',
       }),
+      'geo': None,
       'location': None,
       'recurrence_id': None,
       'rrule': None,
@@ -656,6 +701,7 @@
       'end': dict({
         'dateTime': '2024-09-23T21:00:00+02:00',
       }),
+      'geo': None,
       'location': None,
       'recurrence_id': None,
       'rrule': None,
@@ -670,6 +716,7 @@
       'end': dict({
         'dateTime': '2024-09-24T21:00:00+02:00',
       }),
+      'geo': None,
       'location': None,
       'recurrence_id': None,
       'rrule': None,
@@ -684,6 +731,7 @@
       'end': dict({
         'dateTime': '2024-09-25T21:00:00+02:00',
       }),
+      'geo': None,
       'location': None,
       'recurrence_id': None,
       'rrule': None,
@@ -698,6 +746,7 @@
       'end': dict({
         'dateTime': '2024-09-26T21:00:00+02:00',
       }),
+      'geo': None,
       'location': None,
       'recurrence_id': None,
       'rrule': None,
@@ -712,6 +761,7 @@
       'end': dict({
         'dateTime': '2024-09-27T21:00:00+02:00',
       }),
+      'geo': None,
       'location': None,
       'recurrence_id': None,
       'rrule': None,
@@ -726,6 +776,7 @@
       'end': dict({
         'dateTime': '2024-09-28T21:00:00+02:00',
       }),
+      'geo': None,
       'location': None,
       'recurrence_id': None,
       'rrule': None,
@@ -740,6 +791,7 @@
       'end': dict({
         'dateTime': '2024-09-29T21:00:00+02:00',
       }),
+      'geo': None,
       'location': None,
       'recurrence_id': None,
       'rrule': None,
@@ -754,6 +806,7 @@
       'end': dict({
         'dateTime': '2024-09-30T21:00:00+02:00',
       }),
+      'geo': None,
       'location': None,
       'recurrence_id': None,
       'rrule': None,
@@ -768,6 +821,7 @@
       'end': dict({
         'dateTime': '2024-10-01T21:00:00+02:00',
       }),
+      'geo': None,
       'location': None,
       'recurrence_id': None,
       'rrule': None,
@@ -782,6 +836,7 @@
       'end': dict({
         'dateTime': '2024-10-02T21:00:00+02:00',
       }),
+      'geo': None,
       'location': None,
       'recurrence_id': None,
       'rrule': None,
@@ -796,6 +851,7 @@
       'end': dict({
         'dateTime': '2024-10-03T21:00:00+02:00',
       }),
+      'geo': None,
       'location': None,
       'recurrence_id': None,
       'rrule': None,
@@ -810,6 +866,7 @@
       'end': dict({
         'dateTime': '2024-10-04T21:00:00+02:00',
       }),
+      'geo': None,
       'location': None,
       'recurrence_id': None,
       'rrule': None,
@@ -824,6 +881,7 @@
       'end': dict({
         'dateTime': '2024-10-05T21:00:00+02:00',
       }),
+      'geo': None,
       'location': None,
       'recurrence_id': None,
       'rrule': None,
@@ -838,6 +896,7 @@
       'end': dict({
         'dateTime': '2024-10-06T21:00:00+02:00',
       }),
+      'geo': None,
       'location': None,
       'recurrence_id': None,
       'rrule': None,
@@ -852,6 +911,7 @@
       'end': dict({
         'dateTime': '2024-10-07T21:00:00+02:00',
       }),
+      'geo': None,
       'location': None,
       'recurrence_id': None,
       'rrule': None,
@@ -870,6 +930,7 @@
       'end': dict({
         'dateTime': '2024-09-22T03:00:00+02:00',
       }),
+      'geo': None,
       'location': None,
       'recurrence_id': None,
       'rrule': None,
@@ -888,6 +949,7 @@
       'end': dict({
         'date': '2024-09-01',
       }),
+      'geo': None,
       'location': None,
       'recurrence_id': None,
       'rrule': None,
@@ -902,6 +964,7 @@
       'end': dict({
         'date': '2024-09-22',
       }),
+      'geo': None,
       'location': None,
       'recurrence_id': None,
       'rrule': None,
@@ -916,6 +979,7 @@
       'end': dict({
         'date': '2024-09-28',
       }),
+      'geo': None,
       'location': None,
       'recurrence_id': None,
       'rrule': None,

@@ -34,6 +34,9 @@
         "end_time": {
           "name": "End time"
         },
+        "geo": {
+          "name": "Geo"
+        },
         "location": {
           "name": "Location"
         },
@@ -89,12 +92,16 @@
           "description": "The date and time the event should end.",
           "name": "End time"
         },
+        "geo": {
+          "description": "The geographic coordinates of the event.",
+          "name": "Geographic position"
+        },
         "in": {
           "description": "Days or weeks that you want to create the event in.",
           "name": "In"
         },
         "location": {
-          "description": "The location of the event.",
+          "description": "Friendly name for the location of the event.",
           "name": "Location"
         },
         "start_date": {
