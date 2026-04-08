@@ -7,7 +7,6 @@
     'area_id': None,
     'capabilities': dict({
       'event_types': list([
-        <DoorbellEventType.RING: 'ring'>,
         'ding',
       ]),
     }),
@@ -48,7 +47,6 @@
       'device_class': 'doorbell',
       'event_type': None,
       'event_types': list([
-        <DoorbellEventType.RING: 'ring'>,
         'ding',
       ]),
       'friendly_name': 'Front Door Ding',
@@ -189,7 +187,6 @@
     'area_id': None,
     'capabilities': dict({
       'event_types': list([
-        <DoorbellEventType.RING: 'ring'>,
         'ding',
       ]),
     }),
@@ -230,7 +227,6 @@
       'device_class': 'doorbell',
       'event_type': None,
       'event_types': list([
-        <DoorbellEventType.RING: 'ring'>,
         'ding',
       ]),
       'friendly_name': 'Ingress Ding',
