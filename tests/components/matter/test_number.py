@@ -332,9 +332,9 @@ async def test_boolean_state_configuration_current_sensitivity_level(
 
     state = hass.states.get(entity_id)
     assert state
-    assert state.state == "2"
-    assert state.attributes["min"] == 0
-    assert state.attributes["max"] == 2
+    assert state.state == "3"
+    assert state.attributes["min"] == 1
+    assert state.attributes["max"] == 3
     assert state.attributes["step"] == 1
     assert state.attributes["mode"] == "slider"
 
@@ -342,7 +342,7 @@ async def test_boolean_state_configuration_current_sensitivity_level(
     await trigger_subscription_callback(hass, matter_client)
     state = hass.states.get(entity_id)
     assert state
-    assert state.state == "1"
+    assert state.state == "2"
 
     matter_client.write_attribute.reset_mock()
     await hass.services.async_call(
@@ -350,7 +350,7 @@ async def test_boolean_state_configuration_current_sensitivity_level(
         "set_value",
         {
             "entity_id": entity_id,
-            "value": 0,
+            "value": 1,
         },
         blocking=True,
     )

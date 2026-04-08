@@ -5,10 +5,10 @@
     }),
     'area_id': None,
     'capabilities': dict({
-      'max': 2,
-      'min': 0,
+      'max': 3,
+      'min': 1,
       'mode': <NumberMode.SLIDER: 'slider'>,
-      'step': 1.0,
+      'step': 1,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -44,17 +44,17 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Aqara Door and Window Sensor P2 Sensitivity',
-      'max': 2,
-      'min': 0,
+      'max': 3,
+      'min': 1,
       'mode': <NumberMode.SLIDER: 'slider'>,
-      'step': 1.0,
+      'step': 1,
     }),
     'context': <ANY>,
     'entity_id': 'number.aqara_door_and_window_sensor_p2_sensitivity',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '2',
+    'state': '3',
   })
 # ---
 # name: test_numbers[aqara_motion_p2][number.aqara_motion_and_light_sensor_p2_hold_time-entry]
@@ -123,10 +123,10 @@
     }),
     'area_id': None,
     'capabilities': dict({
-      'max': 2,
-      'min': 0,
+      'max': 3,
+      'min': 1,
       'mode': <NumberMode.SLIDER: 'slider'>,
-      'step': 1.0,
+      'step': 1,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -162,17 +162,17 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Aqara Motion and Light Sensor P2 Sensitivity',
-      'max': 2,
-      'min': 0,
+      'max': 3,
+      'min': 1,
       'mode': <NumberMode.SLIDER: 'slider'>,
-      'step': 1.0,
+      'step': 1,
     }),
     'context': <ANY>,
     'entity_id': 'number.aqara_motion_and_light_sensor_p2_sensitivity',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '1',
+    'state': '2',
   })
 # ---
 # name: test_numbers[aqara_presence_fp300][number.presence_multi_sensor_fp300_1_hold_time-entry]
@@ -241,10 +241,10 @@
     }),
     'area_id': None,
     'capabilities': dict({
-      'max': 2,
-      'min': 0,
+      'max': 3,
+      'min': 1,
       'mode': <NumberMode.SLIDER: 'slider'>,
-      'step': 1.0,
+      'step': 1,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -280,17 +280,17 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Presence Multi-Sensor FP300 1 Sensitivity',
-      'max': 2,
-      'min': 0,
+      'max': 3,
+      'min': 1,
       'mode': <NumberMode.SLIDER: 'slider'>,
-      'step': 1.0,
+      'step': 1,
     }),
     'context': <ANY>,
     'entity_id': 'number.presence_multi_sensor_fp300_1_sensitivity',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0',
+    'state': '1',
   })
 # ---
 # name: test_numbers[aqara_thermostat_w500][number.floor_heating_thermostat_occupied_setback-entry]
@@ -1010,6 +1010,64 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '70',
+  })
+# ---
+# name: test_numbers[heiman_motion_sensor_m1][number.smart_motion_sensor_sensitivity-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 3,
+      'min': 1,
+      'mode': <NumberMode.SLIDER: 'slider'>,
+      'step': 1,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.smart_motion_sensor_sensitivity',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Sensitivity',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Sensitivity',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'sensitivity_level',
+    'unique_id': '00000000000004D2-0000000000000058-MatterNodeDevice-1-BooleanStateConfigurationCurrentSensitivityLevel-128-0',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_numbers[heiman_motion_sensor_m1][number.smart_motion_sensor_sensitivity-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Smart motion sensor Sensitivity',
+      'max': 3,
+      'min': 1,
+      'mode': <NumberMode.SLIDER: 'slider'>,
+      'step': 1,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.smart_motion_sensor_sensitivity',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '3',
   })
 # ---
 # name: test_numbers[inovelli_vtm30][number.white_series_onoff_switch_led_off_intensity_load_control-entry]
@@ -3094,64 +3152,6 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '30',
-  })
-# ---
-# name: test_numbers[heiman_motion_sensor_m1][number.smart_motion_sensor_sensitivity-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'max': 2,
-      'min': 0,
-      'mode': <NumberMode.SLIDER: 'slider'>,
-      'step': 1.0,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'number',
-    'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.smart_motion_sensor_sensitivity',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Sensitivity',
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Sensitivity',
-    'platform': 'matter',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'sensitivity_level',
-    'unique_id': '00000000000004D2-0000000000000058-MatterNodeDevice-1-BooleanStateConfigurationCurrentSensitivityLevel-128-0',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_numbers[heiman_motion_sensor_m1][number.smart_motion_sensor_sensitivity-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Smart motion sensor Sensitivity',
-      'max': 2,
-      'min': 0,
-      'mode': <NumberMode.SLIDER: 'slider'>,
-      'step': 1.0,
-    }),
-    'context': <ANY>,
-    'entity_id': 'number.smart_motion_sensor_sensitivity',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '2',
   })
 # ---
 # name: test_numbers[mock_mounted_dimmable_load_control_fixture][number.mock_mounted_dimmable_load_control_on_level-entry]

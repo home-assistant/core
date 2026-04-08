@@ -445,11 +445,13 @@ DISCOVERY_SCHEMAS = [
         platform=Platform.NUMBER,
         entity_description=MatterRangeNumberEntityDescription(
             key="BooleanStateConfigurationCurrentSensitivityLevel",
+            name="Sensitivity",
             entity_category=EntityCategory.CONFIG,
             translation_key="sensitivity_level",
-            native_min_value=0,
+            native_min_value=1,
             native_step=1,
-            format_max_value=lambda x: x - 1,
+            device_to_ha=lambda x: x + 1,
+            ha_to_device=lambda x: int(x) - 1,
             max_attribute=(
                 clusters.BooleanStateConfiguration.Attributes.SupportedSensitivityLevels
             ),
