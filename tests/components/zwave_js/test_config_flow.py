@@ -651,7 +651,7 @@ async def test_abort_hassio_discovery_for_other_addon(hass: HomeAssistant) -> No
     assert result2["reason"] == "not_zwave_js_addon"
 
 
-@pytest.mark.usefixtures("supervisor", "addon_not_installed", "addon_info")
+@pytest.mark.usefixtures("supervisor", "addon_info")
 @pytest.mark.parametrize(
     ("usb_discovery_info", "device", "discovery_name"),
     [
@@ -1176,7 +1176,7 @@ async def test_usb_discovery_migration_restore_driver_ready_timeout(
 @pytest.mark.parametrize(
     "service_info", [ESPHOME_DISCOVERY_INFO, ESPHOME_DISCOVERY_INFO_CLEAN]
 )
-@pytest.mark.usefixtures("supervisor", "addon_not_installed", "addon_info")
+@pytest.mark.usefixtures("supervisor", "addon_info")
 async def test_esphome_discovery_intent_custom(
     hass: HomeAssistant,
     install_addon: AsyncMock,
@@ -1460,7 +1460,7 @@ async def test_esphome_discovery_already_configured_unmanaged_addon(
     }
 
 
-@pytest.mark.usefixtures("supervisor", "addon_not_installed", "addon_info")
+@pytest.mark.usefixtures("supervisor", "addon_info")
 async def test_esphome_discovery_usb_same_home_id(
     hass: HomeAssistant,
     install_addon: AsyncMock,
@@ -1699,7 +1699,7 @@ async def test_discovery_addon_not_running(
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-@pytest.mark.usefixtures("supervisor", "addon_not_installed", "addon_info")
+@pytest.mark.usefixtures("supervisor", "addon_info")
 async def test_discovery_addon_not_installed(
     hass: HomeAssistant,
     install_addon: AsyncMock,
@@ -2768,7 +2768,7 @@ async def test_addon_installed_already_configured(
     assert entry.data["lr_s2_authenticated_key"] == "new321"
 
 
-@pytest.mark.usefixtures("supervisor", "addon_not_installed", "addon_info")
+@pytest.mark.usefixtures("supervisor", "addon_info")
 async def test_addon_not_installed(
     hass: HomeAssistant,
     install_addon: AsyncMock,
@@ -3873,7 +3873,7 @@ async def test_reconfigure_addon_running_server_info_failure(
     assert client.disconnect.call_count == 1
 
 
-@pytest.mark.usefixtures("supervisor", "addon_not_installed")
+@pytest.mark.usefixtures("supervisor")
 @pytest.mark.parametrize(
     (
         "entry_data",
@@ -5036,7 +5036,7 @@ async def test_get_usb_ports_ignored_devices() -> None:
         ]
 
 
-@pytest.mark.usefixtures("supervisor", "addon_not_installed", "addon_info")
+@pytest.mark.usefixtures("supervisor", "addon_info")
 async def test_intent_recommended_user(
     hass: HomeAssistant,
     install_addon: AsyncMock,
@@ -5132,7 +5132,7 @@ async def test_intent_recommended_user(
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-@pytest.mark.usefixtures("supervisor", "addon_not_installed", "addon_info")
+@pytest.mark.usefixtures("supervisor", "addon_info")
 @pytest.mark.parametrize(
     ("usb_discovery_info", "device", "discovery_name"),
     [

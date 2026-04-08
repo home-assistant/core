@@ -24,6 +24,7 @@ V1_ADVERTISEMENT_DATA = b"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x82\x72\x
 
 TEST_ADDRESS = "AA:BB:CC:DD:EE:FF"
 TEST_TITLE = "OpenDisplay 1234"
+ENCRYPTION_KEY = "aabbccddee112233aabbccddee112233"  # 32 hex chars = 16 bytes
 
 # Firmware version response: major=1, minor=2, sha="abc123"
 FIRMWARE_VERSION = {"major": 1, "minor": 2, "sha": "abc123"}
@@ -44,7 +45,7 @@ DEVICE_CONFIG = GlobalConfig(
     ),
     power=PowerOption(
         power_mode=0,
-        battery_capacity_mah=0,
+        battery_capacity_mah=b"\x00" * 3,
         sleep_timeout_ms=0,
         tx_power=0,
         sleep_flags=0,
@@ -78,7 +79,8 @@ DEVICE_CONFIG = GlobalConfig(
             transmission_modes=0x01,
             clk_pin=0,
             reserved_pins=b"\x00" * 7,
-            reserved=b"\x00" * 35,
+            full_update_mC=0,
+            reserved=b"\x00" * 33,
         )
     ],
 )

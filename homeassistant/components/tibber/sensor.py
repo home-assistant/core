@@ -3,10 +3,8 @@
 from __future__ import annotations
 
 from collections.abc import Callable
-import datetime
 from datetime import timedelta
 import logging
-from random import randrange
 from typing import Any
 
 import aiohttp
@@ -42,18 +40,20 @@ from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
 )
-from homeassistant.util import Throttle, dt as dt_util
+from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN, MANUFACTURER, TibberConfigEntry
-from .coordinator import TibberDataAPICoordinator, TibberDataCoordinator
+from .coordinator import (
+    TibberDataAPICoordinator,
+    TibberDataCoordinator,
+    TibberPriceCoordinator,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
 ICON = "mdi:currency-usd"
 SCAN_INTERVAL = timedelta(minutes=1)
-MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=5)
 PARALLEL_UPDATES = 0
-TWENTY_MINUTES = 20 * 60
 
 RT_SENSORS_UNIQUE_ID_MIGRATION = {
     "accumulated_consumption_last_hour": "accumulated consumption current hour",
@@ -610,6 +610,7 @@ async def _async_setup_graphql_sensors(
     entity_registry = er.async_get(hass)
 
     coordinator: TibberDataCoordinator | None = None
+    price_coordinator: TibberPriceCoordinator | None = None
     entities: list[TibberSensor] = []
     for home in tibber_connection.get_homes(only_active=False):
         try:
@@ -626,7 +627,9 @@ async def _async_setup_graphql_sensors(
             raise PlatformNotReady from err
 
         if home.has_active_subscription:
-            entities.append(TibberSensorElPrice(home))
+            if price_coordinator is None:
+                price_coordinator = TibberPriceCoordinator(hass, entry)
+            entities.append(TibberSensorElPrice(price_coordinator, home))
             if coordinator is None:
                 coordinator = TibberDataCoordinator(hass, entry, tibber_connection)
             entities.extend(
@@ -737,19 +740,21 @@ class TibberSensor(SensorEntity):
         return device_info
 
 
-class TibberSensorElPrice(TibberSensor):
+class TibberSensorElPrice(TibberSensor, CoordinatorEntity[TibberPriceCoordinator]):
     """Representation of a Tibber sensor for el price."""
 
     _attr_state_class = SensorStateClass.MEASUREMENT
     _attr_translation_key = "electricity_price"
 
-    def __init__(self, tibber_home: TibberHome) -> None:
+    def __init__(
+        self,
+        coordinator: TibberPriceCoordinator,
+        tibber_home: TibberHome,
+    ) -> None:
         """Initialize the sensor."""
-        super().__init__(tibber_home=tibber_home)
-        self._last_updated: datetime.datetime | None = None
-        self._spread_load_constant = randrange(TWENTY_MINUTES)
-
+        super().__init__(coordinator=coordinator, tibber_home=tibber_home)
         self._attr_available = False
+        self._attr_native_unit_of_measurement = tibber_home.price_unit
         self._attr_extra_state_attributes = {
             "app_nickname": None,
             "grid_company": None,
@@ -768,51 +773,38 @@ class TibberSensorElPrice(TibberSensor):
 
         self._device_name = self._home_name
 
-    async def async_update(self) -> None:
-        """Get the latest data and updates the states."""
-        now = dt_util.now()
-        if (
-            not self._tibber_home.last_data_timestamp
-            or (self._tibber_home.last_data_timestamp - now).total_seconds()
-            < 10 * 3600 - self._spread_load_constant
-            or not self.available
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        data = self.coordinator.data
+        if not data or (
+            (home_data := data.get(self._tibber_home.home_id)) is None
+            or (current_price := home_data.get("current_price")) is None
         ):
-            _LOGGER.debug("Asking for new data")
-            await self._fetch_data()
-
-        elif (
-            self._tibber_home.price_total
-            and self._last_updated
-            and self._last_updated.hour == now.hour
-            and now - self._last_updated < timedelta(minutes=15)
-            and self._tibber_home.last_data_timestamp
-        ):
+            self._attr_available = False
+            self.async_write_ha_state()
             return
 
-        res = self._tibber_home.current_price_data()
-        self._attr_native_value, self._last_updated, price_rank = res
-        self._attr_extra_state_attributes["intraday_price_ranking"] = price_rank
-
-        attrs = self._tibber_home.current_attributes()
-        self._attr_extra_state_attributes.update(attrs)
-        self._attr_available = self._attr_native_value is not None
-        self._attr_native_unit_of_measurement = self._tibber_home.price_unit
-
-    @Throttle(MIN_TIME_BETWEEN_UPDATES)
-    async def _fetch_data(self) -> None:
-        _LOGGER.debug("Fetching data")
-        try:
-            await self._tibber_home.update_info_and_price_info()
-        except TimeoutError, aiohttp.ClientError:
-            return
-        data = self._tibber_home.info["viewer"]["home"]
-        self._attr_extra_state_attributes["app_nickname"] = data["appNickname"]
-        self._attr_extra_state_attributes["grid_company"] = data["meteringPointData"][
-            "gridCompany"
+        self._attr_native_unit_of_measurement = home_data.get(
+            "price_unit", self._tibber_home.price_unit
+        )
+        self._attr_native_value = current_price
+        self._attr_extra_state_attributes["intraday_price_ranking"] = home_data.get(
+            "intraday_price_ranking"
+        )
+        self._attr_extra_state_attributes["max_price"] = home_data["max_price"]
+        self._attr_extra_state_attributes["avg_price"] = home_data["avg_price"]
+        self._attr_extra_state_attributes["min_price"] = home_data["min_price"]
+        self._attr_extra_state_attributes["off_peak_1"] = home_data["off_peak_1"]
+        self._attr_extra_state_attributes["peak"] = home_data["peak"]
+        self._attr_extra_state_attributes["off_peak_2"] = home_data["off_peak_2"]
+        self._attr_extra_state_attributes["app_nickname"] = home_data["app_nickname"]
+        self._attr_extra_state_attributes["grid_company"] = home_data["grid_company"]
+        self._attr_extra_state_attributes["estimated_annual_consumption"] = home_data[
+            "estimated_annual_consumption"
         ]
-        self._attr_extra_state_attributes["estimated_annual_consumption"] = data[
-            "meteringPointData"
-        ]["estimatedAnnualConsumption"]
+        self._attr_available = True
+        self.async_write_ha_state()
 
 
 class TibberDataSensor(TibberSensor, CoordinatorEntity[TibberDataCoordinator]):

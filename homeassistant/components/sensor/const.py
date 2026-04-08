@@ -180,7 +180,7 @@ class SensorDeviceClass(StrEnum):
     CURRENT = "current"
     """Current.
 
-    Unit of measurement: `A`, `mA`
+    Unit of measurement: `A`, `mA`, `μA`
     """
 
     DATA_RATE = "data_rate"
@@ -238,7 +238,7 @@ class SensorDeviceClass(StrEnum):
     FREQUENCY = "frequency"
     """Frequency.
 
-    Unit of measurement: `Hz`, `kHz`, `MHz`, `GHz`
+    Unit of measurement: `mHz`, `Hz`, `kHz`, `MHz`, `GHz`
     """
 
     GAS = "gas"

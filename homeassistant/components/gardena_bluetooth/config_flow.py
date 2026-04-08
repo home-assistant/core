@@ -43,6 +43,7 @@ def _is_supported(discovery_info: BluetoothServiceInfo):
         ProductType.WATER_COMPUTER,
         ProductType.AUTOMATS,
         ProductType.PRESSURE_TANKS,
+        ProductType.AQUA_CONTOURS,
     ):
         _LOGGER.debug("Unsupported device: %s", manufacturer_data)
         return False
@@ -70,6 +71,7 @@ class GardenaBluetoothConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_read_data(self):
         """Try to connect to device and extract information."""
+        assert self.address
         client = Client(get_connection(self.hass, self.address))
         try:
             model = await client.read_char(DeviceInformation.model_number)

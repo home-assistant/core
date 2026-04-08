@@ -234,7 +234,6 @@ SENSORS: Final = (
     ),
     IndevoltSensorEntityDescription(
         key="1505",
-        generation=[1],
         translation_key="cumulative_production",
         native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
         suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,

@@ -47,6 +47,14 @@ COLOR_MODE_MAP = {
     clusters.ColorControl.Enums.ColorModeEnum.kColorTemperatureMireds: ColorMode.COLOR_TEMP,
 }
 
+# Maximum Mireds value per the Matter spec is 65279
+# Conversion between Kelvin and Mireds is 1,000,000 / Kelvin, so this corresponds to a minimum color temperature of ~15.3K
+# Which is shown in UI as 15 Kelvin due to rounding.
+# But converting 15 Kelvin back to Mireds gives 66666 which is above the maximum,
+# and causes Invoke error, so cap values over maximum when sending
+MATTER_MAX_MIREDS = 65279
+
+
 # there's a bug in (at least) Espressif's implementation of light transitions
 # on devices based on Matter 1.0. Mark potential devices with this issue.
 # https://github.com/home-assistant/core/issues/113775
@@ -152,7 +160,7 @@ class MatterLight(MatterEntity, LightEntity):
         )
         await self.send_device_command(
             clusters.ColorControl.Commands.MoveToColorTemperature(
-                colorTemperatureMireds=color_temp_mired,
+                colorTemperatureMireds=min(color_temp_mired, MATTER_MAX_MIREDS),
                 # transition in matter is measured in tenths of a second
                 transitionTime=int(transition * 10),
                 # allow setting the color while the light is off,

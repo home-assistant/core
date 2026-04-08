@@ -18,6 +18,7 @@ from homeassistant.components.climate import (
     ATTR_MAX_TEMP,
     ATTR_MIN_TEMP,
     ATTR_PRESET_MODE,
+    ATTR_SWING_MODE,
     ATTR_TARGET_TEMP_STEP,
     ATTR_TEMPERATURE,
     DOMAIN as CLIMATE_DOMAIN,
@@ -25,6 +26,7 @@ from homeassistant.components.climate import (
     SERVICE_SET_HUMIDITY,
     SERVICE_SET_HVAC_MODE,
     SERVICE_SET_PRESET_MODE,
+    SERVICE_SET_SWING_MODE,
     SERVICE_SET_TEMPERATURE,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
@@ -41,7 +43,13 @@ from . import initialize_entry
 from tests.common import MockConfigEntry, snapshot_platform
 
 
-@patch("homeassistant.components.tuya.PLATFORMS", [Platform.CLIMATE])
+@pytest.fixture(autouse=True)
+def platform_autouse():
+    """Platform fixture."""
+    with patch("homeassistant.components.tuya.PLATFORMS", [Platform.CLIMATE]):
+        yield
+
+
 async def test_platform_setup_and_discovery(
     hass: HomeAssistant,
     mock_manager: Manager,
@@ -56,7 +64,6 @@ async def test_platform_setup_and_discovery(
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
-@patch("homeassistant.components.tuya.PLATFORMS", [Platform.CLIMATE])
 async def test_us_customary_system(
     hass: HomeAssistant,
     mock_manager: Manager,
@@ -128,6 +135,13 @@ async def test_us_customary_system(
             SERVICE_SET_PRESET_MODE,
             {ATTR_PRESET_MODE: "holiday"},
             [{"code": "mode", "value": "holiday"}],
+        ),
+        (
+            "kt_wxqdp6ecfkd78zzz",
+            "climate.mini_split",
+            SERVICE_SET_SWING_MODE,
+            {ATTR_SWING_MODE: "horizontal"},
+            [{"code": "switch_horizontal", "value": True}],
         ),
     ],
 )

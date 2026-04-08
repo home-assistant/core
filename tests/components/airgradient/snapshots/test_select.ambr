@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_all_entities[indoor][select.airgradient_co2_automatic_baseline_duration-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -67,8 +68,9 @@
 # ---
 # name: test_all_entities[indoor][select.airgradient_configuration_source-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -125,8 +127,9 @@
 # ---
 # name: test_all_entities[indoor][select.airgradient_display_pm_standard-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -183,8 +186,9 @@
 # ---
 # name: test_all_entities[indoor][select.airgradient_display_temperature_unit-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -241,8 +245,9 @@
 # ---
 # name: test_all_entities[indoor][select.airgradient_led_bar_mode-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -301,8 +306,9 @@
 # ---
 # name: test_all_entities[indoor][select.airgradient_nox_index_learning_offset-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -365,8 +371,9 @@
 # ---
 # name: test_all_entities[indoor][select.airgradient_voc_index_learning_offset-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -429,8 +436,9 @@
 # ---
 # name: test_all_entities[outdoor][select.airgradient_co2_automatic_baseline_duration-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -495,8 +503,9 @@
 # ---
 # name: test_all_entities[outdoor][select.airgradient_configuration_source-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -553,8 +562,9 @@
 # ---
 # name: test_all_entities[outdoor][select.airgradient_nox_index_learning_offset-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -617,8 +627,9 @@
 # ---
 # name: test_all_entities[outdoor][select.airgradient_voc_index_learning_offset-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([

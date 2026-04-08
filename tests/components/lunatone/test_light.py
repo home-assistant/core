@@ -151,10 +151,7 @@ async def test_turn_on_off_broadcast(
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test the broadcast light can be turned on and off."""
-    entity_id = (
-        f"light.{mock_config_entry.domain}_{mock_config_entry.unique_id}"
-        f"_line{mock_lunatone_dali_broadcast.line}"
-    )
+    entity_id = f"light.dali_line_{mock_lunatone_dali_broadcast.line}"
 
     await setup_integration(hass, mock_config_entry)
 
@@ -197,10 +194,7 @@ async def test_line_broadcast_available_status(
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test if the broadcast light is available."""
-    entity_id = (
-        f"light.{mock_config_entry.domain}_{mock_config_entry.unique_id}"
-        f"_line{mock_lunatone_dali_broadcast.line}"
-    )
+    entity_id = f"light.dali_line_{mock_lunatone_dali_broadcast.line}"
 
     await setup_integration(hass, mock_config_entry)
 

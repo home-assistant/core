@@ -8,13 +8,12 @@ import socket
 from typing import Any
 
 from pyvizio import VizioAsync, async_guess_device_type
-from pyvizio.const import APP_HOME
+from pyvizio.const import APP_HOME, APPS
 import voluptuous as vol
 
 from homeassistant.components.media_player import MediaPlayerDeviceClass
 from homeassistant.config_entries import (
     SOURCE_ZEROCONF,
-    ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
     OptionsFlow,
@@ -34,6 +33,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 from homeassistant.util.network import is_ip_address
 
+from . import DATA_APPS
 from .const import (
     CONF_APPS,
     CONF_APPS_TO_INCLUDE_OR_EXCLUDE,
@@ -45,6 +45,7 @@ from .const import (
     DEVICE_ID,
     DOMAIN,
 )
+from .coordinator import VizioConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -106,6 +107,14 @@ def _host_is_same(host1: str, host2: str) -> bool:
 class VizioOptionsConfigFlow(OptionsFlow):
     """Handle Vizio options."""
 
+    def _get_app_list(self) -> list[dict[str, Any]]:
+        """Return the current apps list, falling back to defaults."""
+        if (
+            apps_coordinator := self.hass.data.get(DATA_APPS)
+        ) and apps_coordinator.data:
+            return apps_coordinator.data
+        return APPS
+
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -157,10 +166,7 @@ class VizioOptionsConfigFlow(OptionsFlow):
                     ): cv.multi_select(
                         [
                             APP_HOME["name"],
-                            *(
-                                app["name"]
-                                for app in self.hass.data[DOMAIN][CONF_APPS].data
-                            ),
+                            *(app["name"] for app in self._get_app_list()),
                         ]
                     ),
                 }
@@ -176,7 +182,9 @@ class VizioConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
-    def async_get_options_flow(config_entry: ConfigEntry) -> VizioOptionsConfigFlow:
+    def async_get_options_flow(
+        config_entry: VizioConfigEntry,
+    ) -> VizioOptionsConfigFlow:
         """Get the options flow for this handler."""
         return VizioOptionsConfigFlow()
 

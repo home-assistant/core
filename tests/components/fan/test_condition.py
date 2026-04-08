@@ -7,7 +7,7 @@ import pytest
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
 
-from tests.components import (
+from tests.components.common import (
     ConditionStateDescription,
     assert_condition_gated_by_labs_flag,
     create_target_condition,
@@ -20,19 +20,19 @@ from tests.components import (
 
 
 @pytest.fixture
-async def target_fans(hass: HomeAssistant) -> list[str]:
+async def target_fans(hass: HomeAssistant) -> dict[str, list[str]]:
     """Create multiple fan entities associated with different targets."""
-    return (await target_entities(hass, "fan"))["included"]
+    return await target_entities(hass, "fan")
 
 
 @pytest.fixture
-async def target_switches(hass: HomeAssistant) -> list[str]:
+async def target_switches(hass: HomeAssistant) -> dict[str, list[str]]:
     """Create multiple switch entities associated with different targets.
 
     Note: The switches are used to ensure that only fan entities are considered
     in the condition evaluation and not other toggle entities.
     """
-    return (await target_entities(hass, "switch"))["included"]
+    return await target_entities(hass, "switch")
 
 
 @pytest.mark.parametrize(
@@ -71,8 +71,8 @@ async def test_fan_conditions_gated_by_labs_flag(
 )
 async def test_fan_state_condition_behavior_any(
     hass: HomeAssistant,
-    target_fans: list[str],
-    target_switches: list[str],
+    target_fans: dict[str, list[str]],
+    target_switches: dict[str, list[str]],
     condition_target_config: dict,
     entity_id: str,
     entities_in_target: int,
@@ -81,11 +81,11 @@ async def test_fan_state_condition_behavior_any(
     states: list[ConditionStateDescription],
 ) -> None:
     """Test the fan state condition with the 'any' behavior."""
-    other_entity_ids = set(target_fans) - {entity_id}
+    other_entity_ids = set(target_fans["included_entities"]) - {entity_id}
 
     # Set all fans, including the tested fan, to the initial state
-    for eid in target_fans:
-        set_or_remove_state(hass, eid, states[0]["included"])
+    for eid in target_fans["included_entities"]:
+        set_or_remove_state(hass, eid, states[0]["included_state"])
         await hass.async_block_till_done()
 
     condition = await create_target_condition(
@@ -97,13 +97,13 @@ async def test_fan_state_condition_behavior_any(
 
     # Set state for switches to ensure that they don't impact the condition
     for state in states:
-        for eid in target_switches:
-            set_or_remove_state(hass, eid, state["included"])
+        for eid in target_switches["included_entities"]:
+            set_or_remove_state(hass, eid, state["included_state"])
             await hass.async_block_till_done()
             assert condition(hass) is False
 
     for state in states:
-        included_state = state["included"]
+        included_state = state["included_state"]
         set_or_remove_state(hass, entity_id, included_state)
         await hass.async_block_till_done()
         assert condition(hass) == state["condition_true"]
@@ -137,7 +137,7 @@ async def test_fan_state_condition_behavior_any(
 )
 async def test_fan_state_condition_behavior_all(
     hass: HomeAssistant,
-    target_fans: list[str],
+    target_fans: dict[str, list[str]],
     condition_target_config: dict,
     entity_id: str,
     entities_in_target: int,
@@ -150,11 +150,11 @@ async def test_fan_state_condition_behavior_all(
     hass.states.async_set("switch.label_switch_1", STATE_OFF)
     hass.states.async_set("switch.label_switch_2", STATE_ON)
 
-    other_entity_ids = set(target_fans) - {entity_id}
+    other_entity_ids = set(target_fans["included_entities"]) - {entity_id}
 
     # Set all fans, including the tested fan, to the initial state
-    for eid in target_fans:
-        set_or_remove_state(hass, eid, states[0]["included"])
+    for eid in target_fans["included_entities"]:
+        set_or_remove_state(hass, eid, states[0]["included_state"])
         await hass.async_block_till_done()
 
     condition = await create_target_condition(
@@ -165,7 +165,7 @@ async def test_fan_state_condition_behavior_all(
     )
 
     for state in states:
-        included_state = state["included"]
+        included_state = state["included_state"]
 
         set_or_remove_state(hass, entity_id, included_state)
         await hass.async_block_till_done()

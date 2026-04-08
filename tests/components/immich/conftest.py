@@ -287,7 +287,9 @@ async def mock_immich(
 ) -> AsyncGenerator[AsyncMock]:
     """Mock the Immich API."""
     with (
-        patch("homeassistant.components.immich.Immich", autospec=True) as mock_immich,
+        patch(
+            "homeassistant.components.immich.coordinator.Immich", autospec=True
+        ) as mock_immich,
         patch("homeassistant.components.immich.config_flow.Immich", new=mock_immich),
     ):
         client = mock_immich.return_value

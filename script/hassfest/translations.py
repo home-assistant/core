@@ -14,7 +14,7 @@ from voluptuous.humanize import humanize_error
 import homeassistant.helpers.config_validation as cv
 from script.translations import upload
 
-from .model import Config, Integration
+from .model import Config, Integration, IntegrationType
 
 UNDEFINED = 0
 REQUIRED = 1
@@ -345,7 +345,9 @@ def gen_strings_schema(config: Config, integration: Integration) -> vol.Schema:
                 flow_title=REMOVED,
                 require_step_title=False,
                 mandatory_description=(
-                    "user" if integration.integration_type == "helper" else None
+                    "user"
+                    if integration.integration_type == IntegrationType.HELPER
+                    else None
                 ),
             ),
             vol.Optional("config_subentries"): cv.schema_with_slug_keys(
@@ -402,7 +404,7 @@ def gen_strings_schema(config: Config, integration: Integration) -> vol.Schema:
                         cv.schema_with_slug_keys(
                             {
                                 vol.Required("name"): str,
-                                vol.Required(
+                                vol.Optional(
                                     "description"
                                 ): translation_value_validator,
                             },
@@ -508,7 +510,7 @@ def gen_strings_schema(config: Config, integration: Integration) -> vol.Schema:
                     vol.Optional("fields"): cv.schema_with_slug_keys(
                         {
                             vol.Required("name"): str,
-                            vol.Required("description"): translation_value_validator,
+                            vol.Optional("description"): translation_value_validator,
                             vol.Optional("example"): translation_value_validator,
                         },
                         slug_validator=translation_key_validator,
@@ -530,7 +532,7 @@ def gen_strings_schema(config: Config, integration: Integration) -> vol.Schema:
                     vol.Optional("fields"): cv.schema_with_slug_keys(
                         {
                             vol.Required("name"): str,
-                            vol.Required("description"): translation_value_validator,
+                            vol.Optional("description"): translation_value_validator,
                             vol.Optional("example"): translation_value_validator,
                         },
                         slug_validator=translation_key_validator,
@@ -545,7 +547,7 @@ def gen_strings_schema(config: Config, integration: Integration) -> vol.Schema:
                     vol.Optional("fields"): cv.schema_with_slug_keys(
                         {
                             vol.Required("name"): str,
-                            vol.Required("description"): translation_value_validator,
+                            vol.Optional("description"): translation_value_validator,
                             vol.Optional("example"): translation_value_validator,
                         },
                         slug_validator=translation_key_validator,

@@ -258,3 +258,61 @@ async def test_zone_set_hvac_mode_api_error(
             {ATTR_ENTITY_ID: "climate.living_room", ATTR_HVAC_MODE: HVACMode.OFF},
             blocking=True,
         )
+
+
+async def test_system_hvac_mode_unmapped(
+    hass: HomeAssistant,
+    mock_actron_api: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test system climate entity returns None for unmapped HVAC mode."""
+    status = mock_actron_api.state_manager.get_status.return_value
+    status.user_aircon_settings.is_on = True
+    status.user_aircon_settings.mode = "UNKNOWN_MODE"
+
+    with patch("homeassistant.components.actron_air.PLATFORMS", [Platform.CLIMATE]):
+        await setup_integration(hass, mock_config_entry)
+
+    state = hass.states.get("climate.test_system")
+    assert state.state == "unknown"
+
+
+async def test_zone_hvac_mode_unmapped(
+    hass: HomeAssistant,
+    mock_actron_api: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    mock_zone: MagicMock,
+) -> None:
+    """Test zone climate entity returns None for unmapped HVAC mode."""
+    mock_zone.is_active = True
+    mock_zone.hvac_mode = "UNKNOWN_MODE"
+
+    status = mock_actron_api.state_manager.get_status.return_value
+    status.remote_zone_info = [mock_zone]
+    status.zones = {1: mock_zone}
+
+    with patch("homeassistant.components.actron_air.PLATFORMS", [Platform.CLIMATE]):
+        await setup_integration(hass, mock_config_entry)
+
+    state = hass.states.get("climate.living_room")
+    assert state.state == "unknown"
+
+
+async def test_zone_hvac_mode_inactive(
+    hass: HomeAssistant,
+    mock_actron_api: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    mock_zone: MagicMock,
+) -> None:
+    """Test zone climate entity returns OFF when zone is inactive."""
+    mock_zone.is_active = False
+
+    status = mock_actron_api.state_manager.get_status.return_value
+    status.remote_zone_info = [mock_zone]
+    status.zones = {1: mock_zone}
+
+    with patch("homeassistant.components.actron_air.PLATFORMS", [Platform.CLIMATE]):
+        await setup_integration(hass, mock_config_entry)
+
+    state = hass.states.get("climate.living_room")
+    assert state.state == "off"

@@ -19,6 +19,8 @@ from anthropic.types import (
     CitationsWebSearchResultLocation,
     CitationWebSearchResultLocationParam,
     CodeExecutionTool20250825Param,
+    CodeExecutionToolResultBlock,
+    CodeExecutionToolResultBlockParamContentParam,
     Container,
     ContentBlockParam,
     DocumentBlockParam,
@@ -56,20 +58,26 @@ from anthropic.types import (
     ToolChoiceAutoParam,
     ToolChoiceToolParam,
     ToolParam,
+    ToolSearchToolBm25_20251119Param,
+    ToolSearchToolResultBlock,
     ToolUnionParam,
     ToolUseBlock,
     ToolUseBlockParam,
     Usage,
     WebSearchTool20250305Param,
+    WebSearchTool20260209Param,
     WebSearchToolResultBlock,
     WebSearchToolResultBlockParamContentParam,
 )
 from anthropic.types.bash_code_execution_tool_result_block_param import (
-    Content as BashCodeExecutionToolResultContentParam,
+    Content as BashCodeExecutionToolResultBlockParamContentParam,
 )
 from anthropic.types.message_create_params import MessageCreateParamsStreaming
 from anthropic.types.text_editor_code_execution_tool_result_block_param import (
-    Content as TextEditorCodeExecutionToolResultContentParam,
+    Content as TextEditorCodeExecutionToolResultBlockParamContentParam,
+)
+from anthropic.types.tool_search_tool_result_block_param import (
+    Content as ToolSearchToolResultBlockParamContentParam,
 )
 import voluptuous as vol
 from voluptuous_openapi import convert
@@ -79,19 +87,20 @@ from homeassistant.config_entries import ConfigSubentry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, llm
-from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.json import json_dumps
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import slugify
 from homeassistant.util.json import JsonObjectType
 
-from . import AnthropicConfigEntry
 from .const import (
     CONF_CHAT_MODEL,
     CONF_CODE_EXECUTION,
     CONF_MAX_TOKENS,
+    CONF_PROMPT_CACHING,
     CONF_TEMPERATURE,
     CONF_THINKING_BUDGET,
     CONF_THINKING_EFFORT,
+    CONF_TOOL_SEARCH,
     CONF_WEB_SEARCH,
     CONF_WEB_SEARCH_CITY,
     CONF_WEB_SEARCH_COUNTRY,
@@ -105,8 +114,11 @@ from .const import (
     MIN_THINKING_BUDGET,
     NON_ADAPTIVE_THINKING_MODELS,
     NON_THINKING_MODELS,
+    PROGRAMMATIC_TOOL_CALLING_UNSUPPORTED_MODELS,
     UNSUPPORTED_STRUCTURED_OUTPUT_MODELS,
+    PromptCaching,
 )
+from .coordinator import AnthropicConfigEntry, AnthropicCoordinator
 
 # Max number of back and forth with the LLM to generate a response
 MAX_TOOL_ITERATIONS = 10
@@ -198,7 +210,7 @@ class ContentDetails:
         ]
 
 
-def _convert_content(
+def _convert_content(  # noqa: C901
     chat_content: Iterable[conversation.Content],
 ) -> tuple[list[MessageParam], str | None]:
     """Transform HA chat_log content into Anthropic API format."""
@@ -224,12 +236,22 @@ def _convert_content(
                         },
                     ),
                 }
+            elif content.tool_name == "code_execution":
+                tool_result_block = {
+                    "type": "code_execution_tool_result",
+                    "tool_use_id": content.tool_call_id,
+                    "content": cast(
+                        CodeExecutionToolResultBlockParamContentParam,
+                        content.tool_result,
+                    ),
+                }
             elif content.tool_name == "bash_code_execution":
                 tool_result_block = {
                     "type": "bash_code_execution_tool_result",
                     "tool_use_id": content.tool_call_id,
                     "content": cast(
-                        BashCodeExecutionToolResultContentParam, content.tool_result
+                        BashCodeExecutionToolResultBlockParamContentParam,
+                        content.tool_result,
                     ),
                 }
             elif content.tool_name == "text_editor_code_execution":
@@ -237,7 +259,16 @@ def _convert_content(
                     "type": "text_editor_code_execution_tool_result",
                     "tool_use_id": content.tool_call_id,
                     "content": cast(
-                        TextEditorCodeExecutionToolResultContentParam,
+                        TextEditorCodeExecutionToolResultBlockParamContentParam,
+                        content.tool_result,
+                    ),
+                }
+            elif content.tool_name == "tool_search":
+                tool_result_block = {
+                    "type": "tool_search_tool_result",
+                    "tool_use_id": content.tool_call_id,
+                    "content": cast(
+                        ToolSearchToolResultBlockParamContentParam,
                         content.tool_result,
                     ),
                 }
@@ -368,8 +399,10 @@ def _convert_content(
                             name=cast(
                                 Literal[
                                     "web_search",
+                                    "code_execution",
                                     "bash_code_execution",
                                     "text_editor_code_execution",
+                                    "tool_search_tool_bm25",
                                 ],
                                 tool_call.tool_name,
                             ),
@@ -379,8 +412,10 @@ def _convert_content(
                         and tool_call.tool_name
                         in [
                             "web_search",
+                            "code_execution",
                             "bash_code_execution",
                             "text_editor_code_execution",
+                            "tool_search_tool_bm25",
                         ]
                         else ToolUseBlockParam(
                             type="tool_use",
@@ -401,7 +436,11 @@ def _convert_content(
                 messages[-1]["content"] = messages[-1]["content"][0]["text"]
         else:
             # Note: We don't pass SystemContent here as it's passed to the API as the prompt
-            raise HomeAssistantError("Unexpected content type in chat log")
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="unexpected_chat_log_content",
+                translation_placeholders={"type": type(content).__name__},
+            )
 
     return messages, container_id
 
@@ -443,7 +482,9 @@ async def _transform_stream(  # noqa: C901 - This is complex, but better to have
     Each message could contain multiple blocks of the same type.
     """
     if stream is None or not hasattr(stream, "__aiter__"):
-        raise HomeAssistantError("Expected a stream of messages")
+        raise HomeAssistantError(
+            translation_domain=DOMAIN, translation_key="unexpected_stream_object"
+        )
 
     current_tool_block: ToolUseBlockParam | ServerToolUseBlockParam | None = None
     current_tool_args: str
@@ -464,7 +505,7 @@ async def _transform_stream(  # noqa: C901 - This is complex, but better to have
                     type="tool_use",
                     id=response.content_block.id,
                     name=response.content_block.name,
-                    input={},
+                    input=response.content_block.input or {},
                 )
                 current_tool_args = ""
                 if response.content_block.name == output_tool:
@@ -526,15 +567,17 @@ async def _transform_stream(  # noqa: C901 - This is complex, but better to have
                     type="server_tool_use",
                     id=response.content_block.id,
                     name=response.content_block.name,
-                    input={},
+                    input=response.content_block.input or {},
                 )
                 current_tool_args = ""
             elif isinstance(
                 response.content_block,
                 (
                     WebSearchToolResultBlock,
+                    CodeExecutionToolResultBlock,
                     BashCodeExecutionToolResultBlock,
                     TextEditorCodeExecutionToolResultBlock,
+                    ToolSearchToolResultBlock,
                 ),
             ):
                 if content_details:
@@ -588,13 +631,13 @@ async def _transform_stream(  # noqa: C901 - This is complex, but better to have
                     current_tool_block = None
                     continue
                 tool_args = json.loads(current_tool_args) if current_tool_args else {}
-                current_tool_block["input"] = tool_args
+                current_tool_block["input"] |= tool_args
                 yield {
                     "tool_calls": [
                         llm.ToolInput(
                             id=current_tool_block["id"],
                             tool_name=current_tool_block["name"],
-                            tool_args=tool_args,
+                            tool_args=current_tool_block["input"],
                             external=current_tool_block["type"] == "server_tool_use",
                         )
                     ]
@@ -605,7 +648,9 @@ async def _transform_stream(  # noqa: C901 - This is complex, but better to have
                 chat_log.async_trace(_create_token_stats(input_usage, usage))
             content_details.container = response.delta.container
             if response.delta.stop_reason == "refusal":
-                raise HomeAssistantError("Potential policy violation detected")
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN, translation_key="api_refusal"
+                )
         elif isinstance(response, RawMessageStopEvent):
             if content_details:
                 content_details.delete_empty()
@@ -633,7 +678,7 @@ def _create_token_stats(
     }
 
 
-class AnthropicBaseLLMEntity(Entity):
+class AnthropicBaseLLMEntity(CoordinatorEntity[AnthropicCoordinator]):
     """Anthropic base LLM entity."""
 
     _attr_has_entity_name = True
@@ -641,6 +686,7 @@ class AnthropicBaseLLMEntity(Entity):
 
     def __init__(self, entry: AnthropicConfigEntry, subentry: ConfigSubentry) -> None:
         """Initialize the entity."""
+        super().__init__(entry.runtime_data)
         self.entry = entry
         self.subentry = subentry
         self._attr_unique_id = subentry.subentry_id
@@ -652,7 +698,7 @@ class AnthropicBaseLLMEntity(Entity):
             entry_type=dr.DeviceEntryType.SERVICE,
         )
 
-    async def _async_handle_chat_log(
+    async def _async_handle_chat_log(  # noqa: C901
         self,
         chat_log: conversation.ChatLog,
         structure_name: str | None = None,
@@ -662,18 +708,19 @@ class AnthropicBaseLLMEntity(Entity):
         """Generate an answer for the chat log."""
         options = self.subentry.data
 
+        preloaded_tools = [
+            "HassTurnOn",
+            "HassTurnOff",
+            "GetLiveContext",
+            "code_execution",
+            "web_search",
+        ]
+
         system = chat_log.content[0]
         if not isinstance(system, conversation.SystemContent):
-            raise HomeAssistantError("First message must be a system message")
-
-        # System prompt with caching enabled
-        system_prompt: list[TextBlockParam] = [
-            TextBlockParam(
-                type="text",
-                text=system.content,
-                cache_control={"type": "ephemeral"},
+            raise HomeAssistantError(
+                translation_domain=DOMAIN, translation_key="system_message_not_found"
             )
-        ]
 
         messages, container_id = _convert_content(chat_log.content[1:])
 
@@ -683,10 +730,27 @@ class AnthropicBaseLLMEntity(Entity):
             model=model,
             messages=messages,
             max_tokens=options.get(CONF_MAX_TOKENS, DEFAULT[CONF_MAX_TOKENS]),
-            system=system_prompt,
+            system=system.content,
             stream=True,
             container=container_id,
         )
+
+        if (
+            options.get(CONF_PROMPT_CACHING, DEFAULT[CONF_PROMPT_CACHING])
+            == PromptCaching.PROMPT
+        ):
+            model_args["system"] = [
+                {
+                    "type": "text",
+                    "text": system.content,
+                    "cache_control": {"type": "ephemeral"},
+                }
+            ]
+        elif (
+            options.get(CONF_PROMPT_CACHING, DEFAULT[CONF_PROMPT_CACHING])
+            == PromptCaching.AUTOMATIC
+        ):
+            model_args["cache_control"] = {"type": "ephemeral"}
 
         if not model.startswith(tuple(NON_ADAPTIVE_THINKING_MODELS)):
             thinking_effort = options.get(
@@ -725,19 +789,34 @@ class AnthropicBaseLLMEntity(Entity):
             ]
 
         if options.get(CONF_CODE_EXECUTION):
-            tools.append(
-                CodeExecutionTool20250825Param(
-                    name="code_execution",
-                    type="code_execution_20250825",
-                ),
-            )
+            # The `web_search_20260209` tool automatically enables `code_execution_20260120` tool
+            if model.startswith(
+                tuple(PROGRAMMATIC_TOOL_CALLING_UNSUPPORTED_MODELS)
+            ) or not options.get(CONF_WEB_SEARCH):
+                tools.append(
+                    CodeExecutionTool20250825Param(
+                        name="code_execution",
+                        type="code_execution_20250825",
+                    ),
+                )
 
         if options.get(CONF_WEB_SEARCH):
-            web_search = WebSearchTool20250305Param(
-                name="web_search",
-                type="web_search_20250305",
-                max_uses=options.get(CONF_WEB_SEARCH_MAX_USES),
-            )
+            if model.startswith(
+                tuple(PROGRAMMATIC_TOOL_CALLING_UNSUPPORTED_MODELS)
+            ) or not options.get(CONF_CODE_EXECUTION):
+                web_search: WebSearchTool20250305Param | WebSearchTool20260209Param = (
+                    WebSearchTool20250305Param(
+                        name="web_search",
+                        type="web_search_20250305",
+                        max_uses=options.get(CONF_WEB_SEARCH_MAX_USES),
+                    )
+                )
+            else:
+                web_search = WebSearchTool20260209Param(
+                    name="web_search",
+                    type="web_search_20260209",
+                    max_uses=options.get(CONF_WEB_SEARCH_MAX_USES),
+                )
             if options.get(CONF_WEB_SEARCH_USER_LOCATION):
                 web_search["user_location"] = {
                     "type": "approximate",
@@ -754,7 +833,7 @@ class AnthropicBaseLLMEntity(Entity):
             last_message = messages[-1]
             if last_message["role"] != "user":
                 raise HomeAssistantError(
-                    "Last message must be a user message to add attachments"
+                    translation_domain=DOMAIN, translation_key="user_message_not_found"
                 )
             if isinstance(last_message["content"], str):
                 last_message["content"] = [
@@ -831,11 +910,27 @@ class AnthropicBaseLLMEntity(Entity):
                         ),
                     )
                 )
+                preloaded_tools.append(structure_name)
 
         if tools:
+            if (
+                options.get(CONF_TOOL_SEARCH, DEFAULT[CONF_TOOL_SEARCH])
+                and len(tools) > len(preloaded_tools) + 1
+            ):
+                for tool in tools:
+                    if not tool["name"].endswith(tuple(preloaded_tools)):
+                        tool["defer_loading"] = True
+                tools.append(
+                    ToolSearchToolBm25_20251119Param(
+                        type="tool_search_tool_bm25_20251119",
+                        name="tool_search_tool_bm25",
+                    )
+                )
+
             model_args["tools"] = tools
 
-        client = self.entry.runtime_data
+        coordinator = self.entry.runtime_data
+        client = coordinator.client
 
         # To prevent infinite loops, we limit the number of iterations
         for _iteration in range(max_iterations):
@@ -857,16 +952,37 @@ class AnthropicBaseLLMEntity(Entity):
                 )
                 messages.extend(new_messages)
             except anthropic.AuthenticationError as err:
-                self.entry.async_start_reauth(self.hass)
+                # Trigger coordinator to confirm the auth failure and trigger the reauth flow.
+                await coordinator.async_request_refresh()
                 raise HomeAssistantError(
-                    "Authentication error with Anthropic API, reauthentication required"
+                    translation_domain=DOMAIN,
+                    translation_key="api_authentication_error",
+                    translation_placeholders={"message": err.message},
+                ) from err
+            except anthropic.APIConnectionError as err:
+                LOGGER.info("Connection error while talking to Anthropic: %s", err)
+                coordinator.mark_connection_error()
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN,
+                    translation_key="api_error",
+                    translation_placeholders={"message": err.message},
                 ) from err
             except anthropic.AnthropicError as err:
+                # Non-connection error, mark connection as healthy
+                coordinator.async_set_updated_data(None)
+                LOGGER.error("Error while talking to Anthropic: %s", err)
                 raise HomeAssistantError(
-                    f"Sorry, I had a problem talking to Anthropic: {err}"
+                    translation_domain=DOMAIN,
+                    translation_key="api_error",
+                    translation_placeholders={
+                        "message": err.message
+                        if isinstance(err, anthropic.APIError)
+                        else str(err)
+                    },
                 ) from err
 
             if not chat_log.unresponded_tool_results:
+                coordinator.async_set_updated_data(None)
                 break
 
 
@@ -883,15 +999,23 @@ async def async_prepare_files_for_prompt(
 
         for file_path, mime_type in files:
             if not file_path.exists():
-                raise HomeAssistantError(f"`{file_path}` does not exist")
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN,
+                    translation_key="wrong_file_path",
+                    translation_placeholders={"file_path": file_path.as_posix()},
+                )
 
             if mime_type is None:
                 mime_type = guess_file_type(file_path)[0]
 
             if not mime_type or not mime_type.startswith(("image/", "application/pdf")):
                 raise HomeAssistantError(
-                    "Only images and PDF are supported by the Anthropic API,"
-                    f"`{file_path}` is not an image file or PDF"
+                    translation_domain=DOMAIN,
+                    translation_key="wrong_file_type",
+                    translation_placeholders={
+                        "file_path": file_path.as_posix(),
+                        "mime_type": mime_type or "unknown",
+                    },
                 )
             if mime_type == "image/jpg":
                 mime_type = "image/jpeg"

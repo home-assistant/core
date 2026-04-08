@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_all_entities[sensor.nanostation_5ac_ap_name_antenna_gain-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -55,8 +56,9 @@
 # ---
 # name: test_all_entities[sensor.nanostation_5ac_ap_name_cpu_load-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -111,8 +113,9 @@
 # ---
 # name: test_all_entities[sensor.nanostation_5ac_ap_name_download_capacity-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -171,8 +174,9 @@
 # ---
 # name: test_all_entities[sensor.nanostation_5ac_ap_name_network_role-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -230,8 +234,9 @@
 # ---
 # name: test_all_entities[sensor.nanostation_5ac_ap_name_throughput_receive_actual-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -290,8 +295,9 @@
 # ---
 # name: test_all_entities[sensor.nanostation_5ac_ap_name_throughput_transmit_actual-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -350,8 +356,9 @@
 # ---
 # name: test_all_entities[sensor.nanostation_5ac_ap_name_upload_capacity-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -410,8 +417,9 @@
 # ---
 # name: test_all_entities[sensor.nanostation_5ac_ap_name_uptime-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -467,8 +475,9 @@
 # ---
 # name: test_all_entities[sensor.nanostation_5ac_ap_name_wireless_distance-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -524,8 +533,9 @@
 # ---
 # name: test_all_entities[sensor.nanostation_5ac_ap_name_wireless_frequency-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -578,8 +588,9 @@
 # ---
 # name: test_all_entities[sensor.nanostation_5ac_ap_name_wireless_mode-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -637,8 +648,9 @@
 # ---
 # name: test_all_entities[sensor.nanostation_5ac_ap_name_wireless_role-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -696,8 +708,9 @@
 # ---
 # name: test_all_entities[sensor.nanostation_5ac_ap_name_wireless_ssid-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,

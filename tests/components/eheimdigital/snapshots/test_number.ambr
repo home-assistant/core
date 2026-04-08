@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_setup[number.mock_classicledcontrol_e_system_led_brightness-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 100,
@@ -60,8 +61,9 @@
 # ---
 # name: test_setup[number.mock_classicvario_day_speed-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 100.0,
@@ -119,8 +121,9 @@
 # ---
 # name: test_setup[number.mock_classicvario_manual_speed-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 100.0,
@@ -178,8 +181,9 @@
 # ---
 # name: test_setup[number.mock_classicvario_night_speed-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 100.0,
@@ -237,8 +241,9 @@
 # ---
 # name: test_setup[number.mock_classicvario_system_led_brightness-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 100,
@@ -296,8 +301,9 @@
 # ---
 # name: test_setup[number.mock_filter_high_pulse_duration-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 200000,
@@ -356,8 +362,9 @@
 # ---
 # name: test_setup[number.mock_filter_low_pulse_duration-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 200000,
@@ -416,8 +423,9 @@
 # ---
 # name: test_setup[number.mock_filter_system_led_brightness-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 100,
@@ -475,8 +483,9 @@
 # ---
 # name: test_setup[number.mock_heater_night_temperature_offset-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 5,
@@ -534,8 +543,9 @@
 # ---
 # name: test_setup[number.mock_heater_system_led_brightness-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 100,
@@ -593,8 +603,9 @@
 # ---
 # name: test_setup[number.mock_heater_temperature_offset-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 3,
@@ -652,8 +663,9 @@
 # ---
 # name: test_setup[number.mock_reeflex_booster_duration-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 20160,
@@ -712,8 +724,9 @@
 # ---
 # name: test_setup[number.mock_reeflex_daily_burn_duration-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 1440,
@@ -772,8 +785,9 @@
 # ---
 # name: test_setup[number.mock_reeflex_pause_duration-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 20160,
@@ -832,8 +846,9 @@
 # ---
 # name: test_setup[number.mock_reeflex_system_led_brightness-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 100,

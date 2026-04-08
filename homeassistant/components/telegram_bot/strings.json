@@ -92,7 +92,8 @@
       },
       "entry_type": "Allowed chat ID",
       "error": {
-        "chat_not_found": "Chat not found"
+        "chat_not_found": "Chat not found",
+        "telegram_error": "[%key:component::telegram_bot::config::error::telegram_error%]"
       },
       "initiate_flow": {
         "user": "Add allowed chat ID"
@@ -105,7 +106,7 @@
           "data_description": {
             "chat_id": "ID representing the user or group chat to which messages can be sent."
           },
-          "description": "Before you proceed, send any message to your bot: [{bot_username}]({bot_url}). This is required because Telegram prevents bots from initiating chats with users.\n\nThen follow these steps to get your chat ID:\n\n1. Open Telegram and start a chat with [{id_bot_username}]({id_bot_url}).\n1. Send any message to the bot.\n1. Your chat ID is in the `ID` field of the bot's response.",
+          "description": "Before you proceed, send any message to your bot: [{bot_username}]({bot_url}). This is required because Telegram prevents bots from initiating chats with users.\n\nThen follow these steps to get your chat ID:\n\n1. Open Telegram and start a chat with [{id_bot_username}]({id_bot_url}).\n1. Send any message to the bot.\n1. Your chat ID is in the `ID` field of the bot's response.\n\nMost recent chat: {most_recent_chat}",
           "title": "Add chat"
         }
       }
@@ -276,6 +277,18 @@
         "upload_video": "Uploading video",
         "upload_video_note": "Uploading video note",
         "upload_voice": "Uploading voice"
+      }
+    },
+    "media": {
+      "fields": {
+        "authentication": "Authentication",
+        "caption": "Caption",
+        "file": "File",
+        "media_type": "Media type",
+        "password": "Password",
+        "url": "URL",
+        "username": "Username",
+        "verify_ssl": "Verify SSL"
       }
     },
     "media_type": {
@@ -822,6 +835,53 @@
         }
       },
       "name": "Send location",
+      "sections": {
+        "advanced": {
+          "name": "[%key:component::telegram_bot::services::send_message::sections::advanced::name%]"
+        }
+      }
+    },
+    "send_media_group": {
+      "description": "Sends a group of photos, videos, documents or audios as an album. Documents and audio files can only be grouped in an album with messages of the same type.",
+      "fields": {
+        "chat_id": {
+          "description": "[%key:component::telegram_bot::services::send_message::fields::chat_id::description%]",
+          "name": "[%key:component::telegram_bot::services::send_message::fields::chat_id::name%]"
+        },
+        "config_entry_id": {
+          "description": "The config entry representing the Telegram bot to send the media group.",
+          "name": "[%key:component::telegram_bot::services::send_message::fields::config_entry_id::name%]"
+        },
+        "disable_notification": {
+          "description": "[%key:component::telegram_bot::services::send_message::fields::disable_notification::description%]",
+          "name": "[%key:component::telegram_bot::services::send_message::fields::disable_notification::name%]"
+        },
+        "entity_id": {
+          "description": "[%key:component::telegram_bot::services::send_message::fields::entity_id::description%]",
+          "name": "[%key:component::telegram_bot::services::send_message::fields::entity_id::name%]"
+        },
+        "media": {
+          "description": "A list of media to be sent.",
+          "name": "Media"
+        },
+        "message_thread_id": {
+          "description": "[%key:component::telegram_bot::services::send_message::fields::message_thread_id::description%]",
+          "name": "[%key:component::telegram_bot::services::send_message::fields::message_thread_id::name%]"
+        },
+        "parse_mode": {
+          "description": "[%key:component::telegram_bot::services::send_message::fields::parse_mode::description%]",
+          "name": "[%key:component::telegram_bot::services::send_message::fields::parse_mode::name%]"
+        },
+        "protect_content": {
+          "description": "Protects the contents of the sent message from forwarding and saving.",
+          "name": "Protect content"
+        },
+        "reply_to_message_id": {
+          "description": "[%key:component::telegram_bot::services::send_message::fields::reply_to_message_id::description%]",
+          "name": "[%key:component::telegram_bot::services::send_message::fields::reply_to_message_id::name%]"
+        }
+      },
+      "name": "Send media group",
       "sections": {
         "advanced": {
           "name": "[%key:component::telegram_bot::services::send_message::sections::advanced::name%]"

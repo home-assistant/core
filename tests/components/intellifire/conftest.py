@@ -12,7 +12,6 @@ from intellifire4py.model import (
 import pytest
 
 from homeassistant.components.intellifire.const import (
-    API_MODE_CLOUD,
     API_MODE_LOCAL,
     CONF_AUTH_COOKIE,
     CONF_CONTROL_MODE,
@@ -59,6 +58,28 @@ def mock_config_entry_current() -> MockConfigEntry:
     return MockConfigEntry(
         domain=DOMAIN,
         version=1,
+        minor_version=3,
+        data={
+            CONF_IP_ADDRESS: "192.168.2.108",
+            CONF_USERNAME: "grumpypanda@china.cn",
+            CONF_PASSWORD: "you-stole-my-pandas",
+            CONF_SERIAL: "3FB284769E4736F30C8973A7ED358123",
+            CONF_WEB_CLIENT_ID: "FA2B1C3045601234D0AE17D72F8E975",
+            CONF_API_KEY: "B5C4DA27AAEF31D1FB21AFF9BFA6BCD2",
+            CONF_AUTH_COOKIE: "B984F21A6378560019F8A1CDE41B6782",
+            CONF_USER_ID: "52C3F9E8B9D3AC99F8E4D12345678901FE9A2BC7D85F7654E28BF98BCD123456",
+        },
+        options={CONF_READ_MODE: API_MODE_LOCAL, CONF_CONTROL_MODE: API_MODE_LOCAL},
+        unique_id="3FB284769E4736F30C8973A7ED358123",
+    )
+
+
+@pytest.fixture
+def mock_config_entry_v1_2_old_options() -> MockConfigEntry:
+    """Config entry at v1.2 with old option keys (cloud_read, cloud_control)."""
+    return MockConfigEntry(
+        domain=DOMAIN,
+        version=1,
         minor_version=2,
         data={
             CONF_IP_ADDRESS: "192.168.2.108",
@@ -70,7 +91,8 @@ def mock_config_entry_current() -> MockConfigEntry:
             CONF_AUTH_COOKIE: "B984F21A6378560019F8A1CDE41B6782",
             CONF_USER_ID: "52C3F9E8B9D3AC99F8E4D12345678901FE9A2BC7D85F7654E28BF98BCD123456",
         },
-        options={CONF_READ_MODE: API_MODE_LOCAL, CONF_CONTROL_MODE: API_MODE_CLOUD},
+        # Old option keys as they exist in upstream/dev
+        options={"cloud_read": "cloud", "cloud_control": "local"},
         unique_id="3FB284769E4736F30C8973A7ED358123",
     )
 

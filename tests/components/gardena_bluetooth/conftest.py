@@ -8,27 +8,21 @@ from freezegun.api import FrozenDateTimeFactory
 from gardena_bluetooth.client import Client
 from gardena_bluetooth.const import DeviceInformation
 from gardena_bluetooth.exceptions import CharacteristicNotFound
-from gardena_bluetooth.parse import Characteristic
+from gardena_bluetooth.parse import Characteristic, Service
 import pytest
 
-from homeassistant.components.gardena_bluetooth.const import DOMAIN
 from homeassistant.components.gardena_bluetooth.coordinator import SCAN_INTERVAL
-from homeassistant.const import CONF_ADDRESS
 from homeassistant.core import HomeAssistant
 
-from . import WATER_TIMER_SERVICE_INFO
+from . import WATER_TIMER_SERVICE_INFO, get_config_entry
 
-from tests.common import MockConfigEntry, async_fire_time_changed
+from tests.common import async_fire_time_changed
 
 
 @pytest.fixture
 def mock_entry():
     """Create hass config fixture."""
-    return MockConfigEntry(
-        domain=DOMAIN,
-        data={CONF_ADDRESS: WATER_TIMER_SERVICE_INFO.address},
-        unique_id=WATER_TIMER_SERVICE_INFO.address,
-    )
+    return get_config_entry(WATER_TIMER_SERVICE_INFO)
 
 
 @pytest.fixture(scope="module")
@@ -83,7 +77,7 @@ def mock_client(
 ) -> Generator[Mock]:
     """Auto mock bluetooth."""
 
-    client = Mock(spec_set=Client)
+    client_class = Mock()
 
     SENTINEL = object()
 
@@ -106,19 +100,32 @@ def mock_client(
             return default
         return val
 
-    def _all_char():
+    def _all_char_uuid():
         return set(mock_read_char_raw.keys())
 
+    def _all_char():
+        product_type = client_class.call_args.args[1]
+        services = Service.services_for_product_type(product_type)
+        return {
+            char.unique_id: char
+            for service in services
+            for char in service.characteristics.values()
+            if char.uuid in mock_read_char_raw
+        }
+
+    client = Mock(spec_set=Client)
     client.read_char.side_effect = _read_char
     client.read_char_raw.side_effect = _read_char_raw
-    client.get_all_characteristics_uuid.side_effect = _all_char
+    client.get_all_characteristics_uuid.side_effect = _all_char_uuid
+    client.get_all_characteristics.side_effect = _all_char
+    client_class.return_value = client
 
     with (
         patch(
             "homeassistant.components.gardena_bluetooth.config_flow.Client",
-            return_value=client,
+            new=client_class,
         ),
-        patch("homeassistant.components.gardena_bluetooth.Client", return_value=client),
+        patch("homeassistant.components.gardena_bluetooth.Client", new=client_class),
     ):
         yield client
 

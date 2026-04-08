@@ -4,9 +4,6 @@ from __future__ import annotations
 
 DOMAIN = "picnic"
 
-CONF_API = "api"
-CONF_COORDINATOR = "coordinator"
-
 SERVICE_ADD_PRODUCT_TO_CART = "add_product"
 
 ATTR_PRODUCT_ID = "product_id"
