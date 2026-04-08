@@ -3,6 +3,7 @@
 import datetime as dt
 from unittest.mock import AsyncMock, MagicMock
 
+import aiohttp
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 import tibber
@@ -265,19 +266,28 @@ async def test_get_prices_invalid_input(
         )
 
 
-async def test_get_prices_refresh_raises_http_error(
+@pytest.mark.parametrize(
+    "exception",
+    [
+        pytest.param(TimeoutError(), id="timeout"),
+        pytest.param(tibber.InvalidLoginError(401), id="invalid_login"),
+        pytest.param(tibber.RetryableHttpExceptionError(503), id="retryable_http"),
+        pytest.param(tibber.FatalHttpExceptionError(500), id="fatal_http"),
+        pytest.param(aiohttp.ClientError("connection failed"), id="client_error"),
+    ],
+)
+async def test_get_prices_refresh_raises_handled_exception(
     mock_tibber_setup: MagicMock,
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
+    exception: Exception,
 ) -> None:
-    """When price refresh fails, the service raises HomeAssistantError."""
+    """When price refresh fails with handled exceptions, raise HomeAssistantError."""
     freezer.move_to(START_TIME)
     mock_home = MagicMock()
     mock_home.name = "home"
     mock_home.price_total = {}
-    mock_home.update_info_and_price_info = AsyncMock(
-        side_effect=tibber.RetryableHttpExceptionError(503)
-    )
+    mock_home.update_info_and_price_info = AsyncMock(side_effect=exception)
     mock_tibber_setup.get_homes.return_value = [mock_home]
 
     with pytest.raises(HomeAssistantError):

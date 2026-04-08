@@ -296,7 +296,7 @@ class TibberPriceCoordinator(DataUpdateCoordinator[dict[str, TibberHomeData]]):
         active_homes = tibber_connection.get_homes(only_active=True)
 
         now = dt_util.now()
-        today_start = dt_util.start_of_local_day()
+        today_start = dt_util.start_of_local_day(now)
         today_end = today_start + timedelta(days=1)
         tomorrow_start = today_end
         tomorrow_end = tomorrow_start + timedelta(days=1)
