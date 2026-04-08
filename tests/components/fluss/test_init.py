@@ -54,3 +54,46 @@ async def test_async_setup_entry_authentication_error(
     await setup_integration(hass, mock_config_entry)
 
     assert mock_config_entry.state is state
+
+
+async def test_wifi_filtering(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_api_client: AsyncMock,
+) -> None:
+    """Test that devices without canUseWiFi are filtered out."""
+    mock_api_client.async_get_devices.return_value = {
+        "devices": [
+            {
+                "deviceId": "wifi_device",
+                "deviceName": "WiFi Device",
+                "userPermissions": {
+                    "canUseWiFi": True,
+                    "canOpenMain": True,
+                    "canOpenPedestrian": False,
+                    "canOperateSwitch": False,
+                    "canViewState": False,
+                    "userType": "Owner",
+                },
+            },
+            {
+                "deviceId": "no_wifi_device",
+                "deviceName": "No WiFi Device",
+                "userPermissions": {
+                    "canUseWiFi": False,
+                    "canOpenMain": True,
+                    "canOpenPedestrian": False,
+                    "canOperateSwitch": False,
+                    "canViewState": False,
+                    "userType": "Owner",
+                },
+            },
+        ]
+    }
+
+    await setup_integration(hass, mock_config_entry)
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    coordinator = mock_config_entry.runtime_data
+    assert "wifi_device" in coordinator.data
+    assert "no_wifi_device" not in coordinator.data

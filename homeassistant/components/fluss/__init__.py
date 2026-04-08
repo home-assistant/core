@@ -7,7 +7,7 @@ from homeassistant.core import HomeAssistant
 
 from .coordinator import FlussConfigEntry, FlussDataUpdateCoordinator
 
-PLATFORMS: list[Platform] = [Platform.BUTTON]
+PLATFORMS: list[Platform] = [Platform.BUTTON, Platform.COVER]
 
 
 async def async_setup_entry(
