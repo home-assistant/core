@@ -53,13 +53,6 @@
       }
     }
   },
-  "entity": {
-    "button": {
-      "trigger": {
-        "name": "Trigger"
-      }
-    }
-  },
   "exceptions": {
     "close_failed": {
       "message": "Failed to close device: {error}"
