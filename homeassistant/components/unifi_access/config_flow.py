@@ -12,6 +12,7 @@ import voluptuous as vol
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_API_TOKEN, CONF_HOST, CONF_VERIFY_SSL
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.util.ssl import create_no_verify_ssl_context
 
 from .const import DOMAIN
 
@@ -30,16 +31,24 @@ class UnifiAccessConfigFlow(ConfigFlow, domain=DOMAIN):
         session = async_get_clientsession(
             self.hass, verify_ssl=user_input[CONF_VERIFY_SSL]
         )
+        ssl_context = (
+            None if user_input[CONF_VERIFY_SSL] else create_no_verify_ssl_context()
+        )
         client = UnifiAccessApiClient(
             host=user_input[CONF_HOST],
             api_token=user_input[CONF_API_TOKEN],
             session=session,
             verify_ssl=user_input[CONF_VERIFY_SSL],
+            ssl_context=ssl_context,
         )
         try:
             await client.authenticate()
         except ApiAuthError:
-            errors["base"] = "invalid_auth"
+            try:
+                is_protect = await client.is_protect_api_key()
+            except Exception:  # noqa: BLE001
+                is_protect = False
+            errors["base"] = "protect_api_key" if is_protect else "invalid_auth"
         except ApiConnectionError:
             errors["base"] = "cannot_connect"
         except Exception:
