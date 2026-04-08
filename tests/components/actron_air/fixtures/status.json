@@ -1,0 +1,41 @@
+{
+  "isOnline": true,
+  "lastKnownState": {
+    "AirconSystem": {
+      "MasterWCModel": "Test Model",
+      "MasterSerial": "123456",
+      "MasterWCFirmwareVersion": "1.0.0",
+      "SystemName": "Test System"
+    },
+    "NV_SystemSettings": {
+      "SystemName": "Test System"
+    },
+    "UserAirconSettings": {
+      "isOn": false,
+      "Mode": "COOL",
+      "FanMode": "LOW",
+      "AwayMode": false,
+      "TemperatureSetpoint_Cool_oC": 24.0,
+      "TemperatureSetpoint_Heat_oC": 20.0,
+      "EnabledZones": [],
+      "QuietModeEnabled": false,
+      "TurboMode": {
+        "Enabled": false,
+        "Supported": true
+      }
+    },
+    "MasterInfo": {
+      "LiveTemp_oC": 22.0,
+      "LiveHumidity_pc": 50.0,
+      "LiveOutdoorTemp_oC": 0.0
+    },
+    "NV_Limits": {
+      "UserSetpoint_oC": {
+        "setCool_Min": 16.0,
+        "setCool_Max": 30.0
+      }
+    },
+    "RemoteZoneInfo": []
+  },
+  "serial_number": "123456"
+}
