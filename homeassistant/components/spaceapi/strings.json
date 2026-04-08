@@ -25,6 +25,12 @@
       }
     }
   },
+  "issues": {
+    "deprecated_yaml": {
+      "description": "Configuring SpaceAPI using YAML is being removed.\n\nYour existing YAML configuration has been imported into the UI automatically.\n\nRemove the `spaceapi` configuration from your configuration.yaml file and restart Home Assistant to fix this issue.",
+      "title": "YAML configuration is being removed"
+    }
+  },
   "selector": {
     "issue_report_channels": {
       "options": {

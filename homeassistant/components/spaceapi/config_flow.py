@@ -78,3 +78,63 @@ class SpaceAPIConfigFlow(ConfigFlow, domain=DOMAIN):
                 CONF_ISSUE_REPORT_CHANNELS: user_input[CONF_ISSUE_REPORT_CHANNELS],
             },
         )
+
+    async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:
+        """Import SpaceAPI config from YAML."""
+        self._async_abort_entries_match({})
+
+        # Required fields -> entry.data
+        data = {
+            CONF_SPACE: import_data[CONF_SPACE],
+            CONF_LOGO: import_data[CONF_LOGO],
+            CONF_URL: import_data[CONF_URL],
+            "state": {"entity_id": import_data["state"]["entity_id"]},
+            CONF_CONTACT: {CONF_EMAIL: import_data[CONF_CONTACT].get(CONF_EMAIL, "")},
+            CONF_ISSUE_REPORT_CHANNELS: import_data[CONF_ISSUE_REPORT_CHANNELS],
+        }
+
+        # Optional fields -> entry.options
+        options: dict[str, Any] = {}
+
+        # Contact extras (everything except email)
+        contact_extras = {
+            k: v
+            for k, v in import_data.get(CONF_CONTACT, {}).items()
+            if k != CONF_EMAIL and v
+        }
+        if contact_extras:
+            options[CONF_CONTACT] = contact_extras
+
+        # State icons
+        state_icons: dict[str, str] = {}
+        state_config = import_data.get("state", {})
+        if "icon_open" in state_config:
+            state_icons["icon_open"] = state_config["icon_open"]
+        if "icon_closed" in state_config:
+            state_icons["icon_closed"] = state_config["icon_closed"]
+        if state_icons:
+            options["state"] = state_icons
+
+        # Optional sections pass through directly
+        for key in (
+            "sensors",
+            "spacefed",
+            "cam",
+            "stream",
+            "feeds",
+            "cache",
+            "projects",
+            "radio_show",
+        ):
+            if key in import_data:
+                options[key] = import_data[key]
+
+        # Location address
+        if "location" in import_data and "address" in import_data["location"]:
+            options["location"] = {"address": import_data["location"]["address"]}
+
+        return self.async_create_entry(
+            title=data[CONF_SPACE],
+            data=data,
+            options=options,
+        )
