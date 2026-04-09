@@ -576,8 +576,8 @@ async def test_config_flow_device(
             },
             ["on", "off"],
             {"one": "on", "two": "off"},
-            {},
-            {},
+            {"device_class": "motion"},
+            {"device_class": "window"},
             "state",
         ),
         (
@@ -828,6 +828,11 @@ async def test_options(
         result["data_schema"].schema, key_template
     ) == old_state_template.get(key_template)
     assert "name" not in result["data_schema"].schema
+    if template_type == "binary_sensor":
+        assert (
+            get_schema_suggested_value(result["data_schema"].schema, "device_class")
+            == "motion"
+        )
 
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
@@ -842,6 +847,7 @@ async def test_options(
         "template_type": template_type,
         **new_state_template,
         **extra_options,
+        **options_options,
     }
     assert config_entry.data == {}
     assert config_entry.options == {
@@ -849,6 +855,7 @@ async def test_options(
         "template_type": template_type,
         **new_state_template,
         **extra_options,
+        **options_options,
     }
     assert config_entry.title == "My template"
 
