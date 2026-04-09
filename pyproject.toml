@@ -473,7 +473,7 @@ filterwarnings = [
   "ignore:.*a temporary mapping .* from `updated_parsed` to `published_parsed` if `updated_parsed` doesn't exist:DeprecationWarning:feedparser.util",
 
   # -- design choice 3rd party
-  # https://github.com/gwww/elkm1/blob/2.2.11/elkm1_lib/util.py#L8-L19
+  # https://github.com/gwww/elkm1/blob/2.2.13/elkm1_lib/util.py#L8-L19
   "ignore:ssl.TLSVersion.TLSv1 is deprecated:DeprecationWarning:elkm1_lib.util",
   # https://github.com/bachya/regenmaschine/blob/2024.03.0/regenmaschine/client.py#L52
   "ignore:ssl.TLSVersion.SSLv3 is deprecated:DeprecationWarning:regenmaschine.client",
@@ -489,8 +489,13 @@ filterwarnings = [
   # -- fixed, waiting for release / update
   # https://github.com/httplib2/httplib2/pull/226 - >=0.21.0
   "ignore:ssl.PROTOCOL_TLS is deprecated:DeprecationWarning:httplib2",
-  # https://github.com/BerriAI/litellm/pull/17657 - >1.80.9
-  "ignore:Support for class-based `config` is deprecated, use ConfigDict instead:DeprecationWarning:litellm.types.llms.anthropic",
+  # https://github.com/httplib2/httplib2/pull/253 - >=0.31.1
+  "ignore:'(addParseAction|delimitedList|leaveWhitespace|setName|setParseAction)' deprecated:DeprecationWarning:httplib2.auth",
+  # https://github.com/lawtancool/pyControl4/pull/47 - >=1.6.0
+  "ignore:with timeout\\(\\) is deprecated, use async with timeout\\(\\) instead:DeprecationWarning:pyControl4.account",
+  # https://pypi.org/project/pyqwikswitch/ - >=1.0
+  "ignore:client.loop property is deprecated:DeprecationWarning:pyqwikswitch.async_",
+  "ignore:with timeout\\(\\) is deprecated:DeprecationWarning:pyqwikswitch.async_",
   # https://github.com/allenporter/python-google-nest-sdm/pull/1229 - >9.1.2
   "ignore:datetime.*utcnow\\(\\) is deprecated:DeprecationWarning:google_nest_sdm.device",
   # https://github.com/rytilahti/python-miio/pull/1809 - >=0.6.0.dev0
@@ -498,7 +503,9 @@ filterwarnings = [
   "ignore:datetime.*utcnow\\(\\) is deprecated and scheduled for removal:DeprecationWarning:miio.miioprotocol",
   # https://github.com/rytilahti/python-miio/pull/1993 - >0.6.0.dev0
   "ignore:functools.partial will be a method descriptor in future Python versions; wrap it in enum.member\\(\\) if you want to preserve the old behavior:FutureWarning:miio.miot_device",
-  # https://github.com/xchwarze/samsung-tv-ws-api/pull/151 - >2.7.2 - 2024-12-06  # wrong stacklevel in aiohttp
+  # https://github.com/pyusb/pyusb/pull/545 - >1.3.1
+  "ignore:Due to '_pack_', the '.*' Structure will use memory layout compatible with MSVC:DeprecationWarning:usb.backend.libusb0",
+  # https://github.com/xchwarze/samsung-tv-ws-api/pull/151 - >=3.0.0 - 2024-12-06  # wrong stacklevel in aiohttp
   "ignore:verify_ssl is deprecated, use ssl=False instead:DeprecationWarning:aiohttp.client",
 
   # -- other
@@ -522,8 +529,8 @@ filterwarnings = [
   # https://pypi.org/project/motionblindsble/ - v0.1.3 - 2024-11-12
   # https://github.com/LennP/motionblindsble/blob/0.1.3/motionblindsble/device.py#L390
   "ignore:Passing additional arguments for BLEDevice is deprecated and has no effect:DeprecationWarning:motionblindsble.device",
-  # https://pypi.org/project/pyeconet/ - v0.2.0 - 2025-10-05
-  # https://github.com/w1ll1am23/pyeconet/blob/v0.2.0/src/pyeconet/api.py#L39
+  # https://pypi.org/project/pyeconet/ - v0.2.2 - 2026-03-05
+  # https://github.com/w1ll1am23/pyeconet/blob/v0.2.2/src/pyeconet/api.py#L39
   "ignore:ssl.PROTOCOL_TLS is deprecated:DeprecationWarning:pyeconet.api",
   # https://github.com/thecynic/pylutron - v0.2.18 - 2025-04-15
   "ignore:setDaemon\\(\\) is deprecated, set the daemon attribute instead:DeprecationWarning:pylutron",
@@ -534,15 +541,17 @@ filterwarnings = [
   # https://github.com/lextudio/pysnmp/blob/v7.1.21/pysnmp/smi/compiler.py#L23-L31 - v7.1.21 - 2025-06-19
   "ignore:smiV1Relaxed is deprecated. Please use smi_v1_relaxed instead:DeprecationWarning:pysnmp.smi.compiler",
   "ignore:getReadersFromUrls is deprecated. Please use get_readers_from_urls instead:DeprecationWarning:pysnmp.smi.compiler",
-  # https://github.com/Python-roborock/python-roborock/issues/305 - 2.19.0 - 2025-05-13
-  "ignore:Callback API version 1 is deprecated, update to latest version:DeprecationWarning:roborock.cloud_api",
+  # https://github.com/frenck/python-radios/blob/v0.3.2/src/radios/radio_browser.py#L76 - v0.3.2 - 2024-10-26
+  "ignore:query\\(\\) is deprecated, use query_dns\\(\\) instead:DeprecationWarning:radios.radio_browser",
+  # https://github.com/python-telegram-bot/python-telegram-bot/blob/v22.7/src/telegram/error.py#L243 - 22.7 - 2026-03-16
+  "ignore:Deprecated since version v22.2.*attribute `retry_after` will be of type `datetime.timedelta`:DeprecationWarning:telegram.error",
   # https://github.com/briis/pyweatherflowudp/blob/v1.4.5/pyweatherflowudp/const.py#L20 - v1.4.5 - 2023-10-10
   "ignore:This function will be removed in future versions of pint:DeprecationWarning:pyweatherflowudp.const",
-  # - SyntaxWarnings
+  # - SyntaxWarnings - invalid escape sequence
   # https://pypi.org/project/aprslib/ - v0.7.2 - 2022-07-10
   "ignore:.*invalid escape sequence:SyntaxWarning:.*aprslib.parsing.common",
   "ignore:datetime.*utcnow\\(\\) is deprecated and scheduled for removal:DeprecationWarning:aprslib.parsing.common",
-  # https://pypi.org/project/panasonic-viera/ - v0.4.2 - 2024-04-24
+  # https://pypi.org/project/panasonic-viera/ - v0.4.4 - 2025-11-25
   # https://github.com/florianholzapfel/panasonic-viera/blob/0.4.4/panasonic_viera/remote_control.py#L665
   "ignore:.*invalid escape sequence:SyntaxWarning:.*panasonic_viera",
   # https://pypi.org/project/pyblackbird/ - v0.6 - 2023-03-15
@@ -555,11 +564,6 @@ filterwarnings = [
   "ignore:.*invalid escape sequence:SyntaxWarning:.*sanix",
   # https://pypi.org/project/sleekxmppfs/ - v1.4.1 - 2022-08-18
   "ignore:.*invalid escape sequence:SyntaxWarning:.*sleekxmppfs.thirdparty.mini_dateutil", # codespell:ignore thirdparty
-  # - pkg_resources
-  # https://pypi.org/project/aiomusiccast/ - v0.14.8 - 2023-03-20
-  "ignore:pkg_resources is deprecated as an API:UserWarning:aiomusiccast",
-  # https://pypi.org/project/pybotvac/ - v0.0.28 - 2025-06-11
-  "ignore:pkg_resources is deprecated as an API:UserWarning:pybotvac.version",
   # - SyntaxWarning - is with literal
   # https://github.com/majuss/lupupy/pull/15 - >0.3.2
   "ignore:\"is.*\" with '.*' literal:SyntaxWarning:.*lupupy.devices.alarm",
@@ -572,8 +576,6 @@ filterwarnings = [
   "ignore:'return' in a 'finally' block:SyntaxWarning:.*nextcord.(gateway|player)",
   # https://pypi.org/project/sleekxmppfs/ - v1.4.1 - 2022-08-18
   "ignore:'return' in a 'finally' block:SyntaxWarning:.*sleekxmppfs.(roster.single|xmlstream.xmlstream)",
-  # https://github.com/cereal2nd/velbus-aio/pull/153 - >2025.11.0
-  "ignore:'return' in a 'finally' block:SyntaxWarning:.*velbusaio.vlp_reader",
 
   # -- New in Python 3.13
   # https://github.com/youknowone/python-deadlib - Backports for aifc, telnetlib
@@ -589,8 +591,6 @@ filterwarnings = [
   "ignore:Core Pydantic V1 functionality isn't compatible with Python 3.14 or greater:UserWarning:elevenlabs.core.pydantic_utilities",
   # https://github.com/Lektrico/lektricowifi - v0.1 - 2025-05-19
   "ignore:Core Pydantic V1 functionality isn't compatible with Python 3.14 or greater:UserWarning:lektricowifi.models",
-  # https://github.com/bang-olufsen/mozart-open-api - v4.1.1.116.4 - 2025-01-22
-  "ignore:Core Pydantic V1 functionality isn't compatible with Python 3.14 or greater:UserWarning:mozart_api.api.beolink_api",
   # https://github.com/sstallion/sensorpush-api - v2.1.3 - 2025-06-10
   "ignore:Core Pydantic V1 functionality isn't compatible with Python 3.14 or greater:UserWarning:sensorpush_api.api.api_api",
 
@@ -599,28 +599,23 @@ filterwarnings = [
   "ignore:'asyncio.iscoroutinefunction' is deprecated and slated for removal in Python 3.16:DeprecationWarning:(backoff._decorator|backoff._async)",
   # https://github.com/albertogeniola/elmax-api - v0.0.6.3 - 2024-11-30
   "ignore:'asyncio.iscoroutinefunction' is deprecated and slated for removal in Python 3.16:DeprecationWarning:elmax_api.http",
-  # https://github.com/BerriAI/litellm - v1.80.9 - 2025-12-08
-  "ignore:'asyncio.iscoroutinefunction' is deprecated and slated for removal in Python 3.16:DeprecationWarning:litellm.litellm_core_utils.logging_utils",
   # https://github.com/nextcord/nextcord/pull/1269 - >3.1.1 - 2025-08-16
   "ignore:'asyncio.iscoroutinefunction' is deprecated and slated for removal in Python 3.16:DeprecationWarning:nextcord.member",
-  # https://github.com/SteveEasley/pykaleidescape/pull/7 - v2022.2.6 - 2022-03-07
-  "ignore:'asyncio.iscoroutinefunction' is deprecated and slated for removal in Python 3.16:DeprecationWarning:kaleidescape.dispatcher",
   # https://github.com/svinota/pyroute2
   "ignore:Due to '_pack_', the '.*' Structure will use memory layout compatible with MSVC:DeprecationWarning:pyroute2.ethtool.ioctl",
   # https://github.com/googleapis/python-genai
+  "ignore:Inheritance class AiohttpClientSession from ClientSession is discouraged:DeprecationWarning:google.genai._api_client",
   "ignore:'_UnionGenericAlias' is deprecated and slated for removal in Python 3.17:DeprecationWarning:google.genai.types",
-  # https://github.com/pyusb/pyusb/issues/535
-  "ignore:Due to '_pack_', the '.*' Structure will use memory layout compatible with MSVC:DeprecationWarning:usb.backend.libusb0",
 
   # -- Websockets 14.1
   # https://websockets.readthedocs.io/en/stable/howto/upgrade.html
   "ignore:websockets.legacy is deprecated:DeprecationWarning:websockets.legacy",
-  # https://github.com/graphql-python/gql/pull/543 - >=4.0.0b0
-  "ignore:websockets.client.WebSocketClientProtocol is deprecated:DeprecationWarning:gql.transport.websockets_base",
 
   # -- unmaintained projects, last release about 2+ years
   # https://pypi.org/project/aiomodernforms/ - v0.1.8 - 2021-06-27
   "ignore:with timeout\\(\\) is deprecated:DeprecationWarning:aiomodernforms.modernforms",
+  # https://pypi.org/project/colorthief/ - v0.2.1 - 2017-02-09
+  "ignore:Image.Image.getdata is deprecated and will be removed in Pillow 14.* Use get_flattened_data instead:DeprecationWarning:colorthief",
   # https://pypi.org/project/directv/ - v0.4.0 - 2020-09-12
   "ignore:with timeout\\(\\) is deprecated:DeprecationWarning:directv.directv",
   "ignore:datetime.*utcnow\\(\\) is deprecated and scheduled for removal:DeprecationWarning:directv.models",
@@ -646,9 +641,6 @@ filterwarnings = [
   "ignore:.*invalid escape sequence:SyntaxWarning:.*pydub.utils",
   # https://pypi.org/project/PyPasser/ - v0.0.5 - 2021-10-21
   "ignore:.*invalid escape sequence:SyntaxWarning:.*pypasser.utils",
-  # https://pypi.org/project/pyqwikswitch/ - v0.94 - 2019-08-19
-  "ignore:client.loop property is deprecated:DeprecationWarning:pyqwikswitch.async_",
-  "ignore:with timeout\\(\\) is deprecated:DeprecationWarning:pyqwikswitch.async_",
   # https://pypi.org/project/rxv/ - v0.7.0 - 2021-10-10
   "ignore:defusedxml.cElementTree is deprecated, import from defusedxml.ElementTree instead:DeprecationWarning:rxv.ssdp",
 ]
