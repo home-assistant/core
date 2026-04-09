@@ -190,6 +190,6 @@ def refresh_system[_AqualinkEntityT: AqualinkEntity, **_P](
     ) -> None:
         """Call decorated function and send update signal to all entities."""
         await func(self, *args, **kwargs)
-        await self.coordinator.async_request_refresh()
+        self.coordinator.async_set_updated_data(None)
 
     return wrapper
