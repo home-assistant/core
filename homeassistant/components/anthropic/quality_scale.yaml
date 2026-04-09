@@ -87,7 +87,10 @@ rules:
     status: exempt
     comment: |
       No entities disabled by default.
-  entity-translations: done
+  entity-translations:
+    status: exempt
+    comment: |
+      Entities `use _attr_name = None` (main entity of device), translation key is not used for naming.
   exception-translations: done
   icon-translations: done
   reconfiguration-flow: done
