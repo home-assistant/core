@@ -1,5 +1,6 @@
 """The tests for the Template vacuum platform."""
 
+from dataclasses import asdict
 from typing import Any
 
 import pytest
@@ -9,6 +10,7 @@ from homeassistant.components import template, vacuum
 from homeassistant.components.vacuum import (
     ATTR_BATTERY_LEVEL,
     ATTR_FAN_SPEED,
+    Segment,
     VacuumActivity,
     VacuumEntityFeature,
 )
@@ -38,6 +40,7 @@ TEST_STATE_SENSOR = "sensor.test_state"
 TEST_SPEED_SENSOR = "sensor.test_fan_speed"
 TEST_BATTERY_LEVEL_SENSOR = "sensor.test_battery_level"
 TEST_AVAILABILITY_ENTITY = "availability_state.state"
+TEST_SEGMENT_NAME = "input_text.segment_name"
 
 TEST_VACUUM = TemplatePlatformSetup(
     vacuum.DOMAIN,
@@ -48,6 +51,7 @@ TEST_VACUUM = TemplatePlatformSetup(
         TEST_SPEED_SENSOR,
         TEST_BATTERY_LEVEL_SENSOR,
         TEST_AVAILABILITY_ENTITY,
+        TEST_SEGMENT_NAME,
     ),
 )
 
@@ -108,6 +112,17 @@ TEMPLATE_VACUUM_ACTIONS = {
         },
     },
 }
+CLEAN_AREA_ACTION = {
+    "clean_area": {
+        "service": "test.automation",
+        "data": {
+            "caller": "{{ this.entity_id }}",
+            "action": "clean_area",
+            "segment_ids": "{{ segment_ids }}",
+        },
+    },
+}
+
 
 UNIQUE_ID_CONFIG = {"unique_id": "not-so-unique-anymore", **TEMPLATE_VACUUM_ACTIONS}
 
@@ -1079,6 +1094,162 @@ async def test_not_optimistic(
 
     state = hass.states.get(TEST_VACUUM.entity_id)
     assert state.state == STATE_UNKNOWN
+
+
+@pytest.mark.parametrize(
+    ("count", "vacuum_config"),
+    [
+        (
+            1,
+            {
+                "name": TEST_VACUUM.object_id,
+                "unique_id": TEST_VACUUM.entity_id,
+                "state": "{{ states('sensor.test_state') }}",
+                "start": [],
+                **CLEAN_AREA_ACTION,
+            },
+        )
+    ],
+)
+@pytest.mark.parametrize(
+    "style",
+    [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
+)
+@pytest.mark.usefixtures("setup_vacuum")
+async def test_clean_area(
+    hass: HomeAssistant,
+    calls: list[ServiceCall],
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test clean area passes segment IDs to action."""
+    entity_registry.async_update_entity_options(
+        TEST_VACUUM.entity_id,
+        vacuum.DOMAIN,
+        {
+            "area_mapping": {"area_1": ["1", "2"]},
+            "last_seen_segments": [
+                {"id": "1", "name": "Livingroom"},
+                {"id": "2", "name": "Kitchen"},
+            ],
+        },
+    )
+
+    await common.async_clean_area(hass, ["area_1"], TEST_VACUUM.entity_id)
+    await hass.async_block_till_done()
+    assert calls[-1].data["action"] == "clean_area"
+    assert calls[-1].data["caller"] == TEST_VACUUM.entity_id
+    assert calls[-1].data["segment_ids"] == ["1", "2"]
+
+    state = hass.states.get(TEST_VACUUM.entity_id)
+    assert state is not None
+    assert state.attributes["supported_features"] & VacuumEntityFeature.CLEAN_AREA
+
+
+@pytest.mark.parametrize(
+    ("count", "vacuum_config"),
+    [
+        (
+            1,
+            {
+                "name": TEST_VACUUM.object_id,
+                "start": [],
+                **CLEAN_AREA_ACTION,
+            },
+        )
+    ],
+)
+@pytest.mark.parametrize(
+    "style",
+    [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
+)
+@pytest.mark.parametrize(
+    ("extra_config", "expected_segments"),
+    [
+        (
+            {
+                "segments_template": "{{ {'1': 'Kitchen', '2': 'Living Room'} }}",
+            },
+            [
+                asdict(Segment(id="1", name="Kitchen")),
+                asdict(Segment(id="2", name="Living Room")),
+            ],
+        ),
+        (
+            {
+                "segments_template": "{{ ["
+                "{'id': '1', 'name': 'Kitchen'}, "
+                "{'id': '2', 'name': 'Bedroom', 'group': 'Upstairs'}"
+                "] }}",
+            },
+            [
+                asdict(Segment(id="1", name="Kitchen")),
+                asdict(Segment(id="2", name="Bedroom", group="Upstairs")),
+            ],
+        ),
+    ],
+)
+@pytest.mark.usefixtures("setup_test_vacuum_with_extra_config")
+async def test_get_segments(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    expected_segments: list[dict[str, Any]],
+) -> None:
+    """Test get_segments returns segments from template."""
+
+    await async_trigger(hass, TEST_STATE_SENSOR, VacuumActivity.DOCKED)
+
+    client = await hass_ws_client(hass)
+    await client.send_json_auto_id(
+        {"type": "vacuum/get_segments", "entity_id": TEST_VACUUM.entity_id}
+    )
+    msg = await client.receive_json()
+
+    assert msg["success"]
+    assert msg["result"] == {"segments": expected_segments}
+
+
+@pytest.mark.parametrize(
+    ("count", "vacuum_config"),
+    [
+        (
+            1,
+            {
+                "name": TEST_VACUUM.object_id,
+                "unique_id": TEST_VACUUM.entity_id,
+                "start": [],
+                **CLEAN_AREA_ACTION,
+                "segments_template": "{{ {'1': 'Kitchen', '2': states('input_text.segment_name')} }}",
+            },
+        )
+    ],
+)
+@pytest.mark.parametrize(
+    "style",
+    [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
+)
+@pytest.mark.usefixtures("setup_vacuum")
+async def test_vacuum_raise_segments_changed_issue(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
+    """Test that issue is raised on segments change."""
+    hass.states.async_set(TEST_SEGMENT_NAME, "Bedroom")
+    await hass.async_block_till_done()
+
+    entity_registry.async_update_entity_options(
+        TEST_VACUUM.entity_id,
+        vacuum.DOMAIN,
+        {
+            "last_seen_segments": [
+                {"id": "1", "name": "Kitchen"},
+                {"id": "2", "name": "Bedroom"},
+            ],
+        },
+    )
+    hass.states.async_set(TEST_SEGMENT_NAME, "Bathroom")
+    await hass.async_block_till_done()
+
+    issue_registry = ir.async_get(hass)
+    assert len(issue_registry.issues) != 0
 
 
 async def test_setup_config_entry(
