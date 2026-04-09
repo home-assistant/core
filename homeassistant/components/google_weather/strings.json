@@ -104,6 +104,9 @@
     }
   },
   "exceptions": {
+    "auth_error": {
+      "message": "Authentication failed: {error}"
+    },
     "update_error": {
       "message": "Error fetching weather data: {error}"
     }

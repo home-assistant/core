@@ -386,20 +386,45 @@ async def test_reauth(
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_reauth_auth_error(
+@pytest.mark.parametrize(
+    ("api_exception", "expected_error", "expected_placeholders"),
+    [
+        (
+            GoogleWeatherApiAuthError("Invalid API key"),
+            "cannot_connect",
+            {
+                "api_key_url": "https://developers.google.com/maps/documentation/weather/get-api-key",
+                "restricting_api_keys_url": "https://developers.google.com/maps/api-security-best-practices#restricting-api-keys",
+                "error_message": "Invalid API key",
+                "name": "Google Weather",
+            },
+        ),
+        (
+            ValueError(),
+            "unknown",
+            {
+                "api_key_url": "https://developers.google.com/maps/documentation/weather/get-api-key",
+                "restricting_api_keys_url": "https://developers.google.com/maps/api-security-best-practices#restricting-api-keys",
+                "name": "Google Weather",
+            },
+        ),
+    ],
+)
+async def test_reauth_exceptions(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_google_weather_api: AsyncMock,
+    api_exception: Exception,
+    expected_error: str,
+    expected_placeholders: dict[str, str],
 ) -> None:
-    """Test reauth flow with auth error."""
+    """Test reauth flow with exceptions."""
     mock_config_entry.add_to_hass(hass)
 
     result = await mock_config_entry.start_reauth_flow(hass)
     assert result["type"] is FlowResultType.FORM
 
-    mock_google_weather_api.async_get_current_conditions.side_effect = (
-        GoogleWeatherApiAuthError("Invalid API key")
-    )
+    mock_google_weather_api.async_get_current_conditions.side_effect = api_exception
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -409,49 +434,8 @@ async def test_reauth_auth_error(
     )
 
     assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"base": "cannot_connect"}
-    assert result["description_placeholders"] == {
-        "api_key_url": "https://developers.google.com/maps/documentation/weather/get-api-key",
-        "restricting_api_keys_url": "https://developers.google.com/maps/api-security-best-practices#restricting-api-keys",
-        "error_message": "Invalid API key",
-        "name": "Google Weather",
-    }
-
-    mock_google_weather_api.async_get_current_conditions.side_effect = None
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {
-            CONF_API_KEY: "valid-api-key",
-        },
-    )
-
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "reauth_successful"
-
-
-async def test_reauth_unexpected_error(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_google_weather_api: AsyncMock,
-) -> None:
-    """Test reauth flow with unexpected error."""
-    mock_config_entry.add_to_hass(hass)
-
-    result = await mock_config_entry.start_reauth_flow(hass)
-    assert result["type"] is FlowResultType.FORM
-
-    mock_google_weather_api.async_get_current_conditions.side_effect = ValueError()
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {
-            CONF_API_KEY: "invalid-api-key",
-        },
-    )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"base": "unknown"}
+    assert result["errors"] == {"base": expected_error}
+    assert result["description_placeholders"] == expected_placeholders
 
     mock_google_weather_api.async_get_current_conditions.side_effect = None
 
@@ -522,6 +506,70 @@ async def test_reconfigure(
     assert result["reason"] == "reconfigure_successful"
     assert mock_config_entry.data[CONF_API_KEY] == "new-api-key"
     assert mock_config_entry.data.get(CONF_REFERRER) == "new-referrer"
+    assert len(mock_setup_entry.mock_calls) == 1
+
+
+@pytest.mark.parametrize(
+    ("api_exception", "expected_error", "expected_placeholders"),
+    [
+        (
+            GoogleWeatherApiAuthError("Invalid API key"),
+            "cannot_connect",
+            {
+                "api_key_url": "https://developers.google.com/maps/documentation/weather/get-api-key",
+                "restricting_api_keys_url": "https://developers.google.com/maps/api-security-best-practices#restricting-api-keys",
+                "error_message": "Invalid API key",
+            },
+        ),
+        (
+            ValueError(),
+            "unknown",
+            {
+                "api_key_url": "https://developers.google.com/maps/documentation/weather/get-api-key",
+                "restricting_api_keys_url": "https://developers.google.com/maps/api-security-best-practices#restricting-api-keys",
+            },
+        ),
+    ],
+)
+async def test_reconfigure_exceptions(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    mock_google_weather_api: AsyncMock,
+    api_exception: Exception,
+    expected_error: str,
+    expected_placeholders: dict[str, str],
+) -> None:
+    """Test reconfigure flow with exceptions."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+
+    mock_google_weather_api.async_get_current_conditions.side_effect = api_exception
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_API_KEY: "invalid-api-key",
+        },
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": expected_error}
+    assert result["description_placeholders"] == expected_placeholders
+
+    mock_google_weather_api.async_get_current_conditions.side_effect = None
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_API_KEY: "valid-api-key",
+        },
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
     assert len(mock_setup_entry.mock_calls) == 1
 
 

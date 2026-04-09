@@ -95,7 +95,13 @@ class GoogleWeatherBaseCoordinator(TimestampDataUpdateCoordinator[T]):
                 self.subentry.data[CONF_LONGITUDE],
             )
         except GoogleWeatherApiAuthError as err:
-            raise ConfigEntryAuthFailed(err) from err
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN,
+                translation_key="auth_error",
+                translation_placeholders={
+                    "error": str(err),
+                },
+            ) from err
         except GoogleWeatherApiError as err:
             _LOGGER.error(
                 "Error fetching %s for %s: %s",
