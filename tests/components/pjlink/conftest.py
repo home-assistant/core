@@ -40,8 +40,6 @@ def mock_pjlink() -> Generator[MagicMock]:
         patch("homeassistant.components.pjlink.config_flow.PJLink") as mock_config,
     ):
         instance = MagicMock()
-        instance.__aenter__ = AsyncMock(return_value=instance)
-        instance.__aexit__ = AsyncMock(return_value=None)
 
         instance.info = MagicMock()
         instance.info.projector_name = AsyncMock(return_value="test name")
