@@ -86,8 +86,8 @@ class RenaultSensor[T: KamereonVehicleDataAttributes](
     _unrecorded_attributes = frozenset(
         {
             "schedules",
-            "startDateTime",
-            "dateTime",
+            "start_date_time",
+            "last_update",
             "delay",
         }
     )
