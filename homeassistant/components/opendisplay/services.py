@@ -31,11 +31,16 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_DEVICE_ID
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
-from homeassistant.helpers import config_validation as cv, device_registry as dr
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import CONNECTION_BLUETOOTH
 from homeassistant.helpers.network import get_url
-from homeassistant.helpers.selector import MediaSelector, MediaSelectorConfig
+from homeassistant.helpers.selector import (
+    DeviceSelector,
+    DeviceSelectorConfig,
+    MediaSelector,
+    MediaSelectorConfig,
+)
 
 if TYPE_CHECKING:
     from . import OpenDisplayConfigEntry
@@ -64,7 +69,9 @@ def _str_to_int_enum(enum_class: type[IntEnum]) -> Callable[[str], Any]:
 
 SCHEMA_UPLOAD_IMAGE = vol.Schema(
     {
-        vol.Required(ATTR_DEVICE_ID): cv.string,
+        vol.Required(ATTR_DEVICE_ID): DeviceSelector(
+            DeviceSelectorConfig(integration=DOMAIN)
+        ),
         vol.Required(ATTR_IMAGE): MediaSelector(
             MediaSelectorConfig(accept=["image/*"])
         ),
