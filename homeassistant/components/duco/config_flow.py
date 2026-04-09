@@ -1,0 +1,74 @@
+"""Config flow for the Duco integration."""
+
+from __future__ import annotations
+
+import logging
+from typing import Any
+
+from duco import DucoClient
+from duco.exceptions import DucoConnectionError, DucoError
+import voluptuous as vol
+
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.const import CONF_HOST
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.device_registry import format_mac
+
+from .const import DOMAIN
+
+_LOGGER = logging.getLogger(__name__)
+
+STEP_USER_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_HOST): str,
+    }
+)
+
+
+class DucoConfigFlow(ConfigFlow, domain=DOMAIN):
+    """Config flow for Duco."""
+
+    VERSION = 1
+    MINOR_VERSION = 1
+
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle the initial step."""
+        errors: dict[str, str] = {}
+
+        if user_input is not None:
+            try:
+                box_name, mac = await self._validate_input(user_input[CONF_HOST])
+            except DucoConnectionError:
+                errors["base"] = "cannot_connect"
+            except DucoError:
+                _LOGGER.exception("Unexpected error connecting to Duco box")
+                errors["base"] = "unknown"
+            else:
+                await self.async_set_unique_id(format_mac(mac))
+                self._abort_if_unique_id_configured()
+
+                return self.async_create_entry(
+                    title=box_name,
+                    data={CONF_HOST: user_input[CONF_HOST]},
+                )
+
+        return self.async_show_form(
+            step_id="user",
+            data_schema=STEP_USER_SCHEMA,
+            errors=errors,
+        )
+
+    async def _validate_input(self, host: str) -> tuple[str, str]:
+        """Validate the user input by connecting to the Duco box.
+
+        Returns a tuple of (box_name, mac_address).
+        """
+        client = DucoClient(
+            session=async_get_clientsession(self.hass),
+            host=host,
+        )
+        board_info = await client.async_get_board_info()
+        lan_info = await client.async_get_lan_info()
+        return board_info.box_name, lan_info.mac
