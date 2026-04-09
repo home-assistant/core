@@ -3,10 +3,16 @@
 from errno import EADDRINUSE, ENETDOWN
 from unittest.mock import AsyncMock, MagicMock, call, patch
 
+from freezegun.api import FrozenDateTimeFactory
 from govee_local_api import GoveeDevice
+from govee_local_api.message import DevStatusResponse
 import pytest
 
-from homeassistant.components.govee_light_local.const import DOMAIN
+from homeassistant.components.govee_light_local.const import (
+    DEVICE_TIMEOUT,
+    DOMAIN,
+    SCAN_INTERVAL,
+)
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_BRIGHTNESS_PCT,
@@ -18,12 +24,18 @@ from homeassistant.components.light import (
     ColorMode,
 )
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import SERVICE_TURN_OFF, SERVICE_TURN_ON
+from homeassistant.const import (
+    SERVICE_TURN_OFF,
+    SERVICE_TURN_ON,
+    STATE_OFF,
+    STATE_UNAVAILABLE,
+)
 from homeassistant.core import HomeAssistant
+from homeassistant.util import dt as dt_util
 
 from .conftest import DEFAULT_CAPABILITIES, SCENE_CAPABILITIES
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 async def test_light_known_device(
@@ -755,3 +767,148 @@ async def test_scene_none(hass: HomeAssistant, mock_govee_api: MagicMock) -> Non
     assert light.state == "on"
     assert light.attributes[ATTR_EFFECT] is None
     mock_govee_api.set_scene.assert_not_called()
+
+
+def _status_response(
+    *,
+    is_on: bool = False,
+    brightness: int = 0,
+    r: int = 0,
+    g: int = 0,
+    b: int = 0,
+    color_temp: int = 0,
+) -> DevStatusResponse:
+    """Build a DevStatusResponse matching the library's wire format.
+
+    Driving availability tests through the library's public ``device.update``
+    keeps the test honest about the contract we depend on: ``lastseen`` is
+    refreshed whenever a status response is applied.
+    """
+    return DevStatusResponse(
+        {
+            "onOff": 1 if is_on else 0,
+            "brightness": brightness,
+            "color": {"r": r, "g": g, "b": b},
+            "colorTemInKelvin": color_temp,
+        }
+    )
+
+
+async def test_device_becomes_unavailable_after_timeout(
+    hass: HomeAssistant,
+    mock_govee_api: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test that a device goes unavailable when no status response arrives."""
+    device = GoveeDevice(
+        controller=mock_govee_api,
+        ip="192.168.1.100",
+        fingerprint="asdawdqwdqwd",
+        sku="H615A",
+        capabilities=DEFAULT_CAPABILITIES,
+    )
+    mock_govee_api.devices = [device]
+
+    entry = MockConfigEntry(domain=DOMAIN)
+    entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("light.H615A")
+    assert state is not None
+    assert state.state == STATE_OFF
+
+    # Advance past DEVICE_TIMEOUT without firing any status responses, and
+    # tick the coordinator forward so a state write occurs.
+    freezer.tick(DEVICE_TIMEOUT + SCAN_INTERVAL)
+    async_fire_time_changed(hass, dt_util.utcnow())
+    await hass.async_block_till_done()
+
+    state = hass.states.get("light.H615A")
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE
+
+
+async def test_device_recovers_after_status_response(
+    hass: HomeAssistant,
+    mock_govee_api: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test that an unavailable device recovers when it responds again."""
+    device = GoveeDevice(
+        controller=mock_govee_api,
+        ip="192.168.1.100",
+        fingerprint="asdawdqwdqwd",
+        sku="H615A",
+        capabilities=DEFAULT_CAPABILITIES,
+    )
+    mock_govee_api.devices = [device]
+
+    entry = MockConfigEntry(domain=DOMAIN)
+    entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    # Drive it unavailable first.
+    freezer.tick(DEVICE_TIMEOUT + SCAN_INTERVAL)
+    async_fire_time_changed(hass, dt_util.utcnow())
+    await hass.async_block_till_done()
+
+    state = hass.states.get("light.H615A")
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE
+
+    # A status response refreshes lastseen and fires the entity callback.
+    device.update(_status_response())
+    await hass.async_block_till_done()
+
+    state = hass.states.get("light.H615A")
+    assert state is not None
+    assert state.state == STATE_OFF
+
+
+async def test_one_silent_device_does_not_affect_others(
+    hass: HomeAssistant,
+    mock_govee_api: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test that one silent device does not pull the others unavailable."""
+    silent = GoveeDevice(
+        controller=mock_govee_api,
+        ip="192.168.1.100",
+        fingerprint="silent_device",
+        sku="H615A",
+        capabilities=DEFAULT_CAPABILITIES,
+    )
+    chatty = GoveeDevice(
+        controller=mock_govee_api,
+        ip="192.168.1.101",
+        fingerprint="chatty_device",
+        sku="H615B",
+        capabilities=DEFAULT_CAPABILITIES,
+    )
+    mock_govee_api.devices = [silent, chatty]
+
+    entry = MockConfigEntry(domain=DOMAIN)
+    entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    # Tick past the timeout, but have the chatty device reply along the way.
+    freezer.tick(SCAN_INTERVAL)
+    chatty.update(_status_response())
+    freezer.tick(DEVICE_TIMEOUT)
+    chatty.update(_status_response())
+
+    async_fire_time_changed(hass, dt_util.utcnow())
+    await hass.async_block_till_done()
+
+    silent_state = hass.states.get("light.H615A")
+    chatty_state = hass.states.get("light.H615B")
+    assert silent_state is not None
+    assert chatty_state is not None
+    assert silent_state.state == STATE_UNAVAILABLE
+    assert chatty_state.state == STATE_OFF
