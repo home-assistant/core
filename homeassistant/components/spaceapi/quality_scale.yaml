@@ -10,8 +10,8 @@ rules:
   common-modules:
     status: exempt
     comment: This integration has no entities and no coordinator.
-  config-flow-test-coverage: todo
-  config-flow: todo
+  config-flow-test-coverage: done
+  config-flow: done
   dependency-transparency:
     status: exempt
     comment: This integration has no dependencies.
@@ -30,16 +30,20 @@ rules:
   has-entity-name:
     status: exempt
     comment: This integration has no entities.
-  runtime-data: todo
-  test-before-configure: todo
-  test-before-setup: todo
-  unique-config-entry: todo
+  runtime-data: done
+  test-before-configure:
+    status: exempt
+    comment: This integration does not connect to any external device or service.
+  test-before-setup:
+    status: exempt
+    comment: This integration does not connect to any external service and setup cannot fail.
+  unique-config-entry: done
 
   # Silver
   action-exceptions:
     status: exempt
     comment: This integration has no custom service actions.
-  config-entry-unloading: todo
+  config-entry-unloading: done
   docs-configuration-parameters: todo
   docs-installation-parameters: done
   entity-unavailable:
@@ -52,14 +56,16 @@ rules:
   parallel-updates:
     status: exempt
     comment: This integration does not poll.
-  reauthentication-flow: todo
+  reauthentication-flow:
+    status: exempt
+    comment: This integration does not require any form of authentication.
   test-coverage: done
 
   # Gold
   devices:
     status: exempt
     comment: This integration has no entities.
-  diagnostics: todo
+  diagnostics: done
   discovery-update-info:
     status: exempt
     comment: This integration is a service and has no devices.
@@ -104,8 +110,8 @@ rules:
   icon-translations:
     status: exempt
     comment: This integration does not use icons.
-  reconfiguration-flow: todo
-  repair-issues: todo
+  reconfiguration-flow: done
+  repair-issues: done
   stale-devices:
     status: exempt
     comment: This integration is a service and has no devices.
