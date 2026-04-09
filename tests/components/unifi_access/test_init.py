@@ -512,10 +512,11 @@ async def test_set_lock_rule_unknown_door(
     init_integration: MockConfigEntry,
     mock_client: MagicMock,
 ) -> None:
-    """Test async_set_lock_rule returns early for a door not in data."""
+    """Test async_set_lock_rule still calls the API but does not cache an unknown door."""
     coordinator = init_integration.runtime_data
     await coordinator.async_set_lock_rule("door-unknown", "keep_lock")
     mock_client.set_door_lock_rule.assert_awaited_once()
+    assert "door-unknown" not in coordinator.data.door_lock_rules
 
 
 async def test_set_lock_rule_during_error_state(
