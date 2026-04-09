@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from copy import deepcopy
 from unittest.mock import Mock
 
 import pytest
@@ -160,6 +161,45 @@ async def test_smart_scene_select_activate_option(
     assert len(mock_bridge_v2.mock_requests) > 0
     last_request = mock_bridge_v2.mock_requests[-1]
     assert smart_scene_id in last_request["path"]
+
+
+async def test_smart_scene_select_disambiguates_duplicate_names(
+    hass: HomeAssistant, mock_bridge_v2: Mock, v2_resources_test_data: JsonArrayType
+) -> None:
+    """Test duplicate smart scene names are exposed and recalled distinctly."""
+    test_data = deepcopy(v2_resources_test_data)
+    duplicate_smart_scene = deepcopy(
+        next(resource for resource in test_data if resource["type"] == "smart_scene")
+    )
+    duplicate_smart_scene_id = "11111111-2222-4333-8444-555555555555"
+    duplicate_smart_scene["id"] = duplicate_smart_scene_id
+    duplicate_smart_scene["state"] = "inactive"
+    test_data.append(duplicate_smart_scene)
+
+    await mock_bridge_v2.api.load_test_data(test_data)
+    await setup_platform(hass, mock_bridge_v2, [Platform.SCENE, Platform.SELECT])
+
+    state = hass.states.get("select.test_room_smart_scene")
+    assert state is not None
+    assert state.state == "Smart Test Scene (8abe5a3e)"
+    assert state.attributes["options"] == [
+        "Smart Test Scene (8abe5a3e)",
+        "Smart Test Scene (11111111)",
+    ]
+
+    await hass.services.async_call(
+        "select",
+        "select_option",
+        {
+            "entity_id": "select.test_room_smart_scene",
+            "option": "Smart Test Scene (11111111)",
+        },
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+
+    last_request = mock_bridge_v2.mock_requests[-1]
+    assert duplicate_smart_scene_id in last_request["path"]
 
 
 @pytest.mark.parametrize(

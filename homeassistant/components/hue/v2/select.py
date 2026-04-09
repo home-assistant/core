@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections import Counter
 import logging
 
 from aiohue.v2 import HueBridgeV2
@@ -25,6 +26,24 @@ from .scene_activity import HueSceneActivityManager
 _LOGGER = logging.getLogger(__name__)
 
 PARALLEL_UPDATES = 0
+
+
+def _build_scene_option_maps(
+    scenes: list[HueScene | HueSmartScene],
+) -> tuple[dict[str, str], dict[str, str]]:
+    """Build bidirectional option maps for a scene collection."""
+    name_counts = Counter(scene.metadata.name for scene in scenes)
+    option_to_scene_id: dict[str, str] = {}
+    scene_id_to_option: dict[str, str] = {}
+
+    for scene in scenes:
+        option = scene.metadata.name
+        if name_counts[option] > 1:
+            option = f"{option} ({scene.id[:8]})"
+        option_to_scene_id[option] = scene.id
+        scene_id_to_option[scene.id] = option
+
+    return option_to_scene_id, scene_id_to_option
 
 
 class SceneActivityBaseEntity(HueBaseEntity):
@@ -67,6 +86,10 @@ class SceneActivityBaseEntity(HueBaseEntity):
             self._manager.async_add_listener(self._group_id, _on_manager_update)
         )
 
+    def scene_option_matches_name(self, scene_id: str, name: str) -> bool:
+        """Return if the current option label still matches an unchanged scene name."""
+        return self._scene_id_to_option.get(scene_id) == name
+
 
 # pylint: disable-next=hass-enforce-class-module
 class HueSceneSelectEntity(SceneActivityBaseEntity, SelectEntity):
@@ -83,31 +106,37 @@ class HueSceneSelectEntity(SceneActivityBaseEntity, SelectEntity):
         """Initialize the regular-scene select entity."""
         super().__init__(bridge, manager, group_id)
         self._attr_unique_id = f"{group_id}_scene_select"
-        self._refresh_options()
+        self.refresh_options()
 
-    def _refresh_options(self) -> None:
+    def refresh_options(self) -> None:
         """Rebuild the name→id map of regular scenes available for this group."""
-        self._scene_id_by_name: dict[str, str] = {
-            scene.metadata.name: scene.id
-            for scene in self.bridge.api.scenes.scene
-            if scene.group.rid == self._group_id
-        }
+        self._option_to_scene_id, self._scene_id_to_option = _build_scene_option_maps(
+            [
+                scene
+                for scene in self.bridge.api.scenes.scene
+                if scene.group.rid == self._group_id
+            ]
+        )
 
     @property
     def options(self) -> list[str]:
         """Return the available regular scene names for this group."""
-        return list(self._scene_id_by_name)
+        return list(self._option_to_scene_id)
 
     @property
     def current_option(self) -> str | None:
         """Return the name of the currently active regular scene, if any."""
-        return self._group_state.active_scene_name
+        if not (active_scene_id := self._group_state.active_scene_id):
+            return None
+        return self._scene_id_to_option.get(active_scene_id)
 
     async def async_select_option(self, option: str) -> None:
         """Activate the regular scene with the given name."""
-        scene_id = self._scene_id_by_name.get(option)
+        scene_id = self._option_to_scene_id.get(option)
         if scene_id is None:
-            _LOGGER.debug("Scene '%s' not found in group %s", option, self._group_id)
+            _LOGGER.debug(
+                "Scene option '%s' not found in group %s", option, self._group_id
+            )
             return
         await self.bridge.async_request_call(
             self.bridge.api.scenes.scene.recall,
@@ -130,32 +159,38 @@ class HueSmartSceneSelectEntity(SceneActivityBaseEntity, SelectEntity):
         """Initialize the smart-scene select entity."""
         super().__init__(bridge, manager, group_id)
         self._attr_unique_id = f"{group_id}_smart_scene_select"
-        self._refresh_options()
+        self.refresh_options()
 
-    def _refresh_options(self) -> None:
+    def refresh_options(self) -> None:
         """Rebuild the name→id map of smart scenes available for this group."""
-        self._scene_id_by_name: dict[str, str] = {
-            scene.metadata.name: scene.id
-            for scene in self.bridge.api.scenes.smart_scene
-            if scene.group.rid == self._group_id
-        }
+        self._option_to_scene_id, self._scene_id_to_option = _build_scene_option_maps(
+            [
+                scene
+                for scene in self.bridge.api.scenes.smart_scene
+                if scene.group.rid == self._group_id
+            ]
+        )
 
     @property
     def options(self) -> list[str]:
         """Return the available smart scene names for this group."""
-        return list(self._scene_id_by_name)
+        return list(self._option_to_scene_id)
 
     @property
     def current_option(self) -> str | None:
         """Return the name of the currently active smart scene, if any."""
-        return self._group_state.active_smart_scene_name
+        if not (active_smart_scene_id := self._group_state.active_smart_scene_id):
+            return None
+        return self._scene_id_to_option.get(active_smart_scene_id)
 
     async def async_select_option(self, option: str) -> None:
         """Activate the smart scene with the given name."""
-        scene_id = self._scene_id_by_name.get(option)
+        scene_id = self._option_to_scene_id.get(option)
         if scene_id is None:
             _LOGGER.debug(
-                "Smart scene '%s' not found in group %s", option, self._group_id
+                "Smart scene option '%s' not found in group %s",
+                option,
+                self._group_id,
             )
             return
         await self.bridge.async_request_call(
@@ -172,7 +207,8 @@ async def async_setup_entry(
     """Set up Hue scene select entities from a config entry."""
     bridge = config_entry.runtime_data
     api: HueBridgeV2 = bridge.api
-    assert (manager := bridge.scene_activity_manager) is not None
+    manager = bridge.scene_activity_manager
+    assert manager is not None
 
     scene_entities: dict[str, HueSceneSelectEntity] = {}
     smart_scene_entities: dict[str, HueSmartSceneSelectEntity] = {}
@@ -183,10 +219,10 @@ async def async_setup_entry(
             # Skip rebuild on status updates where the name hasn't changed.
             if (
                 event_type == EventType.RESOURCE_UPDATED
-                and scene.metadata.name in entity._scene_id_by_name
+                and entity.scene_option_matches_name(scene.id, scene.metadata.name)
             ):
                 return
-            entity._refresh_options()
+            entity.refresh_options()
             entity.async_write_ha_state()
 
     @callback
@@ -194,10 +230,10 @@ async def async_setup_entry(
         if entity := smart_scene_entities.get(scene.group.rid):
             if (
                 event_type == EventType.RESOURCE_UPDATED
-                and scene.metadata.name in entity._scene_id_by_name
+                and entity.scene_option_matches_name(scene.id, scene.metadata.name)
             ):
                 return
-            entity._refresh_options()
+            entity.refresh_options()
             entity.async_write_ha_state()
 
     scene_event_filter = (
