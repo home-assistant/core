@@ -1,0 +1,15 @@
+# serializer version: 1
+# name: test_diagnostics
+  dict({
+    'entry_data': dict({
+      'host': '192.168.1.100',
+      'installation_id': '123',
+      'model': 'Cerbo GX',
+      'password': '**REDACTED**',
+      'port': 1883,
+      'serial': 'HQ2234ABCDE',
+      'ssl': False,
+      'username': '**REDACTED**',
+    }),
+  })
+# ---
