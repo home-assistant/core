@@ -6,12 +6,7 @@ from typing import Any
 
 import voluptuous as vol
 
-from homeassistant.config_entries import (
-    ConfigEntry,
-    ConfigFlow,
-    ConfigFlowResult,
-    OptionsFlow,
-)
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFlow
 from homeassistant.const import CONF_EMAIL, CONF_URL
 from homeassistant.core import callback
 from homeassistant.helpers.selector import (
@@ -25,6 +20,7 @@ from homeassistant.helpers.selector import (
     TextSelectorType,
 )
 
+from . import SpaceAPIConfigEntry
 from .const import (
     CONF_CACHE,
     CONF_CAM,
@@ -110,7 +106,7 @@ class SpaceAPIConfigFlow(ConfigFlow, domain=DOMAIN):
     @staticmethod
     @callback
     def async_get_options_flow(
-        config_entry: ConfigEntry,
+        config_entry: SpaceAPIConfigEntry,
     ) -> SpaceAPIOptionsFlowHandler:
         """Create the options flow."""
         return SpaceAPIOptionsFlowHandler()
