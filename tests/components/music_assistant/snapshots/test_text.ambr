@@ -1,0 +1,60 @@
+# serializer version: 1
+# name: test_text_entities[text.test_player_1_network_name-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 255,
+      'min': 0,
+      'mode': <TextMode.TEXT: 'text'>,
+      'pattern': None,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'text',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'text.test_player_1_network_name',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Network name',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Network name',
+    'platform': 'music_assistant',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'network_name',
+    'unique_id': '00:00:00:00:00:01_network_name',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_text_entities[text.test_player_1_network_name-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Test Player 1 Network name',
+      'max': 255,
+      'min': 0,
+      'mode': <TextMode.TEXT: 'text'>,
+      'pattern': None,
+    }),
+    'context': <ANY>,
+    'entity_id': 'text.test_player_1_network_name',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'receiver',
+  })
+# ---
