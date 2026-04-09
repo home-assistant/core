@@ -547,9 +547,6 @@ filterwarnings = [
   "ignore:Deprecated since version v22.2.*attribute `retry_after` will be of type `datetime.timedelta`:DeprecationWarning:telegram.error",
   # https://github.com/briis/pyweatherflowudp/blob/v1.4.5/pyweatherflowudp/const.py#L20 - v1.4.5 - 2023-10-10
   "ignore:This function will be removed in future versions of pint:DeprecationWarning:pyweatherflowudp.const",
-  # - pkg_resources
-  # https://pypi.org/project/pybotvac/ - v0.0.28 - 2025-06-11
-  "ignore:pkg_resources is deprecated as an API:UserWarning:pybotvac.version",
   # - SyntaxWarnings - invalid escape sequence
   # https://pypi.org/project/aprslib/ - v0.7.2 - 2022-07-10
   "ignore:.*invalid escape sequence:SyntaxWarning:.*aprslib.parsing.common",
