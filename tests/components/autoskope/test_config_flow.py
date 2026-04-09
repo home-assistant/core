@@ -187,7 +187,11 @@ async def test_reauth_flow(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
-    assert mock_config_entry.data[CONF_PASSWORD] == "new_password"
+    assert mock_config_entry.data == {
+        CONF_USERNAME: "test_user",
+        CONF_PASSWORD: "new_password",
+        CONF_HOST: DEFAULT_HOST,
+    }
 
 
 @pytest.mark.parametrize(
