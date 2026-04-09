@@ -47,7 +47,7 @@ async def _advance_coordinator_time(
     """Advance time to trigger coordinator update interval."""
     freezer.tick(delta=UPDATE_INTERVAL)
     async_fire_time_changed(hass, dt_util.utcnow())
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
 
 async def test_system_refresh_failure_marks_entities_unavailable(
