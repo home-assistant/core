@@ -173,9 +173,6 @@
     },
     "play_tone_failed": {
       "message": "Failed to play tone on {device_name}: {error}."
-    },
-    "send_ir_code_failed": {
-      "message": "Failed to send IR code: {error}."
     }
   },
   "issues": {
