@@ -2106,9 +2106,6 @@ pysensibo==1.2.1
 # homeassistant.components.senz
 pysenz==1.0.2
 
-# homeassistant.components.acer_projector
-pyserial==3.5
-
 # homeassistant.components.seventeentrack
 pyseventeentrack==1.1.2
 
