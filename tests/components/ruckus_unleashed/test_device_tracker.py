@@ -6,7 +6,7 @@ from unittest.mock import AsyncMock
 from aioruckus.const import ERROR_CONNECT_EOF, ERROR_LOGIN_INCORRECT
 from aioruckus.exceptions import AuthenticationError
 
-from homeassistant.components.ruckus_unleashed import DOMAIN
+from homeassistant.components.ruckus_unleashed.const import DOMAIN
 from homeassistant.const import STATE_HOME, STATE_NOT_HOME, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
