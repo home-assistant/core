@@ -302,6 +302,7 @@ class TelegramNotificationService:
         """Initialize the service."""
         self.app = app
         self.config = config
+        self.old_config_data = config.data.copy()
         self._parsers: dict[str, str | None] = {
             PARSER_HTML: ParseMode.HTML,
             PARSER_MD: ParseMode.MARKDOWN,
