@@ -114,7 +114,6 @@ from .const import (
     MIN_THINKING_BUDGET,
     NON_ADAPTIVE_THINKING_MODELS,
     NON_THINKING_MODELS,
-    PROGRAMMATIC_TOOL_CALLING_UNSUPPORTED_MODELS,
     UNSUPPORTED_STRUCTURED_OUTPUT_MODELS,
     PromptCaching,
 )
@@ -795,9 +794,11 @@ class AnthropicBaseLLMEntity(CoordinatorEntity[AnthropicCoordinator]):
 
         if options.get(CONF_CODE_EXECUTION):
             # The `web_search_20260209` tool automatically enables `code_execution_20260120` tool
-            if model.startswith(
-                tuple(PROGRAMMATIC_TOOL_CALLING_UNSUPPORTED_MODELS)
-            ) or not options.get(CONF_WEB_SEARCH):
+            if (
+                not self.model_info.capabilities
+                or not self.model_info.capabilities.code_execution.supported
+                or not options.get(CONF_WEB_SEARCH)
+            ):
                 tools.append(
                     CodeExecutionTool20250825Param(
                         name="code_execution",
@@ -806,9 +807,11 @@ class AnthropicBaseLLMEntity(CoordinatorEntity[AnthropicCoordinator]):
                 )
 
         if options.get(CONF_WEB_SEARCH):
-            if model.startswith(
-                tuple(PROGRAMMATIC_TOOL_CALLING_UNSUPPORTED_MODELS)
-            ) or not options.get(CONF_CODE_EXECUTION):
+            if (
+                not self.model_info.capabilities
+                or not self.model_info.capabilities.code_execution.supported
+                or not options.get(CONF_CODE_EXECUTION)
+            ):
                 web_search: WebSearchTool20250305Param | WebSearchTool20260209Param = (
                     WebSearchTool20250305Param(
                         name="web_search",
