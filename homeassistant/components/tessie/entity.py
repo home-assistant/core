@@ -77,6 +77,7 @@ class TessieEntity(TessieBaseEntity):
         data_key: str | None = None,
     ) -> None:
         """Initialize common aspects of a Tessie vehicle entity."""
+        self.api = vehicle.api
         self.vin = vehicle.vin
         self._session = vehicle.data_coordinator.session
         self._api_key = vehicle.data_coordinator.api_key

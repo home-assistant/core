@@ -40,7 +40,7 @@ class TessieEnergyData:
 class TessieVehicleData:
     """Data for a Tessie vehicle."""
 
+    api: Vehicle
     data_coordinator: TessieStateUpdateCoordinator
     device: DeviceInfo
     vin: str
-    api: Vehicle | None = None
