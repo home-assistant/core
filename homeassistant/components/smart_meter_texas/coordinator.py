@@ -55,7 +55,7 @@ class SmartMeterTexasData:
 type SmartMeterTexasConfigEntry = ConfigEntry[SmartMeterTexasCoordinator]
 
 
-class SmartMeterTexasCoordinator(DataUpdateCoordinator[SmartMeterTexasData]):
+class SmartMeterTexasCoordinator(DataUpdateCoordinator[None]):
     """Class to manage fetching Smart Meter Texas data."""
 
     config_entry: SmartMeterTexasConfigEntry
@@ -79,8 +79,7 @@ class SmartMeterTexasCoordinator(DataUpdateCoordinator[SmartMeterTexasData]):
         )
         self.smart_meter_texas_data = smart_meter_texas_data
 
-    async def _async_update_data(self) -> SmartMeterTexasData:
+    async def _async_update_data(self) -> None:
         """Fetch latest data."""
         _LOGGER.debug("Fetching latest data")
         await self.smart_meter_texas_data.read_meters()
-        return self.smart_meter_texas_data
