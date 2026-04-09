@@ -17,7 +17,7 @@ from homeassistant.config_entries import (
     ConfigFlowResult,
 )
 from homeassistant.const import CONF_API_TOKEN, CONF_HOST, CONF_VERIFY_SSL
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 from homeassistant.helpers.service_info.ssdp import SsdpServiceInfo
@@ -36,28 +36,19 @@ ENTRY_FAILURE_STATES = (
 )
 
 
-@callback
-def _last_update_was_successful(entry: ConfigEntry) -> bool:
-    """Check if the last coordinator update was successful.
-
-    Returns True when runtime_data is not set (e.g. setup failed before
-    the coordinator was stored). In that case the entry state will already
-    be in ENTRY_FAILURE_STATES, so the caller still detects the problem.
-    """
-    runtime_data = getattr(entry, "runtime_data", None)
-    return runtime_data is None or runtime_data.last_update_success
-
-
 async def _async_console_is_offline(
     hass: HomeAssistant,
     entry: ConfigEntry,
 ) -> bool:
     """Check if a console is offline."""
-    return bool(
-        entry.state in ENTRY_FAILURE_STATES or not _last_update_was_successful(entry)
-    ) and not await async_console_is_alive(
-        async_get_clientsession(hass, verify_ssl=False), entry.data[CONF_HOST]
-    )
+    if entry.state in ENTRY_FAILURE_STATES or (
+        entry.state is ConfigEntryState.LOADED
+        and not entry.runtime_data.last_update_success
+    ):
+        return not await async_console_is_alive(
+            async_get_clientsession(hass, verify_ssl=False), entry.data[CONF_HOST]
+        )
+    return False
 
 
 def _format_mac(mac: str) -> str:

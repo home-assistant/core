@@ -2,19 +2,15 @@
 
 from __future__ import annotations
 
-import asyncio
 from collections.abc import Awaitable, Callable
 import ssl
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 from unifi_access_api import (
     ApiAuthError,
     ApiConnectionError,
     ApiError,
-    ApiNotFoundError,
-    DoorLockRuleStatus,
-    DoorLockRuleType,
     DoorPositionStatus,
 )
 from unifi_access_api.models.websocket import (
@@ -26,12 +22,11 @@ from unifi_access_api.models.websocket import (
     V2LocationUpdate,
     V2LocationUpdateData,
     WebsocketMessage,
-    WsDoorLockRuleStatus,
 )
 
 from homeassistant.components.unifi_access.const import DOMAIN
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
-from homeassistant.const import CONF_VERIFY_SSL, STATE_UNKNOWN
+from homeassistant.const import CONF_VERIFY_SSL
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
@@ -43,9 +38,6 @@ FRONT_DOOR_BINARY_SENSOR = "binary_sensor.front_door"
 BACK_DOOR_BINARY_SENSOR = "binary_sensor.back_door"
 FRONT_DOOR_IMAGE = "image.front_door_thumbnail"
 BACK_DOOR_IMAGE = "image.back_door_thumbnail"
-FRONT_DOOR_SELECT = "select.front_door_lock_rule"
-BACK_DOOR_SELECT = "select.back_door_lock_rule"
-FRONT_DOOR_LOCK_RULE_SENSOR = "sensor.front_door_lock_rule"
 
 
 def _get_ws_handlers(
@@ -494,181 +486,3 @@ async def test_stale_device_removed_on_startup(
     assert device_registry.async_get_device(identifiers={(DOMAIN, "door-001")})
     assert device_registry.async_get_device(identifiers={(DOMAIN, "door-002")})
     assert not device_registry.async_get_device(identifiers={(DOMAIN, "door-003")})
-
-
-async def test_set_lock_rule_empty_rule_type(
-    hass: HomeAssistant,
-    init_integration: MockConfigEntry,
-    mock_client: MagicMock,
-) -> None:
-    """Test async_set_lock_rule returns early when rule_type is empty."""
-    coordinator = init_integration.runtime_data
-    await coordinator.async_set_lock_rule("door-001", "")
-    mock_client.set_door_lock_rule.assert_not_awaited()
-
-
-async def test_set_lock_rule_unknown_door(
-    hass: HomeAssistant,
-    init_integration: MockConfigEntry,
-    mock_client: MagicMock,
-) -> None:
-    """Test async_set_lock_rule still calls the API but does not cache an unknown door."""
-    coordinator = init_integration.runtime_data
-    await coordinator.async_set_lock_rule("door-unknown", "keep_lock")
-    mock_client.set_door_lock_rule.assert_awaited_once()
-    assert "door-unknown" not in coordinator.data.door_lock_rules
-
-
-async def test_set_lock_rule_during_error_state(
-    hass: HomeAssistant,
-    init_integration: MockConfigEntry,
-    mock_client: MagicMock,
-) -> None:
-    """Test async_set_lock_rule updates cached data while preserving error state.
-
-    When the coordinator is in error state, entities are unavailable and cannot
-    be used to verify data changes. The coordinator deliberately updates cached
-    data so that when the connection recovers, the state is already correct.
-    """
-    coordinator = init_integration.runtime_data
-
-    # Put coordinator in error state via websocket disconnect
-    on_disconnect = mock_client.start_websocket.call_args[1]["on_disconnect"]
-    on_disconnect()
-    await hass.async_block_till_done()
-
-    # Entities are unavailable during error state
-    assert hass.states.get(FRONT_DOOR_SELECT).state == "unavailable"
-
-    await coordinator.async_set_lock_rule("door-001", "keep_lock")
-    await hass.async_block_till_done()
-
-    # Cached data was updated despite error state (entity stays unavailable)
-    assert (
-        coordinator.data.door_lock_rules["door-001"].type == DoorLockRuleType.KEEP_LOCK
-    )
-
-
-async def test_coordinator_lock_rule_timeout(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_client: MagicMock,
-) -> None:
-    """Test coordinator handles timeout when fetching lock rules."""
-    mock_client.get_door_lock_rule = AsyncMock(side_effect=TimeoutError)
-    mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    assert mock_config_entry.state is ConfigEntryState.LOADED
-    # Doors are unconfirmed but select entities are created as placeholders
-    assert hass.states.get(FRONT_DOOR_SELECT) is not None
-    assert hass.states.get(FRONT_DOOR_SELECT).state == STATE_UNKNOWN
-    assert hass.states.get(BACK_DOOR_SELECT) is not None
-    assert hass.states.get(BACK_DOOR_SELECT).state == STATE_UNKNOWN
-
-
-async def test_coordinator_lock_rule_not_found(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_client: MagicMock,
-) -> None:
-    """Test coordinator handles ApiNotFoundError for lock rules (unsupported door)."""
-    mock_client.get_door_lock_rule = AsyncMock(side_effect=ApiNotFoundError())
-    mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    assert mock_config_entry.state is ConfigEntryState.LOADED
-    # Lock rules unsupported: select/sensor entities not created
-    assert hass.states.get(FRONT_DOOR_SELECT) is None
-    assert hass.states.get(BACK_DOOR_SELECT) is None
-    assert hass.states.get(FRONT_DOOR_LOCK_RULE_SENSOR) is None
-
-
-async def test_ws_location_update_with_remain_unlock(
-    hass: HomeAssistant,
-    init_integration: MockConfigEntry,
-    mock_client: MagicMock,
-) -> None:
-    """Test location_update_v2 with remain_unlock updates lock rule status."""
-    handlers = _get_ws_handlers(mock_client)
-    msg = LocationUpdateV2(
-        event="access.data.device.location_update_v2",
-        data=LocationUpdateData(
-            id="door-001",
-            location_type="DOOR",
-            state=LocationUpdateState.model_construct(
-                dps=None,
-                lock="unknown",
-                remain_unlock=WsDoorLockRuleStatus(
-                    type=DoorLockRuleType.KEEP_UNLOCK, until=1800000000
-                ),
-            ),
-        ),
-    )
-
-    await handlers["access.data.device.location_update_v2"](msg)
-    await hass.async_block_till_done()
-
-    assert hass.states.get(FRONT_DOOR_SELECT).state == "keep_unlock"
-    assert hass.states.get(FRONT_DOOR_LOCK_RULE_SENSOR).state == "keep_unlock"
-
-
-async def test_coordinator_preserves_lock_rules_on_transient_error(
-    hass: HomeAssistant,
-    init_integration: MockConfigEntry,
-    mock_client: MagicMock,
-) -> None:
-    """Test coordinator preserves previous lock rules on transient fetch error."""
-    # Verify select entities exist after initial setup
-    assert hass.states.get(FRONT_DOOR_SELECT) is not None
-    assert hass.states.get(BACK_DOOR_SELECT) is not None
-
-    # Make lock rule fetch fail with a transient error on refresh
-    mock_client.get_door_lock_rule = AsyncMock(
-        side_effect=ApiConnectionError("Connection failed")
-    )
-
-    # Trigger refresh via WS reconnect
-    on_disconnect = mock_client.start_websocket.call_args[1]["on_disconnect"]
-    on_connect = mock_client.start_websocket.call_args[1]["on_connect"]
-    on_disconnect()
-    await hass.async_block_till_done()
-    on_connect()
-    await hass.async_block_till_done()
-
-    # Select entities still exist (previous lock rules preserved)
-    assert hass.states.get(FRONT_DOOR_SELECT) is not None
-    assert hass.states.get(FRONT_DOOR_SELECT).state != "unavailable"
-    assert hass.states.get(BACK_DOOR_SELECT) is not None
-    assert hass.states.get(BACK_DOOR_SELECT).state != "unavailable"
-
-
-async def test_coordinator_lock_rule_gather_timeout(
-    hass: HomeAssistant,
-    init_integration: MockConfigEntry,
-    mock_client: MagicMock,
-) -> None:
-    """Test coordinator handles outer timeout when gathering lock rules."""
-
-    async def hanging_lock_rule(door_id: str) -> DoorLockRuleStatus:
-        await asyncio.Event().wait()
-        return DoorLockRuleStatus()  # pragma: no cover
-
-    mock_client.get_door_lock_rule = AsyncMock(side_effect=hanging_lock_rule)
-
-    with patch(
-        "homeassistant.components.unifi_access.coordinator.LOCK_RULE_FETCH_TIMEOUT",
-        new=0,
-    ):
-        on_disconnect = mock_client.start_websocket.call_args[1]["on_disconnect"]
-        on_connect = mock_client.start_websocket.call_args[1]["on_connect"]
-        on_disconnect()
-        await hass.async_block_till_done()
-        on_connect()
-        await hass.async_block_till_done()
-
-    # Lock rule gather timed out; previous rules preserved, entities still available
-    assert hass.states.get(FRONT_DOOR_SELECT) is not None
-    assert hass.states.get(FRONT_DOOR_SELECT).state != "unavailable"

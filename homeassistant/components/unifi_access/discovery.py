@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from dataclasses import asdict, dataclass
+from dataclasses import asdict
 from datetime import timedelta
 import logging
 from typing import Any
@@ -19,17 +19,7 @@ from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-
-@dataclass
-class UniFiAccessDiscoveryData:
-    """Runtime data for UniFi Access discovery."""
-
-    discovery_started: bool = False
-
-
-DATA_UNIFI_ACCESS_DISCOVERY: HassKey[UniFiAccessDiscoveryData] = HassKey(
-    f"{DOMAIN}_discovery"
-)
+DATA_UNIFI_ACCESS_DISCOVERY: HassKey[bool] = HassKey(DOMAIN)
 
 DISCOVERY_INTERVAL = timedelta(minutes=60)
 
@@ -37,12 +27,9 @@ DISCOVERY_INTERVAL = timedelta(minutes=60)
 @callback
 def async_start_discovery(hass: HomeAssistant) -> None:
     """Start discovery."""
-    domain_data = hass.data.setdefault(
-        DATA_UNIFI_ACCESS_DISCOVERY, UniFiAccessDiscoveryData()
-    )
-    if domain_data.discovery_started:
+    if hass.data.get(DATA_UNIFI_ACCESS_DISCOVERY):
         return
-    domain_data.discovery_started = True
+    hass.data[DATA_UNIFI_ACCESS_DISCOVERY] = True
 
     async def _async_discovery() -> None:
         async_trigger_discovery(hass, await async_discover_devices())
