@@ -10,7 +10,6 @@ from datetime import datetime, timedelta
 from enum import Enum
 from functools import cache, lru_cache, partial, wraps
 import logging
-import math
 import pathlib
 import re
 import sys
@@ -18,7 +17,6 @@ from types import CodeType
 from typing import TYPE_CHECKING, Any, Concatenate, Literal, NoReturn, Self, overload
 import weakref
 
-from awesomeversion import AwesomeVersion
 import jinja2
 from jinja2 import pass_context, pass_eval_context
 from jinja2.runtime import AsyncLoopContext, LoopContext
@@ -68,7 +66,7 @@ from .context import (
     template_context_manager,
     template_cv,
 )
-from .helpers import raise_no_default, result_as_boolean as result_as_boolean
+from .helpers import result_as_boolean as result_as_boolean
 from .render_info import RenderInfo, render_info_cv
 
 if TYPE_CHECKING:
@@ -1158,72 +1156,6 @@ def expand(hass: HomeAssistant, *args: Any) -> Iterable[State]:
     return list(found.values())
 
 
-def integration_entities(hass: HomeAssistant, entry_name: str) -> Iterable[str]:
-    """Get entity ids for entities tied to an integration/domain.
-
-    Provide entry_name as domain to get all entity id's for a integration/domain
-    or provide a config entry title for filtering between instances of the same
-    integration.
-    """
-
-    # Don't allow searching for config entries without title
-    if not entry_name:
-        return []
-
-    # first try if there are any config entries with a matching title
-    entities: list[str] = []
-    ent_reg = er.async_get(hass)
-    for entry in hass.config_entries.async_entries():
-        if entry.title != entry_name:
-            continue
-        entries = er.async_entries_for_config_entry(ent_reg, entry.entry_id)
-        entities.extend(entry.entity_id for entry in entries)
-    if entities:
-        return entities
-
-    # fallback to just returning all entities for a domain
-    from homeassistant.helpers.entity import entity_sources  # noqa: PLC0415
-
-    return [
-        entity_id
-        for entity_id, info in entity_sources(hass).items()
-        if info["domain"] == entry_name
-    ]
-
-
-def config_entry_id(hass: HomeAssistant, entity_id: str) -> str | None:
-    """Get an config entry ID from an entity ID."""
-    entity_reg = er.async_get(hass)
-    if entity := entity_reg.async_get(entity_id):
-        return entity.config_entry_id
-    return None
-
-
-def config_entry_attr(
-    hass: HomeAssistant, config_entry_id_: str, attr_name: str
-) -> Any:
-    """Get config entry specific attribute."""
-    if not isinstance(config_entry_id_, str):
-        raise TemplateError("Must provide a config entry ID")
-
-    if attr_name not in (
-        "domain",
-        "title",
-        "state",
-        "source",
-        "disabled_by",
-        "pref_disable_polling",
-    ):
-        raise TemplateError("Invalid config entry attribute")
-
-    config_entry = hass.config_entries.async_get_entry(config_entry_id_)
-
-    if config_entry is None:
-        return None
-
-    return getattr(config_entry, attr_name)
-
-
 def closest(hass: HomeAssistant, *args: Any) -> State | None:
     """Find closest entity.
 
@@ -1412,55 +1344,6 @@ def has_value(hass: HomeAssistant, entity_id: str) -> bool:
     )
 
 
-def forgiving_round(value, precision=0, method="common", default=_SENTINEL):
-    """Filter to round a value."""
-    try:
-        # support rounding methods like jinja
-        multiplier = float(10**precision)
-        if method == "ceil":
-            value = math.ceil(float(value) * multiplier) / multiplier
-        elif method == "floor":
-            value = math.floor(float(value) * multiplier) / multiplier
-        elif method == "half":
-            value = round(float(value) * 2) / 2
-        else:
-            # if method is common or something else, use common rounding
-            value = round(float(value), precision)
-        return int(value) if precision == 0 else value
-    except ValueError, TypeError:
-        # If value can't be converted to float
-        if default is _SENTINEL:
-            raise_no_default("round", value)
-        return default
-
-
-def multiply(value, amount, default=_SENTINEL):
-    """Filter to convert value to float and multiply it."""
-    try:
-        return float(value) * amount
-    except ValueError, TypeError:
-        # If value can't be converted to float
-        if default is _SENTINEL:
-            raise_no_default("multiply", value)
-        return default
-
-
-def add(value, amount, default=_SENTINEL):
-    """Filter to convert value to float and add it."""
-    try:
-        return float(value) + amount
-    except ValueError, TypeError:
-        # If value can't be converted to float
-        if default is _SENTINEL:
-            raise_no_default("add", value)
-        return default
-
-
-def version(value):
-    """Filter and function to get version object of the value."""
-    return AwesomeVersion(value)
-
-
 def make_logging_undefined(
     strict: bool | None, log_fn: Callable[[int, str], None] | None
 ) -> type[jinja2.Undefined]:
@@ -1591,6 +1474,9 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.add_extension(
             "homeassistant.helpers.template.extensions.CollectionExtension"
         )
+        self.add_extension(
+            "homeassistant.helpers.template.extensions.ConfigEntryExtension"
+        )
         self.add_extension("homeassistant.helpers.template.extensions.CryptoExtension")
         self.add_extension(
             "homeassistant.helpers.template.extensions.DateTimeExtension"
@@ -1611,13 +1497,7 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.add_extension(
             "homeassistant.helpers.template.extensions.TypeCastExtension"
         )
-
-        self.globals["version"] = version
-
-        self.filters["add"] = add
-        self.filters["multiply"] = multiply
-        self.filters["round"] = forgiving_round
-        self.filters["version"] = version
+        self.add_extension("homeassistant.helpers.template.extensions.VersionExtension")
 
         if hass is None:
             return
@@ -1643,19 +1523,6 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
                 return func(hass, *args, **kwargs)
 
             return jinja_context(wrapper)
-
-        # Integration extensions
-
-        self.globals["integration_entities"] = hassfunction(integration_entities)
-        self.filters["integration_entities"] = self.globals["integration_entities"]
-
-        # Config entry extensions
-
-        self.globals["config_entry_attr"] = hassfunction(config_entry_attr)
-        self.filters["config_entry_attr"] = self.globals["config_entry_attr"]
-
-        self.globals["config_entry_id"] = hassfunction(config_entry_id)
-        self.filters["config_entry_id"] = self.globals["config_entry_id"]
 
         if limited:
 
