@@ -115,7 +115,7 @@ async def test_ignored(
     registry_entries = er.async_entries_for_config_entry(
         entity_registry, config_entry_id=config_entry.entry_id
     )
-    # we only have a single non read-only player options
+    # we only have a single non read-only player option
     assert sum(1 for entry in registry_entries if entry.domain == TEXT_DOMAIN) == 1
 
 
