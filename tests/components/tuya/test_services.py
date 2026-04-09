@@ -127,7 +127,7 @@ async def test_set_feeder_meal_plan(
         Service.SET_FEEDER_MEAL_PLAN,
         {
             "device_id": device_id,
-            "data": DECODED_MEAL_PLAN,
+            "meal_plan": DECODED_MEAL_PLAN,
         },
         blocking=True,
     )
@@ -163,7 +163,7 @@ async def test_set_feeder_meal_plan_unsupported_device(
             Service.SET_FEEDER_MEAL_PLAN,
             {
                 "device_id": device_id,
-                "data": DECODED_MEAL_PLAN,
+                "meal_plan": DECODED_MEAL_PLAN,
             },
             blocking=True,
         )

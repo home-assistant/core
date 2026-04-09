@@ -13,7 +13,7 @@ set_feeder_meal_plan:
       selector:
         device:
           integration: tuya
-    data:
+    meal_plan:
       required: true
       selector:
         object:

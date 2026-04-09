@@ -120,7 +120,7 @@ async def async_set_feeder_meal_plan(call: ServiceCall) -> None:
             },
         )
 
-    meal_plan: list[FeederSchedule] = call.data["data"]
+    meal_plan: list[FeederSchedule] = call.data["meal_plan"]
 
     await call.hass.async_add_executor_job(
         manager.send_commands,
@@ -151,7 +151,7 @@ async def async_setup_services(hass: HomeAssistant) -> None:
         schema=vol.Schema(
             {
                 vol.Required(ATTR_DEVICE_ID): str,
-                vol.Required("data"): vol.All(
+                vol.Required("meal_plan"): vol.All(
                     list,
                     [FEEDING_ENTRY_SCHEMA],
                 ),
