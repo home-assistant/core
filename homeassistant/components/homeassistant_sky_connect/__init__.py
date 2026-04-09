@@ -13,7 +13,7 @@ from homeassistant.components.homeassistant_hardware.util import guess_firmware_
 from homeassistant.components.usb import (
     USBDevice,
     async_register_port_event_callback,
-    scan_serial_ports,
+    async_scan_serial_ports,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
@@ -163,7 +163,7 @@ async def async_migrate_entry(
                 key not in config_entry.data
                 for key in (VID, PID, MANUFACTURER, PRODUCT, SERIAL_NUMBER)
             ):
-                serial_ports = await hass.async_add_executor_job(scan_serial_ports)
+                serial_ports = await async_scan_serial_ports(hass)
                 serial_ports_info = {port.device: port for port in serial_ports}
                 device = config_entry.data[DEVICE]
 
