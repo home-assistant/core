@@ -115,7 +115,7 @@
         "name": "ESS AC power setpoint"
       },
       "multi_ess_min_soc_limit": {
-        "name": "ESS minimum Soc limit"
+        "name": "ESS minimum SoC limit"
       },
       "multi_shore_current_limit": {
         "name": "Shore current limit"
@@ -991,7 +991,7 @@
         "name": "ESS AC power setpoint"
       },
       "multi_ess_min_soc_limit": {
-        "name": "ESS minimum Soc limit"
+        "name": "ESS minimum SoC limit"
       },
       "multi_ess_mode": {
         "name": "ESS mode",

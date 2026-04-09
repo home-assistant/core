@@ -16,7 +16,6 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import METRIC_NATURE_TO_STATE_CLASS
 from .entity import VictronBaseEntity
 from .hub import VictronGxConfigEntry
 
@@ -80,8 +79,8 @@ class VictronNumber(VictronBaseEntity, NumberEntity):
         """Initialize the number entity."""
         super().__init__(device, metric, device_info, installation_id)
         self._attr_device_class = METRIC_TYPE_TO_DEVICE_CLASS.get(metric.metric_type)
-        self._attr_state_class = METRIC_NATURE_TO_STATE_CLASS.get(metric.metric_nature)
-        self._attr_native_unit_of_measurement = metric.unit_of_measurement
+        if self._attr_device_class is not None:
+            self._attr_native_unit_of_measurement = metric.unit_of_measurement
         self._attr_native_value = metric.value
         if isinstance(metric.min_value, int | float):
             self._attr_native_min_value = metric.min_value
