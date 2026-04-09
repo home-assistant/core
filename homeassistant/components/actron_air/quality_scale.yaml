@@ -54,15 +54,9 @@ rules:
   docs-troubleshooting: done
   docs-use-cases: done
   dynamic-devices: todo
-  entity-category:
-    status: exempt
-    comment: This integration does not use entity categories.
-  entity-device-class:
-    status: exempt
-    comment: This integration does not use entity device classes.
-  entity-disabled-by-default:
-    status: exempt
-    comment: Not required for this integration at this stage.
+  entity-category: done
+  entity-device-class: todo
+  entity-disabled-by-default: todo
   entity-translations: todo
   exception-translations: done
   icon-translations: todo
