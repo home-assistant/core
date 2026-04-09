@@ -23,6 +23,7 @@ from unittest.mock import (
     patch,
 )
 
+from aiohttp import FormData
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from securetar import SecureTarArchive, SecureTarFile
@@ -1974,6 +1975,10 @@ async def test_receive_backup(
 ) -> None:
     """Test receive backup and upload to the local and a remote agent."""
     mock_agents = await setup_backup_integration(hass, remote_agents=["test.remote"])
+    # Make sure we wait for Platform.EVENT and Platform.SENSOR to be fully processed,
+    # to avoid interference with the Path.open patching below which is used to verify
+    # that the file is written to the expected location.
+    await hass.async_block_till_done(True)
     client = await hass_client()
 
     upload_data = "test"
@@ -2011,6 +2016,77 @@ async def test_receive_backup(
             backup_data += chunk
         assert backup_data == expected_backup_data
     assert unlink_mock.call_count == temp_file_unlink_call_count
+
+
+async def test_receive_backup_valid_filename(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+) -> None:
+    """Test receive backup with a valid filename."""
+    await setup_backup_integration(hass)
+    client = await hass_client()
+
+    expected_path = Path(hass.config.path("tmp_backups"), "backup.tar")
+
+    with (
+        patch("shutil.move"),
+        patch(
+            "homeassistant.components.backup.manager.read_backup",
+            return_value=TEST_BACKUP_ABC123,
+        ) as read_backup_mock,
+    ):
+        data = FormData(quote_fields=False)
+        data.add_field(
+            "file",
+            "test",
+            filename="backup.tar",
+            content_type="application/octet-stream",
+        )
+        resp = await client.post(
+            "/api/backup/upload?agent_id=backup.local",
+            data=data,
+        )
+        await hass.async_block_till_done()
+
+    assert resp.status == 201
+    read_backup_mock.assert_called_once_with(expected_path)
+
+
+@pytest.mark.parametrize(
+    "suggested_filename",
+    [
+        "../traversal.tar",
+        "../../etc/passwd",
+        "subdir/backup.tar",
+        ".",
+        "..",
+        "../..",
+        "..\\traversal.tar",
+        "C:\\fakepath\\backup.tar",
+    ],
+)
+async def test_receive_backup_path_traversal(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    suggested_filename: str,
+) -> None:
+    """Test receive backup rejects filenames with path traversal."""
+    await setup_backup_integration(hass)
+    client = await hass_client()
+
+    data = FormData(quote_fields=False)
+    data.add_field(
+        "file",
+        "test",
+        filename=suggested_filename,
+        content_type="application/octet-stream",
+    )
+    resp = await client.post(
+        "/api/backup/upload?agent_id=backup.local",
+        data=data,
+    )
+
+    assert resp.status == 400
 
 
 async def test_receive_backup_busy_manager(
@@ -3542,7 +3618,7 @@ async def test_initiate_backup_per_agent_encryption(
         await hass.async_block_till_done()
 
     assert mock_secure_tar_archive.mock_calls[0] == call(
-        ANY, ANY, "w", bufsize=4194304, create_version=2, password=inner_tar_password
+        ANY, ANY, "w", bufsize=4194304, create_version=3, password=inner_tar_password
     )
 
     result = await ws_client.receive_json()

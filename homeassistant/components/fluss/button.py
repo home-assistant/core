@@ -1,15 +1,12 @@
 """Support for Fluss Devices."""
 
 from homeassistant.components.button import ButtonEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .coordinator import FlussApiClientError, FlussDataUpdateCoordinator
+from .coordinator import FlussApiClientError, FlussConfigEntry
 from .entity import FlussEntity
-
-type FlussConfigEntry = ConfigEntry[FlussDataUpdateCoordinator]
 
 
 async def async_setup_entry(

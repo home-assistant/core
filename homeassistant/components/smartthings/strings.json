@@ -85,6 +85,12 @@
       "robot_cleaner_dust_bag": {
         "name": "Dust bag full"
       },
+      "stick_cleaner_dust_bag": {
+        "name": "[%key:component::smartthings::entity::binary_sensor::robot_cleaner_dust_bag::name%]"
+      },
+      "stick_cleaner_status": {
+        "name": "Stick cleaner in station"
+      },
       "sub_remote_control": {
         "name": "Upper washer remote control"
       },
@@ -585,6 +591,25 @@
       "media_playback_status": {
         "name": "Media playback status"
       },
+      "microfiber_filter_job_state": {
+        "name": "[%key:component::smartthings::entity::sensor::dishwasher_job_state::name%]",
+        "state": {
+          "bypassing": "Bypassing",
+          "filtering": "Filtering",
+          "none": "[%key:component::smartthings::entity::sensor::washer_job_state::state::none%]",
+          "sensing": "Weight sensing",
+          "stopping": "Stopping",
+          "waiting": "Waiting"
+        }
+      },
+      "microfiber_filter_operating_state": {
+        "name": "[%key:component::smartthings::entity::sensor::cooktop_operating_state::name%]",
+        "state": {
+          "paused": "[%key:common::state::paused%]",
+          "ready": "[%key:component::smartthings::entity::sensor::oven_machine_state::state::ready%]",
+          "running": "[%key:component::smartthings::entity::sensor::dishwasher_machine_state::state::run%]"
+        }
+      },
       "odor_sensor": {
         "name": "Odor sensor"
       },
@@ -814,6 +839,22 @@
           "tested": "[%key:component::smartthings::entity::sensor::carbon_monoxide_detector::state::tested%]"
         }
       },
+      "stick_cleaner_dust_bag_usage": {
+        "name": "Dust bag cycles",
+        "unit_of_measurement": "cycles"
+      },
+      "stick_cleaner_dustbin_last_emptied": {
+        "name": "Last emptied"
+      },
+      "stick_cleaner_operating_state": {
+        "state": {
+          "emptying_dustbin": "Emptying dustbin",
+          "ready": "[%key:component::smartthings::entity::sensor::oven_machine_state::state::ready%]",
+          "using_vacuum": "Using vacuum",
+          "uv_cleaning": "UV cleaning",
+          "uv_paused": "UV paused"
+        }
+      },
       "thermostat_cooling_setpoint": {
         "name": "Cooling setpoint"
       },
@@ -931,6 +972,9 @@
       "bubble_soak": {
         "name": "Bubble Soak"
       },
+      "bypass_mode": {
+        "name": "Bypass mode"
+      },
       "display_lighting": {
         "name": "Display lighting"
       },
@@ -939,6 +983,9 @@
       },
       "dry_plus": {
         "name": "Dry plus"
+      },
+      "empty_dustbin": {
+        "name": "Empty dustbin"
       },
       "heated_dry": {
         "name": "Heated dry"

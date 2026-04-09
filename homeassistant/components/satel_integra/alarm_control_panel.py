@@ -5,7 +5,7 @@ from __future__ import annotations
 import asyncio
 import logging
 
-from satel_integra.satel_integra import AlarmState
+from satel_integra import AlarmState
 
 from homeassistant.components.alarm_control_panel import (
     AlarmControlPanelEntity,

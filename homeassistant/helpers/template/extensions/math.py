@@ -77,6 +77,10 @@ class MathExtension(BaseTemplateExtension):
                 TemplateFunction(
                     "bitwise_xor", self.bitwise_xor, as_global=True, as_filter=True
                 ),
+                # Arithmetic filters
+                TemplateFunction("add", self.add, as_filter=True),
+                TemplateFunction("multiply", self.multiply, as_filter=True),
+                TemplateFunction("round", self.forgiving_round, as_filter=True),
                 # Value constraint functions (as globals and filters)
                 TemplateFunction("clamp", self.clamp, as_global=True, as_filter=True),
                 TemplateFunction("wrap", self.wrap, as_global=True, as_filter=True),
@@ -331,6 +335,52 @@ class MathExtension(BaseTemplateExtension):
     def bitwise_xor(first_value: Any, second_value: Any) -> Any:
         """Perform a bitwise xor operation."""
         return first_value ^ second_value
+
+    @staticmethod
+    def add(value: Any, amount: Any, default: Any = _SENTINEL) -> Any:
+        """Filter to convert value to float and add it."""
+        try:
+            return float(value) + amount
+        except ValueError, TypeError:
+            if default is _SENTINEL:
+                raise_no_default("add", value)
+            return default
+
+    @staticmethod
+    def multiply(value: Any, amount: Any, default: Any = _SENTINEL) -> Any:
+        """Filter to convert value to float and multiply it."""
+        try:
+            return float(value) * amount
+        except ValueError, TypeError:
+            if default is _SENTINEL:
+                raise_no_default("multiply", value)
+            return default
+
+    @staticmethod
+    def forgiving_round(
+        value: Any,
+        precision: int = 0,
+        method: str = "common",
+        default: Any = _SENTINEL,
+    ) -> Any:
+        """Filter to round a value."""
+        try:
+            # support rounding methods like jinja
+            multiplier = float(10**precision)
+            if method == "ceil":
+                value = math.ceil(float(value) * multiplier) / multiplier
+            elif method == "floor":
+                value = math.floor(float(value) * multiplier) / multiplier
+            elif method == "half":
+                value = round(float(value) * 2) / 2
+            else:
+                # if method is common or something else, use common rounding
+                value = round(float(value), precision)
+            return int(value) if precision == 0 else value
+        except ValueError, TypeError:
+            if default is _SENTINEL:
+                raise_no_default("round", value)
+            return default
 
     @staticmethod
     def clamp(value: Any, min_value: Any, max_value: Any) -> Any:

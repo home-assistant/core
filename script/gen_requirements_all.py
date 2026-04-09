@@ -225,6 +225,15 @@ auth0-python<5.0
 
 # Setuptools >=82.0.0 doesn't contain pkg_resources anymore
 setuptools<82.0.0
+
+# Pin dependencies with '.pth' files to exact versions, only update manually!
+# https://github.com/Azure/azure-kusto-python/ -> '.pth' files removed with >=5.0.5
+# https://github.com/xolox/python-coloredlogs -> unmaintained
+# https://github.com/pypa/setuptools
+azure-kusto-data==4.5.1
+azure-kusto-ingest==4.5.1
+coloredlogs==15.0.1
+setuptools==81.0.0
 """
 
 GENERATED_MESSAGE = (

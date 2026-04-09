@@ -1,6 +1,6 @@
 """Test the Victron Bluetooth Low Energy config flow."""
 
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, patch
 
 from home_assistant_bluetooth import BluetoothServiceInfo
 import pytest
@@ -228,3 +228,102 @@ async def test_async_step_bluetooth_already_in_progress(hass: HomeAssistant) -> 
     )
     assert result.get("type") is FlowResultType.ABORT
     assert result.get("reason") == "already_in_progress"
+
+
+async def test_async_step_reauth_valid_key(
+    hass: HomeAssistant,
+    mock_discovered_service_info: AsyncMock,
+) -> None:
+    """Test reauth flow with a valid new key."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_ADDRESS: VICTRON_VEBUS_SERVICE_INFO.address,
+            CONF_ACCESS_TOKEN: VICTRON_TEST_WRONG_TOKEN,
+        },
+        unique_id=VICTRON_VEBUS_SERVICE_INFO.address,
+    )
+    entry.add_to_hass(hass)
+
+    result = await entry.start_reauth_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_ACCESS_TOKEN: VICTRON_VEBUS_TOKEN},
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    assert entry.data[CONF_ACCESS_TOKEN] == VICTRON_VEBUS_TOKEN
+
+
+async def test_async_step_reauth_invalid_key(
+    hass: HomeAssistant,
+    mock_config_entry_added_to_hass: MockConfigEntry,
+    mock_discovered_service_info: AsyncMock,
+) -> None:
+    """Test reauth flow with an invalid key shows error and allows retry."""
+    result = await mock_config_entry_added_to_hass.start_reauth_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+
+    # Submit wrong key
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_ACCESS_TOKEN: VICTRON_TEST_WRONG_TOKEN},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+    assert result["errors"] == {"base": "invalid_access_token"}
+
+    # Now submit correct key
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_ACCESS_TOKEN: VICTRON_VEBUS_TOKEN},
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+
+
+async def test_async_step_reauth_device_not_found(
+    hass: HomeAssistant,
+    mock_config_entry_added_to_hass: MockConfigEntry,
+) -> None:
+    """Test reauth flow when device is not currently broadcasting."""
+    # No mock_discovered_service_info, so no devices will be found
+    with patch(
+        "homeassistant.components.victron_ble.config_flow.async_discovered_service_info",
+        return_value=[],
+    ):
+        result = await mock_config_entry_added_to_hass.start_reauth_flow(hass)
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "reauth_confirm"
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={CONF_ACCESS_TOKEN: VICTRON_VEBUS_TOKEN},
+        )
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "reauth_confirm"
+        assert result["errors"] == {"base": "no_devices_found"}
+
+
+async def test_reauth_flow_sets_title_placeholders(
+    hass: HomeAssistant,
+    mock_config_entry_added_to_hass: MockConfigEntry,
+    mock_discovered_service_info: AsyncMock,
+) -> None:
+    """Test that reauth flow has title_placeholders set for flow_title rendering.
+
+    Regression test for https://github.com/home-assistant/core/issues/167105 where
+    the flow_title used '{title}' but HA only automatically provides 'name' in
+    title_placeholders for reauth flows, causing a frontend MISSING_VALUE error.
+    """
+    await mock_config_entry_added_to_hass.start_reauth_flow(hass)
+
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+    assert flows[0]["context"]["title_placeholders"]["name"] == (
+        mock_config_entry_added_to_hass.title
+    )
