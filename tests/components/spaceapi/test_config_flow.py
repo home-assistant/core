@@ -159,3 +159,42 @@ async def test_import_flow_already_configured(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
     assert len(mock_setup_entry.mock_calls) == 0
+
+
+async def test_reconfigure_flow(hass: HomeAssistant) -> None:
+    """Test reconfiguration flow."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            "space": "OldSpace",
+            "logo": "https://example.com/old.png",
+            "url": "https://example.com",
+            "state": {"entity_id": "binary_sensor.door"},
+            "contact": {"email": "old@example.com"},
+            "issue_report_channels": ["email"],
+        },
+    )
+    entry.add_to_hass(hass)
+
+    result = await entry.start_reconfigure_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            "space": "NewSpace",
+            "logo": "https://example.com/new.png",
+            "url": "https://example.com/new",
+            "entity_id": "binary_sensor.new_door",
+            "email": "new@example.com",
+            "issue_report_channels": ["email", "twitter"],
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert entry.data["space"] == "NewSpace"
+    assert entry.data["state"]["entity_id"] == "binary_sensor.new_door"
+    assert entry.data["contact"]["email"] == "new@example.com"
