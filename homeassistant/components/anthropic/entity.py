@@ -689,12 +689,18 @@ class AnthropicBaseLLMEntity(CoordinatorEntity[AnthropicCoordinator]):
         super().__init__(entry.runtime_data)
         self.entry = entry
         self.subentry = subentry
+        coordinator = entry.runtime_data
+        self.model_info = coordinator.get_model_info(
+            subentry.data.get(CONF_CHAT_MODEL, DEFAULT[CONF_CHAT_MODEL])
+        )
         self._attr_unique_id = subentry.subentry_id
         self._attr_device_info = dr.DeviceInfo(
             identifiers={(DOMAIN, subentry.subentry_id)},
             name=subentry.title,
             manufacturer="Anthropic",
-            model=subentry.data.get(CONF_CHAT_MODEL, DEFAULT[CONF_CHAT_MODEL]),
+            model=self.model_info.display_name,
+            model_id=self.model_info.id,
+            created_at=self.model_info.created_at.isoformat(),
             entry_type=dr.DeviceEntryType.SERVICE,
         )
 
@@ -969,7 +975,7 @@ class AnthropicBaseLLMEntity(CoordinatorEntity[AnthropicCoordinator]):
                 ) from err
             except anthropic.AnthropicError as err:
                 # Non-connection error, mark connection as healthy
-                coordinator.async_set_updated_data(None)
+                coordinator.async_set_updated_data(coordinator.data)
                 LOGGER.error("Error while talking to Anthropic: %s", err)
                 raise HomeAssistantError(
                     translation_domain=DOMAIN,
@@ -982,7 +988,7 @@ class AnthropicBaseLLMEntity(CoordinatorEntity[AnthropicCoordinator]):
                 ) from err
 
             if not chat_log.unresponded_tool_results:
-                coordinator.async_set_updated_data(None)
+                coordinator.async_set_updated_data(coordinator.data)
                 break
 
 
