@@ -150,6 +150,7 @@ _EXPERIMENTAL_CONDITION_PLATFORMS = {
     "temperature",
     "text",
     "timer",
+    "todo",
     "vacuum",
     "valve",
     "water_heater",

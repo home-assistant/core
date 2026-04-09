@@ -1,4 +1,12 @@
 {
+  "conditions": {
+    "all_completed": {
+      "condition": "mdi:clipboard-check"
+    },
+    "incomplete": {
+      "condition": "mdi:clipboard-alert"
+    }
+  },
   "entity_component": {
     "_": {
       "default": "mdi:clipboard-list"
