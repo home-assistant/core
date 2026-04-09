@@ -49,6 +49,7 @@
     'attributes': ReadOnlyDict({
       'current_temperature': 19.0,
       'friendly_name': 'Bedroom Thermostat',
+      'hvac_action': <HVACAction.IDLE: 'idle'>,
       'hvac_modes': list([
         <HVACMode.HEAT: 'heat'>,
         <HVACMode.OFF: 'off'>,
@@ -117,6 +118,7 @@
     'attributes': ReadOnlyDict({
       'current_temperature': 20.5,
       'friendly_name': 'Living Room Thermostat',
+      'hvac_action': <HVACAction.HEATING: 'heating'>,
       'hvac_modes': list([
         <HVACMode.HEAT: 'heat'>,
         <HVACMode.OFF: 'off'>,

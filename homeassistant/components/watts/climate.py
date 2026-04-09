@@ -10,6 +10,7 @@ from visionpluspython.models import ThermostatDevice
 from homeassistant.components.climate import (
     ClimateEntity,
     ClimateEntityFeature,
+    HVACAction,
     HVACMode,
 )
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
@@ -19,7 +20,12 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import WattsVisionConfigEntry
-from .const import DOMAIN, HVAC_MODE_TO_THERMOSTAT, THERMOSTAT_MODE_TO_HVAC
+from .const import (
+    DOMAIN,
+    HVAC_ACTION_TO_HA,
+    HVAC_MODE_TO_THERMOSTAT,
+    THERMOSTAT_MODE_TO_HVAC,
+)
 from .coordinator import WattsVisionDeviceCoordinator
 from .entity import WattsVisionEntity
 
@@ -115,6 +121,11 @@ class WattsVisionClimate(WattsVisionEntity[ThermostatDevice], ClimateEntity):
     def hvac_mode(self) -> HVACMode | None:
         """Return hvac mode."""
         return THERMOSTAT_MODE_TO_HVAC.get(self.device.thermostat_mode)
+
+    @property
+    def hvac_action(self) -> HVACAction | None:
+        """Return the current HVAC action."""
+        return HVAC_ACTION_TO_HA.get(self.device.hvac_action)
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
