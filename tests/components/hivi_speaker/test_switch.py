@@ -808,6 +808,87 @@ async def test_async_turn_on_master_missing_after_slave_ip(
     assert switch._attr_is_on is False
 
 
+async def test_async_turn_on_master_missing_wifi_params_aborts(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    mock_device_manager: MagicMock,
+) -> None:
+    """Turn on aborts when master lacks ssid (or other set_slave params)."""
+    slave_info = SlaveDeviceInfo(
+        friendly_name="Slave",
+        ssid="",
+        mask=None,
+        volume=0,
+        mute=False,
+        channel=0,
+        battery=None,
+        ip_addr="192.168.1.3",
+        version="1",
+        uuid="slave-u",
+    )
+    master = HIVIDevice(
+        speaker_device_id="master-u",
+        friendly_name="Master",
+        connection_status=ConnectionStatus.ONLINE,
+        sync_group_status=SyncGroupStatus.STANDALONE,
+        ip_addr="192.168.1.2",
+        ssid=None,
+        wifi_channel="6",
+        auth_mode="wpa2",
+        encryption_mode="aes",
+        psk="secret",
+        uuid="muuid",
+        slave_device_list=[slave_info],
+    )
+    master_dict = master.model_dump(mode="json")
+    slave_dict = HIVIDevice(
+        speaker_device_id="slave-u",
+        friendly_name="Slave",
+        connection_status=ConnectionStatus.ONLINE,
+        sync_group_status=SyncGroupStatus.STANDALONE,
+        ip_addr="192.168.1.3",
+    ).model_dump(mode="json")
+
+    def get_by_speaker(sid: str):
+        if sid == "master-u":
+            return master_dict
+        if sid == "slave-u":
+            return slave_dict
+        return None
+
+    mock_device_manager.device_data_registry.get_device_dict_by_speaker_device_id = (
+        MagicMock(side_effect=get_by_speaker)
+    )
+    mock_device_manager.device_data_registry.get_ha_device_id_by_speaker_device_id = (
+        MagicMock(return_value="ha-slave")
+    )
+    mock_device_manager.postpone_discovery = AsyncMock()
+    mock_device_manager.refresh_discovery = AsyncMock()
+
+    config_entry.add_to_hass(hass)
+    hass.data.setdefault(DOMAIN, {})[config_entry.entry_id] = {
+        "device_manager": mock_device_manager,
+    }
+    hub = HIVISlaveControlSwitchHub(hass, config_entry)
+    switch = HIVISlaveControlSwitch(
+        hass=hass,
+        hub=hub,
+        master_speaker_device_id="master-u",
+        slave_speaker_device_id="slave-u",
+        device_manager=mock_device_manager,
+        create_type="from_standalone_device",
+    )
+    with (
+        patch.object(switch, "async_write_ha_state"),
+        patch(
+            "homeassistant.components.hivi_speaker.switch.async_dispatcher_send"
+        ) as mock_send,
+    ):
+        await switch.async_turn_on()
+    mock_send.assert_not_called()
+    assert switch._attr_is_on is False
+
+
 async def test_async_turn_on_operation_callback_branches(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,

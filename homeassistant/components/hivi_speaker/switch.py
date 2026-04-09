@@ -298,13 +298,44 @@ class HIVISlaveControlSwitch(SwitchEntity):
             self.async_write_ha_state()
             return
 
+        master_ip = master_device.ip_addr.strip()
+        if not master_ip:
+            _LOGGER.error(
+                "Master device %s has no IP address, cannot set master-slave relationship",
+                self._master_speaker_device_id,
+            )
+            self._attr_is_on = False
+            self.async_write_ha_state()
+            return
+
+        missing_labels: list[str] = []
+        for label, val in (
+            ("ssid", master_device.ssid),
+            ("wifi_channel", master_device.wifi_channel),
+            ("auth_mode", master_device.auth_mode),
+            ("encryption_mode", master_device.encryption_mode),
+            ("psk", master_device.psk),
+            ("uuid", master_device.uuid),
+        ):
+            if val is None or not str(val).strip():
+                missing_labels.append(label)
+        if missing_labels:
+            _LOGGER.error(
+                "Master device %s missing required fields for set_slave (%s); cannot pair %s",
+                self._master_speaker_device_id,
+                ", ".join(missing_labels),
+                self._slave_device_friendly_name,
+            )
+            self._attr_is_on = False
+            self.async_write_ha_state()
+            return
+
         slave_ip = slave_device_ip_addr
         ssid = master_device.ssid
         wifi_channel = master_device.wifi_channel
         auth = master_device.auth_mode
         encry = master_device.encryption_mode
         psk = master_device.psk
-        master_ip = master_device.ip_addr
         uuid = master_device.uuid
         operation_data = {
             "type": "set_slave",
