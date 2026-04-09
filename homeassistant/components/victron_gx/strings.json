@@ -678,7 +678,7 @@
       },
       "gps_course": {
         "name": "Course",
-        "unit_of_measurement": "\u00b0"
+        "unit_of_measurement": "°"
       },
       "gps_latitude": {
         "name": "Latitude",
