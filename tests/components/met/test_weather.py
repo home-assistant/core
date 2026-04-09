@@ -1,9 +1,14 @@
 """Test Met weather entity."""
 
+from unittest.mock import patch
+
 from homeassistant import config_entries
 from homeassistant.components.met import DOMAIN
+from homeassistant.components.met.weather import format_condition
 from homeassistant.components.weather import (
+    ATTR_CONDITION_CLEAR_NIGHT,
     ATTR_CONDITION_CLOUDY,
+    ATTR_FORECAST_TIME,
     ATTR_WEATHER_DEW_POINT,
     ATTR_WEATHER_HUMIDITY,
     ATTR_WEATHER_PRESSURE,
@@ -140,3 +145,62 @@ async def test_remove_hourly_entity(
     await hass.async_block_till_done()
     assert hass.states.async_entity_ids("weather") == ["weather.forecast_somewhere"]
     assert list(entity_registry.entities.keys()) == ["weather.forecast_somewhere"]
+
+
+def test_format_condition_unknown() -> None:
+    """Test that unknown condition is returned as-is."""
+    assert format_condition("unknown_condition") == "unknown_condition"
+
+
+async def test_condition_sunny_at_night(hass: HomeAssistant, mock_weather) -> None:
+    """Test that sunny condition returns clear-night when sun is not up."""
+    mock_weather.get_current_weather.return_value = {
+        "condition": "sunny",
+        "temperature": 15,
+        "pressure": 100,
+        "humidity": 50,
+        "wind_speed": 10,
+        "wind_bearing": 90,
+        "dew_point": 12.1,
+        "uv_index": 1.1,
+    }
+    with patch("homeassistant.components.met.weather.sun.is_up", return_value=False):
+        await init_integration(hass)
+        entity_id = hass.states.async_entity_ids("weather")[0]
+        state = hass.states.get(entity_id)
+        assert state.state == ATTR_CONDITION_CLEAR_NIGHT
+
+
+async def test_forecast(hass: HomeAssistant, mock_weather) -> None:
+    """Test daily and hourly forecast."""
+    mock_weather.get_forecast.return_value = [
+        {
+            "temperature": 15,
+            ATTR_FORECAST_TIME: "2024-01-01T00:00:00",
+            "condition": "cloudy",
+        },
+        {
+            # item missing required keys - should be skipped
+            "condition": "sunny",
+        },
+    ]
+    await init_integration(hass)
+    entity_id = hass.states.async_entity_ids("weather")[0]
+
+    daily = await hass.services.async_call(
+        WEATHER_DOMAIN,
+        "get_forecasts",
+        {"entity_id": entity_id, "type": "daily"},
+        blocking=True,
+        return_response=True,
+    )
+    assert len(daily[entity_id]["forecast"]) == 1
+
+    hourly = await hass.services.async_call(
+        WEATHER_DOMAIN,
+        "get_forecasts",
+        {"entity_id": entity_id, "type": "hourly"},
+        blocking=True,
+        return_response=True,
+    )
+    assert len(hourly[entity_id]["forecast"]) == 1
