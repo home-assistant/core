@@ -362,6 +362,8 @@ async def test_alarm_update_exception_logs_warning(
     # Speaker should not be set up due to household mismatch
     assert "switch.sonos_alarm_14" not in entity_registry.entities
     assert "cannot be updated due to a household mismatch" in caplog.text
+
+
 async def test_alarm_setup_for_undiscovered_speaker(
     hass: HomeAssistant,
     async_setup_sonos,
