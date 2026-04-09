@@ -20,7 +20,7 @@ set_system_mode:
       selector:
         object:
     duration:
-      example: '{"hours": 18}'
+      example: "18:00:00"
       selector:
         duration:
           enable_second: false
