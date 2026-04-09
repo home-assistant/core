@@ -127,7 +127,7 @@ WSDiscovery==2.1.2
 accuweather==5.1.0
 
 # homeassistant.components.actron_air
-actron-neo-api==0.4.1
+actron-neo-api==0.5.0
 
 # homeassistant.components.adax
 adax==0.4.0
@@ -416,7 +416,7 @@ aiotankerkoenig==0.5.1
 aiotedee==0.3.0
 
 # homeassistant.components.tractive
-aiotractive==1.0.1
+aiotractive==1.0.2
 
 # homeassistant.components.unifi
 aiounifi==90
@@ -635,7 +635,7 @@ bring-api==1.1.1
 broadlink==0.19.0
 
 # homeassistant.components.brother
-brother==6.0.0
+brother==6.1.0
 
 # homeassistant.components.brottsplatskartan
 brottsplatskartan==1.0.5
@@ -1292,7 +1292,7 @@ loqedAPI==2.1.11
 luftdaten==0.7.4
 
 # homeassistant.components.lunatone
-lunatone-rest-api-client==0.7.0
+lunatone-rest-api-client==0.9.0
 
 # homeassistant.components.lupusec
 lupupy==0.3.2
@@ -1732,7 +1732,7 @@ pyblackbird==0.6
 pyblu==2.0.6
 
 # homeassistant.components.neato
-pybotvac==0.0.28
+pybotvac==0.0.29
 
 # homeassistant.components.braviatv
 pybravia==0.4.1
@@ -1943,7 +1943,7 @@ pylitejet==0.6.3
 pylitterbot==2025.2.0
 
 # homeassistant.components.lutron_caseta
-pylutron-caseta==0.27.0
+pylutron-caseta==0.28.0
 
 # homeassistant.components.lutron
 pylutron==0.4.1
@@ -2335,7 +2335,7 @@ pyvesync==3.4.1
 pyvizio==0.1.61
 
 # homeassistant.components.velux
-pyvlx==0.2.32
+pyvlx==0.2.33
 
 # homeassistant.components.volumio
 pyvolumio==0.1.5
