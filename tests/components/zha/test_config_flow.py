@@ -2844,7 +2844,7 @@ async def test_config_flow_port_yellow_port_name(
     with (
         patch("homeassistant.components.zha.config_flow.yellow_hardware.async_info"),
         patch(
-            "homeassistant.components.zha.config_flow.scan_serial_ports",
+            "homeassistant.components.zha.config_flow.async_scan_serial_ports",
             return_value=[port],
         ),
     ):
@@ -2866,7 +2866,7 @@ async def test_config_flow_ports_no_hassio(hass: HomeAssistant) -> None:
     with (
         patch("homeassistant.components.zha.config_flow.is_hassio", return_value=False),
         patch(
-            "homeassistant.components.zha.config_flow.scan_serial_ports",
+            "homeassistant.components.zha.config_flow.async_scan_serial_ports",
             return_value=[],
         ),
     ):
@@ -2884,7 +2884,7 @@ async def test_config_flow_port_multiprotocol_port_name(hass: HomeAssistant) -> 
             "homeassistant.components.hassio.addon_manager.AddonManager.async_get_addon_info"
         ) as async_get_addon_info,
         patch(
-            "homeassistant.components.zha.config_flow.scan_serial_ports",
+            "homeassistant.components.zha.config_flow.async_scan_serial_ports",
             return_value=[],
         ),
     ):
@@ -2909,7 +2909,7 @@ async def test_config_flow_port_no_multiprotocol(hass: HomeAssistant) -> None:
             side_effect=AddonError,
         ),
         patch(
-            "homeassistant.components.zha.config_flow.scan_serial_ports",
+            "homeassistant.components.zha.config_flow.async_scan_serial_ports",
             return_value=[],
         ),
     ):
@@ -2974,7 +2974,7 @@ async def test_list_serial_ports_ignored_devices(hass: HomeAssistant) -> None:
     with (
         patch("homeassistant.components.zha.config_flow.is_hassio", return_value=False),
         patch(
-            "homeassistant.components.zha.config_flow.scan_serial_ports",
+            "homeassistant.components.zha.config_flow.async_scan_serial_ports",
             return_value=mock_ports,
         ),
     ):
