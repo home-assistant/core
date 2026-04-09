@@ -22,13 +22,13 @@ rules:
   test-before-setup: done
   unique-config-entry: done
   # Silver
-  action-exceptions: todo
+  action-exceptions: done
   config-entry-unloading: done
   docs-configuration-parameters: done
   docs-installation-parameters: done
   integration-owner: done
   log-when-unavailable: done
-  parallel-updates: todo
+  parallel-updates: done
   reauthentication-flow: done
   test-coverage: todo
   # Gold
@@ -43,7 +43,7 @@ rules:
   discovery: todo
   stale-devices: todo
   diagnostics: todo
-  exception-translations: todo
+  exception-translations: done
   icon-translations:
     status: exempt
     comment: |

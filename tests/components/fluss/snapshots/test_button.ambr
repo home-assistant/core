@@ -25,7 +25,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': None,
+    'original_icon': 'mdi:garage',
     'original_name': None,
     'platform': 'fluss',
     'previous_unique_id': None,
@@ -40,6 +40,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Device 1',
+      'icon': 'mdi:garage',
     }),
     'context': <ANY>,
     'entity_id': 'button.device_1',
@@ -75,7 +76,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': None,
+    'original_icon': 'mdi:garage',
     'original_name': None,
     'platform': 'fluss',
     'previous_unique_id': None,
@@ -90,6 +91,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Device 2',
+      'icon': 'mdi:garage',
     }),
     'context': <ANY>,
     'entity_id': 'button.device_2',

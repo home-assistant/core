@@ -8,7 +8,7 @@ from fluss_api import (
 )
 import pytest
 
-from homeassistant.components.fluss.const import DOMAIN
+from homeassistant.components.fluss.const import CONF_ICON_TYPE, DOMAIN
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
@@ -176,3 +176,26 @@ async def test_reauth_errors(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
     assert mock_config_entry.data[CONF_API_KEY] == "new_api_key"
+
+async def test_options_flow(
+    hass: HomeAssistant,
+    mock_api_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test options flow for icon type selection."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "init"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={CONF_ICON_TYPE: "garage"},
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert mock_config_entry.options[CONF_ICON_TYPE] == "garage"

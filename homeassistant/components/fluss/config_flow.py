@@ -12,18 +12,40 @@ from fluss_api import (
 )
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFlow
 from homeassistant.const import CONF_API_KEY
+from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.selector import (
+    SelectOptionDict,
+    SelectSelector,
+    SelectSelectorConfig,
+)
 
-from .const import DOMAIN, LOGGER
+from .const import CONF_ICON_TYPE, DEFAULT_ICON_TYPE, DOMAIN, LOGGER
 
 STEP_USER_DATA_SCHEMA = vol.Schema({vol.Required(CONF_API_KEY): cv.string})
+
+ICON_OPTIONS = [
+    SelectOptionDict(value="gate", label="Gate"),
+    SelectOptionDict(value="garage", label="Garage"),
+    SelectOptionDict(value="door", label="Door"),
+    SelectOptionDict(value="boom_gate", label="Boom gate"),
+    SelectOptionDict(value="barrier", label="Barrier"),
+]
 
 
 class FlussConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Fluss+."""
+
+    @staticmethod
+    @callback
+    def async_get_options_flow(
+        config_entry: Any,
+    ) -> FlussOptionsFlow:
+        """Get the options flow for this handler."""
+        return FlussOptionsFlow()
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -91,4 +113,34 @@ class FlussConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="reauth_confirm",
             data_schema=STEP_USER_DATA_SCHEMA,
             errors=errors,
+        )
+
+
+class FlussOptionsFlow(OptionsFlow):
+    """Handle Fluss+ options."""
+
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Manage the options."""
+        if user_input is not None:
+            return self.async_create_entry(data=user_input)
+
+        return self.async_show_form(
+            step_id="init",
+            data_schema=self.add_suggested_values_to_schema(
+                vol.Schema(
+                    {
+                        vol.Optional(
+                            CONF_ICON_TYPE, default=DEFAULT_ICON_TYPE
+                        ): SelectSelector(
+                            SelectSelectorConfig(
+                                options=ICON_OPTIONS,
+                                translation_key="icon_type",
+                            )
+                        ),
+                    }
+                ),
+                self.config_entry.options,
+            ),
         )

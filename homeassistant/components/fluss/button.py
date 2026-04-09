@@ -1,12 +1,18 @@
-"""Support for Fluss Devices."""
+"""Support for Fluss button devices."""
+
+from __future__ import annotations
+
+from fluss_api import FlussApiClientError
 
 from homeassistant.components.button import ButtonEntity
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .coordinator import FlussApiClientError, FlussConfigEntry
+from .coordinator import FlussConfigEntry
 from .entity import FlussEntity
+
+PARALLEL_UPDATES = 1
 
 
 async def async_setup_entry(
@@ -14,13 +20,12 @@ async def async_setup_entry(
     entry: FlussConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up the Fluss Devices, filtering out any invalid payloads."""
+    """Set up Fluss button entities."""
     coordinator = entry.runtime_data
-    devices = coordinator.data
 
     async_add_entities(
         FlussButton(coordinator, device_id, device)
-        for device_id, device in devices.items()
+        for device_id, device in coordinator.data.items()
     )
 
 
@@ -29,9 +34,19 @@ class FlussButton(FlussEntity, ButtonEntity):
 
     _attr_name = None
 
+    @property
+    def icon(self) -> str:
+        """Return the base icon for the configured icon type."""
+        return self._base_icon
+
     async def async_press(self) -> None:
         """Handle the button press."""
         try:
             await self.coordinator.api.async_trigger_device(self.device_id)
         except FlussApiClientError as err:
-            raise HomeAssistantError(f"Failed to trigger device: {err}") from err
+            raise HomeAssistantError(
+                translation_domain="fluss",
+                translation_key="trigger_failed",
+                translation_placeholders={"error": str(err)},
+            ) from err
+        await self.coordinator.async_request_refresh()
