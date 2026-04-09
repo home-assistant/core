@@ -29,7 +29,6 @@ class DreoData:
     """Dreo data."""
 
     client: DreoClient
-    devices: list[dict[str, Any]]
     coordinators: dict[str, DreoDataUpdateCoordinator]
 
 
@@ -39,7 +38,7 @@ async def async_login(
     """Log into Dreo and return client and device data."""
     client = DreoClient(username, password)
 
-    def setup_client():
+    def setup_client() -> list[dict[str, Any]]:
         client.login()
         return client.get_devices()
 
@@ -66,7 +65,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: DreoConfigEntry) 
             hass, config_entry, client, device, coordinators
         )
 
-    config_entry.runtime_data = DreoData(client, devices, coordinators)
+    config_entry.runtime_data = DreoData(client, coordinators)
 
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
     return True
@@ -96,9 +95,7 @@ async def async_setup_device_coordinator(
     if device_id in coordinators:
         return
 
-    coordinator = DreoDataUpdateCoordinator(
-        hass, config_entry, client, device_id, model_config
-    )
+    coordinator = DreoDataUpdateCoordinator(hass, config_entry, client, device, model_config)
     await coordinator.async_refresh()
     coordinators[device_id] = coordinator
 

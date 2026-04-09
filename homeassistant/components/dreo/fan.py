@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import logging
 from typing import Any
 
 from homeassistant.components.fan import FanEntity, FanEntityFeature
@@ -17,7 +16,10 @@ from .const import (
     ERROR_SET_SPEED_FAILED,
     ERROR_TURN_OFF_FAILED,
     ERROR_TURN_ON_FAILED,
-    FAN_DEVICE_TYPE,
+    FIELD_MODE,
+    FIELD_OSCILLATE,
+    FIELD_POWER_ON,
+    FIELD_SPEED,
 )
 from .coordinator import (
     DreoDataUpdateCoordinator,
@@ -26,7 +28,7 @@ from .coordinator import (
 )
 from .entity import DreoEntity
 
-_LOGGER = logging.getLogger(__name__)
+UNIQUE_ID_SUFFIX = "fan"
 
 
 async def async_setup_entry(
@@ -35,36 +37,9 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Fans from a config entry."""
-
-    @callback
-    def async_add_fan_devices() -> None:
-        """Add fan devices."""
-        new_fans = []
-
-        for device in config_entry.runtime_data.devices:
-            device_type = device.get("deviceType")
-            if device_type is None:
-                continue
-
-            if device_type != FAN_DEVICE_TYPE:
-                continue
-
-            device_id = device.get("deviceSn")
-            if not device_id:
-                continue
-
-            coordinator = config_entry.runtime_data.coordinators.get(device_id)
-            if not coordinator:
-                _LOGGER.error("Coordinator not found for device %s", device_id)
-                continue
-
-            fan = DreoFan(device, coordinator)
-            new_fans.append(fan)
-
-        if new_fans:
-            async_add_entities(new_fans)
-
-    async_add_fan_devices()
+    async_add_entities(
+        DreoFan(coordinator) for coordinator in config_entry.runtime_data.coordinators.values()
+    )
 
 
 class DreoFan(DreoEntity, FanEntity):
@@ -77,18 +52,16 @@ class DreoFan(DreoEntity, FanEntity):
         | FanEntityFeature.TURN_ON
         | FanEntityFeature.TURN_OFF
     )
+    _attr_is_on = False
     _attr_percentage = 0
     _attr_preset_mode = None
     _attr_oscillating = None
     _attr_speed_count = 100
 
-    def __init__(
-        self,
-        device: dict[str, Any],
-        coordinator: DreoDataUpdateCoordinator,
-    ) -> None:
+    def __init__(self, coordinator: DreoDataUpdateCoordinator) -> None:
         """Initialize the Dreo fan."""
-        super().__init__(device, coordinator, FAN_DEVICE_TYPE)
+        super().__init__(coordinator)
+        self._attr_unique_id = f"{coordinator.device_id}_{UNIQUE_ID_SUFFIX}"
 
         model_config = coordinator.model_config
         fan_model_config = get_fan_model_config(model_config)
@@ -114,6 +87,7 @@ class DreoFan(DreoEntity, FanEntity):
             return
 
         fan_state_data = self.coordinator.data
+        self._attr_is_on = fan_state_data.is_on
 
         if not fan_state_data.is_on:
             self._attr_percentage = 0
@@ -127,10 +101,7 @@ class DreoFan(DreoEntity, FanEntity):
     @property
     def is_on(self) -> bool | None:
         """Return whether the fan is on."""
-        if not self.coordinator.data:
-            return None
-
-        return self.coordinator.data.is_on
+        return self._attr_is_on
 
     async def async_turn_on(
         self,
@@ -139,72 +110,79 @@ class DreoFan(DreoEntity, FanEntity):
         **kwargs: Any,
     ) -> None:
         """Turn the device on."""
-        await self.async_execute_fan_common_command(
-            ERROR_TURN_ON_FAILED, percentage=percentage, preset_mode=preset_mode
-        )
-
-    async def async_turn_off(self, **kwargs: Any) -> None:
-        """Turn the device off."""
-        await self.async_send_command_and_update(
-            ERROR_TURN_OFF_FAILED, power_switch=False
-        )
-
-    async def async_set_preset_mode(self, preset_mode: str) -> None:
-        """Set the preset mode of fan."""
-        await self.async_execute_fan_common_command(
-            ERROR_SET_PRESET_MODE_FAILED, preset_mode=preset_mode
-        )
-
-    async def async_set_percentage(self, percentage: int) -> None:
-        """Set the speed of fan."""
-
-        if percentage <= 0:
+        if percentage is not None and percentage <= 0:
             await self.async_turn_off()
             return
-
-        await self.async_execute_fan_common_command(
-            ERROR_SET_SPEED_FAILED, percentage=percentage
-        )
-
-    async def async_oscillate(self, oscillating: bool) -> None:
-        """Set the oscillation of fan."""
-        await self.async_execute_fan_common_command(
-            ERROR_SET_OSCILLATE_FAILED, oscillate=oscillating
-        )
-
-    async def async_execute_fan_common_command(
-        self,
-        error_translation_key: str,
-        percentage: int | None = None,
-        preset_mode: str | None = None,
-        oscillate: bool | None = None,
-    ) -> None:
-        """Execute fan command with common parameter handling."""
 
         command_params: dict[str, Any] = {}
 
         if not self.is_on:
-            command_params["power_switch"] = True
+            command_params[FIELD_POWER_ON] = True
 
-        if percentage is not None and percentage > 0 and self._speed_values:
+        if percentage is not None and self._speed_values:
             speed = percentage_to_ordered_list_item(self._speed_values, percentage)
-            current_percentage = self.percentage
-            current_speed = (
-                percentage_to_ordered_list_item(self._speed_values, current_percentage)
-                if current_percentage
-                else None
-            )
-            if speed > 0 and speed != current_speed:
-                command_params["speed"] = speed
+            if speed != percentage_to_ordered_list_item(self._speed_values, self.percentage or 0):
+                command_params[FIELD_SPEED] = speed
 
-        if preset_mode is not None:
-            command_params["mode"] = preset_mode
-        if oscillate is not None:
-            command_params["oscillate"] = oscillate
+        if preset_mode is not None and preset_mode != self.preset_mode:
+            command_params[FIELD_MODE] = preset_mode
 
         if not command_params:
             return
 
-        await self.async_send_command_and_update(
-            error_translation_key, **command_params
-        )
+        await self.async_send_command(ERROR_TURN_ON_FAILED, **command_params)
+
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        """Turn the device off."""
+        await self.async_send_command(ERROR_TURN_OFF_FAILED, **{FIELD_POWER_ON: False})
+
+    async def async_set_preset_mode(self, preset_mode: str) -> None:
+        """Set the preset mode of fan."""
+        command_params: dict[str, Any] = {}
+
+        if not self.is_on:
+            command_params[FIELD_POWER_ON] = True
+
+        if preset_mode != self.preset_mode:
+            command_params[FIELD_MODE] = preset_mode
+
+        if not command_params:
+            return
+
+        await self.async_send_command(ERROR_SET_PRESET_MODE_FAILED, **command_params)
+
+    async def async_set_percentage(self, percentage: int) -> None:
+        """Set the speed of fan."""
+        if percentage <= 0:
+            await self.async_turn_off()
+            return
+
+        command_params: dict[str, Any] = {}
+
+        if not self.is_on:
+            command_params[FIELD_POWER_ON] = True
+
+        if self._speed_values:
+            speed = percentage_to_ordered_list_item(self._speed_values, percentage)
+            if speed != percentage_to_ordered_list_item(self._speed_values, self.percentage or 0):
+                command_params[FIELD_SPEED] = speed
+
+        if not command_params:
+            return
+
+        await self.async_send_command(ERROR_SET_SPEED_FAILED, **command_params)
+
+    async def async_oscillate(self, oscillating: bool) -> None:
+        """Set the oscillation of fan."""
+        command_params: dict[str, Any] = {}
+
+        if not self.is_on:
+            command_params[FIELD_POWER_ON] = True
+
+        if oscillating != self.oscillating:
+            command_params[FIELD_OSCILLATE] = oscillating
+
+        if not command_params:
+            return
+
+        await self.async_send_command(ERROR_SET_OSCILLATE_FAILED, **command_params)

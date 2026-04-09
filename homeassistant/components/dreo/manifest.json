@@ -7,5 +7,5 @@
   "integration_type": "hub",
   "iot_class": "cloud_polling",
   "quality_scale": "bronze",
-  "requirements": ["pydreo-client==1.0.2rc0"]
+  "requirements": ["pydreo-client==1.0.3rc0"]
 }

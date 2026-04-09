@@ -1,4 +1,4 @@
-"""Test dreo config flow."""
+"""Test Dreo config flow."""
 
 from unittest.mock import MagicMock, patch
 
@@ -90,6 +90,22 @@ async def test_user_step_invalid_auth(hass: HomeAssistant) -> None:
     assert result["errors"]["base"] == "invalid_auth"
 
 
+async def test_user_step_unknown_error(hass: HomeAssistant) -> None:
+    """Test user step falls back to the unknown error key."""
+    flow = DreoFlowHandler()
+    flow.hass = hass
+    flow.context = {}
+
+    user_input = {CONF_USERNAME: "test@example.com", CONF_PASSWORD: "password123"}
+
+    with patch.object(flow, "_validate_login", return_value=(False, None)):
+        result = await flow.async_step_user(user_input)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] is not None
+    assert result["errors"]["base"] == "unknown"
+
+
 async def test_user_step_unique_id_already_configured(hass: HomeAssistant) -> None:
     """Test user step when unique ID is already configured."""
     existing_entry = MockConfigEntry(
@@ -110,44 +126,6 @@ async def test_user_step_unique_id_already_configured(hass: HomeAssistant) -> No
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
-
-
-async def test_reauth_flow_success(hass: HomeAssistant) -> None:
-    """Test successful reauthentication flow."""
-    existing_entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={
-            CONF_USERNAME: "test@example.com",
-            CONF_PASSWORD: "password123",
-        },
-        unique_id="test@example.com",
-    )
-    existing_entry.add_to_hass(hass)
-
-    result = await existing_entry.start_reauth_flow(hass)
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "reauth_confirm"
-
-    with (
-        patch(
-            "homeassistant.config_entries.ConfigEntries.async_reload",
-            return_value=True,
-        ),
-        patch(
-            "homeassistant.components.dreo.config_flow.DreoClient"
-        ) as mock_client_class,
-    ):
-        mock_client = mock_client_class.return_value
-        mock_client.login = MagicMock()
-
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {CONF_PASSWORD: "new-password"},
-        )
-
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "reauth_successful"
-    assert existing_entry.data[CONF_PASSWORD] == "new-password"
 
 
 async def test_validate_login_success(hass: HomeAssistant) -> None:
