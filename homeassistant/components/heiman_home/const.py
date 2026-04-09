@@ -58,12 +58,12 @@ AREA_NAME_RULE_HOME_ROOM = "home_room"
 
 # 平台定义
 PLATFORMS = [
-    "binary_sensor",
+    # "binary_sensor",
     "sensor",
-    "select",
-    "switch",
-    "button",
-    "update",
+    # "select",
+    # "switch",
+    # "button",
+    # "update",
 ]
 
 # Binary Sensor 设备类映射
