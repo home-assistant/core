@@ -30,13 +30,15 @@ MOCK_ENTRY_ID = "mock-unifi-access-entry-id"
 
 
 @pytest.fixture(autouse=True)
-def mock_discovery() -> Generator[AsyncMock]:
+def mock_discovery() -> Generator[MagicMock]:
     """Prevent real network discovery during tests."""
     with patch(
-        "homeassistant.components.unifi_access.discovery.async_discover_devices",
-        return_value=[],
-    ) as mock_discover:
-        yield mock_discover
+        "homeassistant.components.unifi_access.discovery.AIOUnifiScanner"
+    ) as mock_scanner_cls:
+        mock_scanner = MagicMock()
+        mock_scanner.async_scan = AsyncMock(return_value=[])
+        mock_scanner_cls.return_value = mock_scanner
+        yield mock_scanner
 
 
 @pytest.fixture
