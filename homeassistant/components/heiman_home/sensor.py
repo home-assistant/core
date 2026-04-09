@@ -15,7 +15,7 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN, SENSOR_UNIT_MAP, ENTITY_ICONS
@@ -27,7 +27,7 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: config_entries.ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Heiman sensors based on a config entry."""
     coordinator: HeimanDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
@@ -125,9 +125,9 @@ class HeimanSensorEntity(CoordinatorEntity[HeimanDataUpdateCoordinator], SensorE
                 break
         
         if config:
-            self._attr_device_class = config.get("device_class")
+            self._attr_device_class = SensorDeviceClass(config.get("device_class"))
             self._attr_native_unit_of_measurement = config.get("unit")
-            self._attr_state_class = config.get("state_class", SensorStateClass.MEASUREMENT)
+            self._attr_state_class = SensorStateClass(config.get("state_class", SensorStateClass.MEASUREMENT.value))
         else:
             # Check if value is numeric before setting state_class
             if prop.value is not None and isinstance(prop.value, (int, float)):
@@ -158,19 +158,19 @@ class HeimanSensorEntity(CoordinatorEntity[HeimanDataUpdateCoordinator], SensorE
         
         # 根据设备类设置默认图标（使用 getattr 安全访问）
         device_class = getattr(self, '_attr_device_class', None)
-        if device_class == "temperature":
+        if device_class == SensorDeviceClass.TEMPERATURE:
             self._attr_icon = "mdi:thermometer"
-        elif device_class == "humidity":
+        elif device_class == SensorDeviceClass.HUMIDITY:
             self._attr_icon = "mdi:water-percent"
-        elif device_class == "battery":
+        elif device_class == SensorDeviceClass.BATTERY:
             self._attr_icon = "mdi:battery"
-        elif device_class == "signal_strength":
+        elif device_class == SensorDeviceClass.SIGNAL_STRENGTH:
             self._attr_icon = "mdi:signal"
-        elif device_class == "voltage":
+        elif device_class == SensorDeviceClass.VOLTAGE:
             self._attr_icon = "mdi:flash-triangle"
-        elif device_class == "power":
+        elif device_class == SensorDeviceClass.POWER:
             self._attr_icon = "mdi:flash"
-        elif device_class == "energy":
+        elif device_class == SensorDeviceClass.ENERGY:
             self._attr_icon = "mdi:lightning-bolt"
         else:
             self._attr_icon = "mdi:gauge"
@@ -188,7 +188,7 @@ class HeimanSensorEntity(CoordinatorEntity[HeimanDataUpdateCoordinator], SensorE
         return device.online
     
     @property
-    def native_value(self) -> Any:
+    def native_value(self) -> str | int | float | None:
         """Return the state of the sensor."""
         device = self.coordinator.get_device(self._device.device_id)
         if not device:

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 import logging
 from dataclasses import dataclass, field
 from datetime import datetime
@@ -164,7 +165,6 @@ class HeimanDataUpdateCoordinator(DataUpdateCoordinator[HeimanData]):
 
                                 # 从 deriveMetadata 中提取属性值并更新到设备对象
                                 if "deriveMetadata" in device_detail:
-                                    import json
                                     try:
                                         metadata_str = device_detail.get("deriveMetadata", "")
                                         if metadata_str:
@@ -196,12 +196,14 @@ class HeimanDataUpdateCoordinator(DataUpdateCoordinator[HeimanData]):
                                                                 device.properties["DeviceINFO_DBM"].value = dbm_value
 
                                                             # Extract DBM_Level (signal strength level)
-                                                            dbm_level_value = prop_value.get("DBM")
+                                                            # Try to get DBM_Level directly, or convert from DBM
+                                                            dbm_level_value = prop_value.get("DBM_Level")
+                                                            if dbm_level_value is None and dbm_value is not None:
+                                                                # Convert numeric DBM to level string if DBM_Level not provided
+                                                                dbm_level_value = self._convert_dbm_to_level(dbm_value)
+                                                            
                                                             if dbm_level_value is not None and "DeviceINFO_DBM_Level" in device.properties:
-                                                                # Convert numeric DBM to level string
-                                                                dbm_level = self._convert_dbm_to_level(dbm_level_value)
-                                                                device.properties[
-                                                                    "DeviceINFO_DBM_Level"].value = dbm_level
+                                                                device.properties["DeviceINFO_DBM_Level"].value = dbm_level_value
 
                                                             # Extract IP address
                                                             ip_value = prop_value.get("IP")

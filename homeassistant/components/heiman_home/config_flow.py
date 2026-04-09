@@ -123,9 +123,9 @@ class HeimanConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
                     CONF_USER_ID: self._auth_info.user_info.user_id,
                 }
 
-                # Get title from user info (nickname or email)
+                # Get title from user info (nick_name or email)
                 user_info = self._auth_info.user_info
-                title = getattr(user_info, 'nickname', None) or getattr(user_info, 'email', None) or "Heiman Home"
+                title = getattr(user_info, 'nick_name', None) or getattr(user_info, 'email', None) or "Heiman Home"
 
                 return self.async_create_entry(
                     title=title,

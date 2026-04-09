@@ -170,7 +170,7 @@ ENTITY_ICONS = {
         "humidity": "mdi:water-percent",
         "temperature": "mdi:thermometer",
         "SignalStrength": "mdi:signal",
-        "TimeZone":"mdi:clock-time-nine-outline",
+        "TimeZone": "mdi:clock-time-nine-outline",
     },
     # Switch 图标
     "switch": {

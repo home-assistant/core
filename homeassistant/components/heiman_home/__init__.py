@@ -3,20 +3,11 @@
 from __future__ import annotations
 
 import logging
-import sys
-from pathlib import Path
-
-_LOGGER = logging.getLogger(__name__)
-
-# 添加本地 heimanconnect 库路径（Docker 环境）
-_custom_components_path = Path("/config/custom_components")
-if str(_custom_components_path) not in sys.path:
-    sys.path.insert(0, str(_custom_components_path))
 
 from heimanconnect import DeviceManagement
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_TOKEN, Platform
+from homeassistant.const import CONF_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import (
     ConfigEntryAuthFailed,
@@ -51,6 +42,8 @@ from .coordinator import HeimanDataUpdateCoordinator
 
 
 type HeimanConfigEntry = ConfigEntry[HeimanDataUpdateCoordinator]
+
+_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: HeimanConfigEntry) -> bool:
@@ -121,13 +114,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: HeimanConfigEntry) -> bo
         filter_config=filter_config,
         area_sync_mode=area_sync_mode,
     )
-    
-    # 存储设备管理到 hass.data
-    if DOMAIN not in hass.data:
-        hass.data[DOMAIN] = {}
-    hass.data[DOMAIN][entry.entry_id] = {
-        "device_management": device_management,
-    }
     
     # 创建数据协调器
     coordinator = HeimanDataUpdateCoordinator(
