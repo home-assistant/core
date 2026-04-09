@@ -257,7 +257,9 @@ async def get_z2m_addon_firmware_info(
     if z2m_addon_info.state == AddonState.NOT_INSTALLED:
         return None
 
-    if (z2m_port := z2m_addon_info.options.get("serial", {}).get("port")) is None:
+    serial = z2m_addon_info.options.get("serial")
+
+    if not isinstance(serial, dict) or (z2m_port := serial.get("port")) is None:
         return None
 
     return FirmwareInfo(

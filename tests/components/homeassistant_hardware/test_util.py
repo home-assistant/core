@@ -574,6 +574,24 @@ async def test_get_z2m_addon_firmware_info_failure_bad_options(
     assert (await get_z2m_addon_firmware_info(hass, z2m_addon_manager)) is None
 
 
+async def test_get_z2m_addon_firmware_info_failure_serial_not_dict(
+    hass: HomeAssistant,
+) -> None:
+    """Test getting Z2M addon firmware info failure when serial is not a dict."""
+
+    z2m_addon_manager = AsyncMock(spec_set=AddonManager)
+    z2m_addon_manager.async_get_addon_info.return_value = AddonInfo(
+        available=True,
+        hostname="core_some_addon_slug",
+        options={"serial": "/dev/ttyUSB0"},  # `serial` is a string, not a dict
+        state=AddonState.RUNNING,
+        update_available=False,
+        version="1.0.0",
+    )
+
+    assert (await get_z2m_addon_firmware_info(hass, z2m_addon_manager)) is None
+
+
 @pytest.mark.parametrize(
     ("app_type", "firmware_version", "expected_fw_info"),
     [
