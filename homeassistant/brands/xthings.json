@@ -1,6 +1,0 @@
-{
-  "domain": "xthings",
-  "name": "Xthings",
-  "integrations": ["xthings_cloud","ultraloq"],
-  "iot_standards": ["zwave","homekit"]
-}
