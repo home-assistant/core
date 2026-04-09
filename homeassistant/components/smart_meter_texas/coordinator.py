@@ -1,5 +1,6 @@
 """DataUpdateCoordinator for the Smart Meter Texas integration."""
 
+from dataclasses import dataclass
 import logging
 
 from smart_meter_texas import Account, Client, Meter
@@ -52,15 +53,26 @@ class SmartMeterTexasData:
         return self.meters
 
 
+type SmartMeterTexasConfigEntry = ConfigEntry[SmartMeterTexasRuntimeData]
+
+
+@dataclass
+class SmartMeterTexasRuntimeData:
+    """Runtime data for Smart Meter Texas."""
+
+    coordinator: SmartMeterTexasCoordinator
+    smart_meter_data: SmartMeterTexasData
+
+
 class SmartMeterTexasCoordinator(DataUpdateCoordinator[SmartMeterTexasData]):
     """Class to manage fetching Smart Meter Texas data."""
 
-    config_entry: ConfigEntry
+    config_entry: SmartMeterTexasConfigEntry
 
     def __init__(
         self,
         hass: HomeAssistant,
-        entry: ConfigEntry,
+        entry: SmartMeterTexasConfigEntry,
         smart_meter_texas_data: SmartMeterTexasData,
     ) -> None:
         """Initialize the coordinator."""
