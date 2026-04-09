@@ -39,18 +39,7 @@ async def async_setup_entry(
         installation_id: str,
     ) -> None:
         """Handle new select metric discovery."""
-        if not isinstance(metric, VictronVenusWritableMetric):
-            _LOGGER.warning(
-                "Skipping non-writable metric for device %s",
-                device.unique_id,
-            )
-            return
-        if not metric.enum_values:
-            _LOGGER.warning(
-                "Skipping select metric without enum values for device %s",
-                device.unique_id,
-            )
-            return
+        assert isinstance(metric, VictronVenusWritableMetric)
         async_add_entities(
             [VictronSelect(device, metric, device_info, installation_id)]
         )
@@ -70,7 +59,8 @@ class VictronSelect(VictronBaseEntity, SelectEntity):
     ) -> None:
         """Initialize the select entity."""
         super().__init__(device, metric, device_info, installation_id)
-        self._attr_options = metric.enum_values or []
+        assert metric.enum_values, "Select metric will always have enum values"
+        self._attr_options = metric.enum_values
         self._attr_current_option = VictronSelect._normalize_value(metric.value)
 
     @callback
@@ -80,12 +70,7 @@ class VictronSelect(VictronBaseEntity, SelectEntity):
 
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
-        if not isinstance(self._metric, VictronVenusWritableMetric):
-            _LOGGER.error(
-                "Cannot set option for non-writable metric %s",
-                self._attr_unique_id,
-            )
-            return
+        assert isinstance(self._metric, VictronVenusWritableMetric)
         _LOGGER.debug("Setting select %s to %s", self._attr_unique_id, option)
         self._metric.set(option)
 
