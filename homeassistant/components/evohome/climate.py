@@ -189,25 +189,25 @@ class EvoZone(EvoChild, EvoClimateEntity):
         )
 
     async def async_clear_zone_override(self) -> None:
-        """Clear the zone's override, if any."""
+        """Clear the zone override (if any) and return to following its schedule."""
         await self.coordinator.call_client_api(self._evo_device.reset())
 
     async def async_set_zone_override(
         self, setpoint: float, duration: timedelta | None = None
     ) -> None:
-        """Set the zone's override (mode/setpoint)."""
+        """Override the zone's setpoint, either permanently or for a duration."""
         temperature = max(min(setpoint, self.max_temp), self.min_temp)
 
-        if duration is not None:
-            if duration.total_seconds() == 0:
-                await self._update_schedule()
-                until = self.setpoints.get("next_sp_from")
-            else:
-                until = dt_util.now() + duration
-        else:
+        if duration is None:
             until = None  # indefinitely
+        elif duration.total_seconds() == 0:
+            await self._update_schedule()
+            until = self.setpoints.get("next_sp_from")
+        else:
+            until = dt_util.now() + duration
 
         until = dt_util.as_utc(until) if until else None
+
         await self.coordinator.call_client_api(
             self._evo_device.set_temperature(temperature, until=until)
         )
