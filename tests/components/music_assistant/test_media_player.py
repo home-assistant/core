@@ -670,7 +670,7 @@ async def test_media_player_select_sound_mode_action(
         SERVICE_SELECT_SOUND_MODE,
         {
             ATTR_ENTITY_ID: entity_id,
-            ATTR_SOUND_MODE: "Munich",
+            ATTR_SOUND_MODE: "munich",
         },
         blocking=True,
     )
