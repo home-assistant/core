@@ -59,7 +59,7 @@ class AqualinkRuntimeData:
     """Runtime data for Aqualink."""
 
     client: AqualinkClient
-    coordinator: AqualinkDataUpdateCoordinator
+    coordinators: dict[str, AqualinkDataUpdateCoordinator]
     # These will contain the initialized devices
     binary_sensors: list[AqualinkBinarySensor]
     lights: list[AqualinkLight]
@@ -99,23 +99,21 @@ async def async_setup_entry(hass: HomeAssistant, entry: AqualinkConfigEntry) -> 
             f"Error while attempting to retrieve systems list: {svc_exception}"
         ) from svc_exception
 
-    systems = list(systems.values())
-    if not systems:
+    systems_list = list(systems.values())
+    if not systems_list:
         await aqualink.close()
         raise ConfigEntryError("No systems detected or supported")
 
-    coordinator = AqualinkDataUpdateCoordinator(hass, entry, systems)
-
     runtime_data = AqualinkRuntimeData(
         aqualink,
-        coordinator,
+        coordinators={},
         binary_sensors=[],
         lights=[],
         sensors=[],
         switches=[],
         thermostats=[],
     )
-    for system in systems:
+    for system in systems_list:
         try:
             devices = await system.get_devices()
         except AqualinkServiceException as svc_exception:
@@ -123,6 +121,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: AqualinkConfigEntry) -> 
             raise ConfigEntryNotReady(
                 f"Error while attempting to retrieve devices list: {svc_exception}"
             ) from svc_exception
+
+        runtime_data.coordinators[system.serial] = AqualinkDataUpdateCoordinator(
+            hass, entry, system
+        )
 
         device_registry = dr.async_get(hass)
         device_registry.async_get_or_create(
@@ -165,7 +167,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: AqualinkConfigEntry) -> 
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    coordinator.async_set_updated_data(None)
+    for coordinator in runtime_data.coordinators.values():
+        coordinator.async_set_updated_data(None)
 
     return True
 

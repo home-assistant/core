@@ -25,8 +25,12 @@ async def async_setup_entry(
 ) -> None:
     """Set up discovered switches."""
     async_add_entities(
-        HassAqualinkSwitch(config_entry.runtime_data.coordinator, dev)
-        for dev in config_entry.runtime_data.switches
+        (
+            HassAqualinkSwitch(
+                config_entry.runtime_data.coordinators[dev.system.serial], dev
+            )
+            for dev in config_entry.runtime_data.switches
+        ),
     )
 
 

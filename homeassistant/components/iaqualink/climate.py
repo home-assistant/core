@@ -36,7 +36,9 @@ async def async_setup_entry(
     """Set up discovered switches."""
     async_add_entities(
         (
-            HassAqualinkThermostat(config_entry.runtime_data.coordinator, dev)
+            HassAqualinkThermostat(
+                config_entry.runtime_data.coordinators[dev.system.serial], dev
+            )
             for dev in config_entry.runtime_data.thermostats
         ),
     )

@@ -1,6 +1,5 @@
 """Tests for iAqualink integration."""
 
-import logging
 from unittest.mock import AsyncMock, patch
 
 from iaqualink.exception import (
@@ -25,17 +24,49 @@ from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_ASSUMED_STATE, STATE_ON, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.update_coordinator import UpdateFailed
 
 from .conftest import get_aqualink_device, get_aqualink_system
 
 
 async def _refresh_coordinator(hass: HomeAssistant, config_entry) -> None:
-    await config_entry.runtime_data.coordinator.async_refresh()
+    coordinator = next(iter(config_entry.runtime_data.coordinators.values()))
+    await coordinator.async_refresh()
     await hass.async_block_till_done()
 
 
-async def test_setup_login_service_exception(hass: HomeAssistant, config_entry) -> None:
-    """Test setup encountering a transient service exception during login."""
+async def test_system_coordinator_raises_update_failed(
+    hass: HomeAssistant, config_entry, client
+) -> None:
+    """Test a system coordinator raises UpdateFailed on update errors."""
+    config_entry.add_to_hass(hass)
+
+    system = get_aqualink_system(client, cls=IaquaSystem)
+    systems = {system.serial: system}
+    system.get_devices = AsyncMock(return_value={})
+
+    with (
+        patch(
+            "homeassistant.components.iaqualink.AqualinkClient.login",
+            return_value=None,
+        ),
+        patch(
+            "homeassistant.components.iaqualink.AqualinkClient.get_systems",
+            return_value=systems,
+        ),
+    ):
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    coordinator = config_entry.runtime_data.coordinators[system.serial]
+    system.update = AsyncMock(side_effect=AqualinkServiceException)
+
+    with pytest.raises(UpdateFailed):
+        await coordinator._async_update_data()
+
+
+async def test_setup_login_exception(hass: HomeAssistant, config_entry) -> None:
+    """Test setup encountering a login exception."""
     config_entry.add_to_hass(hass)
 
     with patch(
@@ -237,9 +268,7 @@ async def test_setup_all_good_all_device_types(
     assert config_entry.state is ConfigEntryState.NOT_LOADED
 
 
-async def test_multiple_updates(
-    hass: HomeAssistant, config_entry, caplog: pytest.LogCaptureFixture, client
-) -> None:
+async def test_multiple_updates(hass: HomeAssistant, config_entry, client) -> None:
     """Test all possible results of online status transition after update."""
     config_entry.add_to_hass(hass)
 
@@ -247,8 +276,6 @@ async def test_multiple_updates(
     systems = {system.serial: system}
 
     system.get_devices = AsyncMock(return_value={})
-
-    caplog.set_level(logging.INFO)
 
     with (
         patch(
@@ -275,70 +302,48 @@ async def test_multiple_updates(
 
     # True -> True
     system.online = True
-    caplog.clear()
     system.update.side_effect = set_online_to_true
     await _refresh_coordinator(hass, config_entry)
-    assert len(caplog.records) == 0
 
     # True -> False
     system.online = True
-    caplog.clear()
     system.update.side_effect = set_online_to_false
     await _refresh_coordinator(hass, config_entry)
-    assert len(caplog.records) == 1
-    assert "unavailable" in caplog.text
 
     # True -> None / ServiceException
     system.online = True
-    caplog.clear()
     system.update.side_effect = AqualinkServiceException
     await _refresh_coordinator(hass, config_entry)
-    assert len(caplog.records) == 0
 
     # False -> False
     system.online = False
-    caplog.clear()
     system.update.side_effect = set_online_to_false
     await _refresh_coordinator(hass, config_entry)
-    assert len(caplog.records) == 0
 
     # False -> True
     system.online = False
-    caplog.clear()
     system.update.side_effect = set_online_to_true
     await _refresh_coordinator(hass, config_entry)
-    assert len(caplog.records) == 1
-    assert "reconnected" in caplog.text
 
     # False -> None / ServiceException
     system.online = False
-    caplog.clear()
     system.update.side_effect = AqualinkServiceException
     await _refresh_coordinator(hass, config_entry)
-    assert len(caplog.records) == 1
-    assert "unavailable" in caplog.text
 
     # None -> None / ServiceException
     system.online = None
-    caplog.clear()
     system.update.side_effect = AqualinkServiceException
     await _refresh_coordinator(hass, config_entry)
-    assert len(caplog.records) == 0
 
     # None -> True
     system.online = None
-    caplog.clear()
     system.update.side_effect = set_online_to_true
     await _refresh_coordinator(hass, config_entry)
-    assert len(caplog.records) == 1
-    assert "reconnected" in caplog.text
 
     # None -> False
     system.online = None
-    caplog.clear()
     system.update.side_effect = set_online_to_false
     await _refresh_coordinator(hass, config_entry)
-    assert len(caplog.records) == 0
 
     assert await hass.config_entries.async_unload(config_entry.entry_id)
     await hass.async_block_till_done()

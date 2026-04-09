@@ -32,7 +32,9 @@ async def async_setup_entry(
     """Set up discovered lights."""
     async_add_entities(
         (
-            HassAqualinkLight(config_entry.runtime_data.coordinator, dev)
+            HassAqualinkLight(
+                config_entry.runtime_data.coordinators[dev.system.serial], dev
+            )
             for dev in config_entry.runtime_data.lights
         ),
     )

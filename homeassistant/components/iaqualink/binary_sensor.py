@@ -26,7 +26,9 @@ async def async_setup_entry(
     """Set up discovered binary sensors."""
     async_add_entities(
         (
-            HassAqualinkBinarySensor(config_entry.runtime_data.coordinator, dev)
+            HassAqualinkBinarySensor(
+                config_entry.runtime_data.coordinators[dev.system.serial], dev
+            )
             for dev in config_entry.runtime_data.binary_sensors
         ),
     )
