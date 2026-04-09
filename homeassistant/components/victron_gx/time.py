@@ -2,7 +2,7 @@
 
 from datetime import time
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from victron_mqtt import (
     Device as VictronVenusDevice,
@@ -39,7 +39,8 @@ async def async_setup_entry(
         installation_id: str,
     ) -> None:
         """Handle new time metric discovery."""
-        assert isinstance(metric, VictronVenusWritableMetric)
+        if TYPE_CHECKING:
+            assert isinstance(metric, VictronVenusWritableMetric)
         async_add_entities([VictronTime(device, metric, device_info, installation_id)])
 
     hub.register_new_metric_callback(MetricKind.TIME, on_new_metric)
@@ -64,9 +65,10 @@ class VictronTime(VictronBaseEntity, TimeEntity):
         self._attr_native_value = VictronTime.victron_time_to_time(value)
         self.async_write_ha_state()
 
-    def set_value(self, value: time) -> None:
+    async def async_set_value(self, value: time) -> None:
         """Set a new time value."""
-        assert isinstance(self._metric, VictronVenusWritableMetric)
+        if TYPE_CHECKING:
+            assert isinstance(self._metric, VictronVenusWritableMetric)
         total_minutes = VictronTime.time_to_victron_time(value)
         _LOGGER.debug(
             "Setting time %s (%d minutes) on entity: %s",
