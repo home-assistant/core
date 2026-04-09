@@ -101,9 +101,7 @@ def handle_b2_errors[T](
         try:
             return await func(*args, **kwargs)
         except B2Error as err:
-            error_msg = f"Failed during {func.__name__}: {err}"
-            _LOGGER.error(error_msg)
-            raise BackupAgentError(error_msg) from err
+            raise BackupAgentError(f"Failed during {func.__name__}: {err}") from err
 
     return wrapper
 
