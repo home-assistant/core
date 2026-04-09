@@ -49,7 +49,6 @@ async def async_setup_entry(
             if (
                 not player_option.read_only
                 and player_option.type == PlayerOptionType.BOOLEAN
-                and not player_option.options  # these we map to select
             ):
                 # the MA translation key must have the format player_options.<translation key>
                 # we ignore entities with unknown translation keys.
