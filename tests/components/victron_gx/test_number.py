@@ -2,14 +2,7 @@
 
 from __future__ import annotations
 
-from unittest.mock import MagicMock
-
-import pytest
-from victron_mqtt import (
-    Hub as VictronVenusHub,
-    Metric as VictronVenusMetric,
-    MetricKind,
-)
+from victron_mqtt import Hub as VictronVenusHub
 from victron_mqtt.testing import finalize_injection, inject_message
 
 from homeassistant.components.number import NumberDeviceClass
@@ -142,65 +135,3 @@ async def test_victron_number_actions(
     state = hass.states.get(entity_id)
     assert state is not None
     assert state.state == "20"
-
-
-async def test_victron_number_skips_non_writable_metric(
-    hass: HomeAssistant,
-    init_integration: tuple[VictronVenusHub, MockConfigEntry],
-    entity_registry: er.EntityRegistry,
-    caplog: pytest.LogCaptureFixture,
-) -> None:
-    """Test that non-writable metrics are skipped with a warning."""
-    _, mock_config_entry = init_integration
-    hub = mock_config_entry.runtime_data
-
-    callback = hub.new_metric_callbacks[MetricKind.NUMBER]
-
-    mock_device = MagicMock()
-    mock_device.unique_id = "test_device_0"
-    mock_metric = MagicMock(spec=VictronVenusMetric)
-    mock_device_info = MagicMock()
-
-    callback(mock_device, mock_metric, mock_device_info, MOCK_INSTALLATION_ID)
-
-    assert "Skipping non-writable metric for device test_device_0" in caplog.text
-
-    entities = er.async_entries_for_config_entry(
-        entity_registry, mock_config_entry.entry_id
-    )
-    assert len(entities) == 0
-
-
-async def test_victron_number_set_value_non_writable_metric(
-    hass: HomeAssistant,
-    init_integration: tuple[VictronVenusHub, MockConfigEntry],
-    entity_registry: er.EntityRegistry,
-    caplog: pytest.LogCaptureFixture,
-) -> None:
-    """Test that set_native_value logs error for non-writable metric."""
-    victron_hub, mock_config_entry = init_integration
-
-    await inject_message(
-        victron_hub,
-        f"N/{MOCK_INSTALLATION_ID}/evcharger/0/SetCurrent",
-        '{"value": 12}',
-    )
-    await finalize_injection(victron_hub)
-    await hass.async_block_till_done()
-
-    entities = er.async_entries_for_config_entry(
-        entity_registry, mock_config_entry.entry_id
-    )
-    entity_id = entities[0].entity_id
-
-    entity = hass.data["entity_components"]["number"].get_entity(entity_id)
-    entity._metric = MagicMock(spec=VictronVenusMetric)
-
-    await hass.services.async_call(
-        "number",
-        "set_value",
-        {"entity_id": entity_id, "value": 20.0},
-        blocking=True,
-    )
-
-    assert "Cannot set value for non-writable metric" in caplog.text

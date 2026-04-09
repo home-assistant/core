@@ -53,12 +53,7 @@ async def async_setup_entry(
         installation_id: str,
     ) -> None:
         """Handle new number metric discovery."""
-        if not isinstance(metric, VictronVenusWritableMetric):
-            _LOGGER.warning(
-                "Skipping non-writable metric for device %s",
-                device.unique_id,
-            )
-            return
+        assert isinstance(metric, VictronVenusWritableMetric)
         async_add_entities(
             [VictronNumber(device, metric, device_info, installation_id)]
         )
@@ -96,10 +91,5 @@ class VictronNumber(VictronBaseEntity, NumberEntity):
 
     def set_native_value(self, value: float) -> None:
         """Set a new value."""
-        if not isinstance(self._metric, VictronVenusWritableMetric):
-            _LOGGER.error(
-                "Cannot set value for non-writable metric %s",
-                self._attr_unique_id,
-            )
-            return
+        assert isinstance(self._metric, VictronVenusWritableMetric)
         self._metric.set(value)
