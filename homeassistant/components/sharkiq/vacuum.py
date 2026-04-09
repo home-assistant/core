@@ -12,7 +12,6 @@ from homeassistant.components.vacuum import (
     VacuumActivity,
     VacuumEntityFeature,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -20,7 +19,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import ATTR_ROOMS, DOMAIN, LOGGER, SHARK
-from .coordinator import SharkIqUpdateCoordinator
+from .coordinator import SharkIqConfigEntry, SharkIqUpdateCoordinator
 
 OPERATING_STATE_MAP = {
     OperatingModes.PAUSE: VacuumActivity.PAUSED,
@@ -46,11 +45,11 @@ ATTR_RECHARGE_RESUME = "recharge_and_resume"
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: SharkIqConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Shark IQ vacuum cleaner."""
-    coordinator: SharkIqUpdateCoordinator = hass.data[DOMAIN][config_entry.entry_id]
+    coordinator = config_entry.runtime_data
     devices: Iterable[SharkIqVacuum] = coordinator.shark_vacs.values()
     device_names = [d.name for d in devices]
     LOGGER.debug(
