@@ -40,10 +40,10 @@ def platforms() -> Platform | list[Platform]:
 
 
 def _build_fire_sse_ambilight(
-    hass: HomeAssistant, mock_smlight_client: MagicMock
+    hass: HomeAssistant, mock_ultima_client: MagicMock
 ) -> Callable[[dict[str, object]], Awaitable[None]]:
     """Build helper to push ambilight SSE events and wait for state updates."""
-    page_callback = mock_smlight_client.sse.register_page_cb.call_args[0][1]
+    page_callback = mock_ultima_client.sse.register_page_cb.call_args[0][1]
 
     async def fire_ambi(changes: dict[str, object]) -> None:
         page_callback(changes)
