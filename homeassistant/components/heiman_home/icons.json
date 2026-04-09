@@ -1,0 +1,174 @@
+{
+  "entity": {
+    "binary_sensor": {
+      "SmokeSensorState": {
+        "default": "mdi:smoke",
+        "state": {
+          "on": "mdi:smoke-detector",
+          "off": "mdi:smoke-detector-variant"
+        }
+      },
+      "WaterSensorState": {
+        "default": "mdi:water",
+        "state": {
+          "on": "mdi:water-check",
+          "off": "mdi:water-off"
+        }
+      },
+      "TamperState": {
+        "default": "mdi:alert",
+        "state": {
+          "on": "mdi:alert-circle",
+          "off": "mdi:shield-check"
+        }
+      },
+      "UnderVoltError": {
+        "default": "mdi:battery-alert-variant",
+        "state": {
+          "on": "mdi:battery-alert",
+          "off": "mdi:battery-check"
+        }
+      },
+      "FreezingPointAlarm": {
+        "default": "mdi:water-thermometer-outline",
+        "state": {
+          "on": "mdi:snowflake-alert",
+          "off": "mdi:snowflake"
+        }
+      },
+      "MotionStatus": {
+        "default": "mdi:motion-sensor-off",
+        "state": {
+          "on": "mdi:motion-sensor",
+          "off": "mdi:motion-sensor-off"
+        }
+      },
+      "DoorStatus": {
+        "default": "mdi:door-closed",
+        "state": {
+          "on": "mdi:door-open",
+          "off": "mdi:door-closed"
+        }
+      },
+      "CoStatus": {
+        "default": "mdi:molecule-co",
+        "state": {
+          "on": "mdi:molecule-co-warning",
+          "off": "mdi:check-circle"
+        }
+      }
+    },
+    "sensor": {
+      "CurrentTemperature": {
+        "default": "mdi:thermometer"
+      },
+      "BatteryPercentage": {
+        "default": "mdi:battery",
+        "state": {
+          "0-10": "mdi:battery-alert-variant-outline",
+          "11-20": "mdi:battery-10",
+          "21-30": "mdi:battery-20",
+          "31-40": "mdi:battery-30",
+          "41-50": "mdi:battery-40",
+          "51-60": "mdi:battery-50",
+          "61-70": "mdi:battery-60",
+          "71-80": "mdi:battery-70",
+          "81-90": "mdi:battery-80",
+          "91-100": "mdi:battery-charging"
+        }
+      },
+      "DeviceINFO_DBM": {
+        "default": "mdi:signal"
+      },
+      "DeviceINFO_DBM_Level": {
+        "default": "mdi:signal",
+        "state": {
+          "strong": "mdi:signal-strong",
+          "medium": "mdi:signal-distance-variant",
+          "weak": "mdi:signal-2g",
+          "very_weak": "mdi:signal-off"
+        }
+      },
+      "RSSI_Level": {
+        "default": "mdi:signal",
+        "state": {
+          "strong": "mdi:signal-strong",
+          "medium": "mdi:signal-distance-variant",
+          "weak": "mdi:signal-2g",
+          "very_weak": "mdi:signal-off"
+        }
+      },
+      "DeviceINFO_MAC": {
+        "default": "mdi:dharmachakra"
+      },
+      "DeviceINFO_IP": {
+        "default": "mdi:ip"
+      },
+      "DeviceMac": {
+        "default": "mdi:dharmachakra"
+      },
+      "Humidity": {
+        "default": "mdi:water-percent"
+      },
+      "Temperature": {
+        "default": "mdi:thermometer"
+      },
+      "SignalStrength": {
+        "default": "mdi:signal"
+      },
+      "RSSI": {
+        "default": "mdi:signal"
+      }
+    },
+    "switch": {
+      "LightSwitch": {
+        "default": "mdi:lightbulb-outline",
+        "state": {
+          "on": "mdi:lightbulb-on",
+          "off": "mdi:lightbulb-off"
+        }
+      },
+      "FreezingPointEnable": {
+        "default": "mdi:snowflake-alert",
+        "state": {
+          "on": "mdi:snowflake-check",
+          "off": "mdi:snowflake-off"
+        }
+      },
+      "BuzzerEnable": {
+        "default": "mdi:surround-sound",
+        "state": {
+          "on": "mdi:volume-high",
+          "off": "mdi:volume-off"
+        }
+      }
+    },
+    "button": {
+      "RemoteLocate": {
+        "default": "mdi:radar"
+      },
+      "RemoteCheck": {
+        "default": "mdi:clipboard-check"
+      },
+      "Mute": {
+        "default": "mdi:volume-mute"
+      },
+      "Reset": {
+        "default": "mdi:reload"
+      }
+    },
+    "select": {
+      "AlarmSoundOption": {
+        "default": "mdi:volume-high"
+      },
+      "TimeZone": {
+        "default": "mdi:clock-time-nine-outline"
+      }
+    },
+    "update": {
+      "firmware_update": {
+        "default": "mdi:package-up"
+      }
+    }
+  }
+}

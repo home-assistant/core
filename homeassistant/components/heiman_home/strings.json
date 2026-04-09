@@ -1,0 +1,65 @@
+{
+  "title": "Heiman Home",
+  "config": {
+    "step": {
+      "user": {
+        "title": "Configure Heiman Home",
+        "description": "Connect your Heiman Home devices to Home Assistant."
+      },
+      "select_home": {
+        "title": "Select Home",
+        "description": "Logged in as {user_email}",
+        "data": {
+          "home_id": "Import Device's Family",
+          "area_name_rule": "Room Name Sync Mode"
+        },
+        "data_description": {
+          "home_id": "Choose one or more homes to import devices from",
+          "area_name_rule": "How room names should be synchronized to Home Assistant areas"
+        }
+      },
+      "reauth_confirm": {
+        "title": "Re-authentication Required",
+        "description": "Your Heiman Home authentication has expired. Please re-authenticate to continue using the integration."
+      }
+    },
+    "error": {
+      "no_home_selected": "Please select at least one home",
+      "authorize_url_timeout": "Authorization URL timed out. Please try again.",
+      "network_error": "Network error occurred. Please check your connection and try again.",
+      "unknown": "An unknown error occurred. Please try again."
+    },
+    "abort": {
+      "missing_scopes": "The authorization is missing required scopes. Please authorize again with all permissions.",
+      "token_invalid": "Failed to authenticate with Heiman Home API. The token may be invalid.",
+      "no_homes": "No homes found in your Heiman Home account.",
+      "homes_fetch_failed": "Failed to fetch home information from Heiman Home.",
+      "reauth_user_mismatch": "Re-authentication failed: User mismatch.",
+      "reauth_account_mismatch": "Re-authentication failed: Account mismatch.",
+      "token_expired": "Your authentication token has expired. Please re-authenticate to continue using the integration."
+    },
+    "selector": {
+      "area_name_rule": {
+        "options": {
+          "none": "Do not sync",
+          "room": "Room name",
+          "home": "Home name",
+          "home_room": "Home name and Room name"
+        }
+      },
+      "home_device_count": "{count} devices"
+    }
+  },
+  "entity": {
+    "select": {
+      "AlarmSoundOption": {
+        "name": "AlarmSoundOption",
+        "state": {
+          "fast": "Fast Beep",
+          "medium": "Medium Beep",
+          "slow": "Slow Beep"
+        }
+      }
+    }
+  }
+}
