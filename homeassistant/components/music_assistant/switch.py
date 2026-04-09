@@ -17,7 +17,8 @@ from .const import PLAYER_OPTIONS_TRANSLATION_KEY_PREFIX
 from .entity import MusicAssistantPlayerOptionEntity
 from .helpers import catch_musicassistant_error
 
-PLAYER_OPTIONS_SWITCH: Final[dict[str, bool]] = {  # translation_key, enable by default
+PLAYER_OPTIONS_SWITCH: Final[dict[str, bool]] = {
+    # translation_key: enabled_by_default
     "adaptive_drc": False,
     "bass_extension": False,
     "clear_voice": False,
