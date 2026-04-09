@@ -1113,7 +1113,7 @@
       "message": "Device with ID {device_id} is not a Tuya feeder."
     },
     "invalid_meal_plan_data": {
-      "message": "Invalid meal plan data provided."
+      "message": "Unable to parse meal plan data."
     }
   },
   "selector": {

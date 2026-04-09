@@ -12,7 +12,7 @@ import voluptuous as vol
 
 from homeassistant.const import ATTR_DEVICE_ID
 from homeassistant.core import HomeAssistant, ServiceCall, SupportsResponse
-from homeassistant.exceptions import ServiceValidationError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import device_registry as dr
 
 from .const import DOMAIN
@@ -99,7 +99,7 @@ async def async_get_feeder_meal_plan(
 
     meal_plan = wrapper.read_device_status(device)
     if meal_plan is None:
-        raise ServiceValidationError(
+        raise HomeAssistantError(
             translation_domain=DOMAIN,
             translation_key="invalid_meal_plan_data",
         )
