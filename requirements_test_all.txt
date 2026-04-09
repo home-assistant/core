@@ -413,7 +413,7 @@ aiotankerkoenig==0.5.1
 aiotedee==0.3.0
 
 # homeassistant.components.tractive
-aiotractive==1.0.1
+aiotractive==1.0.2
 
 # homeassistant.components.unifi
 aiounifi==90
@@ -488,7 +488,7 @@ anova-wifi==0.17.0
 anthemav==1.4.1
 
 # homeassistant.components.anthropic
-anthropic==0.83.0
+anthropic==0.92.0
 
 # homeassistant.components.mcp_server
 anyio==4.10.0
@@ -2740,7 +2740,7 @@ venstarcolortouch==0.21
 victron-ble-ha-parser==0.6.3
 
 # homeassistant.components.victron_gx
-victron-mqtt==2026.4.2
+victron-mqtt==2026.4.3
 
 # homeassistant.components.victron_remote_monitoring
 victron-vrm==0.1.8
