@@ -343,7 +343,7 @@ ENTITY_STATE_TRIGGER_SCHEMA_FIRST_LAST = ENTITY_STATE_TRIGGER_SCHEMA.extend(
             vol.Required(ATTR_BEHAVIOR, default=BEHAVIOR_ANY): vol.In(
                 [BEHAVIOR_FIRST, BEHAVIOR_LAST, BEHAVIOR_ANY]
             ),
-            vol.Required(CONF_FOR): cv.positive_time_period_dict,
+            vol.Optional(CONF_FOR): cv.positive_time_period_dict,
         },
     }
 )
