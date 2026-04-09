@@ -20,7 +20,7 @@ rules:
   has-entity-name: todo
   runtime-data: done
   test-before-configure: done
-  test-before-setup: done
+  test-before-setup: todo
   unique-config-entry: done
 
   # Silver
