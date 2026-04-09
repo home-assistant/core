@@ -172,11 +172,16 @@ async def async_setup_entry(
     elif coordinator.model == SwitchbotModel.PRESENCE_SENSOR:
         sensor_entities.extend(
             SwitchBotSensor(coordinator, sensor)
-            for sensor in parsed_data
-            if sensor in SENSOR_TYPES and sensor not in ("battery", "battery_range")
+            for sensor in (
+                *(
+                    s
+                    for s in parsed_data
+                    if s in SENSOR_TYPES and s not in ("battery", "battery_range")
+                ),
+                "battery",
+                "battery_range",
+            )
         )
-        sensor_entities.append(SwitchBotSensor(coordinator, "battery"))
-        sensor_entities.append(SwitchBotSensor(coordinator, "battery_range"))
     else:
         sensor_entities.extend(
             SwitchBotSensor(coordinator, sensor)
@@ -218,7 +223,7 @@ class SwitchBotSensor(SwitchbotEntity, SensorEntity):
     @property
     def native_value(self) -> str | int | None:
         """Return the state of the sensor."""
-        value = self.parsed_data[self._sensor]
+        value = self.parsed_data.get(self._sensor)
         if isinstance(self.entity_description, SwitchBotSensorEntityDescription):
             return self.entity_description.value_fn(value)
         return value
