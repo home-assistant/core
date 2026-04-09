@@ -61,8 +61,8 @@ async def __get_prices(call: ServiceCall) -> ServiceResponse:
 
     def _has_valid_prices(home: tibber.TibberHome) -> bool:
         """Return True if the home has valid prices."""
-        for start in home.price_total:
-            start_dt = dt_util.as_local(datetime.fromisoformat(str(start)))
+        for price_start in home.price_total:
+            start_dt = dt_util.as_local(datetime.fromisoformat(str(price_start)))
 
             if now.hour >= 13:
                 if today_end <= start_dt < tomorrow_end:
