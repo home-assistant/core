@@ -246,7 +246,7 @@ def validate_segments(
                         entity,
                         option,
                         result,
-                        "unexpected segment item type",
+                        f"expected {type(result[0])}, got {type(item)}",
                     )
                     return None
                 if isinstance(item, str):
@@ -287,6 +287,14 @@ def validate_segments(
                             group=str(item[2]) if len(item) == 3 else None,
                         )
                     )
+                else:
+                    template_validators.log_validation_result_error(
+                        entity,
+                        option,
+                        result,
+                        f"expected list of str, lists or objects, got {type(item)}",
+                    )
+                    return None
 
             return segments
 
