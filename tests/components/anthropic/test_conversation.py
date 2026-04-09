@@ -46,12 +46,19 @@ from homeassistant.components.anthropic.const import (
     CONF_WEB_SEARCH_REGION,
     CONF_WEB_SEARCH_TIMEZONE,
     CONF_WEB_SEARCH_USER_LOCATION,
+    DOMAIN,
 )
 from homeassistant.components.anthropic.entity import CitationDetails, ContentDetails
 from homeassistant.const import CONF_LLM_HASS_API
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import chat_session, entity_registry as er, intent, llm
+from homeassistant.helpers import (
+    chat_session,
+    device_registry as dr,
+    entity_registry as er,
+    intent,
+    llm,
+)
 from homeassistant.setup import async_setup_component
 from homeassistant.util import ulid as ulid_util
 
@@ -97,6 +104,24 @@ async def test_entity(
         state.attributes["supported_features"]
         == conversation.ConversationEntityFeature.CONTROL
     )
+
+
+async def test_device(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    mock_config_entry: MockConfigEntry,
+    mock_init_component,
+) -> None:
+    """Test device parameters."""
+    subentry = next(iter(mock_config_entry.subentries.values()))
+    device = device_registry.async_get_device({(DOMAIN, subentry.subentry_id)})
+
+    assert device is not None
+    assert device.name == "Claude conversation"
+    assert device.manufacturer == "Anthropic"
+    assert device.model == "Claude Haiku 4.5"
+    assert device.model_id == "claude-haiku-4-5-20251001"
+    assert device.entry_type == dr.DeviceEntryType.SERVICE
 
 
 async def test_translation_key(
