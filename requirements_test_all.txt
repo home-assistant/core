@@ -1076,6 +1076,9 @@ hdfury==1.6.0
 # homeassistant.components.hegel
 hegel-ip-client==0.1.4
 
+# homeassistant.components.heiman_home
+heiman-connect==1.0.4
+
 # homeassistant.components.here_travel_time
 here-routing==1.2.0
 
