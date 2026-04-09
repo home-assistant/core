@@ -88,7 +88,7 @@ class ZWaveMeRGB(ZWaveMeEntity, LightEntity):
         if color is not None:
             if not any(color):
                 color = (255, 255, 255)
-            for colorId, colorVal in zip(("red", "green", "blue"), color):
+            for colorId, colorVal in zip(("red", "green", "blue"), color, strict=True):
                 commandArgs[colorId] = str(colorVal)
         elif brightness is not None:
             commandArgs["level"] = str(round(brightness / 2.55))
