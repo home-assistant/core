@@ -146,6 +146,38 @@
         "name": "Treble"
       }
     },
+    "switch": {
+      "adaptive_drc": {
+        "name": "Adaptive DRC"
+      },
+      "bass_extension": {
+        "name": "Bass extension"
+      },
+      "clear_voice": {
+        "name": "Clear voice"
+      },
+      "enhancer": {
+        "name": "Enhancer"
+      },
+      "extra_bass": {
+        "name": "Extra bass"
+      },
+      "party_mode": {
+        "name": "Party mode"
+      },
+      "pure_direct": {
+        "name": "Pure direct"
+      },
+      "speaker_a": {
+        "name": "Speaker A"
+      },
+      "speaker_b": {
+        "name": "Speaker B"
+      },
+      "surround_3d": {
+        "name": "Surround 3D"
+      }
+    },
     "text": {
       "network_name": {
         "name": "Network name"

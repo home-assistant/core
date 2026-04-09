@@ -53,6 +53,7 @@ PLATFORMS = [
     Platform.BUTTON,
     Platform.MEDIA_PLAYER,
     Platform.NUMBER,
+    Platform.SWITCH,
     Platform.TEXT,
 ]
 
