@@ -45,13 +45,13 @@ class HeimanDataUpdateCoordinator(DataUpdateCoordinator[HeimanData]):
     config_entry: ConfigEntry
 
     def __init__(
-            self,
-            hass: HomeAssistant,
-            logger: logging.Logger,
-            api_client: HeimanApiClient,
-            config_entry: ConfigEntry,
-            device_management: DeviceManagement | None = None,
-            oauth_session=None,
+        self,
+        hass: HomeAssistant,
+        logger: logging.Logger,
+        api_client: HeimanApiClient,
+        config_entry: ConfigEntry,
+        device_management: DeviceManagement | None = None,
+        oauth_session=None,
     ) -> None:
         """Initialize the coordinator.
 
@@ -138,35 +138,56 @@ class HeimanDataUpdateCoordinator(DataUpdateCoordinator[HeimanData]):
                 # Extract firmware version from device list
                 for device_id, device in devices.items():
                     # First check if device raw_data has firmwareInfo
-                    if hasattr(device, 'raw_data') and device.raw_data:
+                    if hasattr(device, "raw_data") and device.raw_data:
                         firmware_info = device.raw_data.get("firmwareInfo", {})
-                        if isinstance(firmware_info, dict) and "version" in firmware_info:
+                        if (
+                            isinstance(firmware_info, dict)
+                            and "version" in firmware_info
+                        ):
                             device.firmware_version = firmware_info.get("version")
 
                     # Try to get firmware version from device's firmware_info attribute
-                    if hasattr(device, 'firmware_info') and device.firmware_info:
-                        if isinstance(device.firmware_info, dict) and "version" in device.firmware_info:
+                    if hasattr(device, "firmware_info") and device.firmware_info:
+                        if (
+                            isinstance(device.firmware_info, dict)
+                            and "version" in device.firmware_info
+                        ):
                             # Store firmware version in device object for later use
-                            device.firmware_version = device.firmware_info.get("version")
+                            device.firmware_version = device.firmware_info.get(
+                                "version"
+                            )
 
                 # Get detailed info for filtered devices to populate property values
                 for device_id, device in devices.items():
                     try:
                         # Get device details via cloud_client
-                        if hasattr(self.api_client, '_cloud_client') and self.api_client._cloud_client:
-                            device_detail = await self.api_client._cloud_client._async_get_device_detail(device_id)
+                        if (
+                            hasattr(self.api_client, "_cloud_client")
+                            and self.api_client._cloud_client
+                        ):
+                            device_detail = await self.api_client._cloud_client._async_get_device_detail(
+                                device_id
+                            )
                             if device_detail:
-
                                 # Extract firmware version from firmwareInfo (if not retrieved earlier)
                                 if not device.firmware_version:
-                                    firmware_info = device_detail.get("firmwareInfo", {})
-                                    if isinstance(firmware_info, dict) and "version" in firmware_info:
-                                        device.firmware_version = firmware_info.get("version")
+                                    firmware_info = device_detail.get(
+                                        "firmwareInfo", {}
+                                    )
+                                    if (
+                                        isinstance(firmware_info, dict)
+                                        and "version" in firmware_info
+                                    ):
+                                        device.firmware_version = firmware_info.get(
+                                            "version"
+                                        )
 
                                 # Extract property values from deriveMetadata and update device object
                                 if "deriveMetadata" in device_detail:
                                     try:
-                                        metadata_str = device_detail.get("deriveMetadata", "")
+                                        metadata_str = device_detail.get(
+                                            "deriveMetadata", ""
+                                        )
                                         if metadata_str:
                                             # deriveMetadata is a JSON string that parses to a list of property objects
                                             metadata_list = json.loads(metadata_str)
@@ -174,49 +195,112 @@ class HeimanDataUpdateCoordinator(DataUpdateCoordinator[HeimanData]):
                                             # Iterate through the list and update properties
                                             if isinstance(metadata_list, list):
                                                 for prop_item in metadata_list:
-                                                    prop_id = prop_item.get("property", "")
+                                                    prop_id = prop_item.get(
+                                                        "property", ""
+                                                    )
                                                     prop_value = prop_item.get("value")
 
                                                     # Also check 'id' field if 'property' is not available
                                                     if not prop_id:
-                                                        prop_id = prop_item.get("id", "")
+                                                        prop_id = prop_item.get(
+                                                            "id", ""
+                                                        )
 
-                                                    if prop_id and prop_value is not None:
+                                                    if (
+                                                        prop_id
+                                                        and prop_value is not None
+                                                    ):
                                                         # Special handling for DeviceINFO object
                                                         # Extract MAC, DBM, DBM_Level, IP from nested structure
-                                                        if prop_id == "DeviceINFO" and isinstance(prop_value, dict):
+                                                        if (
+                                                            prop_id == "DeviceINFO"
+                                                            and isinstance(
+                                                                prop_value, dict
+                                                            )
+                                                        ):
                                                             # Extract MAC address
-                                                            mac_value = prop_value.get("MAC")
-                                                            if mac_value and "DeviceINFO_MAC" in device.properties:
-                                                                device.properties["DeviceINFO_MAC"].value = mac_value
+                                                            mac_value = prop_value.get(
+                                                                "MAC"
+                                                            )
+                                                            if (
+                                                                mac_value
+                                                                and "DeviceINFO_MAC"
+                                                                in device.properties
+                                                            ):
+                                                                device.properties[
+                                                                    "DeviceINFO_MAC"
+                                                                ].value = mac_value
 
                                                             # Extract DBM (signal strength in dBm)
-                                                            dbm_value = prop_value.get("DBM")
-                                                            if dbm_value is not None and "DeviceINFO_DBM" in device.properties:
-                                                                device.properties["DeviceINFO_DBM"].value = dbm_value
+                                                            dbm_value = prop_value.get(
+                                                                "DBM"
+                                                            )
+                                                            if (
+                                                                dbm_value is not None
+                                                                and "DeviceINFO_DBM"
+                                                                in device.properties
+                                                            ):
+                                                                device.properties[
+                                                                    "DeviceINFO_DBM"
+                                                                ].value = dbm_value
 
                                                             # Extract DBM_Level (signal strength level)
                                                             # Try to get DBM_Level directly, or convert from DBM
-                                                            dbm_level_value = prop_value.get("DBM_Level")
-                                                            if dbm_level_value is None and dbm_value is not None:
+                                                            dbm_level_value = (
+                                                                prop_value.get(
+                                                                    "DBM_Level"
+                                                                )
+                                                            )
+                                                            if (
+                                                                dbm_level_value is None
+                                                                and dbm_value
+                                                                is not None
+                                                            ):
                                                                 # Convert numeric DBM to level string if DBM_Level not provided
-                                                                dbm_level_value = self._convert_dbm_to_level(dbm_value)
+                                                                dbm_level_value = self._convert_dbm_to_level(
+                                                                    dbm_value
+                                                                )
 
-                                                            if dbm_level_value is not None and "DeviceINFO_DBM_Level" in device.properties:
-                                                                device.properties["DeviceINFO_DBM_Level"].value = dbm_level_value
+                                                            if (
+                                                                dbm_level_value
+                                                                is not None
+                                                                and "DeviceINFO_DBM_Level"
+                                                                in device.properties
+                                                            ):
+                                                                device.properties[
+                                                                    "DeviceINFO_DBM_Level"
+                                                                ].value = (
+                                                                    dbm_level_value
+                                                                )
 
                                                             # Extract IP address
-                                                            ip_value = prop_value.get("IP")
-                                                            if ip_value and "DeviceINFO_IP" in device.properties:
-                                                                device.properties["DeviceINFO_IP"].value = ip_value
+                                                            ip_value = prop_value.get(
+                                                                "IP"
+                                                            )
+                                                            if (
+                                                                ip_value
+                                                                and "DeviceINFO_IP"
+                                                                in device.properties
+                                                            ):
+                                                                device.properties[
+                                                                    "DeviceINFO_IP"
+                                                                ].value = ip_value
                                                         # Update regular property
-                                                        elif prop_id in device.properties:
+                                                        elif (
+                                                            prop_id in device.properties
+                                                        ):
                                                             if prop_id == "RSSI":
                                                                 # Convert numeric DBM to level string
-                                                                dbm_level = self._convert_dbm_to_level(prop_value)
-                                                                device.properties[prop_id].value = dbm_level
+                                                                dbm_level = self._convert_dbm_to_level(
+                                                                    prop_value
+                                                                )
+                                                                device.properties[
+                                                                    prop_id
+                                                                ].value = dbm_level
                                                             else:
-                                                                device.properties[prop_id].value = prop_value
+                                                                device.properties[
+                                                                    prop_id
+                                                                ].value = prop_value
                                     except Exception as err:
                                         _LOGGER.error(
                                             "Failed to parse deriveMetadata for %s: %s",
@@ -244,7 +328,9 @@ class HeimanDataUpdateCoordinator(DataUpdateCoordinator[HeimanData]):
                             if prop_id in new_device.properties:
                                 # Keep latest value
                                 if old_prop.value is not None:
-                                    new_device.properties[prop_id].value = old_prop.value
+                                    new_device.properties[
+                                        prop_id
+                                    ].value = old_prop.value
 
                         # Copy online status
                         if not new_device.online and old_device.online:
@@ -306,7 +392,8 @@ class HeimanDataUpdateCoordinator(DataUpdateCoordinator[HeimanData]):
             List of matching HeimanDevice objects
         """
         return [
-            device for device in self.data.devices.values()
+            device
+            for device in self.data.devices.values()
             if device.device_type == device_type
         ]
 
@@ -355,14 +442,18 @@ class HeimanDataUpdateCoordinator(DataUpdateCoordinator[HeimanData]):
                     _LOGGER.warning("Failed to get access_token from session: %s", err)
 
             # Final fallback: get token from api_client
-            if not access_token and hasattr(self.api_client, '_get_access_token'):
+            if not access_token and hasattr(self.api_client, "_get_access_token"):
                 try:
                     access_token = self.api_client._get_access_token()
                 except Exception as err:
-                    _LOGGER.warning("Failed to get access_token from api_client: %s", err)
+                    _LOGGER.warning(
+                        "Failed to get access_token from api_client: %s", err
+                    )
 
             if not access_token:
-                _LOGGER.warning("Cannot initialize MQTT: access_token not available from any source")
+                _LOGGER.warning(
+                    "Cannot initialize MQTT: access_token not available from any source"
+                )
                 return
 
             if not user_id:
@@ -374,17 +465,17 @@ class HeimanDataUpdateCoordinator(DataUpdateCoordinator[HeimanData]):
             try:
                 if self.data.user_info:
                     # Try to get nickName first
-                    user_display_name = getattr(self.data.user_info, 'nick_name', None)
+                    user_display_name = getattr(self.data.user_info, "nick_name", None)
                     if not user_display_name:
                         # Fallback to email
-                        user_display_name = getattr(self.data.user_info, 'email', None)
+                        user_display_name = getattr(self.data.user_info, "email", None)
             except Exception as err:
                 _LOGGER.warning("Failed to get user display name: %s", err)
 
             # Get cloud client reference for child device detection
             cloud_client = None
             try:
-                if hasattr(self.api_client, '_cloud_client'):
+                if hasattr(self.api_client, "_cloud_client"):
                     cloud_client = self.api_client._cloud_client
             except Exception as err:
                 _LOGGER.warning("Failed to get cloud_client reference: %s", err)
@@ -412,7 +503,9 @@ class HeimanDataUpdateCoordinator(DataUpdateCoordinator[HeimanData]):
         except Exception as err:
             _LOGGER.error("Unexpected error initializing MQTT client: %s", err)
 
-    def _on_device_property_update(self, device_id: str, properties: dict[str, Any]) -> None:
+    def _on_device_property_update(
+        self, device_id: str, properties: dict[str, Any]
+    ) -> None:
         """Handle device property update from MQTT.
 
         Args:
@@ -431,6 +524,7 @@ class HeimanDataUpdateCoordinator(DataUpdateCoordinator[HeimanData]):
             else:
                 # Add new property if it doesn't exist
                 from heimanconnect import DeviceProperty
+
                 device.properties[prop_name] = DeviceProperty(
                     identifier=prop_name,
                     name=prop_name,
@@ -439,7 +533,7 @@ class HeimanDataUpdateCoordinator(DataUpdateCoordinator[HeimanData]):
 
         # Schedule entity update if coordinator is set up
         # IMPORTANT: Must be called from the event loop thread for thread safety
-        if hasattr(self, 'async_set_updated_data') and self.hass:
+        if hasattr(self, "async_set_updated_data") and self.hass:
             # Use hass.add_job to schedule the update in the event loop
             # Pass the coroutine function and data as arguments
             self.hass.add_job(self.async_set_updated_data, self.data)
@@ -475,6 +569,7 @@ class HeimanDataUpdateCoordinator(DataUpdateCoordinator[HeimanData]):
                     else:
                         # Add new property if it doesn't exist
                         from heimanconnect import DeviceProperty
+
                         device.properties[prop_name] = DeviceProperty(
                             identifier=prop_name,
                             name=prop_name,
@@ -483,7 +578,7 @@ class HeimanDataUpdateCoordinator(DataUpdateCoordinator[HeimanData]):
 
                 # Trigger entity update
                 # IMPORTANT: Must be called from the event loop thread for thread safety
-                if hasattr(self, 'async_set_updated_data') and self.hass:
+                if hasattr(self, "async_set_updated_data") and self.hass:
                     # Use hass.add_job to schedule the update in the event loop
                     # Pass the coroutine function and data as arguments
                     self.hass.add_job(self.async_set_updated_data, self.data)
@@ -491,7 +586,9 @@ class HeimanDataUpdateCoordinator(DataUpdateCoordinator[HeimanData]):
                 _LOGGER.warning("No properties returned from device %s", device_id)
 
         except Exception as err:
-            _LOGGER.error("Failed to read properties from device %s: %s", device_id, err)
+            _LOGGER.error(
+                "Failed to read properties from device %s: %s", device_id, err
+            )
 
     def get_online_devices(self) -> list[HeimanDevice]:
         """Get all online devices.

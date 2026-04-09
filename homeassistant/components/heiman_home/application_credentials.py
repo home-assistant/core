@@ -40,7 +40,15 @@ async def async_get_auth_implementation(
 
 
 class HeimanOAuth2Implementation(AuthImplementation):
-    """OAuth2 implementation for Heiman."""
+    """Heiman-specific OAuth2 implementation.
+
+    This specialization is needed because Heiman's OAuth2 token endpoint
+    requires custom error handling and response validation that differs
+    from the standard OAuth2 flow. Specifically:
+    - Custom error code mapping for re-authentication scenarios
+    - Special handling for empty responses (expired refresh tokens)
+    - Detailed logging for debugging token issues
+    """
 
     async def _token_request(self, data: dict) -> dict:
         """Make a token request."""
@@ -66,7 +74,7 @@ class HeimanOAuth2Implementation(AuthImplementation):
                 error_code,
                 error_description,
             )
-            
+
             # Determine the appropriate exception type based on error code
             if error_code in ["invalid_grant", "invalid_token"]:
                 raise OAuth2TokenRequestReauthError(
@@ -76,7 +84,7 @@ class HeimanOAuth2Implementation(AuthImplementation):
                     headers=resp.headers,
                     domain=self.domain,
                 )
-            elif resp.status >= 500:
+            if resp.status >= 500:
                 raise OAuth2TokenRequestTransientError(
                     request_info=resp.request_info,
                     history=resp.history,
@@ -84,47 +92,57 @@ class HeimanOAuth2Implementation(AuthImplementation):
                     headers=resp.headers,
                     domain=self.domain,
                 )
-            else:
-                raise OAuth2TokenRequestError(
-                    request_info=resp.request_info,
-                    history=resp.history,
-                    status=resp.status,
-                    headers=resp.headers,
-                    domain=self.domain,
-                )
+            raise OAuth2TokenRequestError(
+                request_info=resp.request_info,
+                history=resp.history,
+                status=resp.status,
+                headers=resp.headers,
+                domain=self.domain,
+            )
 
         # Try to parse JSON response
         try:
-            # First check if response has content
-            text = await resp.text()
-
-            if not text or not text.strip():
-                _LOGGER.error(
-                    "Token request returned empty response (status %s). "
-                    "This may indicate an invalid refresh token or expired credentials.",
-                    resp.status,
-                )
-                raise ValueError(f"Empty response from token endpoint (status {resp.status})")
-
-            # Try to parse as JSON
-            try:
-                response_data = await resp.json()
-                return cast(dict, response_data)
-            except (ClientError, JSONDecodeError):
-                _LOGGER.error(
-                    "Token request returned non-JSON response (status %s, content_type='%s'): %s",
-                    resp.status,
-                    resp.content_type,
-                    text[:500] if text else "(empty)",
-                )
-                raise
+            return await self._parse_token_response(resp)
         except ValueError:
             # Re-raise ValueError as-is
             raise
         except Exception as err:
+            _LOGGER.exception("Failed to process token response: %s", err)
+            raise
+
+    async def _parse_token_response(self, resp) -> dict:
+        """Parse and validate token response.
+
+        Args:
+            resp: HTTP response object
+
+        Returns:
+            Parsed response data as dictionary
+
+        Raises:
+            ValueError: If response is empty or invalid
+        """
+        # First check if response has content
+        text = await resp.text()
+
+        if not text or not text.strip():
             _LOGGER.error(
-                "Failed to process token response: %s",
-                err,
-                exc_info=True,
+                "Token request returned empty response (status %s). "
+                "This may indicate an invalid refresh token or expired credentials",
+                resp.status,
+            )
+            msg = f"Empty response from token endpoint (status {resp.status})"
+            raise ValueError(msg)
+
+        # Try to parse as JSON
+        try:
+            response_data = await resp.json()
+            return cast(dict, response_data)
+        except (ClientError, JSONDecodeError):
+            _LOGGER.exception(
+                "Token request returned non-JSON response (status %s, content_type='%s'): %s",
+                resp.status,
+                resp.content_type,
+                text[:500] if text else "(empty)",
             )
             raise

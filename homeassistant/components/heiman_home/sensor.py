@@ -42,7 +42,7 @@ async def async_setup_entry(
                 continue
 
             # Use entity field from DeviceProperty
-            if hasattr(prop, 'entity') and prop.entity == "sensor":
+            if hasattr(prop, "entity") and prop.entity == "sensor":
                 sensors.append(
                     HeimanSensorEntity(
                         coordinator=coordinator,
@@ -101,7 +101,9 @@ class HeimanSensorEntity(CoordinatorEntity[HeimanDataUpdateCoordinator], SensorE
             # Apply icon
             self._apply_icon(property_identifier, prop)
 
-    def _apply_sensor_config(self, property_identifier: str, prop: DeviceProperty | None) -> None:
+    def _apply_sensor_config(
+        self, property_identifier: str, prop: DeviceProperty | None
+    ) -> None:
         """Apply sensor configuration based on property type.
 
         Args:
@@ -110,14 +112,23 @@ class HeimanSensorEntity(CoordinatorEntity[HeimanDataUpdateCoordinator], SensorE
         """
         # Map common properties to standard device classes
         property_mapping = {
-            "temperature": {"device_class": SensorDeviceClass.TEMPERATURE, "key": "temperature"},
+            "temperature": {
+                "device_class": SensorDeviceClass.TEMPERATURE,
+                "key": "temperature",
+            },
             "humidity": {"device_class": SensorDeviceClass.HUMIDITY, "key": "humidity"},
             "battery": {"device_class": SensorDeviceClass.BATTERY, "key": "battery"},
             "voltage": {"device_class": SensorDeviceClass.VOLTAGE, "key": "voltage"},
             "power": {"device_class": SensorDeviceClass.POWER, "key": "power"},
             "energy": {"device_class": SensorDeviceClass.ENERGY, "key": "energy"},
-            "co_concentration": {"device_class": SensorDeviceClass.CO, "key": "co_concentration"},
-            "signal_strength": {"device_class": SensorDeviceClass.SIGNAL_STRENGTH, "key": "signal_strength"},
+            "co_concentration": {
+                "device_class": SensorDeviceClass.CO,
+                "key": "co_concentration",
+            },
+            "signal_strength": {
+                "device_class": SensorDeviceClass.SIGNAL_STRENGTH,
+                "key": "signal_strength",
+            },
         }
 
         # Try to match known properties
@@ -128,16 +139,32 @@ class HeimanSensorEntity(CoordinatorEntity[HeimanDataUpdateCoordinator], SensorE
                 break
 
         if config:
-            self._attr_device_class = SensorDeviceClass(config.get("device_class"))
+            device_class_value = config.get("device_class")
+            if device_class_value:
+                self._attr_device_class = SensorDeviceClass(device_class_value)
             self._attr_native_unit_of_measurement = config.get("unit")
-            self._attr_state_class = SensorStateClass(config.get("state_class", SensorStateClass.MEASUREMENT.value))
+            state_class_value = config.get("state_class", SensorStateClass.MEASUREMENT.value)
+            if state_class_value:
+                self._attr_state_class = SensorStateClass(state_class_value)
         elif prop:
             # Check if value is numeric before setting state_class
-            if (prop.value is not None and isinstance(prop.value, (int, float))) or prop.data_type in ["int", "double", "float", "long", "short", "byte", "number"]:
+            if (
+                prop.value is not None and isinstance(prop.value, (int, float))
+            ) or prop.data_type in [
+                "int",
+                "double",
+                "float",
+                "long",
+                "short",
+                "byte",
+                "number",
+            ]:
                 self._attr_state_class = SensorStateClass.MEASUREMENT
             # Non-numeric sensors should not have state_class set
 
-    def _apply_icon(self, property_identifier: str, prop: DeviceProperty | None) -> None:
+    def _apply_icon(
+        self, property_identifier: str, prop: DeviceProperty | None
+    ) -> None:
         """Apply icon based on property type.
 
         Args:
@@ -158,7 +185,7 @@ class HeimanSensorEntity(CoordinatorEntity[HeimanDataUpdateCoordinator], SensorE
             return
 
         # Set default icon based on device class (use getattr for safe access)
-        device_class = getattr(self, '_attr_device_class', None)
+        device_class = getattr(self, "_attr_device_class", None)
         if device_class == SensorDeviceClass.TEMPERATURE:
             self._attr_icon = "mdi:thermometer"
         elif device_class == SensorDeviceClass.HUMIDITY:

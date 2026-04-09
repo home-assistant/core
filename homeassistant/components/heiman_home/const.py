@@ -21,13 +21,13 @@ OAUTH_TOKEN_URL = "https://spapi.heiman.cn/api-auth/oauth/token"
 API_BASE_URL = "https://spapi.heiman.cn"
 
 # Scopes
-SCOPES = [
+SCOPES: list[str] = [
     # "user_info",
     # "device_list",
     # "device_control",
 ]
 
-REQUESTED_SCOPES = [
+REQUESTED_SCOPES: list[str] = [
     # *SCOPES,
     # "home_manage",
 ]
@@ -185,7 +185,5 @@ ENTITY_ICONS = {
         "Mute": "mdi:volume-mute",
     },
     # Select Icons
-    "select": {
-        "AlarmSoundOption": "mdi:volume-high"
-    },
+    "select": {"AlarmSoundOption": "mdi:volume-high"},
 }

@@ -73,7 +73,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: HeimanConfigEntry) -> bo
         # Handle empty response or invalid token format
         _LOGGER.error(
             "OAuth2 token validation failed: %s. "
-            "The refresh token may have expired. Please re-authenticate.",
+            "The refresh token may have expired. Please re-authenticate",
             err,
         )
         raise ConfigEntryAuthFailed(

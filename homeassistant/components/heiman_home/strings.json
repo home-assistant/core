@@ -1,5 +1,4 @@
 {
-  "title": "Heiman Home",
   "config": {
     "step": {
       "user": {
@@ -37,23 +36,24 @@
       "reauth_user_mismatch": "Re-authentication failed: User mismatch.",
       "reauth_account_mismatch": "Re-authentication failed: Account mismatch.",
       "token_expired": "Your authentication token has expired. Please re-authenticate to continue using the integration."
-    },
-    "selector": {
-      "area_name_rule": {
-        "options": {
-          "none": "Do not sync",
-          "room": "Room name",
-          "home": "Home name",
-          "home_room": "Home name and Room name"
+    }
+  },
+  "services": {
+    "read_device_properties": {
+      "name": "Read Device Properties",
+      "description": "Read properties from a Heiman device",
+      "fields": {
+        "device_id": {
+          "name": "Device ID",
+          "description": "The ID of the device to read properties from"
         }
-      },
-      "home_device_count": "{count} devices"
+      }
     }
   },
   "entity": {
     "select": {
-      "AlarmSoundOption": {
-        "name": "AlarmSoundOption",
+      "alarm_sound_option": {
+        "name": "Alarm Sound Option",
         "state": {
           "fast": "Fast Beep",
           "medium": "Medium Beep",
