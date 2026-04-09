@@ -1186,6 +1186,22 @@ async def test_clean_area(
                 asdict(Segment(id="2", name="Bedroom", group="Upstairs")),
             ],
         ),
+        (
+            {"segments_template": "{{ ['1', '3'] }}"},
+            [asdict(Segment(id="1", name="1")), asdict(Segment(id="3", name="3"))],
+        ),
+        (
+            {
+                "segments_template": "{{ ["
+                "['1', 'Kitchen'], "
+                "['2', 'Bedroom', 'Upstairs']"
+                "] }}",
+            },
+            [
+                asdict(Segment(id="1", name="Kitchen")),
+                asdict(Segment(id="2", name="Bedroom", group="Upstairs")),
+            ],
+        ),
     ],
 )
 @pytest.mark.usefixtures("setup_test_vacuum_with_extra_config")
@@ -1203,7 +1219,6 @@ async def test_get_segments(
         {"type": "vacuum/get_segments", "entity_id": TEST_VACUUM.entity_id}
     )
     msg = await client.receive_json()
-
     assert msg["success"]
     assert msg["result"] == {"segments": expected_segments}
 

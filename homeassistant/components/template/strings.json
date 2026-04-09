@@ -494,7 +494,7 @@
           "locate": "Defines actions to run when the vacuum is given a 'Locate' command.",
           "pause": "Defines actions to run when the vacuum is paused.",
           "return_to_base": "Defines actions to run when the vacuum is given a 'Return to dock' command.",
-          "segments_template": "Defines a template that returns vacuum segments. Accepted formats are a mapping of segment id to segment name, or a list of objects with `id`, `name`, and optional `group`.",
+          "segments_template": "Defines a template that returns vacuum segments. Accepted formats are a mapping of segment id to segment name, a list of objects with `id`, `name`, and optional `group`, or a list of strings or item lists containing id, name, and optional group.",
           "set_fan_speed": "Defines actions to run when the vacuum is given a command to set the fan speed. Receives variable `fan_speed`.",
           "start": "Defines actions to run when the vacuum is started.",
           "state": "Defines a template to get the state of the vacuum. Valid values are `cleaning`, `docked`, `idle`, `paused`, `returning`, and `error`.",
