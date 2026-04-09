@@ -45,6 +45,7 @@ from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 DEFAULT_LOCK_RULE_INTERVAL = 10
+LOCK_RULE_FETCH_TIMEOUT = 10
 
 type UnifiAccessConfigEntry = ConfigEntry[UnifiAccessCoordinator]
 
@@ -174,7 +175,7 @@ class UnifiAccessCoordinator(DataUpdateCoordinator[UnifiAccessData]):
         unconfirmed_lock_rule_doors: set[str] = set()
         lock_rule_support_complete = True
         try:
-            async with asyncio.timeout(10):
+            async with asyncio.timeout(LOCK_RULE_FETCH_TIMEOUT):
                 lock_rule_results = await asyncio.gather(
                     *(self._async_get_door_lock_rule(door.id) for door in doors),
                     return_exceptions=True,
@@ -375,7 +376,7 @@ class UnifiAccessCoordinator(DataUpdateCoordinator[UnifiAccessData]):
     async def _handle_setting_update(self, msg: WebsocketMessage) -> None:
         """Handle settings update messages (evacuation/lockdown)."""
         if self.data is None:
-            return  # type: ignore[unreachable]
+            return  # type: ignore[unreachable]  # pragma: no cover
         update = cast(SettingUpdate, msg)
         self.async_set_updated_data(
             replace(

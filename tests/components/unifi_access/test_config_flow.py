@@ -691,6 +691,46 @@ async def test_integration_discovery_adopts_manual_entry(
     assert manual_entry.unique_id == "B4FBE4AABBCC"
 
 
+async def test_integration_discovery_skips_non_matching_host(
+    hass: HomeAssistant,
+) -> None:
+    """Test discovery skips entries with non-matching host before finding a match."""
+    other_entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="Other Console",
+        data={
+            CONF_HOST: "10.0.0.99",
+            CONF_API_TOKEN: "other-token",
+            CONF_VERIFY_SSL: False,
+        },
+        unique_id=None,
+    )
+    other_entry.add_to_hass(hass)
+
+    matching_entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="UniFi Access",
+        data={
+            CONF_HOST: "10.0.0.5",
+            CONF_API_TOKEN: MOCK_API_TOKEN,
+            CONF_VERIFY_SSL: False,
+        },
+        unique_id=None,
+    )
+    matching_entry.add_to_hass(hass)
+
+    device = _make_discovered_device(source_ip="10.0.0.5")
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_INTEGRATION_DISCOVERY},
+        data=asdict(device),
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert matching_entry.unique_id == "B4FBE4AABBCC"
+
+
 async def test_integration_discovery_aborts_existing_host_different_unique_id(
     hass: HomeAssistant,
 ) -> None:

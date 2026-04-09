@@ -2,11 +2,12 @@
 
 from __future__ import annotations
 
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 from unifi_discovery import UnifiDevice, UnifiService
 
 from homeassistant.components.unifi_access.discovery import (
+    async_discover_devices,
     async_start_discovery,
     async_trigger_discovery,
 )
@@ -78,3 +79,17 @@ async def test_start_discovery_only_starts_once(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
     mock_discover.assert_called_once()
+
+
+async def test_async_discover_devices() -> None:
+    """Test async_discover_devices calls the scanner and returns results."""
+    mock_device = _make_device()
+    with patch(
+        "homeassistant.components.unifi_access.discovery.AIOUnifiScanner"
+    ) as mock_scanner_cls:
+        mock_scanner = mock_scanner_cls.return_value
+        mock_scanner.async_scan = AsyncMock(return_value=[mock_device])
+        result = await async_discover_devices()
+
+    assert result == [mock_device]
+    mock_scanner.async_scan.assert_awaited_once()
