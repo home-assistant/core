@@ -9,7 +9,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .coordinator import FlussConfigEntry
+from .coordinator import FlussConfigEntry, device_has_cover_status
 from .entity import FlussEntity
 
 PARALLEL_UPDATES = 1
@@ -20,17 +20,18 @@ async def async_setup_entry(
     entry: FlussConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up Fluss button entities."""
+    """Set up Fluss button entities for devices without open/close status."""
     coordinator = entry.runtime_data
 
     async_add_entities(
         FlussButton(coordinator, device_id, device)
         for device_id, device in coordinator.data.items()
+        if not device_has_cover_status(device)
     )
 
 
 class FlussButton(FlussEntity, ButtonEntity):
-    """Representation of a Fluss button device."""
+    """Button to trigger a Fluss device (fallback when status unavailable)."""
 
     _attr_name = None
 

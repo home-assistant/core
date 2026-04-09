@@ -26,11 +26,12 @@ rules:
   config-entry-unloading: done
   docs-configuration-parameters: done
   docs-installation-parameters: done
+  entity-unavailable: done
   integration-owner: done
   log-when-unavailable: done
   parallel-updates: done
   reauthentication-flow: done
-  test-coverage: todo
+  test-coverage: done
   # Gold
   entity-translations: done
   entity-device-class: done
@@ -44,10 +45,7 @@ rules:
   stale-devices: todo
   diagnostics: todo
   exception-translations: done
-  icon-translations:
-    status: exempt
-    comment: |
-      No icons used
+  icon-translations: todo
   reconfiguration-flow: todo
   dynamic-devices: todo
   discovery-update-info: todo

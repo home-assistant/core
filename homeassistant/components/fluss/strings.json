@@ -54,6 +54,12 @@
     }
   },
   "exceptions": {
+    "close_failed": {
+      "message": "Failed to close device: {error}"
+    },
+    "open_failed": {
+      "message": "Failed to open device: {error}"
+    },
     "trigger_failed": {
       "message": "Failed to trigger device: {error}"
     }
