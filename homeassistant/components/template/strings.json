@@ -470,6 +470,7 @@
       },
       "vacuum": {
         "data": {
+          "clean_area": "Actions on clean area",
           "clean_spot": "Actions on clean spot",
           "device_id": "[%key:common::config_flow::data::device%]",
           "fan_speed": "Fan speed",
@@ -478,12 +479,14 @@
           "name": "[%key:common::config_flow::data::name%]",
           "pause": "Actions on pause",
           "return_to_base": "Actions on return to dock",
+          "segments_template": "Segments",
           "set_fan_speed": "Actions on set fan speed",
           "start": "Actions on start",
           "state": "[%key:component::template::common::state%]",
           "stop": "Actions on stop"
         },
         "data_description": {
+          "clean_area": "Defines actions to run when the vacuum is given a 'Clean area' command. Receives variable `segment_ids`.",
           "clean_spot": "Defines actions to run when the vacuum is given a 'Clean spot' command.",
           "device_id": "[%key:component::template::common::device_id_description%]",
           "fan_speed": "Defines a template to get the fan speed of the vacuum.",
@@ -491,6 +494,7 @@
           "locate": "Defines actions to run when the vacuum is given a 'Locate' command.",
           "pause": "Defines actions to run when the vacuum is paused.",
           "return_to_base": "Defines actions to run when the vacuum is given a 'Return to dock' command.",
+          "segments_template": "Defines a template that returns vacuum segments. Accepted formats are a mapping of segment id to segment name, or a list of objects with `id`, `name`, and optional `group`.",
           "set_fan_speed": "Defines actions to run when the vacuum is given a command to set the fan speed. Receives variable `fan_speed`.",
           "start": "Defines actions to run when the vacuum is started.",
           "state": "Defines a template to get the state of the vacuum. Valid values are `cleaning`, `docked`, `idle`, `paused`, `returning`, and `error`.",
@@ -988,6 +992,7 @@
       },
       "vacuum": {
         "data": {
+          "clean_area": "[%key:component::template::config::step::vacuum::data::clean_area%]",
           "clean_spot": "[%key:component::template::config::step::vacuum::data::clean_spot%]",
           "device_id": "[%key:common::config_flow::data::device%]",
           "fan_speed": "[%key:component::template::config::step::vacuum::data::fan_speed%]",
@@ -996,12 +1001,14 @@
           "name": "[%key:common::config_flow::data::name%]",
           "pause": "[%key:component::template::config::step::vacuum::data::pause%]",
           "return_to_base": "[%key:component::template::config::step::vacuum::data::return_to_base%]",
+          "segments_template": "[%key:component::template::config::step::vacuum::data::segments_template%]",
           "set_fan_speed": "[%key:component::template::config::step::vacuum::data::set_fan_speed%]",
           "start": "[%key:component::template::config::step::vacuum::data::start%]",
           "state": "[%key:component::template::common::state%]",
           "stop": "[%key:component::template::config::step::vacuum::data::stop%]"
         },
         "data_description": {
+          "clean_area": "[%key:component::template::config::step::vacuum::data_description::clean_area%]",
           "clean_spot": "[%key:component::template::config::step::vacuum::data_description::clean_spot%]",
           "device_id": "[%key:component::template::common::device_id_description%]",
           "fan_speed": "[%key:component::template::config::step::vacuum::data_description::fan_speed%]",
@@ -1009,6 +1016,7 @@
           "locate": "[%key:component::template::config::step::vacuum::data_description::locate%]",
           "pause": "[%key:component::template::config::step::vacuum::data_description::pause%]",
           "return_to_base": "[%key:component::template::config::step::vacuum::data_description::return_to_base%]",
+          "segments_template": "[%key:component::template::config::step::vacuum::data_description::segments_template%]",
           "set_fan_speed": "[%key:component::template::config::step::vacuum::data_description::set_fan_speed%]",
           "start": "[%key:component::template::config::step::vacuum::data_description::start%]",
           "state": "[%key:component::template::config::step::vacuum::data_description::state%]",

@@ -124,6 +124,8 @@ from .update import (
 from .vacuum import (
     CONF_FAN_SPEED,
     CONF_FAN_SPEED_LIST,
+    CONF_SEGMENTS_TEMPLATE,
+    SERVICE_CLEAN_AREA,
     SERVICE_CLEAN_SPOT,
     SERVICE_LOCATE,
     SERVICE_PAUSE,
@@ -402,6 +404,8 @@ def generate_schema(domain: str, flow_type: str) -> vol.Schema:
             vol.Optional(SERVICE_RETURN_TO_BASE): selector.ActionSelector(),
             vol.Optional(SERVICE_CLEAN_SPOT): selector.ActionSelector(),
             vol.Optional(SERVICE_LOCATE): selector.ActionSelector(),
+            vol.Optional(CONF_SEGMENTS_TEMPLATE): selector.TemplateSelector(),
+            vol.Optional(SERVICE_CLEAN_AREA): selector.ActionSelector(),
         }
 
     if domain == Platform.WEATHER:
