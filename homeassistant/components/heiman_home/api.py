@@ -42,7 +42,7 @@ class HeimanApiClient:
         self._session = session
         self._token_data = token_data
         
-        # 初始化 HTTP 客户端和云客户端
+        # Initialize HTTP and cloud clients
         self._http_client: HeimanHttpClient | None = None
         self._cloud_client: HeimanCloudClient | None = None
         
@@ -82,7 +82,7 @@ class HeimanApiClient:
                 _LOGGER.error("Token refresh failed: %s", err)
                 raise ConfigEntryAuthFailed(f"Token refresh failed: {err}") from err
         
-        # 如果 token 已更新，重新初始化客户端
+        # Re-initialize client if token updated
         current_token = self._get_access_token()
         if self._http_client and current_token:
             self._http_client.update_access_token(current_token)
@@ -170,7 +170,7 @@ class HeimanApiClient:
             raise HeimanConnectionError("Client not initialized")
         
         try:
-            # 设置当前家庭 ID
+            # Set current home ID
             self._cloud_client.home_id = home_id
             devices = await self._cloud_client.async_get_devices(home_id=home_id)
             _LOGGER.debug("Retrieved %d devices", len(devices))

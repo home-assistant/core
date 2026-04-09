@@ -23,7 +23,7 @@ from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .api import HeimanApiClient
-from .const import CONF_HOME_ID, CONF_USER_ID, UPDATE_INTERVAL
+from .const import CONF_HOME_ID, CONF_USER_ID
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -88,12 +88,12 @@ class HeimanDataUpdateCoordinator(DataUpdateCoordinator[HeimanData]):
             UpdateFailed: If data fetch fails
         """
         try:
-            # 获取家庭 ID
+            # Get home ID
             home_id = self.config_entry.data.get(CONF_HOME_ID)
             if not home_id:
                 raise UpdateFailed("Home ID not found in config entry")
 
-            # 获取用户信息（只在首次更新时获取）
+            # Get user info (only on first update)
             if self.data.user_info is None:
                 try:
                     self.data.user_info = await self.api_client.async_get_user_info()
@@ -103,7 +103,7 @@ class HeimanDataUpdateCoordinator(DataUpdateCoordinator[HeimanData]):
                     _LOGGER.warning("Failed to fetch user info: %s", err)
                     self.data.errors["user_info"] = str(err)
 
-            # 获取家庭信息（只在首次更新时获取）
+            # Get home info (only on first update)
             if self.data.home_info is None:
                 try:
                     homes = await self.api_client.async_get_homes()
@@ -118,11 +118,11 @@ class HeimanDataUpdateCoordinator(DataUpdateCoordinator[HeimanData]):
                     _LOGGER.warning("Failed to fetch home info: %s", err)
                     self.data.errors["home_info"] = str(err)
 
-            # 获取设备列表和详情
+            # Get device list and details
             try:
                 devices_dict = await self.api_client.async_get_devices(home_id=home_id)
 
-                # 应用设备过滤
+                # Apply device filtering
                 if self.device_management:
                     devices_list = list(devices_dict.values())
                     filtered_devices_list = (
@@ -130,40 +130,40 @@ class HeimanDataUpdateCoordinator(DataUpdateCoordinator[HeimanData]):
                             devices_list
                         )
                     )
-                    # 转回字典
+                    # Convert back to dictionary
                     devices = {d.device_id: d for d in filtered_devices_list}
                 else:
                     devices = devices_dict
 
-                # 从设备列表中提取固件版本信息
+                # Extract firmware version from device list
                 for device_id, device in devices.items():
-                    # 首先检查设备的原始数据中是否有 firmwareInfo
+                    # First check if device raw_data has firmwareInfo
                     if hasattr(device, 'raw_data') and device.raw_data:
                         firmware_info = device.raw_data.get("firmwareInfo", {})
                         if isinstance(firmware_info, dict) and "version" in firmware_info:
                             device.firmware_version = firmware_info.get("version")
 
-                    # 尝试从设备的 firmware_info 属性获取固件版本
+                    # Try to get firmware version from device's firmware_info attribute
                     if hasattr(device, 'firmware_info') and device.firmware_info:
                         if isinstance(device.firmware_info, dict) and "version" in device.firmware_info:
-                            # 将固件版本存储到设备对象中供后续使用
+                            # Store firmware version in device object for later use
                             device.firmware_version = device.firmware_info.get("version")
 
-                # 为过滤后的设备获取详细信息以填充属性值
+                # Get detailed info for filtered devices to populate property values
                 for device_id, device in devices.items():
                     try:
-                        # 通过 cloud_client 获取设备详情
+                        # Get device details via cloud_client
                         if hasattr(self.api_client, '_cloud_client') and self.api_client._cloud_client:
                             device_detail = await self.api_client._cloud_client._async_get_device_detail(device_id)
                             if device_detail:
 
-                                # 从 firmwareInfo 中提取固件版本（如果之前没有获取到）
+                                # Extract firmware version from firmwareInfo (if not retrieved earlier)
                                 if not device.firmware_version:
                                     firmware_info = device_detail.get("firmwareInfo", {})
                                     if isinstance(firmware_info, dict) and "version" in firmware_info:
                                         device.firmware_version = firmware_info.get("version")
 
-                                # 从 deriveMetadata 中提取属性值并更新到设备对象
+                                # Extract property values from deriveMetadata and update device object
                                 if "deriveMetadata" in device_detail:
                                     try:
                                         metadata_str = device_detail.get("deriveMetadata", "")
@@ -227,22 +227,22 @@ class HeimanDataUpdateCoordinator(DataUpdateCoordinator[HeimanData]):
                     except Exception as err:
                         pass
 
-                # 更新设备数据
+                # Update device data
                 old_devices = self.data.devices.copy()
                 self.data.devices = devices
 
-                # 合并旧设备的状态（如果新设备没有该属性）
+                # Merge old device states (if new device doesn't have the property)
                 for device_id, new_device in devices.items():
                     if device_id in old_devices:
                         old_device = old_devices[device_id]
-                        # 保留旧设备的在线状态和其他动态属性
+                        # Preserve old device's online status and other dynamic properties
                         for prop_id, old_prop in old_device.properties.items():
                             if prop_id in new_device.properties:
-                                # 保持最新值
+                                # Keep latest value
                                 if old_prop.value is not None:
                                     new_device.properties[prop_id].value = old_prop.value
 
-                        # 复制在线状态
+                        # Copy online status
                         if not new_device.online and old_device.online:
                             new_device.online = old_device.online
 
@@ -256,11 +256,11 @@ class HeimanDataUpdateCoordinator(DataUpdateCoordinator[HeimanData]):
                     exc_info=True,  # Add full traceback for debugging
                 )
                 self.data.errors["devices"] = str(err)
-                # 如果之前有设备数据，保持不变
+                # If there was previous device data, keep it
                 if not self.data.devices:
                     raise UpdateFailed(f"Failed to fetch devices: {err}") from err
 
-            # 更新最后更新时间
+            # Update last update time
             self.data.last_update = datetime.now()
             self.data.errors.clear()
 

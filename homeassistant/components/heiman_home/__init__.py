@@ -49,7 +49,7 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(hass: HomeAssistant, entry: HeimanConfigEntry) -> bool:
     """Set up Heiman from a config entry."""
-    # 检查配置中是否包含 token
+    # Check if config contains token
     if CONF_TOKEN not in entry.data:
         raise ConfigEntryAuthFailed("Config entry missing token")
     
@@ -63,7 +63,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: HeimanConfigEntry) -> bo
     
     session = OAuth2Session(hass, entry, implementation)
     
-    # 验证 token 有效性
+    # Validate token
     try:
         await session.async_ensure_token_valid()
     except OAuth2TokenRequestReauthError as err:
@@ -82,19 +82,19 @@ async def async_setup_entry(hass: HomeAssistant, entry: HeimanConfigEntry) -> bo
             translation_key="token_expired",
         ) from err
     
-    # 创建 API 客户端
+    # Create API client
     api_client = HeimanApiClient(hass=hass, session=session)
     
-    # 测试 API 连接
+    # Test API connection
     try:
         user_info = await api_client.async_get_user_info()
     except Exception as err:
         raise ConfigEntryNotReady(f"Failed to connect to Heiman API: {err}") from err
     
-    # 初始化设备管理
+    # Initialize device management
     device_management = DeviceManagement()
     
-    # 配置设备过滤
+    # Configure device filtering
     filter_config = {
         "filter_mode": entry.data.get(CONF_DEVICE_FILTER, "exclude"),
         "statistics_logic": entry.data.get(CONF_STATISTICS_LOGIC, "or"),
@@ -108,7 +108,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: HeimanConfigEntry) -> bo
         "device_list": entry.data.get(CONF_DEVICE_LIST, []),
     }
     
-    # 配置区域同步
+    # Configure area sync
     area_sync_mode = entry.data.get(CONF_AREA_NAME_RULE, AREA_NAME_RULE_HOME_ROOM)
     
     device_management.configure(
@@ -116,7 +116,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: HeimanConfigEntry) -> bo
         area_sync_mode=area_sync_mode,
     )
     
-    # 创建数据协调器
+    # Create data coordinator
     coordinator = HeimanDataUpdateCoordinator(
         hass=hass,
         logger=_LOGGER,
@@ -126,22 +126,22 @@ async def async_setup_entry(hass: HomeAssistant, entry: HeimanConfigEntry) -> bo
         oauth_session=session,  # Pass OAuth2 session for MQTT token retrieval
     )
     
-    # 首次更新数据
+    # First data update
     await coordinator.async_config_entry_first_refresh()
     
-    # 初始化 MQTT 客户端（用于实时设备属性更新）
+    # Initialize MQTT client (for real-time device property updates)
     await coordinator.async_init_mqtt_client()
     
-    # 存储协调器到 hass.data 和 runtime_data
+    # Store coordinator in hass.data and runtime_data
     if DOMAIN not in hass.data:
         hass.data[DOMAIN] = {}
     hass.data[DOMAIN][entry.entry_id] = coordinator
     entry.runtime_data = coordinator
     
-    # 加载平台
+    # Load platforms
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     
-    # 注册服务来读取设备属性
+    # Register service to read device properties
     async def handle_read_device_properties(call):
         """Handle read device properties service call."""
         device_id = call.data.get("device_id")

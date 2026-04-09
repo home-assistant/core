@@ -13,11 +13,11 @@ from homeassistant.const import (
 
 DOMAIN = "heiman_home"
 
-# OAuth 2.0 配置
+# OAuth 2.0 Configuration
 OAUTH_AUTHORIZE_URL = "https://spapi.heiman.cn/api-auth/system/auth/ha/oauth/authorize"
 OAUTH_TOKEN_URL = "https://spapi.heiman.cn/api-auth/oauth/token"
 
-# API 端点
+# API Endpoint
 API_BASE_URL = "https://spapi.heiman.cn"
 
 # Scopes
@@ -32,12 +32,12 @@ REQUESTED_SCOPES = [
     # "home_manage",
 ]
 
-# 配置项
+# Configuration Items
 CONF_HOME_ID = "home_id"
 CONF_USER_ID = "user_id"
 CONF_REFRESH_TOKEN = "refresh_token"
 
-# 设备过滤配置
+# Device Filter Configuration
 CONF_DEVICE_FILTER = "devices_filter"
 CONF_STATISTICS_LOGIC = "statistics_logic"
 CONF_ROOM_FILTER_MODE = "room_filter_mode"
@@ -49,14 +49,14 @@ CONF_TYPE_LIST = "type_list"
 CONF_MODEL_LIST = "model_list"
 CONF_DEVICE_LIST = "device_list"
 
-# 区域名称同步
+# Area Name Sync
 CONF_AREA_NAME_RULE = "area_name_rule"
 AREA_NAME_RULE_NONE = "none"
 AREA_NAME_RULE_ROOM = "room"
 AREA_NAME_RULE_HOME = "home"
 AREA_NAME_RULE_HOME_ROOM = "home_room"
 
-# 平台定义
+# Platform Definitions
 PLATFORMS = [
     # "binary_sensor",
     "sensor",
@@ -66,7 +66,7 @@ PLATFORMS = [
     # "update",
 ]
 
-# Binary Sensor 设备类映射
+# Binary Sensor Device Class Mapping
 BINARY_SENSOR_DEVICE_CLASS_MAP = {
     "SmokeSensorState": "smoke",
     "CarbonMonoxideAlarm": "gas",
@@ -81,7 +81,7 @@ BINARY_SENSOR_DEVICE_CLASS_MAP = {
     "DoorStatus": "door",
 }
 
-# Sensor 设备类与单位映射
+# Sensor Device Class and Unit Mapping
 SENSOR_UNIT_MAP = {
     "temperature": {
         "device_class": "temperature",
@@ -139,15 +139,15 @@ ALARM_SOUND_DISPLAY_NAMES = {
     "slow": "Slow Beep",
 }
 
-# 更新间隔（秒）
+# Update Interval (seconds)
 UPDATE_INTERVAL = timedelta(seconds=60)
 
-# 服务定义
+# Service Definitions
 SERVICE_READ_DEVICE_PROPERTIES = "read_device_properties"
 
-# 图标映射（使用 icons.json 作为主要来源，这里提供后备）
+# Icon Mapping (icons.json is primary source, this provides fallback)
 ENTITY_ICONS = {
-    # Binary Sensor 图标
+    # Binary Sensor Icons
     "binary_sensor": {
         "SmokeSensorState": "mdi:smoke",
         "WaterSensorState": "mdi:water",
@@ -158,7 +158,7 @@ ENTITY_ICONS = {
         "DoorStatus": "mdi:door",
         "CoStatus": "mdi:molecule-co",
     },
-    # Sensor 图标
+    # Sensor Icons
     "sensor": {
         "CurrentTemperature": "mdi:thermometer",
         "BatteryPercentage": "mdi:battery",
@@ -172,19 +172,19 @@ ENTITY_ICONS = {
         "SignalStrength": "mdi:signal",
         "TimeZone": "mdi:clock-time-nine-outline",
     },
-    # Switch 图标
+    # Switch Icons
     "switch": {
         "LightSwitch": "mdi:lightbulb-outline",
         "FreezingPointEnable": "mdi:snowflake-alert",
         "BuzzerEnable": "mdi:surround-sound",
     },
-    # Button 图标
+    # Button Icons
     "button": {
         "RemoteLocate": "mdi:radar",
         "RemoteCheck": "mdi:clipboard-check",
         "Mute": "mdi:volume-mute",
     },
-    # Select 图标
+    # Select Icons
     "select": {
         "AlarmSoundOption": "mdi:volume-high"
     },

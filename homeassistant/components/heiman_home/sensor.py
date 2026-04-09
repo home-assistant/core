@@ -5,7 +5,7 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from heimanconnect import HeimanDevice
+from heimanconnect import HeimanDevice, DeviceProperty
 
 from homeassistant import config_entries
 from homeassistant.components.sensor import (
@@ -36,7 +36,7 @@ async def async_setup_entry(
     sensors = []
     
     for device in devices:
-        # 为每个设备的每个可读属性创建传感器
+        # Create sensor for each readable property of each device
         for property_id, prop in device.properties.items():
             if not prop.readable:
                 continue
@@ -76,16 +76,16 @@ class HeimanSensorEntity(CoordinatorEntity[HeimanDataUpdateCoordinator], SensorE
         self._device = device
         self._property_identifier = property_identifier
         
-        # 生成唯一 ID
+        # Generate unique ID
         self._attr_unique_id = f"{device.device_id}_{property_identifier}_sensor"
         
-        # 获取属性对象
+        # Get property object
         prop = device.properties.get(property_identifier)
         
-        # 设置名称
+        # Set name
         self._attr_name = prop.name if prop else property_identifier
         
-        # 获取设备信息
+        # Get device info
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, device.device_id)},
             name=device.device_name,
@@ -95,20 +95,20 @@ class HeimanSensorEntity(CoordinatorEntity[HeimanDataUpdateCoordinator], SensorE
             hw_version=device.hardware_version,
         )
         
-        # 根据属性类型设置设备类和单位（仅在属性存在时应用）
+        # Apply device class and unit based on property type (only if property exists)
         if prop:
             self._apply_sensor_config(property_identifier, prop)
-            # 应用图标
+            # Apply icon
             self._apply_icon(property_identifier, prop)
     
-    def _apply_sensor_config(self, property_identifier: str, prop) -> None:
+    def _apply_sensor_config(self, property_identifier: str, prop: DeviceProperty | None) -> None:
         """Apply sensor configuration based on property type.
         
         Args:
             property_identifier: Property identifier
             prop: Property object
         """
-        # 映射常见属性到标准设备类
+        # Map common properties to standard device classes
         property_mapping = {
             "temperature": {"device_class": SensorDeviceClass.TEMPERATURE, "key": "temperature"},
             "humidity": {"device_class": SensorDeviceClass.HUMIDITY, "key": "humidity"},
@@ -120,7 +120,7 @@ class HeimanSensorEntity(CoordinatorEntity[HeimanDataUpdateCoordinator], SensorE
             "signal_strength": {"device_class": SensorDeviceClass.SIGNAL_STRENGTH, "key": "signal_strength"},
         }
         
-        # 尝试匹配已知属性
+        # Try to match known properties
         config = None
         for key, cfg in property_mapping.items():
             if key in property_identifier.lower():
@@ -131,7 +131,7 @@ class HeimanSensorEntity(CoordinatorEntity[HeimanDataUpdateCoordinator], SensorE
             self._attr_device_class = SensorDeviceClass(config.get("device_class"))
             self._attr_native_unit_of_measurement = config.get("unit")
             self._attr_state_class = SensorStateClass(config.get("state_class", SensorStateClass.MEASUREMENT.value))
-        else:
+        elif prop:
             # Check if value is numeric before setting state_class
             if prop.value is not None and isinstance(prop.value, (int, float)):
                 self._attr_state_class = SensorStateClass.MEASUREMENT
@@ -139,27 +139,27 @@ class HeimanSensorEntity(CoordinatorEntity[HeimanDataUpdateCoordinator], SensorE
                 self._attr_state_class = SensorStateClass.MEASUREMENT
             # Non-numeric sensors should not have state_class set
     
-    def _apply_icon(self, property_identifier: str, prop) -> None:
+    def _apply_icon(self, property_identifier: str, prop: DeviceProperty | None) -> None:
         """Apply icon based on property type.
         
         Args:
             property_identifier: Property identifier
             prop: Property object
         """
-        # 首先尝试从 ENTITY_ICONS 获取（使用原始大小写）
+        # First try to get from ENTITY_ICONS (using original case)
         icons_config = ENTITY_ICONS.get("sensor", {})
 
         if property_identifier in icons_config:
             self._attr_icon = icons_config[property_identifier]
             return
         
-        # 如果未找到，尝试小写匹配
+        # If not found, try lowercase matching
         prop_lower = property_identifier.lower()
         if prop_lower in icons_config:
             self._attr_icon = icons_config[prop_lower]
             return
         
-        # 根据设备类设置默认图标（使用 getattr 安全访问）
+        # Set default icon based on device class (use getattr for safe access)
         device_class = getattr(self, '_attr_device_class', None)
         if device_class == SensorDeviceClass.TEMPERATURE:
             self._attr_icon = "mdi:thermometer"

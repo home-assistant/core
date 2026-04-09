@@ -4,7 +4,7 @@ from collections.abc import Mapping
 import logging
 from typing import Any
 
-import voluptuous as vol
+import vol
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlowResult
@@ -43,6 +43,7 @@ class HeimanConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
 
     def __init__(self) -> None:
         """Initialize the config flow."""
+        super().__init__()
         self._auth_info = AuthInfo()
 
     @property
@@ -57,11 +58,11 @@ class HeimanConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
 
     async def async_oauth_create_entry(self, data: dict[str, Any]) -> ConfigFlowResult:
         """Create an entry for Heiman."""
-        # 验证 scopes
+        # Validate scopes
         if not set(data[CONF_TOKEN].get("scope", "").split()) >= set(SCOPES):
             return self.async_abort(reason="missing_scopes")
 
-        # 创建 API 客户端验证 token 并获取用户信息
+        # Create API client to validate token and get user info
         api_client = HeimanApiClient(hass=self.hass, session=None, token_data=data[CONF_TOKEN])
 
         try:
@@ -70,7 +71,7 @@ class HeimanConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
             _LOGGER.error("Failed to get user info: %s", err)
             return self.async_abort(reason="token_invalid")
 
-        # 获取家庭信息
+        # Get home info
         try:
             homes = await api_client.async_get_homes()
             if not homes:
@@ -79,12 +80,12 @@ class HeimanConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
             _LOGGER.error("Failed to get homes: %s", err)
             return self.async_abort(reason="homes_fetch_failed")
 
-        # 存储临时数据用于家庭选择
+        # Store temporary data for home selection
         self._auth_info.homes = homes if isinstance(homes, list) else []
         self._auth_info.user_info = user_info
         self._auth_info.auth_data = data
 
-        # 进入家庭选择步骤
+        # Enter home selection step
         return await self.async_step_select_home()
 
     async def async_step_select_home(
@@ -92,7 +93,7 @@ class HeimanConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle home selection step with multi-select support."""
         if user_input is not None:
-            # 用户选择了家庭（支持多选）
+            # User selected homes (supports multi-select)
             selected_home_ids = user_input.get(CONF_HOME_ID, [])
 
             if not selected_home_ids:
@@ -102,11 +103,11 @@ class HeimanConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
                     errors={"base": "no_home_selected"},
                 )
 
-            # 存储选中的家庭 ID
+            # Store selected home IDs
             self._auth_info.selected_home_ids = selected_home_ids
 
             first_home = next(
-                (h for h in self._auth_info.homes if h.home_id == selected_home_ids[0]),
+                (h for h in self._auth_info.homes if h.get("home_id") == selected_home_ids[0]),
                 self._auth_info.homes[0] if self._auth_info.homes else None,
             )
 
@@ -115,11 +116,11 @@ class HeimanConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
             if self.source != SOURCE_REAUTH:
                 self._abort_if_unique_id_configured()
 
-                # 构建配置数据
+                # Build config data
                 config_data = {
                     **self._auth_info.auth_data,
-                    CONF_HOME_ID: selected_home_ids[0] if selected_home_ids else None,  # 主家庭 ID
-                    "home_ids": selected_home_ids,  # 所有选中的家庭 ID
+                    CONF_HOME_ID: selected_home_ids[0] if selected_home_ids else None,  # Primary home ID
+                    "home_ids": selected_home_ids,  # All selected home IDs
                     CONF_USER_ID: self._auth_info.user_info.user_id,
                 }
 
@@ -132,7 +133,7 @@ class HeimanConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
                     data=config_data,
                 )
 
-            # 处理重新认证
+            # Handle re-authentication
             if (entry := self._get_reauth_entry()) and CONF_TOKEN not in entry.data:
                 if entry.data.get(CONF_USER_ID) != self._auth_info.user_info.user_id:
                     return self.async_abort(reason="reauth_user_mismatch")
@@ -170,14 +171,14 @@ class HeimanConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
 
         home_options = {}
         for home in homes:
-            home_id = home.home_id
-            home_name = home.home_name or "Unknown"
-            device_count = home.device_count
+            home_id = home.get("home_id", "")
+            home_name = home.get("home_name", "Unknown")
+            device_count = home.get("device_count", 0)
 
             display_text = f"{home_name} [{device_count} devices]"
             home_options[home_id] = display_text
 
-        default_homes = [home.home_id for home in homes if home.home_id]
+        default_homes = [home.get("home_id") for home in homes if home.get("home_id")]
         
         return vol.Schema(
             {
