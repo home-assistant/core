@@ -207,7 +207,7 @@
         "state": {
           "absorption": "Absorption",
           "auto_equalize": "Auto equalize / recondition",
-          "battery_safe": "Battery safe",
+          "battery_safe": "Battery Safe",
           "bulk": "Bulk",
           "discharging": "[%key:common::state::discharging%]",
           "equalize": "Equalize",
