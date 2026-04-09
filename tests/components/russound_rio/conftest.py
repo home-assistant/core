@@ -85,6 +85,7 @@ def mock_russound_client() -> Generator[AsyncMock]:
                 zone.set_turn_on_volume = AsyncMock()
                 zone.set_loudness = AsyncMock()
                 zone.restore_preset = AsyncMock()
+                zone.set_party_mode = AsyncMock()
 
         client.controllers = {
             1: Controller(
