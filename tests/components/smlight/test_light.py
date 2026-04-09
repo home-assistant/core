@@ -3,7 +3,6 @@
 from collections.abc import Awaitable, Callable
 from unittest.mock import MagicMock
 
-from pysmlight import Info
 from pysmlight.const import AmbiEffect
 from pysmlight.exceptions import SmlightConnectionError
 from pysmlight.models import AmbilightPayload
@@ -74,11 +73,6 @@ async def test_light_not_created_non_ultima(
     mock_smlight_client: MagicMock,
 ) -> None:
     """Test light entity is not created for non-Ultima devices."""
-    mock_smlight_client.get_info.side_effect = None
-    mock_smlight_client.get_info.return_value = Info(
-        MAC="AA:BB:CC:DD:EE:FF",
-        model="SLZB-MR1",
-    )
     await setup_integration(hass, mock_config_entry)
 
     state = hass.states.get("light.mock_title_ambilight")
