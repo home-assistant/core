@@ -3,6 +3,7 @@
 import argparse
 from pathlib import Path
 import sys
+import time
 
 import orjson
 
@@ -77,8 +78,10 @@ def run():
 
     if args.all:
         prepare_download_dir()
+        start_time = time.perf_counter()
         run_translation(translations["component"], flattened_translations)
-        print("🌎 Generated translation files for all integrations")
+        elapsed = time.perf_counter() - start_time
+        print(f"🌎 Generated translation files for all integrations in {elapsed:.2f}s")
         return 0
 
     if args.integration:
