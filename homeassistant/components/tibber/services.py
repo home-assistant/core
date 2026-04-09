@@ -55,7 +55,7 @@ async def __get_prices(call: ServiceCall) -> ServiceResponse:
     tibber_prices: dict[str, Any] = {}
 
     now = dt_util.now()
-    today_start = dt_util.start_of_local_day()
+    today_start = dt_util.start_of_local_day(now)
     today_end = today_start + dt.timedelta(days=1)
     tomorrow_end = today_start + dt.timedelta(days=2)
 
