@@ -114,7 +114,6 @@ from .const import (
     MIN_THINKING_BUDGET,
     NON_ADAPTIVE_THINKING_MODELS,
     NON_THINKING_MODELS,
-    UNSUPPORTED_STRUCTURED_OUTPUT_MODELS,
     PromptCaching,
 )
 from .coordinator import AnthropicConfigEntry, AnthropicCoordinator
@@ -854,7 +853,10 @@ class AnthropicBaseLLMEntity(CoordinatorEntity[AnthropicCoordinator]):
             )
 
         if structure and structure_name:
-            if not model.startswith(tuple(UNSUPPORTED_STRUCTURED_OUTPUT_MODELS)):
+            if (
+                self.model_info.capabilities
+                and self.model_info.capabilities.structured_outputs.supported
+            ):
                 # Native structured output for those models who support it.
                 structure_name = None
                 model_args.setdefault("output_config", OutputConfigParam())[
