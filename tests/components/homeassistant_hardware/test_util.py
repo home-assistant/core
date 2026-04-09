@@ -175,7 +175,6 @@ async def test_guess_firmware_info_integrations(hass: HomeAssistant) -> None:
 
 async def test_guess_hardware_owners_z2m(
     hass: HomeAssistant,
-    supervisor_client: AsyncMock,
 ) -> None:
     """Test fetching adapter info for a complex Z2M scenario."""
     await async_setup_component(hass, DOMAIN, {})
@@ -183,40 +182,27 @@ async def test_guess_hardware_owners_z2m(
     multipan_addon_manager = AsyncMock(spec_set=AddonManager)
     multipan_addon_manager.async_get_addon_info.side_effect = AddonError()
 
-    def mock_addon_info(slug: str) -> AddonInfo:
+    async def mock_z2m_firmware_info(
+        hass: HomeAssistant, z2m_addon_manager: AddonManager
+    ) -> FirmwareInfo | None:
+        slug = z2m_addon_manager.addon_slug
         if slug == TEST_Z2M_ADDON_SLUG_1:
-            return AddonInfo(
-                available=True,
-                hostname=f"core_{TEST_Z2M_ADDON_SLUG_1}",
-                options={"serial": {"port": "/dev/ttyUSB1"}},
-                state=AddonState.RUNNING,
-                update_available=False,
-                version="1.0.0",
+            return FirmwareInfo(
+                device="/dev/ttyUSB1",
+                firmware_type=ApplicationType.EZSP,
+                firmware_version=None,
+                source=f"zigbee2mqtt ({TEST_Z2M_ADDON_SLUG_1})",
+                owners=[OwningAddon(slug=TEST_Z2M_ADDON_SLUG_1)],
             )
-
         if slug == TEST_Z2M_ADDON_SLUG_2:
-            return AddonInfo(
-                available=True,
-                hostname=f"core_{TEST_Z2M_ADDON_SLUG_2}",
-                options={"serial": {"port": "/dev/ttyUSB2"}},
-                state=AddonState.NOT_RUNNING,
-                update_available=False,
-                version="1.0.0",
+            return FirmwareInfo(
+                device="/dev/ttyUSB2",
+                firmware_type=ApplicationType.EZSP,
+                firmware_version=None,
+                source=f"zigbee2mqtt ({TEST_Z2M_ADDON_SLUG_2})",
+                owners=[OwningAddon(slug=TEST_Z2M_ADDON_SLUG_2)],
             )
-
-        if slug == "unrelated_addon":
-            return AddonInfo(
-                available=True,
-                hostname="core_unrelated_addon",
-                options={},
-                state=AddonState.RUNNING,
-                update_available=False,
-                version="1.0.0",
-            )
-
-        raise AddonError
-
-    supervisor_client.addons.addon_info.side_effect = mock_addon_info
+        return None
 
     with (
         patch(
@@ -243,6 +229,14 @@ async def test_guess_hardware_owners_z2m(
                 {"slug": TEST_Z2M_ADDON_SLUG_3, "state": "stopped"},
                 {"slug": "unrelated_addon", "state": "started"},
             ],
+        ),
+        patch(
+            "homeassistant.components.homeassistant_hardware.util.get_z2m_addon_manager",
+            side_effect=lambda hass, slug: Mock(addon_slug=slug),
+        ),
+        patch(
+            "homeassistant.components.homeassistant_hardware.util.get_z2m_addon_firmware_info",
+            side_effect=mock_z2m_firmware_info,
         ),
     ):
         assert (await guess_hardware_owners(hass, "/dev/ttyUSB1")) == [
