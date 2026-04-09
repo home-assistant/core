@@ -194,6 +194,7 @@ async def test_victron_select_option_non_writable_metric(
 
     # Patch the entity's _metric to a non-writable type
     entity = hass.data["entity_components"]["select"].get_entity(entity_id)
+    assert entity is not None
     entity._metric = MagicMock(spec=VictronVenusMetric)
 
     await hass.services.async_call(

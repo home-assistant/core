@@ -78,7 +78,7 @@ class VictronSelect(VictronBaseEntity, SelectEntity):
         self._attr_current_option = VictronSelect._normalize_value(value)
         self.async_write_ha_state()
 
-    def select_option(self, option: str) -> None:
+    async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
         if not isinstance(self._metric, VictronVenusWritableMetric):
             _LOGGER.error(
