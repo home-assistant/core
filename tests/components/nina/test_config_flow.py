@@ -6,7 +6,7 @@ from copy import deepcopy
 from typing import Any
 from unittest.mock import AsyncMock
 
-from pynina import ApiError
+from pynina import ApiError, Warning
 
 from homeassistant.components.nina.const import (
     CONF_AREA_FILTER,
@@ -21,6 +21,7 @@ from homeassistant.components.nina.const import (
     CONST_REGION_R_TO_U,
     CONST_REGION_V_TO_Z,
     DOMAIN,
+    SENSOR_SUFFIXES,
 )
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.core import HomeAssistant
@@ -285,6 +286,17 @@ async def test_options_flow_entity_removal(
     """Test if old entities are removed."""
     await setup_platform(hass, mock_config_entry, mock_nina_class, nina_warnings)
 
+    entries = er.async_entries_for_config_entry(
+        entity_registry, mock_config_entry.entry_id
+    )
+
+    entities_per_slot = len(SENSOR_SUFFIXES) + 1
+
+    assert (
+        len(entries)
+        == mock_config_entry.data.get(CONF_MESSAGE_SLOTS) * entities_per_slot
+    )
+
     result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
 
     new_slot_count = 2
@@ -309,4 +321,4 @@ async def test_options_flow_entity_removal(
         entity_registry, mock_config_entry.entry_id
     )
 
-    assert len(entries) == new_slot_count
+    assert len(entries) == new_slot_count * entities_per_slot

@@ -10,15 +10,13 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME, UnitOfDataRate, UnitOfInformation
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.util.dt import utcnow
 
-from .const import DATA_COORDINATOR, DOMAIN
-from .coordinator import NZBGetDataUpdateCoordinator
+from .coordinator import NZBGetConfigEntry, NZBGetDataUpdateCoordinator
 from .entity import NZBGetEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -92,13 +90,11 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: NZBGetConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up NZBGet sensor based on a config entry."""
-    coordinator: NZBGetDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id][
-        DATA_COORDINATOR
-    ]
+    coordinator = entry.runtime_data
     entities = [
         NZBGetSensor(coordinator, entry.entry_id, entry.data[CONF_NAME], description)
         for description in SENSOR_TYPES

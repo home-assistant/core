@@ -2,21 +2,20 @@
 
 from abc import abstractmethod
 from collections.abc import Awaitable, Callable
+from inspect import isawaitable
 from typing import Any
 
-from aiohttp import ClientError
-
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN, TRANSLATED_ERRORS
+from .const import DOMAIN
 from .coordinator import (
     TessieEnergyHistoryCoordinator,
     TessieEnergySiteInfoCoordinator,
     TessieEnergySiteLiveCoordinator,
     TessieStateUpdateCoordinator,
 )
+from .helpers import handle_command, handle_legacy_command
 from .models import TessieEnergyData, TessieVehicleData
 
 
@@ -93,30 +92,24 @@ class TessieEntity(TessieBaseEntity):
         self.async_write_ha_state()
 
     async def run(
-        self, func: Callable[..., Awaitable[dict[str, Any]]], **kargs: Any
+        self,
+        command: Callable[..., Awaitable[dict[str, Any]]] | Awaitable[dict[str, Any]],
+        **kargs: Any,
     ) -> None:
-        """Run a tessie_api function and handle exceptions."""
-        try:
-            response = await func(
+        """Run a legacy tessie_api command function or awaitable Vehicle command."""
+        if isawaitable(command):
+            await handle_command(command)
+            return
+
+        await handle_legacy_command(
+            command(
                 session=self._session,
                 vin=self.vin,
                 api_key=self._api_key,
                 **kargs,
-            )
-        except ClientError as e:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="cannot_connect",
-            ) from e
-        if response["result"] is False:
-            name: str = getattr(self, "name", self.entity_id)
-            reason: str = response.get("reason", "unknown")
-            translation_key = TRANSLATED_ERRORS.get(reason, "command_failed")
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key=translation_key,
-                translation_placeholders={"name": name, "message": reason},
-            )
+            ),
+            name=getattr(self, "name", self.entity_id),
+        )
 
     def _async_update_attrs(self) -> None:
         """Update the attributes of the entity."""

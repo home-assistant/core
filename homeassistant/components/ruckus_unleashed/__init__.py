@@ -5,7 +5,6 @@ import logging
 from aioruckus import AjaxSession
 from aioruckus.exceptions import AuthenticationError, SchemaError
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
@@ -18,18 +17,18 @@ from .const import (
     API_AP_MODEL,
     API_SYS_SYSINFO,
     API_SYS_SYSINFO_VERSION,
-    COORDINATOR,
     DOMAIN,
     MANUFACTURER,
     PLATFORMS,
-    UNDO_UPDATE_LISTENERS,
 )
-from .coordinator import RuckusDataUpdateCoordinator
+from .coordinator import RuckusDataUpdateCoordinator, RuckusUnleashedConfigEntry
 
 _LOGGER = logging.getLogger(__package__)
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(
+    hass: HomeAssistant, entry: RuckusUnleashedConfigEntry
+) -> bool:
     """Set up Ruckus from a config entry."""
 
     ruckus = AjaxSession.async_create(
@@ -69,25 +68,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             ),
         )
 
-    hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN][entry.entry_id] = {
-        COORDINATOR: coordinator,
-        UNDO_UPDATE_LISTENERS: [],
-    }
+    entry.runtime_data = coordinator
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(
+    hass: HomeAssistant, entry: RuckusUnleashedConfigEntry
+) -> bool:
     """Unload a config entry."""
-
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-    if unload_ok:
-        for listener in hass.data[DOMAIN][entry.entry_id][UNDO_UPDATE_LISTENERS]:
-            listener()
-        await hass.data[DOMAIN][entry.entry_id][COORDINATOR].ruckus.close()
-        hass.data[DOMAIN].pop(entry.entry_id)
-
-    return unload_ok
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
