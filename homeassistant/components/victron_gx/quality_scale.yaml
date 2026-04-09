@@ -45,7 +45,7 @@ rules:
   diagnostics: todo
   discovery-update-info: done
   discovery: done
-  docs-data-update: todo
+  docs-data-update: done
   docs-examples: todo
   docs-known-limitations: todo
   docs-supported-devices: done
@@ -62,8 +62,15 @@ rules:
     status: exempt
     comment: |
       Not relevant.
-  reconfiguration-flow: todo
-  repair-issues: todo
+  reconfiguration-flow:
+    status: exempt
+    comment: |
+      Reconfiguration is not needed. Users can remove and re-add the
+      integration, or use the reauthentication flow for credential changes.
+  repair-issues:
+    status: exempt
+    comment: |
+      No actionable repair scenarios exist for this integration.
   stale-devices: todo
 
   # Platinum
