@@ -12,6 +12,11 @@ from homeassistant.components.application_credentials import (
     ClientCredential,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import (
+    OAuth2TokenRequestError,
+    OAuth2TokenRequestReauthError,
+    OAuth2TokenRequestTransientError,
+)
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN, OAUTH_AUTHORIZE_URL, OAUTH_TOKEN_URL
@@ -46,7 +51,7 @@ class HeimanOAuth2Implementation(AuthImplementation):
             data=data,
             auth=BasicAuth(self.client_id, self.client_secret),
         )
-        
+
         # Check for error status codes
         if resp.status >= 400:
             try:
@@ -61,13 +66,38 @@ class HeimanOAuth2Implementation(AuthImplementation):
                 error_code,
                 error_description,
             )
-            resp.raise_for_status()
-        
+            
+            # Determine the appropriate exception type based on error code
+            if error_code in ["invalid_grant", "invalid_token"]:
+                raise OAuth2TokenRequestReauthError(
+                    request_info=resp.request_info,
+                    history=resp.history,
+                    status=resp.status,
+                    headers=resp.headers,
+                    domain=self.domain,
+                )
+            elif resp.status >= 500:
+                raise OAuth2TokenRequestTransientError(
+                    request_info=resp.request_info,
+                    history=resp.history,
+                    status=resp.status,
+                    headers=resp.headers,
+                    domain=self.domain,
+                )
+            else:
+                raise OAuth2TokenRequestError(
+                    request_info=resp.request_info,
+                    history=resp.history,
+                    status=resp.status,
+                    headers=resp.headers,
+                    domain=self.domain,
+                )
+
         # Try to parse JSON response
         try:
             # First check if response has content
             text = await resp.text()
-            
+
             if not text or not text.strip():
                 _LOGGER.error(
                     "Token request returned empty response (status %s). "
@@ -75,12 +105,12 @@ class HeimanOAuth2Implementation(AuthImplementation):
                     resp.status,
                 )
                 raise ValueError(f"Empty response from token endpoint (status {resp.status})")
-            
+
             # Try to parse as JSON
             try:
                 response_data = await resp.json()
                 return cast(dict, response_data)
-            except (ClientError, JSONDecodeError) as json_err:
+            except (ClientError, JSONDecodeError):
                 _LOGGER.error(
                     "Token request returned non-JSON response (status %s, content_type='%s'): %s",
                     resp.status,

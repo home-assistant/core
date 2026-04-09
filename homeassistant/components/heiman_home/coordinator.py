@@ -2,19 +2,19 @@
 
 from __future__ import annotations
 
-import json
-import logging
 from dataclasses import dataclass, field
 from datetime import datetime
+import json
+import logging
 from typing import Any
 
 from heimanconnect import (
     DeviceManagement,
     HeimanDevice,
     HeimanHome,
-    HeimanUser,
     HeimanMqttClient,
     HeimanMQTTError,
+    HeimanUser,
 )
 
 from homeassistant.config_entries import ConfigEntry
@@ -54,7 +54,7 @@ class HeimanDataUpdateCoordinator(DataUpdateCoordinator[HeimanData]):
             oauth_session=None,
     ) -> None:
         """Initialize the coordinator.
-        
+
         Args:
             hass: Home Assistant instance
             logger: Logger instance
@@ -79,10 +79,10 @@ class HeimanDataUpdateCoordinator(DataUpdateCoordinator[HeimanData]):
 
     async def _async_update_data(self) -> HeimanData:
         """Fetch data from Heiman API.
-        
+
         Returns:
             HeimanData object with updated information
-            
+
         Raises:
             ConfigEntryAuthFailed: If authentication fails
             UpdateFailed: If data fetch fails
@@ -201,7 +201,7 @@ class HeimanDataUpdateCoordinator(DataUpdateCoordinator[HeimanData]):
                                                             if dbm_level_value is None and dbm_value is not None:
                                                                 # Convert numeric DBM to level string if DBM_Level not provided
                                                                 dbm_level_value = self._convert_dbm_to_level(dbm_value)
-                                                            
+
                                                             if dbm_level_value is not None and "DeviceINFO_DBM_Level" in device.properties:
                                                                 device.properties["DeviceINFO_DBM_Level"].value = dbm_level_value
 
@@ -225,7 +225,11 @@ class HeimanDataUpdateCoordinator(DataUpdateCoordinator[HeimanData]):
                                             exc_info=True,
                                         )
                     except Exception as err:
-                        pass
+                        _LOGGER.debug(
+                            "Failed to get device details for %s: %s",
+                            device_id,
+                            err,
+                        )
 
                 # Update device data
                 old_devices = self.data.devices.copy()
@@ -275,10 +279,10 @@ class HeimanDataUpdateCoordinator(DataUpdateCoordinator[HeimanData]):
 
     def get_device(self, device_id: str) -> HeimanDevice | None:
         """Get device by ID.
-        
+
         Args:
             device_id: Device ID to retrieve
-            
+
         Returns:
             HeimanDevice object or None if not found
         """
@@ -286,7 +290,7 @@ class HeimanDataUpdateCoordinator(DataUpdateCoordinator[HeimanData]):
 
     def get_all_devices(self) -> list[HeimanDevice]:
         """Get all devices.
-        
+
         Returns:
             List of all HeimanDevice objects
         """
@@ -294,10 +298,10 @@ class HeimanDataUpdateCoordinator(DataUpdateCoordinator[HeimanData]):
 
     def get_devices_by_type(self, device_type: str) -> list[HeimanDevice]:
         """Get devices by type.
-        
+
         Args:
             device_type: Device type to filter by
-            
+
         Returns:
             List of matching HeimanDevice objects
         """
@@ -307,12 +311,12 @@ class HeimanDataUpdateCoordinator(DataUpdateCoordinator[HeimanData]):
         ]
 
     @staticmethod
-    def _convert_dbm_to_level(dbm_value: int | float) -> str:
+    def _convert_dbm_to_level(dbm_value: float) -> str:
         """Convert numeric DBM value to signal strength level string.
-        
+
         Args:
             dbm_value: Signal strength in dBm (negative number)
-            
+
         Returns:
             Signal level string: "Strong", "Medium", "Weak", or "Very Weak"
         """
@@ -320,12 +324,11 @@ class HeimanDataUpdateCoordinator(DataUpdateCoordinator[HeimanData]):
         # Closer to 0 = stronger signal
         if dbm_value >= -50:
             return "Strong"
-        elif dbm_value >= -65:
+        if dbm_value >= -65:
             return "Medium"
-        elif dbm_value >= -75:
+        if dbm_value >= -75:
             return "Weak"
-        else:
-            return "Very Weak"
+        return "Very Weak"
 
     async def async_init_mqtt_client(self) -> None:
         """Initialize MQTT client for real-time updates."""
@@ -365,7 +368,7 @@ class HeimanDataUpdateCoordinator(DataUpdateCoordinator[HeimanData]):
             if not user_id:
                 _LOGGER.warning("Cannot initialize MQTT: user_id not available")
                 return
-            
+
             # Get user display name (prefer nickName, fallback to email)
             user_display_name = None
             try:
@@ -377,7 +380,7 @@ class HeimanDataUpdateCoordinator(DataUpdateCoordinator[HeimanData]):
                         user_display_name = getattr(self.data.user_info, 'email', None)
             except Exception as err:
                 _LOGGER.warning("Failed to get user display name: %s", err)
-            
+
             # Get cloud client reference for child device detection
             cloud_client = None
             try:
@@ -385,7 +388,7 @@ class HeimanDataUpdateCoordinator(DataUpdateCoordinator[HeimanData]):
                     cloud_client = self.api_client._cloud_client
             except Exception as err:
                 _LOGGER.warning("Failed to get cloud_client reference: %s", err)
-            
+
             # Get devices dictionary for child device detection
             devices_dict = dict(self.data.devices) if self.data.devices else {}
 
@@ -411,7 +414,7 @@ class HeimanDataUpdateCoordinator(DataUpdateCoordinator[HeimanData]):
 
     def _on_device_property_update(self, device_id: str, properties: dict[str, Any]) -> None:
         """Handle device property update from MQTT.
-        
+
         Args:
             device_id: Device ID that sent the update
             properties: Dictionary of property name to value
@@ -443,7 +446,7 @@ class HeimanDataUpdateCoordinator(DataUpdateCoordinator[HeimanData]):
 
     async def async_read_device_properties(self, device_id: str) -> None:
         """Read properties from a specific device via MQTT.
-        
+
         Args:
             device_id: Device ID to read properties from
         """
@@ -492,28 +495,28 @@ class HeimanDataUpdateCoordinator(DataUpdateCoordinator[HeimanData]):
 
     def get_online_devices(self) -> list[HeimanDevice]:
         """Get all online devices.
-        
+
         Returns:
             List of online HeimanDevice objects
         """
         return [device for device in self.data.devices.values() if device.online]
-    
+
     def get_device_property(self, device_id: str, property_name: str) -> Any | None:
         """Get device property value from cache.
-        
+
         Args:
             device_id: Device ID
             property_name: Property name
-            
+
         Returns:
             Property value if found, None otherwise
         """
         device = self.data.devices.get(device_id)
         if not device:
             return None
-        
+
         prop = device.properties.get(property_name)
         if not prop:
             return None
-        
+
         return prop.value

@@ -41,7 +41,6 @@ from .const import (
 )
 from .coordinator import HeimanDataUpdateCoordinator
 
-
 type HeimanConfigEntry = ConfigEntry[HeimanDataUpdateCoordinator]
 
 _LOGGER = logging.getLogger(__name__)
@@ -52,7 +51,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: HeimanConfigEntry) -> bo
     # Check if config contains token
     if CONF_TOKEN not in entry.data:
         raise ConfigEntryAuthFailed("Config entry missing token")
-    
+
     try:
         implementation = await async_get_config_entry_implementation(hass, entry)
     except ImplementationUnavailableError as err:
@@ -60,9 +59,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: HeimanConfigEntry) -> bo
             translation_domain=DOMAIN,
             translation_key="oauth2_implementation_unavailable",
         ) from err
-    
+
     session = OAuth2Session(hass, entry, implementation)
-    
+
     # Validate token
     try:
         await session.async_ensure_token_valid()
@@ -81,19 +80,19 @@ async def async_setup_entry(hass: HomeAssistant, entry: HeimanConfigEntry) -> bo
             translation_domain=DOMAIN,
             translation_key="token_expired",
         ) from err
-    
+
     # Create API client
     api_client = HeimanApiClient(hass=hass, session=session)
-    
+
     # Test API connection
     try:
-        user_info = await api_client.async_get_user_info()
+        await api_client.async_get_user_info()
     except Exception as err:
         raise ConfigEntryNotReady(f"Failed to connect to Heiman API: {err}") from err
-    
+
     # Initialize device management
     device_management = DeviceManagement()
-    
+
     # Configure device filtering
     filter_config = {
         "filter_mode": entry.data.get(CONF_DEVICE_FILTER, "exclude"),
@@ -107,15 +106,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: HeimanConfigEntry) -> bo
         "device_filter_mode": entry.data.get(CONF_DEVICE_FILTER_MODE, "exclude"),
         "device_list": entry.data.get(CONF_DEVICE_LIST, []),
     }
-    
+
     # Configure area sync
     area_sync_mode = entry.data.get(CONF_AREA_NAME_RULE, AREA_NAME_RULE_HOME_ROOM)
-    
+
     device_management.configure(
         filter_config=filter_config,
         area_sync_mode=area_sync_mode,
     )
-    
+
     # Create data coordinator
     coordinator = HeimanDataUpdateCoordinator(
         hass=hass,
@@ -125,22 +124,22 @@ async def async_setup_entry(hass: HomeAssistant, entry: HeimanConfigEntry) -> bo
         device_management=device_management,
         oauth_session=session,  # Pass OAuth2 session for MQTT token retrieval
     )
-    
+
     # First data update
     await coordinator.async_config_entry_first_refresh()
-    
+
     # Initialize MQTT client (for real-time device property updates)
     await coordinator.async_init_mqtt_client()
-    
+
     # Store coordinator in hass.data and runtime_data
     if DOMAIN not in hass.data:
         hass.data[DOMAIN] = {}
     hass.data[DOMAIN][entry.entry_id] = coordinator
     entry.runtime_data = coordinator
-    
+
     # Load platforms
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-    
+
     # Register service to read device properties
     async def handle_read_device_properties(call):
         """Handle read device properties service call."""
@@ -148,16 +147,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: HeimanConfigEntry) -> bo
         if not device_id:
             _LOGGER.error("Device ID is required for read_device_properties service")
             return
-        
+
         coordinator: HeimanDataUpdateCoordinator = entry.runtime_data
         await coordinator.async_read_device_properties(device_id)
-    
+
     hass.services.async_register(
         DOMAIN,
         SERVICE_READ_DEVICE_PROPERTIES,
         handle_read_device_properties,
     )
-    
+
     return True
 
 
@@ -168,5 +167,5 @@ async def async_unload_entry(hass: HomeAssistant, entry: HeimanConfigEntry) -> b
 
 async def async_migrate_entry(hass: HomeAssistant, entry: HeimanConfigEntry) -> bool:
     """Migrate old configuration entries."""
-    
+
     return True

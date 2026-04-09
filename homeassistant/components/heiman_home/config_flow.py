@@ -6,19 +6,13 @@ from typing import Any
 
 import vol
 
-import homeassistant.helpers.config_validation as cv
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlowResult
 from homeassistant.const import CONF_TOKEN
 from homeassistant.helpers.config_entry_oauth2_flow import AbstractOAuth2FlowHandler
+import homeassistant.helpers.config_validation as cv
 
 from .api import HeimanApiClient
-from .const import (
-    CONF_HOME_ID,
-    CONF_USER_ID,
-    DOMAIN,
-    REQUESTED_SCOPES,
-    SCOPES,
-)
+from .const import CONF_HOME_ID, CONF_USER_ID, DOMAIN, REQUESTED_SCOPES, SCOPES
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -106,11 +100,6 @@ class HeimanConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
             # Store selected home IDs
             self._auth_info.selected_home_ids = selected_home_ids
 
-            first_home = next(
-                (h for h in self._auth_info.homes if h.get("home_id") == selected_home_ids[0]),
-                self._auth_info.homes[0] if self._auth_info.homes else None,
-            )
-
             await self.async_set_unique_id(self._auth_info.user_info.user_id)
 
             if self.source != SOURCE_REAUTH:
@@ -179,7 +168,7 @@ class HeimanConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
             home_options[home_id] = display_text
 
         default_homes = [home.get("home_id") for home in homes if home.get("home_id")]
-        
+
         return vol.Schema(
             {
                 vol.Required(CONF_HOME_ID, default=default_homes): cv.multi_select(home_options),
