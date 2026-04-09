@@ -11,9 +11,9 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
 
 # Entities that should be marked as diagnostic
-ENTITIES_CATEGORY_DIAGNOSTIC = ["system_heartbeat"]
+ENTITIES_CATEGORY_DIAGNOSTIC = ["system_heartbeat", "platform_device_reboot"]
 # Entities that should be disabled by default
-ENTITIES_DISABLE_BY_DEFAULT = ["system_heartbeat"]
+ENTITIES_DISABLE_BY_DEFAULT = ["system_heartbeat", "platform_device_reboot"]
 
 
 class VictronBaseEntity(Entity):
