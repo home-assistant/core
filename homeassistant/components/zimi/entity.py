@@ -47,24 +47,29 @@ class ZimiEntity(Entity):
     def available(self) -> bool:
         """Return True if Home Assistant is able to read the state and control the underlying device.
 
-        If the device is not connected then a repair is needed and should be flagged in UI.  (This can
-        be caused if a device has old firmware or is not responding to the API.)
+        If the device is not connected then a repair is needed and should be flagged in UI.
+        (This can be caused if a device has old firmware or is not responding to the API.)
         """
+
         if not self._device.is_connected:
             ir.async_create_issue(
                 self.hass,
                 DOMAIN,
-                f"{self._device.identifier}_device_not_connected",
+                f"{self._device.identifier}_device_not_available",
                 is_fixable=False,
                 severity=ir.IssueSeverity.ERROR,
-                translation_key="device_not_connected",
+                translation_key="device_not_available",
                 translation_placeholders={
                     "device_name": self._device.name,
                     "device_room": self._device.room,
                 },
             )
-            return False
-        return True
+        else:
+            ir.async_delete_issue(
+                self.hass, DOMAIN, f"{self._device.identifier}_device_not_available"
+            )
+
+        return self._device.is_connected
 
     async def async_added_to_hass(self) -> None:
         """Subscribe to the events."""

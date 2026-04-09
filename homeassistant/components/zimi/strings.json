@@ -51,9 +51,9 @@
     }
   },
   "issues": {
-    "device_not_connected": {
-      "description": "The device {device_name} in {device_room} is not responding to API calls.\nThis can be caused by old firmware or a device that is not responding.\nPlease check the device and upgrade to latest firmware with Zimi app.",
-      "title": "Zimi device {device_name} not connected"
+    "device_not_available": {
+      "description": "The device {device_name} in {device_room} is not available to the ZCC API.\nThis can be caused by old firmware or a device that is not responding.\nPlease check the device and upgrade to latest firmware with Zimi app.",
+      "title": "{device_name} in {device_room} is not available"
     }
   }
 }
