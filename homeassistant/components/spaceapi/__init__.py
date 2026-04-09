@@ -89,13 +89,33 @@ ATTR_URL = "url"
 ATTR_VALUE = "value"
 ATTR_SENSOR_LOCATION = "location"
 
+# Legacy v13 constants — only used by CONFIG_SCHEMA for YAML import migration
+_CONF_CACHE = "cache"
+_CONF_CACHE_SCHEDULE = "schedule"
+_CONF_FOURSQUARE = "foursquare"
+_CONF_IDENTICA = "identica"
+_CONF_ISSUE_MAIL = "issue_mail"
+_CONF_ISSUE_REPORT_CHANNELS = "issue_report_channels"
+_CONF_JABBER = "jabber"
+_CONF_M4 = "m4"
+_CONF_MJPEG = "mjpeg"
+_CONF_RADIO_SHOW = "radio_show"
+_CONF_RADIO_SHOW_END = "end"
+_CONF_RADIO_SHOW_NAME = "name"
+_CONF_RADIO_SHOW_START = "start"
+_CONF_RADIO_SHOW_TYPE = "type"
+_CONF_RADIO_SHOW_URL = "url"
+_CONF_SPACEPHONE = "spacephone"
+_CONF_STREAM = "stream"
+_CONF_USTREAM = "ustream"
+
 LOCATION_SCHEMA = vol.Schema({vol.Optional(CONF_ADDRESS): cv.string})
 
 SPACEFED_SCHEMA = vol.Schema(
     {
         vol.Optional(CONF_SPACENET): cv.boolean,
         vol.Optional(CONF_SPACESAML): cv.boolean,
-        vol.Optional("spacephone"): cv.boolean,
+        vol.Optional(_CONF_SPACEPHONE): cv.boolean,  # Removed in v15
     }
 )
 
@@ -131,10 +151,10 @@ CONTACT_SCHEMA = vol.Schema(
         vol.Optional(CONF_TWITTER): cv.string,
         vol.Optional(CONF_SIP): cv.string,
         vol.Optional(CONF_FACEBOOK): cv.string,
-        vol.Optional("identica"): cv.string,
-        vol.Optional("foursquare"): cv.string,
-        vol.Optional("jabber"): cv.string,
-        vol.Optional("issue_mail"): cv.string,
+        vol.Optional(_CONF_IDENTICA): cv.string,  # Removed in v15
+        vol.Optional(_CONF_FOURSQUARE): cv.string,  # Removed in v15
+        vol.Optional(_CONF_JABBER): cv.string,  # Renamed to xmpp in v15
+        vol.Optional(_CONF_ISSUE_MAIL): cv.string,  # Removed in v15
         vol.Optional(CONF_KEYMASTERS): vol.All(
             cv.ensure_list, [KEYMASTER_SCHEMA], vol.Length(min=1)
         ),
@@ -155,17 +175,18 @@ SENSOR_SCHEMA = vol.Schema(
     {vol.In(SENSOR_TYPES): [cv.entity_id], cv.string: [cv.entity_id]}
 )
 
+# Legacy v13 schemas — removed in v15, only used for YAML import migration
 STREAM_SCHEMA = vol.Schema(
     {
-        vol.Optional("m4"): cv.url,
-        vol.Optional("mjpeg"): cv.url,
-        vol.Optional("ustream"): cv.url,
+        vol.Optional(_CONF_M4): cv.url,
+        vol.Optional(_CONF_MJPEG): cv.url,
+        vol.Optional(_CONF_USTREAM): cv.url,
     }
 )
 
 CACHE_SCHEMA = vol.Schema(
     {
-        vol.Required("schedule"): cv.matches_regex(
+        vol.Required(_CONF_CACHE_SCHEDULE): cv.matches_regex(
             r"(m.02|m.05|m.10|m.15|m.30|h.01|h.02|h.04|h.08|h.12|d.01)"
         )
     }
@@ -173,22 +194,24 @@ CACHE_SCHEMA = vol.Schema(
 
 RADIO_SHOW_SCHEMA = vol.Schema(
     {
-        vol.Required("name"): cv.string,
-        vol.Required("url"): cv.url,
-        vol.Required("type"): cv.matches_regex(r"(mp3|ogg)"),
-        vol.Required("start"): cv.string,
-        vol.Required("end"): cv.string,
+        vol.Required(_CONF_RADIO_SHOW_NAME): cv.string,
+        vol.Required(_CONF_RADIO_SHOW_URL): cv.url,
+        vol.Required(_CONF_RADIO_SHOW_TYPE): cv.matches_regex(r"(mp3|ogg)"),
+        vol.Required(_CONF_RADIO_SHOW_START): cv.string,
+        vol.Required(_CONF_RADIO_SHOW_END): cv.string,
     }
 )
 
+# Accepts v13 YAML format for import migration to v15 config entries.
+# Fields marked "v13 only" are dropped or converted during import.
 CONFIG_SCHEMA = vol.Schema(
     {
         DOMAIN: vol.Schema(
             {
                 vol.Required(CONF_CONTACT): CONTACT_SCHEMA,
-                vol.Required("issue_report_channels"): vol.All(
+                vol.Required(_CONF_ISSUE_REPORT_CHANNELS): vol.All(  # Removed in v15
                     cv.ensure_list,
-                    [vol.In([CONF_EMAIL, "issue_mail", CONF_ML, CONF_TWITTER])],
+                    [vol.In([CONF_EMAIL, _CONF_ISSUE_MAIL, CONF_ML, CONF_TWITTER])],
                 ),
                 vol.Optional(CONF_LOCATION): LOCATION_SCHEMA,
                 vol.Required(CONF_LOGO): cv.url,
@@ -200,11 +223,11 @@ CONFIG_SCHEMA = vol.Schema(
                 vol.Optional(CONF_CAM): vol.All(
                     cv.ensure_list, [cv.url], vol.Length(min=1)
                 ),
-                vol.Optional("stream"): STREAM_SCHEMA,
+                vol.Optional(_CONF_STREAM): STREAM_SCHEMA,  # Removed in v15
                 vol.Optional(CONF_FEEDS): FEEDS_SCHEMA,
-                vol.Optional("cache"): CACHE_SCHEMA,
+                vol.Optional(_CONF_CACHE): CACHE_SCHEMA,  # Removed in v15
                 vol.Optional(CONF_PROJECTS): vol.All(cv.ensure_list, [cv.url]),
-                vol.Optional("radio_show"): vol.All(
+                vol.Optional(_CONF_RADIO_SHOW): vol.All(  # Removed in v15
                     cv.ensure_list, [RADIO_SHOW_SCHEMA]
                 ),
             }
