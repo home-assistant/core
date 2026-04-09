@@ -28,7 +28,7 @@ class AqualinkDataUpdateCoordinator(DataUpdateCoordinator[None]):
             hass,
             _LOGGER,
             config_entry=config_entry,
-            name=DOMAIN,
+            name=f"{DOMAIN}_{system.serial}",
             update_interval=UPDATE_INTERVAL,
         )
         self.system = system
