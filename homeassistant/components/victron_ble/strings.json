@@ -18,7 +18,7 @@
       "invalid_access_token": "Invalid encryption key for instant readout",
       "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]"
     },
-    "flow_title": "{title}",
+    "flow_title": "{name}",
     "step": {
       "access_token": {
         "data": {

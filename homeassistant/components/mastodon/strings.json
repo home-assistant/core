@@ -104,6 +104,9 @@
     "idempotency_key_too_short": {
       "message": "Idempotency key must be at least 4 characters long."
     },
+    "media_source_not_supported": {
+      "message": "Media source {media_content_id} is not supported."
+    },
     "mute_duration_too_long": {
       "message": "Mute duration is too long."
     },
@@ -122,11 +125,26 @@
     "unable_to_unmute_account": {
       "message": "Unable to unmute account \"{account_name}\""
     },
+    "unable_to_update_profile": {
+      "message": "Unable to update profile."
+    },
     "unable_to_upload_image": {
       "message": "Unable to upload image {media_path}."
     }
   },
   "selector": {
+    "fields": {
+      "fields": {
+        "name": {
+          "description": "The label for this field.",
+          "name": "Label"
+        },
+        "value": {
+          "description": "The value for this field.",
+          "name": "Value"
+        }
+      }
+    },
     "post_visibility": {
       "options": {
         "direct": "Direct - Mentioned accounts only",
@@ -228,6 +246,52 @@
         }
       },
       "name": "Unmute account"
+    },
+    "update_profile": {
+      "description": "Updates your Mastodon profile information and pictures.",
+      "fields": {
+        "attribution_domains": {
+          "description": "Websites allowed to credit you. Protects from false attributions. Note that setting attribution domains will replace all existing attribution domains, not just the ones specified here.",
+          "name": "Attribution domains"
+        },
+        "avatar": {
+          "description": "An image to set as your profile picture. WEBP, PNG, or JPG. At most 8 MB. Will be downscaled to 400x400px.",
+          "name": "Profile picture"
+        },
+        "bot": {
+          "description": "Signal to others that the account mainly performs automated actions.",
+          "name": "Automated account"
+        },
+        "config_entry_id": {
+          "description": "Select the Mastodon account to update the profile of.",
+          "name": "[%key:component::mastodon::services::post::fields::config_entry_id::name%]"
+        },
+        "discoverable": {
+          "description": "Whether your profile should be discoverable. Public posts and the profile may be featured or recommended across Mastodon.",
+          "name": "Discoverable"
+        },
+        "display_name": {
+          "description": "The display name to set on your profile.",
+          "name": "Display name"
+        },
+        "fields": {
+          "description": "Additional profile fields as key-value pairs. Your homepage, pronouns, age, anything you want. Note that updating fields will replace all existing fields, not just the ones specified here.",
+          "name": "Extra fields"
+        },
+        "header": {
+          "description": "An image to set as your profile header. WEBP, PNG, or JPG. At most 8 MB. Will be downscaled to 1500x500px.",
+          "name": "Header picture"
+        },
+        "locked": {
+          "description": "Whether to lock your profile. A locked profile requires you to approve followers and hides your posts from non-followers.",
+          "name": "Lock profile"
+        },
+        "note": {
+          "description": "The bio to set on your profile. You can @mention other people or #hashtags.",
+          "name": "Bio"
+        }
+      },
+      "name": "Update profile"
     }
   }
 }
