@@ -9,18 +9,8 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 from homeassistant.components.teleinfo.const import CONF_SERIAL_PORT, DOMAIN
-from homeassistant.helpers.service_info.usb import UsbServiceInfo
 
 from tests.common import MockConfigEntry
-
-USB_DISCOVERY_INFO = UsbServiceInfo(
-    device="/dev/ttyUSB0",
-    pid="6015",
-    vid="0403",
-    serial_number="AB1234",
-    manufacturer="FTDI",
-    description="FT230X Basic UART",
-)
 
 # Common labels shared by all contract types (monophase)
 _COMMON_LABELS: dict[str, str] = {

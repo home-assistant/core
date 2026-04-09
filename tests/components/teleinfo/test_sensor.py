@@ -314,6 +314,70 @@ async def test_sensor_unavailable_on_serial_error(
     assert state.state == STATE_UNAVAILABLE
 
 
+async def test_sensor_unavailable_on_timeout_error(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_teleinfo: MagicMock,
+    mock_serial_port: MagicMock,
+) -> None:
+    """Test sensors become unavailable when a timeout occurs."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    entity_registry = er.async_get(hass)
+    entity_id = entity_registry.async_get_entity_id(
+        "sensor", DOMAIN, f"{ADCO}_apparent_power"
+    )
+    assert entity_id is not None
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == "2830"
+
+    # Simulate timeout on next update
+    mock_serial_port.side_effect = TimeoutError("no data")
+    coordinator = mock_config_entry.runtime_data
+    await coordinator.async_refresh()
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE
+
+
+async def test_sensor_unavailable_on_decode_error(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_teleinfo: MagicMock,
+    mock_serial_port: MagicMock,
+) -> None:
+    """Test sensors become unavailable when a decode error occurs."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    entity_registry = er.async_get(hass)
+    entity_id = entity_registry.async_get_entity_id(
+        "sensor", DOMAIN, f"{ADCO}_apparent_power"
+    )
+    assert entity_id is not None
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == "2830"
+
+    # Simulate decode failure on next update
+    mock_teleinfo.decode.side_effect = RuntimeError("bad frame")
+    coordinator = mock_config_entry.runtime_data
+    await coordinator.async_refresh()
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE
+
+
 async def test_sensor_recovers_after_error(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
