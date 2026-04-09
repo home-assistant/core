@@ -38,32 +38,24 @@ async def test_notify_entity_created(
     assert notify_entities[0].unique_id == f"{MOCK_GATEWAY_ID}_{MOCK_RECIPIENT_ID}"
 
 
-class TestNotifyEntityNotCreatedWithoutSubentry:
-    """Tests that no entity is created when there are no subentries."""
+@pytest.mark.parametrize("mock_subentries", [[]])
+async def test_notify_entity_not_created_without_subentry(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_connection: MagicMock,
+    mock_send: tuple[MagicMock, MagicMock],
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test no notify entity without subentries."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
 
-    @pytest.fixture
-    def mock_subentries(self) -> list:
-        """Override: no subentries."""
-        return []
-
-    async def test_notify_entity_not_created_without_subentry(
-        self,
-        hass: HomeAssistant,
-        mock_config_entry: MockConfigEntry,
-        mock_connection: MagicMock,
-        mock_send: tuple[MagicMock, MagicMock],
-        entity_registry: er.EntityRegistry,
-    ) -> None:
-        """Test no notify entity without subentries."""
-        mock_config_entry.add_to_hass(hass)
-        await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
-
-        entities = er.async_entries_for_config_entry(
-            entity_registry, mock_config_entry.entry_id
-        )
-        notify_entities = [e for e in entities if e.domain == NOTIFY_DOMAIN]
-        assert len(notify_entities) == 0
+    entities = er.async_entries_for_config_entry(
+        entity_registry, mock_config_entry.entry_id
+    )
+    notify_entities = [e for e in entities if e.domain == NOTIFY_DOMAIN]
+    assert len(notify_entities) == 0
 
 
 async def test_send_message_simple(
