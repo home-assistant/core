@@ -27,6 +27,7 @@ from unifi_access_api.models.websocket import (
     InsightsAdd,
     LocationUpdateState,
     LocationUpdateV2,
+    LogAdd,
     SettingUpdate,
     ThumbnailInfo,
     V2LocationState,
@@ -92,6 +93,7 @@ class UnifiAccessCoordinator(DataUpdateCoordinator[UnifiAccessData]):
         )
         self.client = client
         self._event_listeners: list[Callable[[DoorEvent], None]] = []
+        self._device_to_door: dict[str, str] = {}
 
     @callback
     def async_subscribe_door_events(
@@ -141,6 +143,7 @@ class UnifiAccessCoordinator(DataUpdateCoordinator[UnifiAccessData]):
             "access.data.v2.location.update": self._handle_v2_location_update,
             "access.hw.door_bell": self._handle_doorbell,
             "access.logs.insights.add": self._handle_insights_add,
+            "access.logs.add": self._handle_logs_add,
             "access.data.setting.update": self._handle_setting_update,
         }
         self.client.start_websocket(
@@ -197,6 +200,13 @@ class UnifiAccessCoordinator(DataUpdateCoordinator[UnifiAccessData]):
 
         current_ids = {door.id for door in doors} | {self.config_entry.entry_id}
         self._remove_stale_devices(current_ids)
+
+        current_door_ids = {door.id for door in doors}
+        self._device_to_door = {
+            dev_id: door_id
+            for dev_id, door_id in self._device_to_door.items()
+            if door_id in current_door_ids
+        }
 
         return UnifiAccessData(
             doors={door.id: door for door in doors},
@@ -268,9 +278,20 @@ class UnifiAccessCoordinator(DataUpdateCoordinator[UnifiAccessData]):
     async def _handle_v2_location_update(self, msg: WebsocketMessage) -> None:
         """Handle V2 location update messages."""
         update = cast(V2LocationUpdate, msg)
-        self._process_door_update(
-            update.data.id, update.data.state, update.data.thumbnail
-        )
+        door_id = update.data.id
+
+        stale_device_ids = [
+            device_id
+            for device_id, mapped_door_id in self._device_to_door.items()
+            if mapped_door_id == door_id
+        ]
+        for device_id in stale_device_ids:
+            del self._device_to_door[device_id]
+
+        for device_id in update.data.device_ids:
+            self._device_to_door[device_id] = door_id
+
+        self._process_door_update(door_id, update.data.state, update.data.thumbnail)
 
     def _process_door_update(
         self,
@@ -395,6 +416,26 @@ class UnifiAccessCoordinator(DataUpdateCoordinator[UnifiAccessData]):
         for door in door_entries:
             if door.id:
                 self._dispatch_door_event(door.id, "access", event_type, attrs)
+
+    async def _handle_logs_add(self, msg: WebsocketMessage) -> None:
+        """Handle access log events (entry/exit via access.logs.add)."""
+        log = cast(LogAdd, msg)
+        source = log.data.source
+        device_target = source.device_config
+        if device_target is None or device_target.id not in self._device_to_door:
+            return
+        door_id = self._device_to_door[device_target.id]
+        event_type = (
+            "access_granted" if source.event.result == "ACCESS" else "access_denied"
+        )
+        attrs: dict[str, Any] = {}
+        if source.actor.display_name:
+            attrs["actor"] = source.actor.display_name
+        if source.authentication.credential_provider:
+            attrs["authentication"] = source.authentication.credential_provider
+        if source.event.result:
+            attrs["result"] = source.event.result
+        self._dispatch_door_event(door_id, "access", event_type, attrs)
 
     def get_lock_rule_status(self, door_id: str) -> DoorLockRuleStatus | None:
         """Return the current lock rule status for a door."""

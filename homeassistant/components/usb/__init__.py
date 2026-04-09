@@ -32,9 +32,13 @@ from homeassistant.loader import USBMatcher, async_get_usb
 from homeassistant.util.hass_dict import HassKey
 
 from .const import DOMAIN
-from .models import USBDevice
+from .models import (
+    SerialDevice,  # noqa: F401
+    USBDevice,
+)
 from .utils import (
-    scan_serial_ports,
+    async_scan_serial_ports,
+    scan_serial_ports,  # noqa: F401
     usb_device_from_path,  # noqa: F401
     usb_device_from_port,  # noqa: F401
     usb_device_matches_matcher,
@@ -425,11 +429,16 @@ class USBDiscovery:
 
     async def _async_scan_serial(self) -> None:
         """Scan serial ports."""
-        _LOGGER.debug("Executing comports scan")
+        _LOGGER.debug("Executing USB serial device scan")
         async with self._scan_lock:
-            await self._async_process_ports(
-                await self.hass.async_add_executor_job(scan_serial_ports)
-            )
+            # Only consider USB-serial ports for discovery
+            usb_ports = [
+                p
+                for p in await async_scan_serial_ports(self.hass)
+                if isinstance(p, USBDevice)
+            ]
+
+            await self._async_process_ports(usb_ports)
         if self.initial_scan_done:
             return
 
