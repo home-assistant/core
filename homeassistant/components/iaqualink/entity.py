@@ -16,11 +16,10 @@ class AqualinkEntity[AqualinkDeviceT: AqualinkDevice](
 ):
     """Abstract class for all Aqualink platforms.
 
-    Entity state is updated via the interval timer within the integration.
-    Any entity state change via the iaqualink library triggers an internal
-    state refresh which is then propagated to all the entities in the system
-    via the refresh_system decorator above to the _update_callback in this
-    class.
+    Entity availability and periodic refreshes are driven by the per-system
+    DataUpdateCoordinator. State changes initiated through the iaqualink
+    library are propagated back to Home Assistant through the coordinator-aware
+    entity update flow.
     """
 
     def __init__(
