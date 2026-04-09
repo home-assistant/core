@@ -27,7 +27,7 @@ from .coordinator import EvoDataUpdateCoordinator
 # System service schemas (registered as domain services)
 SET_SYSTEM_MODE_SCHEMA: Final[dict[str | vol.Marker, Any]] = {
     # unsupported modes are rejected at runtime with ServiceValidationError
-    vol.Required(ATTR_MODE): cv.string,  # avoid vol.In(SystemMode)
+    vol.Required(ATTR_MODE): cv.string,  # ... so, don't use SystemMode enum here
     vol.Exclusive(ATTR_DURATION, "temporary"): vol.All(
         cv.time_period,
         vol.Range(min=timedelta(hours=0), max=timedelta(hours=24)),
