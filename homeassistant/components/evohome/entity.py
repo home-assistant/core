@@ -41,7 +41,7 @@ class EvoEntity(CoordinatorEntity[EvoDataUpdateCoordinator]):
 
     _evo_device: evo.ControlSystem | evo.HotWater | evo.Zone
     _evo_id_attr: str
-    _evo_state_attr_names: tuple[str, ...] = ()
+    _evo_state_attr_names: tuple[str, ...]
 
     def __init__(
         self,

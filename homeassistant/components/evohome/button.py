@@ -49,6 +49,8 @@ class EvoResetButtonBase(EvoEntity, ButtonEntity):
 
     _attr_entity_category = EntityCategory.CONFIG
 
+    _evo_state_attr_names = ()
+
     def __init__(
         self,
         coordinator: EvoDataUpdateCoordinator,
