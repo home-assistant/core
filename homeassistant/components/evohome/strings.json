@@ -1,17 +1,4 @@
 {
-  "entity": {
-    "button": {
-      "clear_dhw_override": {
-        "name": "Reset {device_name}"
-      },
-      "clear_zone_override": {
-        "name": "Reset {device_name}"
-      },
-      "reset_system_mode": {
-        "name": "Reset {device_name}"
-      }
-    }
-  },
   "exceptions": {
     "invalid_system_mode": {
       "message": "The requested system mode is not supported: {error}"

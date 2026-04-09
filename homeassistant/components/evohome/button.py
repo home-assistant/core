@@ -6,7 +6,7 @@ import evohomeasync2 as evo
 
 from homeassistant.components.button import ButtonEntity
 from homeassistant.const import EntityCategory
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
@@ -59,12 +59,12 @@ class EvoResetButtonBase(EvoEntity, ButtonEntity):
         """Initialize the system reset button."""
         super().__init__(coordinator, evo_device)
 
+        # zones can be renamed, so set name in their property method
         if isinstance(evo_device, evo.ControlSystem):
-            name = evo_device.location.name
-        else:
-            name = evo_device.name
+            self._attr_name = f"Reset {evo_device.location.name}"
+        elif not isinstance(evo_device, evo.Zone):
+            self._attr_name = f"Reset {evo_device.name}"
 
-        self._attr_translation_placeholders = {"device_name": name}
         self._attr_unique_id = f"{evo_device.id}_reset"
 
     async def async_press(self) -> None:
@@ -110,16 +110,7 @@ class EvoResetZoneButton(EvoResetButtonBase):
             # this system does not have a distinct ID for the zone
             self._attr_unique_id = f"{evo_device.id}z_reset"
 
-    @callback
-    def _handle_coordinator_update(self) -> None:
-        """Handle updated data from the coordinator."""
-
-        # zone names are not immutable
-        name = self._evo_device.name
-
-        if self._attr_translation_placeholders.get("device_name") != name:
-            self._attr_translation_placeholders = {"device_name": name}
-            self.__dict__.pop("translation_placeholders", None)
-            self.__dict__.pop("name", None)
-
-        super()._handle_coordinator_update()
+    @property
+    def name(self) -> str:
+        """Return the name of the evohome entity."""
+        return f"Reset {self._evo_device.name}"
