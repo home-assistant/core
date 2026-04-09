@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import asyncio
 from typing import Any
 
 from lunatone_rest_api_client import DALIBroadcast
@@ -28,7 +27,6 @@ from .coordinator import (
 )
 
 PARALLEL_UPDATES = 0
-STATUS_UPDATE_DELAY = 0.04
 
 
 async def async_setup_entry(
@@ -149,8 +147,6 @@ class LunatoneLight(
             )
         else:
             await self._device.switch_on()
-
-        await asyncio.sleep(STATUS_UPDATE_DELAY)
         await self.coordinator.async_refresh()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
@@ -161,8 +157,6 @@ class LunatoneLight(
             await self._device.fade_to_brightness(0)
         else:
             await self._device.switch_off()
-
-        await asyncio.sleep(STATUS_UPDATE_DELAY)
         await self.coordinator.async_refresh()
 
 
@@ -221,13 +215,9 @@ class LunatoneLineBroadcastLight(
         await self._broadcast.fade_to_brightness(
             brightness_to_value(self.BRIGHTNESS_SCALE, kwargs.get(ATTR_BRIGHTNESS, 255))
         )
-
-        await asyncio.sleep(STATUS_UPDATE_DELAY)
         await self._coordinator_devices.async_refresh()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Instruct the line to turn off."""
         await self._broadcast.fade_to_brightness(0)
-
-        await asyncio.sleep(STATUS_UPDATE_DELAY)
         await self._coordinator_devices.async_refresh()
