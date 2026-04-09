@@ -84,7 +84,7 @@ async def test_victron_time_actions(
     init_integration: tuple[VictronVenusHub, MockConfigEntry],
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """Test time None value, same-value skip, and set_value service call."""
+    """Test time None handling and the set_value service call."""
     victron_hub, mock_config_entry = init_integration
 
     await inject_message(
@@ -98,6 +98,7 @@ async def test_victron_time_actions(
     entities = er.async_entries_for_config_entry(
         entity_registry, mock_config_entry.entry_id
     )
+    assert len(entities) == 1
     entity_id = entities[0].entity_id
 
     # Inject null to cover the None branch in victron_time_to_time
@@ -115,3 +116,7 @@ async def test_victron_time_actions(
         {"entity_id": entity_id, "time": dt_time(9, 0)},
         blocking=True,
     )
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == "09:00:00"
