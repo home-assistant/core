@@ -17,18 +17,18 @@ from .const import PLAYER_OPTIONS_TRANSLATION_KEY_PREFIX
 from .entity import MusicAssistantPlayerOptionEntity
 from .helpers import catch_musicassistant_error
 
-PLAYER_OPTIONS_TRANSLATION_KEYS_SWITCH: Final[list[str]] = [
-    "adaptive_drc",
-    "bass_extension",
-    "clear_voice",
-    "enhancer",
-    "extra_bass",
-    "party_mode",
-    "pure_direct",
-    "speaker_a",
-    "speaker_b",
-    "surround_3d",
-]
+PLAYER_OPTIONS_SWITCH: Final[dict[str, bool]] = {  # translation_key, enable by default
+    "adaptive_drc": False,
+    "bass_extension": False,
+    "clear_voice": False,
+    "enhancer": True,
+    "extra_bass": False,
+    "party_mode": False,
+    "pure_direct": True,
+    "speaker_a": True,
+    "speaker_b": True,
+    "surround_3d": False,
+}
 
 
 async def async_setup_entry(
@@ -63,7 +63,7 @@ async def async_setup_entry(
                 translation_key = player_option.translation_key[
                     len(PLAYER_OPTIONS_TRANSLATION_KEY_PREFIX) :
                 ]
-                if translation_key not in PLAYER_OPTIONS_TRANSLATION_KEYS_SWITCH:
+                if translation_key not in PLAYER_OPTIONS_SWITCH:
                     continue
 
                 entities.append(
@@ -74,6 +74,9 @@ async def async_setup_entry(
                         entity_description=SwitchEntityDescription(
                             key=player_option.key,
                             translation_key=translation_key,
+                            entity_registry_enabled_default=PLAYER_OPTIONS_SWITCH.get(
+                                translation_key, False
+                            ),
                         ),
                     )
                 )

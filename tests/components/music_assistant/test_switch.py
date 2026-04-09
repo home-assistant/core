@@ -6,9 +6,7 @@ from music_assistant_models.enums import EventType
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.music_assistant.const import DOMAIN
-from homeassistant.components.music_assistant.switch import (
-    PLAYER_OPTIONS_TRANSLATION_KEYS_SWITCH,
-)
+from homeassistant.components.music_assistant.switch import PLAYER_OPTIONS_SWITCH
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SERVICE_TOGGLE
 from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON, Platform
 from homeassistant.core import HomeAssistant
@@ -127,7 +125,7 @@ async def test_name_translation_availability(
         hass, language=LOCALE_EN, category="entity", integrations=[DOMAIN]
     )
     prefix = f"component.{DOMAIN}.entity.{Platform.SWITCH.value}."
-    for translation_key in PLAYER_OPTIONS_TRANSLATION_KEYS_SWITCH:
+    for translation_key in PLAYER_OPTIONS_SWITCH:
         assert translations.get(f"{prefix}{translation_key}.name") is not None, (
             f"{translation_key} is missing in strings.json for platform switch"
         )
