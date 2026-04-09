@@ -4,7 +4,7 @@ from json import JSONDecodeError
 import logging
 from typing import cast
 
-from aiohttp import BasicAuth, ClientError
+from aiohttp import BasicAuth, ClientError, ClientResponse
 
 from homeassistant.components.application_credentials import (
     AuthImplementation,
@@ -110,7 +110,7 @@ class HeimanOAuth2Implementation(AuthImplementation):
             _LOGGER.exception("Failed to process token response: %s", err)
             raise
 
-    async def _parse_token_response(self, resp) -> dict:
+    async def _parse_token_response(self, resp: ClientResponse) -> dict:
         """Parse and validate token response.
 
         Args:

@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from datetime import datetime
+from datetime import datetime, timezone
 import json
 import logging
 from typing import Any
@@ -160,15 +160,11 @@ class HeimanDataUpdateCoordinator(DataUpdateCoordinator[HeimanData]):
                 # Get detailed info for filtered devices to populate property values
                 for device_id, device in devices.items():
                     try:
-                        # Get device details via cloud_client
-                        if (
-                            hasattr(self.api_client, "_cloud_client")
-                            and self.api_client._cloud_client
-                        ):
-                            device_detail = await self.api_client._cloud_client._async_get_device_detail(
-                                device_id
-                            )
-                            if device_detail:
+                        # Get device details via public API method
+                        device_detail = await self.api_client.async_get_device_detail(
+                            device_id
+                        )
+                        if device_detail:
                                 # Extract firmware version from firmwareInfo (if not retrieved earlier)
                                 if not device.firmware_version:
                                     firmware_info = device_detail.get(
@@ -351,7 +347,7 @@ class HeimanDataUpdateCoordinator(DataUpdateCoordinator[HeimanData]):
                     raise UpdateFailed(f"Failed to fetch devices: {err}") from err
 
             # Update last update time
-            self.data.last_update = datetime.now()
+            self.data.last_update = datetime.now(timezone.utc)
             self.data.errors.clear()
 
             return self.data

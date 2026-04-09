@@ -259,6 +259,27 @@ class HeimanApiClient:
             )
             return result
 
+    async def async_get_device_detail(self, device_id: str) -> dict[str, Any] | None:
+        """Get detailed device information.
+
+        Args:
+            device_id: Device ID
+
+        Returns:
+            Dictionary with device details or None if not available
+        """
+        if not self._cloud_client:
+            _LOGGER.warning("Cloud client not initialized")
+            return None
+
+        try:
+            # Use the internal method to get device detail
+            device_detail = await self._cloud_client._async_get_device_detail(device_id)
+            return device_detail
+        except Exception as err:
+            _LOGGER.debug("Failed to get device detail for %s: %s", device_id, err)
+            return None
+
     async def close(self) -> None:
         """Close the client."""
         if self._http_client:
