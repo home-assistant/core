@@ -54,7 +54,15 @@ class AmazonDevicesCoordinator(DataUpdateCoordinator[dict[str, AmazonDevice]]):
             entry.data[CONF_PASSWORD],
             entry.data[CONF_LOGIN_DATA],
         )
-        self.previous_devices: set[str] = set()
+        device_registry = dr.async_get(hass)
+        self.previous_devices: set[str] = {
+            identifier
+            for device in device_registry.devices.get_devices_for_config_entry_id(
+                entry.entry_id
+            )
+            for identifier_domain, identifier in device.identifiers
+            if identifier_domain == DOMAIN
+        }
 
     async def _async_update_data(self) -> dict[str, AmazonDevice]:
         """Update device data."""
