@@ -45,7 +45,7 @@ set_zone_override:
           max: 35.0
           step: 0.1
     duration:
-      example: '{"minutes": 135}'
+      example: "02:15:00"
       selector:
         duration:
           enable_second: false
