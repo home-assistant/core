@@ -2,7 +2,6 @@
 
 import asyncio
 from collections.abc import Generator
-from copy import copy
 from ipaddress import ip_address
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, call, patch
@@ -12,14 +11,14 @@ from aiohasupervisor import SupervisorError
 from aiohasupervisor.models import AddonsOptions, Discovery
 import aiohttp
 import pytest
-from serial.tools.list_ports_common import ListPortInfo
 from voluptuous import InInvalid
 from zwave_js_server.exceptions import FailedCommand
 from zwave_js_server.model.node import Node
 from zwave_js_server.version import VersionInfo
 
 from homeassistant import config_entries, data_entry_flow
-from homeassistant.components.zwave_js.config_flow import TITLE, get_usb_ports
+from homeassistant.components.usb import SerialDevice, USBDevice
+from homeassistant.components.zwave_js.config_flow import TITLE, async_get_usb_ports
 from homeassistant.components.zwave_js.const import (
     ADDON_SLUG,
     CONF_ADDON_DEVICE,
@@ -164,37 +163,42 @@ def mock_addon_setup_time() -> Generator[None]:
 
 
 @pytest.fixture(name="serial_port")
-def serial_port_fixture() -> ListPortInfo:
+def serial_port_fixture() -> USBDevice:
     """Return a mock serial port."""
-    port = ListPortInfo("/test", skip_link_detection=True)
-    port.serial_number = "1234"
-    port.manufacturer = "Virtual serial port"
-    port.device = "/test"
-    port.description = "Some serial port"
-    port.pid = 9876
-    port.vid = 5678
+    return USBDevice(
+        device="/test",
+        vid="162E",
+        pid="269C",
+        serial_number="1234",
+        manufacturer="Virtual serial port",
+        description="Some serial port",
+    )
 
-    return port
 
-
-@pytest.fixture(name="mock_list_ports", autouse=True)
-def mock_list_ports_fixture(serial_port) -> Generator[MagicMock]:
-    """Mock list ports."""
+@pytest.fixture(name="mock_scan_serial_ports", autouse=True)
+def mock_scan_serial_ports_fixture(serial_port: USBDevice) -> Generator[MagicMock]:
+    """Mock scan serial ports."""
     with patch(
-        "homeassistant.components.zwave_js.config_flow.list_ports.comports"
-    ) as mock_list_ports:
-        another_port = copy(serial_port)
-        another_port.device = "/new"
-        another_port.description = "New serial port"
-        another_port.serial_number = "5678"
-        another_port.pid = 8765
-        no_vid_port = copy(serial_port)
-        no_vid_port.device = "/no_vid"
-        no_vid_port.description = "Port without vid"
-        no_vid_port.serial_number = "9123"
-        no_vid_port.vid = None
-        mock_list_ports.return_value = [serial_port, another_port, no_vid_port]
-        yield mock_list_ports
+        "homeassistant.components.zwave_js.config_flow.usb.async_scan_serial_ports"
+    ) as mock_scan:
+        another_port = USBDevice(
+            device="/new",
+            vid="162E",
+            pid="223D",
+            serial_number="5678",
+            manufacturer="Virtual serial port",
+            description="New serial port",
+        )
+
+        no_vid_port = SerialDevice(
+            device="/no_vid",
+            description="Port without vid",
+            serial_number="9123",
+            manufacturer=None,
+        )
+
+        mock_scan.return_value = [serial_port, another_port, no_vid_port]
+        yield mock_scan
 
 
 @pytest.fixture(name="mock_usb_serial_by_id", autouse=True)
@@ -4888,44 +4892,92 @@ async def test_configure_addon_usb_ports_failure(
         assert result["reason"] == "usb_ports_failed"
 
 
-async def test_get_usb_ports_filtering() -> None:
+async def test_get_usb_ports_filtering(hass: HomeAssistant) -> None:
     """Test that get_usb_ports filters out 'n/a' descriptions when other ports are available."""
     mock_ports = [
-        ListPortInfo("/dev/ttyUSB0"),
-        ListPortInfo("/dev/ttyUSB1"),
-        ListPortInfo("/dev/ttyUSB2"),
-        ListPortInfo("/dev/ttyUSB3"),
+        USBDevice(
+            device="/dev/ttyUSB0",
+            vid="1234",
+            pid="5678",
+            serial_number=None,
+            manufacturer=None,
+            description="n/a",
+        ),
+        USBDevice(
+            device="/dev/ttyUSB1",
+            vid="1234",
+            pid="5678",
+            serial_number=None,
+            manufacturer=None,
+            description="Device A",
+        ),
+        USBDevice(
+            device="/dev/ttyUSB2",
+            vid="1234",
+            pid="5678",
+            serial_number=None,
+            manufacturer=None,
+            description="N/A",
+        ),
+        USBDevice(
+            device="/dev/ttyUSB3",
+            vid="1234",
+            pid="5678",
+            serial_number=None,
+            manufacturer=None,
+            description="Device B",
+        ),
     ]
-    mock_ports[0].description = "n/a"
-    mock_ports[1].description = "Device A"
-    mock_ports[2].description = "N/A"
-    mock_ports[3].description = "Device B"
 
-    with patch("serial.tools.list_ports.comports", return_value=mock_ports):
-        result = get_usb_ports()
+    with patch(
+        "homeassistant.components.zwave_js.config_flow.usb.async_scan_serial_ports",
+        return_value=mock_ports,
+    ):
+        result = await async_get_usb_ports(hass)
 
         descriptions = list(result.values())
 
         # Verify that only non-"n/a" descriptions are returned
         assert descriptions == [
-            "Device A - /dev/ttyUSB1, s/n: n/a",
-            "Device B - /dev/ttyUSB3, s/n: n/a",
+            "Device A - /dev/ttyUSB1, s/n: n/a - 1234:5678",
+            "Device B - /dev/ttyUSB3, s/n: n/a - 1234:5678",
         ]
 
 
-async def test_get_usb_ports_all_na() -> None:
+async def test_get_usb_ports_all_na(hass: HomeAssistant) -> None:
     """Test that get_usb_ports returns all ports as-is when only 'n/a' descriptions exist."""
     mock_ports = [
-        ListPortInfo("/dev/ttyUSB0"),
-        ListPortInfo("/dev/ttyUSB1"),
-        ListPortInfo("/dev/ttyUSB2"),
+        USBDevice(
+            device="/dev/ttyUSB0",
+            vid="1234",
+            pid="5678",
+            serial_number=None,
+            manufacturer=None,
+            description="n/a",
+        ),
+        USBDevice(
+            device="/dev/ttyUSB1",
+            vid="1234",
+            pid="5678",
+            serial_number=None,
+            manufacturer=None,
+            description="N/A",
+        ),
+        USBDevice(
+            device="/dev/ttyUSB2",
+            vid="1234",
+            pid="5678",
+            serial_number=None,
+            manufacturer=None,
+            description="n/a",
+        ),
     ]
-    mock_ports[0].description = "n/a"
-    mock_ports[1].description = "N/A"
-    mock_ports[2].description = "n/a"
 
-    with patch("serial.tools.list_ports.comports", return_value=mock_ports):
-        result = get_usb_ports()
+    with patch(
+        "homeassistant.components.zwave_js.config_flow.usb.async_scan_serial_ports",
+        return_value=mock_ports,
+    ):
+        result = await async_get_usb_ports(hass)
 
         descriptions = list(result.values())
 
@@ -4940,65 +4992,121 @@ async def test_get_usb_ports_all_na() -> None:
         assert "/dev/ttyUSB2" in device_paths
 
 
-async def test_get_usb_ports_mixed_case_filtering() -> None:
+async def test_get_usb_ports_mixed_case_filtering(hass: HomeAssistant) -> None:
     """Test that get_usb_ports filters out 'n/a' descriptions with different case variations."""
     mock_ports = [
-        ListPortInfo("/dev/ttyUSB0"),
-        ListPortInfo("/dev/ttyUSB1"),
-        ListPortInfo("/dev/ttyUSB2"),
-        ListPortInfo("/dev/ttyUSB3"),
-        ListPortInfo("/dev/ttyUSB4"),
+        USBDevice(
+            device="/dev/ttyUSB0",
+            vid="1234",
+            pid="5678",
+            serial_number=None,
+            manufacturer=None,
+            description="n/a",
+        ),
+        USBDevice(
+            device="/dev/ttyUSB1",
+            vid="1234",
+            pid="5678",
+            serial_number=None,
+            manufacturer=None,
+            description="Device A",
+        ),
+        USBDevice(
+            device="/dev/ttyUSB2",
+            vid="1234",
+            pid="5678",
+            serial_number=None,
+            manufacturer=None,
+            description="N/A",
+        ),
+        USBDevice(
+            device="/dev/ttyUSB3",
+            vid="1234",
+            pid="5678",
+            serial_number=None,
+            manufacturer=None,
+            description="n/A",
+        ),
+        USBDevice(
+            device="/dev/ttyUSB4",
+            vid="1234",
+            pid="5678",
+            serial_number=None,
+            manufacturer=None,
+            description="Device B",
+        ),
     ]
-    mock_ports[0].description = "n/a"
-    mock_ports[1].description = "Device A"
-    mock_ports[2].description = "N/A"
-    mock_ports[3].description = "n/A"
-    mock_ports[4].description = "Device B"
 
-    with patch("serial.tools.list_ports.comports", return_value=mock_ports):
-        result = get_usb_ports()
+    with patch(
+        "homeassistant.components.zwave_js.config_flow.usb.async_scan_serial_ports",
+        return_value=mock_ports,
+    ):
+        result = await async_get_usb_ports(hass)
 
         descriptions = list(result.values())
 
         # Verify that only non-"n/a" descriptions are returned (case-insensitive filtering)
         assert descriptions == [
-            "Device A - /dev/ttyUSB1, s/n: n/a",
-            "Device B - /dev/ttyUSB4, s/n: n/a",
+            "Device A - /dev/ttyUSB1, s/n: n/a - 1234:5678",
+            "Device B - /dev/ttyUSB4, s/n: n/a - 1234:5678",
         ]
 
 
-async def test_get_usb_ports_empty_list() -> None:
+async def test_get_usb_ports_empty_list(hass: HomeAssistant) -> None:
     """Test that get_usb_ports handles empty port list."""
-    with patch("serial.tools.list_ports.comports", return_value=[]):
-        result = get_usb_ports()
+    with patch(
+        "homeassistant.components.zwave_js.config_flow.usb.async_scan_serial_ports",
+        return_value=[],
+    ):
+        result = await async_get_usb_ports(hass)
 
         # Verify that empty dict is returned
         assert result == {}
 
 
-async def test_get_usb_ports_single_na_port() -> None:
+async def test_get_usb_ports_single_na_port(hass: HomeAssistant) -> None:
     """Test that get_usb_ports returns single 'n/a' port when it's the only one available."""
-    mock_ports = [ListPortInfo("/dev/ttyUSB0")]
-    mock_ports[0].description = "n/a"
+    mock_ports = [
+        USBDevice(
+            device="/dev/ttyUSB0",
+            vid="1234",
+            pid="5678",
+            serial_number=None,
+            manufacturer=None,
+            description="n/a",
+        ),
+    ]
 
-    with patch("serial.tools.list_ports.comports", return_value=mock_ports):
-        result = get_usb_ports()
+    with patch(
+        "homeassistant.components.zwave_js.config_flow.usb.async_scan_serial_ports",
+        return_value=mock_ports,
+    ):
+        result = await async_get_usb_ports(hass)
 
         descriptions = list(result.values())
 
         # Verify that the single "n/a" port is returned
         assert descriptions == [
-            "n/a - /dev/ttyUSB0, s/n: n/a",
+            "n/a - /dev/ttyUSB0, s/n: n/a - 1234:5678",
         ]
 
 
-async def test_get_usb_ports_single_valid_port() -> None:
+async def test_get_usb_ports_single_valid_port(hass: HomeAssistant) -> None:
     """Test that get_usb_ports returns single valid port."""
-    mock_ports = [ListPortInfo("/dev/ttyUSB0")]
-    mock_ports[0].description = "Device A"
+    mock_ports = [
+        SerialDevice(
+            device="/dev/ttyUSB0",
+            serial_number=None,
+            manufacturer=None,
+            description="Device A",
+        ),
+    ]
 
-    with patch("serial.tools.list_ports.comports", return_value=mock_ports):
-        result = get_usb_ports()
+    with patch(
+        "homeassistant.components.zwave_js.config_flow.usb.async_scan_serial_ports",
+        return_value=mock_ports,
+    ):
+        result = await async_get_usb_ports(hass)
 
         descriptions = list(result.values())
 
@@ -5008,48 +5116,76 @@ async def test_get_usb_ports_single_valid_port() -> None:
         ]
 
 
-async def test_get_usb_ports_ignored_devices() -> None:
+async def test_get_usb_ports_ignored_devices(hass: HomeAssistant) -> None:
     """Test that get_usb_ports filters out ignored non-Z-Wave devices."""
     mock_ports = [
-        ListPortInfo("/dev/ttyUSB0"),
-        ListPortInfo("/dev/ttyUSB1"),
-        ListPortInfo("/dev/ttyUSB2"),
-        ListPortInfo("/dev/ttyUSB3"),
-        ListPortInfo("/dev/ttyUSB4"),
-        ListPortInfo("/dev/ttyUSB5"),
+        # ZBT-2, should be filtered
+        USBDevice(
+            device="/dev/ttyUSB0",
+            vid="10C4",
+            pid="EA60",
+            serial_number=None,
+            manufacturer="Nabu Casa",
+            description="ZBT-2",
+        ),
+        # SkyConnect, should be filtered
+        USBDevice(
+            device="/dev/ttyUSB1",
+            vid="10C4",
+            pid="EA60",
+            serial_number=None,
+            manufacturer="Nabu Casa",
+            description="SkyConnect v1.0",
+        ),
+        # ZBT-1, should be filtered
+        USBDevice(
+            device="/dev/ttyUSB2",
+            vid="10C4",
+            pid="EA60",
+            serial_number=None,
+            manufacturer="Nabu Casa",
+            description="Home Assistant Connect ZBT-1",
+        ),
+        # ZWA-2, should be shown
+        USBDevice(
+            device="/dev/ttyUSB3",
+            vid="10C4",
+            pid="EA60",
+            serial_number=None,
+            manufacturer="Nabu Casa",
+            description="ZWA-2",
+        ),
+        # unknown device with manufacturer/description, should be shown
+        USBDevice(
+            device="/dev/ttyUSB4",
+            vid="10C4",
+            pid="EA60",
+            serial_number=None,
+            manufacturer="Another Manufacturer",
+            description="Z-Wave USB Adapter",
+        ),
+        # unknown device with no manufacturer/description, should be shown
+        USBDevice(
+            device="/dev/ttyUSB5",
+            vid="10C4",
+            pid="EA60",
+            serial_number=None,
+            manufacturer=None,
+            description=None,
+        ),
     ]
-    # ZBT-2, should be filtered
-    mock_ports[0].manufacturer = "Nabu Casa"
-    mock_ports[0].description = "ZBT-2"
 
-    # ZBT-1, should be filtered
-    mock_ports[2].manufacturer = "Nabu Casa"
-    mock_ports[2].description = "Home Assistant Connect ZBT-1"
-
-    # SkyConnect, should be filtered
-    mock_ports[1].manufacturer = "Nabu Casa"
-    mock_ports[1].description = "SkyConnect v1.0"
-
-    # ZWA-2, should be shown
-    mock_ports[3].manufacturer = "Nabu Casa"
-    mock_ports[3].description = "ZWA-2"
-
-    # unknown device with manufacturer/description, should be shown
-    mock_ports[4].manufacturer = "Another Manufacturer"
-    mock_ports[4].description = "Z-Wave USB Adapter"
-
-    # unknown device with no manufacturer/description, should be shown
-    mock_ports[5].manufacturer = None
-    mock_ports[5].description = None
-
-    with patch("serial.tools.list_ports.comports", return_value=mock_ports):
-        result = get_usb_ports()
+    with patch(
+        "homeassistant.components.zwave_js.config_flow.usb.async_scan_serial_ports",
+        return_value=mock_ports,
+    ):
+        result = await async_get_usb_ports(hass)
         descriptions = list(result.values())
 
         assert descriptions == [
-            "ZWA-2 - /dev/ttyUSB3, s/n: n/a - Nabu Casa",
-            "Z-Wave USB Adapter - /dev/ttyUSB4, s/n: n/a - Another Manufacturer",
-            "/dev/ttyUSB5, s/n: n/a",
+            "ZWA-2 - /dev/ttyUSB3, s/n: n/a - Nabu Casa - 10C4:EA60",
+            "Z-Wave USB Adapter - /dev/ttyUSB4, s/n: n/a - Another Manufacturer - 10C4:EA60",
+            "/dev/ttyUSB5, s/n: n/a - 10C4:EA60",
         ]
 
 
