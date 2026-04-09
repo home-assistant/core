@@ -83,13 +83,15 @@ class HuumConfigFlow(ConfigFlow, domain=DOMAIN):
             else:
                 return self.async_update_reload_and_abort(
                     reconfigure_entry,
+                    title=user_input[CONF_USERNAME],
                     data_updates=user_input,
                 )
 
         return self.async_show_form(
             step_id="reconfigure",
             data_schema=self.add_suggested_values_to_schema(
-                STEP_USER_DATA_SCHEMA, reconfigure_entry.data
+                STEP_USER_DATA_SCHEMA,
+                {CONF_USERNAME: reconfigure_entry.data[CONF_USERNAME]},
             ),
             errors=errors,
         )

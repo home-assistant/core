@@ -185,7 +185,7 @@ async def test_reauth_errors(
     assert mock_config_entry.data[CONF_PASSWORD] == "new_password"
 
 
-@pytest.mark.usefixtures("mock_huum_client")
+@pytest.mark.usefixtures("mock_huum_client", "mock_setup_entry")
 async def test_reconfigure_flow(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
@@ -208,11 +208,12 @@ async def test_reconfigure_flow(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
+    assert mock_config_entry.title == "new@sauna.org"
     assert mock_config_entry.data[CONF_USERNAME] == "new@sauna.org"
     assert mock_config_entry.data[CONF_PASSWORD] == "new_password"
 
 
-@pytest.mark.usefixtures("mock_huum_client")
+@pytest.mark.usefixtures("mock_huum_client", "mock_setup_entry")
 async def test_reconfigure_flow_already_configured(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
@@ -257,6 +258,7 @@ async def test_reconfigure_flow_already_configured(
 async def test_reconfigure_errors(
     hass: HomeAssistant,
     mock_huum_client: AsyncMock,
+    mock_setup_entry: AsyncMock,
     mock_config_entry: MockConfigEntry,
     raises: Exception,
     error_base: str,
