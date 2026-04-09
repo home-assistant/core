@@ -16,7 +16,6 @@ from homeassistant.core import (
 from homeassistant.helpers import config_validation as cv, selector, service
 from homeassistant.util import slugify
 
-from . import SeventeenTrackCoordinator
 from .const import (
     ATTR_DESTINATION_COUNTRY,
     ATTR_INFO_TEXT,
@@ -34,6 +33,7 @@ from .const import (
     SERVICE_ARCHIVE_PACKAGE,
     SERVICE_GET_PACKAGES,
 )
+from .coordinator import SeventeenTrackConfigEntry
 
 SERVICE_GET_PACKAGES_SCHEMA: Final = vol.Schema(
     {
@@ -72,13 +72,11 @@ async def _get_packages(call: ServiceCall) -> ServiceResponse:
     """Get packages from 17Track."""
     package_states = call.data.get(ATTR_PACKAGE_STATE, [])
 
-    entry = service.async_get_config_entry(
+    entry: SeventeenTrackConfigEntry = service.async_get_config_entry(
         call.hass, DOMAIN, call.data[ATTR_CONFIG_ENTRY_ID]
     )
 
-    seventeen_coordinator: SeventeenTrackCoordinator = call.hass.data[DOMAIN][
-        entry.entry_id
-    ]
+    seventeen_coordinator = entry.runtime_data
     live_packages = sorted(
         await seventeen_coordinator.client.profile.packages(
             show_archived=seventeen_coordinator.show_archived
@@ -99,13 +97,11 @@ async def _add_package(call: ServiceCall) -> None:
     tracking_number = call.data[ATTR_PACKAGE_TRACKING_NUMBER]
     friendly_name = call.data[ATTR_PACKAGE_FRIENDLY_NAME]
 
-    entry = service.async_get_config_entry(
+    entry: SeventeenTrackConfigEntry = service.async_get_config_entry(
         call.hass, DOMAIN, call.data[ATTR_CONFIG_ENTRY_ID]
     )
 
-    seventeen_coordinator: SeventeenTrackCoordinator = call.hass.data[DOMAIN][
-        entry.entry_id
-    ]
+    seventeen_coordinator = entry.runtime_data
 
     await seventeen_coordinator.client.profile.add_package(
         tracking_number, friendly_name
@@ -115,13 +111,11 @@ async def _add_package(call: ServiceCall) -> None:
 async def _archive_package(call: ServiceCall) -> None:
     tracking_number = call.data[ATTR_PACKAGE_TRACKING_NUMBER]
 
-    entry = service.async_get_config_entry(
+    entry: SeventeenTrackConfigEntry = service.async_get_config_entry(
         call.hass, DOMAIN, call.data[ATTR_CONFIG_ENTRY_ID]
     )
 
-    seventeen_coordinator: SeventeenTrackCoordinator = call.hass.data[DOMAIN][
-        entry.entry_id
-    ]
+    seventeen_coordinator = entry.runtime_data
 
     await seventeen_coordinator.client.profile.archive_package(tracking_number)
 
