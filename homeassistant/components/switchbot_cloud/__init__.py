@@ -13,6 +13,7 @@ from switchbot_api import (
     SwitchBotAPI,
     SwitchBotAuthenticationError,
     SwitchBotConnectionError,
+    SwitchBotDeviceOfflineError,
 )
 
 from homeassistant.components import webhook
@@ -202,7 +203,7 @@ async def make_device_data(
 
     if isinstance(device, Device) and device.device_type == "Bot":
         coordinator = await coordinator_for_device(
-            hass, entry, api, device, coordinators_by_id
+            hass, entry, api, device, coordinators_by_id, True
         )
         devices_data.sensors.append((device, coordinator))
         if coordinator.data is not None:
@@ -409,42 +410,49 @@ async def _initialize_webhook(
             hass,
             entry.data[CONF_WEBHOOK_ID],
         )
-
         # check if webhook is configured in switchbot cloud
-        check_webhook_result = None
-        with contextlib.suppress(Exception):
-            check_webhook_result = await api.get_webook_configuration()
 
-        actual_webhook_urls = (
-            check_webhook_result["urls"]
-            if check_webhook_result and "urls" in check_webhook_result
-            else []
-        )
-        need_add_webhook = (
-            len(actual_webhook_urls) == 0 or webhook_url not in actual_webhook_urls
-        )
-        need_clean_previous_webhook = (
-            len(actual_webhook_urls) > 0 and webhook_url not in actual_webhook_urls
-        )
+        try:
+            check_webhook_result = None
+            with contextlib.suppress(Exception):
+                check_webhook_result = await api.get_webook_configuration()
 
-        if need_clean_previous_webhook:
-            # it seems is impossible to register multiple webhook.
-            # So, if webhook already exists, we delete it
-            await api.delete_webhook(actual_webhook_urls[0])
-            _LOGGER.debug(
-                "Deleted previous Switchbot cloud webhook url: %s",
-                actual_webhook_urls[0],
+            actual_webhook_urls = (
+                check_webhook_result["urls"]
+                if check_webhook_result and "urls" in check_webhook_result
+                else []
+            )
+            need_add_webhook = (
+                len(actual_webhook_urls) == 0 or webhook_url not in actual_webhook_urls
+            )
+            need_clean_previous_webhook = (
+                len(actual_webhook_urls) > 0 and webhook_url not in actual_webhook_urls
             )
 
-        if need_add_webhook:
-            # call api for register webhookurl
-            await api.setup_webhook(webhook_url)
-            _LOGGER.debug("Registered Switchbot cloud webhook at hass: %s", webhook_url)
+            if need_clean_previous_webhook:
+                # it seems is impossible to register multiple webhook.
+                # So, if webhook already exists, we delete it
+                await api.delete_webhook(actual_webhook_urls[0])
+                _LOGGER.debug(
+                    "Deleted previous Switchbot cloud webhook url: %s",
+                    actual_webhook_urls[0],
+                )
 
-        for coordinator in coordinators_by_id.values():
-            coordinator.webhook_subscription_listener(True)
+            if need_add_webhook:
+                # call api for register webhookurl
+                await api.setup_webhook(webhook_url)
+                _LOGGER.debug(
+                    "Registered Switchbot cloud webhook at hass: %s", webhook_url
+                )
 
-        _LOGGER.debug("Registered Switchbot cloud webhook at: %s", webhook_url)
+            for coordinator in coordinators_by_id.values():
+                coordinator.webhook_subscription_listener(True)
+
+            _LOGGER.debug("Registered Switchbot cloud webhook at: %s", webhook_url)
+        except SwitchBotDeviceOfflineError as e:
+            _LOGGER.error("Failed to connect Switchbot cloud device: %s", e)
+        except SwitchBotConnectionError as e:
+            _LOGGER.error("Failed to connect Switchbot cloud device: %s", e)
 
 
 def _create_handle_webhook(
