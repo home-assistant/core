@@ -700,7 +700,6 @@ class AnthropicBaseLLMEntity(CoordinatorEntity[AnthropicCoordinator]):
             manufacturer="Anthropic",
             model=self.model_info.display_name,
             model_id=self.model_info.id,
-            created_at=self.model_info.created_at.isoformat(),
             entry_type=dr.DeviceEntryType.SERVICE,
         )
 
