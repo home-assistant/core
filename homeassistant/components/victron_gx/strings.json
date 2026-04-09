@@ -47,6 +47,15 @@
     }
   },
   "entity": {
+    "button": {
+      "platform_device_reboot": {
+        "name": "Device reboot",
+        "state": {
+          "off": "Off",
+          "on": "On"
+        }
+      }
+    },
     "sensor": {
       "acload_current": {
         "name": "Load current"
