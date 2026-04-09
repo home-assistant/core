@@ -23,8 +23,6 @@ class AqualinkEntity[AqualinkDeviceT: AqualinkDevice](
     class.
     """
 
-    _attr_should_poll = False
-
     def __init__(
         self, coordinator: AqualinkDataUpdateCoordinator, dev: AqualinkDeviceT
     ) -> None:
