@@ -3,6 +3,7 @@
 from unittest.mock import AsyncMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
+from iaqualink.client import AqualinkClient
 from iaqualink.exception import (
     AqualinkServiceException,
     AqualinkServiceUnauthorizedException,
@@ -31,7 +32,7 @@ from homeassistant.util import dt as dt_util
 
 from .conftest import get_aqualink_device, get_aqualink_system
 
-from tests.common import async_fire_time_changed
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 async def _advance_coordinator_time(
@@ -44,7 +45,9 @@ async def _advance_coordinator_time(
 
 
 async def test_system_coordinator_raises_update_failed(
-    hass: HomeAssistant, config_entry, client
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    client: AqualinkClient,
 ) -> None:
     """Test a system coordinator raises UpdateFailed on update errors."""
     config_entry.add_to_hass(hass)
@@ -73,7 +76,9 @@ async def test_system_coordinator_raises_update_failed(
         await coordinator._async_update_data()
 
 
-async def test_setup_login_exception(hass: HomeAssistant, config_entry) -> None:
+async def test_setup_login_exception(
+    hass: HomeAssistant, config_entry: MockConfigEntry
+) -> None:
     """Test setup encountering a login exception."""
     config_entry.add_to_hass(hass)
 
@@ -101,7 +106,9 @@ async def test_setup_login_unauthorized(hass: HomeAssistant, config_entry) -> No
     assert config_entry.state is ConfigEntryState.SETUP_ERROR
 
 
-async def test_setup_login_timeout(hass: HomeAssistant, config_entry) -> None:
+async def test_setup_login_timeout(
+    hass: HomeAssistant, config_entry: MockConfigEntry
+) -> None:
     """Test setup encountering a timeout while logging in."""
     config_entry.add_to_hass(hass)
 
@@ -115,7 +122,9 @@ async def test_setup_login_timeout(hass: HomeAssistant, config_entry) -> None:
     assert config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
-async def test_setup_systems_exception(hass: HomeAssistant, config_entry) -> None:
+async def test_setup_systems_exception(
+    hass: HomeAssistant, config_entry: MockConfigEntry
+) -> None:
     """Test setup encountering an exception while retrieving systems."""
     config_entry.add_to_hass(hass)
 
@@ -135,7 +144,9 @@ async def test_setup_systems_exception(hass: HomeAssistant, config_entry) -> Non
     assert config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
-async def test_setup_no_systems_recognized(hass: HomeAssistant, config_entry) -> None:
+async def test_setup_no_systems_recognized(
+    hass: HomeAssistant, config_entry: MockConfigEntry
+) -> None:
     """Test setup ending in no systems recognized."""
     config_entry.add_to_hass(hass)
 
@@ -156,7 +167,9 @@ async def test_setup_no_systems_recognized(hass: HomeAssistant, config_entry) ->
 
 
 async def test_setup_devices_exception(
-    hass: HomeAssistant, config_entry, client
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    client: AqualinkClient,
 ) -> None:
     """Test setup encountering an exception while retrieving devices."""
     config_entry.add_to_hass(hass)
@@ -186,7 +199,9 @@ async def test_setup_devices_exception(
 
 
 async def test_setup_all_good_no_recognized_devices(
-    hass: HomeAssistant, config_entry, client
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    client: AqualinkClient,
 ) -> None:
     """Test setup ending in no devices recognized."""
     config_entry.add_to_hass(hass)
@@ -230,7 +245,9 @@ async def test_setup_all_good_no_recognized_devices(
 
 
 async def test_setup_all_good_all_device_types(
-    hass: HomeAssistant, config_entry, client
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    client: AqualinkClient,
 ) -> None:
     """Test setup ending in one device of each type recognized."""
     config_entry.add_to_hass(hass)
@@ -277,7 +294,10 @@ async def test_setup_all_good_all_device_types(
 
 
 async def test_multiple_updates(
-    hass: HomeAssistant, config_entry, client, freezer: FrozenDateTimeFactory
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    client: AqualinkClient,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test all possible results of online status transition after update."""
     config_entry.add_to_hass(hass)
@@ -362,7 +382,10 @@ async def test_multiple_updates(
 
 
 async def test_entity_assumed_and_available(
-    hass: HomeAssistant, config_entry, client, freezer: FrozenDateTimeFactory
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    client: AqualinkClient,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test assumed_state and_available properties for all values of online."""
     config_entry.add_to_hass(hass)
