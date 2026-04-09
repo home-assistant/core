@@ -328,30 +328,42 @@ async def test_switch_no_mesh_wifi_uplink(
     await hass.async_block_till_done(wait_background_tasks=True)
 
 
-async def test_switch_device_no_wan_access(
+@pytest.mark.parametrize(
+    ("wan_access_data", "expected_state"),
+    [
+        (None, STATE_UNAVAILABLE),
+        ("unknown", STATE_UNAVAILABLE),
+        ("error", STATE_UNAVAILABLE),
+        ("granted", STATE_ON),
+        ("denied", STATE_OFF),
+    ],
+)
+async def test_switch_device_wan_access(
     hass: HomeAssistant,
     fc_class_mock,
     fh_class_mock,
     fs_class_mock,
+    wan_access_data: str | None,
+    expected_state: str,
 ) -> None:
-    """Test Fritz!Tools switches when device has no WAN access."""
+    """Test Fritz!Tools switches have proper WAN access state."""
 
     entity_id = "switch.printer_internet_access"
 
     entry = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_DATA)
     entry.add_to_hass(hass)
 
-    attributes = [
-        {k: v for k, v in host.items() if k != "X_AVM-DE_WANAccess"}
-        for host in MOCK_HOST_ATTRIBUTES_DATA
-    ]
+    attributes = deepcopy(MOCK_HOST_ATTRIBUTES_DATA)
+    for host in attributes:
+        host["X_AVM-DE_WANAccess"] = wan_access_data
+
     fh_class_mock.get_hosts_attributes = MagicMock(return_value=attributes)
 
     assert await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done(wait_background_tasks=True)
 
     assert (state := hass.states.get(entity_id))
-    assert state.state == STATE_UNAVAILABLE
+    assert state.state == expected_state
 
 
 async def test_switch_device_no_ip_address(
