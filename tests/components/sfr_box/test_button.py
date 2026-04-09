@@ -16,7 +16,9 @@ from homeassistant.helpers import entity_registry as er
 
 from tests.common import snapshot_platform
 
-pytestmark = pytest.mark.usefixtures("system_get_info", "dsl_get_info", "wan_get_info")
+pytestmark = pytest.mark.usefixtures(
+    "system_get_info", "dsl_get_info", "voip_get_info", "wan_get_info"
+)
 
 
 @pytest.fixture(autouse=True)

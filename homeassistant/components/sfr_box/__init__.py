@@ -22,6 +22,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: SFRConfigEntry) -> bool:
     """Set up SFR box as config entry."""
     box = SFRBox(ip=entry.data[CONF_HOST], client=async_get_clientsession(hass))
     platforms = PLATFORMS
+    has_auth = False
     if (username := entry.data.get(CONF_USERNAME)) and (
         password := entry.data.get(CONF_PASSWORD)
     ):
@@ -39,6 +40,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: SFRConfigEntry) -> bool:
                 translation_placeholders={"error": str(err)},
             ) from err
         platforms = PLATFORMS_WITH_AUTH
+        has_auth = True
 
     data = SFRRuntimeData(
         box=box,
@@ -51,10 +53,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: SFRConfigEntry) -> bool:
         system=SFRDataUpdateCoordinator(
             hass, entry, box, "system", lambda b: b.system_get_info()
         ),
+        voip=None,
         wan=SFRDataUpdateCoordinator(
             hass, entry, box, "wan", lambda b: b.wan_get_info()
         ),
     )
+    if has_auth:
+        data.voip = SFRDataUpdateCoordinator(
+            hass, entry, box, "voip", lambda b: b.voip_get_info()
+        )
     # Preload system information
     await data.system.async_config_entry_first_refresh()
     system_info = data.system.data
@@ -63,6 +70,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: SFRConfigEntry) -> bool:
 
     # Preload other coordinators (based on net infrastructure)
     tasks = [data.wan.async_config_entry_first_refresh()]
+    if data.voip is not None:
+        tasks.append(data.voip.async_config_entry_first_refresh())
     if (net_infra := system_info.net_infra) == "adsl":
         tasks.append(data.dsl.async_config_entry_first_refresh())
     elif net_infra == "ftth":
