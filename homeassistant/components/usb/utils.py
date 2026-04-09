@@ -42,10 +42,7 @@ def serial_device_from_port(port: SerialPortInfo) -> SerialDevice:
 
 def usb_serial_device_from_port(port: SerialPortInfo) -> USBDevice | SerialDevice:
     """Convert serialx SerialPortInfo to USBDevice or SerialDevice."""
-    if port.vid is not None or port.pid is not None:
-        assert port.vid is not None
-        assert port.pid is not None
-
+    if port.vid is not None and port.pid is not None:
         return usb_device_from_port(port)
     return serial_device_from_port(port)
 
