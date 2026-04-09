@@ -9,11 +9,6 @@ FETCH_INTERVAL = 300
 UPDATE_INTERVAL = 7200
 CONF_UPDATE_ENABLED = "update_enabled"
 
-# entry fields
-ENTRY_CONTROLLER = "controller"
-ENTRY_COORDINATOR = "coordinator"
-ENTRY_VEHICLES = "vehicles"
-
 # update coordinator name
 COORDINATOR_NAME = "subaru_data"
 

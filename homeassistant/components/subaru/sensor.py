@@ -26,15 +26,12 @@ from . import get_device_info
 from .const import (
     API_GEN_2,
     API_GEN_3,
-    DOMAIN,
-    ENTRY_COORDINATOR,
-    ENTRY_VEHICLES,
     VEHICLE_API_GEN,
     VEHICLE_HAS_EV,
     VEHICLE_STATUS,
     VEHICLE_VIN,
 )
-from .coordinator import SubaruDataUpdateCoordinator
+from .coordinator import SubaruConfigEntry, SubaruDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -138,13 +135,12 @@ EV_SENSORS = [
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: SubaruConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Subaru sensors by config_entry."""
-    entry = hass.data[DOMAIN][config_entry.entry_id]
-    coordinator = entry[ENTRY_COORDINATOR]
-    vehicle_info = entry[ENTRY_VEHICLES]
+    coordinator = config_entry.runtime_data.coordinator
+    vehicle_info = config_entry.runtime_data.vehicles
     entities = []
     await _async_migrate_entries(hass, config_entry)
     for info in vehicle_info.values():
