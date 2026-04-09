@@ -217,6 +217,7 @@ class ConversationSubentryFlowHandler(ConfigSubentryFlow):
     """Flow for managing conversation subentries."""
 
     options: dict[str, Any]
+    model_info: anthropic.types.ModelInfo
 
     @property
     def _is_new(self) -> bool:
@@ -363,6 +364,18 @@ class ConversationSubentryFlowHandler(ConfigSubentryFlow):
         if user_input is not None:
             self.options.update(user_input)
 
+            coordinator = self._get_entry().runtime_data
+            self.model_info = coordinator.get_model_info(self.options[CONF_CHAT_MODEL])
+            if self.model_info.display_name == self.options[CONF_CHAT_MODEL]:
+                # Couldn't find the model in the model list, try to fetch it directly
+                client = coordinator.client
+                try:
+                    self.model_info = await client.models.retrieve(
+                        self.options[CONF_CHAT_MODEL]
+                    )
+                except anthropic.AnthropicError:
+                    errors[CONF_CHAT_MODEL] = "model_not_found"
+
             if not errors:
                 return await self.async_step_model()
 
@@ -503,10 +516,8 @@ class ConversationSubentryFlowHandler(ConfigSubentryFlow):
 
     async def _get_model_list(self) -> list[SelectOptionDict]:
         """Get list of available models."""
-        client = anthropic.AsyncAnthropic(
-            api_key=self._get_entry().data[CONF_API_KEY],
-            http_client=get_async_client(self.hass),
-        )
+        coordinator = self._get_entry().runtime_data
+        client = coordinator.client
         return await get_model_list(client)
 
     async def _get_location_data(self) -> dict[str, str]:
