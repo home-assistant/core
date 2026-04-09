@@ -131,12 +131,32 @@
       },
       "sensors": {
         "data": {
+          "account_balance": "Account balance sensors",
+          "barometer": "Barometer sensors",
+          "beverage_supply": "Beverage supply sensors",
+          "carbondioxide": "CO2 sensors",
+          "door_locked": "Door lock entities",
           "humidity": "Humidity sensors",
-          "temperature": "Temperature sensors"
+          "network_connections": "Network connection sensors",
+          "people_now_present": "People now present sensors",
+          "power_consumption": "Power consumption sensors",
+          "power_generation": "Power generation sensors",
+          "temperature": "Temperature sensors",
+          "total_member_count": "Total member count sensors"
         },
         "data_description": {
+          "account_balance": "Entities that report the account balance.",
+          "barometer": "Entities that report atmospheric pressure.",
+          "beverage_supply": "Entities that report beverage supply.",
+          "carbondioxide": "Entities that report CO2 concentration.",
+          "door_locked": "Entities that report whether a door is locked.",
           "humidity": "Entities that report humidity.",
-          "temperature": "Entities that report temperature."
+          "network_connections": "Entities that report network connections.",
+          "people_now_present": "Entities that report the number of people present.",
+          "power_consumption": "Entities that report power consumption.",
+          "power_generation": "Entities that report power generation.",
+          "temperature": "Entities that report temperature.",
+          "total_member_count": "Entities that report the total member count."
         }
       },
       "spacefed": {

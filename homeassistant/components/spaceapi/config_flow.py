@@ -22,8 +22,13 @@ from homeassistant.helpers.selector import (
 
 from . import SpaceAPIConfigEntry
 from .const import (
+    CONF_ACCOUNT_BALANCE,
+    CONF_BAROMETER,
+    CONF_BEVERAGE_SUPPLY,
     CONF_CAM,
+    CONF_CARBONDIOXIDE,
     CONF_CONTACT,
+    CONF_DOOR_LOCKED,
     CONF_FACEBOOK,
     CONF_FEED_BLOG,
     CONF_FEED_CALENDAR,
@@ -40,7 +45,11 @@ from .const import (
     CONF_MATRIX,
     CONF_ML,
     CONF_MUMBLE,
+    CONF_NETWORK_CONNECTIONS,
+    CONF_PEOPLE_NOW_PRESENT,
     CONF_PHONE,
+    CONF_POWER_CONSUMPTION,
+    CONF_POWER_GENERATION,
     CONF_PROJECTS,
     CONF_SIP,
     CONF_SPACE,
@@ -48,6 +57,7 @@ from .const import (
     CONF_SPACENET,
     CONF_SPACESAML,
     CONF_TEMPERATURE,
+    CONF_TOTAL_MEMBER_COUNT,
     CONF_TWITTER,
     CONF_XMPP,
     DOMAIN,
@@ -265,22 +275,22 @@ class SpaceAPIOptionsFlowHandler(OptionsFlow):
                     TextSelectorConfig(type=TextSelectorType.EMAIL)
                 ),
                 vol.Optional(CONF_IRC, default=""): TextSelector(
-                    TextSelectorConfig(type=TextSelectorType.TEXT)
+                    TextSelectorConfig(type=TextSelectorType.URL)
                 ),
                 vol.Optional(CONF_ML, default=""): TextSelector(
-                    TextSelectorConfig(type=TextSelectorType.TEXT)
+                    TextSelectorConfig(type=TextSelectorType.EMAIL)
                 ),
                 vol.Optional(CONF_PHONE, default=""): TextSelector(
-                    TextSelectorConfig(type=TextSelectorType.TEXT)
+                    TextSelectorConfig(type=TextSelectorType.TEL)
                 ),
                 vol.Optional(CONF_SIP, default=""): TextSelector(
-                    TextSelectorConfig(type=TextSelectorType.TEXT)
+                    TextSelectorConfig(type=TextSelectorType.URL)
                 ),
                 vol.Optional(CONF_TWITTER, default=""): TextSelector(
                     TextSelectorConfig(type=TextSelectorType.TEXT)
                 ),
                 vol.Optional(CONF_FACEBOOK, default=""): TextSelector(
-                    TextSelectorConfig(type=TextSelectorType.TEXT)
+                    TextSelectorConfig(type=TextSelectorType.URL)
                 ),
                 vol.Optional(CONF_MASTODON, default=""): TextSelector(
                     TextSelectorConfig(type=TextSelectorType.TEXT)
@@ -292,10 +302,10 @@ class SpaceAPIOptionsFlowHandler(OptionsFlow):
                     TextSelectorConfig(type=TextSelectorType.TEXT)
                 ),
                 vol.Optional(CONF_MUMBLE, default=""): TextSelector(
-                    TextSelectorConfig(type=TextSelectorType.TEXT)
+                    TextSelectorConfig(type=TextSelectorType.URL)
                 ),
                 vol.Optional(CONF_GOPHER, default=""): TextSelector(
-                    TextSelectorConfig(type=TextSelectorType.TEXT)
+                    TextSelectorConfig(type=TextSelectorType.URL)
                 ),
             }
         )
@@ -350,10 +360,83 @@ class SpaceAPIOptionsFlowHandler(OptionsFlow):
         schema = vol.Schema(
             {
                 vol.Optional(CONF_TEMPERATURE): EntitySelector(
-                    EntitySelectorConfig(multiple=True)
+                    EntitySelectorConfig(
+                        multiple=True,
+                        domain="sensor",
+                        device_class="temperature",
+                    )
                 ),
                 vol.Optional(CONF_HUMIDITY): EntitySelector(
-                    EntitySelectorConfig(multiple=True)
+                    EntitySelectorConfig(
+                        multiple=True,
+                        domain="sensor",
+                        device_class="humidity",
+                    )
+                ),
+                vol.Optional(CONF_BAROMETER): EntitySelector(
+                    EntitySelectorConfig(
+                        multiple=True,
+                        domain="sensor",
+                        device_class="atmospheric_pressure",
+                    )
+                ),
+                vol.Optional(CONF_CARBONDIOXIDE): EntitySelector(
+                    EntitySelectorConfig(
+                        multiple=True,
+                        domain="sensor",
+                        device_class="carbon_dioxide",
+                    )
+                ),
+                vol.Optional(CONF_POWER_CONSUMPTION): EntitySelector(
+                    EntitySelectorConfig(
+                        multiple=True,
+                        domain="sensor",
+                        device_class="power",
+                    )
+                ),
+                vol.Optional(CONF_POWER_GENERATION): EntitySelector(
+                    EntitySelectorConfig(
+                        multiple=True,
+                        domain="sensor",
+                        device_class="power",
+                    )
+                ),
+                vol.Optional(CONF_DOOR_LOCKED): EntitySelector(
+                    EntitySelectorConfig(
+                        multiple=True,
+                        domain=["lock", "binary_sensor"],
+                    )
+                ),
+                vol.Optional(CONF_PEOPLE_NOW_PRESENT): EntitySelector(
+                    EntitySelectorConfig(
+                        multiple=True,
+                        domain="sensor",
+                    )
+                ),
+                vol.Optional(CONF_TOTAL_MEMBER_COUNT): EntitySelector(
+                    EntitySelectorConfig(
+                        multiple=True,
+                        domain="sensor",
+                    )
+                ),
+                vol.Optional(CONF_ACCOUNT_BALANCE): EntitySelector(
+                    EntitySelectorConfig(
+                        multiple=True,
+                        domain="sensor",
+                        device_class="monetary",
+                    )
+                ),
+                vol.Optional(CONF_BEVERAGE_SUPPLY): EntitySelector(
+                    EntitySelectorConfig(
+                        multiple=True,
+                        domain="sensor",
+                    )
+                ),
+                vol.Optional(CONF_NETWORK_CONNECTIONS): EntitySelector(
+                    EntitySelectorConfig(
+                        multiple=True,
+                        domain="sensor",
+                    )
                 ),
             }
         )
