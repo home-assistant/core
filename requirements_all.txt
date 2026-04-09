@@ -3292,7 +3292,7 @@ webio-api==0.1.12
 webmin-xmlrpc==0.0.2
 
 # homeassistant.components.weheat
-weheat==2026.2.28
+weheat==2026.4.8
 
 # homeassistant.components.whirlpool
 whirlpool-sixth-sense==1.0.3
