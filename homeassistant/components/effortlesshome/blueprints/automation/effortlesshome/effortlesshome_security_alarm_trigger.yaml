@@ -1,0 +1,68 @@
+blueprint:
+  name: Security Alarm Trigger
+  description: Define the devices what will trigger the security alarm (e.g. Door, Window, Motion)
+  domain: automation
+  author: EffortlessHome
+  input:
+    monitoringdevice:
+      name: Security Alarm Devices
+      description: The triggering device(s)
+      selector:
+        entity:
+          domain:
+            - binary_sensor
+            - group
+          device_class:
+            - door
+            - window
+            - motion
+            - presence
+          multiple: true
+    securityalarm:
+      name: Security Alarm
+      description: The security alarm to arm in away mode
+      default: alarm_control_panel.effortlesshome
+      selector:
+        entity:
+          filter:
+            - domain:
+                - alarm_control_panel
+          multiple: false          
+    arming_mode:
+      name: Arming Mode
+      description: The arming mode to check.
+      default: armed_away
+      selector:
+        select:
+          options:
+            - armed_home
+            - armed_away
+    additional_actions:
+      name: Additional Actions
+      description: Add additional actions to execute (Optional)
+      default: []
+      selector:
+        action: {}
+trigger:
+  - platform: state
+    entity_id: !input monitoringdevice
+    to: "on"
+variables:
+  triggering_sensor: "{{ trigger }}"
+conditions:
+  - condition: state
+    entity_id: !input securityalarm
+    state: !input arming_mode
+action:
+  - action: alarm_control_panel.alarm_trigger
+    metadata: {}
+    data: {}
+    target:
+      entity_id: !input securityalarm  
+  - service: effortlesshome.create_alert_service
+    data:
+      alert_type: Security Alarm Trigger
+      alert_description: "Security Alarm Triggered by {{ triggering_sensor.entity_id }}"
+      status: Active  
+  - choose: []
+    default: !input additional_actions

@@ -1,0 +1,126 @@
+# Service to clean motion files older than specified age
+clean_motion_files:
+  name: Clean motion files
+  description: Clean motion files older than specified number of days
+  fields:
+    age:
+      name: Age
+      description: The age of the files to remove in days. Default is 30 days.
+      example: 30
+      selector:
+        number:
+          min: 1
+          max: 365
+          unit_of_measurement: days
+
+# Get Firebase configuration from Oasira for mobile_app setup
+get_firebase_config:
+  name: Get Firebase config
+  description: Get Firebase configuration from Oasira for mobile app setup
+
+# Add a label to an entity
+add_label_to_entity:
+  name: Add label to entity
+  description: Add a label to an entity
+  fields:
+    entity_id:
+      name: Entity
+      description: The entity to update
+      example: "binary_sensor.front_door"
+      required: true
+      selector:
+        entity:
+
+    label:
+      name: Label
+      description: The label to apply to the entity
+      example: "favorite"
+      required: true
+      selector:
+        label:
+
+# Create an alert record
+create_alert:
+  name: Create alert
+  description: Create an alert record
+  fields:
+    alert_type:
+      name: Alert type
+      description: The type of alert
+      example: "Humidity Alert"
+      required: true
+      selector:
+        text:
+    alert_description:
+      name: Alert description
+      description: Details about the alert
+      example: "High humidity detected in basement"
+      required: true
+      selector:
+        text:
+          multiline: true
+    status:
+      name: Status
+      description: The status of the alert
+      example: "Active"
+      required: true
+      selector:
+        select:
+          options:
+            - "Active"
+            - "Resolved"
+            - "Acknowledged"
+
+# Confirm pending EffortlessHome alarm
+confirm_pending_alarm:
+  name: Confirm pending alarm
+  description: Confirm a pending EffortlessHome alarm
+
+# Cancel EffortlessHome alarm
+cancel_alarm:
+  name: Cancel alarm
+  description: Cancel an active EffortlessHome alarm
+
+# Get EffortlessHome alarm status
+get_alarm_status:
+  name: Get alarm status
+  description: Get the current EffortlessHome alarm status
+
+# Update entity area
+update_entity:
+  name: Update entity
+  description: Update an entity in the entity registry with an area
+  fields:
+    entity_id:
+      name: Entity
+      description: The entity to update
+      example: "binary_sensor.front_door"
+      required: true
+      selector:
+        entity:
+
+    area_id:
+      name: Area
+      description: The new area to assign to the entity
+      example: "living_room"
+      required: true
+      selector:
+        area:
+
+# Deploy latest EffortlessHome config
+deploy_latest_config:
+  name: Deploy latest config
+  description: Deploy latest EffortlessHome configuration files (themes, blueprints, cards)
+
+# Create event service
+create_event:
+  name: Create event
+  description: Create an event for the active alarm
+  fields:
+    entity_id:
+      name: Entity
+      description: The entity that triggered the event
+      example: "binary_sensor.front_door"
+      required: true
+      selector:
+        entity:

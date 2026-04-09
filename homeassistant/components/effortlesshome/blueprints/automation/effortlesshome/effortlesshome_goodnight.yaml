@@ -1,0 +1,128 @@
+blueprint:
+  name: Goodnight
+  description: Actions to take when going to bed for the night
+  domain: automation
+  author: EffortlessHome
+  input:
+    goodnight_time:
+      name: What time of the day will goodnight run
+      description:
+        The time of day when this will run each day. You can run manually
+        instead it will only run once per day.
+      default: "21:00:00"
+      selector:
+        time: {}
+
+    on_target:
+      name: Lights and switches to turn on
+      description: Turn on these lights and switches (optional)
+      selector:
+        target:
+          entity:
+            - domain:
+                - light
+                - switch
+    off_target:
+      name: Lights and switches to turn off
+      description: Turn off these lights and switches (optional)
+      default: light.all_lights
+      selector:
+        target:
+          entity:
+            - domain:
+                - light
+                - switch
+    securityalarm:
+      name: Security Alarm
+      description: The security alarm to arm in night/home mode
+      default: alarm_control_panel.effortlesshome
+      selector:
+        entity:
+          filter:
+            - domain:
+                - alarm_control_panel
+          multiple: false
+    doorlock:
+      name: Door Lock
+      description: The door lock to lock
+      default: []
+      selector:
+        entity:
+          filter:
+            - domain:
+                - lock
+          multiple: false
+
+    wait_time:
+      name: Wait time
+      description: Time to wait before turning off lights and switches.
+      default: 300
+      selector:
+        number:
+          min: 0.0
+          max: 3000.0
+          unit_of_measurement: seconds
+          step: 1.0
+          mode: slider
+    window_sensor:
+      name: Window/Door Sensor Group(s)
+      description: Select any door or window sensor(s) to check for open state.
+      selector:
+        entity:
+          domain:
+            - binary_sensor
+          multiple: true
+    additional_actions:
+      name: Additional Actions
+      description: Add additional actions to execute (Optional)
+      default: []
+      selector:
+        action: {}
+    conditions:
+      name: Conditions
+      description: List of conditions that must be true for this automation to run. Each condition is a Home Assistant condition block. By default, checks that binary_sensor.sleeping_sensor is off.
+      default:
+        - condition: state
+          entity_id: binary_sensor.sleeping_sensor
+          state: "off"
+      selector:
+        condition: {}
+trigger:
+  - platform: time
+    at: !input goodnight_time
+condition:
+  !input conditions
+action:
+  - if:
+      - condition: or
+        conditions:
+          - condition: state
+            entity_id: !input window_sensor
+            state: "on"
+    then:
+      - service: notify.notify
+        metadata: {}
+        data:
+          message: Door or Window Left Open
+  - action: switch.turn_on
+    metadata: {}
+    data: {}
+    target:
+      entity_id: switch.sleep_mode
+  - service: homeassistant.turn_on
+    data: {}
+    target: !input on_target
+  - service: lock.lock
+    target:
+      entity_id: !input doorlock
+  - service: alarm_control_panel.alarm_arm_home
+    target:
+      entity_id: !input securityalarm
+
+  - delay: !input wait_time
+  - service: homeassistant.turn_off
+    data: {}
+    target: !input off_target
+
+  - choose: []
+    default: !input additional_actions

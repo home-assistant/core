@@ -1,0 +1,56 @@
+blueprint:
+  name: Water Alarm Triggered
+  description: Set the actions to take when a water alarm is triggered
+  domain: automation
+  author: EffortlessHome
+  input:
+    watersensor:
+      name: Water Leak Sensor
+      description: The triggering water leak sensor(s)
+      selector:
+        entity:
+          filter:
+            - domain:
+                - binary_sensor
+          multiple: true
+    notification_message:
+      name: Notification message
+      description: "Water Leak Sensor Activated Message"
+      default: "Water Sensor Activated. Check for water immediately."
+
+    data_clickaction_url:
+      name: URL to Navigate (Optional)
+      description:
+        The URL to navigate to when clicking on the notification. (default
+        = /lovelace)
+      default: /lovelace
+    additional_actions:
+      name: Additional Actions
+      description: Add additional actions to execute (Optional)
+      default: []
+      selector:
+        action: {}
+trigger:
+  - platform: state
+    entity_id: !input watersensor
+    to: "on"
+variables:
+  clickActionURL: !input data_clickaction_url
+
+action:
+  - service: notify.effortlesshome
+    data:
+      title: Water Sensor Activated
+      message: !input notification_message
+      data:
+        clickAction: !input data_clickaction_url
+        ttl: 0
+        priority: high
+        url: !input data_clickaction_url
+  - service: effortlesshome.create_alert_service
+    data:
+      alert_type: Water Sensor Activated
+      alert_description: !input notification_message
+      status: Active
+  - choose: []
+    default: !input additional_actions

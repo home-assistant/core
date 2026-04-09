@@ -1,0 +1,62 @@
+blueprint:
+  name: Sunrise
+  description:
+    Actions to take when the sun rises (e.g. turn off certain lights) if
+    someone is home
+  domain: automation
+  author: EffortlessHome
+  input:
+    lighttoturnon:
+      name: Lights to turn off
+      description: Turn off these lights (optional)
+      default: light.all_lights
+      selector:
+        entity:
+          filter:
+            - domain:
+                - light
+          multiple: true
+    plugtoturnon:
+      name: Plugs to turn off
+      description: Turn off these plugs (optional)
+      default: []
+      selector:
+        entity:
+          filter:
+            - domain:
+                - switch
+          multiple: true
+    additional_actions:
+      name: Additional Actions
+      description: Add additional actions to execute (Optional)
+      default: []
+      selector:
+        action: {}
+    conditions:
+      name: Conditions
+      description: List of conditions that must be true for this automation to run. Each condition is a Home Assistant condition block. By default, checks that binary_sensor.someone_home_sensor is on.
+      default:
+        - condition: or
+          conditions:
+            - condition: state
+              entity_id: binary_sensor.someone_home_sensor
+              state: "on"
+            - condition: state
+              entity_id: switch.presence_simulation
+              state: "on"
+      selector:
+        condition: {}
+trigger:
+  - platform: sun
+    event: sunset
+    offset: 0
+condition: !input conditions
+action:
+  - service: light.turn_off
+    target:
+      entity_id: !input lighttoturnon
+  - service: switch.turn_off
+    target:
+      entity_id: !input plugtoturnon
+  - choose: []
+    default: !input additional_actions

@@ -1,0 +1,95 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Sign in to EffortlessHome",
+        "description": "Enter your EffortlessHome account credentials. New users can sign up at https://my.effortlesshome.co",
+        "data": {
+          "info": "Information",
+          "email": "Email",
+          "password": "Password"
+        }
+      },
+      "select_system": {
+        "title": "Select System",
+        "description": "Multiple systems found for your account. Please select which system to configure.",
+        "data": {
+          "system_id": "System"
+        }
+      },
+      "manual_entry": {
+        "title": "Manual Configuration",
+        "description": "Enter your Customer ID and System ID manually",
+        "data": {
+          "info": "Information",
+          "customer_id": "Customer ID",
+          "system_id": "System ID"
+        }
+      }
+    },
+    "error": {
+      "missing_fields": "Please provide all required fields",
+      "invalid_auth": "Invalid email or password. Please check your credentials and try again.",
+      "cannot_connect": "Unable to connect to EffortlessHome services. Please check your internet connection.",
+      "no_system_found": "No system found for this account. Please ensure your account is properly set up at https://my.effortlesshome.co",
+      "invalid_system": "Invalid system selection. Please try again.",
+      "unknown": "An unexpected error occurred. Please try again later."
+    },
+    "abort": {
+      "already_configured": "This EffortlessHome system is already configured.",
+      "reauth_successful": "Re-authentication successful"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "EffortlessHome Options",
+        "data": {
+          "debug_mode": "Enable debug logging"
+        }
+      }
+    }
+  },
+  "services": {
+    "clean_motion_files": {
+      "name": "Clean motion files",
+      "description": "Clean motion files older than specified number of days"
+    },
+    "get_firebase_config": {
+      "name": "Get Firebase config",
+      "description": "Get Firebase configuration from Oasira for mobile app setup"
+    },
+    "add_label_to_entity": {
+      "name": "Add label to entity",
+      "description": "Add a label to an entity"
+    },
+    "create_alert": {
+      "name": "Create alert",
+      "description": "Create an alert record"
+    },
+    "confirm_pending_alarm": {
+      "name": "Confirm pending alarm",
+      "description": "Confirm a pending EffortlessHome alarm"
+    },
+    "cancel_alarm": {
+      "name": "Cancel alarm",
+      "description": "Cancel an active EffortlessHome alarm"
+    },
+    "get_alarm_status": {
+      "name": "Get alarm status",
+      "description": "Get the current EffortlessHome alarm status"
+    },
+    "update_entity": {
+      "name": "Update entity",
+      "description": "Update an entity in the entity registry with an area"
+    },
+    "deploy_latest_config": {
+      "name": "Deploy latest config",
+      "description": "Deploy latest EffortlessHome configuration files (themes, blueprints, cards)"
+    },
+    "create_event": {
+      "name": "Create event",
+      "description": "Create an event for the active alarm"
+    }
+  }
+}

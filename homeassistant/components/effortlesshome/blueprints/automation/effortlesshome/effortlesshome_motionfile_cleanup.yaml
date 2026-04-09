@@ -1,0 +1,34 @@
+blueprint:
+  name: Motion and Person Image File Cleanup
+  description: Daily cleanup of 30+ day old motion and person detection image files
+  domain: automation
+  author: EffortlessHome
+  input:
+    execution_time:
+      name: What time of the day will the Maintenance Job run
+      description: The time of day when this will run each day. Strongly recommend
+        during a low usage time.
+      selector:
+        time: {}
+    age_sensor:
+      name: Age Sensor
+      description: The sensor that provides the age of items to keep.
+      default: sensor.config_dayshistorytokeep
+      selector:
+        entity:
+          domain: sensor
+    additional_actions:
+      name: Additional Actions
+      description: Add additional actions to execute (Optional)
+      default: []
+      selector:
+        action: {}
+trigger:
+  - platform: time
+    at: !input execution_time
+action:
+  - service: effortlesshome.createcleanmotionfilesservice
+    data:
+      age: !input age_sensor
+  - choose: []
+    default: !input additional_actions

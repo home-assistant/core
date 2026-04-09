@@ -1,0 +1,62 @@
+blueprint:
+  name: Temperature Alarm Triggered
+  description: Set the actions to take when a temperature alarm is triggered
+  domain: automation
+  author: EffortlessHome
+  input:
+    tempsensor:
+      name: Temperature Sensor
+      description: The triggering temperature sensor(s)
+      selector:
+        entity:
+          filter:
+            - domain:
+                - sensor
+          multiple: true
+    high_sensor:
+      name: High Temperature Value Sensor
+      description: The sensor that provides the level of temperature configured to trigger an alert.
+      default: sensor.config_hightemperature
+      selector:
+        entity:
+          domain: sensor
+    low_sensor:
+      name: Low Temperature Value Sensor
+      description: The sensor that provides the level of temperature configured to trigger an alert.
+      default: sensor.config_lowtemperature
+      selector:
+        entity:
+          domain: sensor
+
+    notification_message:
+      name: Notification message
+      description: "Temperature Sensor Activated Message"
+      default: "Temperature Sensor Activated"
+
+    additional_actions:
+      name: Additional Actions
+      description: Add additional actions to execute (Optional)
+      default: []
+      selector:
+        action: {}
+trigger:
+  - platform: numeric_state
+    entity_id: !input tempsensor
+    above: !input high_sensor
+  - platform: numeric_state
+    entity_id: !input tempsensor
+    below: !input low_sensor
+
+action:
+  - service: notify.effortlesshome
+    data:
+      title: Temperature Sensor Activated
+      message: !input notification_message
+
+  - service: effortlesshome.create_alert_service
+    data:
+      alert_type: Temperature Sensor Activated
+      alert_description: !input notification_message
+      status: Active
+  - choose: []
+    default: !input additional_actions

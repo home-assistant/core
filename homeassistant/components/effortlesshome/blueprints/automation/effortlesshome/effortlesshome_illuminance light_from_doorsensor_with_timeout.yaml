@@ -1,0 +1,107 @@
+blueprint:
+  name: Door Activated Light with Illuminance and Timeout
+  description:
+    Automatically actitvate a light with a door sensor attached to the
+    door, activating a smart switch or light.  The light will turn off at the end
+    of a timer.  Logic is also implemented to turn off the light in the event it's
+    manually turned on while the door is open or after the automation has already run. 
+  domain: automation
+  author: EffortlessHome
+  input:
+    door_sensor:
+      name: Door Sensor
+      selector:
+        entity:
+          domain:
+            - binary_sensor
+          multiple: false
+    light_target:
+      name: Light
+      selector:
+        target:
+          entity:
+            - domain:
+                - light
+                - switch
+    light_timeout:
+      name: Light Timeout
+      description: How long to let the light stay on after opening the door.
+      default: 300
+      selector:
+        number:
+          min: 0.0
+          max: 1000.0
+          unit_of_measurement: seconds
+          mode: slider
+          step: 1.0
+    lux_entity:
+      name: Illuminance Sensor
+      default: sensor.virtualilluminancesensor
+      selector:
+        entity:
+          domain:
+            - sensor
+          #device_class:
+          #  - illuminance
+          multiple: false
+    lux_level:
+      name: Illuminance level
+      description:
+        If lux is below this value and motion is detected, the light will
+        turn on.
+      default: 100
+      selector:
+        number:
+          min: 0.0
+          max: 1000.0
+          step: 1.0
+          mode: slider
+
+    conditions:
+      name: Conditions
+      description: List of conditions that must be true for this automation to run. Each condition is a Home Assistant condition block. By default, checks that binary_sensor.sleeping_sensor is off.
+      default:
+        - condition: state
+          entity_id: binary_sensor.sleeping_sensor
+          state: "off"
+      selector:
+        condition: {}
+    additional_actions:
+      name: Additional Actions
+      description: Add additional actions to execute (Optional)
+      default: []
+      selector:
+        action: {}        
+mode: restart
+max_exceeded: silent
+trigger:
+  - platform: state
+    entity_id: !input door_sensor
+    from: "off"
+    to: "on"
+    id: door-open
+
+action:
+
+  - choose:
+      - conditions:
+          - condition: numeric_state
+            entity_id: !input lux_entity
+            below: !input lux_level
+          - condition: and
+            conditions: !input conditions
+        sequence:
+          - service: light.turn_on
+            target: !input light_target
+          - delay:
+              hours: 0
+              minutes: 0
+              seconds: !input light_timeout
+              milliseconds: 0
+          - service: homeassistant.turn_off
+            target: !input light_target
+          - choose: []
+            default: !input additional_actions            
+    default: []
+
+
