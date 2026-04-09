@@ -44,11 +44,11 @@ PTEC_OPTIONS: dict[str, str] = {
 }
 
 # DEMAIN (Couleur du lendemain) raw protocol values → clean option keys
-DEMAIN_OPTIONS: dict[str, str] = {
+DEMAIN_OPTIONS: dict[str, str | None] = {
     "BLEU": "blue",
     "BLAN": "white",
     "ROUG": "red",
-    "----": "undetermined",
+    "----": None,
 }
 
 
@@ -216,7 +216,7 @@ SENSOR_DESCRIPTIONS: tuple[TeleinfoSensorEntityDescription, ...] = (
         key="tomorrow_color",
         translation_key="tomorrow_color",
         device_class=SensorDeviceClass.ENUM,
-        options=list(DEMAIN_OPTIONS.values()),
+        options=[v for v in DEMAIN_OPTIONS.values() if v is not None],
         entity_registry_enabled_default=False,
         required_label="DEMAIN",
         value_fn=lambda data: DEMAIN_OPTIONS.get(data["DEMAIN"]),

@@ -83,7 +83,6 @@
         "state": {
           "blue": "Blue",
           "red": "Red",
-          "undetermined": "Undetermined",
           "white": "White"
         }
       },
