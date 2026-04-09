@@ -45,7 +45,7 @@ class VictronBaseEntity(Entity):
             self._attr_translation_placeholders = metric.key_values
 
         # Special case for "%" as it should not be coming from the localization file
-        self._attr_unit_of_measurement = (
+        self._attr_native_unit_of_measurement = (
             "%" if metric.unit_of_measurement == "%" else None
         )
         self._attr_entity_category = (
