@@ -102,5 +102,4 @@ class VictronNumber(VictronBaseEntity, NumberEntity):
                 self._attr_unique_id,
             )
             return
-        _LOGGER.debug("Setting number %s to %s", self._attr_unique_id, value)
         self._metric.set(value)
