@@ -22,7 +22,6 @@ from homeassistant.helpers.selector import (
 
 from . import SpaceAPIConfigEntry
 from .const import (
-    CONF_CACHE,
     CONF_CAM,
     CONF_CONTACT,
     CONF_FACEBOOK,
@@ -31,33 +30,27 @@ from .const import (
     CONF_FEED_FLICKER,
     CONF_FEED_WIKI,
     CONF_FEEDS,
-    CONF_FOURSQUARE,
+    CONF_GOPHER,
     CONF_HUMIDITY,
     CONF_ICON_CLOSED,
     CONF_ICON_OPEN,
-    CONF_IDENTICA,
     CONF_IRC,
-    CONF_ISSUE_MAIL,
-    CONF_ISSUE_REPORT_CHANNELS,
-    CONF_JABBER,
     CONF_LOGO,
-    CONF_M4,
-    CONF_MJPEG,
+    CONF_MASTODON,
+    CONF_MATRIX,
     CONF_ML,
+    CONF_MUMBLE,
     CONF_PHONE,
     CONF_PROJECTS,
     CONF_SIP,
     CONF_SPACE,
     CONF_SPACEFED,
     CONF_SPACENET,
-    CONF_SPACEPHONE,
     CONF_SPACESAML,
-    CONF_STREAM,
     CONF_TEMPERATURE,
     CONF_TWITTER,
-    CONF_USTREAM,
+    CONF_XMPP,
     DOMAIN,
-    ISSUE_REPORT_CHANNELS,
 )
 
 STEP_USER_DATA_SCHEMA = vol.Schema(
@@ -71,33 +64,16 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
         vol.Required(CONF_URL): TextSelector(
             TextSelectorConfig(type=TextSelectorType.URL)
         ),
-        vol.Required("entity_id"): EntitySelector(EntitySelectorConfig()),
+        vol.Required("entity_id"): EntitySelector(
+            EntitySelectorConfig(
+                domain=["binary_sensor", "input_boolean", "switch", "lock", "cover"]
+            )
+        ),
         vol.Required(CONF_EMAIL): TextSelector(
             TextSelectorConfig(type=TextSelectorType.EMAIL)
         ),
-        vol.Required(CONF_ISSUE_REPORT_CHANNELS): SelectSelector(
-            SelectSelectorConfig(
-                options=ISSUE_REPORT_CHANNELS,
-                multiple=True,
-                translation_key="issue_report_channels",
-            )
-        ),
     }
 )
-
-CACHE_SCHEDULE_OPTIONS = [
-    "m.02",
-    "m.05",
-    "m.10",
-    "m.15",
-    "m.30",
-    "h.01",
-    "h.02",
-    "h.04",
-    "h.08",
-    "h.12",
-    "d.01",
-]
 
 
 class SpaceAPIConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -130,7 +106,6 @@ class SpaceAPIConfigFlow(ConfigFlow, domain=DOMAIN):
                 CONF_URL: user_input[CONF_URL],
                 "state": {"entity_id": user_input["entity_id"]},
                 CONF_CONTACT: {CONF_EMAIL: user_input[CONF_EMAIL]},
-                CONF_ISSUE_REPORT_CHANNELS: user_input[CONF_ISSUE_REPORT_CHANNELS],
             },
         )
 
@@ -145,18 +120,22 @@ class SpaceAPIConfigFlow(ConfigFlow, domain=DOMAIN):
             CONF_URL: import_data[CONF_URL],
             "state": {"entity_id": import_data["state"]["entity_id"]},
             CONF_CONTACT: {CONF_EMAIL: import_data[CONF_CONTACT].get(CONF_EMAIL, "")},
-            CONF_ISSUE_REPORT_CHANNELS: import_data[CONF_ISSUE_REPORT_CHANNELS],
         }
 
         # Optional fields -> entry.options
         options: dict[str, Any] = {}
 
-        # Contact extras (everything except email)
-        contact_extras = {
-            k: v
-            for k, v in import_data.get(CONF_CONTACT, {}).items()
-            if k != CONF_EMAIL and v
-        }
+        # Contact extras (everything except email, dropping removed v13 fields)
+        dropped_contact_fields = {"identica", "foursquare", "issue_mail", "keymasters"}
+        contact_extras: dict[str, Any] = {}
+        for k, v in import_data.get(CONF_CONTACT, {}).items():
+            if k == CONF_EMAIL or not v or k in dropped_contact_fields:
+                continue
+            # Auto-rename jabber -> xmpp
+            if k == "jabber":
+                contact_extras[CONF_XMPP] = v
+            else:
+                contact_extras[k] = v
         if contact_extras:
             options[CONF_CONTACT] = contact_extras
 
@@ -170,19 +149,23 @@ class SpaceAPIConfigFlow(ConfigFlow, domain=DOMAIN):
         if state_icons:
             options["state"] = state_icons
 
-        # Optional sections pass through directly
+        # Optional sections pass through directly (dropping removed v13 sections)
         for key in (
             "sensors",
-            "spacefed",
             "cam",
-            "stream",
             "feeds",
-            "cache",
             "projects",
-            "radio_show",
         ):
             if key in import_data:
                 options[key] = import_data[key]
+
+        # Spacefed: drop spacephone
+        if "spacefed" in import_data:
+            spacefed = {
+                k: v for k, v in import_data["spacefed"].items() if k != "spacephone"
+            }
+            if spacefed:
+                options["spacefed"] = spacefed
 
         # Location address
         if "location" in import_data and "address" in import_data["location"]:
@@ -210,9 +193,6 @@ class SpaceAPIConfigFlow(ConfigFlow, domain=DOMAIN):
                         CONF_URL: entry.data[CONF_URL],
                         "entity_id": entry.data["state"]["entity_id"],
                         CONF_EMAIL: entry.data[CONF_CONTACT][CONF_EMAIL],
-                        CONF_ISSUE_REPORT_CHANNELS: entry.data[
-                            CONF_ISSUE_REPORT_CHANNELS
-                        ],
                     },
                 ),
             )
@@ -241,7 +221,6 @@ class SpaceAPIConfigFlow(ConfigFlow, domain=DOMAIN):
                         if k != CONF_EMAIL
                     },
                 },
-                CONF_ISSUE_REPORT_CHANNELS: user_input[CONF_ISSUE_REPORT_CHANNELS],
             },
         )
 
@@ -303,17 +282,20 @@ class SpaceAPIOptionsFlowHandler(OptionsFlow):
                 vol.Optional(CONF_FACEBOOK, default=""): TextSelector(
                     TextSelectorConfig(type=TextSelectorType.TEXT)
                 ),
-                vol.Optional(CONF_IDENTICA, default=""): TextSelector(
+                vol.Optional(CONF_MASTODON, default=""): TextSelector(
                     TextSelectorConfig(type=TextSelectorType.TEXT)
                 ),
-                vol.Optional(CONF_FOURSQUARE, default=""): TextSelector(
+                vol.Optional(CONF_MATRIX, default=""): TextSelector(
                     TextSelectorConfig(type=TextSelectorType.TEXT)
                 ),
-                vol.Optional(CONF_JABBER, default=""): TextSelector(
+                vol.Optional(CONF_XMPP, default=""): TextSelector(
                     TextSelectorConfig(type=TextSelectorType.TEXT)
                 ),
-                vol.Optional(CONF_ISSUE_MAIL, default=""): TextSelector(
-                    TextSelectorConfig(type=TextSelectorType.EMAIL)
+                vol.Optional(CONF_MUMBLE, default=""): TextSelector(
+                    TextSelectorConfig(type=TextSelectorType.TEXT)
+                ),
+                vol.Optional(CONF_GOPHER, default=""): TextSelector(
+                    TextSelectorConfig(type=TextSelectorType.TEXT)
                 ),
             }
         )
@@ -398,7 +380,6 @@ class SpaceAPIOptionsFlowHandler(OptionsFlow):
             {
                 vol.Required(CONF_SPACENET, default=False): BooleanSelector(),
                 vol.Required(CONF_SPACESAML, default=False): BooleanSelector(),
-                vol.Required(CONF_SPACEPHONE, default=False): BooleanSelector(),
             }
         )
         return self.async_show_form(
@@ -409,7 +390,7 @@ class SpaceAPIOptionsFlowHandler(OptionsFlow):
     async def async_step_media(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Configure media (cameras and streams)."""
+        """Configure media (cameras)."""
         if user_input is not None:
             options = dict(self.config_entry.options)
 
@@ -420,37 +401,16 @@ class SpaceAPIOptionsFlowHandler(OptionsFlow):
             else:
                 options.pop(CONF_CAM, None)
 
-            # Stream URLs
-            stream: dict[str, str] = {}
-            for key in (CONF_M4, CONF_MJPEG, CONF_USTREAM):
-                if user_input.get(key):
-                    stream[key] = user_input[key]
-            if stream:
-                options[CONF_STREAM] = stream
-            else:
-                options.pop(CONF_STREAM, None)
-
             return self.async_create_entry(data=options)
 
         current_cam = self.config_entry.options.get(CONF_CAM, [])
-        current_stream = self.config_entry.options.get(CONF_STREAM, {})
         current = {
             CONF_CAM: current_cam,
-            **current_stream,
         }
         schema = vol.Schema(
             {
                 vol.Optional(CONF_CAM): SelectSelector(
                     SelectSelectorConfig(options=[], custom_value=True, multiple=True)
-                ),
-                vol.Optional(CONF_M4, default=""): TextSelector(
-                    TextSelectorConfig(type=TextSelectorType.URL)
-                ),
-                vol.Optional(CONF_MJPEG, default=""): TextSelector(
-                    TextSelectorConfig(type=TextSelectorType.URL)
-                ),
-                vol.Optional(CONF_USTREAM, default=""): TextSelector(
-                    TextSelectorConfig(type=TextSelectorType.URL)
                 ),
             }
         )
@@ -535,15 +495,9 @@ class SpaceAPIOptionsFlowHandler(OptionsFlow):
     async def async_step_other(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Configure other settings (cache, projects)."""
+        """Configure other settings (projects)."""
         if user_input is not None:
             options = dict(self.config_entry.options)
-
-            cache_schedule = user_input.get("cache_schedule", "")
-            if cache_schedule:
-                options[CONF_CACHE] = {"schedule": cache_schedule}
-            else:
-                options.pop(CONF_CACHE, None)
 
             projects = user_input.get(CONF_PROJECTS, [])
             if projects:
@@ -553,17 +507,12 @@ class SpaceAPIOptionsFlowHandler(OptionsFlow):
 
             return self.async_create_entry(data=options)
 
-        current_cache = self.config_entry.options.get(CONF_CACHE, {})
         current_projects = self.config_entry.options.get(CONF_PROJECTS, [])
         current = {
-            "cache_schedule": current_cache.get("schedule", ""),
             CONF_PROJECTS: current_projects,
         }
         schema = vol.Schema(
             {
-                vol.Optional("cache_schedule"): SelectSelector(
-                    SelectSelectorConfig(options=CACHE_SCHEDULE_OPTIONS)
-                ),
                 vol.Optional(CONF_PROJECTS): SelectSelector(
                     SelectSelectorConfig(options=[], custom_value=True, multiple=True)
                 ),
