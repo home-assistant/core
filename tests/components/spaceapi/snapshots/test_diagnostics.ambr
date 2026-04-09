@@ -1,0 +1,85 @@
+# serializer version: 1
+# name: test_diagnostics
+  dict({
+    'config_entry_data': dict({
+      'contact': dict({
+        'email': '**REDACTED**',
+      }),
+      'issue_report_channels': list([
+        'email',
+      ]),
+      'logo': 'https://home-assistant.io/logo.png',
+      'space': 'Home',
+      'state': dict({
+        'entity_id': 'test.test_door',
+      }),
+      'url': 'https://home-assistant.io',
+    }),
+    'config_entry_options': dict({
+      'cache': dict({
+        'schedule': 'm.02',
+      }),
+      'cam': list([
+        'https://home-assistant.io/cam1',
+        'https://home-assistant.io/cam2',
+      ]),
+      'contact': dict({
+        'email': '**REDACTED**',
+      }),
+      'feeds': dict({
+        'blog': dict({
+          'url': 'https://home-assistant.io/blog',
+        }),
+        'calendar': dict({
+          'type': 'ical',
+          'url': 'https://home-assistant.io/calendar',
+        }),
+        'flicker': dict({
+          'url': 'https://www.flickr.com/photos/home-assistant',
+        }),
+        'wiki': dict({
+          'type': 'mediawiki',
+          'url': 'https://home-assistant.io/wiki',
+        }),
+      }),
+      'projects': list([
+        'https://home-assistant.io/projects/1',
+        'https://home-assistant.io/projects/2',
+        'https://home-assistant.io/projects/3',
+      ]),
+      'radio_show': list([
+        dict({
+          'end': '2019-09-02T12:00Z',
+          'name': 'Radioshow',
+          'start': '2019-09-02T10:00Z',
+          'type': 'ogg',
+          'url': 'https://home-assistant.io/radio',
+        }),
+      ]),
+      'sensors': dict({
+        'humidity': list([
+          'test.hum1',
+        ]),
+        'temperature': list([
+          'test.temp1',
+          'test.temp2',
+          'test.temp3',
+        ]),
+      }),
+      'spacefed': dict({
+        'spacenet': True,
+        'spacephone': True,
+        'spacesaml': False,
+      }),
+      'state': dict({
+        'icon_closed': 'https://home-assistant.io/close.png',
+        'icon_open': 'https://home-assistant.io/open.png',
+      }),
+      'stream': dict({
+        'm4': 'https://home-assistant.io/m4',
+        'mjpeg': 'https://home-assistant.io/mjpeg',
+        'ustream': 'https://home-assistant.io/ustream',
+      }),
+    }),
+  })
+# ---
