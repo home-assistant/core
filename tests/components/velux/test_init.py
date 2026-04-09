@@ -8,7 +8,7 @@ They also verify that unloading the integration properly disconnects.
 
 from __future__ import annotations
 
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
 from pyvlx.exception import PyVLXException
@@ -20,7 +20,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.setup import async_setup_component
 
-from tests.common import AsyncMock, ConfigEntry, MockConfigEntry
+from tests.common import ConfigEntry, MockConfigEntry
 
 
 async def test_setup_retry_on_nodes_failure(
@@ -86,6 +86,37 @@ async def test_setup_auth_error(
 
     mock_pyvlx.load_scenes.assert_awaited_once()
     mock_pyvlx.load_nodes.assert_not_called()
+
+
+async def test_setup_uses_preconnected_pyvlx_from_config_flow(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_pyvlx: AsyncMock
+) -> None:
+    """Test that setup uses the PyVLX instance stored by the config flow.
+
+    When the config flow stores a connected instance in hass.data, setup should
+    reuse it instead of constructing a fresh one, preventing an unnecessary
+    disconnect/reboot cycle between connection validation and integration start.
+    """
+
+    hass.data.setdefault(DOMAIN, {})["127.0.0.1"] = mock_pyvlx
+
+    # A fresh instance must NOT have been used.
+    fresh = AsyncMock(name="fresh-not-used")
+    with patch("homeassistant.components.velux.PyVLX", return_value=fresh):
+        mock_config_entry.add_to_hass(hass)
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+    fresh.ensure_connected.assert_not_awaited()
+    fresh.load_scenes.assert_not_awaited()
+    fresh.load_nodes.assert_not_awaited()
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    mock_pyvlx.ensure_connected.assert_awaited_once()
+    mock_pyvlx.load_scenes.assert_awaited_once()
+    mock_pyvlx.load_nodes.assert_awaited_once()
+    # The pre-connected instance must be consumed.
+    assert hass.data.get(DOMAIN, {}).get("127.0.0.1") is None
+    assert mock_config_entry.runtime_data is mock_pyvlx
 
 
 @pytest.fixture

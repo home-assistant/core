@@ -77,10 +77,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: VeluxConfigEntry) -> boo
     """Set up the velux component."""
     host = entry.data[CONF_HOST]
     password = entry.data[CONF_PASSWORD]
-    pyvlx = PyVLX(host=host, password=password)
 
-    LOGGER.debug("Setting up Velux gateway %s", host)
+    # Prefer the already-connected instance passed from the config flow so that
+    # we do not force a disconnect/reboot between connection validation and setup.
+    # Falls back to creating a fresh instance on HA restart or reload.
+    pyvlx: PyVLX = hass.data.get(DOMAIN, {}).pop(host, None) or PyVLX(
+        host=host, password=password
+    )
+
     try:
+        LOGGER.debug("Ensuring connection to Velux gateway %s", host)
+        await pyvlx.ensure_connected()
         LOGGER.debug("Retrieving scenes from %s", host)
         await pyvlx.load_scenes()
         LOGGER.debug("Retrieving nodes from %s", host)
