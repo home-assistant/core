@@ -290,7 +290,9 @@ async def test_coordinator_updates(
     hass: HomeAssistant, side_effect: Exception | None, success: bool
 ) -> None:
     """Test the update coordinator update functions."""
-    coordinator = hass.data[DOMAIN][ENTRY_ID]
+    entry = hass.config_entries.async_get_entry(ENTRY_ID)
+    assert entry is not None
+    coordinator = entry.runtime_data
 
     await async_setup_component(hass, HOMEASSISTANT_DOMAIN, {})
 

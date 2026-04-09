@@ -36,7 +36,6 @@ async def test_climate_entities(
     """Test climate entities."""
     status = mock_actron_api.state_manager.get_status.return_value
     status.remote_zone_info = [mock_zone]
-    status.zones = {1: mock_zone}
 
     with patch("homeassistant.components.actron_air.PLATFORMS", [Platform.CLIMATE]):
         await setup_integration(hass, mock_config_entry)
@@ -289,7 +288,6 @@ async def test_zone_hvac_mode_unmapped(
 
     status = mock_actron_api.state_manager.get_status.return_value
     status.remote_zone_info = [mock_zone]
-    status.zones = {1: mock_zone}
 
     with patch("homeassistant.components.actron_air.PLATFORMS", [Platform.CLIMATE]):
         await setup_integration(hass, mock_config_entry)
@@ -309,7 +307,6 @@ async def test_zone_hvac_mode_inactive(
 
     status = mock_actron_api.state_manager.get_status.return_value
     status.remote_zone_info = [mock_zone]
-    status.zones = {1: mock_zone}
 
     with patch("homeassistant.components.actron_air.PLATFORMS", [Platform.CLIMATE]):
         await setup_integration(hass, mock_config_entry)
