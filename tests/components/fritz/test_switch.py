@@ -358,7 +358,7 @@ async def test_switch_device_wan_access(
     entry = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_DATA)
     entry.add_to_hass(hass)
 
-    attributes = MOCK_HOST_ATTRIBUTES_DATA.copy()
+    attributes = deepcopy(MOCK_HOST_ATTRIBUTES_DATA)
     for host in attributes:
         host["X_AVM-DE_WANAccess"] = wan_access_data
 
