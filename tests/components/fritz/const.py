@@ -22,20 +22,6 @@ from homeassistant.helpers.service_info.ssdp import (
 ATTR_HOST = "host"
 ATTR_NEW_SERIAL_NUMBER = "NewSerialNumber"
 
-MOCK_CONFIG = {
-    DOMAIN: {
-        CONF_DEVICES: [
-            {
-                CONF_HOST: "fake_host",
-                CONF_PORT: "1234",
-                CONF_PASSWORD: "fake_pass",
-                CONF_USERNAME: "fake_user",
-                CONF_SSL: False,
-            }
-        ]
-    }
-}
-
 MOCK_HOST = "fake_host"
 MOCK_IPS = {
     "fritz.box": "192.168.178.1",
@@ -1004,14 +990,26 @@ MOCK_STATUS_AVM_DEVICE_LOG_DATA = MOCK_FB_SERVICES["DeviceInfo1"]["GetInfo"][
     "NewDeviceLog"
 ]
 
-MOCK_USER_DATA = MOCK_CONFIG[DOMAIN][CONF_DEVICES][0]
+MOCK_USER_DATA = {
+    CONF_HOST: "fake_host",
+    CONF_PORT: 1234,
+    CONF_PASSWORD: "fake_pass",
+    CONF_USERNAME: "fake_user",
+    CONF_SSL: False,
+}
+
+MOCK_CONFIG = {DOMAIN: {CONF_DEVICES: [MOCK_USER_DATA]}}
+
 MOCK_USER_INPUT_ADVANCED = MOCK_USER_DATA
+"""User input data with optional port."""
+
 MOCK_USER_INPUT_SIMPLE = {
     CONF_HOST: "fake_host",
     CONF_PASSWORD: "fake_pass",
     CONF_USERNAME: "fake_user",
     CONF_SSL: False,
 }
+"""User input data without optional port."""
 
 MOCK_DEVICE_INFO = {
     ATTR_HOST: MOCK_HOST,

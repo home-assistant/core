@@ -57,10 +57,9 @@ from tests.common import MockConfigEntry
 
 
 @pytest.mark.parametrize(
-    ("show_advanced_options", "user_input", "expected_config", "expected_options"),
+    ("user_input", "expected_config", "expected_options"),
     [
         (
-            True,
             MOCK_USER_INPUT_ADVANCED,
             {
                 CONF_HOST: "fake_host",
@@ -76,7 +75,6 @@ from tests.common import MockConfigEntry
             },
         ),
         (
-            False,
             MOCK_USER_INPUT_SIMPLE,
             {
                 CONF_HOST: "fake_host",
@@ -92,7 +90,6 @@ from tests.common import MockConfigEntry
             },
         ),
         (
-            False,
             {
                 **MOCK_USER_INPUT_SIMPLE,
                 CONF_SSL: True,
@@ -116,7 +113,6 @@ from tests.common import MockConfigEntry
 async def test_user(
     hass: HomeAssistant,
     fc_class_mock,
-    show_advanced_options: bool,
     user_input: dict,
     expected_config: dict,
     expected_options: dict,
@@ -150,10 +146,7 @@ async def test_user(
 
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
-            context={
-                "source": SOURCE_USER,
-                "show_advanced_options": show_advanced_options,
-            },
+            context={"source": SOURCE_USER},
         )
         assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "user"
@@ -170,13 +163,12 @@ async def test_user(
 
 
 @pytest.mark.parametrize(
-    ("show_advanced_options", "user_input"),
-    [(True, MOCK_USER_INPUT_ADVANCED), (False, MOCK_USER_INPUT_SIMPLE)],
+    ("user_input"),
+    [(MOCK_USER_INPUT_ADVANCED), (MOCK_USER_INPUT_SIMPLE)],
 )
 async def test_user_already_configured(
     hass: HomeAssistant,
     fc_class_mock,
-    show_advanced_options: bool,
     user_input,
 ) -> None:
     """Test starting a flow by user with an already configured device."""
@@ -211,10 +203,7 @@ async def test_user_already_configured(
 
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
-            context={
-                "source": SOURCE_USER,
-                "show_advanced_options": show_advanced_options,
-            },
+            context={"source": SOURCE_USER},
         )
         assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "user"
@@ -232,20 +221,19 @@ async def test_user_already_configured(
     FRITZ_AUTH_EXCEPTIONS,
 )
 @pytest.mark.parametrize(
-    ("show_advanced_options", "user_input"),
-    [(True, MOCK_USER_INPUT_ADVANCED), (False, MOCK_USER_INPUT_SIMPLE)],
+    ("user_input"),
+    [(MOCK_USER_INPUT_ADVANCED), (MOCK_USER_INPUT_SIMPLE)],
 )
 async def test_exception_security(
     hass: HomeAssistant,
     error,
-    show_advanced_options: bool,
     user_input,
 ) -> None:
     """Test starting a flow by user with invalid credentials."""
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
-        context={"source": SOURCE_USER, "show_advanced_options": show_advanced_options},
+        context={"source": SOURCE_USER},
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
@@ -264,19 +252,18 @@ async def test_exception_security(
 
 
 @pytest.mark.parametrize(
-    ("show_advanced_options", "user_input"),
-    [(True, MOCK_USER_INPUT_ADVANCED), (False, MOCK_USER_INPUT_SIMPLE)],
+    ("user_input"),
+    [(MOCK_USER_INPUT_ADVANCED), (MOCK_USER_INPUT_SIMPLE)],
 )
 async def test_exception_connection(
     hass: HomeAssistant,
-    show_advanced_options: bool,
     user_input,
 ) -> None:
     """Test starting a flow by user with a connection error."""
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
-        context={"source": SOURCE_USER, "show_advanced_options": show_advanced_options},
+        context={"source": SOURCE_USER},
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
@@ -295,17 +282,15 @@ async def test_exception_connection(
 
 
 @pytest.mark.parametrize(
-    ("show_advanced_options", "user_input"),
-    [(True, MOCK_USER_INPUT_ADVANCED), (False, MOCK_USER_INPUT_SIMPLE)],
+    ("user_input"),
+    [(MOCK_USER_INPUT_ADVANCED), (MOCK_USER_INPUT_SIMPLE)],
 )
-async def test_exception_unknown(
-    hass: HomeAssistant, show_advanced_options: bool, user_input
-) -> None:
+async def test_exception_unknown(hass: HomeAssistant, user_input) -> None:
     """Test starting a flow by user with an unknown exception."""
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
-        context={"source": SOURCE_USER, "show_advanced_options": show_advanced_options},
+        context={"source": SOURCE_USER},
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
@@ -413,30 +398,52 @@ async def test_reauth_not_successful(
 
 
 @pytest.mark.parametrize(
-    ("show_advanced_options", "user_input", "expected_config"),
+    ("initial_config", "user_input", "expected_config"),
     [
         (
-            True,
+            MOCK_USER_DATA,
             {CONF_HOST: "host_a", CONF_PORT: 49000, CONF_SSL: False},
             {CONF_HOST: "host_a", CONF_PORT: 49000, CONF_SSL: False},
         ),
         (
-            True,
+            MOCK_USER_DATA,
             {CONF_HOST: "host_a", CONF_PORT: 49443, CONF_SSL: True},
             {CONF_HOST: "host_a", CONF_PORT: 49443, CONF_SSL: True},
         ),
         (
-            True,
+            MOCK_USER_DATA,
             {CONF_HOST: "host_a", CONF_PORT: 12345, CONF_SSL: True},
             {CONF_HOST: "host_a", CONF_PORT: 12345, CONF_SSL: True},
         ),
         (
-            False,
+            MOCK_USER_DATA,
+            {CONF_HOST: "host_b", CONF_SSL: False},
+            {CONF_HOST: "host_b", CONF_PORT: 1234, CONF_SSL: False},
+        ),
+        (
+            MOCK_USER_DATA,
+            {CONF_HOST: "host_b", CONF_SSL: True},
+            {CONF_HOST: "host_b", CONF_PORT: 1234, CONF_SSL: True},
+        ),
+        (
+            {
+                CONF_HOST: "fake_host",
+                CONF_PORT: 49000,
+                CONF_PASSWORD: "fake_pass",
+                CONF_USERNAME: "fake_user",
+                CONF_SSL: False,
+            },
             {CONF_HOST: "host_b", CONF_SSL: False},
             {CONF_HOST: "host_b", CONF_PORT: 49000, CONF_SSL: False},
         ),
         (
-            False,
+            {
+                CONF_HOST: "fake_host",
+                CONF_PORT: 49000,
+                CONF_PASSWORD: "fake_pass",
+                CONF_USERNAME: "fake_user",
+                CONF_SSL: False,
+            },
             {CONF_HOST: "host_b", CONF_SSL: True},
             {CONF_HOST: "host_b", CONF_PORT: 49443, CONF_SSL: True},
         ),
@@ -445,13 +452,13 @@ async def test_reauth_not_successful(
 async def test_reconfigure_successful(
     hass: HomeAssistant,
     fc_class_mock,
-    show_advanced_options: bool,
+    initial_config: dict,
     user_input: dict,
     expected_config: dict,
 ) -> None:
     """Test starting a reconfigure flow."""
 
-    mock_config = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_DATA)
+    mock_config = MockConfigEntry(domain=DOMAIN, data=initial_config)
     mock_config.add_to_hass(hass)
 
     with (
@@ -478,10 +485,7 @@ async def test_reconfigure_successful(
         mock_request_post.return_value.status_code = 200
         mock_request_post.return_value.text = MOCK_REQUEST
 
-        result = await mock_config.start_reconfigure_flow(
-            hass,
-            show_advanced_options=show_advanced_options,
-        )
+        result = await mock_config.start_reconfigure_flow(hass)
 
         assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "reconfigure"
@@ -566,7 +570,7 @@ async def test_reconfigure_not_successful(
             CONF_HOST: "fake_host",
             CONF_PASSWORD: "fake_pass",
             CONF_USERNAME: "fake_user",
-            CONF_PORT: 49000,
+            CONF_PORT: 1234,
             CONF_SSL: False,
         }
 

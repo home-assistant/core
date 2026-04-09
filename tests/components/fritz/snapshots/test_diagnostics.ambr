@@ -62,7 +62,7 @@
       'data': dict({
         'host': 'fake_host',
         'password': '**REDACTED**',
-        'port': '1234',
+        'port': 1234,
         'ssl': False,
         'username': '**REDACTED**',
       }),

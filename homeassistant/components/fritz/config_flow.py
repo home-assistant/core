@@ -36,7 +36,6 @@ from homeassistant.helpers.service_info.ssdp import (
     ATTR_UPNP_UDN,
     SsdpServiceInfo,
 )
-from homeassistant.helpers.typing import VolDictType
 
 from .const import (
     CONF_FEATURE_DEVICE_TRACKING,
@@ -227,19 +226,12 @@ class FritzBoxToolsFlowHandler(ConfigFlow, domain=DOMAIN):
         self, errors: dict[str, str] | None = None
     ) -> ConfigFlowResult:
         """Show the setup form to the user."""
-
-        advanced_data_schema: VolDictType = {}
-        if self.show_advanced_options:
-            advanced_data_schema = {
-                vol.Optional(CONF_PORT): vol.Coerce(int),
-            }
-
         return self.async_show_form(
             step_id="user",
             data_schema=vol.Schema(
                 {
                     vol.Optional(CONF_HOST, default=DEFAULT_HOST): str,
-                    **advanced_data_schema,
+                    vol.Optional(CONF_PORT): vol.Coerce(int),
                     vol.Required(CONF_USERNAME): str,
                     vol.Required(CONF_PASSWORD): str,
                     vol.Optional(CONF_SSL, default=DEFAULT_SSL): bool,
@@ -359,18 +351,14 @@ class FritzBoxToolsFlowHandler(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any], errors: dict[str, str] | None = None
     ) -> ConfigFlowResult:
         """Show the reconfigure form to the user."""
-        advanced_data_schema: VolDictType = {}
-        if self.show_advanced_options:
-            advanced_data_schema = {
-                vol.Optional(CONF_PORT, default=user_input[CONF_PORT]): vol.Coerce(int),
-            }
-
         return self.async_show_form(
             step_id="reconfigure",
             data_schema=vol.Schema(
                 {
                     vol.Required(CONF_HOST, default=user_input[CONF_HOST]): str,
-                    **advanced_data_schema,
+                    vol.Optional(CONF_PORT, default=user_input[CONF_PORT]): vol.Coerce(
+                        int
+                    ),
                     vol.Required(CONF_SSL, default=user_input[CONF_SSL]): bool,
                 }
             ),
@@ -384,11 +372,21 @@ class FritzBoxToolsFlowHandler(ConfigFlow, domain=DOMAIN):
         """Handle reconfigure flow."""
         if user_input is None:
             reconfigure_entry_data = self._get_reconfigure_entry().data
+            port = reconfigure_entry_data[CONF_PORT]
+            ssl = reconfigure_entry_data.get(CONF_SSL, DEFAULT_SSL)
+
+            if (port == DEFAULT_HTTP_PORT and not ssl) or (
+                port == DEFAULT_HTTPS_PORT and ssl
+            ):
+                # don't show default ports in reconfigure flow, as they are determined by ssl value
+                # this allows the user to toggle ssl without having to change the port
+                port = vol.UNDEFINED
+
             return self._show_setup_form_reconfigure(
                 {
                     CONF_HOST: reconfigure_entry_data[CONF_HOST],
-                    CONF_PORT: reconfigure_entry_data[CONF_PORT],
-                    CONF_SSL: reconfigure_entry_data.get(CONF_SSL, DEFAULT_SSL),
+                    CONF_PORT: port,
+                    CONF_SSL: ssl,
                 }
             )
 
