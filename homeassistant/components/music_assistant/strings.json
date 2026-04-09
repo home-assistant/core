@@ -82,6 +82,11 @@
       "treble": {
         "name": "Treble"
       }
+    },
+    "text": {
+      "network_name": {
+        "name": "Network name"
+      }
     }
   },
   "issues": {
