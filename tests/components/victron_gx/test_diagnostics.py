@@ -20,9 +20,7 @@ async def test_diagnostics(
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test diagnostics."""
-    with patch(
-        "homeassistant.components.victron_gx.hub.VictronVenusHub"
-    ):
+    with patch("homeassistant.components.victron_gx.hub.VictronVenusHub"):
         result = await get_diagnostics_for_config_entry(
             hass, hass_client, mock_config_entry
         )
