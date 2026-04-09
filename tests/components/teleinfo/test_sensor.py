@@ -53,20 +53,20 @@ async def test_sensor_setup_tempo(
     entity_registry = er.async_get(hass)
 
     expected_values: dict[str, str] = {
-        f"{ADCO}_blue_day_off_peak_index": "18328702",
-        f"{ADCO}_blue_day_peak_index": "23739545",
-        f"{ADCO}_white_day_off_peak_index": "1466099",
-        f"{ADCO}_white_day_peak_index": "2132883",
-        f"{ADCO}_red_day_off_peak_index": "860118",
-        f"{ADCO}_red_day_peak_index": "844115",
-        f"{ADCO}_apparent_power": "2830",
-        f"{ADCO}_current_tariff_period": "off_peak_blue_day",
+        f"{ADCO}_BBRHCJB": "18328702",
+        f"{ADCO}_BBRHPJB": "23739545",
+        f"{ADCO}_BBRHCJW": "1466099",
+        f"{ADCO}_BBRHPJW": "2132883",
+        f"{ADCO}_BBRHCJR": "860118",
+        f"{ADCO}_BBRHPJR": "844115",
+        f"{ADCO}_PAPP": "2830",
+        f"{ADCO}_PTEC": "off_peak_blue_day",
     }
 
     # These sensors are disabled by default; verify they are registered but have no state
     disabled_unique_ids = [
-        f"{ADCO}_instantaneous_current",
-        f"{ADCO}_tomorrow_color",
+        f"{ADCO}_IINST",
+        f"{ADCO}_DEMAIN",
     ]
     for unique_id in disabled_unique_ids:
         entity_id = entity_registry.async_get_entity_id("sensor", DOMAIN, unique_id)
@@ -85,12 +85,12 @@ async def test_sensor_setup_tempo(
 
     # Verify BASE/HC/EJP sensors are NOT created
     for absent_unique_id in (
-        f"{ADCO}_base_index",
-        f"{ADCO}_off_peak_index",
-        f"{ADCO}_peak_index",
-        f"{ADCO}_normal_hours_index",
-        f"{ADCO}_peak_mobile_hours_index",
-        f"{ADCO}_ejp_warning",
+        f"{ADCO}_BASE",
+        f"{ADCO}_HCHC",
+        f"{ADCO}_HCHP",
+        f"{ADCO}_EJPHN",
+        f"{ADCO}_EJPHPM",
+        f"{ADCO}_PEJP",
     ):
         entity_id = entity_registry.async_get_entity_id(
             "sensor", DOMAIN, absent_unique_id
@@ -116,7 +116,7 @@ async def test_sensor_setup_base(
 
     # BASE sensor should exist
     entity_id = entity_registry.async_get_entity_id(
-        "sensor", DOMAIN, f"{ADCO}_base_index"
+        "sensor", DOMAIN, f"{ADCO}_BASE"
     )
     assert entity_id is not None
     state = hass.states.get(entity_id)
@@ -124,16 +124,16 @@ async def test_sensor_setup_base(
     assert state.state == "45367891"
 
     # Common sensors should exist
-    for unique_id in (f"{ADCO}_apparent_power", f"{ADCO}_current_tariff_period"):
+    for unique_id in (f"{ADCO}_PAPP", f"{ADCO}_PTEC"):
         entity_id = entity_registry.async_get_entity_id("sensor", DOMAIN, unique_id)
         assert entity_id is not None, f"Common sensor {unique_id} not found"
 
     # Tempo/HC/EJP sensors should NOT exist
     for absent_unique_id in (
-        f"{ADCO}_blue_day_off_peak_index",
-        f"{ADCO}_off_peak_index",
-        f"{ADCO}_normal_hours_index",
-        f"{ADCO}_tomorrow_color",
+        f"{ADCO}_BBRHCJB",
+        f"{ADCO}_HCHC",
+        f"{ADCO}_EJPHN",
+        f"{ADCO}_DEMAIN",
     ):
         entity_id = entity_registry.async_get_entity_id(
             "sensor", DOMAIN, absent_unique_id
@@ -159,10 +159,10 @@ async def test_sensor_setup_hc(
 
     # HC sensors should exist
     expected_values: dict[str, str] = {
-        f"{ADCO}_off_peak_index": "25643781",
-        f"{ADCO}_peak_index": "31285904",
-        f"{ADCO}_apparent_power": "2830",
-        f"{ADCO}_current_tariff_period": "off_peak",
+        f"{ADCO}_HCHC": "25643781",
+        f"{ADCO}_HCHP": "31285904",
+        f"{ADCO}_PAPP": "2830",
+        f"{ADCO}_PTEC": "off_peak",
     }
     for unique_id, expected_state in expected_values.items():
         entity_id = entity_registry.async_get_entity_id("sensor", DOMAIN, unique_id)
@@ -173,9 +173,9 @@ async def test_sensor_setup_hc(
 
     # BASE/Tempo/EJP sensors should NOT exist
     for absent_unique_id in (
-        f"{ADCO}_base_index",
-        f"{ADCO}_blue_day_off_peak_index",
-        f"{ADCO}_normal_hours_index",
+        f"{ADCO}_BASE",
+        f"{ADCO}_BBRHCJB",
+        f"{ADCO}_EJPHN",
     ):
         entity_id = entity_registry.async_get_entity_id(
             "sensor", DOMAIN, absent_unique_id
@@ -199,10 +199,10 @@ async def test_sensor_setup_ejp(
 
     # EJP sensors should exist
     expected_values: dict[str, str] = {
-        f"{ADCO}_normal_hours_index": "38912456",
-        f"{ADCO}_peak_mobile_hours_index": "7654321",
-        f"{ADCO}_apparent_power": "2830",
-        f"{ADCO}_current_tariff_period": "normal_hours",
+        f"{ADCO}_EJPHN": "38912456",
+        f"{ADCO}_EJPHPM": "7654321",
+        f"{ADCO}_PAPP": "2830",
+        f"{ADCO}_PTEC": "normal_hours",
     }
     for unique_id, expected_state in expected_values.items():
         entity_id = entity_registry.async_get_entity_id("sensor", DOMAIN, unique_id)
@@ -213,7 +213,7 @@ async def test_sensor_setup_ejp(
 
     # EJP warning is disabled by default
     entity_id = entity_registry.async_get_entity_id(
-        "sensor", DOMAIN, f"{ADCO}_ejp_warning"
+        "sensor", DOMAIN, f"{ADCO}_PEJP"
     )
     assert entity_id is not None
     state = hass.states.get(entity_id)
@@ -221,10 +221,10 @@ async def test_sensor_setup_ejp(
 
     # BASE/Tempo/HC sensors should NOT exist
     for absent_unique_id in (
-        f"{ADCO}_base_index",
-        f"{ADCO}_blue_day_off_peak_index",
-        f"{ADCO}_off_peak_index",
-        f"{ADCO}_tomorrow_color",
+        f"{ADCO}_BASE",
+        f"{ADCO}_BBRHCJB",
+        f"{ADCO}_HCHC",
+        f"{ADCO}_DEMAIN",
     ):
         entity_id = entity_registry.async_get_entity_id(
             "sensor", DOMAIN, absent_unique_id
@@ -264,16 +264,16 @@ async def test_sensor_unique_ids_tempo(
     entity_registry = er.async_get(hass)
 
     expected_unique_ids = [
-        f"{ADCO}_blue_day_off_peak_index",
-        f"{ADCO}_blue_day_peak_index",
-        f"{ADCO}_white_day_off_peak_index",
-        f"{ADCO}_white_day_peak_index",
-        f"{ADCO}_red_day_off_peak_index",
-        f"{ADCO}_red_day_peak_index",
-        f"{ADCO}_apparent_power",
-        f"{ADCO}_instantaneous_current",
-        f"{ADCO}_current_tariff_period",
-        f"{ADCO}_tomorrow_color",
+        f"{ADCO}_BBRHCJB",
+        f"{ADCO}_BBRHPJB",
+        f"{ADCO}_BBRHCJW",
+        f"{ADCO}_BBRHPJW",
+        f"{ADCO}_BBRHCJR",
+        f"{ADCO}_BBRHPJR",
+        f"{ADCO}_PAPP",
+        f"{ADCO}_IINST",
+        f"{ADCO}_PTEC",
+        f"{ADCO}_DEMAIN",
     ]
 
     for unique_id in expected_unique_ids:
@@ -294,7 +294,7 @@ async def test_sensor_unavailable_on_serial_error(
 
     entity_registry = er.async_get(hass)
     entity_id = entity_registry.async_get_entity_id(
-        "sensor", DOMAIN, f"{ADCO}_apparent_power"
+        "sensor", DOMAIN, f"{ADCO}_PAPP"
     )
     assert entity_id is not None
 
@@ -327,7 +327,7 @@ async def test_sensor_unavailable_on_timeout_error(
 
     entity_registry = er.async_get(hass)
     entity_id = entity_registry.async_get_entity_id(
-        "sensor", DOMAIN, f"{ADCO}_apparent_power"
+        "sensor", DOMAIN, f"{ADCO}_PAPP"
     )
     assert entity_id is not None
 
@@ -359,7 +359,7 @@ async def test_sensor_unavailable_on_decode_error(
 
     entity_registry = er.async_get(hass)
     entity_id = entity_registry.async_get_entity_id(
-        "sensor", DOMAIN, f"{ADCO}_apparent_power"
+        "sensor", DOMAIN, f"{ADCO}_PAPP"
     )
     assert entity_id is not None
 
@@ -393,7 +393,7 @@ async def test_sensor_recovers_after_error(
 
     entity_registry = er.async_get(hass)
     entity_id = entity_registry.async_get_entity_id(
-        "sensor", DOMAIN, f"{ADCO}_apparent_power"
+        "sensor", DOMAIN, f"{ADCO}_PAPP"
     )
     assert entity_id is not None
 
@@ -431,7 +431,7 @@ async def test_sensor_returns_unknown_on_missing_key(
 
     entity_registry = er.async_get(hass)
     entity_id = entity_registry.async_get_entity_id(
-        "sensor", DOMAIN, f"{ADCO}_apparent_power"
+        "sensor", DOMAIN, f"{ADCO}_PAPP"
     )
     assert entity_id is not None
 

@@ -37,7 +37,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'apparent_power',
-    'unique_id': '021861348497_apparent_power',
+    'unique_id': '021861348497_PAPP',
     'unit_of_measurement': <UnitOfApparentPower.VOLT_AMPERE: 'VA'>,
   })
 # ---
@@ -104,7 +104,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'current_tariff_period',
-    'unique_id': '021861348497_current_tariff_period',
+    'unique_id': '021861348497_PTEC',
     'unit_of_measurement': None,
   })
 # ---
@@ -173,7 +173,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'blue_day_off_peak_index',
-    'unique_id': '021861348497_blue_day_off_peak_index',
+    'unique_id': '021861348497_BBRHCJB',
     'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
   })
 # ---
@@ -231,7 +231,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'blue_day_peak_index',
-    'unique_id': '021861348497_blue_day_peak_index',
+    'unique_id': '021861348497_BBRHPJB',
     'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
   })
 # ---
@@ -289,7 +289,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'red_day_off_peak_index',
-    'unique_id': '021861348497_red_day_off_peak_index',
+    'unique_id': '021861348497_BBRHCJR',
     'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
   })
 # ---
@@ -347,7 +347,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'red_day_peak_index',
-    'unique_id': '021861348497_red_day_peak_index',
+    'unique_id': '021861348497_BBRHPJR',
     'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
   })
 # ---
@@ -405,7 +405,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'white_day_off_peak_index',
-    'unique_id': '021861348497_white_day_off_peak_index',
+    'unique_id': '021861348497_BBRHCJW',
     'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
   })
 # ---
@@ -463,7 +463,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'white_day_peak_index',
-    'unique_id': '021861348497_white_day_peak_index',
+    'unique_id': '021861348497_BBRHPJW',
     'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
   })
 # ---
@@ -521,7 +521,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'instantaneous_current',
-    'unique_id': '021861348497_instantaneous_current',
+    'unique_id': '021861348497_IINST',
     'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })
 # ---
@@ -580,7 +580,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'tomorrow_color',
-    'unique_id': '021861348497_tomorrow_color',
+    'unique_id': '021861348497_DEMAIN',
     'unit_of_measurement': None,
   })
 # ---
