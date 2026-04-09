@@ -285,7 +285,7 @@ DHW_ENERGY_SENSORS = [
         key="energy_output_dhw",
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
-        state_class=SensorStateClass.TOTAL_INCREASING,
+        state_class=SensorStateClass.TOTAL,
         value_fn=lambda status: status.energy_out_dhw,
     ),
 ]
