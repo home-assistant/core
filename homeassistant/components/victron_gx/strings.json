@@ -678,7 +678,7 @@
       },
       "gps_course": {
         "name": "Course",
-        "unit_of_measurement": "°"
+        "unit_of_measurement": "\u00b0"
       },
       "gps_latitude": {
         "name": "Latitude",
@@ -1776,6 +1776,14 @@
           "sustain_alt": "Sustain Alt"
         }
       }
+    }
+  },
+  "exceptions": {
+    "authentication_failed": {
+      "message": "Authentication failed for {host}."
+    },
+    "cannot_connect": {
+      "message": "Cannot connect to the hub at {host}."
     }
   }
 }
