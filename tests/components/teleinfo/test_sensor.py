@@ -115,9 +115,7 @@ async def test_sensor_setup_base(
     entity_registry = er.async_get(hass)
 
     # BASE sensor should exist
-    entity_id = entity_registry.async_get_entity_id(
-        "sensor", DOMAIN, f"{ADCO}_BASE"
-    )
+    entity_id = entity_registry.async_get_entity_id("sensor", DOMAIN, f"{ADCO}_BASE")
     assert entity_id is not None
     state = hass.states.get(entity_id)
     assert state is not None
@@ -212,9 +210,7 @@ async def test_sensor_setup_ejp(
         assert state.state == expected_state
 
     # EJP warning is disabled by default
-    entity_id = entity_registry.async_get_entity_id(
-        "sensor", DOMAIN, f"{ADCO}_PEJP"
-    )
+    entity_id = entity_registry.async_get_entity_id("sensor", DOMAIN, f"{ADCO}_PEJP")
     assert entity_id is not None
     state = hass.states.get(entity_id)
     assert state is None  # disabled, no state
@@ -293,9 +289,7 @@ async def test_sensor_unavailable_on_serial_error(
     await hass.async_block_till_done()
 
     entity_registry = er.async_get(hass)
-    entity_id = entity_registry.async_get_entity_id(
-        "sensor", DOMAIN, f"{ADCO}_PAPP"
-    )
+    entity_id = entity_registry.async_get_entity_id("sensor", DOMAIN, f"{ADCO}_PAPP")
     assert entity_id is not None
 
     # Verify sensor is available initially
@@ -326,9 +320,7 @@ async def test_sensor_unavailable_on_timeout_error(
     await hass.async_block_till_done()
 
     entity_registry = er.async_get(hass)
-    entity_id = entity_registry.async_get_entity_id(
-        "sensor", DOMAIN, f"{ADCO}_PAPP"
-    )
+    entity_id = entity_registry.async_get_entity_id("sensor", DOMAIN, f"{ADCO}_PAPP")
     assert entity_id is not None
 
     state = hass.states.get(entity_id)
@@ -358,9 +350,7 @@ async def test_sensor_unavailable_on_decode_error(
     await hass.async_block_till_done()
 
     entity_registry = er.async_get(hass)
-    entity_id = entity_registry.async_get_entity_id(
-        "sensor", DOMAIN, f"{ADCO}_PAPP"
-    )
+    entity_id = entity_registry.async_get_entity_id("sensor", DOMAIN, f"{ADCO}_PAPP")
     assert entity_id is not None
 
     state = hass.states.get(entity_id)
@@ -392,9 +382,7 @@ async def test_sensor_recovers_after_error(
     await hass.async_block_till_done()
 
     entity_registry = er.async_get(hass)
-    entity_id = entity_registry.async_get_entity_id(
-        "sensor", DOMAIN, f"{ADCO}_PAPP"
-    )
+    entity_id = entity_registry.async_get_entity_id("sensor", DOMAIN, f"{ADCO}_PAPP")
     assert entity_id is not None
 
     # Simulate serial error
@@ -430,9 +418,7 @@ async def test_sensor_returns_unknown_on_missing_key(
     await hass.async_block_till_done()
 
     entity_registry = er.async_get(hass)
-    entity_id = entity_registry.async_get_entity_id(
-        "sensor", DOMAIN, f"{ADCO}_PAPP"
-    )
+    entity_id = entity_registry.async_get_entity_id("sensor", DOMAIN, f"{ADCO}_PAPP")
     assert entity_id is not None
 
     # Verify sensor is available initially
