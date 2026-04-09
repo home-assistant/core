@@ -14,15 +14,19 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 from .const import CONF_PLACE_ID, CONF_SERVICE_ID, LOGGER
 
+type RecollectWasteConfigEntry = ConfigEntry[ReCollectWasteDataUpdateCoordinator]
+
 DEFAULT_UPDATE_INTERVAL = timedelta(days=1)
 
 
 class ReCollectWasteDataUpdateCoordinator(DataUpdateCoordinator[list[PickupEvent]]):
     """Class to manage fetching ReCollect Waste data."""
 
-    config_entry: ConfigEntry
+    config_entry: RecollectWasteConfigEntry
 
-    def __init__(self, hass: HomeAssistant, config_entry: ConfigEntry) -> None:
+    def __init__(
+        self, hass: HomeAssistant, config_entry: RecollectWasteConfigEntry
+    ) -> None:
         """Initialize the coordinator."""
         super().__init__(
             hass,
