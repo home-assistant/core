@@ -16,7 +16,7 @@ from .models import SerialDevice, USBDevice
 
 
 def usb_device_from_port(port: SerialPortInfo) -> USBDevice:
-    """Convert serial SerialPortInfo to USBDevice."""
+    """Convert serialx SerialPortInfo to USBDevice."""
     assert port.vid is not None
     assert port.pid is not None
 
@@ -31,7 +31,7 @@ def usb_device_from_port(port: SerialPortInfo) -> USBDevice:
 
 
 def serial_device_from_port(port: SerialPortInfo) -> SerialDevice:
-    """Convert serial SerialPortInfo to SerialDevice."""
+    """Convert serialx SerialPortInfo to SerialDevice."""
     return SerialDevice(
         device=port.device,
         serial_number=port.serial_number,
@@ -41,7 +41,7 @@ def serial_device_from_port(port: SerialPortInfo) -> SerialDevice:
 
 
 def usb_serial_device_from_port(port: SerialPortInfo) -> USBDevice | SerialDevice:
-    """Convert serial SerialPortInfo to USBDevice or SerialDevice."""
+    """Convert serialx SerialPortInfo to USBDevice or SerialDevice."""
     if port.vid is not None or port.pid is not None:
         assert port.vid is not None
         assert port.pid is not None
