@@ -85,8 +85,8 @@ async def test_removing_incorrect_devices(
 
 
 async def test_api_failure(hass: HomeAssistant, mock_weather: MagicMock) -> None:
-    """Test that entry goes to SETUP_RETRY when API fails."""
-    mock_weather.fetching_data.side_effect = Exception("API error")
+    """Test that entry goes to SETUP_RETRY when fetching_data returns False."""
+    mock_weather.fetching_data.return_value = False
     entry = MockConfigEntry(
         domain=DOMAIN,
         data={
@@ -111,6 +111,6 @@ async def test_track_home_called_twice(
     coordinator = entry.runtime_data
 
     coordinator.track_home()
-    coordinator.track_home()  # druhé volání by mělo hned vrátit
+    coordinator.track_home()  # second call should return immediately without registering a duplicate listener
 
     assert coordinator._unsub_track_home is not None
