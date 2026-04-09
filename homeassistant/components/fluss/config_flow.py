@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from typing import Any
 
 from fluss_api import (
@@ -52,4 +53,42 @@ class FlussConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
+        )
+
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
+        """Handle reauth when the API key becomes invalid."""
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Confirm reauth with a new API key."""
+        errors: dict[str, str] = {}
+
+        if user_input is not None:
+            client = FlussApiClient(
+                user_input[CONF_API_KEY],
+                session=async_get_clientsession(self.hass),
+            )
+            try:
+                await client.async_get_devices()
+            except FlussApiClientCommunicationError:
+                errors["base"] = "cannot_connect"
+            except FlussApiClientAuthenticationError:
+                errors["base"] = "invalid_auth"
+            except Exception:  # noqa: BLE001
+                LOGGER.exception("Unexpected exception during reauth")
+                errors["base"] = "unknown"
+            else:
+                return self.async_update_reload_and_abort(
+                    self._get_reauth_entry(),
+                    data_updates=user_input,
+                )
+
+        return self.async_show_form(
+            step_id="reauth_confirm",
+            data_schema=STEP_USER_DATA_SCHEMA,
+            errors=errors,
         )
