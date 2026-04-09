@@ -32,6 +32,7 @@ class AqualinkDataUpdateCoordinator(DataUpdateCoordinator[None]):
             update_interval=UPDATE_INTERVAL,
         )
         self.systems = systems
+        self._logged_unavailable: set[str] = set()
 
     async def _async_update_data(self) -> None:
         """Refresh internal state for all systems."""
@@ -41,15 +42,17 @@ class AqualinkDataUpdateCoordinator(DataUpdateCoordinator[None]):
             try:
                 await system.update()
             except AqualinkServiceException, httpx.HTTPError:
-                if prev is not None:
-                    self.logger.warning(
-                        "Failed to refresh system %s state",
-                        system.serial,
-                    )
+                if prev is not None and system.serial not in self._logged_unavailable:
+                    self.logger.info("System %s unavailable", system.serial)
+                    self._logged_unavailable.add(system.serial)
                 await system.aqualink.close()
             else:
                 cur = system.online
-                if cur and not prev:
-                    self.logger.warning(
+                if cur and system.serial in self._logged_unavailable:
+                    self.logger.info(
                         "System %s reconnected to iAqualink", system.serial
                     )
+                    self._logged_unavailable.discard(system.serial)
+                elif not cur and prev and system.serial not in self._logged_unavailable:
+                    self.logger.info("System %s unavailable", system.serial)
+                    self._logged_unavailable.add(system.serial)

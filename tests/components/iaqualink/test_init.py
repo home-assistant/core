@@ -248,7 +248,7 @@ async def test_multiple_updates(
 
     system.get_devices = AsyncMock(return_value={})
 
-    caplog.set_level(logging.WARNING)
+    caplog.set_level(logging.INFO)
 
     with (
         patch(
@@ -285,15 +285,15 @@ async def test_multiple_updates(
     caplog.clear()
     system.update.side_effect = set_online_to_false
     await _refresh_coordinator(hass, config_entry)
-    assert len(caplog.records) == 0
+    assert len(caplog.records) == 1
+    assert "unavailable" in caplog.text
 
     # True -> None / ServiceException
     system.online = True
     caplog.clear()
     system.update.side_effect = AqualinkServiceException
     await _refresh_coordinator(hass, config_entry)
-    assert len(caplog.records) == 1
-    assert "Failed" in caplog.text
+    assert len(caplog.records) == 0
 
     # False -> False
     system.online = False
@@ -316,7 +316,7 @@ async def test_multiple_updates(
     system.update.side_effect = AqualinkServiceException
     await _refresh_coordinator(hass, config_entry)
     assert len(caplog.records) == 1
-    assert "Failed" in caplog.text
+    assert "unavailable" in caplog.text
 
     # None -> None / ServiceException
     system.online = None
