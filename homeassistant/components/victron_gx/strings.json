@@ -1765,6 +1765,12 @@
           "sustain_alt": "Sustain Alt"
         }
       }
+    },
+    "time": {
+      "system_ess_schedule_charge_slot_start": {
+        "name": "ESS BatteryLife schedule charge {slot} start",
+        "unit_of_measurement": "min"
+      }
     }
   }
 }
