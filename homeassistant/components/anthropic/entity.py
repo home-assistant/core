@@ -113,7 +113,6 @@ from .const import (
     LOGGER,
     MIN_THINKING_BUDGET,
     NON_ADAPTIVE_THINKING_MODELS,
-    NON_THINKING_MODELS,
     PromptCaching,
 )
 from .coordinator import AnthropicConfigEntry, AnthropicCoordinator
@@ -772,7 +771,8 @@ class AnthropicBaseLLMEntity(CoordinatorEntity[AnthropicCoordinator]):
                 CONF_THINKING_BUDGET, DEFAULT[CONF_THINKING_BUDGET]
             )
             if (
-                not model.startswith(tuple(NON_THINKING_MODELS))
+                self.model_info.capabilities
+                and self.model_info.capabilities.thinking.supported
                 and thinking_budget >= MIN_THINKING_BUDGET
             ):
                 model_args["thinking"] = ThinkingConfigEnabledParam(

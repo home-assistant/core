@@ -52,10 +52,6 @@ DEFAULT = {
     CONF_WEB_SEARCH_MAX_USES: 5,
 }
 
-NON_THINKING_MODELS = [
-    "claude-3-haiku",
-]
-
 NON_ADAPTIVE_THINKING_MODELS = [
     "claude-opus-4-5",
     "claude-sonnet-4-5",

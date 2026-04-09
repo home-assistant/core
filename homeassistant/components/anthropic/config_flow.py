@@ -67,7 +67,6 @@ from .const import (
     DOMAIN,
     MIN_THINKING_BUDGET,
     NON_ADAPTIVE_THINKING_MODELS,
-    NON_THINKING_MODELS,
     TOOL_SEARCH_UNSUPPORTED_MODELS,
     WEB_SEARCH_UNSUPPORTED_MODELS,
     PromptCaching,
@@ -398,8 +397,10 @@ class ConversationSubentryFlowHandler(ConfigSubentryFlow):
 
         model = self.options[CONF_CHAT_MODEL]
 
-        if not model.startswith(tuple(NON_THINKING_MODELS)) and model.startswith(
-            tuple(NON_ADAPTIVE_THINKING_MODELS)
+        if (
+            self.model_info.capabilities
+            and self.model_info.capabilities.thinking.supported
+            and model.startswith(tuple(NON_ADAPTIVE_THINKING_MODELS))
         ):
             step_schema[
                 vol.Optional(
