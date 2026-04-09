@@ -6,8 +6,7 @@ from aiocomelit.api import ComelitVedoAreaObject, ComelitVedoZoneObject
 from aiocomelit.const import ALARM_AREA, ALARM_ZONE, AlarmAreaState, AlarmZoneState
 from freezegun.api import FrozenDateTimeFactory
 
-from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
-from homeassistant.components.comelit.const import DOMAIN, SCAN_INTERVAL
+from homeassistant.components.comelit.const import SCAN_INTERVAL
 from homeassistant.const import STATE_OFF, STATE_ON, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -29,29 +28,13 @@ async def test_binary_sensor_entities_created(
     ):
         await setup_integration(hass, mock_vedo_config_entry)
 
-    anomaly_entity_id = entity_registry.async_get_entity_id(
-        BINARY_SENSOR_DOMAIN,
-        DOMAIN,
-        f"{mock_vedo_config_entry.entry_id}-anomaly-0",
-    )
-    presence_entity_id = entity_registry.async_get_entity_id(
-        BINARY_SENSOR_DOMAIN,
-        DOMAIN,
-        f"{mock_vedo_config_entry.entry_id}-presence-0",
-    )
-    faulty_entity_id = entity_registry.async_get_entity_id(
-        BINARY_SENSOR_DOMAIN,
-        DOMAIN,
-        f"{mock_vedo_config_entry.entry_id}-faulty-0",
-    )
-
-    assert anomaly_entity_id is not None
-    assert presence_entity_id is not None
-    assert faulty_entity_id is not None
+    anomaly_entity_id = "binary_sensor.area0_anomaly"
+    motion_entity_id = "binary_sensor.zone0_motion"
+    faulty_entity_id = "binary_sensor.zone0_faulty"
 
     assert (state := hass.states.get(anomaly_entity_id))
     assert state.state == STATE_OFF
-    assert (state := hass.states.get(presence_entity_id))
+    assert (state := hass.states.get(motion_entity_id))
     assert state.state == STATE_OFF
     assert (state := hass.states.get(faulty_entity_id))
     assert state.state == STATE_OFF
@@ -70,19 +53,8 @@ async def test_binary_sensor_state_update(
     ):
         await setup_integration(hass, mock_vedo_config_entry)
 
-    anomaly_entity_id = entity_registry.async_get_entity_id(
-        BINARY_SENSOR_DOMAIN,
-        DOMAIN,
-        f"{mock_vedo_config_entry.entry_id}-anomaly-0",
-    )
-    faulty_entity_id = entity_registry.async_get_entity_id(
-        BINARY_SENSOR_DOMAIN,
-        DOMAIN,
-        f"{mock_vedo_config_entry.entry_id}-faulty-0",
-    )
-
-    assert anomaly_entity_id is not None
-    assert faulty_entity_id is not None
+    anomaly_entity_id = "binary_sensor.area0_anomaly"
+    faulty_entity_id = "binary_sensor.zone0_faulty"
 
     mock_vedo.get_all_areas_and_zones.return_value = {
         ALARM_AREA: {

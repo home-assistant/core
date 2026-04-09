@@ -71,8 +71,8 @@
       "faulty": {
         "name": "Faulty"
       },
-      "presence": {
-        "name": "Presence"
+      "motion": {
+        "name": "Motion"
       }
     },
     "climate": {
