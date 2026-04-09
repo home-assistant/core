@@ -10,7 +10,6 @@ from evohomeasync2.const import SZ_CAN_BE_TEMPORARY, SZ_SYSTEM_MODE, SZ_TIMING_M
 from evohomeasync2.schemas.const import (
     S2_DURATION as SZ_DURATION,
     S2_PERIOD as SZ_PERIOD,
-    SystemMode,
 )
 import voluptuous as vol
 
@@ -28,16 +27,14 @@ from .coordinator import EvoDataUpdateCoordinator
 # System service schemas (registered as domain services)
 SET_SYSTEM_MODE_SCHEMA: Final[dict[str | vol.Marker, Any]] = {
     # unsupported modes are rejected at runtime with ServiceValidationError
-    vol.Required(ATTR_MODE): vol.Coerce(SystemMode),
+    vol.Required(ATTR_MODE): cv.string,  # ... so, don't use SystemMode enum here
     vol.Exclusive(ATTR_DURATION, "temporary"): vol.All(
         cv.time_period,
         vol.Range(min=timedelta(hours=0), max=timedelta(hours=24)),
-        msg="Use either duration or period, or neither, but not both",
     ),
     vol.Exclusive(ATTR_PERIOD, "temporary"): vol.All(
         cv.time_period,
         vol.Range(min=timedelta(days=1), max=timedelta(days=99)),
-        msg="Use either duration or period, or neither, but not both",
     ),
 }
 
