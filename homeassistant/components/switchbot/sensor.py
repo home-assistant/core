@@ -2,6 +2,9 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
+from dataclasses import dataclass
+
 import switchbot
 from switchbot import HumidifierWaterLevel, SwitchbotModel
 from switchbot.const.air_purifier import AirQualityLevel
@@ -34,6 +37,14 @@ from .coordinator import SwitchbotConfigEntry, SwitchbotDataUpdateCoordinator
 from .entity import SwitchbotEntity
 
 PARALLEL_UPDATES = 0
+
+
+@dataclass(frozen=True, kw_only=True)
+class SwitchBotSensorEntityDescription(SensorEntityDescription):
+    """Describes SwitchBot sensor entities with optional value transformation."""
+
+    value_fn: Callable[[str | int | None], str | int | None] = lambda v: v
+
 
 SENSOR_TYPES: dict[str, SensorEntityDescription] = {
     "rssi": SensorEntityDescription(
@@ -126,9 +137,18 @@ SENSOR_TYPES: dict[str, SensorEntityDescription] = {
         device_class=SensorDeviceClass.ENUM,
         options=HumidifierWaterLevel.get_levels(),
     ),
-    "battery_range": SensorEntityDescription(
+    "battery_range": SwitchBotSensorEntityDescription(
         key="battery_range",
         translation_key="battery_range",
+        device_class=SensorDeviceClass.ENUM,
+        options=["critical", "low", "medium", "high"],
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=lambda v: {
+            "<10%": "critical",
+            "10-19%": "low",
+            "20-59%": "medium",
+            ">=60%": "high",
+        }.get(str(v)),
     ),
 }
 
@@ -155,10 +175,8 @@ async def async_setup_entry(
             for sensor in parsed_data
             if sensor in SENSOR_TYPES and sensor not in ("battery", "battery_range")
         )
-        if "battery" in parsed_data:
-            sensor_entities.append(SwitchBotSensor(coordinator, "battery"))
-        else:
-            sensor_entities.append(SwitchBotSensor(coordinator, "battery_range"))
+        sensor_entities.append(SwitchBotSensor(coordinator, "battery"))
+        sensor_entities.append(SwitchBotSensor(coordinator, "battery_range"))
     else:
         sensor_entities.extend(
             SwitchBotSensor(coordinator, sensor)
@@ -200,7 +218,10 @@ class SwitchBotSensor(SwitchbotEntity, SensorEntity):
     @property
     def native_value(self) -> str | int | None:
         """Return the state of the sensor."""
-        return self.parsed_data[self._sensor]
+        value = self.parsed_data[self._sensor]
+        if isinstance(self.entity_description, SwitchBotSensorEntityDescription):
+            return self.entity_description.value_fn(value)
+        return value
 
 
 class SwitchbotRSSISensor(SwitchBotSensor):

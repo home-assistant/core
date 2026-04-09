@@ -22,6 +22,7 @@ from homeassistant.const import (
     CONF_SENSOR_TYPE,
     STATE_OFF,
     STATE_ON,
+    STATE_UNKNOWN,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
@@ -821,7 +822,7 @@ async def test_presence_sensor(hass: HomeAssistant) -> None:
     assert await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    assert len(hass.states.async_all("sensor")) == 3
+    assert len(hass.states.async_all("sensor")) == 4
     assert len(hass.states.async_all("binary_sensor")) == 1
 
     battery_sensor = hass.states.get("sensor.test_name_battery")
@@ -829,6 +830,13 @@ async def test_presence_sensor(hass: HomeAssistant) -> None:
     assert battery_sensor
     assert battery_sensor_attrs[ATTR_FRIENDLY_NAME] == "test-name Battery"
     assert battery_sensor_attrs[ATTR_STATE_CLASS] == "measurement"
+
+    battery_range_sensor = hass.states.get("sensor.test_name_battery_range")
+    assert battery_range_sensor is not None
+    assert battery_range_sensor.state == "high"
+    assert (
+        battery_range_sensor.attributes[ATTR_FRIENDLY_NAME] == "test-name Battery range"
+    )
 
     light_level_sensor = hass.states.get("sensor.test_name_light_level")
     light_level_sensor_attrs = light_level_sensor.attributes
@@ -895,14 +903,18 @@ async def test_presence_sensor_without_battery(hass: HomeAssistant) -> None:
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
-        assert len(hass.states.async_all("sensor")) == 3
+        assert len(hass.states.async_all("sensor")) == 4
         assert len(hass.states.async_all("binary_sensor")) == 1
 
         battery_range_sensor = hass.states.get("sensor.test_name_battery_range")
         assert battery_range_sensor is not None
         br_sensor_attrs = battery_range_sensor.attributes
-        assert battery_range_sensor.state == ">=60%"
+        assert battery_range_sensor.state == "high"
         assert br_sensor_attrs[ATTR_FRIENDLY_NAME] == "test-name Battery range"
+
+        battery_sensor = hass.states.get("sensor.test_name_battery")
+        assert battery_sensor is not None
+        assert battery_sensor.state == STATE_UNKNOWN
 
         light_level_sensor = hass.states.get("sensor.test_name_light_level")
         light_level_sensor_attrs = light_level_sensor.attributes
