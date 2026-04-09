@@ -384,9 +384,12 @@ def _encrypt_backup(
         if prefix not in expected_archives:
             LOGGER.debug("Unknown inner tar file %s will not be encrypted", obj.name)
             continue
-        output_archive.import_tar(
-            input_tar.extractfile(obj), obj, derived_key_id=inner_tar_idx
-        )
+        if (fileobj := input_tar.extractfile(obj)) is None:
+            LOGGER.debug(
+                "Non regular inner tar file %s will not be encrypted", obj.name
+            )
+            continue
+        output_archive.import_tar(fileobj, obj, derived_key_id=inner_tar_idx)
         inner_tar_idx += 1
 
 
@@ -420,7 +423,7 @@ class _CipherBackupStreamer:
         hass: HomeAssistant,
         backup: AgentBackup,
         open_stream: Callable[[], Coroutine[Any, Any, AsyncIterator[bytes]]],
-        password: str | None,
+        password: str,
     ) -> None:
         """Initialize."""
         self._workers: list[_CipherWorkerStatus] = []
@@ -432,7 +435,7 @@ class _CipherBackupStreamer:
 
     def size(self) -> int:
         """Return the maximum size of the decrypted or encrypted backup."""
-        return get_archive_max_ciphertext_size(  # type: ignore[no-any-return]
+        return get_archive_max_ciphertext_size(
             self._backup.size, SECURETAR_CREATE_VERSION, self._num_tar_files()
         )
 

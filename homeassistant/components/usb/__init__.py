@@ -37,7 +37,8 @@ from .models import (
     USBDevice,
 )
 from .utils import (
-    scan_serial_ports,
+    async_scan_serial_ports,
+    scan_serial_ports,  # noqa: F401
     usb_device_from_path,  # noqa: F401
     usb_device_from_port,  # noqa: F401
     usb_device_matches_matcher,
@@ -433,7 +434,7 @@ class USBDiscovery:
             # Only consider USB-serial ports for discovery
             usb_ports = [
                 p
-                for p in await self.hass.async_add_executor_job(scan_serial_ports)
+                for p in await async_scan_serial_ports(self.hass)
                 if isinstance(p, USBDevice)
             ]
 

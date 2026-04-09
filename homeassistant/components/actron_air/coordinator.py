@@ -6,12 +6,12 @@ from dataclasses import dataclass
 from datetime import timedelta
 
 from actron_neo_api import (
-    ActronAirACSystem,
     ActronAirAPI,
     ActronAirAPIError,
     ActronAirAuthError,
     ActronAirStatus,
 )
+from actron_neo_api.models.system import ActronAirSystemInfo
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -38,7 +38,7 @@ class ActronAirRuntimeData:
 type ActronAirConfigEntry = ConfigEntry[ActronAirRuntimeData]
 
 
-class ActronAirSystemCoordinator(DataUpdateCoordinator[ActronAirACSystem]):
+class ActronAirSystemCoordinator(DataUpdateCoordinator[ActronAirStatus]):
     """System coordinator for Actron Air integration."""
 
     def __init__(
@@ -46,7 +46,7 @@ class ActronAirSystemCoordinator(DataUpdateCoordinator[ActronAirACSystem]):
         hass: HomeAssistant,
         entry: ActronAirConfigEntry,
         api: ActronAirAPI,
-        system: ActronAirACSystem,
+        system: ActronAirSystemInfo,
     ) -> None:
         """Initialize the coordinator."""
         super().__init__(
@@ -57,7 +57,7 @@ class ActronAirSystemCoordinator(DataUpdateCoordinator[ActronAirACSystem]):
             config_entry=entry,
         )
         self.system = system
-        self.serial_number = system["serial"]
+        self.serial_number = system.serial
         self.api = api
         self.status = self.api.state_manager.get_status(self.serial_number)
         self.last_seen = dt_util.utcnow()
