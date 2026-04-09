@@ -36,6 +36,7 @@ from .const import (
     MOCK_FB_SERVICES,
     MOCK_HOST_ATTRIBUTES_DATA,
     MOCK_MESH_MASTER_MAC,
+    MOCK_SERIAL_NUMBER,
     MOCK_USER_DATA,
 )
 
@@ -515,8 +516,8 @@ async def test_migrate_to_new_unique_id(
     for old_description, new_identifier in zip(
         old_descriptions, new_identifiers, strict=True
     ):
-        old_unique_id = f"{MOCK_MESH_MASTER_MAC}-{slugify(old_description)}"
-        new_unique_id = f"{MOCK_MESH_MASTER_MAC}-wi_fi_{new_identifier}"
+        old_unique_id = f"{MOCK_SERIAL_NUMBER}-{slugify(old_description)}"
+        new_unique_id = f"{MOCK_SERIAL_NUMBER}-wi_fi_{new_identifier}"
         old_unique_ids.append(old_unique_id)
         new_unique_ids.append(new_unique_id)
         entity_ids.append(f"switch.fritz_{slugify(old_unique_id)}")
@@ -531,7 +532,7 @@ async def test_migrate_to_new_unique_id(
 
     device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
-        identifiers={(DOMAIN, MOCK_UNIQUE_ID)},
+        identifiers={(DOMAIN, MOCK_SERIAL_NUMBER)},
         connections={
             (dr.CONNECTION_NETWORK_MAC, MOCK_MESH_MASTER_MAC),
         },

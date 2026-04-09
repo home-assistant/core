@@ -706,6 +706,21 @@ async def test_extended_thinking(
     assert call_args == snapshot
 
 
+@pytest.mark.parametrize(
+    "subentry_data",
+    [
+        {
+            CONF_LLM_HASS_API: "assist",
+            CONF_CHAT_MODEL: "claude-haiku-4-5",
+            CONF_THINKING_BUDGET: 0,
+        },
+        {
+            CONF_LLM_HASS_API: "assist",
+            CONF_CHAT_MODEL: "claude-opus-4-6",
+            CONF_THINKING_EFFORT: "none",
+        },
+    ],
+)
 @freeze_time("2024-05-24 12:00:00")
 async def test_disabled_thinking(
     hass: HomeAssistant,
@@ -713,16 +728,13 @@ async def test_disabled_thinking(
     mock_init_component,
     mock_create_stream: AsyncMock,
     snapshot: SnapshotAssertion,
+    subentry_data: dict[str, Any],
 ) -> None:
     """Test conversation with thinking effort disabled."""
     hass.config_entries.async_update_subentry(
         mock_config_entry,
         next(iter(mock_config_entry.subentries.values())),
-        data={
-            CONF_LLM_HASS_API: "assist",
-            CONF_CHAT_MODEL: "claude-opus-4-6",
-            CONF_THINKING_EFFORT: "none",
-        },
+        data=subentry_data,
     )
 
     mock_create_stream.return_value = [
