@@ -9,7 +9,10 @@ import serial
 from teleinfo import decode, read_frame
 import voluptuous as vol
 
+from homeassistant.components import usb
+from homeassistant.components.usb import human_readable_device_name
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.helpers.service_info.usb import UsbServiceInfo
 
 from .const import CONF_SERIAL_PORT, DOMAIN
 
@@ -27,6 +30,10 @@ class TeleinfoConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
     MINOR_VERSION = 1
+
+    def __init__(self) -> None:
+        """Initialize the Teleinfo config flow."""
+        self._discovered_device: str | None = None
 
     async def _validate_serial_port(
         self, serial_port: str
@@ -77,3 +84,47 @@ class TeleinfoConfigFlow(ConfigFlow, domain=DOMAIN):
             data_schema=STEP_USER_DATA_SCHEMA,
             errors=errors,
         )
+
+    async def async_step_usb(self, discovery_info: UsbServiceInfo) -> ConfigFlowResult:
+        """Handle USB discovery."""
+        # Resolve stable /dev/serial/by-id/ path
+        dev_path = await self.hass.async_add_executor_job(
+            usb.get_serial_by_id, discovery_info.device
+        )
+
+        # Validate by reading a real Teleinfo frame — silent abort on failure
+        errors, decoded_data = await self._validate_serial_port(dev_path)
+        if errors or decoded_data is None:
+            return self.async_abort(reason="not_teleinfo_device")
+
+        # Use ADCO (meter serial number) as unique_id — same as manual entry
+        adco = decoded_data["ADCO"]
+        await self.async_set_unique_id(adco)
+        self._abort_if_unique_id_configured(updates={CONF_SERIAL_PORT: dev_path})
+
+        self._discovered_device = dev_path
+        self.context["title_placeholders"] = {
+            "name": human_readable_device_name(
+                discovery_info.device,
+                discovery_info.serial_number,
+                discovery_info.manufacturer,
+                discovery_info.description,
+                discovery_info.vid,
+                discovery_info.pid,
+            )
+        }
+        return await self.async_step_usb_confirm()
+
+    async def async_step_usb_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle USB discovery confirmation."""
+        if user_input is not None:
+            if self._discovered_device is None:
+                raise RuntimeError("Discovered device unexpectedly None")
+            return self.async_create_entry(
+                title=f"Teleinfo ({self._discovered_device})",
+                data={CONF_SERIAL_PORT: self._discovered_device},
+            )
+        self._set_confirm_only()
+        return self.async_show_form(step_id="usb_confirm")
