@@ -1,7 +1,7 @@
 """Support for Victron GX select entities."""
 
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from victron_mqtt import (
     Device as VictronVenusDevice,
@@ -59,7 +59,8 @@ class VictronSelect(VictronBaseEntity, SelectEntity):
     ) -> None:
         """Initialize the select entity."""
         super().__init__(device, metric, device_info, installation_id)
-        assert metric.enum_values, "Select metric will always have enum values"
+        if TYPE_CHECKING:
+            assert metric.enum_values, "Select metric will always have enum values"
         self._attr_options = metric.enum_values
         self._attr_current_option = VictronSelect._normalize_value(metric.value)
 
@@ -70,7 +71,8 @@ class VictronSelect(VictronBaseEntity, SelectEntity):
 
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
-        assert isinstance(self._metric, VictronVenusWritableMetric)
+        if TYPE_CHECKING:
+            assert isinstance(self._metric, VictronVenusWritableMetric)
         _LOGGER.debug("Setting select %s to %s", self._attr_unique_id, option)
         self._metric.set(option)
 

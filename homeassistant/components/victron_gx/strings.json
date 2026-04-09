@@ -77,7 +77,7 @@
         "state": {
           "auto": "[%key:common::state::auto%]",
           "manual": "[%key:common::state::manual%]",
-          "scheduled_charge": "Scheduled Charge"
+          "scheduled_charge": "Scheduled charge"
         }
       },
       "inverter_mode": {
