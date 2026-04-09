@@ -353,6 +353,7 @@ class ElectricCurrentConverter(BaseUnitConverter):
     _UNIT_CONVERSION: dict[str | None, float] = {
         UnitOfElectricCurrent.AMPERE: 1,
         UnitOfElectricCurrent.MILLIAMPERE: 1e3,
+        UnitOfElectricCurrent.MICROAMPERE: 1e6,
     }
     VALID_UNITS = set(UnitOfElectricCurrent)
 
