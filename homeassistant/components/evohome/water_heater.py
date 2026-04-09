@@ -69,7 +69,6 @@ class EvoDHW(EvoChild, WaterHeaterEntity):
     """Base for any evohome-compatible DHW controller."""
 
     _attr_name = "DHW controller"
-    _attr_icon = "mdi:thermometer-lines"
     _attr_operation_list = list(HA_STATE_TO_EVO)
     _attr_supported_features = (
         WaterHeaterEntityFeature.AWAY_MODE
