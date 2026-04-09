@@ -64,6 +64,19 @@
           "phone": "Phone",
           "sip": "SIP",
           "twitter": "Twitter"
+        },
+        "data_description": {
+          "email": "Contact email address for the space.",
+          "facebook": "Facebook page URL of the space.",
+          "foursquare": "Foursquare ID of the space.",
+          "identica": "Identica account of the space.",
+          "irc": "IRC channel of the space.",
+          "issue_mail": "Email address for issue reports.",
+          "jabber": "Jabber/XMPP address of the space.",
+          "ml": "Mailing list address of the space.",
+          "phone": "Phone number of the space.",
+          "sip": "SIP address of the space.",
+          "twitter": "Twitter account of the space."
         }
       },
       "feeds": {
@@ -76,6 +89,16 @@
           "flicker_url": "Flickr URL",
           "wiki_type": "Wiki type",
           "wiki_url": "Wiki URL"
+        },
+        "data_description": {
+          "blog_type": "Type of the blog feed (e.g. rss, atom).",
+          "blog_url": "URL of the blog feed.",
+          "calendar_type": "Type of the calendar feed (e.g. ical).",
+          "calendar_url": "URL of the calendar feed.",
+          "flicker_type": "Type of the Flickr feed.",
+          "flicker_url": "URL of the Flickr feed.",
+          "wiki_type": "Type of the wiki feed (e.g. mediawiki).",
+          "wiki_url": "URL of the wiki feed."
         }
       },
       "init": {
@@ -95,12 +118,22 @@
           "m4": "M4 stream URL",
           "mjpeg": "MJPEG stream URL",
           "ustream": "UStream URL"
+        },
+        "data_description": {
+          "cam": "URLs of camera streams for the space.",
+          "m4": "URL of the M4 stream.",
+          "mjpeg": "URL of the MJPEG stream.",
+          "ustream": "URL of the UStream stream."
         }
       },
       "other": {
         "data": {
           "cache_schedule": "Cache schedule",
           "projects": "Project URLs"
+        },
+        "data_description": {
+          "cache_schedule": "How often the space status is expected to change.",
+          "projects": "URLs of projects hosted by the space."
         }
       },
       "sensors": {
@@ -118,12 +151,21 @@
           "spacenet": "SpaceNet",
           "spacephone": "SpacePhone",
           "spacesaml": "SpaceSAML"
+        },
+        "data_description": {
+          "spacenet": "Whether the space supports SpaceNet.",
+          "spacephone": "Whether the space supports SpacePhone.",
+          "spacesaml": "Whether the space supports SpaceSAML."
         }
       },
       "state_icons": {
         "data": {
           "icon_closed": "Icon URL when closed",
           "icon_open": "Icon URL when open"
+        },
+        "data_description": {
+          "icon_closed": "URL of the icon to display when the space is closed.",
+          "icon_open": "URL of the icon to display when the space is open."
         }
       }
     }
