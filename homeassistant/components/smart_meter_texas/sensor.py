@@ -25,8 +25,8 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Smart Meter Texas sensors."""
-    coordinator = config_entry.runtime_data.coordinator
-    meters = config_entry.runtime_data.smart_meter_data.meters
+    coordinator = config_entry.runtime_data
+    meters = coordinator.smart_meter_texas_data.meters
 
     async_add_entities(
         [SmartMeterTexasSensor(meter, coordinator) for meter in meters], False

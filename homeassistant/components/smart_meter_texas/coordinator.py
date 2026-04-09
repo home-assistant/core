@@ -1,6 +1,5 @@
 """DataUpdateCoordinator for the Smart Meter Texas integration."""
 
-from dataclasses import dataclass
 import logging
 
 from smart_meter_texas import Account, Client, Meter
@@ -53,15 +52,7 @@ class SmartMeterTexasData:
         return self.meters
 
 
-type SmartMeterTexasConfigEntry = ConfigEntry[SmartMeterTexasRuntimeData]
-
-
-@dataclass
-class SmartMeterTexasRuntimeData:
-    """Runtime data for Smart Meter Texas."""
-
-    coordinator: SmartMeterTexasCoordinator
-    smart_meter_data: SmartMeterTexasData
+type SmartMeterTexasConfigEntry = ConfigEntry[SmartMeterTexasCoordinator]
 
 
 class SmartMeterTexasCoordinator(DataUpdateCoordinator[SmartMeterTexasData]):
@@ -86,10 +77,10 @@ class SmartMeterTexasCoordinator(DataUpdateCoordinator[SmartMeterTexasData]):
                 hass, _LOGGER, cooldown=DEBOUNCE_COOLDOWN, immediate=True
             ),
         )
-        self._smart_meter_texas_data = smart_meter_texas_data
+        self.smart_meter_texas_data = smart_meter_texas_data
 
     async def _async_update_data(self) -> SmartMeterTexasData:
         """Fetch latest data."""
         _LOGGER.debug("Fetching latest data")
-        await self._smart_meter_texas_data.read_meters()
-        return self._smart_meter_texas_data
+        await self.smart_meter_texas_data.read_meters()
+        return self.smart_meter_texas_data

@@ -13,7 +13,6 @@ from .coordinator import (
     SmartMeterTexasConfigEntry,
     SmartMeterTexasCoordinator,
     SmartMeterTexasData,
-    SmartMeterTexasRuntimeData,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -48,10 +47,7 @@ async def async_setup_entry(
     # too long to update.
     coordinator = SmartMeterTexasCoordinator(hass, entry, smart_meter_texas_data)
 
-    entry.runtime_data = SmartMeterTexasRuntimeData(
-        coordinator=coordinator,
-        smart_meter_data=smart_meter_texas_data,
-    )
+    entry.runtime_data = coordinator
 
     entry.async_create_background_task(
         hass, coordinator.async_refresh(), "smart_meter_texas-coordinator-refresh"
