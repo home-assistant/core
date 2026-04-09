@@ -81,6 +81,7 @@ async def test_victron_number_update(
     entities = er.async_entries_for_config_entry(
         entity_registry, mock_config_entry.entry_id
     )
+    assert len(entities) == 1
     entity_id = entities[0].entity_id
 
     state = hass.states.get(entity_id)
@@ -118,6 +119,7 @@ async def test_victron_number_actions(
     entities = er.async_entries_for_config_entry(
         entity_registry, mock_config_entry.entry_id
     )
+    assert len(entities) == 1
     entity_id = entities[0].entity_id
 
     state = hass.states.get(entity_id)
