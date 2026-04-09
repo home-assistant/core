@@ -31,8 +31,8 @@ def _format_id(value: str | int | None) -> str:
 
 def _generate_unique_id(info: usb.USBDevice | usb.SerialDevice | UsbServiceInfo) -> str:
     """Generate unique id from usb attributes."""
-    vid = info.vid if not isinstance(info, usb.SerialDevice) else None
-    pid = info.pid if not isinstance(info, usb.SerialDevice) else None
+    vid = info.vid if isinstance(info, (usb.USBDevice, UsbServiceInfo)) else None
+    pid = info.pid if isinstance(info, (usb.USBDevice, UsbServiceInfo)) else None
 
     return (
         f"{_format_id(vid)}:{_format_id(pid)}_{info.serial_number}"
