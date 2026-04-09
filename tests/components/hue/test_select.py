@@ -111,6 +111,53 @@ async def test_scene_select_activate_option(
     assert regular_scene_id in last_request["path"]
 
 
+async def test_scene_select_disambiguates_duplicate_names(
+    hass: HomeAssistant, mock_bridge_v2: Mock, v2_resources_test_data: JsonArrayType
+) -> None:
+    """Test duplicate regular scene names are exposed and recalled distinctly."""
+    test_data = deepcopy(v2_resources_test_data)
+    duplicate_scene = deepcopy(
+        next(
+            resource
+            for resource in test_data
+            if resource["type"] == "scene"
+            and resource["metadata"]["name"] == "Regular Test Scene"
+        )
+    )
+    duplicate_scene_id = "22222222-3333-4444-8555-666666666666"
+    duplicate_scene["id"] = duplicate_scene_id
+    duplicate_scene["status"] = {
+        "active": "inactive",
+        "last_recall": "2025-09-12T11:41:46.318Z",
+    }
+    test_data.append(duplicate_scene)
+
+    await mock_bridge_v2.api.load_test_data(test_data)
+    await setup_platform(hass, mock_bridge_v2, [Platform.SCENE, Platform.SELECT])
+
+    state = hass.states.get("select.test_room_scene")
+    assert state is not None
+    assert state.state == "Regular Test Scene (cdbf3740)"
+    assert state.attributes["options"] == [
+        "Regular Test Scene (cdbf3740)",
+        "Regular Test Scene (22222222)",
+    ]
+
+    await hass.services.async_call(
+        "select",
+        "select_option",
+        {
+            "entity_id": "select.test_room_scene",
+            "option": "Regular Test Scene (22222222)",
+        },
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+
+    last_request = mock_bridge_v2.mock_requests[-1]
+    assert duplicate_scene_id in last_request["path"]
+
+
 async def test_smart_scene_select_active(
     hass: HomeAssistant, mock_bridge_v2: Mock, v2_resources_test_data: JsonArrayType
 ) -> None:
