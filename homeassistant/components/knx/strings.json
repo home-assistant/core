@@ -950,6 +950,48 @@
       "description": "Add and manage KNX entities",
       "title": "Entities"
     },
+    "expose": {
+      "create": {
+        "add_expose": "Add expose",
+        "attribute": {
+          "description": "Expose changes of a specific attribute of the entity instead of the state. Optional. If the attribute is not set, the entity state is exposed."
+        },
+        "cooldown": {
+          "description": "Minimum time between consecutive sends. This can be used to prevent high traffic on the KNX bus when values change very frequently. Only the most recent value during the cooldown period is sent.",
+          "label": "Cooldown"
+        },
+        "default": {
+          "description": "The value to send if the entity state is `unavailable` or `unknown`, or if the attribute is not set. If `default` is omitted, nothing is sent in these cases, but the last known value remains available for read requests.",
+          "label": "Default value"
+        },
+        "entity": {
+          "description": "Home Assistant entity to expose state changes to the KNX bus.",
+          "label": "Entity"
+        },
+        "ga": {
+          "label": "Group address"
+        },
+        "periodic_send": {
+          "description": "Time interval to automatically resend the current value to the KNX bus, even if it hasn’t changed.",
+          "label": "Periodic send interval"
+        },
+        "respond_to_read": {
+          "description": "[%key:component::knx::config_panel::entities::create::_::knx::respond_to_read::description%]",
+          "label": "[%key:component::knx::config_panel::entities::create::_::knx::respond_to_read::label%]"
+        },
+        "section_advanced_options": {
+          "title": "Advanced options"
+        },
+        "show_raw_values": "Show raw values",
+        "title": "Add exposure",
+        "value_template": {
+          "description": "Optionally transform the entity state or attribute value before sending it to KNX using a template. The template receives the entity state or attribute value as `value` variable.",
+          "label": "Value template"
+        }
+      },
+      "description": "Expose Home Assistant entity states to the KNX bus",
+      "title": "Expose"
+    },
     "group_monitor": {
       "description": "Monitor KNX group communication",
       "title": "Group monitor"
