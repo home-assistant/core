@@ -175,6 +175,100 @@
         "name": "Grid lost alarm setting"
       }
     },
+    "select": {
+      "acsystem_mode": {
+        "state": {
+          "charger_only": "Charger only",
+          "inverter_only": "Inverter only",
+          "off": "[%key:common::state::off%]",
+          "on": "[%key:common::state::on%]",
+          "passthrough": "Passthrough"
+        }
+      },
+      "evcharger_mode": {
+        "name": "Mode",
+        "state": {
+          "auto": "[%key:common::state::auto%]",
+          "manual": "[%key:common::state::manual%]",
+          "scheduled_charge": "Scheduled charge"
+        }
+      },
+      "inverter_mode": {
+        "state": {
+          "eco": "Eco",
+          "inverter": "Inverter",
+          "off": "[%key:common::state::off%]"
+        }
+      },
+      "system_ess_batterylife_state": {
+        "name": "ESS BatteryLife state",
+        "state": {
+          "keep_batteries_charged": "'Keep batteries charged' mode enabled",
+          "recharge": "Recharge, SoC dropped 5% or more below minimum SoC",
+          "recharge_no_battery_life": "Recharge, SoC dropped 5% or more below minimum SoC (No BatteryLife)",
+          "self_consumption": "Self-consumption",
+          "self_consumption_soc_above_min": "Self-consumption, SoC at or above minimum SoC",
+          "self_consumption_soc_at_100": "Self-consumption, SoC at 100%",
+          "self_consumption_soc_below_min": "Self-consumption, SoC is below minimum SoC",
+          "self_consumption_soc_exceeds_85": "Self-consumption, SoC exceeds 85%",
+          "soc_below_battery_life_dynamic_soc_limit": "SoC below BatteryLife dynamic SoC limit",
+          "soc_below_soc_limit_24_hours": "SoC has been below SoC limit for more than 24 hours. Charging battery with 5 amps",
+          "sustain": "Multi/Quattro is in sustain",
+          "with_battery_life": "Optimized mode with BatteryLife"
+        }
+      },
+      "system_ess_mode": {
+        "name": "ESS mode (Hub4)",
+        "state": {
+          "external_control": "External control",
+          "phase_compensation_disabled": "Optimized mode or 'keep batteries charged' and phase compensation disabled",
+          "phase_compensation_enabled": "Optimized mode or 'keep batteries charged' and phase compensation enabled"
+        }
+      },
+      "system_ess_schedule_charge_slot_days": {
+        "name": "ESS BatteryLife schedule charge {slot} days",
+        "state": {
+          "disabled_every_day": "Disabled (Every day)",
+          "disabled_friday": "Disabled (Friday)",
+          "disabled_monday": "Disabled (Monday)",
+          "disabled_saturday": "Disabled (Saturday)",
+          "disabled_sunday": "Disabled (Sunday)",
+          "disabled_thursday": "Disabled (Thursday)",
+          "disabled_tuesday": "Disabled (Tuesday)",
+          "disabled_wednesday": "Disabled (Wednesday)",
+          "disabled_weekdays": "Disabled (Weekdays)",
+          "disabled_weekend": "Disabled (Weekends)",
+          "every_day": "Every day",
+          "friday": "[%key:common::time::friday%]",
+          "monday": "[%key:common::time::monday%]",
+          "saturday": "[%key:common::time::saturday%]",
+          "sunday": "[%key:common::time::sunday%]",
+          "thursday": "[%key:common::time::thursday%]",
+          "tuesday": "[%key:common::time::tuesday%]",
+          "wednesday": "[%key:common::time::wednesday%]",
+          "weekdays": "Weekdays",
+          "weekends": "Weekends"
+        }
+      },
+      "system_settings_dess_mode": {
+        "name": "DESS mode",
+        "state": {
+          "auto_vrm": "Auto / VRM",
+          "buy": "Buy",
+          "node_red": "Node-RED",
+          "off": "[%key:common::state::off%]",
+          "sell": "Sell"
+        }
+      },
+      "vebus_inverter_mode": {
+        "state": {
+          "charger_only": "Charger only",
+          "inverter_only": "Inverter only",
+          "off": "[%key:common::state::off%]",
+          "on": "[%key:common::state::on%]"
+        }
+      }
+    },
     "sensor": {
       "acload_current": {
         "name": "Load current"
