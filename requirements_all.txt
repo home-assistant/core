@@ -702,7 +702,7 @@ bring-api==1.1.1
 broadlink==0.19.0
 
 # homeassistant.components.brother
-brother==6.0.0
+brother==6.1.0
 
 # homeassistant.components.brottsplatskartan
 brottsplatskartan==1.0.5
@@ -1467,7 +1467,7 @@ loqedAPI==2.1.11
 luftdaten==0.7.4
 
 # homeassistant.components.lunatone
-lunatone-rest-api-client==0.7.0
+lunatone-rest-api-client==0.9.0
 
 # homeassistant.components.lupusec
 lupupy==0.3.2
@@ -1995,7 +1995,7 @@ pyblackbird==0.6
 pyblu==2.0.6
 
 # homeassistant.components.neato
-pybotvac==0.0.28
+pybotvac==0.0.29
 
 # homeassistant.components.braviatv
 pybravia==0.4.1
@@ -2742,7 +2742,7 @@ pyvesync==3.4.1
 pyvizio==0.1.61
 
 # homeassistant.components.velux
-pyvlx==0.2.32
+pyvlx==0.2.33
 
 # homeassistant.components.volumio
 pyvolumio==0.1.5
