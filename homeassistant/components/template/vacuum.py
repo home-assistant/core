@@ -392,6 +392,9 @@ class AbstractTemplateVacuum(AbstractTemplateEntity, StateVacuumEntity):
 
     async def async_clean_segments(self, segment_ids: list[str], **kwargs: Any) -> None:
         """Perform an area clean."""
+        if self._attr_assumed_state:
+            self._attr_activity = VacuumActivity.CLEANING
+            self.async_write_ha_state()
         if script := self._action_scripts.get(SERVICE_CLEAN_AREA):
             await self.async_run_script(
                 script,
