@@ -10,6 +10,7 @@ from music_assistant_models.enums import (
     QueueOption,
 )
 from music_assistant_models.media_items import Track
+from music_assistant_models.player import PlayerMedia
 import pytest
 from syrupy.assertion import SnapshotAssertion
 from syrupy.filters import paths
@@ -740,3 +741,75 @@ async def test_media_player_supported_features(
     state = hass.states.get(entity_id)
     assert state
     assert state.attributes["supported_features"] == expected_features
+
+
+async def test_media_image_prefers_current_media(
+    hass: HomeAssistant,
+    music_assistant_client: MagicMock,
+) -> None:
+    """Test that entity_picture uses player.current_media.image_url over static queue image."""
+    await setup_integration_from_fixtures(hass, music_assistant_client)
+    entity_id = "media_player.test_group_player_1"
+    mass_player_id = "test_group_player_1"
+
+    # The group player has a queue with current_item (which has a static image)
+    # and current_media. Set current_media.image_url to a dynamic stream art URL.
+    stream_art_url = "https://img.radioparadise.com/covers/l/19806.jpg"
+    player = music_assistant_client.players._players[mass_player_id]
+    player.current_media = PlayerMedia(
+        uri=player.current_media.uri,
+        title="Lay It Down",
+        artist="Cowboy Junkies",
+        image_url=stream_art_url,
+    )
+
+    # Also set up get_media_item_image_url to return a static logo URL
+    # so we can verify it's NOT used when current_media has an image
+    static_logo_url = "https://example.com/station_logo.png"
+    music_assistant_client.get_media_item_image_url = MagicMock(
+        return_value=static_logo_url
+    )
+
+    await trigger_subscription_callback(
+        hass, music_assistant_client, EventType.PLAYER_UPDATED, mass_player_id
+    )
+    state = hass.states.get(entity_id)
+    assert state
+    # Should use the dynamic stream art, not the static logo
+    assert state.attributes["entity_picture"] == stream_art_url
+    # Static queue image path should not have been consulted
+    music_assistant_client.get_media_item_image_url.assert_not_called()
+
+
+async def test_media_image_falls_back_to_queue_item(
+    hass: HomeAssistant,
+    music_assistant_client: MagicMock,
+) -> None:
+    """Test that entity_picture falls back to queue item image when current_media has none."""
+    await setup_integration_from_fixtures(hass, music_assistant_client)
+    entity_id = "media_player.test_group_player_1"
+    mass_player_id = "test_group_player_1"
+
+    # Set current_media with no image_url
+    player = music_assistant_client.players._players[mass_player_id]
+    player.current_media = PlayerMedia(
+        uri=player.current_media.uri,
+        title="Some Track",
+        image_url=None,
+    )
+
+    # Set up get_media_item_image_url to return a static image
+    static_image_url = "https://example.com/album_art.jpg"
+    music_assistant_client.get_media_item_image_url = MagicMock(
+        return_value=static_image_url
+    )
+
+    await trigger_subscription_callback(
+        hass, music_assistant_client, EventType.PLAYER_UPDATED, mass_player_id
+    )
+    state = hass.states.get(entity_id)
+    assert state
+    # Should fall back to the static queue item image
+    assert state.attributes["entity_picture"] == static_image_url
+    # Verify the fallback path was actually taken
+    music_assistant_client.get_media_item_image_url.assert_called_once()

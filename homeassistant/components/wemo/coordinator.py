@@ -7,7 +7,7 @@ from dataclasses import dataclass, fields
 from datetime import timedelta
 from functools import partial
 import logging
-from typing import TYPE_CHECKING, Literal
+from typing import Literal
 
 from pywemo import Insight, LongPressMixin, WeMoDevice
 from pywemo.exceptions import ActionException, PyWeMoException
@@ -145,9 +145,10 @@ class DeviceCoordinator(DataUpdateCoordinator[None]):
         if self._shutdown_requested:
             return
         await super().async_shutdown()
-        if TYPE_CHECKING:
-            # mypy doesn't known that the device_id is set in async_setup.
-            assert self.device_id is not None
+        if self.device_id is None:
+            # async_refresh failed in async_register_device before async_setup
+            # was called, so this coordinator was never fully registered.
+            return
         del _async_coordinators(self.hass)[self.device_id]
         assert self.options  # Always set by async_register_device.
         if self.options.enable_subscription:

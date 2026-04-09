@@ -140,6 +140,7 @@ async def async_setup_entry(
 
     if config_entry.data[CONF_FLOW_TYPE] == CONF_GATEWAY:
         gateway = config_entry.runtime_data.gateway
+        gateway_coordinators = config_entry.runtime_data.gateway_coordinators
         # Gateway light
         if gateway.model not in [
             GATEWAY_MODEL_AC_V1,
@@ -151,14 +152,11 @@ async def async_setup_entry(
             )
         # Gateway sub devices
         sub_devices = gateway.devices
-        for sub_device in sub_devices.values():
-            if sub_device.device_type == "LightBulb":
-                coordinator = config_entry.runtime_data.gateway_coordinators[
-                    sub_device.sid
-                ]
-                entities.append(
-                    XiaomiGatewayBulb(coordinator, sub_device, config_entry)
-                )
+        entities.extend(
+            XiaomiGatewayBulb(gateway_coordinators[sub_device.sid])
+            for sub_device in sub_devices.values()
+            if sub_device.device_type == "LightBulb"
+        )
 
     if config_entry.data[CONF_FLOW_TYPE] == CONF_DEVICE:
         if DATA_KEY not in hass.data:

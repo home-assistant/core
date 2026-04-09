@@ -38,10 +38,13 @@ from homeassistant.components.zwave_js.helpers import SERVER_VERSION_TIMEOUT
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.redact import REDACTED
 from homeassistant.helpers.service_info.esphome import ESPHomeServiceInfo
 from homeassistant.helpers.service_info.hassio import HassioServiceInfo
 from homeassistant.helpers.service_info.usb import UsbServiceInfo
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
+
+from .common import TEST_SENSITIVE_NETWORK_KEY
 
 from tests.common import MockConfigEntry, async_capture_events
 
@@ -651,7 +654,7 @@ async def test_abort_hassio_discovery_for_other_addon(hass: HomeAssistant) -> No
     assert result2["reason"] == "not_zwave_js_addon"
 
 
-@pytest.mark.usefixtures("supervisor", "addon_not_installed", "addon_info")
+@pytest.mark.usefixtures("supervisor", "addon_info")
 @pytest.mark.parametrize(
     ("usb_discovery_info", "device", "discovery_name"),
     [
@@ -1176,7 +1179,7 @@ async def test_usb_discovery_migration_restore_driver_ready_timeout(
 @pytest.mark.parametrize(
     "service_info", [ESPHOME_DISCOVERY_INFO, ESPHOME_DISCOVERY_INFO_CLEAN]
 )
-@pytest.mark.usefixtures("supervisor", "addon_not_installed", "addon_info")
+@pytest.mark.usefixtures("supervisor", "addon_info")
 async def test_esphome_discovery_intent_custom(
     hass: HomeAssistant,
     install_addon: AsyncMock,
@@ -1460,7 +1463,7 @@ async def test_esphome_discovery_already_configured_unmanaged_addon(
     }
 
 
-@pytest.mark.usefixtures("supervisor", "addon_not_installed", "addon_info")
+@pytest.mark.usefixtures("supervisor", "addon_info")
 async def test_esphome_discovery_usb_same_home_id(
     hass: HomeAssistant,
     install_addon: AsyncMock,
@@ -1699,7 +1702,7 @@ async def test_discovery_addon_not_running(
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-@pytest.mark.usefixtures("supervisor", "addon_not_installed", "addon_info")
+@pytest.mark.usefixtures("supervisor", "addon_info")
 async def test_discovery_addon_not_installed(
     hass: HomeAssistant,
     install_addon: AsyncMock,
@@ -2542,13 +2545,23 @@ async def test_addon_installed_failures(
 
 
 @pytest.mark.usefixtures("supervisor", "addon_installed", "addon_info")
-@pytest.mark.parametrize("set_addon_options_side_effect", [SupervisorError()])
+@pytest.mark.parametrize(
+    "set_addon_options_side_effect",
+    [
+        SupervisorError(
+            "not a valid value for dictionary value @ data['options']. "
+            f"Got {{'s0_legacy_key': '{TEST_SENSITIVE_NETWORK_KEY}'}}"
+        )
+    ],
+)
 async def test_addon_installed_set_options_failure(
     hass: HomeAssistant,
     set_addon_options: AsyncMock,
     start_addon: AsyncMock,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test all failures when add-on is installed."""
+    secret = TEST_SENSITIVE_NETWORK_KEY
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -2594,7 +2607,7 @@ async def test_addon_installed_set_options_failure(
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
-            "s0_legacy_key": "new123",
+            "s0_legacy_key": secret,
             "s2_access_control_key": "new456",
             "s2_authenticated_key": "new789",
             "s2_unauthenticated_key": "new987",
@@ -2608,7 +2621,7 @@ async def test_addon_installed_set_options_failure(
         AddonsOptions(
             config={
                 "device": "/test",
-                "s0_legacy_key": "new123",
+                "s0_legacy_key": secret,
                 "s2_access_control_key": "new456",
                 "s2_authenticated_key": "new789",
                 "s2_unauthenticated_key": "new987",
@@ -2622,6 +2635,10 @@ async def test_addon_installed_set_options_failure(
     assert result["reason"] == "addon_set_config_failed"
 
     assert start_addon.call_count == 0
+    assert "Failed to set the Z-Wave JS app options" in caplog.text
+    assert "not a valid value for dictionary value" in caplog.text
+    assert REDACTED in caplog.text
+    assert secret not in caplog.text
 
 
 @pytest.mark.usefixtures("supervisor", "addon_installed")
@@ -2768,7 +2785,7 @@ async def test_addon_installed_already_configured(
     assert entry.data["lr_s2_authenticated_key"] == "new321"
 
 
-@pytest.mark.usefixtures("supervisor", "addon_not_installed", "addon_info")
+@pytest.mark.usefixtures("supervisor", "addon_info")
 async def test_addon_not_installed(
     hass: HomeAssistant,
     install_addon: AsyncMock,
@@ -3873,7 +3890,7 @@ async def test_reconfigure_addon_running_server_info_failure(
     assert client.disconnect.call_count == 1
 
 
-@pytest.mark.usefixtures("supervisor", "addon_not_installed")
+@pytest.mark.usefixtures("supervisor")
 @pytest.mark.parametrize(
     (
         "entry_data",
@@ -5036,7 +5053,7 @@ async def test_get_usb_ports_ignored_devices() -> None:
         ]
 
 
-@pytest.mark.usefixtures("supervisor", "addon_not_installed", "addon_info")
+@pytest.mark.usefixtures("supervisor", "addon_info")
 async def test_intent_recommended_user(
     hass: HomeAssistant,
     install_addon: AsyncMock,
@@ -5132,7 +5149,7 @@ async def test_intent_recommended_user(
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-@pytest.mark.usefixtures("supervisor", "addon_not_installed", "addon_info")
+@pytest.mark.usefixtures("supervisor", "addon_info")
 @pytest.mark.parametrize(
     ("usb_discovery_info", "device", "discovery_name"),
     [

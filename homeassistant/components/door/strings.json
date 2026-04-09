@@ -1,0 +1,62 @@
+{
+  "common": {
+    "condition_behavior_name": "Condition passes if",
+    "trigger_behavior_name": "Trigger when"
+  },
+  "conditions": {
+    "is_closed": {
+      "description": "Tests if one or more doors are closed.",
+      "fields": {
+        "behavior": {
+          "name": "[%key:component::door::common::condition_behavior_name%]"
+        }
+      },
+      "name": "Door is closed"
+    },
+    "is_open": {
+      "description": "Tests if one or more doors are open.",
+      "fields": {
+        "behavior": {
+          "name": "[%key:component::door::common::condition_behavior_name%]"
+        }
+      },
+      "name": "Door is open"
+    }
+  },
+  "selector": {
+    "condition_behavior": {
+      "options": {
+        "all": "All",
+        "any": "Any"
+      }
+    },
+    "trigger_behavior": {
+      "options": {
+        "any": "Any",
+        "first": "First",
+        "last": "Last"
+      }
+    }
+  },
+  "title": "Door",
+  "triggers": {
+    "closed": {
+      "description": "Triggers after one or more doors close.",
+      "fields": {
+        "behavior": {
+          "name": "[%key:component::door::common::trigger_behavior_name%]"
+        }
+      },
+      "name": "Door closed"
+    },
+    "opened": {
+      "description": "Triggers after one or more doors open.",
+      "fields": {
+        "behavior": {
+          "name": "[%key:component::door::common::trigger_behavior_name%]"
+        }
+      },
+      "name": "Door opened"
+    }
+  }
+}

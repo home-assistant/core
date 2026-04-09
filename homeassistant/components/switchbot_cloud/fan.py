@@ -1,4 +1,4 @@
-"""Support for the Switchbot Battery Circulator fan."""
+"""Support for the Switchbot (Battery) Circulator fan."""
 
 import asyncio
 import logging
@@ -43,7 +43,7 @@ async def async_setup_entry(
 
 
 class SwitchBotCloudFan(SwitchBotCloudEntity, FanEntity):
-    """Representation of a SwitchBot Battery Circulator Fan."""
+    """Representation of a SwitchBot (Battery) Circulator Fan."""
 
     _attr_name = None
 
@@ -110,10 +110,6 @@ class SwitchBotCloudFan(SwitchBotCloudEntity, FanEntity):
 
     async def async_set_percentage(self, percentage: int) -> None:
         """Set the speed of the fan, as a percentage."""
-        await self.send_api_command(
-            command=BatteryCirculatorFanCommands.SET_WIND_MODE,
-            parameters=str(BatteryCirculatorFanMode.DIRECT.value),
-        )
         await self.send_api_command(
             command=BatteryCirculatorFanCommands.SET_WIND_SPEED,
             parameters=str(percentage),

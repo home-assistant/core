@@ -146,6 +146,7 @@ async def test_avaliable_after_update(
         {ATTR_ENTITY_ID: [wemo_entity.entity_id]},
         blocking=True,
     )
+
     assert hass.states.get(wemo_entity.entity_id).state == STATE_UNAVAILABLE
 
     pywemo_registry.callbacks[pywemo_device.name](pywemo_device, "", "")

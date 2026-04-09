@@ -2,10 +2,11 @@
 
 from __future__ import annotations
 
+import asyncio
 import logging
 
 import voluptuous as vol
-from waterfurnace.waterfurnace import WaterFurnace, WFCredentialError
+from waterfurnace.waterfurnace import WaterFurnace, WFCredentialError, WFException
 
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
@@ -16,7 +17,11 @@ from homeassistant.helpers import config_validation as cv, issue_registry as ir
 from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN, INTEGRATION_TITLE
-from .coordinator import WaterFurnaceCoordinator
+from .coordinator import (
+    WaterFurnaceCoordinator,
+    WaterFurnaceDeviceData,
+    WaterFurnaceEnergyCoordinator,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -33,7 +38,7 @@ CONFIG_SCHEMA = vol.Schema(
     },
     extra=vol.ALLOW_EXTRA,
 )
-type WaterFurnaceConfigEntry = ConfigEntry[WaterFurnaceCoordinator]
+type WaterFurnaceConfigEntry = ConfigEntry[dict[str, WaterFurnaceDeviceData]]
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -88,6 +93,38 @@ async def _async_setup(hass: HomeAssistant, config: ConfigType) -> None:
     )
 
 
+async def _async_setup_coordinator(
+    hass: HomeAssistant,
+    username: str,
+    password: str,
+    device_index: int,
+    entry: WaterFurnaceConfigEntry,
+) -> tuple[str, WaterFurnaceDeviceData]:
+    """Set up a coordinator for a device."""
+
+    device_client = WaterFurnace(username, password, device=device_index)
+    await hass.async_add_executor_job(device_client.login)
+    coordinator = WaterFurnaceCoordinator(hass, device_client, entry)
+    await coordinator.async_config_entry_first_refresh()
+
+    if device_client.gwid is None:
+        raise ConfigEntryNotReady(
+            f"Invalid GWID for device at index {device_index}: {device_client.gwid}"
+        )
+
+    energy_coordinator = WaterFurnaceEnergyCoordinator(
+        hass, device_client, entry, device_client.gwid
+    )
+    # Use async_refresh() instead of async_config_entry_first_refresh() so that
+    # energy data failures (e.g. WFNoDataError for new accounts) don't block
+    # the integration from loading. Realtime sensor data is the primary concern.
+    await energy_coordinator.async_refresh()
+
+    return device_client.gwid, WaterFurnaceDeviceData(
+        realtime=coordinator, energy=energy_coordinator
+    )
+
+
 async def async_setup_entry(
     hass: HomeAssistant, entry: WaterFurnaceConfigEntry
 ) -> bool:
@@ -104,14 +141,48 @@ async def async_setup_entry(
             "Authentication failed. Please update your credentials."
         ) from err
 
-    if not client.gwid:
-        raise ConfigEntryNotReady(
-            "Failed to connect to WaterFurnace service: No GWID found for device"
-        )
+    device_count = len(client.devices) if client.devices else 0
 
-    coordinator = WaterFurnaceCoordinator(hass, client, entry)
-    entry.runtime_data = coordinator
-    await coordinator.async_config_entry_first_refresh()
+    results = await asyncio.gather(
+        *[
+            _async_setup_coordinator(hass, username, password, index, entry)
+            for index in range(device_count)
+        ]
+    )
+    entry.runtime_data = dict(results)
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+
+    return True
+
+
+async def async_unload_entry(
+    hass: HomeAssistant, entry: WaterFurnaceConfigEntry
+) -> bool:
+    """Unload a WaterFurnace config entry."""
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+
+
+async def async_migrate_entry(
+    hass: HomeAssistant, entry: WaterFurnaceConfigEntry
+) -> bool:
+    """Migrate old entry."""
+
+    if entry.version == 1 and entry.minor_version < 2:
+        # Migrate from gwid-based unique_id to account_id-based unique_id
+        client = WaterFurnace(entry.data[CONF_USERNAME], entry.data[CONF_PASSWORD])
+        try:
+            await hass.async_add_executor_job(client.login)
+        except WFCredentialError, WFException:
+            _LOGGER.error("Failed to login during migration to account_id")
+            return False
+
+        if client.account_id is None:
+            _LOGGER.error("Account ID is invalid during migration")
+            return False
+
+        hass.config_entries.async_update_entry(
+            entry, unique_id=str(client.account_id), minor_version=2
+        )
+        _LOGGER.info("Migrated config entry unique_id to account_id")
 
     return True

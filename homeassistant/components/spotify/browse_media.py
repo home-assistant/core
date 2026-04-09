@@ -118,7 +118,6 @@ class BrowsableMedia(StrEnum):
     CURRENT_USER_RECENTLY_PLAYED = "current_user_recently_played"
     CURRENT_USER_TOP_ARTISTS = "current_user_top_artists"
     CURRENT_USER_TOP_TRACKS = "current_user_top_tracks"
-    NEW_RELEASES = "new_releases"
 
 
 LIBRARY_MAP = {
@@ -130,7 +129,6 @@ LIBRARY_MAP = {
     BrowsableMedia.CURRENT_USER_RECENTLY_PLAYED.value: "Recently played",
     BrowsableMedia.CURRENT_USER_TOP_ARTISTS.value: "Top Artists",
     BrowsableMedia.CURRENT_USER_TOP_TRACKS.value: "Top Tracks",
-    BrowsableMedia.NEW_RELEASES.value: "New Releases",
 }
 
 CONTENT_TYPE_MEDIA_CLASS: dict[str, Any] = {
@@ -165,10 +163,6 @@ CONTENT_TYPE_MEDIA_CLASS: dict[str, Any] = {
     BrowsableMedia.CURRENT_USER_TOP_TRACKS.value: {
         "parent": MediaClass.DIRECTORY,
         "children": MediaClass.TRACK,
-    },
-    BrowsableMedia.NEW_RELEASES.value: {
-        "parent": MediaClass.DIRECTORY,
-        "children": MediaClass.ALBUM,
     },
     MediaType.PLAYLIST: {
         "parent": MediaClass.PLAYLIST,
@@ -356,14 +350,11 @@ async def build_item_response(  # noqa: C901
     elif media_content_type == BrowsableMedia.CURRENT_USER_TOP_TRACKS:
         if top_tracks := await spotify.get_top_tracks():
             items = [_get_track_item_payload(track) for track in top_tracks]
-    elif media_content_type == BrowsableMedia.NEW_RELEASES:
-        if new_releases := await spotify.get_new_releases():
-            items = [_get_album_item_payload(album) for album in new_releases]
     elif media_content_type == MediaType.PLAYLIST:
         if playlist := await spotify.get_playlist(media_content_id):
             title = playlist.name
             image = playlist.images[0].url if playlist.images else None
-            for playlist_item in playlist.tracks.items:
+            for playlist_item in playlist.items.items:
                 if playlist_item.track.type is ItemType.TRACK:
                     if TYPE_CHECKING:
                         assert isinstance(playlist_item.track, Track)

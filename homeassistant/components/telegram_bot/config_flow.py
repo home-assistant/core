@@ -153,6 +153,7 @@ STEP_WEBHOOKS_DATA_SCHEMA: vol.Schema = vol.Schema(
         vol.Required(CONF_TRUSTED_NETWORKS): vol.Coerce(str),
     }
 )
+SUBENTRY_SCHEMA: vol.Schema = vol.Schema({vol.Required(CONF_CHAT_ID): vol.Coerce(int)})
 OPTIONS_SCHEMA: vol.Schema = vol.Schema(
     {
         vol.Required(
@@ -187,7 +188,7 @@ class OptionsFlowHandler(OptionsFlow):
         )
 
 
-class TelgramBotConfigFlow(ConfigFlow, domain=DOMAIN):
+class TelegramBotConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Telegram."""
 
     VERSION = 1
@@ -410,7 +411,10 @@ class TelgramBotConfigFlow(ConfigFlow, domain=DOMAIN):
                     "URL is required since you have not configured an external URL in Home Assistant"
                 )
                 return
-        elif not url.startswith("https"):
+        elif (
+            not url.startswith("https")
+            and self._step_user_data[CONF_API_ENDPOINT] == DEFAULT_API_ENDPOINT
+        ):
             errors["base"] = "invalid_url"
             description_placeholders[ERROR_FIELD] = "URL"
             description_placeholders[ERROR_MESSAGE] = "URL must start with https"
@@ -595,38 +599,88 @@ class AllowedChatIdsSubEntryFlowHandler(ConfigSubentryFlow):
             )
 
         errors: dict[str, str] = {}
+        description_placeholders = DESCRIPTION_PLACEHOLDERS.copy()
 
         if user_input is not None:
             config_entry: TelegramBotConfigEntry = self._get_entry()
             bot = config_entry.runtime_data.bot
 
+            # validate chat id
             chat_id: int = user_input[CONF_CHAT_ID]
-            chat_name = await _async_get_chat_name(bot, chat_id)
-            if chat_name:
+            try:
+                chat_info: ChatFullInfo = await bot.get_chat(chat_id)
+            except BadRequest:
+                errors["base"] = "chat_not_found"
+            except TelegramError as err:
+                errors["base"] = "telegram_error"
+                description_placeholders[ERROR_MESSAGE] = str(err)
+
+            if not errors:
                 return self.async_create_entry(
-                    title=f"{chat_name} ({chat_id})",
+                    title=chat_info.effective_name or str(chat_id),
                     data={CONF_CHAT_ID: chat_id},
                     unique_id=str(chat_id),
                 )
 
-            errors["base"] = "chat_not_found"
-
         service: TelegramNotificationService = self._get_entry().runtime_data
-        description_placeholders = DESCRIPTION_PLACEHOLDERS.copy()
         description_placeholders["bot_username"] = f"@{service.bot.username}"
         description_placeholders["bot_url"] = f"https://t.me/{service.bot.username}"
 
+        # suggest chat id based on the most recent chat
+        suggested_values = {}
+        description_placeholders["most_recent_chat"] = "Not available"
+        try:
+            most_recent_chat = await _get_most_recent_chat(service)
+        except TelegramError as err:
+            _LOGGER.warning("Error occurred while fetching recent chat: %s", err)
+            most_recent_chat = None
+        if most_recent_chat is not None:
+            suggested_values[CONF_CHAT_ID] = most_recent_chat[0]
+
+            description_placeholders["most_recent_chat"] = (
+                f"{most_recent_chat[1]} ({most_recent_chat[0]})"
+                if most_recent_chat[1]
+                else str(most_recent_chat[0])
+            )
+
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema({vol.Required(CONF_CHAT_ID): vol.Coerce(int)}),
+            data_schema=self.add_suggested_values_to_schema(
+                SUBENTRY_SCHEMA,
+                suggested_values,
+            ),
             description_placeholders=description_placeholders,
             errors=errors,
         )
 
 
-async def _async_get_chat_name(bot: Bot, chat_id: int) -> str:
-    try:
-        chat_info: ChatFullInfo = await bot.get_chat(chat_id)
-        return chat_info.effective_name or str(chat_id)
-    except BadRequest:
-        return ""
+async def _get_most_recent_chat(
+    service: TelegramNotificationService,
+) -> tuple[int, str | None] | None:
+    """Get the most recent chat ID and name.
+
+    For broadcast bot, this is retrieved using get_updates() to find the most recent message received.
+    For polling or webhook bot, this is retrieved from the runtime data which is updated whenever a message is received.
+    """
+
+    if service.app is not None:
+        # this is either polling or webhook bot
+
+        if service.app.most_recent_chat_id is None:
+            return None
+
+        chat = await service.bot.get_chat(service.app.most_recent_chat_id)
+        return (service.app.most_recent_chat_id, chat.effective_name)
+
+    # broadcast bot
+    updates = await service.bot.get_updates(offset=0)
+    if updates:
+        last_update = updates[-1]
+        if last_update.effective_chat:
+            chat_name = last_update.effective_chat.effective_name
+            return (
+                last_update.effective_chat.id,
+                chat_name,
+            )
+
+    return None

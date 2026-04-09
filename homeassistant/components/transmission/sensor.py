@@ -11,8 +11,9 @@ from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
+    SensorStateClass,
 )
-from homeassistant.const import STATE_IDLE, UnitOfDataRate
+from homeassistant.const import STATE_IDLE, UnitOfDataRate, UnitOfInformation
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
@@ -38,6 +39,18 @@ class TransmissionSensorEntityDescription(SensorEntityDescription):
 
     val_func: Callable[[TransmissionDataUpdateCoordinator], StateType]
     extra_state_attr_func: Callable[[Any], dict[str, str]] | None = None
+
+
+def _compute_ratio(uploaded: int | None, downloaded: int | None) -> float | None:
+    """Compute upload/download ratio.
+
+    Returns None when data is unavailable or downloaded == 0.
+    """
+    if uploaded is None or downloaded is None:
+        return None
+    if downloaded == 0:
+        return None
+    return uploaded / downloaded
 
 
 SENSOR_TYPES: tuple[TransmissionSensorEntityDescription, ...] = (
@@ -112,6 +125,66 @@ SENSOR_TYPES: tuple[TransmissionSensorEntityDescription, ...] = (
             coordinator=coordinator, key="started"
         ),
     ),
+    TransmissionSensorEntityDescription(
+        key="session_download",
+        translation_key="session_download",
+        device_class=SensorDeviceClass.DATA_SIZE,
+        native_unit_of_measurement=UnitOfInformation.BYTES,
+        suggested_unit_of_measurement=UnitOfInformation.GIBIBYTES,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        suggested_display_precision=3,
+        val_func=lambda coordinator: coordinator.data.current_stats.downloaded_bytes,
+    ),
+    TransmissionSensorEntityDescription(
+        key="session_upload",
+        translation_key="session_upload",
+        device_class=SensorDeviceClass.DATA_SIZE,
+        native_unit_of_measurement=UnitOfInformation.BYTES,
+        suggested_unit_of_measurement=UnitOfInformation.GIBIBYTES,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        suggested_display_precision=3,
+        val_func=lambda coordinator: coordinator.data.current_stats.uploaded_bytes,
+    ),
+    TransmissionSensorEntityDescription(
+        key="total_download",
+        translation_key="total_download",
+        device_class=SensorDeviceClass.DATA_SIZE,
+        native_unit_of_measurement=UnitOfInformation.BYTES,
+        suggested_unit_of_measurement=UnitOfInformation.GIBIBYTES,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        suggested_display_precision=3,
+        val_func=lambda coordinator: coordinator.data.cumulative_stats.downloaded_bytes,
+    ),
+    TransmissionSensorEntityDescription(
+        key="total_upload",
+        translation_key="total_upload",
+        device_class=SensorDeviceClass.DATA_SIZE,
+        native_unit_of_measurement=UnitOfInformation.BYTES,
+        suggested_unit_of_measurement=UnitOfInformation.GIBIBYTES,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        suggested_display_precision=3,
+        val_func=lambda coordinator: coordinator.data.cumulative_stats.uploaded_bytes,
+    ),
+    TransmissionSensorEntityDescription(
+        key="session_ratio",
+        translation_key="session_ratio",
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=3,
+        val_func=lambda coordinator: _compute_ratio(
+            coordinator.data.current_stats.uploaded_bytes,
+            coordinator.data.current_stats.downloaded_bytes,
+        ),
+    ),
+    TransmissionSensorEntityDescription(
+        key="total_ratio",
+        translation_key="total_ratio",
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=3,
+        val_func=lambda coordinator: _compute_ratio(
+            coordinator.data.cumulative_stats.uploaded_bytes,
+            coordinator.data.cumulative_stats.downloaded_bytes,
+        ),
+    ),
 )
 
 
@@ -121,7 +194,6 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Transmission sensors."""
-
     coordinator = config_entry.runtime_data
 
     async_add_entities(

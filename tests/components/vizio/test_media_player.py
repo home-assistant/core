@@ -8,7 +8,7 @@ from datetime import timedelta
 from typing import Any
 from unittest.mock import call, patch
 
-from freezegun import freeze_time
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 from pyvizio.api.apps import AppConfig
 from pyvizio.const import (
@@ -40,6 +40,7 @@ from homeassistant.components.media_player import (
     SERVICE_VOLUME_SET,
     SERVICE_VOLUME_UP,
     MediaPlayerDeviceClass,
+    MediaPlayerEntityFeature,
 )
 from homeassistant.components.vizio.const import (
     CONF_ADDITIONAL_CONFIGS,
@@ -49,6 +50,7 @@ from homeassistant.components.vizio.const import (
     DOMAIN,
 )
 from homeassistant.components.vizio.services import SERVICE_UPDATE_SETTING
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
@@ -88,15 +90,12 @@ async def _add_config_entry_to_hass(
     await hass.async_block_till_done()
 
 
-def _get_ha_power_state(vizio_power_state: bool | None) -> str:
+def _get_ha_power_state(vizio_power_state: bool) -> str:
     """Return HA power state given Vizio power state."""
     if vizio_power_state:
         return STATE_ON
 
-    if vizio_power_state is False:
-        return STATE_OFF
-
-    return STATE_UNAVAILABLE
+    return STATE_OFF
 
 
 def _assert_sources_and_volume(attr: dict[str, Any], vizio_device_class: str) -> None:
@@ -124,27 +123,27 @@ def _get_attr_and_assert_base_attr(
 
 @asynccontextmanager
 async def _cm_for_test_setup_without_apps(
-    all_settings: dict[str, Any], vizio_power_state: bool | None
+    all_settings: dict[str, Any], vizio_power_state: bool
 ) -> AsyncIterator[None]:
     """Context manager to setup test for Vizio devices without including app specific patches."""
     with (
         patch(
-            "homeassistant.components.vizio.media_player.VizioAsync.get_all_settings",
+            "homeassistant.components.vizio.VizioAsync.get_all_settings",
             return_value=all_settings,
         ),
         patch(
-            "homeassistant.components.vizio.media_player.VizioAsync.get_setting_options",
+            "homeassistant.components.vizio.VizioAsync.get_setting_options",
             return_value=EQ_LIST,
         ),
         patch(
-            "homeassistant.components.vizio.media_player.VizioAsync.get_power_state",
+            "homeassistant.components.vizio.VizioAsync.get_power_state",
             return_value=vizio_power_state,
         ),
     ):
         yield
 
 
-async def _test_setup_tv(hass: HomeAssistant, vizio_power_state: bool | None) -> None:
+async def _test_setup_tv(hass: HomeAssistant, vizio_power_state: bool) -> None:
     """Test Vizio TV entity setup."""
     ha_power_state = _get_ha_power_state(vizio_power_state)
 
@@ -155,7 +154,11 @@ async def _test_setup_tv(hass: HomeAssistant, vizio_power_state: bool | None) ->
     )
 
     async with _cm_for_test_setup_without_apps(
-        {"volume": int(MAX_VOLUME[VIZIO_DEVICE_CLASS_TV] / 2), "mute": "Off"},
+        {
+            "volume": int(MAX_VOLUME[VIZIO_DEVICE_CLASS_TV] / 2),
+            "mute": "Off",
+            "eq": CURRENT_EQ,
+        },
         vizio_power_state,
     ):
         await _add_config_entry_to_hass(hass, config_entry)
@@ -165,12 +168,10 @@ async def _test_setup_tv(hass: HomeAssistant, vizio_power_state: bool | None) ->
         )
         if ha_power_state == STATE_ON:
             _assert_sources_and_volume(attr, VIZIO_DEVICE_CLASS_TV)
-            assert "sound_mode" not in attr
+            assert attr[ATTR_SOUND_MODE] == CURRENT_EQ
 
 
-async def _test_setup_speaker(
-    hass: HomeAssistant, vizio_power_state: bool | None
-) -> None:
+async def _test_setup_speaker(hass: HomeAssistant, vizio_power_state: bool) -> None:
     """Test Vizio Speaker entity setup."""
     ha_power_state = _get_ha_power_state(vizio_power_state)
 
@@ -190,18 +191,14 @@ async def _test_setup_speaker(
         audio_settings,
         vizio_power_state,
     ):
-        with patch(
-            "homeassistant.components.vizio.media_player.VizioAsync.get_current_app_config",
-        ) as service_call:
-            await _add_config_entry_to_hass(hass, config_entry)
+        await _add_config_entry_to_hass(hass, config_entry)
 
-            attr = _get_attr_and_assert_base_attr(
-                hass, MediaPlayerDeviceClass.SPEAKER, ha_power_state
-            )
-            if ha_power_state == STATE_ON:
-                _assert_sources_and_volume(attr, VIZIO_DEVICE_CLASS_SPEAKER)
-                assert not service_call.called
-                assert "sound_mode" in attr
+        attr = _get_attr_and_assert_base_attr(
+            hass, MediaPlayerDeviceClass.SPEAKER, ha_power_state
+        )
+        if ha_power_state == STATE_ON:
+            _assert_sources_and_volume(attr, VIZIO_DEVICE_CLASS_SPEAKER)
+            assert "sound_mode" in attr
 
 
 @asynccontextmanager
@@ -218,7 +215,7 @@ async def _cm_for_test_setup_tv_with_apps(
         True,
     ):
         with patch(
-            "homeassistant.components.vizio.media_player.VizioAsync.get_current_app_config",
+            "homeassistant.components.vizio.VizioAsync.get_current_app_config",
             return_value=AppConfig(**app_config),
         ):
             await _add_config_entry_to_hass(hass, config_entry)
@@ -262,7 +259,7 @@ async def _test_service(
         service_data.update(additional_service_data)
 
     with patch(
-        f"homeassistant.components.vizio.media_player.VizioAsync.{vizio_func_name}"
+        f"homeassistant.components.vizio.VizioAsync.{vizio_func_name}"
     ) as service_call:
         await hass.services.async_call(
             domain,
@@ -289,14 +286,6 @@ async def test_speaker_off(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.usefixtures("vizio_connect", "vizio_update")
-async def test_speaker_unavailable(
-    hass: HomeAssistant,
-) -> None:
-    """Test Vizio Speaker entity setup when unavailable."""
-    await _test_setup_speaker(hass, None)
-
-
-@pytest.mark.usefixtures("vizio_connect", "vizio_update")
 async def test_init_tv_on(hass: HomeAssistant) -> None:
     """Test Vizio TV entity setup when on."""
     await _test_setup_tv(hass, True)
@@ -308,32 +297,28 @@ async def test_init_tv_off(hass: HomeAssistant) -> None:
     await _test_setup_tv(hass, False)
 
 
-@pytest.mark.usefixtures("vizio_connect", "vizio_update")
-async def test_init_tv_unavailable(hass: HomeAssistant) -> None:
-    """Test Vizio TV entity setup when unavailable."""
-    await _test_setup_tv(hass, None)
-
-
 @pytest.mark.usefixtures("vizio_cant_connect")
 async def test_setup_unavailable_speaker(hass: HomeAssistant) -> None:
-    """Test speaker entity sets up as unavailable."""
+    """Test speaker config entry retries setup when device is unavailable."""
     config_entry = MockConfigEntry(
         domain=DOMAIN, data=MOCK_SPEAKER_CONFIG, unique_id=UNIQUE_ID
     )
-    await _add_config_entry_to_hass(hass, config_entry)
-    assert len(hass.states.async_entity_ids(MP_DOMAIN)) == 1
-    assert hass.states.get("media_player.vizio").state == STATE_UNAVAILABLE
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
 @pytest.mark.usefixtures("vizio_cant_connect")
 async def test_setup_unavailable_tv(hass: HomeAssistant) -> None:
-    """Test TV entity sets up as unavailable."""
+    """Test TV config entry retries setup when device is unavailable."""
     config_entry = MockConfigEntry(
         domain=DOMAIN, data=MOCK_USER_VALID_TV_CONFIG, unique_id=UNIQUE_ID
     )
-    await _add_config_entry_to_hass(hass, config_entry)
-    assert len(hass.states.async_entity_ids(MP_DOMAIN)) == 1
-    assert hass.states.get("media_player.vizio").state == STATE_UNAVAILABLE
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
 @pytest.mark.usefixtures("vizio_connect", "vizio_update")
@@ -377,7 +362,7 @@ async def test_services(hass: HomeAssistant) -> None:
         "vol_up",
         SERVICE_VOLUME_SET,
         {ATTR_MEDIA_VOLUME_LEVEL: 1},
-        num=(100 - 15),
+        num=50,  # From 50% to 100% = 50 steps (TV max volume 100, starting at 50)
     )
     await _test_service(
         hass,
@@ -385,7 +370,7 @@ async def test_services(hass: HomeAssistant) -> None:
         "vol_down",
         SERVICE_VOLUME_SET,
         {ATTR_MEDIA_VOLUME_LEVEL: 0},
-        num=(15 - 0),
+        num=100,  # From 100% (after previous vol_up) to 0% = 100 steps
     )
     await _test_service(hass, MP_DOMAIN, "ch_up", SERVICE_MEDIA_NEXT_TRACK, None)
     await _test_service(hass, MP_DOMAIN, "ch_down", SERVICE_MEDIA_PREVIOUS_TRACK, None)
@@ -444,66 +429,52 @@ async def test_options_update(hass: HomeAssistant) -> None:
     )
 
 
-async def _test_update_availability_switch(
+@pytest.mark.usefixtures("vizio_connect", "vizio_update")
+async def test_update_available_to_unavailable(
     hass: HomeAssistant,
-    initial_power_state: bool | None,
-    final_power_state: bool | None,
-    caplog: pytest.LogCaptureFixture,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
-    now = dt_util.utcnow()
-    future_interval = timedelta(minutes=1)
+    """Test device becomes unavailable after being available."""
+    await _test_setup_speaker(hass, True)
 
-    # Setup device as if time is right now
-    with freeze_time(now):
-        await _test_setup_speaker(hass, initial_power_state)
-
-    # Clear captured logs so that only availability state changes are captured for
-    # future assertion
-    caplog.clear()
-
-    # Fast forward time to future twice to trigger update and assert vizio log message
-    for i in range(1, 3):
-        future = now + (future_interval * i)
-        with (
-            patch(
-                "homeassistant.components.vizio.media_player.VizioAsync.get_power_state",
-                return_value=final_power_state,
-            ),
-            freeze_time(future),
-        ):
-            async_fire_time_changed(hass, future)
-            await hass.async_block_till_done()
-            if final_power_state is None:
-                assert hass.states.get(ENTITY_ID).state == STATE_UNAVAILABLE
-            else:
-                assert hass.states.get(ENTITY_ID).state != STATE_UNAVAILABLE
-
-    # Ensure connection status messages from vizio.media_player appear exactly once
-    # (on availability state change)
-    vizio_log_list = [
-        log
-        for log in caplog.records
-        if log.name == "homeassistant.components.vizio.media_player"
-    ]
-    assert len(vizio_log_list) == 1
+    # Simulate device becoming unreachable
+    with patch(
+        "homeassistant.components.vizio.VizioAsync.get_power_state",
+        return_value=None,
+    ):
+        freezer.tick(timedelta(minutes=1))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+        assert hass.states.get(ENTITY_ID).state == STATE_UNAVAILABLE
 
 
 @pytest.mark.usefixtures("vizio_connect", "vizio_update")
 async def test_update_unavailable_to_available(
     hass: HomeAssistant,
-    caplog: pytest.LogCaptureFixture,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test device becomes available after being unavailable."""
-    await _test_update_availability_switch(hass, None, True, caplog)
+    await _test_setup_speaker(hass, True)
 
+    # First, make device unavailable
+    with patch(
+        "homeassistant.components.vizio.VizioAsync.get_power_state",
+        return_value=None,
+    ):
+        freezer.tick(timedelta(minutes=1))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+        assert hass.states.get(ENTITY_ID).state == STATE_UNAVAILABLE
 
-@pytest.mark.usefixtures("vizio_connect", "vizio_update")
-async def test_update_available_to_unavailable(
-    hass: HomeAssistant,
-    caplog: pytest.LogCaptureFixture,
-) -> None:
-    """Test device becomes unavailable after being available."""
-    await _test_update_availability_switch(hass, True, None, caplog)
+    # Then, make device available again
+    with patch(
+        "homeassistant.components.vizio.VizioAsync.get_power_state",
+        return_value=True,
+    ):
+        freezer.tick(timedelta(minutes=1))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+        assert hass.states.get(ENTITY_ID).state != STATE_UNAVAILABLE
 
 
 @pytest.mark.usefixtures("vizio_connect", "vizio_update_with_apps")
@@ -619,11 +590,9 @@ async def test_setup_with_apps_additional_apps_config(
 
     # Test that invalid app does nothing
     with (
+        patch("homeassistant.components.vizio.VizioAsync.launch_app") as service_call1,
         patch(
-            "homeassistant.components.vizio.media_player.VizioAsync.launch_app"
-        ) as service_call1,
-        patch(
-            "homeassistant.components.vizio.media_player.VizioAsync.launch_app_config"
+            "homeassistant.components.vizio.VizioAsync.launch_app_config"
         ) as service_call2,
     ):
         await hass.services.async_call(
@@ -679,7 +648,7 @@ async def test_setup_tv_without_mute(hass: HomeAssistant) -> None:
 
     async with _cm_for_test_setup_without_apps(
         {"volume": int(MAX_VOLUME[VIZIO_DEVICE_CLASS_TV] / 2)},
-        STATE_ON,
+        True,
     ):
         await _add_config_entry_to_hass(hass, config_entry)
 
@@ -735,3 +704,122 @@ async def test_vizio_update_with_apps_on_input(hass: HomeAssistant) -> None:
     attr = _get_attr_and_assert_base_attr(hass, MediaPlayerDeviceClass.TV, STATE_ON)
     # app ID should not be in the attributes
     assert "app_id" not in attr
+
+
+@pytest.mark.usefixtures("vizio_connect", "vizio_update")
+async def test_coordinator_update_on_to_off(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test device transitions from on to off during coordinator refresh."""
+    await _test_setup_speaker(hass, True)
+    attr = _get_attr_and_assert_base_attr(
+        hass, MediaPlayerDeviceClass.SPEAKER, STATE_ON
+    )
+    assert attr[ATTR_MEDIA_VOLUME_LEVEL] is not None
+    assert ATTR_SOUND_MODE in attr
+
+    # Device turns off
+    with patch(
+        "homeassistant.components.vizio.VizioAsync.get_power_state",
+        return_value=False,
+    ):
+        freezer.tick(timedelta(minutes=1))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+
+        assert hass.states.get(ENTITY_ID).state == STATE_OFF
+        attr = hass.states.get(ENTITY_ID).attributes
+        assert attr.get(ATTR_MEDIA_VOLUME_LEVEL) is None
+        assert attr.get(ATTR_MEDIA_VOLUME_MUTED) is None
+        assert attr.get(ATTR_SOUND_MODE) is None
+
+
+@pytest.mark.usefixtures("vizio_connect", "vizio_update")
+async def test_coordinator_update_off_to_on(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test device transitions from off to on during coordinator refresh."""
+    await _test_setup_speaker(hass, False)
+    assert hass.states.get(ENTITY_ID).state == STATE_OFF
+
+    # Device turns on
+    freezer.tick(timedelta(minutes=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(ENTITY_ID).state == STATE_ON
+    attr = hass.states.get(ENTITY_ID).attributes
+    assert attr[ATTR_MEDIA_VOLUME_LEVEL] is not None
+    assert ATTR_SOUND_MODE in attr
+
+
+@pytest.mark.usefixtures("vizio_connect", "vizio_update")
+async def test_sound_mode_feature_toggling(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test sound mode feature is added when present and removed when absent."""
+    await _test_setup_speaker(hass, True)
+    attr = _get_attr_and_assert_base_attr(
+        hass, MediaPlayerDeviceClass.SPEAKER, STATE_ON
+    )
+    assert ATTR_SOUND_MODE in attr
+    state = hass.states.get(ENTITY_ID)
+    assert (
+        state.attributes["supported_features"]
+        & MediaPlayerEntityFeature.SELECT_SOUND_MODE
+    )
+
+    # Update with audio settings that have no sound mode
+    with (
+        patch(
+            "homeassistant.components.vizio.VizioAsync.get_all_settings",
+            return_value={"volume": 50, "mute": "Off"},
+        ),
+        patch(
+            "homeassistant.components.vizio.VizioAsync.get_power_state",
+            return_value=True,
+        ),
+    ):
+        freezer.tick(timedelta(minutes=1))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+
+        state = hass.states.get(ENTITY_ID)
+        assert state.state == STATE_ON
+        assert not (
+            state.attributes["supported_features"]
+            & MediaPlayerEntityFeature.SELECT_SOUND_MODE
+        )
+
+
+@pytest.mark.usefixtures("vizio_connect", "vizio_update")
+async def test_sound_mode_list_cached(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test sound mode list is cached after first retrieval."""
+    await _test_setup_speaker(hass, True)
+    attr = hass.states.get(ENTITY_ID).attributes
+    assert attr["sound_mode_list"] == EQ_LIST
+
+    # Update with different sound mode options — cached list should persist
+    with (
+        patch(
+            "homeassistant.components.vizio.VizioAsync.get_setting_options",
+            return_value=["Different1", "Different2"],
+        ),
+        patch(
+            "homeassistant.components.vizio.VizioAsync.get_power_state",
+            return_value=True,
+        ),
+    ):
+        freezer.tick(timedelta(minutes=1))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+
+        attr = hass.states.get(ENTITY_ID).attributes
+        # Sound mode list should still be the original cached list
+        assert attr["sound_mode_list"] == EQ_LIST

@@ -9,8 +9,14 @@ from typing import Any, cast
 
 import jwt
 from tesla_fleet_api import TeslaFleetApi
-from tesla_fleet_api.const import SERVERS
-from tesla_fleet_api.exceptions import PreconditionFailed, TeslaFleetError
+from tesla_fleet_api.const import SERVERS, Scope
+from tesla_fleet_api.exceptions import (
+    InvalidToken,
+    LoginRequired,
+    OAuthExpired,
+    PreconditionFailed,
+    TeslaFleetError,
+)
 import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlowResult
@@ -69,6 +75,7 @@ class OAuth2FlowHandler(
         # OAuth done, setup Partner API connections for all regions
         implementation = cast(TeslaUserImplementation, self.flow_impl)
         session = async_get_clientsession(self.hass)
+        failed_regions: list[str] = []
 
         for region, server_url in SERVERS.items():
             if region == "cn":
@@ -84,10 +91,36 @@ class OAuth2FlowHandler(
                 vehicle_scope=False,
             )
             await api.get_private_key(self.hass.config.path("tesla_fleet.key"))
-            await api.partner_login(
-                implementation.client_id, implementation.client_secret
-            )
+            try:
+                await api.partner_login(
+                    implementation.client_id,
+                    implementation.client_secret,
+                    [Scope.OPENID],
+                )
+            except (InvalidToken, OAuthExpired, LoginRequired) as err:
+                LOGGER.warning(
+                    "Partner login failed for %s due to an authentication error: %s",
+                    server_url,
+                    err,
+                )
+                return self.async_abort(reason="oauth_error")
+            except TeslaFleetError as err:
+                LOGGER.warning("Partner login failed for %s: %s", server_url, err)
+                failed_regions.append(server_url)
+                continue
             self.apis.append(api)
+
+        if not self.apis:
+            LOGGER.warning(
+                "Partner login failed for all regions: %s", ", ".join(failed_regions)
+            )
+            return self.async_abort(reason="oauth_error")
+
+        if failed_regions:
+            LOGGER.warning(
+                "Partner login succeeded on some regions but failed on: %s",
+                ", ".join(failed_regions),
+            )
 
         return await self.async_step_domain_input()
 

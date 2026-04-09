@@ -11,8 +11,8 @@ from homeassistant.components.binary_sensor import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from .coordinator import PowerwallConfigEntry
 from .entity import PowerWallEntity
-from .models import PowerwallConfigEntry
 
 CONNECTED_GRID_STATUSES = {
     GridStatus.TRANSITION_TO_GRID,
