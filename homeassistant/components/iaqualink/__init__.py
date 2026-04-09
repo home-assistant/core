@@ -18,12 +18,19 @@ from iaqualink.device import (
     AqualinkSwitch,
     AqualinkThermostat,
 )
-from iaqualink.exception import AqualinkServiceException
+from iaqualink.exception import (
+    AqualinkServiceException,
+    AqualinkServiceUnauthorizedException,
+)
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    ConfigEntryError,
+    ConfigEntryNotReady,
+)
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
@@ -74,11 +81,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: AqualinkConfigEntry) -> 
     )
     try:
         await aqualink.login()
-    except AqualinkServiceException as login_exception:
-        _LOGGER.error("Failed to login: %s", login_exception)
+    except AqualinkServiceUnauthorizedException as auth_exception:
         await aqualink.close()
-        return False
-    except (TimeoutError, httpx.HTTPError) as aio_exception:
+        raise ConfigEntryAuthFailed(
+            "Invalid credentials for iAqualink"
+        ) from auth_exception
+    except (AqualinkServiceException, TimeoutError, httpx.HTTPError) as aio_exception:
         await aqualink.close()
         raise ConfigEntryNotReady(
             f"Error while attempting login: {aio_exception}"
@@ -94,9 +102,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: AqualinkConfigEntry) -> 
 
     systems = list(systems.values())
     if not systems:
-        _LOGGER.error("No systems detected or supported")
         await aqualink.close()
-        return False
+        raise ConfigEntryError("No systems detected or supported")
 
     runtime_data = AqualinkRuntimeData(
         aqualink, binary_sensors=[], lights=[], sensors=[], switches=[], thermostats=[]

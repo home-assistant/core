@@ -3,7 +3,10 @@
 import logging
 from unittest.mock import AsyncMock, patch
 
-from iaqualink.exception import AqualinkServiceException
+from iaqualink.exception import (
+    AqualinkServiceException,
+    AqualinkServiceUnauthorizedException,
+)
 from iaqualink.systems.iaqua.device import (
     IaquaAuxSwitch,
     IaquaBinarySensor,
@@ -36,13 +39,27 @@ async def _ffwd_next_update_interval(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
 
 
-async def test_setup_login_exception(hass: HomeAssistant, config_entry) -> None:
-    """Test setup encountering a login exception."""
+async def test_setup_login_service_exception(hass: HomeAssistant, config_entry) -> None:
+    """Test setup encountering a transient service exception during login."""
     config_entry.add_to_hass(hass)
 
     with patch(
         "homeassistant.components.iaqualink.AqualinkClient.login",
         side_effect=AqualinkServiceException,
+    ):
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+async def test_setup_login_unauthorized(hass: HomeAssistant, config_entry) -> None:
+    """Test setup encountering an unauthorized exception during login."""
+    config_entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.iaqualink.AqualinkClient.login",
+        side_effect=AqualinkServiceUnauthorizedException,
     ):
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
