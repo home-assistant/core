@@ -2107,7 +2107,6 @@ pysensibo==1.2.1
 pysenz==1.0.2
 
 # homeassistant.components.acer_projector
-# homeassistant.components.route_b_smart_meter
 # homeassistant.components.usb
 pyserial==3.5
 
