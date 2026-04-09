@@ -2,8 +2,6 @@
 
 from datetime import datetime
 
-import pytest
-
 from homeassistant.components.lyric.sensor import get_datetime_from_future_time
 
 
@@ -13,7 +11,7 @@ def test_get_datetime_from_future_time_none() -> None:
 
 
 def test_get_datetime_from_future_time_invalid() -> None:
-    """Test that an unparseable time string returns None."""
+    """Test that an unparsable time string returns None."""
     assert get_datetime_from_future_time("not_a_time") is None
 
 
