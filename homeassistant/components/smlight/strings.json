@@ -164,6 +164,9 @@
     },
     "firmware_update_failed": {
       "message": "Firmware update failed for {device_name}."
+    },
+    "send_ir_code_failed": {
+      "message": "Failed to send IR code: {error}."
     }
   },
   "issues": {
