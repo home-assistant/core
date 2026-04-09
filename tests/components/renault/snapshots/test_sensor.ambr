@@ -2430,7 +2430,8 @@
         'delayed',
         'scheduled',
       ]),
-      'schedules': None,
+      'schedules': list([
+      ]),
       'start_date_time': None,
     }),
     'context': <ANY>,
@@ -3415,7 +3416,8 @@
         'delayed',
         'scheduled',
       ]),
-      'schedules': None,
+      'schedules': list([
+      ]),
       'start_date_time': '2025-12-29T10:20:30Z',
     }),
     'context': <ANY>,
@@ -4284,7 +4286,8 @@
         'delayed',
         'scheduled',
       ]),
-      'schedules': None,
+      'schedules': list([
+      ]),
       'start_date_time': None,
     }),
     'context': <ANY>,

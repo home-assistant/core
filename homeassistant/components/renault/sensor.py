@@ -160,7 +160,7 @@ def _get_charging_settings_attributes(
     return {
         "schedules": (
             [schedule.for_json() for schedule in schedules]
-            if (schedules := data.schedules)
+            if (schedules := data.schedules) is not None
             else None
         ),
         "last_update": data.dateTime,
