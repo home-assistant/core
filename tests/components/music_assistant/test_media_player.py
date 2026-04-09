@@ -24,9 +24,11 @@ from homeassistant.components.media_player import (
     ATTR_MEDIA_SHUFFLE,
     ATTR_MEDIA_VOLUME_LEVEL,
     ATTR_MEDIA_VOLUME_MUTED,
+    ATTR_SOUND_MODE,
     DOMAIN as MEDIA_PLAYER_DOMAIN,
     SERVICE_CLEAR_PLAYLIST,
     SERVICE_JOIN,
+    SERVICE_SELECT_SOUND_MODE,
     SERVICE_SELECT_SOURCE,
     SERVICE_UNJOIN,
     MediaPlayerEntityFeature,
@@ -653,6 +655,31 @@ async def test_media_player_select_source_action(
     )
 
 
+async def test_media_player_select_sound_mode_action(
+    hass: HomeAssistant,
+    music_assistant_client: MagicMock,
+) -> None:
+    """Test media_player entity select sound mode action."""
+    await setup_integration_from_fixtures(hass, music_assistant_client)
+    entity_id = "media_player.test_player_1"
+    mass_player_id = "00:00:00:00:00:01"
+    state = hass.states.get(entity_id)
+    assert state
+    await hass.services.async_call(
+        MEDIA_PLAYER_DOMAIN,
+        SERVICE_SELECT_SOUND_MODE,
+        {
+            ATTR_ENTITY_ID: entity_id,
+            ATTR_SOUND_MODE: "munich",
+        },
+        blocking=True,
+    )
+    assert music_assistant_client.send_command.call_count == 1
+    assert music_assistant_client.send_command.call_args == call(
+        "players/cmd/select_sound_mode", player_id=mass_player_id, sound_mode="munich"
+    )
+
+
 async def test_media_player_supported_features(
     hass: HomeAssistant,
     music_assistant_client: MagicMock,
@@ -686,6 +713,7 @@ async def test_media_player_supported_features(
         | MediaPlayerEntityFeature.TURN_OFF
         | MediaPlayerEntityFeature.SEARCH_MEDIA
         | MediaPlayerEntityFeature.SELECT_SOURCE
+        | MediaPlayerEntityFeature.SELECT_SOUND_MODE
     )
     assert state.attributes["supported_features"] == expected_features
     # remove power control capability from player, trigger subscription callback

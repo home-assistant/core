@@ -32,7 +32,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': <MediaPlayerEntityFeature: 8320959>,
-    'translation_key': None,
+    'translation_key': 'ma_media_player',
     'unique_id': '00:00:00:00:00:02',
     'unit_of_measurement': None,
   })
@@ -103,7 +103,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': <MediaPlayerEntityFeature: 8320959>,
-    'translation_key': None,
+    'translation_key': 'ma_media_player',
     'unique_id': 'test_group_player_1',
     'unit_of_measurement': None,
   })
@@ -152,6 +152,10 @@
     ]),
     'area_id': None,
     'capabilities': dict({
+      'sound_mode_list': list([
+        'munich',
+        'vienna',
+      ]),
       'source_list': list([
         'Music Assistant Queue',
         'Line-In',
@@ -181,8 +185,8 @@
     'platform': 'music_assistant',
     'previous_unique_id': None,
     'suggested_object_id': None,
-    'supported_features': <MediaPlayerEntityFeature: 8323007>,
-    'translation_key': None,
+    'supported_features': <MediaPlayerEntityFeature: 8388543>,
+    'translation_key': 'ma_media_player',
     'unique_id': '00:00:00:00:00:01',
     'unit_of_measurement': None,
   })
@@ -198,11 +202,15 @@
       'icon': 'mdi:speaker',
       'last_non_buffering_state': <MediaPlayerState.OFF: 'off'>,
       'mass_player_type': 'player',
+      'sound_mode_list': list([
+        'munich',
+        'vienna',
+      ]),
       'source_list': list([
         'Music Assistant Queue',
         'Line-In',
       ]),
-      'supported_features': <MediaPlayerEntityFeature: 8323007>,
+      'supported_features': <MediaPlayerEntityFeature: 8388543>,
     }),
     'context': <ANY>,
     'entity_id': 'media_player.test_player_1',
