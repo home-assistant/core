@@ -37,6 +37,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: AnthropicConfigEntry) ->
     coordinator = AnthropicCoordinator(hass, entry)
     await coordinator.async_config_entry_first_refresh()
     entry.runtime_data = coordinator
+    LOGGER.debug("Available models: %s", coordinator.data)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
