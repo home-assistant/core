@@ -150,12 +150,15 @@ class UnifiAccessConfigFlow(ConfigFlow, domain=DOMAIN):
                 break
         self._abort_if_unique_id_configured(updates=updates)
 
-        # If a manually created entry exists for this host without a unique_id,
-        # adopt it by setting the unique_id so future discoveries can update its IP.
+        # Abort if an existing entry already targets this discovered IP.
+        # If the entry was created manually without a unique_id, adopt it so
+        # future discoveries can match and update it by unique_id.
         for entry in self._async_current_entries():
-            if entry.unique_id is None and entry.data.get(CONF_HOST) == source_ip:
+            if entry.data.get(CONF_HOST) != source_ip:
+                continue
+            if entry.unique_id is None:
                 self.hass.config_entries.async_update_entry(entry, unique_id=mac)
-                return self.async_abort(reason="already_configured")
+            return self.async_abort(reason="already_configured")
 
         return await self.async_step_discovery_confirm()
 
