@@ -233,7 +233,7 @@ class MusicAssistantPlayer(MusicAssistantEntity, MediaPlayerEntity):
                 or SOUND_MODES_TRANSLATION_KEY_PREFIX not in sound_mode.translation_key
             ):
                 # MA's data class initializes the translation_key to
-                # player_sound_mode.<id> automatically if it is not give, so we should
+                # player_sound_mode.<id> automatically if it is not given, so we should
                 # always have a non None value
                 continue
             translation_key = sound_mode.translation_key[
