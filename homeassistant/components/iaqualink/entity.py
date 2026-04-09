@@ -5,13 +5,15 @@ from __future__ import annotations
 from iaqualink.device import AqualinkDevice
 
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
+from .coordinator import AqualinkDataUpdateCoordinator
 
 
-class AqualinkEntity[AqualinkDeviceT: AqualinkDevice](Entity):
+class AqualinkEntity[AqualinkDeviceT: AqualinkDevice](
+    CoordinatorEntity[AqualinkDataUpdateCoordinator]
+):
     """Abstract class for all Aqualink platforms.
 
     Entity state is updated via the interval timer within the integration.
@@ -23,8 +25,11 @@ class AqualinkEntity[AqualinkDeviceT: AqualinkDevice](Entity):
 
     _attr_should_poll = False
 
-    def __init__(self, dev: AqualinkDeviceT) -> None:
+    def __init__(
+        self, coordinator: AqualinkDataUpdateCoordinator, dev: AqualinkDeviceT
+    ) -> None:
         """Initialize the entity."""
+        super().__init__(coordinator)
         self.dev = dev
         self._attr_unique_id = f"{dev.system.serial}_{dev.name}"
         self._attr_device_info = DeviceInfo(
@@ -33,12 +38,6 @@ class AqualinkEntity[AqualinkDeviceT: AqualinkDevice](Entity):
             manufacturer=dev.manufacturer,
             model=dev.model,
             name=dev.label,
-        )
-
-    async def async_added_to_hass(self) -> None:
-        """Set up a listener when this entity is added to HA."""
-        self.async_on_remove(
-            async_dispatcher_connect(self.hass, DOMAIN, self.async_write_ha_state)
         )
 
     @property

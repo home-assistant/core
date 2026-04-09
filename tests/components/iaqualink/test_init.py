@@ -19,23 +19,18 @@ import pytest
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.components.climate import DOMAIN as CLIMATE_DOMAIN
-from homeassistant.components.iaqualink.const import UPDATE_INTERVAL
 from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_ASSUMED_STATE, STATE_ON, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
-from homeassistant.util import dt as dt_util
 
 from .conftest import get_aqualink_device, get_aqualink_system
 
-from tests.common import async_fire_time_changed
 
-
-async def _ffwd_next_update_interval(hass: HomeAssistant) -> None:
-    now = dt_util.utcnow()
-    async_fire_time_changed(hass, now + UPDATE_INTERVAL)
+async def _refresh_coordinator(hass: HomeAssistant, config_entry) -> None:
+    await config_entry.runtime_data.coordinator.async_refresh()
     await hass.async_block_till_done()
 
 
@@ -282,21 +277,21 @@ async def test_multiple_updates(
     system.online = True
     caplog.clear()
     system.update.side_effect = set_online_to_true
-    await _ffwd_next_update_interval(hass)
+    await _refresh_coordinator(hass, config_entry)
     assert len(caplog.records) == 0
 
     # True -> False
     system.online = True
     caplog.clear()
     system.update.side_effect = set_online_to_false
-    await _ffwd_next_update_interval(hass)
+    await _refresh_coordinator(hass, config_entry)
     assert len(caplog.records) == 0
 
     # True -> None / ServiceException
     system.online = True
     caplog.clear()
     system.update.side_effect = AqualinkServiceException
-    await _ffwd_next_update_interval(hass)
+    await _refresh_coordinator(hass, config_entry)
     assert len(caplog.records) == 1
     assert "Failed" in caplog.text
 
@@ -304,14 +299,14 @@ async def test_multiple_updates(
     system.online = False
     caplog.clear()
     system.update.side_effect = set_online_to_false
-    await _ffwd_next_update_interval(hass)
+    await _refresh_coordinator(hass, config_entry)
     assert len(caplog.records) == 0
 
     # False -> True
     system.online = False
     caplog.clear()
     system.update.side_effect = set_online_to_true
-    await _ffwd_next_update_interval(hass)
+    await _refresh_coordinator(hass, config_entry)
     assert len(caplog.records) == 1
     assert "reconnected" in caplog.text
 
@@ -319,7 +314,7 @@ async def test_multiple_updates(
     system.online = False
     caplog.clear()
     system.update.side_effect = AqualinkServiceException
-    await _ffwd_next_update_interval(hass)
+    await _refresh_coordinator(hass, config_entry)
     assert len(caplog.records) == 1
     assert "Failed" in caplog.text
 
@@ -327,14 +322,14 @@ async def test_multiple_updates(
     system.online = None
     caplog.clear()
     system.update.side_effect = AqualinkServiceException
-    await _ffwd_next_update_interval(hass)
+    await _refresh_coordinator(hass, config_entry)
     assert len(caplog.records) == 0
 
     # None -> True
     system.online = None
     caplog.clear()
     system.update.side_effect = set_online_to_true
-    await _ffwd_next_update_interval(hass)
+    await _refresh_coordinator(hass, config_entry)
     assert len(caplog.records) == 1
     assert "reconnected" in caplog.text
 
@@ -342,7 +337,7 @@ async def test_multiple_updates(
     system.online = None
     caplog.clear()
     system.update.side_effect = set_online_to_false
-    await _ffwd_next_update_interval(hass)
+    await _refresh_coordinator(hass, config_entry)
     assert len(caplog.records) == 0
 
     assert await hass.config_entries.async_unload(config_entry.entry_id)
@@ -386,19 +381,19 @@ async def test_entity_assumed_and_available(
 
     # None means maybe.
     light.system.online = None
-    await _ffwd_next_update_interval(hass)
+    await _refresh_coordinator(hass, config_entry)
     state = hass.states.get(name)
     assert state.state == STATE_UNAVAILABLE
     assert state.attributes.get(ATTR_ASSUMED_STATE) is True
 
     light.system.online = False
-    await _ffwd_next_update_interval(hass)
+    await _refresh_coordinator(hass, config_entry)
     state = hass.states.get(name)
     assert state.state == STATE_UNAVAILABLE
     assert state.attributes.get(ATTR_ASSUMED_STATE) is True
 
     light.system.online = True
-    await _ffwd_next_update_interval(hass)
+    await _refresh_coordinator(hass, config_entry)
     state = hass.states.get(name)
     assert state.state == STATE_ON
     assert state.attributes.get(ATTR_ASSUMED_STATE) is None
