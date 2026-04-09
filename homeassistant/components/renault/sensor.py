@@ -163,8 +163,8 @@ def _get_charging_settings_attributes(
             if (schedules := data.schedules)
             else None
         ),
-        "dateTime": data.dateTime,
-        "startDateTime": data.startDateTime,
+        "last_update": data.dateTime,
+        "start_date_time": data.startDateTime,
         "delay": data.delay,
     }
 

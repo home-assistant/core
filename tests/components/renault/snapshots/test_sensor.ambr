@@ -346,17 +346,17 @@
 # name: test_sensor_empty[zoe_40][sensor.reg_zoe_40_charging_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'dateTime': None,
       'delay': None,
       'device_class': 'enum',
       'friendly_name': 'REG-ZOE-40 Charging mode',
+      'last_update': None,
       'options': list([
         'always',
         'delayed',
         'scheduled',
       ]),
       'schedules': None,
-      'startDateTime': None,
+      'start_date_time': None,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.reg_zoe_40_charging_mode',
@@ -2421,17 +2421,17 @@
 # name: test_sensors[captur_phev][sensor.reg_captur_phev_charging_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'dateTime': None,
       'delay': None,
       'device_class': 'enum',
       'friendly_name': 'REG-CAPTUR_PHEV Charging mode',
+      'last_update': None,
       'options': list([
         'always',
         'delayed',
         'scheduled',
       ]),
       'schedules': None,
-      'startDateTime': None,
+      'start_date_time': None,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.reg_captur_phev_charging_mode',
@@ -3406,17 +3406,17 @@
 # name: test_sensors[megane_e_tech][sensor.reg_meg_0_charging_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'dateTime': None,
       'delay': 300,
       'device_class': 'enum',
       'friendly_name': 'REG-MEG-0 Charging mode',
+      'last_update': None,
       'options': list([
         'always',
         'delayed',
         'scheduled',
       ]),
       'schedules': None,
-      'startDateTime': '2025-12-29T10:20:30Z',
+      'start_date_time': '2025-12-29T10:20:30Z',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.reg_meg_0_charging_mode',
@@ -4275,17 +4275,17 @@
 # name: test_sensors[twingo_3_electric][sensor.reg_twingo_iii_charging_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'dateTime': None,
       'delay': None,
       'device_class': 'enum',
       'friendly_name': 'REG-TWINGO-III Charging mode',
+      'last_update': None,
       'options': list([
         'always',
         'delayed',
         'scheduled',
       ]),
       'schedules': None,
-      'startDateTime': None,
+      'start_date_time': None,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.reg_twingo_iii_charging_mode',
@@ -5086,17 +5086,17 @@
 # name: test_sensors[zoe_40][sensor.reg_zoe_40_charging_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'dateTime': None,
       'delay': None,
       'device_class': 'enum',
       'friendly_name': 'REG-ZOE-40 Charging mode',
+      'last_update': None,
       'options': list([
         'always',
         'delayed',
         'scheduled',
       ]),
       'schedules': None,
-      'startDateTime': None,
+      'start_date_time': None,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.reg_zoe_40_charging_mode',
@@ -5962,10 +5962,10 @@
 # name: test_sensors[zoe_50][sensor.reg_zoe_50_charging_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'dateTime': None,
       'delay': None,
       'device_class': 'enum',
       'friendly_name': 'REG-ZOE-50 Charging mode',
+      'last_update': None,
       'options': list([
         'always',
         'delayed',
@@ -6070,7 +6070,7 @@
           'wednesday': None,
         }),
       ]),
-      'startDateTime': None,
+      'start_date_time': None,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.reg_zoe_50_charging_mode',

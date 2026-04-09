@@ -154,6 +154,20 @@
           "always": "Always",
           "delayed": "Delayed",
           "scheduled": "Scheduled"
+        },
+        "state_attributes": {
+          "delay": {
+            "name": "Minutes to next start"
+          },
+          "last_update": {
+            "name": "Last mode update"
+          },
+          "schedules": {
+            "name": "Current schedules"
+          },
+          "start_date_time": {
+            "name": "Delayed start time"
+          }
         }
       },
       "front_left_pressure": {
