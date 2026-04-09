@@ -81,7 +81,7 @@
     },
     "infrared": {
       "infrared_emitter": {
-        "name": "IR Emitter"
+        "name": "IR emitter"
       }
     },
     "light": {
