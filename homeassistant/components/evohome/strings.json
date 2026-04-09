@@ -4,13 +4,13 @@
       "message": "The requested system mode is not supported: {error}"
     },
     "mode_cant_be_temporary": {
-      "message": "The mode `{mode}` does not support `Duration` or `Period`"
+      "message": "The mode `{mode}` does not support 'Duration' or 'Period'"
     },
     "mode_cant_have_duration": {
-      "message": "The mode `{mode}` does not support `Duration`; use `Period` instead"
+      "message": "The mode `{mode}` does not support 'Duration'; use 'Period' instead"
     },
     "mode_cant_have_period": {
-      "message": "The mode `{mode}` does not support `Period`; use `Duration` instead"
+      "message": "The mode `{mode}` does not support 'Period'; use 'Duration' instead"
     },
     "mode_not_supported": {
       "message": "The mode `{mode}` is not supported by this controller"
