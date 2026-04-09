@@ -130,14 +130,13 @@
         "name": "ESS AC power setpoint"
       },
       "multi_ess_min_soc_limit": {
-        "name": "ESS minimum Soc limit"
+        "name": "ESS minimum SoC limit"
       },
       "multi_shore_current_limit": {
         "name": "Shore current limit"
       },
       "multiplus_assist_current_boost_factor": {
-        "name": "Assist current boost factor",
-        "unit_of_measurement": "factor"
+        "name": "Assist current boost factor"
       },
       "switch_output_dimming": {
         "name": "{output} dimming",
@@ -180,8 +179,7 @@
         "name": "Offset"
       },
       "temperature_scale": {
-        "name": "Scale factor",
-        "unit_of_measurement": "factor"
+        "name": "Scale factor"
       },
       "transfer_switch_generator_current_limit": {
         "name": "Generator AC current limit"
@@ -777,12 +775,10 @@
         "name": "Power"
       },
       "grid_power_factor": {
-        "name": "Power factor",
-        "unit_of_measurement": "factor"
+        "name": "Power factor"
       },
       "grid_power_factor_phase": {
-        "name": "Power factor on {phase}",
-        "unit_of_measurement": "factor"
+        "name": "Power factor on {phase}"
       },
       "grid_power_phase": {
         "name": "Power on {phase}"

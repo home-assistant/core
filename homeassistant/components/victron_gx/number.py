@@ -1,7 +1,6 @@
 """Support for Victron GX number entities."""
 
-import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from victron_mqtt import (
     Device as VictronVenusDevice,
@@ -18,8 +17,6 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .entity import VictronBaseEntity
 from .hub import VictronGxConfigEntry
-
-_LOGGER = logging.getLogger(__name__)
 
 PARALLEL_UPDATES = 0
 
@@ -53,7 +50,8 @@ async def async_setup_entry(
         installation_id: str,
     ) -> None:
         """Handle new number metric discovery."""
-        assert isinstance(metric, VictronVenusWritableMetric)
+        if TYPE_CHECKING:
+            assert isinstance(metric, VictronVenusWritableMetric)
         async_add_entities(
             [VictronNumber(device, metric, device_info, installation_id)]
         )
@@ -77,11 +75,11 @@ class VictronNumber(VictronBaseEntity, NumberEntity):
         if self._attr_device_class is not None:
             self._attr_native_unit_of_measurement = metric.unit_of_measurement
         self._attr_native_value = metric.value
-        if isinstance(metric.min_value, int | float):
+        if metric.min_value is not None:
             self._attr_native_min_value = metric.min_value
-        if isinstance(metric.max_value, int | float):
+        if metric.max_value is not None:
             self._attr_native_max_value = metric.max_value
-        if isinstance(metric.step, int | float):
+        if metric.step is not None:
             self._attr_native_step = metric.step
 
     @callback
@@ -89,7 +87,8 @@ class VictronNumber(VictronBaseEntity, NumberEntity):
         self._attr_native_value = value
         self.async_write_ha_state()
 
-    def set_native_value(self, value: float) -> None:
+    async def async_set_native_value(self, value: float) -> None:
         """Set a new value."""
-        assert isinstance(self._metric, VictronVenusWritableMetric)
+        if TYPE_CHECKING:
+            assert isinstance(self._metric, VictronVenusWritableMetric)
         self._metric.set(value)
