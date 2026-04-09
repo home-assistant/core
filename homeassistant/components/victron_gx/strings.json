@@ -52,7 +52,7 @@
         "name": "Charge current limit"
       },
       "evcharger_set_current": {
-        "name": "Set current"
+        "name": "Charge current setpoint"
       },
       "generator_gen_id_cool_down_timer": {
         "name": "Generator cooldown timer"
