@@ -23,8 +23,7 @@ set_system_mode:
     duration:
       example: "18:00"
       selector:
-        duration:
-          enable_second: false
+        object:
 
 reset_system:
 
@@ -48,8 +47,7 @@ set_zone_override:
     duration:
       example: "02:15"
       selector:
-        duration:
-          enable_second: false
+        object:
 
 clear_zone_override:
   target:
