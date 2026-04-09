@@ -34,12 +34,14 @@ from homeassistant.helpers import (
     entity_registry as er,
     issue_registry as ir,
 )
+from homeassistant.helpers.redact import REDACTED
 from homeassistant.setup import async_setup_component
 
 from .common import (
     AIR_TEMPERATURE_SENSOR,
     BULB_6_MULTI_COLOR_LIGHT_ENTITY,
     EATON_RF9640_ENTITY,
+    TEST_SENSITIVE_NETWORK_KEY,
 )
 
 from tests.common import (
@@ -933,7 +935,47 @@ async def test_start_addon(
     assert start_addon.call_args == call("core_zwave_js")
 
 
-@pytest.mark.usefixtures("addon_not_installed", "addon_info")
+@pytest.mark.usefixtures("addon_installed", "addon_info")
+@pytest.mark.parametrize(
+    "set_addon_options_side_effect",
+    [
+        SupervisorError(
+            "not a valid value for dictionary value @ data['options']. "
+            f"Got {{'s0_legacy_key': '{TEST_SENSITIVE_NETWORK_KEY}'}}"
+        )
+    ],
+)
+async def test_start_addon_redacts_set_options_error(
+    hass: HomeAssistant,
+    install_addon: AsyncMock,
+    set_addon_options: AsyncMock,
+    start_addon: AsyncMock,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test startup redacts add-on options backend error details."""
+    device = "/test"
+    secret = TEST_SENSITIVE_NETWORK_KEY
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="Z-Wave JS",
+        data={"use_addon": True, "usb_path": device, "network_key": secret},
+    )
+    entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.SETUP_RETRY
+    assert install_addon.call_count == 0
+    assert set_addon_options.call_count == 1
+    assert start_addon.call_count == 0
+    assert "Failed to set the Z-Wave JS app options" in caplog.text
+    assert "not a valid value for dictionary value" in caplog.text
+    assert REDACTED in caplog.text
+    assert secret not in caplog.text
+
+
+@pytest.mark.usefixtures("addon_info")
 async def test_install_addon(
     hass: HomeAssistant,
     install_addon: AsyncMock,
@@ -1446,12 +1488,17 @@ async def test_node_removed(
     assert old_device
     assert old_device.id
 
+    node_events = integration.runtime_data.driver_events.controller_events.node_events
+    assert node.node_id in node_events.value_updates_disc_info
+
     event = {"node": node, "reason": 0}
 
     client.driver.controller.emit("node removed", event)
     await hass.async_block_till_done()
     # Assert device has been removed
     assert not device_registry.async_get(old_device.id)
+    # Assert value_updates_disc_info has been cleaned up
+    assert node.node_id not in node_events.value_updates_disc_info
 
 
 async def test_replace_same_node(

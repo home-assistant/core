@@ -9,7 +9,7 @@ from typing import TYPE_CHECKING, Any
 
 import aiotractive
 
-from homeassistant.components.sensor import DOMAIN as SENSOR_PLATFORM
+from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_BATTERY_CHARGING,
@@ -136,7 +136,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: TractiveConfigEntry) -> 
     for item in filtered_trackables:
         for key in ("activity_label", "calories", "sleep_label"):
             if entity_id := entity_reg.async_get_entity_id(
-                SENSOR_PLATFORM, DOMAIN, f"{item.trackable['_id']}_{key}"
+                SENSOR_DOMAIN, DOMAIN, f"{item.trackable['_id']}_{key}"
             ):
                 entity_reg.async_remove(entity_id)
 
@@ -246,6 +246,7 @@ class TractiveClient:
                     ):
                         self._last_hw_time = event["hardware"]["time"]
                         self._send_hardware_update(event)
+                        self._send_switch_update(event)
                     if (
                         "position" in event
                         and self._last_pos_time != event["position"]["time"]
@@ -302,7 +303,10 @@ class TractiveClient:
         for switch, key in SWITCH_KEY_MAP.items():
             if switch_data := event.get(key):
                 payload[switch] = switch_data["active"]
-        payload[ATTR_POWER_SAVING] = event.get("tracker_state_reason") == "POWER_SAVING"
+        if hardware := event.get("hardware", {}):
+            payload[ATTR_POWER_SAVING] = (
+                hardware.get("power_saving_zone_id") is not None
+            )
         self._dispatch_tracker_event(
             TRACKER_SWITCH_STATUS_UPDATED, event["tracker_id"], payload
         )

@@ -156,14 +156,14 @@ async def async_turn_on(hass: HomeAssistant, entity_id, percentage=None):
         if value is not None
     }
 
-    await hass.services.async_call(Platform.FAN, SERVICE_TURN_ON, data, blocking=True)
+    await hass.services.async_call(FAN_DOMAIN, SERVICE_TURN_ON, data, blocking=True)
 
 
 async def async_turn_off(hass: HomeAssistant, entity_id):
     """Turn fan off."""
     data = {ATTR_ENTITY_ID: entity_id} if entity_id else {}
 
-    await hass.services.async_call(Platform.FAN, SERVICE_TURN_OFF, data, blocking=True)
+    await hass.services.async_call(FAN_DOMAIN, SERVICE_TURN_OFF, data, blocking=True)
 
 
 async def async_set_percentage(hass: HomeAssistant, entity_id, percentage=None):
@@ -175,7 +175,7 @@ async def async_set_percentage(hass: HomeAssistant, entity_id, percentage=None):
     }
 
     await hass.services.async_call(
-        Platform.FAN, SERVICE_SET_PERCENTAGE, data, blocking=True
+        FAN_DOMAIN, SERVICE_SET_PERCENTAGE, data, blocking=True
     )
 
 

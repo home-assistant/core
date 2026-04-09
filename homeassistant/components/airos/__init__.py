@@ -4,7 +4,16 @@ from __future__ import annotations
 
 import logging
 
+from airos.airos6 import AirOS6
 from airos.airos8 import AirOS8
+from airos.exceptions import (
+    AirOSConnectionAuthenticationError,
+    AirOSConnectionSetupError,
+    AirOSDataMissingError,
+    AirOSDeviceConnectionError,
+    AirOSKeyDataMissingError,
+)
+from airos.helpers import DetectDeviceData, async_get_firmware_data
 
 from homeassistant.const import (
     CONF_HOST,
@@ -15,16 +24,29 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    ConfigEntryError,
+    ConfigEntryNotReady,
+)
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DEFAULT_SSL, DEFAULT_VERIFY_SSL, DOMAIN, SECTION_ADVANCED_SETTINGS
-from .coordinator import AirOSConfigEntry, AirOSDataUpdateCoordinator
+from .coordinator import (
+    AirOSConfigEntry,
+    AirOSDataUpdateCoordinator,
+    AirOSFirmwareUpdateCoordinator,
+    AirOSRuntimeData,
+)
 
 _PLATFORMS: list[Platform] = [
     Platform.BINARY_SENSOR,
+    Platform.BUTTON,
     Platform.SENSOR,
+    Platform.UPDATE,
 ]
+
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -38,18 +60,53 @@ async def async_setup_entry(hass: HomeAssistant, entry: AirOSConfigEntry) -> boo
         hass, verify_ssl=entry.data[SECTION_ADVANCED_SETTINGS][CONF_VERIFY_SSL]
     )
 
-    airos_device = AirOS8(
-        host=entry.data[CONF_HOST],
-        username=entry.data[CONF_USERNAME],
-        password=entry.data[CONF_PASSWORD],
-        session=session,
-        use_ssl=entry.data[SECTION_ADVANCED_SETTINGS][CONF_SSL],
+    conn_data = {
+        CONF_HOST: entry.data[CONF_HOST],
+        CONF_USERNAME: entry.data[CONF_USERNAME],
+        CONF_PASSWORD: entry.data[CONF_PASSWORD],
+        "use_ssl": entry.data[SECTION_ADVANCED_SETTINGS][CONF_SSL],
+        "session": session,
+    }
+
+    # Determine firmware version before creating the device instance
+    try:
+        device_data: DetectDeviceData = await async_get_firmware_data(**conn_data)
+    except (
+        AirOSConnectionSetupError,
+        AirOSDeviceConnectionError,
+        TimeoutError,
+    ) as err:
+        raise ConfigEntryNotReady from err
+    except (
+        AirOSConnectionAuthenticationError,
+        AirOSDataMissingError,
+    ) as err:
+        raise ConfigEntryAuthFailed from err
+    except AirOSKeyDataMissingError as err:
+        raise ConfigEntryError("key_data_missing") from err
+    except Exception as err:
+        raise ConfigEntryError("unknown") from err
+
+    airos_class: type[AirOS8 | AirOS6] = (
+        AirOS8 if device_data["fw_major"] == 8 else AirOS6
     )
 
-    coordinator = AirOSDataUpdateCoordinator(hass, entry, airos_device)
-    await coordinator.async_config_entry_first_refresh()
+    airos_device = airos_class(**conn_data)
 
-    entry.runtime_data = coordinator
+    data_coordinator = AirOSDataUpdateCoordinator(
+        hass, entry, device_data, airos_device
+    )
+    await data_coordinator.async_config_entry_first_refresh()
+
+    firmware_coordinator: AirOSFirmwareUpdateCoordinator | None = None
+    if device_data["fw_major"] >= 8:
+        firmware_coordinator = AirOSFirmwareUpdateCoordinator(hass, entry, airos_device)
+        await firmware_coordinator.async_config_entry_first_refresh()
+
+    entry.runtime_data = AirOSRuntimeData(
+        status=data_coordinator,
+        firmware=firmware_coordinator,
+    )
 
     await hass.config_entries.async_forward_entry_setups(entry, _PLATFORMS)
 

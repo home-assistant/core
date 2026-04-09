@@ -2,7 +2,7 @@
 
 from typing import Any, NewType
 
-from pyopnsense import diagnostics
+from aiopnsense import OPNsenseClient
 
 from homeassistant.components.device_tracker import DeviceScanner
 from homeassistant.core import HomeAssistant
@@ -27,9 +27,7 @@ async def async_get_scanner(
 class OPNsenseDeviceScanner(DeviceScanner):
     """This class queries a router running OPNsense."""
 
-    def __init__(
-        self, client: diagnostics.InterfaceClient, interfaces: list[str]
-    ) -> None:
+    def __init__(self, client: OPNsenseClient, interfaces: list[str]) -> None:
         """Initialize the scanner."""
         self.last_results: dict[str, Any] = {}
         self.client = client
@@ -43,9 +41,9 @@ class OPNsenseDeviceScanner(DeviceScanner):
                 out_devices[device["mac"]] = device
         return out_devices
 
-    def scan_devices(self) -> list[str]:
+    async def async_scan_devices(self) -> list[str]:
         """Scan for new devices and return a list with found device IDs."""
-        self.update_info()
+        await self._async_update_info()
         return list(self.last_results)
 
     def get_device_name(self, device: str) -> str | None:
@@ -54,12 +52,12 @@ class OPNsenseDeviceScanner(DeviceScanner):
             return None
         return self.last_results[device].get("hostname") or None
 
-    def update_info(self) -> bool:
+    async def _async_update_info(self) -> bool:
         """Ensure the information from the OPNsense router is up to date.
 
         Return boolean if scanning successful.
         """
-        devices = self.client.get_arp()
+        devices = await self.client.get_arp_table(True)
         self.last_results = self._get_mac_addrs(devices)
         return True
 

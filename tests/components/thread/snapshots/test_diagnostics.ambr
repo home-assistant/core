@@ -5,7 +5,7 @@
       '1111111122222222': dict({
         'name': 'OpenThreadDemo',
         'prefixes': list([
-          'fdad:70bf:e5aa:15dd',
+          'fdad:70bf:e5aa:15dd::',
         ]),
         'routers': dict({
         }),

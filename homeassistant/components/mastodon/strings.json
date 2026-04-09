@@ -1,7 +1,11 @@
 {
   "config": {
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
+      "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
+      "wrong_account": "You have to use the same account that was used to configure the integration."
     },
     "error": {
       "network_error": "The Mastodon instance was not found.",
@@ -9,6 +13,28 @@
       "unknown": "Unknown error occurred when connecting to the Mastodon instance."
     },
     "step": {
+      "reauth_confirm": {
+        "data": {
+          "access_token": "[%key:common::config_flow::data::access_token%]"
+        },
+        "data_description": {
+          "access_token": "[%key:component::mastodon::config::step::user::data_description::access_token%]"
+        },
+        "description": "Please reauthenticate {account_name} with Mastodon."
+      },
+      "reconfigure": {
+        "data": {
+          "access_token": "[%key:common::config_flow::data::access_token%]",
+          "client_id": "[%key:component::mastodon::config::step::user::data::client_id%]",
+          "client_secret": "[%key:component::mastodon::config::step::user::data::client_secret%]"
+        },
+        "data_description": {
+          "access_token": "[%key:component::mastodon::config::step::user::data_description::access_token%]",
+          "client_id": "[%key:component::mastodon::config::step::user::data_description::client_id%]",
+          "client_secret": "[%key:component::mastodon::config::step::user::data_description::client_secret%]"
+        },
+        "description": "Reconfigure {account_name} with Mastodon."
+      },
       "user": {
         "data": {
           "access_token": "[%key:common::config_flow::data::access_token%]",
@@ -69,8 +95,20 @@
     }
   },
   "exceptions": {
+    "account_not_found": {
+      "message": "Mastodon account \"{account_name}\" not found."
+    },
+    "auth_failed": {
+      "message": "Authentication failed, please reauthenticate with Mastodon."
+    },
     "idempotency_key_too_short": {
       "message": "Idempotency key must be at least 4 characters long."
+    },
+    "media_source_not_supported": {
+      "message": "Media source {media_content_id} is not supported."
+    },
+    "mute_duration_too_long": {
+      "message": "Mute duration is too long."
     },
     "not_whitelisted_directory": {
       "message": "{media} is not a whitelisted directory."
@@ -78,14 +116,35 @@
     "unable_to_get_account": {
       "message": "Unable to get account \"{account_name}\"."
     },
+    "unable_to_mute_account": {
+      "message": "Unable to mute account \"{account_name}\""
+    },
     "unable_to_send_message": {
       "message": "Unable to send message."
+    },
+    "unable_to_unmute_account": {
+      "message": "Unable to unmute account \"{account_name}\""
+    },
+    "unable_to_update_profile": {
+      "message": "Unable to update profile."
     },
     "unable_to_upload_image": {
       "message": "Unable to upload image {media_path}."
     }
   },
   "selector": {
+    "fields": {
+      "fields": {
+        "name": {
+          "description": "The label for this field.",
+          "name": "Label"
+        },
+        "value": {
+          "description": "The value for this field.",
+          "name": "Value"
+        }
+      }
+    },
     "post_visibility": {
       "options": {
         "direct": "Direct - Mentioned accounts only",
@@ -109,6 +168,28 @@
         }
       },
       "name": "Get account"
+    },
+    "mute_account": {
+      "description": "Mutes a Mastodon account.",
+      "fields": {
+        "account_name": {
+          "description": "The Mastodon account username to mute (e.g. @user@instance).",
+          "name": "Account name"
+        },
+        "config_entry_id": {
+          "description": "Select the Mastodon instance to mute this account on.",
+          "name": "Mastodon instance"
+        },
+        "duration": {
+          "description": "The duration to mute the account for (default: indefinitely).",
+          "name": "Duration"
+        },
+        "hide_notifications": {
+          "description": "Hide notifications from this account while muted.",
+          "name": "Hide notifications"
+        }
+      },
+      "name": "Mute account"
     },
     "post": {
       "description": "Posts a status on your Mastodon account.",
@@ -151,6 +232,66 @@
         }
       },
       "name": "Post"
+    },
+    "unmute_account": {
+      "description": "Unmutes a Mastodon account.",
+      "fields": {
+        "account_name": {
+          "description": "The Mastodon account username to unmute (e.g. @user@instance).",
+          "name": "Account name"
+        },
+        "config_entry_id": {
+          "description": "Select the Mastodon instance to unmute this account on.",
+          "name": "Mastodon instance"
+        }
+      },
+      "name": "Unmute account"
+    },
+    "update_profile": {
+      "description": "Updates your Mastodon profile information and pictures.",
+      "fields": {
+        "attribution_domains": {
+          "description": "Websites allowed to credit you. Protects from false attributions. Note that setting attribution domains will replace all existing attribution domains, not just the ones specified here.",
+          "name": "Attribution domains"
+        },
+        "avatar": {
+          "description": "An image to set as your profile picture. WEBP, PNG, or JPG. At most 8 MB. Will be downscaled to 400x400px.",
+          "name": "Profile picture"
+        },
+        "bot": {
+          "description": "Signal to others that the account mainly performs automated actions.",
+          "name": "Automated account"
+        },
+        "config_entry_id": {
+          "description": "Select the Mastodon account to update the profile of.",
+          "name": "[%key:component::mastodon::services::post::fields::config_entry_id::name%]"
+        },
+        "discoverable": {
+          "description": "Whether your profile should be discoverable. Public posts and the profile may be featured or recommended across Mastodon.",
+          "name": "Discoverable"
+        },
+        "display_name": {
+          "description": "The display name to set on your profile.",
+          "name": "Display name"
+        },
+        "fields": {
+          "description": "Additional profile fields as key-value pairs. Your homepage, pronouns, age, anything you want. Note that updating fields will replace all existing fields, not just the ones specified here.",
+          "name": "Extra fields"
+        },
+        "header": {
+          "description": "An image to set as your profile header. WEBP, PNG, or JPG. At most 8 MB. Will be downscaled to 1500x500px.",
+          "name": "Header picture"
+        },
+        "locked": {
+          "description": "Whether to lock your profile. A locked profile requires you to approve followers and hides your posts from non-followers.",
+          "name": "Lock profile"
+        },
+        "note": {
+          "description": "The bio to set on your profile. You can @mention other people or #hashtags.",
+          "name": "Bio"
+        }
+      },
+      "name": "Update profile"
     }
   }
 }

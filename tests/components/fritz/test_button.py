@@ -12,7 +12,11 @@ from homeassistant.components.fritz.const import DOMAIN, SCAN_INTERVAL, MeshRole
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers import (
+    device_registry as dr,
+    entity_registry as er,
+    issue_registry as ir,
+)
 
 from .const import (
     MOCK_HOST_ATTRIBUTES_DATA,
@@ -30,6 +34,7 @@ async def test_button_setup(
     entity_registry: er.EntityRegistry,
     fc_class_mock,
     fh_class_mock,
+    fs_class_mock,
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test setup of Fritz!Tools buttons."""
@@ -53,12 +58,14 @@ async def test_button_setup(
         ("button.mock_title_cleanup", "async_trigger_cleanup"),
     ],
 )
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_buttons(
     hass: HomeAssistant,
     entity_id: str,
     wrapper_method: str,
     fc_class_mock,
     fh_class_mock,
+    fs_class_mock,
 ) -> None:
     """Test Fritz!Tools buttons."""
     entry = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_DATA)
@@ -68,9 +75,9 @@ async def test_buttons(
     await hass.async_block_till_done()
     assert entry.state is ConfigEntryState.LOADED
 
-    button = hass.states.get(entity_id)
-    assert button
-    assert button.state == STATE_UNKNOWN
+    assert (state := hass.states.get(entity_id))
+    assert state.state == STATE_UNKNOWN
+
     with patch(
         f"homeassistant.components.fritz.coordinator.AvmWrapper.{wrapper_method}"
     ) as mock_press_action:
@@ -82,8 +89,8 @@ async def test_buttons(
         )
         mock_press_action.assert_called_once()
 
-        button = hass.states.get(entity_id)
-        assert button.state != STATE_UNKNOWN
+        assert (state := hass.states.get(entity_id))
+        assert state.state != STATE_UNKNOWN
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
@@ -91,6 +98,7 @@ async def test_wol_button(
     hass: HomeAssistant,
     fc_class_mock,
     fh_class_mock,
+    fs_class_mock,
 ) -> None:
     """Test Fritz!Tools wake on LAN button."""
     entry = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_DATA)
@@ -101,9 +109,9 @@ async def test_wol_button(
 
     assert entry.state is ConfigEntryState.LOADED
 
-    button = hass.states.get("button.printer_wake_on_lan")
-    assert button
-    assert button.state == STATE_UNKNOWN
+    assert (state := hass.states.get("button.printer_wake_on_lan"))
+    assert state.state == STATE_UNKNOWN
+
     with patch(
         "homeassistant.components.fritz.coordinator.AvmWrapper.async_wake_on_lan"
     ) as mock_press_action:
@@ -115,8 +123,8 @@ async def test_wol_button(
         )
         mock_press_action.assert_called_once_with("AA:BB:CC:00:11:22")
 
-        button = hass.states.get("button.printer_wake_on_lan")
-        assert button.state != STATE_UNKNOWN
+        assert (state := hass.states.get("button.printer_wake_on_lan"))
+        assert state.state != STATE_UNKNOWN
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
@@ -125,6 +133,7 @@ async def test_wol_button_new_device(
     freezer: FrozenDateTimeFactory,
     fc_class_mock,
     fh_class_mock,
+    fs_class_mock,
 ) -> None:
     """Test WoL button is created for new device at runtime."""
     entry = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_DATA)
@@ -154,6 +163,7 @@ async def test_wol_button_absent_for_mesh_slave(
     hass: HomeAssistant,
     fc_class_mock,
     fh_class_mock,
+    fs_class_mock,
 ) -> None:
     """Test WoL button not created if interviewed box is in slave mode."""
     entry = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_DATA)
@@ -167,8 +177,7 @@ async def test_wol_button_absent_for_mesh_slave(
     await hass.async_block_till_done()
     assert entry.state is ConfigEntryState.LOADED
 
-    button = hass.states.get("button.printer_wake_on_lan")
-    assert button is None
+    assert hass.states.get("button.printer_wake_on_lan") is None
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
@@ -176,6 +185,7 @@ async def test_wol_button_absent_for_non_lan_device(
     hass: HomeAssistant,
     fc_class_mock,
     fh_class_mock,
+    fs_class_mock,
 ) -> None:
     """Test WoL button not created if interviewed device is not connected via LAN."""
     entry = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_DATA)
@@ -193,16 +203,17 @@ async def test_wol_button_absent_for_non_lan_device(
     await hass.async_block_till_done()
     assert entry.state is ConfigEntryState.LOADED
 
-    button = hass.states.get("button.printer_wake_on_lan")
-    assert button is None
+    assert hass.states.get("button.printer_wake_on_lan") is None
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_cleanup_button(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
     fc_class_mock,
     fh_class_mock,
+    fs_class_mock,
 ) -> None:
     """Test cleanup of orphan devices."""
 
@@ -253,3 +264,23 @@ async def test_cleanup_button(
         if entity.unique_id.startswith("AA:BB:CC:00:11:22")
     ]
     assert not entities
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_cleanup_button_deprecation_issue(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    fc_class_mock,
+    fh_class_mock,
+    fs_class_mock,
+) -> None:
+    """Test deprecation issue is created when legacy cleanup button is enabled."""
+    entry = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_DATA)
+    entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+    assert entry.state is ConfigEntryState.LOADED
+
+    issue_registry = ir.async_get(hass)
+    assert issue_registry.async_get_issue(DOMAIN, "deprecated_cleanup_button")

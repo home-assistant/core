@@ -9,12 +9,10 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-    DataUpdateCoordinator,
-)
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
+from .coordinator import MullvadCoordinator
 
 BINARY_SENSORS = (
     BinarySensorEntityDescription(
@@ -39,14 +37,14 @@ async def async_setup_entry(
     )
 
 
-class MullvadBinarySensor(CoordinatorEntity, BinarySensorEntity):
+class MullvadBinarySensor(CoordinatorEntity[MullvadCoordinator], BinarySensorEntity):
     """Represents a Mullvad binary sensor."""
 
     _attr_has_entity_name = True
 
     def __init__(
         self,
-        coordinator: DataUpdateCoordinator,
+        coordinator: MullvadCoordinator,
         entity_description: BinarySensorEntityDescription,
         config_entry: ConfigEntry,
     ) -> None:

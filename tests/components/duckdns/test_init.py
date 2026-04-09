@@ -19,6 +19,7 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
+from homeassistant.helpers import issue_registry as ir
 from homeassistant.util.dt import utcnow
 
 from .conftest import TEST_SUBDOMAIN, TEST_TOKEN
@@ -118,7 +119,9 @@ async def test_setup_backoff(
 
 @pytest.mark.usefixtures("setup_duckdns")
 async def test_service_set_txt(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    issue_registry: ir.IssueRegistry,
 ) -> None:
     """Test set txt service call."""
     # Empty the fixture mock requests
@@ -139,6 +142,11 @@ async def test_service_set_txt(
         blocking=True,
     )
     assert aioclient_mock.call_count == 1
+
+    assert issue_registry.async_get_issue(
+        domain=DOMAIN,
+        issue_id="deprecated_call_without_config_entry",
+    )
 
 
 @pytest.mark.usefixtures("setup_duckdns")

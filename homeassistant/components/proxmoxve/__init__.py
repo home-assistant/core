@@ -2,16 +2,11 @@
 
 from __future__ import annotations
 
-from datetime import timedelta
 import logging
-from typing import Any
 
-from proxmoxer import AuthenticationError, ProxmoxAPI
-import requests.exceptions
-from requests.exceptions import ConnectTimeout, SSLError
 import voluptuous as vol
 
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
+from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
@@ -22,37 +17,39 @@ from homeassistant.const import (
 )
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
-from homeassistant.helpers import config_validation as cv, issue_registry as ir
-from homeassistant.helpers.typing import ConfigType
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
-
-from .common import (
-    ProxmoxClient,
-    ResourceException,
-    call_api_container_vm,
-    parse_api_container_vm,
+from homeassistant.helpers import (
+    config_validation as cv,
+    entity_registry as er,
+    issue_registry as ir,
 )
+from homeassistant.helpers.typing import ConfigType
+
 from .const import (
+    AUTH_OTHER,
+    AUTH_PAM,
+    AUTH_PVE,
+    CONF_AUTH_METHOD,
     CONF_CONTAINERS,
     CONF_NODE,
     CONF_NODES,
     CONF_REALM,
+    CONF_TOKEN,
+    CONF_TOKEN_ID,
+    CONF_TOKEN_SECRET,
     CONF_VMS,
     DEFAULT_PORT,
     DEFAULT_REALM,
     DEFAULT_VERIFY_SSL,
     DOMAIN,
-    TYPE_CONTAINER,
-    TYPE_VM,
-    UPDATE_INTERVAL,
 )
+from .coordinator import ProxmoxConfigEntry, ProxmoxCoordinator
 
-PLATFORMS = [Platform.BINARY_SENSOR]
-
-type ProxmoxConfigEntry = ConfigEntry[
-    dict[str, dict[str, dict[int, DataUpdateCoordinator[dict[str, Any] | None]]]]
+PLATFORMS = [
+    Platform.BINARY_SENSOR,
+    Platform.BUTTON,
+    Platform.SENSOR,
 ]
+
 
 CONFIG_SCHEMA = vol.Schema(
     {
@@ -63,9 +60,15 @@ CONFIG_SCHEMA = vol.Schema(
                     {
                         vol.Required(CONF_HOST): cv.string,
                         vol.Required(CONF_USERNAME): cv.string,
-                        vol.Required(CONF_PASSWORD): cv.string,
+                        vol.Optional(CONF_PASSWORD): cv.string,
                         vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+                        vol.Required(
+                            CONF_AUTH_METHOD, default=DEFAULT_REALM
+                        ): cv.string,
                         vol.Optional(CONF_REALM, default=DEFAULT_REALM): cv.string,
+                        vol.Optional(CONF_TOKEN, default=False): cv.boolean,
+                        vol.Optional(CONF_TOKEN_ID): cv.string,
+                        vol.Optional(CONF_TOKEN_SECRET): cv.string,
                         vol.Optional(
                             CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL
                         ): cv.boolean,
@@ -93,7 +96,7 @@ CONFIG_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
-LOGGER = logging.getLogger(__name__)
+_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -150,130 +153,59 @@ async def _async_setup(hass: HomeAssistant, config: ConfigType) -> None:
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ProxmoxConfigEntry) -> bool:
-    """Set up a ProxmoxVE instance from a config entry."""
+    """Set up a ProxmoxVE from a config entry."""
+    coordinator = ProxmoxCoordinator(hass, entry)
+    await coordinator.async_config_entry_first_refresh()
 
-    def build_client() -> ProxmoxClient:
-        """Build and return the Proxmox client connection."""
-        host = entry.data[CONF_HOST]
-        port = entry.data[CONF_PORT]
-        user = entry.data[CONF_USERNAME]
-        realm = entry.data[CONF_REALM]
-        password = entry.data[CONF_PASSWORD]
-        verify_ssl = entry.data[CONF_VERIFY_SSL]
-        try:
-            client = ProxmoxClient(host, port, user, realm, password, verify_ssl)
-            client.build_client()
-        except AuthenticationError as ex:
-            raise ConfigEntryAuthFailed("Invalid credentials") from ex
-        except SSLError as ex:
-            raise ConfigEntryAuthFailed(
-                f"Unable to verify proxmox server SSL. Try using 'verify_ssl: false' for proxmox instance {host}:{port}"
-            ) from ex
-        except ConnectTimeout as ex:
-            raise ConfigEntryNotReady("Connection timed out") from ex
-        except requests.exceptions.ConnectionError as ex:
-            raise ConfigEntryNotReady(f"Host {host} is not reachable: {ex}") from ex
-        else:
-            return client
-
-    proxmox_client = await hass.async_add_executor_job(build_client)
-
-    coordinators: dict[
-        str, dict[str, dict[int, DataUpdateCoordinator[dict[str, Any] | None]]]
-    ] = {}
-    entry.runtime_data = coordinators
-
-    host_name = entry.data[CONF_HOST]
-    coordinators[host_name] = {}
-
-    proxmox: ProxmoxAPI = proxmox_client.get_api_client()
-
-    for node_config in entry.data[CONF_NODES]:
-        node_name = node_config[CONF_NODE]
-        node_coordinators = coordinators[host_name][node_name] = {}
-
-        try:
-            vms, containers = await hass.async_add_executor_job(
-                _get_vms_containers, proxmox, node_config
-            )
-        except (ResourceException, requests.exceptions.ConnectionError) as err:
-            LOGGER.error("Unable to get vms/containers for node %s: %s", node_name, err)
-            continue
-
-        for vm in vms:
-            coordinator = _create_coordinator_container_vm(
-                hass, entry, proxmox, host_name, node_name, vm["vmid"], TYPE_VM
-            )
-            await coordinator.async_config_entry_first_refresh()
-
-            node_coordinators[vm["vmid"]] = coordinator
-
-        for container in containers:
-            coordinator = _create_coordinator_container_vm(
-                hass,
-                entry,
-                proxmox,
-                host_name,
-                node_name,
-                container["vmid"],
-                TYPE_CONTAINER,
-            )
-            await coordinator.async_config_entry_first_refresh()
-
-            node_coordinators[container["vmid"]] = coordinator
-
+    entry.runtime_data = coordinator
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 
 
-def _get_vms_containers(
-    proxmox: ProxmoxAPI,
-    node_config: dict[str, Any],
-) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
-    """Get vms and containers for a node."""
-    vms = proxmox.nodes(node_config[CONF_NODE]).qemu.get()
-    containers = proxmox.nodes(node_config[CONF_NODE]).lxc.get()
-    assert vms is not None and containers is not None
-    return vms, containers
+async def async_migrate_entry(hass: HomeAssistant, entry: ProxmoxConfigEntry) -> bool:
+    """Migrate old config entries."""
 
-
-def _create_coordinator_container_vm(
-    hass: HomeAssistant,
-    entry: ProxmoxConfigEntry,
-    proxmox: ProxmoxAPI,
-    host_name: str,
-    node_name: str,
-    vm_id: int,
-    vm_type: int,
-) -> DataUpdateCoordinator[dict[str, Any] | None]:
-    """Create and return a DataUpdateCoordinator for a vm/container."""
-
-    async def async_update_data() -> dict[str, Any] | None:
-        """Call the api and handle the response."""
-
-        def poll_api() -> dict[str, Any] | None:
-            """Call the api."""
-            return call_api_container_vm(proxmox, node_name, vm_id, vm_type)
-
-        vm_status = await hass.async_add_executor_job(poll_api)
-
-        if vm_status is None:
-            LOGGER.warning(
-                "Vm/Container %s unable to be found in node %s", vm_id, node_name
+    # Migration for only the old binary sensors to new unique_id format
+    if entry.version < 2:
+        ent_reg = er.async_get(hass)
+        for entity_entry in er.async_entries_for_config_entry(ent_reg, entry.entry_id):
+            new_unique_id = (
+                f"{entry.entry_id}_{entity_entry.unique_id.split('_')[-2]}_status"
             )
-            return None
 
-        return parse_api_container_vm(vm_status)
+            _LOGGER.debug(
+                "Migrating entity %s from old unique_id %s to new unique_id %s",
+                entity_entry.entity_id,
+                entity_entry.unique_id,
+                new_unique_id,
+            )
+            ent_reg.async_update_entity(
+                entity_entry.entity_id, new_unique_id=new_unique_id
+            )
 
-    return DataUpdateCoordinator(
-        hass,
-        LOGGER,
-        config_entry=entry,
-        name=f"proxmox_coordinator_{host_name}_{node_name}_{vm_id}",
-        update_method=async_update_data,
-        update_interval=timedelta(seconds=UPDATE_INTERVAL),
-    )
+        hass.config_entries.async_update_entry(entry, version=2)
+
+    # Migration for additional configuration options added to support API tokens
+    if entry.version < 3:
+        data = dict(entry.data)
+        # If CONF_REALM wasn't there yet, extract from username
+        if CONF_REALM not in data:
+            data[CONF_REALM] = DEFAULT_REALM
+            if "@" in data.get(CONF_USERNAME, ""):
+                username, realm = data[CONF_USERNAME].split("@", 1)
+                data[CONF_USERNAME] = username
+                data[CONF_REALM] = realm.lower()
+
+        realm = data[CONF_REALM].lower()
+
+        # If the realm is one of the base providers, set the provider to match the realm.
+        data[CONF_AUTH_METHOD] = realm if realm in (AUTH_PAM, AUTH_PVE) else AUTH_OTHER
+        data.setdefault(CONF_TOKEN, False)
+
+        hass.config_entries.async_update_entry(entry, data=data, version=3)
+
+    return True
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ProxmoxConfigEntry) -> bool:

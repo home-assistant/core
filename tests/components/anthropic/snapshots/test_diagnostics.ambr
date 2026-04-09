@@ -1,0 +1,87 @@
+# serializer version: 1
+# name: test_entry_diagnostics
+  dict({
+    'data': dict({
+      'api_key': '**REDACTED**',
+    }),
+    'entities': dict({
+      'ai_task.claude_ai_task': dict({
+        'aliases': list([
+          None,
+        ]),
+        'area_id': None,
+        'capabilities': None,
+        'categories': dict({
+        }),
+        'device_class': None,
+        'disabled_by': None,
+        'entity_category': None,
+        'entity_id': 'ai_task.claude_ai_task',
+        'has_entity_name': True,
+        'hidden_by': None,
+        'icon': None,
+        'labels': list([
+        ]),
+        'name': None,
+        'options': dict({
+          'conversation': dict({
+            'should_expose': False,
+          }),
+        }),
+        'original_device_class': None,
+        'original_icon': None,
+        'original_name': None,
+        'platform': 'anthropic',
+        'translation_key': 'ai_task_data',
+      }),
+      'conversation.claude_conversation': dict({
+        'aliases': list([
+          None,
+        ]),
+        'area_id': None,
+        'capabilities': None,
+        'categories': dict({
+        }),
+        'device_class': None,
+        'disabled_by': None,
+        'entity_category': None,
+        'entity_id': 'conversation.claude_conversation',
+        'has_entity_name': True,
+        'hidden_by': None,
+        'icon': None,
+        'labels': list([
+        ]),
+        'name': None,
+        'options': dict({
+          'conversation': dict({
+            'should_expose': False,
+          }),
+        }),
+        'original_device_class': None,
+        'original_icon': None,
+        'original_name': None,
+        'platform': 'anthropic',
+        'translation_key': 'conversation',
+      }),
+    }),
+    'entry_version': '2.3',
+    'options': dict({
+    }),
+    'state': 'loaded',
+    'subentries': list([
+      dict({
+        'data': dict({
+        }),
+        'subentry_type': 'conversation',
+        'title': 'Claude conversation',
+      }),
+      dict({
+        'data': dict({
+        }),
+        'subentry_type': 'ai_task_data',
+        'title': 'Claude AI Task',
+      }),
+    ]),
+    'title': 'Claude',
+  })
+# ---

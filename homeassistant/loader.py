@@ -767,6 +767,7 @@ class Integration:
         self.pkg_path = pkg_path
         self.file_path = file_path
         self.manifest = manifest
+        self.logger = logging.getLogger(pkg_path)
         manifest["is_built_in"] = self.is_built_in
         manifest["overwrites_built_in"] = self.overwrites_built_in
 
@@ -881,6 +882,11 @@ class Integration:
     def has_translations(self) -> bool:
         """Return if the integration has translations."""
         return "translations" in self._top_level_files
+
+    @cached_property
+    def has_branding(self) -> bool:
+        """Return if the integration has brand assets."""
+        return "brand" in self._top_level_files
 
     @cached_property
     def has_triggers(self) -> bool:

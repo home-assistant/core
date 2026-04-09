@@ -1,0 +1,12 @@
+{
+  "entity": {
+    "switch": {
+      "hold": {
+        "default": "mdi:timer",
+        "state": {
+          "on": "mdi:timer-off"
+        }
+      }
+    }
+  }
+}

@@ -118,43 +118,85 @@ SERVICE_TRIGGER = "trigger"
 NEW_TRIGGERS_CONDITIONS_FEATURE_FLAG = "new_triggers_conditions"
 
 _EXPERIMENTAL_CONDITION_PLATFORMS = {
+    "air_quality",
     "alarm_control_panel",
     "assist_satellite",
+    "battery",
+    "calendar",
     "climate",
+    "counter",
+    "cover",
     "device_tracker",
+    "door",
     "fan",
+    "garage_door",
+    "gate",
     "humidifier",
+    "humidity",
+    "illuminance",
     "lawn_mower",
     "light",
     "lock",
     "media_player",
+    "moisture",
+    "motion",
+    "occupancy",
     "person",
+    "power",
+    "schedule",
+    "select",
     "siren",
     "switch",
+    "temperature",
+    "text",
+    "timer",
     "vacuum",
+    "valve",
+    "water_heater",
+    "window",
 }
 
 _EXPERIMENTAL_TRIGGER_PLATFORMS = {
+    "air_quality",
     "alarm_control_panel",
     "assist_satellite",
-    "binary_sensor",
+    "battery",
     "button",
     "climate",
+    "counter",
     "cover",
     "device_tracker",
+    "door",
+    "event",
     "fan",
+    "garage_door",
+    "gate",
     "humidifier",
+    "humidity",
+    "illuminance",
     "lawn_mower",
     "light",
     "lock",
     "media_player",
+    "moisture",
+    "motion",
+    "occupancy",
     "person",
+    "power",
+    "remote",
     "scene",
+    "schedule",
+    "select",
     "siren",
     "switch",
+    "temperature",
     "text",
+    "todo",
     "update",
     "vacuum",
+    "valve",
+    "water_heater",
+    "window",
 }
 
 
@@ -363,8 +405,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     async def reload_service_handler(service_call: ServiceCall) -> None:
         """Remove all automations and load new ones from config."""
         await async_get_blueprints(hass).async_reset_cache()
-        if (conf := await component.async_prepare_reload(skip_reset=True)) is None:
-            return
+        conf = await component.async_prepare_reload(skip_reset=True)
         if automation_id := service_call.data.get(CONF_ID):
             await _async_process_single_config(hass, conf, component, automation_id)
         else:

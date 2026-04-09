@@ -1,0 +1,18 @@
+.trigger_common: &trigger_common
+  target:
+    entity:
+      domain: valve
+  fields:
+    behavior:
+      required: true
+      default: any
+      selector:
+        select:
+          translation_key: trigger_behavior
+          options:
+            - first
+            - last
+            - any
+
+closed: *trigger_common
+opened: *trigger_common

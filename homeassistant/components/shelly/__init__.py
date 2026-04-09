@@ -66,6 +66,7 @@ from .repairs import (
 from .services import async_setup_services
 from .utils import (
     async_create_issue_unsupported_firmware,
+    async_migrate_rpc_sensor_description_unique_ids,
     async_migrate_rpc_virtual_components_unique_ids,
     get_coap_context,
     get_device_entry_gen,
@@ -127,16 +128,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: ShellyConfigEntry) -> bo
     """Set up Shelly from a config entry."""
     entry.runtime_data = ShellyEntryData([])
 
-    # The custom component for Shelly devices uses shelly domain as well as core
-    # integration. If the user removes the custom component but doesn't remove the
-    # config entry, core integration will try to configure that config entry with an
-    # error. The config entry data for this custom component doesn't contain host
-    # value, so if host isn't present, config entry will not be configured.
+    # The community integration for Shelly devices uses Shelly domain as well as Core
+    # integration. If the user removes the community integration but doesn't remove
+    # the config entry, Core integration will try to configure that config entry with
+    # an error. The config entry data for this community integration doesn't contain
+    # host value, so if host isn't present, config entry will not be configured.
     if not entry.data.get(CONF_HOST):
         LOGGER.warning(
             (
-                "The config entry %s probably comes from a custom integration, please"
-                " remove it if you want to use core Shelly integration"
+                "The config entry %s probably comes from a community integration, "
+                "please remove it if you want to use the Core Shelly integration"
             ),
             entry.title,
         )
@@ -295,6 +296,12 @@ async def _async_setup_rpc_entry(hass: HomeAssistant, entry: ShellyConfigEntry) 
     sleep_period = entry.data.get(CONF_SLEEP_PERIOD)
     runtime_data = entry.runtime_data
     runtime_data.platforms = RPC_SLEEPING_PLATFORMS
+
+    await er.async_migrate_entries(
+        hass,
+        entry.entry_id,
+        async_migrate_rpc_sensor_description_unique_ids,
+    )
 
     if sleep_period == 0:
         # Not a sleeping device, finish setup

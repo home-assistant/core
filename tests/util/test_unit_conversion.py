@@ -413,6 +413,30 @@ _CONVERTED_VALUE: dict[
             62.744976,
             CONCENTRATION_PARTS_PER_BILLION,
         ),
+        (
+            1,
+            CONCENTRATION_PARTS_PER_MILLION,
+            1912.503,
+            CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        ),
+        (
+            120,
+            CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+            0.062744976,
+            CONCENTRATION_PARTS_PER_MILLION,
+        ),
+        (
+            100,
+            CONCENTRATION_PARTS_PER_BILLION,
+            0.1,
+            CONCENTRATION_PARTS_PER_MILLION,
+        ),
+        (
+            0.5,
+            CONCENTRATION_PARTS_PER_MILLION,
+            500,
+            CONCENTRATION_PARTS_PER_BILLION,
+        ),
     ],
     NitrogenMonoxideConcentrationConverter: [
         (
@@ -604,7 +628,11 @@ _CONVERTED_VALUE: dict[
     ],
     ElectricCurrentConverter: [
         (5, UnitOfElectricCurrent.AMPERE, 5000, UnitOfElectricCurrent.MILLIAMPERE),
-        (5, UnitOfElectricCurrent.MILLIAMPERE, 0.005, UnitOfElectricCurrent.AMPERE),
+        (5, UnitOfElectricCurrent.AMPERE, 5e6, UnitOfElectricCurrent.MICROAMPERE),
+        (5, UnitOfElectricCurrent.MILLIAMPERE, 5e-3, UnitOfElectricCurrent.AMPERE),
+        (5, UnitOfElectricCurrent.MILLIAMPERE, 5e3, UnitOfElectricCurrent.MICROAMPERE),
+        (5, UnitOfElectricCurrent.MICROAMPERE, 5e-6, UnitOfElectricCurrent.AMPERE),
+        (5, UnitOfElectricCurrent.MICROAMPERE, 5e-3, UnitOfElectricCurrent.MILLIAMPERE),
     ],
     ElectricPotentialConverter: [
         (5, UnitOfElectricPotential.VOLT, 5000, UnitOfElectricPotential.MILLIVOLT),

@@ -2,7 +2,7 @@
 
 from collections.abc import Callable
 from typing import Any
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock
 
 import pytest
 
@@ -14,22 +14,22 @@ from homeassistant.components.adguard.const import (
     SERVICE_REFRESH,
     SERVICE_REMOVE_URL,
 )
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 
-from . import setup_integration
+pytestmark = pytest.mark.usefixtures("init_integration")
 
-from tests.common import MockConfigEntry
+
+@pytest.fixture
+def platforms() -> list[Platform]:
+    """Fixture to specify platforms to test."""
+    return []
 
 
 async def test_service_registration(
     hass: HomeAssistant,
-    mock_adguard: AsyncMock,
-    mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test the adguard services be registered."""
-    with patch("homeassistant.components.adguard.PLATFORMS", []):
-        await setup_integration(hass, mock_config_entry, mock_adguard)
-
     services = hass.services.async_services_for_domain(DOMAIN)
 
     assert len(services) == 5
@@ -73,15 +73,11 @@ async def test_service_registration(
 async def test_service(
     hass: HomeAssistant,
     mock_adguard: AsyncMock,
-    mock_config_entry: MockConfigEntry,
     service: str,
     service_call_data: dict,
     call_assertion: Callable[[AsyncMock], Any],
 ) -> None:
     """Test the adguard services be unregistered with unloading last entry."""
-    with patch("homeassistant.components.adguard.PLATFORMS", []):
-        await setup_integration(hass, mock_config_entry, mock_adguard)
-
     await hass.services.async_call(
         DOMAIN,
         service,

@@ -43,13 +43,17 @@ from homeassistant.helpers.selector import (
 from homeassistant.helpers.typing import VolDictType
 
 from .const import (
+    CODE_EXECUTION_UNSUPPORTED_MODELS,
     CONF_CHAT_MODEL,
+    CONF_CODE_EXECUTION,
     CONF_MAX_TOKENS,
     CONF_PROMPT,
+    CONF_PROMPT_CACHING,
     CONF_RECOMMENDED,
     CONF_TEMPERATURE,
     CONF_THINKING_BUDGET,
     CONF_THINKING_EFFORT,
+    CONF_TOOL_SEARCH,
     CONF_WEB_SEARCH,
     CONF_WEB_SEARCH_CITY,
     CONF_WEB_SEARCH_COUNTRY,
@@ -63,7 +67,9 @@ from .const import (
     DOMAIN,
     NON_ADAPTIVE_THINKING_MODELS,
     NON_THINKING_MODELS,
+    TOOL_SEARCH_UNSUPPORTED_MODELS,
     WEB_SEARCH_UNSUPPORTED_MODELS,
+    PromptCaching,
 )
 
 if TYPE_CHECKING:
@@ -112,19 +118,12 @@ async def get_model_list(client: anthropic.AsyncAnthropic) -> list[SelectOptionD
         # Resolve alias from versioned model name:
         model_alias = (
             model_info.id[:-9]
-            if model_info.id
-            not in (
-                "claude-3-haiku-20240307",
-                "claude-3-5-haiku-20241022",
-                "claude-3-opus-20240229",
-            )
+            if model_info.id != "claude-3-haiku-20240307"
             and model_info.id[-2:-1] != "-"
             else model_info.id
         )
         if short_form.search(model_alias):
             model_alias += "-0"
-        if model_alias.endswith(("haiku", "opus", "sonnet")):
-            model_alias += "-latest"
         model_options.append(
             SelectOptionDict(
                 label=model_info.display_name,
@@ -361,6 +360,16 @@ class ConversationSubentryFlowHandler(ConfigSubentryFlow):
                 CONF_TEMPERATURE,
                 default=DEFAULT[CONF_TEMPERATURE],
             ): NumberSelector(NumberSelectorConfig(min=0, max=1, step=0.05)),
+            vol.Optional(
+                CONF_PROMPT_CACHING,
+                default=DEFAULT[CONF_PROMPT_CACHING],
+            ): SelectSelector(
+                SelectSelectorConfig(
+                    options=[x.value for x in PromptCaching],
+                    translation_key=CONF_PROMPT_CACHING,
+                    mode=SelectSelectorMode.DROPDOWN,
+                )
+            ),
         }
 
         if user_input is not None:
@@ -422,6 +431,16 @@ class ConversationSubentryFlowHandler(ConfigSubentryFlow):
         else:
             self.options.pop(CONF_THINKING_EFFORT, None)
 
+        if not model.startswith(tuple(CODE_EXECUTION_UNSUPPORTED_MODELS)):
+            step_schema[
+                vol.Optional(
+                    CONF_CODE_EXECUTION,
+                    default=DEFAULT[CONF_CODE_EXECUTION],
+                )
+            ] = bool
+        else:
+            self.options.pop(CONF_CODE_EXECUTION, None)
+
         if not model.startswith(tuple(WEB_SEARCH_UNSUPPORTED_MODELS)):
             step_schema.update(
                 {
@@ -448,6 +467,16 @@ class ConversationSubentryFlowHandler(ConfigSubentryFlow):
         self.options.pop(CONF_WEB_SEARCH_REGION, None)
         self.options.pop(CONF_WEB_SEARCH_COUNTRY, None)
         self.options.pop(CONF_WEB_SEARCH_TIMEZONE, None)
+
+        if not model.startswith(tuple(TOOL_SEARCH_UNSUPPORTED_MODELS)):
+            step_schema[
+                vol.Optional(
+                    CONF_TOOL_SEARCH,
+                    default=DEFAULT[CONF_TOOL_SEARCH],
+                )
+            ] = bool
+        else:
+            self.options.pop(CONF_TOOL_SEARCH, None)
 
         if not step_schema:
             user_input = {}

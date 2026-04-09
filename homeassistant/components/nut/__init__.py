@@ -3,13 +3,11 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import timedelta
 import logging
 from typing import TYPE_CHECKING
 
-from aionut import AIONUTClient, NUTError, NUTLoginError
+from aionut import AIONUTClient, NUTError
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_ALIAS,
     CONF_HOST,
@@ -21,28 +19,16 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
 )
 from homeassistant.core import Event, HomeAssistant, callback
-from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, format_mac
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN, INTEGRATION_SUPPORTED_COMMANDS, PLATFORMS
+from .coordinator import NutConfigEntry, NutCoordinator, NutRuntimeData
 
 NUT_FAKE_SERIAL = ["unknown", "blank"]
 
 _LOGGER = logging.getLogger(__name__)
-
-type NutConfigEntry = ConfigEntry[NutRuntimeData]
-
-
-@dataclass
-class NutRuntimeData:
-    """Runtime data definition."""
-
-    coordinator: DataUpdateCoordinator
-    data: PyNUTData
-    unique_id: str
-    user_available_commands: set[str]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: NutConfigEntry) -> bool:
@@ -73,36 +59,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: NutConfigEntry) -> bool:
 
     entry.async_on_unload(data.async_shutdown)
 
-    async def async_update_data() -> dict[str, str]:
-        """Fetch data from NUT."""
-        try:
-            return await data.async_update()
-        except NUTLoginError as err:
-            raise ConfigEntryAuthFailed(
-                translation_domain=DOMAIN,
-                translation_key="device_authentication",
-                translation_placeholders={
-                    "err": str(err),
-                },
-            ) from err
-        except NUTError as err:
-            raise UpdateFailed(
-                translation_domain=DOMAIN,
-                translation_key="data_fetch_error",
-                translation_placeholders={
-                    "err": str(err),
-                },
-            ) from err
-
-    coordinator = DataUpdateCoordinator(
-        hass,
-        _LOGGER,
-        config_entry=entry,
-        name="NUT resource status",
-        update_method=async_update_data,
-        update_interval=timedelta(seconds=60),
-        always_update=False,
-    )
+    coordinator = NutCoordinator(hass, data, entry)
 
     # Fetch initial data so we have data when entities subscribe
     await coordinator.async_config_entry_first_refresh()

@@ -47,11 +47,13 @@
           "data": {
             "chat_model": "[%key:common::generic::model%]",
             "max_tokens": "[%key:component::anthropic::config_subentries::conversation::step::advanced::data::max_tokens%]",
+            "prompt_caching": "[%key:component::anthropic::config_subentries::conversation::step::advanced::data::prompt_caching%]",
             "temperature": "[%key:component::anthropic::config_subentries::conversation::step::advanced::data::temperature%]"
           },
           "data_description": {
             "chat_model": "[%key:component::anthropic::config_subentries::conversation::step::advanced::data_description::chat_model%]",
             "max_tokens": "[%key:component::anthropic::config_subentries::conversation::step::advanced::data_description::max_tokens%]",
+            "prompt_caching": "[%key:component::anthropic::config_subentries::conversation::step::advanced::data_description::prompt_caching%]",
             "temperature": "[%key:component::anthropic::config_subentries::conversation::step::advanced::data_description::temperature%]"
           },
           "title": "[%key:component::anthropic::config_subentries::conversation::step::advanced::title%]"
@@ -69,15 +71,19 @@
         },
         "model": {
           "data": {
+            "code_execution": "[%key:component::anthropic::config_subentries::conversation::step::model::data::code_execution%]",
             "thinking_budget": "[%key:component::anthropic::config_subentries::conversation::step::model::data::thinking_budget%]",
             "thinking_effort": "[%key:component::anthropic::config_subentries::conversation::step::model::data::thinking_effort%]",
+            "tool_search": "[%key:component::anthropic::config_subentries::conversation::step::model::data::tool_search%]",
             "user_location": "[%key:component::anthropic::config_subentries::conversation::step::model::data::user_location%]",
             "web_search": "[%key:component::anthropic::config_subentries::conversation::step::model::data::web_search%]",
             "web_search_max_uses": "[%key:component::anthropic::config_subentries::conversation::step::model::data::web_search_max_uses%]"
           },
           "data_description": {
+            "code_execution": "[%key:component::anthropic::config_subentries::conversation::step::model::data_description::code_execution%]",
             "thinking_budget": "[%key:component::anthropic::config_subentries::conversation::step::model::data_description::thinking_budget%]",
             "thinking_effort": "[%key:component::anthropic::config_subentries::conversation::step::model::data_description::thinking_effort%]",
+            "tool_search": "[%key:component::anthropic::config_subentries::conversation::step::model::data_description::tool_search%]",
             "user_location": "[%key:component::anthropic::config_subentries::conversation::step::model::data_description::user_location%]",
             "web_search": "[%key:component::anthropic::config_subentries::conversation::step::model::data_description::web_search%]",
             "web_search_max_uses": "[%key:component::anthropic::config_subentries::conversation::step::model::data_description::web_search_max_uses%]"
@@ -101,11 +107,13 @@
           "data": {
             "chat_model": "[%key:common::generic::model%]",
             "max_tokens": "Maximum tokens to return in response",
+            "prompt_caching": "Caching strategy",
             "temperature": "Temperature"
           },
           "data_description": {
             "chat_model": "The model to serve the responses.",
             "max_tokens": "Limit the number of response tokens.",
+            "prompt_caching": "Optimize your API cost and response times based on your usage.",
             "temperature": "Control the randomness of the response, trading off between creativity and coherence."
           },
           "title": "Advanced settings"
@@ -127,15 +135,19 @@
         },
         "model": {
           "data": {
+            "code_execution": "Code execution",
             "thinking_budget": "Thinking budget",
             "thinking_effort": "Thinking effort",
+            "tool_search": "Enable tool search tool",
             "user_location": "Include home location",
             "web_search": "Enable web search",
             "web_search_max_uses": "Maximum web searches"
           },
           "data_description": {
+            "code_execution": "Allow the model to execute code in a secure sandbox environment, enabling it to analyze data and perform complex calculations.",
             "thinking_budget": "The number of tokens the model can use to think about the response out of the total maximum number of tokens. Set to 1024 or greater to enable extended thinking.",
             "thinking_effort": "Control how many tokens Claude uses when responding, trading off between response thoroughness and token efficiency",
+            "tool_search": "Enable dynamic tool discovery instead of preloading all tools into the context",
             "user_location": "Localize search results based on home location",
             "web_search": "The web search tool gives Claude direct access to real-time web content, allowing it to answer questions with up-to-date information beyond its knowledge cutoff",
             "web_search_max_uses": "Limit the number of searches performed per response"
@@ -143,6 +155,47 @@
           "title": "Model-specific options"
         }
       }
+    }
+  },
+  "exceptions": {
+    "api_authentication_error": {
+      "message": "Authentication error with Anthropic API: {message}. Reauthentication required."
+    },
+    "api_error": {
+      "message": "Anthropic API error: {message}."
+    },
+    "api_refusal": {
+      "message": "Potential policy violation detected."
+    },
+    "json_parse_error": {
+      "message": "Error with Claude structured response."
+    },
+    "response_not_found": {
+      "message": "Last content in chat log is not an AssistantContent."
+    },
+    "subentry_not_found": {
+      "message": "Subentry not found."
+    },
+    "system_message_not_found": {
+      "message": "First message must be a system message."
+    },
+    "unexpected_chat_log_content": {
+      "message": "Unexpected content type in chat log: {type}."
+    },
+    "unexpected_stream_object": {
+      "message": "Expected a stream of messages."
+    },
+    "unknown_issue_id": {
+      "message": "Unknown issue ID."
+    },
+    "user_message_not_found": {
+      "message": "Last message must be a user message to add attachments."
+    },
+    "wrong_file_path": {
+      "message": "`{file_path}` does not exist."
+    },
+    "wrong_file_type": {
+      "message": "Only images and PDF are supported by the Anthropic API, `{file_path}` ({mime_type}) is not an image file or PDF."
     }
   },
   "issues": {
@@ -165,6 +218,13 @@
     }
   },
   "selector": {
+    "prompt_caching": {
+      "options": {
+        "automatic": "Full",
+        "off": "Disabled",
+        "prompt": "System prompt"
+      }
+    },
     "thinking_effort": {
       "options": {
         "high": "[%key:common::state::high%]",
