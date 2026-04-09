@@ -1,7 +1,7 @@
 {
   "domain": "spaceapi",
   "name": "SpaceAPI",
-  "codeowners": ["@fabaff"],
+  "codeowners": ["@fabaff", "@ximex"],
   "config_flow": true,
   "dependencies": ["http"],
   "documentation": "https://www.home-assistant.io/integrations/spaceapi",

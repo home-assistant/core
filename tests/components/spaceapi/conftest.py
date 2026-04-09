@@ -17,7 +17,6 @@ ENTRY_DATA = {
     "url": "https://home-assistant.io",
     "state": {"entity_id": "test.test_door"},
     "contact": {"email": "hello@home-assistant.io"},
-    "issue_report_channels": ["email"],
 }
 
 ENTRY_OPTIONS = {
@@ -30,33 +29,18 @@ ENTRY_OPTIONS = {
         "temperature": ["test.temp1", "test.temp2", "test.temp3"],
         "humidity": ["test.hum1"],
     },
-    "spacefed": {"spacenet": True, "spacesaml": False, "spacephone": True},
+    "spacefed": {"spacenet": True, "spacesaml": False},
     "cam": ["https://home-assistant.io/cam1", "https://home-assistant.io/cam2"],
-    "stream": {
-        "m4": "https://home-assistant.io/m4",
-        "mjpeg": "https://home-assistant.io/mjpeg",
-        "ustream": "https://home-assistant.io/ustream",
-    },
     "feeds": {
         "blog": {"url": "https://home-assistant.io/blog"},
         "wiki": {"type": "mediawiki", "url": "https://home-assistant.io/wiki"},
         "calendar": {"type": "ical", "url": "https://home-assistant.io/calendar"},
         "flicker": {"url": "https://www.flickr.com/photos/home-assistant"},
     },
-    "cache": {"schedule": "m.02"},
     "projects": [
         "https://home-assistant.io/projects/1",
         "https://home-assistant.io/projects/2",
         "https://home-assistant.io/projects/3",
-    ],
-    "radio_show": [
-        {
-            "name": "Radioshow",
-            "url": "https://home-assistant.io/radio",
-            "type": "ogg",
-            "start": "2019-09-02T10:00Z",
-            "end": "2019-09-02T12:00Z",
-        }
     ],
 }
 

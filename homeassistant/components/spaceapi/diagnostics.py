@@ -9,7 +9,7 @@ from homeassistant.core import HomeAssistant
 
 from . import SpaceAPIConfigEntry
 
-TO_REDACT = {"email", "phone", "sip", "issue_mail", "address", "lat", "lon"}
+TO_REDACT = {"email", "phone", "sip", "address", "lat", "lon"}
 
 
 async def async_get_config_entry_diagnostics(

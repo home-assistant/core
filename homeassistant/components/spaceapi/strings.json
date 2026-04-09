@@ -9,7 +9,6 @@
         "data": {
           "email": "[%key:common::config_flow::data::email%]",
           "entity_id": "[%key:component::spaceapi::config::step::user::data::entity_id%]",
-          "issue_report_channels": "[%key:component::spaceapi::config::step::user::data::issue_report_channels%]",
           "logo": "[%key:component::spaceapi::config::step::user::data::logo%]",
           "space": "[%key:component::spaceapi::config::step::user::data::space%]",
           "url": "[%key:component::spaceapi::config::step::user::data::url%]"
@@ -17,17 +16,16 @@
         "data_description": {
           "email": "[%key:component::spaceapi::config::step::user::data_description::email%]",
           "entity_id": "[%key:component::spaceapi::config::step::user::data_description::entity_id%]",
-          "issue_report_channels": "[%key:component::spaceapi::config::step::user::data_description::issue_report_channels%]",
           "logo": "[%key:component::spaceapi::config::step::user::data_description::logo%]",
           "space": "[%key:component::spaceapi::config::step::user::data_description::space%]",
           "url": "[%key:component::spaceapi::config::step::user::data_description::url%]"
-        }
+        },
+        "description": "The SpaceAPI endpoint is available at `/api/spaceapi`."
       },
       "user": {
         "data": {
           "email": "Contact email",
           "entity_id": "State entity",
-          "issue_report_channels": "Issue report channels",
           "logo": "Logo URL",
           "space": "Space name",
           "url": "Website URL"
@@ -35,11 +33,11 @@
         "data_description": {
           "email": "Contact email address for the space.",
           "entity_id": "Entity that represents the open/closed state of the space.",
-          "issue_report_channels": "Channels for reporting issues.",
           "logo": "URL to the logo of your hackerspace.",
           "space": "The name of your hackerspace.",
           "url": "URL to the website of your hackerspace."
-        }
+        },
+        "description": "The SpaceAPI endpoint will be available at `/api/spaceapi`."
       }
     }
   },
@@ -55,28 +53,30 @@
         "data": {
           "email": "[%key:common::config_flow::data::email%]",
           "facebook": "Facebook",
-          "foursquare": "Foursquare",
-          "identica": "Identica",
+          "gopher": "Gopher",
           "irc": "IRC channel",
-          "issue_mail": "Issue report email",
-          "jabber": "Jabber/XMPP",
+          "mastodon": "Mastodon",
+          "matrix": "Matrix",
           "ml": "Mailing list",
+          "mumble": "Mumble",
           "phone": "Phone",
           "sip": "SIP",
-          "twitter": "Twitter"
+          "twitter": "Twitter",
+          "xmpp": "XMPP"
         },
         "data_description": {
           "email": "Contact email address for the space.",
           "facebook": "Facebook page URL of the space.",
-          "foursquare": "Foursquare ID of the space.",
-          "identica": "Identica account of the space.",
+          "gopher": "Gopher URL of the space.",
           "irc": "IRC channel of the space.",
-          "issue_mail": "Email address for issue reports.",
-          "jabber": "Jabber/XMPP address of the space.",
+          "mastodon": "Mastodon account of the space.",
+          "matrix": "Matrix room of the space.",
           "ml": "Mailing list address of the space.",
+          "mumble": "Mumble server of the space.",
           "phone": "Phone number of the space.",
           "sip": "SIP address of the space.",
-          "twitter": "Twitter account of the space."
+          "twitter": "Twitter account of the space.",
+          "xmpp": "XMPP address of the space."
         }
       },
       "feeds": {
@@ -102,6 +102,7 @@
         }
       },
       "init": {
+        "description": "The SpaceAPI endpoint is available at `/api/spaceapi`.",
         "menu_options": {
           "contact": "Contact details",
           "feeds": "Feeds",
@@ -114,25 +115,17 @@
       },
       "media": {
         "data": {
-          "cam": "Camera URLs",
-          "m4": "M4 stream URL",
-          "mjpeg": "MJPEG stream URL",
-          "ustream": "UStream URL"
+          "cam": "Camera URLs"
         },
         "data_description": {
-          "cam": "URLs of camera streams for the space.",
-          "m4": "URL of the M4 stream.",
-          "mjpeg": "URL of the MJPEG stream.",
-          "ustream": "URL of the UStream stream."
+          "cam": "URLs of camera streams for the space."
         }
       },
       "other": {
         "data": {
-          "cache_schedule": "Cache schedule",
           "projects": "Project URLs"
         },
         "data_description": {
-          "cache_schedule": "How often the space status is expected to change.",
           "projects": "URLs of projects hosted by the space."
         }
       },
@@ -149,12 +142,10 @@
       "spacefed": {
         "data": {
           "spacenet": "SpaceNet",
-          "spacephone": "SpacePhone",
           "spacesaml": "SpaceSAML"
         },
         "data_description": {
           "spacenet": "Whether the space supports SpaceNet.",
-          "spacephone": "Whether the space supports SpacePhone.",
           "spacesaml": "Whether the space supports SpaceSAML."
         }
       },
@@ -167,16 +158,6 @@
           "icon_closed": "URL of the icon to display when the space is closed.",
           "icon_open": "URL of the icon to display when the space is open."
         }
-      }
-    }
-  },
-  "selector": {
-    "issue_report_channels": {
-      "options": {
-        "email": "Email",
-        "issue_mail": "Issue mail",
-        "ml": "Mailing list",
-        "twitter": "Twitter"
       }
     }
   }
