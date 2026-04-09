@@ -8,6 +8,7 @@ import vol
 
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlowResult
 from homeassistant.const import CONF_TOKEN
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.config_entry_oauth2_flow import AbstractOAuth2FlowHandler
 import homeassistant.helpers.config_validation as cv
 
