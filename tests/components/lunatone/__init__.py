@@ -13,12 +13,15 @@ from lunatone_rest_api_client.models import (
 )
 from lunatone_rest_api_client.models.common import ColorRGBData, ColorWAFData, Status
 from lunatone_rest_api_client.models.devices import DeviceStatus
+from yarl import URL
 
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
 
-BASE_URL: Final = "http://10.0.0.131"
+BASE_IP: Final = "10.0.0.131"
+BASE_URL: Final = URL.build(scheme="http", host=BASE_IP).human_repr()[:-1]
+MANUFACTURER: Final = "Lunatone Industrielle Elektronik GmbH"
 PRODUCT_NAME: Final = "Test Product"
 SERIAL_NUMBER: Final = 12345
 UUID: Final = "be37ca9c-47c2-4498-a38b-c62c7c711840"
