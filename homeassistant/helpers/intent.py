@@ -1181,17 +1181,11 @@ class DynamicServiceIntentHandler(IntentHandler):
 
         After the timeout the task will continue to run in the background.
         """
-        try:
-            await asyncio.wait({task}, timeout=self.service_timeout)
-        except TimeoutError:
-            pass
-        except asyncio.CancelledError:
-            # Task calling us was cancelled, so cancel service call task, and wait for
-            # it to be cancelled, within reason, before leaving.
-            _LOGGER.debug("Service call was cancelled: %s", task.get_name())
-            task.cancel()
-            await asyncio.wait({task}, timeout=5)
-            raise
+        done, _ = await asyncio.wait({task}, timeout=self.service_timeout)
+        if done:
+            # Task finished within the timeout. Re-raise any exception
+            # (e.g. validation errors) so the caller can handle it.
+            task.result()
 
 
 class ServiceIntentHandler(DynamicServiceIntentHandler):
