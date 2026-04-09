@@ -260,7 +260,7 @@
           "cooking_common_program_hood_automatic": "[%key:component::home_connect::selector::programs::options::cooking_common_program_hood_automatic%]",
           "cooking_common_program_hood_delayed_shut_off": "[%key:component::home_connect::selector::programs::options::cooking_common_program_hood_delayed_shut_off%]",
           "cooking_common_program_hood_venting": "[%key:component::home_connect::selector::programs::options::cooking_common_program_hood_venting%]",
-          "cooking_oven_program_heating_mode_3_d_heating": "[%key:component::home_connect::selector::programs::options::cooking_oven_program_heating_mode_3_d_heating%]",
+          "cooking_oven_program_heating_mode_3_d_hot_air": "[%key:component::home_connect::selector::programs::options::cooking_oven_program_heating_mode_3_d_hot_air%]",
           "cooking_oven_program_heating_mode_air_fry": "[%key:component::home_connect::selector::programs::options::cooking_oven_program_heating_mode_air_fry%]",
           "cooking_oven_program_heating_mode_bottom_heating": "[%key:component::home_connect::selector::programs::options::cooking_oven_program_heating_mode_bottom_heating%]",
           "cooking_oven_program_heating_mode_bread_baking": "[%key:component::home_connect::selector::programs::options::cooking_oven_program_heating_mode_bread_baking%]",
@@ -431,7 +431,7 @@
         }
       },
       "bean_container": {
-        "name": "[%key:component::home_connect::services::set_program_and_options::fields::consumer_products_coffee_maker_option_bean_container::name%]",
+        "name": "[%key:component::home_connect::services::set_program_and_options::fields::consumer_products_coffee_maker_option_bean_container_selection::name%]",
         "state": {
           "consumer_products_coffee_maker_enum_type_bean_container_selection_left": "[%key:component::home_connect::selector::bean_container::options::consumer_products_coffee_maker_enum_type_bean_container_selection_left%]",
           "consumer_products_coffee_maker_enum_type_bean_container_selection_right": "[%key:component::home_connect::selector::bean_container::options::consumer_products_coffee_maker_enum_type_bean_container_selection_right%]"
@@ -484,9 +484,9 @@
       "current_map": {
         "name": "Current map",
         "state": {
-          "consumer_products_cleaning_robot_enum_type_available_maps_map1": "[%key:component::home_connect::selector::available_maps::options::consumer_products_cleaning_robot_enum_type_available_maps_map1%]",
-          "consumer_products_cleaning_robot_enum_type_available_maps_map2": "[%key:component::home_connect::selector::available_maps::options::consumer_products_cleaning_robot_enum_type_available_maps_map2%]",
-          "consumer_products_cleaning_robot_enum_type_available_maps_map3": "[%key:component::home_connect::selector::available_maps::options::consumer_products_cleaning_robot_enum_type_available_maps_map3%]",
+          "consumer_products_cleaning_robot_enum_type_available_maps_map_1": "[%key:component::home_connect::selector::available_maps::options::consumer_products_cleaning_robot_enum_type_available_maps_map_1%]",
+          "consumer_products_cleaning_robot_enum_type_available_maps_map_2": "[%key:component::home_connect::selector::available_maps::options::consumer_products_cleaning_robot_enum_type_available_maps_map_2%]",
+          "consumer_products_cleaning_robot_enum_type_available_maps_map_3": "[%key:component::home_connect::selector::available_maps::options::consumer_products_cleaning_robot_enum_type_available_maps_map_3%]",
           "consumer_products_cleaning_robot_enum_type_available_maps_temp_map": "[%key:component::home_connect::selector::available_maps::options::consumer_products_cleaning_robot_enum_type_available_maps_temp_map%]"
         }
       },
@@ -557,19 +557,19 @@
         }
       },
       "intensive_level": {
-        "name": "[%key:component::home_connect::services::set_program_and_options::fields::cooking_hood_option_intensive_level::name%]",
+        "name": "[%key:component::home_connect::services::set_program_and_options::fields::cooking_common_option_hood_intensive_level::name%]",
         "state": {
-          "cooking_hood_enum_type_intensive_stage_intensive_stage1": "[%key:component::home_connect::selector::intensive_level::options::cooking_hood_enum_type_intensive_stage_intensive_stage1%]",
-          "cooking_hood_enum_type_intensive_stage_intensive_stage2": "[%key:component::home_connect::selector::intensive_level::options::cooking_hood_enum_type_intensive_stage_intensive_stage2%]",
+          "cooking_hood_enum_type_intensive_stage_intensive_stage_1": "[%key:component::home_connect::selector::intensive_level::options::cooking_hood_enum_type_intensive_stage_intensive_stage_1%]",
+          "cooking_hood_enum_type_intensive_stage_intensive_stage_2": "[%key:component::home_connect::selector::intensive_level::options::cooking_hood_enum_type_intensive_stage_intensive_stage_2%]",
           "cooking_hood_enum_type_intensive_stage_intensive_stage_off": "[%key:component::home_connect::selector::intensive_level::options::cooking_hood_enum_type_intensive_stage_intensive_stage_off%]"
         }
       },
       "reference_map_id": {
         "name": "[%key:component::home_connect::services::set_program_and_options::fields::consumer_products_cleaning_robot_option_reference_map_id::name%]",
         "state": {
-          "consumer_products_cleaning_robot_enum_type_available_maps_map1": "[%key:component::home_connect::selector::available_maps::options::consumer_products_cleaning_robot_enum_type_available_maps_map1%]",
-          "consumer_products_cleaning_robot_enum_type_available_maps_map2": "[%key:component::home_connect::selector::available_maps::options::consumer_products_cleaning_robot_enum_type_available_maps_map2%]",
-          "consumer_products_cleaning_robot_enum_type_available_maps_map3": "[%key:component::home_connect::selector::available_maps::options::consumer_products_cleaning_robot_enum_type_available_maps_map3%]",
+          "consumer_products_cleaning_robot_enum_type_available_maps_map_1": "[%key:component::home_connect::selector::available_maps::options::consumer_products_cleaning_robot_enum_type_available_maps_map_1%]",
+          "consumer_products_cleaning_robot_enum_type_available_maps_map_2": "[%key:component::home_connect::selector::available_maps::options::consumer_products_cleaning_robot_enum_type_available_maps_map_2%]",
+          "consumer_products_cleaning_robot_enum_type_available_maps_map_3": "[%key:component::home_connect::selector::available_maps::options::consumer_products_cleaning_robot_enum_type_available_maps_map_3%]",
           "consumer_products_cleaning_robot_enum_type_available_maps_temp_map": "[%key:component::home_connect::selector::available_maps::options::consumer_products_cleaning_robot_enum_type_available_maps_temp_map%]"
         }
       },
@@ -620,7 +620,7 @@
           "cooking_common_program_hood_automatic": "[%key:component::home_connect::selector::programs::options::cooking_common_program_hood_automatic%]",
           "cooking_common_program_hood_delayed_shut_off": "[%key:component::home_connect::selector::programs::options::cooking_common_program_hood_delayed_shut_off%]",
           "cooking_common_program_hood_venting": "[%key:component::home_connect::selector::programs::options::cooking_common_program_hood_venting%]",
-          "cooking_oven_program_heating_mode_3_d_heating": "[%key:component::home_connect::selector::programs::options::cooking_oven_program_heating_mode_3_d_heating%]",
+          "cooking_oven_program_heating_mode_3_d_hot_air": "[%key:component::home_connect::selector::programs::options::cooking_oven_program_heating_mode_3_d_hot_air%]",
           "cooking_oven_program_heating_mode_air_fry": "[%key:component::home_connect::selector::programs::options::cooking_oven_program_heating_mode_air_fry%]",
           "cooking_oven_program_heating_mode_bottom_heating": "[%key:component::home_connect::selector::programs::options::cooking_oven_program_heating_mode_bottom_heating%]",
           "cooking_oven_program_heating_mode_bread_baking": "[%key:component::home_connect::selector::programs::options::cooking_oven_program_heating_mode_bread_baking%]",
@@ -786,7 +786,7 @@
         }
       },
       "vario_perfect": {
-        "name": "[%key:component::home_connect::services::set_program_and_options::fields::laundry_care_washer_option_vario_perfect::name%]",
+        "name": "[%key:component::home_connect::services::set_program_and_options::fields::laundry_care_common_option_vario_perfect::name%]",
         "state": {
           "laundry_care_common_enum_type_vario_perfect_eco_perfect": "[%key:component::home_connect::selector::vario_perfect::options::laundry_care_common_enum_type_vario_perfect_eco_perfect%]",
           "laundry_care_common_enum_type_vario_perfect_off": "[%key:common::state::off%]",
@@ -794,7 +794,7 @@
         }
       },
       "venting_level": {
-        "name": "[%key:component::home_connect::services::set_program_and_options::fields::cooking_hood_option_venting_level::name%]",
+        "name": "[%key:component::home_connect::services::set_program_and_options::fields::cooking_common_option_hood_venting_level::name%]",
         "state": {
           "cooking_hood_enum_type_stage_fan_off": "[%key:component::home_connect::selector::venting_level::options::cooking_hood_enum_type_stage_fan_off%]",
           "cooking_hood_enum_type_stage_fan_stage_01": "[%key:component::home_connect::selector::venting_level::options::cooking_hood_enum_type_stage_fan_stage_01%]",
@@ -1272,10 +1272,10 @@
         "name": "[%key:component::home_connect::services::set_program_and_options::fields::dishcare_dishwasher_option_hygiene_plus::name%]"
       },
       "i_dos1_active": {
-        "name": "[%key:component::home_connect::services::set_program_and_options::fields::laundry_care_washer_option_i_dos1_active::name%]"
+        "name": "[%key:component::home_connect::services::set_program_and_options::fields::laundry_care_washer_option_i_dos_1_active::name%]"
       },
       "i_dos2_active": {
-        "name": "[%key:component::home_connect::services::set_program_and_options::fields::laundry_care_washer_option_i_dos2_active::name%]"
+        "name": "[%key:component::home_connect::services::set_program_and_options::fields::laundry_care_washer_option_i_dos_2_active::name%]"
       },
       "intensiv_zone": {
         "name": "[%key:component::home_connect::services::set_program_and_options::fields::dishcare_dishwasher_option_intensiv_zone::name%]"
@@ -1458,9 +1458,9 @@
     },
     "available_maps": {
       "options": {
-        "consumer_products_cleaning_robot_enum_type_available_maps_map1": "Map 1",
-        "consumer_products_cleaning_robot_enum_type_available_maps_map2": "Map 2",
-        "consumer_products_cleaning_robot_enum_type_available_maps_map3": "Map 3",
+        "consumer_products_cleaning_robot_enum_type_available_maps_map_1": "Map 1",
+        "consumer_products_cleaning_robot_enum_type_available_maps_map_2": "Map 2",
+        "consumer_products_cleaning_robot_enum_type_available_maps_map_3": "Map 3",
         "consumer_products_cleaning_robot_enum_type_available_maps_temp_map": "Temporary map"
       }
     },
@@ -1584,8 +1584,8 @@
     },
     "intensive_level": {
       "options": {
-        "cooking_hood_enum_type_intensive_stage_intensive_stage1": "Intensive stage 1",
-        "cooking_hood_enum_type_intensive_stage_intensive_stage2": "Intensive stage 2",
+        "cooking_hood_enum_type_intensive_stage_intensive_stage_1": "Intensive stage 1",
+        "cooking_hood_enum_type_intensive_stage_intensive_stage_2": "Intensive stage 2",
         "cooking_hood_enum_type_intensive_stage_intensive_stage_off": "Intensive stage off"
       }
     },
@@ -1629,7 +1629,7 @@
         "cooking_common_program_hood_automatic": "Automatic",
         "cooking_common_program_hood_delayed_shut_off": "Delayed shut off",
         "cooking_common_program_hood_venting": "Venting",
-        "cooking_oven_program_heating_mode_3_d_heating": "3D heating",
+        "cooking_oven_program_heating_mode_3_d_hot_air": "3D hot air",
         "cooking_oven_program_heating_mode_air_fry": "Air fry",
         "cooking_oven_program_heating_mode_bottom_heating": "Bottom heating",
         "cooking_oven_program_heating_mode_bread_baking": "Bread baking",
@@ -1892,7 +1892,7 @@
           "description": "Describes the amount of coffee beans used in a coffee machine program.",
           "name": "Bean amount"
         },
-        "consumer_products_coffee_maker_option_bean_container": {
+        "consumer_products_coffee_maker_option_bean_container_selection": {
           "description": "Defines the preferred bean container.",
           "name": "Bean container"
         },
@@ -1920,11 +1920,11 @@
           "description": "Defines if double dispensing is enabled.",
           "name": "Multiple beverages"
         },
-        "cooking_hood_option_intensive_level": {
+        "cooking_common_option_hood_intensive_level": {
           "description": "Defines the intensive setting.",
           "name": "Intensive level"
         },
-        "cooking_hood_option_venting_level": {
+        "cooking_common_option_hood_venting_level": {
           "description": "Defines the required fan setting.",
           "name": "Venting level"
         },
@@ -1992,15 +1992,19 @@
           "description": "Defines if the silent mode is activated.",
           "name": "Silent mode"
         },
+        "laundry_care_common_option_vario_perfect": {
+          "description": "Defines if a cycle saves energy (Eco Perfect) or time (Speed Perfect).",
+          "name": "Vario perfect"
+        },
         "laundry_care_dryer_option_drying_target": {
           "description": "Describes the drying target for a dryer program.",
           "name": "Drying target"
         },
-        "laundry_care_washer_option_i_dos1_active": {
+        "laundry_care_washer_option_i_dos_1_active": {
           "description": "Defines if the detergent feed is activated / deactivated. (i-Dos content 1)",
           "name": "i-Dos 1 Active"
         },
-        "laundry_care_washer_option_i_dos2_active": {
+        "laundry_care_washer_option_i_dos_2_active": {
           "description": "Defines if the detergent feed is activated / deactivated. (i-Dos content 2)",
           "name": "i-Dos 2 Active"
         },
@@ -2043,10 +2047,6 @@
         "laundry_care_washer_option_temperature": {
           "description": "Defines the temperature of the washing program.",
           "name": "Temperature"
-        },
-        "laundry_care_washer_option_vario_perfect": {
-          "description": "Defines if a cycle saves energy (Eco Perfect) or time (Speed Perfect).",
-          "name": "Vario perfect"
         },
         "laundry_care_washer_option_water_plus": {
           "description": "Defines if the water plus option is activated.",
