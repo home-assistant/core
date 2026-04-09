@@ -198,3 +198,198 @@ async def test_reconfigure_flow(hass: HomeAssistant) -> None:
     assert entry.data["space"] == "NewSpace"
     assert entry.data["state"]["entity_id"] == "binary_sensor.new_door"
     assert entry.data["contact"]["email"] == "new@example.com"
+
+
+async def test_options_flow_menu(hass: HomeAssistant) -> None:
+    """Test options flow shows the menu with all sub-menu options."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            "space": "Home",
+            "logo": "https://home-assistant.io/logo.png",
+            "url": "https://home-assistant.io",
+            "state": {"entity_id": "binary_sensor.front_door"},
+            "contact": {"email": "hello@home-assistant.io"},
+            "issue_report_channels": ["email"],
+        },
+    )
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+    assert result["type"] is FlowResultType.MENU
+    assert result["step_id"] == "init"
+    assert result["menu_options"] == [
+        "contact",
+        "state_icons",
+        "sensors",
+        "spacefed",
+        "media",
+        "feeds",
+        "other",
+    ]
+
+
+async def test_options_flow_contact(hass: HomeAssistant) -> None:
+    """Test options flow contact sub-menu saves contact details."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            "space": "Home",
+            "logo": "https://home-assistant.io/logo.png",
+            "url": "https://home-assistant.io",
+            "state": {"entity_id": "binary_sensor.front_door"},
+            "contact": {"email": "hello@home-assistant.io"},
+            "issue_report_channels": ["email"],
+        },
+    )
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+    assert result["type"] is FlowResultType.MENU
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        {"next_step_id": "contact"},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "contact"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        {
+            "email": "",
+            "irc": "#hackerspace",
+            "ml": "list@hackerspace.org",
+            "phone": "",
+            "sip": "",
+            "twitter": "@hackerspace",
+            "facebook": "",
+            "identica": "",
+            "foursquare": "",
+            "jabber": "",
+            "issue_mail": "",
+        },
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"]["contact"] == {
+        "irc": "#hackerspace",
+        "ml": "list@hackerspace.org",
+        "twitter": "@hackerspace",
+    }
+
+
+async def test_options_flow_contact_empty_clears(hass: HomeAssistant) -> None:
+    """Test options flow contact clears section when all fields are empty."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            "space": "Home",
+            "logo": "https://home-assistant.io/logo.png",
+            "url": "https://home-assistant.io",
+            "state": {"entity_id": "binary_sensor.front_door"},
+            "contact": {"email": "hello@home-assistant.io"},
+            "issue_report_channels": ["email"],
+        },
+        options={"contact": {"irc": "#old"}},
+    )
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        {"next_step_id": "contact"},
+    )
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        {
+            "email": "",
+            "irc": "",
+            "ml": "",
+            "phone": "",
+            "sip": "",
+            "twitter": "",
+            "facebook": "",
+            "identica": "",
+            "foursquare": "",
+            "jabber": "",
+            "issue_mail": "",
+        },
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert "contact" not in result["data"]
+
+
+async def test_options_flow_sensors(hass: HomeAssistant) -> None:
+    """Test options flow sensors sub-menu saves entity selections."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            "space": "Home",
+            "logo": "https://home-assistant.io/logo.png",
+            "url": "https://home-assistant.io",
+            "state": {"entity_id": "binary_sensor.front_door"},
+            "contact": {"email": "hello@home-assistant.io"},
+            "issue_report_channels": ["email"],
+        },
+    )
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        {"next_step_id": "sensors"},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "sensors"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        {
+            "temperature": ["sensor.temp1", "sensor.temp2"],
+            "humidity": ["sensor.hum1"],
+        },
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"]["sensors"] == {
+        "temperature": ["sensor.temp1", "sensor.temp2"],
+        "humidity": ["sensor.hum1"],
+    }
+
+
+async def test_options_flow_spacefed(hass: HomeAssistant) -> None:
+    """Test options flow spacefed sub-menu saves boolean values."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            "space": "Home",
+            "logo": "https://home-assistant.io/logo.png",
+            "url": "https://home-assistant.io",
+            "state": {"entity_id": "binary_sensor.front_door"},
+            "contact": {"email": "hello@home-assistant.io"},
+            "issue_report_channels": ["email"],
+        },
+    )
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        {"next_step_id": "spacefed"},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "spacefed"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        {
+            "spacenet": True,
+            "spacesaml": False,
+            "spacephone": True,
+        },
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"]["spacefed"] == {
+        "spacenet": True,
+        "spacesaml": False,
+        "spacephone": True,
+    }

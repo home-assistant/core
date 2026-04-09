@@ -49,6 +49,85 @@
       "title": "YAML configuration is being removed"
     }
   },
+  "options": {
+    "step": {
+      "contact": {
+        "data": {
+          "email": "[%key:common::config_flow::data::email%]",
+          "facebook": "Facebook",
+          "foursquare": "Foursquare",
+          "identica": "Identica",
+          "irc": "IRC channel",
+          "issue_mail": "Issue report email",
+          "jabber": "Jabber/XMPP",
+          "ml": "Mailing list",
+          "phone": "Phone",
+          "sip": "SIP",
+          "twitter": "Twitter"
+        }
+      },
+      "feeds": {
+        "data": {
+          "blog_type": "Blog type",
+          "blog_url": "Blog URL",
+          "calendar_type": "Calendar type",
+          "calendar_url": "Calendar URL",
+          "flicker_type": "Flickr type",
+          "flicker_url": "Flickr URL",
+          "wiki_type": "Wiki type",
+          "wiki_url": "Wiki URL"
+        }
+      },
+      "init": {
+        "menu_options": {
+          "contact": "Contact details",
+          "feeds": "Feeds",
+          "media": "Media",
+          "other": "Other",
+          "sensors": "Sensors",
+          "spacefed": "Space federation",
+          "state_icons": "State icons"
+        }
+      },
+      "media": {
+        "data": {
+          "cam": "Camera URLs",
+          "m4": "M4 stream URL",
+          "mjpeg": "MJPEG stream URL",
+          "ustream": "UStream URL"
+        }
+      },
+      "other": {
+        "data": {
+          "cache_schedule": "Cache schedule",
+          "projects": "Project URLs"
+        }
+      },
+      "sensors": {
+        "data": {
+          "humidity": "Humidity sensors",
+          "temperature": "Temperature sensors"
+        },
+        "data_description": {
+          "humidity": "Entities that report humidity.",
+          "temperature": "Entities that report temperature."
+        }
+      },
+      "spacefed": {
+        "data": {
+          "spacenet": "SpaceNet",
+          "spacephone": "SpacePhone",
+          "spacesaml": "SpaceSAML"
+        }
+      },
+      "state_icons": {
+        "data": {
+          "icon_closed": "Icon URL when closed",
+          "icon_open": "Icon URL when open"
+        }
+      }
+    }
+  },
   "selector": {
     "issue_report_channels": {
       "options": {
