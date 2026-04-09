@@ -138,3 +138,54 @@ class SpaceAPIConfigFlow(ConfigFlow, domain=DOMAIN):
             data=data,
             options=options,
         )
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration."""
+        if user_input is None:
+            entry = self._get_reconfigure_entry()
+            return self.async_show_form(
+                step_id="reconfigure",
+                data_schema=self.add_suggested_values_to_schema(
+                    STEP_USER_DATA_SCHEMA,
+                    {
+                        CONF_SPACE: entry.data[CONF_SPACE],
+                        CONF_LOGO: entry.data[CONF_LOGO],
+                        CONF_URL: entry.data[CONF_URL],
+                        "entity_id": entry.data["state"]["entity_id"],
+                        CONF_EMAIL: entry.data[CONF_CONTACT][CONF_EMAIL],
+                        CONF_ISSUE_REPORT_CHANNELS: entry.data[
+                            CONF_ISSUE_REPORT_CHANNELS
+                        ],
+                    },
+                ),
+            )
+
+        entry = self._get_reconfigure_entry()
+        return self.async_update_reload_and_abort(
+            entry,
+            title=user_input[CONF_SPACE],
+            data_updates={
+                CONF_SPACE: user_input[CONF_SPACE],
+                CONF_LOGO: user_input[CONF_LOGO],
+                CONF_URL: user_input[CONF_URL],
+                "state": {
+                    "entity_id": user_input["entity_id"],
+                    **{
+                        k: v
+                        for k, v in entry.data.get("state", {}).items()
+                        if k != "entity_id"
+                    },
+                },
+                CONF_CONTACT: {
+                    CONF_EMAIL: user_input[CONF_EMAIL],
+                    **{
+                        k: v
+                        for k, v in entry.data.get(CONF_CONTACT, {}).items()
+                        if k != CONF_EMAIL
+                    },
+                },
+                CONF_ISSUE_REPORT_CHANNELS: user_input[CONF_ISSUE_REPORT_CHANNELS],
+            },
+        )
