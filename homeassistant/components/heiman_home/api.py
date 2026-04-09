@@ -110,7 +110,7 @@ class HeimanApiClient:
         except HeimanConnectionError:
             raise
         except Exception as err:
-            _LOGGER.exception("Unexpected error getting user info: %s", err)
+            _LOGGER.exception("Unexpected error getting user info")
             raise HeimanConnectionError(f"Failed to get user info: {err}") from err
         else:
             _LOGGER.debug("Retrieved user info: %s", user.email)
@@ -138,7 +138,7 @@ class HeimanApiClient:
         except HeimanConnectionError:
             raise
         except Exception as err:
-            _LOGGER.exception("Unexpected error getting homes: %s", err)
+            _LOGGER.exception("Unexpected error getting homes")
             raise HeimanConnectionError(f"Failed to get homes: {err}") from err
         else:
             _LOGGER.debug("Retrieved %d homes", len(homes))
@@ -171,7 +171,7 @@ class HeimanApiClient:
         except HeimanConnectionError:
             raise
         except Exception as err:
-            _LOGGER.exception("Unexpected error getting devices: %s", err)
+            _LOGGER.exception("Unexpected error getting devices")
             raise HeimanConnectionError(f"Failed to get devices: {err}") from err
         else:
             _LOGGER.debug("Retrieved %d devices", len(devices))
@@ -202,7 +202,7 @@ class HeimanApiClient:
         except HeimanConnectionError:
             raise
         except Exception as err:
-            _LOGGER.exception("Unexpected error getting device properties: %s", err)
+            _LOGGER.exception("Unexpected error getting device properties")
             raise HeimanConnectionError(
                 f"Failed to get device properties: {err}"
             ) from err
@@ -248,7 +248,7 @@ class HeimanApiClient:
         except HeimanConnectionError:
             raise
         except Exception as err:
-            _LOGGER.exception("Unexpected error controlling device: %s", err)
+            _LOGGER.exception("Unexpected error controlling device")
             raise HeimanConnectionError(f"Failed to control device: {err}") from err
         else:
             _LOGGER.debug(
@@ -267,6 +267,11 @@ class HeimanApiClient:
 
         Returns:
             Dictionary with device details or None if not available
+
+        Note:
+            This method uses the internal _async_get_device_detail from heimanconnect
+            library as there is no public API available. This is necessary to access
+            deriveMetadata which contains real-time property values.
         """
         if not self._cloud_client:
             _LOGGER.warning("Cloud client not initialized")
@@ -274,6 +279,9 @@ class HeimanApiClient:
 
         try:
             # Use the internal method to get device detail
+            # Note: This accesses a private method from heimanconnect library
+            # because deriveMetadata (containing property values) is only available
+            # through this internal endpoint
             device_detail = await self._cloud_client._async_get_device_detail(device_id)
             return device_detail
         except Exception as err:

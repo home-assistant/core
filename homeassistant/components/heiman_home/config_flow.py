@@ -63,7 +63,9 @@ class HeimanConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
 
         try:
             user_info = await api_client.async_get_user_info()
-        except Exception as err:
+        except ConfigEntryAuthFailed:
+            return self.async_abort(reason="token_invalid")
+        except Exception as err:  # noqa: BLE001
             _LOGGER.error("Failed to get user info: %s", err)
             return self.async_abort(reason="token_invalid")
 
@@ -72,7 +74,9 @@ class HeimanConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
             homes = await api_client.async_get_homes()
             if not homes:
                 return self.async_abort(reason="no_homes")
-        except Exception as err:
+        except ConfigEntryAuthFailed:
+            return self.async_abort(reason="token_invalid")
+        except Exception as err:  # noqa: BLE001
             _LOGGER.error("Failed to get homes: %s", err)
             return self.async_abort(reason="homes_fetch_failed")
 
@@ -131,7 +135,7 @@ class HeimanConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
                 )
 
             # Handle re-authentication
-            if (entry := self._get_reauth_entry()) and CONF_TOKEN not in entry.data:
+            if entry := self._get_reauth_entry():
                 if entry.data.get(CONF_USER_ID) != self._auth_info.user_info.user_id:
                     return self.async_abort(reason="reauth_user_mismatch")
                 return self.async_update_reload_and_abort(

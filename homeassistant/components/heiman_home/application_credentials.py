@@ -107,7 +107,7 @@ class HeimanOAuth2Implementation(AuthImplementation):
             # Re-raise ValueError as-is
             raise
         except Exception as err:
-            _LOGGER.exception("Failed to process token response: %s", err)
+            _LOGGER.exception("Failed to process token response")
             raise
 
     async def _parse_token_response(self, resp: ClientResponse) -> dict:
