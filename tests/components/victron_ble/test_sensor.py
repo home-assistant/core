@@ -235,9 +235,19 @@ async def test_reauth_not_triggered_on_unknown_enum_value(
     assert await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    for _ in range(REAUTH_AFTER_FAILURES + 1):
+    service_info = VICTRON_DC_DC_CONVERTER_UNKNOWN_OFF_REASON_SERVICE_INFO
+    for idx in range(REAUTH_AFTER_FAILURES + 1):
         inject_bluetooth_service_info(
-            hass, VICTRON_DC_DC_CONVERTER_UNKNOWN_OFF_REASON_SERVICE_INFO
+            hass,
+            BluetoothServiceInfo(
+                name=service_info.name,
+                address=service_info.address,
+                rssi=service_info.rssi - idx,
+                manufacturer_data=service_info.manufacturer_data,
+                service_data=service_info.service_data,
+                service_uuids=service_info.service_uuids,
+                source=service_info.source,
+            ),
         )
         await hass.async_block_till_done()
 

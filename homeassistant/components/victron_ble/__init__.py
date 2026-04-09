@@ -57,6 +57,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                     consecutive_failures = 0
             else:
                 consecutive_failures = 0
+        else:
+            consecutive_failures = 0
 
         return update
 
