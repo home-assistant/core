@@ -1,0 +1,12 @@
+{
+  "domain": "xthings_cloud",
+  "name": "Xthings Cloud",
+  "codeowners": ["jacobs@xthings.com"],
+  "config_flow": true,
+  "documentation": "",
+  "integration_type": "hub",
+  "iot_class": "cloud_push",
+  "requirements": [],
+  "loggers": ["custom_components.xthings_cloud"],
+  "version": "1.0.0"
+}
