@@ -144,11 +144,13 @@ def get_setpoint_status(status: str, time: str) -> str | None:
     return LYRIC_SETPOINT_STATUS_NAMES.get(status)
 
 
-def get_datetime_from_future_time(time_str: str) -> datetime:
+def get_datetime_from_future_time(time_str: str | None) -> datetime | None:
     """Get datetime from future time provided."""
+    if time_str is None:
+        return None
     time = dt_util.parse_time(time_str)
     if time is None:
-        raise ValueError(f"Unable to parse time {time_str}")
+        return None
     now = dt_util.utcnow()
     if time <= now.time():
         now = now + timedelta(days=1)
