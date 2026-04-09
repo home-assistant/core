@@ -475,7 +475,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "hyperion",
     "ialarm",
     "iammeter",
-    "iaqualink",
     "ibeacon",
     "icloud",
     "idteck_prox",
