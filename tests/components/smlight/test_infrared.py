@@ -3,7 +3,6 @@
 from unittest.mock import MagicMock
 
 from infrared_protocols import Command, Timing
-from pysmlight import Info
 from pysmlight.exceptions import SmlightError
 from pysmlight.models import IRPayload
 import pytest
@@ -54,11 +53,6 @@ async def test_infrared_not_created_non_ultima(
     mock_smlight_client: MagicMock,
 ) -> None:
     """Test infrared entity is not created for non-Ultima devices."""
-    mock_smlight_client.get_info.side_effect = None
-    mock_smlight_client.get_info.return_value = Info(
-        MAC="AA:BB:CC:DD:EE:FF",
-        model="SLZB-MR1",
-    )
     await setup_integration(hass, mock_config_entry)
 
     state = hass.states.get("infrared.mock_title_ir_emitter")
