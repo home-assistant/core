@@ -351,7 +351,7 @@ async def test_switch_device_wan_access(
     wan_access_data: str | None,
     expected_state: str,
 ) -> None:
-    """Test Fritz!Tools switches has proper WAN access state."""
+    """Test Fritz!Tools switches have proper WAN access state."""
 
     entity_id = "switch.printer_internet_access"
 
