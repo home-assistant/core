@@ -416,7 +416,7 @@ class MusicAssistantPlayer(MusicAssistantEntity, MediaPlayerEntity):
         sound_mode_id = self._sound_mode_list_mapping.get(sound_mode)
         if sound_mode_id is None:
             raise ServiceValidationError(
-                f"Source '{sound_mode}' not found for player {self.name}"
+                f"Sound mode '{sound_mode}' not found for player {self.name}"
             )
         await self.mass.players.select_sound_mode(self.player_id, sound_mode_id)
 
