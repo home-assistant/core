@@ -33,8 +33,6 @@ from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import dt as dt_util
 
 from .const import (
-    CONF_CACHE,
-    CONF_CACHE_SCHEDULE,
     CONF_CAM,
     CONF_CONTACT,
     CONF_FACEBOOK,
@@ -45,15 +43,10 @@ from .const import (
     CONF_FEED_URL,
     CONF_FEED_WIKI,
     CONF_FEEDS,
-    CONF_FOURSQUARE,
     CONF_ICON_CLOSED,
     CONF_ICON_OPEN,
     CONF_ICONS,
-    CONF_IDENTICA,
     CONF_IRC,
-    CONF_ISSUE_MAIL,
-    CONF_ISSUE_REPORT_CHANNELS,
-    CONF_JABBER,
     CONF_KEYMASTER_EMAIL,
     CONF_KEYMASTER_IRC_NICK,
     CONF_KEYMASTER_NAME,
@@ -61,48 +54,31 @@ from .const import (
     CONF_KEYMASTER_TWITTER,
     CONF_KEYMASTERS,
     CONF_LOGO,
-    CONF_M4,
-    CONF_MJPEG,
     CONF_ML,
     CONF_PHONE,
     CONF_PROJECTS,
-    CONF_RADIO_SHOW,
-    CONF_RADIO_SHOW_END,
-    CONF_RADIO_SHOW_NAME,
-    CONF_RADIO_SHOW_START,
-    CONF_RADIO_SHOW_TYPE,
-    CONF_RADIO_SHOW_URL,
     CONF_SIP,
     CONF_SPACE,
     CONF_SPACEFED,
     CONF_SPACENET,
-    CONF_SPACEPHONE,
     CONF_SPACESAML,
-    CONF_STREAM,
     CONF_TWITTER,
-    CONF_USTREAM,
     DATA_SPACEAPI,
     DOMAIN,
-    ISSUE_REPORT_CHANNELS,
     SENSOR_TYPES,
-    SPACEAPI_VERSION,
+    SPACEAPI_COMPATIBILITY,
     URL_API_SPACEAPI,
 )
 
 ATTR_ADDRESS = "address"
 ATTR_SPACEFED = "spacefed"
 ATTR_CAM = "cam"
-ATTR_STREAM = "stream"
 ATTR_FEEDS = "feeds"
-ATTR_CACHE = "cache"
 ATTR_PROJECTS = "projects"
-ATTR_RADIO_SHOW = "radio_show"
 ATTR_LAT = "lat"
 ATTR_LON = "lon"
-ATTR_API = "api"
 ATTR_CLOSED = "closed"
 ATTR_CONTACT = "contact"
-ATTR_ISSUE_REPORT_CHANNELS = "issue_report_channels"
 ATTR_LASTCHANGE = "lastchange"
 ATTR_LOGO = "logo"
 ATTR_OPEN = "open"
@@ -119,15 +95,7 @@ SPACEFED_SCHEMA = vol.Schema(
     {
         vol.Optional(CONF_SPACENET): cv.boolean,
         vol.Optional(CONF_SPACESAML): cv.boolean,
-        vol.Optional(CONF_SPACEPHONE): cv.boolean,
-    }
-)
-
-STREAM_SCHEMA = vol.Schema(
-    {
-        vol.Optional(CONF_M4): cv.url,
-        vol.Optional(CONF_MJPEG): cv.url,
-        vol.Optional(CONF_USTREAM): cv.url,
+        vol.Optional("spacephone"): cv.boolean,
     }
 )
 
@@ -141,24 +109,6 @@ FEEDS_SCHEMA = vol.Schema(
         vol.Optional(CONF_FEED_WIKI): FEED_SCHEMA,
         vol.Optional(CONF_FEED_CALENDAR): FEED_SCHEMA,
         vol.Optional(CONF_FEED_FLICKER): FEED_SCHEMA,
-    }
-)
-
-CACHE_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_CACHE_SCHEDULE): cv.matches_regex(
-            r"(m.02|m.05|m.10|m.15|m.30|h.01|h.02|h.04|h.08|h.12|d.01)"
-        )
-    }
-)
-
-RADIO_SHOW_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_RADIO_SHOW_NAME): cv.string,
-        vol.Required(CONF_RADIO_SHOW_URL): cv.url,
-        vol.Required(CONF_RADIO_SHOW_TYPE): cv.matches_regex(r"(mp3|ogg)"),
-        vol.Required(CONF_RADIO_SHOW_START): cv.string,
-        vol.Required(CONF_RADIO_SHOW_END): cv.string,
     }
 )
 
@@ -181,10 +131,10 @@ CONTACT_SCHEMA = vol.Schema(
         vol.Optional(CONF_TWITTER): cv.string,
         vol.Optional(CONF_SIP): cv.string,
         vol.Optional(CONF_FACEBOOK): cv.string,
-        vol.Optional(CONF_IDENTICA): cv.string,
-        vol.Optional(CONF_FOURSQUARE): cv.string,
-        vol.Optional(CONF_JABBER): cv.string,
-        vol.Optional(CONF_ISSUE_MAIL): cv.string,
+        vol.Optional("identica"): cv.string,
+        vol.Optional("foursquare"): cv.string,
+        vol.Optional("jabber"): cv.string,
+        vol.Optional("issue_mail"): cv.string,
         vol.Optional(CONF_KEYMASTERS): vol.All(
             cv.ensure_list, [KEYMASTER_SCHEMA], vol.Length(min=1)
         ),
@@ -205,13 +155,40 @@ SENSOR_SCHEMA = vol.Schema(
     {vol.In(SENSOR_TYPES): [cv.entity_id], cv.string: [cv.entity_id]}
 )
 
+STREAM_SCHEMA = vol.Schema(
+    {
+        vol.Optional("m4"): cv.url,
+        vol.Optional("mjpeg"): cv.url,
+        vol.Optional("ustream"): cv.url,
+    }
+)
+
+CACHE_SCHEMA = vol.Schema(
+    {
+        vol.Required("schedule"): cv.matches_regex(
+            r"(m.02|m.05|m.10|m.15|m.30|h.01|h.02|h.04|h.08|h.12|d.01)"
+        )
+    }
+)
+
+RADIO_SHOW_SCHEMA = vol.Schema(
+    {
+        vol.Required("name"): cv.string,
+        vol.Required("url"): cv.url,
+        vol.Required("type"): cv.matches_regex(r"(mp3|ogg)"),
+        vol.Required("start"): cv.string,
+        vol.Required("end"): cv.string,
+    }
+)
+
 CONFIG_SCHEMA = vol.Schema(
     {
         DOMAIN: vol.Schema(
             {
                 vol.Required(CONF_CONTACT): CONTACT_SCHEMA,
-                vol.Required(CONF_ISSUE_REPORT_CHANNELS): vol.All(
-                    cv.ensure_list, [vol.In(ISSUE_REPORT_CHANNELS)]
+                vol.Required("issue_report_channels"): vol.All(
+                    cv.ensure_list,
+                    [vol.In([CONF_EMAIL, "issue_mail", CONF_ML, CONF_TWITTER])],
                 ),
                 vol.Optional(CONF_LOCATION): LOCATION_SCHEMA,
                 vol.Required(CONF_LOGO): cv.url,
@@ -223,11 +200,11 @@ CONFIG_SCHEMA = vol.Schema(
                 vol.Optional(CONF_CAM): vol.All(
                     cv.ensure_list, [cv.url], vol.Length(min=1)
                 ),
-                vol.Optional(CONF_STREAM): STREAM_SCHEMA,
+                vol.Optional("stream"): STREAM_SCHEMA,
                 vol.Optional(CONF_FEEDS): FEEDS_SCHEMA,
-                vol.Optional(CONF_CACHE): CACHE_SCHEMA,
+                vol.Optional("cache"): CACHE_SCHEMA,
                 vol.Optional(CONF_PROJECTS): vol.All(cv.ensure_list, [cv.url]),
-                vol.Optional(CONF_RADIO_SHOW): vol.All(
+                vol.Optional("radio_show"): vol.All(
                     cv.ensure_list, [RADIO_SHOW_SCHEMA]
                 ),
             }
@@ -396,36 +373,39 @@ class APISpaceApiView(HomeAssistantView):
         except TypeError:
             pass
 
-        state_entity_id = spaceapi[CONF_STATE][ATTR_ENTITY_ID]
-
-        state: dict[str, bool | int | float | str | dict[str, str]]
-        if (space_state := hass.states.get(state_entity_id)) is not None:
-            state = {
-                ATTR_OPEN: space_state.state != "off",
-                ATTR_LASTCHANGE: dt_util.as_timestamp(space_state.last_updated),
-            }
-        else:
-            state = {
-                ATTR_OPEN: "null",
-                ATTR_LASTCHANGE: 0,
-            }
-
-        with suppress(KeyError):
-            state[ATTR_ICON] = {
-                ATTR_OPEN: spaceapi[CONF_STATE][CONF_ICON_OPEN],
-                ATTR_CLOSED: spaceapi[CONF_STATE][CONF_ICON_CLOSED],
-            }
-
-        data = {
-            ATTR_API: SPACEAPI_VERSION,
+        data: dict[str, Any] = {
+            "api_compatibility": SPACEAPI_COMPATIBILITY,
             ATTR_CONTACT: spaceapi[CONF_CONTACT],
-            ATTR_ISSUE_REPORT_CHANNELS: spaceapi[CONF_ISSUE_REPORT_CHANNELS],
             ATTR_LOCATION: location,
             ATTR_LOGO: spaceapi[CONF_LOGO],
             ATTR_SPACE: spaceapi[CONF_SPACE],
-            ATTR_STATE: state,
             ATTR_URL: spaceapi[CONF_URL],
         }
+
+        if CONF_STATE in spaceapi:
+            state_entity_id = spaceapi[CONF_STATE][ATTR_ENTITY_ID]
+
+            state: dict[str, bool | int | float | str | dict[str, str]]
+            if (space_state := hass.states.get(state_entity_id)) is not None:
+                state = {
+                    ATTR_OPEN: space_state.state != "off",
+                    ATTR_LASTCHANGE: int(
+                        dt_util.as_timestamp(space_state.last_updated)
+                    ),
+                }
+            else:
+                state = {
+                    ATTR_OPEN: False,
+                    ATTR_LASTCHANGE: 0,
+                }
+
+            with suppress(KeyError):
+                state[ATTR_ICON] = {
+                    ATTR_OPEN: spaceapi[CONF_STATE][CONF_ICON_OPEN],
+                    ATTR_CLOSED: spaceapi[CONF_STATE][CONF_ICON_CLOSED],
+                }
+
+            data[ATTR_STATE] = state
 
         with suppress(KeyError):
             data[ATTR_CAM] = spaceapi[CONF_CAM]
@@ -434,19 +414,10 @@ class APISpaceApiView(HomeAssistantView):
             data[ATTR_SPACEFED] = spaceapi[CONF_SPACEFED]
 
         with suppress(KeyError):
-            data[ATTR_STREAM] = spaceapi[CONF_STREAM]
-
-        with suppress(KeyError):
             data[ATTR_FEEDS] = spaceapi[CONF_FEEDS]
 
         with suppress(KeyError):
-            data[ATTR_CACHE] = spaceapi[CONF_CACHE]
-
-        with suppress(KeyError):
             data[ATTR_PROJECTS] = spaceapi[CONF_PROJECTS]
-
-        with suppress(KeyError):
-            data[ATTR_RADIO_SHOW] = spaceapi[CONF_RADIO_SHOW]
 
         sensors: dict[str, list[str]] | None = spaceapi.get(CONF_SENSORS)
         if isinstance(sensors, dict):

@@ -16,7 +16,6 @@ USER_INPUT = {
     "url": "https://home-assistant.io",
     "entity_id": "binary_sensor.front_door",
     "email": "hello@home-assistant.io",
-    "issue_report_channels": ["email"],
 }
 
 YAML_CONFIG = {
@@ -24,7 +23,12 @@ YAML_CONFIG = {
     "logo": "https://home-assistant.io/logo.png",
     "url": "https://home-assistant.io",
     "location": {"address": "In your Home"},
-    "contact": {"email": "hello@home-assistant.io"},
+    "contact": {
+        "email": "hello@home-assistant.io",
+        "jabber": "space@conference.jabber.org",
+        "identica": "space_identica",
+        "foursquare": "space_foursquare",
+    },
     "issue_report_channels": ["email"],
     "state": {
         "entity_id": "test.test_door",
@@ -61,7 +65,6 @@ async def test_user_flow(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> No
         "url": "https://home-assistant.io",
         "state": {"entity_id": "binary_sensor.front_door"},
         "contact": {"email": "hello@home-assistant.io"},
-        "issue_report_channels": ["email"],
     }
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -78,7 +81,6 @@ async def test_user_flow_already_configured(
             "url": "https://example.com",
             "state": {"entity_id": "binary_sensor.door"},
             "contact": {"email": "test@example.com"},
-            "issue_report_channels": ["email"],
         },
     )
     entry.add_to_hass(hass)
@@ -116,9 +118,19 @@ async def test_import_flow(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> 
         "url": "https://home-assistant.io",
         "state": {"entity_id": "test.test_door"},
         "contact": {"email": "hello@home-assistant.io"},
-        "issue_report_channels": ["email"],
     }
+    # Verify jabber was renamed to xmpp
+    assert "jabber" not in result["options"].get("contact", {})
+    assert result["options"]["contact"]["xmpp"] == "space@conference.jabber.org"
+    # Verify dropped fields are not present
+    assert "identica" not in result["options"].get("contact", {})
+    assert "foursquare" not in result["options"].get("contact", {})
+    assert "spacephone" not in result["options"].get("spacefed", {})
+    assert "stream" not in result["options"]
+    assert "cache" not in result["options"]
+    assert "radio_show" not in result["options"]
     assert result["options"] == {
+        "contact": {"xmpp": "space@conference.jabber.org"},
         "state": {
             "icon_open": "https://home-assistant.io/open.png",
             "icon_closed": "https://home-assistant.io/close.png",
@@ -127,7 +139,7 @@ async def test_import_flow(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> 
             "temperature": ["test.temp1"],
             "humidity": ["test.hum1"],
         },
-        "spacefed": {"spacenet": True, "spacesaml": False, "spacephone": True},
+        "spacefed": {"spacenet": True, "spacesaml": False},
         "location": {"address": "In your Home"},
     }
     assert len(mock_setup_entry.mock_calls) == 1
@@ -145,7 +157,6 @@ async def test_import_flow_already_configured(
             "url": "https://example.com",
             "state": {"entity_id": "binary_sensor.door"},
             "contact": {"email": "test@example.com"},
-            "issue_report_channels": ["email"],
         },
     )
     entry.add_to_hass(hass)
@@ -171,7 +182,6 @@ async def test_reconfigure_flow(hass: HomeAssistant) -> None:
             "url": "https://example.com",
             "state": {"entity_id": "binary_sensor.door"},
             "contact": {"email": "old@example.com"},
-            "issue_report_channels": ["email"],
         },
     )
     entry.add_to_hass(hass)
@@ -188,7 +198,6 @@ async def test_reconfigure_flow(hass: HomeAssistant) -> None:
             "url": "https://example.com/new",
             "entity_id": "binary_sensor.new_door",
             "email": "new@example.com",
-            "issue_report_channels": ["email", "twitter"],
         },
     )
     await hass.async_block_till_done()
@@ -210,7 +219,6 @@ async def test_options_flow_menu(hass: HomeAssistant) -> None:
             "url": "https://home-assistant.io",
             "state": {"entity_id": "binary_sensor.front_door"},
             "contact": {"email": "hello@home-assistant.io"},
-            "issue_report_channels": ["email"],
         },
     )
     entry.add_to_hass(hass)
@@ -239,7 +247,6 @@ async def test_options_flow_contact(hass: HomeAssistant) -> None:
             "url": "https://home-assistant.io",
             "state": {"entity_id": "binary_sensor.front_door"},
             "contact": {"email": "hello@home-assistant.io"},
-            "issue_report_channels": ["email"],
         },
     )
     entry.add_to_hass(hass)
@@ -264,10 +271,11 @@ async def test_options_flow_contact(hass: HomeAssistant) -> None:
             "sip": "",
             "twitter": "@hackerspace",
             "facebook": "",
-            "identica": "",
-            "foursquare": "",
-            "jabber": "",
-            "issue_mail": "",
+            "mastodon": "",
+            "matrix": "",
+            "xmpp": "",
+            "mumble": "",
+            "gopher": "",
         },
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
@@ -288,7 +296,6 @@ async def test_options_flow_contact_empty_clears(hass: HomeAssistant) -> None:
             "url": "https://home-assistant.io",
             "state": {"entity_id": "binary_sensor.front_door"},
             "contact": {"email": "hello@home-assistant.io"},
-            "issue_report_channels": ["email"],
         },
         options={"contact": {"irc": "#old"}},
     )
@@ -309,10 +316,11 @@ async def test_options_flow_contact_empty_clears(hass: HomeAssistant) -> None:
             "sip": "",
             "twitter": "",
             "facebook": "",
-            "identica": "",
-            "foursquare": "",
-            "jabber": "",
-            "issue_mail": "",
+            "mastodon": "",
+            "matrix": "",
+            "xmpp": "",
+            "mumble": "",
+            "gopher": "",
         },
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
@@ -329,7 +337,6 @@ async def test_options_flow_sensors(hass: HomeAssistant) -> None:
             "url": "https://home-assistant.io",
             "state": {"entity_id": "binary_sensor.front_door"},
             "contact": {"email": "hello@home-assistant.io"},
-            "issue_report_channels": ["email"],
         },
     )
     entry.add_to_hass(hass)
@@ -366,7 +373,6 @@ async def test_options_flow_spacefed(hass: HomeAssistant) -> None:
             "url": "https://home-assistant.io",
             "state": {"entity_id": "binary_sensor.front_door"},
             "contact": {"email": "hello@home-assistant.io"},
-            "issue_report_channels": ["email"],
         },
     )
     entry.add_to_hass(hass)
@@ -384,12 +390,10 @@ async def test_options_flow_spacefed(hass: HomeAssistant) -> None:
         {
             "spacenet": True,
             "spacesaml": False,
-            "spacephone": True,
         },
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"]["spacefed"] == {
         "spacenet": True,
         "spacesaml": False,
-        "spacephone": True,
     }
