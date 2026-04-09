@@ -211,17 +211,12 @@ class HeimanDataUpdateCoordinator(DataUpdateCoordinator[HeimanData]):
                                                                 device.properties["DeviceINFO_IP"].value = ip_value
                                                         # Update regular property
                                                         elif prop_id in device.properties:
-                                                            old_value = device.properties[prop_id].value
-                                                            device.properties[prop_id].value = prop_value
                                                             if prop_id == "RSSI":
                                                                 # Convert numeric DBM to level string
-                                                                old_value = device.properties[prop_id].value
                                                                 dbm_level = self._convert_dbm_to_level(prop_value)
                                                                 device.properties[prop_id].value = dbm_level
-                                                        else:
-                                                            pass
-                                                    else:
-                                                        pass
+                                                            else:
+                                                                device.properties[prop_id].value = prop_value
                                     except Exception as err:
                                         _LOGGER.error(
                                             "Failed to parse deriveMetadata for %s: %s",

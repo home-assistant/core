@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Any, TYPE_CHECKING
+from typing import Any
 
 from heimanconnect import (
     HeimanCloudClient,
@@ -13,15 +13,11 @@ from heimanconnect import (
     HeimanDevice,
     HeimanAuthError,
     HeimanConnectionError,
-    HeimanApiError,
 )
 
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.config_entry_oauth2_flow import OAuth2Session
-
-if TYPE_CHECKING:
-    from .const import CONF_ACCESS_TOKEN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -104,7 +100,7 @@ class HeimanApiClient:
         await self._ensure_authenticated()
         
         if not self._cloud_client:
-            raise HeimanConnectionError(message="Client not initialized")
+            raise HeimanConnectionError("Client not initialized")
         
         try:
             user = await self._cloud_client.async_get_user_info()
@@ -136,7 +132,7 @@ class HeimanApiClient:
         await self._ensure_authenticated()
         
         if not self._cloud_client:
-            raise HeimanConnectionError(message="Client not initialized")
+            raise HeimanConnectionError("Client not initialized")
         
         try:
             homes = await self._cloud_client.async_get_homes()
@@ -171,7 +167,7 @@ class HeimanApiClient:
         await self._ensure_authenticated()
         
         if not self._cloud_client:
-            raise HeimanConnectionError(message="Client not initialized")
+            raise HeimanConnectionError("Client not initialized")
         
         try:
             # 设置当前家庭 ID
@@ -208,7 +204,7 @@ class HeimanApiClient:
         await self._ensure_authenticated()
         
         if not self._cloud_client:
-            raise HeimanConnectionError(message="Client not initialized")
+            raise HeimanConnectionError("Client not initialized")
         
         try:
             properties = await self._cloud_client.async_get_device_properties(device_id)
@@ -245,7 +241,7 @@ class HeimanApiClient:
         await self._ensure_authenticated()
         
         if not self._cloud_client:
-            raise HeimanConnectionError(message="Client not initialized")
+            raise HeimanConnectionError("Client not initialized")
         
         try:
             result = await self._cloud_client.async_control_device(

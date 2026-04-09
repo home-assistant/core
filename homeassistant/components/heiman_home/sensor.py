@@ -79,8 +79,11 @@ class HeimanSensorEntity(CoordinatorEntity[HeimanDataUpdateCoordinator], SensorE
         # 生成唯一 ID
         self._attr_unique_id = f"{device.device_id}_{property_identifier}_sensor"
         
+        # 获取属性对象
+        prop = device.properties.get(property_identifier)
+        
         # 设置名称
-        self._attr_name = prop.name if (prop := device.properties.get(property_identifier)) else property_identifier
+        self._attr_name = prop.name if prop else property_identifier
         
         # 获取设备信息
         self._attr_device_info = DeviceInfo(
@@ -92,11 +95,11 @@ class HeimanSensorEntity(CoordinatorEntity[HeimanDataUpdateCoordinator], SensorE
             hw_version=device.hardware_version,
         )
         
-        # 根据属性类型设置设备类和单位
-        self._apply_sensor_config(property_identifier, prop)
-        
-        # 应用图标
-        self._apply_icon(property_identifier, prop)
+        # 根据属性类型设置设备类和单位（仅在属性存在时应用）
+        if prop:
+            self._apply_sensor_config(property_identifier, prop)
+            # 应用图标
+            self._apply_icon(property_identifier, prop)
     
     def _apply_sensor_config(self, property_identifier: str, prop) -> None:
         """Apply sensor configuration based on property type.

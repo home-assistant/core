@@ -25,6 +25,7 @@ from .api import HeimanApiClient
 from .const import (
     AREA_NAME_RULE_HOME_ROOM,
     CONF_AREA_NAME_RULE,
+    CONF_DEVICE_FILTER,
     CONF_DEVICE_FILTER_MODE,
     CONF_DEVICE_LIST,
     CONF_MODEL_FILTER_MODE,
@@ -95,7 +96,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: HeimanConfigEntry) -> bo
     
     # 配置设备过滤
     filter_config = {
-        "filter_mode": entry.data.get(CONF_DEVICE_FILTER_MODE, "exclude"),
+        "filter_mode": entry.data.get(CONF_DEVICE_FILTER, "exclude"),
         "statistics_logic": entry.data.get(CONF_STATISTICS_LOGIC, "or"),
         "room_filter_mode": entry.data.get(CONF_ROOM_FILTER_MODE, "exclude"),
         "room_list": entry.data.get(CONF_ROOM_LIST, []),
