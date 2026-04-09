@@ -146,8 +146,8 @@ class EnvisalinkAlarm(EnvisalinkEntity, AlarmControlPanelEntity):
         """Return user arm/disarm attribution attributes."""
         status = self._info["status"]
         return {
-            "last_disarmed_by_user_id": status.get("last_disarmed_by_user"),
-            "last_armed_by_user_id": status.get("last_armed_by_user"),
+            "last_disarmed_by_user_id": status.get("last_disarmed_by_user") or None,
+            "last_armed_by_user_id": status.get("last_armed_by_user") or None,
         }
 
     @property
