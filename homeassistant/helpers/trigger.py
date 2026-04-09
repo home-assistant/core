@@ -482,8 +482,9 @@ class EntityTriggerBase(Trigger):
             @callback
             def call_action() -> None:
                 """Call action with right context."""
-                # Note: entity_id, from_state and to_state are from the initial
-                # event that triggered. We need to confirm this is what we want.
+                # After a `for` delay, keep the original triggering event payload.
+                # `async_track_same_state` only verifies the state remained valid
+                # for the configured duration before firing the action.
                 run_action(
                     {
                         ATTR_ENTITY_ID: entity_id,
