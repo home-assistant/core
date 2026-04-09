@@ -26,7 +26,7 @@ async def test_victron_time(
     """Test TIME MetricKind - ESS schedule charge start time is created and updated."""
     victron_hub, mock_config_entry = init_integration
 
-    # 480 seconds -> 8 minutes -> time(0, 8)
+    # 480 raw seconds, library converts to 8 minutes -> time(0, 8)
     await inject_message(
         victron_hub,
         f"N/{MOCK_INSTALLATION_ID}/settings/0/Settings/CGwacs/BatteryLife/Schedule/Charge/0/Start",
@@ -61,7 +61,7 @@ async def test_victron_time(
     assert device is not None
     assert device.manufacturer == "Victron Energy"
 
-    # Update the metric: 3600 seconds -> 60 minutes -> time(1, 0)
+    # Update: 3600 raw seconds, library converts to 60 minutes -> time(1, 0)
     await inject_message(
         victron_hub,
         f"N/{MOCK_INSTALLATION_ID}/settings/0/Settings/CGwacs/BatteryLife/Schedule/Charge/0/Start",
@@ -74,7 +74,7 @@ async def test_victron_time(
     assert state.state == "01:00:00"
 
 
-def test_minutes_to_time_none() -> None:
+def test_victron_time_to_time_none() -> None:
     """Test that victron_time_to_time returns None when given None."""
     assert VictronTime.victron_time_to_time(None) is None
 
@@ -100,7 +100,7 @@ async def test_victron_time_actions(
     )
     entity_id = entities[0].entity_id
 
-    # Inject null to cover the None branch in _minutes_to_time
+    # Inject null to cover the None branch in victron_time_to_time
     await inject_message(
         victron_hub,
         f"N/{MOCK_INSTALLATION_ID}/settings/0/Settings/CGwacs/BatteryLife/Schedule/Charge/0/Start",
@@ -108,7 +108,7 @@ async def test_victron_time_actions(
     )
     await hass.async_block_till_done()
 
-    # Call set_value service to cover set_value() and _time_to_minutes()
+    # Call set_value service to cover set_value() and time_to_victron_time()
     await hass.services.async_call(
         "time",
         "set_value",
