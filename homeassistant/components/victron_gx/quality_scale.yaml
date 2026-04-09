@@ -64,7 +64,7 @@ rules:
       Not relevant.
   reconfiguration-flow: todo
   repair-issues: todo
-  stale-devices: todo
+  stale-devices: done
 
   # Platinum
   async-dependency: done
