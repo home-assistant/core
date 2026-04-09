@@ -9,8 +9,10 @@ from zwave_me_ws import ZWaveMeData
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_RGB_COLOR,
+    ATTR_TRANSITION,
     ColorMode,
     LightEntity,
+    LightEntityFeature
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
@@ -67,6 +69,7 @@ class ZWaveMeRGB(ZWaveMeEntity, LightEntity):
         else:
             self._attr_color_mode = ColorMode.BRIGHTNESS
         self._attr_supported_color_modes: set[ColorMode] = {self._attr_color_mode}
+        self._attr_supported_features = LightEntityFeature.TRANSITION
 
     def turn_off(self, **kwargs: Any) -> None:
         """Turn the device on."""
@@ -74,19 +77,37 @@ class ZWaveMeRGB(ZWaveMeEntity, LightEntity):
 
     def turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
-        color = kwargs.get(ATTR_RGB_COLOR)
+        color: tuple[int, int, int]|None = kwargs.get(ATTR_RGB_COLOR)
+        brightness = kwargs.get(ATTR_BRIGHTNESS)
+        transition: float|None = kwargs.get(ATTR_TRANSITION)
 
-        if color is None:
-            brightness = kwargs.get(ATTR_BRIGHTNESS)
-            if brightness is None:
-                self.controller.zwave_api.send_command(self.device.id, "on")
+        commandId = "exact"
+        commandArgs: dict[str, str] = {}
+
+        #set color levels
+        if color is not None:
+            if not any(color):
+                color = (255, 255, 255)
+            for colorId, colorVal in zip(("red", "green", "blue"), color):
+                commandArgs[colorId] = str(colorVal)
+        elif brightness is not None:
+            commandArgs["level"] = str(round(brightness / 2.55))
+        elif transition is not None:
+            commandArgs["level"] = "100"
+        else:
+            commandId = "on"
+
+        if transition is not None:
+            commandId = "exactSmooth"
+            if transition < 127:
+                duration = round(transition)
             else:
-                self.controller.zwave_api.send_command(
-                    self.device.id, f"exact?level={round(brightness / 2.55)}"
-                )
-            return
-        red, green, blue = color if any(color) else (255, 255, 255)
-        cmd = f"exact?red={red}&green={green}&blue={blue}"
+                duration = min(127, round((transition)/60))+127
+            commandArgs["duration"] = str(duration)
+
+        cmd = f"{commandId}"
+        if commandArgs:
+            cmd = f"{commandId}?{'&'.join(f'{argId}={argVal}' for argId, argVal in commandArgs.items())}"
         self.controller.zwave_api.send_command(self.device.id, cmd)
 
     @property
