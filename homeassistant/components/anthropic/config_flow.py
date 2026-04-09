@@ -70,7 +70,7 @@ from .const import (
     WEB_SEARCH_UNSUPPORTED_MODELS,
     PromptCaching,
 )
-from .coordinator import short_model_name
+from .coordinator import model_alias
 
 if TYPE_CHECKING:
     from . import AnthropicConfigEntry
@@ -115,7 +115,7 @@ async def get_model_list(client: anthropic.AsyncAnthropic) -> list[SelectOptionD
     return [
         SelectOptionDict(
             label=model_info.display_name,
-            value=short_model_name(model_info.id),
+            value=model_alias(model_info.id),
         )
         for model_info in models
     ]

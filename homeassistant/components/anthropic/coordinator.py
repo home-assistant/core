@@ -25,7 +25,8 @@ type AnthropicConfigEntry = ConfigEntry[AnthropicCoordinator]
 _model_short_form = re.compile(r"[^\d]-\d$")
 
 
-def short_model_name(model_id: str) -> str:
+@callback
+def model_alias(model_id: str) -> str:
     """Resolve alias from versioned model name."""
     if model_id == "claude-3-haiku-20240307" or model_id.endswith("-preview"):
         return model_id
@@ -93,6 +94,7 @@ class AnthropicCoordinator(DataUpdateCoordinator[list[anthropic.types.ModelInfo]
             if self._listeners and not self.hass.is_stopping:
                 self._schedule_refresh()
 
+    @callback
     def get_model_info(self, model_id: str) -> anthropic.types.ModelInfo:
         """Get model info for a given model ID."""
         # First try: exact name match
@@ -100,9 +102,9 @@ class AnthropicCoordinator(DataUpdateCoordinator[list[anthropic.types.ModelInfo]
             if model.id == model_id:
                 return model
         # Second try: match by alias
-        model_alias = short_model_name(model_id)
+        alias = model_alias(model_id)
         for model in self.data or []:
-            if short_model_name(model.id) == model_alias:
+            if model_alias(model.id) == alias:
                 return model
         # Model not found, return safe defaults
         return anthropic.types.ModelInfo(
