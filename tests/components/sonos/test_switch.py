@@ -347,7 +347,7 @@ async def test_alarm_update_exception_logs_warning(
     soco: MockSoCo,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test household mismatch logs warning and prevents speaker setup."""
+    """Test household mismatch logs warning and alarm update/setup is skipped."""
     with patch(
         "homeassistant.components.sonos.alarms.Alarms.update",
         side_effect=SoCoException(

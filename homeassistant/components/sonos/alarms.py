@@ -30,6 +30,7 @@ class SonosAlarms(SonosHouseholdCoordinator):
         super().__init__(*args)
         self.alarms: Alarms = Alarms()
         self.created_alarm_ids: set[str] = set()
+        self._household_mismatch_logged = False
 
     def __iter__(self) -> Iterator:
         """Return an iterator for the known alarms."""
@@ -88,14 +89,16 @@ class SonosAlarms(SonosHouseholdCoordinator):
             err_msg = str(err)
             # Only catch the specific household mismatch error
             if "Alarm list UID" in err_msg and "does not match" in err_msg:
-                _LOGGER.warning(
-                    "Sonos alarms for %s cannot be updated due to a household mismatch. "
-                    "This is a known limitation in setups with multiple households. "
-                    "You can safely ignore this warning, or to silence it, remove the "
-                    "affected household from your Sonos system. Error: %s",
-                    soco.player_name,
-                    err_msg,
-                )
+                if not self._household_mismatch_logged:
+                    _LOGGER.warning(
+                        "Sonos alarms for %s cannot be updated due to a household mismatch. "
+                        "This is a known limitation in setups with multiple households. "
+                        "You can safely ignore this warning, or to silence it, remove the "
+                        "affected household from your Sonos system. Error: %s",
+                        soco.player_name,
+                        err_msg,
+                    )
+                    self._household_mismatch_logged = True
                 return False
             # Let all other exceptions bubble up to be handled by @soco_error()
             raise
