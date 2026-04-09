@@ -16,7 +16,6 @@ from iaqualink.systems.iaqua.device import (
     IaquaThermostat,
 )
 from iaqualink.systems.iaqua.system import IaquaSystem
-import pytest
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.components.climate import DOMAIN as CLIMATE_DOMAIN
@@ -27,7 +26,6 @@ from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_ASSUMED_STATE, STATE_ON, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.update_coordinator import UpdateFailed
 from homeassistant.util import dt as dt_util
 
 from .conftest import get_aqualink_device, get_aqualink_system
@@ -44,17 +42,23 @@ async def _advance_coordinator_time(
     await hass.async_block_till_done()
 
 
-async def test_system_coordinator_raises_update_failed(
+async def test_system_refresh_failure_marks_entities_unavailable(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     client: AqualinkClient,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test a system coordinator raises UpdateFailed on update errors."""
+    """Test a system refresh failure marks attached entities unavailable."""
     config_entry.add_to_hass(hass)
 
     system = get_aqualink_system(client, cls=IaquaSystem)
+    system.online = True
     systems = {system.serial: system}
-    system.get_devices = AsyncMock(return_value={})
+    light = get_aqualink_device(
+        system, name="aux_1", cls=IaquaLightSwitch, data={"state": "1"}
+    )
+    devices = {light.name: light}
+    system.get_devices = AsyncMock(return_value=devices)
 
     with (
         patch(
@@ -69,11 +73,22 @@ async def test_system_coordinator_raises_update_failed(
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
-    coordinator = config_entry.runtime_data.coordinators[system.serial]
-    system.update = AsyncMock(side_effect=AqualinkServiceException)
+    name = f"{LIGHT_DOMAIN}.{light.name}"
+    state = hass.states.get(name)
+    assert state is not None
+    assert state.state == STATE_ON
 
-    with pytest.raises(UpdateFailed):
-        await coordinator._async_update_data()
+    async def fail_update() -> None:
+        system.online = None
+        raise AqualinkServiceException
+
+    system.update = AsyncMock(side_effect=fail_update)
+
+    await _advance_coordinator_time(hass, freezer)
+
+    state = hass.states.get(name)
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE
 
 
 async def test_setup_login_exception(
