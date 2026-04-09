@@ -12,7 +12,7 @@ from homeassistant.components.light import (
     ATTR_TRANSITION,
     ColorMode,
     LightEntity,
-    LightEntityFeature
+    LightEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
@@ -77,14 +77,14 @@ class ZWaveMeRGB(ZWaveMeEntity, LightEntity):
 
     def turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
-        color: tuple[int, int, int]|None = kwargs.get(ATTR_RGB_COLOR)
+        color: tuple[int, int, int] | None = kwargs.get(ATTR_RGB_COLOR)
         brightness = kwargs.get(ATTR_BRIGHTNESS)
-        transition: float|None = kwargs.get(ATTR_TRANSITION)
+        transition: float | None = kwargs.get(ATTR_TRANSITION)
 
         commandId = "exact"
         commandArgs: dict[str, str] = {}
 
-        #set color levels
+        # set color levels
         if color is not None:
             if not any(color):
                 color = (255, 255, 255)
@@ -102,7 +102,7 @@ class ZWaveMeRGB(ZWaveMeEntity, LightEntity):
             if transition < 127:
                 duration = round(transition)
             else:
-                duration = min(127, round((transition)/60))+127
+                duration = min(127, round((transition) / 60)) + 127
             commandArgs["duration"] = str(duration)
 
         cmd = f"{commandId}"
