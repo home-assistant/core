@@ -3,7 +3,6 @@
 from unittest.mock import MagicMock
 
 from infrared_protocols import Command, Timing
-from pysmlight import Info
 from pysmlight.exceptions import SmlightError
 from pysmlight.models import IRPayload
 import pytest
@@ -36,20 +35,12 @@ def platforms() -> list[Platform]:
     return [Platform.INFRARED]
 
 
-MOCK_ULTIMA = Info(
-    MAC="AA:BB:CC:DD:EE:FF",
-    model="SLZB-Ultima3",
-)
-
-
 async def test_infrared_setup_ultima(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_smlight_client: MagicMock,
+    mock_ultima_client: MagicMock,
 ) -> None:
     """Test infrared entity is created for Ultima devices."""
-    mock_smlight_client.get_info.side_effect = None
-    mock_smlight_client.get_info.return_value = MOCK_ULTIMA
     await setup_integration(hass, mock_config_entry)
 
     state = hass.states.get("infrared.mock_title_ir_emitter")
@@ -62,11 +53,6 @@ async def test_infrared_not_created_non_ultima(
     mock_smlight_client: MagicMock,
 ) -> None:
     """Test infrared entity is not created for non-Ultima devices."""
-    mock_smlight_client.get_info.side_effect = None
-    mock_smlight_client.get_info.return_value = Info(
-        MAC="AA:BB:CC:DD:EE:FF",
-        model="SLZB-MR1",
-    )
     await setup_integration(hass, mock_config_entry)
 
     state = hass.states.get("infrared.mock_title_ir_emitter")
@@ -76,11 +62,9 @@ async def test_infrared_not_created_non_ultima(
 async def test_infrared_send_command(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_smlight_client: MagicMock,
+    mock_ultima_client: MagicMock,
 ) -> None:
     """Test sending IR command."""
-    mock_smlight_client.get_info.side_effect = None
-    mock_smlight_client.get_info.return_value = MOCK_ULTIMA
     await setup_integration(hass, mock_config_entry)
 
     entity_id = "infrared.mock_title_ir_emitter"
@@ -93,7 +77,7 @@ async def test_infrared_send_command(
         MockCommand(),
     )
 
-    mock_smlight_client.actions.send_ir_code.assert_called_once_with(
+    mock_ultima_client.actions.send_ir_code.assert_called_once_with(
         IRPayload.from_raw_timings([9000, 4500, 560, 1690], freq=38000)
     )
 
@@ -101,18 +85,16 @@ async def test_infrared_send_command(
 async def test_infrared_send_command_error(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_smlight_client: MagicMock,
+    mock_ultima_client: MagicMock,
 ) -> None:
     """Test connection error handling."""
-    mock_smlight_client.get_info.side_effect = None
-    mock_smlight_client.get_info.return_value = MOCK_ULTIMA
     await setup_integration(hass, mock_config_entry)
 
     entity_id = "infrared.mock_title_ir_emitter"
     state = hass.states.get(entity_id)
     assert state is not None
 
-    mock_smlight_client.actions.send_ir_code.side_effect = SmlightError("Failed")
+    mock_ultima_client.actions.send_ir_code.side_effect = SmlightError("Failed")
 
     with pytest.raises(HomeAssistantError) as exc_info:
         await async_send_command(
@@ -126,18 +108,16 @@ async def test_infrared_send_command_error(
 async def test_infrared_send_empty_command_error(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_smlight_client: MagicMock,
+    mock_ultima_client: MagicMock,
 ) -> None:
     """Test ValueError from pysmlight is surfaced as HomeAssistantError."""
-    mock_smlight_client.get_info.side_effect = None
-    mock_smlight_client.get_info.return_value = MOCK_ULTIMA
     await setup_integration(hass, mock_config_entry)
 
     entity_id = "infrared.mock_title_ir_emitter"
     state = hass.states.get(entity_id)
     assert state is not None
 
-    mock_smlight_client.actions.send_ir_code.side_effect = ValueError("empty payload")
+    mock_ultima_client.actions.send_ir_code.side_effect = ValueError("empty payload")
 
     with pytest.raises(HomeAssistantError) as exc_info:
         await async_send_command(
@@ -152,11 +132,9 @@ async def test_infrared_send_empty_command_error(
 async def test_infrared_state_updated_after_send(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_smlight_client: MagicMock,
+    mock_ultima_client: MagicMock,
 ) -> None:
     """Test that entity state is updated with a timestamp after a successful send."""
-    mock_smlight_client.get_info.side_effect = None
-    mock_smlight_client.get_info.return_value = MOCK_ULTIMA
     await setup_integration(hass, mock_config_entry)
 
     entity_id = "infrared.mock_title_ir_emitter"
