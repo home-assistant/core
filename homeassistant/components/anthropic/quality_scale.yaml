@@ -90,7 +90,7 @@ rules:
   entity-translations:
     status: exempt
     comment: |
-      Entities `use _attr_name = None` (main entity of device), translation key is not used for naming.
+      Entities explicitly set `_attr_name` to `None`, so entity name translations are not used.
   exception-translations: done
   icon-translations: done
   reconfiguration-flow: done
