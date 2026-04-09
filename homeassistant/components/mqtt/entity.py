@@ -140,6 +140,7 @@ MQTT_ATTRIBUTES_BLOCKED = {
     "entity_registry_enabled_default",
     "extra_state_attributes",
     "force_update",
+    "group_entities",
     "icon",
     "friendly_name",
     "should_poll",
@@ -1484,7 +1485,6 @@ class MqttEntity(
         self._config = config
         self._setup_from_config(self._config)
         self._setup_common_attributes_from_config(self._config)
-        self._process_entity_update()
 
         # Prepare MQTT subscriptions
         self.attributes_prepare_discovery_update(config)
@@ -1586,10 +1586,6 @@ class MqttEntity(
 
     def _setup_from_config(self, config: ConfigType) -> None:
         """(Re)Setup the entity."""
-
-    @callback
-    def _process_entity_update(self) -> None:
-        """Process an entity discovery update."""
 
     @abstractmethod
     @callback

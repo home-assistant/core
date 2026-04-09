@@ -300,7 +300,6 @@ class JellyfinMediaPlayer(JellyfinClientEntity, MediaPlayerEntity):
             self.hass,
             self.coordinator.api_client,
             self.coordinator.user_id,
-            media_content_type,
             media_content_id,
         )
 

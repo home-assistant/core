@@ -58,7 +58,7 @@ class ModelDeprecatedRepairFlow(RepairsFlow):
         if entry.entry_id in self._model_list_cache:
             model_list = self._model_list_cache[entry.entry_id]
         else:
-            client = entry.runtime_data
+            client = entry.runtime_data.client
             model_list = [
                 model_option
                 for model_option in await get_model_list(client)
@@ -161,7 +161,9 @@ class ModelDeprecatedRepairFlow(RepairsFlow):
             is None
             or (subentry := entry.subentries.get(self._current_subentry_id)) is None
         ):
-            raise HomeAssistantError("Subentry not found")
+            raise HomeAssistantError(
+                translation_domain=DOMAIN, translation_key="subentry_not_found"
+            )
 
         updated_data = {
             **subentry.data,
@@ -190,4 +192,6 @@ async def async_create_fix_flow(
     """Create flow."""
     if issue_id == "model_deprecated":
         return ModelDeprecatedRepairFlow()
-    raise HomeAssistantError("Unknown issue ID")
+    raise HomeAssistantError(
+        translation_domain=DOMAIN, translation_key="unknown_issue_id"
+    )

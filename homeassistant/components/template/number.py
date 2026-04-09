@@ -46,6 +46,8 @@ CONF_SET_VALUE = "set_value"
 DEFAULT_NAME = "Template Number"
 DEFAULT_OPTIMISTIC = False
 
+SCRIPT_FIELDS = (CONF_SET_VALUE,)
+
 NUMBER_COMMON_SCHEMA = vol.Schema(
     {
         vol.Optional(CONF_MAX, default=DEFAULT_MAX_VALUE): cv.template,
@@ -81,6 +83,7 @@ async def async_setup_platform(
         TriggerNumberEntity,
         async_add_entities,
         discovery_info,
+        script_options=SCRIPT_FIELDS,
     )
 
 
@@ -96,6 +99,7 @@ async def async_setup_entry(
         async_add_entities,
         StateNumberEntity,
         NUMBER_CONFIG_ENTRY_SCHEMA,
+        script_options=SCRIPT_FIELDS,
     )
 
 
@@ -114,6 +118,7 @@ class AbstractTemplateNumber(AbstractTemplateEntity, NumberEntity):
 
     _entity_id_format = ENTITY_ID_FORMAT
     _optimistic_entity = True
+    _state_option = CONF_STATE
 
     # The super init is not called because TemplateEntity and TriggerEntity will call AbstractTemplateEntity.__init__.
     # This ensures that the __init__ on AbstractTemplateEntity is not called twice.
@@ -125,7 +130,6 @@ class AbstractTemplateNumber(AbstractTemplateEntity, NumberEntity):
         self._attr_native_max_value = DEFAULT_MAX_VALUE
 
         self.setup_state_template(
-            CONF_STATE,
             "_attr_native_value",
             template_validators.number(self, CONF_STATE),
         )

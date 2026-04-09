@@ -25,6 +25,7 @@ from homeassistant.const import (
     UnitOfVolume,
 )
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.icon import icon_for_battery_level
@@ -536,6 +537,8 @@ async def async_setup_entry(
     # These are run serially to reuse the cached user profile, not gathered
     # to avoid two racing requests.
     user_profile = await api.async_get_user_profile()
+    if user_profile.encoded_id is None:
+        raise ConfigEntryNotReady("Could not get user profile")
     unit_system = await api.async_get_unit_system()
 
     fitbit_config = config_from_entry_data(entry.data)

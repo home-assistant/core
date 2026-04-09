@@ -23,6 +23,7 @@ from homeassistant.components.zwave_js.discovery import (
     FirmwareVersionRange,
     ZWaveDiscoverySchema,
     ZWaveValueDiscoverySchema,
+    check_value,
 )
 from homeassistant.components.zwave_js.discovery_data_template import (
     DynamicCurrentTempClimateDataTemplate,
@@ -547,6 +548,84 @@ async def test_nabu_casa_zwa2(
     assert state.attributes["friendly_name"] == "Home Assistant Connect ZWA-2 LED", (
         "The LED should have the correct friendly name"
     )
+
+
+def _make_mock_value(cc_specific: dict | None = None) -> MagicMock:
+    """Create a base mock ZwaveValue for check_value tests."""
+    value = MagicMock()
+    value.command_class = 49
+    value.endpoint = 0
+    value.property_ = "Air temperature"
+    value.property_name = "Air temperature"
+    value.property_key = None
+    value.metadata.type = "number"
+    value.metadata.readable = True
+    value.metadata.writeable = False
+    value.metadata.states = None
+    value.metadata.cc_specific = cc_specific
+    value.metadata.stateful = None
+    value.value = 9
+    return value
+
+
+def test_check_value_all_available_cc_specific_match() -> None:
+    """Test check_value matches when all cc_specific key/value pairs are present."""
+    schema = ZWaveValueDiscoverySchema(
+        command_class={49},
+        all_available_cc_specific={("scale", 0), ("sensorType", 1)},
+    )
+    value = _make_mock_value({"scale": 0, "sensorType": 1})
+    assert check_value(value, schema) is True
+
+
+def test_check_value_all_available_cc_specific_partial_match() -> None:
+    """Test check_value fails when not all cc_specific key/value pairs match."""
+    schema = ZWaveValueDiscoverySchema(
+        command_class={49},
+        all_available_cc_specific={("scale", 0), ("sensorType", 1)},
+    )
+    value = _make_mock_value({"scale": 0, "sensorType": 5})
+    assert check_value(value, schema) is False
+
+
+def test_check_value_all_available_cc_specific_none() -> None:
+    """Test check_value fails when cc_specific is None and all_available is set."""
+    schema = ZWaveValueDiscoverySchema(
+        command_class={49},
+        all_available_cc_specific={("scale", 0)},
+    )
+    value = _make_mock_value()
+    assert check_value(value, schema) is False
+
+
+def test_check_value_any_available_cc_specific_match() -> None:
+    """Test check_value matches when any cc_specific key/value pair is present."""
+    schema = ZWaveValueDiscoverySchema(
+        command_class={49},
+        any_available_cc_specific={("sensorType", 1), ("sensorType", 3)},
+    )
+    value = _make_mock_value({"sensorType": 1, "scale": 0})
+    assert check_value(value, schema) is True
+
+
+def test_check_value_any_available_cc_specific_no_match() -> None:
+    """Test check_value fails when no cc_specific key/value pair matches."""
+    schema = ZWaveValueDiscoverySchema(
+        command_class={49},
+        any_available_cc_specific={("sensorType", 1), ("sensorType", 3)},
+    )
+    value = _make_mock_value({"sensorType": 5, "scale": 0})
+    assert check_value(value, schema) is False
+
+
+def test_check_value_any_available_cc_specific_none() -> None:
+    """Test check_value fails when cc_specific is None and any_available is set."""
+    schema = ZWaveValueDiscoverySchema(
+        command_class={49},
+        any_available_cc_specific={("sensorType", 1)},
+    )
+    value = _make_mock_value()
+    assert check_value(value, schema) is False
 
 
 async def test_nabu_casa_zwa2_legacy(

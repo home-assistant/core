@@ -87,6 +87,15 @@ LEGACY_FIELDS = {
 
 DEFAULT_NAME = "Template Fan"
 
+SCRIPT_FIELDS = (
+    CONF_OFF_ACTION,
+    CONF_ON_ACTION,
+    CONF_SET_DIRECTION_ACTION,
+    CONF_SET_OSCILLATING_ACTION,
+    CONF_SET_PERCENTAGE_ACTION,
+    CONF_SET_PRESET_MODE_ACTION,
+)
+
 FAN_COMMON_SCHEMA = vol.Schema(
     {
         vol.Optional(CONF_DIRECTION): cv.template,
@@ -159,6 +168,7 @@ async def async_setup_platform(
         discovery_info,
         LEGACY_FIELDS,
         legacy_key=CONF_FANS,
+        script_options=SCRIPT_FIELDS,
     )
 
 
@@ -174,6 +184,7 @@ async def async_setup_entry(
         async_add_entities,
         StateFanEntity,
         FAN_CONFIG_ENTRY_SCHEMA,
+        script_options=SCRIPT_FIELDS,
     )
 
 
@@ -196,13 +207,13 @@ class AbstractTemplateFan(AbstractTemplateEntity, FanEntity):
 
     _entity_id_format = ENTITY_ID_FORMAT
     _optimistic_entity = True
+    _state_option = CONF_STATE
 
     # The super init is not called because TemplateEntity and TriggerEntity will call AbstractTemplateEntity.__init__.
     # This ensures that the __init__ on AbstractTemplateEntity is not called twice.
     def __init__(self, name: str, config: dict[str, Any]) -> None:  # pylint: disable=super-init-not-called
         """Initialize the features."""
         self.setup_state_template(
-            CONF_STATE,
             "_attr_is_on",
             template_validators.boolean(self, CONF_STATE),
         )

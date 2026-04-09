@@ -3,12 +3,21 @@
 import asyncio
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from opendisplay import BLEConnectionError, BLETimeoutError, OpenDisplayError
+from opendisplay import (
+    AuthenticationFailedError,
+    AuthenticationRequiredError,
+    BLEConnectionError,
+    BLETimeoutError,
+    OpenDisplayError,
+)
 import pytest
 
+from homeassistant.components.opendisplay.const import CONF_ENCRYPTION_KEY
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
+
+from . import ENCRYPTION_KEY
 
 from tests.common import MockConfigEntry
 
@@ -28,6 +37,25 @@ async def test_setup_and_unload(
     await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
+
+
+async def test_setup_encrypted_device(
+    hass: HomeAssistant,
+    mock_encrypted_config_entry: MockConfigEntry,
+    mock_opendisplay_device: MagicMock,
+    mock_opendisplay_device_class: MagicMock,
+) -> None:
+    """Test setup passes the encryption key to OpenDisplayDevice."""
+    mock_opendisplay_device.is_flex = False
+    mock_encrypted_config_entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(mock_encrypted_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_encrypted_config_entry.state is ConfigEntryState.LOADED
+    assert mock_opendisplay_device_class.call_args.kwargs[
+        "encryption_key"
+    ] == bytes.fromhex(ENCRYPTION_KEY)
 
 
 async def test_setup_device_not_found(
@@ -135,3 +163,46 @@ async def test_unload_cancels_active_upload_task(
     assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
     await hass.async_block_till_done()
     assert task.cancelled()
+
+
+@pytest.mark.parametrize(
+    "exception",
+    [
+        AuthenticationFailedError("wrong key"),
+        AuthenticationRequiredError("auth required"),
+    ],
+)
+async def test_setup_authentication_error(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    exception: Exception,
+) -> None:
+    """Test that auth errors result in SETUP_ERROR and trigger reauth."""
+    mock_config_entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.opendisplay.OpenDisplayDevice",
+        return_value=AsyncMock(__aenter__=AsyncMock(side_effect=exception)),
+    ):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+
+
+async def test_setup_invalid_encryption_key_format(
+    hass: HomeAssistant,
+) -> None:
+    """Test that a malformed stored encryption key triggers reauth."""
+    entry = MockConfigEntry(
+        domain="opendisplay",
+        unique_id="AA:BB:CC:DD:EE:FF",
+        title="OpenDisplay 1234",
+        data={CONF_ENCRYPTION_KEY: "not-valid-hex!"},
+    )
+    entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.SETUP_ERROR

@@ -13,7 +13,8 @@ from homeassistant.const import (
     ATTR_FRIENDLY_NAME,
     ATTR_SUPPORTED_FEATURES,
 )
-from homeassistant.core import HomeAssistant, State
+from homeassistant.core import HomeAssistant, ServiceCall, State
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import (
     area_registry as ar,
     config_validation as cv,
@@ -725,6 +726,29 @@ async def test_validate_then_run_in_background(hass: HomeAssistant) -> None:
     assert calls[0].data == {"entity_id": "light.kitchen"}
 
 
+async def test_run_then_background_validation_error(hass: HomeAssistant) -> None:
+    """Test that a validation error within the timeout is propagated."""
+    hass.states.async_set("light.kitchen", "off")
+
+    async def mock_service(call: ServiceCall) -> None:
+        """Mock service that raises a validation error immediately."""
+        raise HomeAssistantError("Invalid service data")
+
+    hass.services.async_register("light", "turn_on", mock_service)
+
+    handler = intent.ServiceIntentHandler("TestType", "light", "turn_on")
+    intent.async_register(hass, handler)
+
+    # The single entity fails, so IntentHandleError is raised
+    with pytest.raises(intent.IntentHandleError):
+        await intent.async_handle(
+            hass,
+            "test",
+            "TestType",
+            slots={"name": {"value": "kitchen"}},
+        )
+
+
 async def test_invalid_area_floor_names(hass: HomeAssistant) -> None:
     """Test that we throw an appropriate errors with invalid area/floor names."""
     handler = intent.ServiceIntentHandler("TestType", "light", "turn_on")
@@ -886,6 +910,34 @@ async def test_service_handler_device_classes(
             "TestType",
             slots={"device_class": {"value": "light"}},
         )
+
+
+async def test_service_handler_matched_states_uses_updated_state(
+    hass: HomeAssistant,
+) -> None:
+    """Test that matched_states reflects the post-service-call state, not the pre-call state."""
+    hass.states.async_set("light.kitchen", "off")
+
+    async def mock_turn_on(call):
+        """Mock service that updates the entity state."""
+        hass.states.async_set(call.data["entity_id"], "on")
+
+    hass.services.async_register("light", "turn_on", mock_turn_on)
+
+    handler = intent.ServiceIntentHandler("TestType", "light", "turn_on")
+    intent.async_register(hass, handler)
+
+    result = await intent.async_handle(
+        hass,
+        "test",
+        "TestType",
+        slots={"name": {"value": "kitchen"}},
+    )
+
+    assert result.response_type == intent.IntentResponseType.ACTION_DONE
+    assert len(result.matched_states) == 1
+    assert result.matched_states[0].entity_id == "light.kitchen"
+    assert result.matched_states[0].state == "on"
 
 
 @pytest.mark.parametrize(

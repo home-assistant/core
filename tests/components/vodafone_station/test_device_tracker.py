@@ -11,6 +11,7 @@ from homeassistant.components.vodafone_station.coordinator import CONSIDER_HOME_
 from homeassistant.const import STATE_HOME, STATE_NOT_HOME, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from . import setup_integration
 from .const import DEVICE_1_HOST, DEVICE_1_MAC
@@ -60,3 +61,29 @@ async def test_consider_home(
 
     assert (state := hass.states.get(device_tracker))
     assert state.state == STATE_NOT_HOME
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_already_tracked_devices(
+    hass: HomeAssistant,
+    mock_vodafone_station_router: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test that already tracked devices are skipped when signal fires again."""
+    await setup_integration(hass, mock_config_entry)
+
+    # Capture the number of existing device_tracker entities before firing the signal
+    tracker_count_before = len(hass.states.async_all(Platform.DEVICE_TRACKER))
+    assert tracker_count_before > 0
+
+    coordinator = mock_config_entry.runtime_data
+
+    # Fire signal_device_new again; all devices are already tracked so no new
+    # entities should be added and the continue branch in async_add_new_tracked_entities
+    # is exercised.
+    async_dispatcher_send(hass, coordinator.signal_device_new)
+    await hass.async_block_till_done()
+
+    # Ensure no additional device_tracker entities were created
+    tracker_count_after = len(hass.states.async_all(Platform.DEVICE_TRACKER))
+    assert tracker_count_after == tracker_count_before

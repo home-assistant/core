@@ -2,7 +2,7 @@
 
 from abc import abstractmethod
 import asyncio
-from collections.abc import Awaitable, Callable, Sequence
+from collections.abc import Awaitable, Callable, Iterable, Sequence
 import io
 import logging
 import os
@@ -71,6 +71,8 @@ from .const import (
     ATTR_INLINE_MESSAGE_ID,
     ATTR_KEYBOARD,
     ATTR_KEYBOARD_INLINE,
+    ATTR_MEDIA,
+    ATTR_MEDIA_TYPE,
     ATTR_MESSAGE,
     ATTR_MESSAGE_ID,
     ATTR_MESSAGE_TAG,
@@ -81,6 +83,7 @@ from .const import (
     ATTR_OPEN_PERIOD,
     ATTR_PARSER,
     ATTR_PASSWORD,
+    ATTR_PROTECT_CONTENT,
     ATTR_REPLY_TO_MSGID,
     ATTR_REPLYMARKUP,
     ATTR_RESIZE_KEYBOARD,
@@ -435,7 +438,7 @@ class TelegramNotificationService:
 
     async def _send_msg_formatted(
         self,
-        func_send: Callable[..., Awaitable[Message]],
+        func_send: Callable[..., Awaitable[Message | tuple[Message, ...]]],
         message_tag: str | None,
         *args_msg: Any,
         context: Context | None = None,
@@ -448,7 +451,7 @@ class TelegramNotificationService:
         chat_id: int = kwargs_msg.pop(ATTR_CHAT_ID)
         _LOGGER.debug("%s to chat ID %s", func_send.__name__, chat_id)
 
-        response: Message = await self._send_msg(
+        response: Message | tuple[Message, ...] = await self._send_msg(
             func_send,
             message_tag,
             chat_id,
@@ -456,6 +459,9 @@ class TelegramNotificationService:
             context=context,
             **kwargs_msg,
         )
+
+        if isinstance(response, Iterable):
+            return {str(chat_id): [message.id for message in response]}
 
         return {str(chat_id): response.id}
 
@@ -469,9 +475,14 @@ class TelegramNotificationService:
     ) -> Any:
         """Send one message."""
         out = await func_send(*args_msg, **kwargs_msg)
-        if isinstance(out, Message):
-            chat_id = out.chat_id
-            message_id = out.message_id
+
+        message = out
+        if isinstance(message, Iterable):
+            message = out[-1]
+
+        if isinstance(message, Message):
+            chat_id = message.chat_id
+            message_id = message.message_id
             self._last_message_id[chat_id] = message_id
             _LOGGER.debug(
                 "Last message ID: %s (from chat_id %s)",
@@ -520,6 +531,57 @@ class TelegramNotificationService:
             reply_markup=params[ATTR_REPLYMARKUP],
             read_timeout=params[ATTR_TIMEOUT],
             message_thread_id=params[ATTR_MESSAGE_THREAD_ID],
+            context=context,
+        )
+
+    async def send_media_group(
+        self,
+        chat_id: int,
+        context: Context | None = None,
+        **kwargs: Any,
+    ) -> dict[str, JsonValueType]:
+        """Send media group to a chat ID.
+
+        :returns: a dict mapping each chat_id to a list of message_ids for the sent media group.
+        """
+        params = self._get_msg_kwargs(kwargs)
+
+        media: list[
+            InputMediaAudio | InputMediaDocument | InputMediaPhoto | InputMediaVideo
+        ] = []
+        input_media: list[dict[str, Any]] = kwargs[ATTR_MEDIA]
+        for entry in input_media:
+            file_content = await load_data(
+                self.hass,
+                url=entry.get(ATTR_URL),
+                filepath=entry.get(ATTR_FILE),
+                username=entry.get(ATTR_USERNAME, ""),
+                password=entry.get(ATTR_PASSWORD, ""),
+                authentication=entry.get(ATTR_AUTHENTICATION),
+                verify_ssl=entry[ATTR_VERIFY_SSL],
+            )
+            _LOGGER.debug("downloaded: %s", entry[ATTR_URL])
+
+            caption: str | None = entry.get(ATTR_CAPTION)
+            if entry[ATTR_MEDIA_TYPE] == InputMediaType.AUDIO:
+                media.append(InputMediaAudio(file_content, caption=caption))
+            elif entry[ATTR_MEDIA_TYPE] == InputMediaType.DOCUMENT:
+                media.append(InputMediaDocument(file_content, caption=caption))
+            elif entry[ATTR_MEDIA_TYPE] == InputMediaType.PHOTO:
+                media.append(InputMediaPhoto(file_content, caption=caption))
+            else:
+                media.append(InputMediaVideo(file_content, caption=caption))
+
+        return await self._send_msg_formatted(
+            self.bot.send_media_group,
+            params[ATTR_MESSAGE_TAG],
+            chat_id=chat_id,
+            media=media,
+            disable_notification=params[ATTR_DISABLE_NOTIF],
+            protect_content=kwargs.get(ATTR_PROTECT_CONTENT, False),
+            message_thread_id=params[ATTR_MESSAGE_THREAD_ID],
+            reply_to_message_id=params[ATTR_REPLY_TO_MSGID],
+            parse_mode=params[ATTR_PARSER],
             context=context,
         )
 
