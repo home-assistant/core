@@ -62,6 +62,213 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "digitalinput_settings_invert_translation": {
+        "name": "Invert digital input"
+      },
+      "evcharger_charge": {
+        "name": "EV charging"
+      },
+      "evcharger_connected": {
+        "name": "Connected"
+      },
+      "generator_autorun": {
+        "name": "Auto-start enabled"
+      },
+      "generator_gen_id_quiet_hours_enabled": {
+        "name": "Generator quiet hours enabled"
+      },
+      "generator_gen_id_start_on_soc_enabled": {
+        "name": "Generator start on SOC enabled"
+      },
+      "generator_gen_id_start_on_temp_enabled": {
+        "name": "Generator start on high temp enabled"
+      },
+      "generator_gen_id_start_on_voltage_enabled": {
+        "name": "Generator start on voltage enabled"
+      },
+      "generator_manual_start": {
+        "name": "Manual start"
+      },
+      "gps_connected": {
+        "name": "Connected"
+      },
+      "gps_fix": {
+        "name": "Fix"
+      },
+      "inverter_alarm_high_temperature": {
+        "name": "High temperature alarm"
+      },
+      "inverter_alarm_high_voltage": {
+        "name": "High voltage alarm"
+      },
+      "inverter_alarm_high_voltage_ac_out": {
+        "name": "High voltage AC-out alarm"
+      },
+      "inverter_alarm_low_temperature": {
+        "name": "Low temperature alarm"
+      },
+      "inverter_alarm_low_voltage": {
+        "name": "Low voltage alarm"
+      },
+      "inverter_alarm_low_voltage_ac_out": {
+        "name": "Low voltage AC-out alarm"
+      },
+      "inverter_alarm_overload": {
+        "name": "Overload alarm"
+      },
+      "inverter_alarm_ripple": {
+        "name": "Ripple alarm"
+      },
+      "multi_disable_charge": {
+        "name": "ESS disable charge"
+      },
+      "multi_disable_feed_in": {
+        "name": "ESS disable feed-in"
+      },
+      "multi_relay0_state": {
+        "name": "Relay on Multi RS state"
+      },
+      "solarcharger_load_state": {
+        "name": "Load state"
+      },
+      "solarcharger_relay_state": {
+        "name": "Relay state"
+      },
+      "switch_output_state": {
+        "name": "Switch {output} state"
+      },
+      "switchable_output_output_state": {
+        "name": "Switchable output {output} state"
+      },
+      "system_dynamicess_active": {
+        "name": "Dynamic ESS active"
+      },
+      "system_dynamicess_allow_gridfeedin": {
+        "name": "Dynamic ESS allow grid feed-in"
+      },
+      "system_dynamicess_available": {
+        "name": "Dynamic ESS available"
+      },
+      "system_ess_battery_use": {
+        "name": "ESS only critical loads from battery"
+      },
+      "system_ess_schedule_charge_slot_enabled": {
+        "name": "ESS BatteryLife schedule charge {slot} enabled"
+      },
+      "system_relay_relay": {
+        "name": "Relay {relay} state"
+      },
+      "system_settings_overvoltage_feedin": {
+        "name": "PV DC overvoltage feed-in"
+      },
+      "vebus_device_device_number_power_assist_enabled": {
+        "name": "{device_number} PowerAssist enabled"
+      },
+      "vebus_inverter_connected": {
+        "name": "Connected"
+      },
+      "vebus_inverter_ignoreacin1_onoff_control": {
+        "name": "Control ignore AC-in-1"
+      },
+      "vebus_inverter_setting_alarm_grid_lost": {
+        "name": "Grid lost alarm setting"
+      }
+    },
+    "select": {
+      "acsystem_mode": {
+        "state": {
+          "charger_only": "Charger only",
+          "inverter_only": "Inverter only",
+          "off": "[%key:common::state::off%]",
+          "on": "[%key:common::state::on%]",
+          "passthrough": "Passthrough"
+        }
+      },
+      "evcharger_mode": {
+        "name": "Mode",
+        "state": {
+          "auto": "[%key:common::state::auto%]",
+          "manual": "[%key:common::state::manual%]",
+          "scheduled_charge": "Scheduled charge"
+        }
+      },
+      "inverter_mode": {
+        "state": {
+          "eco": "Eco",
+          "inverter": "Inverter",
+          "off": "[%key:common::state::off%]"
+        }
+      },
+      "system_ess_batterylife_state": {
+        "name": "ESS BatteryLife state",
+        "state": {
+          "keep_batteries_charged": "'Keep batteries charged' mode enabled",
+          "recharge": "Recharge, SoC dropped 5% or more below minimum SoC",
+          "recharge_no_battery_life": "Recharge, SoC dropped 5% or more below minimum SoC (No BatteryLife)",
+          "self_consumption": "Self-consumption",
+          "self_consumption_soc_above_min": "Self-consumption, SoC at or above minimum SoC",
+          "self_consumption_soc_at_100": "Self-consumption, SoC at 100%",
+          "self_consumption_soc_below_min": "Self-consumption, SoC is below minimum SoC",
+          "self_consumption_soc_exceeds_85": "Self-consumption, SoC exceeds 85%",
+          "soc_below_battery_life_dynamic_soc_limit": "SoC below BatteryLife dynamic SoC limit",
+          "soc_below_soc_limit_24_hours": "SoC has been below SoC limit for more than 24 hours. Charging battery with 5 amps",
+          "sustain": "Multi/Quattro is in sustain",
+          "with_battery_life": "Optimized mode with BatteryLife"
+        }
+      },
+      "system_ess_mode": {
+        "name": "ESS mode (Hub4)",
+        "state": {
+          "external_control": "External control",
+          "phase_compensation_disabled": "Optimized mode or 'keep batteries charged' and phase compensation disabled",
+          "phase_compensation_enabled": "Optimized mode or 'keep batteries charged' and phase compensation enabled"
+        }
+      },
+      "system_ess_schedule_charge_slot_days": {
+        "name": "ESS BatteryLife schedule charge {slot} days",
+        "state": {
+          "disabled_every_day": "Disabled (Every day)",
+          "disabled_friday": "Disabled (Friday)",
+          "disabled_monday": "Disabled (Monday)",
+          "disabled_saturday": "Disabled (Saturday)",
+          "disabled_sunday": "Disabled (Sunday)",
+          "disabled_thursday": "Disabled (Thursday)",
+          "disabled_tuesday": "Disabled (Tuesday)",
+          "disabled_wednesday": "Disabled (Wednesday)",
+          "disabled_weekdays": "Disabled (Weekdays)",
+          "disabled_weekend": "Disabled (Weekends)",
+          "every_day": "Every day",
+          "friday": "[%key:common::time::friday%]",
+          "monday": "[%key:common::time::monday%]",
+          "saturday": "[%key:common::time::saturday%]",
+          "sunday": "[%key:common::time::sunday%]",
+          "thursday": "[%key:common::time::thursday%]",
+          "tuesday": "[%key:common::time::tuesday%]",
+          "wednesday": "[%key:common::time::wednesday%]",
+          "weekdays": "Weekdays",
+          "weekends": "Weekends"
+        }
+      },
+      "system_settings_dess_mode": {
+        "name": "DESS mode",
+        "state": {
+          "auto_vrm": "Auto / VRM",
+          "buy": "Buy",
+          "node_red": "Node-RED",
+          "off": "[%key:common::state::off%]",
+          "sell": "Sell"
+        }
+      },
+      "vebus_inverter_mode": {
+        "state": {
+          "charger_only": "Charger only",
+          "inverter_only": "Inverter only",
+          "off": "[%key:common::state::off%]",
+          "on": "[%key:common::state::on%]"
+        }
+      }
+    },
     "sensor": {
       "acload_current": {
         "name": "Load current"

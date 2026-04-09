@@ -114,6 +114,11 @@
       "surround_3d": {
         "name": "Surround 3D"
       }
+    },
+    "text": {
+      "network_name": {
+        "name": "Network name"
+      }
     }
   },
   "issues": {
