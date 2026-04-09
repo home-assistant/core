@@ -167,9 +167,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: AqualinkConfigEntry) -> 
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    for coordinator in runtime_data.coordinators.values():
-        coordinator.async_set_updated_data(None)
-
     return True
 
 
