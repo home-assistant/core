@@ -2,12 +2,12 @@
 # name: test_diagnostics
   dict({
     'entry_data': dict({
-      'host': '192.168.1.100',
-      'installation_id': '123',
+      'host': '**REDACTED**',
+      'installation_id': '**REDACTED**',
       'model': 'Cerbo GX',
       'password': '**REDACTED**',
       'port': 1883,
-      'serial': 'HQ2234ABCDE',
+      'serial': '**REDACTED**',
       'ssl': False,
       'username': '**REDACTED**',
     }),
