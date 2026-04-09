@@ -105,5 +105,6 @@ class ZWaveMeRGB(ZWaveMeEntity, LightEntity):
         rgb = self.device.color
         return rgb["r"], rgb["g"], rgb["b"]
 
-    def update(self):
+    def update(self) -> None:
+        """Get data from the device"""
         self.controller.zwave_api.send_command(self.device.id, "update")
