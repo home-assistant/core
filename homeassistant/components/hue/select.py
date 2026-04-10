@@ -8,6 +8,8 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from .bridge import HueConfigEntry
 from .v2.select import async_setup_entry as setup_entry_v2
 
+PARALLEL_UPDATES = 0
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
