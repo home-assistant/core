@@ -41,3 +41,5 @@ class AqualinkDataUpdateCoordinator(DataUpdateCoordinator[None]):
             raise UpdateFailed(
                 f"Unable to update iAqualink system {self.system.serial}: {err}"
             ) from err
+        if self.system.online is not True:
+            raise UpdateFailed(f"iAqualink system {self.system.serial} is offline")

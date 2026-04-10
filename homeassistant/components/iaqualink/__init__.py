@@ -114,17 +114,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: AqualinkConfigEntry) -> 
         thermostats=[],
     )
     for system in systems_list:
+        coordinator = AqualinkDataUpdateCoordinator(hass, entry, system)
+        runtime_data.coordinators[system.serial] = coordinator
+        await coordinator.async_config_entry_first_refresh()
+
         try:
             devices = await system.get_devices()
         except AqualinkServiceException as svc_exception:
-            await aqualink.close()
             raise ConfigEntryNotReady(
                 f"Error while attempting to retrieve devices list: {svc_exception}"
             ) from svc_exception
-
-        runtime_data.coordinators[system.serial] = AqualinkDataUpdateCoordinator(
-            hass, entry, system
-        )
 
         device_registry = dr.async_get(hass)
         device_registry.async_get_or_create(

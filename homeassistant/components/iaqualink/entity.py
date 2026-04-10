@@ -41,8 +41,3 @@ class AqualinkEntity[AqualinkDeviceT: AqualinkDevice](
     def assumed_state(self) -> bool:
         """Return whether the state is based on actual reading from the device."""
         return self.dev.system.online in [False, None]
-
-    @property
-    def available(self) -> bool:
-        """Return whether the device is available or not."""
-        return self.dev.system.online is True

@@ -61,6 +61,7 @@ async def test_system_refresh_failure_marks_entities_unavailable(
 
     system = get_aqualink_system(client, cls=IaquaSystem)
     system.online = True
+    system.update = AsyncMock()
     systems = {system.serial: system}
     light = get_aqualink_device(
         system, name="aux_1", cls=IaquaLightSwitch, data={"state": "1"}
@@ -109,6 +110,7 @@ async def test_light_service_calls_update_entity_state(
 
     system = get_aqualink_system(client, cls=IaquaSystem)
     system.online = True
+    system.update = AsyncMock()
     systems = {system.serial: system}
     light = get_aqualink_device(
         system, name="aux_1", cls=IaquaLightSwitch, data={"state": "1"}
@@ -263,6 +265,7 @@ async def test_setup_devices_exception(
     config_entry.add_to_hass(hass)
 
     system = get_aqualink_system(client, cls=IaquaSystem)
+    system.update = AsyncMock()
     systems = {system.serial: system}
 
     with (
@@ -295,6 +298,8 @@ async def test_setup_all_good_no_recognized_devices(
     config_entry.add_to_hass(hass)
 
     system = get_aqualink_system(client, cls=IaquaSystem)
+    system.online = True
+    system.update = AsyncMock()
     systems = {system.serial: system}
 
     device = get_aqualink_device(system, name="dev_1")
@@ -341,16 +346,38 @@ async def test_setup_all_good_all_device_types(
     config_entry.add_to_hass(hass)
 
     system = get_aqualink_system(client, cls=IaquaSystem)
+    system.online = True
+    system.update = AsyncMock()
     systems = {system.serial: system}
 
     devices = [
-        get_aqualink_device(system, name="aux_1", cls=IaquaAuxSwitch),
-        get_aqualink_device(system, name="freeze_protection", cls=IaquaBinarySensor),
-        get_aqualink_device(system, name="aux_2", cls=IaquaLightSwitch),
-        get_aqualink_device(system, name="ph", cls=IaquaSensor),
-        get_aqualink_device(system, name="pool_set_point", cls=IaquaThermostat),
+        get_aqualink_device(
+            system, name="aux_1", cls=IaquaAuxSwitch, data={"state": "0"}
+        ),
+        get_aqualink_device(
+            system, name="freeze_protection", cls=IaquaBinarySensor, data={"state": "0"}
+        ),
+        get_aqualink_device(
+            system, name="aux_2", cls=IaquaLightSwitch, data={"state": "0"}
+        ),
+        get_aqualink_device(system, name="ph", cls=IaquaSensor, data={"state": "7.2"}),
+        get_aqualink_device(
+            system, name="pool_set_point", cls=IaquaThermostat, data={"state": "0"}
+        ),
     ]
     devices = {d.name: d for d in devices}
+
+    pool_heater = get_aqualink_device(
+        system, name="pool_heater", cls=IaquaAuxSwitch, data={"state": "0"}
+    )
+    pool_temp = get_aqualink_device(
+        system, name="pool_temp", cls=IaquaSensor, data={"state": "72"}
+    )
+    system.devices = {
+        **{d.name: d for d in devices.values()},
+        pool_heater.name: pool_heater,
+        pool_temp.name: pool_temp,
+    }
 
     system.get_devices = AsyncMock(return_value=devices)
 
@@ -392,6 +419,7 @@ async def test_multiple_updates(
 
     system = get_aqualink_system(client, cls=IaquaSystem)
     system.online = True
+    system.update = AsyncMock()
     systems = {system.serial: system}
 
     light = get_aqualink_device(
@@ -514,6 +542,7 @@ async def test_entity_assumed_and_available(
     config_entry.add_to_hass(hass)
 
     system = get_aqualink_system(client, cls=IaquaSystem)
+    system.online = True
     systems = {system.serial: system}
 
     light = get_aqualink_device(
