@@ -121,10 +121,7 @@ class HomeegramButton(ButtonEntity):
         self._host_connected = entry.runtime_data.connected
         self._attr_name = homeegram.name
 
-        # Only enable entity, if it has more than 1 action.
-        self._attr_entity_registry_enabled_default = (
-            self.get_number_of_actions(homeegram) > 1
-        )
+        self._attr_entity_registry_enabled_default = self.add_as_enabled(homeegram)
 
     async def async_added_to_hass(self) -> None:
         """Add the Homeegram entity to home assistant."""
@@ -140,7 +137,7 @@ class HomeegramButton(ButtonEntity):
     @property
     def available(self) -> bool:
         """Return the availability of the homeegram based on host availability."""
-        return self._host_connected
+        return self._homeegram.active and self._host_connected
 
     async def async_press(self) -> None:
         """Trigger Homeegram on push."""
@@ -153,6 +150,10 @@ class HomeegramButton(ButtonEntity):
         self._host_connected = connected
         self.schedule_update_ha_state()
 
-    def get_number_of_actions(self, homeegram: HomeeGram) -> int:
+    def add_as_enabled(self, homeegram: HomeeGram) -> bool:
         """Get the number of actions in a homeegram."""
-        return sum(len(action_type) for action_type in homeegram.actions.data.values())
+        # We only enable if homeegram has more than one action and it is activated.
+        return (
+            sum(len(action_type) for action_type in homeegram.actions.data.values()) > 1
+            and homeegram.active
+        )
