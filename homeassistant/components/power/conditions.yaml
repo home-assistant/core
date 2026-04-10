@@ -28,8 +28,6 @@
 is_value:
   target:
     entity:
-      - domain: number
-        device_class: power
       - domain: sensor
         device_class: power
   fields:

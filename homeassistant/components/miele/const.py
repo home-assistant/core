@@ -19,9 +19,13 @@ LIGHT = "light"
 LIGHT_ON = 1
 LIGHT_OFF = 2
 
+# API "no reading" sentinels. Most temperatures use centidegrees (-32768 -> -327.68 °C).
+# Some devices report the int16 minimum already in degrees after scaling (-3276800 raw -> -32768 °C).
 DISABLED_TEMP_ENTITIES = (
     -32768 / 100,
     -32766 / 100,
+    -32768.0,
+    -32766.0,
 )
 
 
@@ -270,6 +274,7 @@ class ProgramPhaseOven(MieleEnum, missing_to_none=True):
     process_finished = 3078
     searing = 3080
     roasting = 3081
+    cooling_down = 3083
     energy_save = 3084
     pre_heating = 3099
 
@@ -439,6 +444,7 @@ class WashingMachineProgramId(MieleEnum, missing_to_none=True):
 
     no_program = 0, -1
     cottons = 1, 10001
+    normal = 2
     minimum_iron = 3
     delicates = 4, 10022
     woollens = 8, 10040
@@ -452,6 +458,7 @@ class WashingMachineProgramId(MieleEnum, missing_to_none=True):
     proofing = 27, 10057
     sportswear = 29, 10052
     automatic_plus = 31
+    table_linen = 33
     outerwear = 37
     pillows = 39
     cool_air = 45  # washer-dryer
@@ -491,7 +498,7 @@ class DishWasherProgramId(MieleEnum, missing_to_none=True):
     intensive = 1, 26, 205
     maintenance = 2, 27, 214
     eco = 3, 22, 28, 200
-    automatic = 6, 7, 31, 32, 202
+    automatic = 6, 7, 31, 32, 201, 202
     solar_save = 9, 34
     gentle = 10, 35, 210
     extra_quiet = 11, 36, 207
@@ -586,6 +593,7 @@ class OvenProgramId(MieleEnum, missing_to_none=True):
     microwave_fan_grill = 23
     conventional_heat = 24
     top_heat = 25
+    booster = 27
     fan_grill = 29
     bottom_heat = 31
     moisture_plus_auto_roast = 35, 48
@@ -594,6 +602,7 @@ class OvenProgramId(MieleEnum, missing_to_none=True):
     moisture_plus_conventional_heat = 51, 76
     popcorn = 53
     quick_microwave = 54
+    airfry = 95
     custom_program_1 = 97
     custom_program_2 = 98
     custom_program_3 = 99

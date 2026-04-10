@@ -156,8 +156,8 @@ async def async_setup_entry(
 ) -> None:
     """Set up Waterfurnace sensors from a config entry."""
     async_add_entities(
-        WaterFurnaceSensor(coordinator, description)
-        for coordinator in config_entry.runtime_data.values()
+        WaterFurnaceSensor(device_data.realtime, description)
+        for device_data in config_entry.runtime_data.values()
         for description in SENSORS
     )
 

@@ -6,7 +6,6 @@ from homeassistant.components.binary_sensor import (
     DOMAIN as BINARY_SENSOR_DOMAIN,
     BinarySensorDeviceClass,
 )
-from homeassistant.components.number import DOMAIN as NUMBER_DOMAIN, NumberDeviceClass
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN, SensorDeviceClass
 from homeassistant.const import LIGHT_LUX, STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
@@ -19,7 +18,6 @@ from homeassistant.helpers.trigger import (
 )
 
 ILLUMINANCE_DOMAIN_SPECS: dict[str, DomainSpec] = {
-    NUMBER_DOMAIN: DomainSpec(device_class=NumberDeviceClass.ILLUMINANCE),
     SENSOR_DOMAIN: DomainSpec(device_class=SensorDeviceClass.ILLUMINANCE),
 }
 

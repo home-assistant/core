@@ -23,8 +23,6 @@ is_value:
     entity:
       - domain: sensor
         device_class: illuminance
-      - domain: number
-        device_class: illuminance
   fields:
     behavior: *condition_behavior
     threshold:

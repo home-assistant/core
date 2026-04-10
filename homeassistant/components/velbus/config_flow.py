@@ -6,12 +6,12 @@ from pathlib import Path
 import shutil
 from typing import Any, Final
 
-import serial.tools.list_ports
 import velbusaio.controller
 from velbusaio.exceptions import VelbusConnectionFailed
 from velbusaio.vlp_reader import VlpFile
 import voluptuous as vol
 
+from homeassistant.components import usb
 from homeassistant.components.file_upload import process_uploaded_file
 from homeassistant.config_entries import (
     SOURCE_RECONFIGURE,
@@ -115,9 +115,10 @@ class VelbusConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle usb select step."""
         step_errors: dict[str, str] = {}
-        ports = await self.hass.async_add_executor_job(serial.tools.list_ports.comports)
+        ports = await usb.async_scan_serial_ports(self.hass)
         list_of_ports = [
-            f"{p}{', s/n: ' + p.serial_number if p.serial_number else ''}"
+            f"{p.device} - {p.description or 'n/a'}"
+            f"{', s/n: ' + p.serial_number if p.serial_number else ''}"
             + (f" - {p.manufacturer}" if p.manufacturer else "")
             for p in ports
         ]

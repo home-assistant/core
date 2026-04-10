@@ -279,6 +279,18 @@
         "upload_voice": "Uploading voice"
       }
     },
+    "media": {
+      "fields": {
+        "authentication": "Authentication",
+        "caption": "Caption",
+        "file": "File",
+        "media_type": "Media type",
+        "password": "Password",
+        "url": "URL",
+        "username": "Username",
+        "verify_ssl": "Verify SSL"
+      }
+    },
     "media_type": {
       "options": {
         "animation": "Animation",

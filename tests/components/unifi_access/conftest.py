@@ -105,11 +105,13 @@ def mock_client() -> Generator[MagicMock]:
     ):
         client = client_mock.return_value
         client.authenticate = AsyncMock()
+        client.is_protect_api_key = AsyncMock(return_value=False)
         client.get_doors = AsyncMock(return_value=MOCK_DOORS)
         client.get_emergency_status = AsyncMock(
             return_value=EmergencyStatus(evacuation=False, lockdown=False)
         )
         client.get_door_lock_rule = AsyncMock(return_value=DoorLockRuleStatus())
+        client.set_door_lock_rule = AsyncMock()
         client.set_emergency_status = AsyncMock()
         client.unlock_door = AsyncMock()
         client.get_thumbnail = AsyncMock(return_value=b"")

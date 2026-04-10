@@ -8,7 +8,7 @@ from http import HTTPMethod
 from typing import Any
 from unittest.mock import MagicMock, patch
 
-from evohomeasync2 import EvohomeClient
+from evohomeasync2 import EvohomeClient, HotWater
 from evohomeasync2.auth import AbstractTokenManager, Auth
 from evohomeasync2.control_system import ControlSystem
 from evohomeasync2.zone import Zone
@@ -18,8 +18,9 @@ import pytest
 from homeassistant.components.evohome.const import DOMAIN
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
-from homeassistant.util import dt as dt_util, slugify
+from homeassistant.util import dt as dt_util
 from homeassistant.util.json import JsonArrayType, JsonObjectType
 
 from .const import ACCESS_TOKEN, REFRESH_TOKEN, SESSION_ID, USERNAME
@@ -210,20 +211,52 @@ async def evohome(
 
 
 @pytest.fixture
-def ctl_id(evohome: MagicMock) -> str:
-    """Return the entity_id of the evohome integration's controller."""
+def ctl_id(evohome: MagicMock, entity_id: Callable[[Platform, str], str]) -> str:
+    """Return the entity_id of evohome's controller (a Climate entity)."""
+
+    evo: EvohomeClient = evohome.return_value
+    tcs: ControlSystem = evo.tcs
+
+    return entity_id(Platform.CLIMATE, tcs.id)
+
+
+@pytest.fixture
+def zone_id(evohome: MagicMock, entity_id: Callable[[Platform, str], str]) -> str:
+    """Return the entity_id of evohome's first zone (a Climate entity)."""
 
     evo: EvohomeClient = evohome.return_value
     ctl: ControlSystem = evo.tcs
 
-    return f"{Platform.CLIMATE}.{slugify(ctl.location.name)}"
+    zone: Zone = evo.tcs.zones[0]
+
+    return entity_id(Platform.CLIMATE, f"{zone.id}z" if zone.id == ctl.id else zone.id)
 
 
 @pytest.fixture
-def zone_id(evohome: MagicMock) -> str:
-    """Return the entity_id of the evohome integration's first zone."""
+def dhw_id(evohome: MagicMock, entity_id: Callable[[Platform, str], str]) -> str:
+    """Return the entity_id of Evohome's DHW controller (a WaterHeater entity)."""
 
     evo: EvohomeClient = evohome.return_value
-    zone: Zone = evo.tcs.zones[0]
+    dhw: HotWater | None = evo.tcs.hotwater
 
-    return f"{Platform.CLIMATE}.{slugify(zone.name)}"
+    assert dhw is not None, "Fixture has no DHW zone"
+
+    return entity_id(Platform.WATER_HEATER, dhw.id)
+
+
+@pytest.fixture
+def entity_id(
+    entity_registry: er.EntityRegistry,
+) -> Callable[[Platform, str], str]:
+    """Return a helper to lookup an entity_id from platform and unique_id."""
+
+    def get_entity_id(platform: Platform, unique_id: str) -> str:
+        """Return an entity_id from the entity registry."""
+
+        entity = entity_registry.async_get_entity_id(platform, DOMAIN, unique_id)
+        assert entity is not None, (
+            f"Entity not found for platform={platform}: {unique_id}"
+        )
+        return entity
+
+    return get_entity_id
