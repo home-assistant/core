@@ -2,8 +2,6 @@
 
 import logging
 
-from dateutil import parser as date_parser
-
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
@@ -14,15 +12,6 @@ from .coordinator import MosqueCoordinator, PrayerTimeCoordinator
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS = [Platform.SENSOR]
-
-
-def is_date_parsing(date_str) -> bool:
-    """Check if the given string can be parsed into a date."""
-    try:
-        date_parser.parse(date_str)
-    except ValueError:
-        return False
-    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
