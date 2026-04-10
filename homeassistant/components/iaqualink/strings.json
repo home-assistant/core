@@ -10,9 +10,10 @@
     "step": {
       "reauth_confirm": {
         "data": {
-          "password": "[%key:common::config_flow::data::password%]"
+          "password": "[%key:common::config_flow::data::password%]",
+          "username": "[%key:common::config_flow::data::username%]"
         },
-        "description": "Update your iAqualink password.",
+        "description": "Please enter the username and password for your iAqualink account.",
         "title": "Reauthenticate iAqualink"
       },
       "user": {
