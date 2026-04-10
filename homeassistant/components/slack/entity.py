@@ -1,17 +1,10 @@
 """The slack integration."""
 
-from __future__ import annotations
-
-from typing import TYPE_CHECKING
-
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity import Entity, EntityDescription
 
+from . import SlackConfigEntry, SlackData
 from .const import DEFAULT_NAME, DOMAIN
-
-if TYPE_CHECKING:
-    from . import SlackConfigEntry, SlackData
-
 
 class SlackEntity(Entity):
     """Representation of a Slack entity."""
