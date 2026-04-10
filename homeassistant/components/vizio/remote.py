@@ -82,7 +82,8 @@ class VizioRemote(CoordinatorEntity[VizioDeviceCoordinator], RemoteEntity):
         delay: float = kwargs.get(ATTR_DELAY_SECS, DEFAULT_DELAY_SECS)
         resolved = [vol.All(vol.Lower, self._resolve_command)(cmd) for cmd in command]
 
-        for _ in range(num_repeats):
+        for i in range(num_repeats):
             for cmd in resolved:
                 await self._device.remote(cmd, log_api_exception=False)
-            await asyncio.sleep(delay)
+            if i < num_repeats - 1:
+                await asyncio.sleep(delay)

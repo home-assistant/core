@@ -9,6 +9,7 @@ import pytest
 from homeassistant.components.remote import (
     ATTR_COMMAND,
     ATTR_DELAY_SECS,
+    ATTR_NUM_REPEATS,
     DOMAIN as REMOTE_DOMAIN,
     SERVICE_SEND_COMMAND,
 )
@@ -126,7 +127,6 @@ async def test_send_command_tv_valid(
             {
                 ATTR_ENTITY_ID: REMOTE_ENTITY_ID,
                 ATTR_COMMAND: [command],
-                ATTR_DELAY_SECS: 0,
             },
             blocking=True,
         )
@@ -145,7 +145,6 @@ async def test_send_command_tv_invalid(hass: HomeAssistant, command: str) -> Non
             {
                 ATTR_ENTITY_ID: REMOTE_ENTITY_ID,
                 ATTR_COMMAND: [command],
-                ATTR_DELAY_SECS: 0,
             },
             blocking=True,
         )
@@ -182,7 +181,6 @@ async def test_send_command_speaker_valid(
             {
                 ATTR_ENTITY_ID: REMOTE_ENTITY_ID,
                 ATTR_COMMAND: [command],
-                ATTR_DELAY_SECS: 0,
             },
             blocking=True,
         )
@@ -211,7 +209,6 @@ async def test_send_command_speaker_invalid(hass: HomeAssistant, command: str) -
             {
                 ATTR_ENTITY_ID: REMOTE_ENTITY_ID,
                 ATTR_COMMAND: [command],
-                ATTR_DELAY_SECS: 0,
             },
             blocking=True,
         )
@@ -230,7 +227,6 @@ async def test_send_command_multiple(hass: HomeAssistant) -> None:
             {
                 ATTR_ENTITY_ID: REMOTE_ENTITY_ID,
                 ATTR_COMMAND: ["UP", "OK"],
-                ATTR_DELAY_SECS: 0,
             },
             blocking=True,
         )
@@ -255,8 +251,35 @@ async def test_send_command_invalid_skips_valid(hass: HomeAssistant) -> None:
             {
                 ATTR_ENTITY_ID: REMOTE_ENTITY_ID,
                 ATTR_COMMAND: ["UP", "INVALID_KEY"],
-                ATTR_DELAY_SECS: 0,
             },
             blocking=True,
         )
     mock_remote.assert_not_called()
+
+
+@pytest.mark.usefixtures("vizio_connect", "vizio_update")
+async def test_send_command_delay_between_repeats(hass: HomeAssistant) -> None:
+    """Test delay is applied between repeats but not after the last one."""
+    await _setup_entry(hass, MOCK_USER_VALID_TV_CONFIG)
+    with (
+        patch(
+            "homeassistant.components.vizio.VizioAsync.remote",
+        ) as mock_remote,
+        patch(
+            "homeassistant.components.vizio.remote.asyncio.sleep",
+        ) as mock_sleep,
+    ):
+        await hass.services.async_call(
+            REMOTE_DOMAIN,
+            SERVICE_SEND_COMMAND,
+            {
+                ATTR_ENTITY_ID: REMOTE_ENTITY_ID,
+                ATTR_COMMAND: ["UP"],
+                ATTR_NUM_REPEATS: 3,
+                ATTR_DELAY_SECS: 0.5,
+            },
+            blocking=True,
+        )
+        assert mock_remote.call_count == 3
+        assert mock_sleep.call_count == 2
+        mock_sleep.assert_called_with(0.5)
