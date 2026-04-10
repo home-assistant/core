@@ -18,7 +18,7 @@ from homeassistant.helpers.selector import (
     SelectSelectorMode,
 )
 
-from .const import CONF_DEVICE_TYPE, CONF_INFRARED_ENTITY_ID, DOMAIN, LGDeviceType
+from .const import CONF_DEVICE_TYPE, CONF_INFRARED_ENTITY_ID, DOMAIN, LGDeviceType, CONF_REGION, REGION_GLOBAL, REGION_JAPAN
 
 DEVICE_TYPE_NAMES: dict[LGDeviceType, str] = {
     LGDeviceType.TV: "TV",
@@ -71,6 +71,13 @@ class LgIrConfigFlow(ConfigFlow, domain=DOMAIN):
                         EntitySelectorConfig(
                             domain=INFRARED_DOMAIN,
                             include_entities=emitter_entity_ids,
+                        )
+                    ),
+                    vol.Required(CONF_REGION, default=REGION_GLOBAL): selector.SelectSelector(
+                        SelectSelectorConfig(
+                            options=[REGION_GLOBAL, REGION_JAPAN],
+                            translation_key="region",
+                            mode=selector.SelectSelectorMode.DROPDOWN,
                         )
                     ),
                 }
