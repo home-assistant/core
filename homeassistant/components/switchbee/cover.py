@@ -27,7 +27,7 @@ async def async_setup_entry(
     entry: SwitchBeeConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up SwitchBee switch."""
+    """Set up SwitchBee covers."""
     coordinator = entry.runtime_data
     entities: list[CoverEntity] = []
 
