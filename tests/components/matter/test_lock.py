@@ -952,6 +952,45 @@ async def test_get_lock_users_with_nullvalue_credentials(
 
 @pytest.mark.parametrize("node_fixture", ["mock_door_lock"])
 @pytest.mark.parametrize("attributes", [{"1/257/65532": _FEATURE_USR_PIN}])
+async def test_get_lock_users_with_fabric_indices(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test get_lock_users returns fabric indices and normalizes NullValue."""
+    matter_client.send_device_command = AsyncMock(
+        side_effect=[
+            {
+                "userIndex": 1,
+                "userName": "HA User",
+                "userUniqueID": None,
+                "userStatus": 1,
+                "userType": 0,
+                "credentialRule": 0,
+                "credentials": None,
+                "creatorFabricIndex": 3,
+                "lastModifiedFabricIndex": NullValue,
+                "nextUserIndex": None,
+            },
+        ]
+    )
+
+    result = await hass.services.async_call(
+        DOMAIN,
+        "get_lock_users",
+        {ATTR_ENTITY_ID: "lock.mock_door_lock"},
+        blocking=True,
+        return_response=True,
+    )
+
+    users = result["lock.mock_door_lock"]["users"]
+    assert len(users) == 1
+    assert users[0]["creator_fabric_index"] == 3
+    assert users[0]["last_modified_fabric_index"] is None
+
+
+@pytest.mark.parametrize("node_fixture", ["mock_door_lock"])
+@pytest.mark.parametrize("attributes", [{"1/257/65532": _FEATURE_USR_PIN}])
 @pytest.mark.parametrize(
     ("service_name", "service_data", "return_response"),
     [
@@ -1584,6 +1623,45 @@ async def test_get_lock_credential_status_empty_slot(
         "creator_fabric_index": None,
         "last_modified_fabric_index": None,
         "next_credential_index": None,
+    }
+
+
+@pytest.mark.parametrize("node_fixture", ["mock_door_lock"])
+@pytest.mark.parametrize("attributes", [{"1/257/65532": _FEATURE_USR_PIN}])
+async def test_get_lock_credential_status_with_fabric_indices(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test get_lock_credential_status returns fabric indices and normalizes NullValue."""
+    matter_client.send_device_command = AsyncMock(
+        return_value={
+            "credentialExists": True,
+            "userIndex": 2,
+            "creatorFabricIndex": 1,
+            "lastModifiedFabricIndex": NullValue,
+            "nextCredentialIndex": 5,
+        }
+    )
+
+    result = await hass.services.async_call(
+        DOMAIN,
+        "get_lock_credential_status",
+        {
+            ATTR_ENTITY_ID: "lock.mock_door_lock",
+            ATTR_CREDENTIAL_TYPE: "pin",
+            ATTR_CREDENTIAL_INDEX: 1,
+        },
+        blocking=True,
+        return_response=True,
+    )
+
+    assert result["lock.mock_door_lock"] == {
+        "credential_exists": True,
+        "user_index": 2,
+        "creator_fabric_index": 1,
+        "last_modified_fabric_index": None,
+        "next_credential_index": 5,
     }
 
 
