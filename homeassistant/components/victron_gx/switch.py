@@ -16,7 +16,7 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .binary_sensor import VictronBinarySensor
-from .const import SWITCH_OFF_ID, SWITCH_ON_ID
+from .const import BINARY_SENSOR_OFF_ID, BINARY_SENSOR_ON_ID
 from .entity import VictronBaseEntity
 from .hub import VictronGxConfigEntry
 
@@ -71,10 +71,10 @@ class VictronSwitch(VictronBaseEntity, SwitchEntity):
         """Turn the switch on."""
         assert isinstance(self._metric, VictronVenusWritableMetric)
         _LOGGER.debug("Turning on switch: %s", self._attr_unique_id)
-        self._metric.set(SWITCH_ON_ID)
+        self._metric.set(BINARY_SENSOR_ON_ID)
 
     def turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
         assert isinstance(self._metric, VictronVenusWritableMetric)
         _LOGGER.debug("Turning off switch: %s", self._attr_unique_id)
-        self._metric.set(SWITCH_OFF_ID)
+        self._metric.set(BINARY_SENSOR_OFF_ID)
