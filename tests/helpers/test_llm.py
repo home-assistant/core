@@ -1550,7 +1550,9 @@ async def test_find_exposed_entities_tool(
     )
     api = await llm.async_get_api(hass, "assist", llm_context)
 
-    tool = next((tool for tool in api.tools if tool.name == "FindExposedEntities"), None)
+    tool = next(
+        (tool for tool in api.tools if tool.name == "FindExposedEntities"), None
+    )
     assert tool is not None
 
     result = await tool.async_call(
@@ -1632,7 +1634,9 @@ async def test_find_exposed_entities_tool_avoids_false_positive_substring_matche
         device_id=None,
     )
     api = await llm.async_get_api(hass, "assist", llm_context)
-    tool = next((tool for tool in api.tools if tool.name == "FindExposedEntities"), None)
+    tool = next(
+        (tool for tool in api.tools if tool.name == "FindExposedEntities"), None
+    )
     assert tool is not None
 
     result = await tool.async_call(

@@ -402,9 +402,18 @@ async def test_mcp_tools_list(
     assert search_tool.inputSchema == {
         "type": "object",
         "properties": {
-            "query": {"description": "Search text to match against exposed entity names and aliases", "type": "string"},
-            "domain": {"description": "Limit results to one domain such as light, climate, or script", "type": "string"},
-            "area": {"description": "Limit results to one area name or alias", "type": "string"},
+            "query": {
+                "description": "Search text to match against exposed entity names and aliases",
+                "type": "string",
+            },
+            "domain": {
+                "description": "Limit results to one domain such as light, climate, or script",
+                "type": "string",
+            },
+            "area": {
+                "description": "Limit results to one area name or alias",
+                "type": "string",
+            },
             "limit": {
                 "description": "Maximum number of matches to return",
                 "default": 5,

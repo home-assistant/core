@@ -736,7 +736,9 @@ def _get_exposed_entities(
 
 
 @callback
-def _has_exposed_entities(exposed_entities: dict[str, dict[str, dict[str, Any]]]) -> bool:
+def _has_exposed_entities(
+    exposed_entities: dict[str, dict[str, dict[str, Any]]],
+) -> bool:
     """Return if any entities are exposed to the assistant."""
     return any(exposed_entities.values())
 
@@ -830,7 +832,10 @@ def _score_search_match(query: str, candidate: str) -> float:
         return 900 - len(candidate_norm)
 
     if query_tokens and all(
-        any(candidate_token.startswith(query_token) for candidate_token in candidate_tokens)
+        any(
+            candidate_token.startswith(query_token)
+            for candidate_token in candidate_tokens
+        )
         for query_token in query_tokens
     ):
         return 700 - len(candidate_tokens)
@@ -953,7 +958,9 @@ class FindExposedEntitiesTool(Tool):
                 continue
 
             names = [info["name"], *info["aliases"]]
-            best_score = max((_score_search_match(query, name) for name in names), default=0)
+            best_score = max(
+                (_score_search_match(query, name) for name in names), default=0
+            )
             if best_score <= 0:
                 continue
 
@@ -973,9 +980,7 @@ class FindExposedEntitiesTool(Tool):
         return {
             "success": True,
             "result": {
-                "matches": [
-                    result for _, result in results[: data["limit"]]
-                ],
+                "matches": [result for _, result in results[: data["limit"]]],
                 "truncated": len(results) > data["limit"],
             },
         }
