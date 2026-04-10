@@ -623,6 +623,16 @@ class ZHAGatewayProxy(EventBase):
 
         # Group devices use synthetic identifiers, not real IEEE addresses
         if ieee_address.startswith("zha_group_"):
+            group_id = int(ieee_address.removeprefix("zha_group_"), 16)
+            if (group_proxy := self.group_proxies.get(group_id)) is None:
+                return
+            if entity_entry.unique_id not in group_proxy.group.group_entities:
+                return
+            group_entity = group_proxy.group.group_entities[entity_entry.unique_id]
+            if entity_entry.disabled:
+                group_entity.disable()
+            else:
+                group_entity.enable()
             return
 
         ieee = EUI64.convert(ieee_address)
@@ -897,16 +907,15 @@ class ZHAGatewayProxy(EventBase):
             )
             self.group_proxies[group_info.group_id] = zha_group_proxy
 
-            # Only create a device for groups that have entities
-            if zha_group_proxy.group.group_entities:
-                device_registry = dr.async_get(self.hass)
-                coordinator_ieee = str(self.gateway.state.node_info.ieee)
-                device_info = zha_group_proxy.get_device_info(coordinator_ieee)
-                device_registry_device = device_registry.async_get_or_create(
-                    config_entry_id=self.config_entry.entry_id,
-                    **device_info,
-                )
-                zha_group_proxy.device_id = device_registry_device.id
+        if zha_group_proxy.device_id is None and zha_group_proxy.group.group_entities:
+            device_registry = dr.async_get(self.hass)
+            coordinator_ieee = str(self.gateway.state.node_info.ieee)
+            device_info = zha_group_proxy.get_device_info(coordinator_ieee)
+            device_registry_device = device_registry.async_get_or_create(
+                config_entry_id=self.config_entry.entry_id,
+                **device_info,
+            )
+            zha_group_proxy.device_id = device_registry_device.id
         return zha_group_proxy
 
     def _create_entity_metadata(
@@ -953,7 +962,8 @@ class ZHAGatewayProxy(EventBase):
             entity_registry.deleted_entities.pop(
                 (entry.domain, entry.platform, entry.unique_id), None
             )
-        device_registry.async_remove_device(device_id)
+        if device_registry.async_get(device_id) is not None:
+            device_registry.async_remove_device(device_id)
         device_registry.deleted_devices.pop(device_id, None)
 
     def _update_group_entities(self, group_event: GroupEvent) -> None:
