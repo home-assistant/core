@@ -89,7 +89,7 @@ class MawaqitPrayerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     ) -> config_entries.ConfigFlowResult:
         """Handle mosques step."""
 
-        errors = {}
+        errors: dict[str, str] = {}
 
         lat = self.hass.config.latitude
         longi = self.hass.config.longitude
@@ -135,7 +135,7 @@ class MawaqitPrayerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self, user_input=None
     ) -> config_entries.ConfigFlowResult:
         """Handle the user's choice of search method."""
-        errors = {}
+        errors: dict[str, str] = {}
         schema = vol.Schema(
             {
                 vol.Required(

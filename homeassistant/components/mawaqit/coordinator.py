@@ -23,8 +23,8 @@ class MosqueCoordinator(DataUpdateCoordinator[dict]):
 
     def __init__(self, hass: HomeAssistant, config_entry: ConfigEntry) -> None:
         """Initialize the mosque coordinator."""
-        self.mosque_uuid = config_entry.data.get(CONF_UUID)
-        self.token = config_entry.data.get(CONF_API_KEY)
+        self.mosque_uuid: str = config_entry.data[CONF_UUID]
+        self.token: str | None = config_entry.data.get(CONF_API_KEY)
 
         super().__init__(
             hass,
