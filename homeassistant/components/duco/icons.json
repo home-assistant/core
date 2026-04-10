@@ -1,0 +1,9 @@
+{
+  "entity": {
+    "sensor": {
+      "ventilation_state": {
+        "default": "mdi:tune-variant"
+      }
+    }
+  }
+}

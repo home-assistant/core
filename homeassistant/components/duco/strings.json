@@ -29,6 +29,17 @@
           }
         }
       }
+    },
+    "sensor": {
+      "iaq_co2": {
+        "name": "CO2 air quality index"
+      },
+      "iaq_rh": {
+        "name": "Humidity air quality index"
+      },
+      "ventilation_state": {
+        "name": "Ventilation state"
+      }
     }
   },
   "exceptions": {
