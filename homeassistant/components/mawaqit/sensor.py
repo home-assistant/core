@@ -240,13 +240,16 @@ class MyMosqueSensor(SensorEntity, CoordinatorEntity[MosqueCoordinator]):
     @property
     def native_value(self) -> str | None:
         """Return the current mosque name as the sensor state."""
+        if not self.coordinator.data:
+            return None
         return self.coordinator.data.get("name")
 
     @property
     def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return additional attributes for the mosque sensor."""
+        if not self.coordinator.data:
+            return None
         filtered_data = {}
-        # Announcements are dynamic and could be useful for automations
         announcements = self.coordinator.data.get("announcements")
         if announcements:
             filtered_data["announcements"] = [
@@ -278,23 +281,11 @@ class MawaqitPrayerTimeSensor(SensorEntity, CoordinatorEntity[PrayerTimeCoordina
         prayer_data = self.coordinator.data
 
         if not prayer_data:
-            _LOGGER.warning(
-                "No prayer data available yet for %s", self.entity_description.key
-            )
-            return None
-
-        if (
-            not hasattr(self.entity_description, "get_value")
-            or self.entity_description.get_value is None
-        ):
-            _LOGGER.error(
-                "No get_value function defined for %s", self.entity_description.key
-            )
             return None
 
         try:
             return self.entity_description.get_value(prayer_data)
-        except (KeyError, ValueError, TypeError) as e:
+        except KeyError, ValueError, TypeError as e:
             _LOGGER.error(
                 "Error retrieving prayer time for %s: %s",
                 self.entity_description.key,

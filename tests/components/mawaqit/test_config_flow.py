@@ -504,7 +504,9 @@ async def test_async_step_mosques_coordinates(
 
 
 @pytest.mark.asyncio
-async def test_async_get_options_flow(mock_config_entry_mawaqit) -> None:
+async def test_async_get_options_flow(
+    mock_config_entry_mawaqit: MockConfigEntry,
+) -> None:
     """Test the options flow is correctly instantiated with the config entry."""
 
     options_flow = config_flow.MawaqitPrayerFlowHandler.async_get_options_flow(
@@ -550,12 +552,14 @@ async def test_options_flow_valid_input(
 async def test_options_flow_no_input_reopens_form(
     hass: HomeAssistant,
     config_entry_setup: MockConfigEntry,
+    mock_mosques_test_data: tuple[list[dict], tuple[list[str], list[str], list[str]]],
 ) -> None:
     """Test the options flow reopens the form when no input is provided."""
+    mock_mosques, _ = mock_mosques_test_data
 
     with patch(
         "homeassistant.components.mawaqit.mawaqit_wrapper.all_mosques_neighborhood",
-        return_value={},
+        return_value=mock_mosques,
     ):
         # show initial form
         result = await hass.config_entries.options.async_init(
@@ -567,9 +571,7 @@ async def test_options_flow_no_input_reopens_form(
             result["flow_id"], user_input=None
         )
 
-        assert (
-            result.get("type") == data_entry_flow.FlowResultType.FORM
-        )  # Assert that a form is shown
+        assert result.get("type") == data_entry_flow.FlowResultType.FORM
         assert result.get("step_id") == "init"
 
 
@@ -577,25 +579,22 @@ async def test_options_flow_no_input_reopens_form(
 async def test_options_flow_no_input_error_reopens_form(
     hass: HomeAssistant,
     mock_config_entry_mawaqit: MockConfigEntry,
+    mock_mosques_test_data: tuple[list[dict], tuple[list[str], list[str], list[str]]],
 ) -> None:
-    """Test the options flow reopens the form when no input is provided and an error occurs."""
-    # MawaqitPrayerOptionsFlowHandler.
+    """Test the options flow reopens the form when no input is provided."""
+    mock_mosques, _ = mock_mosques_test_data
 
-    mock_config_entry_mawaqit.add_to_hass(hass)  # register the MockConfigEntry to Hass
+    mock_config_entry_mawaqit.add_to_hass(hass)
 
     with patch(
         "homeassistant.components.mawaqit.mawaqit_wrapper.all_mosques_neighborhood",
-        return_value={},
+        return_value=mock_mosques,
     ):
-        # Simulate the init step
         result = await hass.config_entries.options.async_init(
             mock_config_entry_mawaqit.entry_id, data=None
         )
 
-        assert (
-            result.get("type") == data_entry_flow.FlowResultType.FORM
-        )  # Assert that a form is shown
-
+        assert result.get("type") == data_entry_flow.FlowResultType.FORM
         assert result.get("step_id") == "init"
 
 

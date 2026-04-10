@@ -3,7 +3,7 @@
 from typing import Any
 
 from aiohttp.client_exceptions import ClientConnectorError
-from mawaqit.consts import NoMosqueAround, NoMosqueFound
+from mawaqit.consts import BadCredentialsException, NoMosqueAround, NoMosqueFound
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -67,14 +67,18 @@ class MawaqitPrayerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 errors["base"] = CANNOT_CONNECT_TO_SERVER
             else:
                 if valid:
-                    mawaqit_token = await mawaqit_wrapper.get_mawaqit_api_token(
-                        username, password
-                    )
-                    if not mawaqit_token:
+                    try:
+                        mawaqit_token = await mawaqit_wrapper.get_mawaqit_api_token(
+                            username, password
+                        )
+                    except ClientConnectorError, ConnectionError, TimeoutError:
                         errors["base"] = CANNOT_CONNECT_TO_SERVER
                     else:
-                        self.token = mawaqit_token
-                        return await self.async_step_search_method()
+                        if not mawaqit_token:
+                            errors["base"] = CANNOT_CONNECT_TO_SERVER
+                        else:
+                            self.token = mawaqit_token
+                            return await self.async_step_search_method()
                 else:
                     errors["base"] = WRONG_CREDENTIAL
 
@@ -114,6 +118,13 @@ class MawaqitPrayerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                     self.mosques = neighborhood_mosques
             except NoMosqueAround:
                 return self.async_abort(reason="no_mosque")
+            except (
+                BadCredentialsException,
+                ClientConnectorError,
+                ConnectionError,
+                TimeoutError,
+            ):
+                return self.async_abort(reason="cannot_connect")
 
         name_servers, _uuid_servers, _calc_methods = utils.parse_mosque_data(
             self.mosques
@@ -176,6 +187,13 @@ class MawaqitPrayerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
             except NoMosqueAround:
                 return self.async_abort(reason="no_mosque")
+            except (
+                BadCredentialsException,
+                ClientConnectorError,
+                ConnectionError,
+                TimeoutError,
+            ):
+                return self.async_abort(reason="cannot_connect")
 
             return await self.async_step_mosques_coordinates()
 
@@ -219,11 +237,24 @@ class MawaqitPrayerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                         )
                     )
 
-                    if mosques_found_keyword:
-                        self.mosques = mosques_found_keyword
+                    self.mosques = mosques_found_keyword or []
 
                 except NoMosqueFound:
                     errors["base"] = NO_MOSQUE_FOUND_KEYWORD
+                    return self.async_show_form(
+                        step_id="keyword_search",
+                        data_schema=self.add_suggested_values_to_schema(
+                            vol.Schema(option), {CONF_SEARCH: user_input[CONF_SEARCH]}
+                        ),
+                        errors=errors,
+                    )
+                except (
+                    BadCredentialsException,
+                    ClientConnectorError,
+                    ConnectionError,
+                    TimeoutError,
+                ):
+                    errors["base"] = CANNOT_CONNECT_TO_SERVER
                     return self.async_show_form(
                         step_id="keyword_search",
                         data_schema=self.add_suggested_values_to_schema(
@@ -307,38 +338,46 @@ class MawaqitPrayerOptionsFlowHandler(config_entries.OptionsFlow):
             )
             return self.async_create_entry(title=None, data={})
 
-        # Attempt to fetch nearby mosques, handle the NoMosqueAround exception
         try:
             neighborhood_mosques = await mawaqit_wrapper.all_mosques_neighborhood(
                 lat, longi, token=mawaqit_token
             )
             if neighborhood_mosques:
                 self.mosques = neighborhood_mosques
-
-            name_servers, uuid_servers, _calc_methods = utils.parse_mosque_data(
-                self.mosques
-            )
-
-            current_mosque = self.config_entry.data.get(CONF_UUID)
-
-            try:
-                index = uuid_servers.index(current_mosque)
-                default_name = name_servers[index]
-            except ValueError:
-                default_name = name_servers[0] if name_servers else None
-
-            options = {
-                vol.Required(
-                    CONF_CALC_METHOD,
-                    default=default_name,
-                ): vol.In(name_servers)
-            }
-
-            return self.async_show_form(
-                step_id="init",
-                data_schema=vol.Schema(options),
-                description_placeholders={"mawaqit_url": "https://mawaqit.net/"},
-            )
-
         except NoMosqueAround:
             return self.async_abort(reason="no_mosque")
+        except (
+            BadCredentialsException,
+            ClientConnectorError,
+            ConnectionError,
+            TimeoutError,
+        ):
+            return self.async_abort(reason="cannot_connect")
+
+        name_servers, uuid_servers, _calc_methods = utils.parse_mosque_data(
+            self.mosques
+        )
+
+        if not name_servers:
+            return self.async_abort(reason="no_mosque")
+
+        current_mosque = self.config_entry.data.get(CONF_UUID)
+
+        try:
+            index = uuid_servers.index(current_mosque)
+            default_name = name_servers[index]
+        except ValueError:
+            default_name = name_servers[0]
+
+        options = {
+            vol.Required(
+                CONF_CALC_METHOD,
+                default=default_name,
+            ): vol.In(name_servers)
+        }
+
+        return self.async_show_form(
+            step_id="init",
+            data_schema=vol.Schema(options),
+            description_placeholders={"mawaqit_url": "https://mawaqit.net/"},
+        )

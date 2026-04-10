@@ -71,7 +71,11 @@ def save_mosque(
     raw_all_mosques_data = mosques
 
     mosque = UUID
-    index = name_servers.index(mosque)
+    try:
+        index = name_servers.index(mosque)
+    except ValueError:
+        _LOGGER.error("Mosque label '%s' not found in available mosques", mosque)
+        raise
     mosque_id = uuid_servers[index]
 
     title = "MAWAQIT" + " - " + raw_all_mosques_data[index]["name"]
@@ -216,7 +220,7 @@ def get_next_friday():
 
     :return: A datetime.date object representing the next Friday (never today).
     """
-    today = datetime.today().date()
+    today = dt_util.now().date()
     days_until_friday = (
         4 - today.weekday()
     ) % 7  # 4 represents Friday (Monday=0, ..., Sunday=6)
@@ -224,7 +228,7 @@ def get_next_friday():
     if days_until_friday == 0:  # If today is Friday, move to next week
         days_until_friday = 7
 
-    return today + timedelta(days=days_until_friday)  # represents the next Friday
+    return today + timedelta(days=days_until_friday)
 
 
 def get_prayer_times_for_two_days(prayer_calendar, today, timezone):
@@ -321,8 +325,8 @@ def get_regular_prayer_time(prayer_data: dict, prayer_name: str) -> datetime | N
         _LOGGER.warning("Missing calendar or timezone data for %s", prayer_name)
         return None
 
-    # Get today's date
-    day = dt_util.now().date()
+    tz = dt_util.get_time_zone(timezone)
+    day = dt_util.now(tz).date() if tz else dt_util.now().date()
     prayer_time = extract_time_from_calendar(calendar, prayer_name, day, timezone)
 
     if not prayer_time:
@@ -346,7 +350,8 @@ def get_shuruq_time(prayer_data: dict) -> datetime | None:
     if not shuruq_time:
         return None
 
-    day = dt_util.now().date()
+    tz = dt_util.get_time_zone(timezone)
+    day = dt_util.now(tz).date() if tz else dt_util.now().date()
     localized_prayer_time = time_with_timezone(timezone, day, shuruq_time)
     if localized_prayer_time:
         return localized_prayer_time.astimezone(dt_util.UTC)
@@ -373,8 +378,6 @@ def get_jumua_time(prayer_data: dict, jumua_name: str) -> datetime | None:
 
 
 def get_iqama_time(prayer_data: dict, prayer_name: str) -> datetime | None:
-    # """Get Iqama prayer time."""
-    # calendar = prayer_data.get("calendar")
     """Get Iqama prayer time."""
     calendar = prayer_data.get("calendar")
     iqama_calendar = prayer_data.get("iqamaCalendar")
@@ -384,7 +387,8 @@ def get_iqama_time(prayer_data: dict, prayer_name: str) -> datetime | None:
         _LOGGER.warning("Missing calendar data for %s Iqama", prayer_name)
         return None
 
-    day = dt_util.now().date()
+    tz = dt_util.get_time_zone(timezone)
+    day = dt_util.now(tz).date() if tz else dt_util.now().date()
 
     # Get base prayer time
     prayer_time = extract_time_from_calendar(calendar, prayer_name, day, timezone)

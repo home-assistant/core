@@ -2,6 +2,7 @@
   "config": {
     "abort": {
       "already_configured": "A single MAWAQIT entry is allowed. If you want to reconfigure your mosque, you can select \"Configure\" next to the existing entry, or open the 3-dots menu and select Delete.",
+      "cannot_connect": "Failed to connect to the MAWAQIT server. Please check your internet connection and try again.",
       "no_mosque": "Sorry, no MAWAQIT mosques were found in your area. Please check your coordinates or remove the existing mosque configuration and set up a new one."
     },
     "error": {
@@ -112,6 +113,7 @@
   },
   "options": {
     "abort": {
+      "cannot_connect": "Failed to connect to the MAWAQIT server. Please check your internet connection and try again.",
       "no_mosque": "Sorry, no MAWAQIT mosques were found in your area. Please check your coordinates or remove the existing mosque configuration and set up a new one."
     },
     "step": {

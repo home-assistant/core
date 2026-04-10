@@ -47,7 +47,7 @@ async def get_mawaqit_api_token(
         token = await client.get_api_token()
     except BadCredentialsException as e:
         _LOGGER.debug("Error on retrieving API Token: %s", e)
-    except (ConnectionError, TimeoutError) as e:
+    except ConnectionError, TimeoutError as e:
         _LOGGER.debug("Network-related error: %s", e)
     finally:
         if client is not None:
@@ -65,27 +65,17 @@ async def all_mosques_neighborhood(
     client_instance: AsyncMawaqitClient | None = None,
 ) -> list[dict] | None:
     """Return mosques in the neighborhood if any. Returns a list of dicts."""
-    nearest_mosques = None
+    client = client_instance
     try:
-        client = client_instance
         if client is None:
             client = AsyncMawaqitClient(
                 latitude, longitude, mosque, username, password, token, session=None
             )
-        else:
-            # would be better to set pos in client
-            pass
         await client.get_api_token()
-        nearest_mosques = await client.all_mosques_neighborhood()
-    except BadCredentialsException as e:
-        _LOGGER.debug("Error on retrieving mosques: %s", e)
-    except (ConnectionError, TimeoutError) as e:
-        _LOGGER.debug("Network-related error: %s", e)
+        return await client.all_mosques_neighborhood()
     finally:
         if client is not None:
             await client.close()
-
-    return nearest_mosques
 
 
 async def all_mosques_by_keyword(
@@ -94,32 +84,22 @@ async def all_mosques_by_keyword(
     password: str | None = None,
     token: str | None = None,
     client_instance: AsyncMawaqitClient | None = None,
-) -> list[dict] | None:
-    """Return mosques in the neighborhood if any. Returns a list of dicts."""
-    search_mosques = []
+) -> list[dict]:
+    """Return mosques matching the keyword. Returns a list of dicts."""
+    client = client_instance
     try:
-        client = client_instance
         if client is None:
             client = AsyncMawaqitClient(
                 username=username, password=password, token=token, session=None
             )
-        else:
-            # would be better to set pos in client
-            pass
         await client.get_api_token()
 
         if search_keyword is not None:
-            search_mosques = await client.fetch_mosques_by_keyword(search_keyword)
-
-    except BadCredentialsException as e:
-        _LOGGER.debug("Error on retrieving mosques: %s", e)
-    except (ConnectionError, TimeoutError) as e:
-        _LOGGER.debug("Network-related error: %s", e)
+            return await client.fetch_mosques_by_keyword(search_keyword)
+        return []
     finally:
         if client is not None:
             await client.close()
-
-    return search_mosques
 
 
 async def fetch_prayer_times(
