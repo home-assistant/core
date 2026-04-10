@@ -7,13 +7,13 @@ from aiorussound.rio import RussoundRIOClient
 from aiorussound.rio.models import CallbackType
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_PORT, Platform
+from homeassistant.const import CONF_HOST, CONF_PORT, CONF_TYPE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 
-from .const import DOMAIN, RUSSOUND_RIO_EXCEPTIONS
+from .const import DOMAIN, RUSSOUND_RIO_EXCEPTIONS, TYPE_TCP
 
 PLATFORMS = [Platform.MEDIA_PLAYER, Platform.NUMBER, Platform.SELECT, Platform.SWITCH]
 
@@ -99,3 +99,30 @@ async def async_unload_entry(hass: HomeAssistant, entry: RussoundConfigEntry) ->
         await entry.runtime_data.disconnect()
 
     return unload_ok
+
+
+async def async_migrate_entry(
+    hass: HomeAssistant, config_entry: RussoundConfigEntry
+) -> bool:
+    """Migrate old entry."""
+    if config_entry.version > 2:
+        # This means the user has downgraded from a future version
+        return False
+
+    if config_entry.version == 1:
+        (
+            hass.config_entries.async_update_entry(
+                config_entry,
+                data={
+                    CONF_TYPE: TYPE_TCP,
+                    **config_entry.data,
+                },
+                version=2,
+            ),
+        )
+
+    _LOGGER.debug(
+        "Migration to configuration version %s successful", config_entry.version
+    )
+
+    return True

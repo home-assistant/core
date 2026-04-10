@@ -14,16 +14,42 @@ from homeassistant.config_entries import (
     ConfigFlow,
     ConfigFlowResult,
 )
-from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
+from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PATH, CONF_PORT, CONF_TYPE
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.selector import SelectSelector, SelectSelectorConfig
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
-from .const import DOMAIN, RUSSOUND_RIO_EXCEPTIONS
+from .const import (
+    CONF_BAUDRATE,
+    DEFAULT_BAUDRATE,
+    DOMAIN,
+    RUSSOUND_RIO_EXCEPTIONS,
+    TYPE_SERIAL,
+    TYPE_TCP,
+)
 
-DATA_SCHEMA = vol.Schema(
+TRANSPORT_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_TYPE, default=TYPE_TCP): SelectSelector(
+            SelectSelectorConfig(
+                options=[TYPE_TCP, TYPE_SERIAL],
+                translation_key="connection_type",
+            )
+        ),
+    }
+)
+
+TCP_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_HOST): cv.string,
         vol.Optional(CONF_PORT, default=9621): cv.port,
+    }
+)
+
+USB_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_PATH): cv.string,
+        vol.Optional(CONF_BAUDRATE, default=DEFAULT_BAUDRATE): vol.Coerce(int),
     }
 )
 
@@ -33,7 +59,7 @@ _LOGGER = logging.getLogger(__name__)
 class FlowHandler(ConfigFlow, domain=DOMAIN):
     """Russound RIO configuration flow."""
 
-    VERSION = 1
+    VERSION = 2
 
     def __init__(self) -> None:
         """Initialize the config flow."""
@@ -71,7 +97,11 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             return self.async_create_entry(
                 title=self.data[CONF_NAME],
-                data={CONF_HOST: self.data[CONF_HOST], CONF_PORT: self.data[CONF_PORT]},
+                data={
+                    CONF_TYPE: TYPE_TCP,
+                    CONF_HOST: self.data[CONF_HOST],
+                    CONF_PORT: self.data[CONF_PORT],
+                },
             )
 
         self._set_confirm_only()
@@ -85,7 +115,22 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Handle a flow initialized by the user."""
+        """Handle a flow initiated by the user."""
+        if user_input is None:
+            return self.async_show_form(
+                step_id="user",
+                data_schema=TRANSPORT_SCHEMA,
+            )
+
+        self.data[CONF_TYPE] = user_input[CONF_TYPE]
+        if user_input[CONF_TYPE] == TYPE_TCP:
+            return await self.async_step_tcp()
+        return await self.async_step_tcp()
+
+    async def async_step_tcp(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle TCP configuration."""
         errors: dict[str, str] = {}
         if user_input is not None:
             host = user_input[CONF_HOST]
@@ -110,22 +155,17 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
                         data_updates=user_input,
                     )
                 self._abort_if_unique_id_configured()
-                data = {CONF_HOST: host, CONF_PORT: port}
+                data = {CONF_TYPE: TYPE_TCP, CONF_HOST: host, CONF_PORT: port}
                 return self.async_create_entry(
                     title=controller.controller_type, data=data
                 )
 
         return self.async_show_form(
-            step_id="user", data_schema=DATA_SCHEMA, errors=errors
+            step_id="tcp", data_schema=TCP_SCHEMA, errors=errors
         )
 
     async def async_step_reconfigure(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle reconfiguration of the integration."""
-        if not user_input:
-            return self.async_show_form(
-                step_id="reconfigure",
-                data_schema=DATA_SCHEMA,
-            )
         return await self.async_step_user(user_input)

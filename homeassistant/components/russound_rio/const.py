@@ -16,3 +16,8 @@ RUSSOUND_RIO_EXCEPTIONS = (
     TimeoutError,
     asyncio.CancelledError,
 )
+
+CONF_BAUDRATE = "baudrate"
+TYPE_TCP = "tcp"
+TYPE_SERIAL = "serial"
+DEFAULT_BAUDRATE = "19200"
