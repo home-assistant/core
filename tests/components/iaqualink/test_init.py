@@ -167,10 +167,10 @@ async def test_light_service_calls_update_entity_state(
     assert state.state == STATE_ON
 
 
-async def test_setup_login_exception(
+async def test_setup_login_service_exception(
     hass: HomeAssistant, config_entry: MockConfigEntry
 ) -> None:
-    """Test setup encountering a login exception."""
+    """Test setup encountering a transient service exception during login."""
     config_entry.add_to_hass(hass)
 
     with patch(
@@ -183,7 +183,9 @@ async def test_setup_login_exception(
     assert config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
-async def test_setup_login_unauthorized(hass: HomeAssistant, config_entry) -> None:
+async def test_setup_login_unauthorized(
+    hass: HomeAssistant, config_entry: MockConfigEntry
+) -> None:
     """Test setup encountering an unauthorized exception during login."""
     config_entry.add_to_hass(hass)
 
@@ -592,7 +594,7 @@ async def test_entity_assumed_and_available(
 
 
 async def test_stale_device_entries_removed(
-    hass: HomeAssistant, config_entry, client
+    hass: HomeAssistant, config_entry: MockConfigEntry, client: AsyncMock
 ) -> None:
     """Test that old per-entity device registry entries are removed on setup."""
     config_entry.add_to_hass(hass)
