@@ -34,6 +34,7 @@ base_platforms: &base_platforms
   - homeassistant/components/humidifier/**
   - homeassistant/components/image/**
   - homeassistant/components/image_processing/**
+  - homeassistant/components/infrared/**
   - homeassistant/components/lawn_mower/**
   - homeassistant/components/light/**
   - homeassistant/components/lock/**

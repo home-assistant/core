@@ -1,5 +1,6 @@
 """Test the Anthropic config flow."""
 
+import datetime
 from unittest.mock import AsyncMock, patch
 
 from anthropic import (
@@ -9,8 +10,10 @@ from anthropic import (
     AuthenticationError,
     BadRequestError,
     InternalServerError,
+    NotFoundError,
     types,
 )
+from anthropic.types import ModelInfo
 from httpx import URL, Request, Response
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -22,12 +25,15 @@ from homeassistant.components.anthropic.config_flow import (
 )
 from homeassistant.components.anthropic.const import (
     CONF_CHAT_MODEL,
+    CONF_CODE_EXECUTION,
     CONF_MAX_TOKENS,
     CONF_PROMPT,
+    CONF_PROMPT_CACHING,
     CONF_RECOMMENDED,
     CONF_TEMPERATURE,
     CONF_THINKING_BUDGET,
     CONF_THINKING_EFFORT,
+    CONF_TOOL_SEARCH,
     CONF_WEB_SEARCH,
     CONF_WEB_SEARCH_CITY,
     CONF_WEB_SEARCH_COUNTRY,
@@ -323,14 +329,17 @@ async def test_subentry_web_search_user_location(
         "country": "US",
         "max_tokens": 8192,
         "prompt": "You are a helpful assistant",
+        "prompt_caching": "prompt",
         "recommended": False,
         "region": "California",
         "temperature": 1.0,
-        "thinking_budget": 0,
+        "thinking_budget": 1024,
         "timezone": "America/Los_Angeles",
+        "tool_search": False,
         "user_location": True,
         "web_search": True,
         "web_search_max_uses": 5,
+        "code_execution": False,
     }
 
 
@@ -359,21 +368,33 @@ async def test_model_list(
     assert options["data_schema"].schema["chat_model"].config["options"] == snapshot
 
 
-async def test_model_list_error(
-    hass: HomeAssistant, mock_config_entry, mock_init_component
+async def test_invalid_model(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_init_component: None
 ) -> None:
-    """Test exception handling during fetching the list of models."""
-    subentry = next(iter(mock_config_entry.subentries.values()))
-    options_flow = await mock_config_entry.start_subentry_reconfigure_flow(
-        hass, subentry.subentry_id
+    """Test exceptions during fetching model info."""
+    options = await hass.config_entries.subentries.async_init(
+        (mock_config_entry.entry_id, "conversation"),
+        context={"source": config_entries.SOURCE_USER},
     )
 
     # Configure initial step
+    options = await hass.config_entries.subentries.async_configure(
+        options["flow_id"],
+        {
+            CONF_NAME: "Mock name",
+            **DEFAULT_CONVERSATION_OPTIONS,
+            CONF_RECOMMENDED: False,
+        },
+    )
+    assert options["type"] is FlowResultType.FORM
+    assert options["step_id"] == "advanced"
+
+    # Configure advanced step but with api error
     with patch(
-        "homeassistant.components.anthropic.config_flow.anthropic.resources.models.AsyncModels.list",
+        "homeassistant.components.anthropic.config_flow.anthropic.resources.models.AsyncModels.retrieve",
         new_callable=AsyncMock,
         side_effect=InternalServerError(
-            message=None,
+            message="Mock server error",
             response=Response(
                 status_code=500,
                 request=Request(method="POST", url=URL()),
@@ -382,15 +403,72 @@ async def test_model_list_error(
         ),
     ):
         options = await hass.config_entries.subentries.async_configure(
-            options_flow["flow_id"],
+            options["flow_id"],
             {
-                "prompt": "You are a helpful assistant",
-                "recommended": False,
+                CONF_CHAT_MODEL: "invalid-model-2-0",
             },
         )
     assert options["type"] is FlowResultType.FORM
-    assert options["step_id"] == "advanced"
-    assert options["data_schema"].schema["chat_model"].config["options"] == []
+    assert options["errors"] == {"chat_model": "api_error"}
+    assert options["description_placeholders"] == {"message": "Mock server error"}
+
+    # Try again
+    with patch(
+        "homeassistant.components.anthropic.config_flow.anthropic.resources.models.AsyncModels.retrieve",
+        new_callable=AsyncMock,
+        side_effect=NotFoundError(
+            message="Model not found",
+            response=Response(
+                status_code=404,
+                request=Request(method="GET", url=URL()),
+            ),
+            body={
+                "type": "error",
+                "error": {
+                    "type": "not_found_error",
+                    "message": "model: invalid-model-2-0",
+                },
+            },
+        ),
+    ):
+        options = await hass.config_entries.subentries.async_configure(
+            options["flow_id"],
+            {
+                CONF_CHAT_MODEL: "invalid-model-2-0",
+            },
+        )
+    assert options["type"] is FlowResultType.FORM
+    assert options["errors"] == {"chat_model": "model_not_found"}
+
+    # Try again with a valid model
+    with patch(
+        "homeassistant.components.anthropic.config_flow.anthropic.resources.models.AsyncModels.retrieve",
+        new_callable=AsyncMock,
+        return_value=ModelInfo(
+            type="model",
+            id="valid-model-4-5",
+            created_at=datetime.datetime(1970, 1, 1, tzinfo=datetime.UTC),
+            display_name="Valid Model 4-5",
+        ),
+    ):
+        options = await hass.config_entries.subentries.async_configure(
+            options["flow_id"],
+            {
+                CONF_CHAT_MODEL: "valid-model-4-5",
+            },
+        )
+
+    assert options["type"] is FlowResultType.FORM
+    assert not options["errors"]
+    assert options["step_id"] == "model"
+
+    options = await hass.config_entries.subentries.async_configure(
+        options["flow_id"],
+        {},
+    )
+
+    assert options["type"] is FlowResultType.CREATE_ENTRY
+    assert options["data"][CONF_CHAT_MODEL] == "valid-model-4-5"
 
 
 @pytest.mark.parametrize(
@@ -429,6 +507,7 @@ async def test_model_list_error(
                 {
                     CONF_CHAT_MODEL: "claude-3-haiku-20240307",
                     CONF_TEMPERATURE: 1.0,
+                    CONF_PROMPT_CACHING: "prompt",
                 },
             ),
             {
@@ -437,6 +516,7 @@ async def test_model_list_error(
                 CONF_TEMPERATURE: 1.0,
                 CONF_CHAT_MODEL: "claude-3-haiku-20240307",
                 CONF_MAX_TOKENS: DEFAULT[CONF_MAX_TOKENS],
+                CONF_PROMPT_CACHING: "prompt",
             },
         ),
         (  # Model with web search options
@@ -444,6 +524,8 @@ async def test_model_list_error(
                 CONF_RECOMMENDED: False,
                 CONF_CHAT_MODEL: "claude-sonnet-4-5",
                 CONF_PROMPT: "bla",
+                CONF_PROMPT_CACHING: "prompt",
+                CONF_TOOL_SEARCH: False,
                 CONF_WEB_SEARCH: True,
                 CONF_WEB_SEARCH_MAX_USES: 4,
                 CONF_WEB_SEARCH_USER_LOCATION: True,
@@ -461,23 +543,27 @@ async def test_model_list_error(
                 {
                     CONF_CHAT_MODEL: "claude-haiku-4-5",
                     CONF_TEMPERATURE: 1.0,
+                    CONF_PROMPT_CACHING: "off",
                 },
                 {
                     CONF_WEB_SEARCH: False,
                     CONF_WEB_SEARCH_MAX_USES: 10,
                     CONF_WEB_SEARCH_USER_LOCATION: False,
+                    CONF_CODE_EXECUTION: False,
                 },
             ),
             {
                 CONF_RECOMMENDED: False,
                 CONF_PROMPT: "Speak like a pirate",
+                CONF_PROMPT_CACHING: "off",
                 CONF_TEMPERATURE: 1.0,
                 CONF_CHAT_MODEL: "claude-haiku-4-5",
                 CONF_MAX_TOKENS: DEFAULT[CONF_MAX_TOKENS],
-                CONF_THINKING_BUDGET: 0,
+                CONF_THINKING_BUDGET: DEFAULT[CONF_THINKING_BUDGET],
                 CONF_WEB_SEARCH: False,
                 CONF_WEB_SEARCH_MAX_USES: 10,
                 CONF_WEB_SEARCH_USER_LOCATION: False,
+                CONF_CODE_EXECUTION: False,
             },
         ),
         (  # Model with thinking budget options
@@ -485,10 +571,13 @@ async def test_model_list_error(
                 CONF_RECOMMENDED: False,
                 CONF_CHAT_MODEL: "claude-sonnet-4-5",
                 CONF_PROMPT: "bla",
+                CONF_PROMPT_CACHING: "off",
+                CONF_TOOL_SEARCH: False,
                 CONF_WEB_SEARCH: False,
                 CONF_WEB_SEARCH_MAX_USES: 5,
                 CONF_WEB_SEARCH_USER_LOCATION: False,
                 CONF_THINKING_BUDGET: 4096,
+                CONF_CODE_EXECUTION: True,
             },
             (
                 {
@@ -499,24 +588,30 @@ async def test_model_list_error(
                 {
                     CONF_CHAT_MODEL: "claude-sonnet-4-5",
                     CONF_TEMPERATURE: 1.0,
+                    CONF_PROMPT_CACHING: "automatic",
                 },
                 {
                     CONF_WEB_SEARCH: False,
                     CONF_WEB_SEARCH_MAX_USES: 10,
                     CONF_WEB_SEARCH_USER_LOCATION: False,
+                    CONF_TOOL_SEARCH: True,
+                    CONF_CODE_EXECUTION: False,
                     CONF_THINKING_BUDGET: 2048,
                 },
             ),
             {
                 CONF_RECOMMENDED: False,
                 CONF_PROMPT: "Speak like a pirate",
+                CONF_PROMPT_CACHING: "automatic",
                 CONF_TEMPERATURE: 1.0,
                 CONF_CHAT_MODEL: "claude-sonnet-4-5",
                 CONF_MAX_TOKENS: DEFAULT[CONF_MAX_TOKENS],
                 CONF_THINKING_BUDGET: 2048,
+                CONF_TOOL_SEARCH: True,
                 CONF_WEB_SEARCH: False,
                 CONF_WEB_SEARCH_MAX_USES: 10,
                 CONF_WEB_SEARCH_USER_LOCATION: False,
+                CONF_CODE_EXECUTION: False,
             },
         ),
         (  # Model with thinking effort options
@@ -524,9 +619,12 @@ async def test_model_list_error(
                 CONF_RECOMMENDED: False,
                 CONF_CHAT_MODEL: "claude-opus-4-6",
                 CONF_PROMPT: "bla",
+                CONF_PROMPT_CACHING: "automatic",
+                CONF_TOOL_SEARCH: True,
                 CONF_WEB_SEARCH: False,
                 CONF_WEB_SEARCH_MAX_USES: 5,
                 CONF_WEB_SEARCH_USER_LOCATION: False,
+                CONF_CODE_EXECUTION: False,
                 CONF_THINKING_EFFORT: "max",
             },
             (
@@ -538,24 +636,30 @@ async def test_model_list_error(
                 {
                     CONF_CHAT_MODEL: "claude-opus-4-6",
                     CONF_TEMPERATURE: 1.0,
+                    CONF_PROMPT_CACHING: "prompt",
                 },
                 {
                     CONF_WEB_SEARCH: False,
                     CONF_WEB_SEARCH_MAX_USES: 10,
                     CONF_WEB_SEARCH_USER_LOCATION: False,
+                    CONF_TOOL_SEARCH: False,
+                    CONF_CODE_EXECUTION: True,
                     CONF_THINKING_EFFORT: "medium",
                 },
             ),
             {
                 CONF_RECOMMENDED: False,
                 CONF_PROMPT: "Speak like a pirate",
+                CONF_PROMPT_CACHING: "prompt",
                 CONF_TEMPERATURE: 1.0,
                 CONF_CHAT_MODEL: "claude-opus-4-6",
                 CONF_MAX_TOKENS: DEFAULT[CONF_MAX_TOKENS],
                 CONF_THINKING_EFFORT: "medium",
+                CONF_TOOL_SEARCH: False,
                 CONF_WEB_SEARCH: False,
                 CONF_WEB_SEARCH_MAX_USES: 10,
                 CONF_WEB_SEARCH_USER_LOCATION: False,
+                CONF_CODE_EXECUTION: True,
             },
         ),
         (  # Test switching from recommended to custom options
@@ -571,25 +675,14 @@ async def test_model_list_error(
                 },
                 {
                     CONF_TEMPERATURE: 0.3,
+                    CONF_PROMPT_CACHING: "automatic",
                 },
                 {},
             ),
             {
                 CONF_RECOMMENDED: False,
                 CONF_PROMPT: "Speak like a pirate",
-                CONF_TEMPERATURE: 0.3,
-                CONF_CHAT_MODEL: DEFAULT[CONF_CHAT_MODEL],
-                CONF_MAX_TOKENS: DEFAULT[CONF_MAX_TOKENS],
-                CONF_THINKING_BUDGET: 0,
-                CONF_WEB_SEARCH: False,
-                CONF_WEB_SEARCH_MAX_USES: 5,
-                CONF_WEB_SEARCH_USER_LOCATION: False,
-            },
-        ),
-        (  # Test switching from custom to recommended options
-            {
-                CONF_RECOMMENDED: False,
-                CONF_PROMPT: "Speak like a pirate",
+                CONF_PROMPT_CACHING: "automatic",
                 CONF_TEMPERATURE: 0.3,
                 CONF_CHAT_MODEL: DEFAULT[CONF_CHAT_MODEL],
                 CONF_MAX_TOKENS: DEFAULT[CONF_MAX_TOKENS],
@@ -597,6 +690,23 @@ async def test_model_list_error(
                 CONF_WEB_SEARCH: False,
                 CONF_WEB_SEARCH_MAX_USES: 5,
                 CONF_WEB_SEARCH_USER_LOCATION: False,
+                CONF_CODE_EXECUTION: False,
+            },
+        ),
+        (  # Test switching from custom to recommended options
+            {
+                CONF_RECOMMENDED: False,
+                CONF_PROMPT: "Speak like a pirate",
+                CONF_PROMPT_CACHING: "off",
+                CONF_TEMPERATURE: 0.3,
+                CONF_CHAT_MODEL: DEFAULT[CONF_CHAT_MODEL],
+                CONF_MAX_TOKENS: DEFAULT[CONF_MAX_TOKENS],
+                CONF_THINKING_BUDGET: DEFAULT[CONF_THINKING_BUDGET],
+                CONF_TOOL_SEARCH: True,
+                CONF_WEB_SEARCH: False,
+                CONF_WEB_SEARCH_MAX_USES: 5,
+                CONF_WEB_SEARCH_USER_LOCATION: False,
+                CONF_CODE_EXECUTION: True,
             },
             (
                 {
@@ -750,7 +860,7 @@ async def test_creating_ai_task_subentry_advanced(
         result["flow_id"],
         {
             CONF_CHAT_MODEL: "claude-sonnet-4-5",
-            CONF_MAX_TOKENS: 200,
+            CONF_MAX_TOKENS: 1200,
             CONF_TEMPERATURE: 0.5,
         },
     )
@@ -771,12 +881,15 @@ async def test_creating_ai_task_subentry_advanced(
     assert result4.get("data") == {
         CONF_RECOMMENDED: False,
         CONF_CHAT_MODEL: "claude-sonnet-4-5",
-        CONF_MAX_TOKENS: 200,
+        CONF_MAX_TOKENS: 1200,
         CONF_TEMPERATURE: 0.5,
+        CONF_TOOL_SEARCH: False,
         CONF_WEB_SEARCH: False,
         CONF_WEB_SEARCH_MAX_USES: 5,
         CONF_WEB_SEARCH_USER_LOCATION: False,
-        CONF_THINKING_BUDGET: 0,
+        CONF_THINKING_BUDGET: 1024,
+        CONF_CODE_EXECUTION: False,
+        CONF_PROMPT_CACHING: "prompt",
     }
 
 

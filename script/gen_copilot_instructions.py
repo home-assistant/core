@@ -7,7 +7,6 @@ Necessary until copilot can handle skills.
 from __future__ import annotations
 
 from pathlib import Path
-import re
 import sys
 
 GENERATED_MESSAGE = (
@@ -18,60 +17,30 @@ SKILLS_DIR = Path(".claude/skills")
 AGENTS_FILE = Path("AGENTS.md")
 OUTPUT_FILE = Path(".github/copilot-instructions.md")
 
-# Pattern to match markdown links to local files: [text](filename)
-# Excludes URLs (http://, https://) and anchors (#)
-LOCAL_LINK_PATTERN = re.compile(r"\[([^\]]+)\]\(([^)]+)\)")
+EXCLUDED_SKILLS = {"github-pr-reviewer"}
+COPILOT_SPECIFIC_INSTRUCTIONS = """
+# Copilot code review instructions
+
+- Start review comments with a short, one-sentence summary of the suggested fix.
+- Do not add comments about code style, formatting or linting issues.
+"""
 
 
-def expand_file_references(content: str, skill_dir: Path) -> str:
-    """Expand file references in skill content.
-
-    Finds markdown links to local files and replaces them with the file content
-    wrapped in reference tags.
-    """
-    lines = content.split("\n")
-    result_lines: list[str] = []
-
-    for line in lines:
-        result_lines.append(line)
-        matches = list(LOCAL_LINK_PATTERN.finditer(line))
-        if not matches:
-            continue
-
-        # Check if any match is a local file reference
-        for match in matches:
-            link_path = match.group(2)
-
-            # Skip URLs and anchors
-            if link_path.startswith(("http://", "https://", "#", "/")):
-                continue
-
-            # Try to find the referenced file
-            ref_file = skill_dir / link_path
-
-            if ref_file.exists():
-                ref_content = ref_file.read_text().strip()
-                result_lines.append(f"<REFERENCE {ref_file.name}>")
-                result_lines.append(ref_content)
-                result_lines.append(f"<END REFERENCE {ref_file.name}>")
-                result_lines.append("")
-                break
-
-    return "\n".join(result_lines)
-
-
-def gather_skills() -> list[tuple[str, str]]:
+def gather_skills() -> list[tuple[str, Path]]:
     """Gather all skills from the skills directory.
 
-    Returns a list of tuples (skill_name, skill_content).
+    Returns a list of tuples (skill_name, skill_file_path).
     """
-    skills: list[tuple[str, str]] = []
+    skills: list[tuple[str, Path]] = []
 
     if not SKILLS_DIR.exists():
         return skills
 
     for skill_dir in sorted(SKILLS_DIR.iterdir()):
         if not skill_dir.is_dir():
+            continue
+
+        if skill_dir.name in EXCLUDED_SKILLS:
             continue
 
         skill_file = skill_dir / "SKILL.md"
@@ -91,13 +60,8 @@ def gather_skills() -> list[tuple[str, str]]:
                     if line.startswith("name:"):
                         skill_name = line[5:].strip()
                         break
-                # Remove frontmatter from content
-                skill_content = skill_content[end_idx + 3 :].strip()
 
-        # Expand file references in the skill content
-        skill_content = expand_file_references(skill_content, skill_dir)
-
-        skills.append((skill_name, skill_content))
+        skills.append((skill_name, skill_file))
 
     return skills
 
@@ -108,20 +72,21 @@ def generate_output() -> str:
         print(f"Error: {AGENTS_FILE} not found")
         sys.exit(1)
 
-    output_parts: list[str] = [GENERATED_MESSAGE]
+    output_parts: list[str] = [GENERATED_MESSAGE, COPILOT_SPECIFIC_INSTRUCTIONS]
 
     # Add AGENTS.md content
     agents_content = AGENTS_FILE.read_text()
     output_parts.append(agents_content.strip())
     output_parts.append("")
 
-    # Add each skill
+    # Add skills section as a bullet list of name: path
     skills = gather_skills()
-    for skill_name, skill_content in skills:
+    if skills:
         output_parts.append("")
-        output_parts.append(f"# Skill: {skill_name}")
+        output_parts.append("# Skills")
         output_parts.append("")
-        output_parts.append(skill_content)
+        for skill_name, skill_file in skills:
+            output_parts.append(f"- {skill_name}: {skill_file}")
         output_parts.append("")
 
     return "\n".join(output_parts)

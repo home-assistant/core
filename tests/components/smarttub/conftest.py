@@ -21,12 +21,13 @@ def config_data() -> dict[str, Any]:
 
 
 @pytest.fixture
-def config_entry(config_data: dict[str, Any]) -> MockConfigEntry:
+def config_entry(config_data: dict[str, Any], account) -> MockConfigEntry:
     """Create a mock config entry."""
     return MockConfigEntry(
         domain=DOMAIN,
         data=config_data,
         options={},
+        unique_id=account.id,
     )
 
 

@@ -1,0 +1,89 @@
+rules:
+  # Bronze
+  action-setup:
+    status: exempt
+    comment: Integration does not provide service actions.
+  appropriate-polling: done
+  brands: done
+  common-modules: done
+  config-flow-test-coverage: done
+  config-flow: done
+  dependency-transparency: done
+  docs-actions:
+    status: exempt
+    comment: Integration does not provide service actions.
+  docs-high-level-description: done
+  docs-installation-instructions: done
+  docs-removal-instructions: done
+  entity-event-setup:
+    status: exempt
+    comment: Integration uses a coordinator; entities do not subscribe to events directly.
+  entity-unique-id: done
+  has-entity-name: done
+  runtime-data: done
+  test-before-configure: done
+  test-before-setup: done
+  unique-config-entry: done
+
+  # Silver
+  action-exceptions: done
+  config-entry-unloading: done
+  docs-configuration-parameters:
+    status: exempt
+    comment: Integration does not provide an option flow.
+  docs-installation-parameters: done
+  entity-unavailable: done
+  integration-owner: done
+  log-when-unavailable:
+    status: done
+    comment: Handled by the DataUpdateCoordinator.
+  parallel-updates: done
+  reauthentication-flow:
+    status: exempt
+    comment: Integration uses a local API that requires no credentials.
+  test-coverage: done
+
+  # Gold
+  devices: done
+  diagnostics: todo
+  discovery-update-info:
+    status: todo
+    comment: >-
+      DHCP host updating to be implemented in a follow-up PR.
+      The device hostname follows the pattern duco_<last 6 chars of MAC>
+      (e.g. duco_061293), which can be used for DHCP hostname matching.
+  discovery:
+    status: todo
+    comment: >-
+      Device can be discovered via DHCP. The hostname follows the pattern
+      duco_<last 6 chars of MAC> (e.g. duco_061293). To be implemented
+      in a follow-up PR together with discovery-update-info.
+  docs-data-update: done
+  docs-examples: done
+  docs-known-limitations: done
+  docs-supported-devices: done
+  docs-supported-functions: done
+  docs-troubleshooting: done
+  docs-use-cases: done
+  dynamic-devices:
+    status: todo
+    comment: >-
+      Users can pair new modules (CO2 sensors, humidity sensors, zone valves)
+      to their Duco box. Dynamic device support to be added in a follow-up PR.
+  entity-category: todo
+  entity-device-class: todo
+  entity-disabled-by-default: todo
+  entity-translations: done
+  exception-translations: todo
+  icon-translations: todo
+  reconfiguration-flow: todo
+  repair-issues: todo
+  stale-devices:
+    status: todo
+    comment: >-
+      To be implemented together with dynamic device support in a follow-up PR.
+
+  # Platinum
+  async-dependency: done
+  inject-websession: done
+  strict-typing: todo

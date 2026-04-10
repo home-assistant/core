@@ -26,6 +26,17 @@
         "name": "Previous"
       }
     },
+    "climate": {
+      "smart_radiator_thermostat": {
+        "state_attributes": {
+          "preset_mode": {
+            "state": {
+              "schedule": "Schedule"
+            }
+          }
+        }
+      }
+    },
     "fan": {
       "air_purifier": {
         "state_attributes": {

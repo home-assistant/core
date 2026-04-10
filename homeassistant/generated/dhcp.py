@@ -402,6 +402,10 @@ DHCP: Final[list[dict[str, str | bool]]] = [
         "hostname": "litter-robot4",
     },
     {
+        "domain": "litterrobot",
+        "hostname": "whiskerrobots",
+    },
+    {
         "domain": "lyric",
         "hostname": "lyric-*",
         "macaddress": "48A2E6*",
@@ -431,6 +435,14 @@ DHCP: Final[list[dict[str, str | bool]]] = [
     {
         "domain": "motion_blinds",
         "hostname": "connector_*",
+    },
+    {
+        "domain": "mystrom",
+        "hostname": "mystrom-*",
+    },
+    {
+        "domain": "mystrom",
+        "registered_devices": True,
     },
     {
         "domain": "nest",
@@ -816,6 +828,11 @@ DHCP: Final[list[dict[str, str | bool]]] = [
         "domain": "smartthings",
         "hostname": "hub*",
         "macaddress": "286D97*",
+    },
+    {
+        "domain": "smartthings",
+        "hostname": "smarthub",
+        "macaddress": "683A48*",
     },
     {
         "domain": "smartthings",

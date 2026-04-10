@@ -5,6 +5,8 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 
+from pyportainer import DockerContainerState, EndpointStatus, StackStatus
+
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
@@ -15,8 +17,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import PortainerConfigEntry
-from .const import CONTAINER_STATE_RUNNING, STACK_STATUS_ACTIVE
-from .coordinator import PortainerContainerData, PortainerCoordinator
+from .coordinator import PortainerContainerData
 from .entity import (
     PortainerContainerEntity,
     PortainerCoordinatorData,
@@ -25,7 +26,7 @@ from .entity import (
     PortainerStackEntity,
 )
 
-PARALLEL_UPDATES = 1
+PARALLEL_UPDATES = 0
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -53,7 +54,7 @@ CONTAINER_SENSORS: tuple[PortainerContainerBinarySensorEntityDescription, ...] =
     PortainerContainerBinarySensorEntityDescription(
         key="status",
         translation_key="status",
-        state_fn=lambda data: data.container.state == CONTAINER_STATE_RUNNING,
+        state_fn=lambda data: data.container.state == DockerContainerState.RUNNING,
         device_class=BinarySensorDeviceClass.RUNNING,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
@@ -63,7 +64,7 @@ ENDPOINT_SENSORS: tuple[PortainerEndpointBinarySensorEntityDescription, ...] = (
     PortainerEndpointBinarySensorEntityDescription(
         key="status",
         translation_key="status",
-        state_fn=lambda data: data.endpoint.status == 1,  # 1 = Running | 2 = Stopped
+        state_fn=lambda data: data.endpoint.status == EndpointStatus.UP,
         device_class=BinarySensorDeviceClass.RUNNING,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
@@ -73,9 +74,7 @@ STACK_SENSORS: tuple[PortainerStackBinarySensorEntityDescription, ...] = (
     PortainerStackBinarySensorEntityDescription(
         key="stack_status",
         translation_key="status",
-        state_fn=lambda data: (
-            data.stack.status == STACK_STATUS_ACTIVE
-        ),  # 1 = Active | 2 = Inactive
+        state_fn=lambda data: data.stack.status == StackStatus.ACTIVE,
         device_class=BinarySensorDeviceClass.RUNNING,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
@@ -165,18 +164,6 @@ class PortainerEndpointSensor(PortainerEndpointEntity, BinarySensorEntity):
 
     entity_description: PortainerEndpointBinarySensorEntityDescription
 
-    def __init__(
-        self,
-        coordinator: PortainerCoordinator,
-        entity_description: PortainerEndpointBinarySensorEntityDescription,
-        device_info: PortainerCoordinatorData,
-    ) -> None:
-        """Initialize Portainer endpoint binary sensor entity."""
-        self.entity_description = entity_description
-        super().__init__(device_info, coordinator)
-
-        self._attr_unique_id = f"{coordinator.config_entry.entry_id}_{device_info.id}_{entity_description.key}"
-
     @property
     def is_on(self) -> bool | None:
         """Return true if the binary sensor is on."""
@@ -188,19 +175,6 @@ class PortainerContainerSensor(PortainerContainerEntity, BinarySensorEntity):
 
     entity_description: PortainerContainerBinarySensorEntityDescription
 
-    def __init__(
-        self,
-        coordinator: PortainerCoordinator,
-        entity_description: PortainerContainerBinarySensorEntityDescription,
-        device_info: PortainerContainerData,
-        via_device: PortainerCoordinatorData,
-    ) -> None:
-        """Initialize the Portainer container sensor."""
-        self.entity_description = entity_description
-        super().__init__(device_info, coordinator, via_device)
-
-        self._attr_unique_id = f"{coordinator.config_entry.entry_id}_{self.device_name}_{entity_description.key}"
-
     @property
     def is_on(self) -> bool | None:
         """Return true if the binary sensor is on."""
@@ -211,19 +185,6 @@ class PortainerStackSensor(PortainerStackEntity, BinarySensorEntity):
     """Representation of a Portainer stack sensor."""
 
     entity_description: PortainerStackBinarySensorEntityDescription
-
-    def __init__(
-        self,
-        coordinator: PortainerCoordinator,
-        entity_description: PortainerStackBinarySensorEntityDescription,
-        device_info: PortainerStackData,
-        via_device: PortainerCoordinatorData,
-    ) -> None:
-        """Initialize the Portainer stack sensor."""
-        self.entity_description = entity_description
-        super().__init__(device_info, coordinator, via_device)
-
-        self._attr_unique_id = f"{coordinator.config_entry.entry_id}_{device_info.stack.id}_{entity_description.key}"
 
     @property
     def is_on(self) -> bool | None:

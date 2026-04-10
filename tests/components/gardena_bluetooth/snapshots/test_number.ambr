@@ -111,7 +111,45 @@
     'state': '45.0',
   })
 # ---
-# name: test_setup[98bd0f13-0b0e-421a-84e5-ddbf75dc6de4-raw1-number.mock_title_remaining_open_time]
+# name: test_setup[service_info0-98bd0f14-0b0e-421a-84e5-ddbf75dc6de4-raw0-number.mock_title_manual_watering_time]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'duration',
+      'friendly_name': 'Mock Title Manual watering time',
+      'max': 86400,
+      'min': 0.0,
+      'mode': <NumberMode.BOX: 'box'>,
+      'step': 60,
+      'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.mock_title_manual_watering_time',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '100.0',
+  })
+# ---
+# name: test_setup[service_info0-98bd0f14-0b0e-421a-84e5-ddbf75dc6de4-raw0-number.mock_title_manual_watering_time].1
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'duration',
+      'friendly_name': 'Mock Title Manual watering time',
+      'max': 86400,
+      'min': 0.0,
+      'mode': <NumberMode.BOX: 'box'>,
+      'step': 60,
+      'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.mock_title_manual_watering_time',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '10.0',
+  })
+# ---
+# name: test_setup[service_info1-98bd0f13-0b0e-421a-84e5-ddbf75dc6de4-raw1-number.mock_title_remaining_open_time]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
@@ -130,7 +168,7 @@
     'state': '100.0',
   })
 # ---
-# name: test_setup[98bd0f13-0b0e-421a-84e5-ddbf75dc6de4-raw1-number.mock_title_remaining_open_time].1
+# name: test_setup[service_info1-98bd0f13-0b0e-421a-84e5-ddbf75dc6de4-raw1-number.mock_title_remaining_open_time].1
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
@@ -149,7 +187,7 @@
     'state': '10.0',
   })
 # ---
-# name: test_setup[98bd0f13-0b0e-421a-84e5-ddbf75dc6de4-raw1-number.mock_title_remaining_open_time].2
+# name: test_setup[service_info1-98bd0f13-0b0e-421a-84e5-ddbf75dc6de4-raw1-number.mock_title_remaining_open_time].2
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
@@ -168,7 +206,7 @@
     'state': 'unknown',
   })
 # ---
-# name: test_setup[98bd0f13-0b0e-421a-84e5-ddbf75dc6de4-raw1-number.mock_title_remaining_open_time].3
+# name: test_setup[service_info1-98bd0f13-0b0e-421a-84e5-ddbf75dc6de4-raw1-number.mock_title_remaining_open_time].3
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
@@ -187,7 +225,7 @@
     'state': 'unavailable',
   })
 # ---
-# name: test_setup[98bd0f13-0b0e-421a-84e5-ddbf75dc6de4-raw2-number.mock_title_open_for]
+# name: test_setup[service_info2-98bd0f13-0b0e-421a-84e5-ddbf75dc6de4-raw2-number.mock_title_open_for]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
@@ -206,7 +244,7 @@
     'state': 'unknown',
   })
 # ---
-# name: test_setup[98bd0f14-0b0e-421a-84e5-ddbf75dc6de4-raw0-number.mock_title_manual_watering_time]
+# name: test_setup[service_info3-98bd0d13-0b0e-421a-84e5-ddbf75dc6de4-raw3-number.mock_title_manual_watering_time]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
@@ -225,7 +263,7 @@
     'state': '100.0',
   })
 # ---
-# name: test_setup[98bd0f14-0b0e-421a-84e5-ddbf75dc6de4-raw0-number.mock_title_manual_watering_time].1
+# name: test_setup[service_info3-98bd0d13-0b0e-421a-84e5-ddbf75dc6de4-raw3-number.mock_title_manual_watering_time].1
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
@@ -242,5 +280,81 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '10.0',
+  })
+# ---
+# name: test_setup[service_info4-98bd0d12-0b0e-421a-84e5-ddbf75dc6de4-raw4-number.mock_title_remaining_watering_time]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'duration',
+      'friendly_name': 'Mock Title Remaining watering time',
+      'max': 86400,
+      'min': 0.0,
+      'mode': <NumberMode.AUTO: 'auto'>,
+      'step': 60.0,
+      'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.mock_title_remaining_watering_time',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '100.0',
+  })
+# ---
+# name: test_setup[service_info4-98bd0d12-0b0e-421a-84e5-ddbf75dc6de4-raw4-number.mock_title_remaining_watering_time].1
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'duration',
+      'friendly_name': 'Mock Title Remaining watering time',
+      'max': 86400,
+      'min': 0.0,
+      'mode': <NumberMode.AUTO: 'auto'>,
+      'step': 60.0,
+      'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.mock_title_remaining_watering_time',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '10.0',
+  })
+# ---
+# name: test_setup[service_info4-98bd0d12-0b0e-421a-84e5-ddbf75dc6de4-raw4-number.mock_title_remaining_watering_time].2
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'duration',
+      'friendly_name': 'Mock Title Remaining watering time',
+      'max': 86400,
+      'min': 0.0,
+      'mode': <NumberMode.AUTO: 'auto'>,
+      'step': 60.0,
+      'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.mock_title_remaining_watering_time',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_setup[service_info4-98bd0d12-0b0e-421a-84e5-ddbf75dc6de4-raw4-number.mock_title_remaining_watering_time].3
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'duration',
+      'friendly_name': 'Mock Title Remaining watering time',
+      'max': 86400,
+      'min': 0.0,
+      'mode': <NumberMode.AUTO: 'auto'>,
+      'step': 60.0,
+      'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.mock_title_remaining_watering_time',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
   })
 # ---

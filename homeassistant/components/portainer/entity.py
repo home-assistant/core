@@ -4,6 +4,7 @@ from yarl import URL
 
 from homeassistant.const import CONF_URL
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
+from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DEFAULT_NAME, DOMAIN
@@ -26,11 +27,13 @@ class PortainerEndpointEntity(PortainerCoordinatorEntity):
 
     def __init__(
         self,
-        device_info: PortainerCoordinatorData,
         coordinator: PortainerCoordinator,
+        entity_description: EntityDescription,
+        device_info: PortainerCoordinatorData,
     ) -> None:
         """Initialize a Portainer endpoint."""
         super().__init__(coordinator)
+        self.entity_description = entity_description
         self._device_info = device_info
         self.device_id = device_info.endpoint.id
         self._attr_device_info = DeviceInfo(
@@ -45,6 +48,7 @@ class PortainerEndpointEntity(PortainerCoordinatorEntity):
             name=device_info.endpoint.name,
             entry_type=DeviceEntryType.SERVICE,
         )
+        self._attr_unique_id = f"{coordinator.config_entry.entry_id}_{device_info.id}_{entity_description.key}"
 
     @property
     def available(self) -> bool:
@@ -57,12 +61,14 @@ class PortainerContainerEntity(PortainerCoordinatorEntity):
 
     def __init__(
         self,
-        device_info: PortainerContainerData,
         coordinator: PortainerCoordinator,
+        entity_description: EntityDescription,
+        device_info: PortainerContainerData,
         via_device: PortainerCoordinatorData,
     ) -> None:
         """Initialize a Portainer container."""
         super().__init__(coordinator)
+        self.entity_description = entity_description
         self._device_info = device_info
         self.device_id = self._device_info.container.id
         self.endpoint_id = via_device.endpoint.id
@@ -91,13 +97,14 @@ class PortainerContainerEntity(PortainerCoordinatorEntity):
             # else it's the endpoint
             via_device=(
                 DOMAIN,
-                f"{coordinator.config_entry.entry_id}_{self.endpoint_id}_{device_info.stack.name}"
+                f"{coordinator.config_entry.entry_id}_{self.endpoint_id}_stack_{device_info.stack.id}"
                 if device_info.stack
                 else f"{coordinator.config_entry.entry_id}_{self.endpoint_id}",
             ),
             translation_key=None if self.device_name else "unknown_container",
             entry_type=DeviceEntryType.SERVICE,
         )
+        self._attr_unique_id = f"{coordinator.config_entry.entry_id}_{self.device_name}_{entity_description.key}"
 
     @property
     def available(self) -> bool:
@@ -119,12 +126,14 @@ class PortainerStackEntity(PortainerCoordinatorEntity):
 
     def __init__(
         self,
-        device_info: PortainerStackData,
         coordinator: PortainerCoordinator,
+        entity_description: EntityDescription,
+        device_info: PortainerStackData,
         via_device: PortainerCoordinatorData,
     ) -> None:
         """Initialize a Portainer stack."""
         super().__init__(coordinator)
+        self.entity_description = entity_description
         self._device_info = device_info
         self.stack_id = device_info.stack.id
         self.device_name = device_info.stack.name
@@ -135,7 +144,7 @@ class PortainerStackEntity(PortainerCoordinatorEntity):
             identifiers={
                 (
                     DOMAIN,
-                    f"{coordinator.config_entry.entry_id}_{self.endpoint_id}_{self.device_name}",
+                    f"{coordinator.config_entry.entry_id}_{self.endpoint_id}_stack_{self.stack_id}",
                 )
             },
             manufacturer=DEFAULT_NAME,
@@ -149,6 +158,7 @@ class PortainerStackEntity(PortainerCoordinatorEntity):
                 f"{coordinator.config_entry.entry_id}_{self.endpoint_id}",
             ),
         )
+        self._attr_unique_id = f"{coordinator.config_entry.entry_id}_{self.stack_id}_{entity_description.key}"
 
     @property
     def available(self) -> bool:

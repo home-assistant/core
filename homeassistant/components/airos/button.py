@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-import logging
-
 from airos.exceptions import AirOSException
 
 from homeassistant.components.button import (
@@ -17,8 +15,6 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import DOMAIN, AirOSConfigEntry, AirOSDataUpdateCoordinator
 from .entity import AirOSEntity
-
-_LOGGER = logging.getLogger(__name__)
 
 PARALLEL_UPDATES = 0
 
@@ -35,7 +31,9 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the AirOS button from a config entry."""
-    async_add_entities([AirOSRebootButton(config_entry.runtime_data, REBOOT_BUTTON)])
+    async_add_entities(
+        [AirOSRebootButton(config_entry.runtime_data.status, REBOOT_BUTTON)]
+    )
 
 
 class AirOSRebootButton(AirOSEntity, ButtonEntity):

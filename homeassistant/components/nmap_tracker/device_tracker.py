@@ -6,24 +6,28 @@ import logging
 from typing import Any
 
 from homeassistant.components.device_tracker import ScannerEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import NmapDevice, NmapDeviceScanner, short_hostname, signal_device_update
-from .const import DOMAIN
+from . import (
+    NmapDevice,
+    NmapDeviceScanner,
+    NmapTrackerConfigEntry,
+    short_hostname,
+    signal_device_update,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: NmapTrackerConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up device tracker for Nmap Tracker component."""
-    nmap_tracker = hass.data[DOMAIN][entry.entry_id]
+    nmap_tracker = entry.runtime_data
 
     @callback
     def device_new(mac_address):

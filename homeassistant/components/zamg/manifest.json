@@ -4,6 +4,7 @@
   "codeowners": ["@killer0071234"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/zamg",
+  "integration_type": "service",
   "iot_class": "cloud_polling",
   "requirements": ["zamg==0.3.6"]
 }

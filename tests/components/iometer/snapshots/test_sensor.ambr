@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_all_sensors[sensor.iometer_1isk0000000000_battery_level-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -55,8 +56,9 @@
 # ---
 # name: test_all_sensors[sensor.iometer_1isk0000000000_consumption_tariff_t1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -112,8 +114,9 @@
 # ---
 # name: test_all_sensors[sensor.iometer_1isk0000000000_consumption_tariff_t2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -169,8 +172,9 @@
 # ---
 # name: test_all_sensors[sensor.iometer_1isk0000000000_meter_number-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -219,8 +223,9 @@
 # ---
 # name: test_all_sensors[sensor.iometer_1isk0000000000_pin_status-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -282,8 +287,9 @@
 # ---
 # name: test_all_sensors[sensor.iometer_1isk0000000000_power-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -339,8 +345,9 @@
 # ---
 # name: test_all_sensors[sensor.iometer_1isk0000000000_power_supply-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -400,8 +407,9 @@
 # ---
 # name: test_all_sensors[sensor.iometer_1isk0000000000_signal_strength_core_bridge-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -454,8 +462,9 @@
 # ---
 # name: test_all_sensors[sensor.iometer_1isk0000000000_signal_strength_wi_fi-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -508,8 +517,9 @@
 # ---
 # name: test_all_sensors[sensor.iometer_1isk0000000000_total_consumption-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -565,8 +575,9 @@
 # ---
 # name: test_all_sensors[sensor.iometer_1isk0000000000_total_production-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
