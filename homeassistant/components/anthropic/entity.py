@@ -690,7 +690,7 @@ class AnthropicBaseLLMEntity(CoordinatorEntity[AnthropicCoordinator]):
         self.entry = entry
         self.subentry = subentry
         coordinator = entry.runtime_data
-        self.model_info = coordinator.get_model_info(
+        self.model_info, _ = coordinator.get_model_info(
             subentry.data.get(CONF_CHAT_MODEL, DEFAULT[CONF_CHAT_MODEL])
         )
         self._attr_unique_id = subentry.subentry_id
