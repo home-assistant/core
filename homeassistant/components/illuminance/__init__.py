@@ -1,4 +1,4 @@
-"""Integration for illuminance triggers."""
+"""Integration for illuminance triggers and conditions."""
 
 from __future__ import annotations
 

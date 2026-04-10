@@ -1,8 +1,10 @@
 """Shared test helpers for components."""
 
 from collections.abc import Iterable
+import copy
 from enum import StrEnum
 import itertools
+import logging
 from typing import Any, TypedDict
 
 import pytest
@@ -13,8 +15,6 @@ from homeassistant.const import (
     ATTR_FLOOR_ID,
     ATTR_LABEL_ID,
     ATTR_UNIT_OF_MEASUREMENT,
-    CONF_ABOVE,
-    CONF_BELOW,
     CONF_CONDITION,
     CONF_ENTITY_ID,
     CONF_OPTIONS,
@@ -23,7 +23,7 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
-from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.core import Context, HomeAssistant, callback
 from homeassistant.helpers import (
     area_registry as ar,
     device_registry as dr,
@@ -35,12 +35,8 @@ from homeassistant.helpers.condition import (
     ConditionCheckerTypeOptional,
     async_from_config as async_condition_from_config,
 )
-from homeassistant.helpers.trigger import (
-    CONF_LOWER_LIMIT,
-    CONF_THRESHOLD_TYPE,
-    CONF_UPPER_LIMIT,
-    ThresholdType,
-)
+from homeassistant.helpers.trigger import async_initialize_triggers
+from homeassistant.helpers.typing import UNDEFINED, TemplateVarsType, UndefinedType
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry, mock_device_registry
@@ -439,7 +435,6 @@ def parametrize_trigger_states(
         (
             trigger,
             trigger_options,
-            # other_state,
             list(
                 itertools.chain.from_iterable(
                     (
@@ -541,11 +536,27 @@ def parametrize_trigger_states(
     return tests
 
 
+def _add_threshold_unit(
+    options: dict[str, Any], threshold_unit: str | None | UndefinedType
+) -> dict[str, Any]:
+    """Add unit to trigger thresholds if threshold_unit is provided."""
+    if threshold_unit is UNDEFINED:
+        return options
+    options = copy.deepcopy(options)
+    threshold_options = options["threshold"]
+    for key in ("value", "value_min", "value_max"):
+        if key not in threshold_options:
+            continue
+        threshold_options[key]["unit_of_measurement"] = threshold_unit
+    return options
+
+
 def parametrize_numerical_attribute_changed_trigger_states(
     trigger: str,
     state: str,
     attribute: str,
     *,
+    threshold_unit: str | None | UndefinedType = UNDEFINED,
     trigger_options: dict[str, Any] | None = None,
     required_filter_attributes: dict | None = None,
     unit_attributes: dict | None = None,
@@ -557,7 +568,15 @@ def parametrize_numerical_attribute_changed_trigger_states(
     return [
         *parametrize_trigger_states(
             trigger=trigger,
-            trigger_options={**trigger_options},
+            trigger_options=_add_threshold_unit(
+                {
+                    "threshold": {
+                        "type": "any",
+                    },
+                    **trigger_options,
+                },
+                threshold_unit,
+            ),
             target_states=[
                 (state, {attribute: 0} | unit_attributes),
                 (state, {attribute: 50} | unit_attributes),
@@ -569,7 +588,16 @@ def parametrize_numerical_attribute_changed_trigger_states(
         ),
         *parametrize_trigger_states(
             trigger=trigger,
-            trigger_options={CONF_ABOVE: 10, **trigger_options},
+            trigger_options=_add_threshold_unit(
+                {
+                    "threshold": {
+                        "type": "above",
+                        "value": {"number": 10},
+                    },
+                    **trigger_options,
+                },
+                threshold_unit,
+            ),
             target_states=[
                 (state, {attribute: 50} | unit_attributes),
                 (state, {attribute: 100} | unit_attributes),
@@ -583,7 +611,16 @@ def parametrize_numerical_attribute_changed_trigger_states(
         ),
         *parametrize_trigger_states(
             trigger=trigger,
-            trigger_options={CONF_BELOW: 90, **trigger_options},
+            trigger_options=_add_threshold_unit(
+                {
+                    "threshold": {
+                        "type": "below",
+                        "value": {"number": 90},
+                    },
+                    **trigger_options,
+                },
+                threshold_unit,
+            ),
             target_states=[
                 (state, {attribute: 0} | unit_attributes),
                 (state, {attribute: 50} | unit_attributes),
@@ -603,6 +640,7 @@ def parametrize_numerical_attribute_crossed_threshold_trigger_states(
     state: str,
     attribute: str,
     *,
+    threshold_unit: str | None | UndefinedType = UNDEFINED,
     trigger_options: dict[str, Any] | None = None,
     required_filter_attributes: dict | None = None,
     unit_attributes: dict | None = None,
@@ -614,12 +652,17 @@ def parametrize_numerical_attribute_crossed_threshold_trigger_states(
     return [
         *parametrize_trigger_states(
             trigger=trigger,
-            trigger_options={
-                CONF_THRESHOLD_TYPE: ThresholdType.BETWEEN,
-                CONF_LOWER_LIMIT: 10,
-                CONF_UPPER_LIMIT: 90,
-                **trigger_options,
-            },
+            trigger_options=_add_threshold_unit(
+                {
+                    "threshold": {
+                        "type": "between",
+                        "value_min": {"number": 10},
+                        "value_max": {"number": 90},
+                    },
+                    **trigger_options,
+                },
+                threshold_unit,
+            ),
             target_states=[
                 (state, {attribute: 50} | unit_attributes),
                 (state, {attribute: 60} | unit_attributes),
@@ -633,12 +676,17 @@ def parametrize_numerical_attribute_crossed_threshold_trigger_states(
         ),
         *parametrize_trigger_states(
             trigger=trigger,
-            trigger_options={
-                CONF_THRESHOLD_TYPE: ThresholdType.OUTSIDE,
-                CONF_LOWER_LIMIT: 10,
-                CONF_UPPER_LIMIT: 90,
-                **trigger_options,
-            },
+            trigger_options=_add_threshold_unit(
+                {
+                    "threshold": {
+                        "type": "outside",
+                        "value_min": {"number": 10},
+                        "value_max": {"number": 90},
+                    },
+                    **trigger_options,
+                },
+                threshold_unit,
+            ),
             target_states=[
                 (state, {attribute: 0} | unit_attributes),
                 (state, {attribute: 100} | unit_attributes),
@@ -652,11 +700,16 @@ def parametrize_numerical_attribute_crossed_threshold_trigger_states(
         ),
         *parametrize_trigger_states(
             trigger=trigger,
-            trigger_options={
-                CONF_THRESHOLD_TYPE: ThresholdType.ABOVE,
-                CONF_LOWER_LIMIT: 10,
-                **trigger_options,
-            },
+            trigger_options=_add_threshold_unit(
+                {
+                    "threshold": {
+                        "type": "above",
+                        "value": {"number": 10},
+                    },
+                    **trigger_options,
+                },
+                threshold_unit,
+            ),
             target_states=[
                 (state, {attribute: 50} | unit_attributes),
                 (state, {attribute: 100} | unit_attributes),
@@ -669,11 +722,16 @@ def parametrize_numerical_attribute_crossed_threshold_trigger_states(
         ),
         *parametrize_trigger_states(
             trigger=trigger,
-            trigger_options={
-                CONF_THRESHOLD_TYPE: ThresholdType.BELOW,
-                CONF_UPPER_LIMIT: 90,
-                **trigger_options,
-            },
+            trigger_options=_add_threshold_unit(
+                {
+                    "threshold": {
+                        "type": "below",
+                        "value": {"number": 90},
+                    },
+                    **trigger_options,
+                },
+                threshold_unit,
+            ),
             target_states=[
                 (state, {attribute: 0} | unit_attributes),
                 (state, {attribute: 50} | unit_attributes),
@@ -691,6 +749,7 @@ def parametrize_numerical_state_value_changed_trigger_states(
     trigger: str,
     *,
     device_class: str,
+    threshold_unit: str | None | UndefinedType = UNDEFINED,
     trigger_options: dict[str, Any] | None = None,
     unit_attributes: dict | None = None,
 ) -> list[tuple[str, dict[str, Any], list[TriggerStateDescription]]]:
@@ -709,7 +768,15 @@ def parametrize_numerical_state_value_changed_trigger_states(
     return [
         *parametrize_trigger_states(
             trigger=trigger,
-            trigger_options=trigger_options,
+            trigger_options=_add_threshold_unit(
+                {
+                    "threshold": {
+                        "type": "any",
+                    },
+                    **trigger_options,
+                },
+                threshold_unit,
+            ),
             target_states=[
                 ("0", unit_attributes),
                 ("50", unit_attributes),
@@ -722,7 +789,16 @@ def parametrize_numerical_state_value_changed_trigger_states(
         ),
         *parametrize_trigger_states(
             trigger=trigger,
-            trigger_options={CONF_ABOVE: 10} | trigger_options,
+            trigger_options=_add_threshold_unit(
+                {
+                    "threshold": {
+                        "type": "above",
+                        "value": {"number": 10},
+                    }
+                }
+                | trigger_options,
+                threshold_unit,
+            ),
             target_states=[("50", unit_attributes), ("100", unit_attributes)],
             other_states=[("none", unit_attributes), ("0", unit_attributes)],
             required_filter_attributes=required_filter_attributes,
@@ -731,7 +807,16 @@ def parametrize_numerical_state_value_changed_trigger_states(
         ),
         *parametrize_trigger_states(
             trigger=trigger,
-            trigger_options={CONF_BELOW: 90} | trigger_options,
+            trigger_options=_add_threshold_unit(
+                {
+                    "threshold": {
+                        "type": "below",
+                        "value": {"number": 90},
+                    }
+                }
+                | trigger_options,
+                threshold_unit,
+            ),
             target_states=[("0", unit_attributes), ("50", unit_attributes)],
             other_states=[("none", unit_attributes), ("100", unit_attributes)],
             required_filter_attributes=required_filter_attributes,
@@ -745,6 +830,7 @@ def parametrize_numerical_state_value_crossed_threshold_trigger_states(
     trigger: str,
     *,
     device_class: str,
+    threshold_unit: str | None | UndefinedType = UNDEFINED,
     trigger_options: dict[str, Any] | None = None,
     unit_attributes: dict | None = None,
 ) -> list[tuple[str, dict[str, Any], list[TriggerStateDescription]]]:
@@ -763,12 +849,17 @@ def parametrize_numerical_state_value_crossed_threshold_trigger_states(
     return [
         *parametrize_trigger_states(
             trigger=trigger,
-            trigger_options={
-                CONF_THRESHOLD_TYPE: ThresholdType.BETWEEN,
-                CONF_LOWER_LIMIT: 10,
-                CONF_UPPER_LIMIT: 90,
-                **trigger_options,
-            },
+            trigger_options=_add_threshold_unit(
+                {
+                    "threshold": {
+                        "type": "between",
+                        "value_min": {"number": 10},
+                        "value_max": {"number": 90},
+                    },
+                    **trigger_options,
+                },
+                threshold_unit,
+            ),
             target_states=[("50", unit_attributes), ("60", unit_attributes)],
             other_states=[
                 ("none", unit_attributes),
@@ -780,12 +871,17 @@ def parametrize_numerical_state_value_crossed_threshold_trigger_states(
         ),
         *parametrize_trigger_states(
             trigger=trigger,
-            trigger_options={
-                CONF_THRESHOLD_TYPE: ThresholdType.OUTSIDE,
-                CONF_LOWER_LIMIT: 10,
-                CONF_UPPER_LIMIT: 90,
-                **trigger_options,
-            },
+            trigger_options=_add_threshold_unit(
+                {
+                    "threshold": {
+                        "type": "outside",
+                        "value_min": {"number": 10},
+                        "value_max": {"number": 90},
+                    },
+                    **trigger_options,
+                },
+                threshold_unit,
+            ),
             target_states=[("0", unit_attributes), ("100", unit_attributes)],
             other_states=[
                 ("none", unit_attributes),
@@ -797,11 +893,16 @@ def parametrize_numerical_state_value_crossed_threshold_trigger_states(
         ),
         *parametrize_trigger_states(
             trigger=trigger,
-            trigger_options={
-                CONF_THRESHOLD_TYPE: ThresholdType.ABOVE,
-                CONF_LOWER_LIMIT: 10,
-                **trigger_options,
-            },
+            trigger_options=_add_threshold_unit(
+                {
+                    "threshold": {
+                        "type": "above",
+                        "value": {"number": 10},
+                    },
+                    **trigger_options,
+                },
+                threshold_unit,
+            ),
             target_states=[("50", unit_attributes), ("100", unit_attributes)],
             other_states=[("none", unit_attributes), ("0", unit_attributes)],
             required_filter_attributes=required_filter_attributes,
@@ -809,11 +910,16 @@ def parametrize_numerical_state_value_crossed_threshold_trigger_states(
         ),
         *parametrize_trigger_states(
             trigger=trigger,
-            trigger_options={
-                CONF_THRESHOLD_TYPE: ThresholdType.BELOW,
-                CONF_UPPER_LIMIT: 90,
-                **trigger_options,
-            },
+            trigger_options=_add_threshold_unit(
+                {
+                    "threshold": {
+                        "type": "below",
+                        "value": {"number": 90},
+                    },
+                    **trigger_options,
+                },
+                threshold_unit,
+            ),
             target_states=[("0", unit_attributes), ("50", unit_attributes)],
             other_states=[("none", unit_attributes), ("100", unit_attributes)],
             required_filter_attributes=required_filter_attributes,
@@ -827,30 +933,32 @@ async def arm_trigger(
     trigger: str,
     trigger_options: dict[str, Any] | None,
     trigger_target: dict,
+    calls: list[str],
 ) -> None:
-    """Arm the specified trigger, call service test.automation when it triggers."""
-
-    # Local include to avoid importing the automation component unnecessarily
-    from homeassistant.components import automation  # noqa: PLC0415
-
+    """Arm the specified trigger and record fired entity_ids in calls when it triggers."""
     options = {CONF_OPTIONS: {**trigger_options}} if trigger_options is not None else {}
 
-    await async_setup_component(
+    trigger_config = {
+        CONF_PLATFORM: trigger,
+        CONF_TARGET: {**trigger_target},
+    } | options
+
+    @callback
+    def action(run_variables: TemplateVarsType, context: Context | None = None) -> None:
+        calls.append(run_variables["trigger"]["entity_id"])
+
+    logger = logging.getLogger(__name__)
+
+    def log_cb(level: int, msg: str, **kwargs: Any) -> None:
+        logger._log(level, "%s", msg, **kwargs)
+
+    await async_initialize_triggers(
         hass,
-        automation.DOMAIN,
-        {
-            automation.DOMAIN: {
-                "trigger": {
-                    CONF_PLATFORM: trigger,
-                    CONF_TARGET: {**trigger_target},
-                }
-                | options,
-                "action": {
-                    "service": "test.automation",
-                    "data_template": {CONF_ENTITY_ID: "{{ trigger.entity_id }}"},
-                },
-            }
-        },
+        [trigger_config],
+        action,
+        domain="test",
+        name="test_trigger",
+        log_cb=log_cb,
     )
 
 
@@ -940,7 +1048,25 @@ async def assert_trigger_gated_by_labs_flag(
 ) -> None:
     """Helper to check that a trigger is gated by the labs flag."""
 
-    await arm_trigger(hass, trigger, None, {ATTR_LABEL_ID: "test_label"})
+    # Local include to avoid importing the automation component unnecessarily
+    from homeassistant.components import automation  # noqa: PLC0415
+
+    await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "trigger": {
+                    CONF_PLATFORM: trigger,
+                    CONF_TARGET: {ATTR_LABEL_ID: "test_label"},
+                },
+                "action": {
+                    "service": "test.automation",
+                },
+            }
+        },
+    )
+
     assert (
         "Unnamed automation failed to setup triggers and has been disabled: Trigger "
         f"'{trigger}' requires the experimental 'New triggers and conditions' "
@@ -1053,7 +1179,6 @@ async def assert_condition_behavior_all(
 async def assert_trigger_behavior_any(
     hass: HomeAssistant,
     *,
-    service_calls: list[ServiceCall],
     target_entities: dict[str, list[str]],
     trigger_target_config: dict,
     entity_id: str,
@@ -1063,6 +1188,7 @@ async def assert_trigger_behavior_any(
     states: list[TriggerStateDescription],
 ) -> None:
     """Test trigger fires in mode any."""
+    calls: list[str] = []
     other_entity_ids = set(target_entities["included_entities"]) - {entity_id}
     excluded_entity_ids = set(target_entities["excluded_entities"]) - {entity_id}
 
@@ -1073,17 +1199,17 @@ async def assert_trigger_behavior_any(
         set_or_remove_state(hass, eid, states[0]["excluded_state"])
         await hass.async_block_till_done()
 
-    await arm_trigger(hass, trigger, trigger_options, trigger_target_config)
+    await arm_trigger(hass, trigger, trigger_options, trigger_target_config, calls)
 
     for state in states[1:]:
         excluded_state = state["excluded_state"]
         included_state = state["included_state"]
         set_or_remove_state(hass, entity_id, included_state)
         await hass.async_block_till_done()
-        assert len(service_calls) == state["count"]
-        for service_call in service_calls:
-            assert service_call.data[CONF_ENTITY_ID] == entity_id
-        service_calls.clear()
+        assert len(calls) == state["count"]
+        for call in calls:
+            assert call == entity_id
+        calls.clear()
 
         for other_entity_id in other_entity_ids:
             set_or_remove_state(hass, other_entity_id, included_state)
@@ -1091,14 +1217,13 @@ async def assert_trigger_behavior_any(
         for excluded_entity_id in excluded_entity_ids:
             set_or_remove_state(hass, excluded_entity_id, excluded_state)
             await hass.async_block_till_done()
-        assert len(service_calls) == (entities_in_target - 1) * state["count"]
-        service_calls.clear()
+        assert len(calls) == (entities_in_target - 1) * state["count"]
+        calls.clear()
 
 
 async def assert_trigger_behavior_first(
     hass: HomeAssistant,
     *,
-    service_calls: list[ServiceCall],
     target_entities: dict[str, list[str]],
     trigger_target_config: dict,
     entity_id: str,
@@ -1108,6 +1233,7 @@ async def assert_trigger_behavior_first(
     states: list[TriggerStateDescription],
 ) -> None:
     """Test trigger fires in mode first."""
+    calls: list[str] = []
     other_entity_ids = set(target_entities["included_entities"]) - {entity_id}
     excluded_entity_ids = set(target_entities["excluded_entities"]) - {entity_id}
 
@@ -1119,7 +1245,11 @@ async def assert_trigger_behavior_first(
         await hass.async_block_till_done()
 
     await arm_trigger(
-        hass, trigger, {"behavior": "first"} | trigger_options, trigger_target_config
+        hass,
+        trigger,
+        {"behavior": "first"} | trigger_options,
+        trigger_target_config,
+        calls,
     )
 
     for state in states[1:]:
@@ -1127,10 +1257,10 @@ async def assert_trigger_behavior_first(
         included_state = state["included_state"]
         set_or_remove_state(hass, entity_id, included_state)
         await hass.async_block_till_done()
-        assert len(service_calls) == state["count"]
-        for service_call in service_calls:
-            assert service_call.data[CONF_ENTITY_ID] == entity_id
-        service_calls.clear()
+        assert len(calls) == state["count"]
+        for call in calls:
+            assert call == entity_id
+        calls.clear()
 
         for other_entity_id in other_entity_ids:
             set_or_remove_state(hass, other_entity_id, included_state)
@@ -1138,13 +1268,12 @@ async def assert_trigger_behavior_first(
         for excluded_entity_id in excluded_entity_ids:
             set_or_remove_state(hass, excluded_entity_id, excluded_state)
             await hass.async_block_till_done()
-        assert len(service_calls) == 0
+        assert len(calls) == 0
 
 
 async def assert_trigger_behavior_last(
     hass: HomeAssistant,
     *,
-    service_calls: list[ServiceCall],
     target_entities: dict[str, list[str]],
     trigger_target_config: dict,
     entity_id: str,
@@ -1154,6 +1283,7 @@ async def assert_trigger_behavior_last(
     states: list[TriggerStateDescription],
 ) -> None:
     """Test trigger fires in mode last."""
+    calls: list[str] = []
     other_entity_ids = set(target_entities["included_entities"]) - {entity_id}
     excluded_entity_ids = set(target_entities["excluded_entities"]) - {entity_id}
 
@@ -1165,7 +1295,11 @@ async def assert_trigger_behavior_last(
         await hass.async_block_till_done()
 
     await arm_trigger(
-        hass, trigger, {"behavior": "last"} | trigger_options, trigger_target_config
+        hass,
+        trigger,
+        {"behavior": "last"} | trigger_options,
+        trigger_target_config,
+        calls,
     )
 
     for state in states[1:]:
@@ -1174,19 +1308,19 @@ async def assert_trigger_behavior_last(
         for other_entity_id in other_entity_ids:
             set_or_remove_state(hass, other_entity_id, included_state)
             await hass.async_block_till_done()
-        assert len(service_calls) == 0
+        assert len(calls) == 0
 
         set_or_remove_state(hass, entity_id, included_state)
         await hass.async_block_till_done()
-        assert len(service_calls) == state["count"]
-        for service_call in service_calls:
-            assert service_call.data[CONF_ENTITY_ID] == entity_id
-        service_calls.clear()
+        assert len(calls) == state["count"]
+        for call in calls:
+            assert call == entity_id
+        calls.clear()
 
         for excluded_entity_id in excluded_entity_ids:
             set_or_remove_state(hass, excluded_entity_id, excluded_state)
             await hass.async_block_till_done()
-        assert len(service_calls) == 0
+        assert len(calls) == 0
 
 
 def parametrize_numerical_condition_above_below_any(
@@ -1194,6 +1328,7 @@ def parametrize_numerical_condition_above_below_any(
     *,
     device_class: str,
     condition_options: dict[str, Any] | None = None,
+    threshold_unit: str | None | UndefinedType = UNDEFINED,
     unit_attributes: dict | None = None,
 ) -> list[tuple[str, dict[str, Any], list[ConditionStateDescription]]]:
     """Parametrize above/below threshold test cases for numerical conditions.
@@ -1209,7 +1344,13 @@ def parametrize_numerical_condition_above_below_any(
     return [
         *parametrize_condition_states_any(
             condition=condition,
-            condition_options={CONF_ABOVE: 20, **condition_options},
+            condition_options=_add_threshold_unit(
+                {
+                    "threshold": {"type": "above", "value": {"number": 20}},
+                    **condition_options,
+                },
+                threshold_unit,
+            ),
             target_states=[
                 ("21", unit_attributes),
                 ("50", unit_attributes),
@@ -1224,7 +1365,13 @@ def parametrize_numerical_condition_above_below_any(
         ),
         *parametrize_condition_states_any(
             condition=condition,
-            condition_options={CONF_BELOW: 80, **condition_options},
+            condition_options=_add_threshold_unit(
+                {
+                    "threshold": {"type": "below", "value": {"number": 80}},
+                    **condition_options,
+                },
+                threshold_unit,
+            ),
             target_states=[
                 ("0", unit_attributes),
                 ("50", unit_attributes),
@@ -1239,7 +1386,17 @@ def parametrize_numerical_condition_above_below_any(
         ),
         *parametrize_condition_states_any(
             condition=condition,
-            condition_options={CONF_ABOVE: 20, CONF_BELOW: 80, **condition_options},
+            condition_options=_add_threshold_unit(
+                {
+                    "threshold": {
+                        "type": "between",
+                        "value_min": {"number": 20},
+                        "value_max": {"number": 80},
+                    },
+                    **condition_options,
+                },
+                threshold_unit,
+            ),
             target_states=[
                 ("21", unit_attributes),
                 ("50", unit_attributes),
@@ -1261,6 +1418,7 @@ def parametrize_numerical_condition_above_below_all(
     *,
     device_class: str,
     condition_options: dict[str, Any] | None = None,
+    threshold_unit: str | None | UndefinedType = UNDEFINED,
     unit_attributes: dict | None = None,
 ) -> list[tuple[str, dict[str, Any], list[ConditionStateDescription]]]:
     """Parametrize above/below threshold test cases for numerical conditions with 'all' behavior.
@@ -1276,7 +1434,13 @@ def parametrize_numerical_condition_above_below_all(
     return [
         *parametrize_condition_states_all(
             condition=condition,
-            condition_options={CONF_ABOVE: 20, **condition_options},
+            condition_options=_add_threshold_unit(
+                {
+                    "threshold": {"type": "above", "value": {"number": 20}},
+                    **condition_options,
+                },
+                threshold_unit,
+            ),
             target_states=[
                 ("21", unit_attributes),
                 ("50", unit_attributes),
@@ -1291,7 +1455,13 @@ def parametrize_numerical_condition_above_below_all(
         ),
         *parametrize_condition_states_all(
             condition=condition,
-            condition_options={CONF_BELOW: 80, **condition_options},
+            condition_options=_add_threshold_unit(
+                {
+                    "threshold": {"type": "below", "value": {"number": 80}},
+                    **condition_options,
+                },
+                threshold_unit,
+            ),
             target_states=[
                 ("0", unit_attributes),
                 ("50", unit_attributes),
@@ -1306,7 +1476,17 @@ def parametrize_numerical_condition_above_below_all(
         ),
         *parametrize_condition_states_all(
             condition=condition,
-            condition_options={CONF_ABOVE: 20, CONF_BELOW: 80, **condition_options},
+            condition_options=_add_threshold_unit(
+                {
+                    "threshold": {
+                        "type": "between",
+                        "value_min": {"number": 20},
+                        "value_max": {"number": 80},
+                    },
+                    **condition_options,
+                },
+                threshold_unit,
+            ),
             target_states=[
                 ("21", unit_attributes),
                 ("50", unit_attributes),
@@ -1330,6 +1510,7 @@ def parametrize_numerical_attribute_condition_above_below_any(
     *,
     condition_options: dict[str, Any] | None = None,
     required_filter_attributes: dict | None = None,
+    threshold_unit: str | None | UndefinedType = UNDEFINED,
     unit_attributes: dict | None = None,
 ) -> list[tuple[str, dict[str, Any], list[ConditionStateDescription]]]:
     """Parametrize above/below threshold test cases for attribute-based numerical conditions.
@@ -1342,7 +1523,13 @@ def parametrize_numerical_attribute_condition_above_below_any(
     return [
         *parametrize_condition_states_any(
             condition=condition,
-            condition_options={CONF_ABOVE: 20, **condition_options},
+            condition_options=_add_threshold_unit(
+                {
+                    "threshold": {"type": "above", "value": {"number": 20}},
+                    **condition_options,
+                },
+                threshold_unit,
+            ),
             target_states=[
                 (state, {attribute: 21} | unit_attributes),
                 (state, {attribute: 50} | unit_attributes),
@@ -1357,7 +1544,13 @@ def parametrize_numerical_attribute_condition_above_below_any(
         ),
         *parametrize_condition_states_any(
             condition=condition,
-            condition_options={CONF_BELOW: 80, **condition_options},
+            condition_options=_add_threshold_unit(
+                {
+                    "threshold": {"type": "below", "value": {"number": 80}},
+                    **condition_options,
+                },
+                threshold_unit,
+            ),
             target_states=[
                 (state, {attribute: 0} | unit_attributes),
                 (state, {attribute: 50} | unit_attributes),
@@ -1372,7 +1565,17 @@ def parametrize_numerical_attribute_condition_above_below_any(
         ),
         *parametrize_condition_states_any(
             condition=condition,
-            condition_options={CONF_ABOVE: 20, CONF_BELOW: 80, **condition_options},
+            condition_options=_add_threshold_unit(
+                {
+                    "threshold": {
+                        "type": "between",
+                        "value_min": {"number": 20},
+                        "value_max": {"number": 80},
+                    },
+                    **condition_options,
+                },
+                threshold_unit,
+            ),
             target_states=[
                 (state, {attribute: 21} | unit_attributes),
                 (state, {attribute: 50} | unit_attributes),
@@ -1396,6 +1599,7 @@ def parametrize_numerical_attribute_condition_above_below_all(
     *,
     condition_options: dict[str, Any] | None = None,
     required_filter_attributes: dict | None = None,
+    threshold_unit: str | None | UndefinedType = UNDEFINED,
     unit_attributes: dict | None = None,
 ) -> list[tuple[str, dict[str, Any], list[ConditionStateDescription]]]:
     """Parametrize above/below threshold test cases for attribute-based numerical conditions with 'all' behavior.
@@ -1408,7 +1612,13 @@ def parametrize_numerical_attribute_condition_above_below_all(
     return [
         *parametrize_condition_states_all(
             condition=condition,
-            condition_options={CONF_ABOVE: 20, **condition_options},
+            condition_options=_add_threshold_unit(
+                {
+                    "threshold": {"type": "above", "value": {"number": 20}},
+                    **condition_options,
+                },
+                threshold_unit,
+            ),
             target_states=[
                 (state, {attribute: 21} | unit_attributes),
                 (state, {attribute: 50} | unit_attributes),
@@ -1423,7 +1633,13 @@ def parametrize_numerical_attribute_condition_above_below_all(
         ),
         *parametrize_condition_states_all(
             condition=condition,
-            condition_options={CONF_BELOW: 80, **condition_options},
+            condition_options=_add_threshold_unit(
+                {
+                    "threshold": {"type": "below", "value": {"number": 80}},
+                    **condition_options,
+                },
+                threshold_unit,
+            ),
             target_states=[
                 (state, {attribute: 0} | unit_attributes),
                 (state, {attribute: 50} | unit_attributes),
@@ -1438,7 +1654,17 @@ def parametrize_numerical_attribute_condition_above_below_all(
         ),
         *parametrize_condition_states_all(
             condition=condition,
-            condition_options={CONF_ABOVE: 20, CONF_BELOW: 80, **condition_options},
+            condition_options=_add_threshold_unit(
+                {
+                    "threshold": {
+                        "type": "between",
+                        "value_min": {"number": 20},
+                        "value_max": {"number": 80},
+                    },
+                    **condition_options,
+                },
+                threshold_unit,
+            ),
             target_states=[
                 (state, {attribute: 21} | unit_attributes),
                 (state, {attribute: 50} | unit_attributes),
@@ -1458,13 +1684,11 @@ def parametrize_numerical_attribute_condition_above_below_all(
 async def assert_trigger_ignores_limit_entities_with_wrong_unit(
     hass: HomeAssistant,
     *,
-    service_calls: list[ServiceCall],
     trigger: str,
     trigger_options: dict[str, Any],
     entity_id: str,
-    entity_state: str,
-    reset_attributes: dict[str, Any],
-    trigger_attributes: dict[str, Any],
+    reset_state: StateDescription,
+    trigger_state: StateDescription,
     limit_entities: list[tuple[str, str]],
     correct_unit: str,
     wrong_unit: str,
@@ -1480,16 +1704,16 @@ async def assert_trigger_ignores_limit_entities_with_wrong_unit(
         trigger_options: Trigger options dict (must already contain the limit
             entity IDs as values).
         entity_id: The entity being observed by the trigger.
-        entity_state: The state string for the observed entity (e.g. STATE_ON).
-        reset_attributes: Attributes to set on the entity before re-triggering.
-        trigger_attributes: Attributes that should cause the trigger to fire.
+        reset_state: The state description for the reset phase.
+        trigger_state: The state description that should cause the trigger to fire.
         limit_entities: List of (entity_id, value) tuples for the limit entities.
         correct_unit: The unit that the trigger expects (e.g. "%").
         wrong_unit: A unit that the trigger should reject (e.g. "lx").
 
     """
+    calls: list[str] = []
     # Set up entity in triggering state
-    hass.states.async_set(entity_id, entity_state, trigger_attributes)
+    set_or_remove_state(hass, entity_id, trigger_state)
     # Set up all limit entities with the wrong unit
     for limit_entity_id, limit_value in limit_entities:
         hass.states.async_set(
@@ -1499,14 +1723,16 @@ async def assert_trigger_ignores_limit_entities_with_wrong_unit(
         )
     await hass.async_block_till_done()
 
-    await arm_trigger(hass, trigger, trigger_options, {CONF_ENTITY_ID: [entity_id]})
+    await arm_trigger(
+        hass, trigger, trigger_options, {CONF_ENTITY_ID: [entity_id]}, calls
+    )
 
     # Cycle entity state - should NOT fire (all limit entities have wrong unit)
-    hass.states.async_set(entity_id, entity_state, reset_attributes)
+    set_or_remove_state(hass, entity_id, reset_state)
     await hass.async_block_till_done()
-    hass.states.async_set(entity_id, entity_state, trigger_attributes)
+    set_or_remove_state(hass, entity_id, trigger_state)
     await hass.async_block_till_done()
-    assert len(service_calls) == 0
+    assert len(calls) == 0
 
     # Fix limit entities one at a time; trigger should not fire until all are fixed
     for i, (limit_entity_id, limit_value) in enumerate(limit_entities):
@@ -1517,17 +1743,17 @@ async def assert_trigger_ignores_limit_entities_with_wrong_unit(
         )
         await hass.async_block_till_done()
 
-        hass.states.async_set(entity_id, entity_state, reset_attributes)
+        set_or_remove_state(hass, entity_id, reset_state)
         await hass.async_block_till_done()
-        hass.states.async_set(entity_id, entity_state, trigger_attributes)
+        set_or_remove_state(hass, entity_id, trigger_state)
         await hass.async_block_till_done()
 
         if i < len(limit_entities) - 1:
             # Not all limits fixed yet - should not fire
-            assert len(service_calls) == 0
+            assert len(calls) == 0
         else:
             # All limits fixed - should fire
-            assert len(service_calls) == 1
+            assert len(calls) == 1
 
 
 async def assert_numerical_condition_unit_conversion(

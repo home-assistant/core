@@ -1319,9 +1319,18 @@ class NumberSelector(Selector[NumberSelectorConfig]):
 class NumericThresholdSelectorConfig(BaseSelectorConfig, total=False):
     """Class to represent a numeric threshold selector config."""
 
-    unit_of_measurement: list[str]
+    mode: Required[NumericThresholdMode]
+    unit_of_measurement: list[str | None]
     number: NumberSelectorConfig
     entity: EntityFilterSelectorConfig | list[EntityFilterSelectorConfig]
+
+
+class NumericThresholdMode(StrEnum):
+    """Possible modes for a numeric threshold selector."""
+
+    CROSSED = "crossed"  # value crossed a threshold
+    CHANGED = "changed"  # value changed and is matching the threshold
+    IS = "is"  # value is matching the threshold
 
 
 class NumericThresholdType(StrEnum):
@@ -1331,6 +1340,7 @@ class NumericThresholdType(StrEnum):
     BELOW = "below"
     BETWEEN = "between"
     OUTSIDE = "outside"
+    ANY = "any"
 
 
 class NumericThresholdActiveChoice(StrEnum):
@@ -1384,7 +1394,7 @@ _NUMERIC_THRESHOLD_VALUE_ENTRY_SCHEMA = vol.All(
             ),
             vol.Optional("number"): vol.Coerce(float),
             vol.Optional("entity"): cv.entity_id,
-            vol.Optional("unit_of_measurement"): str,
+            vol.Optional("unit_of_measurement"): vol.Any(str, None),
         }
     ),
     vol.Any(
@@ -1436,13 +1446,18 @@ _NUMERIC_THRESHOLD_VALUE_SCHEMA = vol.All(
                 vol.Required("value_max"): _NUMERIC_THRESHOLD_VALUE_ENTRY_SCHEMA,
             }
         ),
+        vol.Schema(
+            {
+                vol.Required("type"): vol.In([NumericThresholdType.ANY]),
+            }
+        ),
     ),
     _validate_numeric_threshold_range,
 )
 
 
 def _validate_numeric_threshold_unit[_T: dict[str, Any]](
-    allowed_units: list[str],
+    allowed_units: list[str | None],
 ) -> Callable[[_T], _T]:
     """Generate a validator that checks unit_of_measurement against an allowed list."""
 
@@ -1456,8 +1471,12 @@ def _validate_numeric_threshold_unit[_T: dict[str, Any]](
         else:
             entries = (value.get("value_min", {}), value.get("value_max", {}))
         for entry in entries:
-            if "unit_of_measurement" not in entry:
+            if "number" not in entry:
                 continue
+            if "unit_of_measurement" not in entry:
+                raise vol.Invalid(
+                    f"Missing unit_of_measurement, expected one of {allowed_units}"
+                )
             unit = entry["unit_of_measurement"]
             if unit not in allowed_units:
                 raise vol.Invalid(
@@ -1467,6 +1486,13 @@ def _validate_numeric_threshold_unit[_T: dict[str, Any]](
         return value
 
     return _validate
+
+
+def _validate_numeric_threshold_not_any[_T: dict[str, Any]](value: _T) -> _T:
+    """Validate that the threshold type is not 'any'."""
+    if value.get("type") == NumericThresholdType.ANY:
+        raise vol.Invalid("Threshold type 'any' is only allowed when mode is 'changed'")
+    return value
 
 
 def _validate_numeric_threshold_number_range[_T: dict[str, Any]](
@@ -1510,7 +1536,10 @@ class NumericThresholdSelector(Selector[NumericThresholdSelectorConfig]):
 
     CONFIG_SCHEMA = make_selector_config_schema(
         {
-            vol.Optional("unit_of_measurement"): [str],
+            vol.Required("mode"): vol.All(
+                vol.Coerce(NumericThresholdMode), lambda val: val.value
+            ),
+            vol.Optional("unit_of_measurement"): [vol.Any(str, None)],
             vol.Optional("number"): NumberSelector.CONFIG_SCHEMA,
             vol.Optional("entity"): vol.All(
                 cv.ensure_list, [ENTITY_FILTER_SELECTOR_CONFIG_SCHEMA]
@@ -1525,6 +1554,9 @@ class NumericThresholdSelector(Selector[NumericThresholdSelectorConfig]):
     def __call__(self, data: Any) -> Any:
         """Validate the passed selection."""
         validators: list[Callable[[Any], Any]] = [_NUMERIC_THRESHOLD_VALUE_SCHEMA]
+        mode = self.config["mode"]
+        if mode != NumericThresholdMode.CHANGED:
+            validators.append(_validate_numeric_threshold_not_any)
         if allowed_units := self.config.get("unit_of_measurement"):
             validators.append(_validate_numeric_threshold_unit(allowed_units))
         if number_config := cast(dict[str, Any] | None, self.config.get("number")):

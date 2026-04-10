@@ -10,6 +10,7 @@ from functools import partial
 from ipaddress import IPv4Network, IPv6Network, ip_network
 import logging
 import os
+from pathlib import Path
 import socket
 import ssl
 from tempfile import NamedTemporaryFile
@@ -33,6 +34,7 @@ from homeassistant.components.network import async_get_source_ip
 from homeassistant.const import (
     EVENT_HOMEASSISTANT_START,
     EVENT_HOMEASSISTANT_STOP,
+    HASSIO_USER_NAME,
     SERVER_PORT,
 )
 from homeassistant.core import Event, HomeAssistant, callback
@@ -69,7 +71,7 @@ from .headers import setup_headers
 from .request_context import setup_request_context
 from .security_filter import setup_security_filter
 from .static import CACHE_HEADERS, CachingStaticResource
-from .web_runner import HomeAssistantTCPSite
+from .web_runner import HomeAssistantTCPSite, HomeAssistantUnixSite
 
 CONF_SERVER_HOST: Final = "server_host"
 CONF_SERVER_PORT: Final = "server_port"
@@ -235,6 +237,17 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     source_ip_task = create_eager_task(async_get_source_ip(hass))
 
+    supervisor_unix_socket_path: Path | None = None
+    if socket_env := os.environ.get("SUPERVISOR_CORE_API_SOCKET"):
+        socket_path = Path(socket_env)
+        if socket_path.is_absolute():
+            supervisor_unix_socket_path = socket_path
+        else:
+            _LOGGER.error(
+                "Invalid Supervisor Unix socket path %s: path must be absolute",
+                socket_env,
+            )
+
     server = HomeAssistantHTTP(
         hass,
         server_host=server_host,
@@ -244,6 +257,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         ssl_key=ssl_key,
         trusted_proxies=trusted_proxies,
         ssl_profile=ssl_profile,
+        supervisor_unix_socket_path=supervisor_unix_socket_path,
     )
     await server.async_initialize(
         cors_origins=cors_origins,
@@ -266,6 +280,21 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             await start_http_server_and_save_config(hass, dict(conf), server)
 
     async_when_setup_or_start(hass, "frontend", start_server)
+
+    if server.supervisor_unix_socket_path is not None:
+
+        async def start_supervisor_unix_socket(*_: Any) -> None:
+            """Start the Unix socket after the Supervisor user is available."""
+            if any(
+                user
+                for user in await hass.auth.async_get_users()
+                if user.system_generated and user.name == HASSIO_USER_NAME
+            ):
+                await server.async_start_supervisor_unix_socket()
+            else:
+                _LOGGER.error("Supervisor user not found; not starting Unix socket")
+
+        async_when_setup_or_start(hass, "hassio", start_supervisor_unix_socket)
 
     hass.http = server
 
@@ -366,6 +395,7 @@ class HomeAssistantHTTP:
         server_port: int,
         trusted_proxies: list[IPv4Network | IPv6Network],
         ssl_profile: str,
+        supervisor_unix_socket_path: Path | None = None,
     ) -> None:
         """Initialize the HTTP Home Assistant server."""
         self.app = HomeAssistantApplication(
@@ -384,8 +414,10 @@ class HomeAssistantHTTP:
         self.server_port = server_port
         self.trusted_proxies = trusted_proxies
         self.ssl_profile = ssl_profile
+        self.supervisor_unix_socket_path = supervisor_unix_socket_path
         self.runner: web.AppRunner | None = None
         self.site: HomeAssistantTCPSite | None = None
+        self.supervisor_site: HomeAssistantUnixSite | None = None
         self.context: ssl.SSLContext | None = None
 
     async def async_initialize(
@@ -610,6 +642,33 @@ class HomeAssistantHTTP:
             context.load_cert_chain(cert_pem.name, key_pem.name)
         return context
 
+    async def async_start_supervisor_unix_socket(self) -> None:
+        """Start listening on the Unix socket.
+
+        This is called separately from start() to delay serving the Unix
+        socket until the Supervisor user exists (created by the hassio
+        integration).  Without this delay, Supervisor could connect before
+        its user is available and receive 401 responses it won't retry.
+        """
+        if self.supervisor_unix_socket_path is None or self.runner is None:
+            return
+        self.supervisor_site = HomeAssistantUnixSite(
+            self.runner, self.supervisor_unix_socket_path
+        )
+        try:
+            await self.supervisor_site.start()
+        except OSError as error:
+            _LOGGER.error(
+                "Failed to create HTTP server on unix socket %s: %s",
+                self.supervisor_unix_socket_path,
+                error,
+            )
+            self.supervisor_site = None
+        else:
+            _LOGGER.info(
+                "Now listening on unix socket %s", self.supervisor_unix_socket_path
+            )
+
     async def start(self) -> None:
         """Start the aiohttp server."""
         # Aiohttp freezes apps after start so that no changes can be made.
@@ -637,6 +696,19 @@ class HomeAssistantHTTP:
 
     async def stop(self) -> None:
         """Stop the aiohttp server."""
+        if self.supervisor_site is not None:
+            await self.supervisor_site.stop()
+            if self.supervisor_unix_socket_path is not None:
+                try:
+                    await self.hass.async_add_executor_job(
+                        self.supervisor_unix_socket_path.unlink, True
+                    )
+                except OSError as err:
+                    _LOGGER.warning(
+                        "Could not remove Supervisor unix socket %s: %s",
+                        self.supervisor_unix_socket_path,
+                        err,
+                    )
         if self.site is not None:
             await self.site.stop()
         if self.runner is not None:

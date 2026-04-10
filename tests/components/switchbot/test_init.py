@@ -20,13 +20,14 @@ from homeassistant.const import CONF_ADDRESS, CONF_NAME, CONF_SENSOR_TYPE
 from homeassistant.core import HomeAssistant
 
 from . import (
-    AIR_PURIFIER_PM25_SERVICE_INFO,
-    AIR_PURIFIER_TABLE_PM25_SERVICE_INFO,
-    AIR_PURIFIER_TABLE_VOC_SERVICE_INFO,
-    AIR_PURIFIER_VOC_SERVICE_INFO,
+    AIR_PURIFIER_JP_SERVICE_INFO,
+    AIR_PURIFIER_TABLE_JP_SERVICE_INFO,
+    AIR_PURIFIER_TABLE_US_SERVICE_INFO,
+    AIR_PURIFIER_US_SERVICE_INFO,
     HUBMINI_MATTER_SERVICE_INFO,
     LOCK_SERVICE_INFO,
     WOCURTAIN_SERVICE_INFO,
+    WOMETERTHPC_SERVICE_INFO,
     WOSENSORTH_SERVICE_INFO,
     patch_async_ble_device_from_address,
 )
@@ -84,6 +85,32 @@ async def test_setup_entry_without_ble_device(
         "Could not find Switchbot hygrometer_co2 with address aa:bb:cc:dd:ee:ff"
         in caplog.text
     )
+
+
+async def test_setup_entry_meter_pro_co2_uses_non_connectable(
+    hass: HomeAssistant,
+    mock_entry_factory: Callable[[str], MockConfigEntry],
+) -> None:
+    """Test that Meter Pro CO2 setup uses connectable=False for BLE lookup.
+
+    Meter Pro CO2 is in both CONNECTABLE and NON_CONNECTABLE model types,
+    so async_ble_device_from_address should be called with connectable=False
+    to support passive BT proxies.
+    """
+    inject_bluetooth_service_info(hass, WOMETERTHPC_SERVICE_INFO)
+
+    entry = mock_entry_factory("hygrometer_co2")
+    entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.bluetooth.async_ble_device_from_address",
+    ) as mock_ble:
+        mock_ble.return_value = WOMETERTHPC_SERVICE_INFO.device
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+        # connectable should be False since METER_PRO_C is in both lists
+        assert mock_ble.call_args_list[0][0][2] is False
 
 
 async def test_coordinator_wait_ready_timeout(
@@ -226,22 +253,22 @@ async def test_migrate_entry_fails_for_future_version(
     [
         (
             DEPRECATED_SENSOR_TYPE_AIR_PURIFIER,
-            AIR_PURIFIER_VOC_SERVICE_INFO,
+            AIR_PURIFIER_JP_SERVICE_INFO,
             "air_purifier_jp",
         ),
         (
             DEPRECATED_SENSOR_TYPE_AIR_PURIFIER,
-            AIR_PURIFIER_PM25_SERVICE_INFO,
+            AIR_PURIFIER_US_SERVICE_INFO,
             "air_purifier_us",
         ),
         (
             DEPRECATED_SENSOR_TYPE_AIR_PURIFIER_TABLE,
-            AIR_PURIFIER_TABLE_VOC_SERVICE_INFO,
+            AIR_PURIFIER_TABLE_JP_SERVICE_INFO,
             "air_purifier_table_jp",
         ),
         (
             DEPRECATED_SENSOR_TYPE_AIR_PURIFIER_TABLE,
-            AIR_PURIFIER_TABLE_PM25_SERVICE_INFO,
+            AIR_PURIFIER_TABLE_US_SERVICE_INFO,
             "air_purifier_table_us",
         ),
     ],

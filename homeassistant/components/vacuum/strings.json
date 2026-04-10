@@ -1,16 +1,13 @@
 {
   "common": {
-    "condition_behavior_description": "How the state should match on the targeted vacuum cleaners.",
-    "condition_behavior_name": "Behavior",
-    "trigger_behavior_description": "The behavior of the targeted vacuum cleaners to trigger on.",
-    "trigger_behavior_name": "Behavior"
+    "condition_behavior_name": "Condition passes if",
+    "trigger_behavior_name": "Trigger when"
   },
   "conditions": {
     "is_cleaning": {
       "description": "Tests if one or more vacuum cleaners are cleaning.",
       "fields": {
         "behavior": {
-          "description": "[%key:component::vacuum::common::condition_behavior_description%]",
           "name": "[%key:component::vacuum::common::condition_behavior_name%]"
         }
       },
@@ -20,7 +17,6 @@
       "description": "Tests if one or more vacuum cleaners are docked.",
       "fields": {
         "behavior": {
-          "description": "[%key:component::vacuum::common::condition_behavior_description%]",
           "name": "[%key:component::vacuum::common::condition_behavior_name%]"
         }
       },
@@ -30,7 +26,6 @@
       "description": "Tests if one or more vacuum cleaners are encountering an error.",
       "fields": {
         "behavior": {
-          "description": "[%key:component::vacuum::common::condition_behavior_description%]",
           "name": "[%key:component::vacuum::common::condition_behavior_name%]"
         }
       },
@@ -40,7 +35,6 @@
       "description": "Tests if one or more vacuum cleaners are paused.",
       "fields": {
         "behavior": {
-          "description": "[%key:component::vacuum::common::condition_behavior_description%]",
           "name": "[%key:component::vacuum::common::condition_behavior_name%]"
         }
       },
@@ -50,7 +44,6 @@
       "description": "Tests if one or more vacuum cleaners are returning to the dock.",
       "fields": {
         "behavior": {
-          "description": "[%key:component::vacuum::common::condition_behavior_description%]",
           "name": "[%key:component::vacuum::common::condition_behavior_name%]"
         }
       },
@@ -197,7 +190,6 @@
       "description": "Triggers after one or more vacuums have returned to dock.",
       "fields": {
         "behavior": {
-          "description": "[%key:component::vacuum::common::trigger_behavior_description%]",
           "name": "[%key:component::vacuum::common::trigger_behavior_name%]"
         }
       },
@@ -207,7 +199,6 @@
       "description": "Triggers after one or more vacuums encounter an error.",
       "fields": {
         "behavior": {
-          "description": "[%key:component::vacuum::common::trigger_behavior_description%]",
           "name": "[%key:component::vacuum::common::trigger_behavior_name%]"
         }
       },
@@ -217,7 +208,6 @@
       "description": "Triggers after one or more vacuums pause cleaning.",
       "fields": {
         "behavior": {
-          "description": "[%key:component::vacuum::common::trigger_behavior_description%]",
           "name": "[%key:component::vacuum::common::trigger_behavior_name%]"
         }
       },
@@ -227,7 +217,6 @@
       "description": "Triggers after one or more vacuums start cleaning.",
       "fields": {
         "behavior": {
-          "description": "[%key:component::vacuum::common::trigger_behavior_description%]",
           "name": "[%key:component::vacuum::common::trigger_behavior_name%]"
         }
       },
@@ -237,7 +226,6 @@
       "description": "Triggers after one or more vacuums start returning to dock.",
       "fields": {
         "behavior": {
-          "description": "[%key:component::vacuum::common::trigger_behavior_description%]",
           "name": "[%key:component::vacuum::common::trigger_behavior_name%]"
         }
       },

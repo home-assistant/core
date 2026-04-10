@@ -225,7 +225,8 @@ turn_on:
         supported_features:
           - light.LightEntityFeature.EFFECT
       selector:
-        text:
+        state:
+          attribute: effect
     advanced_fields:
       collapsed: true
       fields:

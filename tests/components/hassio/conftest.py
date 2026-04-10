@@ -1,6 +1,6 @@
 """Fixtures for Hass.io."""
 
-from collections.abc import Generator
+from collections.abc import AsyncGenerator, Generator
 from dataclasses import replace
 import os
 import re
@@ -17,7 +17,6 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from . import SUPERVISOR_TOKEN
 
-from tests.test_util.aiohttp import AiohttpClientMocker
 from tests.typing import ClientSessionGenerator
 
 
@@ -67,9 +66,7 @@ async def hassio_client_supervisor(
 
 
 @pytest.fixture
-async def hassio_handler(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
-) -> Generator[HassIO]:
+async def hassio_handler(hass: HomeAssistant) -> AsyncGenerator[HassIO]:
     """Create mock hassio handler."""
     with patch.dict(os.environ, {"SUPERVISOR_TOKEN": SUPERVISOR_TOKEN}):
         yield HassIO(hass.loop, async_get_clientsession(hass), "127.0.0.1")
@@ -77,7 +74,6 @@ async def hassio_handler(
 
 @pytest.fixture
 def all_setup_requests(
-    aioclient_mock: AiohttpClientMocker,
     request: pytest.FixtureRequest,
     addon_installed: AsyncMock,
     store_info: AsyncMock,
@@ -93,16 +89,11 @@ def all_setup_requests(
     os_info: AsyncMock,
     homeassistant_stats: AsyncMock,
     supervisor_stats: AsyncMock,
+    ingress_panels: AsyncMock,
 ) -> None:
     """Mock all setup requests."""
     include_addons = hasattr(request, "param") and request.param.get(
         "include_addons", False
-    )
-
-    aioclient_mock.post("http://127.0.0.1/homeassistant/options", json={"result": "ok"})
-    aioclient_mock.post("http://127.0.0.1/supervisor/options", json={"result": "ok"})
-    aioclient_mock.get(
-        "http://127.0.0.1/ingress/panels", json={"result": "ok", "data": {"panels": {}}}
     )
 
     if include_addons:
@@ -174,8 +165,3 @@ def all_setup_requests(
         )
 
     addon_stats.side_effect = mock_addon_stats
-
-    aioclient_mock.get(
-        "http://127.0.0.1/jobs/info",
-        json={"result": "ok", "data": {"ignore_conditions": [], "jobs": []}},
-    )

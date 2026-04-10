@@ -5,7 +5,7 @@ import voluptuous as vol
 from homeassistant.const import ATTR_TEMPERATURE, CONF_OPTIONS, UnitOfTemperature
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.automation import DomainSpec, NumericalDomainSpec
+from homeassistant.helpers.automation import DomainSpec
 from homeassistant.helpers.trigger import (
     ENTITY_STATE_TRIGGER_SCHEMA_FIRST_LAST,
     EntityNumericalStateChangedTriggerWithUnitBase,
@@ -52,7 +52,7 @@ class _ClimateTargetTemperatureTriggerMixin(EntityNumericalStateTriggerWithUnitB
     """Mixin for climate target temperature triggers with unit conversion."""
 
     _base_unit = UnitOfTemperature.CELSIUS
-    _domain_specs = {DOMAIN: NumericalDomainSpec(value_source=ATTR_TEMPERATURE)}
+    _domain_specs = {DOMAIN: DomainSpec(value_source=ATTR_TEMPERATURE)}
     _unit_converter = TemperatureConverter
 
     def _get_entity_unit(self, state: State) -> str | None:
@@ -84,11 +84,11 @@ TRIGGERS: dict[str, type[Trigger]] = {
         {DOMAIN: DomainSpec(value_source=ATTR_HVAC_ACTION)}, HVACAction.DRYING
     ),
     "target_humidity_changed": make_entity_numerical_state_changed_trigger(
-        {DOMAIN: NumericalDomainSpec(value_source=ATTR_HUMIDITY)},
+        {DOMAIN: DomainSpec(value_source=ATTR_HUMIDITY)},
         valid_unit="%",
     ),
     "target_humidity_crossed_threshold": make_entity_numerical_state_crossed_threshold_trigger(
-        {DOMAIN: NumericalDomainSpec(value_source=ATTR_HUMIDITY)},
+        {DOMAIN: DomainSpec(value_source=ATTR_HUMIDITY)},
         valid_unit="%",
     ),
     "target_temperature_changed": ClimateTargetTemperatureChangedTrigger,
