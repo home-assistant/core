@@ -124,12 +124,12 @@ async def async_setup_entry(
 ) -> None:
     """Set up a Tradfri config entry."""
     gateway_id = config_entry.data[CONF_GATEWAY_ID]
-    coordinator_data = config_entry.runtime_data.coordinator
-    api = coordinator_data.api
+    tradfri_data = config_entry.runtime_data
+    api = tradfri_data.api
 
     entities: list[TradfriSensor] = []
 
-    for device_coordinator in coordinator_data.coordinator_list:
+    for device_coordinator in tradfri_data.coordinator_list:
         if (
             not device_coordinator.device.has_light_control
             and not device_coordinator.device.has_socket_control

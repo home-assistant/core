@@ -15,7 +15,7 @@ async def async_get_config_entry_diagnostics(
     hass: HomeAssistant, entry: TradfriConfigEntry
 ) -> dict[str, Any]:
     """Return diagnostics the Tradfri platform."""
-    coordinator_data = entry.runtime_data.coordinator
+    tradfri_data = entry.runtime_data
 
     device_registry = dr.async_get(hass)
     device = cast(
@@ -27,7 +27,7 @@ async def async_get_config_entry_diagnostics(
 
     device_data: list = [
         coordinator.device.device_info.model_number
-        for coordinator in coordinator_data.coordinator_list
+        for coordinator in tradfri_data.coordinator_list
     ]
 
     return {

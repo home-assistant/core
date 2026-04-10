@@ -36,15 +36,15 @@ async def async_setup_entry(
 ) -> None:
     """Load Tradfri switches based on a config entry."""
     gateway_id = config_entry.data[CONF_GATEWAY_ID]
-    coordinator_data = config_entry.runtime_data.coordinator
+    tradfri_data = config_entry.runtime_data
 
     async_add_entities(
         TradfriAirPurifierFan(
             device_coordinator,
-            coordinator_data.api,
+            tradfri_data.api,
             gateway_id,
         )
-        for device_coordinator in coordinator_data.coordinator_list
+        for device_coordinator in tradfri_data.coordinator_list
         if device_coordinator.device.has_air_purifier_control
     )
 

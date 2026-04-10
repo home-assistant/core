@@ -23,7 +23,6 @@ from homeassistant.helpers.event import async_track_time_interval
 from .const import CONF_GATEWAY_ID, CONF_IDENTITY, CONF_KEY, DOMAIN, LOGGER
 from .coordinator import (
     TradfriConfigEntry,
-    TradfriCoordinatorData,
     TradfriData,
     TradfriDeviceDataUpdateCoordinator,
 )
@@ -88,7 +87,7 @@ async def async_setup_entry(
     remove_stale_devices(hass, entry, devices)
 
     # Setup the device coordinators
-    coordinator_data = TradfriCoordinatorData(gateway=gateway, api=api)
+    tradfri_data = TradfriData(factory=factory, gateway=gateway, api=api)
 
     for device in devices:
         coordinator = TradfriDeviceDataUpdateCoordinator(
@@ -99,9 +98,9 @@ async def async_setup_entry(
         entry.async_on_unload(
             async_dispatcher_connect(hass, SIGNAL_GW, coordinator.set_hub_available)
         )
-        coordinator_data.coordinator_list.append(coordinator)
+        tradfri_data.coordinator_list.append(coordinator)
 
-    entry.runtime_data = TradfriData(factory=factory, coordinator=coordinator_data)
+    entry.runtime_data = tradfri_data
 
     async def async_keep_alive(now: datetime) -> None:
         if hass.is_stopping:

@@ -25,22 +25,15 @@ type TradfriConfigEntry = ConfigEntry[TradfriData]
 
 
 @dataclass
-class TradfriCoordinatorData:
-    """Coordinator data for a Tradfri gateway."""
+class TradfriData:
+    """Runtime data for a Tradfri config entry."""
 
+    factory: APIFactory
     gateway: Gateway
     api: Callable[[Command | list[Command]], Any]
     coordinator_list: list[TradfriDeviceDataUpdateCoordinator] = field(
         default_factory=list
     )
-
-
-@dataclass
-class TradfriData:
-    """Runtime data for a Tradfri config entry."""
-
-    factory: APIFactory
-    coordinator: TradfriCoordinatorData
 
 
 class TradfriDeviceDataUpdateCoordinator(DataUpdateCoordinator[Device]):
