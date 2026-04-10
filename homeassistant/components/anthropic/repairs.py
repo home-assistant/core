@@ -113,7 +113,7 @@ class ModelDeprecatedRepairFlow(RepairsFlow):
     ) -> list[SelectOptionDict]:
         """Get list of available models."""
         try:
-            models = (await client.models.list()).data
+            models = (await client.models.list(timeout=10.0)).data
         except anthropic.AnthropicError:
             models = []
         return [

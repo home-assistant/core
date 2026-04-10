@@ -354,7 +354,7 @@ class ConversationSubentryFlowHandler(ConfigSubentryFlow):
                 client = coordinator.client
                 try:
                     self.model_info = await client.models.retrieve(
-                        self.options[CONF_CHAT_MODEL]
+                        self.options[CONF_CHAT_MODEL], timeout=10.0
                     )
                 except anthropic.NotFoundError:
                     errors[CONF_CHAT_MODEL] = "model_not_found"
