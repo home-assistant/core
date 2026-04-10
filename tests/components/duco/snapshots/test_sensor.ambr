@@ -1,54 +1,4 @@
 # serializer version: 1
-# name: test_sensor_entities_state[sensor.bathroom_rh-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.bathroom_rh',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': None,
-    'platform': 'duco',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'ventilation_state',
-    'unique_id': 'aa:bb:cc:dd:ee:ff_113_ventilation_state',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_sensor_entities_state[sensor.bathroom_rh-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Bathroom RH',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.bathroom_rh',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'AUTO',
-  })
-# ---
 # name: test_sensor_entities_state[sensor.bathroom_rh_humidity-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -157,7 +107,7 @@
     'state': '85',
   })
 # ---
-# name: test_sensor_entities_state[sensor.living-entry]
+# name: test_sensor_entities_state[sensor.bathroom_rh_ventilation_state-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -171,7 +121,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.living',
+    'entity_id': 'sensor.bathroom_rh_ventilation_state',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -179,28 +129,28 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': None,
+    'object_id_base': 'Ventilation state',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': None,
+    'original_name': 'Ventilation state',
     'platform': 'duco',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'ventilation_state',
-    'unique_id': 'aa:bb:cc:dd:ee:ff_1_ventilation_state',
+    'unique_id': 'aa:bb:cc:dd:ee:ff_113_ventilation_state',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor_entities_state[sensor.living-state]
+# name: test_sensor_entities_state[sensor.bathroom_rh_ventilation_state-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Living',
+      'friendly_name': 'Bathroom RH Ventilation state',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.living',
+    'entity_id': 'sensor.bathroom_rh_ventilation_state',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -315,7 +265,7 @@
     'state': '75',
   })
 # ---
-# name: test_sensor_entities_state[sensor.office_co2-entry]
+# name: test_sensor_entities_state[sensor.living_ventilation_state-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -329,7 +279,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.office_co2',
+    'entity_id': 'sensor.living_ventilation_state',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -337,28 +287,28 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': None,
+    'object_id_base': 'Ventilation state',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': None,
+    'original_name': 'Ventilation state',
     'platform': 'duco',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'ventilation_state',
-    'unique_id': 'aa:bb:cc:dd:ee:ff_2_ventilation_state',
+    'unique_id': 'aa:bb:cc:dd:ee:ff_1_ventilation_state',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor_entities_state[sensor.office_co2-state]
+# name: test_sensor_entities_state[sensor.living_ventilation_state-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Office CO2',
+      'friendly_name': 'Living Ventilation state',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.office_co2',
+    'entity_id': 'sensor.living_ventilation_state',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -471,5 +421,55 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '80',
+  })
+# ---
+# name: test_sensor_entities_state[sensor.office_co2_ventilation_state-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.office_co2_ventilation_state',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Ventilation state',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Ventilation state',
+    'platform': 'duco',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'ventilation_state',
+    'unique_id': 'aa:bb:cc:dd:ee:ff_2_ventilation_state',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor_entities_state[sensor.office_co2_ventilation_state-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Office CO2 Ventilation state',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.office_co2_ventilation_state',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'AUTO',
   })
 # ---
