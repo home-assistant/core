@@ -491,6 +491,9 @@
     "command_send_failed": {
       "message": "Failed to send command: {exception}"
     },
+    "oauth2_implementation_unavailable": {
+      "message": "[%key:common::exceptions::oauth2_implementation_unavailable::message%]"
+    },
     "work_area_not_existing": {
       "message": "The selected work area does not exist."
     },
