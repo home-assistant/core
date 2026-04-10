@@ -3154,7 +3154,6 @@ def test_device_class_converters_are_complete() -> None:
         SensorDeviceClass.CO2,
         SensorDeviceClass.DATE,
         SensorDeviceClass.ENUM,
-        SensorDeviceClass.FREQUENCY,
         SensorDeviceClass.HUMIDITY,
         SensorDeviceClass.ILLUMINANCE,
         SensorDeviceClass.IRRADIANCE,

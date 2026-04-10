@@ -6,12 +6,18 @@ from dataclasses import dataclass
 
 
 @dataclass(slots=True, frozen=True, kw_only=True)
-class USBDevice:
-    """A usb device."""
+class SerialDevice:
+    """A serial device."""
 
     device: str
-    vid: str
-    pid: str
     serial_number: str | None
     manufacturer: str | None
     description: str | None
+
+
+@dataclass(slots=True, frozen=True, kw_only=True)
+class USBDevice(SerialDevice):
+    """A usb device."""
+
+    vid: str
+    pid: str
