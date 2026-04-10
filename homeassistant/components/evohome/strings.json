@@ -1,5 +1,8 @@
 {
   "exceptions": {
+    "controller_only_service": {
+      "message": "Only Evohome controllers support the `{service}` action"
+    },
     "invalid_system_mode": {
       "message": "The requested system mode is not supported: {error}"
     },
@@ -19,6 +22,12 @@
       "message": "Only zones support the `{service}` action"
     }
   },
+  "issues": {
+    "deprecated_controller_service_call": {
+      "description": "Calling the `{service}` service without `entity_id` is deprecated and will stop working in Home Assistant 2026.7. Update any automation or script to include the Evohome controller climate entity_id.",
+      "title": "Untargeted Evohome controller service call deprecated"
+    }
+  },
   "services": {
     "clear_zone_override": {
       "description": "Sets a zone to follow its schedule.",
@@ -30,6 +39,12 @@
     },
     "reset_system": {
       "description": "Sets the system to `Auto` mode and resets all the zones to follow their schedules. Not all Evohome systems support this feature (i.e. `AutoWithReset` mode).",
+      "fields": {
+        "entity_id": {
+          "description": "The Evohome controller climate entity.",
+          "name": "Entity"
+        }
+      },
       "name": "Reset system"
     },
     "set_system_mode": {
@@ -38,6 +53,10 @@
         "duration": {
           "description": "The duration in hours; used only with `AutoWithEco` mode (up to 24 hours).",
           "name": "Duration"
+        },
+        "entity_id": {
+          "description": "The Evohome controller climate entity.",
+          "name": "Entity"
         },
         "mode": {
           "description": "Mode to set the system to.",

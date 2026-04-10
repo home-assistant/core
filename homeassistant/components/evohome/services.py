@@ -14,15 +14,22 @@ from evohomeasync2.schemas.const import (
 import voluptuous as vol
 
 from homeassistant.components.climate import DOMAIN as CLIMATE_DOMAIN
-from homeassistant.const import ATTR_MODE
+from homeassistant.const import ATTR_ENTITY_ID, ATTR_MODE
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import ServiceValidationError
-from homeassistant.helpers import config_validation as cv, service
+from homeassistant.helpers import (
+    config_validation as cv,
+    entity_registry as er,
+    issue_registry as ir,
+    service,
+)
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.service import verify_domain_control
 
 from .const import ATTR_DURATION, ATTR_PERIOD, ATTR_SETPOINT, DOMAIN, EvoService
 from .coordinator import EvoDataUpdateCoordinator
+
+BREAKS_IN_HA_VERSION: Final = "2026.7.0"
 
 # System service schemas (registered as domain services)
 SET_SYSTEM_MODE_SCHEMA: Final[dict[str | vol.Marker, Any]] = {
@@ -36,6 +43,11 @@ SET_SYSTEM_MODE_SCHEMA: Final[dict[str | vol.Marker, Any]] = {
         cv.time_period,
         vol.Range(min=timedelta(days=1), max=timedelta(days=99)),
     ),
+    vol.Optional(ATTR_ENTITY_ID): cv.entity_id,
+}
+
+RESET_SYSTEM_SCHEMA: Final[dict[str | vol.Marker, Any]] = {
+    vol.Optional(ATTR_ENTITY_ID): cv.entity_id,
 }
 
 # Zone service schemas (registered as entity services)
@@ -69,6 +81,56 @@ def _register_zone_entity_services(hass: HomeAssistant) -> None:
         schema=SET_ZONE_OVERRIDE_SCHEMA,
         func="async_set_zone_override",
     )
+
+
+@callback
+def _create_legacy_ctl_service_issue(hass: HomeAssistant, service_name: str) -> None:
+    """Create a repair issue for the deprecated untargeted controller service."""
+
+    ir.async_create_issue(
+        hass,
+        DOMAIN,
+        f"deprecated_{service_name}_service_call",
+        breaks_in_ha_version=BREAKS_IN_HA_VERSION,
+        is_fixable=False,
+        is_persistent=True,
+        issue_domain=DOMAIN,
+        severity=ir.IssueSeverity.WARNING,
+        translation_key="deprecated_controller_service_call",
+        translation_placeholders={"service": service_name},
+    )
+
+
+def _resolve_ctl_unique_id(
+    hass: HomeAssistant,
+    call: ServiceCall,
+    tcs_id: str,
+) -> str:
+    """Resolve the target controller unique_id from an optional entity_id.
+
+    During the deprecation window, advise users to switch to targeting the controller.
+    """
+
+    if (entity_id := call.data.get(ATTR_ENTITY_ID)) is None:
+        _create_legacy_ctl_service_issue(hass, call.service)
+        return tcs_id
+
+    entry = er.async_get(hass).async_get(entity_id)
+
+    # currently, evohome supports only 1 controller
+    if (
+        entry is None
+        or entry.domain != CLIMATE_DOMAIN
+        or entry.platform != DOMAIN
+        or entry.unique_id != tcs_id
+    ):
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="controller_only_service",
+            translation_placeholders={"service": call.service},
+        )
+
+    return tcs_id
 
 
 def _validate_set_system_mode_params(tcs: ControlSystem, data: dict[str, Any]) -> None:
@@ -131,6 +193,12 @@ def setup_service_functions(
     async def set_system_mode(call: ServiceCall) -> None:
         """Set the Evohome system mode or reset the system."""
 
+        # We can rely upon coordinator.tcs being non-None here, since:
+        # - services are registered only if coordinator.async_first_refresh() succeeds
+        # - without config flow, the controller entity will never be de-registered
+
+        assert coordinator.tcs is not None  # mypy
+
         # No additional validation for RESET_SYSTEM here, as the library method invoked
         # via that service call may be able to emulate the reset even if the system
         # doesn't support AutoWithReset natively
@@ -139,14 +207,20 @@ def setup_service_functions(
             _validate_set_system_mode_params(coordinator.tcs, call.data)
 
         payload = {
-            "unique_id": coordinator.tcs.id,
+            "unique_id": _resolve_ctl_unique_id(hass, call, coordinator.tcs.id),
             "service": call.service,
             "data": call.data,
         }
         async_dispatcher_send(hass, DOMAIN, payload)
 
     hass.services.async_register(DOMAIN, EvoService.REFRESH_SYSTEM, force_refresh)
-    hass.services.async_register(DOMAIN, EvoService.RESET_SYSTEM, set_system_mode)
+
+    hass.services.async_register(
+        DOMAIN,
+        EvoService.RESET_SYSTEM,
+        set_system_mode,
+        schema=vol.Schema(RESET_SYSTEM_SCHEMA),
+    )
 
     hass.services.async_register(
         DOMAIN,
