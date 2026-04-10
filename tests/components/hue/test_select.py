@@ -139,8 +139,8 @@ async def test_scene_select_disambiguates_duplicate_names(
     assert state is not None
     assert state.state == "Regular Test Scene (cdbf3740)"
     assert state.attributes["options"] == [
-        "Regular Test Scene (cdbf3740)",
         "Regular Test Scene (22222222)",
+        "Regular Test Scene (cdbf3740)",
     ]
 
     await hass.services.async_call(
@@ -230,8 +230,8 @@ async def test_smart_scene_select_disambiguates_duplicate_names(
     assert state is not None
     assert state.state == "Smart Test Scene (8abe5a3e)"
     assert state.attributes["options"] == [
-        "Smart Test Scene (8abe5a3e)",
         "Smart Test Scene (11111111)",
+        "Smart Test Scene (8abe5a3e)",
     ]
 
     await hass.services.async_call(

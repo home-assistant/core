@@ -32,6 +32,8 @@ def _build_scene_option_maps(
     scenes: list[HueScene | HueSmartScene],
 ) -> tuple[dict[str, str], dict[str, str]]:
     """Build bidirectional option maps for a scene collection."""
+    # Sort for a stable option order across restarts and updates.
+    scenes = sorted(scenes, key=lambda s: (s.metadata.name, s.id))
     name_counts = Counter(scene.metadata.name for scene in scenes)
     option_to_scene_id: dict[str, str] = {}
     scene_id_to_option: dict[str, str] = {}
