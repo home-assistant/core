@@ -29,6 +29,7 @@ from .coordinator import (
 from .entity import DreoEntity
 
 UNIQUE_ID_SUFFIX = "fan"
+PARALLEL_UPDATES = 0
 
 
 async def async_setup_entry(
