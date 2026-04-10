@@ -70,6 +70,12 @@ SWITCH_ENTITIES: dict[str, DeclarativeSwitchEntityDescription] = {
         translation_key="sleep_mode",
         entity_category=EntityCategory.CONFIG,
     ),
+    CharacteristicsTypes.AIRPLAY_ENABLE: DeclarativeSwitchEntityDescription(
+        key=CharacteristicsTypes.AIRPLAY_ENABLE,
+        name="AirPlay Enable",
+        translation_key="airplay_enable",
+        entity_category=EntityCategory.CONFIG,
+    ),
 }
 
 
