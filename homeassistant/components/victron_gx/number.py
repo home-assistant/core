@@ -50,8 +50,7 @@ async def async_setup_entry(
         installation_id: str,
     ) -> None:
         """Handle new number metric discovery."""
-        if TYPE_CHECKING:
-            assert isinstance(metric, VictronVenusWritableMetric)
+        assert isinstance(metric, VictronVenusWritableMetric)
         async_add_entities(
             [VictronNumber(device, metric, device_info, installation_id)]
         )
