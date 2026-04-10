@@ -2132,7 +2132,6 @@ async def test_on_create_entry_with_subentry_flow(
             return self.async_create_entry(
                 title="user_flow",
                 data={"flow": "user"},
-                next_flow=(config_entries.FlowType.CONFIG_FLOW, result["flow_id"]),
             )
 
     class TestSubentryFlowHandler(config_entries.ConfigSubentryFlow):
@@ -2254,7 +2253,6 @@ async def test_on_create_entry_with_options_flow(
             return self.async_create_entry(
                 title="user_flow",
                 data={"flow": "user"},
-                next_flow=(config_entries.FlowType.CONFIG_FLOW, result["flow_id"]),
             )
 
     class TestOptionsFlowHandler(config_entries.OptionsFlow):
