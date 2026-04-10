@@ -117,9 +117,15 @@ async def test_sensor_uptime_spike(
 
 @pytest.mark.freeze_time(datetime(2024, 9, 1, 20, tzinfo=UTC))
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
+@pytest.mark.parametrize(
+    ("side_effect", "return_values"),
+    [(RequestException("boom"), None), (None, [0, 0, 0]), (None, [])],
+)
 async def test_sensor_cpu_temp_not_supported(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
+    side_effect,
+    return_values,
     fc_class_mock,
     fh_class_mock,
     fs_class_mock,
@@ -136,7 +142,8 @@ async def test_sensor_cpu_temp_not_supported(
             "homeassistant.components.fritz.coordinator.FritzStatus", fs_class_mock
         ) as mock_status,
     ):
-        mock_status.get_cpu_temperatures.side_effect = RequestException("boom")
+        mock_status.get_cpu_temperatures.side_effect = side_effect
+        mock_status.get_cpu_temperatures.return_value = return_values
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 

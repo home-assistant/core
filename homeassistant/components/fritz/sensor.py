@@ -157,9 +157,12 @@ def _retrieve_cpu_temperature_state(
 def _is_suitable_cpu_temperature(status: FritzStatus) -> bool:
     """Return whether the CPU temperature sensor is suitable."""
     try:
-        status.get_cpu_temperatures()
-    except RequestException:
+        cpu_temp = status.get_cpu_temperatures()[0]
+    except RequestException, IndexError:
         _LOGGER.debug("CPU temperature not supported by the device")
+        return False
+    if cpu_temp == 0:
+        _LOGGER.debug("CPU temperature returns 0°C, treating as not supported")
         return False
     return True
 
