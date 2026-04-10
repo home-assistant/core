@@ -29,7 +29,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN
+from .const import AIRPURIFIER_PM25_MODELS, DOMAIN
 from .coordinator import SwitchbotConfigEntry, SwitchbotDataUpdateCoordinator
 from .entity import SwitchbotEntity
 
@@ -151,10 +151,23 @@ async def async_setup_entry(
             if sensor in SENSOR_TYPES
         )
     else:
-        sensor_entities.extend(
-            SwitchBotSensor(coordinator, sensor)
+        # Sensors from BLE broadcast data.
+        sensors: set[str] = {
+            sensor
             for sensor in coordinator.device.parsed_data
             if sensor in SENSOR_TYPES
+        }
+        # PM2.5 is absent from BLE broadcast frames and only arrives after an
+        # active BLE query (get_basic_info).  Register the entity based on device
+        # capability so it is always present; SwitchBotAirPurifierEntity.
+        # async_added_to_hass triggers the initial poll to populate the value.
+        if (
+            isinstance(coordinator.device, switchbot.SwitchbotAirPurifier)
+            and coordinator.model in AIRPURIFIER_PM25_MODELS
+        ):
+            sensors.add("pm25")
+        sensor_entities.extend(
+            SwitchBotSensor(coordinator, sensor) for sensor in sensors
         )
     sensor_entities.append(SwitchbotRSSISensor(coordinator, "rssi"))
     async_add_entities(sensor_entities)

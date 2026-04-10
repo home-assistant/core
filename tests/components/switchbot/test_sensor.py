@@ -21,6 +21,7 @@ from homeassistant.const import (
     CONF_SENSOR_TYPE,
     STATE_OFF,
     STATE_ON,
+    STATE_UNKNOWN,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
@@ -974,15 +975,16 @@ async def test_air_purifier_sensor(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
-async def test_air_purifier_no_pm25_sensor_when_initial_poll_fails(
+async def test_air_purifier_pm25_sensor_unknown_before_first_poll(
     hass: HomeAssistant,
 ) -> None:
-    """Test PM2.5 sensor is not created when the initial active poll returns no data.
+    """Test PM2.5 sensor shows unknown state when active poll has not yet returned data.
 
     PM2.5 values are not included in BLE broadcast frames.  They are only
     available after an active BLE query (get_basic_info) triggered by the fan
-    entity's async_added_to_hass.  If that initial poll fails (returns None),
-    pm25 is never added to parsed_data and the sensor entity is not created.
+    entity's async_added_to_hass.  The sensor entity is registered based on
+    device model capability so it is always present; if the initial poll fails
+    the entity state is STATE_UNKNOWN until a successful poll populates the value.
     """
     await async_setup_component(hass, DOMAIN, {})
     inject_bluetooth_service_info(hass, AIR_PURIFIER_TABLE_US_SERVICE_INFO)
@@ -1007,9 +1009,10 @@ async def test_air_purifier_no_pm25_sensor_when_initial_poll_fails(
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
-    # PM2.5 entity must NOT be created when initial poll returns no data.
+    # PM2.5 entity must exist even when the initial poll returned no data.
     pm25_sensor = hass.states.get("sensor.test_name_pm2_5")
-    assert pm25_sensor is None
+    assert pm25_sensor is not None
+    assert pm25_sensor.state == STATE_UNKNOWN
 
     # aqi_level comes from broadcast data and is always available.
     aqi_sensor = hass.states.get("sensor.test_name_air_quality_level")
