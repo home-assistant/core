@@ -120,7 +120,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: AqualinkConfigEntry) -> 
         await coordinator.async_config_entry_first_refresh()
 
     device_registry = dr.async_get(hass)
-    for system in systems:
+    for system in systems_list:
         try:
             devices = await system.get_devices()
         except AqualinkServiceException as svc_exception:
@@ -172,7 +172,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: AqualinkConfigEntry) -> 
     # Remove stale per-entity device registry entries created by older versions.
     # Previously each entity had its own device with identifier (DOMAIN, serial_name);
     # now all entities share a single system device with identifier (DOMAIN, serial).
-    valid_identifiers = {(DOMAIN, system.serial) for system in systems}
+    valid_identifiers = {(DOMAIN, system.serial) for system in systems_list}
     for device_entry in dr.async_entries_for_config_entry(
         device_registry, entry.entry_id
     ):

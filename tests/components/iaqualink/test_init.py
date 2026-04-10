@@ -83,7 +83,7 @@ async def test_system_refresh_failure_marks_entities_unavailable(
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
-    name = f"{LIGHT_DOMAIN}.{light.name}"
+    [name] = hass.states.async_entity_ids(LIGHT_DOMAIN)
     state = hass.states.get(name)
     assert state is not None
     assert state.state == STATE_ON
@@ -141,7 +141,7 @@ async def test_light_service_calls_update_entity_state(
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
-    entity_id = f"{LIGHT_DOMAIN}.{light.name}"
+    [entity_id] = hass.states.async_entity_ids(LIGHT_DOMAIN)
     state = hass.states.get(entity_id)
     assert state is not None
     assert state.state == STATE_ON
@@ -447,7 +447,7 @@ async def test_multiple_updates(
 
     assert config_entry.state is ConfigEntryState.LOADED
 
-    entity_id = f"{LIGHT_DOMAIN}.{light.name}"
+    [entity_id] = hass.states.async_entity_ids(LIGHT_DOMAIN)
 
     def assert_state(expected_state: str) -> None:
         state = hass.states.get(entity_id)
@@ -600,6 +600,8 @@ async def test_stale_device_entries_removed(
     config_entry.add_to_hass(hass)
 
     system = get_aqualink_system(client, cls=IaquaSystem)
+    system.online = True
+    system.update = AsyncMock()
     systems = {system.serial: system}
 
     light = get_aqualink_device(
