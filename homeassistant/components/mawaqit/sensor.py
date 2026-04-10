@@ -35,8 +35,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 import homeassistant.util.dt as dt_util
 
-from . import utils
-from . import MawaqitConfigEntry
+from . import MawaqitConfigEntry, utils
 from .const import PRAYER_NAMES
 from .coordinator import MosqueCoordinator, PrayerTimeCoordinator
 
