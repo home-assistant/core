@@ -83,8 +83,11 @@ async def test_system_refresh_failure_marks_entities_unavailable(
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
-    name = f"{LIGHT_DOMAIN}.{light.name}"
-    state = hass.states.get(name)
+    entity_ids = hass.states.async_entity_ids(LIGHT_DOMAIN)
+    assert len(entity_ids) == 1
+    entity_id = entity_ids[0]
+
+    state = hass.states.get(entity_id)
     assert state is not None
     assert state.state == STATE_ON
 
@@ -96,7 +99,7 @@ async def test_system_refresh_failure_marks_entities_unavailable(
 
     await _advance_coordinator_time(hass, freezer)
 
-    state = hass.states.get(name)
+    state = hass.states.get(entity_id)
     assert state is not None
     assert state.state == STATE_UNAVAILABLE
 
@@ -141,7 +144,10 @@ async def test_light_service_calls_update_entity_state(
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
-    entity_id = f"{LIGHT_DOMAIN}.{light.name}"
+    entity_ids = hass.states.async_entity_ids(LIGHT_DOMAIN)
+    assert len(entity_ids) == 1
+    entity_id = entity_ids[0]
+
     state = hass.states.get(entity_id)
     assert state is not None
     assert state.state == STATE_ON
@@ -458,7 +464,9 @@ async def test_multiple_updates(
 
     assert config_entry.state is ConfigEntryState.LOADED
 
-    entity_id = f"{LIGHT_DOMAIN}.{light.name}"
+    entity_ids = hass.states.async_entity_ids(LIGHT_DOMAIN)
+    assert len(entity_ids) == 1
+    entity_id = entity_ids[0]
 
     def assert_state(expected_state: str) -> None:
         state = hass.states.get(entity_id)
