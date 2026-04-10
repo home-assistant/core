@@ -1,7 +1,5 @@
 """The Fresh-r integration."""
 
-from __future__ import annotations
-
 import asyncio
 
 from homeassistant.const import Platform
