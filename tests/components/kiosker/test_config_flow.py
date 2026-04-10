@@ -56,7 +56,7 @@ async def test_user_flow_creates_entry(
 ) -> None:
     """Test the full user config flow creates a config entry."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": SOURCE_USER}
     )
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
