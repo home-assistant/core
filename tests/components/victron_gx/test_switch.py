@@ -75,7 +75,7 @@ async def test_victron_switch_actions(
     init_integration: tuple[VictronVenusHub, MockConfigEntry],
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """Test switch same-value skip and turn on/off service calls."""
+    """Test switch turn_on and turn_off service calls update the entity state."""
     victron_hub, mock_config_entry = init_integration
 
     await inject_message(
