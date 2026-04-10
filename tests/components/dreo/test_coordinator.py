@@ -4,6 +4,13 @@ Only tests for core logic that cannot be tested through platforms should be here
 Most coordinator functionality should be tested through platform tests (test_fan.py).
 """
 
+from homeassistant.components.dreo.const import (
+    FIELD_CONNECTED,
+    FIELD_MODE,
+    FIELD_OSCILLATE,
+    FIELD_POWER_ON,
+    FIELD_SPEED,
+)
 from homeassistant.components.dreo.coordinator import DreoFanDeviceData
 
 
@@ -11,14 +18,14 @@ async def test_speed_range_conversion_logic() -> None:
     """Test speed range conversion algorithm - core logic that spans multiple platforms."""
 
     test_cases = [
-        ({"speed": 1}, 16),
-        ({"speed": 3}, 50),
-        ({"speed": 6}, 100),
-        ({"speed": 0}, 0),
+        ({FIELD_SPEED: 1}, 16),
+        ({FIELD_SPEED: 3}, 50),
+        ({FIELD_SPEED: 6}, 100),
+        ({FIELD_SPEED: 0}, 0),
     ]
 
     for status, expected_percentage in test_cases:
-        status.update({"connected": True, "power_switch": True})
+        status.update({FIELD_CONNECTED: True, FIELD_POWER_ON: True})
         model_config = {
             "preset_modes": ["Sleep", "Auto", "Natural", "Normal"],
             "speed_range": [1, 6],
@@ -30,11 +37,11 @@ async def test_speed_range_conversion_logic() -> None:
 async def test_data_type_conversion_algorithms() -> None:
     """Test core data type conversion algorithms used across platforms."""
     status = {
-        "connected": True,
-        "power_switch": True,
-        "mode": 123,
-        "oscillate": 1,
-        "speed": 3,
+        FIELD_CONNECTED: True,
+        FIELD_POWER_ON: True,
+        FIELD_MODE: 123,
+        FIELD_OSCILLATE: 1,
+        FIELD_SPEED: 3,
     }
     model_config = {
         "preset_modes": ["Sleep", "Auto", "Natural", "Normal"],
@@ -50,7 +57,7 @@ async def test_data_type_conversion_algorithms() -> None:
 
 async def test_speed_values_list_conversion_logic() -> None:
     """Test speed conversion from explicit supported speed values."""
-    status = {"connected": True, "power_switch": True, "speed": 7}
+    status = {FIELD_CONNECTED: True, FIELD_POWER_ON: True, FIELD_SPEED: 7}
     model_config = {
         "preset_modes": ["Sleep", "Auto", "Natural", "Normal"],
         "speed_range": [1, 3, 5, 7, 9, 12],
@@ -63,7 +70,7 @@ async def test_speed_values_list_conversion_logic() -> None:
 
 async def test_data_processing_with_missing_speed_range() -> None:
     """Test data processing behavior when speed_range is not in model config."""
-    status = {"connected": True, "power_switch": True, "speed": 3}
+    status = {FIELD_CONNECTED: True, FIELD_POWER_ON: True, FIELD_SPEED: 3}
     model_config = {
         "preset_modes": ["Sleep", "Auto", "Natural", "Normal"],
     }
@@ -76,7 +83,7 @@ async def test_data_processing_with_missing_speed_range() -> None:
 async def test_process_fan_data_edge_cases() -> None:
     """Test edge cases in fan data processing."""
 
-    status = {"power_switch": False}
+    status = {FIELD_POWER_ON: False}
     model_config = {
         "preset_modes": ["Sleep", "Auto", "Natural", "Normal"],
         "speed_range": [1, 6],
@@ -89,10 +96,10 @@ async def test_process_fan_data_edge_cases() -> None:
     assert fan_data.speed_percentage is None
 
     status_zero_oscillate = {
-        "connected": True,
-        "power_switch": True,
-        "oscillate": 0,
-        "speed": 3,
+        FIELD_CONNECTED: True,
+        FIELD_POWER_ON: True,
+        FIELD_OSCILLATE: 0,
+        FIELD_SPEED: 3,
     }
 
     fan_data_zero = DreoFanDeviceData.process_fan_data(
@@ -104,7 +111,7 @@ async def test_process_fan_data_edge_cases() -> None:
 
 async def test_process_fan_data_zero_speed() -> None:
     """Test zero speed is reported correctly."""
-    status = {"connected": True, "power_switch": True, "speed": 0}
+    status = {FIELD_CONNECTED: True, FIELD_POWER_ON: True, FIELD_SPEED: 0}
     model_config = {
         "preset_modes": ["Sleep", "Auto", "Natural", "Normal"],
         "speed_range": [1, 6],

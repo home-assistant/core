@@ -6,8 +6,8 @@ from dataclasses import dataclass
 import logging
 from typing import Any
 
-from pydreo.client import DreoClient
-from pydreo.exceptions import DreoBusinessException, DreoException
+from pydreo import DreoBusinessException, DreoException
+from pydreo.cloud.client import DreoClient
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
@@ -29,7 +29,6 @@ class DreoData:
     """Dreo data."""
 
     client: DreoClient
-    devices: list[dict[str, Any]]
     coordinators: dict[str, DreoDataUpdateCoordinator]
 
 
@@ -39,7 +38,7 @@ async def async_login(
     """Log into Dreo and return client and device data."""
     client = DreoClient(username, password)
 
-    def setup_client():
+    def setup_client() -> list[dict[str, Any]]:
         client.login()
         return client.get_devices()
 
@@ -66,7 +65,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: DreoConfigEntry) 
             hass, config_entry, client, device, coordinators
         )
 
-    config_entry.runtime_data = DreoData(client, devices, coordinators)
+    config_entry.runtime_data = DreoData(client, coordinators)
 
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
     return True
@@ -97,7 +96,7 @@ async def async_setup_device_coordinator(
         return
 
     coordinator = DreoDataUpdateCoordinator(
-        hass, config_entry, client, device_id, model_config
+        hass, config_entry, client, device, model_config
     )
     await coordinator.async_refresh()
     coordinators[device_id] = coordinator

@@ -3,6 +3,13 @@
 DOMAIN = "dreo"
 FAN_DEVICE_TYPE = "fan"
 
+# state/control fields
+FIELD_CONNECTED = "connected"
+FIELD_MODE = "mode"
+FIELD_OSCILLATE = "oscillate"
+FIELD_POWER_ON = "poweron"
+FIELD_SPEED = "speed"
+
 
 # Error messages
 ERROR_TURN_ON_FAILED = "turn_on_failed"

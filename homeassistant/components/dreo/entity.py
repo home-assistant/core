@@ -1,9 +1,10 @@
 """Dreo device base entity."""
 
+import asyncio
 from functools import partial
 from typing import Any
 
-from pydreo.exceptions import (
+from pydreo import (
     DreoAccessDeniedException,
     DreoBusinessException,
     DreoException,
@@ -17,51 +18,41 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from .const import DOMAIN
 from .coordinator import DreoDataUpdateCoordinator
 
+AFTER_COMMAND_REFRESH = 1
+
 
 class DreoEntity(CoordinatorEntity[DreoDataUpdateCoordinator]):
     """Representation of a base Dreo Entity."""
 
     _attr_has_entity_name = True
 
-    def __init__(
-        self,
-        device: dict[str, Any],
-        coordinator: DreoDataUpdateCoordinator,
-        unique_id_suffix: str | None = None,
-        name: str | None = None,
-    ) -> None:
+    def __init__(self, coordinator: DreoDataUpdateCoordinator) -> None:
         """Initialize the Dreo entity."""
 
         super().__init__(coordinator)
+        device = coordinator.device
         self._client = coordinator.client
-        self._device_id = device.get("deviceSn")
-        self._model = device.get("model")
-        self._attr_name = name
-
-        if unique_id_suffix:
-            self._attr_unique_id = f"{self._device_id}_{unique_id_suffix}"
-        else:
-            self._attr_unique_id = self._device_id
+        self._device_id = coordinator.device_id
 
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, str(self._device_id))},
+            identifiers={(DOMAIN, self._device_id)},
             manufacturer="Dreo",
-            model=self._model,
+            model=device.get("model"),
             name=device.get("deviceName"),
+            serial_number=self._device_id,
             sw_version=device.get("moduleFirmwareVersion"),
             hw_version=device.get("mcuFirmwareVersion"),
         )
 
-    async def async_send_command_and_update(
+    async def async_send_command(
         self, error_translation_key: str, **kwargs: Any
     ) -> None:
-        """Call a device command and refresh the coordinator."""
+        """Call a device command and handle errors."""
 
         try:
             await self.coordinator.hass.async_add_executor_job(
                 partial(self._client.update_status, self._device_id, **kwargs)
             )
-            await self.coordinator.async_request_refresh()
         except (
             DreoException,
             DreoBusinessException,
@@ -71,3 +62,6 @@ class DreoEntity(CoordinatorEntity[DreoDataUpdateCoordinator]):
             raise HomeAssistantError(
                 translation_domain=DOMAIN, translation_key=error_translation_key
             ) from ex
+
+        await asyncio.sleep(AFTER_COMMAND_REFRESH)
+        await self.coordinator.async_refresh()

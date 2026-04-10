@@ -4,10 +4,15 @@ from __future__ import annotations
 
 from unittest.mock import MagicMock, patch
 
-from pydreo.exceptions import DreoBusinessException, DreoException
+from pydreo import DreoBusinessException, DreoException
 import pytest
 
-from homeassistant.components.dreo.const import DOMAIN
+from homeassistant.components.dreo.const import (
+    DOMAIN,
+    FIELD_CONNECTED,
+    FIELD_POWER_ON,
+    FIELD_SPEED,
+)
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
@@ -43,8 +48,8 @@ async def test_setup_success(
             }
         ]
         mock_client.get_status.return_value = {
-            "power_switch": True,
-            "connected": True,
+            FIELD_POWER_ON: True,
+            FIELD_CONNECTED: True,
         }
 
         mock_config_flow_client.return_value.login = MagicMock()
@@ -165,8 +170,8 @@ async def test_setup_with_multiple_devices(hass: HomeAssistant) -> None:
             },
         ]
         mock_client.get_status.return_value = {
-            "power_switch": True,
-            "connected": True,
+            FIELD_POWER_ON: True,
+            FIELD_CONNECTED: True,
         }
 
         assert await hass.config_entries.async_setup(mock_entry.entry_id)
@@ -214,8 +219,8 @@ async def test_unload_config_entry(
             }
         ]
         mock_client.get_status.return_value = {
-            "power_switch": True,
-            "connected": True,
+            FIELD_POWER_ON: True,
+            FIELD_CONNECTED: True,
         }
 
         mock_config_flow_client.return_value.login = MagicMock()
@@ -287,7 +292,7 @@ async def test_setup_with_invalid_device_data(hass: HomeAssistant) -> None:
             },
         ]
         mock_client.get_status.return_value = {
-            "power_switch": True,
+            "poweron": True,
             "connected": True,
         }
 
@@ -331,8 +336,8 @@ async def test_coordinator_setup_and_refresh(hass: HomeAssistant) -> None:
         ]
 
         mock_client.get_status.side_effect = [
-            {"power_switch": False, "connected": True},
-            {"power_switch": True, "connected": True, "speed": 3},
+            {FIELD_POWER_ON: False, FIELD_CONNECTED: True},
+            {FIELD_POWER_ON: True, FIELD_CONNECTED: True, FIELD_SPEED: 3},
         ]
 
         assert await hass.config_entries.async_setup(mock_entry.entry_id)
@@ -381,7 +386,7 @@ async def test_coordinator_api_none_response_handling(
         ]
 
         mock_client.get_status.side_effect = [
-            {"power_switch": True, "connected": True, "speed": 3},
+            {FIELD_POWER_ON: True, FIELD_CONNECTED: True, FIELD_SPEED: 3},
             None,
         ]
 
@@ -424,7 +429,7 @@ async def test_coordinator_api_exception_handling(hass: HomeAssistant) -> None:
         ]
 
         mock_client.get_status.side_effect = [
-            {"power_switch": True, "connected": True, "speed": 3},
+            {FIELD_POWER_ON: True, FIELD_CONNECTED: True, FIELD_SPEED: 3},
             DreoException("API Error"),
         ]
 
@@ -468,7 +473,7 @@ async def test_coordinator_generic_exception_handling(hass: HomeAssistant) -> No
         ]
 
         mock_client.get_status.side_effect = [
-            {"power_switch": True, "connected": True, "speed": 3},
+            {FIELD_POWER_ON: True, FIELD_CONNECTED: True, FIELD_SPEED: 3},
             ValueError("Generic error"),
         ]
 

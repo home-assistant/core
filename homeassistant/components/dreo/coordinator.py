@@ -5,17 +5,26 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
-from pydreo.client import DreoClient
-from pydreo.exceptions import DreoException
+from pydreo import DreoException
+from pydreo.cloud.client import DreoClient
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util.percentage import ordered_list_item_to_percentage
 
-from .const import DOMAIN
+from .const import (
+    DOMAIN,
+    FIELD_CONNECTED,
+    FIELD_MODE,
+    FIELD_OSCILLATE,
+    FIELD_POWER_ON,
+    FIELD_SPEED,
+)
+
+if TYPE_CHECKING:
+    from . import DreoConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -70,16 +79,15 @@ class DreoFanDeviceData:
         status: dict[str, Any], model_config: dict[str, Any]
     ) -> DreoFanDeviceData:
         """Process fan device specific data."""
+        fan_data = DreoFanDeviceData(is_on=status.get(FIELD_POWER_ON) is True)
 
-        fan_data = DreoFanDeviceData(is_on=status.get("power_switch") is True)
-
-        if (mode := status.get("mode")) is not None:
+        if (mode := status.get(FIELD_MODE)) is not None:
             fan_data.mode = str(mode)
 
-        if (oscillate := status.get("oscillate")) is not None:
+        if (oscillate := status.get(FIELD_OSCILLATE)) is not None:
             fan_data.oscillate = bool(oscillate)
 
-        if (speed := status.get("speed")) is not None:
+        if (speed := status.get(FIELD_SPEED)) is not None:
             try:
                 speed_value = int(float(speed))
             except TypeError, ValueError:
@@ -105,9 +113,9 @@ class DreoDataUpdateCoordinator(DataUpdateCoordinator[DreoFanDeviceData]):
     def __init__(
         self,
         hass: HomeAssistant,
-        config_entry: ConfigEntry,
+        config_entry: DreoConfigEntry,
         client: DreoClient,
-        device_id: str,
+        device: dict[str, Any],
         model_config: dict[str, Any],
     ) -> None:
         """Initialize the coordinator."""
@@ -119,7 +127,8 @@ class DreoDataUpdateCoordinator(DataUpdateCoordinator[DreoFanDeviceData]):
             update_interval=UPDATE_INTERVAL,
         )
         self.client = client
-        self.device_id = device_id
+        self.device = device
+        self.device_id = str(device["deviceSn"])
         self.model_config = model_config
 
     async def _async_update_data(self) -> DreoFanDeviceData:
@@ -137,7 +146,7 @@ class DreoDataUpdateCoordinator(DataUpdateCoordinator[DreoFanDeviceData]):
         if status is None:
             raise UpdateFailed(f"No status available for device {self.device_id}")
 
-        if status.get("connected") is not True:
+        if status.get(FIELD_CONNECTED) is not True:
             raise UpdateFailed(f"Device {self.device_id} is unavailable")
 
         return DreoFanDeviceData.process_fan_data(status, self.model_config)
