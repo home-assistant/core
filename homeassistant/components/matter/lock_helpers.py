@@ -823,7 +823,8 @@ async def get_lock_credential_status(
 ) -> GetLockCredentialStatusResult:
     """Get the status of a credential slot on the lock.
 
-    Returns typed dict with credential_exists, user_index, next_credential_index.
+    Returns typed dict with credential_exists, user_index, creator_fabric_index,
+    last_modified_fabric_index, and next_credential_index.
     Raises HomeAssistantError on failure.
     """
     lock_endpoint = _get_lock_endpoint_or_raise(node)

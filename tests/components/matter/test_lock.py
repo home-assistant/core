@@ -970,6 +970,18 @@ async def test_get_lock_users_with_fabric_indices(
                 "credentials": None,
                 "creatorFabricIndex": 3,
                 "lastModifiedFabricIndex": NullValue,
+                "nextUserIndex": 2,
+            },
+            {
+                "userIndex": 2,
+                "userName": "External User",
+                "userUniqueID": None,
+                "userStatus": 1,
+                "userType": 0,
+                "credentialRule": 0,
+                "credentials": None,
+                "creatorFabricIndex": NullValue,
+                "lastModifiedFabricIndex": 5,
                 "nextUserIndex": None,
             },
         ]
@@ -984,9 +996,11 @@ async def test_get_lock_users_with_fabric_indices(
     )
 
     users = result["lock.mock_door_lock"]["users"]
-    assert len(users) == 1
+    assert len(users) == 2
     assert users[0]["creator_fabric_index"] == 3
     assert users[0]["last_modified_fabric_index"] is None
+    assert users[1]["creator_fabric_index"] is None
+    assert users[1]["last_modified_fabric_index"] == 5
 
 
 @pytest.mark.parametrize("node_fixture", ["mock_door_lock"])
@@ -1628,18 +1642,29 @@ async def test_get_lock_credential_status_empty_slot(
 
 @pytest.mark.parametrize("node_fixture", ["mock_door_lock"])
 @pytest.mark.parametrize("attributes", [{"1/257/65532": _FEATURE_USR_PIN}])
+@pytest.mark.parametrize(
+    ("creator", "last_modified", "expected_creator", "expected_last_modified"),
+    [
+        (3, NullValue, 3, None),
+        (NullValue, 2, None, 2),
+    ],
+)
 async def test_get_lock_credential_status_with_fabric_indices(
     hass: HomeAssistant,
     matter_client: MagicMock,
     matter_node: MatterNode,
+    creator: int,
+    last_modified: int,
+    expected_creator: int | None,
+    expected_last_modified: int | None,
 ) -> None:
     """Test get_lock_credential_status returns fabric indices and normalizes NullValue."""
     matter_client.send_device_command = AsyncMock(
         return_value={
             "credentialExists": True,
             "userIndex": 2,
-            "creatorFabricIndex": 1,
-            "lastModifiedFabricIndex": NullValue,
+            "creatorFabricIndex": creator,
+            "lastModifiedFabricIndex": last_modified,
             "nextCredentialIndex": 5,
         }
     )
@@ -1659,8 +1684,8 @@ async def test_get_lock_credential_status_with_fabric_indices(
     assert result["lock.mock_door_lock"] == {
         "credential_exists": True,
         "user_index": 2,
-        "creator_fabric_index": 1,
-        "last_modified_fabric_index": None,
+        "creator_fabric_index": expected_creator,
+        "last_modified_fabric_index": expected_last_modified,
         "next_credential_index": 5,
     }
 
