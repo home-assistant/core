@@ -81,13 +81,6 @@ class KioskerSensor(KioskerEntity, SensorEntity):
 
     entity_description: KioskerSensorEntityDescription
 
-    def __init__(
-        self,
-        coordinator: KioskerDataUpdateCoordinator,
-        description: KioskerSensorEntityDescription,
-    ) -> None:
-        """Initialize the sensor entity."""
-        super().__init__(coordinator, description)
 
     @property
     def native_value(self) -> StateType | datetime | None:
