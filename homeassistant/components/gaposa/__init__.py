@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from datetime import timedelta
-import logging
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY, CONF_PASSWORD, CONF_USERNAME, Platform
@@ -11,8 +10,6 @@ from homeassistant.core import HomeAssistant
 
 from .const import UPDATE_INTERVAL
 from .coordinator import DataUpdateCoordinatorGaposa
-
-_LOGGER = logging.getLogger(__name__)
 
 PLATFORMS: list[Platform] = [Platform.COVER]
 
@@ -24,7 +21,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: GaposaConfigEntry) -> bo
     coordinator = DataUpdateCoordinatorGaposa(
         hass,
         entry,
-        _LOGGER,
         api_key=entry.data[CONF_API_KEY],
         username=entry.data[CONF_USERNAME],
         password=entry.data[CONF_PASSWORD],
