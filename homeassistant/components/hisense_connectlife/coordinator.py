@@ -45,7 +45,7 @@ class HisenseACPluginDataUpdateCoordinator(DataUpdateCoordinator):
         """Set up the coordinator."""
         try:
             # Get initial device list
-            devices = await self.api_client.async_get_devices
+            devices = await self.api_client.async_get_devices()
             if not devices:
                 _LOGGER.error("No devices found during setup")
                 return False
@@ -72,7 +72,7 @@ class HisenseACPluginDataUpdateCoordinator(DataUpdateCoordinator):
             _LOGGER.debug("Starting periodic update for all devices")
 
             # Get all device statuses in one call
-            devices = await self.api_client.async_get_devices
+            devices = await self.api_client.async_get_devices()
             if not devices:
                 _LOGGER.warning("No devices found during update")
                 raise UpdateFailed("No devices found")  # noqa: TRY301
@@ -98,7 +98,7 @@ class HisenseACPluginDataUpdateCoordinator(DataUpdateCoordinator):
             _LOGGER.debug("Manually refreshing device %s", device_id)
 
             # Get all device statuses in one call since it's more efficient
-            devices = await self.api_client.async_get_devices
+            devices = await self.api_client.async_get_devices()
             if devices and device_id in devices:
                 self._devices = devices
                 self.data = devices
@@ -114,7 +114,7 @@ class HisenseACPluginDataUpdateCoordinator(DataUpdateCoordinator):
         """Manually refresh all devices' status."""
         try:
             _LOGGER.debug("Manually refreshing all devices")
-            devices = await self.api_client.async_get_devices
+            devices = await self.api_client.async_get_devices()
             if devices:
                 self._devices = devices
                 self.data = devices

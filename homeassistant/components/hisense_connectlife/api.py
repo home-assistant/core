@@ -49,7 +49,6 @@ class HisenseApiClient:
         self._devices: dict[str, HisenseDeviceInfo] = {}
         self._websocket: ConnectLifeWebSocket | None = None
 
-    @property
     async def async_get_devices(self) -> dict[str, HisenseDeviceInfo]:
         """Get list of devices with their current status.
 
@@ -134,7 +133,7 @@ class HisenseApiClient:
         device = self._devices.get(device_id)
         if not device:
             # If device not in cache, refresh the device list once
-            devices = await self.async_get_devices
+            devices = await self.async_get_devices()
             device = devices.get(device_id)
             if not device:
                 raise HisenseApiError(f"Device not found: {device_id}")
