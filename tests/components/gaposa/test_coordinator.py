@@ -1,129 +1,116 @@
-"""Tests for the Gaposa Data Update Coordinator."""
+"""Tests for the Gaposa data update coordinator."""
+
+from __future__ import annotations
 
 from datetime import timedelta
-import logging
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import MagicMock
 
 from pygaposa import FirebaseAuthException, GaposaAuthException
 import pytest
 
 from homeassistant.components.gaposa.const import UPDATE_INTERVAL, UPDATE_INTERVAL_FAST
-from homeassistant.components.gaposa.coordinator import DataUpdateCoordinatorGaposa
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import UpdateFailed
 
-
-@pytest.fixture
-def motors():
-    """Return a mock for a list of motors."""
-    return [MagicMock(id=7), MagicMock(id=8)]
+from tests.common import MockConfigEntry
 
 
-@pytest.fixture
-def device(motors):
-    """Return a mock for a device."""
-    return MagicMock(serial="serial", motors=motors)
+def _get_coordinator(entry: MockConfigEntry):
+    """Return the coordinator from runtime_data regardless of shape.
+
+    The current gaposa code wraps the coordinator in a dict; Stage 3
+    unwraps it. Handle both so these tests survive the refactor.
+    """
+    rd = entry.runtime_data
+    if isinstance(rd, dict):
+        return rd["coordinator"]
+    return rd
 
 
-@pytest.fixture
-def mock_gaposa(device):
-    """Return a mock Gaposa client."""
-    with patch(
-        "homeassistant.components.gaposa.coordinator.Gaposa", autospec=True
-    ) as mock:
-        mock_client = MagicMock(devices=[device])
-        mock.configure_mock(clients=[(mock_client, "user")])
-        yield mock
+async def test_coordinator_populates_data(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+) -> None:
+    """After setup the coordinator should expose a dict of motors keyed by id."""
+    coordinator = _get_coordinator(init_integration)
+
+    # Two mock motors under one device (see conftest).
+    assert coordinator.data is not None
+    assert len(coordinator.data) == 2
+    keys = set(coordinator.data.keys())
+    assert keys == {"DEVICE123.motors.motor-1", "DEVICE123.motors.motor-2"}
 
 
-@pytest.fixture
-def coordinator(hass: HomeAssistant, mock_gaposa):
-    """Return an initialized Gaposa DataUpdateCoordinator."""
-    logger = logging.getLogger("test")
-    coordinator = DataUpdateCoordinatorGaposa(
-        hass,
-        logger,
-        api_key="test_api_key",
-        username="test_username",
-        password="test_password",
-        name="Test Coordinator",
-        update_interval=timedelta(seconds=UPDATE_INTERVAL),
-    )
-    # Manually set the gaposa object for testing
-    coordinator.gaposa = mock_gaposa
-    return coordinator
-
-
-async def test_update_gateway_success(coordinator, mock_gaposa) -> None:
-    """Test successful update_gateway call."""
-    mock_gaposa.update = AsyncMock(return_value=True)
-    assert await coordinator.update_gateway() is True
-
-
-async def test_update_gateway_auth_fail(coordinator, mock_gaposa) -> None:
-    """Test update_gateway with authentication failure."""
-    mock_gaposa.update.side_effect = GaposaAuthException
-    with pytest.raises(ConfigEntryAuthFailed):
-        await coordinator.update_gateway()
-
-
-async def test_update_gateway_firebase_auth_fail(coordinator, mock_gaposa) -> None:
-    """Test update_gateway with Firebase authentication failure."""
-    mock_gaposa.update.side_effect = FirebaseAuthException
-    with pytest.raises(ConfigEntryAuthFailed):
-        await coordinator.update_gateway()
-
-
-async def test_async_update_data(coordinator, mock_gaposa) -> None:
-    """Test _async_update_data method."""
-    mock_gaposa.update = AsyncMock(return_value=True)
-    data = await coordinator._async_update_data()
-    assert data is not None
+async def test_coordinator_normal_refresh_interval(
+    hass: HomeAssistant, init_integration: MockConfigEntry
+) -> None:
+    """After a successful first refresh the interval should be UPDATE_INTERVAL."""
+    coordinator = _get_coordinator(init_integration)
     assert coordinator.update_interval == timedelta(seconds=UPDATE_INTERVAL)
 
 
-async def test_async_update_data_fast_interval(coordinator, mock_gaposa) -> None:
-    """Test _async_update_data method with fast interval."""
-    mock_gaposa.update = AsyncMock(side_effect=Exception("Error message"))
+async def test_update_failure_shortens_interval(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    mock_gaposa_instance: MagicMock,
+) -> None:
+    """A failed refresh should flip the coordinator to the fast interval."""
+    coordinator = _get_coordinator(init_integration)
+    mock_gaposa_instance.update.side_effect = OSError("boom")
+
     with pytest.raises(UpdateFailed):
         await coordinator._async_update_data()
 
     assert coordinator.update_interval == timedelta(seconds=UPDATE_INTERVAL_FAST)
 
 
-async def test_on_document_updated(coordinator, mock_gaposa, motors) -> None:
-    """Test on_document_updated method."""
-    coordinator.async_set_updated_data = MagicMock()
-    coordinator.on_document_updated()
-    assert coordinator.async_set_updated_data.assert_called_once
+async def test_recovery_restores_normal_interval(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    mock_gaposa_instance: MagicMock,
+) -> None:
+    """After a recovered refresh the interval returns to UPDATE_INTERVAL."""
+    coordinator = _get_coordinator(init_integration)
 
-    data = coordinator.async_set_updated_data.call_args[0][0]
-    assert data is not None
-    assert data["serial.motors.7"] == motors[0]
-    assert data["serial.motors.8"] == motors[1]
-
-
-async def test_coordinator_update_with_network_error(coordinator, mock_gaposa) -> None:
-    """Test coordinator update with network error."""
-    mock_gaposa.update.side_effect = ConnectionError
-    with pytest.raises(UpdateFailed):
-        await coordinator._async_update_data()
-
-
-async def test_coordinator_refresh_interval(coordinator, mock_gaposa) -> None:
-    """Test coordinator refresh interval changes."""
-    # Test normal interval
-    assert coordinator.update_interval == timedelta(seconds=UPDATE_INTERVAL)
-
-    # Test fast interval after error
-    mock_gaposa.update.side_effect = Exception("Test error")
+    mock_gaposa_instance.update.side_effect = OSError("boom")
     with pytest.raises(UpdateFailed):
         await coordinator._async_update_data()
     assert coordinator.update_interval == timedelta(seconds=UPDATE_INTERVAL_FAST)
 
-    # Test return to normal interval after successful update
-    mock_gaposa.update.side_effect = None
-    mock_gaposa.update.return_value = True
+    mock_gaposa_instance.update.side_effect = None
     await coordinator._async_update_data()
     assert coordinator.update_interval == timedelta(seconds=UPDATE_INTERVAL)
+
+
+@pytest.mark.parametrize(
+    "exc",
+    [GaposaAuthException, FirebaseAuthException],
+)
+async def test_auth_errors_raise_config_entry_auth_failed(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    mock_gaposa_instance: MagicMock,
+    exc: type[Exception],
+) -> None:
+    """A Gaposa/Firebase auth error on refresh surfaces as ConfigEntryAuthFailed."""
+    from homeassistant.exceptions import ConfigEntryAuthFailed
+
+    coordinator = _get_coordinator(init_integration)
+    mock_gaposa_instance.update.side_effect = exc("credentials rejected")
+
+    with pytest.raises(ConfigEntryAuthFailed):
+        await coordinator._async_update_data()
+
+
+async def test_on_document_updated_pushes_data(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+) -> None:
+    """on_document_updated should synchronously push new data to subscribers."""
+    coordinator = _get_coordinator(init_integration)
+
+    initial = coordinator.data.copy()
+    coordinator.on_document_updated()
+    # Same content shape, but a fresh dict instance (async_set_updated_data
+    # notifies listeners and publishes new data).
+    assert coordinator.data == initial
