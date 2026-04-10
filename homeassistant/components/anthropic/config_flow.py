@@ -348,9 +348,11 @@ class ConversationSubentryFlowHandler(ConfigSubentryFlow):
             self.options.update(user_input)
 
             coordinator = self._get_entry().runtime_data
-            self.model_info = coordinator.get_model_info(self.options[CONF_CHAT_MODEL])
-            if self.model_info.display_name == self.options[CONF_CHAT_MODEL]:
-                # Couldn't find the model in the model list, try to fetch it directly
+            self.model_info, status = coordinator.get_model_info(
+                self.options[CONF_CHAT_MODEL]
+            )
+            if not status:
+                # Couldn't find the model in the cached list, try to fetch it directly
                 client = coordinator.client
                 try:
                     self.model_info = await client.models.retrieve(
