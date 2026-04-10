@@ -260,7 +260,7 @@
     },
     "clear_playlist": {
       "description": "Removes all items from a media player's playlist.",
-      "name": "Clear playlist"
+      "name": "Clear media player playlist"
     },
     "join": {
       "description": "Groups media players together for synchronous playback. Only works on supported multiroom audio systems.",
@@ -270,44 +270,44 @@
           "name": "Group members"
         }
       },
-      "name": "Join"
+      "name": "Join media players"
     },
     "media_next_track": {
-      "description": "Selects the next track.",
-      "name": "Next"
+      "description": "Selects the next track on a media player.",
+      "name": "Next track"
     },
     "media_pause": {
       "description": "Pauses playback on a media player.",
-      "name": "[%key:common::action::pause%]"
+      "name": "Pause media"
     },
     "media_play": {
       "description": "Starts playback on a media player.",
-      "name": "Play"
+      "name": "Play media"
     },
     "media_play_pause": {
       "description": "Toggles play/pause on a media player.",
-      "name": "Play/Pause"
+      "name": "Play/Pause media"
     },
     "media_previous_track": {
-      "description": "Selects the previous track.",
-      "name": "Previous"
+      "description": "Selects the previous track on a media player.",
+      "name": "Previous track"
     },
     "media_seek": {
-      "description": "Allows you to go to a different part of the media that is currently playing.",
+      "description": "Allows you to go to a different part of the media that is currently playing on a media player.",
       "fields": {
         "seek_position": {
           "description": "Target position in the currently playing media. The format is platform dependent.",
           "name": "Position"
         }
       },
-      "name": "Seek"
+      "name": "Seek media"
     },
     "media_stop": {
       "description": "Stops playback on a media player.",
-      "name": "[%key:common::action::stop%]"
+      "name": "Stop media"
     },
     "play_media": {
-      "description": "Starts playing specified media.",
+      "description": "Starts playing specified media on a media player.",
       "fields": {
         "announce": {
           "description": "If the media should be played as an announcement.",
@@ -325,14 +325,14 @@
       "name": "Play media"
     },
     "repeat_set": {
-      "description": "Sets the repeat mode.",
+      "description": "Sets the repeat mode of a media player.",
       "fields": {
         "repeat": {
           "description": "Whether the media (one or all) should be played in a loop or not.",
           "name": "Repeat mode"
         }
       },
-      "name": "Set repeat"
+      "name": "Set media player repeat"
     },
     "search_media": {
       "description": "Searches the available media.",
@@ -357,14 +357,14 @@
       "name": "Search media"
     },
     "select_sound_mode": {
-      "description": "Selects a specific sound mode.",
+      "description": "Selects a specific sound mode of a media player.",
       "fields": {
         "sound_mode": {
           "description": "Name of the sound mode to switch to.",
           "name": "Sound mode"
         }
       },
-      "name": "Select sound mode"
+      "name": "Select media player sound mode"
     },
     "select_source": {
       "description": "Sends a media player the command to change the input source.",
@@ -374,37 +374,37 @@
           "name": "Source"
         }
       },
-      "name": "Select source"
+      "name": "Select media player source"
     },
     "shuffle_set": {
-      "description": "Enables or disables the shuffle mode.",
+      "description": "Enables or disables the shuffle mode of a media player.",
       "fields": {
         "shuffle": {
           "description": "Whether the media should be played in randomized order or not.",
           "name": "Shuffle mode"
         }
       },
-      "name": "Set shuffle"
+      "name": "Set media player shuffle"
     },
     "toggle": {
       "description": "Toggles a media player on/off.",
-      "name": "[%key:common::action::toggle%]"
+      "name": "Toggle media player"
     },
     "turn_off": {
       "description": "Turns off the power of a media player.",
-      "name": "[%key:common::action::turn_off%]"
+      "name": "Turn off media player"
     },
     "turn_on": {
       "description": "Turns on the power of a media player.",
-      "name": "[%key:common::action::turn_on%]"
+      "name": "Turn on media player"
     },
     "unjoin": {
       "description": "Removes a media player from a group. Only works on platforms which support player groups.",
-      "name": "Unjoin"
+      "name": "Unjoin media player"
     },
     "volume_down": {
       "description": "Turns down the volume of a media player.",
-      "name": "Turn down volume"
+      "name": "Turn down media player volume"
     },
     "volume_mute": {
       "description": "Mutes or unmutes a media player.",
@@ -414,7 +414,7 @@
           "name": "Muted"
         }
       },
-      "name": "Mute/unmute volume"
+      "name": "Mute/unmute media player"
     },
     "volume_set": {
       "description": "Sets the volume level of a media player.",
@@ -424,11 +424,11 @@
           "name": "Level"
         }
       },
-      "name": "Set volume"
+      "name": "Set media player volume"
     },
     "volume_up": {
       "description": "Turns up the volume of a media player.",
-      "name": "Turn up volume"
+      "name": "Turn up media player volume"
     }
   },
   "title": "Media player",

@@ -55,6 +55,9 @@
     "auth_error": {
       "message": "Authentication failed, please reauthenticate"
     },
+    "setup_connection_error": {
+      "message": "Failed to connect to the Actron Air API"
+    },
     "update_error": {
       "message": "An error occurred while retrieving data from the Actron Air API: {error}"
     }
