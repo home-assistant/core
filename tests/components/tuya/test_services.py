@@ -73,7 +73,7 @@ async def test_get_feeder_meal_plan(
         blocking=True,
         return_response=True,
     )
-    assert result["data"] == snapshot
+    assert result == snapshot
 
 
 @pytest.mark.parametrize("mock_device_code", ["cwwsq_wfkzyy0evslzsmoi"])
