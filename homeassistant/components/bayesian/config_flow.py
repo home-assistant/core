@@ -520,11 +520,7 @@ class BayesianConfigFlowHandler(SchemaConfigFlowHandler, domain=DOMAIN):
         ]
 
         self.async_config_flow_finished(data)
-        return super().async_create_entry(
-            data=data,
-            subentries=subentries,
-            **kwargs,
-        )
+        return super().async_create_entry(data=data, subentries=subentries, **kwargs)
 
     async def async_on_create_entry(self, result: ConfigFlowResult) -> ConfigFlowResult:
         """Create subentry flow after creating the main entry."""
