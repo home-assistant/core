@@ -39,9 +39,7 @@ class KioskerEntity(CoordinatorEntity[KioskerDataUpdateCoordinator]):
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, device_id)},
             name=(f"Kiosker {device_id_short_display}"),
-            manufacturer="Top North",
-            model=app_name,
-            sw_version=app_version,
+            sw_version=(f"{app_name} {app_version}"),
             hw_version=(
                 None
                 if model is None
