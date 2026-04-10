@@ -59,7 +59,7 @@ class VizioRemote(CoordinatorEntity[VizioDeviceCoordinator], RemoteEntity):
         return self.coordinator.data.is_on
 
     def _resolve_command(self, command: str) -> str:
-        """Resolve an uppercased command string to a pyvizio key name."""
+        """Resolve an lowercased command string to a pyvizio key name."""
         if resolved := self._command_map.get(command):
             return resolved
         raise ServiceValidationError(
