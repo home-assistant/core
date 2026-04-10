@@ -587,6 +587,8 @@ async def test_get_lock_users_service(
                 "user_type": "unrestricted_user",
                 "credential_rule": "single",
                 "credentials": [],
+                "creator_fabric_index": None,
+                "last_modified_fabric_index": None,
                 "next_user_index": None,
             }
         ],
@@ -745,6 +747,8 @@ async def test_get_lock_users_iterates_with_next_index(
                 "user_type": "unrestricted_user",
                 "credential_rule": "single",
                 "credentials": [],
+                "creator_fabric_index": None,
+                "last_modified_fabric_index": None,
                 "next_user_index": 5,
             },
             {
@@ -755,6 +759,8 @@ async def test_get_lock_users_iterates_with_next_index(
                 "user_type": "unrestricted_user",
                 "credential_rule": "single",
                 "credentials": [],
+                "creator_fabric_index": None,
+                "last_modified_fabric_index": None,
                 "next_user_index": None,
             },
         ],
@@ -889,6 +895,8 @@ async def test_get_lock_users_with_credentials(
                     {"type": "pin", "index": 1},
                     {"type": "pin", "index": 2},
                 ],
+                "creator_fabric_index": None,
+                "last_modified_fabric_index": None,
                 "next_user_index": None,
             }
         ],
@@ -940,6 +948,59 @@ async def test_get_lock_users_with_nullvalue_credentials(
     assert user["user_name"] == "User No Creds"
     assert user["user_unique_id"] == 100
     assert user["credentials"] == []
+
+
+@pytest.mark.parametrize("node_fixture", ["mock_door_lock"])
+@pytest.mark.parametrize("attributes", [{"1/257/65532": _FEATURE_USR_PIN}])
+async def test_get_lock_users_with_fabric_indices(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test get_lock_users returns fabric indices and normalizes NullValue."""
+    matter_client.send_device_command = AsyncMock(
+        side_effect=[
+            {
+                "userIndex": 1,
+                "userName": "HA User",
+                "userUniqueID": None,
+                "userStatus": 1,
+                "userType": 0,
+                "credentialRule": 0,
+                "credentials": None,
+                "creatorFabricIndex": 3,
+                "lastModifiedFabricIndex": NullValue,
+                "nextUserIndex": 2,
+            },
+            {
+                "userIndex": 2,
+                "userName": "External User",
+                "userUniqueID": None,
+                "userStatus": 1,
+                "userType": 0,
+                "credentialRule": 0,
+                "credentials": None,
+                "creatorFabricIndex": NullValue,
+                "lastModifiedFabricIndex": 5,
+                "nextUserIndex": None,
+            },
+        ]
+    )
+
+    result = await hass.services.async_call(
+        DOMAIN,
+        "get_lock_users",
+        {ATTR_ENTITY_ID: "lock.mock_door_lock"},
+        blocking=True,
+        return_response=True,
+    )
+
+    users = result["lock.mock_door_lock"]["users"]
+    assert len(users) == 2
+    assert users[0]["creator_fabric_index"] == 3
+    assert users[0]["last_modified_fabric_index"] is None
+    assert users[1]["creator_fabric_index"] is None
+    assert users[1]["last_modified_fabric_index"] == 5
 
 
 @pytest.mark.parametrize("node_fixture", ["mock_door_lock"])
@@ -1524,6 +1585,8 @@ async def test_get_lock_credential_status(
     assert result["lock.mock_door_lock"] == {
         "credential_exists": True,
         "user_index": 2,
+        "creator_fabric_index": None,
+        "last_modified_fabric_index": None,
         "next_credential_index": 3,
     }
 
@@ -1571,7 +1634,59 @@ async def test_get_lock_credential_status_empty_slot(
     assert result["lock.mock_door_lock"] == {
         "credential_exists": False,
         "user_index": None,
+        "creator_fabric_index": None,
+        "last_modified_fabric_index": None,
         "next_credential_index": None,
+    }
+
+
+@pytest.mark.parametrize("node_fixture", ["mock_door_lock"])
+@pytest.mark.parametrize("attributes", [{"1/257/65532": _FEATURE_USR_PIN}])
+@pytest.mark.parametrize(
+    ("creator", "last_modified", "expected_creator", "expected_last_modified"),
+    [
+        (3, NullValue, 3, None),
+        (NullValue, 2, None, 2),
+    ],
+)
+async def test_get_lock_credential_status_with_fabric_indices(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+    creator: int,
+    last_modified: int,
+    expected_creator: int | None,
+    expected_last_modified: int | None,
+) -> None:
+    """Test get_lock_credential_status returns fabric indices and normalizes NullValue."""
+    matter_client.send_device_command = AsyncMock(
+        return_value={
+            "credentialExists": True,
+            "userIndex": 2,
+            "creatorFabricIndex": creator,
+            "lastModifiedFabricIndex": last_modified,
+            "nextCredentialIndex": 5,
+        }
+    )
+
+    result = await hass.services.async_call(
+        DOMAIN,
+        "get_lock_credential_status",
+        {
+            ATTR_ENTITY_ID: "lock.mock_door_lock",
+            ATTR_CREDENTIAL_TYPE: "pin",
+            ATTR_CREDENTIAL_INDEX: 1,
+        },
+        blocking=True,
+        return_response=True,
+    )
+
+    assert result["lock.mock_door_lock"] == {
+        "credential_exists": True,
+        "user_index": 2,
+        "creator_fabric_index": expected_creator,
+        "last_modified_fabric_index": expected_last_modified,
+        "next_credential_index": 5,
     }
 
 
