@@ -40,23 +40,23 @@
       "ventilation_state": {
         "name": "Ventilation state",
         "state": {
-          "aut1": "Automatic level 1",
-          "aut2": "Automatic level 2",
-          "aut3": "Automatic level 3",
+          "aut1": "Automatic low speed",
+          "aut2": "Automatic medium speed",
+          "aut3": "Automatic high speed",
           "auto": "Automatic",
-          "cnt1": "Level 1",
-          "cnt2": "Level 2",
-          "cnt3": "Level 3",
-          "empt": "Empty",
-          "man1": "Manual low",
-          "man1x2": "Manual low (speed 2)",
-          "man1x3": "Manual low (speed 3)",
-          "man2": "Manual medium",
-          "man2x2": "Manual medium (speed 2)",
-          "man2x3": "Manual medium (speed 3)",
-          "man3": "Manual high",
-          "man3x2": "Manual high (speed 2)",
-          "man3x3": "Manual high (speed 3)"
+          "cnt1": "Continuous low speed",
+          "cnt2": "Continuous medium speed",
+          "cnt3": "Continuous high speed",
+          "empt": "Not in use",
+          "man1": "Manual low speed (15 min)",
+          "man1x2": "Manual low speed (30 min)",
+          "man1x3": "Manual low speed (45 min)",
+          "man2": "Manual medium speed (15 min)",
+          "man2x2": "Manual medium speed (30 min)",
+          "man2x3": "Manual medium speed (45 min)",
+          "man3": "Manual high speed (15 min)",
+          "man3x2": "Manual high speed (30 min)",
+          "man3x3": "Manual high speed (45 min)"
         }
       }
     }
