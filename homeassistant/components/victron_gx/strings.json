@@ -601,8 +601,7 @@
         "name": "DC bus mid voltage"
       },
       "battery_mid_voltage_deviation": {
-        "name": "DC bus mid voltage deviation",
-        "unit_of_measurement": "%"
+        "name": "DC bus mid voltage deviation"
       },
       "battery_min_cell_temperature": {
         "name": "Minimum cell temperature"
@@ -642,8 +641,7 @@
         "name": "Charge"
       },
       "battery_soh": {
-        "name": "State of health",
-        "unit_of_measurement": "%"
+        "name": "State of health"
       },
       "battery_temperature": {
         "name": "Temperature"
@@ -1634,8 +1632,7 @@
         }
       },
       "tank_level": {
-        "name": "Level",
-        "unit_of_measurement": "%"
+        "name": "Level"
       },
       "tank_remaining": {
         "name": "Remaining"
@@ -1647,8 +1644,7 @@
         "name": "Sensor battery voltage"
       },
       "temperature_humidity": {
-        "name": "Humidity",
-        "unit_of_measurement": "%"
+        "name": "Humidity"
       },
       "temperature_pressure": {
         "name": "Pressure",
