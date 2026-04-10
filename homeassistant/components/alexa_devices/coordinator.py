@@ -21,7 +21,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 from .const import _LOGGER, CONF_LOGIN_DATA, DOMAIN
 
-SCAN_INTERVAL = 30
+SCAN_INTERVAL = 300
 
 type AmazonConfigEntry = ConfigEntry[AmazonDevicesCoordinator]
 
@@ -45,7 +45,7 @@ class AmazonDevicesCoordinator(DataUpdateCoordinator[dict[str, AmazonDevice]]):
             config_entry=entry,
             update_interval=timedelta(seconds=SCAN_INTERVAL),
             request_refresh_debouncer=Debouncer(
-                hass, _LOGGER, cooldown=30, immediate=False
+                hass, _LOGGER, cooldown=SCAN_INTERVAL, immediate=False
             ),
         )
         self.api = AmazonEchoApi(
@@ -54,12 +54,21 @@ class AmazonDevicesCoordinator(DataUpdateCoordinator[dict[str, AmazonDevice]]):
             entry.data[CONF_PASSWORD],
             entry.data[CONF_LOGIN_DATA],
         )
-        self.previous_devices: set[str] = set()
+        device_registry = dr.async_get(hass)
+        self.previous_devices: set[str] = {
+            identifier
+            for device in device_registry.devices.get_devices_for_config_entry_id(
+                entry.entry_id
+            )
+            if device.entry_type != dr.DeviceEntryType.SERVICE
+            for identifier_domain, identifier in device.identifiers
+            if identifier_domain == DOMAIN
+        }
 
     async def _async_update_data(self) -> dict[str, AmazonDevice]:
         """Update device data."""
         try:
-            await self.api.login_mode_stored_data()
+            await self.api.login.login_mode_stored_data()
             data = await self.api.get_devices_data()
         except CannotConnect as err:
             raise UpdateFailed(

@@ -1,0 +1,86 @@
+{
+  "locationId": "7647411",
+  "gateways": [
+    {
+      "gatewayId": "7539089",
+      "temperatureControlSystems": [
+        {
+          "systemId": "10090510",
+          "zones": [
+            {
+              "zoneId": "10090505",
+              "temperatureStatus": {
+                "temperature": 15.5,
+                "isAvailable": true
+              },
+              "activeFaults": [],
+              "setpointStatus": {
+                "targetHeatTemperature": 5.0,
+                "setpointMode": "FollowSchedule"
+              },
+              "name": "Ba******"
+            },
+            {
+              "zoneId": "10090506",
+              "temperatureStatus": {
+                "temperature": 18.0,
+                "isAvailable": true
+              },
+              "activeFaults": [],
+              "setpointStatus": {
+                "targetHeatTemperature": 18.0,
+                "setpointMode": "FollowSchedule"
+              },
+              "name": "Sl********"
+            },
+            {
+              "zoneId": "10090507",
+              "temperatureStatus": {
+                "temperature": 16.0,
+                "isAvailable": true
+              },
+              "activeFaults": [],
+              "setpointStatus": {
+                "targetHeatTemperature": 15.0,
+                "setpointMode": "FollowSchedule"
+              },
+              "name": "Ka*********"
+            },
+            {
+              "zoneId": "10090508",
+              "temperatureStatus": {
+                "temperature": 17.0,
+                "isAvailable": true
+              },
+              "activeFaults": [],
+              "setpointStatus": {
+                "targetHeatTemperature": 15.0,
+                "setpointMode": "FollowSchedule"
+              },
+              "name": "Ka*****"
+            },
+            {
+              "zoneId": "10090509",
+              "temperatureStatus": {
+                "temperature": 19.0,
+                "isAvailable": true
+              },
+              "activeFaults": [],
+              "setpointStatus": {
+                "targetHeatTemperature": 19.0,
+                "setpointMode": "FollowSchedule"
+              },
+              "name": "Wo*******"
+            }
+          ],
+          "activeFaults": [],
+          "systemModeStatus": {
+            "mode": "Auto",
+            "isPermanent": true
+          }
+        }
+      ],
+      "activeFaults": []
+    }
+  ]
+}

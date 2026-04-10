@@ -18,7 +18,11 @@ from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
-from .coordinator import ConsoleData, XboxUpdateCoordinator
+from .coordinator import (
+    ConsoleData,
+    XboxConsoleStatusCoordinator,
+    XboxPresenceCoordinator,
+)
 
 MAP_MODEL = {
     ConsoleType.XboxOne: "Xbox One",
@@ -41,7 +45,7 @@ class XboxBaseEntityDescription(EntityDescription):
     deprecated: bool | None = None
 
 
-class XboxBaseEntity(CoordinatorEntity[XboxUpdateCoordinator]):
+class XboxBaseEntity(CoordinatorEntity[XboxPresenceCoordinator]):
     """Base Sensor for the Xbox Integration."""
 
     _attr_has_entity_name = True
@@ -49,7 +53,7 @@ class XboxBaseEntity(CoordinatorEntity[XboxUpdateCoordinator]):
 
     def __init__(
         self,
-        coordinator: XboxUpdateCoordinator,
+        coordinator: XboxPresenceCoordinator,
         xuid: str,
         entity_description: XboxBaseEntityDescription,
     ) -> None:
@@ -84,7 +88,8 @@ class XboxBaseEntity(CoordinatorEntity[XboxUpdateCoordinator]):
 
         return (
             entity_picture
-            if (fn := self.entity_description.entity_picture_fn) is not None
+            if self.available
+            and (fn := self.entity_description.entity_picture_fn) is not None
             and (entity_picture := fn(self.data, self.title_info)) is not None
             else super().entity_picture
         )
@@ -98,8 +103,14 @@ class XboxBaseEntity(CoordinatorEntity[XboxUpdateCoordinator]):
             else super().extra_state_attributes
         )
 
+    @property
+    def available(self) -> bool:
+        """Return True if entity is available."""
 
-class XboxConsoleBaseEntity(CoordinatorEntity[XboxUpdateCoordinator]):
+        return super().available and self.xuid in self.coordinator.data.presence
+
+
+class XboxConsoleBaseEntity(CoordinatorEntity[XboxConsoleStatusCoordinator]):
     """Console base entity for the Xbox integration."""
 
     _attr_has_entity_name = True
@@ -107,11 +118,11 @@ class XboxConsoleBaseEntity(CoordinatorEntity[XboxUpdateCoordinator]):
     def __init__(
         self,
         console: SmartglassConsole,
-        coordinator: XboxUpdateCoordinator,
+        coordinator: XboxConsoleStatusCoordinator,
     ) -> None:
         """Initialize the Xbox Console entity."""
 
-        super().__init__(coordinator)
+        super().__init__(coordinator, console)
         self.client = coordinator.client
         self._console = console
 
@@ -128,7 +139,12 @@ class XboxConsoleBaseEntity(CoordinatorEntity[XboxUpdateCoordinator]):
     @property
     def data(self) -> ConsoleData:
         """Return coordinator data for this console."""
-        return self.coordinator.data.consoles[self._console.id]
+        return self.coordinator.data[self._console.id]
+
+    @property
+    def available(self) -> bool:
+        """Return if entity is available."""
+        return self.coordinator.data.get(self._console.id) is not None
 
 
 def check_deprecated_entity(
@@ -151,6 +167,15 @@ def check_deprecated_entity(
     return False
 
 
+def to_https(image_url: str) -> str:
+    """Convert image URLs to secure URLs."""
+
+    url = URL(image_url)
+    if url.host == "images-eds.xboxlive.com":
+        url = url.with_host("images-eds-ssl.xboxlive.com")
+    return str(url.with_scheme("https"))
+
+
 def profile_pic(person: Person, _: Title | None = None) -> str | None:
     """Return the gamer pic."""
 
@@ -160,9 +185,4 @@ def profile_pic(person: Person, _: Title | None = None) -> str | None:
     # to point to the correct image, with the correct domain and certificate.
     # We need to also remove the 'mode=Padding' query because with it,
     # it results in an error 400.
-    url = URL(person.display_pic_raw)
-    if url.host == "images-eds.xboxlive.com":
-        url = url.with_host("images-eds-ssl.xboxlive.com").with_scheme("https")
-    query = dict(url.query)
-    query.pop("mode", None)
-    return str(url.with_query(query))
+    return str(URL(to_https(person.display_pic_raw)).without_query_params("mode"))

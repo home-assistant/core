@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+from typing import Any
 
 import voluptuous as vol
 from webexpythonsdk import ApiError, WebexAPI, exceptions
@@ -51,7 +52,7 @@ class CiscoWebexNotificationService(BaseNotificationService):
         self.room = room
         self.client = client
 
-    def send_message(self, message="", **kwargs):
+    def send_message(self, message: str = "", **kwargs: Any) -> None:
         """Send a message to a user."""
 
         title = ""

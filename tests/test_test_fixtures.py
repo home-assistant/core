@@ -1,6 +1,6 @@
 """Test test fixture configuration."""
 
-from collections.abc import Generator
+from collections.abc import Callable, Generator
 from http import HTTPStatus
 import pathlib
 import socket
@@ -16,14 +16,20 @@ from homeassistant.helpers.http import HomeAssistantView
 from homeassistant.setup import async_setup_component
 
 from .common import MockModule, mock_integration
-from .conftest import evict_faked_translations
+from .conftest import HASocketBlockedError, evict_faked_translations
 from .typing import ClientSessionGenerator
 
 
 def test_sockets_disabled() -> None:
     """Test we can't open sockets."""
+    assert not HASocketBlockedError.instances
     with pytest.raises(pytest_socket.SocketBlockedError):
         socket.socket()
+    assert len(HASocketBlockedError.instances) == 1
+
+    # Clear the instances to not fail the test when exiting the
+    # verify_cleanup fixture.
+    HASocketBlockedError.instances.clear()
 
 
 @pytest.mark.usefixtures("socket_enabled")
@@ -84,20 +90,42 @@ async def test_evict_faked_translations_assumptions(hass: HomeAssistant) -> None
     If this test fails, the evict_faked_translations may need to be updated.
     """
     integration = mock_integration(hass, MockModule("test"), built_in=True)
-    assert integration.file_path == pathlib.Path("")
+    assert integration.file_path == pathlib.Path("homeassistant/components/test")
+
+    integration = mock_integration(hass, MockModule("test"), built_in=False)
+    assert integration.file_path == pathlib.Path("custom_components/test")
 
 
-async def test_evict_faked_translations(hass: HomeAssistant, translations_once) -> None:
-    """Test the evict_faked_translations fixture."""
+@pytest.mark.parametrize(
+    "prepare_integration",
+    [
+        # Fake integration backed by a module
+        lambda hass: mock_integration(hass, MockModule("test"), built_in=True),
+        # fake integration not backed by a module
+        lambda hass: None,
+    ],
+)
+async def test_evict_faked_translations(
+    hass: HomeAssistant,
+    translations_once,
+    prepare_integration: Callable[[HomeAssistant], None],
+) -> None:
+    """Test the evict_faked_translations fixture.
+
+    In this test, we load translations for a fake integration, then ensure that
+    after the fixture is torn down, only the real integration remains in the
+    translations cache.
+    """
     cache: translation._TranslationsCacheData = translations_once.kwargs["return_value"]
     fake_domain = "test"
     real_domain = "homeassistant"
 
-    # Evict the real domain from the cache in case it's been loaded before
-    cache.loaded["en"].discard(real_domain)
+    if "en" in cache.loaded:
+        # Evict the real domain from the cache in case it's been loaded before
+        cache.loaded["en"].discard(real_domain)
 
-    assert fake_domain not in cache.loaded["en"]
-    assert real_domain not in cache.loaded["en"]
+        assert fake_domain not in cache.loaded["en"]
+        assert real_domain not in cache.loaded["en"]
 
     # The evict_faked_translations fixture has module scope, so we set it up and
     # tear it down manually
@@ -107,7 +135,8 @@ async def test_evict_faked_translations(hass: HomeAssistant, translations_once) 
     # Set up the evict_faked_translations fixture
     next(gen)
 
-    mock_integration(hass, MockModule(fake_domain), built_in=True)
+    # Try loading translations for mock integration
+    prepare_integration(hass)
     await translation.async_load_integrations(hass, {fake_domain, real_domain})
     assert fake_domain in cache.loaded["en"]
     assert real_domain in cache.loaded["en"]

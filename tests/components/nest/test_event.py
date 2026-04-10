@@ -80,7 +80,7 @@ def create_event_messages(
                 "name": DEVICE_ID,
                 "events": events,
             },
-            **(parameters if parameters else {}),
+            **(parameters or {}),
         },
     )
 

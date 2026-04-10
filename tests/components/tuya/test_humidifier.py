@@ -26,7 +26,13 @@ from . import initialize_entry
 from tests.common import MockConfigEntry, snapshot_platform
 
 
-@patch("homeassistant.components.tuya.PLATFORMS", [Platform.HUMIDIFIER])
+@pytest.fixture(autouse=True)
+def platform_autouse():
+    """Platform fixture."""
+    with patch("homeassistant.components.tuya.PLATFORMS", [Platform.HUMIDIFIER]):
+        yield
+
+
 async def test_platform_setup_and_discovery(
     hass: HomeAssistant,
     mock_manager: Manager,
@@ -66,7 +72,7 @@ async def test_action(
     service_data: dict[str, Any],
     expected_command: dict[str, Any],
 ) -> None:
-    """Test service action."""
+    """Test humidifier action."""
     entity_id = "humidifier.dehumidifier"
     await initialize_entry(hass, mock_manager, mock_config_entry, mock_device)
 

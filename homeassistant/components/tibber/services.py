@@ -4,8 +4,10 @@ from __future__ import annotations
 
 import datetime as dt
 from datetime import datetime
-from typing import Any, Final
+from typing import TYPE_CHECKING, Any, Final
 
+import aiohttp
+import tibber
 import voluptuous as vol
 
 from homeassistant.core import (
@@ -15,10 +17,13 @@ from homeassistant.core import (
     SupportsResponse,
     callback,
 )
-from homeassistant.exceptions import ServiceValidationError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN
+
+if TYPE_CHECKING:
+    from .const import TibberConfigEntry
 
 PRICE_SERVICE_NAME = "get_prices"
 ATTR_START: Final = "start"
@@ -33,7 +38,13 @@ SERVICE_SCHEMA: Final = vol.Schema(
 
 
 async def __get_prices(call: ServiceCall) -> ServiceResponse:
-    tibber_connection = call.hass.data[DOMAIN]
+    entries: list[TibberConfigEntry] = call.hass.config_entries.async_entries(DOMAIN)
+    if not entries:
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="no_config_entry",
+        )
+    tibber_connection = await entries[0].runtime_data.async_get_client(call.hass)
 
     start = __get_date(call.data.get(ATTR_START), "start")
     end = __get_date(call.data.get(ATTR_END), "end")
@@ -43,7 +54,52 @@ async def __get_prices(call: ServiceCall) -> ServiceResponse:
 
     tibber_prices: dict[str, Any] = {}
 
+    now = dt_util.now()
+    today_start = dt_util.start_of_local_day(now)
+    today_end = today_start + dt.timedelta(days=1)
+    tomorrow_end = today_start + dt.timedelta(days=2)
+
+    def _has_valid_prices(home: tibber.TibberHome) -> bool:
+        """Return True if the home has valid prices."""
+        for price_start in home.price_total:
+            start_dt = dt_util.as_local(datetime.fromisoformat(str(price_start)))
+
+            if now.hour >= 13:
+                if today_end <= start_dt < tomorrow_end:
+                    return True
+            elif today_start <= start_dt < today_end:
+                return True
+        return False
+
     for tibber_home in tibber_connection.get_homes(only_active=True):
+        if not _has_valid_prices(tibber_home):
+            try:
+                await tibber_home.update_info_and_price_info()
+            except TimeoutError as err:
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN,
+                    translation_key="get_prices_timeout",
+                ) from err
+            except tibber.InvalidLoginError as err:
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN,
+                    translation_key="get_prices_invalid_login",
+                ) from err
+            except (
+                tibber.RetryableHttpExceptionError,
+                tibber.FatalHttpExceptionError,
+            ) as err:
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN,
+                    translation_key="get_prices_communication_failed",
+                    translation_placeholders={"detail": str(err.status)},
+                ) from err
+            except aiohttp.ClientError as err:
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN,
+                    translation_key="get_prices_communication_failed",
+                    translation_placeholders={"detail": str(err)},
+                ) from err
         home_nickname = tibber_home.name
 
         price_data = [
@@ -57,7 +113,7 @@ async def __get_prices(call: ServiceCall) -> ServiceResponse:
         selected_data = [
             price
             for price in price_data
-            if start <= dt.datetime.fromisoformat(price["start_time"]) < end
+            if start <= dt.datetime.fromisoformat(str(price["start_time"])) < end
         ]
         tibber_prices[home_nickname] = selected_data
 

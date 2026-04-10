@@ -6,13 +6,15 @@ from datetime import timedelta
 import logging
 from typing import Any
 
-from b2sdk.v2 import B2Api, Bucket, InMemoryAccountInfo, exception
+from b2sdk.v2 import Bucket, exception
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.event import async_track_time_interval
 
+# Import from b2_client to ensure timeout configuration is applied
+from .b2_client import B2Api, InMemoryAccountInfo
 from .const import (
     BACKBLAZE_REALM,
     CONF_APPLICATION_KEY,
@@ -72,7 +74,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: BackblazeConfigEntry) ->
             translation_domain=DOMAIN,
             translation_key="invalid_bucket_name",
         ) from err
-    except exception.ConnectionReset as err:
+    except exception.BadRequest as err:
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="bad_request",
+            translation_placeholders={"error_message": str(err)},
+        ) from err
+    except (
+        exception.B2ConnectionError,
+        exception.B2RequestTimeout,
+        exception.ConnectionReset,
+    ) as err:
         raise ConfigEntryNotReady(
             translation_domain=DOMAIN,
             translation_key="cannot_connect",

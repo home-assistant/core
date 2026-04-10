@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_switches[switch.12345_evening-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -20,6 +21,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Evening',
     'options': dict({
     }),
     'original_device_class': None,
@@ -75,8 +77,9 @@
 # ---
 # name: test_switches[switch.12345_evening_enabled-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -94,6 +97,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Evening enabled',
     'options': dict({
     }),
     'original_device_class': None,
@@ -125,8 +129,9 @@
 # ---
 # name: test_switches[switch.12345_extra_water_on_hot_days-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -144,6 +149,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Extra water on hot days',
     'options': dict({
     }),
     'original_device_class': None,
@@ -174,8 +180,9 @@
 # ---
 # name: test_switches[switch.12345_flower_box-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -193,6 +200,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Flower box',
     'options': dict({
     }),
     'original_device_class': None,
@@ -237,8 +245,9 @@
 # ---
 # name: test_switches[switch.12345_flower_box_enabled-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -256,6 +265,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Flower box enabled',
     'options': dict({
     }),
     'original_device_class': None,
@@ -287,8 +297,9 @@
 # ---
 # name: test_switches[switch.12345_freeze_protection-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -306,6 +317,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Freeze protection',
     'options': dict({
     }),
     'original_device_class': None,
@@ -336,8 +348,9 @@
 # ---
 # name: test_switches[switch.12345_landscaping-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -355,6 +368,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Landscaping',
     'options': dict({
     }),
     'original_device_class': None,
@@ -399,8 +413,9 @@
 # ---
 # name: test_switches[switch.12345_landscaping_enabled-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -418,6 +433,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Landscaping enabled',
     'options': dict({
     }),
     'original_device_class': None,
@@ -449,8 +465,9 @@
 # ---
 # name: test_switches[switch.12345_morning-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -468,6 +485,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Morning',
     'options': dict({
     }),
     'original_device_class': None,
@@ -523,8 +541,9 @@
 # ---
 # name: test_switches[switch.12345_morning_enabled-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -542,6 +561,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Morning enabled',
     'options': dict({
     }),
     'original_device_class': None,
@@ -573,8 +593,9 @@
 # ---
 # name: test_switches[switch.12345_test-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -592,6 +613,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Test',
     'options': dict({
     }),
     'original_device_class': None,
@@ -636,8 +658,9 @@
 # ---
 # name: test_switches[switch.12345_test_enabled-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -655,6 +678,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Test enabled',
     'options': dict({
     }),
     'original_device_class': None,
@@ -686,8 +710,9 @@
 # ---
 # name: test_switches[switch.12345_zone_10-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -705,6 +730,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Zone 10',
     'options': dict({
     }),
     'original_device_class': None,
@@ -749,8 +775,9 @@
 # ---
 # name: test_switches[switch.12345_zone_10_enabled-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -768,6 +795,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Zone 10 enabled',
     'options': dict({
     }),
     'original_device_class': None,
@@ -799,8 +827,9 @@
 # ---
 # name: test_switches[switch.12345_zone_11-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -818,6 +847,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Zone 11',
     'options': dict({
     }),
     'original_device_class': None,
@@ -862,8 +892,9 @@
 # ---
 # name: test_switches[switch.12345_zone_11_enabled-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -881,6 +912,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Zone 11 enabled',
     'options': dict({
     }),
     'original_device_class': None,
@@ -912,8 +944,9 @@
 # ---
 # name: test_switches[switch.12345_zone_12-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -931,6 +964,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Zone 12',
     'options': dict({
     }),
     'original_device_class': None,
@@ -975,8 +1009,9 @@
 # ---
 # name: test_switches[switch.12345_zone_12_enabled-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -994,6 +1029,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Zone 12 enabled',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1025,8 +1061,9 @@
 # ---
 # name: test_switches[switch.12345_zone_4-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1044,6 +1081,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Zone 4',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1088,8 +1126,9 @@
 # ---
 # name: test_switches[switch.12345_zone_4_enabled-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1107,6 +1146,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Zone 4 enabled',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1138,8 +1178,9 @@
 # ---
 # name: test_switches[switch.12345_zone_5-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1157,6 +1198,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Zone 5',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1201,8 +1243,9 @@
 # ---
 # name: test_switches[switch.12345_zone_5_enabled-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1220,6 +1263,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Zone 5 enabled',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1251,8 +1295,9 @@
 # ---
 # name: test_switches[switch.12345_zone_6-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1270,6 +1315,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Zone 6',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1314,8 +1360,9 @@
 # ---
 # name: test_switches[switch.12345_zone_6_enabled-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1333,6 +1380,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Zone 6 enabled',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1364,8 +1412,9 @@
 # ---
 # name: test_switches[switch.12345_zone_7-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1383,6 +1432,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Zone 7',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1427,8 +1477,9 @@
 # ---
 # name: test_switches[switch.12345_zone_7_enabled-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1446,6 +1497,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Zone 7 enabled',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1477,8 +1529,9 @@
 # ---
 # name: test_switches[switch.12345_zone_8-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1496,6 +1549,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Zone 8',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1540,8 +1594,9 @@
 # ---
 # name: test_switches[switch.12345_zone_8_enabled-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1559,6 +1614,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Zone 8 enabled',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1590,8 +1646,9 @@
 # ---
 # name: test_switches[switch.12345_zone_9-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1609,6 +1666,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Zone 9',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1653,8 +1711,9 @@
 # ---
 # name: test_switches[switch.12345_zone_9_enabled-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1672,6 +1731,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Zone 9 enabled',
     'options': dict({
     }),
     'original_device_class': None,

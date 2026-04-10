@@ -5,6 +5,7 @@ from __future__ import annotations
 from typing import Any
 
 import voluptuous as vol
+from wirelesstagpy import SensorTag
 
 from homeassistant.components.switch import (
     PLATFORM_SCHEMA as SWITCH_PLATFORM_SCHEMA,
@@ -17,7 +18,8 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from .const import DOMAIN
+from . import WirelessTagPlatform
+from .const import WIRELESSTAG_DATA
 from .entity import WirelessTagBaseSensor
 from .util import async_migrate_unique_id
 
@@ -62,7 +64,7 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up switches for a Wireless Sensor Tags."""
-    platform = hass.data[DOMAIN]
+    platform = hass.data[WIRELESSTAG_DATA]
 
     tags = platform.load_tags()
     monitored_conditions = config[CONF_MONITORED_CONDITIONS]
@@ -82,11 +84,16 @@ async def async_setup_platform(
 class WirelessTagSwitch(WirelessTagBaseSensor, SwitchEntity):
     """A switch implementation for Wireless Sensor Tags."""
 
-    def __init__(self, api, tag, description: SwitchEntityDescription) -> None:
+    def __init__(
+        self,
+        api: WirelessTagPlatform,
+        tag: SensorTag,
+        description: SwitchEntityDescription,
+    ) -> None:
         """Initialize a switch for Wireless Sensor Tag."""
         super().__init__(api, tag)
         self.entity_description = description
-        self._name = f"{self._tag.name} {description.name}"
+        self._attr_name = f"{self._tag.name} {description.name}"
         self._attr_unique_id = f"{self._uuid}_{description.key}"
 
     def turn_on(self, **kwargs: Any) -> None:
@@ -98,7 +105,7 @@ class WirelessTagSwitch(WirelessTagBaseSensor, SwitchEntity):
         self._api.disarm(self)
 
     @property
-    def is_on(self) -> bool:
+    def is_on(self) -> bool | None:
         """Return True if entity is on."""
         return self._state
 

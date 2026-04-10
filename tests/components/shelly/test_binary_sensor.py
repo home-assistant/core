@@ -3,7 +3,12 @@
 from copy import deepcopy
 from unittest.mock import Mock
 
-from aioshelly.const import MODEL_BLU_GATEWAY_G3, MODEL_MOTION, MODEL_PLUS_SMOKE
+from aioshelly.const import (
+    MODEL_BLU_GATEWAY_G3,
+    MODEL_FLOOD_G4,
+    MODEL_MOTION,
+    MODEL_PLUS_SMOKE,
+)
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -270,6 +275,34 @@ async def test_rpc_binary_sensor(
 
     assert (entry := entity_registry.async_get(entity_id))
     assert entry.unique_id == "123456789ABC-cover:0-overpower"
+
+
+async def test_rpc_binary_sensor_input_custom_name(
+    hass: HomeAssistant,
+    mock_rpc_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test RPC binary sensor."""
+    monkeypatch.setitem(
+        mock_rpc_device.config,
+        "input:1",
+        {
+            "id": 1,
+            "type": "switch",
+            "invert": False,
+            "factory_reset": True,
+            "name": "test channel",
+        },
+    )
+    monkeypatch.setitem(
+        mock_rpc_device.status,
+        "input:1",
+        {"id": 1, "state": True},
+    )
+    await init_integration(hass, 2)
+
+    assert (state := hass.states.get(f"{BINARY_SENSOR_DOMAIN}.test_name_test_channel"))
+    assert state.state == STATE_ON
 
 
 async def test_rpc_binary_sensor_removal(
@@ -584,7 +617,7 @@ async def test_rpc_flood_entities(
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test RPC flood sensor entities."""
-    await init_integration(hass, 4)
+    await init_integration(hass, 4, model=MODEL_FLOOD_G4)
 
     for entity in ("flood", "mute", "cable_unplugged"):
         entity_id = f"{BINARY_SENSOR_DOMAIN}.test_name_kitchen_{entity}"
@@ -602,7 +635,7 @@ async def test_rpc_flood_cable_unplugged(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Test RPC flood cable unplugged entity."""
-    await init_integration(hass, 4)
+    await init_integration(hass, 4, model=MODEL_FLOOD_G4)
 
     entity_id = f"{BINARY_SENSOR_DOMAIN}.test_name_kitchen_cable_unplugged"
 

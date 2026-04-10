@@ -5,6 +5,22 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any
 
+from tuya_device_handlers.definition.cover import (
+    TuyaCoverDefinition,
+    get_default_definition,
+)
+from tuya_device_handlers.device_wrapper.cover import (
+    ControlBackModePercentageMappingWrapper,
+    CoverClosedEnumWrapper,
+    CoverInstructionEnumWrapper,
+    CoverInstructionSpecialEnumWrapper,
+)
+from tuya_device_handlers.device_wrapper.extended import (
+    DPCodeInvertedBooleanWrapper,
+    DPCodeInvertedPercentageWrapper,
+    DPCodePercentageWrapper,
+)
+from tuya_device_handlers.helpers.homeassistant import TuyaCoverAction
 from tuya_sharing import CustomerDevice, Manager
 
 from homeassistant.components.cover import (
@@ -20,73 +36,22 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import TuyaConfigEntry
-from .const import TUYA_DISCOVERY_NEW, DeviceCategory, DPCode, DPType
+from .const import TUYA_DISCOVERY_NEW, DeviceCategory, DPCode
 from .entity import TuyaEntity
-from .models import DPCodeIntegerWrapper, find_dpcode
-from .util import get_dpcode
-
-
-class _DPCodePercentageMappingWrapper(DPCodeIntegerWrapper):
-    """Wrapper for DPCode position values mapping to 0-100 range."""
-
-    def _position_reversed(self, device: CustomerDevice) -> bool:
-        """Check if the position and direction should be reversed."""
-        return False
-
-    def read_device_status(self, device: CustomerDevice) -> float | None:
-        if (value := self._read_device_status_raw(device)) is None:
-            return None
-
-        return round(
-            self.type_information.remap_value_to(
-                value,
-                0,
-                100,
-                self._position_reversed(device),
-            )
-        )
-
-    def _convert_value_to_raw_value(self, device: CustomerDevice, value: Any) -> Any:
-        return round(
-            self.type_information.remap_value_from(
-                value,
-                0,
-                100,
-                self._position_reversed(device),
-            )
-        )
-
-
-class _InvertedPercentageMappingWrapper(_DPCodePercentageMappingWrapper):
-    """Wrapper for DPCode position values mapping to 0-100 range."""
-
-    def _position_reversed(self, device: CustomerDevice) -> bool:
-        """Check if the position and direction should be reversed."""
-        return True
-
-
-class _ControlBackModePercentageMappingWrapper(_DPCodePercentageMappingWrapper):
-    """Wrapper for DPCode position values with control_back_mode support."""
-
-    def _position_reversed(self, device: CustomerDevice) -> bool:
-        """Check if the position and direction should be reversed."""
-        return device.status.get(DPCode.CONTROL_BACK_MODE) != "back"
 
 
 @dataclass(frozen=True)
 class TuyaCoverEntityDescription(CoverEntityDescription):
-    """Describe an Tuya cover entity."""
+    """Describe a Tuya cover entity."""
 
     current_state: DPCode | tuple[DPCode, ...] | None = None
-    current_state_inverse: bool = False
+    current_state_wrapper: type[
+        DPCodeInvertedBooleanWrapper | CoverClosedEnumWrapper
+    ] = CoverClosedEnumWrapper
     current_position: DPCode | tuple[DPCode, ...] | None = None
-    position_wrapper: type[_DPCodePercentageMappingWrapper] = (
-        _InvertedPercentageMappingWrapper
-    )
+    instruction_wrapper: type[CoverInstructionEnumWrapper] = CoverInstructionEnumWrapper
+    position_wrapper: type[DPCodePercentageWrapper] = DPCodeInvertedPercentageWrapper
     set_position: DPCode | None = None
-    open_instruction_value: str = "open"
-    close_instruction_value: str = "close"
-    stop_instruction_value: str = "stop"
 
 
 COVERS: dict[DeviceCategory, tuple[TuyaCoverEntityDescription, ...]] = {
@@ -96,7 +61,7 @@ COVERS: dict[DeviceCategory, tuple[TuyaCoverEntityDescription, ...]] = {
             translation_key="indexed_door",
             translation_placeholders={"index": "1"},
             current_state=DPCode.DOORCONTACT_STATE,
-            current_state_inverse=True,
+            current_state_wrapper=DPCodeInvertedBooleanWrapper,
             device_class=CoverDeviceClass.GARAGE,
         ),
         TuyaCoverEntityDescription(
@@ -104,7 +69,7 @@ COVERS: dict[DeviceCategory, tuple[TuyaCoverEntityDescription, ...]] = {
             translation_key="indexed_door",
             translation_placeholders={"index": "2"},
             current_state=DPCode.DOORCONTACT_STATE_2,
-            current_state_inverse=True,
+            current_state_wrapper=DPCodeInvertedBooleanWrapper,
             device_class=CoverDeviceClass.GARAGE,
         ),
         TuyaCoverEntityDescription(
@@ -112,7 +77,7 @@ COVERS: dict[DeviceCategory, tuple[TuyaCoverEntityDescription, ...]] = {
             translation_key="indexed_door",
             translation_placeholders={"index": "3"},
             current_state=DPCode.DOORCONTACT_STATE_3,
-            current_state_inverse=True,
+            current_state_wrapper=DPCodeInvertedBooleanWrapper,
             device_class=CoverDeviceClass.GARAGE,
         ),
     ),
@@ -147,9 +112,7 @@ COVERS: dict[DeviceCategory, tuple[TuyaCoverEntityDescription, ...]] = {
             current_position=DPCode.POSITION,
             set_position=DPCode.POSITION,
             device_class=CoverDeviceClass.CURTAIN,
-            open_instruction_value="FZ",
-            close_instruction_value="ZZ",
-            stop_instruction_value="STOP",
+            instruction_wrapper=CoverInstructionSpecialEnumWrapper,
         ),
         # switch_1 is an undocumented code that behaves identically to control
         # It is used by the Kogan Smart Blinds Driver
@@ -166,7 +129,7 @@ COVERS: dict[DeviceCategory, tuple[TuyaCoverEntityDescription, ...]] = {
             key=DPCode.CONTROL,
             translation_key="curtain",
             current_position=DPCode.PERCENT_CONTROL,
-            position_wrapper=_ControlBackModePercentageMappingWrapper,
+            position_wrapper=ControlBackModePercentageMappingWrapper,
             set_position=DPCode.PERCENT_CONTROL,
             device_class=CoverDeviceClass.CURTAIN,
         ),
@@ -175,7 +138,7 @@ COVERS: dict[DeviceCategory, tuple[TuyaCoverEntityDescription, ...]] = {
             translation_key="indexed_curtain",
             translation_placeholders={"index": "2"},
             current_position=DPCode.PERCENT_CONTROL_2,
-            position_wrapper=_ControlBackModePercentageMappingWrapper,
+            position_wrapper=ControlBackModePercentageMappingWrapper,
             set_position=DPCode.PERCENT_CONTROL_2,
             device_class=CoverDeviceClass.CURTAIN,
         ),
@@ -208,26 +171,19 @@ async def async_setup_entry(
             device = manager.device_map[device_id]
             if descriptions := COVERS.get(device.category):
                 entities.extend(
-                    TuyaCoverEntity(
-                        device,
-                        manager,
-                        description,
-                        current_position=description.position_wrapper.find_dpcode(
-                            device, description.current_position
-                        ),
-                        set_position=description.position_wrapper.find_dpcode(
-                            device, description.set_position, prefer_function=True
-                        ),
-                        tilt_position=description.position_wrapper.find_dpcode(
-                            device,
-                            (DPCode.ANGLE_HORIZONTAL, DPCode.ANGLE_VERTICAL),
-                            prefer_function=True,
-                        ),
-                    )
+                    TuyaCoverEntity(device, manager, description, definition)
                     for description in descriptions
                     if (
-                        description.key in device.function
-                        or description.key in device.status_range
+                        definition := get_default_definition(
+                            device,
+                            current_position_dpcode=description.current_position,
+                            current_state_dpcode=description.current_state,
+                            current_state_wrapper=description.current_state_wrapper,
+                            instruction_dpcode=description.key,
+                            instruction_wrapper=description.instruction_wrapper,
+                            position_wrapper=description.position_wrapper,
+                            set_position_dpcode=description.set_position,
+                        )
                     )
                 )
 
@@ -243,7 +199,6 @@ async def async_setup_entry(
 class TuyaCoverEntity(TuyaEntity, CoverEntity):
     """Tuya Cover Device."""
 
-    _current_state: DPCode | None = None
     entity_description: TuyaCoverEntityDescription
 
     def __init__(
@@ -251,42 +206,31 @@ class TuyaCoverEntity(TuyaEntity, CoverEntity):
         device: CustomerDevice,
         device_manager: Manager,
         description: TuyaCoverEntityDescription,
-        *,
-        current_position: _DPCodePercentageMappingWrapper | None = None,
-        set_position: _DPCodePercentageMappingWrapper | None = None,
-        tilt_position: _DPCodePercentageMappingWrapper | None = None,
+        definition: TuyaCoverDefinition,
     ) -> None:
         """Init Tuya Cover."""
-        super().__init__(device, device_manager)
-        self.entity_description = description
-        self._attr_unique_id = f"{super().unique_id}{description.key}"
+        super().__init__(device, device_manager, description)
         self._attr_supported_features = CoverEntityFeature(0)
 
-        self._current_position = current_position or set_position
-        self._set_position = set_position
-        self._tilt_position = tilt_position
+        self._current_position = (
+            definition.current_position_wrapper or definition.set_position_wrapper
+        )
+        self._current_state_wrapper = definition.current_state_wrapper
+        self._instruction_wrapper = definition.instruction_wrapper
+        self._set_position = definition.set_position_wrapper
+        self._tilt_position = definition.tilt_position_wrapper
 
-        # Check if this cover is based on a switch or has controls
-        if get_dpcode(self.device, description.key):
-            if device.function[description.key].type == "Boolean":
-                self._attr_supported_features |= (
-                    CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE
-                )
-            elif enum_type := find_dpcode(
-                self.device, description.key, dptype=DPType.ENUM, prefer_function=True
-            ):
-                if description.open_instruction_value in enum_type.range:
-                    self._attr_supported_features |= CoverEntityFeature.OPEN
-                if description.close_instruction_value in enum_type.range:
-                    self._attr_supported_features |= CoverEntityFeature.CLOSE
-                if description.stop_instruction_value in enum_type.range:
-                    self._attr_supported_features |= CoverEntityFeature.STOP
+        if definition.instruction_wrapper:
+            if TuyaCoverAction.OPEN in definition.instruction_wrapper.options:
+                self._attr_supported_features |= CoverEntityFeature.OPEN
+            if TuyaCoverAction.CLOSE in definition.instruction_wrapper.options:
+                self._attr_supported_features |= CoverEntityFeature.CLOSE
+            if TuyaCoverAction.STOP in definition.instruction_wrapper.options:
+                self._attr_supported_features |= CoverEntityFeature.STOP
 
-        self._current_state = get_dpcode(self.device, description.current_state)
-
-        if set_position:
+        if definition.set_position_wrapper:
             self._attr_supported_features |= CoverEntityFeature.SET_POSITION
-        if tilt_position:
+        if definition.tilt_position_wrapper:
             self._attr_supported_features |= CoverEntityFeature.SET_TILT_POSITION
 
     @property
@@ -309,75 +253,58 @@ class TuyaCoverEntity(TuyaEntity, CoverEntity):
         if (position := self.current_cover_position) is not None:
             return position == 0
 
+        return self._read_wrapper(self._current_state_wrapper)
+
+    async def async_open_cover(self, **kwargs: Any) -> None:
+        """Open the cover."""
+        if self._set_position is not None:
+            await self._async_send_commands(
+                self._set_position.get_update_commands(self.device, 100)
+            )
+            return
+
         if (
-            self._current_state is not None
-            and (current_state := self.device.status.get(self._current_state))
-            is not None
-            and current_state != "stop"
+            self._instruction_wrapper
+            and TuyaCoverAction.OPEN in self._instruction_wrapper.options
         ):
-            return self.entity_description.current_state_inverse is not (
-                current_state in (True, "close", "fully_close")
+            await self._async_send_wrapper_updates(
+                self._instruction_wrapper, TuyaCoverAction.OPEN
             )
 
-        return None
-
-    def open_cover(self, **kwargs: Any) -> None:
-        """Open the cover."""
-        value: bool | str = True
-        if find_dpcode(
-            self.device,
-            self.entity_description.key,
-            dptype=DPType.ENUM,
-            prefer_function=True,
-        ):
-            value = self.entity_description.open_instruction_value
-
-        commands: list[dict[str, str | int]] = [
-            {"code": self.entity_description.key, "value": value}
-        ]
-
-        if self._set_position is not None:
-            commands.append(self._set_position.get_update_command(self.device, 100))
-
-        self._send_command(commands)
-
-    def close_cover(self, **kwargs: Any) -> None:
+    async def async_close_cover(self, **kwargs: Any) -> None:
         """Close cover."""
-        value: bool | str = False
-        if find_dpcode(
-            self.device,
-            self.entity_description.key,
-            dptype=DPType.ENUM,
-            prefer_function=True,
-        ):
-            value = self.entity_description.close_instruction_value
-
-        commands: list[dict[str, str | int]] = [
-            {"code": self.entity_description.key, "value": value}
-        ]
-
         if self._set_position is not None:
-            commands.append(self._set_position.get_update_command(self.device, 0))
+            await self._async_send_commands(
+                self._set_position.get_update_commands(self.device, 0)
+            )
+            return
 
-        self._send_command(commands)
+        if (
+            self._instruction_wrapper
+            and TuyaCoverAction.CLOSE in self._instruction_wrapper.options
+        ):
+            await self._async_send_wrapper_updates(
+                self._instruction_wrapper, TuyaCoverAction.CLOSE
+            )
 
     async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Move the cover to a specific position."""
-        await self._async_send_dpcode_update(self._set_position, kwargs[ATTR_POSITION])
-
-    def stop_cover(self, **kwargs: Any) -> None:
-        """Stop the cover."""
-        self._send_command(
-            [
-                {
-                    "code": self.entity_description.key,
-                    "value": self.entity_description.stop_instruction_value,
-                }
-            ]
+        await self._async_send_wrapper_updates(
+            self._set_position, kwargs[ATTR_POSITION]
         )
+
+    async def async_stop_cover(self, **kwargs: Any) -> None:
+        """Stop the cover."""
+        if (
+            self._instruction_wrapper
+            and TuyaCoverAction.STOP in self._instruction_wrapper.options
+        ):
+            await self._async_send_wrapper_updates(
+                self._instruction_wrapper, TuyaCoverAction.STOP
+            )
 
     async def async_set_cover_tilt_position(self, **kwargs: Any) -> None:
         """Move the cover tilt to a specific position."""
-        await self._async_send_dpcode_update(
+        await self._async_send_wrapper_updates(
             self._tilt_position, kwargs[ATTR_TILT_POSITION]
         )

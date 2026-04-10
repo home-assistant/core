@@ -1,4 +1,18 @@
 {
+  "conditions": {
+    "is_jammed": {
+      "condition": "mdi:lock-alert"
+    },
+    "is_locked": {
+      "condition": "mdi:lock"
+    },
+    "is_open": {
+      "condition": "mdi:lock-open-variant"
+    },
+    "is_unlocked": {
+      "condition": "mdi:lock-open-variant"
+    }
+  },
   "entity_component": {
     "_": {
       "default": "mdi:lock",
@@ -21,6 +35,20 @@
     },
     "unlock": {
       "service": "mdi:lock-open-variant"
+    }
+  },
+  "triggers": {
+    "jammed": {
+      "trigger": "mdi:lock-alert"
+    },
+    "locked": {
+      "trigger": "mdi:lock"
+    },
+    "opened": {
+      "trigger": "mdi:lock-open-variant"
+    },
+    "unlocked": {
+      "trigger": "mdi:lock-open-variant"
     }
   }
 }

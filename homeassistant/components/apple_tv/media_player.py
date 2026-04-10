@@ -115,6 +115,7 @@ class AppleTvMediaPlayer(
     """Representation of an Apple TV media player."""
 
     _attr_supported_features = SUPPORT_APPLE_TV
+    _attr_name = None
 
     def __init__(self, name: str, identifier: str, manager: AppleTVManager) -> None:
         """Initialize the Apple TV media player."""
@@ -238,6 +239,15 @@ class AppleTvMediaPlayer(
         This is a callback function from pyatv.interface.AudioListener.
         """
         self.async_write_ha_state()
+
+    @callback
+    def volume_device_update(
+        self, output_device: OutputDevice, old_level: float, new_level: float
+    ) -> None:
+        """Output device volume was updated.
+
+        This is a callback function from pyatv.interface.AudioListener.
+        """
 
     @callback
     def outputdevices_update(

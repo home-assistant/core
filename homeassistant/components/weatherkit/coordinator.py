@@ -11,6 +11,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN, LOGGER
 
@@ -21,6 +22,8 @@ REQUESTED_DATA_SETS = [
 ]
 
 STALE_DATA_THRESHOLD = timedelta(hours=1)
+
+HOURLY_FORECAST_DURATION = timedelta(days=7)
 
 
 class WeatherKitDataUpdateCoordinator(DataUpdateCoordinator):
@@ -67,10 +70,13 @@ class WeatherKitDataUpdateCoordinator(DataUpdateCoordinator):
             if not self.supported_data_sets:
                 await self.update_supported_data_sets()
 
+            dt_now = dt_util.utcnow()
             updated_data = await self.client.get_weather_data(
                 self.config_entry.data[CONF_LATITUDE],
                 self.config_entry.data[CONF_LONGITUDE],
                 self.supported_data_sets,
+                hourly_start=dt_now,
+                hourly_end=dt_now + HOURLY_FORECAST_DURATION,
             )
         except WeatherKitApiClientError as exception:
             if self.data is None or (

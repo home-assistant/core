@@ -10,6 +10,7 @@ from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
+    SensorStateClass,
 )
 from homeassistant.const import (
     CONCENTRATION_PARTS_PER_MILLION,
@@ -26,19 +27,21 @@ from .entity import PooldoseEntity
 
 _LOGGER = logging.getLogger(__name__)
 
+PARALLEL_UPDATES = 0
+
 
 @dataclass(frozen=True, kw_only=True)
 class PooldoseSensorEntityDescription(SensorEntityDescription):
     """Describes PoolDose sensor entity."""
 
-    use_dynamic_unit: bool = False
+    use_unit_conversion: bool = False
 
 
 SENSOR_DESCRIPTIONS: tuple[PooldoseSensorEntityDescription, ...] = (
     PooldoseSensorEntityDescription(
         key="temperature",
         device_class=SensorDeviceClass.TEMPERATURE,
-        use_dynamic_unit=True,
+        use_unit_conversion=True,
     ),
     PooldoseSensorEntityDescription(key="ph", device_class=SensorDeviceClass.PH),
     PooldoseSensorEntityDescription(
@@ -56,7 +59,14 @@ SENSOR_DESCRIPTIONS: tuple[PooldoseSensorEntityDescription, ...] = (
         key="flow_rate",
         translation_key="flow_rate",
         device_class=SensorDeviceClass.VOLUME_FLOW_RATE,
-        use_dynamic_unit=True,
+        use_unit_conversion=True,
+    ),
+    PooldoseSensorEntityDescription(
+        key="water_meter_total_permanent",
+        translation_key="water_meter_total_permanent",
+        device_class=SensorDeviceClass.VOLUME,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        use_unit_conversion=True,
     ),
     PooldoseSensorEntityDescription(
         key="ph_type_dosing",
@@ -111,7 +121,7 @@ SENSOR_DESCRIPTIONS: tuple[PooldoseSensorEntityDescription, ...] = (
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
         device_class=SensorDeviceClass.ENUM,
-        options=["off", "proportional", "on_off", "timed"],
+        options=["off", "proportional", "on_off", "timed", "cycle"],
     ),
     PooldoseSensorEntityDescription(
         key="ofa_orp_time",
@@ -173,6 +183,22 @@ SENSOR_DESCRIPTIONS: tuple[PooldoseSensorEntityDescription, ...] = (
         entity_registry_enabled_default=False,
         native_unit_of_measurement=UnitOfElectricPotential.MILLIVOLT,
     ),
+    PooldoseSensorEntityDescription(
+        key="device_config",
+        translation_key="device_config",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        device_class=SensorDeviceClass.ENUM,
+        options=["ph_orp", "ph_orp_chlorine"],
+    ),
+    PooldoseSensorEntityDescription(
+        key="temperature_unit",
+        translation_key="temperature_unit",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        device_class=SensorDeviceClass.ENUM,
+        options=["celsius", "fahrenheit"],
+    ),
 )
 
 
@@ -219,7 +245,7 @@ class PooldoseSensor(PooldoseEntity, SensorEntity):
     def native_unit_of_measurement(self) -> str | None:
         """Return the unit of measurement."""
         if (
-            self.entity_description.use_dynamic_unit
+            self.entity_description.use_unit_conversion
             and (data := self.get_data()) is not None
             and (device_unit := data.get("unit"))
         ):

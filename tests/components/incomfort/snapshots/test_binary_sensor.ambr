@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_setup_binary_sensors_alt[is_burning][binary_sensor.boiler_burner-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -20,6 +21,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Burner',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.RUNNING: 'running'>,
@@ -50,8 +52,9 @@
 # ---
 # name: test_setup_binary_sensors_alt[is_burning][binary_sensor.boiler_fault-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -69,6 +72,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Fault',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -100,8 +104,9 @@
 # ---
 # name: test_setup_binary_sensors_alt[is_burning][binary_sensor.boiler_hot_water_tap-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -119,6 +124,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Hot water tap',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.RUNNING: 'running'>,
@@ -149,8 +155,9 @@
 # ---
 # name: test_setup_binary_sensors_alt[is_burning][binary_sensor.boiler_pump-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -168,6 +175,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Pump',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.RUNNING: 'running'>,
@@ -198,8 +206,9 @@
 # ---
 # name: test_setup_binary_sensors_alt[is_failed][binary_sensor.boiler_burner-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -217,6 +226,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Burner',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.RUNNING: 'running'>,
@@ -247,8 +257,9 @@
 # ---
 # name: test_setup_binary_sensors_alt[is_failed][binary_sensor.boiler_fault-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -266,6 +277,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Fault',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -297,8 +309,9 @@
 # ---
 # name: test_setup_binary_sensors_alt[is_failed][binary_sensor.boiler_hot_water_tap-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -316,6 +329,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Hot water tap',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.RUNNING: 'running'>,
@@ -346,8 +360,9 @@
 # ---
 # name: test_setup_binary_sensors_alt[is_failed][binary_sensor.boiler_pump-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -365,6 +380,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Pump',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.RUNNING: 'running'>,
@@ -395,8 +411,9 @@
 # ---
 # name: test_setup_binary_sensors_alt[is_pumping][binary_sensor.boiler_burner-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -414,6 +431,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Burner',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.RUNNING: 'running'>,
@@ -444,8 +462,9 @@
 # ---
 # name: test_setup_binary_sensors_alt[is_pumping][binary_sensor.boiler_fault-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -463,6 +482,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Fault',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -494,8 +514,9 @@
 # ---
 # name: test_setup_binary_sensors_alt[is_pumping][binary_sensor.boiler_hot_water_tap-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -513,6 +534,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Hot water tap',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.RUNNING: 'running'>,
@@ -543,8 +565,9 @@
 # ---
 # name: test_setup_binary_sensors_alt[is_pumping][binary_sensor.boiler_pump-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -562,6 +585,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Pump',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.RUNNING: 'running'>,
@@ -592,8 +616,9 @@
 # ---
 # name: test_setup_binary_sensors_alt[is_tapping][binary_sensor.boiler_burner-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -611,6 +636,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Burner',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.RUNNING: 'running'>,
@@ -641,8 +667,9 @@
 # ---
 # name: test_setup_binary_sensors_alt[is_tapping][binary_sensor.boiler_fault-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -660,6 +687,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Fault',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -691,8 +719,9 @@
 # ---
 # name: test_setup_binary_sensors_alt[is_tapping][binary_sensor.boiler_hot_water_tap-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -710,6 +739,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Hot water tap',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.RUNNING: 'running'>,
@@ -740,8 +770,9 @@
 # ---
 # name: test_setup_binary_sensors_alt[is_tapping][binary_sensor.boiler_pump-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -759,6 +790,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Pump',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.RUNNING: 'running'>,
@@ -789,8 +821,9 @@
 # ---
 # name: test_setup_platform[binary_sensor.boiler_burner-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -808,6 +841,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Burner',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.RUNNING: 'running'>,
@@ -838,8 +872,9 @@
 # ---
 # name: test_setup_platform[binary_sensor.boiler_fault-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -857,6 +892,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Fault',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -888,8 +924,9 @@
 # ---
 # name: test_setup_platform[binary_sensor.boiler_hot_water_tap-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -907,6 +944,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Hot water tap',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.RUNNING: 'running'>,
@@ -937,8 +975,9 @@
 # ---
 # name: test_setup_platform[binary_sensor.boiler_pump-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -956,6 +995,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Pump',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.RUNNING: 'running'>,

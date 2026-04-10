@@ -4,6 +4,7 @@ from datetime import timedelta
 
 DOMAIN = "rituals_perfume_genie"
 
+# Old (API V1)
 ACCOUNT_HASH = "account_hash"
 
 # The API provided by Rituals is currently rate limited to 30 requests

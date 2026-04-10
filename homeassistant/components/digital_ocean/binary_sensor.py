@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+from typing import Any
 
 import voluptuous as vol
 
@@ -16,7 +17,7 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import (
+from .const import (
     ATTR_CREATED_AT,
     ATTR_DROPLET_ID,
     ATTR_DROPLET_NAME,
@@ -65,6 +66,7 @@ class DigitalOceanBinarySensor(BinarySensorEntity):
     """Representation of a Digital Ocean droplet sensor."""
 
     _attr_attribution = ATTRIBUTION
+    _attr_device_class = BinarySensorDeviceClass.MOVING
 
     def __init__(self, do, droplet_id):
         """Initialize a new Digital Ocean sensor."""
@@ -79,17 +81,12 @@ class DigitalOceanBinarySensor(BinarySensorEntity):
         return self.data.name
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool:
         """Return true if the binary sensor is on."""
         return self.data.status == "active"
 
     @property
-    def device_class(self):
-        """Return the class of this sensor."""
-        return BinarySensorDeviceClass.MOVING
-
-    @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes of the Digital Ocean droplet."""
         return {
             ATTR_CREATED_AT: self.data.created_at,

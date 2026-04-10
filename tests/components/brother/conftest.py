@@ -91,15 +91,6 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 
 
 @pytest.fixture
-def mock_unload_entry() -> Generator[AsyncMock]:
-    """Override async_unload_entry."""
-    with patch(
-        "homeassistant.components.brother.async_unload_entry", return_value=True
-    ) as mock_unload_entry:
-        yield mock_unload_entry
-
-
-@pytest.fixture
 def mock_brother() -> Generator[AsyncMock]:
     """Mock the Brother class."""
     with (

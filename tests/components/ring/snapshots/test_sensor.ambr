@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_states[sensor.downstairs_volume-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -20,6 +21,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Volume',
     'options': dict({
     }),
     'original_device_class': None,
@@ -27,7 +29,7 @@
     'original_name': 'Volume',
     'platform': 'ring',
     'previous_unique_id': None,
-    'suggested_object_id': 'downstairs_volume',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'volume',
     'unique_id': '123456-volume',
@@ -50,8 +52,9 @@
 # ---
 # name: test_states[sensor.downstairs_wifi_signal_category-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -69,6 +72,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Wi-Fi signal category',
     'options': dict({
     }),
     'original_device_class': None,
@@ -76,7 +80,7 @@
     'original_name': 'Wi-Fi signal category',
     'platform': 'ring',
     'previous_unique_id': None,
-    'suggested_object_id': 'downstairs_wifi_signal_category',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'wifi_signal_category',
     'unique_id': '123456-wifi_signal_category',
@@ -99,8 +103,9 @@
 # ---
 # name: test_states[sensor.downstairs_wifi_signal_strength-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -118,6 +123,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Signal strength',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.SIGNAL_STRENGTH: 'signal_strength'>,
@@ -125,7 +131,7 @@
     'original_name': 'Signal strength',
     'platform': 'ring',
     'previous_unique_id': None,
-    'suggested_object_id': 'downstairs_wifi_signal_strength',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '123456-wifi_signal_strength',
@@ -150,8 +156,9 @@
 # ---
 # name: test_states[sensor.front_battery-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -171,6 +178,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
@@ -204,8 +212,9 @@
 # ---
 # name: test_states[sensor.front_door_battery-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -225,6 +234,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
@@ -258,8 +268,9 @@
 # ---
 # name: test_states[sensor.front_door_last_activity-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -277,6 +288,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Last activity',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -308,8 +320,9 @@
 # ---
 # name: test_states[sensor.front_door_last_ding-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -327,6 +340,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Last ding',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -334,7 +348,7 @@
     'original_name': 'Last ding',
     'platform': 'ring',
     'previous_unique_id': None,
-    'suggested_object_id': 'front_door_last_ding',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'last_ding',
     'unique_id': '987654-last_ding',
@@ -358,8 +372,9 @@
 # ---
 # name: test_states[sensor.front_door_last_motion-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -377,6 +392,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Last motion',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -384,7 +400,7 @@
     'original_name': 'Last motion',
     'platform': 'ring',
     'previous_unique_id': None,
-    'suggested_object_id': 'front_door_last_motion',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'last_motion',
     'unique_id': '987654-last_motion',
@@ -408,8 +424,9 @@
 # ---
 # name: test_states[sensor.front_door_volume-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -427,6 +444,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Volume',
     'options': dict({
     }),
     'original_device_class': None,
@@ -434,7 +452,7 @@
     'original_name': 'Volume',
     'platform': 'ring',
     'previous_unique_id': None,
-    'suggested_object_id': 'front_door_volume',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'volume',
     'unique_id': '765432-volume',
@@ -457,8 +475,9 @@
 # ---
 # name: test_states[sensor.front_door_wifi_signal_category-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -476,6 +495,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Wi-Fi signal category',
     'options': dict({
     }),
     'original_device_class': None,
@@ -483,7 +503,7 @@
     'original_name': 'Wi-Fi signal category',
     'platform': 'ring',
     'previous_unique_id': None,
-    'suggested_object_id': 'front_door_wifi_signal_category',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'wifi_signal_category',
     'unique_id': '987654-wifi_signal_category',
@@ -506,8 +526,9 @@
 # ---
 # name: test_states[sensor.front_door_wifi_signal_strength-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -525,6 +546,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Signal strength',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.SIGNAL_STRENGTH: 'signal_strength'>,
@@ -532,7 +554,7 @@
     'original_name': 'Signal strength',
     'platform': 'ring',
     'previous_unique_id': None,
-    'suggested_object_id': 'front_door_wifi_signal_strength',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '987654-wifi_signal_strength',
@@ -557,8 +579,9 @@
 # ---
 # name: test_states[sensor.front_last_activity-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -576,6 +599,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Last activity',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -607,8 +631,9 @@
 # ---
 # name: test_states[sensor.front_last_ding-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -626,6 +651,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Last ding',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -633,7 +659,7 @@
     'original_name': 'Last ding',
     'platform': 'ring',
     'previous_unique_id': None,
-    'suggested_object_id': 'front_last_ding',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'last_ding',
     'unique_id': '765432-last_ding',
@@ -657,8 +683,9 @@
 # ---
 # name: test_states[sensor.front_last_motion-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -676,6 +703,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Last motion',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -683,7 +711,7 @@
     'original_name': 'Last motion',
     'platform': 'ring',
     'previous_unique_id': None,
-    'suggested_object_id': 'front_last_motion',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'last_motion',
     'unique_id': '765432-last_motion',
@@ -707,8 +735,9 @@
 # ---
 # name: test_states[sensor.front_wifi_signal_category-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -726,6 +755,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Wi-Fi signal category',
     'options': dict({
     }),
     'original_device_class': None,
@@ -733,7 +763,7 @@
     'original_name': 'Wi-Fi signal category',
     'platform': 'ring',
     'previous_unique_id': None,
-    'suggested_object_id': 'front_wifi_signal_category',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'wifi_signal_category',
     'unique_id': '765432-wifi_signal_category',
@@ -756,8 +786,9 @@
 # ---
 # name: test_states[sensor.front_wifi_signal_strength-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -775,6 +806,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Signal strength',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.SIGNAL_STRENGTH: 'signal_strength'>,
@@ -782,7 +814,7 @@
     'original_name': 'Signal strength',
     'platform': 'ring',
     'previous_unique_id': None,
-    'suggested_object_id': 'front_wifi_signal_strength',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '765432-wifi_signal_strength',
@@ -807,8 +839,9 @@
 # ---
 # name: test_states[sensor.ingress_battery-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -828,6 +861,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
@@ -861,8 +895,9 @@
 # ---
 # name: test_states[sensor.ingress_doorbell_volume-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -880,6 +915,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Doorbell volume',
     'options': dict({
     }),
     'original_device_class': None,
@@ -887,7 +923,7 @@
     'original_name': 'Doorbell volume',
     'platform': 'ring',
     'previous_unique_id': None,
-    'suggested_object_id': 'ingress_doorbell_volume',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'doorbell_volume',
     'unique_id': '185036587-doorbell_volume',
@@ -910,8 +946,9 @@
 # ---
 # name: test_states[sensor.ingress_last_activity-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -929,6 +966,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Last activity',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -960,8 +998,9 @@
 # ---
 # name: test_states[sensor.ingress_mic_volume-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -979,6 +1018,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Mic volume',
     'options': dict({
     }),
     'original_device_class': None,
@@ -986,7 +1026,7 @@
     'original_name': 'Mic volume',
     'platform': 'ring',
     'previous_unique_id': None,
-    'suggested_object_id': 'ingress_mic_volume',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'mic_volume',
     'unique_id': '185036587-mic_volume',
@@ -1009,8 +1049,9 @@
 # ---
 # name: test_states[sensor.ingress_voice_volume-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1028,6 +1069,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Voice volume',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1035,7 +1077,7 @@
     'original_name': 'Voice volume',
     'platform': 'ring',
     'previous_unique_id': None,
-    'suggested_object_id': 'ingress_voice_volume',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'voice_volume',
     'unique_id': '185036587-voice_volume',
@@ -1058,8 +1100,9 @@
 # ---
 # name: test_states[sensor.ingress_wifi_signal_category-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1077,6 +1120,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Wi-Fi signal category',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1084,7 +1128,7 @@
     'original_name': 'Wi-Fi signal category',
     'platform': 'ring',
     'previous_unique_id': None,
-    'suggested_object_id': 'ingress_wifi_signal_category',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'wifi_signal_category',
     'unique_id': '185036587-wifi_signal_category',
@@ -1107,8 +1151,9 @@
 # ---
 # name: test_states[sensor.ingress_wifi_signal_strength-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1126,6 +1171,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Signal strength',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.SIGNAL_STRENGTH: 'signal_strength'>,
@@ -1133,7 +1179,7 @@
     'original_name': 'Signal strength',
     'platform': 'ring',
     'previous_unique_id': None,
-    'suggested_object_id': 'ingress_wifi_signal_strength',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '185036587-wifi_signal_strength',
@@ -1158,8 +1204,9 @@
 # ---
 # name: test_states[sensor.internal_battery-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1179,6 +1226,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
@@ -1212,8 +1260,9 @@
 # ---
 # name: test_states[sensor.internal_last_activity-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1231,6 +1280,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Last activity',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -1262,8 +1312,9 @@
 # ---
 # name: test_states[sensor.internal_last_ding-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1281,6 +1332,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Last ding',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -1288,7 +1340,7 @@
     'original_name': 'Last ding',
     'platform': 'ring',
     'previous_unique_id': None,
-    'suggested_object_id': 'internal_last_ding',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'last_ding',
     'unique_id': '345678-last_ding',
@@ -1312,8 +1364,9 @@
 # ---
 # name: test_states[sensor.internal_last_motion-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1331,6 +1384,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Last motion',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -1338,7 +1392,7 @@
     'original_name': 'Last motion',
     'platform': 'ring',
     'previous_unique_id': None,
-    'suggested_object_id': 'internal_last_motion',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'last_motion',
     'unique_id': '345678-last_motion',
@@ -1362,8 +1416,9 @@
 # ---
 # name: test_states[sensor.internal_wifi_signal_category-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1381,6 +1436,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Wi-Fi signal category',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1388,7 +1444,7 @@
     'original_name': 'Wi-Fi signal category',
     'platform': 'ring',
     'previous_unique_id': None,
-    'suggested_object_id': 'internal_wifi_signal_category',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'wifi_signal_category',
     'unique_id': '345678-wifi_signal_category',
@@ -1411,8 +1467,9 @@
 # ---
 # name: test_states[sensor.internal_wifi_signal_strength-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1430,6 +1487,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Signal strength',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.SIGNAL_STRENGTH: 'signal_strength'>,
@@ -1437,7 +1495,7 @@
     'original_name': 'Signal strength',
     'platform': 'ring',
     'previous_unique_id': None,
-    'suggested_object_id': 'internal_wifi_signal_strength',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '345678-wifi_signal_strength',

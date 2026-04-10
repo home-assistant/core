@@ -28,6 +28,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.util.dt import now
+from homeassistant.util.variance import ignore_variance
 
 from .coordinator import StarlinkConfigEntry, StarlinkData
 from .entity import StarlinkEntity
@@ -91,6 +92,10 @@ class StarlinkAccumulationSensor(StarlinkSensorEntity, RestoreSensor):
             self._attr_native_value = last_native_value
 
 
+uptime_to_stable_datetime = ignore_variance(
+    lambda value: now() - timedelta(seconds=value), timedelta(minutes=1)
+)
+
 SENSORS: tuple[StarlinkSensorEntityDescription, ...] = (
     StarlinkSensorEntityDescription(
         key="ping",
@@ -150,9 +155,7 @@ SENSORS: tuple[StarlinkSensorEntityDescription, ...] = (
         translation_key="last_restart",
         device_class=SensorDeviceClass.TIMESTAMP,
         entity_category=EntityCategory.DIAGNOSTIC,
-        value_fn=lambda data: (
-            now() - timedelta(seconds=data.status["uptime"], milliseconds=-500)
-        ).replace(microsecond=0),
+        value_fn=lambda data: uptime_to_stable_datetime(data.status["uptime"]),
         entity_class=StarlinkSensorEntity,
     ),
     StarlinkSensorEntityDescription(

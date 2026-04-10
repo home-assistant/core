@@ -4,6 +4,7 @@
   "codeowners": ["@eavanvalkenburg"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/azure_event_hub",
+  "integration_type": "service",
   "iot_class": "cloud_push",
   "loggers": ["azure"],
   "requirements": ["azure-eventhub==5.11.1"],

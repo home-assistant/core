@@ -81,6 +81,7 @@ def mock_api_tts() -> AsyncMock:
         voices=[
             cloud_tts.Voice(language_codes=["en-US"], name="en-US-Standard-A"),
             cloud_tts.Voice(language_codes=["en-US"], name="en-US-Standard-B"),
+            cloud_tts.Voice(language_codes=["en-US"], name="Standard-A"),
             cloud_tts.Voice(language_codes=["el-GR"], name="el-GR-Standard-A"),
         ]
     )

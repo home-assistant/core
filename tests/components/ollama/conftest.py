@@ -1,12 +1,13 @@
 """Tests Ollama integration."""
 
+from copy import deepcopy
 from typing import Any
 from unittest.mock import patch
 
 import pytest
 
 from homeassistant.components import ollama
-from homeassistant.const import CONF_LLM_HASS_API
+from homeassistant.const import CONF_API_KEY, CONF_LLM_HASS_API
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import llm
 from homeassistant.setup import async_setup_component
@@ -23,13 +24,30 @@ def mock_config_entry_options() -> dict[str, Any]:
 
 
 @pytest.fixture
+def has_token() -> bool:
+    """Fixture to indicate if the config entry has a token."""
+    return False
+
+
+@pytest.fixture
+def mock_config_entry_data(has_token: bool) -> dict[str, Any]:
+    """Fixture for configuration entry data."""
+    res = deepcopy(TEST_USER_DATA)
+    if has_token:
+        res[CONF_API_KEY] = "test_token"
+    return res
+
+
+@pytest.fixture
 def mock_config_entry(
-    hass: HomeAssistant, mock_config_entry_options: dict[str, Any]
+    hass: HomeAssistant,
+    mock_config_entry_options: dict[str, Any],
+    mock_config_entry_data: dict[str, Any],
 ) -> MockConfigEntry:
     """Mock a config entry."""
     entry = MockConfigEntry(
         domain=ollama.DOMAIN,
-        data=TEST_USER_DATA,
+        data=mock_config_entry_data,
         version=3,
         minor_version=2,
         subentries_data=[
@@ -63,6 +81,23 @@ def mock_config_entry_with_assist(
         data={
             **subentry.data,
             CONF_LLM_HASS_API: llm.LLM_API_ASSIST,
+        },
+    )
+    return mock_config_entry
+
+
+@pytest.fixture
+def mock_config_entry_with_assist_invalid_api(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> MockConfigEntry:
+    """Mock a config entry with assist."""
+    subentry = next(iter(mock_config_entry.subentries.values()))
+    hass.config_entries.async_update_subentry(
+        mock_config_entry,
+        subentry,
+        data={
+            **subentry.data,
+            CONF_LLM_HASS_API: [llm.LLM_API_ASSIST, "invalid_api"],
         },
     )
     return mock_config_entry

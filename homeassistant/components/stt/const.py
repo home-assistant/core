@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from enum import Enum
+from enum import Enum, StrEnum
 from typing import TYPE_CHECKING
 
 from homeassistant.util.hass_dict import HassKey
@@ -18,14 +18,14 @@ DATA_COMPONENT: HassKey[EntityComponent[SpeechToTextEntity]] = HassKey(DOMAIN)
 DATA_PROVIDERS: HassKey[dict[str, Provider]] = HassKey(f"{DOMAIN}_providers")
 
 
-class AudioCodecs(str, Enum):
+class AudioCodecs(StrEnum):
     """Supported Audio codecs."""
 
     PCM = "pcm"
     OPUS = "opus"
 
 
-class AudioFormats(str, Enum):
+class AudioFormats(StrEnum):
     """Supported Audio formats."""
 
     WAV = "wav"
@@ -62,7 +62,7 @@ class AudioChannels(int, Enum):
     CHANNEL_STEREO = 2
 
 
-class SpeechResultState(str, Enum):
+class SpeechResultState(StrEnum):
     """Result state of speech."""
 
     SUCCESS = "success"

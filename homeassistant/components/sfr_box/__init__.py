@@ -22,16 +22,25 @@ async def async_setup_entry(hass: HomeAssistant, entry: SFRConfigEntry) -> bool:
     """Set up SFR box as config entry."""
     box = SFRBox(ip=entry.data[CONF_HOST], client=async_get_clientsession(hass))
     platforms = PLATFORMS
+    has_auth = False
     if (username := entry.data.get(CONF_USERNAME)) and (
         password := entry.data.get(CONF_PASSWORD)
     ):
         try:
             await box.authenticate(username=username, password=password)
         except SFRBoxAuthenticationError as err:
-            raise ConfigEntryAuthFailed from err
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN,
+                translation_key="invalid_credentials",
+            ) from err
         except SFRBoxError as err:
-            raise ConfigEntryNotReady from err
+            raise ConfigEntryNotReady(
+                translation_domain=DOMAIN,
+                translation_key="unknown_error",
+                translation_placeholders={"error": str(err)},
+            ) from err
         platforms = PLATFORMS_WITH_AUTH
+        has_auth = True
 
     data = SFRRuntimeData(
         box=box,
@@ -44,10 +53,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: SFRConfigEntry) -> bool:
         system=SFRDataUpdateCoordinator(
             hass, entry, box, "system", lambda b: b.system_get_info()
         ),
+        voip=None,
         wan=SFRDataUpdateCoordinator(
             hass, entry, box, "wan", lambda b: b.wan_get_info()
         ),
     )
+    if has_auth:
+        data.voip = SFRDataUpdateCoordinator(
+            hass, entry, box, "voip", lambda b: b.voip_get_info()
+        )
     # Preload system information
     await data.system.async_config_entry_first_refresh()
     system_info = data.system.data
@@ -56,6 +70,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: SFRConfigEntry) -> bool:
 
     # Preload other coordinators (based on net infrastructure)
     tasks = [data.wan.async_config_entry_first_refresh()]
+    if data.voip is not None:
+        tasks.append(data.voip.async_config_entry_first_refresh())
     if (net_infra := system_info.net_infra) == "adsl":
         tasks.append(data.dsl.async_config_entry_first_refresh())
     elif net_infra == "ftth":
@@ -65,9 +81,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: SFRConfigEntry) -> bool:
     device_registry = dr.async_get(hass)
     device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, system_info.mac_addr)},
         identifiers={(DOMAIN, system_info.mac_addr)},
         name="SFR Box",
-        model=system_info.product_id,
+        model=None,
         model_id=system_info.product_id,
         sw_version=system_info.version_mainfirmware,
         configuration_url=f"http://{entry.data[CONF_HOST]}",

@@ -1,0 +1,15 @@
+stopped_playing:
+  target:
+    entity:
+      domain: media_player
+  fields:
+    behavior:
+      required: true
+      default: any
+      selector:
+        select:
+          translation_key: trigger_behavior
+          options:
+            - first
+            - last
+            - any

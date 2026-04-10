@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import abc
 from collections import deque
-from collections.abc import Callable, Container, Coroutine, Generator, Iterable
+from collections.abc import Callable, Container, Coroutine, Generator, Iterable, Mapping
 from contextlib import contextmanager
 from dataclasses import dataclass
 from datetime import datetime, time as dt_time, timedelta
@@ -13,12 +13,24 @@ import inspect
 import logging
 import re
 import sys
-from typing import TYPE_CHECKING, Any, Protocol, cast
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Final,
+    Literal,
+    Protocol,
+    TypedDict,
+    Unpack,
+    cast,
+    overload,
+    override,
+)
 
 import voluptuous as vol
 
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
+    ATTR_UNIT_OF_MEASUREMENT,
     CONF_ABOVE,
     CONF_AFTER,
     CONF_ATTRIBUTE,
@@ -61,12 +73,27 @@ from homeassistant.loader import (
 from homeassistant.util import dt as dt_util
 from homeassistant.util.async_ import run_callback_threadsafe
 from homeassistant.util.hass_dict import HassKey
+from homeassistant.util.unit_conversion import BaseUnitConverter
 from homeassistant.util.yaml import load_yaml_dict
 
 from . import config_validation as cv, entity_registry as er, selector
-from .automation import get_absolute_description_key, get_relative_description_key
+from .automation import (
+    DomainSpec,
+    ThresholdConfig,
+    filter_by_domain_specs,
+    get_absolute_description_key,
+    get_relative_description_key,
+    move_options_fields_to_top_level,
+)
 from .integration_platform import async_process_integration_platforms
-from .selector import TargetSelector
+from .selector import (
+    NumericThresholdMode,
+    NumericThresholdSelector,
+    NumericThresholdSelectorConfig,
+    NumericThresholdType,
+    TargetSelector,
+)
+from .target import TargetSelection, async_extract_referenced_entity_ids
 from .template import Template, render_complex
 from .trace import (
     TraceElement,
@@ -78,7 +105,7 @@ from .trace import (
     trace_stack_push,
     trace_stack_top,
 )
-from .typing import ConfigType, TemplateVarsType
+from .typing import UNDEFINED, ConfigType, TemplateVarsType, UndefinedType
 
 ASYNC_FROM_CONFIG_FORMAT = "async_{}_from_config"
 FROM_CONFIG_FORMAT = "{}_from_config"
@@ -105,6 +132,9 @@ INPUT_ENTITY_ID = re.compile(
 
 CONDITION_DESCRIPTION_CACHE: HassKey[dict[str, dict[str, Any] | None]] = HassKey(
     "condition_description_cache"
+)
+CONDITION_DISABLED_CONDITIONS: HassKey[set[str]] = HassKey(
+    "condition_disabled_conditions"
 )
 CONDITION_PLATFORM_SUBSCRIPTIONS: HassKey[
     list[Callable[[set[str]], Coroutine[Any, Any, None]]]
@@ -147,9 +177,28 @@ _CONDITIONS_DESCRIPTION_SCHEMA = vol.Schema(
 
 async def async_setup(hass: HomeAssistant) -> None:
     """Set up the condition helper."""
+    from homeassistant.components import automation, labs  # noqa: PLC0415
+
     hass.data[CONDITION_DESCRIPTION_CACHE] = {}
+    hass.data[CONDITION_DISABLED_CONDITIONS] = set()
     hass.data[CONDITION_PLATFORM_SUBSCRIPTIONS] = []
     hass.data[CONDITIONS] = {}
+
+    async def new_triggers_conditions_listener(
+        _event_data: labs.EventLabsUpdatedData,
+    ) -> None:
+        """Handle new_triggers_conditions flag change."""
+        # Invalidate the cache
+        hass.data[CONDITION_DESCRIPTION_CACHE] = {}
+        hass.data[CONDITION_DISABLED_CONDITIONS] = set()
+
+    labs.async_subscribe_preview_feature(
+        hass,
+        automation.DOMAIN,
+        automation.NEW_TRIGGERS_CONDITIONS_FEATURE_FLAG,
+        new_triggers_conditions_listener,
+    )
+
     await async_process_integration_platforms(
         hass, "condition", _register_condition_platform, wait_for_platforms=True
     )
@@ -173,22 +222,41 @@ def async_subscribe_platform_events(
 async def _register_condition_platform(
     hass: HomeAssistant, integration_domain: str, platform: ConditionProtocol
 ) -> None:
-    """Register a condition platform."""
+    """Register a condition platform and notify listeners.
+
+    If the condition platform does not provide any conditions, or it is disabled,
+    listeners will not be notified.
+    """
+    from homeassistant.components import automation  # noqa: PLC0415
 
     new_conditions: set[str] = set()
+    conditions = hass.data[CONDITIONS]
 
     if hasattr(platform, "async_get_conditions"):
-        for condition_key in await platform.async_get_conditions(hass):
+        all_conditions = await platform.async_get_conditions(hass)
+        for condition_key in all_conditions:
             condition_key = get_absolute_description_key(
                 integration_domain, condition_key
             )
-            hass.data[CONDITIONS][condition_key] = integration_domain
-            new_conditions.add(condition_key)
+            if condition_key not in conditions:
+                conditions[condition_key] = integration_domain
+                new_conditions.add(condition_key)
+        if not new_conditions:
+            if not all_conditions:
+                _LOGGER.debug(
+                    "Integration %s returned no conditions in async_get_conditions",
+                    integration_domain,
+                )
+            return
     else:
         _LOGGER.debug(
             "Integration %s does not provide condition support, skipping",
             integration_domain,
         )
+        return
+
+    if automation.is_disabled_experimental_condition(hass, integration_domain):
+        _LOGGER.debug("Conditions for integration %s are disabled", integration_domain)
         return
 
     # We don't use gather here because gather adds additional overhead
@@ -202,10 +270,14 @@ async def _register_condition_platform(
             _LOGGER.exception("Error while notifying condition platform listener")
 
 
-_CONDITION_SCHEMA = vol.Schema(
+_CONDITION_BASE_SCHEMA = vol.Schema(
     {
         **cv.CONDITION_BASE_SCHEMA,
         vol.Required(CONF_CONDITION): str,
+    }
+)
+_CONDITION_SCHEMA = _CONDITION_BASE_SCHEMA.extend(
+    {
         vol.Optional(CONF_OPTIONS): object,
         vol.Optional(CONF_TARGET): cv.TARGET_FIELDS,
     }
@@ -214,6 +286,8 @@ _CONDITION_SCHEMA = vol.Schema(
 
 class Condition(abc.ABC):
     """Condition class."""
+
+    _hass: HomeAssistant
 
     @classmethod
     async def async_validate_complete_config(
@@ -249,10 +323,365 @@ class Condition(abc.ABC):
 
     def __init__(self, hass: HomeAssistant, config: ConditionConfig) -> None:
         """Initialize condition."""
+        self._hass = hass
 
     @abc.abstractmethod
-    async def async_get_checker(self) -> ConditionCheckerType:
+    async def async_get_checker(self) -> ConditionChecker:
         """Get the condition checker."""
+
+
+ATTR_BEHAVIOR: Final = "behavior"
+BEHAVIOR_ANY: Final = "any"
+BEHAVIOR_ALL: Final = "all"
+
+ENTITY_STATE_CONDITION_SCHEMA_ANY_ALL = vol.Schema(
+    {
+        vol.Required(CONF_TARGET): cv.TARGET_FIELDS,
+        vol.Required(CONF_OPTIONS): {
+            vol.Required(ATTR_BEHAVIOR, default=BEHAVIOR_ANY): vol.In(
+                [BEHAVIOR_ANY, BEHAVIOR_ALL]
+            ),
+        },
+    }
+)
+
+
+class EntityConditionBase(Condition):
+    """Base class for entity conditions."""
+
+    _domain_specs: Mapping[str, DomainSpec]
+    _schema: vol.Schema = ENTITY_STATE_CONDITION_SCHEMA_ANY_ALL
+
+    @override
+    @classmethod
+    async def async_validate_config(
+        cls, hass: HomeAssistant, config: ConfigType
+    ) -> ConfigType:
+        """Validate config."""
+        return cast(ConfigType, cls._schema(config))
+
+    def __init__(self, hass: HomeAssistant, config: ConditionConfig) -> None:
+        """Initialize condition."""
+        super().__init__(hass, config)
+        if TYPE_CHECKING:
+            assert config.target
+            assert config.options
+        self._target_selection = TargetSelection(config.target)
+        self._behavior = config.options[ATTR_BEHAVIOR]
+
+    def entity_filter(self, entities: set[str]) -> set[str]:
+        """Filter entities matching any of the domain specs."""
+        return filter_by_domain_specs(self._hass, self._domain_specs, entities)
+
+    def _get_tracked_value(self, entity_state: State) -> Any:
+        """Get the tracked value from a state based on the DomainSpec."""
+        domain_spec = self._domain_specs[entity_state.domain]
+        if domain_spec.value_source is None:
+            return entity_state.state
+        return entity_state.attributes.get(domain_spec.value_source)
+
+    @abc.abstractmethod
+    def is_valid_state(self, entity_state: State) -> bool:
+        """Check if the state matches the expected state(s)."""
+
+    @override
+    async def async_get_checker(self) -> ConditionChecker:
+        """Get the condition checker."""
+
+        def check_any_match_state(states: list[State]) -> bool:
+            """Test if any entity matches the state."""
+            return any(self.is_valid_state(state) for state in states)
+
+        def check_all_match_state(states: list[State]) -> bool:
+            """Test if all entities match the state."""
+            return all(self.is_valid_state(state) for state in states)
+
+        matcher: Callable[[list[State]], bool]
+        if self._behavior == BEHAVIOR_ANY:
+            matcher = check_any_match_state
+        elif self._behavior == BEHAVIOR_ALL:
+            matcher = check_all_match_state
+
+        def test_state(**kwargs: Unpack[ConditionCheckParams]) -> bool:
+            """Test state condition."""
+            targeted_entities = async_extract_referenced_entity_ids(
+                self._hass, self._target_selection, expand_group=False
+            )
+            referenced_entity_ids = targeted_entities.referenced.union(
+                targeted_entities.indirectly_referenced
+            )
+            filtered_entity_ids = self.entity_filter(referenced_entity_ids)
+            entity_states = [
+                _state
+                for entity_id in filtered_entity_ids
+                if (_state := self._hass.states.get(entity_id))
+                and _state.state not in (STATE_UNAVAILABLE, STATE_UNKNOWN)
+            ]
+            return matcher(entity_states)
+
+        return test_state
+
+
+class EntityStateConditionBase(EntityConditionBase):
+    """State condition."""
+
+    _states: set[str | bool]
+
+    def is_valid_state(self, entity_state: State) -> bool:
+        """Check if the state matches the expected state(s)."""
+        return self._get_tracked_value(entity_state) in self._states
+
+
+def _normalize_domain_specs(
+    domain_specs: Mapping[str, DomainSpec] | str,
+) -> Mapping[str, DomainSpec]:
+    """Normalize domain_specs argument to a Mapping."""
+    if isinstance(domain_specs, str):
+        return {domain_specs: DomainSpec()}
+    return domain_specs
+
+
+def make_entity_state_condition(
+    domain_specs: Mapping[str, DomainSpec] | str,
+    states: str | bool | set[str | bool],
+) -> type[EntityStateConditionBase]:
+    """Create a condition for entity state changes to specific state(s).
+
+    domain_specs can be a string (domain name) for simple state-based conditions,
+    or a Mapping[str, DomainSpec] for attribute-based or multi-domain conditions.
+    """
+    specs = _normalize_domain_specs(domain_specs)
+
+    if isinstance(states, (str, bool)):
+        states_set: set[str | bool] = {states}
+    else:
+        states_set = states
+
+    class CustomCondition(EntityStateConditionBase):
+        """Condition for entity state."""
+
+        _domain_specs = specs
+        _states = states_set
+
+    return CustomCondition
+
+
+NUMERICAL_CONDITION_SCHEMA = ENTITY_STATE_CONDITION_SCHEMA_ANY_ALL.extend(
+    {
+        vol.Required(CONF_OPTIONS): {
+            vol.Required("threshold"): NumericThresholdSelector(
+                NumericThresholdSelectorConfig(mode=NumericThresholdMode.IS)
+            ),
+        },
+    }
+)
+
+
+class EntityNumericalConditionBase(EntityConditionBase):
+    """Condition for numerical state comparisons with above/below thresholds."""
+
+    _schema = NUMERICAL_CONDITION_SCHEMA
+    _valid_unit: str | None | UndefinedType = UNDEFINED
+
+    def __init__(self, hass: HomeAssistant, config: ConditionConfig) -> None:
+        """Initialize the numerical condition."""
+        super().__init__(hass, config)
+        if TYPE_CHECKING:
+            assert config.options is not None
+        threshold_options: dict[str, Any] = config.options["threshold"]
+        self.threshold = ThresholdConfig.from_config(threshold_options.get("value"))
+        self.lower_threshold = ThresholdConfig.from_config(
+            threshold_options.get("value_min")
+        )
+        self.upper_threshold = ThresholdConfig.from_config(
+            threshold_options.get("value_max")
+        )
+        self._threshold_type = threshold_options["type"]
+
+    def _is_valid_unit(self, unit: str | None) -> bool:
+        """Check if the given unit is valid for this condition."""
+        if isinstance(self._valid_unit, UndefinedType):
+            return True
+        return unit == self._valid_unit
+
+    def _get_threshold_value(self, threshold: ThresholdConfig | None) -> float | None:
+        """Get threshold value from float or entity state."""
+        if threshold is None:
+            return None
+        if threshold.numerical:
+            return threshold.number
+
+        if not (entity_state := self._hass.states.get(threshold.entity)):  # type: ignore[arg-type]
+            # Entity not found
+            return None
+        if not self._is_valid_unit(
+            entity_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+        ):
+            # Entity unit does not match the expected unit
+            return None
+        try:
+            return float(entity_state.state)
+        except TypeError, ValueError:
+            # Entity state is not a valid number
+            return None
+
+    def _get_tracked_value(self, entity_state: State) -> Any:
+        """Get the tracked value from a state, with unit validation for state-based values."""
+        domain_spec = self._domain_specs[entity_state.domain]
+        if domain_spec.value_source is None:
+            if not self._is_valid_unit(
+                entity_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+            ):
+                return None
+            return entity_state.state
+        return entity_state.attributes.get(domain_spec.value_source)
+
+    def is_valid_state(self, entity_state: State) -> bool:
+        """Check if the state is within the specified range."""
+        try:
+            value = float(self._get_tracked_value(entity_state))
+        except TypeError, ValueError:
+            return False
+
+        if self._threshold_type == NumericThresholdType.ABOVE:
+            if (limit := self._get_threshold_value(self.threshold)) is None:
+                # Entity not found or invalid number, don't trigger
+                return False
+            return value > limit
+        if self._threshold_type == NumericThresholdType.BELOW:
+            if (limit := self._get_threshold_value(self.threshold)) is None:
+                # Entity not found or invalid number, don't trigger
+                return False
+            return value < limit
+
+        # Mode is BETWEEN or OUTSIDE
+        lower_limit = self._get_threshold_value(self.lower_threshold)
+        upper_limit = self._get_threshold_value(self.upper_threshold)
+        if lower_limit is None or upper_limit is None:
+            # Entity not found or invalid number, don't trigger
+            return False
+        between = lower_limit < value < upper_limit
+        if self._threshold_type == NumericThresholdType.BETWEEN:
+            return between
+        return not between
+
+
+def make_entity_numerical_condition(
+    domain_specs: Mapping[str, DomainSpec] | str,
+    valid_unit: str | None | UndefinedType = UNDEFINED,
+) -> type[EntityNumericalConditionBase]:
+    """Create a condition for numerical state comparisons."""
+    specs = _normalize_domain_specs(domain_specs)
+
+    class CustomCondition(EntityNumericalConditionBase):
+        """Condition for numerical state."""
+
+        _domain_specs = specs
+        _valid_unit = valid_unit
+
+    return CustomCondition
+
+
+def _make_numerical_condition_with_unit_schema(
+    unit_converter: type[BaseUnitConverter],
+) -> vol.Schema:
+    """Factory for numerical condition schema with unit option."""
+    return ENTITY_STATE_CONDITION_SCHEMA_ANY_ALL.extend(
+        {
+            vol.Required(CONF_OPTIONS): {
+                vol.Required("threshold"): NumericThresholdSelector(
+                    NumericThresholdSelectorConfig(
+                        mode=NumericThresholdMode.IS,
+                        unit_of_measurement=list(unit_converter.VALID_UNITS),
+                    )
+                ),
+            },
+        }
+    )
+
+
+class EntityNumericalConditionWithUnitBase(EntityNumericalConditionBase):
+    """Condition for numerical state comparisons with unit conversion."""
+
+    _base_unit: str | None  # Base unit for the tracked value
+    _unit_converter: type[BaseUnitConverter]
+
+    def __init_subclass__(cls, **kwargs: Any) -> None:
+        """Create a schema."""
+        super().__init_subclass__(**kwargs)
+        cls._schema = _make_numerical_condition_with_unit_schema(cls._unit_converter)
+
+    def _get_entity_unit(self, entity_state: State) -> str | None:
+        """Get the unit of an entity from its state."""
+        return entity_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+
+    def _get_threshold_value(self, threshold: ThresholdConfig | None) -> float | None:
+        """Get threshold value from float or entity state."""
+        if threshold is None:
+            return None
+        if threshold.numerical:
+            return self._unit_converter.convert(
+                threshold.number,  # type: ignore[arg-type]
+                threshold.unit,  # type: ignore[arg-type]
+                self._base_unit,
+            )
+
+        if not (entity_state := self._hass.states.get(threshold.entity)):  # type: ignore[arg-type]
+            # Entity not found
+            return None
+        try:
+            value = float(entity_state.state)
+        except TypeError, ValueError:
+            # Entity state is not a valid number
+            return None
+
+        try:
+            return self._unit_converter.convert(
+                value,
+                entity_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT),
+                self._base_unit,
+            )
+        except HomeAssistantError:
+            # Unit conversion failed (i.e. incompatible units), treat as invalid number
+            return None
+
+    def _get_tracked_value(self, entity_state: State) -> Any:
+        """Get the tracked numerical value from a state."""
+        domain_spec = self._domain_specs[entity_state.domain]
+        raw_value: Any
+        if domain_spec.value_source is None:
+            raw_value = entity_state.state
+        else:
+            raw_value = entity_state.attributes.get(domain_spec.value_source)
+
+        try:
+            value = float(raw_value)
+        except TypeError, ValueError:
+            return None
+
+        try:
+            return self._unit_converter.convert(
+                value, self._get_entity_unit(entity_state), self._base_unit
+            )
+        except HomeAssistantError:
+            return None
+
+
+def make_entity_numerical_condition_with_unit(
+    domain_specs: Mapping[str, DomainSpec],
+    base_unit: str,
+    unit_converter: type[BaseUnitConverter],
+) -> type[EntityNumericalConditionWithUnitBase]:
+    """Create a condition for numerical state comparisons with unit conversion."""
+
+    class CustomCondition(EntityNumericalConditionWithUnitBase):
+        """Condition for numerical state with unit conversion."""
+
+        _domain_specs = domain_specs
+        _base_unit = base_unit
+        _unit_converter = unit_converter
+
+    return CustomCondition
 
 
 class ConditionProtocol(Protocol):
@@ -272,7 +701,23 @@ class ConditionConfig:
     target: dict[str, Any] | None = None
 
 
-type ConditionCheckerType = Callable[[HomeAssistant, TemplateVarsType], bool | None]
+class ConditionCheckParams(TypedDict, total=False):
+    """Condition check params."""
+
+    variables: TemplateVarsType
+
+
+class ConditionChecker(Protocol):
+    """Protocol for condition checker callable with typed kwargs."""
+
+    def __call__(self, **kwargs: Unpack[ConditionCheckParams]) -> bool:
+        """Check the condition."""
+
+
+type ConditionCheckerType = Callable[[HomeAssistant, TemplateVarsType], bool]
+type ConditionCheckerTypeOptional = Callable[
+    [HomeAssistant, TemplateVarsType], bool | None
+]
 
 
 def condition_trace_append(variables: TemplateVarsType, path: str) -> TraceElement:
@@ -327,7 +772,21 @@ def trace_condition(variables: TemplateVarsType) -> Generator[TraceElement]:
             trace_stack_pop(trace_stack_cv)
 
 
-def trace_condition_function(condition: ConditionCheckerType) -> ConditionCheckerType:
+@overload
+def trace_condition_function(
+    condition: ConditionCheckerType,
+) -> ConditionCheckerType: ...
+
+
+@overload
+def trace_condition_function(
+    condition: ConditionCheckerTypeOptional,
+) -> ConditionCheckerTypeOptional: ...
+
+
+def trace_condition_function(
+    condition: ConditionCheckerType | ConditionCheckerTypeOptional,
+) -> ConditionCheckerType | ConditionCheckerTypeOptional:
     """Wrap a condition function to enable basic tracing."""
 
     @ft.wraps(condition)
@@ -344,11 +803,21 @@ def trace_condition_function(condition: ConditionCheckerType) -> ConditionChecke
 async def _async_get_condition_platform(
     hass: HomeAssistant, condition_key: str
 ) -> tuple[str, ConditionProtocol | None]:
+    from homeassistant.components import automation  # noqa: PLC0415
+
     platform_and_sub_type = condition_key.split(".")
     platform: str | None = platform_and_sub_type[0]
     platform = _PLATFORM_ALIASES.get(platform, platform)
     if platform is None:
         return "", None
+
+    if automation.is_disabled_experimental_condition(hass, platform):
+        raise vol.Invalid(
+            f"Condition '{condition_key}' requires the experimental 'New triggers and "
+            "conditions' feature to be enabled in Home Assistant Labs settings "
+            f"(feature flag: '{automation.NEW_TRIGGERS_CONDITIONS_FEATURE_FLAG}')"
+        )
+
     try:
         integration = await async_get_integration(hass, platform)
     except IntegrationNotFound:
@@ -356,17 +825,32 @@ async def _async_get_condition_platform(
             f'Invalid condition "{condition_key}" specified'
         ) from None
     try:
-        return platform, await integration.async_get_platform("condition")
+        platform_module = await integration.async_get_platform("condition")
     except ImportError:
         raise HomeAssistantError(
             f"Integration '{platform}' does not provide condition support"
         ) from None
 
+    # Ensure conditions are registered so descriptions can be loaded
+    await _register_condition_platform(hass, platform, platform_module)
+
+    return platform, platform_module
+
+
+async def _async_get_checker(condition: Condition) -> ConditionCheckerType:
+    new_checker = await condition.async_get_checker()
+
+    @trace_condition_function
+    def checker(hass: HomeAssistant, variables: TemplateVarsType = None) -> bool:
+        return new_checker(variables=variables)
+
+    return checker
+
 
 async def async_from_config(
     hass: HomeAssistant,
     config: ConfigType,
-) -> ConditionCheckerType:
+) -> ConditionCheckerTypeOptional:
     """Turn a condition configuration into a method.
 
     Should be run on the event loop.
@@ -409,7 +893,7 @@ async def async_from_config(
                 target=config.get(CONF_TARGET),
             ),
         )
-        return await condition.async_get_checker()
+        return await _async_get_checker(condition)
 
     for fmt in (ASYNC_FROM_CONFIG_FORMAT, FROM_CONFIG_FORMAT):
         factory = getattr(sys.modules[__name__], fmt.format(condition_key), None)
@@ -1044,6 +1528,8 @@ async def async_validate_condition_config(
             raise vol.Invalid(f"Invalid condition '{condition_key}' specified")
         return await condition_class.async_validate_complete_config(hass, config)
 
+    config = move_options_fields_to_top_level(config, _CONDITION_BASE_SCHEMA)
+
     if condition_key in ("numeric_state", "state"):
         validator = cast(
             Callable[[HomeAssistant, ConfigType], ConfigType],
@@ -1072,7 +1558,7 @@ async def async_conditions_from_config(
     name: str,
 ) -> Callable[[TemplateVarsType], bool]:
     """AND all conditions."""
-    checks: list[ConditionCheckerType] = [
+    checks = [
         await async_from_config(hass, condition_config)
         for condition_config in condition_configs
     ]
@@ -1130,13 +1616,18 @@ def async_extract_entities(config: ConfigType | Template) -> set[str]:
         if entity_ids is not None:
             referenced.update(entity_ids)
 
+        if target_entities := _get_targets_from_condition_config(
+            config, CONF_ENTITY_ID
+        ):
+            referenced.update(target_entities)
+
     return referenced
 
 
 @callback
 def async_extract_devices(config: ConfigType | Template) -> set[str]:
     """Extract devices from a condition."""
-    referenced = set()
+    referenced: set[str] = set()
     to_process = deque([config])
 
     while to_process:
@@ -1150,13 +1641,55 @@ def async_extract_devices(config: ConfigType | Template) -> set[str]:
             to_process.extend(config["conditions"])
             continue
 
-        if condition != "device":
+        if condition == "device":
+            if (device_id := config.get(CONF_DEVICE_ID)) is not None:
+                referenced.add(device_id)
             continue
 
-        if (device_id := config.get(CONF_DEVICE_ID)) is not None:
-            referenced.add(device_id)
+        if target_devices := _get_targets_from_condition_config(config, CONF_DEVICE_ID):
+            referenced.update(target_devices)
 
     return referenced
+
+
+@callback
+def async_extract_targets(
+    config: ConfigType | Template,
+    target_type: Literal["area_id", "floor_id", "label_id"],
+) -> set[str]:
+    """Extract targets from a condition."""
+    referenced: set[str] = set()
+    to_process = deque([config])
+
+    while to_process:
+        config = to_process.popleft()
+        if isinstance(config, Template):
+            continue
+
+        condition = config[CONF_CONDITION]
+
+        if condition in ("and", "not", "or"):
+            to_process.extend(config["conditions"])
+            continue
+
+        if targets := _get_targets_from_condition_config(config, target_type):
+            referenced.update(targets)
+
+    return referenced
+
+
+@callback
+def _get_targets_from_condition_config(
+    config: ConfigType,
+    target: Literal["entity_id", "device_id", "area_id", "floor_id", "label_id"],
+) -> list[str]:
+    """Extract targets from a condition target config."""
+    if not (target_conf := config.get(CONF_TARGET)):
+        return []
+    if not (targets := target_conf.get(target)):
+        return []
+
+    return [targets] if isinstance(targets, str) else targets
 
 
 def _load_conditions_file(integration: Integration) -> dict[str, Any]:
@@ -1199,6 +1732,8 @@ async def async_get_all_descriptions(
     hass: HomeAssistant,
 ) -> dict[str, dict[str, Any] | None]:
     """Return descriptions (i.e. user documentation) for all conditions."""
+    from homeassistant.components import automation  # noqa: PLC0415
+
     descriptions_cache = hass.data[CONDITION_DESCRIPTION_CACHE]
 
     conditions = hass.data[CONDITIONS]
@@ -1207,7 +1742,12 @@ async def async_get_all_descriptions(
     all_conditions = set(conditions)
     previous_all_conditions = set(descriptions_cache)
     # If the conditions are the same, we can return the cache
-    if previous_all_conditions == all_conditions:
+
+    # mypy complains: Invalid index type "HassKey[set[str]]" for "HassDict"
+    if (
+        previous_all_conditions | hass.data[CONDITION_DISABLED_CONDITIONS]  # type: ignore[index]
+        == all_conditions
+    ):
         return descriptions_cache
 
     # Files we loaded for missing descriptions
@@ -1247,6 +1787,9 @@ async def async_get_all_descriptions(
     new_descriptions_cache = descriptions_cache.copy()
     for missing_condition in missing_conditions:
         domain = conditions[missing_condition]
+        if automation.is_disabled_experimental_condition(hass, domain):
+            hass.data[CONDITION_DISABLED_CONDITIONS].add(missing_condition)
+            continue
 
         if (
             yaml_description := new_conditions_descriptions.get(domain, {}).get(
@@ -1261,6 +1804,8 @@ async def async_get_all_descriptions(
             continue
 
         description = {"fields": yaml_description.get("fields", {})}
+        if (target := yaml_description.get("target")) is not None:
+            description["target"] = target
 
         new_descriptions_cache[missing_condition] = description
 

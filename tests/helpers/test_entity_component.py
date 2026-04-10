@@ -26,6 +26,7 @@ from homeassistant.exceptions import HomeAssistantError, PlatformNotReady
 from homeassistant.helpers import config_validation as cv, discovery
 from homeassistant.helpers.entity_component import EntityComponent, async_update_entity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.service import async_get_all_descriptions
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
@@ -300,13 +301,15 @@ async def test_extract_from_service_no_group_expand(hass: HomeAssistant) -> None
     """Test not expanding a group."""
     component = EntityComponent(_LOGGER, DOMAIN, hass)
     await component.async_setup({})
-    await component.async_add_entities([MockEntity(entity_id="group.test_group")])
+    await component.async_add_entities([MockEntity(entity_id="test_domain.test_group")])
 
-    call = ServiceCall(hass, "test", "service", {"entity_id": ["group.test_group"]})
+    call = ServiceCall(
+        hass, "test", "service", {"entity_id": ["test_domain.test_group"]}
+    )
 
     extracted = await component.async_extract_from_service(call, expand_group=False)
     assert len(extracted) == 1
-    assert extracted[0].entity_id == "group.test_group"
+    assert extracted[0].entity_id == "test_domain.test_group"
 
 
 async def test_setup_dependencies_platform(hass: HomeAssistant) -> None:
@@ -511,7 +514,7 @@ async def test_register_entity_service(
     schema: dict | None,
     service_data: dict,
 ) -> None:
-    """Test registering an enttiy service and calling it."""
+    """Test registering an entity service and calling it."""
     entity = MockEntity(entity_id=f"{DOMAIN}.entity")
     calls = []
 
@@ -525,7 +528,16 @@ async def test_register_entity_service(
     await component.async_setup({})
     await component.async_add_entities([entity])
 
-    component.async_register_entity_service("hello", schema, "async_called_by_service")
+    component.async_register_entity_service(
+        "hello",
+        schema,
+        "async_called_by_service",
+        description_placeholders={"test_placeholder": "beer"},
+    )
+    descriptions = await async_get_all_descriptions(hass)
+    assert descriptions["test_domain"]["hello"]["description_placeholders"] == {
+        "test_placeholder": "beer"
+    }
 
     with pytest.raises(vol.Invalid):
         await hass.services.async_call(

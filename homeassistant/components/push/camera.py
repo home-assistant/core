@@ -6,7 +6,7 @@ import asyncio
 from collections import deque
 from datetime import timedelta
 import logging
-from typing import cast
+from typing import Any, cast
 
 from aiohttp import web
 import voluptuous as vol
@@ -183,7 +183,7 @@ class PushCamera(Camera):
         return self._current_image
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
         return {
             name: value

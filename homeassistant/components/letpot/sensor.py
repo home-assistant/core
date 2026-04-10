@@ -49,10 +49,12 @@ SENSORS: tuple[LetPotSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
         supported_fn=(
-            lambda coordinator: DeviceFeature.TEMPERATURE
-            in coordinator.device_client.device_info(
-                coordinator.device.serial_number
-            ).features
+            lambda coordinator: (
+                DeviceFeature.TEMPERATURE
+                in coordinator.device_client.device_info(
+                    coordinator.device.serial_number
+                ).features
+            )
         ),
     ),
     LetPotSensorEntityDescription(
@@ -62,10 +64,12 @@ SENSORS: tuple[LetPotSensorEntityDescription, ...] = (
         native_unit_of_measurement_fn=lambda _: PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         supported_fn=(
-            lambda coordinator: DeviceFeature.WATER_LEVEL
-            in coordinator.device_client.device_info(
-                coordinator.device.serial_number
-            ).features
+            lambda coordinator: (
+                DeviceFeature.WATER_LEVEL
+                in coordinator.device_client.device_info(
+                    coordinator.device.serial_number
+                ).features
+            )
         ),
     ),
 )

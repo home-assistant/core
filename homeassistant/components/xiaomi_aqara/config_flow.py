@@ -44,6 +44,11 @@ GATEWAY_SETTINGS = vol.Schema(
     }
 )
 
+ERROR_STEP_PLACEHOLDERS = {
+    "tutorial_url": "https://www.domoticz.com/wiki/Xiaomi_Gateway_(Aqara)#Adding_the_Xiaomi_Gateway_to_Domoticz",
+    "invalid_host_url": "https://www.home-assistant.io/integrations/xiaomi_aqara/#connection-problem",
+}
+
 
 class XiaomiAqaraFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle a Xiaomi Aqara config flow."""
@@ -66,7 +71,12 @@ class XiaomiAqaraFlowHandler(ConfigFlow, domain=DOMAIN):
         if (self.host is None and self.sid is None) or errors:
             schema = GATEWAY_CONFIG_HOST
 
-        return self.async_show_form(step_id="user", data_schema=schema, errors=errors)
+        return self.async_show_form(
+            step_id="user",
+            data_schema=schema,
+            errors=errors,
+            description_placeholders=ERROR_STEP_PLACEHOLDERS,
+        )
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -149,7 +159,10 @@ class XiaomiAqaraFlowHandler(ConfigFlow, domain=DOMAIN):
         )
 
         return self.async_show_form(
-            step_id="select", data_schema=select_schema, errors=errors
+            step_id="select",
+            data_schema=select_schema,
+            errors=errors,
+            description_placeholders=ERROR_STEP_PLACEHOLDERS,
         )
 
     async def async_step_zeroconf(
@@ -236,5 +249,8 @@ class XiaomiAqaraFlowHandler(ConfigFlow, domain=DOMAIN):
             errors[CONF_KEY] = "invalid_key"
 
         return self.async_show_form(
-            step_id="settings", data_schema=GATEWAY_SETTINGS, errors=errors
+            step_id="settings",
+            data_schema=GATEWAY_SETTINGS,
+            errors=errors,
+            description_placeholders=ERROR_STEP_PLACEHOLDERS,
         )

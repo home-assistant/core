@@ -1,5 +1,7 @@
 """Tests for HomematicIP Cloud binary sensor."""
 
+from typing import Any
+
 from homematicip.base.enums import SmokeDetectorAlarmType, WindowState
 
 from homeassistant.components.homematicip_cloud.binary_sensor import (
@@ -27,15 +29,58 @@ from homeassistant.core import HomeAssistant
 from .helper import HomeFactory, async_manipulate_test_data, get_and_check_entity_basics
 
 
+async def test_hmip_full_flush_lock_controller_binary_sensors(
+    hass: HomeAssistant,
+    default_mock_hap_factory: HomeFactory,
+    full_flush_lock_controller_device_data: dict[str, Any],
+) -> None:
+    """Test HomematicIP full flush lock controller binary sensors."""
+    mock_hap = await default_mock_hap_factory.async_get_mock_hap(
+        test_devices=["Universal Motorschloss Controller"],
+        extra_devices=[full_flush_lock_controller_device_data],
+    )
+
+    lock_entity_id = "binary_sensor.universal_motorschloss_controller_locked"
+    lock_state, hmip_device = get_and_check_entity_basics(
+        hass,
+        mock_hap,
+        lock_entity_id,
+        "Universal Motorschloss Controller Locked",
+        "HmIP-FLC",
+    )
+    assert lock_state.state == STATE_ON
+
+    glass_entity_id = "binary_sensor.universal_motorschloss_controller_glass_break"
+    glass_state, _ = get_and_check_entity_basics(
+        hass,
+        mock_hap,
+        glass_entity_id,
+        "Universal Motorschloss Controller Glass break",
+        "HmIP-FLC",
+    )
+    assert glass_state.state == STATE_ON
+
+    assert hmip_device is not None
+    await async_manipulate_test_data(hass, hmip_device, "lockState", "UNLOCKED")
+    lock_state = hass.states.get(lock_entity_id)
+    assert lock_state
+    assert lock_state.state == STATE_OFF
+
+    await async_manipulate_test_data(hass, hmip_device, "glassBroken", False)
+    glass_state = hass.states.get(glass_entity_id)
+    assert glass_state
+    assert glass_state.state == STATE_OFF
+
+
 async def test_hmip_home_cloud_connection_sensor(
     hass: HomeAssistant, default_mock_hap_factory: HomeFactory
 ) -> None:
     """Test HomematicipCloudConnectionSensor."""
     entity_id = "binary_sensor.cloud_connection"
-    entity_name = "Cloud Connection"
+    entity_name = "Home Cloud Connection"
     device_model = None
     mock_hap = await default_mock_hap_factory.async_get_mock_hap(
-        test_devices=[entity_name]
+        test_devices=["Cloud Connection"]
     )
 
     ha_state, _hmip_device = get_and_check_entity_basics(
@@ -328,6 +373,27 @@ async def test_hmip_smoke_detector(
     assert ha_state.state == STATE_OFF
 
 
+async def test_hmip_smoke_detector_chamber_degraded(
+    hass: HomeAssistant, default_mock_hap_factory: HomeFactory
+) -> None:
+    """Test HomematicipSmokeDetectorChamberDegraded."""
+    entity_id = "binary_sensor.rauchwarnmelder_chamber_degraded"
+    entity_name = "Rauchwarnmelder Chamber Degraded"
+    device_model = "HmIP-SWSD"
+    mock_hap = await default_mock_hap_factory.async_get_mock_hap(
+        test_devices=["Rauchwarnmelder"]
+    )
+
+    ha_state, hmip_device = get_and_check_entity_basics(
+        hass, mock_hap, entity_id, entity_name, device_model
+    )
+
+    assert ha_state.state == STATE_OFF
+    await async_manipulate_test_data(hass, hmip_device, "chamberDegraded", True)
+    ha_state = hass.states.get(entity_id)
+    assert ha_state.state == STATE_ON
+
+
 async def test_hmip_water_detector(
     hass: HomeAssistant, default_mock_hap_factory: HomeFactory
 ) -> None:
@@ -565,8 +631,8 @@ async def test_hmip_multi_contact_interface(
     hass: HomeAssistant, default_mock_hap_factory: HomeFactory
 ) -> None:
     """Test HomematicipMultiContactInterface."""
-    entity_id = "binary_sensor.wired_eingangsmodul_32_fach_channel5"
-    entity_name = "Wired Eingangsmodul – 32-fach Channel5"
+    entity_id = "binary_sensor.wired_eingangsmodul_32_fach_channel10"
+    entity_name = "Wired Eingangsmodul – 32-fach Channel10"
     device_model = "HmIPW-DRI32"
     mock_hap = await default_mock_hap_factory.async_get_mock_hap(
         test_devices=["Wired Eingangsmodul – 32-fach", "Licht Flur"]
@@ -578,14 +644,24 @@ async def test_hmip_multi_contact_interface(
 
     assert ha_state.state == STATE_OFF
     await async_manipulate_test_data(
-        hass, hmip_device, "windowState", WindowState.OPEN, channel=5
+        hass, hmip_device, "windowState", WindowState.OPEN, channel_real_index=10
     )
     ha_state = hass.states.get(entity_id)
     assert ha_state.state == STATE_ON
 
-    await async_manipulate_test_data(hass, hmip_device, "windowState", None, channel=5)
+    await async_manipulate_test_data(
+        hass, hmip_device, "windowState", None, channel_real_index=10
+    )
     ha_state = hass.states.get(entity_id)
     assert ha_state.state == STATE_UNKNOWN
+
+    # Test channel 32 of device
+    entity_id = "binary_sensor.wired_eingangsmodul_32_fach_channel32"
+    entity_name = "Wired Eingangsmodul – 32-fach Channel32"
+    ha_state, hmip_device = get_and_check_entity_basics(
+        hass, mock_hap, entity_id, entity_name, device_model
+    )
+    assert ha_state.state == STATE_OFF
 
     ha_state, hmip_device = get_and_check_entity_basics(
         hass,

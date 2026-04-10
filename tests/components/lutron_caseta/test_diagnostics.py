@@ -180,6 +180,7 @@ async def test_diagnostics(
             },
             "occupancy_groups": {},
             "scenes": {},
+            "smart_away_state": "",
         },
         "entry": {
             "data": {"ca_certs": "", "certfile": "", "host": "1.1.1.1", "keyfile": ""},

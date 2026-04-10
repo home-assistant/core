@@ -52,7 +52,7 @@ class UpCloudServerEntity(CoordinatorEntity[UpCloudDataUpdateCoordinator]):
         """Return the name of the component."""
         try:
             return DEFAULT_COMPONENT_NAME.format(self._server.title)
-        except (AttributeError, KeyError, TypeError):
+        except AttributeError, KeyError, TypeError:
             return DEFAULT_COMPONENT_NAME.format(self.uuid)
 
     @property

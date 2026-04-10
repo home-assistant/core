@@ -6,32 +6,24 @@ from ast import literal_eval
 import asyncio
 import collections.abc
 from collections.abc import Callable, Generator, Iterable
-from copy import deepcopy
-from datetime import date, datetime, time, timedelta
+from datetime import datetime, timedelta
+from enum import Enum
 from functools import cache, lru_cache, partial, wraps
-import json
 import logging
-import math
-from operator import contains
 import pathlib
-import random
 import re
-from struct import error as StructError, pack, unpack_from
 import sys
 from types import CodeType
 from typing import TYPE_CHECKING, Any, Concatenate, Literal, NoReturn, Self, overload
 import weakref
 
-from awesomeversion import AwesomeVersion
 import jinja2
 from jinja2 import pass_context, pass_eval_context
 from jinja2.runtime import AsyncLoopContext, LoopContext
 from jinja2.sandbox import ImmutableSandboxedEnvironment
 from jinja2.utils import Namespace
 from lru import LRU
-import orjson
 from propcache.api import under_cached_property
-import voluptuous as vol
 
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -48,24 +40,20 @@ from homeassistant.const import (
 from homeassistant.core import (
     Context,
     HomeAssistant,
-    ServiceResponse,
     State,
     callback,
     valid_domain,
     valid_entity_id,
 )
 from homeassistant.exceptions import TemplateError
-from homeassistant.helpers import (
-    area_registry as ar,
-    device_registry as dr,
-    entity_registry as er,
-    issue_registry as ir,
-    location as loc_helper,
-)
+from homeassistant.helpers import entity_registry as er, location as loc_helper
 from homeassistant.helpers.singleton import singleton
-from homeassistant.helpers.translation import async_translate_state
+from homeassistant.helpers.translation import (
+    async_translate_state,
+    async_translate_state_attr,
+)
 from homeassistant.helpers.typing import TemplateVarsType
-from homeassistant.util import convert, dt as dt_util, location as location_util
+from homeassistant.util import convert, location as location_util
 from homeassistant.util.async_ import run_callback_threadsafe
 from homeassistant.util.hass_dict import HassKey
 from homeassistant.util.json import JSON_DECODE_EXCEPTIONS, json_loads
@@ -78,7 +66,7 @@ from .context import (
     template_context_manager,
     template_cv,
 )
-from .helpers import raise_no_default, resolve_area_id
+from .helpers import result_as_boolean as result_as_boolean
 from .render_info import RenderInfo, render_info_cv
 
 if TYPE_CHECKING:
@@ -145,10 +133,6 @@ MAX_TEMPLATE_OUTPUT = 256 * 1024  # 256KiB
 CACHED_TEMPLATE_LRU: LRU[State, TemplateState] = LRU(CACHED_TEMPLATE_STATES)
 CACHED_TEMPLATE_NO_COLLECT_LRU: LRU[State, TemplateState] = LRU(CACHED_TEMPLATE_STATES)
 ENTITY_COUNT_GROWTH_FACTOR = 1.2
-
-ORJSON_PASSTHROUGH_OPTIONS = (
-    orjson.OPT_PASSTHROUGH_DATACLASS | orjson.OPT_PASSTHROUGH_DATETIME
-)
 
 
 def _template_state_no_collect(hass: HomeAssistant, state: State) -> TemplateState:
@@ -484,7 +468,7 @@ class Template:
         """Parse the result."""
         try:
             return _cached_parse_result(render_result)
-        except (ValueError, TypeError, SyntaxError, MemoryError):
+        except ValueError, TypeError, SyntaxError, MemoryError:
             pass
 
         return render_result
@@ -813,6 +797,48 @@ class StateTranslated:
         return "<template StateTranslated>"
 
 
+class StateAttrTranslated:
+    """Class to represent a translated state attribute value in a template."""
+
+    def __init__(self, hass: HomeAssistant) -> None:
+        """Initialize."""
+        self._hass = hass
+
+    def __call__(self, entity_id: str, attribute: str) -> Any:
+        """Retrieve translated state attribute value if available."""
+        state = _get_state_if_valid(self._hass, entity_id)
+
+        if state is None:
+            return None
+
+        attr_value = state.attributes.get(attribute)
+        if attr_value is None:
+            return None
+
+        if not isinstance(attr_value, str | Enum):
+            return attr_value
+
+        domain = state.domain
+        device_class = state.attributes.get("device_class")
+        entry = er.async_get(self._hass).async_get(entity_id)
+        platform = None if entry is None else entry.platform
+        translation_key = None if entry is None else entry.translation_key
+
+        return async_translate_state_attr(
+            self._hass,
+            str(attr_value),
+            domain,
+            platform,
+            translation_key,
+            device_class,
+            attribute,
+        )
+
+    def __repr__(self) -> str:
+        """Representation of Translated state attribute."""
+        return "<template StateAttrTranslated>"
+
+
 class DomainStates:
     """Class to expose a specific HA domain as attributes."""
 
@@ -1087,42 +1113,6 @@ def _resolve_state(
     return None
 
 
-@overload
-def forgiving_boolean(value: Any) -> bool | object: ...
-
-
-@overload
-def forgiving_boolean[_T](value: Any, default: _T) -> bool | _T: ...
-
-
-def forgiving_boolean[_T](
-    value: Any, default: _T | object = _SENTINEL
-) -> bool | _T | object:
-    """Try to convert value to a boolean."""
-    try:
-        # Import here, not at top-level to avoid circular import
-        from homeassistant.helpers import config_validation as cv  # noqa: PLC0415
-
-        return cv.boolean(value)
-    except vol.Invalid:
-        if default is _SENTINEL:
-            raise_no_default("bool", value)
-        return default
-
-
-def result_as_boolean(template_result: Any | None) -> bool:
-    """Convert the template result to a boolean.
-
-    True/not 0/'1'/'true'/'yes'/'on'/'enable' are considered truthy
-    False/0/None/'0'/'false'/'no'/'off'/'disable' are considered falsy
-    All other values are falsy
-    """
-    if template_result is None:
-        return False
-
-    return forgiving_boolean(template_result, default=False)
-
-
 def expand(hass: HomeAssistant, *args: Any) -> Iterable[State]:
     """Expand out any groups and zones into entity states."""
     # circular import.
@@ -1164,181 +1154,6 @@ def expand(hass: HomeAssistant, *args: Any) -> Iterable[State]:
             found[entity_id] = entity
 
     return list(found.values())
-
-
-def integration_entities(hass: HomeAssistant, entry_name: str) -> Iterable[str]:
-    """Get entity ids for entities tied to an integration/domain.
-
-    Provide entry_name as domain to get all entity id's for a integration/domain
-    or provide a config entry title for filtering between instances of the same
-    integration.
-    """
-
-    # Don't allow searching for config entries without title
-    if not entry_name:
-        return []
-
-    # first try if there are any config entries with a matching title
-    entities: list[str] = []
-    ent_reg = er.async_get(hass)
-    for entry in hass.config_entries.async_entries():
-        if entry.title != entry_name:
-            continue
-        entries = er.async_entries_for_config_entry(ent_reg, entry.entry_id)
-        entities.extend(entry.entity_id for entry in entries)
-    if entities:
-        return entities
-
-    # fallback to just returning all entities for a domain
-    from homeassistant.helpers.entity import entity_sources  # noqa: PLC0415
-
-    return [
-        entity_id
-        for entity_id, info in entity_sources(hass).items()
-        if info["domain"] == entry_name
-    ]
-
-
-def config_entry_id(hass: HomeAssistant, entity_id: str) -> str | None:
-    """Get an config entry ID from an entity ID."""
-    entity_reg = er.async_get(hass)
-    if entity := entity_reg.async_get(entity_id):
-        return entity.config_entry_id
-    return None
-
-
-def config_entry_attr(
-    hass: HomeAssistant, config_entry_id_: str, attr_name: str
-) -> Any:
-    """Get config entry specific attribute."""
-    if not isinstance(config_entry_id_, str):
-        raise TemplateError("Must provide a config entry ID")
-
-    if attr_name not in ("domain", "title", "state", "source", "disabled_by"):
-        raise TemplateError("Invalid config entry attribute")
-
-    config_entry = hass.config_entries.async_get_entry(config_entry_id_)
-
-    if config_entry is None:
-        return None
-
-    return getattr(config_entry, attr_name)
-
-
-def issues(hass: HomeAssistant) -> dict[tuple[str, str], dict[str, Any]]:
-    """Return all open issues."""
-    current_issues = ir.async_get(hass).issues
-    # Use JSON for safe representation
-    return {
-        key: issue_entry.to_json()
-        for (key, issue_entry) in current_issues.items()
-        if issue_entry.active
-    }
-
-
-def issue(hass: HomeAssistant, domain: str, issue_id: str) -> dict[str, Any] | None:
-    """Get issue by domain and issue_id."""
-    result = ir.async_get(hass).async_get_issue(domain, issue_id)
-    if result:
-        return result.to_json()
-    return None
-
-
-def areas(hass: HomeAssistant) -> Iterable[str | None]:
-    """Return all areas."""
-    return list(ar.async_get(hass).areas)
-
-
-def area_id(hass: HomeAssistant, lookup_value: str) -> str | None:
-    """Get the area ID from an area name, alias, device id, or entity id."""
-    return resolve_area_id(hass, lookup_value)
-
-
-def _get_area_name(area_reg: ar.AreaRegistry, valid_area_id: str) -> str:
-    """Get area name from valid area ID."""
-    area = area_reg.async_get_area(valid_area_id)
-    assert area
-    return area.name
-
-
-def area_name(hass: HomeAssistant, lookup_value: str) -> str | None:
-    """Get the area name from an area id, device id, or entity id."""
-    area_reg = ar.async_get(hass)
-    if area := area_reg.async_get_area(lookup_value):
-        return area.name
-
-    dev_reg = dr.async_get(hass)
-    ent_reg = er.async_get(hass)
-    # Import here, not at top-level to avoid circular import
-    from homeassistant.helpers import config_validation as cv  # noqa: PLC0415
-
-    try:
-        cv.entity_id(lookup_value)
-    except vol.Invalid:
-        pass
-    else:
-        if entity := ent_reg.async_get(lookup_value):
-            # If entity has an area ID, get the area name for that
-            if entity.area_id:
-                return _get_area_name(area_reg, entity.area_id)
-            # If entity has a device ID and the device exists with an area ID, get the
-            # area name for that
-            if (
-                entity.device_id
-                and (device := dev_reg.async_get(entity.device_id))
-                and device.area_id
-            ):
-                return _get_area_name(area_reg, device.area_id)
-
-    if (device := dev_reg.async_get(lookup_value)) and device.area_id:
-        return _get_area_name(area_reg, device.area_id)
-
-    return None
-
-
-def area_entities(hass: HomeAssistant, area_id_or_name: str) -> Iterable[str]:
-    """Return entities for a given area ID or name."""
-    _area_id: str | None
-    # if area_name returns a value, we know the input was an ID, otherwise we
-    # assume it's a name, and if it's neither, we return early
-    if area_name(hass, area_id_or_name) is None:
-        _area_id = area_id(hass, area_id_or_name)
-    else:
-        _area_id = area_id_or_name
-    if _area_id is None:
-        return []
-    ent_reg = er.async_get(hass)
-    entity_ids = [
-        entry.entity_id for entry in er.async_entries_for_area(ent_reg, _area_id)
-    ]
-    dev_reg = dr.async_get(hass)
-    # We also need to add entities tied to a device in the area that don't themselves
-    # have an area specified since they inherit the area from the device.
-    entity_ids.extend(
-        [
-            entity.entity_id
-            for device in dr.async_entries_for_area(dev_reg, _area_id)
-            for entity in er.async_entries_for_device(ent_reg, device.id)
-            if entity.area_id is None
-        ]
-    )
-    return entity_ids
-
-
-def area_devices(hass: HomeAssistant, area_id_or_name: str) -> Iterable[str]:
-    """Return device IDs for a given area ID or name."""
-    _area_id: str | None
-    # if area_name returns a value, we know the input was an ID, otherwise we
-    # assume it's a name, and if it's neither, we return early
-    if area_name(hass, area_id_or_name) is not None:
-        _area_id = area_id_or_name
-    else:
-        _area_id = area_id(hass, area_id_or_name)
-    if _area_id is None:
-        return []
-    dev_reg = dr.async_get(hass)
-    entries = dr.async_entries_for_area(dev_reg, _area_id)
-    return [entry.id for entry in entries]
 
 
 def closest(hass: HomeAssistant, *args: Any) -> State | None:
@@ -1474,6 +1289,19 @@ def distance(hass: HomeAssistant, *args: Any) -> float | None:
     )
 
 
+def entity_name(hass: HomeAssistant, entity_id: str) -> str | None:
+    """Get the name of an entity from its entity ID."""
+    ent_reg = er.async_get(hass)
+    if (entry := ent_reg.async_get(entity_id)) is not None:
+        return er.async_get_unprefixed_name(hass, entry)
+
+    # Fall back to state for entities without a unique_id (not in the registry)
+    if (state := hass.states.get(entity_id)) is not None:
+        return state.name
+
+    return None
+
+
 def is_hidden_entity(hass: HomeAssistant, entity_id: str) -> bool:
     """Test if an entity is hidden."""
     entity_reg = er.async_get(hass)
@@ -1514,547 +1342,6 @@ def has_value(hass: HomeAssistant, entity_id: str) -> bool:
     return state_obj is not None and (
         state_obj.state not in [STATE_UNAVAILABLE, STATE_UNKNOWN]
     )
-
-
-def now(hass: HomeAssistant) -> datetime:
-    """Record fetching now."""
-    if (render_info := render_info_cv.get()) is not None:
-        render_info.has_time = True
-
-    return dt_util.now()
-
-
-def utcnow(hass: HomeAssistant) -> datetime:
-    """Record fetching utcnow."""
-    if (render_info := render_info_cv.get()) is not None:
-        render_info.has_time = True
-
-    return dt_util.utcnow()
-
-
-def forgiving_round(value, precision=0, method="common", default=_SENTINEL):
-    """Filter to round a value."""
-    try:
-        # support rounding methods like jinja
-        multiplier = float(10**precision)
-        if method == "ceil":
-            value = math.ceil(float(value) * multiplier) / multiplier
-        elif method == "floor":
-            value = math.floor(float(value) * multiplier) / multiplier
-        elif method == "half":
-            value = round(float(value) * 2) / 2
-        else:
-            # if method is common or something else, use common rounding
-            value = round(float(value), precision)
-        return int(value) if precision == 0 else value
-    except (ValueError, TypeError):
-        # If value can't be converted to float
-        if default is _SENTINEL:
-            raise_no_default("round", value)
-        return default
-
-
-def multiply(value, amount, default=_SENTINEL):
-    """Filter to convert value to float and multiply it."""
-    try:
-        return float(value) * amount
-    except (ValueError, TypeError):
-        # If value can't be converted to float
-        if default is _SENTINEL:
-            raise_no_default("multiply", value)
-        return default
-
-
-def add(value, amount, default=_SENTINEL):
-    """Filter to convert value to float and add it."""
-    try:
-        return float(value) + amount
-    except (ValueError, TypeError):
-        # If value can't be converted to float
-        if default is _SENTINEL:
-            raise_no_default("add", value)
-        return default
-
-
-def apply(value, fn, *args, **kwargs):
-    """Call the given callable with the provided arguments and keyword arguments."""
-    return fn(value, *args, **kwargs)
-
-
-def as_function(macro: jinja2.runtime.Macro) -> Callable[..., Any]:
-    """Turn a macro with a 'returns' keyword argument into a function that returns what that argument is called with."""
-
-    def wrapper(*args, **kwargs):
-        return_value = None
-
-        def returns(value):
-            nonlocal return_value
-            return_value = value
-            return value
-
-        # Call the callable with the value and other args
-        macro(*args, **kwargs, returns=returns)
-        return return_value
-
-    # Remove "macro_" from the macro's name to avoid confusion in the wrapper's name
-    trimmed_name = macro.name.removeprefix("macro_")
-
-    wrapper.__name__ = trimmed_name
-    wrapper.__qualname__ = trimmed_name
-    return wrapper
-
-
-def version(value):
-    """Filter and function to get version object of the value."""
-    return AwesomeVersion(value)
-
-
-def timestamp_custom(value, date_format=DATE_STR_FORMAT, local=True, default=_SENTINEL):
-    """Filter to convert given timestamp to format."""
-    try:
-        result = dt_util.utc_from_timestamp(value)
-
-        if local:
-            result = dt_util.as_local(result)
-
-        return result.strftime(date_format)
-    except (ValueError, TypeError):
-        # If timestamp can't be converted
-        if default is _SENTINEL:
-            raise_no_default("timestamp_custom", value)
-        return default
-
-
-def timestamp_local(value, default=_SENTINEL):
-    """Filter to convert given timestamp to local date/time."""
-    try:
-        return dt_util.as_local(dt_util.utc_from_timestamp(value)).isoformat()
-    except (ValueError, TypeError):
-        # If timestamp can't be converted
-        if default is _SENTINEL:
-            raise_no_default("timestamp_local", value)
-        return default
-
-
-def timestamp_utc(value, default=_SENTINEL):
-    """Filter to convert given timestamp to UTC date/time."""
-    try:
-        return dt_util.utc_from_timestamp(value).isoformat()
-    except (ValueError, TypeError):
-        # If timestamp can't be converted
-        if default is _SENTINEL:
-            raise_no_default("timestamp_utc", value)
-        return default
-
-
-def forgiving_as_timestamp(value, default=_SENTINEL):
-    """Filter and function which tries to convert value to timestamp."""
-    try:
-        return dt_util.as_timestamp(value)
-    except (ValueError, TypeError):
-        if default is _SENTINEL:
-            raise_no_default("as_timestamp", value)
-        return default
-
-
-def as_datetime(value: Any, default: Any = _SENTINEL) -> Any:
-    """Filter and to convert a time string or UNIX timestamp to datetime object."""
-    # Return datetime.datetime object without changes
-    if type(value) is datetime:
-        return value
-    # Add midnight to datetime.date object
-    if type(value) is date:
-        return datetime.combine(value, time(0, 0, 0))
-    try:
-        # Check for a valid UNIX timestamp string, int or float
-        timestamp = float(value)
-        return dt_util.utc_from_timestamp(timestamp)
-    except (ValueError, TypeError):
-        # Try to parse datetime string to datetime object
-        try:
-            return dt_util.parse_datetime(value, raise_on_error=True)
-        except (ValueError, TypeError):
-            if default is _SENTINEL:
-                # Return None on string input
-                # to ensure backwards compatibility with HA Core 2024.1 and before.
-                if isinstance(value, str):
-                    return None
-                raise_no_default("as_datetime", value)
-            return default
-
-
-def as_timedelta(value: str) -> timedelta | None:
-    """Parse a ISO8601 duration like 'PT10M' to a timedelta."""
-    return dt_util.parse_duration(value)
-
-
-def merge_response(value: ServiceResponse) -> list[Any]:
-    """Merge action responses into single list.
-
-    Checks that the input is a correct service response:
-    {
-        "entity_id": {str: dict[str, Any]},
-    }
-    If response is a single list, it will extend the list with the items
-        and add the entity_id and value_key to each dictionary for reference.
-    If response is a dictionary or multiple lists,
-        it will append the dictionary/lists to the list
-        and add the entity_id to each dictionary for reference.
-    """
-    if not isinstance(value, dict):
-        raise TypeError("Response is not a dictionary")
-    if not value:
-        # Bail out early if response is an empty dictionary
-        return []
-
-    is_single_list = False
-    response_items: list = []
-    input_service_response = deepcopy(value)
-    for entity_id, entity_response in input_service_response.items():  # pylint: disable=too-many-nested-blocks
-        if not isinstance(entity_response, dict):
-            raise TypeError("Response is not a dictionary")
-        for value_key, type_response in entity_response.items():
-            if len(entity_response) == 1 and isinstance(type_response, list):
-                # Provides special handling for responses such as calendar events
-                # and weather forecasts where the response contains a single list with multiple
-                # dictionaries inside.
-                is_single_list = True
-                for dict_in_list in type_response:
-                    if isinstance(dict_in_list, dict):
-                        if ATTR_ENTITY_ID in dict_in_list:
-                            raise ValueError(
-                                f"Response dictionary already contains key '{ATTR_ENTITY_ID}'"
-                            )
-                        dict_in_list[ATTR_ENTITY_ID] = entity_id
-                        dict_in_list["value_key"] = value_key
-                response_items.extend(type_response)
-            else:
-                # Break the loop if not a single list as the logic is then managed in the outer loop
-                # which handles both dictionaries and in the case of multiple lists.
-                break
-
-        if not is_single_list:
-            _response = entity_response.copy()
-            if ATTR_ENTITY_ID in _response:
-                raise ValueError(
-                    f"Response dictionary already contains key '{ATTR_ENTITY_ID}'"
-                )
-            _response[ATTR_ENTITY_ID] = entity_id
-            response_items.append(_response)
-
-    return response_items
-
-
-def strptime(string, fmt, default=_SENTINEL):
-    """Parse a time string to datetime."""
-    try:
-        return datetime.strptime(string, fmt)
-    except (ValueError, AttributeError, TypeError):
-        if default is _SENTINEL:
-            raise_no_default("strptime", string)
-        return default
-
-
-def fail_when_undefined(value):
-    """Filter to force a failure when the value is undefined."""
-    if isinstance(value, jinja2.Undefined):
-        value()
-    return value
-
-
-def forgiving_float(value, default=_SENTINEL):
-    """Try to convert value to a float."""
-    try:
-        return float(value)
-    except (ValueError, TypeError):
-        if default is _SENTINEL:
-            raise_no_default("float", value)
-        return default
-
-
-def forgiving_float_filter(value, default=_SENTINEL):
-    """Try to convert value to a float."""
-    try:
-        return float(value)
-    except (ValueError, TypeError):
-        if default is _SENTINEL:
-            raise_no_default("float", value)
-        return default
-
-
-def forgiving_int(value, default=_SENTINEL, base=10):
-    """Try to convert value to an int, and raise if it fails."""
-    result = jinja2.filters.do_int(value, default=default, base=base)
-    if result is _SENTINEL:
-        raise_no_default("int", value)
-    return result
-
-
-def forgiving_int_filter(value, default=_SENTINEL, base=10):
-    """Try to convert value to an int, and raise if it fails."""
-    result = jinja2.filters.do_int(value, default=default, base=base)
-    if result is _SENTINEL:
-        raise_no_default("int", value)
-    return result
-
-
-def is_number(value):
-    """Try to convert value to a float."""
-    try:
-        fvalue = float(value)
-    except (ValueError, TypeError):
-        return False
-    if not math.isfinite(fvalue):
-        return False
-    return True
-
-
-def _is_datetime(value: Any) -> bool:
-    """Return whether a value is a datetime."""
-    return isinstance(value, datetime)
-
-
-def _is_string_like(value: Any) -> bool:
-    """Return whether a value is a string or string like object."""
-    return isinstance(value, (str, bytes, bytearray))
-
-
-def struct_pack(value: Any | None, format_string: str) -> bytes | None:
-    """Pack an object into a bytes object."""
-    try:
-        return pack(format_string, value)
-    except StructError:
-        _LOGGER.warning(
-            (
-                "Template warning: 'pack' unable to pack object '%s' with type '%s' and"
-                " format_string '%s' see https://docs.python.org/3/library/struct.html"
-                " for more information"
-            ),
-            str(value),
-            type(value).__name__,
-            format_string,
-        )
-        return None
-
-
-def struct_unpack(value: bytes, format_string: str, offset: int = 0) -> Any | None:
-    """Unpack an object from bytes an return the first native object."""
-    try:
-        return unpack_from(format_string, value, offset)[0]
-    except StructError:
-        _LOGGER.warning(
-            (
-                "Template warning: 'unpack' unable to unpack object '%s' with"
-                " format_string '%s' and offset %s see"
-                " https://docs.python.org/3/library/struct.html for more information"
-            ),
-            value,
-            format_string,
-            offset,
-        )
-        return None
-
-
-def from_hex(value: str) -> bytes:
-    """Perform hex string decode."""
-    return bytes.fromhex(value)
-
-
-def from_json(value, default=_SENTINEL):
-    """Convert a JSON string to an object."""
-    try:
-        return json_loads(value)
-    except JSON_DECODE_EXCEPTIONS:
-        if default is _SENTINEL:
-            raise_no_default("from_json", value)
-        return default
-
-
-def _to_json_default(obj: Any) -> None:
-    """Disable custom types in json serialization."""
-    raise TypeError(f"Object of type {type(obj).__name__} is not JSON serializable")
-
-
-def to_json(
-    value: Any,
-    ensure_ascii: bool = False,
-    pretty_print: bool = False,
-    sort_keys: bool = False,
-) -> str:
-    """Convert an object to a JSON string."""
-    if ensure_ascii:
-        # For those who need ascii, we can't use orjson, so we fall back to the json library.
-        return json.dumps(
-            value,
-            ensure_ascii=ensure_ascii,
-            indent=2 if pretty_print else None,
-            sort_keys=sort_keys,
-        )
-
-    option = (
-        ORJSON_PASSTHROUGH_OPTIONS
-        # OPT_NON_STR_KEYS is added as a workaround to
-        # ensure subclasses of str are allowed as dict keys
-        # See: https://github.com/ijl/orjson/issues/445
-        | orjson.OPT_NON_STR_KEYS
-        | (orjson.OPT_INDENT_2 if pretty_print else 0)
-        | (orjson.OPT_SORT_KEYS if sort_keys else 0)
-    )
-
-    return orjson.dumps(
-        value,
-        option=option,
-        default=_to_json_default,
-    ).decode("utf-8")
-
-
-@pass_context
-def random_every_time(context, values):
-    """Choose a random value.
-
-    Unlike Jinja's random filter,
-    this is context-dependent to avoid caching the chosen value.
-    """
-    return random.choice(values)
-
-
-def today_at(hass: HomeAssistant, time_str: str = "") -> datetime:
-    """Record fetching now where the time has been replaced with value."""
-    if (render_info := render_info_cv.get()) is not None:
-        render_info.has_time = True
-
-    today = dt_util.start_of_local_day()
-    if not time_str:
-        return today
-
-    if (time_today := dt_util.parse_time(time_str)) is None:
-        raise ValueError(
-            f"could not convert {type(time_str).__name__} to datetime: '{time_str}'"
-        )
-
-    return datetime.combine(today, time_today, today.tzinfo)
-
-
-def relative_time(hass: HomeAssistant, value: Any) -> Any:
-    """Take a datetime and return its "age" as a string.
-
-    The age can be in second, minute, hour, day, month or year. Only the
-    biggest unit is considered, e.g. if it's 2 days and 3 hours, "2 days" will
-    be returned.
-    If the input datetime is in the future,
-    the input datetime will be returned.
-
-    If the input are not a datetime object the input will be returned unmodified.
-
-    Note: This template function is deprecated in favor of `time_until`, but is still
-    supported so as not to break old templates.
-    """
-
-    if (render_info := render_info_cv.get()) is not None:
-        render_info.has_time = True
-
-    if not isinstance(value, datetime):
-        return value
-    if not value.tzinfo:
-        value = dt_util.as_local(value)
-    if dt_util.now() < value:
-        return value
-    return dt_util.get_age(value)
-
-
-def time_since(hass: HomeAssistant, value: Any | datetime, precision: int = 1) -> Any:
-    """Take a datetime and return its "age" as a string.
-
-    The age can be in seconds, minutes, hours, days, months and year.
-
-    precision is the number of units to return, with the last unit rounded.
-
-    If the value not a datetime object the input will be returned unmodified.
-    """
-    if (render_info := render_info_cv.get()) is not None:
-        render_info.has_time = True
-
-    if not isinstance(value, datetime):
-        return value
-    if not value.tzinfo:
-        value = dt_util.as_local(value)
-    if dt_util.now() < value:
-        return value
-
-    return dt_util.get_age(value, precision)
-
-
-def time_until(hass: HomeAssistant, value: Any | datetime, precision: int = 1) -> Any:
-    """Take a datetime and return the amount of time until that time as a string.
-
-    The time until can be in seconds, minutes, hours, days, months and years.
-
-    precision is the number of units to return, with the last unit rounded.
-
-    If the value not a datetime object the input will be returned unmodified.
-    """
-    if (render_info := render_info_cv.get()) is not None:
-        render_info.has_time = True
-
-    if not isinstance(value, datetime):
-        return value
-    if not value.tzinfo:
-        value = dt_util.as_local(value)
-    if dt_util.now() > value:
-        return value
-
-    return dt_util.get_time_remaining(value, precision)
-
-
-def iif(
-    value: Any, if_true: Any = True, if_false: Any = False, if_none: Any = _SENTINEL
-) -> Any:
-    """Immediate if function/filter that allow for common if/else constructs.
-
-    https://en.wikipedia.org/wiki/IIf
-
-    Examples:
-        {{ is_state("device_tracker.frenck", "home") | iif("yes", "no") }}
-        {{ iif(1==2, "yes", "no") }}
-        {{ (1 == 1) | iif("yes", "no") }}
-
-    """
-    if value is None and if_none is not _SENTINEL:
-        return if_none
-    if bool(value):
-        return if_true
-    return if_false
-
-
-def typeof(value: Any) -> Any:
-    """Return the type of value passed to debug types."""
-    return value.__class__.__name__
-
-
-def combine(*args: Any, recursive: bool = False) -> dict[Any, Any]:
-    """Combine multiple dictionaries into one."""
-    if not args:
-        raise TypeError("combine expected at least 1 argument, got 0")
-
-    result: dict[Any, Any] = {}
-    for arg in args:
-        if not isinstance(arg, dict):
-            raise TypeError(f"combine expected a dict, got {type(arg).__name__}")
-
-        if recursive:
-            for key, value in arg.items():
-                if (
-                    key in result
-                    and isinstance(result[key], dict)
-                    and isinstance(value, dict)
-                ):
-                    result[key] = combine(result[key], value, recursive=True)
-                else:
-                    result[key] = value
-        else:
-            result |= arg
-
-    return result
 
 
 def make_logging_undefined(
@@ -2182,74 +1469,35 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         ] = weakref.WeakValueDictionary()
         self.add_extension("jinja2.ext.loopcontrols")
         self.add_extension("jinja2.ext.do")
+        self.add_extension("homeassistant.helpers.template.extensions.AreaExtension")
         self.add_extension("homeassistant.helpers.template.extensions.Base64Extension")
         self.add_extension(
             "homeassistant.helpers.template.extensions.CollectionExtension"
         )
+        self.add_extension(
+            "homeassistant.helpers.template.extensions.ConfigEntryExtension"
+        )
         self.add_extension("homeassistant.helpers.template.extensions.CryptoExtension")
+        self.add_extension(
+            "homeassistant.helpers.template.extensions.DateTimeExtension"
+        )
         self.add_extension("homeassistant.helpers.template.extensions.DeviceExtension")
         self.add_extension("homeassistant.helpers.template.extensions.FloorExtension")
+        self.add_extension(
+            "homeassistant.helpers.template.extensions.FunctionalExtension"
+        )
+        self.add_extension("homeassistant.helpers.template.extensions.IssuesExtension")
         self.add_extension("homeassistant.helpers.template.extensions.LabelExtension")
         self.add_extension("homeassistant.helpers.template.extensions.MathExtension")
         self.add_extension("homeassistant.helpers.template.extensions.RegexExtension")
+        self.add_extension(
+            "homeassistant.helpers.template.extensions.SerializationExtension"
+        )
         self.add_extension("homeassistant.helpers.template.extensions.StringExtension")
-
-        self.globals["apply"] = apply
-        self.globals["as_datetime"] = as_datetime
-        self.globals["as_function"] = as_function
-        self.globals["as_local"] = dt_util.as_local
-        self.globals["as_timedelta"] = as_timedelta
-        self.globals["as_timestamp"] = forgiving_as_timestamp
-        self.globals["bool"] = forgiving_boolean
-        self.globals["combine"] = combine
-        self.globals["float"] = forgiving_float
-        self.globals["iif"] = iif
-        self.globals["int"] = forgiving_int
-        self.globals["is_number"] = is_number
-        self.globals["merge_response"] = merge_response
-        self.globals["pack"] = struct_pack
-        self.globals["strptime"] = strptime
-        self.globals["timedelta"] = timedelta
-        self.globals["typeof"] = typeof
-        self.globals["unpack"] = struct_unpack
-        self.globals["version"] = version
-        self.globals["zip"] = zip
-
-        self.filters["add"] = add
-        self.filters["apply"] = apply
-        self.filters["as_datetime"] = as_datetime
-        self.filters["as_function"] = as_function
-        self.filters["as_local"] = dt_util.as_local
-        self.filters["as_timedelta"] = as_timedelta
-        self.filters["as_timestamp"] = forgiving_as_timestamp
-        self.filters["bool"] = forgiving_boolean
-        self.filters["combine"] = combine
-        self.filters["contains"] = contains
-        self.filters["float"] = forgiving_float_filter
-        self.filters["from_json"] = from_json
-        self.filters["from_hex"] = from_hex
-        self.filters["iif"] = iif
-        self.filters["int"] = forgiving_int_filter
-        self.filters["is_defined"] = fail_when_undefined
-        self.filters["is_number"] = is_number
-        self.filters["multiply"] = multiply
-        self.filters["ord"] = ord
-        self.filters["pack"] = struct_pack
-        self.filters["random"] = random_every_time
-        self.filters["round"] = forgiving_round
-        self.filters["timestamp_custom"] = timestamp_custom
-        self.filters["timestamp_local"] = timestamp_local
-        self.filters["timestamp_utc"] = timestamp_utc
-        self.filters["to_json"] = to_json
-        self.filters["typeof"] = typeof
-        self.filters["unpack"] = struct_unpack
-        self.filters["version"] = version
-
-        self.tests["apply"] = apply
-        self.tests["contains"] = contains
-        self.tests["datetime"] = _is_datetime
-        self.tests["is_number"] = is_number
-        self.tests["string_like"] = _is_string_like
+        self.add_extension(
+            "homeassistant.helpers.template.extensions.TypeCastExtension"
+        )
+        self.add_extension("homeassistant.helpers.template.extensions.VersionExtension")
 
         if hass is None:
             return
@@ -2276,44 +1524,8 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
 
             return jinja_context(wrapper)
 
-        # Area extensions
-
-        self.globals["areas"] = hassfunction(areas)
-
-        self.globals["area_id"] = hassfunction(area_id)
-        self.filters["area_id"] = self.globals["area_id"]
-
-        self.globals["area_name"] = hassfunction(area_name)
-        self.filters["area_name"] = self.globals["area_name"]
-
-        self.globals["area_entities"] = hassfunction(area_entities)
-        self.filters["area_entities"] = self.globals["area_entities"]
-
-        self.globals["area_devices"] = hassfunction(area_devices)
-        self.filters["area_devices"] = self.globals["area_devices"]
-
-        # Integration extensions
-
-        self.globals["integration_entities"] = hassfunction(integration_entities)
-        self.filters["integration_entities"] = self.globals["integration_entities"]
-
-        # Config entry extensions
-
-        self.globals["config_entry_attr"] = hassfunction(config_entry_attr)
-        self.filters["config_entry_attr"] = self.globals["config_entry_attr"]
-
-        self.globals["config_entry_id"] = hassfunction(config_entry_id)
-        self.filters["config_entry_id"] = self.globals["config_entry_id"]
-
-        # Issue extensions
-
-        self.globals["issues"] = hassfunction(issues)
-        self.globals["issue"] = hassfunction(issue)
-        self.filters["issue"] = self.globals["issue"]
-
         if limited:
-            # Only device_entities is available to limited templates, mark other
-            # functions and filters as unsupported.
+
             def unsupported(name: str) -> Callable[[], NoReturn]:
                 def warn_unsupported(*args: Any, **kwargs: Any) -> NoReturn:
                     raise TemplateError(
@@ -2323,31 +1535,28 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
                 return warn_unsupported
 
             hass_globals = [
-                "area_id",
-                "area_name",
                 "closest",
                 "distance",
+                "entity_name",
                 "expand",
                 "has_value",
                 "is_hidden_entity",
                 "is_state_attr",
                 "is_state",
-                "now",
-                "relative_time",
                 "state_attr",
+                "state_attr_translated",
                 "state_translated",
                 "states",
-                "time_since",
-                "time_until",
-                "today_at",
-                "utcnow",
             ]
             hass_filters = [
-                "area_id",
-                "area_name",
                 "closest",
+                "entity_name",
                 "expand",
                 "has_value",
+                "state_attr",
+                "state_attr_translated",
+                "state_translated",
+                "states",
             ]
             hass_tests = [
                 "has_value",
@@ -2360,32 +1569,24 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
             for filt in hass_filters:
                 self.filters[filt] = unsupported(filt)
             for test in hass_tests:
-                self.filters[test] = unsupported(test)
+                self.tests[test] = unsupported(test)
             return
 
         self.globals["closest"] = hassfunction(closest)
         self.globals["distance"] = hassfunction(distance)
         self.globals["expand"] = hassfunction(expand)
         self.globals["has_value"] = hassfunction(has_value)
-        self.globals["now"] = hassfunction(now)
-        self.globals["relative_time"] = hassfunction(relative_time)
-        self.globals["time_since"] = hassfunction(time_since)
-        self.globals["time_until"] = hassfunction(time_until)
-        self.globals["today_at"] = hassfunction(today_at)
-        self.globals["utcnow"] = hassfunction(utcnow)
 
         self.filters["closest"] = hassfunction(closest_filter)
         self.filters["expand"] = self.globals["expand"]
         self.filters["has_value"] = self.globals["has_value"]
-        self.filters["relative_time"] = self.globals["relative_time"]
-        self.filters["time_since"] = self.globals["time_since"]
-        self.filters["time_until"] = self.globals["time_until"]
-        self.filters["today_at"] = self.globals["today_at"]
 
         self.tests["has_value"] = hassfunction(has_value, pass_eval_context)
 
         # Entity extensions
 
+        self.globals["entity_name"] = hassfunction(entity_name)
+        self.filters["entity_name"] = self.globals["entity_name"]
         self.globals["is_hidden_entity"] = hassfunction(is_hidden_entity)
         self.tests["is_hidden_entity"] = hassfunction(
             is_hidden_entity, pass_eval_context
@@ -2396,9 +1597,11 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.globals["is_state_attr"] = hassfunction(is_state_attr)
         self.globals["is_state"] = hassfunction(is_state)
         self.globals["state_attr"] = hassfunction(state_attr)
+        self.globals["state_attr_translated"] = StateAttrTranslated(hass)
         self.globals["state_translated"] = StateTranslated(hass)
         self.globals["states"] = AllStates(hass)
         self.filters["state_attr"] = self.globals["state_attr"]
+        self.filters["state_attr_translated"] = self.globals["state_attr_translated"]
         self.filters["state_translated"] = self.globals["state_translated"]
         self.filters["states"] = self.globals["states"]
         self.tests["is_state_attr"] = hassfunction(is_state_attr, pass_eval_context)
@@ -2407,7 +1610,7 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
     def is_safe_callable(self, obj):
         """Test if callback is safe."""
         return isinstance(
-            obj, (AllStates, StateTranslated)
+            obj, (AllStates, StateAttrTranslated, StateTranslated)
         ) or super().is_safe_callable(obj)
 
     def is_safe_attribute(self, obj, attr, value):

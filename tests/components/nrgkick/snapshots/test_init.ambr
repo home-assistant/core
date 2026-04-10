@@ -1,0 +1,36 @@
+# serializer version: 1
+# name: test_device
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
+    'configuration_url': 'http://192.168.1.100',
+    'connections': set({
+      tuple(
+        'mac',
+        'aa:bb:cc:dd:ee:ff',
+      ),
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'nrgkick',
+        'TEST123456',
+      ),
+    }),
+    'labels': set({
+    }),
+    'manufacturer': 'DiniTech',
+    'model': 'NRGkick Gen2 SIM',
+    'model_id': None,
+    'name': 'NRGkick Test',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': 'TEST123456',
+    'sw_version': None,
+    'via_device_id': None,
+  })
+# ---

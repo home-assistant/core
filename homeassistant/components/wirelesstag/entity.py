@@ -1,6 +1,9 @@
 """Support for Wireless Sensor Tags."""
 
 import logging
+from typing import Any
+
+from wirelesstagpy import SensorTag
 
 from homeassistant.const import (
     ATTR_BATTERY_LEVEL,
@@ -10,6 +13,8 @@ from homeassistant.const import (
     UnitOfElectricPotential,
 )
 from homeassistant.helpers.entity import Entity
+
+from . import WirelessTagPlatform
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -25,20 +30,15 @@ ATTR_TAG_POWER_CONSUMPTION = "power_consumption"
 class WirelessTagBaseSensor(Entity):
     """Base class for HA implementation for Wireless Sensor Tag."""
 
-    def __init__(self, api, tag):
+    def __init__(self, api: WirelessTagPlatform, tag: SensorTag) -> None:
         """Initialize a base sensor for Wireless Sensor Tag platform."""
         self._api = api
         self._tag = tag
         self._uuid = self._tag.uuid
         self.tag_id = self._tag.tag_id
         self.tag_manager_mac = self._tag.tag_manager_mac
-        self._name = self._tag.name
+        self._attr_name = self._tag.name
         self._state = None
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._name
 
     @property
     def principal_value(self):
@@ -78,7 +78,7 @@ class WirelessTagBaseSensor(Entity):
         self._state = self.updated_state_value()
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
         return {
             ATTR_BATTERY_LEVEL: int(self._tag.battery_remaining * 100),

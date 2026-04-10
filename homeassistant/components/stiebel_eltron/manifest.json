@@ -4,7 +4,8 @@
   "codeowners": ["@fucm", "@ThyMYthOS"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/stiebel_eltron",
+  "integration_type": "device",
   "iot_class": "local_polling",
   "loggers": ["pymodbus", "pystiebeleltron"],
-  "requirements": ["pystiebeleltron==0.2.3"]
+  "requirements": ["pystiebeleltron==0.2.5"]
 }

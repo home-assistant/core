@@ -18,7 +18,13 @@ from . import initialize_entry
 from tests.common import MockConfigEntry, snapshot_platform
 
 
-@patch("homeassistant.components.tuya.PLATFORMS", [Platform.BUTTON])
+@pytest.fixture(autouse=True)
+def platform_autouse():
+    """Platform fixture."""
+    with patch("homeassistant.components.tuya.PLATFORMS", [Platform.BUTTON]):
+        yield
+
+
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_platform_setup_and_discovery(
     hass: HomeAssistant,
@@ -34,18 +40,17 @@ async def test_platform_setup_and_discovery(
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
-@patch("homeassistant.components.tuya.PLATFORMS", [Platform.BUTTON])
 @pytest.mark.parametrize(
     "mock_device_code",
     ["sd_lr33znaodtyarrrz"],
 )
-async def test_button_press(
+async def test_action(
     hass: HomeAssistant,
     mock_manager: Manager,
     mock_config_entry: MockConfigEntry,
     mock_device: CustomerDevice,
 ) -> None:
-    """Test pressing a button."""
+    """Test button action."""
     entity_id = "button.v20_reset_duster_cloth"
     await initialize_entry(hass, mock_manager, mock_config_entry, mock_device)
 

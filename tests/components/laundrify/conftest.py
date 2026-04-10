@@ -33,7 +33,9 @@ def laundrify_sensor_fixture() -> LaundrifyDevice:
 
 @pytest.fixture(name="laundrify_config_entry")
 async def laundrify_setup_config_entry(
-    hass: HomeAssistant, access_token: str = VALID_ACCESS_TOKEN
+    hass: HomeAssistant,
+    laundrify_api_mock,
+    access_token: str = VALID_ACCESS_TOKEN,
 ) -> MockConfigEntry:
     """Create laundrify entry in Home Assistant."""
     entry = MockConfigEntry(

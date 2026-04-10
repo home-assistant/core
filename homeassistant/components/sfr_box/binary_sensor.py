@@ -6,7 +6,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
-from sfrbox_api.models import DslInfo, FtthInfo, WanInfo
+from sfrbox_api.models import DslInfo, FtthInfo, VoipInfo, WanInfo
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
@@ -19,6 +19,9 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import SFRConfigEntry
 from .entity import SFRCoordinatorEntity
+
+# Coordinator is used to centralize the data updates
+PARALLEL_UPDATES = 0
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -44,6 +47,26 @@ FTTH_SENSOR_TYPES: tuple[SFRBoxBinarySensorEntityDescription[FtthInfo], ...] = (
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda x: x.status == "up",
         translation_key="ftth_status",
+    ),
+)
+VOIP_SENSOR_TYPES: tuple[SFRBoxBinarySensorEntityDescription[VoipInfo], ...] = (
+    SFRBoxBinarySensorEntityDescription[VoipInfo](
+        key="status",
+        device_class=BinarySensorDeviceClass.CONNECTIVITY,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=lambda x: x.status == "up",
+        translation_key="voip_status",
+    ),
+    SFRBoxBinarySensorEntityDescription[VoipInfo](
+        key="callhistory_active",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=lambda x: x.callhistory_active == "on",
+        translation_key="voip_callhistory_active",
+    ),
+    SFRBoxBinarySensorEntityDescription[VoipInfo](
+        key="hook_status",
+        value_fn=lambda x: x.hook_status == "offhook",
+        translation_key="voip_hook_status",
     ),
 )
 WAN_SENSOR_TYPES: tuple[SFRBoxBinarySensorEntityDescription[WanInfo], ...] = (
@@ -72,6 +95,11 @@ async def async_setup_entry(
         SFRBoxBinarySensor(data.wan, description, system_info)
         for description in WAN_SENSOR_TYPES
     ]
+    if data.voip is not None:
+        entities.extend(
+            SFRBoxBinarySensor(data.voip, description, system_info)
+            for description in VOIP_SENSOR_TYPES
+        )
     if (net_infra := system_info.net_infra) == "adsl":
         entities.extend(
             SFRBoxBinarySensor(data.dsl, description, system_info)
@@ -94,6 +122,4 @@ class SFRBoxBinarySensor[_T](SFRCoordinatorEntity[_T], BinarySensorEntity):
     @property
     def is_on(self) -> bool | None:
         """Return the native value of the device."""
-        if self.coordinator.data is None:
-            return None
         return self.entity_description.value_fn(self.coordinator.data)

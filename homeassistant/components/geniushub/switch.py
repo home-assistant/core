@@ -57,7 +57,7 @@ class GeniusSwitch(GeniusZone, SwitchEntity):
     """Representation of a Genius Hub switch."""
 
     @property
-    def device_class(self):
+    def device_class(self) -> SwitchDeviceClass:
         """Return the class of this device, from component DEVICE_CLASSES."""
         return SwitchDeviceClass.OUTLET
 

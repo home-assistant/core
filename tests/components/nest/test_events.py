@@ -519,8 +519,8 @@ async def test_structure_update_event(
     assert not events
 
     assert entity_registry.async_get("camera.front")
-    # Currently need a manual reload to detect the new entity
-    assert not entity_registry.async_get("camera.back")
+    # New entity is now registered automatically when the event arrives
+    assert entity_registry.async_get("camera.back")
 
 
 @pytest.mark.parametrize(

@@ -12,6 +12,10 @@
     'config_store': dict({
       'entities': dict({
       }),
+      'expose': dict({
+      }),
+      'time_server': dict({
+      }),
     }),
     'configuration_yaml': dict({
       'wrong_key': dict({
@@ -42,6 +46,10 @@
     'config_store': dict({
       'entities': dict({
       }),
+      'expose': dict({
+      }),
+      'time_server': dict({
+      }),
     }),
     'configuration_yaml': None,
     'project_info': None,
@@ -64,6 +72,10 @@
     }),
     'config_store': dict({
       'entities': dict({
+      }),
+      'expose': dict({
+      }),
+      'time_server': dict({
       }),
     }),
     'configuration_yaml': None,
@@ -127,6 +139,10 @@
             }),
           }),
         }),
+      }),
+      'expose': dict({
+      }),
+      'time_server': dict({
       }),
     }),
     'configuration_yaml': None,

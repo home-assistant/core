@@ -8,8 +8,7 @@ import voluptuous as vol
 
 from homeassistant import data_entry_flow
 from homeassistant.components.repairs import RepairsFlow
-from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import issue_registry as ir
+from homeassistant.core import HomeAssistant
 
 from .manager import async_replace_device
 
@@ -21,13 +20,6 @@ class ESPHomeRepair(RepairsFlow):
         """Initialize."""
         self._data = data
         super().__init__()
-
-    @callback
-    def _async_get_placeholders(self) -> dict[str, str]:
-        issue_registry = ir.async_get(self.hass)
-        issue = issue_registry.async_get_issue(self.handler, self.issue_id)
-        assert issue is not None
-        return issue.translation_placeholders or {}
 
 
 class DeviceConflictRepair(ESPHomeRepair):
@@ -58,7 +50,6 @@ class DeviceConflictRepair(ESPHomeRepair):
         return self.async_show_menu(
             step_id="init",
             menu_options=["migrate", "manual"],
-            description_placeholders=self._async_get_placeholders(),
         )
 
     async def async_step_migrate(
@@ -69,7 +60,6 @@ class DeviceConflictRepair(ESPHomeRepair):
             return self.async_show_form(
                 step_id="migrate",
                 data_schema=vol.Schema({}),
-                description_placeholders=self._async_get_placeholders(),
             )
         entry_id = self.entry_id
         await async_replace_device(self.hass, entry_id, self.stored_mac, self.mac)
@@ -84,7 +74,6 @@ class DeviceConflictRepair(ESPHomeRepair):
             return self.async_show_form(
                 step_id="manual",
                 data_schema=vol.Schema({}),
-                description_placeholders=self._async_get_placeholders(),
             )
         self.hass.config_entries.async_schedule_reload(self.entry_id)
         return self.async_create_entry(data={})

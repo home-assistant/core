@@ -1,0 +1,88 @@
+rules:
+  ## Bronze
+  config-flow: done
+  test-before-configure: done
+  unique-config-entry: done
+  config-flow-test-coverage: done
+  runtime-data: done
+  test-before-setup: done
+  appropriate-polling: done
+  entity-unique-id: done
+  has-entity-name: done
+  entity-event-setup:
+    status: exempt
+    comment: local_polling without events
+  dependency-transparency: done
+  action-setup:
+    status: exempt
+    comment: There are no service actions
+  common-modules: done
+  docs-high-level-description: done
+  docs-installation-instructions: done
+  docs-removal-instructions: done
+  docs-actions:
+    status: exempt
+    comment: There are no service actions
+  brands: done
+
+  ## Silver
+  config-entry-unloading: done
+  log-when-unavailable: done
+  entity-unavailable: done
+  action-exceptions: done
+  reauthentication-flow: done
+  parallel-updates: done
+  test-coverage: done
+  integration-owner: done
+  docs-installation-parameters: done
+  docs-configuration-parameters:
+    status: exempt
+    comment: No options flow
+
+  ## Gold
+  entity-translations: done
+  entity-device-class: done
+  devices: done
+  entity-category: done
+  entity-disabled-by-default: done
+  discovery:
+    status: todo
+    comment: Should be possible
+  stale-devices: done
+  diagnostics: done
+  exception-translations: done
+  icon-translations: done
+  reconfiguration-flow: done
+  dynamic-devices: done
+  discovery-update-info:
+    status: todo
+    comment: Discovery is not yet implemented
+  repair-issues: done
+  docs-use-cases:
+    status: todo
+    comment: not yet documented
+  docs-supported-devices: done
+  docs-supported-functions: done
+  docs-data-update:
+    status: todo
+    comment: not yet documented
+  docs-known-limitations:
+    status: todo
+    comment: not yet documented
+  docs-troubleshooting:
+    status: todo
+    comment: not yet documented
+  docs-examples:
+    status: todo
+    comment: not yet documented
+
+  ## Platinum
+  async-dependency:
+    status: done
+    comment: sfrbox-api is asynchronous
+  inject-websession:
+    status: done
+    comment: sfrbox-api uses injected aiohttp websession
+  strict-typing:
+    status: done
+    comment: sfrbox-api is fully typed, and integration uses strict typing

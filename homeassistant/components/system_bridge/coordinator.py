@@ -13,13 +13,13 @@ from systembridgeconnector.exceptions import (
     ConnectionClosedException,
     ConnectionErrorException,
 )
-from systembridgeconnector.websocket_client import WebSocketClient
-from systembridgemodels.modules import (
+from systembridgeconnector.models.modules import (
     GetData,
     Module,
     ModulesData,
     RegisterDataListener,
 )
+from systembridgeconnector.websocket_client import WebSocketClient
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -36,18 +36,20 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 from .const import DOMAIN, GET_DATA_WAIT_TIMEOUT, MODULES
 from .data import SystemBridgeData
 
+type SystemBridgeConfigEntry = ConfigEntry[SystemBridgeDataUpdateCoordinator]
+
 
 class SystemBridgeDataUpdateCoordinator(DataUpdateCoordinator[SystemBridgeData]):
     """Class to manage fetching System Bridge data from single endpoint."""
 
-    config_entry: ConfigEntry
+    config_entry: SystemBridgeConfigEntry
 
     def __init__(
         self,
         hass: HomeAssistant,
         LOGGER: logging.Logger,
         *,
-        entry: ConfigEntry,
+        entry: SystemBridgeConfigEntry,
     ) -> None:
         """Initialize global System Bridge data updater."""
         self.title = entry.title

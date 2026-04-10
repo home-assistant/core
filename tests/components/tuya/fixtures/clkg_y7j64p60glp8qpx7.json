@@ -1,0 +1,108 @@
+{
+  "endpoint": "https://openapi.tuyaeu.com",
+  "auth_type": 0,
+  "country_code": "49",
+  "app_type": "smartlife",
+  "mqtt_connected": true,
+  "disabled_by": null,
+  "disabled_polling": false,
+
+  "name": "Fenster K\u00fcche",
+  "model": "108W&108WR New",
+  "category": "clkg",
+  "product_id": "y7j64p60glp8qpx7",
+  "product_name": "Curtain switch",
+  "online": true,
+  "sub": false,
+  "time_zone": "+01:00",
+  "active_time": "2021-12-11T12:14:38+00:00",
+  "create_time": "2021-12-11T12:14:38+00:00",
+  "update_time": "2023-11-10T14:40:46+00:00",
+  "function": {
+    "control": {
+      "type": "Enum",
+      "value": {
+        "range": ["open", "stop", "close"]
+      }
+    },
+    "percent_control": {
+      "type": "Integer",
+      "value": {
+        "unit": "%",
+        "min": 0,
+        "max": 100,
+        "scale": 0,
+        "step": 10
+      }
+    },
+    "cur_calibration": {
+      "type": "Enum",
+      "value": {
+        "range": ["start", "end"]
+      }
+    },
+    "control_back_mode": {
+      "type": "Enum",
+      "value": {
+        "range": ["forward", "back"]
+      }
+    },
+    "tr_timecon": {
+      "type": "Integer",
+      "value": {
+        "unit": "s",
+        "min": 10,
+        "max": 120,
+        "scale": 0,
+        "step": 1
+      }
+    }
+  },
+  "status_range": {
+    "control": {
+      "type": "Enum",
+      "value": {
+        "range": ["open", "stop", "close"]
+      }
+    },
+    "percent_control": {
+      "type": "Integer",
+      "value": {
+        "unit": "%",
+        "min": 0,
+        "max": 100,
+        "scale": 0,
+        "step": 10
+      }
+    },
+    "cur_calibration": {
+      "type": "Enum",
+      "value": {
+        "range": ["start", "end"]
+      }
+    },
+    "control_back_mode": {
+      "type": "Enum",
+      "value": {
+        "range": ["forward", "back"]
+      }
+    },
+    "tr_timecon": {
+      "type": "Integer",
+      "value": {
+        "unit": "s",
+        "min": 10,
+        "max": 120,
+        "scale": 0,
+        "step": 1
+      }
+    }
+  },
+  "status": {
+    "control": "open",
+    "percent_control": 100,
+    "cur_calibration": "start",
+    "control_back_mode": "forward",
+    "tr_timecon": 20
+  }
+}

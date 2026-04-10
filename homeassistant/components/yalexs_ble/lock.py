@@ -52,6 +52,7 @@ class YaleXSBLEBaseLock(YALEXSBLEEntity, LockEntity):
         elif lock_state in (
             LockStatus.UNKNOWN_01,
             LockStatus.UNKNOWN_06,
+            LockStatus.JAMMED,
         ):
             self._attr_is_jammed = True
         elif lock_state is LockStatus.UNKNOWN:

@@ -12,16 +12,13 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-    DataUpdateCoordinator,
-)
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
+from .coordinator import RDWConfigEntry, RDWDataUpdateCoordinator
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -48,11 +45,11 @@ BINARY_SENSORS: tuple[RDWBinarySensorEntityDescription, ...] = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: RDWConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up RDW binary sensors based on a config entry."""
-    coordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
     async_add_entities(
         RDWBinarySensorEntity(
             coordinator=coordinator,
@@ -64,7 +61,7 @@ async def async_setup_entry(
 
 
 class RDWBinarySensorEntity(
-    CoordinatorEntity[DataUpdateCoordinator[Vehicle]], BinarySensorEntity
+    CoordinatorEntity[RDWDataUpdateCoordinator], BinarySensorEntity
 ):
     """Defines an RDW binary sensor."""
 
@@ -74,7 +71,7 @@ class RDWBinarySensorEntity(
     def __init__(
         self,
         *,
-        coordinator: DataUpdateCoordinator[Vehicle],
+        coordinator: RDWDataUpdateCoordinator,
         description: RDWBinarySensorEntityDescription,
     ) -> None:
         """Initialize RDW binary sensor."""

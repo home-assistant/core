@@ -1,124 +1,38 @@
 """Tests for the WLED sensor platform."""
 
-from datetime import datetime
+from collections.abc import Generator
 from unittest.mock import MagicMock, patch
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
+from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.sensor import SensorDeviceClass
-from homeassistant.const import (
-    ATTR_DEVICE_CLASS,
-    ATTR_ICON,
-    ATTR_UNIT_OF_MEASUREMENT,
-    PERCENTAGE,
-    SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
-    STATE_UNKNOWN,
-    EntityCategory,
-    UnitOfElectricCurrent,
-    UnitOfInformation,
-)
+from homeassistant.components.wled.const import SCAN_INTERVAL
+from homeassistant.const import STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
-from homeassistant.util import dt as dt_util
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 
-@pytest.mark.usefixtures("entity_registry_enabled_by_default", "mock_wled")
-async def test_sensors(
+@pytest.fixture(autouse=True)
+def override_platforms() -> Generator[None]:
+    """Override PLATFORMS."""
+    with patch("homeassistant.components.wled.PLATFORMS", [Platform.SENSOR]):
+        yield
+
+
+@pytest.mark.usefixtures("init_integration")
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+@pytest.mark.freeze_time("2021-11-04 17:36:59+01:00")
+async def test_snapshots(
     hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test the creation and values of the WLED sensors."""
-    mock_config_entry.add_to_hass(hass)
-
-    test_time = datetime(2019, 11, 11, 9, 10, 32, tzinfo=dt_util.UTC)
-    with patch("homeassistant.components.wled.sensor.utcnow", return_value=test_time):
-        await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
-
-    assert (state := hass.states.get("sensor.wled_rgb_light_estimated_current"))
-    assert (
-        state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
-        == UnitOfElectricCurrent.MILLIAMPERE
-    )
-    assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.CURRENT
-    assert state.state == "515"
-
-    assert (
-        entry := entity_registry.async_get("sensor.wled_rgb_light_estimated_current")
-    )
-    assert entry.unique_id == "aabbccddeeff_estimated_current"
-    assert entry.entity_category is EntityCategory.DIAGNOSTIC
-
-    assert (state := hass.states.get("sensor.wled_rgb_light_uptime"))
-    assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.TIMESTAMP
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) is None
-    assert state.state == "2019-11-11T08:54:26+00:00"
-
-    assert (entry := entity_registry.async_get("sensor.wled_rgb_light_uptime"))
-    assert entry.unique_id == "aabbccddeeff_uptime"
-    assert entry.entity_category is EntityCategory.DIAGNOSTIC
-
-    assert (state := hass.states.get("sensor.wled_rgb_light_free_memory"))
-    assert state.attributes.get(ATTR_ICON) is None
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfInformation.BYTES
-    assert state.state == "198384"
-    assert entry.entity_category is EntityCategory.DIAGNOSTIC
-
-    assert (entry := entity_registry.async_get("sensor.wled_rgb_light_free_memory"))
-    assert entry.unique_id == "aabbccddeeff_free_heap"
-    assert entry.entity_category is EntityCategory.DIAGNOSTIC
-
-    assert (state := hass.states.get("sensor.wled_rgb_light_wi_fi_signal"))
-    assert state.attributes.get(ATTR_ICON) is None
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == PERCENTAGE
-    assert state.state == "100"
-    assert entry.entity_category is EntityCategory.DIAGNOSTIC
-
-    assert (entry := entity_registry.async_get("sensor.wled_rgb_light_wi_fi_signal"))
-    assert entry.unique_id == "aabbccddeeff_wifi_signal"
-    assert entry.entity_category is EntityCategory.DIAGNOSTIC
-
-    assert (state := hass.states.get("sensor.wled_rgb_light_wi_fi_rssi"))
-    assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.SIGNAL_STRENGTH
-    assert (
-        state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
-        == SIGNAL_STRENGTH_DECIBELS_MILLIWATT
-    )
-    assert state.state == "-43"
-
-    assert (entry := entity_registry.async_get("sensor.wled_rgb_light_wi_fi_rssi"))
-    assert entry.unique_id == "aabbccddeeff_wifi_rssi"
-    assert entry.entity_category is EntityCategory.DIAGNOSTIC
-
-    assert (state := hass.states.get("sensor.wled_rgb_light_wi_fi_channel"))
-    assert state.attributes.get(ATTR_ICON) is None
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) is None
-    assert state.state == "11"
-
-    assert (entry := entity_registry.async_get("sensor.wled_rgb_light_wi_fi_channel"))
-    assert entry.unique_id == "aabbccddeeff_wifi_channel"
-    assert entry.entity_category is EntityCategory.DIAGNOSTIC
-
-    assert (state := hass.states.get("sensor.wled_rgb_light_wi_fi_bssid"))
-    assert state.attributes.get(ATTR_ICON) is None
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) is None
-    assert state.state == "AA:AA:AA:AA:AA:BB"
-
-    assert (entry := entity_registry.async_get("sensor.wled_rgb_light_wi_fi_bssid"))
-    assert entry.unique_id == "aabbccddeeff_wifi_bssid"
-    assert entry.entity_category is EntityCategory.DIAGNOSTIC
-
-    assert (state := hass.states.get("sensor.wled_rgb_light_ip"))
-    assert state.attributes.get(ATTR_ICON) is None
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) is None
-    assert state.state == "127.0.0.1"
-
-    assert (entry := entity_registry.async_get("sensor.wled_rgb_light_ip"))
-    assert entry.unique_id == "aabbccddeeff_ip"
-    assert entry.entity_category is EntityCategory.DIAGNOSTIC
+    """Test snapshot of the platform."""
+    await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
 @pytest.mark.parametrize(
@@ -189,3 +103,28 @@ async def test_no_current_measurement(
 
     assert hass.states.get("sensor.wled_rgb_light_max_current") is None
     assert hass.states.get("sensor.wled_rgb_light_estimated_current") is None
+
+
+async def test_fail_when_other_device(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+    mock_wled: MagicMock,
+) -> None:
+    """Ensure no data are updated when mac address mismatch."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert (state := hass.states.get("sensor.wled_rgb_light_ip"))
+    assert state.state == "127.0.0.1"
+
+    device = mock_wled.update.return_value
+    device.info.mac_address = "invalid"
+
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert (state := hass.states.get("sensor.wled_rgb_light_ip"))
+    assert state.state == "unavailable"

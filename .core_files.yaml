@@ -13,6 +13,7 @@ core: &core
 
 # Our base platforms, that are used by other integrations
 base_platforms: &base_platforms
+  - homeassistant/components/ai_task/**
   - homeassistant/components/air_quality/**
   - homeassistant/components/alarm_control_panel/**
   - homeassistant/components/assist_satellite/**
@@ -21,6 +22,7 @@ base_platforms: &base_platforms
   - homeassistant/components/calendar/**
   - homeassistant/components/camera/**
   - homeassistant/components/climate/**
+  - homeassistant/components/conversation/**
   - homeassistant/components/cover/**
   - homeassistant/components/date/**
   - homeassistant/components/datetime/**
@@ -32,6 +34,7 @@ base_platforms: &base_platforms
   - homeassistant/components/humidifier/**
   - homeassistant/components/image/**
   - homeassistant/components/image_processing/**
+  - homeassistant/components/infrared/**
   - homeassistant/components/lawn_mower/**
   - homeassistant/components/light/**
   - homeassistant/components/lock/**
@@ -52,6 +55,7 @@ base_platforms: &base_platforms
   - homeassistant/components/update/**
   - homeassistant/components/vacuum/**
   - homeassistant/components/valve/**
+  - homeassistant/components/wake_word/**
   - homeassistant/components/water_heater/**
   - homeassistant/components/weather/**
 
@@ -69,7 +73,6 @@ components: &components
   - homeassistant/components/cloud/**
   - homeassistant/components/config/**
   - homeassistant/components/configurator/**
-  - homeassistant/components/conversation/**
   - homeassistant/components/demo/**
   - homeassistant/components/device_automation/**
   - homeassistant/components/dhcp/**
@@ -90,6 +93,7 @@ components: &components
   - homeassistant/components/input_number/**
   - homeassistant/components/input_select/**
   - homeassistant/components/input_text/**
+  - homeassistant/components/labs/**
   - homeassistant/components/logbook/**
   - homeassistant/components/logger/**
   - homeassistant/components/lovelace/**

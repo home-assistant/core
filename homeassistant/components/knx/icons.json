@@ -21,6 +21,9 @@
       "telegram_count": {
         "default": "mdi:plus-network"
       },
+      "telegrams_data_secure_undecodable": {
+        "default": "mdi:lock-alert"
+      },
       "telegrams_incoming": {
         "default": "mdi:upload-network"
       },

@@ -4,6 +4,7 @@ import json
 
 from homeassistant.util import slugify
 from script.hassfest.manifest import SUPPORTED_IOT_CLASSES
+from script.hassfest.model import IntegrationType
 
 from .const import COMPONENT_DIR
 from .error import ExitApp
@@ -24,7 +25,12 @@ def gather_info(arguments) -> Info:
         info = _gather_info(
             {
                 "domain": {
-                    "prompt": "What is the domain?",
+                    "prompt": (
+                        """What is the domain?
+
+Hint: The domain is a short name consisting of characters and underscores.
+This domain has to be unique, cannot be changed, and has to match the directory name of the integration."""
+                    ),
                     "validators": [
                         CHECK_EMPTY,
                         [
@@ -72,13 +78,8 @@ def gather_new_integration(determine_auth: bool) -> Info:
         },
         "codeowner": {
             "prompt": "What is your GitHub handle?",
-            "validators": [
-                CHECK_EMPTY,
-                [
-                    'GitHub handles need to start with an "@"',
-                    lambda value: value.startswith("@"),
-                ],
-            ],
+            "validators": [CHECK_EMPTY],
+            "converter": lambda value: value if value.startswith("@") else f"@{value}",
         },
         "requirement": {
             "prompt": "What PyPI package and version do you depend on? Leave blank for none.",
@@ -120,10 +121,21 @@ More info @ https://developers.home-assistant.io/docs/creating_integration_manif
                     "default": "no",
                     **YES_NO,
                 },
-                "helper": {
-                    "prompt": "Is this a helper integration? (yes/no)",
-                    "default": "no",
-                    **YES_NO,
+                "integration_type": {
+                    "prompt": f"""What is the integration type?
+
+Valid types are {", ".join(IntegrationType)}.
+This field is recommended and required in some cases. To intentionally leave it unset, type 'omit'.
+
+More info @ https://developers.home-assistant.io/docs/creating_integration_manifest/#integration-type
+""",
+                    "validators": [
+                        [
+                            f"You need to pick one of {', '.join(IntegrationType)} or 'omit'.",
+                            lambda value: value in IntegrationType or value == "omit",
+                        ]
+                    ],
+                    "converter": lambda value: None if value == "omit" else value,
                 },
                 "oauth2": {
                     "prompt": "Can the user authenticate the device using OAuth2? (yes/no)",

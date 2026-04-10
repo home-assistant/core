@@ -1,5 +1,10 @@
 {
   "entity": {
+    "button": {
+      "light_sensor": {
+        "default": "mdi:brightness-auto"
+      }
+    },
     "climate": {
       "climate": {
         "state_attributes": {
@@ -140,6 +145,25 @@
           "medium": "mdi:water"
         }
       }
+    },
+    "switch": {
+      "child_lock": {
+        "state": {
+          "off": "mdi:lock-open",
+          "on": "mdi:lock"
+        }
+      },
+      "wireless_charging": {
+        "state": {
+          "off": "mdi:battery-charging-wireless-outline",
+          "on": "mdi:battery-charging-wireless"
+        }
+      }
+    }
+  },
+  "services": {
+    "add_password": {
+      "service": "mdi:key-plus"
     }
   }
 }

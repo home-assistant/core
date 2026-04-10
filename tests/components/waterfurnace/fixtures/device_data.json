@@ -1,0 +1,16 @@
+{
+  "modeofoperation": 6,
+  "totalunitpower": 1500,
+  "tstatactivesetpoint": 72,
+  "leavingairtemp": 110.5,
+  "tstatroomtemp": 70.2,
+  "enteringwatertemp": 42.8,
+  "tstathumidsetpoint": 45,
+  "tstatrelativehumidity": 43,
+  "compressorpower": 800,
+  "fanpower": 150,
+  "auxpower": 0,
+  "looppumppower": 50,
+  "actualcompressorspeed": 1200,
+  "airflowcurrentspeed": 850
+}

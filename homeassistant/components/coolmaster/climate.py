@@ -8,6 +8,10 @@ from typing import Any
 from pycoolmasternet_async import SWING_MODES
 
 from homeassistant.components.climate import (
+    FAN_AUTO,
+    FAN_HIGH,
+    FAN_LOW,
+    FAN_MEDIUM,
     ClimateEntity,
     ClimateEntityFeature,
     HVACMode,
@@ -31,7 +35,16 @@ CM_TO_HA_STATE = {
 
 HA_STATE_TO_CM = {value: key for key, value in CM_TO_HA_STATE.items()}
 
-FAN_MODES = ["low", "med", "high", "auto"]
+CM_TO_HA_FAN = {
+    "low": FAN_LOW,
+    "med": FAN_MEDIUM,
+    "high": FAN_HIGH,
+    "auto": FAN_AUTO,
+}
+
+HA_FAN_TO_CM = {value: key for key, value in CM_TO_HA_FAN.items()}
+
+FAN_MODES = list(CM_TO_HA_FAN.values())
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -56,6 +69,10 @@ class CoolmasterClimate(CoolmasterEntity, ClimateEntity):
     """Representation of a coolmaster climate device."""
 
     _attr_name = None
+
+    # TODO(2026.7.0): When support for unknown fan speeds is removed, delete this variable.
+    # Holds unknown fan speeds we have already warned about.
+    warned_unknown_fan_speeds: set[str] = set()
 
     def __init__(
         self,
@@ -90,17 +107,17 @@ class CoolmasterClimate(CoolmasterEntity, ClimateEntity):
         return UnitOfTemperature.FAHRENHEIT
 
     @property
-    def current_temperature(self):
+    def current_temperature(self) -> float:
         """Return the current temperature."""
         return self._unit.temperature
 
     @property
-    def target_temperature(self):
+    def target_temperature(self) -> float:
         """Return the temperature we are trying to reach."""
         return self._unit.thermostat
 
     @property
-    def hvac_mode(self):
+    def hvac_mode(self) -> HVACMode:
         """Return hvac target hvac state."""
         mode = self._unit.mode
         if not self._unit.is_on:
@@ -109,12 +126,26 @@ class CoolmasterClimate(CoolmasterEntity, ClimateEntity):
         return CM_TO_HA_STATE[mode]
 
     @property
-    def fan_mode(self):
+    def fan_mode(self) -> str:
         """Return the fan setting."""
-        return self._unit.fan_speed
+
+        # Normalize to lowercase for lookup, and pass unknown lowercase values through.
+        fan_speed_lower = self._unit.fan_speed.lower()
+        if fan_speed_lower not in CM_TO_HA_FAN:
+            # TODO(2026.7.0): Stop supporting unknown fan speeds.
+            if fan_speed_lower not in CoolmasterClimate.warned_unknown_fan_speeds:
+                CoolmasterClimate.warned_unknown_fan_speeds.add(fan_speed_lower)
+                _LOGGER.warning(
+                    "Detected unknown fan speed value from HVAC unit: %s. "
+                    "Support for unknown fan speeds will be removed in 2026.7.0",
+                    fan_speed_lower,
+                )
+            return fan_speed_lower
+
+        return CM_TO_HA_FAN[fan_speed_lower]
 
     @property
-    def fan_modes(self):
+    def fan_modes(self) -> list[str]:
         """Return the list of available fan modes."""
         return FAN_MODES
 
@@ -138,7 +169,7 @@ class CoolmasterClimate(CoolmasterEntity, ClimateEntity):
     async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set new fan mode."""
         _LOGGER.debug("Setting fan mode of %s to %s", self.unique_id, fan_mode)
-        self._unit = await self._unit.set_fan_speed(fan_mode)
+        self._unit = await self._unit.set_fan_speed(HA_FAN_TO_CM[fan_mode])
         self.async_write_ha_state()
 
     async def async_set_swing_mode(self, swing_mode: str) -> None:

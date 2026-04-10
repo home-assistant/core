@@ -199,7 +199,7 @@ class DenonAvrFlowHandler(ConfigFlow, domain=DOMAIN):
 
         try:
             success = await connect_denonavr.async_connect_receiver()
-        except (AvrNetworkError, AvrTimoutError):
+        except AvrNetworkError, AvrTimoutError:
             success = False
         if not success:
             return self.async_abort(reason="cannot_connect")

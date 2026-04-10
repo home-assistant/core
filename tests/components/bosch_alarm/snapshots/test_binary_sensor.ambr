@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_binary_sensor[amax_3000-None][binary_sensor.area1_area_ready_to_arm_away-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -20,6 +21,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Area ready to arm away',
     'options': dict({
     }),
     'original_device_class': None,
@@ -49,8 +51,9 @@
 # ---
 # name: test_binary_sensor[amax_3000-None][binary_sensor.area1_area_ready_to_arm_home-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -68,6 +71,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Area ready to arm home',
     'options': dict({
     }),
     'original_device_class': None,
@@ -97,8 +101,9 @@
 # ---
 # name: test_binary_sensor[amax_3000-None][binary_sensor.bedroom-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -116,6 +121,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -145,8 +151,9 @@
 # ---
 # name: test_binary_sensor[amax_3000-None][binary_sensor.bosch_amax_3000_ac_failure-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -164,6 +171,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'AC failure',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -194,8 +202,9 @@
 # ---
 # name: test_binary_sensor[amax_3000-None][binary_sensor.bosch_amax_3000_battery-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -213,6 +222,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.BATTERY: 'battery'>,
@@ -243,8 +253,9 @@
 # ---
 # name: test_binary_sensor[amax_3000-None][binary_sensor.bosch_amax_3000_battery_missing-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -262,6 +273,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery missing',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -292,8 +304,9 @@
 # ---
 # name: test_binary_sensor[amax_3000-None][binary_sensor.bosch_amax_3000_crc_failure_in_panel_configuration-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -311,6 +324,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'CRC failure in panel configuration',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -341,8 +355,9 @@
 # ---
 # name: test_binary_sensor[amax_3000-None][binary_sensor.bosch_amax_3000_failure_to_call_rps_since_last_rps_connection-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -360,6 +375,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Failure to call RPS since last RPS connection',
     'options': dict({
     }),
     'original_device_class': None,
@@ -389,8 +405,9 @@
 # ---
 # name: test_binary_sensor[amax_3000-None][binary_sensor.bosch_amax_3000_log_overflow-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -408,6 +425,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Log overflow',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -438,8 +456,9 @@
 # ---
 # name: test_binary_sensor[amax_3000-None][binary_sensor.bosch_amax_3000_log_threshold_reached-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -457,6 +476,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Log threshold reached',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -487,8 +507,9 @@
 # ---
 # name: test_binary_sensor[amax_3000-None][binary_sensor.bosch_amax_3000_phone_line_failure-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -506,6 +527,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Phone line failure',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.CONNECTIVITY: 'connectivity'>,
@@ -536,8 +558,9 @@
 # ---
 # name: test_binary_sensor[amax_3000-None][binary_sensor.bosch_amax_3000_point_bus_failure_since_last_rps_connection-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -555,6 +578,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Point bus failure since last RPS connection',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -585,8 +609,9 @@
 # ---
 # name: test_binary_sensor[amax_3000-None][binary_sensor.bosch_amax_3000_problem-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -604,6 +629,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Problem',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -634,8 +660,9 @@
 # ---
 # name: test_binary_sensor[amax_3000-None][binary_sensor.bosch_amax_3000_sdi_failure_since_last_rps_connection-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -653,6 +680,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'SDI failure since last RPS connection',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -683,8 +711,9 @@
 # ---
 # name: test_binary_sensor[amax_3000-None][binary_sensor.bosch_amax_3000_user_code_tamper_since_last_rps_connection-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -702,6 +731,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'User code tamper since last RPS connection',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -732,8 +762,9 @@
 # ---
 # name: test_binary_sensor[amax_3000-None][binary_sensor.co_detector-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -751,6 +782,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -780,8 +812,9 @@
 # ---
 # name: test_binary_sensor[amax_3000-None][binary_sensor.door-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -799,6 +832,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -828,8 +862,9 @@
 # ---
 # name: test_binary_sensor[amax_3000-None][binary_sensor.glassbreak_sensor-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -847,6 +882,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -876,8 +912,9 @@
 # ---
 # name: test_binary_sensor[amax_3000-None][binary_sensor.motion_detector-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -895,6 +932,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -924,8 +962,9 @@
 # ---
 # name: test_binary_sensor[amax_3000-None][binary_sensor.smoke_detector-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -943,6 +982,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -972,8 +1012,9 @@
 # ---
 # name: test_binary_sensor[amax_3000-None][binary_sensor.window-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -991,6 +1032,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -1020,8 +1062,9 @@
 # ---
 # name: test_binary_sensor[b5512-None][binary_sensor.area1_area_ready_to_arm_away-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1039,6 +1082,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Area ready to arm away',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1068,8 +1112,9 @@
 # ---
 # name: test_binary_sensor[b5512-None][binary_sensor.area1_area_ready_to_arm_home-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1087,6 +1132,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Area ready to arm home',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1116,8 +1162,9 @@
 # ---
 # name: test_binary_sensor[b5512-None][binary_sensor.bedroom-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1135,6 +1182,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -1164,8 +1212,9 @@
 # ---
 # name: test_binary_sensor[b5512-None][binary_sensor.bosch_b5512_us1b_ac_failure-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1183,6 +1232,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'AC failure',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -1213,8 +1263,9 @@
 # ---
 # name: test_binary_sensor[b5512-None][binary_sensor.bosch_b5512_us1b_battery-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1232,6 +1283,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.BATTERY: 'battery'>,
@@ -1262,8 +1314,9 @@
 # ---
 # name: test_binary_sensor[b5512-None][binary_sensor.bosch_b5512_us1b_battery_missing-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1281,6 +1334,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery missing',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -1311,8 +1365,9 @@
 # ---
 # name: test_binary_sensor[b5512-None][binary_sensor.bosch_b5512_us1b_crc_failure_in_panel_configuration-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1330,6 +1385,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'CRC failure in panel configuration',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -1360,8 +1416,9 @@
 # ---
 # name: test_binary_sensor[b5512-None][binary_sensor.bosch_b5512_us1b_failure_to_call_rps_since_last_rps_connection-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1379,6 +1436,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Failure to call RPS since last RPS connection',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1408,8 +1466,9 @@
 # ---
 # name: test_binary_sensor[b5512-None][binary_sensor.bosch_b5512_us1b_log_overflow-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1427,6 +1486,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Log overflow',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -1457,8 +1517,9 @@
 # ---
 # name: test_binary_sensor[b5512-None][binary_sensor.bosch_b5512_us1b_log_threshold_reached-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1476,6 +1537,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Log threshold reached',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -1506,8 +1568,9 @@
 # ---
 # name: test_binary_sensor[b5512-None][binary_sensor.bosch_b5512_us1b_phone_line_failure-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1525,6 +1588,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Phone line failure',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.CONNECTIVITY: 'connectivity'>,
@@ -1555,8 +1619,9 @@
 # ---
 # name: test_binary_sensor[b5512-None][binary_sensor.bosch_b5512_us1b_point_bus_failure_since_last_rps_connection-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1574,6 +1639,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Point bus failure since last RPS connection',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -1604,8 +1670,9 @@
 # ---
 # name: test_binary_sensor[b5512-None][binary_sensor.bosch_b5512_us1b_problem-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1623,6 +1690,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Problem',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -1653,8 +1721,9 @@
 # ---
 # name: test_binary_sensor[b5512-None][binary_sensor.bosch_b5512_us1b_sdi_failure_since_last_rps_connection-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1672,6 +1741,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'SDI failure since last RPS connection',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -1702,8 +1772,9 @@
 # ---
 # name: test_binary_sensor[b5512-None][binary_sensor.bosch_b5512_us1b_user_code_tamper_since_last_rps_connection-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1721,6 +1792,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'User code tamper since last RPS connection',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -1751,8 +1823,9 @@
 # ---
 # name: test_binary_sensor[b5512-None][binary_sensor.co_detector-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1770,6 +1843,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -1799,8 +1873,9 @@
 # ---
 # name: test_binary_sensor[b5512-None][binary_sensor.door-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1818,6 +1893,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -1847,8 +1923,9 @@
 # ---
 # name: test_binary_sensor[b5512-None][binary_sensor.glassbreak_sensor-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1866,6 +1943,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -1895,8 +1973,9 @@
 # ---
 # name: test_binary_sensor[b5512-None][binary_sensor.motion_detector-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1914,6 +1993,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -1943,8 +2023,9 @@
 # ---
 # name: test_binary_sensor[b5512-None][binary_sensor.smoke_detector-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1962,6 +2043,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -1991,8 +2073,9 @@
 # ---
 # name: test_binary_sensor[b5512-None][binary_sensor.window-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2010,6 +2093,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -2039,8 +2123,9 @@
 # ---
 # name: test_binary_sensor[solution_3000-None][binary_sensor.area1_area_ready_to_arm_away-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2058,6 +2143,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Area ready to arm away',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2087,8 +2173,9 @@
 # ---
 # name: test_binary_sensor[solution_3000-None][binary_sensor.area1_area_ready_to_arm_home-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2106,6 +2193,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Area ready to arm home',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2135,8 +2223,9 @@
 # ---
 # name: test_binary_sensor[solution_3000-None][binary_sensor.bedroom-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2154,6 +2243,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -2183,8 +2273,9 @@
 # ---
 # name: test_binary_sensor[solution_3000-None][binary_sensor.bosch_solution_3000_ac_failure-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2202,6 +2293,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'AC failure',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -2232,8 +2324,9 @@
 # ---
 # name: test_binary_sensor[solution_3000-None][binary_sensor.bosch_solution_3000_battery-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2251,6 +2344,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.BATTERY: 'battery'>,
@@ -2281,8 +2375,9 @@
 # ---
 # name: test_binary_sensor[solution_3000-None][binary_sensor.bosch_solution_3000_battery_missing-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2300,6 +2395,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery missing',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -2330,8 +2426,9 @@
 # ---
 # name: test_binary_sensor[solution_3000-None][binary_sensor.bosch_solution_3000_crc_failure_in_panel_configuration-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2349,6 +2446,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'CRC failure in panel configuration',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -2379,8 +2477,9 @@
 # ---
 # name: test_binary_sensor[solution_3000-None][binary_sensor.bosch_solution_3000_failure_to_call_rps_since_last_rps_connection-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2398,6 +2497,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Failure to call RPS since last RPS connection',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2427,8 +2527,9 @@
 # ---
 # name: test_binary_sensor[solution_3000-None][binary_sensor.bosch_solution_3000_log_overflow-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2446,6 +2547,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Log overflow',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -2476,8 +2578,9 @@
 # ---
 # name: test_binary_sensor[solution_3000-None][binary_sensor.bosch_solution_3000_log_threshold_reached-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2495,6 +2598,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Log threshold reached',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -2525,8 +2629,9 @@
 # ---
 # name: test_binary_sensor[solution_3000-None][binary_sensor.bosch_solution_3000_phone_line_failure-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2544,6 +2649,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Phone line failure',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.CONNECTIVITY: 'connectivity'>,
@@ -2574,8 +2680,9 @@
 # ---
 # name: test_binary_sensor[solution_3000-None][binary_sensor.bosch_solution_3000_point_bus_failure_since_last_rps_connection-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2593,6 +2700,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Point bus failure since last RPS connection',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -2623,8 +2731,9 @@
 # ---
 # name: test_binary_sensor[solution_3000-None][binary_sensor.bosch_solution_3000_problem-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2642,6 +2751,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Problem',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -2672,8 +2782,9 @@
 # ---
 # name: test_binary_sensor[solution_3000-None][binary_sensor.bosch_solution_3000_sdi_failure_since_last_rps_connection-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2691,6 +2802,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'SDI failure since last RPS connection',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -2721,8 +2833,9 @@
 # ---
 # name: test_binary_sensor[solution_3000-None][binary_sensor.bosch_solution_3000_user_code_tamper_since_last_rps_connection-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2740,6 +2853,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'User code tamper since last RPS connection',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -2770,8 +2884,9 @@
 # ---
 # name: test_binary_sensor[solution_3000-None][binary_sensor.co_detector-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2789,6 +2904,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -2818,8 +2934,9 @@
 # ---
 # name: test_binary_sensor[solution_3000-None][binary_sensor.door-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2837,6 +2954,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -2866,8 +2984,9 @@
 # ---
 # name: test_binary_sensor[solution_3000-None][binary_sensor.glassbreak_sensor-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2885,6 +3004,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -2914,8 +3034,9 @@
 # ---
 # name: test_binary_sensor[solution_3000-None][binary_sensor.motion_detector-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2933,6 +3054,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -2962,8 +3084,9 @@
 # ---
 # name: test_binary_sensor[solution_3000-None][binary_sensor.smoke_detector-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2981,6 +3104,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -3010,8 +3134,9 @@
 # ---
 # name: test_binary_sensor[solution_3000-None][binary_sensor.window-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -3029,6 +3154,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,

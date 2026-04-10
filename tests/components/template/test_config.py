@@ -475,3 +475,72 @@ async def test_invalid_schema_raises_issue(
 
     assert issue.domain == "template"
     assert issue.severity == ir.IssueSeverity.WARNING
+
+
+async def test_multiple_configuration_keys(
+    hass: HomeAssistant,
+) -> None:
+    """Test multiple configurations keys create entities."""
+    await async_setup_component(
+        hass,
+        "template",
+        {
+            "template": [{"binary_sensor": [{"name": "Foo", "state": "{{ True }}"}]}],
+            "template mytemplates": [
+                {
+                    "sensor": [
+                        {"name": "Foo", "state": "{{ 'bar' }}"},
+                        {"name": "Bar", "state": "{{ 'foo' }}"},
+                    ]
+                }
+            ],
+            "template y": [
+                {
+                    "cover": [
+                        {
+                            "name": "Shades Curtain",
+                            "unique_id": "shades_curtain",
+                            "open_cover": [],
+                            "close_cover": [],
+                            "stop_cover": [],
+                        }
+                    ]
+                },
+                {
+                    "cover": [
+                        {
+                            "open_cover": {
+                                "target": {"entity_id": ["cover.shades_curtain"]},
+                                "action": "cover.close_cover",
+                            },
+                            "close_cover": {
+                                "target": {"entity_id": ["cover.shades_curtain"]},
+                                "action": "cover.open_cover",
+                            },
+                            "stop_cover": {
+                                "target": {"entity_id": ["cover.shades_curtain"]},
+                                "action": "cover.stop_cover",
+                            },
+                            "default_entity_id": "cover.shades_reversed",
+                            "icon": "{% set s = states('cover.shades_curtain') %}\n{% if s == 'open' %}\n   mdi:curtains-closed\n{% else %}\n   mdi:curtains\n{% endif %}",
+                            "name": "Shades Reversed",
+                            "unique_id": "c0223bcb-32c6-430e-a2c1-3545f8031796",
+                            "state": "{% set s = states('cover.shades_curtain') %}\n{% if s == 'open' %}\n  closed\n{% elif s == 'closed' %}\n  open\n{% elif s == 'opening' %}\n  closing\n{% elif s == 'closing' %}\n  opening\n{% else %}\n  unknown\n{% endif %}",
+                        }
+                    ]
+                },
+            ],
+        },
+    )
+    await hass.async_block_till_done()
+
+    for entity_id, expected in (
+        ("binary_sensor.foo", "on"),
+        ("sensor.foo", "bar"),
+        ("sensor.bar", "foo"),
+        ("cover.shades_curtain", "unknown"),
+        ("cover.shades_reversed", "unknown"),
+    ):
+        state = hass.states.get(entity_id)
+        assert state
+        assert state.state == expected

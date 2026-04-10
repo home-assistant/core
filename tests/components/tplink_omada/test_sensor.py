@@ -1,14 +1,13 @@
 """Tests for TP-Link Omada sensor entities."""
 
 from datetime import timedelta
-import json
 from unittest.mock import MagicMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
 from tplink_omada_client.definitions import DeviceStatus, DeviceStatusCategory
-from tplink_omada_client.devices import OmadaGatewayPortStatus, OmadaListDevice
+from tplink_omada_client.devices import OmadaListDevice
 
 from homeassistant.components.tplink_omada.const import DOMAIN
 from homeassistant.components.tplink_omada.coordinator import POLL_DEVICES
@@ -18,7 +17,7 @@ from homeassistant.helpers import entity_registry as er
 from tests.common import (
     MockConfigEntry,
     async_fire_time_changed,
-    load_fixture,
+    async_load_json_array_fixture,
     snapshot_platform,
 )
 
@@ -63,7 +62,8 @@ async def test_device_specific_status(
     assert entity is not None
     assert entity.state == "connected"
 
-    _set_test_device_status(
+    await _set_test_device_status(
+        hass,
         mock_omada_site_client,
         DeviceStatus.ADOPT_FAILED.value,
         DeviceStatusCategory.CONNECTED.value,
@@ -74,7 +74,7 @@ async def test_device_specific_status(
     await hass.async_block_till_done()
 
     entity = hass.states.get(entity_id)
-    assert entity.state == "adopt_failed"
+    assert entity and entity.state == "adopt_failed"
 
 
 async def test_device_category_status(
@@ -89,9 +89,10 @@ async def test_device_category_status(
     assert entity is not None
     assert entity.state == "connected"
 
-    _set_test_device_status(
+    await _set_test_device_status(
+        hass,
         mock_omada_site_client,
-        DeviceStatus.PENDING_WIRELESS,
+        DeviceStatus.PENDING_WIRELESS.value,
         DeviceStatusCategory.PENDING.value,
     )
 
@@ -100,15 +101,16 @@ async def test_device_category_status(
     await hass.async_block_till_done()
 
     entity = hass.states.get(entity_id)
-    assert entity.state == "pending"
+    assert entity and entity.state == "pending"
 
 
-def _set_test_device_status(
+async def _set_test_device_status(
+    hass: HomeAssistant,
     mock_omada_site_client: MagicMock,
     status: int,
     status_category: int,
-) -> OmadaGatewayPortStatus:
-    devices_data = json.loads(load_fixture("devices.json", DOMAIN))
+) -> None:
+    devices_data = await async_load_json_array_fixture(hass, "devices.json", DOMAIN)
     devices_data[1]["status"] = status
     devices_data[1]["statusCategory"] = status_category
     devices = [OmadaListDevice(d) for d in devices_data]

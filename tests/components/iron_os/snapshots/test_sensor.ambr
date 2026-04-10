@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_sensors[sensor.pinecil_dc_input_voltage-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -22,6 +23,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'DC input voltage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -57,8 +59,9 @@
 # ---
 # name: test_sensors[sensor.pinecil_estimated_power-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -78,6 +81,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Estimated power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -113,8 +117,9 @@
 # ---
 # name: test_sensors[sensor.pinecil_hall_effect_strength-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -134,6 +139,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Hall effect strength',
     'options': dict({
     }),
     'original_device_class': None,
@@ -164,8 +170,9 @@
 # ---
 # name: test_sensors[sensor.pinecil_handle_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -185,6 +192,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Handle temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -220,8 +228,9 @@
 # ---
 # name: test_sensors[sensor.pinecil_last_movement_time-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -241,6 +250,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Last movement time',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -276,8 +286,9 @@
 # ---
 # name: test_sensors[sensor.pinecil_max_tip_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -295,6 +306,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Max tip temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -329,8 +341,9 @@
 # ---
 # name: test_sensors[sensor.pinecil_operating_mode-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -366,6 +379,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Operating mode',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -413,8 +427,9 @@
 # ---
 # name: test_sensors[sensor.pinecil_power_level-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -434,6 +449,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power level',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -469,8 +485,9 @@
 # ---
 # name: test_sensors[sensor.pinecil_power_source-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -495,6 +512,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power source',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -531,8 +549,9 @@
 # ---
 # name: test_sensors[sensor.pinecil_raw_tip_voltage-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -552,6 +571,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Raw tip voltage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -587,8 +607,9 @@
 # ---
 # name: test_sensors[sensor.pinecil_tip_resistance-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -608,6 +629,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Tip resistance',
     'options': dict({
     }),
     'original_device_class': None,
@@ -639,8 +661,9 @@
 # ---
 # name: test_sensors[sensor.pinecil_tip_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -660,6 +683,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Tip temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -695,8 +719,9 @@
 # ---
 # name: test_sensors[sensor.pinecil_uptime-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -716,6 +741,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Uptime',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,

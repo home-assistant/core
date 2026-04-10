@@ -208,11 +208,11 @@ class UserOnboardingView(_BaseOnboardingStepView):
             area_registry = ar.async_get(hass)
 
             for area in DEFAULT_AREAS:
-                name = translations[f"component.onboarding.area.{area}"]
+                name = translations[f"component.onboarding.area.{area.key}"]
                 # Guard because area might have been created by an automatically
                 # set up integration.
                 if not area_registry.async_get_area_by_name(name):
-                    area_registry.async_create(name)
+                    area_registry.async_create(name, icon=area.icon)
 
             await self._async_mark_done(hass)
 
@@ -283,7 +283,10 @@ class IntegrationOnboardingView(_BaseOnboardingStepView):
     async def post(self, request: web.Request, data: dict[str, Any]) -> web.Response:
         """Handle token creation."""
         hass = request.app[KEY_HASS]
-        refresh_token_id = request[KEY_HASS_REFRESH_TOKEN_ID]
+        if not (refresh_token_id := request.get(KEY_HASS_REFRESH_TOKEN_ID)):
+            return self.json_message(
+                "Refresh token not available", HTTPStatus.FORBIDDEN
+            )
 
         async with self._lock:
             if self._async_is_done():

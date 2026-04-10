@@ -1,6 +1,7 @@
 """Test area_registry API."""
 
 from datetime import datetime
+from typing import Any
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
@@ -171,6 +172,39 @@ async def test_create_area(
     }
     assert len(area_registry.areas) == 2
 
+    # Create area with invalid aliases
+    await client.send_json_auto_id(
+        {
+            "aliases": [" alias_1 ", "", " "],
+            "floor_id": "first_floor",
+            "icon": "mdi:garage",
+            "labels": ["label_1", "label_2"],
+            "name": "mock 3",
+            "picture": "/image/example.png",
+            "temperature_entity_id": "sensor.mock_temperature",
+            "humidity_entity_id": "sensor.mock_humidity",
+            "type": "config/area_registry/create",
+        }
+    )
+
+    msg = await client.receive_json()
+
+    assert msg["success"]
+    assert msg["result"] == {
+        "aliases": unordered(["alias_1"]),
+        "area_id": ANY,
+        "floor_id": "first_floor",
+        "icon": "mdi:garage",
+        "labels": unordered(["label_1", "label_2"]),
+        "name": "mock 3",
+        "picture": "/image/example.png",
+        "created_at": utcnow().timestamp(),
+        "modified_at": utcnow().timestamp(),
+        "temperature_entity_id": "sensor.mock_temperature",
+        "humidity_entity_id": "sensor.mock_humidity",
+    }
+    assert len(area_registry.areas) == 3
+
 
 async def test_create_area_with_name_already_in_use(
     client: MockHAClientWebSocket, area_registry: ar.AreaRegistry
@@ -303,6 +337,40 @@ async def test_update_area(
     }
     assert len(area_registry.areas) == 1
 
+    modified_at = datetime.fromisoformat("2024-07-16T13:55:00.900075+00:00")
+    freezer.move_to(modified_at)
+
+    await client.send_json_auto_id(
+        {
+            "type": "config/area_registry/update",
+            "aliases": ["alias_1", "", " ", " alias_2 "],
+            "area_id": area.id,
+            "floor_id": None,
+            "humidity_entity_id": None,
+            "icon": None,
+            "labels": [],
+            "picture": None,
+            "temperature_entity_id": None,
+        }
+    )
+
+    msg = await client.receive_json()
+
+    assert msg["result"] == {
+        "aliases": unordered(["alias_1", "alias_2"]),
+        "area_id": area.id,
+        "floor_id": None,
+        "icon": None,
+        "labels": [],
+        "name": "mock 2",
+        "picture": None,
+        "temperature_entity_id": None,
+        "humidity_entity_id": None,
+        "created_at": created_at.timestamp(),
+        "modified_at": modified_at.timestamp(),
+    }
+    assert len(area_registry.areas) == 1
+
 
 async def test_update_area_with_same_name(
     client: MockHAClientWebSocket, area_registry: ar.AreaRegistry
@@ -346,3 +414,92 @@ async def test_update_area_with_name_already_in_use(
     assert msg["error"]["code"] == "invalid_info"
     assert msg["error"]["message"] == "The name mock 2 (mock2) is already in use"
     assert len(area_registry.areas) == 2
+
+
+async def test_reorder_areas(
+    client: MockHAClientWebSocket, area_registry: ar.AreaRegistry
+) -> None:
+    """Test reorder areas."""
+    area1 = area_registry.async_create("mock 1")
+    area2 = area_registry.async_create("mock 2")
+    area3 = area_registry.async_create("mock 3")
+
+    await client.send_json_auto_id({"type": "config/area_registry/list"})
+    msg = await client.receive_json()
+    assert [area["area_id"] for area in msg["result"]] == [area1.id, area2.id, area3.id]
+
+    await client.send_json_auto_id(
+        {
+            "type": "config/area_registry/reorder",
+            "area_ids": [area3.id, area1.id, area2.id],
+        }
+    )
+    msg = await client.receive_json()
+    assert msg["success"]
+
+    await client.send_json_auto_id({"type": "config/area_registry/list"})
+    msg = await client.receive_json()
+    assert [area["area_id"] for area in msg["result"]] == [area3.id, area1.id, area2.id]
+
+
+async def test_reorder_areas_invalid_area_ids(
+    client: MockHAClientWebSocket, area_registry: ar.AreaRegistry
+) -> None:
+    """Test reorder with invalid area IDs."""
+    area1 = area_registry.async_create("mock 1")
+    area_registry.async_create("mock 2")
+
+    await client.send_json_auto_id(
+        {
+            "type": "config/area_registry/reorder",
+            "area_ids": [area1.id],
+        }
+    )
+    msg = await client.receive_json()
+    assert not msg["success"]
+    assert msg["error"]["code"] == "invalid_format"
+    assert "must contain all existing area IDs" in msg["error"]["message"]
+
+
+async def test_reorder_areas_with_nonexistent_id(
+    client: MockHAClientWebSocket, area_registry: ar.AreaRegistry
+) -> None:
+    """Test reorder with nonexistent area ID."""
+    area1 = area_registry.async_create("mock 1")
+    area2 = area_registry.async_create("mock 2")
+
+    await client.send_json_auto_id(
+        {
+            "type": "config/area_registry/reorder",
+            "area_ids": [area1.id, area2.id, "nonexistent"],
+        }
+    )
+    msg = await client.receive_json()
+    assert not msg["success"]
+    assert msg["error"]["code"] == "invalid_format"
+
+
+async def test_reorder_areas_persistence(
+    hass: HomeAssistant,
+    client: MockHAClientWebSocket,
+    area_registry: ar.AreaRegistry,
+    hass_storage: dict[str, Any],
+) -> None:
+    """Test that area reordering is persisted."""
+    area1 = area_registry.async_create("mock 1")
+    area2 = area_registry.async_create("mock 2")
+    area3 = area_registry.async_create("mock 3")
+
+    await client.send_json_auto_id(
+        {
+            "type": "config/area_registry/reorder",
+            "area_ids": [area2.id, area3.id, area1.id],
+        }
+    )
+    msg = await client.receive_json()
+    assert msg["success"]
+
+    await hass.async_block_till_done()
+
+    area_ids = [area.id for area in area_registry.async_list_areas()]
+    assert area_ids == [area2.id, area3.id, area1.id]

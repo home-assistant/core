@@ -4,7 +4,10 @@ from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 from homematicip.auth import Auth
 from homematicip.connection.connection_context import ConnectionContext
-from homematicip.exceptions.connection_exceptions import HmipConnectionError
+from homematicip.exceptions.connection_exceptions import (
+    HmipAuthenticationError,
+    HmipConnectionError,
+)
 import pytest
 
 from homeassistant.components.homematicip_cloud import DOMAIN
@@ -269,6 +272,46 @@ async def test_get_state_after_disconnect(
     mock_sleep.assert_awaited_with(2)
 
 
+async def test_get_state_after_ap_reconnect(
+    hass: HomeAssistant, hmip_config_entry: MockConfigEntry, simple_mock_home
+) -> None:
+    """Test state recovery after access point reconnects to cloud.
+
+    When the access point loses its cloud connection, async_update sets all
+    devices to unavailable. When the access point reconnects (home.connected
+    becomes True), async_update should trigger a state refresh to restore
+    entity availability.
+    """
+    hass.config.components.add(DOMAIN)
+    hap = HomematicipHAP(hass, hmip_config_entry)
+    assert hap
+
+    simple_mock_home = MagicMock(spec=AsyncHome)
+    simple_mock_home.devices = []
+    simple_mock_home.websocket_is_connected = Mock(return_value=True)
+    hap.home = simple_mock_home
+
+    with patch.object(hap, "get_state") as mock_get_state:
+        # Initially not disconnected
+        assert not hap._ws_connection_closed.is_set()
+
+        # Access point loses cloud connection
+        hap.home.connected = False
+        hap.async_update()
+        assert hap._ws_connection_closed.is_set()
+        mock_get_state.assert_not_called()
+
+        # Access point reconnects to cloud
+        hap.home.connected = True
+        hap.async_update()
+
+        # Let _try_get_state run
+        await hass.async_block_till_done()
+        mock_get_state.assert_called_once()
+
+    assert not hap._ws_connection_closed.is_set()
+
+
 async def test_try_get_state_exponential_backoff() -> None:
     """Test _try_get_state waits for websocket connection."""
 
@@ -323,3 +366,30 @@ async def test_async_connect(
     simple_mock_home.set_on_disconnected_handler.assert_called_once()
     simple_mock_home.set_on_reconnect_handler.assert_called_once()
     simple_mock_home.enable_events.assert_called_once()
+
+
+async def test_try_get_state_auth_error_triggers_reauth(
+    hass: HomeAssistant, hmip_config_entry: MockConfigEntry, simple_mock_home
+) -> None:
+    """Test _try_get_state stops retrying on auth error and triggers reauth."""
+    hass.config.components.add(DOMAIN)
+    hmip_config_entry.add_to_hass(hass)
+    hap = HomematicipHAP(hass, hmip_config_entry)
+    assert hap
+
+    hap.home = MagicMock(spec=AsyncHome)
+    hap.home.websocket_is_connected = Mock(return_value=True)
+
+    hap.get_state = AsyncMock(side_effect=HmipAuthenticationError)
+
+    assert not hass.config_entries.flow.async_progress_by_handler(DOMAIN)
+
+    await hap._try_get_state()
+    await hass.async_block_till_done()
+
+    # Should have called get_state only once (no retries)
+    assert hap.get_state.call_count == 1
+    # Should have triggered a reauth flow
+    flows = hass.config_entries.flow.async_progress_by_handler(DOMAIN)
+    assert len(flows) == 1
+    assert flows[0]["context"]["source"] == "reauth"

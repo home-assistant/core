@@ -7,6 +7,7 @@ from collections.abc import AsyncGenerator, AsyncIterable, Callable, Generator
 from contextlib import contextmanager
 from contextvars import ContextVar
 from dataclasses import asdict, dataclass, field, replace
+from datetime import datetime
 import logging
 from pathlib import Path
 from typing import Any, Literal, TypedDict, cast
@@ -16,19 +17,57 @@ import voluptuous as vol
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError, TemplateError
 from homeassistant.helpers import chat_session, frame, intent, llm, template
+from homeassistant.util.dt import utcnow
 from homeassistant.util.hass_dict import HassKey
 from homeassistant.util.json import JsonObjectType
 
 from . import trace
+from .const import ChatLogEventType
 from .models import ConversationInput, ConversationResult
 
 DATA_CHAT_LOGS: HassKey[dict[str, ChatLog]] = HassKey("conversation_chat_logs")
-
+DATA_SUBSCRIPTIONS: HassKey[
+    list[Callable[[str, ChatLogEventType, dict[str, Any]], None]]
+] = HassKey("conversation_chat_log_subscriptions")
 LOGGER = logging.getLogger(__name__)
 
 current_chat_log: ContextVar[ChatLog | None] = ContextVar(
     "current_chat_log", default=None
 )
+
+
+@callback
+def async_subscribe_chat_logs(
+    hass: HomeAssistant,
+    callback_func: Callable[[str, ChatLogEventType, dict[str, Any]], None],
+) -> Callable[[], None]:
+    """Subscribe to all chat logs."""
+    subscriptions = hass.data.get(DATA_SUBSCRIPTIONS)
+    if subscriptions is None:
+        subscriptions = []
+        hass.data[DATA_SUBSCRIPTIONS] = subscriptions
+
+    subscriptions.append(callback_func)
+
+    @callback
+    def unsubscribe() -> None:
+        """Unsubscribe from chat logs."""
+        subscriptions.remove(callback_func)
+
+    return unsubscribe
+
+
+@callback
+def _async_notify_subscribers(
+    hass: HomeAssistant,
+    conversation_id: str,
+    event_type: ChatLogEventType,
+    data: dict[str, Any],
+) -> None:
+    """Notify subscribers of a chat log event."""
+    if subscriptions := hass.data.get(DATA_SUBSCRIPTIONS):
+        for callback_func in subscriptions:
+            callback_func(conversation_id, event_type, data)
 
 
 @contextmanager
@@ -63,6 +102,8 @@ def async_get_chat_log(
         all_chat_logs = {}
         hass.data[DATA_CHAT_LOGS] = all_chat_logs
 
+    is_new_log = session.conversation_id not in all_chat_logs
+
     if chat_log := all_chat_logs.get(session.conversation_id):
         chat_log = replace(chat_log, content=chat_log.content.copy())
     else:
@@ -70,6 +111,15 @@ def async_get_chat_log(
 
     if chat_log_delta_listener:
         chat_log.delta_listener = chat_log_delta_listener
+
+    # Fire CREATED event for new chat logs before any content is added
+    if is_new_log:
+        _async_notify_subscribers(
+            hass,
+            session.conversation_id,
+            ChatLogEventType.CREATED,
+            {"chat_log": chat_log.as_dict()},
+        )
 
     if user_input is not None:
         chat_log.async_add_user_content(UserContent(content=user_input.text))
@@ -84,14 +134,28 @@ def async_get_chat_log(
         LOGGER.debug(
             "Chat Log opened but no assistant message was added, ignoring update"
         )
+        # If this was a new log but nothing was added, fire DELETED to clean up
+        if is_new_log:
+            _async_notify_subscribers(
+                hass,
+                session.conversation_id,
+                ChatLogEventType.DELETED,
+                {},
+            )
         return
 
-    if session.conversation_id not in all_chat_logs:
+    if is_new_log:
 
         @callback
         def do_cleanup() -> None:
             """Handle cleanup."""
             all_chat_logs.pop(session.conversation_id)
+            _async_notify_subscribers(
+                hass,
+                session.conversation_id,
+                ChatLogEventType.DELETED,
+                {},
+            )
 
         session.async_on_cleanup(do_cleanup)
 
@@ -99,6 +163,16 @@ def async_get_chat_log(
         chat_log.delta_listener = None
 
     all_chat_logs[session.conversation_id] = chat_log
+
+    # For new logs, CREATED was already fired before content was added
+    # For existing logs, fire UPDATED
+    if not is_new_log:
+        _async_notify_subscribers(
+            hass,
+            session.conversation_id,
+            ChatLogEventType.UPDATED,
+            {"chat_log": chat_log.as_dict()},
+        )
 
 
 class ConverseError(HomeAssistantError):
@@ -129,6 +203,15 @@ class SystemContent:
 
     role: Literal["system"] = field(init=False, default="system")
     content: str
+    created: datetime = field(init=False, default_factory=utcnow)
+
+    def as_dict(self) -> dict[str, Any]:
+        """Return a dictionary representation of the content."""
+        return {
+            "role": self.role,
+            "content": self.content,
+            "created": self.created,
+        }
 
 
 @dataclass(frozen=True)
@@ -138,6 +221,20 @@ class UserContent:
     role: Literal["user"] = field(init=False, default="user")
     content: str
     attachments: list[Attachment] | None = field(default=None)
+    created: datetime = field(init=False, default_factory=utcnow)
+
+    def as_dict(self) -> dict[str, Any]:
+        """Return a dictionary representation of the content."""
+        result: dict[str, Any] = {
+            "role": self.role,
+            "content": self.content,
+            "created": self.created,
+        }
+        if self.attachments:
+            result["attachments"] = [
+                attachment.as_dict() for attachment in self.attachments
+            ]
+        return result
 
 
 @dataclass(frozen=True)
@@ -153,6 +250,14 @@ class Attachment:
     path: Path
     """Path to the attachment on disk."""
 
+    def as_dict(self) -> dict[str, Any]:
+        """Return a dictionary representation of the attachment."""
+        return {
+            "media_content_id": self.media_content_id,
+            "mime_type": self.mime_type,
+            "path": str(self.path),
+        }
+
 
 @dataclass(frozen=True)
 class AssistantContent:
@@ -164,6 +269,22 @@ class AssistantContent:
     thinking_content: str | None = None
     tool_calls: list[llm.ToolInput] | None = None
     native: Any = None
+    created: datetime = field(init=False, default_factory=utcnow)
+
+    def as_dict(self) -> dict[str, Any]:
+        """Return a dictionary representation of the content."""
+        result: dict[str, Any] = {
+            "role": self.role,
+            "agent_id": self.agent_id,
+            "created": self.created,
+        }
+        if self.content:
+            result["content"] = self.content
+        if self.thinking_content:
+            result["thinking_content"] = self.thinking_content
+        if self.tool_calls:
+            result["tool_calls"] = self.tool_calls
+        return result
 
 
 @dataclass(frozen=True)
@@ -175,6 +296,18 @@ class ToolResultContent:
     tool_call_id: str
     tool_name: str
     tool_result: JsonObjectType
+    created: datetime = field(init=False, default_factory=utcnow)
+
+    def as_dict(self) -> dict[str, Any]:
+        """Return a dictionary representation of the content."""
+        return {
+            "role": self.role,
+            "agent_id": self.agent_id,
+            "tool_call_id": self.tool_call_id,
+            "tool_name": self.tool_name,
+            "tool_result": self.tool_result,
+            "created": self.created,
+        }
 
 
 type Content = SystemContent | UserContent | AssistantContent | ToolResultContent
@@ -210,6 +343,16 @@ class ChatLog:
     llm_api: llm.APIInstance | None = None
     delta_listener: Callable[[ChatLog, dict], None] | None = None
     llm_input_provided_index = 0
+    created: datetime = field(init=False, default_factory=utcnow)
+
+    def as_dict(self) -> dict[str, Any]:
+        """Return a dictionary representation of the chat log."""
+        return {
+            "conversation_id": self.conversation_id,
+            "continue_conversation": self.continue_conversation,
+            "content": [c.as_dict() for c in self.content],
+            "created": self.created,
+        }
 
     @property
     def continue_conversation(self) -> bool:
@@ -241,6 +384,12 @@ class ChatLog:
         """Add user content to the log."""
         LOGGER.debug("Adding user content: %s", content)
         self.content.append(content)
+        _async_notify_subscribers(
+            self.hass,
+            self.conversation_id,
+            ChatLogEventType.CONTENT_ADDED,
+            {"content": content.as_dict()},
+        )
 
     @callback
     def async_add_assistant_content_without_tools(
@@ -259,6 +408,12 @@ class ChatLog:
         ):
             raise ValueError("Non-external tool calls not allowed")
         self.content.append(content)
+        _async_notify_subscribers(
+            self.hass,
+            self.conversation_id,
+            ChatLogEventType.CONTENT_ADDED,
+            {"content": content.as_dict()},
+        )
 
     async def async_add_assistant_content(
         self,
@@ -317,6 +472,14 @@ class ChatLog:
                 tool_result=tool_result,
             )
             self.content.append(response_content)
+            _async_notify_subscribers(
+                self.hass,
+                self.conversation_id,
+                ChatLogEventType.CONTENT_ADDED,
+                {
+                    "content": response_content.as_dict(),
+                },
+            )
             yield response_content
 
     async def async_add_delta_content_stream(
@@ -593,6 +756,12 @@ class ChatLog:
         self.llm_api = llm_api
         self.extra_system_prompt = extra_system_prompt
         self.content[0] = SystemContent(content=prompt)
+        _async_notify_subscribers(
+            self.hass,
+            self.conversation_id,
+            ChatLogEventType.UPDATED,
+            {"chat_log": self.as_dict()},
+        )
 
         LOGGER.debug("Prompt: %s", self.content)
         LOGGER.debug("Tools: %s", self.llm_api.tools if self.llm_api else None)

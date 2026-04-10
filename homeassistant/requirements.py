@@ -9,12 +9,15 @@ import logging
 import os
 from typing import Any
 
-from packaging.requirements import Requirement
-
 from .core import HomeAssistant, callback
 from .exceptions import HomeAssistantError
 from .helpers import singleton
-from .loader import Integration, IntegrationNotFound, async_get_integration
+from .loader import (
+    Integration,
+    IntegrationNotFound,
+    async_get_integration,
+    async_suggest_report_issue,
+)
 from .util import package as pkg_util
 
 # The default is too low when the internet connection is satellite or high latency
@@ -27,6 +30,10 @@ DISCOVERY_INTEGRATIONS: dict[str, Iterable[str]] = {
     "mqtt": ("mqtt",),
     "ssdp": ("ssdp",),
     "zeroconf": ("zeroconf", "homekit"),
+}
+DEPRECATED_PACKAGES: dict[str, tuple[str, str]] = {
+    # old_package_name: (reason, breaks_in_ha_version)
+    "pyserial-asyncio": ("should be replaced by pyserial-asyncio-fast", "2026.7"),
 }
 _LOGGER = logging.getLogger(__name__)
 
@@ -55,14 +62,16 @@ async def async_get_integration_with_requirements(
 
 
 async def async_process_requirements(
-    hass: HomeAssistant, name: str, requirements: list[str]
+    hass: HomeAssistant, name: str, requirements: list[str], is_built_in: bool = True
 ) -> None:
     """Install the requirements for a component or platform.
 
     This method is a coroutine. It will raise RequirementsNotFound
     if an requirement can't be satisfied.
     """
-    await _async_get_manager(hass).async_process_requirements(name, requirements)
+    await _async_get_manager(hass).async_process_requirements(
+        name, requirements, is_built_in
+    )
 
 
 async def async_load_installed_versions(
@@ -180,7 +189,7 @@ class RequirementsManager:
         """Process an integration and requirements."""
         if integration.requirements:
             await self.async_process_requirements(
-                integration.domain, integration.requirements
+                integration.domain, integration.requirements, integration.is_built_in
             )
 
         cache = self.integrations_with_reqs
@@ -240,24 +249,54 @@ class RequirementsManager:
             raise exceptions[0]
 
     async def async_process_requirements(
-        self, name: str, requirements: list[str]
+        self, name: str, requirements: list[str], is_built_in: bool
     ) -> None:
         """Install the requirements for a component or platform.
 
         This method is a coroutine. It will raise RequirementsNotFound
         if an requirement can't be satisfied.
         """
-        if self.hass.config.skip_pip_packages:
-            skipped_requirements = {
-                req
-                for req in requirements
-                if Requirement(req).name in self.hass.config.skip_pip_packages
+        if DEPRECATED_PACKAGES or self.hass.config.skip_pip_packages:
+            all_requirements = {
+                requirement_string: requirement_details
+                for requirement_string in requirements
+                if (
+                    requirement_details := pkg_util.parse_requirement_safe(
+                        requirement_string
+                    )
+                )
             }
-
-            for req in skipped_requirements:
-                _LOGGER.warning("Skipping requirement %s. This may cause issues", req)
-
-            requirements = [r for r in requirements if r not in skipped_requirements]
+            if DEPRECATED_PACKAGES:
+                for requirement_string, requirement_details in all_requirements.items():
+                    if deprecation := DEPRECATED_PACKAGES.get(requirement_details.name):
+                        reason, breaks_in_ha_version = deprecation
+                        _LOGGER.warning(
+                            "Detected that %sintegration '%s' %s. %s %s",
+                            "" if is_built_in else "custom ",
+                            name,
+                            f"has requirement '{requirement_string}' which {reason}",
+                            (
+                                "This will stop working in Home Assistant "
+                                f"{breaks_in_ha_version}, please"
+                                if breaks_in_ha_version
+                                else "Please"
+                            ),
+                            async_suggest_report_issue(
+                                self.hass, integration_domain=name
+                            ),
+                        )
+            if skip_pip_packages := self.hass.config.skip_pip_packages:
+                skipped_requirements: set[str] = set()
+                for requirement_string, requirement_details in all_requirements.items():
+                    if requirement_details.name in skip_pip_packages:
+                        _LOGGER.warning(
+                            "Skipping requirement %s. This may cause issues",
+                            requirement_string,
+                        )
+                        skipped_requirements.add(requirement_string)
+                requirements = [
+                    r for r in requirements if r not in skipped_requirements
+                ]
 
         if not (missing := self._find_missing_requirements(requirements)):
             return

@@ -4,21 +4,12 @@ from __future__ import annotations
 
 from collections.abc import Iterable
 from datetime import datetime, timedelta
-import json
-import logging
-import math
-import random
-from types import MappingProxyType
-from typing import Any
 from unittest.mock import patch
 
 from freezegun import freeze_time
-import orjson
 import pytest
-from syrupy.assertion import SnapshotAssertion
 import voluptuous as vol
 
-from homeassistant import config_entries
 from homeassistant.components import group
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
@@ -36,15 +27,11 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import (
-    area_registry as ar,
     device_registry as dr,
-    entity,
     entity_registry as er,
-    issue_registry as ir,
     template,
     translation,
 )
-from homeassistant.helpers.entity_platform import EntityPlatform
 from homeassistant.helpers.json import json_dumps
 from homeassistant.helpers.template.render_info import (
     ALL_STATES_RATE_LIMIT,
@@ -52,7 +39,6 @@ from homeassistant.helpers.template.render_info import (
 )
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
-from homeassistant.util.read_only_dict import ReadOnlyDict
 from homeassistant.util.unit_system import UnitSystem
 
 from .helpers import assert_result_info, render, render_to_info
@@ -304,131 +290,6 @@ def test_loop_controls(hass: HomeAssistant) -> None:
     assert render(hass, tpl) == "02"
 
 
-def test_float_function(hass: HomeAssistant) -> None:
-    """Test float function."""
-    hass.states.async_set("sensor.temperature", "12")
-
-    assert render(hass, "{{ float(states.sensor.temperature.state) }}") == 12.0
-
-    assert render(hass, "{{ float(states.sensor.temperature.state) > 11 }}") is True
-
-    # Test handling of invalid input
-    with pytest.raises(TemplateError):
-        render(hass, "{{ float('forgiving') }}")
-
-    # Test handling of default return value
-    assert render(hass, "{{ float('bad', 1) }}") == 1
-    assert render(hass, "{{ float('bad', default=1) }}") == 1
-
-
-def test_float_filter(hass: HomeAssistant) -> None:
-    """Test float filter."""
-    hass.states.async_set("sensor.temperature", "12")
-
-    assert render(hass, "{{ states.sensor.temperature.state | float }}") == 12.0
-    assert render(hass, "{{ states.sensor.temperature.state | float > 11 }}") is True
-
-    # Test handling of invalid input
-    with pytest.raises(TemplateError):
-        render(hass, "{{ 'bad' | float }}")
-
-    # Test handling of default return value
-    assert render(hass, "{{ 'bad' | float(1) }}") == 1
-    assert render(hass, "{{ 'bad' | float(default=1) }}") == 1
-
-
-def test_int_filter(hass: HomeAssistant) -> None:
-    """Test int filter."""
-    hass.states.async_set("sensor.temperature", "12.2")
-    assert render(hass, "{{ states.sensor.temperature.state | int }}") == 12
-    assert render(hass, "{{ states.sensor.temperature.state | int > 11 }}") is True
-
-    hass.states.async_set("sensor.temperature", "0x10")
-    assert render(hass, "{{ states.sensor.temperature.state | int(base=16) }}") == 16
-
-    # Test handling of invalid input
-    with pytest.raises(TemplateError):
-        render(hass, "{{ 'bad' | int }}")
-
-    # Test handling of default return value
-    assert render(hass, "{{ 'bad' | int(1) }}") == 1
-    assert render(hass, "{{ 'bad' | int(default=1) }}") == 1
-
-
-def test_int_function(hass: HomeAssistant) -> None:
-    """Test int filter."""
-    hass.states.async_set("sensor.temperature", "12.2")
-    assert render(hass, "{{ int(states.sensor.temperature.state) }}") == 12
-    assert render(hass, "{{ int(states.sensor.temperature.state) > 11 }}") is True
-
-    hass.states.async_set("sensor.temperature", "0x10")
-    assert render(hass, "{{ int(states.sensor.temperature.state, base=16) }}") == 16
-
-    # Test handling of invalid input
-    with pytest.raises(TemplateError):
-        render(hass, "{{ int('bad') }}")
-
-    # Test handling of default return value
-    assert render(hass, "{{ int('bad', 1) }}") == 1
-    assert render(hass, "{{ int('bad', default=1) }}") == 1
-
-
-def test_bool_function(hass: HomeAssistant) -> None:
-    """Test bool function."""
-    assert render(hass, "{{ bool(true) }}") is True
-    assert render(hass, "{{ bool(false) }}") is False
-    assert render(hass, "{{ bool('on') }}") is True
-    assert render(hass, "{{ bool('off') }}") is False
-    with pytest.raises(TemplateError):
-        render(hass, "{{ bool('unknown') }}")
-    with pytest.raises(TemplateError):
-        render(hass, "{{ bool(none) }}")
-    assert render(hass, "{{ bool('unavailable', none) }}") is None
-    assert render(hass, "{{ bool('unavailable', default=none) }}") is None
-
-
-def test_bool_filter(hass: HomeAssistant) -> None:
-    """Test bool filter."""
-    assert render(hass, "{{ true | bool }}") is True
-    assert render(hass, "{{ false | bool }}") is False
-    assert render(hass, "{{ 'on' | bool }}") is True
-    assert render(hass, "{{ 'off' | bool }}") is False
-    with pytest.raises(TemplateError):
-        render(hass, "{{ 'unknown' | bool }}")
-    with pytest.raises(TemplateError):
-        render(hass, "{{ none | bool }}")
-    assert render(hass, "{{ 'unavailable' | bool(none) }}") is None
-    assert render(hass, "{{ 'unavailable' | bool(default=none) }}") is None
-
-
-@pytest.mark.parametrize(
-    ("value", "expected"),
-    [
-        (0, True),
-        (0.0, True),
-        ("0", True),
-        ("0.0", True),
-        (True, True),
-        (False, True),
-        ("True", False),
-        ("False", False),
-        (None, False),
-        ("None", False),
-        ("horse", False),
-        (math.pi, True),
-        (math.nan, False),
-        (math.inf, False),
-        ("nan", False),
-        ("inf", False),
-    ],
-)
-def test_isnumber(hass: HomeAssistant, value, expected) -> None:
-    """Test is_number."""
-    assert render(hass, "{{ is_number(value) }}", {"value": value}) == expected
-    assert render(hass, "{{ value | is_number }}", {"value": value}) == expected
-    assert render(hass, "{{ value is is_number }}", {"value": value}) == expected
-
-
 def test_converting_datetime_to_iterable(hass: HomeAssistant) -> None:
     """Test converting a datetime to an iterable raises an error."""
     dt_ = datetime(2020, 1, 1, 0, 0, 0)
@@ -436,519 +297,6 @@ def test_converting_datetime_to_iterable(hass: HomeAssistant) -> None:
         render(hass, "{{ tuple(value) }}", {"value": dt_})
     with pytest.raises(TemplateError):
         render(hass, "{{ set(value) }}", {"value": dt_})
-
-
-@pytest.mark.parametrize(
-    ("value", "expected"),
-    [
-        ([1, 2], False),
-        ({1, 2}, False),
-        ({"a": 1, "b": 2}, False),
-        (ReadOnlyDict({"a": 1, "b": 2}), False),
-        (MappingProxyType({"a": 1, "b": 2}), False),
-        ("abc", False),
-        (b"abc", False),
-        ((1, 2), False),
-        (datetime(2024, 1, 1, 0, 0, 0), True),
-    ],
-)
-def test_is_datetime(hass: HomeAssistant, value, expected) -> None:
-    """Test is datetime."""
-    assert render(hass, "{{ value is datetime }}", {"value": value}) == expected
-
-
-def test_rounding_value(hass: HomeAssistant) -> None:
-    """Test rounding value."""
-    hass.states.async_set("sensor.temperature", 12.78)
-
-    assert render(hass, "{{ states.sensor.temperature.state | round(1) }}") == 12.8
-
-    assert (
-        render(hass, "{{ states.sensor.temperature.state | multiply(10) | round }}")
-        == 128
-    )
-
-    assert (
-        render(hass, '{{ states.sensor.temperature.state | round(1, "floor") }}')
-        == 12.7
-    )
-
-    assert (
-        render(hass, '{{ states.sensor.temperature.state | round(1, "ceil") }}') == 12.8
-    )
-
-    assert (
-        render(hass, '{{ states.sensor.temperature.state | round(1, "half") }}') == 13.0
-    )
-
-
-def test_rounding_value_on_error(hass: HomeAssistant) -> None:
-    """Test rounding value handling of error."""
-    # Test handling of invalid input
-    with pytest.raises(TemplateError):
-        render(hass, "{{ None | round }}")
-
-    with pytest.raises(TemplateError):
-        render(hass, '{{ "no_number" | round }}')
-
-    # Test handling of default return value
-    assert render(hass, "{{ 'no_number' | round(default=1) }}") == 1
-
-
-def test_multiply(hass: HomeAssistant) -> None:
-    """Test multiply."""
-    tests = {10: 100}
-
-    for inp, out in tests.items():
-        assert render(hass, f"{{{{ {inp} | multiply(10) | round }}}}") == out
-
-    # Test handling of invalid input
-    with pytest.raises(TemplateError):
-        render(hass, "{{ abcd | multiply(10) }}")
-
-    # Test handling of default return value
-    assert render(hass, "{{ 'no_number' | multiply(10, 1) }}") == 1
-    assert render(hass, "{{ 'no_number' | multiply(10, default=1) }}") == 1
-
-
-def test_add(hass: HomeAssistant) -> None:
-    """Test add."""
-    tests = {10: 42}
-
-    for inp, out in tests.items():
-        assert render(hass, f"{{{{ {inp} | add(32) | round }}}}") == out
-
-    # Test handling of invalid input
-    with pytest.raises(TemplateError):
-        render(hass, "{{ abcd | add(10) }}")
-
-    # Test handling of default return value
-    assert render(hass, "{{ 'no_number' | add(10, 1) }}") == 1
-    assert render(hass, "{{ 'no_number' | add(10, default=1) }}") == 1
-
-
-def test_apply(hass: HomeAssistant) -> None:
-    """Test apply."""
-    tpl = """
-    {%- macro add_foo(arg) -%}
-    {{arg}}foo
-    {%- endmacro -%}
-    {{ ["a", "b", "c"] | map('apply', add_foo) | list }}
-    """
-    assert render(hass, tpl) == ["afoo", "bfoo", "cfoo"]
-
-    assert render(
-        hass, "{{ ['1', '2', '3', '4', '5'] | map('apply', int) | list }}"
-    ) == [1, 2, 3, 4, 5]
-
-
-def test_apply_macro_with_arguments(hass: HomeAssistant) -> None:
-    """Test apply macro with positional, named, and mixed arguments."""
-    # Test macro with positional arguments
-    tpl = """
-                {%- macro add_numbers(a, b, c) -%}
-                {{ a + b + c }}
-                {%- endmacro -%}
-                {{ apply(5, add_numbers, 10, 15) }}
-                """
-    assert render(hass, tpl) == 30
-
-    # Test macro with named arguments
-    tpl = """
-                {%- macro greet(name, greeting="Hello") -%}
-                {{ greeting }}, {{ name }}!
-                {%- endmacro -%}
-                {{ apply("World", greet, greeting="Hi") }}
-                """
-    assert render(hass, tpl) == "Hi, World!"
-
-    # Test macro with mixed arguments
-    tpl = """
-                {%- macro format_message(prefix, name, suffix="!") -%}
-                {{ prefix }} {{ name }}{{ suffix }}
-                {%- endmacro -%}
-                {{ apply("Welcome", format_message, "John", suffix="...") }}
-                """
-    assert render(hass, tpl) == "Welcome John..."
-
-
-def test_as_function(hass: HomeAssistant) -> None:
-    """Test as_function."""
-    tpl = """
-        {%- macro macro_double(num, returns) -%}
-        {%- do returns(num * 2) -%}
-        {%- endmacro -%}
-        {%- set double = macro_double | as_function -%}
-        {{ double(5) }}
-        """
-    assert render(hass, tpl) == 10
-
-
-def test_as_function_no_arguments(hass: HomeAssistant) -> None:
-    """Test as_function with no arguments."""
-    tpl = """
-        {%- macro macro_get_hello(returns) -%}
-        {%- do returns("Hello") -%}
-        {%- endmacro -%}
-        {%- set get_hello = macro_get_hello | as_function -%}
-        {{ get_hello() }}
-        """
-    assert render(hass, tpl) == "Hello"
-
-
-def test_strptime(hass: HomeAssistant) -> None:
-    """Test the parse timestamp method."""
-    tests = [
-        ("2016-10-19 15:22:05.588122 UTC", "%Y-%m-%d %H:%M:%S.%f %Z", None),
-        ("2016-10-19 15:22:05.588122+0100", "%Y-%m-%d %H:%M:%S.%f%z", None),
-        ("2016-10-19 15:22:05.588122", "%Y-%m-%d %H:%M:%S.%f", None),
-        ("2016-10-19", "%Y-%m-%d", None),
-        ("2016", "%Y", None),
-        ("15:22:05", "%H:%M:%S", None),
-    ]
-
-    for inp, fmt, expected in tests:
-        if expected is None:
-            expected = str(datetime.strptime(inp, fmt))
-
-        temp = f"{{{{ strptime('{inp}', '{fmt}') }}}}"
-
-        assert render(hass, temp) == expected
-
-    # Test handling of invalid input
-    invalid_tests = [
-        ("1469119144", "%Y"),
-        ("invalid", "%Y"),
-    ]
-
-    for inp, fmt in invalid_tests:
-        temp = f"{{{{ strptime('{inp}', '{fmt}') }}}}"
-
-        with pytest.raises(TemplateError):
-            render(hass, temp)
-
-    # Test handling of default return value
-    assert render(hass, "{{ strptime('invalid', '%Y', 1) }}") == 1
-    assert render(hass, "{{ strptime('invalid', '%Y', default=1) }}") == 1
-
-
-async def test_timestamp_custom(hass: HomeAssistant) -> None:
-    """Test the timestamps to custom filter."""
-    await hass.config.async_set_time_zone("UTC")
-    now = dt_util.utcnow()
-    tests = [
-        (1469119144, None, True, "2016-07-21 16:39:04"),
-        (1469119144, "%Y", True, 2016),
-        (1469119144, "invalid", True, "invalid"),
-        (dt_util.as_timestamp(now), None, False, now.strftime("%Y-%m-%d %H:%M:%S")),
-    ]
-
-    for inp, fmt, local, out in tests:
-        if fmt:
-            fil = f"timestamp_custom('{fmt}')"
-        elif fmt and local:
-            fil = f"timestamp_custom('{fmt}', {local})"
-        else:
-            fil = "timestamp_custom"
-
-        assert render(hass, f"{{{{ {inp} | {fil} }}}}") == out
-
-    # Test handling of invalid input
-    invalid_tests = [
-        (None, None, None),
-    ]
-
-    for inp, fmt, local in invalid_tests:
-        if fmt:
-            fil = f"timestamp_custom('{fmt}')"
-        elif fmt and local:
-            fil = f"timestamp_custom('{fmt}', {local})"
-        else:
-            fil = "timestamp_custom"
-
-        with pytest.raises(TemplateError):
-            render(hass, f"{{{{ {inp} | {fil} }}}}")
-
-    # Test handling of default return value
-    assert render(hass, "{{ None | timestamp_custom('invalid', True, 1) }}") == 1
-    assert render(hass, "{{ None | timestamp_custom(default=1) }}") == 1
-
-
-async def test_timestamp_local(hass: HomeAssistant) -> None:
-    """Test the timestamps to local filter."""
-    await hass.config.async_set_time_zone("UTC")
-    tests = [
-        (1469119144, "2016-07-21T16:39:04+00:00"),
-    ]
-
-    for inp, out in tests:
-        assert render(hass, f"{{{{ {inp} | timestamp_local }}}}") == out
-
-    # Test handling of invalid input
-    invalid_tests = [
-        None,
-    ]
-
-    for inp in invalid_tests:
-        with pytest.raises(TemplateError):
-            render(hass, f"{{{{ {inp} | timestamp_local }}}}")
-
-    # Test handling of default return value
-    assert render(hass, "{{ None | timestamp_local(1) }}") == 1
-    assert render(hass, "{{ None | timestamp_local(default=1) }}") == 1
-
-
-@pytest.mark.parametrize(
-    "input",
-    [
-        "2021-06-03 13:00:00.000000+00:00",
-        "1986-07-09T12:00:00Z",
-        "2016-10-19 15:22:05.588122+0100",
-        "2016-10-19",
-        "2021-01-01 00:00:01",
-        "invalid",
-    ],
-)
-def test_as_datetime(hass: HomeAssistant, input) -> None:
-    """Test converting a timestamp string to a date object."""
-    expected = dt_util.parse_datetime(input)
-    if expected is not None:
-        expected = str(expected)
-    assert render(hass, f"{{{{ as_datetime('{input}') }}}}") == expected
-    assert render(hass, f"{{{{ '{input}' | as_datetime }}}}") == expected
-
-
-@pytest.mark.parametrize(
-    ("input", "output"),
-    [
-        (1469119144, "2016-07-21 16:39:04+00:00"),
-        (1469119144.0, "2016-07-21 16:39:04+00:00"),
-        (-1, "1969-12-31 23:59:59+00:00"),
-    ],
-)
-def test_as_datetime_from_timestamp(
-    hass: HomeAssistant,
-    input: float,
-    output: str,
-) -> None:
-    """Test converting a UNIX timestamp to a date object."""
-    assert render(hass, f"{{{{ as_datetime({input}) }}}}") == output
-    assert render(hass, f"{{{{ {input} | as_datetime }}}}") == output
-    assert render(hass, f"{{{{ as_datetime('{input}') }}}}") == output
-    assert render(hass, f"{{{{ '{input}' | as_datetime }}}}") == output
-
-
-@pytest.mark.parametrize(
-    ("input", "output"),
-    [
-        (
-            "{% set dt = as_datetime('2024-01-01 16:00:00-08:00') %}",
-            "2024-01-01 16:00:00-08:00",
-        ),
-        (
-            "{% set dt = as_datetime('2024-01-29').date() %}",
-            "2024-01-29 00:00:00",
-        ),
-    ],
-)
-def test_as_datetime_from_datetime(
-    hass: HomeAssistant, input: str, output: str
-) -> None:
-    """Test using datetime.datetime or datetime.date objects as input."""
-
-    assert render(hass, f"{input}{{{{ dt | as_datetime }}}}") == output
-
-    assert render(hass, f"{input}{{{{ as_datetime(dt) }}}}") == output
-
-
-@pytest.mark.parametrize(
-    ("input", "default", "output"),
-    [
-        (1469119144, 123, "2016-07-21 16:39:04+00:00"),
-        ('"invalid"', ["default output"], ["default output"]),
-        (["a", "list"], 0, 0),
-        ({"a": "dict"}, None, None),
-    ],
-)
-def test_as_datetime_default(
-    hass: HomeAssistant, input: Any, default: Any, output: str
-) -> None:
-    """Test invalid input and return default value."""
-
-    assert render(hass, f"{{{{ as_datetime({input}, default={default}) }}}}") == output
-    assert render(hass, f"{{{{ {input} | as_datetime({default}) }}}}") == output
-
-
-def test_as_local(hass: HomeAssistant) -> None:
-    """Test converting time to local."""
-
-    hass.states.async_set("test.object", "available")
-    last_updated = hass.states.get("test.object").last_updated
-    assert render(hass, "{{ as_local(states.test.object.last_updated) }}") == str(
-        dt_util.as_local(last_updated)
-    )
-    assert render(hass, "{{ states.test.object.last_updated | as_local }}") == str(
-        dt_util.as_local(last_updated)
-    )
-
-
-def test_to_json(hass: HomeAssistant) -> None:
-    """Test the object to JSON string filter."""
-
-    # Note that we're not testing the actual json.loads and json.dumps methods,
-    # only the filters, so we don't need to be exhaustive with our sample JSON.
-    expected_result = {"Foo": "Bar"}
-    actual_result = render(hass, "{{ {'Foo': 'Bar'} | to_json }}")
-    assert actual_result == expected_result
-
-    expected_result = orjson.dumps({"Foo": "Bar"}, option=orjson.OPT_INDENT_2).decode()
-    actual_result = render(
-        hass, "{{ {'Foo': 'Bar'} | to_json(pretty_print=True) }}", parse_result=False
-    )
-    assert actual_result == expected_result
-
-    expected_result = orjson.dumps(
-        {"Z": 26, "A": 1, "M": 13}, option=orjson.OPT_SORT_KEYS
-    ).decode()
-    actual_result = render(
-        hass,
-        "{{ {'Z': 26, 'A': 1, 'M': 13} | to_json(sort_keys=True) }}",
-        parse_result=False,
-    )
-    assert actual_result == expected_result
-
-    with pytest.raises(TemplateError):
-        render(hass, "{{ {'Foo': now()} | to_json }}")
-
-    # Test special case where substring class cannot be rendered
-    # See: https://github.com/ijl/orjson/issues/445
-    class MyStr(str):
-        __slots__ = ()
-
-    expected_result = '{"mykey1":11.0,"mykey2":"myvalue2","mykey3":["opt3b","opt3a"]}'
-    test_dict = {
-        MyStr("mykey2"): "myvalue2",
-        MyStr("mykey1"): 11.0,
-        MyStr("mykey3"): ["opt3b", "opt3a"],
-    }
-    actual_result = render(
-        hass,
-        "{{ test_dict | to_json(sort_keys=True) }}",
-        {"test_dict": test_dict},
-        parse_result=False,
-    )
-    assert actual_result == expected_result
-
-
-def test_to_json_ensure_ascii(hass: HomeAssistant) -> None:
-    """Test the object to JSON string filter."""
-
-    # Note that we're not testing the actual json.loads and json.dumps methods,
-    # only the filters, so we don't need to be exhaustive with our sample JSON.
-    actual_value_ascii = render(hass, "{{ 'Bar ҝ éèà' | to_json(ensure_ascii=True) }}")
-    assert actual_value_ascii == '"Bar \\u049d \\u00e9\\u00e8\\u00e0"'
-    actual_value = render(hass, "{{ 'Bar ҝ éèà' | to_json(ensure_ascii=False) }}")
-    assert actual_value == '"Bar ҝ éèà"'
-
-    expected_result = json.dumps({"Foo": "Bar"}, indent=2)
-    actual_result = render(
-        hass,
-        "{{ {'Foo': 'Bar'} | to_json(pretty_print=True, ensure_ascii=True) }}",
-        parse_result=False,
-    )
-    assert actual_result == expected_result
-
-    expected_result = json.dumps({"Z": 26, "A": 1, "M": 13}, sort_keys=True)
-    actual_result = render(
-        hass,
-        "{{ {'Z': 26, 'A': 1, 'M': 13} | to_json(sort_keys=True, ensure_ascii=True) }}",
-        parse_result=False,
-    )
-    assert actual_result == expected_result
-
-
-def test_from_json(hass: HomeAssistant) -> None:
-    """Test the JSON string to object filter."""
-
-    # Note that we're not testing the actual json.loads and json.dumps methods,
-    # only the filters, so we don't need to be exhaustive with our sample JSON.
-    expected_result = "Bar"
-    actual_result = render(hass, '{{ (\'{"Foo": "Bar"}\' | from_json).Foo }}')
-    assert actual_result == expected_result
-
-    info = render_to_info(hass, "{{ 'garbage string' | from_json }}")
-    with pytest.raises(TemplateError, match="no default was specified"):
-        info.result()
-
-    actual_result = render(hass, "{{ 'garbage string' | from_json('Bar') }}")
-    assert actual_result == expected_result
-
-
-def test_ord(hass: HomeAssistant) -> None:
-    """Test the ord filter."""
-    assert render(hass, '{{ "d" | ord }}') == 100
-
-
-def test_from_hex(hass: HomeAssistant) -> None:
-    """Test the fromhex filter."""
-    assert render(hass, "{{ '0F010003' | from_hex }}") == b"\x0f\x01\x00\x03"
-
-
-def test_timestamp_utc(hass: HomeAssistant) -> None:
-    """Test the timestamps to local filter."""
-    now = dt_util.utcnow()
-    tests = [
-        (1469119144, "2016-07-21T16:39:04+00:00"),
-        (dt_util.as_timestamp(now), now.isoformat()),
-    ]
-
-    for inp, out in tests:
-        assert render(hass, f"{{{{ {inp} | timestamp_utc }}}}") == out
-
-    # Test handling of invalid input
-    invalid_tests = [
-        None,
-    ]
-
-    for inp in invalid_tests:
-        with pytest.raises(TemplateError):
-            render(hass, f"{{{{ {inp} | timestamp_utc }}}}")
-
-    # Test handling of default return value
-    assert render(hass, "{{ None | timestamp_utc(1) }}") == 1
-    assert render(hass, "{{ None | timestamp_utc(default=1) }}") == 1
-
-
-def test_as_timestamp(hass: HomeAssistant) -> None:
-    """Test the as_timestamp function."""
-    with pytest.raises(TemplateError):
-        render(hass, '{{ as_timestamp("invalid") }}')
-
-    hass.states.async_set("test.object", None)
-    with pytest.raises(TemplateError):
-        render(hass, "{{ as_timestamp(states.test.object) }}")
-
-    tpl = (
-        '{{ as_timestamp(strptime("2024-02-03T09:10:24+0000", '
-        '"%Y-%m-%dT%H:%M:%S%z")) }}'
-    )
-    assert render(hass, tpl) == 1706951424.0
-
-    # Test handling of default return value
-    assert render(hass, "{{ 'invalid' | as_timestamp(1) }}") == 1
-    assert render(hass, "{{ 'invalid' | as_timestamp(default=1) }}") == 1
-    assert render(hass, "{{ as_timestamp('invalid', 1) }}") == 1
-    assert render(hass, "{{ as_timestamp('invalid', default=1) }}") == 1
-
-
-@patch.object(random, "choice")
-def test_random_every_time(test_choice, hass: HomeAssistant) -> None:
-    """Ensure the random filter runs every time, not just once."""
-    tpl = template.Template("{{ [1,2] | random }}", hass)
-    test_choice.return_value = "foo"
-    assert tpl.async_render() == "foo"
-    test_choice.return_value = "bar"
-    assert tpl.async_render() == "bar"
 
 
 def test_passing_vars_as_keywords(hass: HomeAssistant) -> None:
@@ -1014,31 +362,6 @@ def test_render_with_possible_json_value_with_missing_json_value(
     assert tpl.async_render_with_possible_json_value('{"hello": "world"}') == ""
 
 
-def test_render_with_possible_json_value_valid_with_is_defined(
-    hass: HomeAssistant,
-) -> None:
-    """Render with possible JSON value with known JSON object."""
-    tpl = template.Template("{{ value_json.hello|is_defined }}", hass)
-    assert tpl.async_render_with_possible_json_value('{"hello": "world"}') == "world"
-
-
-def test_render_with_possible_json_value_undefined_json(hass: HomeAssistant) -> None:
-    """Render with possible JSON value with unknown JSON object."""
-    tpl = template.Template("{{ value_json.bye|is_defined }}", hass)
-    assert (
-        tpl.async_render_with_possible_json_value('{"hello": "world"}')
-        == '{"hello": "world"}'
-    )
-
-
-def test_render_with_possible_json_value_undefined_json_error_value(
-    hass: HomeAssistant,
-) -> None:
-    """Render with possible JSON value with unknown JSON object."""
-    tpl = template.Template("{{ value_json.bye|is_defined }}", hass)
-    assert tpl.async_render_with_possible_json_value('{"hello": "world"}', "") == ""
-
-
 def test_render_with_possible_json_value_non_string_value(hass: HomeAssistant) -> None:
     """Render with possible JSON value with non-string value."""
     tpl = template.Template(
@@ -1078,6 +401,66 @@ def test_if_state_exists(hass: HomeAssistant) -> None:
         hass, "{% if states.test.object %}exists{% else %}not exists{% endif %}"
     )
     assert result == "exists"
+
+
+def test_entity_name(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test entity_name method."""
+    assert render(hass, "{{ entity_name('sensor.fake') }}") is None
+
+    entry = entity_registry.async_get_or_create(
+        "sensor", "test", "unique_1", original_name="Registry Sensor"
+    )
+    assert render(hass, f"{{{{ entity_name('{entry.entity_id}') }}}}") == (
+        "Registry Sensor"
+    )
+    assert render(hass, f"{{{{ '{entry.entity_id}' | entity_name }}}}") == (
+        "Registry Sensor"
+    )
+
+    entity_registry.async_update_entity(entry.entity_id, name="My Custom Sensor")
+    assert render(hass, f"{{{{ entity_name('{entry.entity_id}') }}}}") == (
+        "My Custom Sensor"
+    )
+
+    # Falls back to state for entities not in the registry
+    hass.states.async_set(
+        "light.no_unique_id", "on", {"friendly_name": "No Unique ID Light"}
+    )
+    assert render(hass, "{{ entity_name('light.no_unique_id') }}") == (
+        "No Unique ID Light"
+    )
+
+    config_entry = MockConfigEntry(domain="test")
+    config_entry.add_to_hass(hass)
+    device_entry = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+        name="My Device",
+    )
+    entry2 = entity_registry.async_get_or_create(
+        "sensor",
+        "test",
+        "unique_2",
+        config_entry=config_entry,
+        device_id=device_entry.id,
+        has_entity_name=True,
+        original_name="Temperature",
+    )
+    assert render(hass, f"{{{{ entity_name('{entry2.entity_id}') }}}}") == (
+        "Temperature"
+    )
+
+    # Strips device name prefix
+    entity_registry.async_update_entity(
+        entry2.entity_id, name="My Device Custom Sensor"
+    )
+    assert render(hass, f"{{{{ entity_name('{entry2.entity_id}') }}}}") == (
+        "Custom Sensor"
+    )
 
 
 def test_is_hidden_entity(
@@ -1316,6 +699,136 @@ async def test_state_translated(
     assert result == "unknown"
 
 
+async def test_state_attr_translated(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
+    """Test state_attr_translated method."""
+    await translation._async_get_translations_cache(hass).async_load("en", set())
+
+    hass.states.async_set(
+        "climate.living_room",
+        "heat",
+        attributes={"fan_mode": "auto", "hvac_action": "heating"},
+    )
+    hass.states.async_set(
+        "switch.test",
+        "on",
+        attributes={"some_attr": "some_value", "numeric_attr": 42, "bool_attr": True},
+    )
+
+    result = render(
+        hass,
+        '{{ state_attr_translated("switch.test", "some_attr") }}',
+    )
+    assert result == "some_value"
+
+    # Non-string attributes should be returned as-is without type conversion
+    result = render(
+        hass,
+        '{{ state_attr_translated("switch.test", "numeric_attr") }}',
+    )
+    assert result == 42
+    assert isinstance(result, int)
+
+    result = render(
+        hass,
+        '{{ state_attr_translated("switch.test", "bool_attr") }}',
+    )
+    assert result is True
+
+    result = render(
+        hass,
+        '{{ state_attr_translated("climate.non_existent", "fan_mode") }}',
+    )
+    assert result is None
+
+    with pytest.raises(TemplateError):
+        render(hass, '{{ state_attr_translated("-invalid", "fan_mode") }}')
+
+    result = render(
+        hass,
+        '{{ state_attr_translated("climate.living_room", "non_existent") }}',
+    )
+    assert result is None
+
+
+@pytest.mark.parametrize(
+    (
+        "entity_id",
+        "attribute",
+        "translations",
+        "expected_result",
+    ),
+    [
+        (
+            "climate.test_platform_5678",
+            "fan_mode",
+            {
+                "component.test_platform.entity.climate.my_climate.state_attributes.fan_mode.state.auto": "Platform Automatic",
+            },
+            "Platform Automatic",
+        ),
+        (
+            "climate.living_room",
+            "fan_mode",
+            {
+                "component.climate.entity_component._.state_attributes.fan_mode.state.auto": "Automatic",
+            },
+            "Automatic",
+        ),
+        (
+            "climate.living_room",
+            "hvac_action",
+            {
+                "component.climate.entity_component._.state_attributes.hvac_action.state.heating": "Heating",
+            },
+            "Heating",
+        ),
+    ],
+)
+async def test_state_attr_translated_translation_lookups(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    entity_id: str,
+    attribute: str,
+    translations: dict[str, str],
+    expected_result: str,
+) -> None:
+    """Test state_attr_translated translation lookups."""
+    await translation._async_get_translations_cache(hass).async_load("en", set())
+
+    hass.states.async_set(
+        "climate.living_room",
+        "heat",
+        attributes={"fan_mode": "auto", "hvac_action": "heating"},
+    )
+
+    config_entry = MockConfigEntry(domain="climate")
+    config_entry.add_to_hass(hass)
+    entity_registry.async_get_or_create(
+        "climate",
+        "test_platform",
+        "5678",
+        config_entry=config_entry,
+        translation_key="my_climate",
+    )
+    hass.states.async_set(
+        "climate.test_platform_5678",
+        "heat",
+        attributes={"fan_mode": "auto"},
+    )
+
+    with patch(
+        "homeassistant.helpers.translation.async_get_cached_translations",
+        return_value=translations,
+    ):
+        result = render(
+            hass,
+            f'{{{{ state_attr_translated("{entity_id}", "{attribute}") }}}}',
+        )
+        assert result == expected_result
+
+
 def test_has_value(hass: HomeAssistant) -> None:
     """Test has_value method."""
     hass.states.async_set("test.value1", 1)
@@ -1334,503 +847,6 @@ def test_has_value(hass: HomeAssistant) -> None:
         hass, """{% if "test.value1" is has_value %}yes{% else %}no{% endif %}"""
     )
     assert result == "yes"
-
-
-@patch(
-    "homeassistant.helpers.template.TemplateEnvironment.is_safe_callable",
-    return_value=True,
-)
-def test_now(mock_is_safe, hass: HomeAssistant) -> None:
-    """Test now method."""
-    now = dt_util.now()
-    with freeze_time(now):
-        info = render_to_info(hass, "{{ now().isoformat() }}")
-        assert now.isoformat() == info.result()
-
-    assert info.has_time is True
-
-
-@patch(
-    "homeassistant.helpers.template.TemplateEnvironment.is_safe_callable",
-    return_value=True,
-)
-def test_utcnow(mock_is_safe, hass: HomeAssistant) -> None:
-    """Test now method."""
-    utcnow = dt_util.utcnow()
-    with freeze_time(utcnow):
-        info = render_to_info(hass, "{{ utcnow().isoformat() }}")
-        assert utcnow.isoformat() == info.result()
-
-    assert info.has_time is True
-
-
-@pytest.mark.parametrize(
-    ("now", "expected", "expected_midnight", "timezone_str"),
-    [
-        # Host clock in UTC
-        (
-            "2021-11-24 03:00:00+00:00",
-            "2021-11-23T10:00:00-08:00",
-            "2021-11-23T00:00:00-08:00",
-            "America/Los_Angeles",
-        ),
-        # Host clock in local time
-        (
-            "2021-11-23 19:00:00-08:00",
-            "2021-11-23T10:00:00-08:00",
-            "2021-11-23T00:00:00-08:00",
-            "America/Los_Angeles",
-        ),
-    ],
-)
-@patch(
-    "homeassistant.helpers.template.TemplateEnvironment.is_safe_callable",
-    return_value=True,
-)
-async def test_today_at(
-    mock_is_safe, hass: HomeAssistant, now, expected, expected_midnight, timezone_str
-) -> None:
-    """Test today_at method."""
-    freezer = freeze_time(now)
-    freezer.start()
-
-    await hass.config.async_set_time_zone(timezone_str)
-
-    result = render(hass, "{{ today_at('10:00').isoformat() }}")
-    assert result == expected
-
-    result = render(hass, "{{ today_at('10:00:00').isoformat() }}")
-    assert result == expected
-
-    result = render(hass, "{{ ('10:00:00' | today_at).isoformat() }}")
-    assert result == expected
-
-    result = render(hass, "{{ today_at().isoformat() }}")
-    assert result == expected_midnight
-
-    with pytest.raises(TemplateError):
-        render(hass, "{{ today_at('bad') }}")
-
-    info = render_to_info(hass, "{{ today_at('10:00').isoformat() }}")
-    assert info.has_time is True
-
-    freezer.stop()
-
-
-@patch(
-    "homeassistant.helpers.template.TemplateEnvironment.is_safe_callable",
-    return_value=True,
-)
-async def test_relative_time(mock_is_safe, hass: HomeAssistant) -> None:
-    """Test relative_time method."""
-    await hass.config.async_set_time_zone("UTC")
-    now = datetime.strptime("2000-01-01 10:00:00 +00:00", "%Y-%m-%d %H:%M:%S %z")
-    relative_time_template = (
-        '{{relative_time(strptime("2000-01-01 09:00:00", "%Y-%m-%d %H:%M:%S"))}}'
-    )
-    with freeze_time(now):
-        result = render(hass, relative_time_template)
-        assert result == "1 hour"
-        result = render(
-            hass,
-            (
-                "{{"
-                "  relative_time("
-                "    strptime("
-                '        "2000-01-01 09:00:00 +01:00",'
-                '        "%Y-%m-%d %H:%M:%S %z"'
-                "    )"
-                "  )"
-                "}}"
-            ),
-        )
-        assert result == "2 hours"
-
-        result = render(
-            hass,
-            (
-                "{{"
-                "  relative_time("
-                "    strptime("
-                '       "2000-01-01 03:00:00 -06:00",'
-                '       "%Y-%m-%d %H:%M:%S %z"'
-                "    )"
-                "  )"
-                "}}"
-            ),
-        )
-        assert result == "1 hour"
-
-        result1 = str(
-            template.strptime("2000-01-01 11:00:00 +00:00", "%Y-%m-%d %H:%M:%S %z")
-        )
-        result2 = render(
-            hass,
-            (
-                "{{"
-                "  relative_time("
-                "    strptime("
-                '       "2000-01-01 11:00:00 +00:00",'
-                '       "%Y-%m-%d %H:%M:%S %z"'
-                "    )"
-                "  )"
-                "}}"
-            ),
-        )
-        assert result1 == result2
-
-        result = render(hass, '{{relative_time("string")}}')
-        assert result == "string"
-
-        # Test behavior when current time is same as the input time
-        result = render(
-            hass,
-            (
-                "{{"
-                "  relative_time("
-                "    strptime("
-                '        "2000-01-01 10:00:00 +00:00",'
-                '        "%Y-%m-%d %H:%M:%S %z"'
-                "    )"
-                "  )"
-                "}}"
-            ),
-        )
-        assert result == "0 seconds"
-
-        # Test behavior when the input time is in the future
-        result = render(
-            hass,
-            (
-                "{{"
-                "  relative_time("
-                "    strptime("
-                '        "2000-01-01 11:00:00 +00:00",'
-                '        "%Y-%m-%d %H:%M:%S %z"'
-                "    )"
-                "  )"
-                "}}"
-            ),
-        )
-        assert result == "2000-01-01 11:00:00+00:00"
-
-        info = render_to_info(hass, relative_time_template)
-        assert info.has_time is True
-
-
-@patch(
-    "homeassistant.helpers.template.TemplateEnvironment.is_safe_callable",
-    return_value=True,
-)
-async def test_time_since(mock_is_safe, hass: HomeAssistant) -> None:
-    """Test time_since method."""
-    await hass.config.async_set_time_zone("UTC")
-    now = datetime.strptime("2000-01-01 10:00:00 +00:00", "%Y-%m-%d %H:%M:%S %z")
-    time_since_template = (
-        '{{time_since(strptime("2000-01-01 09:00:00", "%Y-%m-%d %H:%M:%S"))}}'
-    )
-    with freeze_time(now):
-        result = render(hass, time_since_template)
-        assert result == "1 hour"
-
-        result = render(
-            hass,
-            (
-                "{{"
-                "  time_since("
-                "    strptime("
-                '        "2000-01-01 09:00:00 +01:00",'
-                '        "%Y-%m-%d %H:%M:%S %z"'
-                "    )"
-                "  )"
-                "}}"
-            ),
-        )
-        assert result == "2 hours"
-
-        result = render(
-            hass,
-            (
-                "{{"
-                "  time_since("
-                "    strptime("
-                '       "2000-01-01 03:00:00 -06:00",'
-                '       "%Y-%m-%d %H:%M:%S %z"'
-                "    )"
-                "  )"
-                "}}"
-            ),
-        )
-        assert result == "1 hour"
-
-        result1 = str(
-            template.strptime("2000-01-01 11:00:00 +00:00", "%Y-%m-%d %H:%M:%S %z")
-        )
-        result2 = render(
-            hass,
-            (
-                "{{"
-                "  time_since("
-                "    strptime("
-                '       "2000-01-01 11:00:00 +00:00",'
-                '       "%Y-%m-%d %H:%M:%S %z"),'
-                "    precision = 2"
-                "  )"
-                "}}"
-            ),
-        )
-        assert result1 == result2
-
-        result = render(
-            hass,
-            (
-                "{{"
-                "  time_since("
-                "    strptime("
-                '        "2000-01-01 09:05:00 +01:00",'
-                '        "%Y-%m-%d %H:%M:%S %z"),'
-                "       precision=2"
-                "  )"
-                "}}"
-            ),
-        )
-        assert result == "1 hour 55 minutes"
-
-        result = render(
-            hass,
-            (
-                "{{"
-                "  time_since("
-                "    strptime("
-                '       "2000-01-01 02:05:27 -06:00",'
-                '       "%Y-%m-%d %H:%M:%S %z"),'
-                "       precision = 3"
-                "  )"
-                "}}"
-            ),
-        )
-        assert result == "1 hour 54 minutes 33 seconds"
-        result = render(
-            hass,
-            (
-                "{{"
-                "  time_since("
-                "    strptime("
-                '       "2000-01-01 02:05:27 -06:00",'
-                '       "%Y-%m-%d %H:%M:%S %z")'
-                "  )"
-                "}}"
-            ),
-        )
-        assert result == "2 hours"
-        result = render(
-            hass,
-            (
-                "{{"
-                "  time_since("
-                "    strptime("
-                '       "1999-02-01 02:05:27 -06:00",'
-                '       "%Y-%m-%d %H:%M:%S %z"),'
-                "       precision = 0"
-                "  )"
-                "}}"
-            ),
-        )
-        assert result == "11 months 4 days 1 hour 54 minutes 33 seconds"
-        result = render(
-            hass,
-            (
-                "{{"
-                "  time_since("
-                "    strptime("
-                '       "1999-02-01 02:05:27 -06:00",'
-                '       "%Y-%m-%d %H:%M:%S %z")'
-                "  )"
-                "}}"
-            ),
-        )
-        assert result == "11 months"
-        result1 = str(
-            template.strptime("2000-01-01 11:00:00 +00:00", "%Y-%m-%d %H:%M:%S %z")
-        )
-        result2 = render(
-            hass,
-            (
-                "{{"
-                "  time_since("
-                "    strptime("
-                '       "2000-01-01 11:00:00 +00:00",'
-                '       "%Y-%m-%d %H:%M:%S %z"),'
-                "       precision=3"
-                "  )"
-                "}}"
-            ),
-        )
-        assert result1 == result2
-
-        result = render(hass, '{{time_since("string")}}')
-        assert result == "string"
-
-        info = render_to_info(hass, time_since_template)
-        assert info.has_time is True
-
-
-@patch(
-    "homeassistant.helpers.template.TemplateEnvironment.is_safe_callable",
-    return_value=True,
-)
-async def test_time_until(mock_is_safe, hass: HomeAssistant) -> None:
-    """Test time_until method."""
-    await hass.config.async_set_time_zone("UTC")
-    now = datetime.strptime("2000-01-01 10:00:00 +00:00", "%Y-%m-%d %H:%M:%S %z")
-    time_until_template = (
-        '{{time_until(strptime("2000-01-01 11:00:00", "%Y-%m-%d %H:%M:%S"))}}'
-    )
-    with freeze_time(now):
-        result = render(hass, time_until_template)
-        assert result == "1 hour"
-
-        result = render(
-            hass,
-            (
-                "{{"
-                "  time_until("
-                "    strptime("
-                '        "2000-01-01 13:00:00 +01:00",'
-                '        "%Y-%m-%d %H:%M:%S %z"'
-                "    )"
-                "  )"
-                "}}"
-            ),
-        )
-        assert result == "2 hours"
-
-        result = render(
-            hass,
-            (
-                "{{"
-                "  time_until("
-                "    strptime("
-                '       "2000-01-01 05:00:00 -06:00",'
-                '       "%Y-%m-%d %H:%M:%S %z"'
-                "    )"
-                "  )"
-                "}}"
-            ),
-        )
-        assert result == "1 hour"
-
-        result1 = str(
-            template.strptime("2000-01-01 09:00:00 +00:00", "%Y-%m-%d %H:%M:%S %z")
-        )
-        result2 = render(
-            hass,
-            (
-                "{{"
-                "  time_until("
-                "    strptime("
-                '       "2000-01-01 09:00:00 +00:00",'
-                '       "%Y-%m-%d %H:%M:%S %z"),'
-                "    precision = 2"
-                "  )"
-                "}}"
-            ),
-        )
-        assert result1 == result2
-
-        result = render(
-            hass,
-            (
-                "{{"
-                "  time_until("
-                "    strptime("
-                '        "2000-01-01 12:05:00 +01:00",'
-                '        "%Y-%m-%d %H:%M:%S %z"),'
-                "       precision=2"
-                "  )"
-                "}}"
-            ),
-        )
-        assert result == "1 hour 5 minutes"
-
-        result = render(
-            hass,
-            (
-                "{{"
-                "  time_until("
-                "    strptime("
-                '       "2000-01-01 05:54:33 -06:00",'
-                '       "%Y-%m-%d %H:%M:%S %z"),'
-                "       precision = 3"
-                "  )"
-                "}}"
-            ),
-        )
-        assert result == "1 hour 54 minutes 33 seconds"
-        result = render(
-            hass,
-            (
-                "{{"
-                "  time_until("
-                "    strptime("
-                '       "2000-01-01 05:54:33 -06:00",'
-                '       "%Y-%m-%d %H:%M:%S %z")'
-                "  )"
-                "}}"
-            ),
-        )
-        assert result == "2 hours"
-        result = render(
-            hass,
-            (
-                "{{"
-                "  time_until("
-                "    strptime("
-                '       "2001-02-01 05:54:33 -06:00",'
-                '       "%Y-%m-%d %H:%M:%S %z"),'
-                "       precision = 0"
-                "  )"
-                "}}"
-            ),
-        )
-        assert result == "1 year 1 month 2 days 1 hour 54 minutes 33 seconds"
-        result = render(
-            hass,
-            (
-                "{{"
-                "  time_until("
-                "    strptime("
-                '       "2001-02-01 05:54:33 -06:00",'
-                '       "%Y-%m-%d %H:%M:%S %z"),'
-                "       precision = 4"
-                "  )"
-                "}}"
-            ),
-        )
-        assert result == "1 year 1 month 2 days 2 hours"
-        result1 = str(
-            template.strptime("2000-01-01 09:00:00 +00:00", "%Y-%m-%d %H:%M:%S %z")
-        )
-        result2 = render(
-            hass,
-            (
-                "{{"
-                "  time_until("
-                "    strptime("
-                '       "2000-01-01 09:00:00 +00:00",'
-                '       "%Y-%m-%d %H:%M:%S %z"),'
-                "       precision=3"
-                "  )"
-                "}}"
-            ),
-        )
-        assert result1 == result2
-
-        result = render(hass, '{{time_until("string")}}')
-        assert result == "string"
-
-        info = render_to_info(hass, time_until_template)
-        assert info.has_time is True
 
 
 @patch(
@@ -1861,92 +877,6 @@ def test_timedelta(mock_is_safe, hass: HomeAssistant) -> None:
 
         result = render(hass, "{{relative_time(now() - timedelta(weeks=2, days=1))}}")
         assert result == "15 days"
-
-
-def test_version(hass: HomeAssistant) -> None:
-    """Test version filter and function."""
-    filter_result = render(hass, "{{ '2099.9.9' | version}}")
-    function_result = render(hass, "{{ version('2099.9.9')}}")
-    assert filter_result == function_result == "2099.9.9"
-
-    filter_result = render(hass, "{{ '2099.9.9' | version < '2099.9.10' }}")
-    function_result = render(hass, "{{ version('2099.9.9') < '2099.9.10' }}")
-    assert filter_result is function_result is True
-
-    filter_result = render(hass, "{{ '2099.9.9' | version == '2099.9.9' }}")
-    function_result = render(hass, "{{ version('2099.9.9') == '2099.9.9' }}")
-    assert filter_result is function_result is True
-
-    with pytest.raises(TemplateError):
-        render(hass, "{{ version(None) < '2099.9.10' }}")
-
-
-def test_pack(hass: HomeAssistant, caplog: pytest.LogCaptureFixture) -> None:
-    """Test struct pack method."""
-
-    # render as filter
-    variables = {"value": 0xDEADBEEF}
-    assert render(hass, "{{ value | pack('>I') }}", variables) == b"\xde\xad\xbe\xef"
-
-    # render as function
-    assert render(hass, "{{ pack(value, '>I') }}", variables) == b"\xde\xad\xbe\xef"
-
-    # test with None value
-    # "Template warning: 'pack' unable to pack object with type '%s' and format_string '%s' see https://docs.python.org/3/library/struct.html for more information"
-    assert render(hass, "{{ pack(value, '>I') }}", {"value": None}) is None
-    assert (
-        "Template warning: 'pack' unable to pack object 'None' with type 'NoneType' and"
-        " format_string '>I' see https://docs.python.org/3/library/struct.html for more"
-        " information" in caplog.text
-    )
-
-    # test with invalid filter
-    # "Template warning: 'pack' unable to pack object with type '%s' and format_string '%s' see https://docs.python.org/3/library/struct.html for more information"
-    assert render(hass, "{{ pack(value, 'invalid filter') }}", variables) is None
-    assert (
-        "Template warning: 'pack' unable to pack object '3735928559' with type 'int'"
-        " and format_string 'invalid filter' see"
-        " https://docs.python.org/3/library/struct.html for more information"
-        in caplog.text
-    )
-
-
-def test_unpack(hass: HomeAssistant, caplog: pytest.LogCaptureFixture) -> None:
-    """Test struct unpack method."""
-
-    variables = {"value": b"\xde\xad\xbe\xef"}
-
-    # render as filter
-    result = render(hass, """{{ value | unpack('>I') }}""", variables)
-    assert result == 0xDEADBEEF
-
-    # render as function
-    result = render(hass, """{{ unpack(value, '>I') }}""", variables)
-    assert result == 0xDEADBEEF
-
-    # unpack with offset
-    result = render(hass, """{{ unpack(value, '>H', offset=2) }}""", variables)
-    assert result == 0xBEEF
-
-    # test with an empty bytes object
-    assert render(hass, """{{ unpack(value, '>I') }}""", {"value": b""}) is None
-    assert (
-        "Template warning: 'unpack' unable to unpack object 'b''' with format_string"
-        " '>I' and offset 0 see https://docs.python.org/3/library/struct.html for more"
-        " information" in caplog.text
-    )
-
-    # test with invalid filter
-    assert (
-        render(hass, """{{ unpack(value, 'invalid filter') }}""", {"value": b""})
-        is None
-    )
-    assert (
-        "Template warning: 'unpack' unable to unpack object 'b''' with format_string"
-        " 'invalid filter' and offset 0 see"
-        " https://docs.python.org/3/library/struct.html for more information"
-        in caplog.text
-    )
 
 
 def test_distance_function_with_1_state(hass: HomeAssistant) -> None:
@@ -2390,550 +1320,6 @@ async def test_expand(hass: HomeAssistant) -> None:
         "person.person1, person.person2",
         ["zone.test", "person.person1", "person.person2"],
     )
-
-
-async def test_integration_entities(
-    hass: HomeAssistant, entity_registry: er.EntityRegistry
-) -> None:
-    """Test integration_entities function."""
-    # test entities for untitled config entry
-    config_entry = MockConfigEntry(domain="mock", title="")
-    config_entry.add_to_hass(hass)
-    entity_registry.async_get_or_create(
-        "sensor", "mock", "untitled", config_entry=config_entry
-    )
-    info = render_to_info(hass, "{{ integration_entities('') }}")
-    assert_result_info(info, [])
-    assert info.rate_limit is None
-
-    # test entities for given config entry title
-    config_entry = MockConfigEntry(domain="mock", title="Mock bridge 2")
-    config_entry.add_to_hass(hass)
-    entity_entry = entity_registry.async_get_or_create(
-        "sensor", "mock", "test", config_entry=config_entry
-    )
-    info = render_to_info(hass, "{{ integration_entities('Mock bridge 2') }}")
-    assert_result_info(info, [entity_entry.entity_id])
-    assert info.rate_limit is None
-
-    # test entities for given non unique config entry title
-    config_entry = MockConfigEntry(domain="mock", title="Not unique")
-    config_entry.add_to_hass(hass)
-    entity_entry_not_unique_1 = entity_registry.async_get_or_create(
-        "sensor", "mock", "not_unique_1", config_entry=config_entry
-    )
-    config_entry = MockConfigEntry(domain="mock", title="Not unique")
-    config_entry.add_to_hass(hass)
-    entity_entry_not_unique_2 = entity_registry.async_get_or_create(
-        "sensor", "mock", "not_unique_2", config_entry=config_entry
-    )
-    info = render_to_info(hass, "{{ integration_entities('Not unique') }}")
-    assert_result_info(
-        info, [entity_entry_not_unique_1.entity_id, entity_entry_not_unique_2.entity_id]
-    )
-    assert info.rate_limit is None
-
-    # test integration entities not in entity registry
-    mock_entity = entity.Entity()
-    mock_entity.hass = hass
-    mock_entity.entity_id = "light.test_entity"
-    mock_entity.platform = EntityPlatform(
-        hass=hass,
-        logger=logging.getLogger(__name__),
-        domain="light",
-        platform_name="entryless_integration",
-        platform=None,
-        scan_interval=timedelta(seconds=30),
-        entity_namespace=None,
-    )
-    await mock_entity.async_internal_added_to_hass()
-    info = render_to_info(hass, "{{ integration_entities('entryless_integration') }}")
-    assert_result_info(info, ["light.test_entity"])
-    assert info.rate_limit is None
-
-    # Test non existing integration/entry title
-    info = render_to_info(hass, "{{ integration_entities('abc123') }}")
-    assert_result_info(info, [])
-    assert info.rate_limit is None
-
-
-async def test_config_entry_id(
-    hass: HomeAssistant, entity_registry: er.EntityRegistry
-) -> None:
-    """Test config_entry_id function."""
-    config_entry = MockConfigEntry(domain="light", title="Some integration")
-    config_entry.add_to_hass(hass)
-    entity_entry = entity_registry.async_get_or_create(
-        "sensor", "test", "test", suggested_object_id="test", config_entry=config_entry
-    )
-
-    info = render_to_info(hass, "{{ 'sensor.fail' | config_entry_id }}")
-    assert_result_info(info, None)
-    assert info.rate_limit is None
-
-    info = render_to_info(hass, "{{ 56 | config_entry_id }}")
-    assert_result_info(info, None)
-
-    info = render_to_info(hass, "{{ 'not_a_real_entity_id' | config_entry_id }}")
-    assert_result_info(info, None)
-
-    info = render_to_info(
-        hass, f"{{{{ config_entry_id('{entity_entry.entity_id}') }}}}"
-    )
-    assert_result_info(info, config_entry.entry_id)
-    assert info.rate_limit is None
-
-
-async def test_config_entry_attr(hass: HomeAssistant) -> None:
-    """Test config entry attr."""
-    info = {
-        "domain": "mock_light",
-        "title": "mock title",
-        "source": config_entries.SOURCE_BLUETOOTH,
-        "disabled_by": config_entries.ConfigEntryDisabler.USER,
-    }
-    config_entry = MockConfigEntry(**info)
-    config_entry.add_to_hass(hass)
-
-    info["state"] = config_entries.ConfigEntryState.NOT_LOADED
-
-    for key, value in info.items():
-        assert render(
-            hass,
-            "{{ config_entry_attr('" + config_entry.entry_id + "', '" + key + "') }}",
-            parse_result=False,
-        ) == str(value)
-
-    for config_entry_id, key in (
-        (config_entry.entry_id, "invalid_key"),
-        (56, "domain"),
-    ):
-        with pytest.raises(TemplateError):
-            render(
-                hass,
-                "{{ config_entry_attr("
-                + json.dumps(config_entry_id)
-                + ", '"
-                + key
-                + "') }}",
-            )
-
-    assert (
-        render(
-            hass, "{{ config_entry_attr('invalid_id', 'domain') }}", parse_result=False
-        )
-        == "None"
-    )
-
-
-async def test_issues(hass: HomeAssistant, issue_registry: ir.IssueRegistry) -> None:
-    """Test issues function."""
-    # Test no issues
-    info = render_to_info(hass, "{{ issues() }}")
-    assert_result_info(info, {})
-    assert info.rate_limit is None
-
-    # Test persistent issue
-    ir.async_create_issue(
-        hass,
-        "test",
-        "issue 1",
-        breaks_in_ha_version="2023.7",
-        is_fixable=True,
-        is_persistent=True,
-        learn_more_url="https://theuselessweb.com",
-        severity="error",
-        translation_key="abc_1234",
-        translation_placeholders={"abc": "123"},
-    )
-    await hass.async_block_till_done()
-    created_issue = issue_registry.async_get_issue("test", "issue 1")
-    info = render_to_info(hass, "{{ issues()['test', 'issue 1'] }}")
-    assert_result_info(info, created_issue.to_json())
-    assert info.rate_limit is None
-
-    # Test fixed issue
-    ir.async_delete_issue(hass, "test", "issue 1")
-    await hass.async_block_till_done()
-    info = render_to_info(hass, "{{ issues() }}")
-    assert_result_info(info, {})
-    assert info.rate_limit is None
-
-    issue = ir.IssueEntry(
-        active=False,
-        breaks_in_ha_version="2025.12",
-        created=dt_util.utcnow(),
-        data=None,
-        dismissed_version=None,
-        domain="test",
-        is_fixable=False,
-        is_persistent=False,
-        issue_domain="test",
-        issue_id="issue 2",
-        learn_more_url=None,
-        severity="warning",
-        translation_key="abc_1234",
-        translation_placeholders={"abc": "123"},
-    )
-    # Add non active issue
-    issue_registry.issues[("test", "issue 2")] = issue
-    # Test non active issue is omitted
-    issue_entry = issue_registry.async_get_issue("test", "issue 2")
-    assert issue_entry
-    issue_2_created = issue_entry.created
-    assert issue_entry and not issue_entry.active
-    info = render_to_info(hass, "{{ issues() }}")
-    assert_result_info(info, {})
-    assert info.rate_limit is None
-
-    # Load and activate the issue
-    ir.async_create_issue(
-        hass=hass,
-        breaks_in_ha_version="2025.12",
-        data=None,
-        domain="test",
-        is_fixable=False,
-        is_persistent=False,
-        issue_domain="test",
-        issue_id="issue 2",
-        learn_more_url=None,
-        severity="warning",
-        translation_key="abc_1234",
-        translation_placeholders={"abc": "123"},
-    )
-    activated_issue_entry = issue_registry.async_get_issue("test", "issue 2")
-    assert activated_issue_entry and activated_issue_entry.active
-    assert issue_2_created == activated_issue_entry.created
-    info = render_to_info(hass, "{{ issues()['test', 'issue 2'] }}")
-    assert_result_info(info, activated_issue_entry.to_json())
-    assert info.rate_limit is None
-
-
-async def test_issue(hass: HomeAssistant, issue_registry: ir.IssueRegistry) -> None:
-    """Test issue function."""
-    # Test non existent issue
-    info = render_to_info(hass, "{{ issue('non_existent', 'issue') }}")
-    assert_result_info(info, None)
-    assert info.rate_limit is None
-
-    # Test existing issue
-    ir.async_create_issue(
-        hass,
-        "test",
-        "issue 1",
-        breaks_in_ha_version="2023.7",
-        is_fixable=True,
-        is_persistent=True,
-        learn_more_url="https://theuselessweb.com",
-        severity="error",
-        translation_key="abc_1234",
-        translation_placeholders={"abc": "123"},
-    )
-    await hass.async_block_till_done()
-    created_issue = issue_registry.async_get_issue("test", "issue 1")
-    info = render_to_info(hass, "{{ issue('test', 'issue 1') }}")
-    assert_result_info(info, created_issue.to_json())
-    assert info.rate_limit is None
-
-
-async def test_areas(hass: HomeAssistant, area_registry: ar.AreaRegistry) -> None:
-    """Test areas function."""
-    # Test no areas
-    info = render_to_info(hass, "{{ areas() }}")
-    assert_result_info(info, [])
-    assert info.rate_limit is None
-
-    # Test one area
-    area1 = area_registry.async_get_or_create("area1")
-    info = render_to_info(hass, "{{ areas() }}")
-    assert_result_info(info, [area1.id])
-    assert info.rate_limit is None
-
-    # Test multiple areas
-    area2 = area_registry.async_get_or_create("area2")
-    info = render_to_info(hass, "{{ areas() }}")
-    assert_result_info(info, [area1.id, area2.id])
-    assert info.rate_limit is None
-
-
-async def test_area_id(
-    hass: HomeAssistant,
-    area_registry: ar.AreaRegistry,
-    device_registry: dr.DeviceRegistry,
-    entity_registry: er.EntityRegistry,
-) -> None:
-    """Test area_id function."""
-    config_entry = MockConfigEntry(domain="light")
-    config_entry.add_to_hass(hass)
-
-    # Test non existing entity id
-    info = render_to_info(hass, "{{ area_id('sensor.fake') }}")
-    assert_result_info(info, None)
-    assert info.rate_limit is None
-
-    # Test non existing device id (hex value)
-    info = render_to_info(hass, "{{ area_id('123abc') }}")
-    assert_result_info(info, None)
-    assert info.rate_limit is None
-
-    # Test non existing area name
-    info = render_to_info(hass, "{{ area_id('fake area name') }}")
-    assert_result_info(info, None)
-    assert info.rate_limit is None
-
-    # Test wrong value type
-    info = render_to_info(hass, "{{ area_id(56) }}")
-    assert_result_info(info, None)
-    assert info.rate_limit is None
-
-    area_entry_entity_id = area_registry.async_get_or_create("sensor.fake")
-
-    # Test device with single entity, which has no area
-    device_entry = device_registry.async_get_or_create(
-        config_entry_id=config_entry.entry_id,
-        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
-    )
-    entity_entry = entity_registry.async_get_or_create(
-        "light",
-        "hue",
-        "5678",
-        config_entry=config_entry,
-        device_id=device_entry.id,
-    )
-    info = render_to_info(hass, f"{{{{ area_id('{device_entry.id}') }}}}")
-    assert_result_info(info, None)
-    assert info.rate_limit is None
-
-    info = render_to_info(hass, f"{{{{ area_id('{entity_entry.entity_id}') }}}}")
-    assert_result_info(info, None)
-    assert info.rate_limit is None
-
-    # Test device ID, entity ID and area name as input with area name that looks like
-    # a device ID. Try a filter too
-    area_entry_hex = area_registry.async_get_or_create("123abc")
-    device_entry = device_registry.async_update_device(
-        device_entry.id, area_id=area_entry_hex.id
-    )
-    entity_entry = entity_registry.async_update_entity(
-        entity_entry.entity_id, area_id=area_entry_hex.id
-    )
-
-    info = render_to_info(hass, f"{{{{ '{device_entry.id}' | area_id }}}}")
-    assert_result_info(info, area_entry_hex.id)
-    assert info.rate_limit is None
-
-    info = render_to_info(hass, f"{{{{ area_id('{entity_entry.entity_id}') }}}}")
-    assert_result_info(info, area_entry_hex.id)
-    assert info.rate_limit is None
-
-    info = render_to_info(hass, f"{{{{ area_id('{area_entry_hex.name}') }}}}")
-    assert_result_info(info, area_entry_hex.id)
-    assert info.rate_limit is None
-
-    # Test device ID, entity ID and area name as input with area name that looks like an
-    # entity ID
-    area_entry_entity_id = area_registry.async_get_or_create("sensor.fake")
-    device_entry = device_registry.async_update_device(
-        device_entry.id, area_id=area_entry_entity_id.id
-    )
-    entity_entry = entity_registry.async_update_entity(
-        entity_entry.entity_id, area_id=area_entry_entity_id.id
-    )
-
-    info = render_to_info(hass, f"{{{{ area_id('{device_entry.id}') }}}}")
-    assert_result_info(info, area_entry_entity_id.id)
-    assert info.rate_limit is None
-
-    info = render_to_info(hass, f"{{{{ area_id('{entity_entry.entity_id}') }}}}")
-    assert_result_info(info, area_entry_entity_id.id)
-    assert info.rate_limit is None
-
-    info = render_to_info(hass, f"{{{{ area_id('{area_entry_entity_id.name}') }}}}")
-    assert_result_info(info, area_entry_entity_id.id)
-    assert info.rate_limit is None
-
-    # Make sure that when entity doesn't have an area but its device does, that's what
-    # gets returned
-    entity_entry = entity_registry.async_update_entity(
-        entity_entry.entity_id, area_id=area_entry_entity_id.id
-    )
-
-    info = render_to_info(hass, f"{{{{ area_id('{entity_entry.entity_id}') }}}}")
-    assert_result_info(info, area_entry_entity_id.id)
-    assert info.rate_limit is None
-
-
-async def test_area_name(
-    hass: HomeAssistant,
-    area_registry: ar.AreaRegistry,
-    device_registry: dr.DeviceRegistry,
-    entity_registry: er.EntityRegistry,
-) -> None:
-    """Test area_name function."""
-    config_entry = MockConfigEntry(domain="light")
-    config_entry.add_to_hass(hass)
-
-    # Test non existing entity id
-    info = render_to_info(hass, "{{ area_name('sensor.fake') }}")
-    assert_result_info(info, None)
-    assert info.rate_limit is None
-
-    # Test non existing device id (hex value)
-    info = render_to_info(hass, "{{ area_name('123abc') }}")
-    assert_result_info(info, None)
-    assert info.rate_limit is None
-
-    # Test non existing area id
-    info = render_to_info(hass, "{{ area_name('1234567890') }}")
-    assert_result_info(info, None)
-    assert info.rate_limit is None
-
-    # Test wrong value type
-    info = render_to_info(hass, "{{ area_name(56) }}")
-    assert_result_info(info, None)
-    assert info.rate_limit is None
-
-    # Test device with single entity, which has no area
-    device_entry = device_registry.async_get_or_create(
-        config_entry_id=config_entry.entry_id,
-        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
-    )
-    entity_entry = entity_registry.async_get_or_create(
-        "light",
-        "hue",
-        "5678",
-        config_entry=config_entry,
-        device_id=device_entry.id,
-    )
-    info = render_to_info(hass, f"{{{{ area_name('{device_entry.id}') }}}}")
-    assert_result_info(info, None)
-    assert info.rate_limit is None
-
-    info = render_to_info(hass, f"{{{{ area_name('{entity_entry.entity_id}') }}}}")
-    assert_result_info(info, None)
-    assert info.rate_limit is None
-
-    # Test device ID, entity ID and area id as input. Try a filter too
-    area_entry = area_registry.async_get_or_create("123abc")
-    device_entry = device_registry.async_update_device(
-        device_entry.id, area_id=area_entry.id
-    )
-    entity_entry = entity_registry.async_update_entity(
-        entity_entry.entity_id, area_id=area_entry.id
-    )
-
-    info = render_to_info(hass, f"{{{{ '{device_entry.id}' | area_name }}}}")
-    assert_result_info(info, area_entry.name)
-    assert info.rate_limit is None
-
-    info = render_to_info(hass, f"{{{{ area_name('{entity_entry.entity_id}') }}}}")
-    assert_result_info(info, area_entry.name)
-    assert info.rate_limit is None
-
-    info = render_to_info(hass, f"{{{{ area_name('{area_entry.id}') }}}}")
-    assert_result_info(info, area_entry.name)
-    assert info.rate_limit is None
-
-    # Make sure that when entity doesn't have an area but its device does, that's what
-    # gets returned
-    entity_entry = entity_registry.async_update_entity(
-        entity_entry.entity_id, area_id=None
-    )
-
-    info = render_to_info(hass, f"{{{{ area_name('{entity_entry.entity_id}') }}}}")
-    assert_result_info(info, area_entry.name)
-    assert info.rate_limit is None
-
-
-async def test_area_entities(
-    hass: HomeAssistant,
-    area_registry: ar.AreaRegistry,
-    device_registry: dr.DeviceRegistry,
-    entity_registry: er.EntityRegistry,
-) -> None:
-    """Test area_entities function."""
-    config_entry = MockConfigEntry(domain="light")
-    config_entry.add_to_hass(hass)
-
-    # Test non existing device id
-    info = render_to_info(hass, "{{ area_entities('deadbeef') }}")
-    assert_result_info(info, [])
-    assert info.rate_limit is None
-
-    # Test wrong value type
-    info = render_to_info(hass, "{{ area_entities(56) }}")
-    assert_result_info(info, [])
-    assert info.rate_limit is None
-
-    area_entry = area_registry.async_get_or_create("sensor.fake")
-    entity_entry = entity_registry.async_get_or_create(
-        "light",
-        "hue",
-        "5678",
-        config_entry=config_entry,
-    )
-    entity_registry.async_update_entity(entity_entry.entity_id, area_id=area_entry.id)
-
-    info = render_to_info(hass, f"{{{{ area_entities('{area_entry.id}') }}}}")
-    assert_result_info(info, ["light.hue_5678"])
-    assert info.rate_limit is None
-
-    info = render_to_info(hass, f"{{{{ '{area_entry.name}' | area_entities }}}}")
-    assert_result_info(info, ["light.hue_5678"])
-    assert info.rate_limit is None
-
-    # Test for entities that inherit area from device
-    device_entry = device_registry.async_get_or_create(
-        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
-        config_entry_id=config_entry.entry_id,
-        suggested_area="sensor.fake",
-    )
-    entity_registry.async_get_or_create(
-        "light",
-        "hue_light",
-        "5678",
-        config_entry=config_entry,
-        device_id=device_entry.id,
-    )
-
-    info = render_to_info(hass, f"{{{{ '{area_entry.name}' | area_entities }}}}")
-    assert_result_info(info, ["light.hue_5678", "light.hue_light_5678"])
-    assert info.rate_limit is None
-
-
-async def test_area_devices(
-    hass: HomeAssistant,
-    area_registry: ar.AreaRegistry,
-    device_registry: dr.DeviceRegistry,
-) -> None:
-    """Test area_devices function."""
-    config_entry = MockConfigEntry(domain="light")
-    config_entry.add_to_hass(hass)
-
-    # Test non existing device id
-    info = render_to_info(hass, "{{ area_devices('deadbeef') }}")
-    assert_result_info(info, [])
-    assert info.rate_limit is None
-
-    # Test wrong value type
-    info = render_to_info(hass, "{{ area_devices(56) }}")
-    assert_result_info(info, [])
-    assert info.rate_limit is None
-
-    area_entry = area_registry.async_get_or_create("sensor.fake")
-    device_entry = device_registry.async_get_or_create(
-        config_entry_id=config_entry.entry_id,
-        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
-        suggested_area=area_entry.name,
-    )
-
-    info = render_to_info(hass, f"{{{{ area_devices('{area_entry.id}') }}}}")
-    assert_result_info(info, [device_entry.id])
-    assert info.rate_limit is None
-
-    info = render_to_info(hass, f"{{{{ '{area_entry.name}' | area_devices }}}}")
-    assert_result_info(info, [device_entry.id])
-    assert info.rate_limit is None
 
 
 def test_closest_function_to_coord(hass: HomeAssistant) -> None:
@@ -3596,52 +1982,6 @@ def test_render_complex_handling_non_template_values(hass: HomeAssistant) -> Non
     ) == {True: 1, False: 2}
 
 
-def test_as_timedelta(hass: HomeAssistant) -> None:
-    """Test the as_timedelta function/filter."""
-
-    result = render(hass, "{{ as_timedelta('PT10M') }}")
-    assert result == "0:10:00"
-
-    result = render(hass, "{{ 'PT10M' | as_timedelta }}")
-    assert result == "0:10:00"
-
-    result = render(hass, "{{ 'T10M' | as_timedelta }}")
-    assert result is None
-
-
-def test_iif(hass: HomeAssistant) -> None:
-    """Test the immediate if function/filter."""
-
-    result = render(hass, "{{ (1 == 1) | iif }}")
-    assert result is True
-
-    result = render(hass, "{{ (1 == 2) | iif }}")
-    assert result is False
-
-    result = render(hass, "{{ (1 == 1) | iif('yes') }}")
-    assert result == "yes"
-
-    result = render(hass, "{{ (1 == 2) | iif('yes') }}")
-    assert result is False
-
-    result = render(hass, "{{ (1 == 2) | iif('yes', 'no') }}")
-    assert result == "no"
-
-    result = render(hass, "{{ not_exists | default(None) | iif('yes', 'no') }}")
-    assert result == "no"
-
-    result = render(
-        hass, "{{ not_exists | default(None) | iif('yes', 'no', 'unknown') }}"
-    )
-    assert result == "unknown"
-
-    result = render(hass, "{{ iif(1 == 1) }}")
-    assert result is True
-
-    result = render(hass, "{{ iif(1 == 2, 'yes', 'no') }}")
-    assert result == "no"
-
-
 @pytest.mark.usefixtures("hass")
 async def test_cache_garbage_collection() -> None:
     """Test caching a template."""
@@ -4021,32 +2361,6 @@ async def test_template_states_can_serialize(hass: HomeAssistant) -> None:
     assert json_dumps(template_state) == json_dumps(template_state)
 
 
-@pytest.mark.parametrize(
-    ("seq", "value", "expected"),
-    [
-        ([0], 0, True),
-        ([1], 0, False),
-        ([False], 0, True),
-        ([True], 0, False),
-        ([0], [0], False),
-        (["toto", 1], "toto", True),
-        (["toto", 1], "tata", False),
-        ([], 0, False),
-        ([], None, False),
-    ],
-)
-def test_contains(hass: HomeAssistant, seq, value, expected) -> None:
-    """Test contains."""
-    assert (
-        render(hass, "{{ seq | contains(value) }}", {"seq": seq, "value": value})
-        == expected
-    )
-    assert (
-        render(hass, "{{ seq is contains(value) }}", {"seq": seq, "value": value})
-        == expected
-    )
-
-
 async def test_render_to_info_with_exception(hass: HomeAssistant) -> None:
     """Test info is still available if the template has an exception."""
     hass.states.async_set("test_domain.object", "dog")
@@ -4124,264 +2438,6 @@ def test_template_output_exceeds_maximum_size(hass: HomeAssistant) -> None:
         render(hass, "{{ 'a' * 1024 * 257 }}")
 
 
-@pytest.mark.parametrize(
-    ("service_response"),
-    [
-        {
-            "calendar.sports": {
-                "events": [
-                    {
-                        "start": "2024-02-27T17:00:00-06:00",
-                        "end": "2024-02-27T18:00:00-06:00",
-                        "summary": "Basketball vs. Rockets",
-                        "description": "",
-                    }
-                ]
-            },
-            "calendar.local_furry_events": {"events": []},
-            "calendar.yap_house_schedules": {
-                "events": [
-                    {
-                        "start": "2024-02-26T08:00:00-06:00",
-                        "end": "2024-02-26T09:00:00-06:00",
-                        "summary": "Dr. Appt",
-                        "description": "",
-                    },
-                    {
-                        "start": "2024-02-28T20:00:00-06:00",
-                        "end": "2024-02-28T21:00:00-06:00",
-                        "summary": "Bake a cake",
-                        "description": "something good",
-                    },
-                ]
-            },
-        },
-        {
-            "binary_sensor.workday": {"workday": True},
-            "binary_sensor.workday2": {"workday": False},
-        },
-        {
-            "weather.smhi_home": {
-                "forecast": [
-                    {
-                        "datetime": "2024-03-31T16:00:00",
-                        "condition": "cloudy",
-                        "wind_bearing": 79,
-                        "cloud_coverage": 100,
-                        "temperature": 10,
-                        "templow": 4,
-                        "pressure": 998,
-                        "wind_gust_speed": 21.6,
-                        "wind_speed": 11.88,
-                        "precipitation": 0.2,
-                        "humidity": 87,
-                    },
-                    {
-                        "datetime": "2024-04-01T12:00:00",
-                        "condition": "rainy",
-                        "wind_bearing": 17,
-                        "cloud_coverage": 100,
-                        "temperature": 6,
-                        "templow": 1,
-                        "pressure": 999,
-                        "wind_gust_speed": 20.52,
-                        "wind_speed": 8.64,
-                        "precipitation": 2.2,
-                        "humidity": 88,
-                    },
-                    {
-                        "datetime": "2024-04-02T12:00:00",
-                        "condition": "cloudy",
-                        "wind_bearing": 17,
-                        "cloud_coverage": 100,
-                        "temperature": 0,
-                        "templow": -3,
-                        "pressure": 1003,
-                        "wind_gust_speed": 57.24,
-                        "wind_speed": 30.6,
-                        "precipitation": 1.3,
-                        "humidity": 71,
-                    },
-                ]
-            },
-            "weather.forecast_home": {
-                "forecast": [
-                    {
-                        "condition": "cloudy",
-                        "precipitation_probability": 6.6,
-                        "datetime": "2024-03-31T10:00:00+00:00",
-                        "wind_bearing": 71.8,
-                        "temperature": 10.9,
-                        "templow": 6.5,
-                        "wind_gust_speed": 24.1,
-                        "wind_speed": 13.7,
-                        "precipitation": 0,
-                        "humidity": 71,
-                    },
-                    {
-                        "condition": "cloudy",
-                        "precipitation_probability": 8,
-                        "datetime": "2024-04-01T10:00:00+00:00",
-                        "wind_bearing": 350.6,
-                        "temperature": 10.2,
-                        "templow": 3.4,
-                        "wind_gust_speed": 38.2,
-                        "wind_speed": 21.6,
-                        "precipitation": 0,
-                        "humidity": 79,
-                    },
-                    {
-                        "condition": "snowy",
-                        "precipitation_probability": 67.4,
-                        "datetime": "2024-04-02T10:00:00+00:00",
-                        "wind_bearing": 24.5,
-                        "temperature": 3,
-                        "templow": 0,
-                        "wind_gust_speed": 64.8,
-                        "wind_speed": 37.4,
-                        "precipitation": 2.3,
-                        "humidity": 77,
-                    },
-                ]
-            },
-        },
-        {
-            "vacuum.deebot_n8_plus_1": {
-                "payloadType": "j",
-                "resp": {
-                    "body": {
-                        "msg": "ok",
-                    }
-                },
-                "header": {
-                    "ver": "0.0.1",
-                },
-            },
-            "vacuum.deebot_n8_plus_2": {
-                "payloadType": "j",
-                "resp": {
-                    "body": {
-                        "msg": "ok",
-                    }
-                },
-                "header": {
-                    "ver": "0.0.1",
-                },
-            },
-        },
-    ],
-    ids=["calendar", "workday", "weather", "vacuum"],
-)
-async def test_merge_response(
-    hass: HomeAssistant,
-    service_response: dict,
-    snapshot: SnapshotAssertion,
-) -> None:
-    """Test the merge_response function/filter."""
-
-    _template = "{{ merge_response(" + str(service_response) + ") }}"
-
-    assert service_response == snapshot(name="a_response")
-    assert render(
-        hass,
-        _template,
-    ) == snapshot(name="b_rendered")
-
-
-async def test_merge_response_with_entity_id_in_response(
-    hass: HomeAssistant,
-    snapshot: SnapshotAssertion,
-) -> None:
-    """Test the merge_response function/filter with empty lists."""
-
-    service_response = {
-        "test.response": {"some_key": True, "entity_id": "test.response"},
-        "test.response2": {"some_key": False, "entity_id": "test.response2"},
-    }
-    _template = "{{ merge_response(" + str(service_response) + ") }}"
-    with pytest.raises(
-        TemplateError,
-        match="ValueError: Response dictionary already contains key 'entity_id'",
-    ):
-        render(hass, _template)
-
-    service_response = {
-        "test.response": {
-            "happening": [
-                {
-                    "start": "2024-02-27T17:00:00-06:00",
-                    "end": "2024-02-27T18:00:00-06:00",
-                    "summary": "Magic day",
-                    "entity_id": "test.response",
-                }
-            ]
-        }
-    }
-    _template = "{{ merge_response(" + str(service_response) + ") }}"
-    with pytest.raises(
-        TemplateError,
-        match="ValueError: Response dictionary already contains key 'entity_id'",
-    ):
-        render(hass, _template)
-
-
-async def test_merge_response_with_empty_response(
-    hass: HomeAssistant,
-    snapshot: SnapshotAssertion,
-) -> None:
-    """Test the merge_response function/filter with empty lists."""
-
-    service_response = {
-        "calendar.sports": {"events": []},
-        "calendar.local_furry_events": {"events": []},
-        "calendar.yap_house_schedules": {"events": []},
-    }
-    _template = "{{ merge_response(" + str(service_response) + ") }}"
-    assert service_response == snapshot(name="a_response")
-    assert render(hass, _template) == snapshot(name="b_rendered")
-
-
-async def test_response_empty_dict(
-    hass: HomeAssistant,
-    snapshot: SnapshotAssertion,
-) -> None:
-    """Test the merge_response function/filter with empty dict."""
-
-    service_response = {}
-    _template = "{{ merge_response(" + str(service_response) + ") }}"
-
-    result = render(hass, _template)
-    assert result == []
-
-
-async def test_response_incorrect_value(
-    hass: HomeAssistant,
-    snapshot: SnapshotAssertion,
-) -> None:
-    """Test the merge_response function/filter with incorrect response."""
-
-    service_response = "incorrect"
-    _template = "{{ merge_response(" + str(service_response) + ") }}"
-    with pytest.raises(TemplateError, match="TypeError: Response is not a dictionary"):
-        render(hass, _template)
-
-
-async def test_merge_response_with_incorrect_response(hass: HomeAssistant) -> None:
-    """Test the merge_response function/filter with empty response should raise."""
-
-    service_response = {"calendar.sports": []}
-    _template = "{{ merge_response(" + str(service_response) + ") }}"
-    with pytest.raises(TemplateError, match="TypeError: Response is not a dictionary"):
-        render(hass, _template)
-
-    service_response = {
-        "binary_sensor.workday": [],
-    }
-    _template = "{{ merge_response(" + str(service_response) + ") }}"
-    with pytest.raises(TemplateError, match="TypeError: Response is not a dictionary"):
-        render(hass, _template)
-
-
 def test_warn_no_hass(hass: HomeAssistant, caplog: pytest.LogCaptureFixture) -> None:
     """Test deprecation warning when instantiating Template without hass."""
 
@@ -4397,81 +2453,3 @@ def test_warn_no_hass(hass: HomeAssistant, caplog: pytest.LogCaptureFixture) -> 
     template.Template("blah", hass)
     assert message not in caplog.text
     caplog.clear()
-
-
-async def test_merge_response_not_mutate_original_object(
-    hass: HomeAssistant, snapshot: SnapshotAssertion
-) -> None:
-    """Test the merge_response does not mutate original service response value."""
-
-    value = '{"calendar.family": {"events": [{"summary": "An event"}]}'
-    _template = (
-        "{% set calendar_response = " + value + "} %}"
-        "{{ merge_response(calendar_response) }}"
-        # We should be able to merge the same response again
-        # as the merge is working on a copy of the original object (response)
-        "{{ merge_response(calendar_response) }}"
-    )
-
-    assert render(hass, _template)
-
-
-def test_typeof(hass: HomeAssistant) -> None:
-    """Test the typeof debug filter/function."""
-    assert render(hass, "{{ True | typeof }}") == "bool"
-    assert render(hass, "{{ typeof(True) }}") == "bool"
-
-    assert render(hass, "{{ [1, 2, 3] | typeof }}") == "list"
-    assert render(hass, "{{ typeof([1, 2, 3]) }}") == "list"
-
-    assert render(hass, "{{ 1 | typeof }}") == "int"
-    assert render(hass, "{{ typeof(1) }}") == "int"
-
-    assert render(hass, "{{ 1.1 | typeof }}") == "float"
-    assert render(hass, "{{ typeof(1.1) }}") == "float"
-
-    assert render(hass, "{{ None | typeof }}") == "NoneType"
-    assert render(hass, "{{ typeof(None) }}") == "NoneType"
-
-    assert render(hass, "{{ 'Home Assistant' | typeof }}") == "str"
-    assert render(hass, "{{ typeof('Home Assistant') }}") == "str"
-
-
-def test_combine(hass: HomeAssistant) -> None:
-    """Test combine filter and function."""
-    assert render(hass, "{{ {'a': 1, 'b': 2} | combine({'b': 3, 'c': 4}) }}") == {
-        "a": 1,
-        "b": 3,
-        "c": 4,
-    }
-
-    assert render(hass, "{{ combine({'a': 1, 'b': 2}, {'b': 3, 'c': 4}) }}") == {
-        "a": 1,
-        "b": 3,
-        "c": 4,
-    }
-
-    assert render(
-        hass,
-        "{{ combine({'a': 1, 'b': {'x': 1}}, {'b': {'y': 2}, 'c': 4}, recursive=True) }}",
-    ) == {"a": 1, "b": {"x": 1, "y": 2}, "c": 4}
-
-    # Test that recursive=False does not merge nested dictionaries
-    assert render(
-        hass,
-        "{{ combine({'a': 1, 'b': {'x': 1}}, {'b': {'y': 2}, 'c': 4}, recursive=False) }}",
-    ) == {"a": 1, "b": {"y": 2}, "c": 4}
-
-    # Test that None values are handled correctly in recursive merge
-    assert render(
-        hass,
-        "{{ combine({'a': 1, 'b': none}, {'b': {'y': 2}, 'c': 4}, recursive=True) }}",
-    ) == {"a": 1, "b": {"y": 2}, "c": 4}
-
-    with pytest.raises(
-        TemplateError, match="combine expected at least 1 argument, got 0"
-    ):
-        render(hass, "{{ combine() }}")
-
-    with pytest.raises(TemplateError, match="combine expected a dict, got str"):
-        render(hass, "{{ {'a': 1} | combine('not a dict') }}")

@@ -2,7 +2,9 @@
   "config": {
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
+      "unique_id_mismatch": "Please ensure you reconfigure against the same device."
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
@@ -15,7 +17,7 @@
           "username": "[%key:common::config_flow::data::username%]"
         },
         "data_description": {
-          "password": "The password for accessing your SFR box's web interface, the default is the WiFi security key found on the device label",
+          "password": "The password for accessing your SFR box's web interface, the default is the Wi-Fi security key found on the device label",
           "username": "The username for accessing your SFR box's web interface, the default is 'admin'"
         }
       },
@@ -45,6 +47,19 @@
       "ftth_status": {
         "name": "FTTH status"
       },
+      "voip_callhistory_active": {
+        "name": "VoIP call history active"
+      },
+      "voip_hook_status": {
+        "name": "VoIP phone hook status",
+        "state": {
+          "off": "On-hook",
+          "on": "Off-hook"
+        }
+      },
+      "voip_status": {
+        "name": "VoIP status"
+      },
       "wan_status": {
         "name": "WAN status"
       }
@@ -56,11 +71,13 @@
       "dsl_attenuation_up": {
         "name": "DSL attenuation up"
       },
-      "dsl_counter": {
-        "name": "DSL counter"
+      "dsl_connect_count": {
+        "name": "DSL connect count",
+        "unit_of_measurement": "attempts"
       },
-      "dsl_crc": {
-        "name": "DSL CRC"
+      "dsl_crc_error_count": {
+        "name": "DSL CRC error count",
+        "unit_of_measurement": "errors"
       },
       "dsl_line_status": {
         "name": "DSL line status",
@@ -69,8 +86,7 @@
           "loss_of_power": "Loss of power",
           "loss_of_signal": "Loss of signal",
           "loss_of_signal_quality": "Loss of signal quality",
-          "no_defect": "No defect",
-          "unknown": "Unknown"
+          "no_defect": "No defect"
         }
       },
       "dsl_linemode": {
@@ -99,8 +115,7 @@
           "g_993_started": "G.993 Started",
           "g_994_training": "G.994 Training",
           "idle": "[%key:common::state::idle%]",
-          "showtime": "Showtime",
-          "unknown": "Unknown"
+          "showtime": "Showtime"
         }
       },
       "net_infra": {
@@ -108,8 +123,15 @@
         "state": {
           "adsl": "ADSL",
           "ftth": "FTTH",
-          "gprs": "GPRS",
-          "unknown": "Unknown"
+          "gprs": "GPRS"
+        }
+      },
+      "voip_infra": {
+        "name": "VoIP infrastructure",
+        "state": {
+          "adsl": "[%key:component::sfr_box::entity::sensor::net_infra::state::adsl%]",
+          "ftth": "[%key:component::sfr_box::entity::sensor::net_infra::state::ftth%]",
+          "gprs": "[%key:component::sfr_box::entity::sensor::net_infra::state::gprs%]"
         }
       },
       "wan_mode": {
@@ -118,10 +140,20 @@
           "adsl_ppp": "ADSL (PPP)",
           "adsl_routed": "ADSL (Routed)",
           "ftth_routed": "FTTH (Routed)",
-          "grps_ppp": "GPRS (PPP)",
-          "unknown": "Unknown"
+          "grps_ppp": "GPRS (PPP)"
         }
       }
+    }
+  },
+  "exceptions": {
+    "invalid_credentials": {
+      "message": "The provided credentials are invalid."
+    },
+    "no_data": {
+      "message": "No data received from the SFR box."
+    },
+    "unknown_error": {
+      "message": "An unknown error occurred while communicating with the SFR box: {error}"
     }
   }
 }

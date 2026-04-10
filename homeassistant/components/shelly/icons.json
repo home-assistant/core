@@ -105,5 +105,13 @@
         }
       }
     }
+  },
+  "services": {
+    "get_kvs_value": {
+      "service": "mdi:import"
+    },
+    "set_kvs_value": {
+      "service": "mdi:export"
+    }
   }
 }

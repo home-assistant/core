@@ -58,7 +58,7 @@ SWITCH_TYPES: Final[tuple[MieleSwitchDefinition, ...]] = (
         description=MieleSwitchDescription(
             key="supercooling",
             value_fn=lambda value: value.state_status,
-            on_value=StateStatus.SUPERCOOLING,
+            on_value=StateStatus.supercooling,
             translation_key="supercooling",
             on_cmd_data={PROCESS_ACTION: MieleActions.START_SUPERCOOL},
             off_cmd_data={PROCESS_ACTION: MieleActions.STOP_SUPERCOOL},
@@ -73,7 +73,7 @@ SWITCH_TYPES: Final[tuple[MieleSwitchDefinition, ...]] = (
         description=MieleSwitchDescription(
             key="superfreezing",
             value_fn=lambda value: value.state_status,
-            on_value=StateStatus.SUPERFREEZING,
+            on_value=StateStatus.superfreezing,
             translation_key="superfreezing",
             on_cmd_data={PROCESS_ACTION: MieleActions.START_SUPERFREEZE},
             off_cmd_data={PROCESS_ACTION: MieleActions.STOP_SUPERFREEZE},
@@ -117,7 +117,7 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the switch platform."""
-    coordinator = config_entry.runtime_data
+    coordinator = config_entry.runtime_data.coordinator
     added_devices: set[str] = set()
 
     def _async_add_new_devices() -> None:

@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_selects[n0vyif-entity_ids2][select.x8_pro_omni_active_map:entity-registry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -25,6 +26,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Active map',
     'options': dict({
     }),
     'original_device_class': None,
@@ -58,8 +60,9 @@
 # ---
 # name: test_selects[n0vyif-entity_ids2][select.x8_pro_omni_auto_empty_frequency:entity-registry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -82,6 +85,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Auto-empty frequency',
     'options': dict({
     }),
     'original_device_class': None,
@@ -115,8 +119,9 @@
 # ---
 # name: test_selects[n0vyif-entity_ids2][select.x8_pro_omni_work_mode:entity-registry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -141,6 +146,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Work mode',
     'options': dict({
     }),
     'original_device_class': None,
@@ -176,8 +182,9 @@
 # ---
 # name: test_selects[qhe2o2-entity_ids1][select.dusty_active_map:entity-registry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -200,6 +207,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Active map',
     'options': dict({
     }),
     'original_device_class': None,
@@ -233,8 +241,9 @@
 # ---
 # name: test_selects[qhe2o2-entity_ids1][select.dusty_auto_empty_frequency:entity-registry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -257,6 +266,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Auto-empty frequency',
     'options': dict({
     }),
     'original_device_class': None,
@@ -290,8 +300,9 @@
 # ---
 # name: test_selects[qhe2o2-entity_ids1][select.dusty_water_flow_level:entity-registry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -315,6 +326,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Water flow level',
     'options': dict({
     }),
     'original_device_class': None,
@@ -349,8 +361,9 @@
 # ---
 # name: test_selects[yna5x1-entity_ids0][select.ozmo_950_active_map:entity-registry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -373,6 +386,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Active map',
     'options': dict({
     }),
     'original_device_class': None,
@@ -406,8 +420,9 @@
 # ---
 # name: test_selects[yna5x1-entity_ids0][select.ozmo_950_water_flow_level:entity-registry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -432,6 +447,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Water flow level',
     'options': dict({
     }),
     'original_device_class': None,

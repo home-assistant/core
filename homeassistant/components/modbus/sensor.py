@@ -99,7 +99,7 @@ class ModbusRegisterSensor(ModbusStructEntity, RestoreSensor, SensorEntity):
         # Add a dataCoordinator for each sensor that have slaves
         # this ensures that idx = bit position of value in result
         # polling is done with the base class
-        name = self._attr_name if self._attr_name else "modbus_sensor"
+        name = self._attr_name or "modbus_sensor"
         self._coordinator = DataUpdateCoordinator(
             hass,
             _LOGGER,

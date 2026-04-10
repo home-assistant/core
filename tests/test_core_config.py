@@ -34,8 +34,8 @@ from homeassistant.core_config import (
     DATA_CUSTOMIZE,
     Config,
     ConfigSource,
-    _validate_stun_or_turn_url,
     async_process_ha_core_config,
+    validate_stun_or_turn_url,
 )
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.entity import Entity, EntityPlatformState
@@ -175,8 +175,8 @@ def test_webrtc_schema() -> None:
         assert validated["webrtc"] == validated_webrtc
 
 
-def test_validate_stun_or_turn_url() -> None:
-    """Test _validate_stun_or_turn_url."""
+def testvalidate_stun_or_turn_url() -> None:
+    """Test validate_stun_or_turn_url."""
     invalid_urls = (
         "custom_stun_server",
         "custom_stun_server:3478",
@@ -203,10 +203,10 @@ def test_validate_stun_or_turn_url() -> None:
 
     for url in invalid_urls:
         with pytest.raises(Invalid):
-            _validate_stun_or_turn_url(url)
+            validate_stun_or_turn_url(url)
 
     for url in valid_urls:
-        assert _validate_stun_or_turn_url(url) == url
+        assert validate_stun_or_turn_url(url) == url
 
 
 def test_customize_glob_is_ordered() -> None:
@@ -880,6 +880,25 @@ async def test_config_path_with_dir_and_file() -> None:
     hass.data = {}
     config = Config(hass, "/test/ha-config")
     assert config.path("dir", "test.conf") == "/test/ha-config/dir/test.conf"
+
+
+async def test_config_cache_path_with_file() -> None:
+    """Test cache_path method with file."""
+    hass = Mock()
+    hass.data = {}
+    config = Config(hass, "/test/ha-config")
+    assert config.cache_path("test.cache") == "/test/ha-config/.cache/test.cache"
+
+
+async def test_config_cache_path_with_dir_and_file() -> None:
+    """Test cache_path method with dir and file."""
+    hass = Mock()
+    hass.data = {}
+    config = Config(hass, "/test/ha-config")
+    assert (
+        config.cache_path("dir", "test.cache")
+        == "/test/ha-config/.cache/dir/test.cache"
+    )
 
 
 async def test_config_as_dict() -> None:

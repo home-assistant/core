@@ -1,4 +1,12 @@
 {
+  "conditions": {
+    "is_off": {
+      "condition": "mdi:fan-off"
+    },
+    "is_on": {
+      "condition": "mdi:fan"
+    }
+  },
   "entity_component": {
     "_": {
       "default": "mdi:fan",
@@ -46,6 +54,14 @@
     },
     "turn_on": {
       "service": "mdi:fan"
+    }
+  },
+  "triggers": {
+    "turned_off": {
+      "trigger": "mdi:fan-off"
+    },
+    "turned_on": {
+      "trigger": "mdi:fan"
     }
   }
 }

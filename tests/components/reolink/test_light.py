@@ -74,6 +74,7 @@ async def test_light_turn_off(
 ) -> None:
     """Test light turn off service."""
     reolink_host.whiteled_color_temperature.return_value = 3000
+    reolink_host.whiteled_brightness.return_value = 75
 
     with patch("homeassistant.components.reolink.PLATFORMS", [Platform.LIGHT]):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
@@ -81,6 +82,8 @@ async def test_light_turn_off(
     assert config_entry.state is ConfigEntryState.LOADED
 
     entity_id = f"{Platform.LIGHT}.{TEST_CAM_NAME}_floodlight"
+    state = hass.states.get(entity_id)
+    assert state and state.attributes.get(ATTR_BRIGHTNESS) == 191
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
@@ -107,6 +110,7 @@ async def test_light_turn_on(
 ) -> None:
     """Test light turn on service."""
     reolink_host.whiteled_color_temperature.return_value = 3000
+    reolink_host.whiteled_brightness.return_value = None
 
     with patch("homeassistant.components.reolink.PLATFORMS", [Platform.LIGHT]):
         assert await hass.config_entries.async_setup(config_entry.entry_id)

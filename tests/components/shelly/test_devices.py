@@ -45,7 +45,7 @@ async def test_shelly_2pm_gen3_no_relay_names(
     config_entry = await init_integration(hass, gen=3, model=MODEL_2PM_G3)
 
     # Relay 0 sub-device
-    entity_id = "switch.test_name_switch_0"
+    entity_id = "switch.test_name_output_0"
 
     state = hass.states.get(entity_id)
     assert state
@@ -55,9 +55,9 @@ async def test_shelly_2pm_gen3_no_relay_names(
 
     device_entry = device_registry.async_get(entry.device_id)
     assert device_entry
-    assert device_entry.name == "Test name Switch 0"
+    assert device_entry.name == "Test name Output 0"
 
-    entity_id = "sensor.test_name_switch_0_power"
+    entity_id = "sensor.test_name_output_0_power"
 
     state = hass.states.get(entity_id)
     assert state
@@ -67,10 +67,10 @@ async def test_shelly_2pm_gen3_no_relay_names(
 
     device_entry = device_registry.async_get(entry.device_id)
     assert device_entry
-    assert device_entry.name == "Test name Switch 0"
+    assert device_entry.name == "Test name Output 0"
 
     # Relay 1 sub-device
-    entity_id = "switch.test_name_switch_1"
+    entity_id = "switch.test_name_output_1"
 
     state = hass.states.get(entity_id)
     assert state
@@ -80,9 +80,9 @@ async def test_shelly_2pm_gen3_no_relay_names(
 
     device_entry = device_registry.async_get(entry.device_id)
     assert device_entry
-    assert device_entry.name == "Test name Switch 1"
+    assert device_entry.name == "Test name Output 1"
 
-    entity_id = "sensor.test_name_switch_1_power"
+    entity_id = "sensor.test_name_output_1_power"
 
     state = hass.states.get(entity_id)
     assert state
@@ -92,7 +92,7 @@ async def test_shelly_2pm_gen3_no_relay_names(
 
     device_entry = device_registry.async_get(entry.device_id)
     assert device_entry
-    assert device_entry.name == "Test name Switch 1"
+    assert device_entry.name == "Test name Output 1"
 
     # Main device
     entity_id = "update.test_name_firmware"

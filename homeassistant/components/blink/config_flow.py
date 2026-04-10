@@ -21,7 +21,7 @@ from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import DEVICE_ID, DOMAIN
+from .const import DOMAIN, HARDWARE_ID
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -43,7 +43,7 @@ async def _send_blink_2fa_pin(blink: Blink, pin: str | None) -> bool:
 class BlinkConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a Blink config flow."""
 
-    VERSION = 3
+    VERSION = 4
 
     def __init__(self) -> None:
         """Initialize the blink flow."""
@@ -53,7 +53,7 @@ class BlinkConfigFlow(ConfigFlow, domain=DOMAIN):
     async def _handle_user_input(self, user_input: dict[str, Any]):
         """Handle user input."""
         self.auth = Auth(
-            {**user_input, "device_id": DEVICE_ID},
+            {**user_input, "hardware_id": HARDWARE_ID},
             no_prompt=True,
             session=async_get_clientsession(self.hass),
         )

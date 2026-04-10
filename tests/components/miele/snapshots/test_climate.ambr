@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_climate_states[freezer-platforms0][climate.freezer-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'hvac_modes': list([
@@ -27,6 +28,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -65,8 +67,9 @@
 # ---
 # name: test_climate_states[freezer-platforms0][climate.refrigerator-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'hvac_modes': list([
@@ -91,6 +94,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -129,8 +133,9 @@
 # ---
 # name: test_climate_states_api_push[freezer-platforms0][climate.freezer-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'hvac_modes': list([
@@ -155,6 +160,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -193,8 +199,9 @@
 # ---
 # name: test_climate_states_api_push[freezer-platforms0][climate.refrigerator-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'hvac_modes': list([
@@ -219,6 +226,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -257,8 +265,9 @@
 # ---
 # name: test_climate_states_mulizone[fridge_freezer-fridge_freezer.json-platforms0][climate.fridge_freezer_freezer-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'hvac_modes': list([
@@ -283,6 +292,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Freezer',
     'options': dict({
     }),
     'original_device_class': None,
@@ -321,8 +331,9 @@
 # ---
 # name: test_climate_states_mulizone[fridge_freezer-fridge_freezer.json-platforms0][climate.fridge_freezer_freezer_2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'hvac_modes': list([
@@ -347,6 +358,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Freezer',
     'options': dict({
     }),
     'original_device_class': None,
@@ -385,8 +397,9 @@
 # ---
 # name: test_climate_states_mulizone[fridge_freezer-fridge_freezer.json-platforms0][climate.fridge_freezer_refrigerator-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'hvac_modes': list([
@@ -411,6 +424,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Refrigerator',
     'options': dict({
     }),
     'original_device_class': None,
@@ -449,8 +463,9 @@
 # ---
 # name: test_climate_states_mulizone[fridge_freezer-fridge_freezer.json-platforms0][climate.fridge_freezer_refrigerator_2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'hvac_modes': list([
@@ -475,6 +490,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Refrigerator',
     'options': dict({
     }),
     'original_device_class': None,
@@ -513,8 +529,9 @@
 # ---
 # name: test_climate_states_mulizone[fridge_freezer-fridge_freezer.json-platforms0][climate.fridge_freezer_zone_3-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'hvac_modes': list([
@@ -539,6 +556,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Zone 3',
     'options': dict({
     }),
     'original_device_class': None,
@@ -577,8 +595,9 @@
 # ---
 # name: test_climate_states_mulizone[fridge_freezer-fridge_freezer.json-platforms0][climate.fridge_freezer_zone_3_2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'hvac_modes': list([
@@ -603,6 +622,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Zone 3',
     'options': dict({
     }),
     'original_device_class': None,
@@ -641,8 +661,9 @@
 # ---
 # name: test_climate_states_offline[fridge_freezer_offline-fridge_freezer.json-platforms0][climate.fridge_freezer_freezer-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'hvac_modes': list([
@@ -667,6 +688,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Freezer',
     'options': dict({
     }),
     'original_device_class': None,
@@ -705,8 +727,9 @@
 # ---
 # name: test_climate_states_offline[fridge_freezer_offline-fridge_freezer.json-platforms0][climate.fridge_freezer_freezer_2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'hvac_modes': list([
@@ -731,6 +754,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Freezer',
     'options': dict({
     }),
     'original_device_class': None,
@@ -769,8 +793,9 @@
 # ---
 # name: test_climate_states_offline[fridge_freezer_offline-fridge_freezer.json-platforms0][climate.fridge_freezer_refrigerator-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'hvac_modes': list([
@@ -795,6 +820,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Refrigerator',
     'options': dict({
     }),
     'original_device_class': None,
@@ -833,8 +859,9 @@
 # ---
 # name: test_climate_states_offline[fridge_freezer_offline-fridge_freezer.json-platforms0][climate.fridge_freezer_refrigerator_2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'hvac_modes': list([
@@ -859,6 +886,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Refrigerator',
     'options': dict({
     }),
     'original_device_class': None,
@@ -897,8 +925,9 @@
 # ---
 # name: test_climate_states_offline[fridge_freezer_offline-fridge_freezer.json-platforms0][climate.fridge_freezer_zone_3-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'hvac_modes': list([
@@ -923,6 +952,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Zone 3',
     'options': dict({
     }),
     'original_device_class': None,
@@ -961,8 +991,9 @@
 # ---
 # name: test_climate_states_offline[fridge_freezer_offline-fridge_freezer.json-platforms0][climate.fridge_freezer_zone_3_2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'hvac_modes': list([
@@ -987,6 +1018,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Zone 3',
     'options': dict({
     }),
     'original_device_class': None,

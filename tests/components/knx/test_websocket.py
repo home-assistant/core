@@ -311,6 +311,8 @@ async def test_knx_subscribe_telegrams_command_no_project(
         "switch", "turn_on", {"entity_id": "switch.test"}, blocking=True
     )
     await knx.assert_write("1/2/4", 1)
+    # receive undecodable data secure telegram
+    knx.receive_data_secure_issue("1/2/5")
 
     # receive events
     res = await client.receive_json()
@@ -353,6 +355,14 @@ async def test_knx_subscribe_telegrams_command_no_project(
         res["event"]["source"] == "0.0.0"
     )  # needs to be the IA currently connected to
     assert res["event"]["direction"] == "Outgoing"
+    assert res["event"]["timestamp"] is not None
+
+    res = await client.receive_json()
+    assert res["event"]["destination"] == "1/2/5"
+    assert res["event"]["payload"] is None
+    assert res["event"]["telegramtype"] == "SecureAPDU"
+    assert res["event"]["source"] == "1.2.3"
+    assert res["event"]["direction"] == "Incoming"
     assert res["event"]["timestamp"] is not None
 
 

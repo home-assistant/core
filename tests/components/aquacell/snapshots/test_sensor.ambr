@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_sensors[sensor.aquacell_name_battery-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -20,6 +21,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
@@ -51,8 +53,9 @@
 # ---
 # name: test_sensors[sensor.aquacell_name_last_update-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -70,6 +73,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Last update',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -100,8 +104,9 @@
 # ---
 # name: test_sensors[sensor.aquacell_name_salt_left_side_percentage-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -121,6 +126,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Salt left side percentage',
     'options': dict({
     }),
     'original_device_class': None,
@@ -152,8 +158,9 @@
 # ---
 # name: test_sensors[sensor.aquacell_name_salt_left_side_time_remaining-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -171,6 +178,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Salt left side time remaining',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -205,8 +213,9 @@
 # ---
 # name: test_sensors[sensor.aquacell_name_salt_right_side_percentage-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -226,6 +235,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Salt right side percentage',
     'options': dict({
     }),
     'original_device_class': None,
@@ -257,8 +267,9 @@
 # ---
 # name: test_sensors[sensor.aquacell_name_salt_right_side_time_remaining-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -276,6 +287,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Salt right side time remaining',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -310,8 +322,9 @@
 # ---
 # name: test_sensors[sensor.aquacell_name_wi_fi_strength-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -335,6 +348,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Wi-Fi strength',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,

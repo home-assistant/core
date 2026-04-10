@@ -86,6 +86,11 @@ BLUETOOTH: Final[list[dict[str, bool | str | int | list[int]]]] = [
         "service_data_uuid": "0000fcd2-0000-1000-8000-00805f9b34fb",
     },
     {
+        "connectable": True,
+        "domain": "casper_glow",
+        "local_name": "Jar*",
+    },
+    {
         "domain": "dormakaba_dkey",
         "service_uuid": "e7a60000-6639-429f-94fd-86de8ea26897",
     },
@@ -215,6 +220,11 @@ BLUETOOTH: Final[list[dict[str, bool | str | int | list[int]]]] = [
     {
         "connectable": False,
         "domain": "govee_ble",
+        "local_name": "GV5140*",
+    },
+    {
+        "connectable": False,
+        "domain": "govee_ble",
         "manufacturer_id": 1,
         "service_uuid": "0000ec88-0000-1000-8000-00805f9b34fb",
     },
@@ -318,6 +328,12 @@ BLUETOOTH: Final[list[dict[str, bool | str | int | list[int]]]] = [
             6,
         ],
         "manufacturer_id": 76,
+    },
+    {
+        "connectable": True,
+        "domain": "hue_ble",
+        "service_data_uuid": "0000fe0f-0000-1000-8000-00805f9b34fb",
+        "service_uuid": "0000fe0f-0000-1000-8000-00805f9b34fb",
     },
     {
         "connectable": True,
@@ -610,6 +626,11 @@ BLUETOOTH: Final[list[dict[str, bool | str | int | list[int]]]] = [
         "local_name": "MOTION_*",
     },
     {
+        "connectable": True,
+        "domain": "opendisplay",
+        "manufacturer_id": 9286,
+    },
+    {
         "domain": "oralb",
         "manufacturer_id": 220,
     },
@@ -705,6 +726,10 @@ BLUETOOTH: Final[list[dict[str, bool | str | int | list[int]]]] = [
     {
         "domain": "shelly",
         "local_name": "Shelly*",
+    },
+    {
+        "domain": "shelly",
+        "manufacturer_id": 2985,
     },
     {
         "domain": "snooz",
@@ -848,6 +873,14 @@ BLUETOOTH: Final[list[dict[str, bool | str | int | list[int]]]] = [
         "domain": "togrill",
         "manufacturer_id": 34714,
         "service_uuid": "0000cee0-0000-1000-8000-00805f9b34fb",
+    },
+    {
+        "connectable": False,
+        "domain": "victron_ble",
+        "manufacturer_data_start": [
+            16,
+        ],
+        "manufacturer_id": 737,
     },
     {
         "connectable": False,

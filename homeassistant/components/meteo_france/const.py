@@ -23,9 +23,6 @@ from homeassistant.const import Platform
 
 DOMAIN = "meteo_france"
 PLATFORMS = [Platform.SENSOR, Platform.WEATHER]
-COORDINATOR_FORECAST = "coordinator_forecast"
-COORDINATOR_RAIN = "coordinator_rain"
-COORDINATOR_ALERT = "coordinator_alert"
 ATTRIBUTION = "Data provided by Météo-France"
 MODEL = "Météo-France mobile API"
 MANUFACTURER = "Météo-France"
@@ -48,6 +45,7 @@ CONDITION_CLASSES: dict[str, list[str]] = {
         "Brouillard givrant",
         "Bancs de Brouillard",
         "Brouillard dense",
+        "Brouillard dense givrant",
     ],
     ATTR_CONDITION_HAIL: ["Risque de grêle", "Averses de grêle"],
     ATTR_CONDITION_LIGHTNING: ["Risque d'orages", "Orages", "Orage avec grêle"],
@@ -87,7 +85,11 @@ CONDITION_CLASSES: dict[str, list[str]] = {
         "Averses de neige faible",
         "Quelques flocons",
     ],
-    ATTR_CONDITION_SNOWY_RAINY: ["Pluie et neige", "Pluie verglaçante"],
+    ATTR_CONDITION_SNOWY_RAINY: [
+        "Pluie et neige",
+        "Pluie verglaçante",
+        "Averses de pluie et neige",
+    ],
     ATTR_CONDITION_SUNNY: ["Ensoleillé"],
     ATTR_CONDITION_WINDY: [],
     ATTR_CONDITION_WINDY_VARIANT: [],

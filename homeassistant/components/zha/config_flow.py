@@ -15,7 +15,7 @@ from typing import Any
 import voluptuous as vol
 from zha.application.const import RadioType
 import zigpy.backups
-from zigpy.config import CONF_DEVICE, CONF_DEVICE_PATH, CONF_NWK_TX_POWER
+from zigpy.config import CONF_DEVICE, CONF_DEVICE_PATH
 from zigpy.exceptions import CannotWriteNetworkSettings, DestructiveWriteNetworkSettings
 
 from homeassistant.components import onboarding, usb
@@ -26,7 +26,11 @@ from homeassistant.components.homeassistant_hardware.firmware_config_flow import
     ZigbeeFlowStrategy,
 )
 from homeassistant.components.homeassistant_yellow import hardware as yellow_hardware
-from homeassistant.components.usb import USBDevice, scan_serial_ports
+from homeassistant.components.usb import (
+    SerialDevice,
+    USBDevice,
+    async_scan_serial_ports,
+)
 from homeassistant.config_entries import (
     SOURCE_IGNORE,
     SOURCE_ZEROCONF,
@@ -103,6 +107,12 @@ ZEROCONF_PROPERTIES_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
+# USB devices to ignore in serial port selection (non-Zigbee devices)
+# Format: (manufacturer, description)
+IGNORED_USB_DEVICES = {
+    ("Nabu Casa", "ZWA-2"),
+}
+
 
 class OptionsMigrationIntent(StrEnum):
     """Zigbee options flow intents."""
@@ -128,10 +138,28 @@ def _format_backup_choice(
     return f"{dt_util.as_local(backup.backup_time).strftime('%c')} ({identifier})"
 
 
-async def list_serial_ports(hass: HomeAssistant) -> list[USBDevice]:
+def _format_serial_port_choice(
+    serial_port: USBDevice | SerialDevice, resolved_paths: dict[str, str]
+) -> str:
+    """Format a serial port selector entry into a line of text."""
+    text = resolved_paths[serial_port.device]
+
+    if serial_port.description:
+        text += f" - {serial_port.description}"
+
+    if serial_port.serial_number:
+        text += f", s/n: {serial_port.serial_number}"
+
+    if serial_port.manufacturer:
+        text += f" - {serial_port.manufacturer}"
+
+    return text
+
+
+async def list_serial_ports(hass: HomeAssistant) -> list[USBDevice | SerialDevice]:
     """List all serial ports, including the Yellow radio and the multi-PAN addon."""
-    ports: list[USBDevice] = []
-    ports.extend(await hass.async_add_executor_job(scan_serial_ports))
+    ports: list[USBDevice | SerialDevice] = []
+    ports.extend(await async_scan_serial_ports(hass))
 
     # Add useful info to the Yellow's serial port selection screen
     try:
@@ -141,10 +169,8 @@ async def list_serial_ports(hass: HomeAssistant) -> list[USBDevice]:
     else:
         # PySerial does not properly handle the Yellow's serial port with the CM5
         # so we manually include it
-        port = USBDevice(
+        port = SerialDevice(
             device="/dev/ttyAMA1",
-            vid="ffff",  # This is technically not a USB device
-            pid="ffff",
             serial_number=None,
             manufacturer="Nabu Casa",
             description="Yellow Zigbee module",
@@ -161,14 +187,12 @@ async def list_serial_ports(hass: HomeAssistant) -> list[USBDevice]:
 
         try:
             addon_info = await multipan_manager.async_get_addon_info()
-        except (AddonError, KeyError):
+        except AddonError, KeyError:
             addon_info = None
 
         if addon_info is not None and addon_info.state != AddonState.NOT_INSTALLED:
-            addon_port = USBDevice(
+            addon_port = SerialDevice(
                 device=silabs_multiprotocol_addon.get_zigbee_socket(),
-                vid="ffff",  # This is technically not a USB device
-                pid="ffff",
                 serial_number=None,
                 manufacturer="Nabu Casa",
                 description="Silicon Labs Multiprotocol add-on",
@@ -176,7 +200,12 @@ async def list_serial_ports(hass: HomeAssistant) -> list[USBDevice]:
 
             ports.append(addon_port)
 
-    return ports
+    # Filter out ignored USB devices
+    return [
+        port
+        for port in ports
+        if (port.manufacturer, port.description) not in IGNORED_USB_DEVICES
+    ]
 
 
 class BaseZhaFlow(ConfigEntryBaseFlow):
@@ -196,7 +225,6 @@ class BaseZhaFlow(ConfigEntryBaseFlow):
         self._restore_backup_task: asyncio.Task[None] | None = None
         self._reset_old_radio_task: asyncio.Task[None] | None = None
         self._form_network_task: asyncio.Task[None] | None = None
-        self._extra_network_config: dict[str, Any] = {}
 
         # Progress flow steps cannot abort so we need to store the abort reason and then
         # re-raise it in a dedicated step
@@ -252,11 +280,7 @@ class BaseZhaFlow(ConfigEntryBaseFlow):
             for p in ports
         }
 
-        list_of_ports = [
-            f"{resolved_paths[p.device]} - {p.description}{', s/n: ' + p.serial_number if p.serial_number else ''}"
-            + (f" - {p.manufacturer}" if p.manufacturer else "")
-            for p in ports
-        ]
+        list_of_ports = [_format_serial_port_choice(p, resolved_paths) for p in ports]
 
         if not list_of_ports:
             return await self.async_step_manual_pick_radio_type()
@@ -658,7 +682,7 @@ class BaseZhaFlow(ConfigEntryBaseFlow):
 
     async def _async_form_new_network(self) -> None:
         """Do the work of forming a new network."""
-        await self._radio_mgr.async_form_network(config=self._extra_network_config)
+        await self._radio_mgr.async_form_network()
         # Load the newly formed network settings to get the network info
         await self._radio_mgr.async_load_network_settings()
 
@@ -681,6 +705,13 @@ class BaseZhaFlow(ConfigEntryBaseFlow):
 
         try:
             await self._form_network_task
+        except Exception as exc:
+            _LOGGER.exception("Failed to form new network")
+            self._progress_error = AbortFlow(
+                reason="cannot_form_network",
+                description_placeholders={"error": str(exc)},
+            )
+            return self.async_show_progress_done(next_step_id="progress_failed")
         finally:
             self._form_network_task = None
 
@@ -1067,9 +1098,6 @@ class ZhaConfigFlowHandler(BaseZhaFlow, ConfigFlow, domain=DOMAIN):
         device_settings = discovery_data["port"]
         device_path = device_settings[CONF_DEVICE_PATH]
         self._flow_strategy = discovery_data.get("flow_strategy")
-
-        if "tx_power" in discovery_data:
-            self._extra_network_config[CONF_NWK_TX_POWER] = discovery_data["tx_power"]
 
         await self._set_unique_id_and_update_ignored_flow(
             unique_id=f"{name}_{radio_type.name}_{device_path}",

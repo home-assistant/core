@@ -9,9 +9,6 @@ from typing import Any, cast
 import voluptuous as vol
 
 from homeassistant.components.light import (
-    _DEPRECATED_ATTR_COLOR_TEMP,
-    _DEPRECATED_ATTR_MAX_MIREDS,
-    _DEPRECATED_ATTR_MIN_MIREDS,
     ATTR_BRIGHTNESS,
     ATTR_COLOR_MODE,
     ATTR_COLOR_TEMP_KELVIN,
@@ -127,15 +124,12 @@ MQTT_LIGHT_ATTRIBUTES_BLOCKED = frozenset(
     {
         ATTR_COLOR_MODE,
         ATTR_BRIGHTNESS,
-        _DEPRECATED_ATTR_COLOR_TEMP.value,
         ATTR_COLOR_TEMP_KELVIN,
         ATTR_EFFECT,
         ATTR_EFFECT_LIST,
         ATTR_HS_COLOR,
         ATTR_MAX_COLOR_TEMP_KELVIN,
-        _DEPRECATED_ATTR_MAX_MIREDS.value,
         ATTR_MIN_COLOR_TEMP_KELVIN,
-        _DEPRECATED_ATTR_MIN_MIREDS.value,
         ATTR_RGB_COLOR,
         ATTR_RGBW_COLOR,
         ATTR_RGBWW_COLOR,

@@ -44,7 +44,7 @@ async def test_options(
     """Test updating options."""
     result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "init"
 
     result = await hass.config_entries.options.async_configure(
@@ -54,7 +54,7 @@ async def test_options(
         },
     )
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == {
         CONF_LINE: ["Bakerloo", "Central"],
     }

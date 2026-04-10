@@ -72,7 +72,6 @@ class StarlinkUpdateCoordinator(DataUpdateCoordinator[StarlinkData]):
     def _get_starlink_data(self) -> StarlinkData:
         """Retrieve Starlink data."""
         context = self.channel_context
-        status = status_data(context)
         location = location_data(context)
         sleep = get_sleep_config(context)
         status, obstruction, alert = status_data(context)

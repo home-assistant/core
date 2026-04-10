@@ -1,4 +1,28 @@
 {
+  "common": {
+    "condition_behavior_name": "Condition passes if",
+    "trigger_behavior_name": "Trigger when"
+  },
+  "conditions": {
+    "is_off": {
+      "description": "Tests if one or more sirens are off.",
+      "fields": {
+        "behavior": {
+          "name": "[%key:component::siren::common::condition_behavior_name%]"
+        }
+      },
+      "name": "Siren is off"
+    },
+    "is_on": {
+      "description": "Tests if one or more sirens are on.",
+      "fields": {
+        "behavior": {
+          "name": "[%key:component::siren::common::condition_behavior_name%]"
+        }
+      },
+      "name": "Siren is on"
+    }
+  },
   "entity_component": {
     "_": {
       "name": "[%key:component::siren::title%]",
@@ -13,17 +37,32 @@
       }
     }
   },
+  "selector": {
+    "condition_behavior": {
+      "options": {
+        "all": "All",
+        "any": "Any"
+      }
+    },
+    "trigger_behavior": {
+      "options": {
+        "any": "Any",
+        "first": "First",
+        "last": "Last"
+      }
+    }
+  },
   "services": {
     "toggle": {
-      "description": "Toggles the siren on/off.",
-      "name": "[%key:common::action::toggle%]"
+      "description": "Toggles a siren on/off.",
+      "name": "Toggle siren"
     },
     "turn_off": {
-      "description": "Turns the siren off.",
-      "name": "[%key:common::action::turn_off%]"
+      "description": "Turns off a siren.",
+      "name": "Turn off siren"
     },
     "turn_on": {
-      "description": "Turns the siren on.",
+      "description": "Turns on a siren.",
       "fields": {
         "duration": {
           "description": "Number of seconds the sound is played. Must be supported by the integration.",
@@ -38,8 +77,28 @@
           "name": "Volume"
         }
       },
-      "name": "[%key:common::action::turn_on%]"
+      "name": "Turn on siren"
     }
   },
-  "title": "Siren"
+  "title": "Siren",
+  "triggers": {
+    "turned_off": {
+      "description": "Triggers after one or more sirens turn off.",
+      "fields": {
+        "behavior": {
+          "name": "[%key:component::siren::common::trigger_behavior_name%]"
+        }
+      },
+      "name": "Siren turned off"
+    },
+    "turned_on": {
+      "description": "Triggers after one or more sirens turn on.",
+      "fields": {
+        "behavior": {
+          "name": "[%key:component::siren::common::trigger_behavior_name%]"
+        }
+      },
+      "name": "Siren turned on"
+    }
+  }
 }

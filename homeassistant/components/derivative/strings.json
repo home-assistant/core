@@ -58,5 +58,11 @@
       }
     }
   },
+  "services": {
+    "reload": {
+      "description": "Reloads derivative sensors from the YAML-configuration.",
+      "name": "Reload derivative sensors"
+    }
+  },
   "title": "Derivative sensor"
 }

@@ -10,16 +10,19 @@ from pythonxbox.api.provider.gameclips.models import GameclipsResponse
 from pythonxbox.api.provider.people.models import PeopleResponse
 from pythonxbox.api.provider.screenshots.models import ScreenshotResponse
 from pythonxbox.api.provider.smartglass.models import (
+    InstalledPackagesList,
     SmartglassConsoleList,
     SmartglassConsoleStatus,
 )
 from pythonxbox.api.provider.titlehub.models import TitleHubResponse
 
 from homeassistant.components.application_credentials import (
+    DOMAIN as APPLICATION_CREDENTIALS_DOMAIN,
     ClientCredential,
     async_import_client_credential,
 )
 from homeassistant.components.xbox.const import DOMAIN
+from homeassistant.config_entries import ConfigSubentryData
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
@@ -32,7 +35,7 @@ CLIENT_SECRET = "5678"
 @pytest.fixture(autouse=True)
 async def setup_credentials(hass: HomeAssistant) -> None:
     """Fixture to setup credentials."""
-    assert await async_setup_component(hass, "application_credentials", {})
+    assert await async_setup_component(hass, APPLICATION_CREDENTIALS_DOMAIN, {})
     await async_import_client_credential(
         hass, DOMAIN, ClientCredential(CLIENT_ID, CLIENT_SECRET), "cloud"
     )
@@ -43,7 +46,7 @@ def mock_config_entry() -> MockConfigEntry:
     """Mock Xbox configuration entry."""
     return MockConfigEntry(
         domain=DOMAIN,
-        title="Home Assistant Cloud",
+        title="GSR Ae",
         data={
             "auth_implementation": "cloud",
             "token": {
@@ -58,6 +61,27 @@ def mock_config_entry() -> MockConfigEntry:
             },
         },
         unique_id="271958441785640",
+        subentries_data=[
+            ConfigSubentryData(
+                data={},
+                subentry_type="friend",
+                title="erics273",
+                unique_id="2533274913657542",
+            ),
+            ConfigSubentryData(
+                data={},
+                subentry_type="friend",
+                title="Ikken Hissatsuu",
+                unique_id="2533274838782903",
+            ),
+            ConfigSubentryData(
+                data={},
+                subentry_type="friend",
+                title="test",
+                unique_id="2533274838782904",
+            ),
+        ],
+        minor_version=3,
     )
 
 
@@ -70,8 +94,36 @@ def mock_authentication_manager() -> Generator[AsyncMock]:
             "homeassistant.components.xbox.config_flow.AuthenticationManager",
             autospec=True,
         ) as mock_client,
+        patch(
+            "homeassistant.components.xbox.AsyncConfigEntryAuth",
+            autospec=True,
+        ),
     ):
         client = mock_client.return_value
+
+        yield client
+
+
+@pytest.fixture(name="oauth2_session")
+def mock_oauth2_session() -> Generator[AsyncMock]:
+    """Mock OAuth2 session."""
+
+    with patch(
+        "homeassistant.components.xbox.OAuth2Session", autospec=True
+    ) as mock_client:
+        client = mock_client.return_value
+
+        client.token = {
+            "access_token": "1234567890",
+            "expires_at": 1760697327.7298331,
+            "expires_in": 3600,
+            "refresh_token": "0987654321",
+            "scope": "XboxLive.signin XboxLive.offline_access",
+            "service": "xbox",
+            "token_type": "bearer",
+            "user_id": "AAAAAAAAAAAAAAAAAAAAA",
+        }
+        client.valid_token = False
 
         yield client
 
@@ -87,6 +139,7 @@ def mock_xbox_live_client() -> Generator[AsyncMock]:
         patch(
             "homeassistant.components.xbox.config_flow.XboxLiveClient", new=mock_client
         ),
+        patch("homeassistant.components.xbox.XboxLiveClient", new=mock_client),
     ):
         client = mock_client.return_value
 
@@ -97,14 +150,20 @@ def mock_xbox_live_client() -> Generator[AsyncMock]:
         client.smartglass.get_console_status.return_value = SmartglassConsoleStatus(
             **load_json_object_fixture("smartglass_console_status.json", DOMAIN)
         )
+        client.smartglass.get_installed_apps.return_value = InstalledPackagesList(
+            **load_json_object_fixture("smartglass_installed_applications.json", DOMAIN)
+        )
 
         client.catalog = AsyncMock()
         client.catalog.get_product_from_alternate_id.return_value = CatalogResponse(
             **load_json_object_fixture("catalog_product_lookup.json", DOMAIN)
         )
+        client.catalog.get_products.return_value = CatalogResponse(
+            **load_json_object_fixture("catalog_product_lookup.json", DOMAIN)
+        )
 
         client.people = AsyncMock()
-        client.people.get_friends_by_xuid.return_value = PeopleResponse(
+        client.people.get_friend_by_xuid.return_value = PeopleResponse(
             **load_json_object_fixture("people_batch.json", DOMAIN)
         )
         client.people.get_friends_own.return_value = PeopleResponse(

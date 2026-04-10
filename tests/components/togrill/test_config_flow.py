@@ -42,6 +42,7 @@ async def test_user_selection(
         "address": TOGRILL_SERVICE_INFO.address,
         "model": "Pro-05",
         "probe_count": 0,
+        "has_ambient": False,
     }
     assert result["title"] == "Pro-05"
     assert result["result"].unique_id == TOGRILL_SERVICE_INFO.address
@@ -176,6 +177,7 @@ async def test_bluetooth(
         "address": TOGRILL_SERVICE_INFO.address,
         "model": "Pro-05",
         "probe_count": 0,
+        "has_ambient": False,
     }
     assert result["title"] == "Pro-05"
     assert result["result"].unique_id == TOGRILL_SERVICE_INFO.address

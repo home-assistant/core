@@ -77,7 +77,6 @@ async def test_entities_not_created_for_device(
         ("HWE-P1", "select.device_battery_group_mode"),
     ],
 )
-@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_select_entity_snapshots(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
@@ -115,7 +114,6 @@ async def test_select_entity_snapshots(
         ("HWE-P1", "select.device_battery_group_mode", "zero", Batteries.Mode.ZERO),
     ],
 )
-@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_select_set_option(
     hass: HomeAssistant,
     mock_homewizardenergy: MagicMock,
@@ -144,7 +142,6 @@ async def test_select_set_option(
         ("HWE-P1", "select.device_battery_group_mode", "to_full"),
     ],
 )
-@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_select_request_error(
     hass: HomeAssistant,
     mock_homewizardenergy: MagicMock,
@@ -155,7 +152,7 @@ async def test_select_request_error(
     mock_homewizardenergy.batteries.side_effect = RequestError
     with pytest.raises(
         HomeAssistantError,
-        match=r"^An error occurred while communicating with your HomeWizard Energy device$",
+        match=r"^An error occurred while communicating with your HomeWizard device$",
     ):
         await hass.services.async_call(
             SELECT_DOMAIN,
@@ -174,7 +171,6 @@ async def test_select_request_error(
         ("HWE-P1", "select.device_battery_group_mode", "to_full"),
     ],
 )
-@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_select_unauthorized_error(
     hass: HomeAssistant,
     mock_homewizardenergy: MagicMock,
@@ -206,7 +202,6 @@ async def test_select_unauthorized_error(
         ("select.device_battery_group_mode", "combined"),
     ],
 )
-@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_select_unreachable(
     hass: HomeAssistant,
     mock_homewizardenergy: MagicMock,
@@ -230,7 +225,6 @@ async def test_select_unreachable(
         ("HWE-P1", "select.device_battery_group_mode"),
     ],
 )
-@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_select_multiple_state_changes(
     hass: HomeAssistant,
     mock_homewizardenergy: MagicMock,
@@ -275,7 +269,7 @@ async def test_select_multiple_state_changes(
     ("device_fixture", "entity_ids"),
     [
         (
-            "HWE-P1",
+            "HWE-P1-no-batteries",
             [
                 "select.device_battery_group_mode",
             ],

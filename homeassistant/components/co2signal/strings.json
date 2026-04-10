@@ -5,7 +5,7 @@
     },
     "error": {
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
-      "no_data": "No data is available for the location you have selected.",
+      "no_data": "No data is available for the location or zone you have selected.",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "step": {
@@ -17,20 +17,20 @@
       },
       "country": {
         "data": {
-          "country_code": "Country code"
+          "country_code": "Zone key"
         }
       },
       "reauth_confirm": {
         "data": {
-          "api_key": "[%key:common::config_flow::data::access_token%]"
+          "api_key": "[%key:common::config_flow::data::api_key%]"
         }
       },
       "user": {
         "data": {
-          "api_key": "[%key:common::config_flow::data::access_token%]",
+          "api_key": "[%key:common::config_flow::data::api_key%]",
           "location": "[%key:common::config_flow::data::location%]"
         },
-        "description": "Visit the [Electricity Maps page]({register_link}) to request a token."
+        "description": "Visit the [Electricity Maps app]({register_link}) to request an API key."
       }
     }
   },
@@ -40,7 +40,7 @@
         "name": "CO2 intensity",
         "state_attributes": {
           "country_code": {
-            "name": "Country code"
+            "name": "Zone key"
           }
         }
       },
@@ -58,7 +58,7 @@
     "location": {
       "options": {
         "specify_coordinates": "Specify coordinates",
-        "specify_country_code": "Specify country code",
+        "specify_country_code": "Specify zone key",
         "use_home_location": "Use home location"
       }
     }

@@ -9,6 +9,9 @@
       }
     },
     "number": {
+      "segment_speed": {
+        "default": "mdi:speedometer"
+      },
       "speed": {
         "default": "mdi:speedometer"
       }

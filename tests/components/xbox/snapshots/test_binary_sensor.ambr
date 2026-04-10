@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_binary_sensors[binary_sensor.erics273-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -20,6 +21,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -54,8 +56,9 @@
 # ---
 # name: test_binary_sensors[binary_sensor.erics273_in_game-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -73,6 +76,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'In game',
     'options': dict({
     }),
     'original_device_class': None,
@@ -102,8 +106,9 @@
 # ---
 # name: test_binary_sensors[binary_sensor.erics273_subscribed_to_xbox_game_pass-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -121,6 +126,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Subscribed to Xbox Game Pass',
     'options': dict({
     }),
     'original_device_class': None,
@@ -150,8 +156,9 @@
 # ---
 # name: test_binary_sensors[binary_sensor.gsr_ae-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -169,6 +176,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -203,8 +211,9 @@
 # ---
 # name: test_binary_sensors[binary_sensor.gsr_ae_in_game-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -222,6 +231,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'In game',
     'options': dict({
     }),
     'original_device_class': None,
@@ -251,8 +261,9 @@
 # ---
 # name: test_binary_sensors[binary_sensor.gsr_ae_subscribed_to_xbox_game_pass-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -270,6 +281,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Subscribed to Xbox Game Pass',
     'options': dict({
     }),
     'original_device_class': None,
@@ -299,8 +311,9 @@
 # ---
 # name: test_binary_sensors[binary_sensor.ikken_hissatsuu-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -318,6 +331,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -352,8 +366,9 @@
 # ---
 # name: test_binary_sensors[binary_sensor.ikken_hissatsuu_in_game-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -371,6 +386,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'In game',
     'options': dict({
     }),
     'original_device_class': None,
@@ -400,8 +416,9 @@
 # ---
 # name: test_binary_sensors[binary_sensor.ikken_hissatsuu_subscribed_to_xbox_game_pass-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -419,6 +436,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Subscribed to Xbox Game Pass',
     'options': dict({
     }),
     'original_device_class': None,

@@ -88,3 +88,12 @@ async def init_integration(
     await hass.async_block_till_done()
 
     return mock_config_entry
+
+
+@pytest.fixture
+def mock_setup_entry() -> Generator[MagicMock]:
+    """Mock async_setup_entry."""
+    with patch(
+        "homeassistant.components.srp_energy.async_setup_entry", return_value=True
+    ) as mock_setup_entry:
+        yield mock_setup_entry

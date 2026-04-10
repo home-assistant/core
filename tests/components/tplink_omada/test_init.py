@@ -2,7 +2,15 @@
 
 from unittest.mock import MagicMock
 
+import pytest
+from tplink_omada_client.exceptions import (
+    ConnectionFailed,
+    OmadaClientException,
+    UnsupportedControllerVersion,
+)
+
 from homeassistant.components.tplink_omada.const import DOMAIN
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
@@ -15,6 +23,41 @@ MOCK_ENTRY_DATA = {
     "username": "test-username",
     "password": "test-password",
 }
+
+
+@pytest.mark.parametrize(
+    ("side_effect", "entry_state"),
+    [
+        (
+            UnsupportedControllerVersion("4.0.0"),
+            ConfigEntryState.SETUP_ERROR,
+        ),
+        (
+            ConnectionFailed(),
+            ConfigEntryState.SETUP_RETRY,
+        ),
+        (
+            OmadaClientException(),
+            ConfigEntryState.SETUP_RETRY,
+        ),
+    ],
+)
+async def test_setup_entry_login_failed_raises_configentryauthfailed(
+    hass: HomeAssistant,
+    mock_omada_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    side_effect: OmadaClientException,
+    entry_state: ConfigEntryState,
+) -> None:
+    """Test setup entry with login failed raises ConfigEntryAuthFailed."""
+    mock_omada_client.login.side_effect = side_effect
+
+    mock_config_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state == entry_state
 
 
 async def test_missing_devices_removed_at_startup(

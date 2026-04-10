@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_entities[number][number.peblar_ev_charger_charge_limit-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 16,
@@ -25,6 +26,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Charge limit',
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.CURRENT: 'current'>,

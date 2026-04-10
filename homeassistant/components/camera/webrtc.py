@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 import asyncio
-from collections.abc import Awaitable, Callable, Iterable
+from collections.abc import Awaitable, Callable
 from dataclasses import asdict, dataclass, field
 from functools import cache, partial, wraps
 import logging
@@ -12,12 +12,7 @@ from typing import TYPE_CHECKING, Any
 
 from mashumaro import MissingField
 import voluptuous as vol
-from webrtc_models import (
-    RTCConfiguration,
-    RTCIceCandidate,
-    RTCIceCandidateInit,
-    RTCIceServer,
-)
+from webrtc_models import RTCConfiguration, RTCIceCandidate, RTCIceCandidateInit
 
 from homeassistant.components import websocket_api
 from homeassistant.core import HomeAssistant, callback
@@ -37,9 +32,6 @@ _LOGGER = logging.getLogger(__name__)
 
 DATA_WEBRTC_PROVIDERS: HassKey[set[CameraWebRTCProvider]] = HassKey(
     "camera_webrtc_providers"
-)
-DATA_ICE_SERVERS: HassKey[list[Callable[[], Iterable[RTCIceServer]]]] = HassKey(
-    "camera_webrtc_ice_servers"
 )
 
 
@@ -367,21 +359,3 @@ async def async_get_supported_provider(
             return provider
 
     return None
-
-
-@callback
-def async_register_ice_servers(
-    hass: HomeAssistant,
-    get_ice_server_fn: Callable[[], Iterable[RTCIceServer]],
-) -> Callable[[], None]:
-    """Register a ICE server.
-
-    The registering integration is responsible to implement caching if needed.
-    """
-    servers = hass.data.setdefault(DATA_ICE_SERVERS, [])
-
-    def remove() -> None:
-        servers.remove(get_ice_server_fn)
-
-    servers.append(get_ice_server_fn)
-    return remove

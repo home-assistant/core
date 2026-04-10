@@ -4,9 +4,15 @@ from __future__ import annotations
 
 from datetime import timedelta
 from enum import StrEnum, unique
-from typing import Final
+from typing import TYPE_CHECKING, Final
+
+from homeassistant.util.hass_dict import HassKey
+
+if TYPE_CHECKING:
+    from . import EvoData
 
 DOMAIN: Final = "evohome"
+EVOHOME_DATA: HassKey[EvoData] = HassKey(DOMAIN)
 
 STORAGE_VER: Final = 1
 STORAGE_KEY: Final = DOMAIN
@@ -22,7 +28,6 @@ ATTR_PERIOD: Final = "period"  # number of days
 ATTR_DURATION: Final = "duration"  # number of minutes, <24h
 
 ATTR_SETPOINT: Final = "setpoint"
-ATTR_DURATION_UNTIL: Final = "duration"
 
 
 @unique
@@ -33,4 +38,4 @@ class EvoService(StrEnum):
     SET_SYSTEM_MODE = "set_system_mode"
     RESET_SYSTEM = "reset_system"
     SET_ZONE_OVERRIDE = "set_zone_override"
-    RESET_ZONE_OVERRIDE = "clear_zone_override"
+    CLEAR_ZONE_OVERRIDE = "clear_zone_override"

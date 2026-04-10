@@ -1,9 +1,11 @@
 {
   "config": {
-    "error": {
-      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "no_selection": "Please select at least one city/county",
+    "abort": {
+      "no_fetch": "Cannot connect to NINA service to fetch city or counties. Please try again later.",
       "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "error": {
+      "no_selection": "Please select at least one city/county"
     },
     "step": {
       "user": {
@@ -43,11 +45,52 @@
       }
     }
   },
+  "entity": {
+    "binary_sensor": {
+      "warning": {
+        "name": "Warning {slot_id}"
+      }
+    },
+    "sensor": {
+      "affected_areas": {
+        "name": "Affected areas {slot_id}"
+      },
+      "expires": {
+        "name": "Expires {slot_id}"
+      },
+      "headline": {
+        "name": "Headline {slot_id}"
+      },
+      "more_info_url": {
+        "name": "More information URL {slot_id}"
+      },
+      "sender": {
+        "name": "Sender {slot_id}"
+      },
+      "sent": {
+        "name": "Sent {slot_id}"
+      },
+      "severity": {
+        "name": "Severity {slot_id}",
+        "state": {
+          "extreme": "Extreme",
+          "minor": "Minor",
+          "moderate": "Moderate",
+          "severe": "Severe"
+        }
+      },
+      "start": {
+        "name": "Start {slot_id}"
+      }
+    }
+  },
   "options": {
-    "error": {
-      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "no_selection": "[%key:component::nina::config::error::no_selection%]",
+    "abort": {
+      "no_fetch": "[%key:component::nina::config::abort::no_fetch%]",
       "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "error": {
+      "no_selection": "[%key:component::nina::config::error::no_selection%]"
     },
     "step": {
       "init": {

@@ -19,6 +19,7 @@ import uuid
 import pytest
 from serial.tools.list_ports_common import ListPortInfo
 from zha.application.const import RadioType
+from zigpy.application import ControllerApplication
 from zigpy.backups import BackupManager
 import zigpy.config
 from zigpy.config import CONF_DEVICE, CONF_DEVICE_PATH, SCHEMA_DEVICE
@@ -97,9 +98,11 @@ def mock_multipan_platform():
 @pytest.fixture(autouse=True)
 def mock_app() -> Generator[AsyncMock]:
     """Mock zigpy app interface."""
-    mock_app = AsyncMock()
+    mock_app = create_autospec(ControllerApplication, instance=True)
     mock_app.backups = create_autospec(BackupManager, instance=True)
     mock_app.backups.backups = []
+
+    mock_app.state = MagicMock()
     mock_app.state.network_info.extended_pan_id = zigpy.types.EUI64.convert(
         "AABBCCDDEE000000"
     )
@@ -1726,7 +1729,7 @@ def advanced_pick_radio(
             user_input={"next_step_id": config_flow.SETUP_STRATEGY_ADVANCED},
         )
 
-        assert advanced_strategy_result["type"] == FlowResultType.MENU
+        assert advanced_strategy_result["type"] is FlowResultType.MENU
         assert advanced_strategy_result["step_id"] == "choose_formation_strategy"
 
         return advanced_strategy_result
@@ -1808,6 +1811,36 @@ async def test_formation_strategy_form_initial_network(
     mock_app.form_network.assert_called_once()
 
     assert result2["type"] is FlowResultType.CREATE_ENTRY
+
+
+async def test_formation_strategy_form_initial_network_failure(
+    advanced_pick_radio: RadioPicker, mock_app: AsyncMock, hass: HomeAssistant
+) -> None:
+    """Test forming a new network that fails with an exception."""
+    # Mock form_network to raise an exception
+    mock_app.form_network.side_effect = DelayedAsyncMock(
+        side_effect=Exception("Network formation failed")
+    )
+
+    result = await advanced_pick_radio(RadioType.ezsp)
+    result_form = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={"next_step_id": config_flow.FORMATION_FORM_NEW_NETWORK},
+    )
+
+    result2 = await consume_progress_flow(
+        hass,
+        flow_id=result_form["flow_id"],
+        valid_step_ids=("form_new_network",),
+    )
+    await hass.async_block_till_done()
+
+    assert result2["type"] is FlowResultType.ABORT
+    assert result2["reason"] == "cannot_form_network"
+    assert "Network formation failed" in result2["description_placeholders"]["error"]
+
+    # Verify form_network was called
+    mock_app.form_network.assert_called_once()
 
 
 @patch(f"zigpy_znp.{PROBE_FUNCTION_PATH}", AsyncMock(return_value=True))
@@ -2811,7 +2844,7 @@ async def test_config_flow_port_yellow_port_name(
     with (
         patch("homeassistant.components.zha.config_flow.yellow_hardware.async_info"),
         patch(
-            "homeassistant.components.zha.config_flow.scan_serial_ports",
+            "homeassistant.components.zha.config_flow.async_scan_serial_ports",
             return_value=[port],
         ),
     ):
@@ -2833,7 +2866,7 @@ async def test_config_flow_ports_no_hassio(hass: HomeAssistant) -> None:
     with (
         patch("homeassistant.components.zha.config_flow.is_hassio", return_value=False),
         patch(
-            "homeassistant.components.zha.config_flow.scan_serial_ports",
+            "homeassistant.components.zha.config_flow.async_scan_serial_ports",
             return_value=[],
         ),
     ):
@@ -2851,7 +2884,7 @@ async def test_config_flow_port_multiprotocol_port_name(hass: HomeAssistant) -> 
             "homeassistant.components.hassio.addon_manager.AddonManager.async_get_addon_info"
         ) as async_get_addon_info,
         patch(
-            "homeassistant.components.zha.config_flow.scan_serial_ports",
+            "homeassistant.components.zha.config_flow.async_scan_serial_ports",
             return_value=[],
         ),
     ):
@@ -2876,13 +2909,99 @@ async def test_config_flow_port_no_multiprotocol(hass: HomeAssistant) -> None:
             side_effect=AddonError,
         ),
         patch(
-            "homeassistant.components.zha.config_flow.scan_serial_ports",
+            "homeassistant.components.zha.config_flow.async_scan_serial_ports",
             return_value=[],
         ),
     ):
         ports = await config_flow.list_serial_ports(hass)
 
     assert ports == []
+
+
+async def test_list_serial_ports_ignored_devices(hass: HomeAssistant) -> None:
+    """Test that list_serial_ports filters out ignored non-Zigbee devices."""
+    mock_ports = [
+        USBDevice(
+            device="/dev/ttyUSB0",
+            vid="303A",
+            pid="4001",
+            serial_number="1234",
+            manufacturer="Nabu Casa",
+            description="ZWA-2",
+        ),
+        USBDevice(
+            device="/dev/ttyUSB1",
+            vid="303A",
+            pid="4001",
+            serial_number="1235",
+            manufacturer="Nabu Casa",
+            description="ZBT-2",
+        ),
+        USBDevice(
+            device="/dev/ttyUSB2",
+            vid="10C4",
+            pid="EA60",
+            serial_number="1236",
+            manufacturer="Nabu Casa",
+            description="Home Assistant Connect ZBT-1",
+        ),
+        USBDevice(
+            device="/dev/ttyUSB3",
+            vid="10C4",
+            pid="EA60",
+            serial_number="1237",
+            manufacturer="Nabu Casa",
+            description="SkyConnect v1.0",
+        ),
+        USBDevice(
+            device="/dev/ttyUSB4",
+            vid="1234",
+            pid="5678",
+            serial_number="1238",
+            manufacturer="Another Manufacturer",
+            description="Zigbee USB Adapter",
+        ),
+        USBDevice(
+            device="/dev/ttyUSB5",
+            vid="1234",
+            pid="5678",
+            serial_number=None,
+            manufacturer=None,
+            description=None,
+        ),
+    ]
+
+    with (
+        patch("homeassistant.components.zha.config_flow.is_hassio", return_value=False),
+        patch(
+            "homeassistant.components.zha.config_flow.async_scan_serial_ports",
+            return_value=mock_ports,
+        ),
+    ):
+        ports = await config_flow.list_serial_ports(hass)
+
+    # ZWA-2 should be filtered out, others should remain
+    assert len(ports) == 5
+
+    assert ports[0].device == "/dev/ttyUSB1"
+    assert ports[0].manufacturer == "Nabu Casa"
+    assert ports[0].description == "ZBT-2"
+
+    assert ports[1].device == "/dev/ttyUSB2"
+    assert ports[1].manufacturer == "Nabu Casa"
+    assert ports[1].description == "Home Assistant Connect ZBT-1"
+
+    assert ports[2].device == "/dev/ttyUSB3"
+    assert ports[2].manufacturer == "Nabu Casa"
+    assert ports[2].description == "SkyConnect v1.0"
+
+    assert ports[3].device == "/dev/ttyUSB4"
+    assert ports[3].manufacturer == "Another Manufacturer"
+    assert ports[3].description == "Zigbee USB Adapter"
+
+    assert ports[4].device == "/dev/ttyUSB5"
+    assert ports[4].manufacturer is None
+    assert ports[4].description is None
 
 
 @patch(

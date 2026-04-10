@@ -1,0 +1,22 @@
+{
+  "endpoint": "https://apigw.tuyaus.com",
+  "mqtt_connected": true,
+  "disabled_by": null,
+  "disabled_polling": false,
+  "name": "LCDÕ▒Åµ©®µ╣┐Õ║ªõ©çÞâ¢ÚüÑµÄºÕÖ¿",
+  "category": "wsdykq",
+  "product_id": "ay30hrndaogxclh0",
+  "product_name": "LCDÕ▒Åµ©®µ╣┐Õ║ªõ©çÞâ¢ÚüÑµÄºÕÖ¿",
+  "online": false,
+  "sub": false,
+  "time_zone": "-03:00",
+  "active_time": "2025-11-16T17:28:06+00:00",
+  "create_time": "2025-11-16T17:28:06+00:00",
+  "update_time": "2025-11-16T17:28:06+00:00",
+  "function": {},
+  "status_range": {},
+  "status": {},
+  "set_up": false,
+  "support_local": true,
+  "local_strategy": {}
+}
