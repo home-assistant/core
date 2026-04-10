@@ -57,7 +57,6 @@ async def async_setup_entry(
 class ZWaveMeRGB(ZWaveMeEntity, LightEntity):
     """Representation of a ZWaveMe light."""
 
-
     def __init__(
         self,
         controller: ZWaveMeController,
