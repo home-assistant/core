@@ -1,16 +1,21 @@
 """Test updating sensors in the victron_ble integration."""
 
+import json
 import time
 
 from home_assistant_bluetooth import BluetoothServiceInfo
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.components.bluetooth.passive_update_processor import (
+    serialize_entity_description,
+)
 from homeassistant.components.victron_ble.const import (
     DOMAIN,
     REAUTH_AFTER_FAILURES,
     VICTRON_IDENTIFIER,
 )
+from homeassistant.components.victron_ble.sensor import SENSOR_DESCRIPTIONS
 from homeassistant.const import CONF_ACCESS_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -58,6 +63,26 @@ SOLAR_CHARGER_ERROR_PAYLOADS = {
     # ChargerError.NETWORK_A -> mapped to state "network"
     "network": "100242a0016207adcef77b605d7e0ee21b24df5c0404040410951e81ea42b0492e356ad5ed8f7eb7",
 }
+
+
+def test_sensor_descriptions_are_json_serializable() -> None:
+    """Ensure entity descriptions contain no non-JSON-serializable fields.
+
+    The passive Bluetooth processor persists entity descriptions to storage
+    between HA restarts via serialize_entity_description(). Fields that are
+    Python callables (e.g. a value_fn lambda) cannot be serialized and cause
+    repeated 'Bad data' errors in the homeassistant.helpers.storage logger.
+
+    Regression test for https://github.com/home-assistant/core/issues/167224
+    """
+    for key, description in SENSOR_DESCRIPTIONS.items():
+        serialized = serialize_entity_description(description)
+        try:
+            json.dumps(serialized)
+        except TypeError as err:
+            raise AssertionError(
+                f"SENSOR_DESCRIPTIONS[{key!r}] produced a non-serializable value: {err}"
+            ) from err
 
 
 @pytest.mark.usefixtures("enable_bluetooth")
