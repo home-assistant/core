@@ -420,6 +420,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/dsmr_reader/ @sorted-bits @glodenox @erwindouna
 /homeassistant/components/duckdns/ @tr4nt0r
 /tests/components/duckdns/ @tr4nt0r
+/homeassistant/components/duco/ @ronaldvdmeer
+/tests/components/duco/ @ronaldvdmeer
 /homeassistant/components/duotecno/ @cereal2nd
 /tests/components/duotecno/ @cereal2nd
 /homeassistant/components/dwd_weather_warnings/ @runningman84 @stephan192
@@ -1265,8 +1267,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/openuv/ @bachya
 /homeassistant/components/openweathermap/ @fabaff @freekode @nzapponi @wittypluck
 /tests/components/openweathermap/ @fabaff @freekode @nzapponi @wittypluck
-/homeassistant/components/opnsense/ @mtreinish
-/tests/components/opnsense/ @mtreinish
+/homeassistant/components/opnsense/ @HarlemSquirrel @Snuffy2
+/tests/components/opnsense/ @HarlemSquirrel @Snuffy2
 /homeassistant/components/opower/ @tronikos
 /tests/components/opower/ @tronikos
 /homeassistant/components/oralb/ @bdraco @Lash-L
@@ -1877,6 +1879,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/vicare/ @CFenner
 /homeassistant/components/victron_ble/ @rajlaud
 /tests/components/victron_ble/ @rajlaud
+/homeassistant/components/victron_gx/ @tomer-w
+/tests/components/victron_gx/ @tomer-w
 /homeassistant/components/victron_remote_monitoring/ @AndyTempel
 /tests/components/victron_remote_monitoring/ @AndyTempel
 /homeassistant/components/vilfo/ @ManneW

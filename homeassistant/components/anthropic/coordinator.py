@@ -2,7 +2,8 @@
 
 from __future__ import annotations
 
-from datetime import timedelta
+import datetime
+import re
 
 import anthropic
 
@@ -15,13 +16,28 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 from .const import DOMAIN, LOGGER
 
-UPDATE_INTERVAL_CONNECTED = timedelta(hours=12)
-UPDATE_INTERVAL_DISCONNECTED = timedelta(minutes=1)
+UPDATE_INTERVAL_CONNECTED = datetime.timedelta(hours=12)
+UPDATE_INTERVAL_DISCONNECTED = datetime.timedelta(minutes=1)
 
 type AnthropicConfigEntry = ConfigEntry[AnthropicCoordinator]
 
 
-class AnthropicCoordinator(DataUpdateCoordinator[None]):
+_model_short_form = re.compile(r"[^\d]-\d$")
+
+
+@callback
+def model_alias(model_id: str) -> str:
+    """Resolve alias from versioned model name."""
+    if model_id == "claude-3-haiku-20240307" or model_id.endswith("-preview"):
+        return model_id
+    if model_id[-2:-1] != "-":
+        model_id = model_id[:-9]
+    if _model_short_form.search(model_id):
+        return model_id + "-0"
+    return model_id
+
+
+class AnthropicCoordinator(DataUpdateCoordinator[list[anthropic.types.ModelInfo]]):
     """DataUpdateCoordinator which uses different intervals after successful and unsuccessful updates."""
 
     client: anthropic.AsyncAnthropic
@@ -42,16 +58,16 @@ class AnthropicCoordinator(DataUpdateCoordinator[None]):
         )
 
     @callback
-    def async_set_updated_data(self, data: None) -> None:
+    def async_set_updated_data(self, data: list[anthropic.types.ModelInfo]) -> None:
         """Manually update data, notify listeners and update refresh interval."""
         self.update_interval = UPDATE_INTERVAL_CONNECTED
         super().async_set_updated_data(data)
 
-    async def async_update_data(self) -> None:
+    async def async_update_data(self) -> list[anthropic.types.ModelInfo]:
         """Fetch data from the API."""
         try:
             self.update_interval = UPDATE_INTERVAL_DISCONNECTED
-            await self.client.models.list(timeout=10.0)
+            result = await self.client.models.list(timeout=10.0)
             self.update_interval = UPDATE_INTERVAL_CONNECTED
         except anthropic.APITimeoutError as err:
             raise TimeoutError(err.message or str(err)) from err
@@ -67,6 +83,7 @@ class AnthropicCoordinator(DataUpdateCoordinator[None]):
                 translation_key="api_error",
                 translation_placeholders={"message": err.message},
             ) from err
+        return result.data
 
     def mark_connection_error(self) -> None:
         """Mark the connection as having an error and reschedule background check."""
@@ -76,3 +93,23 @@ class AnthropicCoordinator(DataUpdateCoordinator[None]):
             self.async_update_listeners()
             if self._listeners and not self.hass.is_stopping:
                 self._schedule_refresh()
+
+    @callback
+    def get_model_info(self, model_id: str) -> anthropic.types.ModelInfo:
+        """Get model info for a given model ID."""
+        # First try: exact name match
+        for model in self.data or []:
+            if model.id == model_id:
+                return model
+        # Second try: match by alias
+        alias = model_alias(model_id)
+        for model in self.data or []:
+            if model_alias(model.id) == alias:
+                return model
+        # Model not found, return safe defaults
+        return anthropic.types.ModelInfo(
+            type="model",
+            id=model_id,
+            created_at=datetime.datetime(1970, 1, 1, tzinfo=datetime.UTC),
+            display_name=model_id,
+        )
