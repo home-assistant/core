@@ -64,7 +64,6 @@ async def test_victron_binary_sensor(
         f"N/{MOCK_INSTALLATION_ID}/evcharger/0/Connected",
         '{"value": 0}',
     )
-    await finalize_injection(victron_hub)
     await hass.async_block_till_done()
 
     state = hass.states.get(entity.entity_id)

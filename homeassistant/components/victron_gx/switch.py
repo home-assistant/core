@@ -1,6 +1,5 @@
 """Support for Victron GX switches."""
 
-import logging
 from typing import TYPE_CHECKING, Any
 
 from victron_mqtt import (
@@ -20,9 +19,7 @@ from .const import BINARY_SENSOR_OFF_ID, BINARY_SENSOR_ON_ID
 from .entity import VictronBaseEntity
 from .hub import VictronGxConfigEntry
 
-_LOGGER = logging.getLogger(__name__)
-
-PARALLEL_UPDATES = 0  # There is no I/O in the entity itself.
+PARALLEL_UPDATES = 0
 
 
 async def async_setup_entry(
@@ -74,12 +71,10 @@ class VictronSwitch(VictronBaseEntity, SwitchEntity):
         """Turn the switch on."""
         if TYPE_CHECKING:
             assert isinstance(self._metric, VictronVenusWritableMetric)
-        _LOGGER.debug("Turning on switch: %s", self._attr_unique_id)
         self._metric.set(BINARY_SENSOR_ON_ID)
 
     def turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
         if TYPE_CHECKING:
             assert isinstance(self._metric, VictronVenusWritableMetric)
-        _LOGGER.debug("Turning off switch: %s", self._attr_unique_id)
         self._metric.set(BINARY_SENSOR_OFF_ID)

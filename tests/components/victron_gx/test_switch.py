@@ -5,7 +5,11 @@ from __future__ import annotations
 from victron_mqtt import Hub as VictronVenusHub
 from victron_mqtt.testing import finalize_injection, inject_message
 
-from homeassistant.components.victron_gx.const import DOMAIN
+from homeassistant.components.victron_gx.const import (
+    BINARY_SENSOR_OFF_ID,
+    BINARY_SENSOR_ON_ID,
+    DOMAIN,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
@@ -43,7 +47,7 @@ async def test_victron_switch(
 
     state = hass.states.get(entity.entity_id)
     assert state is not None
-    assert state.state == "on"
+    assert state.state == BINARY_SENSOR_ON_ID
 
     # Verify device info was registered correctly
     device = device_registry.async_get_device(
@@ -63,7 +67,7 @@ async def test_victron_switch(
 
     state = hass.states.get(entity.entity_id)
     assert state is not None
-    assert state.state == "off"
+    assert state.state == BINARY_SENSOR_OFF_ID
 
 
 async def test_victron_switch_actions(
@@ -94,7 +98,7 @@ async def test_victron_switch_actions(
     await hass.async_block_till_done()
     state = hass.states.get(entity_id)
     assert state is not None
-    assert state.state == "on"
+    assert state.state == BINARY_SENSOR_ON_ID
 
     await hass.services.async_call(
         "switch", "turn_off", {"entity_id": entity_id}, blocking=True
@@ -102,4 +106,4 @@ async def test_victron_switch_actions(
     await hass.async_block_till_done()
     state = hass.states.get(entity_id)
     assert state is not None
-    assert state.state == "off"
+    assert state.state == BINARY_SENSOR_OFF_ID
