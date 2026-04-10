@@ -458,6 +458,7 @@ DISCOVERY_SCHEMAS = [
         ),
         vendor_id=(4447,),
         product_id=(8194,),
+        allow_multi=True,
     ),
     MatterDiscoverySchema(
         platform=Platform.SELECT,
@@ -488,6 +489,7 @@ DISCOVERY_SCHEMAS = [
             8197,
             8201,
         ),
+        allow_multi=True,
     ),
     MatterDiscoverySchema(
         platform=Platform.SELECT,
@@ -514,6 +516,7 @@ DISCOVERY_SCHEMAS = [
         ),
         vendor_id=(4619,),
         product_id=(4097,),
+        allow_multi=True,
     ),
     MatterDiscoverySchema(
         platform=Platform.SELECT,
