@@ -10,9 +10,6 @@
       "request": "launch",
       "module": "homeassistant",
       "justMyCode": false,
-      "env": {
-        "DYLD_LIBRARY_PATH": "${workspaceFolder}/.local-tools/libjpeg-turbo/opt/libjpeg-turbo/lib"
-      },
       "args": [
         "--debug",
         "-c",
@@ -26,9 +23,6 @@
       "request": "launch",
       "module": "homeassistant",
       "justMyCode": false,
-      "env": {
-        "DYLD_LIBRARY_PATH": "${workspaceFolder}/.local-tools/libjpeg-turbo/opt/libjpeg-turbo/lib"
-      },
       "args": [
         "--debug",
         "-c",
