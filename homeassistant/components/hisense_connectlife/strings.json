@@ -20,6 +20,7 @@
   },
   "options": {
     "error": {
+      "no_coordinator": "Configuration entry not ready yet. Please try again later.",
       "refresh_failed": "Failed to refresh device list",
       "token_refresh_failed": "Failed to refresh token"
     },
