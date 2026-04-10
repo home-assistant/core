@@ -9,5 +9,6 @@
   "integration_type": "hub",
   "iot_class": "local_push",
   "requirements": ["matter-python-client==0.4.1"],
+  "version": "2026.4.0-dev",
   "zeroconf": ["_matter._tcp.local.", "_matterc._udp.local."]
 }

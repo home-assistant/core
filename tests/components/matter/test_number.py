@@ -43,7 +43,7 @@ async def test_level_control_config_entities(
     assert state
     assert state.state == "255"
 
-    state = hass.states.get("number.mock_dimmable_light_power_on_level")
+    state = hass.states.get("number.mock_dimmable_light")
     assert state
     assert state.state == "255"
 
@@ -69,14 +69,14 @@ async def test_level_control_config_entities(
     set_node_attribute(matter_node, 1, 0x00000008, 0x4000, 128)
     await trigger_subscription_callback(hass, matter_client)
 
-    state = hass.states.get("number.mock_dimmable_light_power_on_level")
+    state = hass.states.get("number.mock_dimmable_light")
     assert state
     assert state.state == "128"
 
     set_node_attribute(matter_node, 1, 0x00000008, 0x4000, 255)
     await trigger_subscription_callback(hass, matter_client)
 
-    state = hass.states.get("number.mock_dimmable_light_power_on_level")
+    state = hass.states.get("number.mock_dimmable_light")
     assert state
     assert state.state == "255"
     # Set a concrete value (not null)
@@ -84,7 +84,7 @@ async def test_level_control_config_entities(
         "number",
         "set_value",
         {
-            "entity_id": "number.mock_dimmable_light_power_on_level",
+            "entity_id": "number.mock_dimmable_light",
             "value": 128,
         },
         blocking=True,
@@ -107,7 +107,7 @@ async def test_level_control_config_entities(
         "number",
         "set_value",
         {
-            "entity_id": "number.mock_dimmable_light_power_on_level",
+            "entity_id": "number.mock_dimmable_light",
             "value": 255,
         },
         blocking=True,
@@ -430,7 +430,7 @@ async def test_occupancy_sensing_pir_attributes(
 ) -> None:
     """Test PIR occupancy sensor attributes."""
     # PIRUnoccupiedToOccupiedDelay
-    state = hass.states.get("number.mock_pir_occupancy_sensor_detection_delay")
+    state = hass.states.get("number.mock_pir_occupancy_sensor")
     assert state
     assert state.state == "10"
     assert state.attributes["min"] == 0
@@ -439,12 +439,12 @@ async def test_occupancy_sensing_pir_attributes(
 
     set_node_attribute(matter_node, 1, 1030, 17, 20)
     await trigger_subscription_callback(hass, matter_client)
-    state = hass.states.get("number.mock_pir_occupancy_sensor_detection_delay")
+    state = hass.states.get("number.mock_pir_occupancy_sensor")
     assert state
     assert state.state == "20"
 
     # PIRUnoccupiedToOccupiedThreshold
-    state = hass.states.get("number.mock_pir_occupancy_sensor_detection_threshold")
+    state = hass.states.get("number.mock_pir_occupancy_sensor_2")
     assert state
     assert state.state == "1"
     assert state.attributes["min"] == 1
@@ -452,7 +452,7 @@ async def test_occupancy_sensing_pir_attributes(
 
     set_node_attribute(matter_node, 1, 1030, 18, 5)
     await trigger_subscription_callback(hass, matter_client)
-    state = hass.states.get("number.mock_pir_occupancy_sensor_detection_threshold")
+    state = hass.states.get("number.mock_pir_occupancy_sensor_2")
     assert state
     assert state.state == "5"
 
@@ -461,7 +461,7 @@ async def test_occupancy_sensing_pir_attributes(
         "number",
         "set_value",
         {
-            "entity_id": "number.mock_pir_occupancy_sensor_detection_delay",
+            "entity_id": "number.mock_pir_occupancy_sensor",
             "value": 15,
         },
         blocking=True,
@@ -482,7 +482,7 @@ async def test_occupancy_sensing_pir_attributes(
         "number",
         "set_value",
         {
-            "entity_id": "number.mock_pir_occupancy_sensor_detection_threshold",
+            "entity_id": "number.mock_pir_occupancy_sensor_2",
             "value": 3,
         },
         blocking=True,

@@ -8,18 +8,20 @@ from matter_server.common.helpers.util import create_attribute_path_from_attribu
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.const import Platform
+from homeassistant.const import EntityCategory, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from .common import (
+    create_node_from_fixture,
     set_node_attribute,
     snapshot_matter_entities,
     trigger_subscription_callback,
 )
 
+from tests.common import MockConfigEntry
 
-@pytest.mark.usefixtures("matter_devices")
+@pytest.mark.usefixtures("entity_registry_enabled_by_default", "matter_devices")
 async def test_selects(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
@@ -86,12 +88,15 @@ async def test_attribute_select_entities(
     matter_node: MatterNode,
 ) -> None:
     """Test select entities are created for attribute based discovery schema(s)."""
-    entity_id = "select.mock_dimmable_light_power_on_behavior"
+    entity_id = "select.mock_dimmable_light_power_on_behavior_on_startup"
     state = hass.states.get(entity_id)
     assert state
     assert state.state == "previous"
     assert state.attributes["options"] == ["on", "off", "toggle", "previous"]
-    assert state.attributes["friendly_name"] == "Mock Dimmable Light Power-on behavior"
+    assert (
+        state.attributes["friendly_name"]
+        == "Mock Dimmable Light Power-on behavior on startup"
+    )
     set_node_attribute(matter_node, 1, 6, 16387, 1)
     await trigger_subscription_callback(hass, matter_client)
     state = hass.states.get(entity_id)
@@ -119,6 +124,94 @@ async def test_attribute_select_entities(
     await trigger_subscription_callback(hass, matter_client)
     state = hass.states.get(entity_id)
     assert state.state == "unknown"
+
+
+@pytest.mark.parametrize(
+    ("node_fixture", "entity_id", "unique_id"),
+    [
+        (
+            "aqara_door_window_p2",
+            "select.aqara_door_and_window_sensor_p2_sensitivity",
+            "00000000000004D2-000000000000005B-MatterNodeDevice-1-"
+            "AqaraBooleanStateConfigurationCurrentSensitivityLevel-128-0",
+        ),
+        (
+            "aqara_motion_p2",
+            "select.aqara_motion_and_light_sensor_p2_sensitivity",
+            "00000000000004D2-0000000000000053-MatterNodeDevice-1-"
+            "AqaraOccupancySensorBooleanStateConfigurationCurrentSensitivityLevel-128-0",
+        ),
+        (
+            "aqara_presence_fp300",
+            "select.presence_multi_sensor_fp300_1_sensitivity",
+            "00000000000004D2-00000000000000CD-MatterNodeDevice-1-"
+            "AqaraOccupancySensorBooleanStateConfigurationCurrentSensitivityLevel-128-0",
+        ),
+        (
+            "heiman_motion_sensor_m1",
+            "select.smart_motion_sensor_sensitivity",
+            "00000000000004D2-0000000000000058-MatterNodeDevice-1-"
+            "HeimanOccupancySensorBooleanStateConfigurationCurrentSensitivityLevel-128-0",
+        ),
+    ],
+)
+async def test_existing_legacy_sensitivity_selects_are_restored(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    entity_registry: er.EntityRegistry,
+    node_fixture: str,
+    entity_id: str,
+    unique_id: str,
+) -> None:
+    """Test existing legacy sensitivity selects are restored for migration."""
+    node = create_node_from_fixture(node_fixture)
+    matter_client.get_nodes.return_value = [node]
+    matter_client.get_node.side_effect = lambda node_id: node
+
+    config_entry = MockConfigEntry(
+        domain="matter", data={"url": "http://mock-matter-server-url"}
+    )
+    config_entry.add_to_hass(hass)
+
+    entry = entity_registry.async_get_or_create(
+        "select",
+        "matter",
+        unique_id,
+        config_entry=config_entry,
+        entity_category=EntityCategory.CONFIG,
+        has_entity_name=True,
+        original_name="Sensitivity",
+        suggested_object_id=entity_id.removeprefix("select."),
+        translation_key="sensitivity_level",
+    )
+    assert entry.entity_id == entity_id
+
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(entity_id) is not None
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+@pytest.mark.parametrize("node_fixture", ["aqara_door_window_p2"])
+async def test_legacy_aqara_door_window_p2_sensitivity_select(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test the legacy Aqara select remains available when explicitly enabled."""
+    entity_id = "select.aqara_door_and_window_sensor_p2_sensitivity"
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == "30 mm"
+    assert state.attributes["options"] == ["10 mm", "20 mm", "30 mm"]
+
+    set_node_attribute(matter_node, 1, 128, 0, 1)
+    await trigger_subscription_callback(hass, matter_client)
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == "20 mm"
 
 
 @pytest.mark.parametrize("node_fixture", ["silabs_laundrywasher"])

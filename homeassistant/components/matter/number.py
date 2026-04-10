@@ -465,6 +465,7 @@ DISCOVERY_SCHEMAS = [
         featuremap_contains=(
             clusters.BooleanStateConfiguration.Bitmaps.Feature.kSensitivityLevel
         ),
+        allow_multi=True,
     ),
     MatterDiscoverySchema(
         platform=Platform.NUMBER,
