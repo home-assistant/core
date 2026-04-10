@@ -104,20 +104,23 @@ class HueSceneSelectEntity(SceneActivityBaseEntity, SelectEntity):
         bridge: HueBridge,
         manager: HueSceneActivityManager,
         group_id: str,
+        initial_scenes: list[HueScene] | None = None,
     ) -> None:
         """Initialize the regular-scene select entity."""
         super().__init__(bridge, manager, group_id)
         self._attr_unique_id = f"{group_id}_scene_select"
-        self.refresh_options()
+        self.refresh_options(initial_scenes)
 
-    def refresh_options(self) -> None:
+    def refresh_options(self, scenes: list[HueScene] | None = None) -> None:
         """Rebuild the name→id map of regular scenes available for this group."""
-        self._option_to_scene_id, self._scene_id_to_option = _build_scene_option_maps(
-            [
+        if scenes is None:
+            scenes = [
                 scene
                 for scene in self.bridge.api.scenes.scene
                 if scene.group.rid == self._group_id
             ]
+        self._option_to_scene_id, self._scene_id_to_option = _build_scene_option_maps(
+            scenes
         )
 
     @property
@@ -157,20 +160,23 @@ class HueSmartSceneSelectEntity(SceneActivityBaseEntity, SelectEntity):
         bridge: HueBridge,
         manager: HueSceneActivityManager,
         group_id: str,
+        initial_scenes: list[HueSmartScene] | None = None,
     ) -> None:
         """Initialize the smart-scene select entity."""
         super().__init__(bridge, manager, group_id)
         self._attr_unique_id = f"{group_id}_smart_scene_select"
-        self.refresh_options()
+        self.refresh_options(initial_scenes)
 
-    def refresh_options(self) -> None:
+    def refresh_options(self, scenes: list[HueSmartScene] | None = None) -> None:
         """Rebuild the name→id map of smart scenes available for this group."""
-        self._option_to_scene_id, self._scene_id_to_option = _build_scene_option_maps(
-            [
+        if scenes is None:
+            scenes = [
                 scene
                 for scene in self.bridge.api.scenes.smart_scene
                 if scene.group.rid == self._group_id
             ]
+        self._option_to_scene_id, self._scene_id_to_option = _build_scene_option_maps(
+            scenes
         )
 
     @property
@@ -211,6 +217,16 @@ async def async_setup_entry(
     api: HueBridgeV2 = bridge.api
     manager = bridge.scene_activity_manager
     assert manager is not None
+
+    # Pre-index scenes by group to avoid an O(groups × scenes) scan per entity
+    # when building initial options at startup.
+    scenes_by_group: dict[str, list[HueScene]] = {}
+    for scene in api.scenes.scene:
+        scenes_by_group.setdefault(scene.group.rid, []).append(scene)
+
+    smart_scenes_by_group: dict[str, list[HueSmartScene]] = {}
+    for smart_scene in api.scenes.smart_scene:
+        smart_scenes_by_group.setdefault(smart_scene.group.rid, []).append(smart_scene)
 
     scene_entities: dict[str, HueSceneSelectEntity] = {}
     smart_scene_entities: dict[str, HueSmartSceneSelectEntity] = {}
@@ -257,8 +273,12 @@ async def async_setup_entry(
         """Create select entities for all groups in the given controller."""
         entities: list[SceneActivityBaseEntity] = []
         for group in group_controller:
-            scene_entity = HueSceneSelectEntity(bridge, manager, group.id)
-            smart_scene_entity = HueSmartSceneSelectEntity(bridge, manager, group.id)
+            scene_entity = HueSceneSelectEntity(
+                bridge, manager, group.id, scenes_by_group.get(group.id)
+            )
+            smart_scene_entity = HueSmartSceneSelectEntity(
+                bridge, manager, group.id, smart_scenes_by_group.get(group.id)
+            )
             scene_entities[group.id] = scene_entity
             smart_scene_entities[group.id] = smart_scene_entity
             entities.extend([scene_entity, smart_scene_entity])
