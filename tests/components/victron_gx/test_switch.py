@@ -58,6 +58,7 @@ async def test_victron_switch(
         f"N/{MOCK_INSTALLATION_ID}/evcharger/0/StartStop",
         '{"value": 0}',
     )
+    await finalize_injection(victron_hub)
     await hass.async_block_till_done()
 
     state = hass.states.get(entity.entity_id)
@@ -86,10 +87,19 @@ async def test_victron_switch_actions(
     )
     entity_id = entities[0].entity_id
 
-    # Call turn_on and turn_off services to cover those methods
+    # Call turn_on and turn_off services and assert they update entity state
     await hass.services.async_call(
         "switch", "turn_on", {"entity_id": entity_id}, blocking=True
     )
+    await hass.async_block_till_done()
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == "on"
+
     await hass.services.async_call(
         "switch", "turn_off", {"entity_id": entity_id}, blocking=True
     )
+    await hass.async_block_till_done()
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == "off"

@@ -1,7 +1,7 @@
 """Support for Victron GX switches."""
 
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from victron_mqtt import (
     Device as VictronVenusDevice,
@@ -40,7 +40,8 @@ async def async_setup_entry(
         installation_id: str,
     ) -> None:
         """Handle new switch metric discovery."""
-        assert isinstance(metric, VictronVenusWritableMetric)
+        if TYPE_CHECKING:
+            assert isinstance(metric, VictronVenusWritableMetric)
         async_add_entities(
             [VictronSwitch(device, metric, device_info, installation_id)]
         )
@@ -60,21 +61,25 @@ class VictronSwitch(VictronBaseEntity, SwitchEntity):
     ) -> None:
         """Initialize the switch."""
         super().__init__(device, metric, device_info, installation_id)
-        self._attr_is_on = VictronBinarySensor._is_on(metric.value)  # noqa: SLF001
+        self._attr_is_on = VictronBinarySensor.convert_metric_value_to_is_on(
+            metric.value
+        )
 
     @callback
     def _on_update_cb(self, value: Any) -> None:
-        self._attr_is_on = VictronBinarySensor._is_on(value)  # noqa: SLF001
+        self._attr_is_on = VictronBinarySensor.convert_metric_value_to_is_on(value)
         self.async_write_ha_state()
 
     def turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
-        assert isinstance(self._metric, VictronVenusWritableMetric)
+        if TYPE_CHECKING:
+            assert isinstance(self._metric, VictronVenusWritableMetric)
         _LOGGER.debug("Turning on switch: %s", self._attr_unique_id)
         self._metric.set(BINARY_SENSOR_ON_ID)
 
     def turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
-        assert isinstance(self._metric, VictronVenusWritableMetric)
+        if TYPE_CHECKING:
+            assert isinstance(self._metric, VictronVenusWritableMetric)
         _LOGGER.debug("Turning off switch: %s", self._attr_unique_id)
         self._metric.set(BINARY_SENSOR_OFF_ID)
