@@ -23,7 +23,7 @@ async def async_setup_entry(
     entry: SlackConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up the Slack select."""
+    """Set up the Slack sensor."""
     async_add_entities(
         [
             SlackSensorEntity(
