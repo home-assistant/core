@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, cast
 
 from switchbee.api.central_unit import SwitchBeeDeviceOfflineError, SwitchBeeError
 from switchbee.device import ApiStateCommand, DeviceType, SwitchBeeDimmer
@@ -40,7 +40,7 @@ async def async_setup_entry(
     """Set up SwitchBee light."""
     coordinator = entry.runtime_data
     async_add_entities(
-        SwitchBeeLightEntity(switchbee_device, coordinator)  # type: ignore[arg-type]
+        SwitchBeeLightEntity(cast(SwitchBeeDimmer, switchbee_device), coordinator)
         for switchbee_device in coordinator.data.values()
         if switchbee_device.type == DeviceType.Dimmer
     )
