@@ -24,11 +24,13 @@ class TuyaEntity(Entity):
         self,
         device: CustomerDevice,
         device_manager: Manager,
-        description: EntityDescription,
+        description: EntityDescription | None,
     ) -> None:
-        """Init TuyaHaEntity."""
-        self._attr_unique_id = f"tuya.{device.id}{description.key}"
-        self.entity_description = description
+        """Init TuyaEntity."""
+        self._attr_unique_id = f"tuya.{device.id}"
+        if description:
+            self.entity_description = description
+            self._attr_unique_id = f"tuya.{device.id}{description.key}"
         # TuyaEntity initialize mq can subscribe
         device.set_up = True
         self.device = device

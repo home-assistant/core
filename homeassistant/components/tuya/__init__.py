@@ -3,8 +3,10 @@
 from __future__ import annotations
 
 import logging
+from pathlib import Path
 from typing import Any, NamedTuple
 
+from tuya_device_handlers.devices import register_tuya_quirks
 from tuya_sharing import (
     CustomerDevice,
     Manager,
@@ -58,6 +60,10 @@ def _create_manager(entry: TuyaConfigEntry, token_listener: TokenListener) -> Ma
 
 async def async_setup_entry(hass: HomeAssistant, entry: TuyaConfigEntry) -> bool:
     """Async setup hass config entry."""
+    await hass.async_add_executor_job(
+        register_tuya_quirks, str(Path(hass.config.config_dir, "tuya_quirks"))
+    )
+
     token_listener = TokenListener(hass, entry)
 
     # Move to executor as it makes blocking call to import_module
