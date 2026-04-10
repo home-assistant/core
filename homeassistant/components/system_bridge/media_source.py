@@ -15,12 +15,11 @@ from homeassistant.components.media_source import (
     MediaSourceItem,
     PlayMedia,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_TOKEN
 from homeassistant.core import HomeAssistant
 
 from .const import DOMAIN
-from .coordinator import SystemBridgeDataUpdateCoordinator
+from .coordinator import SystemBridgeConfigEntry
 
 
 async def async_get_media_source(hass: HomeAssistant) -> MediaSource:
@@ -64,12 +63,12 @@ class SystemBridgeSource(MediaSource):
             return self._build_bridges()
 
         if "~~" not in item.identifier:
-            entry = self.hass.config_entries.async_get_entry(item.identifier)
+            entry: SystemBridgeConfigEntry | None = (
+                self.hass.config_entries.async_get_entry(item.identifier)
+            )
             if entry is None:
                 raise ValueError("Invalid entry")
-            coordinator: SystemBridgeDataUpdateCoordinator = self.hass.data[DOMAIN].get(
-                entry.entry_id
-            )
+            coordinator = entry.runtime_data
             directories = await coordinator.websocket_client.get_directories()
             return _build_root_paths(entry, directories)
 
@@ -78,7 +77,7 @@ class SystemBridgeSource(MediaSource):
         if entry is None:
             raise ValueError("Invalid entry")
 
-        coordinator = self.hass.data[DOMAIN].get(entry.entry_id)
+        coordinator = entry.runtime_data
 
         path_split = path.split("/", 1)
 
@@ -123,7 +122,7 @@ class SystemBridgeSource(MediaSource):
 
 
 def _build_base_url(
-    entry: ConfigEntry,
+    entry: SystemBridgeConfigEntry,
 ) -> str:
     """Build base url for System Bridge media."""
     return (
@@ -133,7 +132,7 @@ def _build_base_url(
 
 
 def _build_root_paths(
-    entry: ConfigEntry,
+    entry: SystemBridgeConfigEntry,
     media_directories: list[MediaDirectory],
 ) -> BrowseMediaSource:
     """Build base categories for System Bridge media."""
@@ -164,7 +163,7 @@ def _build_root_paths(
 
 
 def _build_media_items(
-    entry: ConfigEntry,
+    entry: SystemBridgeConfigEntry,
     media_files: MediaFiles,
     path: str,
     identifier: str,
