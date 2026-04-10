@@ -6,7 +6,7 @@ from collections.abc import Mapping
 import logging
 from typing import Any
 
-from pyliebherrhomeapi import LiebherrClient
+from pyliebherrhomeapi import Device, LiebherrClient
 from pyliebherrhomeapi.exceptions import (
     LiebherrAuthenticationError,
     LiebherrConnectionError,
@@ -31,10 +31,12 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 class LiebherrConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for liebherr."""
 
-    async def _validate_api_key(self, api_key: str) -> tuple[list, dict[str, str]]:
+    async def _validate_api_key(
+        self, api_key: str
+    ) -> tuple[list[Device], dict[str, str]]:
         """Validate the API key and return devices and errors."""
         errors: dict[str, str] = {}
-        devices: list = []
+        devices: list[Device] = []
         client = LiebherrClient(
             api_key=api_key,
             session=async_get_clientsession(self.hass),
