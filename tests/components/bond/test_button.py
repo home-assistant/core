@@ -258,11 +258,12 @@ async def test_preset_button(hass: HomeAssistant) -> None:
     mock_action.assert_called_once_with("test-device-id", Action(Action.PRESET))
 
 
-async def test_stop_not_created_when_device_has_hold(hass: HomeAssistant) -> None:
-    """Tests stop button is not created for devices with Hold (e.g. shades).
+async def test_preset_does_not_trigger_stop_button(hass: HomeAssistant) -> None:
+    """Tests that Preset alone does not cause a Stop Actions button to appear.
 
-    Devices with Hold already expose stop via the cover platform,
-    so a separate Stop Actions button would be redundant.
+    Preset is added independently of the main button list, so it should
+    not trigger the Stop button logic (which only activates when there
+    are other button entities).
     """
     await setup_platform(
         hass,
@@ -273,5 +274,6 @@ async def test_stop_not_created_when_device_has_hold(hass: HomeAssistant) -> Non
 
     # Preset button should exist
     assert hass.states.get("button.name_1_preset")
-    # Stop Actions should NOT exist - the cover's Hold already provides stop
+    # Stop Actions should NOT exist - Preset is the only button and is
+    # added independently, so it does not trigger the Stop button logic
     assert not hass.states.get("button.name_1_stop_actions")

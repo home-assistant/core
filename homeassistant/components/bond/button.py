@@ -258,13 +258,14 @@ BUTTONS: tuple[BondButtonEntityDescription, ...] = (
         mutually_exclusive=None,
         argument=None,
     ),
-    BondButtonEntityDescription(
-        key=Action.PRESET,
-        name="Preset",
-        translation_key="preset",
-        mutually_exclusive=None,
-        argument=None,
-    ),
+)
+
+PRESET_BUTTON = BondButtonEntityDescription(
+    key=Action.PRESET,
+    name="Preset",
+    translation_key="preset",
+    mutually_exclusive=None,
+    argument=None,
 )
 
 
@@ -287,17 +288,13 @@ async def async_setup_entry(
                 or not device.has_action(description.mutually_exclusive)
             )
         ]
-        if (
-            device_entities
-            and device.has_action(STOP_BUTTON.key)
-            and not device.has_action(Action.HOLD)
-        ):
+        if device_entities and device.has_action(STOP_BUTTON.key):
             # Most devices have the stop action available, but
             # we only add the stop action button if we add actions
-            # since its not so useful if there are no actions to stop.
-            # Devices with Hold (e.g. shades) already expose stop via
-            # the cover platform, so a separate Stop button is redundant.
+            # since its not so useful if there are no actions to stop
             device_entities.append(BondButtonEntity(data, device, STOP_BUTTON))
+        if device.has_action(PRESET_BUTTON.key):
+            device_entities.append(BondButtonEntity(data, device, PRESET_BUTTON))
         entities.extend(device_entities)
 
     async_add_entities(entities)
