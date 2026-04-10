@@ -71,7 +71,6 @@ async def async_setup_entry(
     """Set up Kiosker sensors based on a config entry."""
     coordinator = entry.runtime_data
 
-    # Create all sensors - they will handle missing data gracefully
     async_add_entities(
         KioskerSensor(coordinator, description) for description in SENSORS
     )
