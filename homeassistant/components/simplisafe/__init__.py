@@ -39,7 +39,7 @@ from simplipy.websocket import (
 )
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import (
     ATTR_CODE,
     ATTR_DEVICE_ID,
@@ -228,8 +228,10 @@ def _async_get_system_for_service_call(
     entry: SimpliSafeConfigEntry | None
     for entry_id in base_station_device_entry.config_entries:
         if (
-            entry := hass.config_entries.async_get_entry(entry_id)
-        ) is None or entry.domain != DOMAIN:
+            (entry := hass.config_entries.async_get_entry(entry_id)) is None
+            or entry.domain != DOMAIN
+            or entry.state != ConfigEntryState.LOADED
+        ):
             continue
         return entry.runtime_data.systems[system_id]
 
