@@ -14,7 +14,9 @@ from .coordinator import XthingsCloudCoordinator
 XthingsCloudConfigEntry = ConfigEntry[XthingsCloudCoordinator]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: XthingsCloudConfigEntry) -> bool:
+async def async_setup_entry(
+    hass: HomeAssistant, entry: XthingsCloudConfigEntry
+) -> bool:
     """Set up config entry."""
     session = async_get_clientsession(hass)
     client = XthingsCloudApiClient(session, token=entry.data[CONF_TOKEN])
@@ -45,7 +47,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: XthingsCloudConfigEntry)
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: XthingsCloudConfigEntry) -> bool:
+async def async_unload_entry(
+    hass: HomeAssistant, entry: XthingsCloudConfigEntry
+) -> bool:
     """Unload config entry."""
     coordinator: XthingsCloudCoordinator = entry.runtime_data
     await coordinator.async_stop_websocket()

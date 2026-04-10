@@ -7,12 +7,23 @@ from typing import Any
 
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.instance_id import async_get as async_get_instance_id
 
-from ha_xthings_cloud import XthingsCloudApiClient, XthingsCloudAuthError, XthingsCloudApiError
-from .const import CONF_EMAIL, CONF_PASSWORD, CONF_REFRESH_TOKEN, CONF_TOKEN, DOMAIN, LOGGER
+from ha_xthings_cloud import (
+    XthingsCloudApiClient,
+    XthingsCloudAuthError,
+    XthingsCloudApiError,
+)
+from .const import (
+    CONF_EMAIL,
+    CONF_PASSWORD,
+    CONF_REFRESH_TOKEN,
+    CONF_TOKEN,
+    DOMAIN,
+    LOGGER,
+)
 
 CONF_VERIFICATION_CODE = "verification_code"
 
@@ -52,7 +63,9 @@ class XthingsCloudConfigFlow(ConfigFlow, domain=DOMAIN):
         self._2fa_type: int = 0
 
     async def _async_try_login(
-        self, email: str, password: str,
+        self,
+        email: str,
+        password: str,
         verification_code: str | None = None,
     ) -> dict[str, Any]:
         """Attempt login, return token data or 2fa info."""
@@ -61,7 +74,9 @@ class XthingsCloudConfigFlow(ConfigFlow, domain=DOMAIN):
         session = async_get_clientsession(self.hass)
         client = XthingsCloudApiClient(session)
         return await client.async_login(
-            email, password, client_id=self._instance_id,
+            email,
+            password,
+            client_id=self._instance_id,
             verification_code=verification_code,
         )
 
@@ -90,7 +105,9 @@ class XthingsCloudConfigFlow(ConfigFlow, domain=DOMAIN):
             except XthingsCloudAuthError as err:
                 errors["base"] = _error_from_exception(err)
             except XthingsCloudApiError as err:
-                errors["base"] = _error_from_exception(err) if err.code else "cannot_connect"
+                errors["base"] = (
+                    _error_from_exception(err) if err.code else "cannot_connect"
+                )
             except Exception:  # noqa: BLE001
                 LOGGER.exception("Unexpected error during login")
                 errors["base"] = "unknown"
@@ -108,15 +125,19 @@ class XthingsCloudConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema({
-                vol.Required(CONF_EMAIL): str,
-                vol.Required(CONF_PASSWORD): str,
-            }),
+            data_schema=vol.Schema(
+                {
+                    vol.Required(CONF_EMAIL): str,
+                    vol.Required(CONF_PASSWORD): str,
+                }
+            ),
             errors=errors,
         )
 
     async def _async_handle_2fa(
-        self, step_id: str, user_input: dict[str, Any] | None,
+        self,
+        step_id: str,
+        user_input: dict[str, Any] | None,
         on_success_create: bool = True,
     ) -> ConfigFlowResult:
         """Shared 2FA verification handler."""
@@ -128,13 +149,16 @@ class XthingsCloudConfigFlow(ConfigFlow, domain=DOMAIN):
             assert self._password is not None
             try:
                 token_data = await self._async_try_login(
-                    self._email, self._password,
+                    self._email,
+                    self._password,
                     verification_code=code,
                 )
             except XthingsCloudAuthError as err:
                 errors["base"] = _error_from_exception(err)
             except XthingsCloudApiError as err:
-                errors["base"] = _error_from_exception(err) if err.code else "cannot_connect"
+                errors["base"] = (
+                    _error_from_exception(err) if err.code else "cannot_connect"
+                )
             except Exception:  # noqa: BLE001
                 errors["base"] = "unknown"
             else:
@@ -155,9 +179,11 @@ class XthingsCloudConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id=step_id,
-            data_schema=vol.Schema({
-                vol.Required(CONF_VERIFICATION_CODE): str,
-            }),
+            data_schema=vol.Schema(
+                {
+                    vol.Required(CONF_VERIFICATION_CODE): str,
+                }
+            ),
             errors=errors,
             description_placeholders={"email": self._email or ""},
         )
@@ -195,7 +221,9 @@ class XthingsCloudConfigFlow(ConfigFlow, domain=DOMAIN):
             except XthingsCloudAuthError as err:
                 errors["base"] = _error_from_exception(err)
             except XthingsCloudApiError as err:
-                errors["base"] = _error_from_exception(err) if err.code else "cannot_connect"
+                errors["base"] = (
+                    _error_from_exception(err) if err.code else "cannot_connect"
+                )
             except Exception:  # noqa: BLE001
                 errors["base"] = "unknown"
             else:
@@ -211,10 +239,14 @@ class XthingsCloudConfigFlow(ConfigFlow, domain=DOMAIN):
         reauth_entry = self._get_reauth_entry()
         return self.async_show_form(
             step_id="reauth_confirm",
-            data_schema=vol.Schema({
-                vol.Required(CONF_EMAIL, default=reauth_entry.data.get(CONF_EMAIL, "")): str,
-                vol.Required(CONF_PASSWORD): str,
-            }),
+            data_schema=vol.Schema(
+                {
+                    vol.Required(
+                        CONF_EMAIL, default=reauth_entry.data.get(CONF_EMAIL, "")
+                    ): str,
+                    vol.Required(CONF_PASSWORD): str,
+                }
+            ),
             errors=errors,
         )
 
@@ -222,10 +254,14 @@ class XthingsCloudConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle 2FA via email during re-authentication."""
-        return await self._async_handle_2fa("reauth_2fa_email", user_input, on_success_create=False)
+        return await self._async_handle_2fa(
+            "reauth_2fa_email", user_input, on_success_create=False
+        )
 
     async def async_step_reauth_2fa_phone(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle 2FA via phone during re-authentication."""
-        return await self._async_handle_2fa("reauth_2fa_phone", user_input, on_success_create=False)
+        return await self._async_handle_2fa(
+            "reauth_2fa_phone", user_input, on_success_create=False
+        )

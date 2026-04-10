@@ -148,20 +148,30 @@ class XthingsCloudLight(XthingsCloudEntity, LightEntity):
             if ATTR_BRIGHTNESS in kwargs:
                 lightness = round(kwargs[ATTR_BRIGHTNESS] * 100 / 255)
                 cur_brightness = lightness
-            await client.async_brite_color(self._device_id, {
-                "colortype": 0, "hue": round(hue), "saturation": round(saturation),
-                "lightness": lightness, "brightness": cur_brightness,
-            })
+            await client.async_brite_color(
+                self._device_id,
+                {
+                    "colortype": 0,
+                    "hue": round(hue),
+                    "saturation": round(saturation),
+                    "lightness": lightness,
+                    "brightness": cur_brightness,
+                },
+            )
         # Adjust color temperature
         if ATTR_COLOR_TEMP_KELVIN in kwargs:
             status = self.device_data.get("status", {})
             cur_brightness = status.get("brightness", 100)
             if ATTR_BRIGHTNESS in kwargs:
                 cur_brightness = round(kwargs[ATTR_BRIGHTNESS] * 100 / 255)
-            await client.async_brite_color(self._device_id, {
-                "colortype": 1, "temperature": kwargs[ATTR_COLOR_TEMP_KELVIN],
-                "brightness": cur_brightness,
-            })
+            await client.async_brite_color(
+                self._device_id,
+                {
+                    "colortype": 1,
+                    "temperature": kwargs[ATTR_COLOR_TEMP_KELVIN],
+                    "brightness": cur_brightness,
+                },
+            )
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off light."""
