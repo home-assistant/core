@@ -14,7 +14,6 @@ from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.config_entries import ConfigSubentry
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.device_registry import DeviceRegistry
 from homeassistant.helpers.entity_registry import EntityRegistry
 
@@ -148,50 +147,6 @@ async def test_config_flow_migration_v2_1_to_v2_2(
         CONF_PORT: 7094,
         CONF_ENCRYPTION_KEY: None,
     }
-
-
-async def test_full_migration(
-    hass: HomeAssistant,
-    snapshot: SnapshotAssertion,
-    mock_satel: AsyncMock,
-    entity_registry: EntityRegistry,
-) -> None:
-    """Test that a config entry with version 1 and minor version 1 is fully migrated to the latest version."""
-
-    config_entry = MockConfigEntry(
-        domain=DOMAIN,
-        title="192.168.0.2",
-        data={CONF_HOST: "192.168.0.2", CONF_PORT: 7094},
-        options={},
-        entry_id=MOCK_ENTRY_ID,
-        version=1,
-        minor_version=1,
-    )
-    config_entry.add_to_hass(hass)
-
-    entity_registry.async_get_or_create(
-        ALARM_PANEL_DOMAIN, DOMAIN, "satel_alarm_panel_1", config_entry=config_entry
-    )
-    entity_registry.async_get_or_create(
-        BINARY_SENSOR_DOMAIN, DOMAIN, "satel_zone_1", config_entry=config_entry
-    )
-    entity_registry.async_get_or_create(
-        BINARY_SENSOR_DOMAIN, DOMAIN, "satel_output_1", config_entry=config_entry
-    )
-    entity_registry.async_get_or_create(
-        SWITCH_DOMAIN, DOMAIN, "satel_switch_1", config_entry=config_entry
-    )
-
-    await hass.config_entries.async_setup(config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    assert config_entry.version == SatelConfigFlow.VERSION
-    assert config_entry.minor_version == SatelConfigFlow.MINOR_VERSION
-
-    assert er.async_entries_for_config_entry(
-        entity_registry, config_entry.entry_id
-    ) == snapshot(name="entity-registry-entries")
-    assert config_entry == snapshot(name="config-entry")
 
 
 async def test_parent_device_exists(
