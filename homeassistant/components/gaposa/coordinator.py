@@ -1,10 +1,13 @@
 """Data update coordinator for the Gaposa integration."""
 
+from __future__ import annotations
+
 from asyncio import timeout
 from collections.abc import Callable
 from datetime import timedelta
 import logging
 
+from aiohttp import ClientError
 from pygaposa import Device, FirebaseAuthException, Gaposa, GaposaAuthException, Motor
 
 from homeassistant.config_entries import ConfigEntry
@@ -15,15 +18,16 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 from .const import UPDATE_INTERVAL, UPDATE_INTERVAL_FAST
 
+_LOGGER = logging.getLogger(__name__)
 
-class DataUpdateCoordinatorGaposa(DataUpdateCoordinator):
-    """Class to manage fetching data from single endpoint."""
+
+class DataUpdateCoordinatorGaposa(DataUpdateCoordinator[dict[str, Motor]]):
+    """Fetch state for every Gaposa motor on the account."""
 
     def __init__(
         self,
         hass: HomeAssistant,
         config_entry: ConfigEntry,
-        logger: logging.Logger,
         *,
         api_key: str,
         username: str,
@@ -31,106 +35,91 @@ class DataUpdateCoordinatorGaposa(DataUpdateCoordinator):
         name: str,
         update_interval: timedelta,
     ) -> None:
-        """Initialize global data updater."""
+        """Initialize the coordinator."""
         super().__init__(
             hass,
-            logger,
+            _LOGGER,
             config_entry=config_entry,
             name=name,
             update_interval=update_interval,
         )
-
         self._api_key = api_key
         self._username = username
         self._password = password
         self.gaposa: Gaposa | None = None
         self.devices: list[Device] = []
-        self.listener: Callable[[], None] | None = None
+        self._listener: Callable[[], None] | None = None
 
-    async def update_gateway(self) -> bool:
-        """Fetch data from gateway."""
-        # Initialize the API if it's not ready
-        if self.gaposa is None:
-            websession = async_get_clientsession(self.hass)
-            try:
-                self.gaposa = Gaposa(self._api_key, websession=websession)
-                await self.gaposa.login(self._username, self._password)
-            except GaposaAuthException as exp:
-                raise ConfigEntryAuthFailed from exp
-            except FirebaseAuthException as exp:
-                raise ConfigEntryAuthFailed from exp
+    async def _async_setup(self) -> None:
+        """Log in to the Gaposa API once, before the first refresh.
 
+        ``DataUpdateCoordinator`` calls this method exactly once as part
+        of ``async_config_entry_first_refresh``, so it's the right place
+        to do any one-time connection / authentication work.
+        """
+        websession = async_get_clientsession(self.hass)
+        self.gaposa = Gaposa(self._api_key, websession=websession)
         try:
-            await self.gaposa.update()
-        except GaposaAuthException as exp:
-            raise ConfigEntryAuthFailed from exp
-        except FirebaseAuthException as exp:
-            raise ConfigEntryAuthFailed from exp
-
-        current_devices: list[Device] = []
-        new_devices: list[Device] = []
-        if self.listener is None and self.gaposa is not None:
-            self.listener = self.on_document_updated
-            # mypy doesn't understand that we've already checked self.gaposa is not None
-            assert self.gaposa is not None
-            for client, _user in self.gaposa.clients:
-                for device in client.devices:
-                    current_devices.append(device)
-                    if device not in self.devices:
-                        device.addListener(self.listener)
-                        new_devices.append(device)
-
-        for device in self.devices:
-            if device not in current_devices:
-                device.removeListener(self.listener)
-
-        self.devices = current_devices
-
-        return True
+            await self.gaposa.login(self._username, self._password)
+        except (GaposaAuthException, FirebaseAuthException) as exc:
+            raise ConfigEntryAuthFailed(
+                "Gaposa authentication failed"
+            ) from exc
 
     async def _async_update_data(self) -> dict[str, Motor]:
-        self.logger.debug(
-            "Gaposa coordinator _async_update_data, interval: %s",
-            str(self.update_interval),
-        )
+        """Refresh motor state from the Gaposa cloud."""
+        assert self.gaposa is not None  # set in _async_setup
 
         try:
             async with timeout(10):
-                await self.update_gateway()
-        except ConfigEntryAuthFailed:
-            raise
-        except TimeoutError:
+                await self.gaposa.update()
+        except (GaposaAuthException, FirebaseAuthException) as exc:
+            raise ConfigEntryAuthFailed(
+                "Gaposa authentication failed"
+            ) from exc
+        except (ClientError, TimeoutError, OSError) as exc:
             self.update_interval = timedelta(seconds=UPDATE_INTERVAL_FAST)
-            raise
-        except Exception as exp:
-            self.logger.exception("Error updating Gaposa data")
-            self.update_interval = timedelta(seconds=UPDATE_INTERVAL_FAST)
-            raise UpdateFailed from exp
+            raise UpdateFailed(f"Error talking to Gaposa: {exc}") from exc
 
+        # Attach a listener to every new device so document-level pushes
+        # from pygaposa trigger async_set_updated_data.
+        if self._listener is None:
+            self._listener = self.on_document_updated
+
+        current_devices: list[Device] = []
+        for client, _user in self.gaposa.clients:
+            for device in client.devices:
+                current_devices.append(device)
+                if device not in self.devices:
+                    device.addListener(self._listener)
+
+        for device in self.devices:
+            if device not in current_devices:
+                device.removeListener(self._listener)
+
+        self.devices = current_devices
+
+        # Recovered from a transient failure — restore the normal interval.
         self.update_interval = timedelta(seconds=UPDATE_INTERVAL)
 
-        data = self._get_data_from_devices()
-
-        self.logger.debug("Finished _async_update_data")
-
-        return data
+        return self._get_data_from_devices()
 
     def _get_data_from_devices(self) -> dict[str, Motor]:
-        # Coordinator data consists of a Dictionary of the controllable motors, with
-        # the dictionalry key being a unique id for the motor of the form
-        # <device serial number>.motors.<channel number>
+        """Flatten all motors across all devices into a single dict.
+
+        The dictionary key is a unique id for the motor of the form
+        ``<device serial number>.motors.<channel number>``.
+        """
         data: dict[str, Motor] = {}
-
-        if self.gaposa is not None:
-            for client, _user in self.gaposa.clients:
-                for device in client.devices:
-                    for motor in device.motors:
-                        data[f"{device.serial}.motors.{motor.id}"] = motor
-
+        if self.gaposa is None:
+            return data
+        for client, _user in self.gaposa.clients:
+            for device in client.devices:
+                for motor in device.motors:
+                    data[f"{device.serial}.motors.{motor.id}"] = motor
         return data
 
     def on_document_updated(self) -> None:
-        """Handle document updated."""
-        self.logger.debug("Gaposa coordinator on_document_updated")
-        data = self._get_data_from_devices()
-        self.async_set_updated_data(data)
+        """Push fresh data to subscribers when pygaposa notifies us."""
+        _LOGGER.debug("Gaposa document updated, pushing new data")
+        self.async_set_updated_data(self._get_data_from_devices())
