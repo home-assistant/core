@@ -4,9 +4,11 @@ from unittest.mock import AsyncMock
 
 from freezegun.api import FrozenDateTimeFactory
 
+from homeassistant.components.alexa_devices.const import DOMAIN
 from homeassistant.components.alexa_devices.coordinator import SCAN_INTERVAL
 from homeassistant.const import STATE_ON
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
 
 from . import setup_integration
 from .const import TEST_DEVICE_1, TEST_DEVICE_1_SN, TEST_DEVICE_2, TEST_DEVICE_2_SN
@@ -50,3 +52,33 @@ async def test_coordinator_stale_device(
 
     # Entity is removed
     assert not hass.states.get(entity_id_1)
+
+
+async def test_coordinator_load_previous_devices_from_registry(
+    hass: HomeAssistant,
+    mock_amazon_devices_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test coordinator preloads previous devices from registry excluding services."""
+    mock_config_entry.add_to_hass(hass)
+
+    device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id,
+        identifiers={(DOMAIN, TEST_DEVICE_1_SN)},
+        name="Echo Test",
+        manufacturer="Amazon",
+        model="Echo Dot",
+    )
+    device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id,
+        identifiers={(DOMAIN, mock_config_entry.entry_id)},
+        name=mock_config_entry.title,
+        manufacturer="Amazon",
+        model="Echo Dot",
+        entry_type=dr.DeviceEntryType.SERVICE,
+    )
+
+    await setup_integration(hass, mock_config_entry)
+    coordinator = mock_config_entry.runtime_data
+    assert coordinator.previous_devices == {TEST_DEVICE_1_SN}
