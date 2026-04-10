@@ -66,6 +66,15 @@ def motorized_shade(name: str):
     }
 
 
+def motorized_shade_with_preset(name: str):
+    """Create a motorized shade with preset action."""
+    return {
+        "name": name,
+        "type": DeviceType.MOTORIZED_SHADES,
+        "actions": [Action.OPEN, Action.CLOSE, Action.HOLD, Action.PRESET, Action.STOP],
+    }
+
+
 async def test_entity_registry(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
@@ -224,3 +233,45 @@ async def test_motorized_shade_actions(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
     mock_action.assert_called_once_with("test-device-id", Action(Action.CLOSE_NEXT))
+
+
+async def test_preset_button(hass: HomeAssistant) -> None:
+    """Tests preset button is created and can be pressed."""
+    await setup_platform(
+        hass,
+        BUTTON_DOMAIN,
+        motorized_shade_with_preset("name-1"),
+        bond_device_id="test-device-id",
+    )
+
+    assert hass.states.get("button.name_1_preset")
+
+    with patch_bond_action() as mock_action, patch_bond_device_state():
+        await hass.services.async_call(
+            BUTTON_DOMAIN,
+            SERVICE_PRESS,
+            {ATTR_ENTITY_ID: "button.name_1_preset"},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+
+    mock_action.assert_called_once_with("test-device-id", Action(Action.PRESET))
+
+
+async def test_stop_not_created_when_device_has_hold(hass: HomeAssistant) -> None:
+    """Tests stop button is not created for devices with Hold (e.g. shades).
+
+    Devices with Hold already expose stop via the cover platform,
+    so a separate Stop Actions button would be redundant.
+    """
+    await setup_platform(
+        hass,
+        BUTTON_DOMAIN,
+        motorized_shade_with_preset("name-1"),
+        bond_device_id="test-device-id",
+    )
+
+    # Preset button should exist
+    assert hass.states.get("button.name_1_preset")
+    # Stop Actions should NOT exist - the cover's Hold already provides stop
+    assert not hass.states.get("button.name_1_stop_actions")
