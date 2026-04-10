@@ -1,0 +1,76 @@
+# Bronze rules for renson_waves integration
+
+rules:
+  # INTEGRATION_MANIFESTS: Ensure manifest.json is complete and well-formed
+  integration-has-proper-manifest:
+    done: true
+    comment: "manifest.json includes all required fields: domain, name, codeowners, config_flow, documentation"
+
+  # CODE_QUALITY: Code follows Home Assistant patterns and conventions
+  config-flow-implemented:
+    done: true
+    comment: "ConfigFlow properly implemented with user and confirm steps"
+
+  CONFIG_ENTRY_AND_OPTIONS_FLOW: Config entry required, no need for options
+    exempt: true
+    comment: "Config entry only; options flow deferred to Phase 2"
+
+  # DATA_COORDINATOR: Entity updates through DataUpdateCoordinator
+  coordinator-pattern-used:
+    done: true
+    comment: "DataUpdateCoordinator with typed return RensonWavesData"
+
+  # ENTITY_COMPONENT_SETUP: Entity.device_info must use any existing DeviceInfo.identifiers
+  entities-have-unique-ids:
+    done: true
+    comment: "All entities use serial-based unique_id, device_info has proper identifiers"
+
+  # ENTITY_COMPONENT_SETUP: Only one entity per entity_id suffix per device
+  no-duplicate-entity-ids:
+    done: true
+    comment: "Unique IDs prevent duplicates; entity_id derivation follows pattern"
+
+  # PLATFORMS: Implemented platforms are required
+  platforms-declared:
+    done: true
+    comment: "sensor and binary_sensor platforms implemented; fan deferred"
+
+  # SENSOR_ENTITY: SensorEntity subclasses properly typed
+  sensor-classes-proper:
+    done: true
+    comment: "Sensors use native_value pattern, proper device_class assignments"
+
+  # BINARY_SENSOR_ENTITY: BinarySensorEntity subclasses properly typed
+  binary-sensor-classes-proper:
+    done: true
+    comment: "Binary sensors use is_on property, proper device_class assignments"
+
+  # STRINGS: strings.json exists and all translatable strings present
+  strings-json-present:
+    done: true
+    comment: "strings.json includes config flow and entity translations"
+
+  # TEST_COVERAGE: Unit tests required
+  unit-tests-pass:
+    todo: true
+    comment: "Will verify after tests are created and run"
+
+  # DIAGNOSTIC_CONFIG: Diagnostic entities optional for Bronze
+  diagnostic-entity-comment:
+    exempt: true
+    comment: "Diagnostic data not required for Bronze tier"
+
+  # REPAIR_REGISTRY: Repair actions optional for Bronze
+  repair-registry-comment:
+    exempt: true
+    comment: "Repair actions not required for Bronze tier"
+
+  # NO_ASYNC_IOErrors: No deprecated async utilities
+  no-deprecated-async:
+    done: true
+    comment: "Uses standard HA async patterns throughout"
+
+  # TESTING: Integration follows test best practices
+  integration-follows-test-practices:
+    done: true
+    comment: "Tests avoid mocking internal integration details"

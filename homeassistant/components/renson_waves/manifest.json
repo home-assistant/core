@@ -1,0 +1,10 @@
+{
+  "domain": "renson_waves",
+  "name": "Renson WAVES",
+  "codeowners": ["@pietergeerts"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/renson_waves",
+  "requirements": [],
+  "version": "1.0.0",
+  "quality_scale": "bronze"
+}
