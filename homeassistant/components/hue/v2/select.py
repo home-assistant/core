@@ -91,7 +91,8 @@ class SceneActivityBaseEntity(HueBaseEntity):
 
     def scene_option_matches_name(self, scene_id: str, name: str) -> bool:
         """Return if the current option label still matches an unchanged scene name."""
-        return self._scene_id_to_option.get(scene_id) == name
+        option = self._scene_id_to_option.get(scene_id)
+        return option in (name, f"{name} ({scene_id[:8]})")
 
 
 # pylint: disable-next=hass-enforce-class-module

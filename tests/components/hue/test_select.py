@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from copy import deepcopy
-from unittest.mock import Mock
+from unittest.mock import Mock, patch
 
 import pytest
 
@@ -156,6 +156,51 @@ async def test_scene_select_disambiguates_duplicate_names(
 
     last_request = mock_bridge_v2.mock_requests[-1]
     assert duplicate_scene_id in last_request["path"]
+
+
+async def test_scene_select_skips_rebuild_on_status_update_for_duplicate_names(
+    hass: HomeAssistant, mock_bridge_v2: Mock, v2_resources_test_data: JsonArrayType
+) -> None:
+    """Test that a status-only update on a disambiguated scene skips the options rebuild."""
+    test_data = deepcopy(v2_resources_test_data)
+    duplicate_scene = deepcopy(
+        next(
+            resource
+            for resource in test_data
+            if resource["type"] == "scene"
+            and resource["metadata"]["name"] == "Regular Test Scene"
+        )
+    )
+    duplicate_scene["id"] = "22222222-3333-4444-8555-666666666666"
+    duplicate_scene["status"] = {
+        "active": "inactive",
+        "last_recall": "2025-09-12T11:41:46.318Z",
+    }
+    test_data.append(duplicate_scene)
+
+    await mock_bridge_v2.api.load_test_data(test_data)
+    await setup_platform(hass, mock_bridge_v2, [Platform.SCENE, Platform.SELECT])
+
+    original_scene_id = "cdbf3740-7977-4a11-8275-8c78636ad4bd"
+
+    with patch(
+        "homeassistant.components.hue.v2.select.HueSceneSelectEntity.refresh_options"
+    ) as mock_refresh:
+        # Emit a status-only update (name is unchanged) — rebuild should be skipped.
+        mock_bridge_v2.api.emit_event(
+            "update",
+            {
+                "id": original_scene_id,
+                "type": "scene",
+                "status": {
+                    "active": "static",
+                    "last_recall": "2025-12-31T23:59:59.999Z",
+                },
+            },
+        )
+        await hass.async_block_till_done()
+
+        mock_refresh.assert_not_called()
 
 
 async def test_smart_scene_select_active(
