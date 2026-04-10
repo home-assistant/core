@@ -3,13 +3,14 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 import json
 import logging
 from typing import Any
 
 from heimanconnect import (
     DeviceManagement,
+    DeviceProperty,
     HeimanDevice,
     HeimanHome,
     HeimanMqttClient,
@@ -101,17 +102,17 @@ class HeimanDataUpdateCoordinator(DataUpdateCoordinator[HeimanData]):
             await self._fetch_and_process_devices(home_id)
 
             # Update last update time
-            self.data.last_update = datetime.now(timezone.utc)
+            self.data.last_update = datetime.now(UTC)
             self.data.errors.clear()
-
-            return self.data
 
         except ConfigEntryAuthFailed:
             _LOGGER.error("Authentication failed during data update")
             raise
-        except Exception as err:  # noqa: BLE001
+        except Exception as err:
             _LOGGER.error("Unexpected error during data update: %s", err)
             raise UpdateFailed(f"Error fetching Heiman data: {err}") from err
+        else:
+            return self.data
 
     async def _fetch_user_and_home_info(self) -> None:
         """Fetch user and home information on first update."""
@@ -170,7 +171,7 @@ class HeimanDataUpdateCoordinator(DataUpdateCoordinator[HeimanData]):
 
         except ConfigEntryAuthFailed:
             raise
-        except Exception as err:  # noqa: BLE001
+        except Exception as err:
             _LOGGER.exception("Failed to fetch devices")
             self.data.errors["devices"] = str(err)
             # If there was previous device data, keep it
@@ -232,7 +233,7 @@ class HeimanDataUpdateCoordinator(DataUpdateCoordinator[HeimanData]):
                     if isinstance(metadata_list, list):
                         for prop_item in metadata_list:
                             self._update_device_property(device, prop_item)
-            except Exception as err:  # noqa: BLE001
+            except Exception:
                 _LOGGER.exception(
                     "Failed to parse deriveMetadata for %s", device.device_id
                 )
@@ -393,7 +394,7 @@ class HeimanDataUpdateCoordinator(DataUpdateCoordinator[HeimanData]):
             # Final fallback: get token from api_client
             if not access_token and hasattr(self.api_client, "_get_access_token"):
                 try:
-                    access_token = self.api_client._get_access_token()
+                    access_token = self.api_client._get_access_token()  # noqa: SLF001
                 except Exception as err:  # noqa: BLE001
                     _LOGGER.warning(
                         "Failed to get access_token from api_client: %s", err
@@ -429,7 +430,7 @@ class HeimanDataUpdateCoordinator(DataUpdateCoordinator[HeimanData]):
                 # This is an internal implementation detail that may be refactored
                 # in future versions of heimanconnect library.
                 if hasattr(self.api_client, "_cloud_client"):
-                    cloud_client = self.api_client._cloud_client
+                    cloud_client = self.api_client._cloud_client  # noqa: SLF001
             except Exception as err:  # noqa: BLE001
                 _LOGGER.warning("Failed to get cloud_client reference: %s", err)
 
@@ -476,8 +477,6 @@ class HeimanDataUpdateCoordinator(DataUpdateCoordinator[HeimanData]):
                 device.properties[prop_name].value = prop_value
             else:
                 # Add new property if it doesn't exist
-                from heimanconnect import DeviceProperty
-
                 device.properties[prop_name] = DeviceProperty(
                     identifier=prop_name,
                     name=prop_name,
@@ -521,8 +520,6 @@ class HeimanDataUpdateCoordinator(DataUpdateCoordinator[HeimanData]):
                         device.properties[prop_name].value = prop_value
                     else:
                         # Add new property if it doesn't exist
-                        from heimanconnect import DeviceProperty
-
                         device.properties[prop_name] = DeviceProperty(
                             identifier=prop_name,
                             name=prop_name,

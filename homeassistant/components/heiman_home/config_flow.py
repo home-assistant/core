@@ -9,8 +9,8 @@ import vol
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlowResult
 from homeassistant.const import CONF_TOKEN
 from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.config_entry_oauth2_flow import AbstractOAuth2FlowHandler
-import homeassistant.helpers.config_validation as cv
 
 from .api import HeimanApiClient
 from .const import CONF_HOME_ID, CONF_USER_ID, DOMAIN, REQUESTED_SCOPES, SCOPES

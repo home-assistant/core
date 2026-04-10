@@ -282,9 +282,8 @@ class HeimanApiClient:
             # Note: This accesses a private method from heimanconnect library
             # because deriveMetadata (containing property values) is only available
             # through this internal endpoint
-            device_detail = await self._cloud_client._async_get_device_detail(device_id)
-            return device_detail
-        except Exception as err:
+            return await self._cloud_client._async_get_device_detail(device_id)  # noqa: SLF001
+        except Exception as err:  # noqa: BLE001
             _LOGGER.debug("Failed to get device detail for %s: %s", device_id, err)
             return None
 
