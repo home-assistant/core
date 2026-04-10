@@ -81,7 +81,7 @@ async def test_victron_switch_actions(
     await inject_message(
         victron_hub,
         f"N/{MOCK_INSTALLATION_ID}/evcharger/0/StartStop",
-        '{"value": 1}',
+        '{"value": 0}',
     )
     await finalize_injection(victron_hub)
     await hass.async_block_till_done()
@@ -90,6 +90,10 @@ async def test_victron_switch_actions(
         entity_registry, mock_config_entry.entry_id
     )
     entity_id = entities[0].entity_id
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == BINARY_SENSOR_OFF_ID
 
     # Call turn_on and turn_off services and assert they update entity state
     await hass.services.async_call(
