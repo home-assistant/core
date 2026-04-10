@@ -405,9 +405,13 @@ async def test_doorbell_missing_ring_event_type(
     assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert (
+    warnings = [
+        record.message for record in caplog.records if record.levelname == "WARNING"
+    ]
+    assert any(
         "Entity event.doorbell_without_ring is a doorbell event entity "
-        "but does not support the 'ring' event type"
-    ) in caplog.text
-    assert "event.doorbell_with_ring" not in caplog.text
-    assert "event.button" not in caplog.text
+        "but does not support the 'ring' event type" in msg
+        for msg in warnings
+    )
+    assert not any("event.doorbell_with_ring" in msg for msg in warnings)
+    assert not any("event.button" in msg for msg in warnings)
