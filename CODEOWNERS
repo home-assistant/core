@@ -2043,3 +2043,4 @@ CLAUDE.md @home-assistant/core
 
 # Remove codeowners from files
 /homeassistant/components/*/translations/
+
