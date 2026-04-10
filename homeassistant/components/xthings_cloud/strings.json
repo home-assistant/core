@@ -1,0 +1,82 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Xthings Cloud Login",
+        "description": "Please enter your Xthings Cloud account credentials.",
+        "data": {
+          "email": "Email",
+          "password": "Password"
+        },
+        "data_description": {
+          "email": "The email address used to register your Xthings Cloud account.",
+          "password": "Your Xthings Cloud account password."
+        }
+      },
+      "2fa_email": {
+        "title": "Email Verification",
+        "description": "A 6-digit verification code has been sent to {email}. Please enter the code.",
+        "data": {
+          "verification_code": "Verification Code"
+        },
+        "data_description": {
+          "verification_code": "Enter the 6-digit code sent to your email."
+        }
+      },
+      "2fa_phone": {
+        "title": "Phone Verification",
+        "description": "A 6-digit verification code has been sent to your phone. Please enter the code.",
+        "data": {
+          "verification_code": "Verification Code"
+        },
+        "data_description": {
+          "verification_code": "Enter the 6-digit code sent to your phone."
+        }
+      },
+      "reauth_confirm": {
+        "title": "Re-authenticate Xthings Cloud",
+        "description": "Your session has expired. Please re-enter your credentials.",
+        "data": {
+          "email": "Email",
+          "password": "Password"
+        }
+      },
+      "reauth_2fa_email": {
+        "title": "Email Verification",
+        "description": "A 6-digit verification code has been sent to {email}. Please enter the code.",
+        "data": {
+          "verification_code": "Verification Code"
+        }
+      },
+      "reauth_2fa_phone": {
+        "title": "Phone Verification",
+        "description": "A 6-digit verification code has been sent to your phone. Please enter the code.",
+        "data": {
+          "verification_code": "Verification Code"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Unable to connect to Xthings Cloud.",
+      "unknown": "An unknown error occurred.",
+      "email_empty": "Email cannot be empty.",
+      "email_invalid": "Invalid email format.",
+      "email_not_found": "Email does not exist.",
+      "email_verify_error": "Email verification failed.",
+      "password_empty": "Password cannot be empty.",
+      "password_wrong": "Incorrect password.",
+      "user_disabled": "This account has been disabled.",
+      "user_not_logged_in": "Session expired, please log in again.",
+      "user_not_activated": "This account has not been activated.",
+      "token_invalid": "Invalid token, please log in again.",
+      "token_expired": "Token expired, please log in again.",
+      "device_not_found": "Device not found.",
+      "device_offline": "Device is offline.",
+      "invalid_verification_code": "Invalid verification code, please try again."
+    },
+    "abort": {
+      "already_configured": "This account is already configured.",
+      "reauth_successful": "Re-authentication successful."
+    }
+  }
+}
