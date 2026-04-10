@@ -23,15 +23,18 @@ class StreamlabsData:
     yearly_usage: float
 
 
+type StreamlabsConfigEntry = ConfigEntry[StreamlabsCoordinator]
+
+
 class StreamlabsCoordinator(DataUpdateCoordinator[dict[str, StreamlabsData]]):
     """Coordinator for Streamlabs."""
 
-    config_entry: ConfigEntry
+    config_entry: StreamlabsConfigEntry
 
     def __init__(
         self,
         hass: HomeAssistant,
-        config_entry: ConfigEntry,
+        config_entry: StreamlabsConfigEntry,
         client: StreamlabsClient,
     ) -> None:
         """Coordinator for Streamlabs."""
