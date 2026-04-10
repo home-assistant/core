@@ -102,7 +102,8 @@ class LogbookRun:
     # Track context_id -> user_id for parent context user attribution.
     # Persisted across batches so child context events can inherit user_id
     # from a parent context whose SERVICE_CALL event arrived in an earlier batch.
-    context_user_ids: dict[bytes, bytes] = field(default_factory=dict)
+    context_user_ids: dict[bytes, tuple[bytes, float]] = field(default_factory=dict)
+    context_user_ids_last_pruned: float = field(default_factory=time.time)
 
 
 class EventProcessor:
@@ -192,6 +193,18 @@ class EventProcessor:
         self, rows: Generator[EventAsRow] | Sequence[Row] | Result
     ) -> list[dict[str, str]]:
         """Humanify rows."""
+        cutoff = time.time() - 600
+        if self.logbook_run.context_user_ids_last_pruned < cutoff:
+            # Prune context_user_ids of entries not seen in the last 10 minutes to prevent unbounded growth
+            self.logbook_run.context_user_ids = {
+                context_id: (user_id, timestamp)
+                for context_id, (
+                    user_id,
+                    timestamp,
+                ) in self.logbook_run.context_user_ids.items()
+                if timestamp > cutoff
+            }
+            self.logbook_run.context_user_ids_last_pruned = time.time()
         return list(
             _humanify(
                 self.hass,
@@ -231,8 +244,11 @@ def _humanify(
         context_id_bin = row[CONTEXT_ID_BIN_POS]
         if memoize_new_contexts and context_id_bin not in context_lookup:
             context_lookup[context_id_bin] = row
+        time_fired_ts: float = row[TIME_FIRED_TS_POS] or time.time()
         if context_user_id_bin := row[CONTEXT_USER_ID_BIN_POS]:
-            context_user_ids.setdefault(context_id_bin, context_user_id_bin)
+            context_user_ids.setdefault(
+                context_id_bin, (context_user_id_bin, time_fired_ts)
+            )
         if row[CONTEXT_ONLY_POS]:
             continue
         event_type = row[EVENT_TYPE_POS]
@@ -290,12 +306,11 @@ def _humanify(
         else:
             continue
 
-        time_fired_ts = row[TIME_FIRED_TS_POS]
         if timestamp:
-            when = time_fired_ts or time.time()
+            when: str | float = time_fired_ts
         else:
             when = process_timestamp_to_utc_isoformat(
-                dt_util.utc_from_timestamp(time_fired_ts) or dt_util.utcnow()
+                dt_util.utc_from_timestamp(time_fired_ts)
             )
         data[LOGBOOK_ENTRY_WHEN] = when
 
@@ -321,10 +336,12 @@ def _humanify(
         if CONTEXT_USER_ID not in data and (
             context_parent_id_bin := row[CONTEXT_PARENT_ID_BIN_POS]
         ):
-            if (parent_user_id_bin := context_user_ids.get(context_parent_id_bin)) or (
-                (parent_row := get_context(context_parent_id_bin, row))
-                and (parent_user_id_bin := parent_row[CONTEXT_USER_ID_BIN_POS])
-            ):
+            parent_user_id_bin: bytes | None = None
+            if parent_entry := context_user_ids.get(context_parent_id_bin):
+                parent_user_id_bin = parent_entry[0]
+            elif parent_row := get_context(context_parent_id_bin, row):
+                parent_user_id_bin = parent_row[CONTEXT_USER_ID_BIN_POS]
+            if parent_user_id_bin:
                 data[CONTEXT_USER_ID] = bytes_to_uuid_hex_or_none(parent_user_id_bin)
 
         yield data

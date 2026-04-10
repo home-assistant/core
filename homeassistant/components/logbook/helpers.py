@@ -109,13 +109,18 @@ def async_determine_event_types(
 
 
 @callback
-def extract_attr(source: Mapping[str, Any], attr: str) -> list[str]:
+def extract_attr(
+    event_type: EventType[Any] | str, source: Mapping[str, Any], attr: str
+) -> list[str]:
     """Extract an attribute as a list or string.
 
     For EVENT_CALL_SERVICE events, the entity_id is inside service_data,
     not at the top level. Check service_data as a fallback.
     """
     if (value := source.get(attr)) is None:
+        # Early return to avoid unnecessary dict lookups for non-service events
+        if event_type != EVENT_CALL_SERVICE:
+            return []
         if service_data := source.get(ATTR_SERVICE_DATA):
             value = service_data.get(attr)
         if value is None:
@@ -147,7 +152,7 @@ def event_forwarder_filtered(
         def _forward_events_filtered_by_entities_filter(event: Event) -> None:
             assert entities_filter is not None
             event_data = event.data
-            entity_ids = extract_attr(event_data, ATTR_ENTITY_ID)
+            entity_ids = extract_attr(event.event_type, event_data, ATTR_ENTITY_ID)
             if entity_ids and not any(
                 entities_filter(entity_id) for entity_id in entity_ids
             ):
@@ -169,9 +174,12 @@ def event_forwarder_filtered(
     @callback
     def _forward_events_filtered_by_device_entity_ids(event: Event) -> None:
         event_data = event.data
+        event_type = event.event_type
         if entity_ids_set.intersection(
-            extract_attr(event_data, ATTR_ENTITY_ID)
-        ) or device_ids_set.intersection(extract_attr(event_data, ATTR_DEVICE_ID)):
+            extract_attr(event_type, event_data, ATTR_ENTITY_ID)
+        ) or device_ids_set.intersection(
+            extract_attr(event_type, event_data, ATTR_DEVICE_ID)
+        ):
             target(event)
 
     return _forward_events_filtered_by_device_entity_ids

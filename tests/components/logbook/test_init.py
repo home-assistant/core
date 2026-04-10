@@ -4,6 +4,7 @@ import asyncio
 from collections.abc import Callable
 from datetime import datetime, timedelta
 from http import HTTPStatus
+import time
 from unittest.mock import Mock
 
 from freezegun import freeze_time
@@ -3155,3 +3156,99 @@ async def test_logbook_user_id_from_parent_context_state_changes_only(
     assert heater_entry["context_entity_id_name"] == "Living Room Thermostat"
     assert heater_entry["context_state"] == "heat"
     assert heater_entry["context_user_id"] == "b400facee45711eaa9308bfd3d19e474"
+
+
+async def test_context_user_ids_pruned_after_10_minutes(
+    hass: HomeAssistant,
+) -> None:
+    """Test that parent context user attribution is lost after pruning.
+
+    When the parent context's SERVICE_CALL event is older than 10 minutes,
+    it should be pruned from context_user_ids. A child state change arriving
+    after pruning should not inherit the parent's user_id.
+    """
+    user_id = "b400facee45711eaa9308bfd3d19e474"
+    parent_context = ha.Context(
+        id="01GTDGKBCH00GW0X476W5TVAAA",
+        user_id=user_id,
+    )
+    child_context = ha.Context(
+        id="01GTDGKBCH00GW0X476W5TVDDD",
+        parent_id=parent_context.id,
+    )
+
+    logbook_run = logbook.processor.LogbookRun(
+        context_lookup={None: None},
+        external_events={},
+        event_cache=logbook.processor.EventCache({}),
+        entity_name_cache=logbook.processor.EntityNameCache(hass),
+        include_entity_name=True,
+        timestamp=False,
+        memoize_new_contexts=False,
+    )
+    context_augmenter = logbook.processor.ContextAugmenter(logbook_run)
+    ent_reg = er.async_get(hass)
+
+    # Build a minimal object that exposes .humanify() using the real
+    # EventProcessor implementation, without needing recorder/logbook setup.
+    processor = logbook.processor.EventProcessor.__new__(
+        logbook.processor.EventProcessor
+    )
+    processor.hass = hass
+    processor.ent_reg = ent_reg
+    processor.logbook_run = logbook_run
+    processor.context_augmenter = context_augmenter
+
+    hass.states.async_set("switch.heater", STATE_OFF)
+    await hass.async_block_till_done()
+
+    # Batch 1: parent SERVICE_CALL event arrives now
+    with freeze_time("2025-01-01 12:00:00"):
+        logbook_run.context_user_ids_last_pruned = time.time()
+        parent_row = MockRow(
+            EVENT_CALL_SERVICE,
+            {
+                ATTR_DOMAIN: "climate",
+                ATTR_SERVICE: "set_hvac_mode",
+                "service_data": {ATTR_ENTITY_ID: "climate.living_room"},
+            },
+            context=parent_context,
+        )
+        parent_row.context_only = True
+        parent_row.icon = None
+        processor.humanify([parent_row])
+
+    # Verify the parent user_id was cached
+    assert len(logbook_run.context_user_ids) == 1
+
+    # Batch 2a: child state change arrives 5 minutes later (within window)
+    with freeze_time("2025-01-01 12:05:00"):
+        child_row = MockRow(
+            PSEUDO_EVENT_STATE_CHANGED,
+            context=child_context,
+        )
+        child_row.state = STATE_ON
+        child_row.entity_id = "switch.heater"
+        child_row.icon = None
+        results = processor.humanify([child_row])
+
+    heater_entries = [e for e in results if e.get("entity_id") == "switch.heater"]
+    assert len(heater_entries) == 1
+    assert heater_entries[0]["context_user_id"] == user_id
+
+    # Batch 2b: same child state change but 11 minutes after the parent
+    # (beyond the 10-minute pruning window) — user_id should be gone
+    with freeze_time("2025-01-01 12:11:00"):
+        child_row = MockRow(
+            PSEUDO_EVENT_STATE_CHANGED,
+            context=child_context,
+        )
+        child_row.state = STATE_ON
+        child_row.entity_id = "switch.heater"
+        child_row.icon = None
+        results = processor.humanify([child_row])
+
+    assert len(logbook_run.context_user_ids) == 0
+    heater_entries = [e for e in results if e.get("entity_id") == "switch.heater"]
+    assert len(heater_entries) == 1
+    assert "context_user_id" not in heater_entries[0]
