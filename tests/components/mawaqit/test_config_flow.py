@@ -28,7 +28,7 @@ from tests.common import MockConfigEntry
 
 
 @pytest.fixture
-async def config_entry_setup(hass: HomeAssistant):
+async def config_entry_setup(hass: HomeAssistant) -> MockConfigEntry:
     """Create a mock config entry for tests."""
     entry = MockConfigEntry(
         version=10,
@@ -50,7 +50,7 @@ async def config_entry_setup(hass: HomeAssistant):
 
 
 @pytest.fixture
-async def mock_mosques_test_data():
+async def mock_mosques_test_data() -> tuple[list[dict], tuple[list[str], list[str], list[str]]]:
     """Provide mock data for mosques."""
     mock_mosques = [
         {
@@ -266,7 +266,8 @@ async def test_async_step_search_method_coordinate_no_neighborhood(
 
 @pytest.mark.asyncio
 async def test_async_step_search_method_coordinate_valid(
-    hass: HomeAssistant, mock_mosques_test_data
+    hass: HomeAssistant,
+    mock_mosques_test_data: tuple[list[dict], tuple[list[str], list[str], list[str]]],
 ) -> None:
     """Test the search method selection step with coordinates search method and where neighbor mosques are found."""
     flow = config_flow.MawaqitPrayerFlowHandler()
@@ -347,7 +348,8 @@ async def test_async_step_keyword_search_initial(hass: HomeAssistant) -> None:
 
 @pytest.mark.asyncio
 async def test_async_step_keyword_search_with_keyword(
-    hass: HomeAssistant, mock_mosques_test_data
+    hass: HomeAssistant,
+    mock_mosques_test_data: tuple[list[dict], tuple[list[str], list[str], list[str]]],
 ) -> None:
     """Test the keyword search step with a keyword provided."""
     flow = config_flow.MawaqitPrayerFlowHandler()
@@ -392,7 +394,8 @@ async def test_async_step_keyword_search_with_keyword_no_mosque_found(
 
 @pytest.mark.asyncio
 async def test_async_step_keyword_search_with_keyword_new_keyword(
-    hass: HomeAssistant, mock_mosques_test_data
+    hass: HomeAssistant,
+    mock_mosques_test_data: tuple[list[dict], tuple[list[str], list[str], list[str]]],
 ) -> None:
     """Test the keyword search step with a keyword provided."""
     flow = config_flow.MawaqitPrayerFlowHandler()
@@ -417,7 +420,7 @@ async def test_async_step_keyword_search_with_keyword_new_keyword(
 @pytest.mark.asyncio
 async def test_async_step_keyword_search_with_keyword_same_keyword(
     hass: HomeAssistant,
-    mock_mosques_test_data,
+    mock_mosques_test_data: tuple[list[dict], tuple[list[str], list[str], list[str]]],
 ) -> None:
     """Test the keyword search step with the same keyword provided before."""
     flow = config_flow.MawaqitPrayerFlowHandler()
@@ -452,7 +455,8 @@ async def test_async_step_keyword_search_with_keyword_same_keyword(
 
 @pytest.mark.asyncio
 async def test_async_step_mosques_coordinates(
-    hass: HomeAssistant, mock_mosques_test_data
+    hass: HomeAssistant,
+    mock_mosques_test_data: tuple[list[dict], tuple[list[str], list[str], list[str]]],
 ) -> None:
     """Test the mosques step in the config flow."""
     mock_mosques, mocked_mosques_data = mock_mosques_test_data
@@ -512,8 +516,8 @@ async def test_async_get_options_flow(mock_config_entry_mawaqit) -> None:
 @pytest.mark.asyncio
 async def test_options_flow_valid_input(
     hass: HomeAssistant,
-    config_entry_setup,
-    mock_mosques_test_data,
+    config_entry_setup: MockConfigEntry,
+    mock_mosques_test_data: tuple[list[dict], tuple[list[str], list[str], list[str]]],
 ) -> None:
     """Test the options flow with valid input."""
     mock_mosques, mocked_mosques_data = mock_mosques_test_data
@@ -543,7 +547,7 @@ async def test_options_flow_valid_input(
 @pytest.mark.asyncio
 async def test_options_flow_no_input_reopens_form(
     hass: HomeAssistant,
-    config_entry_setup,
+    config_entry_setup: MockConfigEntry,
 ) -> None:
     """Test the options flow reopens the form when no input is provided."""
 

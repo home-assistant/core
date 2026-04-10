@@ -240,7 +240,7 @@ def get_prayer_times_for_two_days(prayer_calendar, today, timezone):
 
     """
     tz = dt_util.get_time_zone(timezone)
-    today = dt_util.as_local(today.replace(tzinfo=tz))
+    today = today.astimezone(tz)
     tomorrow = today + timedelta(days=1)
 
     # Extracting times for today and tomorrow
@@ -275,7 +275,7 @@ def find_next_prayer(current_time, prayer_calendar, timezone):
         _LOGGER.error("Invalid timezone: %s", timezone)
         return None, None
 
-    current_time = dt_util.as_local(current_time.replace(tzinfo=tz))
+    current_time = current_time.astimezone(tz)
 
     # Get prayer times for today and tomorrow
     prayer_times_two_days = get_prayer_times_for_two_days(
@@ -305,6 +305,9 @@ def find_next_prayer(current_time, prayer_calendar, timezone):
         next_prayer_datetime = datetime.combine(
             current_time.date() + timedelta(days=1), prayer_time, tz
         )
+
+    if next_prayer_datetime is not None:
+        next_prayer_datetime = next_prayer_datetime.astimezone(dt_util.UTC)
 
     return next_prayer_index, next_prayer_datetime
 

@@ -24,10 +24,7 @@ async def validate_credentials(
             client = AsyncMawaqitClient(username=username, password=password)
         await client.login()
     except BadCredentialsException:
-        _LOGGER.debug("Error : Bad Credentials")
-        return False
-    except (ConnectionError, TimeoutError) as e:
-        _LOGGER.debug("Network-related error: %s", e)
+        _LOGGER.debug("Error: Bad Credentials")
         return False
     finally:
         if client is not None:
@@ -135,28 +132,17 @@ async def fetch_prayer_times(
     client_instance: AsyncMawaqitClient | None = None,
 ) -> dict | None:
     """Get prayer times from the MAWAQIT API. Returns a dict."""
-    dict_calendar = None
+    client = client_instance
     try:
-        client = client_instance
         if client is None:
             client = AsyncMawaqitClient(
                 latitude, longitude, mosque, username, password, token, session=None
             )
-        else:
-            # would be better to set pos in client
-            pass
         await client.get_api_token()
-        dict_calendar = await client.fetch_prayer_times()
-
-    except BadCredentialsException as e:
-        _LOGGER.debug("Error on retrieving prayer times: %s", e)
-    except (ConnectionError, TimeoutError) as e:
-        _LOGGER.debug("Network-related error: %s", e)
+        return await client.fetch_prayer_times()
     finally:
         if client is not None:
             await client.close()
-
-    return dict_calendar
 
 
 async def fetch_mosque_by_id(
@@ -165,20 +151,12 @@ async def fetch_mosque_by_id(
     client_instance: AsyncMawaqitClient | None = None,
 ) -> dict | None:
     """Get Mosque data by ID from the MAWAQIT API. Returns a dict."""
-    dict_mosque = None
+    client = client_instance
     try:
-        client = client_instance
         if client is None:
             client = AsyncMawaqitClient(token=token)
         await client.get_api_token()
-        dict_mosque = await client.fetch_mosque_by_id(mosque)
-
-    except BadCredentialsException as e:
-        _LOGGER.debug("Error while retrieving mosque data: %s", e)
-    except (ConnectionError, TimeoutError) as e:
-        _LOGGER.debug("Network-related error: %s", e)
+        return await client.fetch_mosque_by_id(mosque)
     finally:
         if client is not None:
             await client.close()
-
-    return dict_mosque
