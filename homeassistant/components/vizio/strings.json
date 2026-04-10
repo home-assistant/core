@@ -40,6 +40,11 @@
       }
     }
   },
+  "exceptions": {
+    "unknown_command": {
+      "message": "Unknown remote command `{command}`. Valid commands for this device are listed in the integration documentation."
+    }
+  },
   "options": {
     "step": {
       "init": {

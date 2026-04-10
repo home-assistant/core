@@ -61,6 +61,16 @@ def vizio_data_coordinator_update_fixture() -> Generator[None]:
         yield
 
 
+@pytest.fixture(autouse=True)
+def no_delay_secs() -> Generator[None]:
+    """Patch default delay between remote command repeats to 0."""
+    with patch(
+        "homeassistant.components.vizio.remote.DEFAULT_DELAY_SECS",
+        0,
+    ):
+        yield
+
+
 @pytest.fixture(name="vizio_data_coordinator_update_failure")
 def vizio_data_coordinator_update_failure_fixture() -> Generator[None]:
     """Mock get data coordinator update failure."""
