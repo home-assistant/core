@@ -4,8 +4,6 @@
       "ambient_light": {
         "default": "mdi:brightness-6"
       },
-      "battery_state": {
-        "default": "mdi:lightning-bolt"
       "blackout_state": {
         "default": "mdi:monitor-off"
       },

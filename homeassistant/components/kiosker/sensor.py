@@ -20,7 +20,6 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
 from . import KioskerConfigEntry
-from .coordinator import KioskerDataUpdateCoordinator
 from .entity import KioskerEntity
 
 # Coordinator-based platform; no per-entity polling concurrency needed
@@ -80,7 +79,6 @@ class KioskerSensor(KioskerEntity, SensorEntity):
     """Representation of a Kiosker sensor."""
 
     entity_description: KioskerSensorEntityDescription
-
 
     @property
     def native_value(self) -> StateType | datetime | None:

@@ -33,10 +33,7 @@ class KioskerEntity(CoordinatorEntity[KioskerDataUpdateCoordinator]):
         os_version = status.os_version
 
         # Use uppercased truncated device ID for display purposes (device name, titles)
-        try:
-            device_id_short_display = device_id[:8].upper()
-        except TypeError, AttributeError:
-            device_id_short_display = "unknown"
+        device_id_short_display = device_id[:8].upper()
 
         # Set device info
         self._attr_device_info = DeviceInfo(
@@ -55,7 +52,4 @@ class KioskerEntity(CoordinatorEntity[KioskerDataUpdateCoordinator]):
             serial_number=device_id,
         )
 
-        self._attr_unique_id = (
-            f"{device_id}_{description.key}"
-        )
-
+        self._attr_unique_id = f"{device_id}_{description.key}"
