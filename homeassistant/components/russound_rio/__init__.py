@@ -2,8 +2,9 @@
 
 import logging
 
-from aiorussound import RussoundClient, RussoundTcpConnectionHandler
-from aiorussound.models import CallbackType
+from aiorussound import RussoundTcpConnectionHandler
+from aiorussound.rio import RussoundRIOClient
+from aiorussound.rio.models import CallbackType
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PORT, Platform
@@ -18,7 +19,7 @@ PLATFORMS = [Platform.MEDIA_PLAYER, Platform.NUMBER, Platform.SELECT, Platform.S
 
 _LOGGER = logging.getLogger(__name__)
 
-type RussoundConfigEntry = ConfigEntry[RussoundClient]
+type RussoundConfigEntry = ConfigEntry[RussoundRIOClient]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: RussoundConfigEntry) -> bool:
@@ -26,10 +27,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: RussoundConfigEntry) -> 
 
     host = entry.data[CONF_HOST]
     port = entry.data[CONF_PORT]
-    client = RussoundClient(RussoundTcpConnectionHandler(host, port))
+    client = RussoundRIOClient(RussoundTcpConnectionHandler(host, port))
 
     async def _connection_update_callback(
-        _client: RussoundClient, _callback_type: CallbackType
+        _client: RussoundRIOClient, _callback_type: CallbackType
     ) -> None:
         """Call when the device is notified of changes."""
         if _callback_type == CallbackType.CONNECTION:

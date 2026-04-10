@@ -4,7 +4,7 @@ from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from typing import Any
 
-from aiorussound.rio import Controller, ZoneControlSurface
+from aiorussound.rio.client import Controller, ZoneControlSurface
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.const import EntityCategory

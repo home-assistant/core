@@ -2,7 +2,7 @@
 
 from unittest.mock import AsyncMock, Mock
 
-from aiorussound.models import CallbackType
+from aiorussound.rio.models import CallbackType
 import pytest
 from syrupy.assertion import SnapshotAssertion
 

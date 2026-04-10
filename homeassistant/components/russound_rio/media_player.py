@@ -7,9 +7,9 @@ import datetime as dt
 import logging
 from typing import TYPE_CHECKING, Any
 
-from aiorussound import Controller
 from aiorussound.const import FeatureFlag
-from aiorussound.models import PlayStatus, Source
+from aiorussound.rio import Controller, Source
+from aiorussound.rio.models import PlayStatus
 from aiorussound.util import is_feature_supported
 
 from homeassistant.components.media_player import (
