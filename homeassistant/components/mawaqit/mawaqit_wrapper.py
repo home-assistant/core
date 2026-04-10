@@ -47,7 +47,7 @@ async def get_mawaqit_api_token(
         token = await client.get_api_token()
     except BadCredentialsException as e:
         _LOGGER.debug("Error on retrieving API Token: %s", e)
-    except ConnectionError, TimeoutError as e:
+    except (ConnectionError, TimeoutError) as e:
         _LOGGER.debug("Network-related error: %s", e)
     finally:
         if client is not None:

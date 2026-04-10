@@ -285,7 +285,7 @@ class MawaqitPrayerTimeSensor(SensorEntity, CoordinatorEntity[PrayerTimeCoordina
 
         try:
             return self.entity_description.get_value(prayer_data)
-        except KeyError, ValueError, TypeError as e:
+        except (KeyError, ValueError, TypeError) as e:
             _LOGGER.error(
                 "Error retrieving prayer time for %s: %s",
                 self.entity_description.key,
