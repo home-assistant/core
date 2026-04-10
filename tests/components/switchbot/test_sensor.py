@@ -938,6 +938,72 @@ async def test_presence_sensor_without_battery(hass: HomeAssistant) -> None:
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 @pytest.mark.parametrize(
+    ("raw_battery_range", "expected_state"),
+    [
+        ("<10%", "critical"),
+        ("10-19%", "low"),
+        ("20-59%", "medium"),
+        (">=60%", "high"),
+    ],
+)
+async def test_presence_sensor_battery_range_mapping(
+    hass: HomeAssistant,
+    raw_battery_range: str,
+    expected_state: str,
+) -> None:
+    """Test battery_range value mapping covers all four states."""
+    await async_setup_component(hass, DOMAIN, {})
+    inject_bluetooth_service_info(hass, PRESENCE_SENSOR_SERVICE_INFO)
+
+    with patch(
+        "homeassistant.components.switchbot.sensor.switchbot.parse_advertisement_data",
+        return_value=SwitchBotAdvertisement(
+            address="AA:BB:CC:DD:EE:FF",
+            data={
+                "rawAdvData": b"\x00 d\x00\x10\xcc\xc8",
+                "data": {
+                    "sequence_number": 190,
+                    "adaptive_state": True,
+                    "motion_detected": False,
+                    "battery_range": raw_battery_range,
+                    "trigger_flag": 0,
+                    "led_state": True,
+                    "lightLevel": 1,
+                },
+                "model": b"\x00\x10\xcc\xc8",
+                "isEncrypted": False,
+                "modelFriendlyName": "Presence Sensor",
+                "modelName": SwitchbotModel.PRESENCE_SENSOR,
+            },
+            device=PRESENCE_SENSOR_SERVICE_INFO.device,
+            rssi=PRESENCE_SENSOR_SERVICE_INFO.rssi,
+            active=True,
+        ),
+    ):
+        entry = MockConfigEntry(
+            domain=DOMAIN,
+            data={
+                CONF_ADDRESS: "AA:BB:CC:DD:EE:FF",
+                CONF_NAME: "test-name",
+                CONF_SENSOR_TYPE: "presence_sensor",
+            },
+            unique_id="aabbccddeeff",
+        )
+        entry.add_to_hass(hass)
+
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+        battery_range_sensor = hass.states.get("sensor.test_name_battery_range")
+        assert battery_range_sensor is not None
+        assert battery_range_sensor.state == expected_state
+
+        assert await hass.config_entries.async_unload(entry.entry_id)
+        await hass.async_block_till_done()
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+@pytest.mark.parametrize(
     ("adv_info", "sensor_type", "charging_state"),
     [
         (KEYPAD_VISION_INFO, "keypad_vision", STATE_ON),
