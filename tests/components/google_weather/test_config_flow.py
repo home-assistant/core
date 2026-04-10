@@ -2,7 +2,7 @@
 
 from unittest.mock import AsyncMock
 
-from google_weather_api import GoogleWeatherApiError
+from google_weather_api import GoogleWeatherApiAuthError, GoogleWeatherApiError
 import pytest
 
 from homeassistant import config_entries
@@ -357,6 +357,294 @@ async def test_subentry_flow_location_already_configured(
 
     entry = hass.config_entries.async_get_entry(mock_config_entry.entry_id)
     assert len(entry.subentries) == 1
+
+
+async def test_reauth(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    mock_google_weather_api: AsyncMock,
+) -> None:
+    """Test reauth flow."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await mock_config_entry.start_reauth_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_API_KEY: "new-api-key",
+        },
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    assert mock_config_entry.data[CONF_API_KEY] == "new-api-key"
+    assert mock_config_entry.data.get(CONF_REFERRER) is None
+    assert len(mock_setup_entry.mock_calls) == 1
+
+
+@pytest.mark.parametrize(
+    ("api_exception", "expected_error", "expected_placeholders"),
+    [
+        (
+            GoogleWeatherApiAuthError("Invalid API key"),
+            "cannot_connect",
+            {
+                "api_key_url": "https://developers.google.com/maps/documentation/weather/get-api-key",
+                "restricting_api_keys_url": "https://developers.google.com/maps/api-security-best-practices#restricting-api-keys",
+                "error_message": "Invalid API key",
+                "name": "Google Weather",
+            },
+        ),
+        (
+            ValueError(),
+            "unknown",
+            {
+                "api_key_url": "https://developers.google.com/maps/documentation/weather/get-api-key",
+                "restricting_api_keys_url": "https://developers.google.com/maps/api-security-best-practices#restricting-api-keys",
+                "name": "Google Weather",
+            },
+        ),
+    ],
+)
+async def test_reauth_exceptions(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_google_weather_api: AsyncMock,
+    api_exception: Exception,
+    expected_error: str,
+    expected_placeholders: dict[str, str],
+) -> None:
+    """Test reauth flow with exceptions."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await mock_config_entry.start_reauth_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+
+    mock_google_weather_api.async_get_current_conditions.side_effect = api_exception
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_API_KEY: "invalid-api-key",
+        },
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": expected_error}
+    assert result["description_placeholders"] == expected_placeholders
+
+    mock_google_weather_api.async_get_current_conditions.side_effect = None
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_API_KEY: "valid-api-key",
+        },
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+
+
+async def test_reauth_same_api_key_different_referrer(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    mock_google_weather_api: AsyncMock,
+) -> None:
+    """Test reauth flow with same API key but different referrer."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await mock_config_entry.start_reauth_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_API_KEY: "test-api-key",
+            SECTION_API_KEY_OPTIONS: {
+                CONF_REFERRER: "new-referrer",
+            },
+        },
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    assert mock_config_entry.data[CONF_API_KEY] == "test-api-key"
+    assert mock_config_entry.data.get(CONF_REFERRER) == "new-referrer"
+
+
+async def test_reconfigure(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    mock_google_weather_api: AsyncMock,
+) -> None:
+    """Test reconfigure flow."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_API_KEY: "new-api-key",
+            SECTION_API_KEY_OPTIONS: {
+                CONF_REFERRER: "new-referrer",
+            },
+        },
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert mock_config_entry.data[CONF_API_KEY] == "new-api-key"
+    assert mock_config_entry.data.get(CONF_REFERRER) == "new-referrer"
+    assert len(mock_setup_entry.mock_calls) == 1
+
+
+@pytest.mark.parametrize(
+    ("api_exception", "expected_error", "expected_placeholders"),
+    [
+        (
+            GoogleWeatherApiAuthError("Invalid API key"),
+            "cannot_connect",
+            {
+                "api_key_url": "https://developers.google.com/maps/documentation/weather/get-api-key",
+                "restricting_api_keys_url": "https://developers.google.com/maps/api-security-best-practices#restricting-api-keys",
+                "error_message": "Invalid API key",
+            },
+        ),
+        (
+            ValueError(),
+            "unknown",
+            {
+                "api_key_url": "https://developers.google.com/maps/documentation/weather/get-api-key",
+                "restricting_api_keys_url": "https://developers.google.com/maps/api-security-best-practices#restricting-api-keys",
+            },
+        ),
+    ],
+)
+async def test_reconfigure_exceptions(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    mock_google_weather_api: AsyncMock,
+    api_exception: Exception,
+    expected_error: str,
+    expected_placeholders: dict[str, str],
+) -> None:
+    """Test reconfigure flow with exceptions."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+
+    mock_google_weather_api.async_get_current_conditions.side_effect = api_exception
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_API_KEY: "invalid-api-key",
+        },
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": expected_error}
+    assert result["description_placeholders"] == expected_placeholders
+
+    mock_google_weather_api.async_get_current_conditions.side_effect = None
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_API_KEY: "valid-api-key",
+        },
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_reconfigure_no_subentries(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_google_weather_api: AsyncMock,
+) -> None:
+    """Test reconfigure flow when there are no subentries."""
+    mock_config_entry = MockConfigEntry(
+        title="Google Weather",
+        domain=DOMAIN,
+        data={
+            CONF_API_KEY: "test-api-key",
+        },
+    )
+    mock_config_entry.add_to_hass(hass)
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_API_KEY: "new-api-key",
+        },
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert mock_config_entry.data[CONF_API_KEY] == "new-api-key"
+    assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_subentry_reconfigure(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_google_weather_api: AsyncMock,
+) -> None:
+    """Test reconfiguring a location subentry."""
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+
+    subentry = next(iter(mock_config_entry.subentries.values()))
+    result = await mock_config_entry.start_subentry_reconfigure_flow(
+        hass, subentry.subentry_id
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "location"
+
+    result2 = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        {
+            CONF_NAME: "New Work",
+            CONF_LOCATION: {
+                CONF_LATITUDE: 30.1,
+                CONF_LONGITUDE: 40.1,
+            },
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert result2["type"] is FlowResultType.ABORT
+    assert result2["reason"] == "reconfigure_successful"
+
+    # Reload the entry to see changes
+    entry = hass.config_entries.async_get_entry(mock_config_entry.entry_id)
+    updated_subentry = entry.subentries[subentry.subentry_id]
+
+    assert updated_subentry.title == "New Work"
+    assert updated_subentry.data == {
+        CONF_LATITUDE: 30.1,
+        CONF_LONGITUDE: 40.1,
+    }
 
 
 async def test_subentry_flow_entry_not_loaded(
