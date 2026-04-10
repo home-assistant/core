@@ -79,7 +79,7 @@ class QbusLight(QbusEntity, LightEntity):
         await self._async_publish_output_state(state)
 
     async def _handle_state_received(self, state: QbusMqttAnalogState) -> None:
-        percentage = round(state.read_percentage())
+        percentage = round(state.read_percentage() or 0)
         self._set_state(percentage)
 
     def _set_state(self, percentage: int) -> None:
