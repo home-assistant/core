@@ -8,6 +8,7 @@ import pytest
 from homeassistant.components.binary_sensor import BinarySensorDeviceClass
 from homeassistant.components.satel_integra.const import (
     CONF_ARM_HOME_MODE,
+    CONF_ENCRYPTION_KEY,
     CONF_OUTPUT_NUMBER,
     CONF_PARTITION_NUMBER,
     CONF_SWITCHABLE_OUTPUT_NUMBER,
@@ -51,7 +52,11 @@ from tests.common import MockConfigEntry
         (
             {CONF_HOST: MOCK_CONFIG_DATA[CONF_HOST]},
             {},
-            {CONF_HOST: MOCK_CONFIG_DATA[CONF_HOST], CONF_PORT: DEFAULT_PORT},
+            {
+                CONF_HOST: MOCK_CONFIG_DATA[CONF_HOST],
+                CONF_PORT: DEFAULT_PORT,
+                CONF_ENCRYPTION_KEY: None,
+            },
             {CONF_CODE: None},
         ),
     ],
@@ -362,6 +367,7 @@ async def test_reconfigure_flow_success(
     assert mock_config_entry.data == {
         CONF_HOST: "10.0.0.2",
         CONF_PORT: 4321,
+        CONF_ENCRYPTION_KEY: None,
     }
 
     await hass.async_block_till_done()
@@ -459,6 +465,7 @@ async def test_reconfigure_connection_failed(
     assert mock_config_entry.data == {
         CONF_HOST: "1.2.3.4",
         CONF_PORT: 1234,
+        CONF_ENCRYPTION_KEY: None,
     }
 
 
@@ -483,3 +490,75 @@ async def test_same_host_config_disallowed(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
+
+
+async def test_reconfigure_encryption_key_changed(
+    hass: HomeAssistant,
+    mock_satel: AsyncMock,
+    mock_setup_entry: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test reconfigure flow when encryption key is changed."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+
+    # Change encryption key
+    user_input = {
+        CONF_HOST: "192.168.0.2",
+        CONF_PORT: DEFAULT_PORT,
+        CONF_ENCRYPTION_KEY: "new_key",
+    }
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+
+    expected_data = {
+        CONF_HOST: "192.168.0.2",
+        CONF_PORT: DEFAULT_PORT,
+        CONF_ENCRYPTION_KEY: "new_key",
+    }
+    assert mock_config_entry.data == expected_data
+
+
+async def test_reconfigure_encryption_key_removed(
+    hass: HomeAssistant,
+    mock_satel: AsyncMock,
+    mock_setup_entry: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test reconfigure flow when encryption key is explicitly removed."""
+    # Start with config that has encryption key
+    mock_config_entry.add_to_hass(hass)
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+
+    # Explicitly set encryption key to None (empty string in UI)
+    user_input = {
+        CONF_HOST: "192.168.0.2",
+        CONF_PORT: DEFAULT_PORT,
+    }
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+
+    expected_data = {
+        CONF_HOST: "192.168.0.2",
+        CONF_PORT: DEFAULT_PORT,
+        CONF_ENCRYPTION_KEY: None,
+    }
+    assert mock_config_entry.data == expected_data

@@ -24,6 +24,7 @@ from homeassistant.helpers import config_validation as cv, selector
 
 from .const import (
     CONF_ARM_HOME_MODE,
+    CONF_ENCRYPTION_KEY,
     CONF_OUTPUT_NUMBER,
     CONF_PARTITION_NUMBER,
     CONF_SWITCHABLE_OUTPUT_NUMBER,
@@ -45,6 +46,9 @@ CONNECTION_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_HOST): str,
         vol.Required(CONF_PORT, default=DEFAULT_PORT): cv.port,
+        vol.Optional(CONF_ENCRYPTION_KEY): selector.TextSelector(
+            selector.TextSelectorConfig(type=selector.TextSelectorType.PASSWORD)
+        ),
     }
 )
 
@@ -91,7 +95,7 @@ class SatelConfigFlow(ConfigFlow, domain=DOMAIN):
         self.connection_data: dict[str, Any] = {}
 
     VERSION = 2
-    MINOR_VERSION = 1
+    MINOR_VERSION = 2
 
     @staticmethod
     @callback
@@ -123,10 +127,15 @@ class SatelConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             self._async_abort_entries_match({CONF_HOST: user_input[CONF_HOST]})
 
-            if await self.test_connection(user_input[CONF_HOST], user_input[CONF_PORT]):
+            if await self.test_connection(
+                user_input[CONF_HOST],
+                user_input[CONF_PORT],
+                user_input.get(CONF_ENCRYPTION_KEY),
+            ):
                 self.connection_data = {
                     CONF_HOST: user_input[CONF_HOST],
                     CONF_PORT: user_input[CONF_PORT],
+                    CONF_ENCRYPTION_KEY: user_input.get(CONF_ENCRYPTION_KEY),
                 }
                 return await self.async_step_code()
 
@@ -164,12 +173,17 @@ class SatelConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             self._async_abort_entries_match({CONF_HOST: user_input[CONF_HOST]})
 
+            # Normalize user_input to include None for missing optional encryption key
+            normalized_input = {CONF_ENCRYPTION_KEY: None, **user_input}
+
             if (
                 reconfigure_entry.state is not ConfigEntryState.LOADED
-                or reconfigure_entry.data != user_input
+                or reconfigure_entry.data != normalized_input
             ):
                 if not await self.test_connection(
-                    user_input[CONF_HOST], user_input[CONF_PORT]
+                    normalized_input[CONF_HOST],
+                    normalized_input[CONF_PORT],
+                    normalized_input.get(CONF_ENCRYPTION_KEY),
                 ):
                     errors["base"] = "cannot_connect"
 
@@ -177,10 +191,11 @@ class SatelConfigFlow(ConfigFlow, domain=DOMAIN):
                 return self.async_update_reload_and_abort(
                     reconfigure_entry,
                     data_updates={
-                        CONF_HOST: user_input[CONF_HOST],
-                        CONF_PORT: user_input[CONF_PORT],
+                        CONF_HOST: normalized_input[CONF_HOST],
+                        CONF_PORT: normalized_input[CONF_PORT],
+                        CONF_ENCRYPTION_KEY: normalized_input.get(CONF_ENCRYPTION_KEY),
                     },
-                    title=user_input[CONF_HOST],
+                    title=normalized_input[CONF_HOST],
                 )
 
         suggested_values: dict[str, Any] = {
@@ -196,12 +211,14 @@ class SatelConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def test_connection(self, host: str, port: int) -> bool:
+    async def test_connection(
+        self, host: str, port: int, integration_key: str | None = None
+    ) -> bool:
         """Test a connection to the Satel alarm."""
-        controller = AsyncSatel(host, port)
+        controller = AsyncSatel(host, port, integration_key=integration_key)
 
         try:
-            return await controller.connect(check_busy=False)
+            return await controller.connect()
         except Exception:
             _LOGGER.exception(
                 "Unexpected error during connection test to %s:%s",

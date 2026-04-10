@@ -10,6 +10,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 
 from .const import (
+    CONF_ENCRYPTION_KEY,
     CONF_OUTPUT_NUMBER,
     CONF_PARTITION_NUMBER,
     CONF_SWITCHABLE_OUTPUT_NUMBER,
@@ -61,7 +62,14 @@ class SatelClient:
 
         monitored_outputs = outputs + switchable_outputs
 
-        self.controller = AsyncSatel(host, port, zones, monitored_outputs, partitions)
+        self.controller = AsyncSatel(
+            host,
+            port,
+            zones,
+            monitored_outputs,
+            partitions,
+            integration_key=entry.data[CONF_ENCRYPTION_KEY],
+        )
 
     async def async_connect(
         self,
