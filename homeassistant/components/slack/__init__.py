@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 import logging
 
 from aiohttp.client_exceptions import ClientError
@@ -30,6 +31,17 @@ PLATFORMS = [Platform.NOTIFY, Platform.SENSOR]
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
+type SlackConfigEntry = ConfigEntry[SlackData]
+
+
+@dataclass
+class SlackData:
+    """Runtime data for the Slack integration."""
+
+    client: AsyncWebClient
+    url: str
+    user_id: str
+
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Slack component."""
@@ -37,7 +49,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: SlackConfigEntry) -> bool:
     """Set up Slack from a config entry."""
     session = aiohttp_client.async_get_clientsession(hass)
     slack = AsyncWebClient(
@@ -52,19 +64,25 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             return False
         raise ConfigEntryNotReady("Error while setting up integration") from ex
 
-    data = {
-        DATA_CLIENT: slack,
-        ATTR_URL: res[ATTR_URL],
-        ATTR_USER_ID: res[ATTR_USER_ID],
-    }
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = entry.data | {SLACK_DATA: data}
+    entry.runtime_data = SlackData(
+        client=slack,
+        url=res[ATTR_URL],
+        user_id=res[ATTR_USER_ID],
+    )
 
     hass.async_create_task(
         discovery.async_load_platform(
             hass,
             Platform.NOTIFY,
             DOMAIN,
-            hass.data[DOMAIN][entry.entry_id],
+            entry.data
+            | {
+                SLACK_DATA: {
+                    DATA_CLIENT: slack,
+                    ATTR_URL: res[ATTR_URL],
+                    ATTR_USER_ID: res[ATTR_USER_ID],
+                }
+            },
             hass.data[DATA_HASS_CONFIG],
         )
     )
