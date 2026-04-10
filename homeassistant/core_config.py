@@ -660,11 +660,12 @@ class Config:
 
         thepath = pathlib.Path(path)
         try:
-            # The file path does not have to exist (it's parent should)
-            if thepath.exists():
-                thepath = thepath.resolve()
+            # The file path does not have to exist (its parent should).
+            # Resolve symlinks strictly so dangling symlink paths are rejected.
+            if thepath.exists() or thepath.is_symlink():
+                thepath = thepath.resolve(strict=True)
             else:
-                thepath = thepath.parent.resolve()
+                thepath = thepath.parent.resolve(strict=True)
         except FileNotFoundError, RuntimeError, PermissionError:
             return False
 
