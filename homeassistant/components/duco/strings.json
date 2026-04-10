@@ -38,7 +38,26 @@
         "name": "Humidity air quality index"
       },
       "ventilation_state": {
-        "name": "Ventilation state"
+        "name": "Ventilation state",
+        "state": {
+          "aut1": "Automatic level 1",
+          "aut2": "Automatic level 2",
+          "aut3": "Automatic level 3",
+          "auto": "Automatic",
+          "cnt1": "Level 1",
+          "cnt2": "Level 2",
+          "cnt3": "Level 3",
+          "empt": "Empty",
+          "man1": "Manual low",
+          "man1x2": "Manual low (speed 2)",
+          "man1x3": "Manual low (speed 3)",
+          "man2": "Manual medium",
+          "man2x2": "Manual medium (speed 2)",
+          "man2x3": "Manual medium (speed 3)",
+          "man3": "Manual high",
+          "man3x2": "Manual high (speed 2)",
+          "man3x3": "Manual high (speed 3)"
+        }
       }
     }
   },

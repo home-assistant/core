@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 
-from duco.models import Node, NodeType
+from duco.models import Node, NodeType, VentilationState
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -35,7 +35,11 @@ SENSOR_DESCRIPTIONS: tuple[DucoSensorEntityDescription, ...] = (
     DucoSensorEntityDescription(
         key="ventilation_state",
         translation_key="ventilation_state",
-        value_fn=lambda node: node.ventilation.state if node.ventilation else None,
+        device_class=SensorDeviceClass.ENUM,
+        options=[s.lower() for s in VentilationState],
+        value_fn=lambda node: (
+            node.ventilation.state.lower() if node.ventilation else None
+        ),
         node_types=(NodeType.BOX, NodeType.UCCO2, NodeType.BSRH),
     ),
     DucoSensorEntityDescription(
