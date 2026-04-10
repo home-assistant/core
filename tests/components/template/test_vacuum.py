@@ -1113,34 +1113,9 @@ async def test_clean_area(
     [
         (
             {
-                "segments_template": "{{ {'1': 'Kitchen', '2': 'Living Room'} }}",
-            },
-            [
-                asdict(Segment(id="1", name="Kitchen")),
-                asdict(Segment(id="2", name="Living Room")),
-            ],
-        ),
-        (
-            {
                 "segments_template": "{{ ["
                 "{'id': '1', 'name': 'Kitchen'}, "
                 "{'id': '2', 'name': 'Bedroom', 'group': 'Upstairs'}"
-                "] }}",
-            },
-            [
-                asdict(Segment(id="1", name="Kitchen")),
-                asdict(Segment(id="2", name="Bedroom", group="Upstairs")),
-            ],
-        ),
-        (
-            {"segments_template": "{{ ['1', '3'] }}"},
-            [asdict(Segment(id="1", name="1")), asdict(Segment(id="3", name="3"))],
-        ),
-        (
-            {
-                "segments_template": "{{ ["
-                "['1', 'Kitchen'], "
-                "['2', 'Bedroom', 'Upstairs']"
                 "] }}",
             },
             [
@@ -1175,11 +1150,66 @@ async def test_get_segments(
         (
             1,
             {
+                "start": [],
+                **CLEAN_AREA_ACTION,
+            },
+        )
+    ],
+)
+@pytest.mark.parametrize(
+    "style",
+    [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
+)
+@pytest.mark.parametrize(
+    ("extra_config", "err_msg"),
+    [
+        (
+            {
+                "segments_template": "{{ [ {'id': '1'} ] }}",
+            },
+            "missing 1 required positional argument: 'name'",
+        ),
+        (
+            {
+                "segments_template": "{{ [ {'id': '1', 'name': 'Kitchen', 'extra_key': 'value'} ] }}",
+            },
+            "unexpected keyword argument 'extra_key'",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("setup_test_vacuum_with_extra_config")
+async def test_invalid_segments_template(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    caplog_setup_text,
+    caplog: pytest.LogCaptureFixture,
+    err_msg: str,
+) -> None:
+    """Test that errors are logged if parsing segment template fails."""
+    hass.states.async_set(TEST_STATE_ENTITY_ID, "Works")
+    await hass.async_block_till_done()
+
+    assert err_msg in caplog_setup_text or err_msg in caplog.text
+
+    client = await hass_ws_client(hass)
+    await client.send_json_auto_id(
+        {"type": "vacuum/get_segments", "entity_id": TEST_VACUUM.entity_id}
+    )
+    msg = await client.receive_json()
+    assert msg["result"] == {"segments": []}
+
+
+@pytest.mark.parametrize(
+    ("count", "vacuum_config"),
+    [
+        (
+            1,
+            {
                 "name": TEST_VACUUM.object_id,
                 "unique_id": TEST_VACUUM.entity_id,
                 "start": [],
                 **CLEAN_AREA_ACTION,
-                "segments_template": "{{ {'1': 'Kitchen', '2': states('input_text.segment_name')} }}",
+                "segments_template": "{{ [ {'id': '1', 'name': 'Kitchen'}, {'id': '2', 'name': states('input_text.segment_name')}] }}",
             },
         )
     ],

@@ -231,80 +231,37 @@ def validate_segments(
         if template_validators.check_result_for_none(result):
             return None
 
-        if isinstance(result, dict):
-            return [
-                Segment(id=str(segment_id), name=str(segment_name))
-                for segment_id, segment_name in result.items()
-            ]
-
         segments: list[Segment] = []
 
-        if isinstance(result, list):
-            for item in result:
-                if not isinstance(item, type(result[0])):
-                    template_validators.log_validation_result_error(
-                        entity,
-                        option,
-                        result,
-                        f"expected {type(result[0])}, got {type(item)}",
-                    )
-                    return None
-                if isinstance(item, str):
-                    segments.append(Segment(id=item, name=item, group=None))
-                elif isinstance(item, dict):
-                    if "id" not in item or "name" not in item:
-                        template_validators.log_validation_result_error(
-                            entity,
-                            option,
-                            result,
-                            "expected segment dictionaries with keys `id` and `name`",
-                        )
-                        return None
-                    segments.append(
-                        Segment(
-                            id=str(item["id"]),
-                            name=str(item["name"]),
-                            group=(
-                                str(item["group"])
-                                if item.get("group") is not None
-                                else None
-                            ),
-                        )
-                    )
-                elif isinstance(item, list):
-                    if len(item) not in (2, 3):
-                        template_validators.log_validation_result_error(
-                            entity,
-                            option,
-                            result,
-                            "expected 2-3 elements per segment (id, name, group)",
-                        )
-                        return None
-                    segments.append(
-                        Segment(
-                            id=str(item[0]),
-                            name=str(item[1]),
-                            group=str(item[2]) if len(item) == 3 else None,
-                        )
-                    )
-                else:
-                    template_validators.log_validation_result_error(
-                        entity,
-                        option,
-                        result,
-                        f"expected list of str, lists or objects, got {type(item)}",
-                    )
-                    return None
+        if not isinstance(result, list):
+            template_validators.log_validation_result_error(
+                entity,
+                option,
+                result,
+                "expected a list of dictionaries",
+            )
+            return None
 
-            return segments
-
-        template_validators.log_validation_result_error(
-            entity,
-            option,
-            result,
-            "expected a mapping of id to name or a list of segment dictionaries",
-        )
-        return None
+        for item in result:
+            if not isinstance(item, dict):
+                template_validators.log_validation_result_error(
+                    entity,
+                    option,
+                    result,
+                    "expected a list of dictionaries",
+                )
+                return None
+            try:
+                segments.append(Segment(**item))
+            except TypeError as err:
+                template_validators.log_validation_result_error(
+                    entity,
+                    option,
+                    result,
+                    str(err).replace("Segment.__init__() ", ""),
+                )
+                return None
+        return segments
 
     return parse
 
