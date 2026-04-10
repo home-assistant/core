@@ -75,7 +75,7 @@ class VictronBinarySensor(VictronBaseEntity, BinarySensorEntity):
 
     @staticmethod
     def convert_metric_value_to_is_on(value: Any) -> bool | None:
-        """Convert a Victron binary sensor enum value to a boolean."""
+        """Convert a Victron on/off enum value to a boolean."""
         if value is None or not isinstance(value, VictronEnum):
             return None
         if value.id == BINARY_SENSOR_ON_ID:
