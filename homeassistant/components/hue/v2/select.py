@@ -287,9 +287,19 @@ async def async_setup_entry(
             smart_scene_entities[group.id] = smart_scene_entity
             async_add_entities([scene_entity, smart_scene_entity])
 
+        @callback
+        def _on_group_removed(_: EventType, group: Room | Zone) -> None:
+            scene_entities.pop(group.id, None)
+            smart_scene_entities.pop(group.id, None)
+
         config_entry.async_on_unload(
             group_controller.subscribe(
                 _on_group_added, event_filter=EventType.RESOURCE_ADDED
+            )
+        )
+        config_entry.async_on_unload(
+            group_controller.subscribe(
+                _on_group_removed, event_filter=EventType.RESOURCE_DELETED
             )
         )
 
