@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Iterable
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import voluptuous as vol
 
@@ -46,8 +46,8 @@ class VizioRemote(CoordinatorEntity[VizioDeviceCoordinator], RemoteEntity):
         super().__init__(coordinator)
         self._attr_unique_id = unique_id = config_entry.unique_id
         # Guard against config entries missing unique_id, which should never happen
-        if not unique_id:
-            raise ValueError("Config entry is missing unique_id")
+        if TYPE_CHECKING:
+            assert unique_id is not None
         self._attr_device_info = DeviceInfo(identifiers={(DOMAIN, unique_id)})
         self._device = coordinator.device
         valid_keys = set(self._device.get_remote_keys_list())
