@@ -4,11 +4,10 @@
   "codeowners": ["@XthingsJacobs"],
   "config_flow": true,
   "single_config_entry": true,
-  "documentation": "https://github.com/XthingsJacobs/ha-xthings-cloud",
+  "documentation": "https://www.home-assistant.io/integrations/xthings_cloud",
   "integration_type": "hub",
   "iot_class": "cloud_push",
   "quality_scale": "bronze",
-  "requirements": ["ha-xthings-cloud==1.0.0"],
-  "loggers": ["custom_components.xthings_cloud"],
-  "version": "1.0.0"
+  "requirements": ["ha-xthings-cloud==1.0.2"],
+  "loggers": ["homeassistant.components.xthings_cloud"]
 }

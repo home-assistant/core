@@ -8,10 +8,16 @@ from typing import Any
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from ha_xthings_cloud import XthingsCloudApiClient, XthingsCloudApiError, XthingsCloudAuthError
-from ha_xthings_cloud import XthingsCloudWebSocket
+from ha_xthings_cloud import (
+    XthingsCloudApiClient,
+    XthingsCloudApiError,
+    XthingsCloudAuthError,
+    XthingsCloudWebSocket,
+)
+
 from .const import CONF_REFRESH_TOKEN, CONF_TOKEN, DEFAULT_SCAN_INTERVAL, DOMAIN, LOGGER
 
 
@@ -26,8 +32,11 @@ class XthingsCloudCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         client: XthingsCloudApiClient,
         entry: ConfigEntry,
     ) -> None:
+        """Initialize the coordinator."""
         super().__init__(
-            hass, LOGGER, name=DOMAIN,
+            hass,
+            LOGGER,
+            name=DOMAIN,
             update_interval=timedelta(seconds=DEFAULT_SCAN_INTERVAL),
         )
         self.client = client
@@ -42,15 +51,18 @@ class XthingsCloudCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             return False
         try:
             token_data = await self.client.async_refresh_token(refresh_token)
-            self.hass.config_entries.async_update_entry(
-                self.entry,
-                data={**self.entry.data,
-                      CONF_TOKEN: token_data["token"],
-                      CONF_REFRESH_TOKEN: token_data.get("refresh_token", "")},
-            )
-            return True
         except XthingsCloudAuthError:
             return False
+        else:
+            self.hass.config_entries.async_update_entry(
+                self.entry,
+                data={
+                    **self.entry.data,
+                    CONF_TOKEN: token_data["token"],
+                    CONF_REFRESH_TOKEN: token_data.get("refresh_token", ""),
+                },
+            )
+            return True
 
     async def _async_update_data(self) -> dict[str, Any]:
         """Fetch latest device data from cloud."""
@@ -70,7 +82,7 @@ class XthingsCloudCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                     ) from err
             raise ConfigEntryAuthFailed(
                 "Invalid token, re-authentication required"
-            )
+            ) from None
         except XthingsCloudApiError as err:
             raise UpdateFailed(f"Failed to fetch data: {err}") from err
 
@@ -86,11 +98,11 @@ class XthingsCloudCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         """Start WebSocket connection."""
         if self.websocket:
             return
-        from homeassistant.helpers.aiohttp_client import async_get_clientsession
         session = async_get_clientsession(self.hass)
         token = self.entry.data.get(CONF_TOKEN, "")
         self.websocket = XthingsCloudWebSocket(
-            session=session, token=token,
+            session=session,
+            token=token,
             on_device_status=self._handle_ws_device_status,
             on_token_expired=self._handle_ws_token_expired,
         )
@@ -108,12 +120,10 @@ class XthingsCloudCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         """Handle WebSocket device status update."""
         if not self.data:
             return
-        for device_id, device_data in self.data.items():
+        for device_data in self.data.values():
             if device_data.get("id") == device_uuid:
-                # Update online field at device top level
                 if "online" in status:
                     device_data["online"] = status.pop("online")
-                # Update remaining fields in status sub-object
                 if status:
                     device_data.setdefault("status", {}).update(status)
                 LOGGER.debug("WebSocket updated device status: %s", device_uuid)

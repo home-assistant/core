@@ -15,4 +15,4 @@ CONF_INSTANCE_ID = "instance_id"
 # Polling interval (seconds)
 DEFAULT_SCAN_INTERVAL = 1800
 
-PLATFORMS: list[str] = ["switch", "light", "lock", "camera", "sensor"]
+PLATFORMS: list[str] = ["light"]

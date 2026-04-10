@@ -8,10 +8,10 @@ from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from ha_xthings_cloud import XthingsCloudApiClient, XthingsCloudAuthError
-from .const import CONF_REFRESH_TOKEN, CONF_TOKEN, DOMAIN, LOGGER, PLATFORMS
+from .const import CONF_REFRESH_TOKEN, CONF_TOKEN, PLATFORMS
 from .coordinator import XthingsCloudCoordinator
 
-type XthingsCloudConfigEntry = ConfigEntry[XthingsCloudCoordinator]
+XthingsCloudConfigEntry = ConfigEntry[XthingsCloudCoordinator]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: XthingsCloudConfigEntry) -> bool:
@@ -36,7 +36,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: XthingsCloudConfigEntry)
         else:
             raise ConfigEntryAuthFailed(
                 "Invalid token, re-authentication required"
-            )
+            ) from None
 
     entry.runtime_data = coordinator
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)

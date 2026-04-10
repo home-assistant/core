@@ -23,6 +23,7 @@ class XthingsCloudEntity(CoordinatorEntity[XthingsCloudCoordinator]):
         device_id: str,
         device_data: dict[str, Any],
     ) -> None:
+        """Initialize the entity."""
         super().__init__(coordinator)
         self._device_id = device_id
         self._attr_unique_id = device_id

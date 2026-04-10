@@ -13,7 +13,7 @@ from homeassistant.components.light import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import XthingsCloudCoordinator
 from .entity import XthingsCloudEntity
@@ -22,7 +22,7 @@ from .entity import XthingsCloudEntity
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up light platform."""
     coordinator: XthingsCloudCoordinator = entry.runtime_data
@@ -47,6 +47,7 @@ class XthingsCloudLight(XthingsCloudEntity, LightEntity):
         device_id: str,
         device_data: dict[str, Any],
     ) -> None:
+        """Initialize the light entity."""
         super().__init__(coordinator, device_id, device_data)
         self._device_type = device_data.get("type", "light")
         # Determine supported color modes from device status
@@ -67,20 +68,22 @@ class XthingsCloudLight(XthingsCloudEntity, LightEntity):
         """Return current color mode."""
         status = self.device_data.get("status", {})
         color_type = status.get("color_type")
-        if color_type == 0 and ColorMode.HS in self._attr_supported_color_modes:
+        modes = self._attr_supported_color_modes or set()
+        if color_type == 0 and ColorMode.HS in modes:
             return ColorMode.HS
-        if color_type == 1 and ColorMode.COLOR_TEMP in self._attr_supported_color_modes:
+        if color_type == 1 and ColorMode.COLOR_TEMP in modes:
             return ColorMode.COLOR_TEMP
-        if ColorMode.HS in self._attr_supported_color_modes:
+        if ColorMode.HS in modes:
             return ColorMode.HS
-        if ColorMode.COLOR_TEMP in self._attr_supported_color_modes:
+        if ColorMode.COLOR_TEMP in modes:
             return ColorMode.COLOR_TEMP
-        if ColorMode.BRIGHTNESS in self._attr_supported_color_modes:
+        if ColorMode.BRIGHTNESS in modes:
             return ColorMode.BRIGHTNESS
         return ColorMode.ONOFF
 
     @property
     def is_on(self) -> bool | None:
+        """Return true if the light is on."""
         return self.device_data.get("status", {}).get("on")
 
     @property
@@ -93,6 +96,7 @@ class XthingsCloudLight(XthingsCloudEntity, LightEntity):
 
     @property
     def hs_color(self) -> tuple[float, float] | None:
+        """Return the HS color value."""
         status = self.device_data.get("status", {})
         hue = status.get("hue")
         saturation = status.get("saturation")
@@ -102,14 +106,17 @@ class XthingsCloudLight(XthingsCloudEntity, LightEntity):
 
     @property
     def color_temp_kelvin(self) -> int | None:
+        """Return the color temperature in Kelvin."""
         return self.device_data.get("status", {}).get("temperature")
 
     @property
     def min_color_temp_kelvin(self) -> int:
+        """Return the minimum color temperature in Kelvin."""
         return 2000
 
     @property
     def max_color_temp_kelvin(self) -> int:
+        """Return the maximum color temperature in Kelvin."""
         return 6500
 
     async def async_turn_on(self, **kwargs: Any) -> None:

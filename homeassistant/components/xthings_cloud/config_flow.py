@@ -45,6 +45,7 @@ class XthingsCloudConfigFlow(ConfigFlow, domain=DOMAIN):
     VERSION = 1
 
     def __init__(self) -> None:
+        """Initialize the config flow."""
         self._email: str | None = None
         self._password: str | None = None
         self._instance_id: str | None = None
@@ -64,7 +65,8 @@ class XthingsCloudConfigFlow(ConfigFlow, domain=DOMAIN):
             verification_code=verification_code,
         )
 
-    def _create_entry_data(self, token_data: dict[str, Any]) -> dict[str, Any]:
+    def _create_entry_data(self, token_data: dict[str, Any]) -> dict[str, str]:
+        assert self._email is not None
         return {
             CONF_EMAIL: self._email,
             CONF_TOKEN: token_data["token"],
@@ -100,7 +102,8 @@ class XthingsCloudConfigFlow(ConfigFlow, domain=DOMAIN):
                 await self.async_set_unique_id(self._email)
                 self._abort_if_unique_id_configured()
                 return self.async_create_entry(
-                    title=self._email, data=self._create_entry_data(token_data),
+                    title=self._email or "",
+                    data=self._create_entry_data(token_data),
                 )
 
         return self.async_show_form(
@@ -121,6 +124,8 @@ class XthingsCloudConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             code = user_input[CONF_VERIFICATION_CODE]
+            assert self._email is not None
+            assert self._password is not None
             try:
                 token_data = await self._async_try_login(
                     self._email, self._password,
@@ -139,7 +144,8 @@ class XthingsCloudConfigFlow(ConfigFlow, domain=DOMAIN):
                     await self.async_set_unique_id(self._email)
                     self._abort_if_unique_id_configured()
                     return self.async_create_entry(
-                        title=self._email, data=self._create_entry_data(token_data),
+                        title=self._email or "",
+                        data=self._create_entry_data(token_data),
                     )
                 else:
                     return self.async_update_reload_and_abort(
@@ -153,7 +159,7 @@ class XthingsCloudConfigFlow(ConfigFlow, domain=DOMAIN):
                 vol.Required(CONF_VERIFICATION_CODE): str,
             }),
             errors=errors,
-            description_placeholders={"email": self._email},
+            description_placeholders={"email": self._email or ""},
         )
 
     async def async_step_2fa_email(
