@@ -1,14 +1,17 @@
 """Test the Ollama config flow."""
 
 import asyncio
-from unittest.mock import patch
+from unittest.mock import ANY, AsyncMock, patch
 
 from httpx import ConnectError
+from ollama import ResponseError
 import pytest
 
 from homeassistant import config_entries
 from homeassistant.components import ollama
-from homeassistant.const import CONF_LLM_HASS_API, CONF_NAME
+from homeassistant.components.ollama.const import DOMAIN
+from homeassistant.config_entries import SOURCE_USER
+from homeassistant.const import CONF_API_KEY, CONF_LLM_HASS_API, CONF_NAME, CONF_URL
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -20,14 +23,14 @@ TEST_MODEL = "test_model:latest"
 async def test_form(hass: HomeAssistant) -> None:
     """Test flow when configuring URL only."""
     # Pretend we already set up a config entry.
-    hass.config.components.add(ollama.DOMAIN)
+    hass.config.components.add(DOMAIN)
     MockConfigEntry(
-        domain=ollama.DOMAIN,
+        domain=DOMAIN,
         state=config_entries.ConfigEntryState.LOADED,
     ).add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
-        ollama.DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": SOURCE_USER}
     )
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] is None
@@ -48,18 +51,18 @@ async def test_form(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
     assert result2["type"] is FlowResultType.CREATE_ENTRY
-    assert result2["data"] == {
-        ollama.CONF_URL: "http://localhost:11434",
-    }
+    assert result2["data"] == {ollama.CONF_URL: "http://localhost:11434"}
+
     # No subentries created by default
     assert len(result2.get("subentries", [])) == 0
     assert len(mock_setup_entry.mock_calls) == 1
+    assert CONF_API_KEY not in result2["data"]
 
 
 async def test_duplicate_entry(hass: HomeAssistant) -> None:
     """Test we abort on duplicate config entry."""
     MockConfigEntry(
-        domain=ollama.DOMAIN,
+        domain=DOMAIN,
         data={
             ollama.CONF_URL: "http://localhost:11434",
             ollama.CONF_MODEL: "test_model",
@@ -67,7 +70,7 @@ async def test_duplicate_entry(hass: HomeAssistant) -> None:
     ).add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
-        ollama.DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": SOURCE_USER}
     )
     assert result["type"] is FlowResultType.FORM
     assert not result["errors"]
@@ -141,7 +144,7 @@ async def test_creating_new_conversation_subentry(
     ):
         new_flow = await hass.config_entries.subentries.async_init(
             (mock_config_entry.entry_id, "conversation"),
-            context={"source": config_entries.SOURCE_USER},
+            context={"source": SOURCE_USER},
         )
 
         assert new_flow["type"] is FlowResultType.FORM
@@ -181,7 +184,7 @@ async def test_creating_conversation_subentry_not_loaded(
     await hass.config_entries.async_unload(mock_config_entry.entry_id)
     result = await hass.config_entries.subentries.async_init(
         (mock_config_entry.entry_id, "conversation"),
-        context={"source": config_entries.SOURCE_USER},
+        context={"source": SOURCE_USER},
     )
 
     assert result["type"] is FlowResultType.ABORT
@@ -209,7 +212,7 @@ async def test_subentry_need_download(
     ):
         new_flow = await hass.config_entries.subentries.async_init(
             (mock_config_entry.entry_id, "conversation"),
-            context={"source": config_entries.SOURCE_USER},
+            context={"source": SOURCE_USER},
         )
 
         assert new_flow["type"] is FlowResultType.FORM, new_flow
@@ -271,7 +274,7 @@ async def test_subentry_download_error(
     ):
         new_flow = await hass.config_entries.subentries.async_init(
             (mock_config_entry.entry_id, "conversation"),
-            context={"source": config_entries.SOURCE_USER},
+            context={"source": SOURCE_USER},
         )
 
         assert new_flow["type"] is FlowResultType.FORM
@@ -308,6 +311,130 @@ async def test_subentry_download_error(
 
 
 @pytest.mark.parametrize(
+    ("init_data", "input_data", "expected_data"),
+    [
+        (
+            {
+                CONF_URL: "http://localhost:11434",
+                CONF_API_KEY: "old-api-key",
+            },
+            {
+                CONF_API_KEY: "new-api-key",
+            },
+            {
+                CONF_URL: "http://localhost:11434",
+                CONF_API_KEY: "new-api-key",
+            },
+        ),
+        (
+            {
+                CONF_URL: "http://localhost:11434",
+                CONF_API_KEY: "old-api-key",
+            },
+            {
+                # Reconfigure without api_key to test that it gets removed from data
+            },
+            {
+                CONF_URL: "http://localhost:11434",
+            },
+        ),
+    ],
+)
+async def test_reauth_flow_success(
+    hass: HomeAssistant, init_data, input_data, expected_data
+) -> None:
+    """Test successful reauthentication flow."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=init_data,
+        options={CONF_API_KEY: "stale-options-api-key"},
+        version=3,
+        minor_version=3,
+    )
+    entry.add_to_hass(hass)
+
+    result = await entry.start_reauth_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+
+    with patch(
+        "homeassistant.components.ollama.config_flow.ollama.AsyncClient.list",
+        return_value={"models": [{"model": TEST_MODEL}]},
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            input_data,
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+
+    assert entry.data == expected_data
+    assert entry.options == {}
+
+
+@pytest.mark.parametrize(
+    ("side_effect", "error"),
+    [
+        (ResponseError(error="Unauthorized", status_code=401), "invalid_auth"),
+        (ConnectError(message="Connection failed"), "cannot_connect"),
+    ],
+)
+async def test_reauth_flow_errors(hass: HomeAssistant, side_effect, error) -> None:
+    """Test reauthentication flow when authentication fails."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_URL: "http://localhost:11434",
+            CONF_API_KEY: "old-api-key",
+        },
+        version=3,
+        minor_version=3,
+    )
+    entry.add_to_hass(hass)
+
+    result = await entry.start_reauth_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+
+    with patch(
+        "homeassistant.components.ollama.config_flow.ollama.AsyncClient.list",
+        side_effect=side_effect,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_API_KEY: "other-api-key",
+            },
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+    assert result["errors"] == {"base": error}
+
+    with patch(
+        "homeassistant.components.ollama.config_flow.ollama.AsyncClient.list",
+        return_value={"models": [{"model": TEST_MODEL}]},
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_API_KEY: "new-api-key",
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+
+    assert entry.data == {
+        CONF_URL: "http://localhost:11434",
+        CONF_API_KEY: "new-api-key",
+    }
+
+
+@pytest.mark.parametrize(
     ("side_effect", "error"),
     [
         (ConnectError(message=""), "cannot_connect"),
@@ -317,7 +444,7 @@ async def test_subentry_download_error(
 async def test_form_errors(hass: HomeAssistant, side_effect, error) -> None:
     """Test we handle errors."""
     result = await hass.config_entries.flow.async_init(
-        ollama.DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": SOURCE_USER}
     )
 
     with patch(
@@ -332,10 +459,50 @@ async def test_form_errors(hass: HomeAssistant, side_effect, error) -> None:
     assert result2["errors"] == {"base": error}
 
 
+@pytest.mark.parametrize(
+    ("side_effect", "error"),
+    [
+        (ConnectError(message=""), "cannot_connect"),
+        (RuntimeError(), "unknown"),
+    ],
+)
+async def test_form_errors_recovery(hass: HomeAssistant, side_effect, error) -> None:
+    """Test that the user flow recovers after an error and completes successfully."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    # First attempt fails
+    with patch(
+        "homeassistant.components.ollama.config_flow.ollama.AsyncClient.list",
+        side_effect=side_effect,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {ollama.CONF_URL: "http://localhost:11434"}
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": error}
+
+    # Second attempt succeeds
+    with patch(
+        "homeassistant.components.ollama.config_flow.ollama.AsyncClient.list",
+        return_value={"models": [{"model": TEST_MODEL}]},
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {ollama.CONF_URL: "http://localhost:11434"},
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"] == {ollama.CONF_URL: "http://localhost:11434"}
+
+
 async def test_form_invalid_url(hass: HomeAssistant) -> None:
     """Test we handle invalid URL."""
     result = await hass.config_entries.flow.async_init(
-        ollama.DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": SOURCE_USER}
     )
 
     result2 = await hass.config_entries.flow.async_configure(
@@ -358,7 +525,7 @@ async def test_subentry_connection_error(
     ):
         new_flow = await hass.config_entries.subentries.async_init(
             (mock_config_entry.entry_id, "conversation"),
-            context={"source": config_entries.SOURCE_USER},
+            context={"source": SOURCE_USER},
         )
 
     assert new_flow["type"] is FlowResultType.ABORT
@@ -380,7 +547,7 @@ async def test_subentry_model_check_exception(
     ):
         new_flow = await hass.config_entries.subentries.async_init(
             (mock_config_entry.entry_id, "conversation"),
-            context={"source": config_entries.SOURCE_USER},
+            context={"source": SOURCE_USER},
         )
 
         assert new_flow["type"] is FlowResultType.FORM
@@ -500,7 +667,7 @@ async def test_creating_ai_task_subentry(
     ):
         result = await hass.config_entries.subentries.async_init(
             (mock_config_entry.entry_id, "ai_task_data"),
-            context={"source": config_entries.SOURCE_USER},
+            context={"source": SOURCE_USER},
         )
 
     assert result.get("type") is FlowResultType.FORM
@@ -552,8 +719,167 @@ async def test_ai_task_subentry_not_loaded(
     # Don't call mock_init_component to simulate not loaded state
     result = await hass.config_entries.subentries.async_init(
         (mock_config_entry.entry_id, "ai_task_data"),
-        context={"source": config_entries.SOURCE_USER},
+        context={"source": SOURCE_USER},
     )
 
     assert result.get("type") is FlowResultType.ABORT
     assert result.get("reason") == "entry_not_loaded"
+
+
+@pytest.mark.parametrize(
+    ("user_input", "expected_headers", "expected_data"),
+    [
+        (
+            {CONF_URL: "http://localhost:11434", CONF_API_KEY: "my-secret-token"},
+            {"Authorization": "Bearer my-secret-token"},
+            {CONF_URL: "http://localhost:11434", CONF_API_KEY: "my-secret-token"},
+        ),
+        (
+            {CONF_URL: "http://localhost:11434", CONF_API_KEY: ""},
+            None,
+            {CONF_URL: "http://localhost:11434"},
+        ),
+        (
+            {CONF_URL: "http://localhost:11434", CONF_API_KEY: "          "},
+            None,
+            {CONF_URL: "http://localhost:11434"},
+        ),
+        (
+            {CONF_URL: "http://localhost:11434"},
+            None,
+            {CONF_URL: "http://localhost:11434"},
+        ),
+    ],
+)
+async def test_user_step_async_client_headers(
+    hass: HomeAssistant,
+    user_input: dict[str, str],
+    expected_headers: dict[str, str] | None,
+    expected_data: dict[str, str],
+) -> None:
+    """Test Authorization header passed to AsyncClient with/without api_key."""
+    with patch(
+        "homeassistant.components.ollama.config_flow.ollama.AsyncClient",
+    ) as mock_async_client:
+        mock_async_client.return_value.list = AsyncMock(return_value={"models": []})
+
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_USER}
+        )
+        assert result["type"] is FlowResultType.FORM
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input=user_input,
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"] == expected_data
+    mock_async_client.assert_called_with(
+        host="http://localhost:11434",
+        headers=expected_headers,
+        verify=ANY,
+    )
+
+
+@pytest.mark.parametrize(
+    ("status_code", "error", "error_message", "user_input"),
+    [
+        (
+            400,
+            "unknown",
+            "Bad Request",
+            {
+                CONF_URL: "http://localhost:11434",
+                CONF_API_KEY: "my-secret-token",
+            },
+        ),
+        (
+            401,
+            "invalid_auth",
+            "Unauthorized",
+            {
+                CONF_URL: "http://localhost:11434",
+                CONF_API_KEY: "my-secret-token",
+            },
+        ),
+        (
+            403,
+            "invalid_auth",
+            "Unauthorized",
+            {
+                CONF_URL: "http://localhost:11434",
+                CONF_API_KEY: "my-secret-token",
+            },
+        ),
+        (
+            403,
+            "invalid_auth",
+            "Forbidden",
+            {
+                CONF_URL: "http://localhost:11434",
+            },
+        ),
+    ],
+)
+async def test_user_step_errors(
+    hass: HomeAssistant,
+    status_code: int,
+    error: str,
+    error_message: str,
+    user_input: dict[str, str],
+) -> None:
+    """Test error handling when ollama returns HTTP 4xx."""
+    with patch(
+        "homeassistant.components.ollama.config_flow.ollama.AsyncClient"
+    ) as mock_async_client:
+        mock_client_instance = AsyncMock()
+        mock_async_client.return_value = mock_client_instance
+
+        mock_client_instance.list.side_effect = ResponseError(
+            error=error_message, status_code=status_code
+        )
+
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_USER}
+        )
+        assert result["type"] is FlowResultType.FORM
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input=user_input,
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.FORM
+    assert result.get("errors") == {"base": error}
+
+
+async def test_user_step_trim_url(hass: HomeAssistant) -> None:
+    """Test URL is trimmed before validation and persistence."""
+    with patch(
+        "homeassistant.components.ollama.config_flow.ollama.AsyncClient",
+    ) as mock_async_client:
+        mock_async_client.return_value.list = AsyncMock(return_value={"models": []})
+
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_USER}
+        )
+        assert result["type"] is FlowResultType.FORM
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={
+                CONF_URL: "  http://localhost:11434  ",
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"] == {CONF_URL: "http://localhost:11434"}
+    mock_async_client.assert_called_with(
+        host="http://localhost:11434",
+        headers=None,
+        verify=ANY,
+    )

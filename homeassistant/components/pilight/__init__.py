@@ -20,7 +20,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_START,
     EVENT_HOMEASSISTANT_STOP,
 )
-from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.core import Event, HomeAssistant, ServiceCall
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.event import track_point_in_utc_time
 from homeassistant.helpers.typing import ConfigType
@@ -37,6 +37,7 @@ DEFAULT_SEND_DELAY = 0.0
 DOMAIN = "pilight"
 
 EVENT = "pilight_received"
+type EVENT_TYPE = Event[dict[str, Any]]
 
 # The Pilight code schema depends on the protocol. Thus only require to have
 # the protocol information. Ensure that protocol is in a list otherwise

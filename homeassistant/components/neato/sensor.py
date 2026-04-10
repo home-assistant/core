@@ -10,12 +10,12 @@ from pybotvac.exceptions import NeatoRobotException
 from pybotvac.robot import Robot
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import PERCENTAGE, EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import NEATO_LOGIN, NEATO_ROBOTS, SCAN_INTERVAL_MINUTES
+from . import NeatoConfigEntry
+from .const import SCAN_INTERVAL_MINUTES
 from .entity import NeatoEntity
 from .hub import NeatoHub
 
@@ -28,12 +28,12 @@ BATTERY = "Battery"
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: NeatoConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Neato sensor using config entry."""
-    neato: NeatoHub = hass.data[NEATO_LOGIN]
-    dev = [NeatoSensor(neato, robot) for robot in hass.data[NEATO_ROBOTS]]
+    hub = entry.runtime_data
+    dev = [NeatoSensor(hub, robot) for robot in hub.robots]
 
     if not dev:
         return

@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_all_entities[da_rvc_map_01011][vacuum.robot_vacuum-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'fan_speed_list': list([
@@ -65,8 +66,9 @@
 # ---
 # name: test_all_entities[da_rvc_normal_000001][vacuum.robot_vacuum_1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'fan_speed_list': list([

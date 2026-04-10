@@ -1,7 +1,8 @@
 {
   "config": {
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "missing_api_domain": "The discovered Freebox service did not provide the required API domain. Try again later or configure the Freebox manually."
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",

@@ -288,6 +288,8 @@ class SongpalEntity(MediaPlayerEntity):
             self._volume_min = volume.minVolume
             self._volume = volume.volume
             self._volume_control = volume
+            if self._volume_max:
+                self._attr_volume_step = 1 / self._volume_max
             self._attr_is_volume_muted = self._volume_control.is_muted
 
             status = await self._dev.get_power()
@@ -380,14 +382,6 @@ class SongpalEntity(MediaPlayerEntity):
         volume = int(volume * self._volume_max)
         _LOGGER.debug("Setting volume to %s", volume)
         return await self._volume_control.set_volume(volume)
-
-    async def async_volume_up(self) -> None:
-        """Set volume up."""
-        return await self._volume_control.set_volume(self._volume + 1)
-
-    async def async_volume_down(self) -> None:
-        """Set volume down."""
-        return await self._volume_control.set_volume(self._volume - 1)
 
     async def async_turn_on(self) -> None:
         """Turn the device on."""
