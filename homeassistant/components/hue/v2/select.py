@@ -23,8 +23,6 @@ from ..const import DOMAIN
 from .entity import HueBaseEntity
 from .scene_activity import HueSceneActivityManager
 
-PARALLEL_UPDATES = 0
-
 
 def _build_scene_option_maps(
     scenes: list[HueScene | HueSmartScene],
