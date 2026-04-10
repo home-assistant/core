@@ -14,7 +14,6 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME, PERCENTAGE
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
@@ -22,6 +21,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util.dt import parse_datetime
 
+from . import LaunchLibraryConfigEntry
 from .const import DOMAIN
 from .coordinator import LaunchLibraryCoordinator
 
@@ -118,12 +118,12 @@ SENSOR_DESCRIPTIONS: tuple[LaunchLibrarySensorEntityDescription, ...] = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: LaunchLibraryConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the sensor platform."""
     name = entry.data.get(CONF_NAME, DEFAULT_NEXT_LAUNCH_NAME)
-    coordinator: LaunchLibraryCoordinator = hass.data[DOMAIN]
+    coordinator = entry.runtime_data
 
     async_add_entities(
         LaunchLibrarySensor(

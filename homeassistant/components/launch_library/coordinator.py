@@ -4,17 +4,19 @@ from __future__ import annotations
 
 from datetime import timedelta
 import logging
-from typing import TypedDict
+from typing import TYPE_CHECKING, TypedDict
 
 from pylaunches import PyLaunches, PyLaunchesError
 from pylaunches.types import Launch, StarshipResponse
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN
+
+if TYPE_CHECKING:
+    from . import LaunchLibraryConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -29,12 +31,12 @@ class LaunchLibraryData(TypedDict):
 class LaunchLibraryCoordinator(DataUpdateCoordinator[LaunchLibraryData]):
     """Class to manage fetching Launch Library data."""
 
-    config_entry: ConfigEntry
+    config_entry: LaunchLibraryConfigEntry
 
     def __init__(
         self,
         hass: HomeAssistant,
-        entry: ConfigEntry,
+        entry: LaunchLibraryConfigEntry,
     ) -> None:
         """Initialize the coordinator."""
         super().__init__(
