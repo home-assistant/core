@@ -1,4 +1,17 @@
 {
+  "entity": {
+    "button": {
+      "clear_dhw_override": {
+        "default": "mdi:water-boiler-auto"
+      },
+      "clear_zone_override": {
+        "default": "mdi:thermostat-auto"
+      },
+      "reset_system_mode": {
+        "default": "mdi:thermostat-box-auto"
+      }
+    }
+  },
   "services": {
     "clear_zone_override": {
       "service": "mdi:motion-sensor-off"

@@ -1,4 +1,4 @@
-"""Base for evohome entity."""
+"""Support for entities of the Evohome integration."""
 
 from collections.abc import Mapping
 from datetime import UTC, datetime
@@ -6,6 +6,10 @@ import logging
 from typing import Any
 
 import evohomeasync2 as evo
+from evohomeasync2.schemas.const import (
+    ZoneModelType as EvoZoneModelType,
+    ZoneType as EvoZoneType,
+)
 from evohomeasync2.schemas.typedefs import DayOfWeekDhwT
 
 from homeassistant.core import callback
@@ -16,6 +20,14 @@ from .const import DOMAIN
 from .coordinator import EvoDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
+
+
+def is_valid_zone(zone: evo.Zone) -> bool:
+    """Check if an Evohome zone should have climate and button entities."""
+    return (
+        zone.model == EvoZoneModelType.HEATING_ZONE
+        or zone.type == EvoZoneType.THERMOSTAT
+    )
 
 
 class EvoEntity(CoordinatorEntity[EvoDataUpdateCoordinator]):
@@ -74,6 +86,10 @@ class EvoEntity(CoordinatorEntity[EvoDataUpdateCoordinator]):
             self._device_state_attrs[attr] = getattr(self._evo_device, attr)
 
         super()._handle_coordinator_update()
+
+    async def update_attrs(self) -> None:
+        """Update the entity's extra state attrs."""
+        self._handle_coordinator_update()
 
 
 class EvoChild(EvoEntity):
@@ -179,4 +195,4 @@ class EvoChild(EvoEntity):
     async def update_attrs(self) -> None:
         """Update the entity's extra state attrs."""
         await self._update_schedule()
-        self._handle_coordinator_update()
+        await super().update_attrs()
