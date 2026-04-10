@@ -342,3 +342,32 @@ async def test_update_options_no_change(
     mock_fp.set_control_mode.assert_not_called()
     # But async_request_refresh should still be called
     coordinator.async_request_refresh.assert_called_once()
+
+
+async def test_coordinator_performs_poll(
+    hass: HomeAssistant,
+    mock_config_entry_current: MockConfigEntry,
+    mock_apis_single_fp,
+) -> None:
+    """Test that the library only polls when instructed by the coordinator.
+
+    The library auto-polls by default; ensure the coordinator disables that
+    and drives polling explicitly via perform_poll().
+    """
+    _mock_local, _mock_cloud, mock_fp = mock_apis_single_fp
+
+    with patch(
+        "homeassistant.components.intellifire.UnifiedFireplace.build_fireplace_from_common",
+        new_callable=AsyncMock,
+        return_value=mock_fp,
+    ) as mock_build:
+        mock_config_entry_current.add_to_hass(hass)
+        await hass.config_entries.async_setup(mock_config_entry_current.entry_id)
+        await hass.async_block_till_done()
+
+        # Verify the fireplace was constructed with library background polling disabled
+        mock_build.assert_awaited_once()
+        assert mock_build.call_args.kwargs.get("polling_enabled") is False
+
+        # Verify the coordinator drove exactly one poll during initial refresh
+        mock_fp.perform_poll.assert_awaited_once()
