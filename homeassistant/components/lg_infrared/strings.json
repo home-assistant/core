@@ -8,11 +8,13 @@
       "user": {
         "data": {
           "device_type": "Device type",
-          "infrared_entity_id": "Infrared transmitter"
+          "infrared_entity_id": "Infrared transmitter",
+          "region": "Region"
         },
         "data_description": {
           "device_type": "The type of LG device to control.",
-          "infrared_entity_id": "The infrared transmitter entity to use for sending commands."
+          "infrared_entity_id": "The infrared transmitter entity to use for sending commands.",
+          "region": "The regional model of the LG device."
         },
         "description": "Select the device type and the infrared transmitter entity to use for controlling your LG device.",
         "title": "Set up LG IR Remote"
@@ -21,14 +23,35 @@
   },
   "entity": {
     "button": {
+      "aspect": {
+        "name": "Aspect"
+      },
       "back": {
         "name": "Back"
+      },
+      "blue": {
+        "name": "Blue"
+      },
+      "bs": {
+        "name": "BS"
+      },
+      "cs": {
+        "name": "CS"
       },
       "down": {
         "name": "Down"
       },
+      "dtv": {
+        "name": "DTV"
+      },
       "exit": {
         "name": "Exit"
+      },
+      "fourk": {
+        "name": "4K"
+      },
+      "green": {
+        "name": "Green"
       },
       "guide": {
         "name": "Guide"
@@ -56,6 +79,9 @@
       },
       "left": {
         "name": "Left"
+      },
+      "list": {
+        "name": "List"
       },
       "menu": {
         "name": "Menu"
@@ -90,6 +116,15 @@
       "num_9": {
         "name": "Number 9"
       },
+      "num_10": {
+        "name": "Number 10"
+      },
+      "num_11": {
+        "name": "Number 11"
+      },
+      "num_12": {
+        "name": "Number 12"
+      },
       "ok": {
         "name": "OK"
       },
@@ -99,11 +134,38 @@
       "power_on": {
         "name": "Power on"
       },
+      "rec_list": {
+        "name": "Recording list"
+      },
+      "record": {
+        "name": "Record"
+      },
+      "red": {
+        "name": "Red"
+      },
       "right": {
         "name": "Right"
       },
+      "sap": {
+        "name": "SAP"
+      },
+      "settings": {
+        "name": "Quick settings"
+      },
+      "subtitle": {
+        "name": "Subtitle"
+      },
+      "text": {
+        "name": "Teletext"
+      },
+      "tv": {
+        "name": "TV"
+      },
       "up": {
         "name": "Up"
+      },
+      "yellow": {
+        "name": "Yellow"
       }
     }
   },
@@ -111,6 +173,12 @@
     "device_type": {
       "options": {
         "tv": "TV"
+      }
+    },
+    "region": {
+      "options": {
+        "global": "Global",
+        "japan": "Japan"
       }
     }
   }
