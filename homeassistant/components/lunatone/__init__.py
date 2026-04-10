@@ -1,5 +1,6 @@
 """The Lunatone integration."""
 
+import logging
 from typing import Final
 
 from lunatone_rest_api_client import Auth, DALIBroadcast, Devices, Info
@@ -7,9 +8,10 @@ from lunatone_rest_api_client import Auth, DALIBroadcast, Devices, Info
 from homeassistant.const import CONF_URL, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryError
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
+from .config_flow import LunatoneConfigFlow
 from .const import DOMAIN, MANUFACTURER
 from .coordinator import (
     LunatoneConfigEntry,
@@ -18,7 +20,49 @@ from .coordinator import (
     LunatoneInfoDataUpdateCoordinator,
 )
 
+_LOGGER = logging.getLogger(__name__)
 PLATFORMS: Final[list[Platform]] = [Platform.LIGHT]
+
+
+async def _update_unique_id(
+    hass: HomeAssistant, entry: LunatoneConfigEntry, new_unique_id: str
+) -> None:
+    _LOGGER.debug("Update unique ID")
+
+    # Update all associated entities
+    entity_registry = er.async_get(hass)
+    entities = er.async_entries_for_config_entry(entity_registry, entry.entry_id)
+
+    for entity in entities:
+        parts = list(entity.unique_id.partition("-"))
+        parts[0] = new_unique_id
+
+        entity_registry.async_update_entity(
+            entity.entity_id, new_unique_id="".join(parts)
+        )
+
+    # Update all associated devices
+    device_registry = dr.async_get(hass)
+    devices = dr.async_entries_for_config_entry(device_registry, entry.entry_id)
+
+    for device in devices:
+        identifier = device.identifiers.pop()
+        parts = list(identifier[1].partition("-"))
+        parts[0] = new_unique_id
+
+        device_registry.async_update_device(
+            device.id, new_identifiers={(identifier[0], "".join(parts))}
+        )
+
+    # Update the config entry itself
+    hass.config_entries.async_update_entry(
+        entry,
+        unique_id=new_unique_id,
+        minor_version=LunatoneConfigFlow.MINOR_VERSION,
+        version=LunatoneConfigFlow.VERSION,
+    )
+
+    _LOGGER.debug("Update of unique ID successful")
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: LunatoneConfigEntry) -> bool:
@@ -30,15 +74,22 @@ async def async_setup_entry(hass: HomeAssistant, entry: LunatoneConfigEntry) -> 
     coordinator_info = LunatoneInfoDataUpdateCoordinator(hass, entry, info_api)
     await coordinator_info.async_config_entry_first_refresh()
 
-    if info_api.serial_number is None:
+    if info_api.data is None or info_api.serial_number is None:
         raise ConfigEntryError(
             translation_domain=DOMAIN, translation_key="missing_device_info"
         )
 
+    if info_api.uid is not None:
+        new_unique_id = info_api.uid.replace("-", "")
+        if new_unique_id != entry.unique_id:
+            await _update_unique_id(hass, entry, new_unique_id)
+
+    assert entry.unique_id
+
     device_registry = dr.async_get(hass)
     device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
-        identifiers={(DOMAIN, str(info_api.serial_number))},
+        identifiers={(DOMAIN, entry.unique_id)},
         name=info_api.name,
         manufacturer=MANUFACTURER,
         sw_version=info_api.version,

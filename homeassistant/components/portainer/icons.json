@@ -1,6 +1,9 @@
 {
   "entity": {
     "button": {
+      "kill_container": {
+        "default": "mdi:cog-stop"
+      },
       "pause_container": {
         "default": "mdi:pause-circle"
       },

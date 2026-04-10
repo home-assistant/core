@@ -50,6 +50,9 @@
       "remaining_open_time": {
         "name": "Remaining open time"
       },
+      "remaining_watering_time": {
+        "name": "Remaining watering time"
+      },
       "seasonal_adjust": {
         "name": "Seasonal adjust"
       },
