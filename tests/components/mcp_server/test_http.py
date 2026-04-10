@@ -141,6 +141,13 @@ async def sse_response_reader(
         yield event, data
 
 
+def _tool_payload(result: Any) -> dict[str, Any]:
+    """Decode the text payload returned by an MCP tool call."""
+    assert len(result.content) == 1
+    assert result.content[0].type == "text"
+    return json.loads(result.content[0].text)
+
+
 async def test_http_sse(
     hass: HomeAssistant,
     setup_integration: None,
@@ -388,6 +395,26 @@ async def test_mcp_tools_list(
     properties = tool.inputSchema.get("properties")
     assert properties.get("name") == {"type": "string"}
 
+    search_tool = next(
+        iter(tool for tool in result.tools if tool.name == "FindExposedEntities")
+    )
+    assert search_tool.description is not None
+    assert search_tool.inputSchema == {
+        "type": "object",
+        "properties": {
+            "query": {"description": "Search text to match against exposed entity names and aliases", "type": "string"},
+            "domain": {"description": "Limit results to one domain such as light, climate, or script", "type": "string"},
+            "area": {"description": "Limit results to one area name or alias", "type": "string"},
+            "limit": {
+                "description": "Maximum number of matches to return",
+                "default": 5,
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 10,
+            },
+        },
+    }
+
 
 @pytest.mark.parametrize("llm_hass_api", [llm.LLM_API_ASSIST, STATELESS_LLM_API])
 async def test_mcp_tool_call(
@@ -410,10 +437,8 @@ async def test_mcp_tool_call(
         )
 
     assert not result.isError
-    assert len(result.content) == 1
-    assert result.content[0].type == "text"
     # The content is the raw tool call payload
-    content = json.loads(result.content[0].text)
+    content = _tool_payload(result)
     assert content.get("data", {}).get("success")
     assert not content.get("data", {}).get("failed")
 
@@ -442,6 +467,103 @@ async def test_mcp_tool_call_failed(
     assert len(result.content) == 1
     assert result.content[0].type == "text"
     assert "Error calling tool" in result.content[0].text
+
+
+@pytest.mark.parametrize("llm_hass_api", [llm.LLM_API_ASSIST, STATELESS_LLM_API])
+async def test_mcp_find_exposed_entities_tool_call(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    area_registry: ar.AreaRegistry,
+    setup_integration: None,
+    mcp_url: str,
+    mcp_client: Any,
+    hass_supervisor_access_token: str,
+) -> None:
+    """Test searching exposed entities through the MCP tool surface."""
+    kitchen = area_registry.async_get_area_by_name("Kitchen")
+    assert kitchen is not None
+    area_registry.async_update(kitchen.id, aliases={"Cooking Space"})
+
+    kitchen_counter = entity_registry.async_get_or_create(
+        LIGHT_DOMAIN,
+        "test",
+        "kitchen-counter-light",
+        suggested_object_id="kitchen_counter",
+        original_name="Kitchen Counter Light",
+    )
+    entity_registry.async_update_entity(kitchen_counter.entity_id, area_id=kitchen.id)
+    hass.states.async_set(
+        kitchen_counter.entity_id,
+        STATE_OFF,
+        {"friendly_name": "Kitchen Counter Light"},
+    )
+    async_expose_entity(hass, CONVERSATION_DOMAIN, kitchen_counter.entity_id, False)
+
+    async with mcp_client(hass, mcp_url, hass_supervisor_access_token) as session:
+        result = await session.call_tool(
+            name="FindExposedEntities",
+            arguments={"query": "kitch", "domain": "light", "area": "Cooking Space"},
+        )
+
+    assert not result.isError
+    payload = _tool_payload(result)
+    assert payload == {
+        "success": True,
+        "result": {
+            "matches": [
+                {
+                    "name": "Kitchen Light",
+                    "domain": "light",
+                    "area": "Kitchen",
+                }
+            ],
+            "truncated": False,
+        },
+    }
+
+
+@pytest.mark.parametrize("llm_hass_api", [llm.LLM_API_ASSIST, STATELESS_LLM_API])
+async def test_mcp_find_exposed_entities_tool_no_match(
+    hass: HomeAssistant,
+    setup_integration: None,
+    mcp_url: str,
+    mcp_client: Any,
+    hass_supervisor_access_token: str,
+) -> None:
+    """Test a no-match search result through MCP."""
+    async with mcp_client(hass, mcp_url, hass_supervisor_access_token) as session:
+        result = await session.call_tool(
+            name="FindExposedEntities",
+            arguments={"query": "garage fan"},
+        )
+
+    assert not result.isError
+    assert _tool_payload(result) == {
+        "success": True,
+        "result": {"matches": [], "truncated": False},
+    }
+
+
+@pytest.mark.parametrize("llm_hass_api", [llm.LLM_API_ASSIST, STATELESS_LLM_API])
+async def test_mcp_find_exposed_entities_tool_invalid_area(
+    hass: HomeAssistant,
+    setup_integration: None,
+    mcp_url: str,
+    mcp_client: Any,
+    hass_supervisor_access_token: str,
+) -> None:
+    """Test invalid area handling through MCP."""
+    async with mcp_client(hass, mcp_url, hass_supervisor_access_token) as session:
+        result = await session.call_tool(
+            name="FindExposedEntities",
+            arguments={"query": "kitchen", "area": "Unknown Area"},
+        )
+
+    assert not result.isError
+    assert _tool_payload(result) == {
+        "success": False,
+        "error": "Area not found",
+    }
 
 
 @pytest.mark.parametrize("llm_hass_api", [llm.LLM_API_ASSIST, STATELESS_LLM_API])

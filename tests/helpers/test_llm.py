@@ -183,7 +183,11 @@ async def test_assist_api(
 
     assert len(llm.async_get_apis(hass)) == 1
     api = await llm.async_get_api(hass, "assist", llm_context)
-    assert [tool.name for tool in api.tools] == ["GetDateTime", "GetLiveContext"]
+    assert [tool.name for tool in api.tools] == [
+        "GetDateTime",
+        "FindExposedEntities",
+        "GetLiveContext",
+    ]
 
     # Match all
     intent_handler.platforms = None
@@ -192,6 +196,7 @@ async def test_assist_api(
     assert [tool.name for tool in api.tools] == [
         "test_intent",
         "GetDateTime",
+        "FindExposedEntities",
         "GetLiveContext",
     ]
 
@@ -199,7 +204,7 @@ async def test_assist_api(
     intent_handler.platforms = {"light"}
 
     api = await llm.async_get_api(hass, "assist", llm_context)
-    assert len(api.tools) == 3
+    assert len(api.tools) == 4
     tool = api.tools[0]
     assert tool.name == "test_intent"
     assert tool.description == "Execute Home Assistant test_intent intent"
@@ -1489,6 +1494,164 @@ async def test_todo_get_items_tool(hass: HomeAssistant) -> None:
     assert calls[0].data == {
         "entity_id": ["todo.test_list"],
         "status": ["needs_action", "completed"],
+    }
+
+
+async def test_find_exposed_entities_tool(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    area_registry: ar.AreaRegistry,
+) -> None:
+    """Test the exposed entity search tool."""
+    assert await async_setup_component(hass, "homeassistant", {})
+
+    kitchen = area_registry.async_create("Kitchen", aliases={"Cooking Space"})
+
+    kitchen_light_entry = entity_registry.async_get_or_create(
+        "light",
+        "test",
+        "kitchen-ceiling",
+        suggested_object_id="kitchen_ceiling",
+        original_name="Kitchen Ceiling Light",
+    )
+    entity_registry.async_update_entity(
+        kitchen_light_entry.entity_id,
+        area_id=kitchen.id,
+        aliases=["Ceiling Lamp"],
+    )
+    coffee_machine_entry = entity_registry.async_get_or_create(
+        "switch",
+        "test",
+        "coffee-machine",
+        suggested_object_id="coffee_machine",
+        original_name="Coffee Machine",
+    )
+
+    hass.states.async_set(
+        kitchen_light_entry.entity_id,
+        "off",
+        {"friendly_name": "Kitchen Ceiling Light"},
+    )
+    hass.states.async_set(
+        coffee_machine_entry.entity_id,
+        "off",
+        {"friendly_name": "Coffee Machine"},
+    )
+
+    async_expose_entity(hass, "conversation", kitchen_light_entry.entity_id, True)
+    async_expose_entity(hass, "conversation", coffee_machine_entry.entity_id, False)
+
+    llm_context = llm.LLMContext(
+        platform="test_platform",
+        context=Context(),
+        language="*",
+        assistant="conversation",
+        device_id=None,
+    )
+    api = await llm.async_get_api(hass, "assist", llm_context)
+
+    tool = next((tool for tool in api.tools if tool.name == "FindExposedEntities"), None)
+    assert tool is not None
+
+    result = await tool.async_call(
+        hass,
+        llm.ToolInput(
+            "FindExposedEntities",
+            {"query": "ceiling lamp", "domain": "light", "area": "Cooking Space"},
+        ),
+        llm_context,
+    )
+
+    assert result == {
+        "success": True,
+        "result": {
+            "matches": [
+                {
+                    "name": "Kitchen Ceiling Light",
+                    "domain": "light",
+                    "aliases": ["Ceiling Lamp"],
+                    "area": "Kitchen",
+                }
+            ],
+            "truncated": False,
+        },
+    }
+
+    no_match_result = await tool.async_call(
+        hass,
+        llm.ToolInput("FindExposedEntities", {"query": "garage fan"}),
+        llm_context,
+    )
+    assert no_match_result == {
+        "success": True,
+        "result": {"matches": [], "truncated": False},
+    }
+
+
+async def test_find_exposed_entities_tool_avoids_false_positive_substring_matches(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test the search tool avoids unrelated substring matches."""
+    assert await async_setup_component(hass, "homeassistant", {})
+
+    lamp_entry = entity_registry.async_get_or_create(
+        "light",
+        "test",
+        "desk-lamp",
+        suggested_object_id="desk_lamp",
+        original_name="Desk Lamp",
+    )
+    clamp_entry = entity_registry.async_get_or_create(
+        "switch",
+        "test",
+        "bench-clamp",
+        suggested_object_id="bench_clamp",
+        original_name="Bench Clamp",
+    )
+
+    hass.states.async_set(
+        lamp_entry.entity_id,
+        "off",
+        {"friendly_name": "Desk Lamp"},
+    )
+    hass.states.async_set(
+        clamp_entry.entity_id,
+        "off",
+        {"friendly_name": "Bench Clamp"},
+    )
+
+    async_expose_entity(hass, "conversation", lamp_entry.entity_id, True)
+    async_expose_entity(hass, "conversation", clamp_entry.entity_id, True)
+
+    llm_context = llm.LLMContext(
+        platform="test_platform",
+        context=Context(),
+        language="*",
+        assistant="conversation",
+        device_id=None,
+    )
+    api = await llm.async_get_api(hass, "assist", llm_context)
+    tool = next((tool for tool in api.tools if tool.name == "FindExposedEntities"), None)
+    assert tool is not None
+
+    result = await tool.async_call(
+        hass,
+        llm.ToolInput("FindExposedEntities", {"query": "lamp"}),
+        llm_context,
+    )
+
+    assert result == {
+        "success": True,
+        "result": {
+            "matches": [
+                {
+                    "name": "Desk Lamp",
+                    "domain": "light",
+                }
+            ],
+            "truncated": False,
+        },
     }
 
 

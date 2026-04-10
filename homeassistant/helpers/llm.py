@@ -7,9 +7,11 @@ from collections.abc import Callable
 from dataclasses import dataclass, field as dc_field
 from datetime import timedelta
 from decimal import Decimal
+from difflib import SequenceMatcher
 from enum import Enum
 from functools import cache, partial
 from operator import attrgetter
+import re
 from typing import Any, cast
 
 import slugify as unicode_slug
@@ -85,6 +87,10 @@ If the user asks about the CURRENT state, value, or mode (e.g., "Is the lock loc
     3.  Use the tool's response** to answer the user accurately (e.g., "The temperature outside is [value from tool].").
 For general knowledge questions not about the home: Answer truthfully from internal knowledge.
 """
+
+FIND_EXPOSED_ENTITIES_DEFAULT_LIMIT = 5
+FIND_EXPOSED_ENTITIES_MAX_LIMIT = 10
+_SEARCH_TEXT_SEPARATORS = re.compile(r"[\W_]+")
 
 
 @callback
@@ -595,6 +601,9 @@ class AssistAPI(API):
         tools.append(GetDateTimeTool())
 
         if exposed_entities:
+            if _has_exposed_entities(exposed_entities):
+                tools.append(FindExposedEntitiesTool())
+
             if exposed_entities[CALENDAR_DOMAIN]:
                 names = []
                 for info in exposed_entities[CALENDAR_DOMAIN].values():
@@ -724,6 +733,252 @@ def _get_exposed_entities(
 
     data["entities"] = entities
     return data
+
+
+@callback
+def _has_exposed_entities(exposed_entities: dict[str, dict[str, dict[str, Any]]]) -> bool:
+    """Return if any entities are exposed to the assistant."""
+    return any(exposed_entities.values())
+
+
+@callback
+def _get_searchable_exposed_entities(
+    hass: HomeAssistant, assistant: str
+) -> list[dict[str, Any]]:
+    """Return exposed entities in a shape tailored for discovery."""
+    area_registry = ar.async_get(hass)
+    entity_registry = er.async_get(hass)
+    device_registry = dr.async_get(hass)
+    entities: list[dict[str, Any]] = []
+
+    for state in sorted(hass.states.async_all(), key=attrgetter("name")):
+        if not async_should_expose(hass, assistant, state.entity_id):
+            continue
+
+        entity_entry = entity_registry.async_get(state.entity_id)
+        device_entry = (
+            device_registry.async_get(entity_entry.device_id)
+            if entity_entry is not None and entity_entry.device_id is not None
+            else None
+        )
+        primary_name = state.name.strip()
+        aliases = []
+
+        if entity_entry is not None:
+            aliases = [
+                alias
+                for alias in er.async_get_entity_aliases(
+                    hass, entity_entry, allow_empty=True
+                )
+                if alias and alias.strip() != primary_name
+            ]
+
+        area_names = []
+        if entity_entry is not None:
+            if (
+                entity_entry.area_id is not None
+                and (area_entry := area_registry.async_get_area(entity_entry.area_id))
+                is not None
+            ):
+                area_names.append(area_entry.name)
+                area_names.extend(area_entry.aliases)
+            elif device_entry is not None:
+                if (
+                    device_entry.area_id is not None
+                    and (
+                        area_entry := area_registry.async_get_area(device_entry.area_id)
+                    )
+                    is not None
+                ):
+                    area_names.append(area_entry.name)
+                    area_names.extend(area_entry.aliases)
+
+        entities.append(
+            {
+                "name": primary_name,
+                "aliases": aliases,
+                "domain": state.domain,
+                "areas": area_names,
+            }
+        )
+
+    return entities
+
+
+@callback
+def _normalize_search_text(text: str) -> str:
+    """Normalize search text for comparison."""
+    return " ".join(_SEARCH_TEXT_SEPARATORS.sub(" ", text).casefold().split())
+
+
+@callback
+def _score_search_match(query: str, candidate: str) -> float:
+    """Score how well a candidate name matches the search query."""
+    query_norm = _normalize_search_text(query)
+    candidate_norm = _normalize_search_text(candidate)
+
+    if not query_norm or not candidate_norm:
+        return 0
+
+    query_tokens = query_norm.split()
+    candidate_tokens = candidate_norm.split()
+
+    if candidate_norm == query_norm:
+        return 1_000
+
+    if candidate_norm.startswith(query_norm):
+        return 900 - len(candidate_norm)
+
+    if query_tokens and all(
+        any(candidate_token.startswith(query_token) for candidate_token in candidate_tokens)
+        for query_token in query_tokens
+    ):
+        return 700 - len(candidate_tokens)
+
+    fuzzy_scores: list[float] = []
+    for query_token in query_tokens:
+        fuzzy_score = max(
+            (
+                SequenceMatcher(None, query_token, candidate_token).ratio()
+                for candidate_token in candidate_tokens
+                if candidate_token[:1] == query_token[:1]
+            ),
+            default=0,
+        )
+        if fuzzy_score < 0.75:
+            return 0
+        fuzzy_scores.append(fuzzy_score)
+
+    if fuzzy_scores:
+        return 500 + sum(fuzzy_scores) * 100 / len(fuzzy_scores)
+
+    return 0
+
+
+class FindExposedEntitiesTool(Tool):
+    """Tool for searching exposed entities."""
+
+    name = "FindExposedEntities"
+    description = (
+        "Search for Home Assistant entities that are exposed to the assistant. "
+        "Use this to discover which entities exist and which name to pass to other Home Assistant tools. "
+        "Supports optional domain and area filters and returns concise matches."
+    )
+    parameters = vol.Schema(
+        {
+            vol.Required(
+                "query",
+                description="Search text to match against exposed entity names and aliases",
+            ): cv.string,
+            vol.Optional(
+                "domain",
+                description="Limit results to one domain such as light, climate, or script",
+            ): cv.string,
+            vol.Optional(
+                "area",
+                description="Limit results to one area name or alias",
+            ): cv.string,
+            vol.Optional(
+                "limit",
+                description="Maximum number of matches to return",
+                default=FIND_EXPOSED_ENTITIES_DEFAULT_LIMIT,
+            ): vol.All(
+                vol.Coerce(int),
+                vol.Range(min=1, max=FIND_EXPOSED_ENTITIES_MAX_LIMIT),
+            ),
+        }
+    )
+
+    async def async_call(
+        self,
+        hass: HomeAssistant,
+        tool_input: ToolInput,
+        llm_context: LLMContext,
+    ) -> JsonObjectType:
+        """Search exposed entities."""
+        if llm_context.assistant is None:
+            return {"success": False, "error": "No assistant configured"}
+
+        data = self.parameters(tool_input.tool_args)
+        query = data["query"].strip()
+        if not query:
+            return {"success": False, "error": "Query must not be empty"}
+
+        exposed_entities = _get_exposed_entities(
+            hass, llm_context.assistant, include_state=False
+        )
+
+        if not _has_exposed_entities(exposed_entities):
+            return {"success": False, "error": NO_ENTITIES_PROMPT}
+
+        searchable_entities = _get_searchable_exposed_entities(
+            hass, llm_context.assistant
+        )
+
+        domain_filter = data.get("domain")
+        if domain_filter is not None:
+            domain_filter = domain_filter.strip().casefold()
+            exposed_domains = {
+                info["domain"].casefold() for info in searchable_entities
+            }
+            if domain_filter not in exposed_domains:
+                return {"success": False, "error": "Domain not found"}
+
+        area_names: set[str] | None = None
+        if area_filter := data.get("area"):
+            area_registry = ar.async_get(hass)
+            matching_areas = list(intent.find_areas(area_filter, area_registry))
+            if not matching_areas:
+                return {"success": False, "error": "Area not found"}
+
+            area_names = {
+                _normalize_search_text(area_name)
+                for area in matching_areas
+                for area_name in (area.name, *area.aliases)
+            }
+
+        results: list[tuple[float, dict[str, Any]]] = []
+        for info in searchable_entities:
+            if domain_filter is not None and info["domain"].casefold() != domain_filter:
+                continue
+
+            candidate_areas = info["areas"]
+            if area_names is not None and (
+                not candidate_areas
+                or not {
+                    _normalize_search_text(area_name) for area_name in candidate_areas
+                }
+                & area_names
+            ):
+                continue
+
+            names = [info["name"], *info["aliases"]]
+            best_score = max((_score_search_match(query, name) for name in names), default=0)
+            if best_score <= 0:
+                continue
+
+            result: dict[str, Any] = {
+                "name": info["name"],
+                "domain": info["domain"],
+            }
+            if info["aliases"]:
+                result["aliases"] = info["aliases"]
+            if candidate_areas:
+                result["area"] = candidate_areas[0]
+
+            results.append((best_score, result))
+
+        results.sort(key=lambda item: (-item[0], item[1]["name"], item[1]["domain"]))
+
+        return {
+            "success": True,
+            "result": {
+                "matches": [
+                    result for _, result in results[: data["limit"]]
+                ],
+                "truncated": len(results) > data["limit"],
+            },
+        }
 
 
 def selector_serializer(schema: Any) -> Any:  # noqa: C901
