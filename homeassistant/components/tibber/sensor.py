@@ -769,9 +769,15 @@ class TibberSensorElPrice(TibberSensor, CoordinatorEntity[TibberPriceCoordinator
         self._model = "Price Sensor"
 
         self._device_name = self._home_name
+        self._update_attributes()
 
     @callback
     def _handle_coordinator_update(self) -> None:
+        self._update_attributes()
+        super()._handle_coordinator_update()
+
+    @callback
+    def _update_attributes(self) -> None:
         """Handle updated data from the coordinator."""
         data = self.coordinator.data
         if not data or (
@@ -779,7 +785,6 @@ class TibberSensorElPrice(TibberSensor, CoordinatorEntity[TibberPriceCoordinator
             or (current_price := home_data.get("current_price")) is None
         ):
             self._attr_available = False
-            self.async_write_ha_state()
             return
 
         self._attr_native_unit_of_measurement = home_data.get(
@@ -801,7 +806,6 @@ class TibberSensorElPrice(TibberSensor, CoordinatorEntity[TibberPriceCoordinator
             "estimated_annual_consumption"
         ]
         self._attr_available = True
-        self.async_write_ha_state()
 
 
 class TibberDataSensor(TibberSensor, CoordinatorEntity[TibberDataCoordinator]):
