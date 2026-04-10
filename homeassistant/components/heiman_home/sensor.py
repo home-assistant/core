@@ -143,7 +143,9 @@ class HeimanSensorEntity(CoordinatorEntity[HeimanDataUpdateCoordinator], SensorE
             if device_class_value:
                 self._attr_device_class = SensorDeviceClass(device_class_value)
             self._attr_native_unit_of_measurement = config.get("unit")
-            state_class_value = config.get("state_class", SensorStateClass.MEASUREMENT.value)
+            state_class_value = config.get(
+                "state_class", SensorStateClass.MEASUREMENT.value
+            )
             if state_class_value:
                 self._attr_state_class = SensorStateClass(state_class_value)
         elif prop:

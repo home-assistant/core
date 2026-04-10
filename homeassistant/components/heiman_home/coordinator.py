@@ -385,9 +385,7 @@ class HeimanDataUpdateCoordinator(DataUpdateCoordinator[HeimanData]):
                     if token_data:
                         access_token = token_data.get("access_token")
                     else:
-                        _LOGGER.debug(
-                            "async_ensure_token_valid() returned None"
-                        )
+                        _LOGGER.debug("async_ensure_token_valid() returned None")
                 except Exception as err:  # noqa: BLE001
                     _LOGGER.warning("Failed to get access_token from session: %s", err)
 
