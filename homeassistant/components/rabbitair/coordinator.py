@@ -12,6 +12,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
+type RabbitAirConfigEntry = ConfigEntry[RabbitAirDataUpdateCoordinator]
+
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -43,10 +45,10 @@ class RabbitAirDebouncer(Debouncer[Coroutine[Any, Any, None]]):
 class RabbitAirDataUpdateCoordinator(DataUpdateCoordinator[State]):
     """Class to manage fetching data from single endpoint."""
 
-    config_entry: ConfigEntry
+    config_entry: RabbitAirConfigEntry
 
     def __init__(
-        self, hass: HomeAssistant, config_entry: ConfigEntry, device: Client
+        self, hass: HomeAssistant, config_entry: RabbitAirConfigEntry, device: Client
     ) -> None:
         """Initialize global data updater."""
         self.device = device

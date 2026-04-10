@@ -3,7 +3,6 @@
 from pyseventeentrack import Client as SeventeenTrackClient
 from pyseventeentrack.errors import SeventeenTrackError
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
@@ -12,7 +11,7 @@ from homeassistant.helpers.aiohttp_client import async_create_clientsession
 from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN
-from .coordinator import SeventeenTrackCoordinator
+from .coordinator import SeventeenTrackConfigEntry, SeventeenTrackCoordinator
 from .services import async_setup_services
 
 PLATFORMS: list[Platform] = [Platform.SENSOR]
@@ -28,7 +27,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(
+    hass: HomeAssistant, entry: SeventeenTrackConfigEntry
+) -> bool:
     """Set up 17Track from a config entry."""
 
     session = async_create_clientsession(hass)
@@ -43,6 +44,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     await seventeen_coordinator.async_config_entry_first_refresh()
 
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = seventeen_coordinator
+    entry.runtime_data = seventeen_coordinator
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
