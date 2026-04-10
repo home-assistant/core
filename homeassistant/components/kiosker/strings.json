@@ -52,9 +52,6 @@
       "ambient_light": {
         "name": "Ambient light"
       },
-      "battery_level": {
-        "name": "Battery level"
-      },
       "last_interaction": {
         "name": "Last interaction"
       },
