@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from copy import deepcopy
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 from pysiaalarm.aio import CommunicationsProtocol, SIAAccount, SIAClient, SIAEvent
 
@@ -26,10 +26,9 @@ from .const import (
 )
 from .utils import get_event_data_from_sia_event
 
-if TYPE_CHECKING:
-    from . import SIAConfigEntry
-
 _LOGGER = logging.getLogger(__name__)
+
+type SIAConfigEntry = ConfigEntry[SIAHub]
 
 DEFAULT_TIMEBAND = (80, 40)
 

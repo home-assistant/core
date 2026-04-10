@@ -1,14 +1,11 @@
 """The sia integration."""
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 
 from .const import PLATFORMS
-from .hub import SIAHub
-
-type SIAConfigEntry = ConfigEntry[SIAHub]
+from .hub import SIAConfigEntry, SIAHub
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: SIAConfigEntry) -> bool:

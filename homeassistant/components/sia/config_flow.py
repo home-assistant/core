@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from copy import deepcopy
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 from pysiaalarm import (
     InvalidAccountFormatError,
@@ -31,10 +31,7 @@ from .const import (
     DOMAIN,
     TITLE,
 )
-from .hub import SIAHub
-
-if TYPE_CHECKING:
-    from . import SIAConfigEntry
+from .hub import SIAConfigEntry, SIAHub
 
 _LOGGER = logging.getLogger(__name__)
 
