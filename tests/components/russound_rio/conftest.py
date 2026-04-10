@@ -127,9 +127,6 @@ def mock_russound_client() -> Generator[AsyncMock]:
                 controller_zones[2],
             ),
         }
-        # client.connection_handler = RussoundTcpConnectionHandler(
-        #     MOCK_TCP_CONFIG[CONF_HOST], MOCK_TCP_CONFIG[CONF_PORT]
-        # )
         client.is_connected = Mock(return_value=True)
         client.register_state_update_callbacks = AsyncMock()
         client.unregister_state_update_callbacks = Mock(return_value=True)
