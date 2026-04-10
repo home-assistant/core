@@ -67,13 +67,13 @@ class VictronSwitch(VictronBaseEntity, SwitchEntity):
         self._attr_is_on = VictronBinarySensor.convert_metric_value_to_is_on(value)
         self.async_write_ha_state()
 
-    def turn_on(self, **kwargs: Any) -> None:
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
         if TYPE_CHECKING:
             assert isinstance(self._metric, VictronVenusWritableMetric)
         self._metric.set(BINARY_SENSOR_ON_ID)
 
-    def turn_off(self, **kwargs: Any) -> None:
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
         if TYPE_CHECKING:
             assert isinstance(self._metric, VictronVenusWritableMetric)
