@@ -15,9 +15,9 @@ from aiohasupervisor.models import (
     CIFSMountResponse,
     InstalledAddon,
     NFSMountResponse,
+    ResponseData,
     StoreInfo,
 )
-from aiohasupervisor.models.base import ResponseData
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_MANUFACTURER, ATTR_NAME
