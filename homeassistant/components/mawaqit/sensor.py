@@ -268,7 +268,13 @@ class MawaqitPrayerTimeSensor(SensorEntity, CoordinatorEntity[PrayerTimeCoordina
 
     _attr_has_entity_name = True
 
-    def __init__(self, coordinator, sensor_description) -> None:
+    entity_description: MawaqitPrayerTimeSensorEntityDescription
+
+    def __init__(
+        self,
+        coordinator: PrayerTimeCoordinator,
+        sensor_description: MawaqitPrayerTimeSensorEntityDescription,
+    ) -> None:
         """Initialize the prayer time sensor."""
         super().__init__(coordinator)
         self.entity_description = sensor_description
