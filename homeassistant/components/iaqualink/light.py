@@ -46,7 +46,7 @@ class HassAqualinkLight(AqualinkEntity[AqualinkLight], LightEntity):
     ) -> None:
         """Initialize AquaLink light."""
         super().__init__(coordinator, dev)
-        self._attr_name = dev.label
+        self._attr_name = None
         if dev.supports_effect:
             self._attr_effect_list = list(dev.supported_effects)
             self._attr_supported_features = LightEntityFeature.EFFECT
