@@ -26,6 +26,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     coordinator = DataUpdateCoordinatorGaposa(
         hass,
+        entry,
         _LOGGER,
         api_key=api_key,
         username=username,
