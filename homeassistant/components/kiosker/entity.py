@@ -56,6 +56,6 @@ class KioskerEntity(CoordinatorEntity[KioskerDataUpdateCoordinator]):
         )
 
         self._attr_unique_id = (
-            f"{device_id}_{description.key}" if description else f"{device_id}"
+            f"{device_id}_{description.key}"
         )
 
