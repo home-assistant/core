@@ -9,12 +9,14 @@ from homeassistant.const import CONF_PORT, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import Event, HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 
-from .const import DOMAIN, PLATFORMS
+from .const import PLATFORMS
+
+type LiteJetConfigEntry = ConfigEntry[pylitejet.LiteJet]
 
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: LiteJetConfigEntry) -> bool:
     """Set up LiteJet via a config entry."""
     port = entry.data[CONF_PORT]
 
@@ -38,19 +40,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, handle_stop)
     )
 
-    hass.data[DOMAIN] = system
+    entry.runtime_data = system
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: LiteJetConfigEntry) -> bool:
     """Unload a LiteJet config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
     if unload_ok:
-        await hass.data[DOMAIN].close()
-        hass.data.pop(DOMAIN)
+        await entry.runtime_data.close()
 
     return unload_ok
