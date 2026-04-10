@@ -12,7 +12,6 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONCENTRATION_PARTS_PER_MILLION,
     PERCENTAGE,
@@ -26,7 +25,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import SwitchbotCloudData
+from . import SwitchbotCloudConfigEntry
 from .const import DOMAIN
 from .coordinator import SwitchBotCoordinator
 from .entity import SwitchBotCloudEntity
@@ -267,11 +266,11 @@ SENSOR_DESCRIPTIONS_BY_DEVICE_TYPES = {
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config: ConfigEntry,
+    config: SwitchbotCloudConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up SwitchBot Cloud entry."""
-    data: SwitchbotCloudData = hass.data[DOMAIN][config.entry_id]
+    data = config.runtime_data
     entities: list[SwitchBotCloudSensor] = []
     for device, coordinator in data.devices.sensors:
         for description in SENSOR_DESCRIPTIONS_BY_DEVICE_TYPES[device.device_type]:

@@ -6,12 +6,11 @@ from typing import Any
 from switchbot_api import CommonCommands, Device, PowerState, Remote, SwitchBotAPI
 
 from homeassistant.components.switch import SwitchDeviceClass, SwitchEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import SwitchbotCloudData
+from . import SwitchbotCloudConfigEntry
 from .const import AFTER_COMMAND_REFRESH, DOMAIN
 from .coordinator import SwitchBotCoordinator
 from .entity import SwitchBotCloudEntity
@@ -19,11 +18,11 @@ from .entity import SwitchBotCloudEntity
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config: ConfigEntry,
+    config: SwitchbotCloudConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up SwitchBot Cloud entry."""
-    data: SwitchbotCloudData = hass.data[DOMAIN][config.entry_id]
+    data = config.runtime_data
     entities: list[SwitchBotCloudSwitch] = []
     for device, coordinator in data.devices.switches:
         if device.device_type == "Relay Switch 2PM":
