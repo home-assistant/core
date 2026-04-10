@@ -77,12 +77,16 @@ async def async_unload_entry(hass: HomeAssistant, entry: SwitchBeeConfigEntry) -
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
-async def update_listener(hass: HomeAssistant, config_entry: SwitchBeeConfigEntry) -> None:
+async def update_listener(
+    hass: HomeAssistant, config_entry: SwitchBeeConfigEntry
+) -> None:
     """Update listener."""
     await hass.config_entries.async_reload(config_entry.entry_id)
 
 
-async def async_migrate_entry(hass: HomeAssistant, config_entry: SwitchBeeConfigEntry) -> bool:
+async def async_migrate_entry(
+    hass: HomeAssistant, config_entry: SwitchBeeConfigEntry
+) -> bool:
     """Migrate old entry."""
     _LOGGER.debug("Migrating from version %s", config_entry.version)
 
