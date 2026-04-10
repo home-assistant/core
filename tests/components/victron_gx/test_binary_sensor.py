@@ -80,5 +80,5 @@ async def test_victron_binary_sensor(
     ],
 )
 def test_is_on_edge_cases(value: object, expected: bool | None) -> None:
-    """Test _is_on returns None for non-VictronEnum and unknown enum IDs."""
-    assert VictronBinarySensor._is_on(value) is expected
+    """Test convert_metric_value_to_is_on returns None for unknown values."""
+    assert VictronBinarySensor.convert_metric_value_to_is_on(value) is expected
