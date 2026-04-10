@@ -6,6 +6,7 @@ from homeassistant.helpers.entity import Entity, EntityDescription
 from . import SlackConfigEntry, SlackData
 from .const import DEFAULT_NAME, DOMAIN
 
+
 class SlackEntity(Entity):
     """Representation of a Slack entity."""
 
