@@ -695,6 +695,8 @@ CLAUDE.md @home-assistant/core
 /homeassistant/components/heatmiser/ @andylockran
 /homeassistant/components/hegel/ @boazca
 /tests/components/hegel/ @boazca
+/homeassistant/components/heiman_home/ @heimanhome
+/tests/components/heiman_home/ @heimanhome
 /homeassistant/components/heos/ @andrewsayre
 /tests/components/heos/ @andrewsayre
 /homeassistant/components/here_travel_time/ @eifinger
