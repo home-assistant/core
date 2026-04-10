@@ -377,7 +377,7 @@ aioridwell==2025.09.0
 aioruckus==0.42
 
 # homeassistant.components.russound_rio
-aiorussound==4.10.0
+aiorussound==5.0.0
 
 # homeassistant.components.ruuvi_gateway
 aioruuvigateway==0.1.0
@@ -2871,7 +2871,7 @@ zeversolar==0.3.2
 zha==1.1.2
 
 # homeassistant.components.zinvolt
-zinvolt==0.4.1
+zinvolt==0.4.3
 
 # homeassistant.components.zoneminder
 zm-py==0.5.4
