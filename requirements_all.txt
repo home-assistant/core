@@ -2566,7 +2566,7 @@ python-digitalocean==1.13.2
 python-dropbox-api==0.1.3
 
 # homeassistant.components.duco
-python-duco-client==0.2.0
+python-duco-client==0.3.0
 
 # homeassistant.components.ecobee
 python-ecobee-api==0.3.2
