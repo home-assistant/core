@@ -192,11 +192,12 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ScrapeConfigEntry) -> 
                 unique_id=None,
             )
             _LOGGER.debug(
-                "Migrating sensor %s with unique id %s to sub config entry id %s, data %s",
+                "Migrating sensor %s with unique id %s to sub config entry id %s, old data %s, new data %s",
                 title,
                 old_unique_id,
                 new_sub_entry.subentry_id,
                 sensor_config,
+                subentry_config,
             )
             old_to_new_sensor_id[old_unique_id] = new_sub_entry.subentry_id
             hass.config_entries.async_add_subentry(entry, new_sub_entry)
@@ -227,36 +228,32 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ScrapeConfigEntry) -> 
             for domain, identifier in device.identifiers:
                 if domain != DOMAIN or identifier not in old_to_new_sensor_id:
                     continue
-                if identifier in old_to_new_sensor_id:
-                    subentry_id = old_to_new_sensor_id[identifier]
-                    new_identifiers = deepcopy(device.identifiers)
-                    new_identifiers.remove((domain, identifier))
-                    new_identifiers.add((domain, old_to_new_sensor_id[identifier]))
-                    _LOGGER.debug(
-                        "Migrating device %s with identifiers %s to new identifiers %s",
-                        device.id,
-                        device.identifiers,
-                        new_identifiers,
-                    )
-                    device_reg.async_update_device(
-                        device.id,
-                        add_config_entry_id=entry.entry_id,
-                        add_config_subentry_id=subentry_id,
-                        new_identifiers=new_identifiers,
-                    )
-                    if (
-                        sub_entries := device.config_entries_subentries.get(
-                            entry.entry_id
-                        )
-                    ) and None in sub_entries:
-                        # Removing None from the list of subentries
-                        # as the device should only belong to the subentry
-                        # and not the main config entry
-                        device_reg.async_update_device(
-                            device.id,
-                            remove_config_entry_id=entry.entry_id,
-                            remove_config_subentry_id=None,
-                        )
+
+                subentry_id = old_to_new_sensor_id[identifier]
+                new_identifiers = deepcopy(device.identifiers)
+                new_identifiers.remove((domain, identifier))
+                new_identifiers.add((domain, old_to_new_sensor_id[identifier]))
+                _LOGGER.debug(
+                    "Migrating device %s with identifiers %s to new identifiers %s",
+                    device.id,
+                    device.identifiers,
+                    new_identifiers,
+                )
+                device_reg.async_update_device(
+                    device.id,
+                    add_config_entry_id=entry.entry_id,
+                    add_config_subentry_id=subentry_id,
+                    new_identifiers=new_identifiers,
+                )
+
+                # Removing None from the list of subentries if existing
+                # as the device should only belong to the subentry
+                # and not the main config entry
+                device_reg.async_update_device(
+                    device.id,
+                    remove_config_entry_id=entry.entry_id,
+                    remove_config_subentry_id=None,
+                )
 
         # Update the resource config
         new_config_entry_data = dict(entry.options)
