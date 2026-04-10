@@ -100,7 +100,7 @@ async def test_with_existing_config(
     assert result["data"] == config_data
 
 
-async def test_reauth_success(hass: HomeAssistant, config_data) -> None:
+async def test_reauth_success(hass: HomeAssistant, config_data: dict[str, str]) -> None:
     """Test successful reauthentication."""
     entry = MockConfigEntry(domain=DOMAIN, data=config_data)
     entry.add_to_hass(hass)
@@ -136,7 +136,9 @@ async def test_reauth_success(hass: HomeAssistant, config_data) -> None:
     }
 
 
-async def test_reauth_invalid_auth(hass: HomeAssistant, config_data) -> None:
+async def test_reauth_invalid_auth(
+    hass: HomeAssistant, config_data: dict[str, str]
+) -> None:
     """Test reauthentication with invalid credentials."""
     entry = MockConfigEntry(domain=DOMAIN, data=config_data)
     entry.add_to_hass(hass)
@@ -157,7 +159,9 @@ async def test_reauth_invalid_auth(hass: HomeAssistant, config_data) -> None:
     assert result["errors"] == {"base": "invalid_auth"}
 
 
-async def test_reauth_cannot_connect(hass: HomeAssistant, config_data) -> None:
+async def test_reauth_cannot_connect(
+    hass: HomeAssistant, config_data: dict[str, str]
+) -> None:
     """Test reauthentication when the service cannot be reached."""
     entry = MockConfigEntry(domain=DOMAIN, data=config_data)
     entry.add_to_hass(hass)
