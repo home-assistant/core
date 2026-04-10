@@ -49,8 +49,6 @@ class PicnicUpdateCoordinator(DataUpdateCoordinator):
     async def _async_update_data(self) -> dict:
         """Fetch data from API endpoint."""
         try:
-            # Note: TimeoutError and aiohttp.ClientError are already
-            # handled by the data update coordinator.
             async with asyncio.timeout(10):
                 data = await self.hass.async_add_executor_job(self.fetch_data)
 
@@ -60,6 +58,10 @@ class PicnicUpdateCoordinator(DataUpdateCoordinator):
             raise UpdateFailed(f"API response was malformed: {error}") from error
         except PicnicAuthError as error:
             raise ConfigEntryAuthFailed from error
+        except TimeoutError as error:
+            raise UpdateFailed(
+                "Timeout while connecting to the Picnic API", retry_after=120
+            ) from error
 
         # Return the fetched data
         return data

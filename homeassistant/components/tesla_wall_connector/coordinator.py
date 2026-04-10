@@ -26,6 +26,8 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
+type WallConnectorConfigEntry = ConfigEntry[WallConnectorData]
+
 
 @dataclass
 class WallConnectorData:
@@ -49,12 +51,12 @@ def get_poll_interval(entry: ConfigEntry) -> timedelta:
 class WallConnectorCoordinator(DataUpdateCoordinator[dict]):
     """Class to manage fetching Tesla Wall Connector data."""
 
-    config_entry: ConfigEntry
+    config_entry: WallConnectorConfigEntry
 
     def __init__(
         self,
         hass: HomeAssistant,
-        entry: ConfigEntry,
+        entry: WallConnectorConfigEntry,
         hostname: str,
         wall_connector: WallConnector,
     ) -> None:

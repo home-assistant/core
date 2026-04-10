@@ -85,4 +85,6 @@ class OAuth2FlowHandler(
             )
 
         self._abort_if_unique_id_configured()
-        return self.async_create_entry(title=profile.display_name, data=data)
+        return self.async_create_entry(
+            title=profile.display_name or "Fitbit", data=data
+        )

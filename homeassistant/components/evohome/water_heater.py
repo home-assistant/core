@@ -39,11 +39,12 @@ EVO_STATE_TO_HA = {v: k for k, v in HA_STATE_TO_EVO.items() if k != ""}
 
 async def async_setup_platform(
     hass: HomeAssistant,
-    config: ConfigType,
+    _: ConfigType,
     async_add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
-    """Create a DHW controller."""
+    """Set up the water heater platform for Evohome."""
+
     if discovery_info is None:
         return
 
@@ -69,7 +70,6 @@ class EvoDHW(EvoChild, WaterHeaterEntity):
     """Base for any evohome-compatible DHW controller."""
 
     _attr_name = "DHW controller"
-    _attr_icon = "mdi:thermometer-lines"
     _attr_operation_list = list(HA_STATE_TO_EVO)
     _attr_supported_features = (
         WaterHeaterEntityFeature.AWAY_MODE

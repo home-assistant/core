@@ -6,7 +6,6 @@ from datetime import UTC, datetime
 from typing import Any
 from unittest.mock import patch
 
-from evohomeasync2 import EvohomeClient
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 
@@ -25,10 +24,8 @@ from .const import TEST_INSTALLS
 
 
 @pytest.mark.parametrize("install", ["default"])
-async def test_refresh_system(
-    hass: HomeAssistant,
-    evohome: EvohomeClient,
-) -> None:
+@pytest.mark.usefixtures("evohome")
+async def test_refresh_system(hass: HomeAssistant) -> None:
     """Test Evohome's refresh_system service (for all temperature control systems)."""
 
     # EvoService.REFRESH_SYSTEM
@@ -63,9 +60,9 @@ async def test_reset_system(
 
 
 @pytest.mark.parametrize("install", ["default"])
+@pytest.mark.usefixtures("ctl_id")
 async def test_set_system_mode(
     hass: HomeAssistant,
-    ctl_id: str,
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test Evohome's set_system_mode service (for a temperature control system)."""
@@ -293,6 +290,7 @@ _SET_SYSTEM_MODE_VALIDATOR_PARAMS = [
 
 
 @pytest.mark.parametrize("install", ["default"])
+@pytest.mark.usefixtures("evohome")
 @pytest.mark.parametrize(
     ("service_data", "expected_translation_key"),
     _SET_SYSTEM_MODE_VALIDATOR_PARAMS,
@@ -300,7 +298,6 @@ _SET_SYSTEM_MODE_VALIDATOR_PARAMS = [
 )
 async def test_set_system_mode_validator(
     hass: HomeAssistant,
-    evohome: EvohomeClient,
     service_data: dict[str, Any],
     expected_translation_key: str,
 ) -> None:
