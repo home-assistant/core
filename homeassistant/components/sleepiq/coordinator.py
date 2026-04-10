@@ -18,16 +18,18 @@ UPDATE_INTERVAL = timedelta(seconds=60)
 LONGER_UPDATE_INTERVAL = timedelta(minutes=5)
 SLEEP_DATA_UPDATE_INTERVAL = timedelta(hours=1)  # Sleep data doesn't change frequently
 
+type SleepIQConfigEntry = ConfigEntry[SleepIQData]
+
 
 class SleepIQDataUpdateCoordinator(DataUpdateCoordinator[None]):
     """SleepIQ data update coordinator."""
 
-    config_entry: ConfigEntry
+    config_entry: SleepIQConfigEntry
 
     def __init__(
         self,
         hass: HomeAssistant,
-        config_entry: ConfigEntry,
+        config_entry: SleepIQConfigEntry,
         client: AsyncSleepIQ,
     ) -> None:
         """Initialize coordinator."""
@@ -51,12 +53,12 @@ class SleepIQDataUpdateCoordinator(DataUpdateCoordinator[None]):
 class SleepIQPauseUpdateCoordinator(DataUpdateCoordinator[None]):
     """SleepIQ data update coordinator."""
 
-    config_entry: ConfigEntry
+    config_entry: SleepIQConfigEntry
 
     def __init__(
         self,
         hass: HomeAssistant,
-        config_entry: ConfigEntry,
+        config_entry: SleepIQConfigEntry,
         client: AsyncSleepIQ,
     ) -> None:
         """Initialize coordinator."""
@@ -78,12 +80,12 @@ class SleepIQPauseUpdateCoordinator(DataUpdateCoordinator[None]):
 class SleepIQSleepDataCoordinator(DataUpdateCoordinator[None]):
     """SleepIQ sleep health data coordinator."""
 
-    config_entry: ConfigEntry
+    config_entry: SleepIQConfigEntry
 
     def __init__(
         self,
         hass: HomeAssistant,
-        config_entry: ConfigEntry,
+        config_entry: SleepIQConfigEntry,
         client: AsyncSleepIQ,
     ) -> None:
         """Initialize coordinator."""
