@@ -57,7 +57,6 @@ async def async_setup_entry(
 class ZWaveMeRGB(ZWaveMeEntity, LightEntity):
     """Representation of a ZWaveMe light."""
 
-    _attr_supported_features = LightEntityFeature.TRANSITION
 
     def __init__(
         self,
@@ -70,6 +69,7 @@ class ZWaveMeRGB(ZWaveMeEntity, LightEntity):
             self._attr_color_mode = ColorMode.RGB
         else:
             self._attr_color_mode = ColorMode.BRIGHTNESS
+            self._attr_supported_features = LightEntityFeature.TRANSITION
         self._attr_supported_color_modes: set[ColorMode] = {self._attr_color_mode}
 
     def turn_off(self, **kwargs: Any) -> None:
