@@ -19,14 +19,14 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Top North',
-    'model': 'Kiosker',
+    'manufacturer': None,
+    'model': None,
     'model_id': None,
     'name': 'Kiosker A98BE1CE',
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': 'A98BE1CE-5FE7-4A8D-B2C3-123456789ABC',
-    'sw_version': '25.1.1',
+    'sw_version': 'Kiosker 25.1.1',
     'via_device_id': None,
   })
 # ---

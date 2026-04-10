@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_all_entities[sensor.kiosker_a98be1ce_ambient_light-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -53,8 +54,9 @@
 # ---
 # name: test_all_entities[sensor.kiosker_a98be1ce_battery-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -107,8 +109,9 @@
 # ---
 # name: test_all_entities[sensor.kiosker_a98be1ce_last_interaction-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -157,8 +160,9 @@
 # ---
 # name: test_all_entities[sensor.kiosker_a98be1ce_last_motion-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
