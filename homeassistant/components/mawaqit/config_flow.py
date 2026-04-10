@@ -63,7 +63,7 @@ class MawaqitPrayerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
             try:
                 valid = await mawaqit_wrapper.validate_credentials(username, password)
-            except (ClientConnectorError, ConnectionError, TimeoutError):
+            except ClientConnectorError, ConnectionError, TimeoutError:
                 errors["base"] = CANNOT_CONNECT_TO_SERVER
             else:
                 if valid:

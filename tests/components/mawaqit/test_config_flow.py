@@ -50,7 +50,9 @@ async def config_entry_setup(hass: HomeAssistant) -> MockConfigEntry:
 
 
 @pytest.fixture
-async def mock_mosques_test_data() -> tuple[list[dict], tuple[list[str], list[str], list[str]]]:
+async def mock_mosques_test_data() -> tuple[
+    list[dict], tuple[list[str], list[str], list[str]]
+]:
     """Provide mock data for mosques."""
     mock_mosques = [
         {
