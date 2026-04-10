@@ -2,9 +2,10 @@
 
 from __future__ import annotations
 
+from collections.abc import Generator
 import json
 from pathlib import Path
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import AsyncMock, patch
 
 import pytest
 
@@ -15,30 +16,27 @@ from homeassistant.components.renson_waves.coordinator import (
 )
 from homeassistant.core import HomeAssistant
 
-# Load constellation fixture
 FIXTURE_DIR = Path(__file__).parent / "fixtures"
 
 
+def _load_constellation_fixture() -> dict[str, object]:
+    """Load the constellation fixture."""
+    return json.loads((FIXTURE_DIR / "constellation.json").read_text(encoding="utf-8"))
+
+
 @pytest.fixture
-def mock_setup_entry(
-    hass: HomeAssistant,
-) -> AsyncMock:
-    """Mock setup entry."""
-    with open(FIXTURE_DIR / "constellation.json") as f:
-        constellation_data = json.load(f)
-
-    async def mock_async_setup_entry(hass, entry):
-        """Mock setup entry."""
-        return True
-
-    return mock_async_setup_entry
+def mock_setup_entry() -> Generator[AsyncMock]:
+    """Mock setting up a config entry."""
+    with patch(
+        "homeassistant.components.renson_waves.async_setup_entry", return_value=True
+    ) as mock_setup:
+        yield mock_setup
 
 
 @pytest.fixture
 def mock_renson_client() -> AsyncMock:
     """Mock Renson WAVES client."""
-    with open(FIXTURE_DIR / "constellation.json") as f:
-        constellation_data = json.load(f)
+    constellation_data = _load_constellation_fixture()
 
     client = AsyncMock(spec=RensonWavesClient)
     client.async_get_constellation.return_value = constellation_data
@@ -72,12 +70,9 @@ def mock_coordinator(
     mock_renson_client: AsyncMock,
 ) -> RensonWavesCoordinator:
     """Mock coordinator."""
-    with open(FIXTURE_DIR / "constellation.json") as f:
-        constellation_data = json.load(f)
+    constellation_data = _load_constellation_fixture()
 
     coordinator = RensonWavesCoordinator(hass, mock_renson_client)
-
-    # Set up mock data
     coordinator.data = RensonWavesData(
         constellation=constellation_data,
         wifi_status={

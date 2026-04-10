@@ -463,6 +463,7 @@ homeassistant.components.remember_the_milk.*
 homeassistant.components.remote.*
 homeassistant.components.remote_calendar.*
 homeassistant.components.renault.*
+homeassistant.components.renson_waves.*
 homeassistant.components.reolink.*
 homeassistant.components.repairs.*
 homeassistant.components.rest.*

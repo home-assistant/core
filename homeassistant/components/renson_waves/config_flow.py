@@ -2,23 +2,19 @@
 
 from __future__ import annotations
 
-import logging
 from typing import Any
 
 import voluptuous as vol
 
-from homeassistant import config_entries
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PORT
-from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .client import RensonWavesCannotConnect, RensonWavesClient
 from .const import DEFAULT_PORT, DOMAIN
 
-_LOGGER = logging.getLogger(__name__)
 
-
-class RensonWavesConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class RensonWavesConfigFlow(ConfigFlow, domain=DOMAIN):
     """Config flow for Renson WAVES."""
 
     VERSION = 1
@@ -27,10 +23,12 @@ class RensonWavesConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Initialize config flow."""
         self._device_serial: str | None = None
         self._device_name: str | None = None
+        self._host: str | None = None
+        self._port = DEFAULT_PORT
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> config_entries.FlowResult:
+    ) -> ConfigFlowResult:
         """Handle user step."""
         errors: dict[str, str] = {}
 
@@ -47,8 +45,6 @@ class RensonWavesConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 return await self.async_step_confirm()
             except RensonWavesCannotConnect:
                 errors["base"] = "cannot_connect"
-            except Exception:  # pylint: disable=broad-except
-                errors["base"] = "unknown"
 
         return self.async_show_form(
             step_id="user",
@@ -61,13 +57,26 @@ class RensonWavesConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def async_step_confirm(self) -> config_entries.FlowResult:
+    async def async_step_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Handle confirm step."""
+        if user_input is None:
+            self._set_confirm_only()
+            placeholders = {"name": self._device_name or "Renson WAVES"}
+            self.context["title_placeholders"] = placeholders
+            return self.async_show_form(
+                step_id="confirm",
+                description_placeholders=placeholders,
+            )
+
+        assert self._host is not None
+
         return self.async_create_entry(
             title=self._device_name or "Renson WAVES",
             data={
-                CONF_HOST: self.context.get("host"),
-                CONF_PORT: self.context.get("port", DEFAULT_PORT),
+                CONF_HOST: self._host,
+                CONF_PORT: self._port,
             },
         )
 
@@ -76,21 +85,14 @@ class RensonWavesConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         session = async_get_clientsession(self.hass)
         client = RensonWavesClient(host, port, session)
 
-        try:
-            constellation = await client.async_get_constellation()
+        constellation = await client.async_get_constellation()
 
-            # Extract serial and device name
-            global_data = constellation.get("global", {})
-            self._device_serial = (
-                global_data.get("serial", {}).get("value") or f"{host}:{port}"
-            )
-            self._device_name = (
-                global_data.get("device_name", {}).get("value") or "Renson WAVES"
-            )
-
-            # Store in context for confirm step
-            self.context["host"] = host
-            self.context["port"] = port
-
-        except RensonWavesCannotConnect as err:
-            raise err from err
+        global_data = constellation.get("global", {})
+        self._device_serial = (
+            global_data.get("serial", {}).get("value") or f"{host}:{port}"
+        )
+        self._device_name = (
+            global_data.get("device_name", {}).get("value") or "Renson WAVES"
+        )
+        self._host = host
+        self._port = port

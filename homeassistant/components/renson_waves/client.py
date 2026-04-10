@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Any
+from typing import Any, cast
 
 import aiohttp
 
@@ -32,7 +32,7 @@ class RensonWavesClient:
                 timeout=aiohttp.ClientTimeout(total=10),
             ) as resp:
                 resp.raise_for_status()
-                return await resp.json()
+                return cast(dict[str, Any], await resp.json())
         except aiohttp.ClientError as err:
             _LOGGER.debug("Error fetching constellation: %s", err)
             raise RensonWavesCannotConnect(f"Cannot reach device: {err}") from err
@@ -45,7 +45,7 @@ class RensonWavesClient:
                 timeout=aiohttp.ClientTimeout(total=10),
             ) as resp:
                 resp.raise_for_status()
-                return await resp.json()
+                return cast(dict[str, Any], await resp.json())
         except aiohttp.ClientError as err:
             _LOGGER.debug("Error fetching WiFi status: %s", err)
             return {}
@@ -58,7 +58,7 @@ class RensonWavesClient:
                 timeout=aiohttp.ClientTimeout(total=10),
             ) as resp:
                 resp.raise_for_status()
-                return await resp.json()
+                return cast(dict[str, Any], await resp.json())
         except aiohttp.ClientError as err:
             _LOGGER.debug("Error fetching uptime: %s", err)
             return {}
@@ -71,7 +71,7 @@ class RensonWavesClient:
                 timeout=aiohttp.ClientTimeout(total=10),
             ) as resp:
                 resp.raise_for_status()
-                return await resp.json()
+                return cast(dict[str, Any], await resp.json())
         except aiohttp.ClientError as err:
             _LOGGER.debug("Error fetching room decision: %s", err)
             return {}
@@ -84,7 +84,7 @@ class RensonWavesClient:
                 timeout=aiohttp.ClientTimeout(total=10),
             ) as resp:
                 resp.raise_for_status()
-                return await resp.json()
+                return cast(dict[str, Any], await resp.json())
         except aiohttp.ClientError as err:
             _LOGGER.debug("Error fetching silent decision: %s", err)
             return {}
@@ -97,7 +97,7 @@ class RensonWavesClient:
                 timeout=aiohttp.ClientTimeout(total=10),
             ) as resp:
                 resp.raise_for_status()
-                return await resp.json()
+                return cast(dict[str, Any], await resp.json())
         except aiohttp.ClientError as err:
             _LOGGER.debug("Error fetching breeze decision: %s", err)
             return {}

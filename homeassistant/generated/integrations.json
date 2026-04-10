@@ -5775,6 +5775,12 @@
       "config_flow": true,
       "iot_class": "local_polling"
     },
+    "renson_waves": {
+      "name": "Renson WAVES",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "reolink": {
       "name": "Reolink",
       "integration_type": "hub",

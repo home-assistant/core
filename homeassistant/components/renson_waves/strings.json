@@ -1,56 +1,34 @@
 {
   "config": {
-    "step": {
-      "user": {
-        "title": "Configure Renson WAVES",
-        "description": "Enter the IP address and port of your Renson WAVES device",
-        "data": {
-          "host": "IP Address",
-          "port": "Port"
-        }
-      },
-      "confirm": {
-        "title": "Confirm Renson WAVES Setup"
-      }
+    "abort": {
+      "already_configured": "Device is already configured"
     },
     "error": {
       "cannot_connect": "Failed to connect to device",
       "unknown": "An unknown error occurred"
     },
-    "abort": {
-      "already_configured": "Device is already configured"
+    "step": {
+      "confirm": {
+        "title": "Confirm Renson WAVES Setup"
+      },
+      "user": {
+        "data": {
+          "host": "IP Address",
+          "port": "Port"
+        },
+        "data_description": {
+          "host": "The IP address of your Renson WAVES device",
+          "port": "The HTTP port exposed by your Renson WAVES device"
+        },
+        "description": "Enter the IP address and port of your Renson WAVES device",
+        "title": "Configure Renson WAVES"
+      }
     }
   },
   "entity": {
-    "sensor": {
-      "uptime_seconds": {
-        "name": "Uptime"
-      },
-      "wifi_ssid": {
-        "name": "WiFi SSID"
-      },
-      "room_boost_mode": {
-        "name": "Room Boost Decision"
-      },
-      "room_boost_level": {
-        "name": "Room Boost Level"
-      },
-      "silent_reduction": {
-        "name": "Silent Reduction"
-      },
-      "silent_mode": {
-        "name": "Silent Mode Decision"
-      },
-      "breeze_temperature": {
-        "name": "Breeze Temperature"
-      },
-      "breeze_mode": {
-        "name": "Breeze Mode Decision"
-      }
-    },
     "binary_sensor": {
-      "wifi_connected": {
-        "name": "WiFi Connected"
+      "breeze_mode_enabled": {
+        "name": "Breeze Mode Enabled"
       },
       "room_boost_enabled": {
         "name": "Room Boost Enabled"
@@ -58,8 +36,34 @@
       "silent_mode_enabled": {
         "name": "Silent Mode Enabled"
       },
-      "breeze_mode_enabled": {
-        "name": "Breeze Mode Enabled"
+      "wifi_connected": {
+        "name": "WiFi Connected"
+      }
+    },
+    "sensor": {
+      "breeze_mode": {
+        "name": "Breeze Mode Decision"
+      },
+      "breeze_temperature": {
+        "name": "Breeze Temperature"
+      },
+      "room_boost_level": {
+        "name": "Room Boost Level"
+      },
+      "room_boost_mode": {
+        "name": "Room Boost Decision"
+      },
+      "silent_mode": {
+        "name": "Silent Mode Decision"
+      },
+      "silent_reduction": {
+        "name": "Silent Reduction"
+      },
+      "uptime_seconds": {
+        "name": "Uptime"
+      },
+      "wifi_ssid": {
+        "name": "WiFi SSID"
       }
     }
   }

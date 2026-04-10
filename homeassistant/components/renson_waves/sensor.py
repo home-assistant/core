@@ -2,8 +2,9 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any, Callable
+from typing import cast
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -12,20 +13,40 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import UnitOfTemperature, UnitOfTime
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
 from . import RensonWavesConfigEntry
-from .const import DOMAIN
 from .coordinator import RensonWavesData
 from .entity import RensonWavesEntity
 
+PARALLEL_UPDATES = 0
 
-@dataclass(frozen=True)
+
+@dataclass(frozen=True, kw_only=True)
 class RensonWavesSensorDescription(SensorEntityDescription):
     """Description of a Renson WAVES sensor."""
 
-    value_fn: Callable[[RensonWavesData], StateType] = None
+    value_fn: Callable[[RensonWavesData], StateType]
+
+
+def _constellation_value_fn(
+    sensor_id: str,
+    parameter_key: str,
+) -> Callable[[RensonWavesData], StateType]:
+    """Build a typed extractor for constellation sensor values."""
+
+    def _value_fn(data: RensonWavesData) -> StateType:
+        return cast(
+            StateType,
+            data.constellation.get("sensor", {})
+            .get(sensor_id, {})
+            .get("parameter", {})
+            .get(parameter_key, {})
+            .get("value"),
+        )
+
+    return _value_fn
 
 
 FIXED_SENSORS: tuple[RensonWavesSensorDescription, ...] = (
@@ -106,13 +127,12 @@ class RensonWavesSensor(RensonWavesEntity, SensorEntity):
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: RensonWavesConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up sensors."""
     coordinator = entry.runtime_data
-    serial = coordinator.client.host  # Use host as fallback for entity_id
+    serial = coordinator.client.host
 
-    # Get serial from constellation data
     constellation = coordinator.data.constellation
     if constellation:
         global_data = constellation.get("global", {})
@@ -121,20 +141,15 @@ async def async_setup_entry(
             or f"{coordinator.client.host}:{coordinator.client.port}"
         )
 
-    entities: list[SensorEntity] = []
-
-    # Add fixed sensors
-    for description in FIXED_SENSORS:
-        entities.append(
-            RensonWavesSensor(
-                coordinator=coordinator,
-                description=description,
-                serial=serial,
-            )
+    entities: list[SensorEntity] = [
+        RensonWavesSensor(
+            coordinator=coordinator,
+            description=description,
+            serial=serial,
         )
+        for description in FIXED_SENSORS
+    ]
 
-    # Add dynamic constellation sensors
-    constellation = coordinator.data.constellation
     if constellation:
         sensor_data = constellation.get("sensor", {})
         for sensor_id, sensor_info in sensor_data.items():
@@ -146,14 +161,8 @@ async def async_setup_entry(
                 description = RensonWavesSensorDescription(
                     key=f"constellation_{sensor_id}_{param_key}",
                     translation_key=f"constellation_{sensor_type}_{param_key}",
-                    native_unit_of_measurement=unit if unit else None,
-                    value_fn=lambda data, sid=sensor_id, pk=param_key: (
-                        data.constellation.get("sensor", {})
-                        .get(sid, {})
-                        .get("parameter", {})
-                        .get(pk, {})
-                        .get("value")
-                    ),
+                    native_unit_of_measurement=unit or None,
+                    value_fn=_constellation_value_fn(sensor_id, param_key),
                 )
                 entities.append(
                     RensonWavesSensor(

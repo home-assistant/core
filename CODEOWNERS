@@ -1442,6 +1442,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/renault/ @epenet
 /homeassistant/components/renson/ @jimmyd-be
 /tests/components/renson/ @jimmyd-be
+/homeassistant/components/renson_waves/ @pietergeerts
+/tests/components/renson_waves/ @pietergeerts
 /homeassistant/components/reolink/ @starkillerOG
 /tests/components/reolink/ @starkillerOG
 /homeassistant/components/repairs/ @home-assistant/core

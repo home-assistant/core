@@ -8,6 +8,7 @@ from datetime import timedelta
 import logging
 from typing import Any
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -36,11 +37,13 @@ class RensonWavesCoordinator(DataUpdateCoordinator[RensonWavesData]):
         self,
         hass: HomeAssistant,
         client: RensonWavesClient,
+        config_entry: ConfigEntry[Any] | None = None,
     ) -> None:
         """Initialize coordinator."""
         super().__init__(
             hass,
             _LOGGER,
+            config_entry=config_entry,
             name=DOMAIN,
             update_interval=timedelta(seconds=UPDATE_INTERVAL),
         )
@@ -49,7 +52,6 @@ class RensonWavesCoordinator(DataUpdateCoordinator[RensonWavesData]):
     async def _async_update_data(self) -> RensonWavesData:
         """Fetch data from API."""
         try:
-            # Fetch constellation (required) and optional endpoints in parallel
             (
                 constellation,
                 wifi_status,
@@ -64,24 +66,7 @@ class RensonWavesCoordinator(DataUpdateCoordinator[RensonWavesData]):
                 self.client.async_get_decision_room(),
                 self.client.async_get_decision_silent(),
                 self.client.async_get_decision_breeze(),
-                return_exceptions=True,
             )
-
-            # Check if constellation fetch failed
-            if isinstance(constellation, Exception):
-                raise constellation
-
-            # Wrap other optional fetches that might be exceptions
-            if isinstance(wifi_status, Exception):
-                wifi_status = {}
-            if isinstance(uptime, Exception):
-                uptime = {}
-            if isinstance(decision_room, Exception):
-                decision_room = {}
-            if isinstance(decision_silent, Exception):
-                decision_silent = {}
-            if isinstance(decision_breeze, Exception):
-                decision_breeze = {}
 
             return RensonWavesData(
                 constellation=constellation,
@@ -91,7 +76,6 @@ class RensonWavesCoordinator(DataUpdateCoordinator[RensonWavesData]):
                 decision_silent=decision_silent,
                 decision_breeze=decision_breeze,
             )
-
         except RensonWavesCannotConnect as err:
             raise UpdateFailed(f"Cannot connect to device: {err}") from err
         except Exception as err:

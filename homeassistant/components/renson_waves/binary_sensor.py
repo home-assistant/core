@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any, Callable
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
@@ -11,19 +11,20 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntityDescription,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import StateType
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import RensonWavesConfigEntry
 from .coordinator import RensonWavesData
 from .entity import RensonWavesEntity
 
+PARALLEL_UPDATES = 0
 
-@dataclass(frozen=True)
+
+@dataclass(frozen=True, kw_only=True)
 class RensonWavesBinarySensorDescription(BinarySensorEntityDescription):
     """Description of a Renson WAVES binary sensor."""
 
-    value_fn: Callable[[RensonWavesData], StateType] = None
+    value_fn: Callable[[RensonWavesData], bool | None]
 
 
 BINARY_SENSORS: tuple[RensonWavesBinarySensorDescription, ...] = (
@@ -77,27 +78,23 @@ class RensonWavesBinarySensor(RensonWavesEntity, BinarySensorEntity):
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: RensonWavesConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up binary sensors."""
     coordinator = entry.runtime_data
 
-    # Get serial from constellation data
     constellation = coordinator.data.constellation
     serial = constellation.get("global", {}).get("serial", {}).get("value")
     if not serial:
         serial = f"{coordinator.client.host}:{coordinator.client.port}"
 
-    entities: list[BinarySensorEntity] = []
-
-    # Add binary sensors
-    for description in BINARY_SENSORS:
-        entities.append(
-            RensonWavesBinarySensor(
-                coordinator=coordinator,
-                description=description,
-                serial=serial,
-            )
+    entities: list[BinarySensorEntity] = [
+        RensonWavesBinarySensor(
+            coordinator=coordinator,
+            description=description,
+            serial=serial,
         )
+        for description in BINARY_SENSORS
+    ]
 
     async_add_entities(entities)

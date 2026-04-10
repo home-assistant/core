@@ -11,10 +11,10 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .client import RensonWavesClient
-from .const import DOMAIN
+from .const import DOMAIN as DOMAIN
 from .coordinator import RensonWavesCoordinator
 
-PLATFORMS: Final[list[Platform]] = [Platform.SENSOR, Platform.BINARY_SENSOR]
+PLATFORMS: Final[list[Platform]] = [Platform.BINARY_SENSOR, Platform.SENSOR]
 
 type RensonWavesConfigEntry = ConfigEntry[RensonWavesCoordinator]
 
@@ -27,7 +27,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: RensonWavesConfigEntry) 
     session = async_get_clientsession(hass)
     client = RensonWavesClient(host, port, session)
 
-    coordinator = RensonWavesCoordinator(hass, client)
+    coordinator = RensonWavesCoordinator(hass, client, entry)
     await coordinator.async_config_entry_first_refresh()
 
     entry.runtime_data = coordinator
