@@ -342,11 +342,15 @@ async def async_setup_entry(
     ]
 
     fritz_status = avm_wrapper.fritz_status
-    entities += [
-        FritzBoxSensor(avm_wrapper, entry.title, description)
-        for description in DEVICE_SENSOR_TYPES
-        if await hass.async_add_executor_job(description.is_suitable, fritz_status)
-    ]
+
+    def _generate_device_sensors() -> list[FritzBoxSensor]:
+        return [
+            FritzBoxSensor(avm_wrapper, entry.title, description)
+            for description in DEVICE_SENSOR_TYPES
+            if description.is_suitable(fritz_status)
+        ]
+
+    entities += await hass.async_add_executor_job(_generate_device_sensors)
 
     async_add_entities(entities)
 
