@@ -65,6 +65,8 @@ async def async_setup_entry(
     data: SwitchbotCloudData = hass.data[DOMAIN][config.entry_id]
     entities: list[SwitchBotCloudBot] = []
     for device, coordinator in data.devices.buttons:
+        if not BUTTON_DESCRIPTIONS_BY_DEVICE_TYPES.get(device.device_type):
+            continue
         description_set = BUTTON_DESCRIPTIONS_BY_DEVICE_TYPES[device.device_type]
         for description in description_set:
             entities.extend(

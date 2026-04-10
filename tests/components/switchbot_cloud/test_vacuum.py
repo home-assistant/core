@@ -40,9 +40,7 @@ async def test_coordinator_data_is_none(
             hubDeviceId="test-hub-id",
         ),
     ]
-    mock_get_status.side_effect = [
-        None,
-    ]
+    mock_get_status.side_effect = [{}]
     await configure_integration(hass)
     entity_id = "vacuum.vacuum_1"
     state = hass.states.get(entity_id)

@@ -143,13 +143,19 @@ async def async_setup_entry(
     """Set up SwitchBot Cloud entry."""
     data: SwitchbotCloudData = hass.data[DOMAIN][config.entry_id]
 
-    async_add_entities(
-        SwitchBotCloudBinarySensor(data.api, device, coordinator, description)
-        for device, coordinator in data.devices.binary_sensors
+    entities: list[SwitchBotCloudBinarySensor] = []
+
+    for device, coordinator in data.devices.binary_sensors:
+        if not BINARY_SENSOR_DESCRIPTIONS_BY_DEVICE_TYPES.get(device.device_type):
+            continue
         for description in BINARY_SENSOR_DESCRIPTIONS_BY_DEVICE_TYPES[
             device.device_type
-        ]
-    )
+        ]:
+            entities.extend(
+                [SwitchBotCloudBinarySensor(data.api, device, coordinator, description)]
+            )
+
+    async_add_entities(entities)
 
 
 class SwitchBotCloudBinarySensor(SwitchBotCloudEntity, BinarySensorEntity):

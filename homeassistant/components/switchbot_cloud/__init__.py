@@ -319,13 +319,10 @@ async def make_device_data(
         )
         for item in default_entity_map:
             exist_device_list = getattr(devices_data, str(item.value))
-            # print(exist_device_list)
             for existed_device in exist_device_list:
                 if device.device_id == existed_device[0].device_id:
                     return
             exist_device_list.append((device, coordinator))
-
-        # print("_"*100)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:

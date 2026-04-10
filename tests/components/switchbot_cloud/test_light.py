@@ -38,7 +38,7 @@ async def test_coordinator_data_is_none(
             hubDeviceId="test-hub-id",
         ),
     ]
-    mock_get_status.side_effect = [None]
+    mock_get_status.side_effect = [{}]
     entry = await configure_integration(hass)
     assert entry.state is ConfigEntryState.LOADED
     entity_id = "light.light_1"
