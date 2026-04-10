@@ -1,4 +1,4 @@
-"""Support for sensors."""
+"""Support for binary sensors."""
 
 from __future__ import annotations
 
@@ -49,7 +49,7 @@ BINARY_SENSOR_TYPES: Final[tuple[ComelitBinarySensorEntityDescription, ...]] = (
         ),
     ),
     ComelitBinarySensorEntityDescription(
-        key="motion",
+        key="presence",
         translation_key="motion",
         object_type=ALARM_ZONE,
         device_class=BinarySensorDeviceClass.MOTION,
@@ -87,7 +87,7 @@ async def async_setup_entry(
     config_entry: ComelitConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up Comelit VEDO presence sensors."""
+    """Set up Comelit VEDO binary sensors."""
 
     coordinator = config_entry.runtime_data
     is_bridge = isinstance(coordinator, ComelitSerialBridge)
