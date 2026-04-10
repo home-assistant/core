@@ -101,7 +101,7 @@ SENSOR_TYPES: tuple[OpenEVSESensorDescription, ...] = (
     OpenEVSESensorDescription(
         key="charging_current",
         translation_key="charging_current",
-        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
+        native_unit_of_measurement=UnitOfElectricCurrent.MILLIAMPERE,
         device_class=SensorDeviceClass.CURRENT,
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda ev: ev.charging_current,
@@ -117,7 +117,7 @@ SENSOR_TYPES: tuple[OpenEVSESensorDescription, ...] = (
     OpenEVSESensorDescription(
         key="charging_power",
         translation_key="charging_power",
-        native_unit_of_measurement=UnitOfPower.WATT,
+        native_unit_of_measurement=UnitOfPower.MILLIWATT,
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda ev: ev.charging_power,
