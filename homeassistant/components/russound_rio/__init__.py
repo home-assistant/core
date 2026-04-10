@@ -3,17 +3,21 @@
 import logging
 
 from aiorussound import RussoundTcpConnectionHandler
+from aiorussound.connection import (
+    RussoundConnectionHandler,
+    RussoundSerialConnectionHandler,
+)
 from aiorussound.rio import RussoundRIOClient
 from aiorussound.rio.models import CallbackType
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_PORT, CONF_TYPE, Platform
+from homeassistant.const import CONF_HOST, CONF_PATH, CONF_PORT, CONF_TYPE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 
-from .const import DOMAIN, RUSSOUND_RIO_EXCEPTIONS, TYPE_TCP
+from .const import CONF_BAUDRATE, DOMAIN, RUSSOUND_RIO_EXCEPTIONS, TYPE_TCP
 
 PLATFORMS = [Platform.MEDIA_PLAYER, Platform.NUMBER, Platform.SELECT, Platform.SWITCH]
 
@@ -24,10 +28,16 @@ type RussoundConfigEntry = ConfigEntry[RussoundRIOClient]
 
 async def async_setup_entry(hass: HomeAssistant, entry: RussoundConfigEntry) -> bool:
     """Set up a config entry."""
-
-    host = entry.data[CONF_HOST]
-    port = entry.data[CONF_PORT]
-    client = RussoundRIOClient(RussoundTcpConnectionHandler(host, port))
+    handler: RussoundConnectionHandler
+    if entry.data[CONF_TYPE] == TYPE_TCP:
+        host = entry.data[CONF_HOST]
+        port = entry.data[CONF_PORT]
+        handler = RussoundTcpConnectionHandler(host, port)
+    else:
+        path = entry.data[CONF_PATH]
+        baudrate = entry.data[CONF_BAUDRATE]
+        handler = RussoundSerialConnectionHandler(path, baudrate)
+    client = RussoundRIOClient(handler)
 
     async def _connection_update_callback(
         _client: RussoundRIOClient, _callback_type: CallbackType
