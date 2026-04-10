@@ -32,6 +32,7 @@ from homeassistant.exceptions import (
 )
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.httpx_client import get_async_client
+from homeassistant.helpers.typing import UNDEFINED
 from homeassistant.util.ssl import SSL_ALPN_HTTP11_HTTP2
 
 from .const import DOMAIN
@@ -132,9 +133,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: AqualinkConfigEntry) -> 
             name=system.name,
             identifiers={(DOMAIN, system.serial)},
             manufacturer="Jandy",
-            model=getattr(system, "model", None),
+            model=getattr(system, "model", UNDEFINED),
             serial_number=system.serial,
-            sw_version=getattr(system, "firmware_version", None),
+            sw_version=getattr(system, "firmware_version", UNDEFINED),
         )
 
         for dev in devices.values():
