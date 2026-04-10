@@ -7967,6 +7967,13 @@
       "config_flow": false,
       "iot_class": "local_polling"
     },
+    "xthings_cloud": {
+      "name": "Xthings Cloud",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_push",
+      "single_config_entry": true
+    },
     "yale": {
       "name": "Yale (non-US/Canada)",
       "integrations": {
