@@ -434,7 +434,11 @@ class HassioAddOnDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     config_entry: ConfigEntry
 
     def __init__(
-        self, hass: HomeAssistant, config_entry: ConfigEntry, dev_reg: dr.DeviceRegistry
+        self,
+        hass: HomeAssistant,
+        config_entry: ConfigEntry,
+        dev_reg: dr.DeviceRegistry,
+        jobs: SupervisorJobs,
     ) -> None:
         """Initialize coordinator."""
         super().__init__(
@@ -454,10 +458,6 @@ class HassioAddOnDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self.dev_reg = dev_reg
         self._addon_info_subscriptions: defaultdict[str, set[str]] = defaultdict(set)
         self.supervisor_client = get_supervisor_client(hass)
-        self.jobs: SupervisorJobs = None  # type: ignore[assignment]
-
-    def set_jobs(self, jobs: SupervisorJobs) -> None:
-        """Set the shared jobs instance."""
         self.jobs = jobs
 
     async def _async_update_data(self) -> dict[str, Any]:

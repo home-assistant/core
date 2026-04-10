@@ -465,8 +465,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     await coordinator.async_config_entry_first_refresh()
     hass.data[COORDINATOR] = coordinator
 
-    addon_coordinator = HassioAddOnDataUpdateCoordinator(hass, entry, dev_reg)
-    addon_coordinator.set_jobs(coordinator.jobs)
+    addon_coordinator = HassioAddOnDataUpdateCoordinator(
+        hass, entry, dev_reg, coordinator.jobs
+    )
     await addon_coordinator.async_config_entry_first_refresh()
     hass.data[ADDONS_COORDINATOR] = addon_coordinator
 
