@@ -369,7 +369,7 @@ async def test_model_list(
 
 
 async def test_invalid_model(
-    hass: HomeAssistant, mock_config_entry, mock_init_component
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_init_component: None
 ) -> None:
     """Test exceptions during fetching model info."""
     options = await hass.config_entries.subentries.async_init(
