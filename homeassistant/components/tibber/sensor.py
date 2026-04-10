@@ -609,8 +609,8 @@ async def _async_setup_graphql_sensors(
 
     entity_registry = er.async_get(hass)
 
-    coordinator: TibberDataCoordinator | None = None
-    price_coordinator: TibberPriceCoordinator | None = None
+    coordinator = entry.runtime_data.data_coordinator
+    price_coordinator = entry.runtime_data.price_coordinator
     entities: list[TibberSensor] = []
     for home in tibber_connection.get_homes(only_active=False):
         try:
@@ -626,12 +626,9 @@ async def _async_setup_graphql_sensors(
             _LOGGER.error("Error connecting to Tibber home: %s ", err)
             raise PlatformNotReady from err
 
-        if home.has_active_subscription:
-            if price_coordinator is None:
-                price_coordinator = TibberPriceCoordinator(hass, entry)
+        if price_coordinator is not None and home.has_active_subscription:
             entities.append(TibberSensorElPrice(price_coordinator, home))
-            if coordinator is None:
-                coordinator = TibberDataCoordinator(hass, entry, tibber_connection)
+        if coordinator is not None and home.has_active_subscription:
             entities.extend(
                 TibberDataSensor(home, coordinator, entity_description)
                 for entity_description in SENSORS
