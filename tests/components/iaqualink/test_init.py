@@ -568,7 +568,8 @@ async def test_entity_assumed_and_available(
 
     assert len(hass.states.async_entity_ids(LIGHT_DOMAIN)) == 1
 
-    name = f"{LIGHT_DOMAIN}.{system.name}_{light.name}"
+    entity_ids = hass.states.async_entity_ids(LIGHT_DOMAIN)
+    name = entity_ids[0]
 
     # None means maybe.
     light.system.online = None
