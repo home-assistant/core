@@ -124,7 +124,7 @@ class HueSceneActivityManager:
         group_state = self._group_states[group_id]
 
         if isinstance(scene, HueScene):
-            if scene.status.active != SceneActiveStatus.INACTIVE:
+            if scene.status is not None and scene.status.active != SceneActiveStatus.INACTIVE:
                 group_state.active_scene_id = scene.id
                 group_state.active_scene_entity_id = entity_id
                 group_state.active_scene_name = scene.metadata.name
