@@ -151,17 +151,24 @@ async def async_setup_entry(
             if sensor in SENSOR_TYPES
         )
     else:
-        sensors = list(coordinator.device.parsed_data)
+        # Build sensor list from parsed_data (BLE advertisement keys).
+        # PM2.5 is not present in BLE broadcast frames; it is only available
+        # after an active BLE query (get_basic_info).  For PM2.5-capable models
+        # we register the entity based on device capability so it appears in HA
+        # from the start, and async_added_to_hass triggers an initial poll to
+        # populate the value promptly.
+        sensors: set[str] = {
+            sensor
+            for sensor in coordinator.device.parsed_data
+            if sensor in SENSOR_TYPES
+        }
         if (
             isinstance(coordinator.device, switchbot.SwitchbotAirPurifier)
             and coordinator.model in AIRPURIFIER_PM25_MODELS
-            and "pm25" not in sensors
         ):
-            sensors.append("pm25")
+            sensors.add("pm25")
         sensor_entities.extend(
-            SwitchBotSensor(coordinator, sensor)
-            for sensor in sensors
-            if sensor in SENSOR_TYPES
+            SwitchBotSensor(coordinator, sensor) for sensor in sensors
         )
     sensor_entities.append(SwitchbotRSSISensor(coordinator, "rssi"))
     async_add_entities(sensor_entities)
@@ -195,16 +202,19 @@ class SwitchBotSensor(SwitchbotEntity, SensorEntity):
         else:
             self._attr_unique_id = f"{coordinator.base_unique_id}-{sensor}"
 
+    async def async_added_to_hass(self) -> None:
+        """Handle entity added to hass."""
+        await super().async_added_to_hass()
+        if self._sensor == "pm25":
+            # PM2.5 is absent from BLE broadcast frames and only becomes available
+            # after an active BLE query.  Schedule an immediate poll so the value
+            # appears quickly rather than waiting for the next scheduled poll cycle.
+            self.hass.async_create_task(self._device.update())
+
     @property
     def native_value(self) -> str | int | None:
         """Return the state of the sensor."""
-        # PM2.5 is not present in BLE broadcast data; it is only populated after
-        # the first active poll via get_basic_info().  The entity is intentionally
-        # created before that poll completes (based on device model capability), so
-        # we use .get() here to return None (unknown state) until the value arrives.
-        if self._sensor == "pm25":
-            return self.parsed_data.get(self._sensor)
-        return self.parsed_data[self._sensor]
+        return self.parsed_data.get(self._sensor)
 
 
 class SwitchbotRSSISensor(SwitchBotSensor):
