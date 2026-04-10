@@ -275,22 +275,20 @@ async def async_remove_config_entry_device(
     device_entry: DeviceEntry,
 ) -> bool:
     """Allow removal of a Squeezebox player only if its coordinator is unavailable."""
-    data = config_entry.runtime_data
-
-    player_id = next(
-        (id_ for domain, id_ in device_entry.identifiers if domain == DOMAIN), None
-    )
-
     if device_entry.entry_type is DeviceEntryType.SERVICE:
         raise HomeAssistantError(
             f"Cannot remove Lyrion Music Server '{device_entry.name}' directly. "
             "Please delete the associated config entry instead."
         )
 
+    player_id = next(
+        (id_ for domain, id_ in device_entry.identifiers if domain == DOMAIN), None
+    )
+
     if not player_id:
         return False  # Not a Squeezebox device
 
-    coordinator = data.player_coordinators.get(player_id)
+    coordinator = config_entry.runtime_data.player_coordinators.get(player_id)
 
     if coordinator is None:
         return True
