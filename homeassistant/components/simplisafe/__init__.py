@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Callable, Coroutine
-from typing import Any, cast
+from typing import Any
 
 from simplipy import API
 from simplipy.errors import (
@@ -39,7 +39,7 @@ from simplipy.websocket import (
 )
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import (
     ATTR_CODE,
     ATTR_DEVICE_ID,
@@ -87,6 +87,8 @@ from .const import (
 )
 from .coordinator import SimpliSafeDataUpdateCoordinator
 from .typing import SystemType
+
+type SimpliSafeConfigEntry = ConfigEntry[SimpliSafe]
 
 ATTR_CATEGORY = "category"
 ATTR_LAST_EVENT_CHANGED_BY = "last_event_changed_by"
@@ -223,10 +225,15 @@ def _async_get_system_for_service_call(
     ]
     system_id = int(system_id_str)
 
+    entry: SimpliSafeConfigEntry | None
     for entry_id in base_station_device_entry.config_entries:
-        if (simplisafe := hass.data[DOMAIN].get(entry_id)) is None:
+        if (
+            (entry := hass.config_entries.async_get_entry(entry_id)) is None
+            or entry.domain != DOMAIN
+            or entry.state != ConfigEntryState.LOADED
+        ):
             continue
-        return cast(SystemType, simplisafe.systems[system_id])
+        return entry.runtime_data.systems[system_id]
 
     raise ValueError(f"No system for device ID: {device_id}")
 
@@ -286,7 +293,7 @@ def _async_standardize_config_entry(hass: HomeAssistant, entry: ConfigEntry) -> 
         hass.config_entries.async_update_entry(entry, **entry_updates)
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: SimpliSafeConfigEntry) -> bool:
     """Set up SimpliSafe as config entry."""
     _async_standardize_config_entry(hass, entry)
 
@@ -310,8 +317,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     except SimplipyError as err:
         raise ConfigEntryNotReady from err
 
-    hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN][entry.entry_id] = simplisafe
+    entry.runtime_data = simplisafe
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
@@ -396,11 +402,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: SimpliSafeConfigEntry) -> bool:
     """Unload a SimpliSafe config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-    if unload_ok:
-        hass.data[DOMAIN].pop(entry.entry_id)
 
     if not hass.config_entries.async_loaded_entries(DOMAIN):
         # If this is the last loaded instance of SimpliSafe, deregister any services
