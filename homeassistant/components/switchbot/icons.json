@@ -145,6 +145,20 @@
           "medium": "mdi:water"
         }
       }
+    },
+    "switch": {
+      "child_lock": {
+        "state": {
+          "off": "mdi:lock-open",
+          "on": "mdi:lock"
+        }
+      },
+      "wireless_charging": {
+        "state": {
+          "off": "mdi:battery-charging-wireless-outline",
+          "on": "mdi:battery-charging-wireless"
+        }
+      }
     }
   },
   "services": {
