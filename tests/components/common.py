@@ -34,8 +34,12 @@ from homeassistant.helpers import (
 from homeassistant.helpers.condition import (
     ConditionCheckerTypeOptional,
     async_from_config as async_condition_from_config,
+    async_validate_condition_config,
 )
-from homeassistant.helpers.trigger import async_initialize_triggers
+from homeassistant.helpers.trigger import (
+    async_initialize_triggers,
+    async_validate_trigger_config,
+)
 from homeassistant.helpers.typing import UNDEFINED, TemplateVarsType, UndefinedType
 from homeassistant.setup import async_setup_component
 
@@ -952,9 +956,10 @@ async def arm_trigger(
     def log_cb(level: int, msg: str, **kwargs: Any) -> None:
         logger._log(level, "%s", msg, **kwargs)
 
+    validated_config = await async_validate_trigger_config(hass, [trigger_config])
     await async_initialize_triggers(
         hass,
-        [trigger_config],
+        validated_config,
         action,
         domain="test",
         name="test_trigger",
@@ -971,7 +976,7 @@ async def create_target_condition(
     condition_options: dict[str, Any] | None = None,
 ) -> ConditionCheckerTypeOptional:
     """Create a target condition."""
-    return await async_condition_from_config(
+    validated_config = await async_validate_condition_config(
         hass,
         {
             CONF_CONDITION: condition,
@@ -979,6 +984,7 @@ async def create_target_condition(
             CONF_OPTIONS: {"behavior": behavior, **(condition_options or {})},
         },
     )
+    return await async_condition_from_config(hass, validated_config)
 
 
 def set_or_remove_state(
