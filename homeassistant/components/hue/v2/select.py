@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from collections import Counter
-import logging
 
 from aiohue.v2 import HueBridgeV2
 from aiohue.v2.controllers.events import EventType
@@ -15,6 +14,7 @@ from aiohue.v2.models.zone import Zone
 
 from homeassistant.components.select import SelectEntity
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -22,8 +22,6 @@ from ..bridge import HueBridge, HueConfigEntry
 from ..const import DOMAIN
 from .entity import HueBaseEntity
 from .scene_activity import HueSceneActivityManager
-
-_LOGGER = logging.getLogger(__name__)
 
 PARALLEL_UPDATES = 0
 
@@ -141,10 +139,9 @@ class HueSceneSelectEntity(SceneActivityBaseEntity, SelectEntity):
         """Activate the regular scene with the given name."""
         scene_id = self._option_to_scene_id.get(option)
         if scene_id is None:
-            _LOGGER.debug(
-                "Scene option '%s' not found in group %s", option, self._group_id
+            raise HomeAssistantError(
+                f"Scene option '{option}' not found in group {self._group_id}"
             )
-            return
         await self.bridge.async_request_call(
             self.bridge.api.scenes.scene.recall,
             scene_id,
@@ -197,12 +194,9 @@ class HueSmartSceneSelectEntity(SceneActivityBaseEntity, SelectEntity):
         """Activate the smart scene with the given name."""
         scene_id = self._option_to_scene_id.get(option)
         if scene_id is None:
-            _LOGGER.debug(
-                "Smart scene option '%s' not found in group %s",
-                option,
-                self._group_id,
+            raise HomeAssistantError(
+                f"Smart scene option '{option}' not found in group {self._group_id}"
             )
-            return
         await self.bridge.async_request_call(
             self.bridge.api.scenes.smart_scene.recall,
             scene_id,
