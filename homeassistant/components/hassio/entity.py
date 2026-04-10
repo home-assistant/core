@@ -79,8 +79,9 @@ class HassioStatsEntity(CoordinatorEntity[HassioStatsDataUpdateCoordinator]):
         )
         # Stats are only fetched for containers with subscribed entities.
         # The first coordinator refresh (before entities exist) has no
-        # subscribers, so no stats are fetched. Request a refresh now
-        # that this entity has registered its subscription.
+        # subscribers, so no stats are fetched. Schedule a debounced
+        # refresh so that all stats entities registering during platform
+        # setup are batched into a single API call.
         await self.coordinator.async_request_refresh()
 
 
