@@ -6,7 +6,6 @@ from pyplaato.models.device import PlaatoDevice
 from pyplaato.plaato import PlaatoKeg
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
@@ -18,16 +17,8 @@ from homeassistant.helpers.entity_platform import (
 )
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import ATTR_TEMP, SENSOR_UPDATE
-from .const import (
-    CONF_USE_WEBHOOK,
-    COORDINATOR,
-    DEVICE,
-    DEVICE_ID,
-    DOMAIN,
-    SENSOR_DATA,
-    SENSOR_SIGNAL,
-)
+from . import ATTR_TEMP, SENSOR_UPDATE, PlaatoConfigEntry
+from .const import CONF_USE_WEBHOOK, SENSOR_SIGNAL
 from .entity import PlaatoEntity
 
 
@@ -42,19 +33,19 @@ async def async_setup_platform(
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: PlaatoConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Plaato from a config entry."""
-    entry_data = hass.data[DOMAIN][entry.entry_id]
+    entry_data = entry.runtime_data
 
     @callback
     def _async_update_from_webhook(device_id, sensor_data: PlaatoDevice):
         """Update/Create the sensors."""
-        entry_data[SENSOR_DATA] = sensor_data
+        entry_data.sensor_data = sensor_data
 
-        if device_id != entry_data[DEVICE][DEVICE_ID]:
-            entry_data[DEVICE][DEVICE_ID] = device_id
+        if device_id != entry_data.device_id:
+            entry_data.device_id = device_id
             async_add_entities(
                 [
                     PlaatoSensor(entry_data, sensor_type)
@@ -68,7 +59,8 @@ async def async_setup_entry(
     if entry.data[CONF_USE_WEBHOOK]:
         async_dispatcher_connect(hass, SENSOR_UPDATE, _async_update_from_webhook)
     else:
-        coordinator = entry_data[COORDINATOR]
+        coordinator = entry_data.coordinator
+        assert coordinator is not None
         async_add_entities(
             PlaatoSensor(entry_data, sensor_type, coordinator)
             for sensor_type in coordinator.data.sensors
