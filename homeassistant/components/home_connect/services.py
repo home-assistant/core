@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import asyncio
+
 from collections.abc import Awaitable
 from typing import Any, cast
 
@@ -366,7 +368,11 @@ async def async_service_start_selected_program(call: ServiceCall) -> None:
         ) from err
         
     # Debug Log which Program settings are currently on the machine
-    # await client.get_active_program(ha_id)
+    await asyncio.sleep(10)
+    try:
+        await client.get_active_program(ha_id)
+    except Exception:
+        pass
 
 @callback
 def async_setup_services(hass: HomeAssistant) -> None:
