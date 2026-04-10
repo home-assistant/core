@@ -9,7 +9,6 @@ from aiohttp import ClientSession
 from switchbee.api import CentralUnitPolling, CentralUnitWsRPC, is_wsrpc_api
 from switchbee.api.central_unit import SwitchBeeError
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
@@ -78,12 +77,12 @@ async def async_unload_entry(hass: HomeAssistant, entry: SwitchBeeConfigEntry) -
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
-async def update_listener(hass: HomeAssistant, config_entry: ConfigEntry) -> None:
+async def update_listener(hass: HomeAssistant, config_entry: SwitchBeeConfigEntry) -> None:
     """Update listener."""
     await hass.config_entries.async_reload(config_entry.entry_id)
 
 
-async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+async def async_migrate_entry(hass: HomeAssistant, config_entry: SwitchBeeConfigEntry) -> bool:
     """Migrate old entry."""
     _LOGGER.debug("Migrating from version %s", config_entry.version)
 
