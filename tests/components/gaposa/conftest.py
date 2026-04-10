@@ -18,6 +18,7 @@ TEST_EMAIL = "test@example.com"
 TEST_PASSWORD = "test-password"
 TEST_API_KEY = "test-apikey"
 TEST_DEVICE_SERIAL = "DEVICE123"
+TEST_CLIENT_ID = "gaposa-client-123"
 
 
 def _make_mock_motor(motor_id: str, name: str, state: str = "UP") -> MagicMock:
@@ -43,9 +44,10 @@ def _make_mock_device(serial: str, motors: list[MagicMock]) -> MagicMock:
     return device
 
 
-def _make_mock_client(devices: list[MagicMock]) -> MagicMock:
+def _make_mock_client(devices: list[MagicMock], client_id: str) -> MagicMock:
     """Return a MagicMock shaped like a pygaposa Client."""
     client = MagicMock()
+    client.id = client_id
     client.devices = devices
     return client
 
@@ -63,7 +65,7 @@ def mock_motors() -> list[MagicMock]:
 def mock_gaposa_instance(mock_motors: list[MagicMock]) -> MagicMock:
     """Return a mocked Gaposa client instance populated with test data."""
     device = _make_mock_device(TEST_DEVICE_SERIAL, mock_motors)
-    client = _make_mock_client([device])
+    client = _make_mock_client([device], TEST_CLIENT_ID)
     user = MagicMock()
 
     instance = MagicMock()
@@ -128,7 +130,7 @@ def mock_config_entry() -> MockConfigEntry:
             CONF_PASSWORD: TEST_PASSWORD,
         },
         title="Gaposa Gateway",
-        unique_id=TEST_EMAIL,
+        unique_id=TEST_CLIENT_ID,
     )
 
 
