@@ -41,7 +41,6 @@ from tests.typing import WebSocketGenerator
 TEST_STATE_ENTITY_ID = "sensor.test_state"
 TEST_ATTRIBUTE_ENTITY_ID = "sensor.test_attribute"
 TEST_AVAILABILITY_ENTITY = "binary_sensor.availability"
-TEST_SEGMENT_NAME = "input_text.segment_name"
 
 TEST_VACUUM = TemplatePlatformSetup(
     vacuum.DOMAIN,
@@ -51,7 +50,6 @@ TEST_VACUUM = TemplatePlatformSetup(
         TEST_STATE_ENTITY_ID,
         TEST_ATTRIBUTE_ENTITY_ID,
         TEST_AVAILABILITY_ENTITY,
-        TEST_SEGMENT_NAME,
     ),
 )
 
@@ -64,17 +62,7 @@ SET_FAN_SPEED_ACTION = make_test_action(
 )
 START_ACTION = make_test_action("start")
 STOP_ACTION = make_test_action("stop")
-
-CLEAN_AREA_ACTION = {
-    "clean_area": {
-        "service": "test.automation",
-        "data": {
-            "caller": "{{ this.entity_id }}",
-            "action": "clean_area",
-            "segment_ids": "{{ segment_ids }}",
-        },
-    },
-}
+CLEAN_AREA_ACTION = make_test_action("clean_area", {"segment_ids": "{{ segment_ids }}"})
 
 TEMPLATE_VACUUM_ACTIONS = {
     **START_ACTION,
@@ -1048,9 +1036,7 @@ async def test_not_optimistic(
         (
             1,
             {
-                "name": TEST_VACUUM.object_id,
                 "unique_id": TEST_VACUUM.entity_id,
-                "state": "{{ states('sensor.test_state') }}",
                 "start": [],
                 **CLEAN_AREA_ACTION,
             },
@@ -1082,9 +1068,7 @@ async def test_clean_area(
 
     await common.async_clean_area(hass, ["area_1"], TEST_VACUUM.entity_id)
     await hass.async_block_till_done()
-    assert calls[-1].data["action"] == "clean_area"
-    assert calls[-1].data["caller"] == TEST_VACUUM.entity_id
-    assert calls[-1].data["segment_ids"] == ["1", "2"]
+    assert_action(TEST_VACUUM, calls, 1, "clean_area", segment_ids=["1", "2"])
 
     state = hass.states.get(TEST_VACUUM.entity_id)
     assert state is not None
@@ -1097,7 +1081,6 @@ async def test_clean_area(
         (
             1,
             {
-                "name": TEST_VACUUM.object_id,
                 "start": [],
                 **CLEAN_AREA_ACTION,
             },
@@ -1119,8 +1102,8 @@ async def test_clean_area(
                 "] }}",
             },
             [
-                asdict(Segment(id="1", name="Kitchen")),
-                asdict(Segment(id="2", name="Bedroom", group="Upstairs")),
+                Segment(id="1", name="Kitchen"),
+                Segment(id="2", name="Bedroom", group="Upstairs"),
             ],
         ),
     ],
@@ -1129,7 +1112,7 @@ async def test_clean_area(
 async def test_get_segments(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
-    expected_segments: list[dict[str, Any]],
+    expected_segments: list[Segment],
 ) -> None:
     """Test get_segments returns segments from template."""
 
@@ -1141,7 +1124,9 @@ async def test_get_segments(
     )
     msg = await client.receive_json()
     assert msg["success"]
-    assert msg["result"] == {"segments": expected_segments}
+    assert msg["result"] == {
+        "segments": [asdict(segment) for segment in expected_segments]
+    }
 
 
 @pytest.mark.parametrize(
@@ -1205,11 +1190,10 @@ async def test_invalid_segments_template(
         (
             1,
             {
-                "name": TEST_VACUUM.object_id,
                 "unique_id": TEST_VACUUM.entity_id,
                 "start": [],
                 **CLEAN_AREA_ACTION,
-                "segments_template": "{{ [ {'id': '1', 'name': 'Kitchen'}, {'id': '2', 'name': states('input_text.segment_name')}] }}",
+                "segments_template": "{{ [ {'id': '1', 'name': 'Kitchen'}, {'id': '2', 'name': states('sensor.test_attribute')}] }}",
             },
         )
     ],
@@ -1219,11 +1203,11 @@ async def test_invalid_segments_template(
     [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
 )
 @pytest.mark.usefixtures("setup_vacuum")
-async def test_vacuum_raise_segments_changed_issue(
+async def test_raise_segments_changed_issue(
     hass: HomeAssistant, entity_registry: er.EntityRegistry
 ) -> None:
     """Test that issue is raised on segments change."""
-    hass.states.async_set(TEST_SEGMENT_NAME, "Bedroom")
+    hass.states.async_set(TEST_ATTRIBUTE_ENTITY_ID, "Bedroom")
     await hass.async_block_till_done()
 
     entity_registry.async_update_entity_options(
@@ -1236,7 +1220,7 @@ async def test_vacuum_raise_segments_changed_issue(
             ],
         },
     )
-    hass.states.async_set(TEST_SEGMENT_NAME, "Bathroom")
+    hass.states.async_set(TEST_ATTRIBUTE_ENTITY_ID, "Bathroom")
     await hass.async_block_till_done()
 
     issue_registry = ir.async_get(hass)
