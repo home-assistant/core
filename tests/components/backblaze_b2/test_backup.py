@@ -510,7 +510,93 @@ async def test_upload_with_cleanup_failure(
 
     assert resp.status == 201
     assert any(
-        "Failed to clean up partially uploaded main backup file" in msg
+        "Failed to clean up partially uploaded backup file" in msg
+        for msg in caplog.messages
+    )
+
+
+async def test_tar_upload_failure_skips_cleanup(
+    hass_client: ClientSessionGenerator,
+    mock_config_entry: MockConfigEntry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test that cleanup is not attempted when tar upload itself fails."""
+    client = await hass_client()
+
+    with (
+        patch(
+            "homeassistant.components.backup.manager.BackupManager.async_get_backup",
+            return_value=TEST_BACKUP,
+        ),
+        patch(
+            "homeassistant.components.backup.manager.read_backup",
+            return_value=TEST_BACKUP,
+        ),
+        patch("pathlib.Path.open") as mocked_open,
+        patch.object(
+            BucketSimulator,
+            "upload_unbound_stream",
+            side_effect=B2Error("Connection reset"),
+        ),
+        patch.object(
+            BucketSimulator,
+            "get_file_info_by_name",
+        ) as mock_get_file_info,
+        caplog.at_level(logging.DEBUG),
+    ):
+        mocked_open.return_value.read = Mock(side_effect=[b"test", b""])
+        resp = await client.post(
+            f"/api/backup/upload?agent_id={DOMAIN}.{mock_config_entry.entry_id}",
+            data={"file": StringIO("test")},
+        )
+
+    assert resp.status == 201
+    mock_get_file_info.assert_not_called()
+    assert not any(
+        "Attempting to delete partially uploaded" in msg for msg in caplog.messages
+    )
+    assert any("Connection reset" in msg for msg in caplog.messages)
+
+
+async def test_handle_b2_errors_logs_root_cause(
+    hass_client: ClientSessionGenerator,
+    mock_config_entry: MockConfigEntry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test that the actual B2 error is logged when upload fails."""
+    client = await hass_client()
+
+    with (
+        patch(
+            "homeassistant.components.backup.manager.BackupManager.async_get_backup",
+            return_value=TEST_BACKUP,
+        ),
+        patch(
+            "homeassistant.components.backup.manager.read_backup",
+            return_value=TEST_BACKUP,
+        ),
+        patch("pathlib.Path.open") as mocked_open,
+        patch.object(
+            BucketSimulator,
+            "upload_bytes",
+            side_effect=B2Error("Service unavailable"),
+        ),
+        patch.object(
+            BucketSimulator,
+            "get_file_info_by_name",
+            return_value=Mock(delete=Mock()),
+        ),
+        caplog.at_level(logging.ERROR),
+    ):
+        mocked_open.return_value.read = Mock(side_effect=[b"test", b""])
+        resp = await client.post(
+            f"/api/backup/upload?agent_id={DOMAIN}.{mock_config_entry.entry_id}",
+            data={"file": StringIO("test")},
+        )
+
+    assert resp.status == 201
+    assert any(
+        "Failed during async_upload_backup: Service unavailable" in msg
         for msg in caplog.messages
     )
 
