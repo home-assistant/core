@@ -30,14 +30,14 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 import homeassistant.util.dt as dt_util
 
 from . import utils
-from .const import MOSQUES_COORDINATOR, PRAYER_NAMES, PRAYER_TIMES_COORDINATOR
+from .__init__ import MawaqitConfigEntry
+from .const import PRAYER_NAMES
 from .coordinator import MosqueCoordinator, PrayerTimeCoordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -175,25 +175,12 @@ NEXT_SALAT_SENSOR_DESCRIPTION = [
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: MawaqitConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up the Mawaqit sensor platform.
-
-    This function is called by Home Assistant to set up the Mawaqit sensor platform.
-    It initializes the mosque and prayer time coordinators and adds the necessary entities to the platform.
-
-    Args:
-        hass (HomeAssistant): The Home Assistant instance.
-        config_entry (ConfigEntry): The configuration entry for the Mawaqit sensor platform.
-        async_add_entities (AddEntitiesCallback): A callback function to add entities to the platform.
-
-    Returns:
-        None
-
-    """
-    mosque_coordinator = config_entry.runtime_data.get(MOSQUES_COORDINATOR)
-    prayer_time_coordinator = config_entry.runtime_data.get(PRAYER_TIMES_COORDINATOR)
+    """Set up the Mawaqit sensor platform."""
+    mosque_coordinator = config_entry.runtime_data.mosque_coordinator
+    prayer_time_coordinator = config_entry.runtime_data.prayer_time_coordinator
 
     entities: list[SensorEntity] = []
 

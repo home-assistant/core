@@ -1,12 +1,14 @@
-"""Example integration using DataUpdateCoordinator."""
+"""Coordinators for the Mawaqit integration."""
 
 from datetime import datetime, timedelta
 import logging
 
 from mawaqit.consts import BadCredentialsException, NoMosqueAround, NoMosqueFound
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 import homeassistant.util.dt as dt_util
 
@@ -16,12 +18,11 @@ from .const import CONF_UUID
 _LOGGER = logging.getLogger(__name__)
 
 
-class MosqueCoordinator(DataUpdateCoordinator):
+class MosqueCoordinator(DataUpdateCoordinator[dict]):
     """Coordinator to fetch mosque information."""
 
-    def __init__(self, hass: HomeAssistant, config_entry) -> None:
+    def __init__(self, hass: HomeAssistant, config_entry: ConfigEntry) -> None:
         """Initialize the mosque coordinator."""
-        self.hass = hass
         self.mosque_uuid = config_entry.data.get(CONF_UUID)
         self.token = config_entry.data.get(CONF_API_KEY)
 
@@ -30,17 +31,17 @@ class MosqueCoordinator(DataUpdateCoordinator):
             _LOGGER,
             name="Mosque Data",
             update_method=self._async_update_data,
-            update_interval=timedelta(days=1),  # Updated every day
+            update_interval=timedelta(days=1),
         )
 
     async def _async_update_data(self) -> dict:
-        """Fetch mosque details from local storage."""
+        """Fetch mosque details from the API."""
         try:
             mosque_data = await mawaqit_wrapper.fetch_mosque_by_id(
                 self.mosque_uuid, token=self.token
             )
         except BadCredentialsException as err:
-            raise UpdateFailed(f"Bad credentials: {err}") from err
+            raise ConfigEntryAuthFailed(f"Bad credentials: {err}") from err
         except (NoMosqueAround, NoMosqueFound) as err:
             raise UpdateFailed(f"No mosque found: {err}") from err
         except (ConnectionError, TimeoutError) as err:
@@ -52,13 +53,16 @@ class MosqueCoordinator(DataUpdateCoordinator):
         return mosque_data
 
 
-class PrayerTimeCoordinator(DataUpdateCoordinator):
-    """Coordinator to fetch prayer times from the Mawaqit API."""
+class PrayerTimeCoordinator(DataUpdateCoordinator[dict]):
+    """Coordinator to fetch prayer times from the Mawaqit API.
 
-    def __init__(self, hass: HomeAssistant, config_entry) -> None:
+    The API is called once per day to fetch the full prayer calendar.
+    The coordinator updates every minute so that sensors tracking the
+    next prayer can re-evaluate which prayer is upcoming.
+    """
+
+    def __init__(self, hass: HomeAssistant, config_entry: ConfigEntry) -> None:
         """Initialize the prayer time coordinator."""
-
-        self.hass = hass
         self.mosque_uuid = config_entry.data.get(CONF_UUID)
         self.token = config_entry.data.get(CONF_API_KEY)
         self.last_fetch: datetime | None = None
@@ -73,8 +77,7 @@ class PrayerTimeCoordinator(DataUpdateCoordinator):
         )
 
     async def _async_update_data(self) -> dict:
-        """Fetch prayer times from API, and notify sensors."""
-
+        """Fetch prayer times from API and notify sensors."""
         now = dt_util.utcnow()
 
         if (
@@ -82,25 +85,19 @@ class PrayerTimeCoordinator(DataUpdateCoordinator):
             or ((now - self.last_fetch) > timedelta(days=1))
             or (self.prayer_times is None)
         ):
-            _LOGGER.info("Attempting daily fetch of prayer times from Mawaqit API")
-
             try:
-                # Fetch new data from API
                 self.prayer_times = await mawaqit_wrapper.fetch_prayer_times(
                     mosque=self.mosque_uuid, token=self.token
                 )
-
                 self.last_fetch = now
-
             except BadCredentialsException as err:
-                raise UpdateFailed(f"Bad credentials: {err}") from err
+                raise ConfigEntryAuthFailed(f"Bad credentials: {err}") from err
             except (NoMosqueAround, NoMosqueFound) as err:
                 raise UpdateFailed(f"No mosque found: {err}") from err
             except (ConnectionError, TimeoutError) as err:
                 raise UpdateFailed(f"Network error: {err}") from err
 
         if not self.prayer_times:
-            _LOGGER.error("No prayer times received from API")
             raise UpdateFailed("No data received from API")
 
         return self.prayer_times

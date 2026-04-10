@@ -24,10 +24,10 @@ async def validate_credentials(
             client = AsyncMawaqitClient(username=username, password=password)
         await client.login()
     except BadCredentialsException:
-        _LOGGER.error("Error : Bad Credentials")
+        _LOGGER.debug("Error : Bad Credentials")
         return False
     except (ConnectionError, TimeoutError) as e:
-        _LOGGER.error("Network-related error: %s", e)
+        _LOGGER.debug("Network-related error: %s", e)
         return False
     finally:
         if client is not None:
@@ -49,9 +49,9 @@ async def get_mawaqit_api_token(
             client = AsyncMawaqitClient(username=username, password=password)
         token = await client.get_api_token()
     except BadCredentialsException as e:
-        _LOGGER.error("Error on retrieving API Token: %s", e)
+        _LOGGER.debug("Error on retrieving API Token: %s", e)
     except (ConnectionError, TimeoutError) as e:
-        _LOGGER.error("Network-related error: %s", e)
+        _LOGGER.debug("Network-related error: %s", e)
     finally:
         if client is not None:
             await client.close()
@@ -81,9 +81,9 @@ async def all_mosques_neighborhood(
         await client.get_api_token()
         nearest_mosques = await client.all_mosques_neighborhood()
     except BadCredentialsException as e:
-        _LOGGER.error("Error on retrieving mosques: %s", e)
+        _LOGGER.debug("Error on retrieving mosques: %s", e)
     except (ConnectionError, TimeoutError) as e:
-        _LOGGER.error("Network-related error: %s", e)
+        _LOGGER.debug("Network-related error: %s", e)
     finally:
         if client is not None:
             await client.close()
@@ -115,9 +115,9 @@ async def all_mosques_by_keyword(
             search_mosques = await client.fetch_mosques_by_keyword(search_keyword)
 
     except BadCredentialsException as e:
-        _LOGGER.error("Error on retrieving mosques: %s", e)
+        _LOGGER.debug("Error on retrieving mosques: %s", e)
     except (ConnectionError, TimeoutError) as e:
-        _LOGGER.error("Network-related error: %s", e)
+        _LOGGER.debug("Network-related error: %s", e)
     finally:
         if client is not None:
             await client.close()
@@ -149,9 +149,9 @@ async def fetch_prayer_times(
         dict_calendar = await client.fetch_prayer_times()
 
     except BadCredentialsException as e:
-        _LOGGER.error("Error on retrieving prayer times: %s", e)
+        _LOGGER.debug("Error on retrieving prayer times: %s", e)
     except (ConnectionError, TimeoutError) as e:
-        _LOGGER.error("Network-related error: %s", e)
+        _LOGGER.debug("Network-related error: %s", e)
     finally:
         if client is not None:
             await client.close()
@@ -174,9 +174,9 @@ async def fetch_mosque_by_id(
         dict_mosque = await client.fetch_mosque_by_id(mosque)
 
     except BadCredentialsException as e:
-        _LOGGER.error("Error while retrieving mosque data: %s", e)
+        _LOGGER.debug("Error while retrieving mosque data: %s", e)
     except (ConnectionError, TimeoutError) as e:
-        _LOGGER.error("Network-related error: %s", e)
+        _LOGGER.debug("Network-related error: %s", e)
     finally:
         if client is not None:
             await client.close()

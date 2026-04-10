@@ -1,6 +1,5 @@
-"""Adds config flow for Mawaqit."""
+"""Config flow for the Mawaqit integration."""
 
-import logging
 from typing import Any
 
 from aiohttp.client_exceptions import ClientConnectorError
@@ -27,8 +26,6 @@ from .const import (
     WRONG_CREDENTIAL,
 )
 
-_LOGGER = logging.getLogger(__name__)
-
 
 class MawaqitPrayerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Config flow for MAWAQIT."""
@@ -48,52 +45,38 @@ class MawaqitPrayerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         self._async_abort_entries_match()
 
-        errors: dict[str, str] = {}
+        errors = {}
         schema = vol.Schema(
             {
-                vol.Required(CONF_USERNAME): str,
-                vol.Required(CONF_PASSWORD): str,
+                vol.Required(CONF_USERNAME): selector.TextSelector(
+                    selector.TextSelectorConfig(type=selector.TextSelectorType.TEXT)
+                ),
+                vol.Required(CONF_PASSWORD): selector.TextSelector(
+                    selector.TextSelectorConfig(type=selector.TextSelectorType.PASSWORD)
+                ),
             }
         )
 
-        if user_input is None:
-            return self.async_show_form(
-                step_id="user",
-                data_schema=schema,
-                errors=errors,
-            )
+        if user_input is not None:
+            username = user_input[CONF_USERNAME]
+            password = user_input[CONF_PASSWORD]
 
-        username = user_input[CONF_USERNAME]
-        password = user_input[CONF_PASSWORD]
-
-        # check if the user credentials are correct (valid = True) :
-        try:
-            valid = await mawaqit_wrapper.validate_credentials(username, password)
-        # if we have an error connecting to the server :
-        except ClientConnectorError:
-            errors["base"] = CANNOT_CONNECT_TO_SERVER
-            return self.async_show_form(
-                step_id="user",
-                data_schema=self.add_suggested_values_to_schema(schema, user_input),
-                errors=errors,
-            )
-
-        if valid:
-            mawaqit_token = await mawaqit_wrapper.get_mawaqit_api_token(
-                username, password
-            )
-            if not mawaqit_token:
+            try:
+                valid = await mawaqit_wrapper.validate_credentials(username, password)
+            except ClientConnectorError:
                 errors["base"] = CANNOT_CONNECT_TO_SERVER
-                return self.async_show_form(
-                    step_id="user",
-                    data_schema=self.add_suggested_values_to_schema(schema, user_input),
-                    errors=errors,
-                )
-            self.token = mawaqit_token
-
-            return await self.async_step_search_method()
-
-        errors["base"] = WRONG_CREDENTIAL
+            else:
+                if valid:
+                    mawaqit_token = await mawaqit_wrapper.get_mawaqit_api_token(
+                        username, password
+                    )
+                    if not mawaqit_token:
+                        errors["base"] = CANNOT_CONNECT_TO_SERVER
+                    else:
+                        self.token = mawaqit_token
+                        return await self.async_step_search_method()
+                else:
+                    errors["base"] = WRONG_CREDENTIAL
 
         return self.async_show_form(
             step_id="user",
@@ -106,7 +89,7 @@ class MawaqitPrayerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     ) -> config_entries.ConfigFlowResult:
         """Handle mosques step."""
 
-        errors: dict[str, str] = {}
+        errors = {}
 
         lat = self.hass.config.latitude
         longi = self.hass.config.longitude
@@ -152,7 +135,7 @@ class MawaqitPrayerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self, user_input=None
     ) -> config_entries.ConfigFlowResult:
         """Handle the user's choice of search method."""
-        errors: dict[str, str] = {}
+        errors = {}
         schema = vol.Schema(
             {
                 vol.Required(
@@ -208,7 +191,7 @@ class MawaqitPrayerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self, user_input=None
     ) -> config_entries.ConfigFlowResult:
         """Handle the keyword search."""
-        errors: dict[str, str] = {}
+        errors = {}
         option = {
             vol.Required(CONF_SEARCH): str,
         }
@@ -218,10 +201,9 @@ class MawaqitPrayerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 keyword = user_input[CONF_SEARCH]
 
                 if keyword == self.previous_keyword_search:
-                    # if the form is submitted with the same keyword as the previous one, we check if the user has selected a mosque
-                    if CONF_UUID in user_input and (user_input[CONF_UUID] is not None):
+                    if (mosque_uuid := user_input.get(CONF_UUID)) is not None:
                         title, data_entry = utils.save_mosque(
-                            user_input[CONF_UUID],
+                            mosque_uuid,
                             self.mosques,
                             mawaqit_token=self.token,
                         )
@@ -358,7 +340,4 @@ class MawaqitPrayerOptionsFlowHandler(config_entries.OptionsFlow):
             )
 
         except NoMosqueAround:
-            _LOGGER.error(
-                "No mosque found around your location. Please check your coordinates"
-            )
             return self.async_abort(reason="no_mosque")

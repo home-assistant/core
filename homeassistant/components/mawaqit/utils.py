@@ -1,18 +1,12 @@
-"""Module provides utility functions for reading and writing mosque data files.
-
-Used in the Home Assistant Mawaqit integration.
-"""
+"""Utility functions for the Mawaqit integration."""
 
 from datetime import datetime, timedelta
 import logging
-import os
 
 from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE
 import homeassistant.util.dt as dt_util
 
 from .const import CONF_UUID, PRAYER_NAMES, PRAYER_NAMES_IQAMA
-
-CURRENT_DIR = os.path.dirname(os.path.realpath(__file__))
 
 _LOGGER = logging.getLogger(__name__)
 
