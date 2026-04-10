@@ -332,7 +332,11 @@ class MawaqitPrayerOptionsFlowHandler(config_entries.OptionsFlow):
                 ): vol.In(name_servers)
             }
 
-            return self.async_show_form(step_id="init", data_schema=vol.Schema(options))
+            return self.async_show_form(
+                step_id="init",
+                data_schema=vol.Schema(options),
+                description_placeholders={"mawaqit_url": "https://mawaqit.net/"},
+            )
 
         except NoMosqueAround:
             _LOGGER.error(
