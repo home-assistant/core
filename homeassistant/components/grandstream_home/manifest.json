@@ -1,0 +1,26 @@
+{
+  "domain": "grandstream_home",
+  "name": "Grandstream Home",
+  "codeowners": ["@GrandstreamEngineering"],
+  "config_flow": true,
+  "dependencies": [],
+  "documentation": "https://www.home-assistant.io/integrations/grandstream_home",
+  "integration_type": "device",
+  "iot_class": "local_push",
+  "quality_scale": "bronze",
+  "requirements": ["grandstream-home-api==0.1.3"],
+  "zeroconf": [
+    {
+      "name": "gds*",
+      "type": "_https._tcp.local."
+    },
+    {
+      "name": "gsc*",
+      "type": "_https._tcp.local."
+    },
+    {
+      "name": "*",
+      "type": "_device-info._tcp.local."
+    }
+  ]
+}
