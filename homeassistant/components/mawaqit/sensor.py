@@ -36,7 +36,7 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 import homeassistant.util.dt as dt_util
 
 from . import utils
-from .__init__ import MawaqitConfigEntry
+from . import MawaqitConfigEntry
 from .const import PRAYER_NAMES
 from .coordinator import MosqueCoordinator, PrayerTimeCoordinator
 
