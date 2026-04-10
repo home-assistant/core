@@ -57,6 +57,7 @@ class SceneActivityBaseEntity(HueBaseEntity):
 
     _attr_should_poll = False
     _attr_has_entity_name = True
+    _scene_id_to_option: dict[str, str]
 
     def __init__(
         self,
