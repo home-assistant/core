@@ -953,18 +953,25 @@ class ZHAGatewayProxy(EventBase):
 
         device_registry = dr.async_get(self.hass)
         entity_registry = er.async_get(self.hass)
-        # Fully clean up entity and device registries because group IDs can be
-        # reused, and we don't want old cached data to persist
+        entity_keys = []
         for entry in er.async_entries_for_device(
             entity_registry, device_id, include_disabled_entities=True
         ):
+            entity_keys.append((entry.domain, entry.platform, entry.unique_id))
             entity_registry.async_remove(entry.entity_id)
-            entity_registry.deleted_entities.pop(
-                (entry.domain, entry.platform, entry.unique_id), None
-            )
         if device_registry.async_get(device_id) is not None:
             device_registry.async_remove_device(device_id)
-        device_registry.deleted_devices.pop(device_id, None)
+        # Purge deleted-entry caches so a new group reusing the same zigpy
+        # group ID is not restored with stale settings from the old group.
+        purged = False
+        for key in entity_keys:
+            if entity_registry.deleted_entities.pop(key, None) is not None:
+                purged = True
+        if device_registry.deleted_devices.pop(device_id, None) is not None:
+            purged = True
+        if purged:
+            entity_registry.async_schedule_save()
+            device_registry.async_schedule_save()
 
     def _update_group_entities(self, group_event: GroupEvent) -> None:
         """Update group entities when a group event is received."""
