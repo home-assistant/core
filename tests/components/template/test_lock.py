@@ -19,58 +19,42 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import entity_registry as er
-from homeassistant.setup import async_setup_component
+from homeassistant.helpers.typing import ConfigType
 
-from .conftest import ConfigurationStyle, async_get_flow_preview_state
+from .conftest import (
+    ConfigurationStyle,
+    TemplatePlatformSetup,
+    async_get_flow_preview_state,
+    async_trigger,
+    make_test_action,
+    make_test_trigger,
+    setup_and_test_nested_unique_id,
+    setup_and_test_unique_id,
+    setup_entity,
+)
 
 from tests.common import MockConfigEntry, assert_setup_component
 from tests.typing import WebSocketGenerator
 
-TEST_OBJECT_ID = "test_template_lock"
-TEST_ENTITY_ID = f"lock.{TEST_OBJECT_ID}"
 TEST_STATE_ENTITY_ID = "sensor.test_state"
 TEST_AVAILABILITY_ENTITY_ID = "availability_state.state"
+TEST_LOCK = TemplatePlatformSetup(
+    lock.DOMAIN,
+    None,
+    "test_template_lock",
+    make_test_trigger(
+        TEST_AVAILABILITY_ENTITY_ID,
+        TEST_STATE_ENTITY_ID,
+    ),
+)
 
-TEST_STATE_TRIGGER = {
-    "trigger": {
-        "trigger": "state",
-        "entity_id": [TEST_STATE_ENTITY_ID, TEST_AVAILABILITY_ENTITY_ID],
-    },
-    "variables": {"triggering_entity": "{{ trigger.entity_id }}"},
-    "action": [
-        {"event": "action_event", "event_data": {"what": "{{ triggering_entity }}"}}
-    ],
-}
 
-LOCK_ACTION = {
-    "lock": {
-        "service": "test.automation",
-        "data_template": {
-            "action": "lock",
-            "caller": "{{ this.entity_id }}",
-            "code": "{{ code if code is defined else None }}",
-        },
-    },
+CODE_DATA = {
+    "code": "{{ code if code is defined else None }}",
 }
-UNLOCK_ACTION = {
-    "unlock": {
-        "service": "test.automation",
-        "data_template": {
-            "action": "unlock",
-            "caller": "{{ this.entity_id }}",
-            "code": "{{ code if code is defined else None }}",
-        },
-    },
-}
-OPEN_ACTION = {
-    "open": {
-        "service": "test.automation",
-        "data_template": {
-            "action": "open",
-            "caller": "{{ this.entity_id }}",
-        },
-    },
-}
+LOCK_ACTION = make_test_action("lock", CODE_DATA)
+UNLOCK_ACTION = make_test_action("unlock", CODE_DATA)
+OPEN_ACTION = make_test_action("open")
 
 
 OPTIMISTIC_LOCK = {
@@ -93,78 +77,15 @@ OPTIMISTIC_CODED_LOCK_CONFIG = {
 }
 
 
-async def async_setup_legacy_format(
-    hass: HomeAssistant, count: int, lock_config: dict[str, Any]
-) -> None:
-    """Do setup of lock integration via legacy format."""
-    config = {"lock": {"platform": "template", "name": TEST_OBJECT_ID, **lock_config}}
-
-    with assert_setup_component(count, lock.DOMAIN):
-        assert await async_setup_component(
-            hass,
-            lock.DOMAIN,
-            config,
-        )
-    await hass.async_block_till_done()
-    await hass.async_start()
-    await hass.async_block_till_done()
-
-
-async def async_setup_modern_format(
-    hass: HomeAssistant, count: int, lock_config: dict[str, Any]
-) -> None:
-    """Do setup of lock integration via modern format."""
-    config = {"template": {"lock": {"name": TEST_OBJECT_ID, **lock_config}}}
-
-    with assert_setup_component(count, template.DOMAIN):
-        assert await async_setup_component(
-            hass,
-            template.DOMAIN,
-            config,
-        )
-
-    await hass.async_block_till_done()
-    await hass.async_start()
-    await hass.async_block_till_done()
-
-
-async def async_setup_trigger_format(
-    hass: HomeAssistant, count: int, lock_config: dict[str, Any]
-) -> None:
-    """Do setup of lock integration via trigger format."""
-    config = {
-        "template": {
-            "lock": {"name": TEST_OBJECT_ID, **lock_config},
-            **TEST_STATE_TRIGGER,
-        }
-    }
-
-    with assert_setup_component(count, template.DOMAIN):
-        assert await async_setup_component(
-            hass,
-            template.DOMAIN,
-            config,
-        )
-
-    await hass.async_block_till_done()
-    await hass.async_start()
-    await hass.async_block_till_done()
-
-
 @pytest.fixture
 async def setup_lock(
     hass: HomeAssistant,
     count: int,
     style: ConfigurationStyle,
-    lock_config: dict[str, Any],
+    config: dict[str, Any],
 ) -> None:
     """Do setup of lock integration."""
-    if style == ConfigurationStyle.LEGACY:
-        await async_setup_legacy_format(hass, count, lock_config)
-    elif style == ConfigurationStyle.MODERN:
-        await async_setup_modern_format(hass, count, lock_config)
-    elif style == ConfigurationStyle.TRIGGER:
-        await async_setup_trigger_format(hass, count, lock_config)
+    await setup_entity(hass, TEST_LOCK, style, count, config)
 
 
 @pytest.fixture
@@ -175,25 +96,8 @@ async def setup_base_lock(
     state_template: str,
     extra_config: dict,
 ):
-    """Do setup of cover integration using a state template."""
-    if style == ConfigurationStyle.LEGACY:
-        await async_setup_legacy_format(
-            hass,
-            count,
-            {"value_template": state_template, **extra_config},
-        )
-    elif style == ConfigurationStyle.MODERN:
-        await async_setup_modern_format(
-            hass,
-            count,
-            {"state": state_template, **extra_config},
-        )
-    elif style == ConfigurationStyle.TRIGGER:
-        await async_setup_trigger_format(
-            hass,
-            count,
-            {"state": state_template, **extra_config},
-        )
+    """Do setup of lock integration using a state template."""
+    await setup_entity(hass, TEST_LOCK, style, count, extra_config, state_template)
 
 
 @pytest.fixture
@@ -203,34 +107,8 @@ async def setup_state_lock(
     style: ConfigurationStyle,
     state_template: str,
 ):
-    """Do setup of cover integration using a state template."""
-    if style == ConfigurationStyle.LEGACY:
-        await async_setup_legacy_format(
-            hass,
-            count,
-            {
-                **OPTIMISTIC_LOCK,
-                "value_template": state_template,
-            },
-        )
-    elif style == ConfigurationStyle.MODERN:
-        await async_setup_modern_format(
-            hass,
-            count,
-            {
-                **OPTIMISTIC_LOCK,
-                "state": state_template,
-            },
-        )
-    elif style == ConfigurationStyle.TRIGGER:
-        await async_setup_trigger_format(
-            hass,
-            count,
-            {
-                **OPTIMISTIC_LOCK,
-                "state": state_template,
-            },
-        )
+    """Do setup of lock integration using a state template."""
+    await setup_entity(hass, TEST_LOCK, style, count, OPTIMISTIC_LOCK, state_template)
 
 
 @pytest.fixture
@@ -241,25 +119,10 @@ async def setup_state_lock_with_extra_config(
     state_template: str,
     extra_config: dict,
 ):
-    """Do setup of cover integration using a state template."""
-    if style == ConfigurationStyle.LEGACY:
-        await async_setup_legacy_format(
-            hass,
-            count,
-            {**OPTIMISTIC_LOCK, "value_template": state_template, **extra_config},
-        )
-    elif style == ConfigurationStyle.MODERN:
-        await async_setup_modern_format(
-            hass,
-            count,
-            {**OPTIMISTIC_LOCK, "state": state_template, **extra_config},
-        )
-    elif style == ConfigurationStyle.TRIGGER:
-        await async_setup_trigger_format(
-            hass,
-            count,
-            {**OPTIMISTIC_LOCK, "state": state_template, **extra_config},
-        )
+    """Do setup of lock integration using a state template."""
+    await setup_entity(
+        hass, TEST_LOCK, style, count, OPTIMISTIC_LOCK, state_template, extra_config
+    )
 
 
 @pytest.fixture
@@ -271,30 +134,16 @@ async def setup_state_lock_with_attribute(
     attribute: str,
     attribute_template: str,
 ):
-    """Do setup of cover integration using a state template."""
-    extra = {attribute: attribute_template} if attribute else {}
-    if style == ConfigurationStyle.LEGACY:
-        await async_setup_legacy_format(
-            hass,
-            count,
-            {
-                **OPTIMISTIC_LOCK,
-                "value_template": state_template,
-                **extra,
-            },
-        )
-    elif style == ConfigurationStyle.MODERN:
-        await async_setup_modern_format(
-            hass,
-            count,
-            {**OPTIMISTIC_LOCK, "state": state_template, **extra},
-        )
-    elif style == ConfigurationStyle.TRIGGER:
-        await async_setup_trigger_format(
-            hass,
-            count,
-            {**OPTIMISTIC_LOCK, "state": state_template, **extra},
-        )
+    """Do setup of lock integration using a state template."""
+    await setup_entity(
+        hass,
+        TEST_LOCK,
+        style,
+        count,
+        OPTIMISTIC_LOCK,
+        state_template,
+        {attribute: attribute_template} if attribute else {},
+    )
 
 
 @pytest.mark.parametrize(
@@ -307,28 +156,25 @@ async def setup_state_lock_with_attribute(
 @pytest.mark.usefixtures("setup_state_lock")
 async def test_template_state(hass: HomeAssistant) -> None:
     """Test template."""
-    hass.states.async_set(TEST_STATE_ENTITY_ID, STATE_ON)
-    await hass.async_block_till_done()
+    await async_trigger(hass, TEST_STATE_ENTITY_ID, STATE_ON)
 
-    state = hass.states.get(TEST_ENTITY_ID)
+    state = hass.states.get(TEST_LOCK.entity_id)
     assert state.state == LockState.LOCKED
 
-    hass.states.async_set(TEST_STATE_ENTITY_ID, STATE_OFF)
-    await hass.async_block_till_done()
+    await async_trigger(hass, TEST_STATE_ENTITY_ID, STATE_OFF)
 
-    state = hass.states.get(TEST_ENTITY_ID)
+    state = hass.states.get(TEST_LOCK.entity_id)
     assert state.state == LockState.UNLOCKED
 
-    hass.states.async_set(TEST_STATE_ENTITY_ID, STATE_OPEN)
-    await hass.async_block_till_done()
+    await async_trigger(hass, TEST_STATE_ENTITY_ID, STATE_OPEN)
 
-    state = hass.states.get(TEST_ENTITY_ID)
+    state = hass.states.get(TEST_LOCK.entity_id)
     assert state.state == LockState.OPEN
 
     hass.states.async_set(TEST_STATE_ENTITY_ID, "None")
     await hass.async_block_till_done()
 
-    state = hass.states.get(TEST_ENTITY_ID)
+    state = hass.states.get(TEST_LOCK.entity_id)
     assert state.state == STATE_UNKNOWN
 
 
@@ -345,24 +191,23 @@ async def test_open_lock_optimistic(
     hass: HomeAssistant, calls: list[ServiceCall]
 ) -> None:
     """Test optimistic open."""
-    hass.states.async_set(TEST_STATE_ENTITY_ID, STATE_ON)
-    await hass.async_block_till_done()
+    await async_trigger(hass, TEST_STATE_ENTITY_ID, STATE_ON)
 
-    state = hass.states.get(TEST_ENTITY_ID)
+    state = hass.states.get(TEST_LOCK.entity_id)
     assert state.state == LockState.LOCKED
 
     await hass.services.async_call(
         lock.DOMAIN,
         lock.SERVICE_OPEN,
-        {ATTR_ENTITY_ID: TEST_ENTITY_ID},
+        {ATTR_ENTITY_ID: TEST_LOCK.entity_id},
     )
     await hass.async_block_till_done()
 
     assert len(calls) == 1
     assert calls[0].data["action"] == "open"
-    assert calls[0].data["caller"] == TEST_ENTITY_ID
+    assert calls[0].data["caller"] == TEST_LOCK.entity_id
 
-    state = hass.states.get(TEST_ENTITY_ID)
+    state = hass.states.get(TEST_LOCK.entity_id)
     assert state.state == LockState.OPEN
 
 
@@ -375,10 +220,9 @@ async def test_open_lock_optimistic(
 async def test_template_state_boolean_on(hass: HomeAssistant) -> None:
     """Test the setting of the state with boolean on."""
     # Ensure the trigger executes for trigger configurations
-    hass.states.async_set(TEST_STATE_ENTITY_ID, STATE_ON)
-    await hass.async_block_till_done()
+    await async_trigger(hass, TEST_STATE_ENTITY_ID, STATE_ON)
 
-    state = hass.states.get(TEST_ENTITY_ID)
+    state = hass.states.get(TEST_LOCK.entity_id)
     assert state.state == LockState.LOCKED
 
 
@@ -391,10 +235,9 @@ async def test_template_state_boolean_on(hass: HomeAssistant) -> None:
 async def test_template_state_boolean_off(hass: HomeAssistant) -> None:
     """Test the setting of the state with off."""
     # Ensure the trigger executes for trigger configurations
-    hass.states.async_set(TEST_STATE_ENTITY_ID, STATE_ON)
-    await hass.async_block_till_done()
+    await async_trigger(hass, TEST_STATE_ENTITY_ID, STATE_ON)
 
-    state = hass.states.get(TEST_ENTITY_ID)
+    state = hass.states.get(TEST_LOCK.entity_id)
     assert state.state == LockState.UNLOCKED
 
 
@@ -448,9 +291,9 @@ async def test_template_code_template_syntax_error(hass: HomeAssistant) -> None:
 @pytest.mark.usefixtures("setup_state_lock")
 async def test_template_static(hass: HomeAssistant) -> None:
     """Test that we allow static templates."""
-    hass.states.async_set(TEST_ENTITY_ID, LockState.LOCKED)
+    hass.states.async_set(TEST_LOCK.entity_id, LockState.LOCKED)
     await hass.async_block_till_done()
-    state = hass.states.get(TEST_ENTITY_ID)
+    state = hass.states.get(TEST_LOCK.entity_id)
     assert state.state == LockState.LOCKED
 
 
@@ -472,10 +315,9 @@ async def test_template_static(hass: HomeAssistant) -> None:
 async def test_state_template(hass: HomeAssistant, expected: str) -> None:
     """Test state and value_template template."""
     # Ensure the trigger executes for trigger configurations
-    hass.states.async_set(TEST_STATE_ENTITY_ID, STATE_ON)
-    await hass.async_block_till_done()
+    await async_trigger(hass, TEST_STATE_ENTITY_ID, STATE_ON)
 
-    state = hass.states.get(TEST_ENTITY_ID)
+    state = hass.states.get(TEST_LOCK.entity_id)
     assert state.state == expected
 
 
@@ -496,13 +338,12 @@ async def test_state_template(hass: HomeAssistant, expected: str) -> None:
 @pytest.mark.usefixtures("setup_state_lock_with_attribute")
 async def test_picture_template(hass: HomeAssistant, initial_state: str) -> None:
     """Test entity_picture template."""
-    state = hass.states.get(TEST_ENTITY_ID)
+    state = hass.states.get(TEST_LOCK.entity_id)
     assert state.attributes.get("entity_picture") == initial_state
 
-    hass.states.async_set(TEST_STATE_ENTITY_ID, STATE_ON)
-    await hass.async_block_till_done()
+    await async_trigger(hass, TEST_STATE_ENTITY_ID, STATE_ON)
 
-    state = hass.states.get(TEST_ENTITY_ID)
+    state = hass.states.get(TEST_LOCK.entity_id)
     assert state.attributes["entity_picture"] == "/local/switch.png"
 
 
@@ -522,14 +363,13 @@ async def test_picture_template(hass: HomeAssistant, initial_state: str) -> None
 )
 @pytest.mark.usefixtures("setup_state_lock_with_attribute")
 async def test_icon_template(hass: HomeAssistant, initial_state: str) -> None:
-    """Test entity_picture template."""
-    state = hass.states.get(TEST_ENTITY_ID)
+    """Test icon template."""
+    state = hass.states.get(TEST_LOCK.entity_id)
     assert state.attributes.get("icon") == initial_state
 
-    hass.states.async_set(TEST_STATE_ENTITY_ID, STATE_ON)
-    await hass.async_block_till_done()
+    await async_trigger(hass, TEST_STATE_ENTITY_ID, STATE_ON)
 
-    state = hass.states.get(TEST_ENTITY_ID)
+    state = hass.states.get(TEST_LOCK.entity_id)
     assert state.attributes["icon"] == "mdi:eye"
 
 
@@ -543,22 +383,21 @@ async def test_icon_template(hass: HomeAssistant, initial_state: str) -> None:
 @pytest.mark.usefixtures("setup_state_lock")
 async def test_lock_action(hass: HomeAssistant, calls: list[ServiceCall]) -> None:
     """Test lock action."""
-    hass.states.async_set(TEST_STATE_ENTITY_ID, STATE_OFF)
-    await hass.async_block_till_done()
+    await async_trigger(hass, TEST_STATE_ENTITY_ID, STATE_OFF)
 
-    state = hass.states.get(TEST_ENTITY_ID)
+    state = hass.states.get(TEST_LOCK.entity_id)
     assert state.state == LockState.UNLOCKED
 
     await hass.services.async_call(
         lock.DOMAIN,
         lock.SERVICE_LOCK,
-        {ATTR_ENTITY_ID: TEST_ENTITY_ID},
+        {ATTR_ENTITY_ID: TEST_LOCK.entity_id},
     )
     await hass.async_block_till_done()
 
     assert len(calls) == 1
     assert calls[0].data["action"] == "lock"
-    assert calls[0].data["caller"] == TEST_ENTITY_ID
+    assert calls[0].data["caller"] == TEST_LOCK.entity_id
 
 
 @pytest.mark.parametrize(
@@ -571,22 +410,21 @@ async def test_lock_action(hass: HomeAssistant, calls: list[ServiceCall]) -> Non
 @pytest.mark.usefixtures("setup_state_lock")
 async def test_unlock_action(hass: HomeAssistant, calls: list[ServiceCall]) -> None:
     """Test unlock action."""
-    hass.states.async_set(TEST_STATE_ENTITY_ID, STATE_ON)
-    await hass.async_block_till_done()
+    await async_trigger(hass, TEST_STATE_ENTITY_ID, STATE_ON)
 
-    state = hass.states.get(TEST_ENTITY_ID)
+    state = hass.states.get(TEST_LOCK.entity_id)
     assert state.state == LockState.LOCKED
 
     await hass.services.async_call(
         lock.DOMAIN,
         lock.SERVICE_UNLOCK,
-        {ATTR_ENTITY_ID: TEST_ENTITY_ID},
+        {ATTR_ENTITY_ID: TEST_LOCK.entity_id},
     )
     await hass.async_block_till_done()
 
     assert len(calls) == 1
     assert calls[0].data["action"] == "unlock"
-    assert calls[0].data["caller"] == TEST_ENTITY_ID
+    assert calls[0].data["caller"] == TEST_LOCK.entity_id
 
 
 @pytest.mark.parametrize(
@@ -600,22 +438,21 @@ async def test_unlock_action(hass: HomeAssistant, calls: list[ServiceCall]) -> N
 @pytest.mark.usefixtures("setup_state_lock_with_extra_config")
 async def test_open_action(hass: HomeAssistant, calls: list[ServiceCall]) -> None:
     """Test open action."""
-    hass.states.async_set(TEST_STATE_ENTITY_ID, STATE_ON)
-    await hass.async_block_till_done()
+    await async_trigger(hass, TEST_STATE_ENTITY_ID, STATE_ON)
 
-    state = hass.states.get(TEST_ENTITY_ID)
+    state = hass.states.get(TEST_LOCK.entity_id)
     assert state.state == LockState.LOCKED
 
     await hass.services.async_call(
         lock.DOMAIN,
         lock.SERVICE_OPEN,
-        {ATTR_ENTITY_ID: TEST_ENTITY_ID},
+        {ATTR_ENTITY_ID: TEST_LOCK.entity_id},
     )
     await hass.async_block_till_done()
 
     assert len(calls) == 1
     assert calls[0].data["action"] == "open"
-    assert calls[0].data["caller"] == TEST_ENTITY_ID
+    assert calls[0].data["caller"] == TEST_LOCK.entity_id
 
 
 @pytest.mark.parametrize(
@@ -641,22 +478,21 @@ async def test_lock_action_with_code(
     hass: HomeAssistant, calls: list[ServiceCall]
 ) -> None:
     """Test lock action with defined code format and supplied lock code."""
-    hass.states.async_set(TEST_STATE_ENTITY_ID, STATE_OFF)
-    await hass.async_block_till_done()
+    await async_trigger(hass, TEST_STATE_ENTITY_ID, STATE_OFF)
 
-    state = hass.states.get(TEST_ENTITY_ID)
+    state = hass.states.get(TEST_LOCK.entity_id)
     assert state.state == LockState.UNLOCKED
 
     await hass.services.async_call(
         lock.DOMAIN,
         lock.SERVICE_LOCK,
-        {ATTR_ENTITY_ID: TEST_ENTITY_ID, ATTR_CODE: "LOCK_CODE"},
+        {ATTR_ENTITY_ID: TEST_LOCK.entity_id, ATTR_CODE: "LOCK_CODE"},
     )
     await hass.async_block_till_done()
 
     assert len(calls) == 1
     assert calls[0].data["action"] == "lock"
-    assert calls[0].data["caller"] == TEST_ENTITY_ID
+    assert calls[0].data["caller"] == TEST_LOCK.entity_id
     assert calls[0].data["code"] == "LOCK_CODE"
 
 
@@ -684,22 +520,21 @@ async def test_unlock_action_with_code(
 ) -> None:
     """Test unlock action with code format and supplied unlock code."""
     await setup.async_setup_component(hass, "switch", {})
-    hass.states.async_set(TEST_STATE_ENTITY_ID, STATE_ON)
-    await hass.async_block_till_done()
+    await async_trigger(hass, TEST_STATE_ENTITY_ID, STATE_ON)
 
-    state = hass.states.get(TEST_ENTITY_ID)
+    state = hass.states.get(TEST_LOCK.entity_id)
     assert state.state == LockState.LOCKED
 
     await hass.services.async_call(
         lock.DOMAIN,
         lock.SERVICE_UNLOCK,
-        {ATTR_ENTITY_ID: TEST_ENTITY_ID, ATTR_CODE: "UNLOCK_CODE"},
+        {ATTR_ENTITY_ID: TEST_LOCK.entity_id, ATTR_CODE: "UNLOCK_CODE"},
     )
     await hass.async_block_till_done()
 
     assert len(calls) == 1
     assert calls[0].data["action"] == "unlock"
-    assert calls[0].data["caller"] == TEST_ENTITY_ID
+    assert calls[0].data["caller"] == TEST_LOCK.entity_id
     assert calls[0].data["code"] == "UNLOCK_CODE"
 
 
@@ -734,18 +569,17 @@ async def test_lock_actions_fail_with_invalid_code(
 ) -> None:
     """Test invalid lock codes."""
     # Ensure trigger entities updated
-    hass.states.async_set(TEST_STATE_ENTITY_ID, STATE_ON)
-    await hass.async_block_till_done()
+    await async_trigger(hass, TEST_STATE_ENTITY_ID, STATE_ON)
 
     await hass.services.async_call(
         lock.DOMAIN,
         test_action,
-        {ATTR_ENTITY_ID: TEST_ENTITY_ID, ATTR_CODE: "non-number-value"},
+        {ATTR_ENTITY_ID: TEST_LOCK.entity_id, ATTR_CODE: "non-number-value"},
     )
     await hass.services.async_call(
         lock.DOMAIN,
         test_action,
-        {ATTR_ENTITY_ID: TEST_ENTITY_ID},
+        {ATTR_ENTITY_ID: TEST_LOCK.entity_id},
     )
     await hass.async_block_till_done()
 
@@ -777,18 +611,17 @@ async def test_lock_actions_dont_execute_with_code_template_rendering_error(
     """Test lock code format rendering fails block lock/unlock actions."""
 
     # Ensure trigger entities updated
-    hass.states.async_set(TEST_STATE_ENTITY_ID, STATE_ON)
-    await hass.async_block_till_done()
+    await async_trigger(hass, TEST_STATE_ENTITY_ID, STATE_ON)
 
     await hass.services.async_call(
         lock.DOMAIN,
         lock.SERVICE_LOCK,
-        {ATTR_ENTITY_ID: TEST_ENTITY_ID},
+        {ATTR_ENTITY_ID: TEST_LOCK.entity_id},
     )
     await hass.services.async_call(
         lock.DOMAIN,
         lock.SERVICE_UNLOCK,
-        {ATTR_ENTITY_ID: TEST_ENTITY_ID, ATTR_CODE: "any-value"},
+        {ATTR_ENTITY_ID: TEST_LOCK.entity_id, ATTR_CODE: "any-value"},
     )
     await hass.async_block_till_done()
 
@@ -819,22 +652,21 @@ async def test_actions_with_none_as_codeformat_ignores_code(
     hass: HomeAssistant, action, calls: list[ServiceCall]
 ) -> None:
     """Test lock actions with supplied lock code."""
-    hass.states.async_set(TEST_STATE_ENTITY_ID, STATE_OFF)
-    await hass.async_block_till_done()
+    await async_trigger(hass, TEST_STATE_ENTITY_ID, STATE_OFF)
 
-    state = hass.states.get(TEST_ENTITY_ID)
+    state = hass.states.get(TEST_LOCK.entity_id)
     assert state.state == LockState.UNLOCKED
 
     await hass.services.async_call(
         lock.DOMAIN,
         action,
-        {ATTR_ENTITY_ID: TEST_ENTITY_ID, ATTR_CODE: "any code"},
+        {ATTR_ENTITY_ID: TEST_LOCK.entity_id, ATTR_CODE: "any code"},
     )
     await hass.async_block_till_done()
 
     assert len(calls) == 1
     assert calls[0].data["action"] == action
-    assert calls[0].data["caller"] == TEST_ENTITY_ID
+    assert calls[0].data["caller"] == TEST_LOCK.entity_id
     assert calls[0].data["code"] == "any code"
 
 
@@ -862,26 +694,25 @@ async def test_actions_with_invalid_regexp_as_codeformat_never_execute(
     hass: HomeAssistant, action, calls: list[ServiceCall]
 ) -> None:
     """Test lock actions don't execute with invalid regexp."""
-    hass.states.async_set(TEST_STATE_ENTITY_ID, STATE_OFF)
-    await hass.async_block_till_done()
+    await async_trigger(hass, TEST_STATE_ENTITY_ID, STATE_OFF)
 
-    state = hass.states.get(TEST_ENTITY_ID)
+    state = hass.states.get(TEST_LOCK.entity_id)
     assert state.state == LockState.UNLOCKED
 
     await hass.services.async_call(
         lock.DOMAIN,
         action,
-        {ATTR_ENTITY_ID: TEST_ENTITY_ID, ATTR_CODE: "1"},
+        {ATTR_ENTITY_ID: TEST_LOCK.entity_id, ATTR_CODE: "1"},
     )
     await hass.services.async_call(
         lock.DOMAIN,
         action,
-        {ATTR_ENTITY_ID: TEST_ENTITY_ID, ATTR_CODE: "x"},
+        {ATTR_ENTITY_ID: TEST_LOCK.entity_id, ATTR_CODE: "x"},
     )
     await hass.services.async_call(
         lock.DOMAIN,
         action,
-        {ATTR_ENTITY_ID: TEST_ENTITY_ID},
+        {ATTR_ENTITY_ID: TEST_LOCK.entity_id},
     )
     await hass.async_block_till_done()
 
@@ -910,10 +741,9 @@ async def test_actions_with_invalid_regexp_as_codeformat_never_execute(
 @pytest.mark.usefixtures("setup_state_lock")
 async def test_lock_state(hass: HomeAssistant, test_state) -> None:
     """Test value template."""
-    hass.states.async_set(TEST_STATE_ENTITY_ID, test_state)
-    await hass.async_block_till_done()
+    await async_trigger(hass, TEST_STATE_ENTITY_ID, test_state)
 
-    state = hass.states.get(TEST_ENTITY_ID)
+    state = hass.states.get(TEST_LOCK.entity_id)
     assert state.state == test_state
 
 
@@ -943,14 +773,14 @@ async def test_available_template_with_entities(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
 
     # Device State should not be unavailable
-    assert hass.states.get(TEST_ENTITY_ID).state != STATE_UNAVAILABLE
+    assert hass.states.get(TEST_LOCK.entity_id).state != STATE_UNAVAILABLE
 
     # When Availability template returns false
     hass.states.async_set(TEST_AVAILABILITY_ENTITY_ID, STATE_OFF)
     await hass.async_block_till_done()
 
     # device state should be unavailable
-    assert hass.states.get(TEST_ENTITY_ID).state == STATE_UNAVAILABLE
+    assert hass.states.get(TEST_LOCK.entity_id).state == STATE_UNAVAILABLE
 
 
 @pytest.mark.parametrize(
@@ -976,10 +806,9 @@ async def test_invalid_availability_template_keeps_component_available(
     hass: HomeAssistant, caplog_setup_text, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test that an invalid availability keeps the device available."""
-    hass.states.async_set(TEST_STATE_ENTITY_ID, STATE_ON)
-    await hass.async_block_till_done()
+    await async_trigger(hass, TEST_STATE_ENTITY_ID, STATE_ON)
 
-    assert hass.states.get(TEST_ENTITY_ID).state != STATE_UNAVAILABLE
+    assert hass.states.get(TEST_LOCK.entity_id).state != STATE_UNAVAILABLE
     err = "'x' is undefined"
     assert err in caplog_setup_text or err in caplog.text
 
@@ -1021,83 +850,32 @@ async def test_legacy_unique_id(hass: HomeAssistant) -> None:
     assert len(hass.states.async_all("lock")) == 1
 
 
-async def test_modern_unique_id(hass: HomeAssistant) -> None:
-    """Test unique_id option only creates one cover per id."""
-    config = {
-        "template": {
-            "lock": [
-                {
-                    "name": "test_template_lock_01",
-                    "unique_id": "not-so-unique-anymore",
-                    "state": "{{ false }}",
-                    **OPTIMISTIC_LOCK,
-                },
-                {
-                    "name": "test_template_lock_02",
-                    "unique_id": "not-so-unique-anymore",
-                    "state": "{{ false }}",
-                    **OPTIMISTIC_LOCK,
-                },
-            ]
-        }
-    }
-
-    with assert_setup_component(1, template.DOMAIN):
-        assert await async_setup_component(
-            hass,
-            template.DOMAIN,
-            config,
-        )
-
-    await hass.async_block_till_done()
-    await hass.async_start()
-    await hass.async_block_till_done()
-
-    assert len(hass.states.async_all()) == 1
-
-
-async def test_nested_unique_id(
-    hass: HomeAssistant, entity_registry: er.EntityRegistry
+@pytest.mark.parametrize("config", [OPTIMISTIC_LOCK])
+@pytest.mark.parametrize(
+    "style",
+    [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
+)
+async def test_unique_id(
+    hass: HomeAssistant, style: ConfigurationStyle, config: ConfigType
 ) -> None:
-    """Test a template unique_id propagates to lock unique_ids."""
-    with assert_setup_component(1, template.DOMAIN):
-        assert await async_setup_component(
-            hass,
-            template.DOMAIN,
-            {
-                "template": {
-                    "unique_id": "x",
-                    "lock": [
-                        {
-                            **OPTIMISTIC_LOCK,
-                            "name": "test_a",
-                            "unique_id": "a",
-                            "state": "{{ true }}",
-                        },
-                        {
-                            **OPTIMISTIC_LOCK,
-                            "name": "test_b",
-                            "unique_id": "b",
-                            "state": "{{ true }}",
-                        },
-                    ],
-                },
-            },
-        )
+    """Test unique_id option only creates one entity per id."""
+    await setup_and_test_unique_id(hass, TEST_LOCK, style, config, "{{ 'on' }}")
 
-    await hass.async_block_till_done()
-    await hass.async_start()
-    await hass.async_block_till_done()
 
-    assert len(hass.states.async_all("lock")) == 2
-
-    entry = entity_registry.async_get("lock.test_a")
-    assert entry
-    assert entry.unique_id == "x-a"
-
-    entry = entity_registry.async_get("lock.test_b")
-    assert entry
-    assert entry.unique_id == "x-b"
+@pytest.mark.parametrize("config", [OPTIMISTIC_LOCK])
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
+async def test_nested_unique_id(
+    hass: HomeAssistant,
+    style: ConfigurationStyle,
+    config: ConfigType,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test a template unique_id propagates unique_ids."""
+    await setup_and_test_nested_unique_id(
+        hass, TEST_LOCK, style, entity_registry, config, "{{ 'on' }}"
+    )
 
 
 async def test_emtpy_action_config(hass: HomeAssistant) -> None:
@@ -1148,12 +926,11 @@ async def test_emtpy_action_config(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
-    ("count", "lock_config"),
+    ("count", "config"),
     [
         (
             1,
             {
-                "name": TEST_OBJECT_ID,
                 "lock": [],
                 "unlock": [],
             },
@@ -1168,41 +945,39 @@ async def test_emtpy_action_config(hass: HomeAssistant) -> None:
 async def test_optimistic(hass: HomeAssistant) -> None:
     """Test configuration with optimistic state."""
 
-    state = hass.states.get(TEST_ENTITY_ID)
+    state = hass.states.get(TEST_LOCK.entity_id)
     assert state.state == STATE_UNKNOWN
 
     # Ensure Trigger template entities update.
-    hass.states.async_set(TEST_STATE_ENTITY_ID, "anything")
-    await hass.async_block_till_done()
+    await async_trigger(hass, TEST_STATE_ENTITY_ID, "anything")
 
     await hass.services.async_call(
         lock.DOMAIN,
         lock.SERVICE_LOCK,
-        {ATTR_ENTITY_ID: TEST_ENTITY_ID},
+        {ATTR_ENTITY_ID: TEST_LOCK.entity_id},
         blocking=True,
     )
 
-    state = hass.states.get(TEST_ENTITY_ID)
+    state = hass.states.get(TEST_LOCK.entity_id)
     assert state.state == LockState.LOCKED
 
     await hass.services.async_call(
         lock.DOMAIN,
         lock.SERVICE_UNLOCK,
-        {ATTR_ENTITY_ID: TEST_ENTITY_ID},
+        {ATTR_ENTITY_ID: TEST_LOCK.entity_id},
         blocking=True,
     )
 
-    state = hass.states.get(TEST_ENTITY_ID)
+    state = hass.states.get(TEST_LOCK.entity_id)
     assert state.state == LockState.UNLOCKED
 
 
 @pytest.mark.parametrize(
-    ("count", "lock_config"),
+    ("count", "config"),
     [
         (
             1,
             {
-                "name": TEST_OBJECT_ID,
                 "state": "{{ is_state('sensor.test_state', 'on') }}",
                 "lock": [],
                 "unlock": [],
@@ -1221,7 +996,7 @@ async def test_not_optimistic(hass: HomeAssistant) -> None:
     await hass.services.async_call(
         lock.DOMAIN,
         lock.SERVICE_LOCK,
-        {ATTR_ENTITY_ID: TEST_ENTITY_ID},
+        {ATTR_ENTITY_ID: TEST_LOCK.entity_id},
         blocking=True,
     )
 
@@ -1229,7 +1004,7 @@ async def test_not_optimistic(hass: HomeAssistant) -> None:
     hass.states.async_set(TEST_AVAILABILITY_ENTITY_ID, "anything")
     await hass.async_block_till_done()
 
-    state = hass.states.get(TEST_ENTITY_ID)
+    state = hass.states.get(TEST_LOCK.entity_id)
     assert state.state == LockState.UNLOCKED
 
 

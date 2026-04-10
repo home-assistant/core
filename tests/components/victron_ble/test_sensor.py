@@ -24,6 +24,7 @@ from .fixtures import (
     VICTRON_BATTERY_SENSE_TOKEN,
     VICTRON_DC_DC_CONVERTER_SERVICE_INFO,
     VICTRON_DC_DC_CONVERTER_TOKEN,
+    VICTRON_DC_DC_CONVERTER_UNKNOWN_OFF_REASON_SERVICE_INFO,
     VICTRON_DC_ENERGY_METER_SERVICE_INFO,
     VICTRON_DC_ENERGY_METER_TOKEN,
     VICTRON_SMART_BATTERY_PROTECT_SERVICE_INFO,
@@ -206,6 +207,52 @@ async def test_reauth_triggered_only_once(
     # Still only one reauth flow
     flows = hass.config_entries.flow.async_progress_by_handler("victron_ble")
     assert len(flows) == 1
+
+
+@pytest.mark.usefixtures("enable_bluetooth")
+async def test_reauth_not_triggered_on_unknown_enum_value(
+    hass: HomeAssistant,
+) -> None:
+    """Test reauth is NOT triggered when a valid key yields a sparse update.
+
+    Some devices report bitmask combinations for OffReason or AlarmReason that
+    are not in the enum (e.g. NO_INPUT_POWER|ENGINE_SHUTDOWN = 0x81 on a DC-DC
+    converter that stopped due to both conditions simultaneously). The parser
+    raises ValueError, producing a sparse update (signal strength only).
+    This must not be mistaken for a wrong encryption key.
+
+    Regression test for https://github.com/home-assistant/core/issues/167105
+    """
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            "address": VICTRON_DC_DC_CONVERTER_UNKNOWN_OFF_REASON_SERVICE_INFO.address,
+            CONF_ACCESS_TOKEN: VICTRON_DC_DC_CONVERTER_TOKEN,
+        },
+        unique_id=VICTRON_DC_DC_CONVERTER_UNKNOWN_OFF_REASON_SERVICE_INFO.address,
+    )
+    entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    service_info = VICTRON_DC_DC_CONVERTER_UNKNOWN_OFF_REASON_SERVICE_INFO
+    for idx in range(REAUTH_AFTER_FAILURES + 1):
+        inject_bluetooth_service_info(
+            hass,
+            BluetoothServiceInfo(
+                name=service_info.name,
+                address=service_info.address,
+                rssi=service_info.rssi - idx,
+                manufacturer_data=service_info.manufacturer_data,
+                service_data=service_info.service_data,
+                service_uuids=service_info.service_uuids,
+                source=service_info.source,
+            ),
+        )
+        await hass.async_block_till_done()
+
+    flows = hass.config_entries.flow.async_progress_by_handler(DOMAIN)
+    assert len(flows) == 0
 
 
 @pytest.mark.usefixtures("enable_bluetooth")

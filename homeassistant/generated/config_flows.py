@@ -165,6 +165,7 @@ FLOWS = {
         "dsmr",
         "dsmr_reader",
         "duckdns",
+        "duco",
         "dunehd",
         "duotecno",
         "dwd_weather_warnings",

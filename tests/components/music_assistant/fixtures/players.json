@@ -18,7 +18,8 @@
         "set_members",
         "power",
         "enqueue",
-        "select_source"
+        "select_source",
+        "select_sound_mode"
       ],
       "elapsed_time": null,
       "elapsed_time_last_updated": 0,
@@ -192,6 +193,20 @@
           "can_play_pause": false,
           "can_seek": false,
           "can_next_previous": false
+        }
+      ],
+      "sound_mode_list": [
+        {
+          "id": "munich",
+          "name": "Munich",
+          "passive": false,
+          "translation_key": "player_sound_mode.munich"
+        },
+        {
+          "id": "vienna",
+          "name": "Vienna",
+          "passive": false,
+          "translation_key": "player_sound_mode.vienna"
         }
       ]
     },

@@ -282,7 +282,7 @@ aiohue==4.8.1
 aioimaplib==2.0.1
 
 # homeassistant.components.immich
-aioimmich==0.12.1
+aioimmich==0.14.0
 
 # homeassistant.components.apache_kafka
 aiokafka==0.10.0
@@ -413,7 +413,7 @@ aiotankerkoenig==0.5.1
 aiotedee==0.3.0
 
 # homeassistant.components.tractive
-aiotractive==1.0.1
+aiotractive==1.0.2
 
 # homeassistant.components.unifi
 aiounifi==90
@@ -488,7 +488,7 @@ anova-wifi==0.17.0
 anthemav==1.4.1
 
 # homeassistant.components.anthropic
-anthropic==0.83.0
+anthropic==0.92.0
 
 # homeassistant.components.mcp_server
 anyio==4.10.0
@@ -632,7 +632,7 @@ bring-api==1.1.1
 broadlink==0.19.0
 
 # homeassistant.components.brother
-brother==6.0.0
+brother==6.1.0
 
 # homeassistant.components.brottsplatskartan
 brottsplatskartan==1.0.5
@@ -1289,7 +1289,7 @@ loqedAPI==2.1.11
 luftdaten==0.7.4
 
 # homeassistant.components.lunatone
-lunatone-rest-api-client==0.7.0
+lunatone-rest-api-client==0.9.1
 
 # homeassistant.components.lupusec
 lupupy==0.3.2
@@ -1549,9 +1549,6 @@ pescea==1.0.12
 
 # homeassistant.components.modem_callerid
 phone-modem==0.1.1
-
-# homeassistant.components.pilight
-pilight==0.1.1
 
 # homeassistant.components.plex
 plexauth==0.0.6
@@ -2110,10 +2107,7 @@ pysensibo==1.2.1
 pysenz==1.0.2
 
 # homeassistant.components.acer_projector
-# homeassistant.components.crownstone
-# homeassistant.components.route_b_smart_meter
 # homeassistant.components.usb
-# homeassistant.components.zwave_js
 pyserial==3.5
 
 # homeassistant.components.seventeentrack
@@ -2190,6 +2184,9 @@ python-bsblan==5.1.3
 
 # homeassistant.components.dropbox
 python-dropbox-api==0.1.3
+
+# homeassistant.components.duco
+python-duco-client==0.2.0
 
 # homeassistant.components.ecobee
 python-ecobee-api==0.3.2
@@ -2740,7 +2737,7 @@ venstarcolortouch==0.21
 victron-ble-ha-parser==0.6.3
 
 # homeassistant.components.victron_gx
-victron-mqtt==2026.4.2
+victron-mqtt==2026.4.3
 
 # homeassistant.components.victron_remote_monitoring
 victron-vrm==0.1.8
@@ -2789,7 +2786,7 @@ webio-api==0.1.12
 webmin-xmlrpc==0.0.2
 
 # homeassistant.components.weheat
-weheat==2026.2.28
+weheat==2026.4.8
 
 # homeassistant.components.whirlpool
 whirlpool-sixth-sense==1.0.3
