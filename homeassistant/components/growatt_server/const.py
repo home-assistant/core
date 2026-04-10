@@ -71,3 +71,6 @@ BATT_MODE_GRID_FIRST = 2
 # Used to pass logged-in session from async_migrate_entry to async_setup_entry
 # to avoid double login() calls that trigger API rate limiting
 CACHED_API_KEY = "_cached_api_"
+
+# Maps V1 API device type integers to coordinator device-type strings
+V1_DEVICE_TYPES: dict[int, str] = {5: "sph", 7: "min"}

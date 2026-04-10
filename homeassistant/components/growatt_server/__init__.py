@@ -35,7 +35,11 @@ from requests import RequestException
 from homeassistant.const import CONF_PASSWORD, CONF_TOKEN, CONF_URL, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryError
-from homeassistant.helpers import config_validation as cv, device_registry as dr
+from homeassistant.helpers import (
+    config_validation as cv,
+    device_registry as dr,
+    entity_registry as er,
+)
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import ConfigType
@@ -54,6 +58,7 @@ from .const import (
     LOGIN_INVALID_AUTH_CODE,
     PLATFORMS,
     V1_API_ERROR_NO_PRIVILEGE,
+    V1_DEVICE_TYPES,
 )
 from .coordinator import GrowattConfigEntry, GrowattCoordinator
 from .models import GrowattRuntimeData
@@ -243,9 +248,6 @@ def _login_classic_api(
     return login_response
 
 
-V1_DEVICE_TYPES: dict[int, str] = {5: "sph", 7: "min"}
-
-
 def get_device_list_v1(
     api, config: Mapping[str, str]
 ) -> tuple[list[dict[str, str]], str]:
@@ -375,40 +377,24 @@ async def async_setup_entry(
 
     async def _async_scan_for_new_devices(_now: datetime.datetime) -> None:
         """Scan for new or removed devices and update HA accordingly."""
-        # Always read current config in case credentials were updated via reauth
-        current_config = config_entry.data
-        current_url = current_config.get(CONF_URL, DEFAULT_URL)
-        if current_url in DEPRECATED_URLS:
-            current_url = DEFAULT_URL
-        try:
-            if current_config.get(CONF_AUTH_TYPE) == AUTH_API_TOKEN:
-                scan_api = growattServer.OpenApiV1(token=current_config[CONF_TOKEN])
-                scan_api.server_url = current_url
-                current_devices, _ = await hass.async_add_executor_job(
-                    get_device_list_v1, scan_api, current_config
-                )
-            elif current_config.get(CONF_AUTH_TYPE) == AUTH_PASSWORD:
-                scan_api, _ = await _create_api_and_login(
-                    hass,
-                    current_config[CONF_USERNAME],
-                    current_config[CONF_PASSWORD],
-                    current_url,
-                )
-                current_devices = await hass.async_add_executor_job(
-                    scan_api.device_list, current_config[CONF_PLANT_ID]
-                )
-            else:
-                return
-        except (
-            ConfigEntryAuthFailed,
-            ConfigEntryError,
-            RequestException,
-            JSONDecodeError,
-        ):
-            _LOGGER.debug("Failed to scan for new/removed devices")
+        total_coordinator = config_entry.runtime_data.total_coordinator
+        # Signal the coordinator to also fetch the device list on its next
+        # _sync_update_data run, then force an immediate refresh.  This keeps
+        # the device_list call in the same executor thread as the existing
+        # login() + plant-overview call, so for Classic API there is no extra
+        # login and no thread-safety concern with the shared session.
+        total_coordinator.request_device_list_scan()
+        await total_coordinator.async_refresh()
+
+        if not total_coordinator.last_update_success:
+            _LOGGER.debug("Coordinator refresh failed during device scan, skipping")
             return
-        except Exception:
-            _LOGGER.exception("Unexpected error scanning for new devices")
+
+        current_devices = total_coordinator.device_list
+        if current_devices is None:
+            _LOGGER.debug(
+                "Device list not populated after coordinator refresh, skipping scan"
+            )
             return
 
         runtime_data = config_entry.runtime_data
@@ -416,6 +402,7 @@ async def async_setup_entry(
 
         # Remove stale devices
         device_registry = dr.async_get(hass)
+        entity_registry = er.async_get(hass)
         for device_entry in dr.async_entries_for_config_entry(
             device_registry, config_entry.entry_id
         ):
@@ -433,6 +420,14 @@ async def async_setup_entry(
                 for device_sn in device_domain_ids:
                     if coordinator := runtime_data.devices.pop(device_sn, None):
                         await coordinator.async_shutdown()
+                # Remove orphaned entities from the entity registry so they don't
+                # linger in the state machine after the device is gone.
+                for entity_entry in er.async_entries_for_device(
+                    entity_registry,
+                    device_entry.id,
+                    include_disabled_entities=True,
+                ):
+                    entity_registry.async_remove(entity_entry.entity_id)
                 device_registry.async_update_device(
                     device_entry.id,
                     remove_config_entry_id=config_entry.entry_id,

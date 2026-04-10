@@ -33,7 +33,7 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from . import setup_integration
 
@@ -855,14 +855,16 @@ async def test_stale_device_removed(
     mock_growatt_v1_api,
     mock_config_entry: MockConfigEntry,
     device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test that stale devices are removed from the device registry during a scan."""
-    # Initially MIN123456 device exists
+    # Initially MIN123456 device exists with entities in the state machine
     assert (
         device_registry.async_get_device(identifiers={(DOMAIN, "MIN123456")})
         is not None
     )
+    assert hass.states.get("switch.min123456_charge_from_grid") is not None
 
     # Mock the device disappearing from the API
     mock_growatt_v1_api.device_list.return_value = {"devices": []}
@@ -876,6 +878,9 @@ async def test_stale_device_removed(
     assert device_registry.async_get_device(identifiers={(DOMAIN, "MIN123456")}) is None
     # The coordinator should be removed from runtime_data
     assert "MIN123456" not in mock_config_entry.runtime_data.devices
+    # Orphaned entities must also be gone from the entity registry and state machine
+    assert entity_registry.async_get("switch.min123456_charge_from_grid") is None
+    assert hass.states.get("switch.min123456_charge_from_grid") is None
 
 
 @pytest.mark.usefixtures("init_integration")
@@ -905,3 +910,85 @@ async def test_device_scan_error_is_silent(
         device_registry.async_get_device(identifiers={(DOMAIN, "MIN123456")})
         is not None
     )
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_dynamic_device_refresh_fails_is_skipped(
+    hass: HomeAssistant,
+    mock_growatt_v1_api,
+    mock_config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test that a new device whose first coordinator refresh fails is not added."""
+    # Mock a new device appearing but its data endpoint failing
+    mock_growatt_v1_api.device_list.return_value = {
+        "devices": [
+            {"device_sn": "MIN123456", "type": 7},
+            {"device_sn": "NEW456789", "type": 7},
+        ]
+    }
+
+    def min_detail_side_effect(device_sn: str) -> dict:
+        if device_sn == "NEW456789":
+            raise growattServer.GrowattV1ApiError("Device not reachable")
+        return mock_growatt_v1_api.min_detail.return_value
+
+    mock_growatt_v1_api.min_detail.side_effect = min_detail_side_effect
+
+    freezer.tick(DEVICE_SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    # New device should NOT be added — its refresh failed
+    assert device_registry.async_get_device(identifiers={(DOMAIN, "NEW456789")}) is None
+    assert "NEW456789" not in mock_config_entry.runtime_data.devices
+    # Existing device must be unaffected
+    assert (
+        device_registry.async_get_device(identifiers={(DOMAIN, "MIN123456")})
+        is not None
+    )
+
+
+async def test_classic_api_device_scan(
+    hass: HomeAssistant,
+    mock_growatt_classic_api,
+    mock_config_entry_classic: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test that the periodic device scan works correctly for Classic API (password auth).
+
+    The scan must reuse the total coordinator's authenticated session (no extra login).
+    """
+    mock_growatt_classic_api.device_list.return_value = [
+        {"deviceSn": "TLX123456", "deviceType": "tlx"}
+    ]
+    await setup_integration(hass, mock_config_entry_classic)
+    assert mock_config_entry_classic.state is ConfigEntryState.LOADED
+
+    # Mock a new device appearing; reset device_list call count after setup
+    # so we can assert the scan calls it exactly once.
+    mock_growatt_classic_api.device_list.reset_mock()
+    mock_growatt_classic_api.device_list.return_value = [
+        {"deviceSn": "TLX123456", "deviceType": "tlx"},
+        {"deviceSn": "TLX999999", "deviceType": "tlx"},
+    ]
+    mock_growatt_classic_api.tlx_detail.return_value = {
+        "data": {"deviceSn": "TLX999999"}
+    }
+
+    freezer.tick(DEVICE_SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    # New device should be added via the classic scan path
+    assert (
+        device_registry.async_get_device(identifiers={(DOMAIN, "TLX999999")})
+        is not None
+    )
+    assert "TLX999999" in mock_config_entry_classic.runtime_data.devices
+
+    # The scan reuses the coordinator's API session — device_list must have been
+    # called exactly once (by the scan itself, not a fresh login+list cycle).
+    mock_growatt_classic_api.device_list.assert_called_once()
