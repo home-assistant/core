@@ -22,7 +22,7 @@ import zigpy.quirks
 import zigpy.state
 import zigpy.types
 import zigpy.util
-from zigpy.zcl.clusters.general import Basic, Groups
+from zigpy.zcl.clusters.general import Basic, Groups, OnOff
 from zigpy.zcl.foundation import Status
 import zigpy.zdo.types as zdo_t
 
@@ -37,6 +37,8 @@ from tests.components.light.conftest import mock_light_profiles  # noqa: F401
 
 FIXTURE_GRP_ID = 0x1001
 FIXTURE_GRP_NAME = "fixture group"
+FIXTURE_GRP_WITH_ENTITIES_ID = 0x2001
+FIXTURE_GRP_WITH_ENTITIES_NAME = "Test Group"
 COUNTER_NAMES = ["counter_1", "counter_2", "counter_3"]
 
 
@@ -419,3 +421,38 @@ def zigpy_device_mock(zigpy_app_controller) -> Callable[..., zigpy.device.Device
         return device
 
     return _mock_dev
+
+
+@pytest.fixture
+def zigpy_app_controller_with_group(
+    zigpy_app_controller: ControllerApplication,
+    zigpy_device_mock: Callable[..., zigpy.device.Device],
+) -> ControllerApplication:
+    """Add two switch devices and a group with members to the app controller."""
+    endpoint_config = {
+        1: {
+            SIG_EP_INPUT: [
+                OnOff.cluster_id,
+                Basic.cluster_id,
+                Groups.cluster_id,
+            ],
+            SIG_EP_OUTPUT: [],
+            SIG_EP_TYPE: zha.DeviceType.ON_OFF_SWITCH,
+            SIG_EP_PROFILE: zha.PROFILE_ID,
+        }
+    }
+    device_1 = zigpy_device_mock(endpoint_config, ieee="01:2d:6f:00:0a:90:69:e1")
+    device_2 = zigpy_device_mock(endpoint_config, ieee="01:2d:6f:00:0a:90:69:e2")
+
+    zigpy_app_controller.devices[device_1.ieee] = device_1
+    zigpy_app_controller.devices[device_2.ieee] = device_2
+
+    group = zigpy_app_controller.groups.add_group(
+        FIXTURE_GRP_WITH_ENTITIES_ID,
+        FIXTURE_GRP_WITH_ENTITIES_NAME,
+        suppress_event=True,
+    )
+    group.add_member(device_1.endpoints[1], suppress_event=True)
+    group.add_member(device_2.endpoints[1], suppress_event=True)
+
+    return zigpy_app_controller

@@ -621,6 +621,10 @@ class ZHAGatewayProxy(EventBase):
         )
         assert ieee_address
 
+        # Group devices use synthetic identifiers, not real IEEE addresses
+        if ieee_address.startswith("zha_group_"):
+            return
+
         ieee = EUI64.convert(ieee_address)
 
         assert ieee in self.device_proxies
