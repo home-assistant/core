@@ -7,6 +7,7 @@ import logging
 
 from pygaposa import Device, FirebaseAuthException, Gaposa, GaposaAuthException, Motor
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -21,6 +22,7 @@ class DataUpdateCoordinatorGaposa(DataUpdateCoordinator):
     def __init__(
         self,
         hass: HomeAssistant,
+        config_entry: ConfigEntry,
         logger: logging.Logger,
         *,
         api_key: str,
@@ -33,6 +35,7 @@ class DataUpdateCoordinatorGaposa(DataUpdateCoordinator):
         super().__init__(
             hass,
             logger,
+            config_entry=config_entry,
             name=name,
             update_interval=update_interval,
         )
