@@ -25,8 +25,8 @@ from .coordinator import VizioConfigEntry, VizioDeviceCoordinator
 
 PARALLEL_UPDATES = 0
 
-# Aliases keyed by actual pyvizio key name, values are human-friendly/HA-standard names.
-# Inverted at module level into _ALIAS_LOOKUP for O(1) resolution.
+# Maps native pyvizio key names to human-friendly aliases.
+# Keys are uppercase native names (e.g. "CC_TOGGLE"), values are lowercase aliases.
 REMOTE_KEY_ALIASES: dict[str, list[str]] = {
     "CC_TOGGLE": ["closed_captions", "cc"],
     "CH_DOWN": ["channel_down"],
@@ -46,6 +46,7 @@ REMOTE_KEY_ALIASES: dict[str, list[str]] = {
     "VOL_UP": ["volume_up"],
 }
 
+# Invert aliases into {alias: native_key} for O(1) lookup
 _ALIAS_LOOKUP: dict[str, str] = {
     alias: key for key, aliases in REMOTE_KEY_ALIASES.items() for alias in aliases
 }
@@ -76,7 +77,9 @@ class VizioRemote(CoordinatorEntity[VizioDeviceCoordinator], RemoteEntity):
         self._attr_device_info = DeviceInfo(identifiers={(DOMAIN, unique_id)})
         self._device = coordinator.device
         valid_keys = set(self._device.get_remote_keys_list())
+        # Map lowercased native keys to their original uppercase pyvizio names
         self._command_map: dict[str, str] = {key.lower(): key for key in valid_keys}
+        # Add aliases only for native keys this device actually supports
         for alias, target in _ALIAS_LOOKUP.items():
             if target in valid_keys:
                 self._command_map[alias] = target
