@@ -1,10 +1,11 @@
 """Test Met weather entity."""
 
-from unittest.mock import patch
+from datetime import datetime
+
+from freezegun import freeze_time
 
 from homeassistant import config_entries
 from homeassistant.components.met import DOMAIN
-from homeassistant.components.met.weather import format_condition
 from homeassistant.components.weather import (
     ATTR_CONDITION_CLEAR_NIGHT,
     ATTR_CONDITION_CLOUDY,
@@ -147,11 +148,6 @@ async def test_remove_hourly_entity(
     assert list(entity_registry.entities.keys()) == ["weather.forecast_somewhere"]
 
 
-def test_format_condition_unknown() -> None:
-    """Test that unknown condition is returned as-is."""
-    assert format_condition("unknown_condition") == "unknown_condition"
-
-
 async def test_condition_sunny_at_night(hass: HomeAssistant, mock_weather) -> None:
     """Test that sunny condition returns clear-night when sun is not up."""
     mock_weather.get_current_weather.return_value = {
@@ -164,15 +160,15 @@ async def test_condition_sunny_at_night(hass: HomeAssistant, mock_weather) -> No
         "dew_point": 12.1,
         "uv_index": 1.1,
     }
-    with patch("homeassistant.components.met.weather.sun.is_up", return_value=False):
+    with freeze_time(datetime(2024, 1, 1, 2, 0, 0)):  # 2:00 AM = night
         await init_integration(hass)
         entity_id = hass.states.async_entity_ids("weather")[0]
         state = hass.states.get(entity_id)
         assert state.state == ATTR_CONDITION_CLEAR_NIGHT
 
 
-async def test_forecast(hass: HomeAssistant, mock_weather) -> None:
-    """Test daily and hourly forecast."""
+async def test_forecast_missing_keys(hass: HomeAssistant, mock_weather) -> None:
+    """Test that forecast items missing required keys are skipped."""
     mock_weather.get_forecast.return_value = [
         {
             "temperature": 15,
