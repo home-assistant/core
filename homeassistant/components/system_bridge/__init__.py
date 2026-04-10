@@ -21,7 +21,7 @@ from systembridgeconnector.models.open_url import OpenUrl
 from systembridgeconnector.version import Version
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import (
     CONF_API_KEY,
     CONF_COMMAND,
@@ -57,7 +57,24 @@ from homeassistant.helpers.issue_registry import IssueSeverity, async_create_iss
 
 from .config_flow import SystemBridgeConfigFlow
 from .const import DATA_WAIT_TIMEOUT, DOMAIN, MODULES
-from .coordinator import SystemBridgeDataUpdateCoordinator
+from .coordinator import SystemBridgeConfigEntry, SystemBridgeDataUpdateCoordinator
+
+
+def _get_coordinator(
+    hass: HomeAssistant, entry_id: str
+) -> SystemBridgeDataUpdateCoordinator:
+    """Return the coordinator for a config entry id."""
+    entry: SystemBridgeConfigEntry | None = hass.config_entries.async_get_entry(
+        entry_id
+    )
+    if entry is None or entry.state is not ConfigEntryState.LOADED:
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="device_not_found",
+            translation_placeholders={"device": entry_id},
+        )
+    return entry.runtime_data
+
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -93,7 +110,7 @@ POWER_COMMAND_MAP = {
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: SystemBridgeConfigEntry,
 ) -> bool:
     """Set up System Bridge from a config entry."""
 
@@ -198,8 +215,7 @@ async def async_setup_entry(
     # Fetch initial data so we have data when entities subscribe
     await coordinator.async_config_entry_first_refresh()
 
-    hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN][entry.entry_id] = coordinator
+    entry.runtime_data = coordinator
 
     # Set up all platforms except notify
     await hass.config_entries.async_forward_entry_setups(
@@ -216,7 +232,7 @@ async def async_setup_entry(
                 CONF_NAME: f"{DOMAIN}_{coordinator.data.system.hostname}",
                 CONF_ENTITY_ID: entry.entry_id,
             },
-            hass.data[DOMAIN][entry.entry_id],
+            {},
         )
     )
 
@@ -249,9 +265,7 @@ async def async_setup_entry(
     async def handle_get_process_by_id(service_call: ServiceCall) -> ServiceResponse:
         """Handle the get process by id service call."""
         _LOGGER.debug("Get process by id: %s", service_call.data)
-        coordinator: SystemBridgeDataUpdateCoordinator = hass.data[DOMAIN][
-            service_call.data[CONF_BRIDGE]
-        ]
+        coordinator = _get_coordinator(hass, service_call.data[CONF_BRIDGE])
         processes: list[Process] = coordinator.data.processes
 
         # Find process.id from list, raise ServiceValidationError if not found
@@ -275,9 +289,7 @@ async def async_setup_entry(
     ) -> ServiceResponse:
         """Handle the get process by name service call."""
         _LOGGER.debug("Get process by name: %s", service_call.data)
-        coordinator: SystemBridgeDataUpdateCoordinator = hass.data[DOMAIN][
-            service_call.data[CONF_BRIDGE]
-        ]
+        coordinator = _get_coordinator(hass, service_call.data[CONF_BRIDGE])
 
         # Find processes from list
         items: list[dict[str, Any]] = [
@@ -295,9 +307,7 @@ async def async_setup_entry(
     async def handle_open_path(service_call: ServiceCall) -> ServiceResponse:
         """Handle the open path service call."""
         _LOGGER.debug("Open path: %s", service_call.data)
-        coordinator: SystemBridgeDataUpdateCoordinator = hass.data[DOMAIN][
-            service_call.data[CONF_BRIDGE]
-        ]
+        coordinator = _get_coordinator(hass, service_call.data[CONF_BRIDGE])
         response = await coordinator.websocket_client.open_path(
             OpenPath(path=service_call.data[CONF_PATH])
         )
@@ -306,9 +316,7 @@ async def async_setup_entry(
     async def handle_power_command(service_call: ServiceCall) -> ServiceResponse:
         """Handle the power command service call."""
         _LOGGER.debug("Power command: %s", service_call.data)
-        coordinator: SystemBridgeDataUpdateCoordinator = hass.data[DOMAIN][
-            service_call.data[CONF_BRIDGE]
-        ]
+        coordinator = _get_coordinator(hass, service_call.data[CONF_BRIDGE])
         response = await getattr(
             coordinator.websocket_client,
             POWER_COMMAND_MAP[service_call.data[CONF_COMMAND]],
@@ -318,9 +326,7 @@ async def async_setup_entry(
     async def handle_open_url(service_call: ServiceCall) -> ServiceResponse:
         """Handle the open url service call."""
         _LOGGER.debug("Open URL: %s", service_call.data)
-        coordinator: SystemBridgeDataUpdateCoordinator = hass.data[DOMAIN][
-            service_call.data[CONF_BRIDGE]
-        ]
+        coordinator = _get_coordinator(hass, service_call.data[CONF_BRIDGE])
         response = await coordinator.websocket_client.open_url(
             OpenUrl(url=service_call.data[CONF_URL])
         )
@@ -328,9 +334,7 @@ async def async_setup_entry(
 
     async def handle_send_keypress(service_call: ServiceCall) -> ServiceResponse:
         """Handle the send_keypress service call."""
-        coordinator: SystemBridgeDataUpdateCoordinator = hass.data[DOMAIN][
-            service_call.data[CONF_BRIDGE]
-        ]
+        coordinator = _get_coordinator(hass, service_call.data[CONF_BRIDGE])
         response = await coordinator.websocket_client.keyboard_keypress(
             KeyboardKey(key=service_call.data[CONF_KEY])
         )
@@ -338,9 +342,7 @@ async def async_setup_entry(
 
     async def handle_send_text(service_call: ServiceCall) -> ServiceResponse:
         """Handle the send_keypress service call."""
-        coordinator: SystemBridgeDataUpdateCoordinator = hass.data[DOMAIN][
-            service_call.data[CONF_BRIDGE]
-        ]
+        coordinator = _get_coordinator(hass, service_call.data[CONF_BRIDGE])
         response = await coordinator.websocket_client.keyboard_text(
             KeyboardText(text=service_call.data[CONF_TEXT])
         )
@@ -446,33 +448,27 @@ async def async_setup_entry(
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(
+    hass: HomeAssistant, entry: SystemBridgeConfigEntry
+) -> bool:
     """Unload a config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(
         entry, [platform for platform in PLATFORMS if platform != Platform.NOTIFY]
     )
     if unload_ok:
-        coordinator: SystemBridgeDataUpdateCoordinator = hass.data[DOMAIN][
-            entry.entry_id
-        ]
+        coordinator = entry.runtime_data
 
         # Ensure disconnected and cleanup stop sub
         await coordinator.websocket_client.close()
         if coordinator.unsub:
             coordinator.unsub()
 
-        del hass.data[DOMAIN][entry.entry_id]
-
-    if not hass.data[DOMAIN]:
-        hass.services.async_remove(DOMAIN, SERVICE_OPEN_PATH)
-        hass.services.async_remove(DOMAIN, SERVICE_OPEN_URL)
-        hass.services.async_remove(DOMAIN, SERVICE_SEND_KEYPRESS)
-        hass.services.async_remove(DOMAIN, SERVICE_SEND_TEXT)
-
     return unload_ok
 
 
-async def async_reload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
+async def async_reload_entry(
+    hass: HomeAssistant, entry: SystemBridgeConfigEntry
+) -> None:
     """Reload the config entry when it changed."""
     await hass.config_entries.async_reload(entry.entry_id)
 

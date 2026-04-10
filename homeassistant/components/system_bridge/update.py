@@ -3,23 +3,21 @@
 from __future__ import annotations
 
 from homeassistant.components.update import UpdateEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN
-from .coordinator import SystemBridgeDataUpdateCoordinator
+from .coordinator import SystemBridgeConfigEntry, SystemBridgeDataUpdateCoordinator
 from .entity import SystemBridgeEntity
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: SystemBridgeConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up System Bridge update based on a config entry."""
-    coordinator: SystemBridgeDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
 
     async_add_entities(
         [
