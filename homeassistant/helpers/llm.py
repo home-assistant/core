@@ -909,16 +909,11 @@ class FindExposedEntitiesTool(Tool):
         if not query:
             return {"success": False, "error": "Query must not be empty"}
 
-        exposed_entities = _get_exposed_entities(
-            hass, llm_context.assistant, include_state=False
-        )
-
-        if not _has_exposed_entities(exposed_entities):
-            return {"success": False, "error": NO_ENTITIES_PROMPT}
-
         searchable_entities = _get_searchable_exposed_entities(
             hass, llm_context.assistant
         )
+        if not searchable_entities:
+            return {"success": False, "error": NO_ENTITIES_PROMPT}
 
         domain_filter = data.get("domain")
         if domain_filter is not None:
