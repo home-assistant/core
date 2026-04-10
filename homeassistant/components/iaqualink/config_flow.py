@@ -20,14 +20,7 @@ from homeassistant.util.ssl import SSL_ALPN_HTTP11_HTTP2
 
 from .const import DOMAIN
 
-STEP_USER_DATA_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_USERNAME): str,
-        vol.Required(CONF_PASSWORD): str,
-    }
-)
-
-STEP_REAUTH_DATA_SCHEMA = vol.Schema(
+CREDENTIALS_DATA_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_USERNAME): str,
         vol.Required(CONF_PASSWORD): str,
@@ -75,7 +68,7 @@ class AqualinkFlowHandler(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=STEP_USER_DATA_SCHEMA,
+            data_schema=CREDENTIALS_DATA_SCHEMA,
             errors=errors,
         )
 
@@ -105,6 +98,6 @@ class AqualinkFlowHandler(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="reauth_confirm",
-            data_schema=STEP_REAUTH_DATA_SCHEMA,
+            data_schema=CREDENTIALS_DATA_SCHEMA,
             errors=errors,
         )
