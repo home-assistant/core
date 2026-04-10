@@ -21,7 +21,7 @@ _LOGGER = logging.getLogger(__name__)
 class AuthInfo:
     """Store authentication info temporarily during config flow."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize auth info."""
         self.homes: list[dict[str, Any]] = []
         self.user_info: Any = None

@@ -385,7 +385,7 @@ class HeimanDataUpdateCoordinator(DataUpdateCoordinator[HeimanData]):
                     if token_data:
                         access_token = token_data.get("access_token")
                     else:
-                        _LOGGER.warning(
+                        _LOGGER.debug(
                             "async_ensure_token_valid() returned None"
                         )
                 except Exception as err:  # noqa: BLE001
