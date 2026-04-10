@@ -59,7 +59,3 @@ class KioskerEntity(CoordinatorEntity[KioskerDataUpdateCoordinator]):
             f"{device_id}_{description.key}" if description else f"{device_id}"
         )
 
-    @property
-    def available(self) -> bool:
-        """Return True if entity is available."""
-        return super().available
