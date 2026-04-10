@@ -6,8 +6,6 @@ import asyncio
 from collections.abc import Iterable
 from typing import TYPE_CHECKING, Any
 
-import voluptuous as vol
-
 from homeassistant.components.remote import (
     ATTR_DELAY_SECS,
     ATTR_NUM_REPEATS,
@@ -51,7 +49,7 @@ class VizioRemote(CoordinatorEntity[VizioDeviceCoordinator], RemoteEntity):
         self._attr_device_info = DeviceInfo(identifiers={(DOMAIN, unique_id)})
         self._device = coordinator.device
         valid_keys = set(self._device.get_remote_keys_list())
-        self._command_map: dict[str, str] = {key: key for key in valid_keys}
+        self._command_map: dict[str, str] = {key.lower(): key for key in valid_keys}
 
     @property
     def is_on(self) -> bool:
@@ -80,7 +78,7 @@ class VizioRemote(CoordinatorEntity[VizioDeviceCoordinator], RemoteEntity):
         """Send remote commands to the device."""
         num_repeats: int = kwargs.get(ATTR_NUM_REPEATS, 1)
         delay: float = kwargs.get(ATTR_DELAY_SECS, DEFAULT_DELAY_SECS)
-        resolved = [vol.All(vol.Upper, self._resolve_command)(cmd) for cmd in command]
+        resolved = [self._resolve_command(cmd.lower()) for cmd in command]
 
         for _ in range(num_repeats):
             for cmd in resolved:
