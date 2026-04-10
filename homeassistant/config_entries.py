@@ -1607,7 +1607,7 @@ class ConfigEntriesFlowManager(
             return
         flow_type, flow_id = next_flow
         if flow_type not in FlowType:
-            raise HomeAssistantError("Invalid next_flow type")
+            raise HomeAssistantError(f"Invalid flow type: {flow_type}")
         if flow_type == FlowType.CONFIG_FLOW:
             # Raises UnknownFlow if the flow does not exist.
             self.hass.config_entries.flow.async_get(flow_id)
@@ -3327,8 +3327,7 @@ class ConfigFlow(ConfigEntryBaseFlow):
             reason=reason,
             description_placeholders=description_placeholders,
         )
-        if next_flow:
-            self._async_set_next_flow_if_valid(result, next_flow)
+        self._async_set_next_flow_if_valid(result, next_flow)
         return result
 
     async def async_on_create_entry(self, result: ConfigFlowResult) -> ConfigFlowResult:
@@ -3367,8 +3366,7 @@ class ConfigFlow(ConfigEntryBaseFlow):
         )
 
         result["minor_version"] = self.MINOR_VERSION
-        if next_flow:
-            self._async_set_next_flow_if_valid(result, next_flow)
+        self._async_set_next_flow_if_valid(result, next_flow)
         result["options"] = options or {}
         result["subentries"] = subentries or ()
         result["version"] = self.VERSION
