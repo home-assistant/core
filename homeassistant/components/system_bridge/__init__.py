@@ -463,12 +463,6 @@ async def async_unload_entry(
         if coordinator.unsub:
             coordinator.unsub()
 
-    if not hass.config_entries.async_loaded_entries(DOMAIN):
-        hass.services.async_remove(DOMAIN, SERVICE_OPEN_PATH)
-        hass.services.async_remove(DOMAIN, SERVICE_OPEN_URL)
-        hass.services.async_remove(DOMAIN, SERVICE_SEND_KEYPRESS)
-        hass.services.async_remove(DOMAIN, SERVICE_SEND_TEXT)
-
     return unload_ok
 
 
