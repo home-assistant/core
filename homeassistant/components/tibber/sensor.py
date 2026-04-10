@@ -774,7 +774,7 @@ class TibberSensorElPrice(TibberSensor, CoordinatorEntity[TibberPriceCoordinator
     @callback
     def _handle_coordinator_update(self) -> None:
         self._update_attributes()
-        self.async_write_ha_state()
+        super()._handle_coordinator_update()
 
     @callback
     def _update_attributes(self) -> None:
