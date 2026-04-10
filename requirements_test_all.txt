@@ -242,7 +242,7 @@ aioelectricitymaps==1.1.1
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==44.6.2
+aioesphomeapi==44.13.1
 
 # homeassistant.components.matrix
 # homeassistant.components.slack
@@ -377,7 +377,7 @@ aioridwell==2025.09.0
 aioruckus==0.42
 
 # homeassistant.components.russound_rio
-aiorussound==4.10.0
+aiorussound==5.0.0
 
 # homeassistant.components.ruuvi_gateway
 aioruuvigateway==0.1.0
@@ -2368,7 +2368,7 @@ pyzerproc==0.4.8
 qbittorrent-api==2024.9.67
 
 # homeassistant.components.qbus
-qbusmqttapi==1.4.2
+qbusmqttapi==1.4.3
 
 # homeassistant.components.qingping
 qingping-ble==1.1.0
@@ -2728,7 +2728,7 @@ vegehub==0.1.26
 vehicle==2.2.2
 
 # homeassistant.components.velbus
-velbus-aio==2026.2.0
+velbus-aio==2026.4.0
 
 # homeassistant.components.venstar
 venstarcolortouch==0.21
@@ -2868,10 +2868,10 @@ zeroconf==0.148.0
 zeversolar==0.3.2
 
 # homeassistant.components.zha
-zha==1.1.1
+zha==1.1.2
 
 # homeassistant.components.zinvolt
-zinvolt==0.4.1
+zinvolt==0.4.3
 
 # homeassistant.components.zoneminder
 zm-py==0.5.4
