@@ -23,6 +23,7 @@ from homeassistant.const import (
     UnitOfElectricPotential,
     UnitOfEnergy,
     UnitOfEnergyDistance,
+    UnitOfFrequency,
     UnitOfInformation,
     UnitOfLength,
     UnitOfMass,
@@ -356,6 +357,20 @@ class ElectricCurrentConverter(BaseUnitConverter):
         UnitOfElectricCurrent.MICROAMPERE: 1e6,
     }
     VALID_UNITS = set(UnitOfElectricCurrent)
+
+
+class FrequencyConverter(BaseUnitConverter):
+    """Utility to convert frequency values."""
+
+    UNIT_CLASS = "frequency"
+    _UNIT_CONVERSION: dict[str | None, float] = {
+        UnitOfFrequency.MILLIHERTZ: 1e3,
+        UnitOfFrequency.HERTZ: 1,
+        UnitOfFrequency.KILOHERTZ: 1 / 1e3,
+        UnitOfFrequency.MEGAHERTZ: 1 / 1e6,
+        UnitOfFrequency.GIGAHERTZ: 1 / 1e9,
+    }
+    VALID_UNITS = set(UnitOfFrequency)
 
 
 class ElectricPotentialConverter(BaseUnitConverter):
