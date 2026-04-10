@@ -8,7 +8,6 @@ from mawaqit.consts import BadCredentialsException, NoMosqueAround, NoMosqueFoun
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 import homeassistant.util.dt as dt_util
 
@@ -29,6 +28,7 @@ class MosqueCoordinator(DataUpdateCoordinator[dict]):
         super().__init__(
             hass,
             _LOGGER,
+            config_entry=config_entry,
             name="Mosque Data",
             update_method=self._async_update_data,
             update_interval=timedelta(days=1),
@@ -41,7 +41,7 @@ class MosqueCoordinator(DataUpdateCoordinator[dict]):
                 self.mosque_uuid, token=self.token
             )
         except BadCredentialsException as err:
-            raise ConfigEntryAuthFailed(f"Bad credentials: {err}") from err
+            raise UpdateFailed(f"Bad credentials: {err}") from err
         except (NoMosqueAround, NoMosqueFound) as err:
             raise UpdateFailed(f"No mosque found: {err}") from err
         except (ConnectionError, TimeoutError) as err:
@@ -71,6 +71,7 @@ class PrayerTimeCoordinator(DataUpdateCoordinator[dict]):
         super().__init__(
             hass,
             _LOGGER,
+            config_entry=config_entry,
             name="Prayer Times",
             update_method=self._async_update_data,
             update_interval=timedelta(minutes=1),
@@ -91,7 +92,7 @@ class PrayerTimeCoordinator(DataUpdateCoordinator[dict]):
                 )
                 self.last_fetch = now
             except BadCredentialsException as err:
-                raise ConfigEntryAuthFailed(f"Bad credentials: {err}") from err
+                raise UpdateFailed(f"Bad credentials: {err}") from err
             except (NoMosqueAround, NoMosqueFound) as err:
                 raise UpdateFailed(f"No mosque found: {err}") from err
             except (ConnectionError, TimeoutError) as err:
