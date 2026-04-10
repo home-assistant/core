@@ -41,7 +41,9 @@ async def test_victron_time(
 
     assert len(entities) == 1
     entity = entities[0]
-    assert entity.entity_id == "time.victron_venus"
+    assert (
+        entity.entity_id == "time.victron_venus_ess_batterylife_schedule_charge_0_start"
+    )
     assert (
         entity.unique_id
         == f"{MOCK_INSTALLATION_ID}_system_0_system_ess_schedule_charge_0_start"
@@ -114,3 +116,8 @@ async def test_victron_time_actions(
         {"entity_id": entity_id, "time": dt_time(9, 0)},
         blocking=True,
     )
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == "09:00:00"
