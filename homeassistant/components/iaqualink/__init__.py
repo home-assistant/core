@@ -121,7 +121,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: AqualinkConfigEntry) -> 
     for system in systems_list:
         coordinator = AqualinkDataUpdateCoordinator(hass, entry, system)
         runtime_data.coordinators[system.serial] = coordinator
-        await coordinator.async_config_entry_first_refresh()
+        try:
+            await coordinator.async_config_entry_first_refresh()
+        except ConfigEntryAuthFailed:
+            await aqualink.close()
+            raise
 
         try:
             devices = await system.get_devices()

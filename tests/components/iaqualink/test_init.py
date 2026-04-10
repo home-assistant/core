@@ -182,7 +182,9 @@ async def test_setup_login_exception(
     assert config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
-async def test_setup_login_unauthorized(hass: HomeAssistant, config_entry) -> None:
+async def test_setup_login_unauthorized(
+    hass: HomeAssistant, config_entry: MockConfigEntry
+) -> None:
     """Test setup encountering an unauthorized exception during login."""
     config_entry.add_to_hass(hass)
 
@@ -258,6 +260,41 @@ async def test_setup_systems_unauthorized(
         await hass.async_block_till_done()
 
     assert config_entry.state is ConfigEntryState.SETUP_ERROR
+
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+    assert flows[0]["context"]["source"] == SOURCE_REAUTH
+
+
+async def test_setup_first_refresh_unauthorized_closes_client(
+    hass: HomeAssistant, config_entry: MockConfigEntry, client: AqualinkClient
+) -> None:
+    """Test setup closes the client when first refresh triggers reauthentication."""
+    config_entry.add_to_hass(hass)
+
+    system = get_aqualink_system(client, cls=IaquaSystem)
+    system.update = AsyncMock(side_effect=AqualinkServiceUnauthorizedException)
+    systems = {system.serial: system}
+
+    with (
+        patch(
+            "homeassistant.components.iaqualink.AqualinkClient.login",
+            return_value=None,
+        ),
+        patch(
+            "homeassistant.components.iaqualink.AqualinkClient.get_systems",
+            return_value=systems,
+        ),
+        patch(
+            "homeassistant.components.iaqualink.AqualinkClient.close",
+            new_callable=AsyncMock,
+        ) as mock_close,
+    ):
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.SETUP_ERROR
+    mock_close.assert_awaited_once()
 
     flows = hass.config_entries.flow.async_progress()
     assert len(flows) == 1

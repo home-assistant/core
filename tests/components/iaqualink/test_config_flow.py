@@ -102,8 +102,14 @@ async def test_with_existing_config(
 
 async def test_reauth_success(hass: HomeAssistant, config_data: dict[str, str]) -> None:
     """Test successful reauthentication."""
-    entry = MockConfigEntry(domain=DOMAIN, data=config_data)
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title=config_data[CONF_USERNAME],
+        data=config_data,
+    )
     entry.add_to_hass(hass)
+
+    new_username = "updated@example.com"
 
     result = await entry.start_reauth_flow(hass)
 
@@ -123,15 +129,16 @@ async def test_reauth_success(hass: HomeAssistant, config_data: dict[str, str]) 
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {CONF_USERNAME: config_data[CONF_USERNAME], CONF_PASSWORD: "new_password"},
+            {CONF_USERNAME: new_username, CONF_PASSWORD: "new_password"},
         )
         await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
+    assert entry.title == new_username
     assert dict(entry.data) == {
         **config_data,
-        CONF_USERNAME: config_data[CONF_USERNAME],
+        CONF_USERNAME: new_username,
         CONF_PASSWORD: "new_password",
     }
 

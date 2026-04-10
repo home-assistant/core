@@ -90,6 +90,7 @@ class AqualinkFlowHandler(ConfigFlow, domain=DOMAIN):
             if not errors:
                 return self.async_update_reload_and_abort(
                     reauth_entry,
+                    title=user_input[CONF_USERNAME],
                     data_updates={
                         CONF_USERNAME: user_input[CONF_USERNAME],
                         CONF_PASSWORD: user_input[CONF_PASSWORD],
