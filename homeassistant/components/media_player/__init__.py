@@ -57,7 +57,7 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
-from homeassistant.helpers.network import get_url
+from homeassistant.helpers.network import get_url, is_internal_request
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.hass_dict import HassKey
 
@@ -65,7 +65,9 @@ from .browse_media import (  # noqa: F401
     BrowseMedia,
     SearchMedia,
     SearchMediaQuery,
+    async_get_media_proxy_url,
     async_process_play_media_url,
+    rewrite_browse_media_thumbnails,
 )
 from .const import (  # noqa: F401
     ATTR_APP_ID,
@@ -120,6 +122,7 @@ from .const import (  # noqa: F401
     RepeatMode,
 )
 from .errors import BrowseError, SearchError
+from .media_proxy import MediaProxyView
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -283,6 +286,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     websocket_api.async_register_command(hass, websocket_browse_media)
     websocket_api.async_register_command(hass, websocket_search_media)
     hass.http.register_view(MediaPlayerImageView(component))
+    hass.http.register_view(MediaProxyView())
 
     await component.async_setup(config)
 
@@ -1151,6 +1155,21 @@ class MediaPlayerEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         """
         raise NotImplementedError
 
+    async def async_internal_browse_media(
+        self,
+        media_content_type: MediaType | str | None = None,
+        media_content_id: str | None = None,
+    ) -> BrowseMedia:
+        """Browse media, rewriting http:// thumbnails for external clients.
+
+        Called by the framework instead of async_browse_media directly.
+        Integrations should override async_browse_media, not this method.
+        """
+        result = await self.async_browse_media(media_content_type, media_content_id)
+        if not is_internal_request(self.hass):
+            rewrite_browse_media_thumbnails(self.hass, result)
+        return result
+
     async def async_internal_search_media(
         self,
         search_query: str,
@@ -1346,7 +1365,9 @@ async def websocket_browse_media(
     media_content_id = msg.get(ATTR_MEDIA_CONTENT_ID)
 
     try:
-        payload = await player.async_browse_media(media_content_type, media_content_id)
+        payload = await player.async_internal_browse_media(
+            media_content_type, media_content_id
+        )
     except NotImplementedError:
         assert player.platform
         _LOGGER.error(

@@ -169,6 +169,34 @@ class BrowseMedia:
         return f"<BrowseMedia {self.title} ({self.media_class})>"
 
 
+def async_get_media_proxy_url(hass: HomeAssistant, url: str) -> str:
+    """Return a signed proxy URL for an http:// media URL.
+
+    HTTPS URLs and relative paths are returned unchanged — they are already
+    safe to embed in an HTTPS page.
+
+    Must be called within an active WebSocket or HTTP request context so that
+    async_sign_path can associate the signature with the requesting user.
+    """
+    if not url.startswith("http://"):
+        return url
+    path = f"/api/media_proxy?url={quote(url, safe='')}"
+    return async_sign_path(hass, path, timedelta(seconds=CONTENT_AUTH_EXPIRY_TIME))
+
+
+def rewrite_browse_media_thumbnails(hass: HomeAssistant, media: BrowseMedia) -> None:
+    """Rewrite http:// thumbnail URLs in a BrowseMedia tree in-place.
+
+    Recurses into children. Called for external (non-LAN) clients to ensure
+    http:// image URLs are proxied through HA rather than sent directly to
+    the browser, which would cause mixed-content blocking on HTTPS frontends.
+    """
+    if media.thumbnail and media.thumbnail.startswith("http://"):
+        media.thumbnail = async_get_media_proxy_url(hass, media.thumbnail)
+    for child in media.children or []:
+        rewrite_browse_media_thumbnails(hass, child)
+
+
 @dataclass(kw_only=True, frozen=True)
 class SearchMedia:
     """Represent search results."""

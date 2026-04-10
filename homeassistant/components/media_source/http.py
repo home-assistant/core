@@ -12,9 +12,11 @@ from homeassistant.components.media_player import (
     CONTENT_AUTH_EXPIRY_TIME,
     BrowseError,
     async_process_play_media_url,
+    rewrite_browse_media_thumbnails,
 )
 from homeassistant.components.websocket_api import ActiveConnection
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.network import is_internal_request
 
 from .error import Unresolvable
 from .helper import async_browse_media, async_resolve_media
@@ -42,6 +44,8 @@ async def websocket_browse_media(
     """Browse available media."""
     try:
         media = await async_browse_media(hass, msg.get("media_content_id", ""))
+        if not is_internal_request(hass):
+            rewrite_browse_media_thumbnails(hass, media)
         connection.send_result(
             msg["id"],
             media.as_dict(),
