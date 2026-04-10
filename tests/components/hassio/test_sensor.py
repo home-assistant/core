@@ -223,3 +223,22 @@ async def test_stats_addon_sensor(
     state = hass.states.get(entity_id)
     assert state.state == STATE_UNAVAILABLE
     assert "Could not fetch stats" in caplog.text
+
+    # Disable the entity again and verify stats API calls stop
+    addon_stats.side_effect = None
+    addon_stats.reset_mock()
+    entity_registry.async_update_entity(
+        entity_id, disabled_by=er.RegistryEntryDisabler.USER
+    )
+    freezer.tick(config_entries.RELOAD_AFTER_UPDATE_DELAY)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    # After reload with entity disabled, stats should not be fetched
+    addon_stats.reset_mock()
+    freezer.tick(HASSIO_STATS_UPDATE_INTERVAL + timedelta(seconds=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    addon_stats.assert_not_called()
