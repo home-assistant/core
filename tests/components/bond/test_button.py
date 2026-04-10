@@ -272,8 +272,5 @@ async def test_preset_does_not_trigger_stop_button(hass: HomeAssistant) -> None:
         bond_device_id="test-device-id",
     )
 
-    # Preset button should exist
     assert hass.states.get("button.name_1_preset")
-    # Stop Actions should NOT exist - Preset is the only button and is
-    # added independently, so it does not trigger the Stop button logic
     assert not hass.states.get("button.name_1_stop_actions")
