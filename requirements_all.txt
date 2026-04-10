@@ -1660,7 +1660,7 @@ numpy==2.3.2
 nyt_games==0.5.0
 
 # homeassistant.components.oasa_telematics
-oasatelematics==0.3
+oasatelematics==0.4
 
 # homeassistant.components.google
 oauth2client==4.1.3
