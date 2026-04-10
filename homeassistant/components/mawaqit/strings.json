@@ -12,7 +12,7 @@
     "step": {
       "keep_or_reset": {
         "data": {
-          "choice": "You can eather chose to keep the existing configuration or to reset it:",
+          "choice": "You can either choose to keep the existing configuration or to reset it:",
           "keep": "Keep the existing configuration",
           "reset": "Reset to configure a new mosque"
         },
