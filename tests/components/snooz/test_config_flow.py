@@ -6,7 +6,7 @@ from asyncio import Event, sleep
 from unittest.mock import patch
 
 from homeassistant import config_entries
-from homeassistant.components.snooz import DOMAIN
+from homeassistant.components.snooz.const import DOMAIN
 from homeassistant.config_entries import SOURCE_IGNORE
 from homeassistant.const import CONF_ADDRESS, CONF_NAME, CONF_TOKEN
 from homeassistant.core import HomeAssistant
