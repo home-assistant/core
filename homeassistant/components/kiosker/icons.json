@@ -6,7 +6,6 @@
       },
       "battery_state": {
         "default": "mdi:lightning-bolt"
-      },
       "blackout_state": {
         "default": "mdi:monitor-off"
       },
