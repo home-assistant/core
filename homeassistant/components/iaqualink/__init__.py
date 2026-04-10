@@ -119,6 +119,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: AqualinkConfigEntry) -> 
         runtime_data.coordinators[system.serial] = coordinator
         await coordinator.async_config_entry_first_refresh()
 
+    device_registry = dr.async_get(hass)
+    for system in systems:
         try:
             devices = await system.get_devices()
         except AqualinkServiceException as svc_exception:
@@ -127,7 +129,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: AqualinkConfigEntry) -> 
                 f"Error while attempting to retrieve devices list: {svc_exception}"
             ) from svc_exception
 
-        device_registry = dr.async_get(hass)
         device_registry.async_get_or_create(
             config_entry_id=entry.entry_id,
             name=system.name,
@@ -167,6 +168,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: AqualinkConfigEntry) -> 
     )
 
     entry.runtime_data = runtime_data
+
+    # Remove stale per-entity device registry entries created by older versions.
+    # Previously each entity had its own device with identifier (DOMAIN, serial_name);
+    # now all entities share a single system device with identifier (DOMAIN, serial).
+    valid_identifiers = {(DOMAIN, system.serial) for system in systems}
+    for device_entry in dr.async_entries_for_config_entry(
+        device_registry, entry.entry_id
+    ):
+        if not device_entry.identifiers & valid_identifiers:
+            device_registry.async_remove_device(device_entry.id)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 

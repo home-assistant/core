@@ -19,7 +19,7 @@ from iaqualink.systems.iaqua.system import IaquaSystem
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.components.climate import DOMAIN as CLIMATE_DOMAIN
-from homeassistant.components.iaqualink.const import UPDATE_INTERVAL
+from homeassistant.components.iaqualink.const import DOMAIN, UPDATE_INTERVAL
 from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
@@ -34,6 +34,7 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
 from homeassistant.util import dt as dt_util
 
 from .conftest import get_aqualink_device, get_aqualink_system
@@ -587,3 +588,49 @@ async def test_entity_assumed_and_available(
     state = hass.states.get(name)
     assert state.state == STATE_ON
     assert state.attributes.get(ATTR_ASSUMED_STATE) is None
+
+
+async def test_stale_device_entries_removed(
+    hass: HomeAssistant, config_entry, client
+) -> None:
+    """Test that old per-entity device registry entries are removed on setup."""
+    config_entry.add_to_hass(hass)
+
+    system = get_aqualink_system(client, cls=IaquaSystem)
+    systems = {system.serial: system}
+
+    light = get_aqualink_device(
+        system, name="aux_1", cls=IaquaLightSwitch, data={"state": "1"}
+    )
+    devices = {light.name: light}
+    system.get_devices = AsyncMock(return_value=devices)
+
+    # Pre-populate the device registry with a stale per-entity device entry that
+    # would have been created by a previous version of the integration.
+    device_registry = dr.async_get(hass)
+    stale_device = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={(DOMAIN, f"{system.serial}_{light.name}")},
+    )
+    stale_device_id = stale_device.id
+
+    with (
+        patch(
+            "homeassistant.components.iaqualink.AqualinkClient.login",
+            return_value=None,
+        ),
+        patch(
+            "homeassistant.components.iaqualink.AqualinkClient.get_systems",
+            return_value=systems,
+        ),
+    ):
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    # Stale per-entity device must be gone.
+    assert device_registry.async_get(stale_device_id) is None
+
+    # The system device with the new identifier must still exist.
+    assert device_registry.async_get_device(identifiers={(DOMAIN, system.serial)})
