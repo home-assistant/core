@@ -1,20 +1,93 @@
 rules:
-  action-setup: "done"
-  appropriate-polling: "done"
-  brands: "done"
-  common-modules: "done"
-  config-flow: "done"
-  config-flow-test-coverage: "done"
-  dependency-transparency: "done"
-  diagnostics: "todo"
-  docs-actions: "done"
-  docs-high-level-description: "done"
-  docs-installation-instructions: "done"
-  docs-removal-instructions: "done"
-  entity-event-setup: "done"
-  entity-unique-id: "done"
-  has-entity-name: "done"
-  runtime-data: "done"
-  test-before-configure: "done"
-  test-before-setup: "done"
-  unique-config-entry: "done"
+  # Bronze
+  action-setup:
+    status: exempt
+    comment: This integration does not register custom actions.
+  appropriate-polling: done
+  brands: todo
+  common-modules: done
+  config-flow: done
+  config-flow-test-coverage: done
+  dependency-transparency: done
+  docs-actions:
+    status: exempt
+    comment: This integration does not register custom actions.
+  docs-high-level-description: todo
+  docs-installation-instructions: todo
+  docs-removal-instructions: todo
+  entity-event-setup: done
+  entity-unique-id: done
+  has-entity-name: done
+  runtime-data: done
+  test-before-configure: done
+  test-before-setup: done
+  unique-config-entry: done
+
+  # Silver
+  action-exceptions:
+    status: exempt
+    comment: This integration does not register custom actions.
+  config-entry-unloading: done
+  docs-configuration-parameters:
+    status: exempt
+    comment: This integration has no options flow.
+  docs-installation-parameters: todo
+  entity-unavailable: todo
+  integration-owner: done
+  log-when-unavailable: todo
+  parallel-updates: todo
+  reauthentication-flow: done
+  test-coverage: done
+
+  # Gold
+  devices: done
+  diagnostics: todo
+  discovery:
+    status: exempt
+    comment: |
+      Gaposa is a cloud service; there is no discoverable hub on the
+      local network to find.
+  discovery-update-info:
+    status: exempt
+    comment: |
+      Gaposa is a cloud service; there is no discoverable hub on the
+      local network to find.
+  docs-data-update: todo
+  docs-examples: todo
+  docs-known-limitations: todo
+  docs-supported-devices: todo
+  docs-supported-functions: todo
+  docs-troubleshooting: todo
+  docs-use-cases: todo
+  dynamic-devices: done
+  entity-category:
+    status: exempt
+    comment: The cover entities do not belong to a specific category.
+  entity-device-class: done
+  entity-disabled-by-default:
+    status: exempt
+    comment: This integration does not create any entities that should be disabled.
+  entity-translations:
+    status: exempt
+    comment: |
+      The only entity on each device is the cover itself and its name
+      matches the device name (set via _attr_has_entity_name + name=None).
+  exception-translations: todo
+  icon-translations:
+    status: exempt
+    comment: This integration does not use custom icons.
+  reconfiguration-flow: todo
+  repair-issues:
+    status: exempt
+    comment: This integration has no known failure modes worth surfacing as repair issues.
+  stale-devices: done
+
+  # Platinum
+  async-dependency: done
+  inject-websession: done
+  strict-typing:
+    status: todo
+    comment: |
+      pygaposa does not yet ship a py.typed marker file (PEP 561),
+      so it cannot be used by a strictly-typed HA integration.
+      Blocked on an upstream change to the pygaposa package.
