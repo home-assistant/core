@@ -58,7 +58,7 @@ CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 
 class SoundTouchData:
-    """SoundTouch data stored in the Home Assistant data object."""
+    """SoundTouch data stored in the config entry runtime data."""
 
     def __init__(self, device: SoundTouchDevice) -> None:
         """Initialize the SoundTouch data object for a device."""
