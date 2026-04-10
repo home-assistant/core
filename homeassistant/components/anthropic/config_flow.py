@@ -65,6 +65,7 @@ from .const import (
     DEFAULT_AI_TASK_NAME,
     DEFAULT_CONVERSATION_NAME,
     DOMAIN,
+    MIN_THINKING_BUDGET,
     NON_ADAPTIVE_THINKING_MODELS,
     NON_THINKING_MODELS,
     TOOL_SEARCH_UNSUPPORTED_MODELS,
@@ -486,9 +487,12 @@ class ConversationSubentryFlowHandler(ConfigSubentryFlow):
             user_input = {}  # pragma: no cover
 
         if user_input is not None:
-            if user_input.get(
-                CONF_THINKING_BUDGET, DEFAULT[CONF_THINKING_BUDGET]
-            ) >= user_input.get(CONF_MAX_TOKENS, DEFAULT[CONF_MAX_TOKENS]):
+            if (
+                CONF_THINKING_BUDGET in user_input
+                and user_input[CONF_THINKING_BUDGET] >= MIN_THINKING_BUDGET
+                and user_input[CONF_THINKING_BUDGET]
+                >= user_input.get(CONF_MAX_TOKENS, DEFAULT[CONF_MAX_TOKENS])
+            ):
                 errors[CONF_THINKING_BUDGET] = "thinking_budget_too_large"
 
             if user_input.get(CONF_WEB_SEARCH, DEFAULT[CONF_WEB_SEARCH]) and not errors:
