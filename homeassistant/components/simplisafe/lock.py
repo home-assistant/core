@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from simplipy.device.lock import Lock, LockStates
 from simplipy.errors import SimplipyError
@@ -43,7 +43,8 @@ async def async_setup_entry(
             LOGGER.warning("Skipping lock setup for V2 system: %s", system.system_id)
             continue
 
-        assert isinstance(system, SystemV3)
+        if TYPE_CHECKING:
+            assert isinstance(system, SystemV3)
         locks.extend(
             SimpliSafeLock(simplisafe, system, lock) for lock in system.locks.values()
         )

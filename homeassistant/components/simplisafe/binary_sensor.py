@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING, cast
+
 from simplipy.device import DeviceTypes, DeviceV3
 from simplipy.device.sensor.v3 import SensorV3
 from simplipy.system.v3 import SystemV3
@@ -71,19 +73,22 @@ async def async_setup_entry(
             LOGGER.warning("Skipping sensor setup for V2 system: %s", system.system_id)
             continue
 
-        assert isinstance(system, SystemV3)
+        if TYPE_CHECKING:
+            assert isinstance(system, SystemV3)
         for sensor in system.sensors.values():
             if sensor.type in TRIGGERED_SENSOR_TYPES:
                 sensors.append(
                     TriggeredBinarySensor(
                         simplisafe,
                         system,
-                        sensor,  # type: ignore[arg-type]
+                        cast(SensorV3, sensor),
                         TRIGGERED_SENSOR_TYPES[sensor.type],
                     )
                 )
             if sensor.type in SUPPORTED_BATTERY_SENSOR_TYPES:
-                sensors.append(BatteryBinarySensor(simplisafe, system, sensor))  # type: ignore[arg-type]
+                sensors.append(
+                    BatteryBinarySensor(simplisafe, system, cast(DeviceV3, sensor))
+                )
 
         sensors.extend(
             BatteryBinarySensor(simplisafe, system, lock)

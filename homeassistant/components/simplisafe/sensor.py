@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING, cast
+
 from simplipy.device import DeviceTypes
 from simplipy.device.sensor.v3 import SensorV3
 from simplipy.system.v3 import SystemV3
@@ -34,9 +36,10 @@ async def async_setup_entry(
             LOGGER.warning("Skipping sensor setup for V2 system: %s", system.system_id)
             continue
 
-        assert isinstance(system, SystemV3)
+        if TYPE_CHECKING:
+            assert isinstance(system, SystemV3)
         sensors.extend(
-            SimplisafeFreezeSensor(simplisafe, system, sensor)  # type: ignore[arg-type]
+            SimplisafeFreezeSensor(simplisafe, system, cast(SensorV3, sensor))
             for sensor in system.sensors.values()
             if sensor.type == DeviceTypes.TEMPERATURE
         )
