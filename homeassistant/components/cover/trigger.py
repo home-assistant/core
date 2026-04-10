@@ -1,5 +1,7 @@
 """Provides triggers for covers."""
 
+from collections.abc import Mapping
+
 from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers.trigger import EntityTriggerBase, Trigger
@@ -8,8 +10,10 @@ from .const import ATTR_IS_CLOSED, DOMAIN, CoverDeviceClass
 from .models import CoverDomainSpec
 
 
-class CoverTriggerBase(EntityTriggerBase[CoverDomainSpec]):
+class CoverTriggerBase(EntityTriggerBase):
     """Base trigger for cover state changes."""
+
+    _domain_specs: Mapping[str, CoverDomainSpec]
 
     def _get_value(self, state: State) -> str | bool | None:
         """Extract the relevant value from state based on domain spec."""

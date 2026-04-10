@@ -9,17 +9,14 @@ import voluptuous as vol
 from homeassistant.const import (
     ATTR_TEMPERATURE,
     CONF_OPTIONS,
-    CONF_TARGET,
     STATE_OFF,
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.automation import DomainSpec, NumericalDomainSpec
+from homeassistant.helpers.automation import DomainSpec
 from homeassistant.helpers.condition import (
-    ATTR_BEHAVIOR,
-    BEHAVIOR_ALL,
-    BEHAVIOR_ANY,
+    ENTITY_STATE_CONDITION_SCHEMA_ANY_ALL,
     Condition,
     ConditionConfig,
     EntityConditionBase,
@@ -33,13 +30,9 @@ from .const import DOMAIN
 ATTR_OPERATION_MODE = "operation_mode"
 
 
-_OPERATION_MODE_CONDITION_SCHEMA = vol.Schema(
+_OPERATION_MODE_CONDITION_SCHEMA = ENTITY_STATE_CONDITION_SCHEMA_ANY_ALL.extend(
     {
-        vol.Required(CONF_TARGET): cv.TARGET_FIELDS,
         vol.Required(CONF_OPTIONS): {
-            vol.Required(ATTR_BEHAVIOR, default=BEHAVIOR_ANY): vol.In(
-                [BEHAVIOR_ANY, BEHAVIOR_ALL]
-            ),
             vol.Required(ATTR_OPERATION_MODE): vol.All(
                 cv.ensure_list, vol.Length(min=1), [str]
             ),
@@ -80,7 +73,7 @@ class WaterHeaterTargetTemperatureCondition(EntityNumericalConditionWithUnitBase
     """Condition for water heater target temperature."""
 
     _base_unit = UnitOfTemperature.CELSIUS
-    _domain_specs = {DOMAIN: NumericalDomainSpec(value_source=ATTR_TEMPERATURE)}
+    _domain_specs = {DOMAIN: DomainSpec(value_source=ATTR_TEMPERATURE)}
     _unit_converter = TemperatureConverter
 
     def _get_entity_unit(self, entity_state: State) -> str | None:

@@ -19,7 +19,13 @@ from . import MockDeviceListener, check_selective_state_update, initialize_entry
 from tests.common import MockConfigEntry, snapshot_platform
 
 
-@patch("homeassistant.components.tuya.PLATFORMS", [Platform.BINARY_SENSOR])
+@pytest.fixture(autouse=True)
+def platform_autouse():
+    """Platform fixture."""
+    with patch("homeassistant.components.tuya.PLATFORMS", [Platform.BINARY_SENSOR]):
+        yield
+
+
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_platform_setup_and_discovery(
     hass: HomeAssistant,
@@ -55,7 +61,6 @@ async def test_platform_setup_and_discovery(
         ),
     ],
 )
-@patch("homeassistant.components.tuya.PLATFORMS", [Platform.BINARY_SENSOR])
 @pytest.mark.freeze_time("2024-01-01")
 async def test_selective_state_update(
     hass: HomeAssistant,
@@ -98,7 +103,6 @@ async def test_selective_state_update(
         (0x83, "on", "on", "on"),
     ],
 )
-@patch("homeassistant.components.tuya.PLATFORMS", [Platform.BINARY_SENSOR])
 async def test_bitmap(
     hass: HomeAssistant,
     mock_manager: Manager,

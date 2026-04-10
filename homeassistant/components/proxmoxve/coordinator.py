@@ -22,11 +22,7 @@ from homeassistant.const import (
     CONF_VERIFY_SSL,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import (
-    ConfigEntryAuthFailed,
-    ConfigEntryError,
-    ConfigEntryNotReady,
-)
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryError
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .common import sanitize_config_entry
@@ -48,12 +44,23 @@ _LOGGER = logging.getLogger(__name__)
 
 
 @dataclass(slots=True, kw_only=True)
+class NodeResources:
+    """Raw API resources fetched for a single Proxmox node."""
+
+    vms: list[dict[str, Any]]
+    containers: list[dict[str, Any]]
+    storages: list[dict[str, Any]]
+    backups: list[dict[str, Any]]
+
+
+@dataclass(slots=True, kw_only=True)
 class ProxmoxNodeData:
     """All resources for a single Proxmox node."""
 
     node: dict[str, Any] = field(default_factory=dict)
     vms: dict[int, dict[str, Any]] = field(default_factory=dict)
     containers: dict[int, dict[str, Any]] = field(default_factory=dict)
+    storages: dict[str, dict[str, Any]] = field(default_factory=dict)
     backups: list[dict[str, Any]] = field(default_factory=list)
 
 
@@ -80,6 +87,7 @@ class ProxmoxCoordinator(DataUpdateCoordinator[dict[str, ProxmoxNodeData]]):
         self.known_nodes: set[str] = set()
         self.known_vms: set[tuple[str, int]] = set()
         self.known_containers: set[tuple[str, int]] = set()
+        self.known_storages: set[tuple[str, str]] = set()
         self.permissions: dict[str, dict[str, int]] = {}
 
         self.new_nodes_callbacks: list[Callable[[list[ProxmoxNodeData]], None]] = []
@@ -87,6 +95,9 @@ class ProxmoxCoordinator(DataUpdateCoordinator[dict[str, ProxmoxNodeData]]):
             Callable[[list[tuple[ProxmoxNodeData, dict[str, Any]]]], None]
         ] = []
         self.new_containers_callbacks: list[
+            Callable[[list[tuple[ProxmoxNodeData, dict[str, Any]]]], None]
+        ] = []
+        self.new_storages_callbacks: list[
             Callable[[list[tuple[ProxmoxNodeData, dict[str, Any]]]], None]
         ] = []
 
@@ -107,13 +118,13 @@ class ProxmoxCoordinator(DataUpdateCoordinator[dict[str, ProxmoxNodeData]]):
                 translation_placeholders={"error": repr(err)},
             ) from err
         except ConnectTimeout as err:
-            raise ConfigEntryNotReady(
+            raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="timeout_connect",
                 translation_placeholders={"error": repr(err)},
             ) from err
         except ProxmoxServerError as err:
-            raise ConfigEntryNotReady(
+            raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="api_error_details",
                 translation_placeholders={"error": repr(err)},
@@ -139,9 +150,7 @@ class ProxmoxCoordinator(DataUpdateCoordinator[dict[str, ProxmoxNodeData]]):
         """Fetch data from Proxmox VE API."""
 
         try:
-            nodes, vms_containers = await self.hass.async_add_executor_job(
-                self._fetch_all_nodes
-            )
+            node_pairs = await self.hass.async_add_executor_job(self._fetch_all_nodes)
         except AuthenticationError as err:
             raise ConfigEntryAuthFailed(
                 translation_domain=DOMAIN,
@@ -173,14 +182,16 @@ class ProxmoxCoordinator(DataUpdateCoordinator[dict[str, ProxmoxNodeData]]):
             ) from err
 
         data: dict[str, ProxmoxNodeData] = {}
-        for node, (vms, containers, backups) in zip(nodes, vms_containers, strict=True):
+        for node, resources in node_pairs:
             data[node[CONF_NODE]] = ProxmoxNodeData(
                 node=node,
-                vms={int(vm["vmid"]): vm for vm in vms},
+                vms={int(vm["vmid"]): vm for vm in resources.vms},
                 containers={
-                    int(container["vmid"]): container for container in containers
+                    int(container["vmid"]): container
+                    for container in resources.containers
                 },
-                backups=backups,
+                storages={s["storage"]: s for s in resources.storages},
+                backups=resources.backups,
             )
 
         self._async_add_remove_nodes(data)
@@ -225,36 +236,34 @@ class ProxmoxCoordinator(DataUpdateCoordinator[dict[str, ProxmoxNodeData]]):
                 raise ProxmoxNodesNotFoundError from err
             raise ProxmoxServerError from err
 
-    def _fetch_all_nodes(
-        self,
-    ) -> tuple[
-        list[dict[str, Any]],
-        list[tuple[list[dict[str, Any]], list[dict[str, Any]], list[dict[str, Any]]]],
-    ]:
-        """Fetch all nodes, and then proceed to the VMs, containers, and backups."""
+    def _fetch_all_nodes(self) -> list[tuple[dict[str, Any], NodeResources]]:
+        """Fetch all nodes with their VMs, containers, storages, and backups."""
         nodes = self.proxmox.nodes.get() or []
-        node_data = [self._get_node_data(node) for node in nodes]
-        return nodes, node_data
+        return [(node, self._get_node_data(node)) for node in nodes]
 
     def _get_node_data(
         self,
         node: dict[str, Any],
-    ) -> tuple[list[dict[str, Any]], list[dict[str, Any]], list[dict[str, Any]]]:
-        """Get vms, containers, and backups for a node."""
+    ) -> NodeResources:
+        """Get vms, containers, storages, and backups for a node."""
         if node.get("status") != NODE_ONLINE:
             _LOGGER.debug(
-                "Node %s is offline, skipping VM/container fetch",
+                "Node %s is offline, skipping VM/container/storage fetch",
                 node[CONF_NODE],
             )
-            return [], [], []
+            return NodeResources(vms=[], containers=[], storages=[], backups=[])
 
         vms = self.proxmox.nodes(node[CONF_NODE]).qemu.get() or []
         containers = self.proxmox.nodes(node[CONF_NODE]).lxc.get() or []
+        storages = self.proxmox.nodes(node[CONF_NODE]).storage.get() or []
         backups = (
             self.proxmox.nodes(node[CONF_NODE]).tasks.get(typefilter="vzdump", limit=1)
             or []
         )
-        return vms, containers, backups
+
+        return NodeResources(
+            vms=vms, containers=containers, storages=storages, backups=backups
+        )
 
     def _async_add_remove_nodes(self, data: dict[str, ProxmoxNodeData]) -> None:
         """Add new nodes/VMs/containers, track removals."""
@@ -302,6 +311,23 @@ class ProxmoxCoordinator(DataUpdateCoordinator[dict[str, ProxmoxNodeData]]):
             ]
             for containers_callback in self.new_containers_callbacks:
                 containers_callback(new_container_data)
+
+        current_storages = {
+            (node_name, storage_name)
+            for node_name, node_data in data.items()
+            for storage_name in node_data.storages
+        }
+        self.known_storages &= current_storages
+        new_storages = current_storages - self.known_storages
+        if new_storages:
+            _LOGGER.debug("New storages found: %s", new_storages)
+            self.known_storages.update(new_storages)
+            new_storage_data = [
+                (data[node_name], data[node_name].storages[storage_name])
+                for node_name, storage_name in new_storages
+            ]
+            for storages_callback in self.new_storages_callbacks:
+                storages_callback(new_storage_data)
 
 
 class ProxmoxSetupError(Exception):

@@ -103,6 +103,32 @@
           'type': 'node',
           'uptime': 86400,
         }),
+        'storages': dict({
+          'local': dict({
+            'active': 1,
+            'avail': 9956425728,
+            'content': 'iso,backup,vztmpl',
+            'enabled': 1,
+            'shared': 0,
+            'storage': 'local',
+            'total': 100861726720,
+            'type': 'dir',
+            'used': 85734563840,
+            'used_fraction': 0.85,
+          }),
+          'synology': dict({
+            'active': 1,
+            'avail': 523769479168,
+            'content': 'backup,images',
+            'enabled': 1,
+            'shared': 1,
+            'storage': 'synology',
+            'total': 1915211874304,
+            'type': 'nfs',
+            'used': 1391442395136,
+            'used_fraction': 0.73,
+          }),
+        }),
         'vms': dict({
           '100': dict({
             'cpu': 0.15,

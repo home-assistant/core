@@ -18,7 +18,7 @@ from .const import (
 )
 from .coordinator import NinaConfigEntry, NINADataUpdateCoordinator
 
-PLATFORMS: list[str] = [Platform.BINARY_SENSOR]
+PLATFORMS: list[Platform] = [Platform.BINARY_SENSOR, Platform.SENSOR]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: NinaConfigEntry) -> bool:

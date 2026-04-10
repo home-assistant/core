@@ -27,7 +27,13 @@ from . import initialize_entry
 from tests.common import MockConfigEntry, snapshot_platform
 
 
-@patch("homeassistant.components.tuya.PLATFORMS", [Platform.LIGHT])
+@pytest.fixture(autouse=True)
+def platform_autouse():
+    """Platform fixture."""
+    with patch("homeassistant.components.tuya.PLATFORMS", [Platform.LIGHT]):
+        yield
+
+
 async def test_platform_setup_and_discovery(
     hass: HomeAssistant,
     mock_manager: Manager,
