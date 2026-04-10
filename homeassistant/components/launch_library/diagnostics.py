@@ -8,7 +8,7 @@ from pylaunches.types import Event, Launch
 
 from homeassistant.core import HomeAssistant
 
-from . import LaunchLibraryConfigEntry
+from .coordinator import LaunchLibraryConfigEntry
 
 
 async def async_get_config_entry_diagnostics(

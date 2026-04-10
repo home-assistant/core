@@ -21,9 +21,8 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util.dt import parse_datetime
 
-from . import LaunchLibraryConfigEntry
 from .const import DOMAIN
-from .coordinator import LaunchLibraryCoordinator
+from .coordinator import LaunchLibraryConfigEntry, LaunchLibraryCoordinator
 
 DEFAULT_NEXT_LAUNCH_NAME = "Next launch"
 
