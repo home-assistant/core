@@ -73,7 +73,14 @@
     },
     "event": {
       "ding": {
-        "name": "Ding"
+        "name": "Ding",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "ring": "[%key:component::event::entity_component::doorbell::state_attributes::event_type::state::ring%]"
+            }
+          }
+        }
       },
       "intercom_unlock": {
         "name": "Intercom unlock"
