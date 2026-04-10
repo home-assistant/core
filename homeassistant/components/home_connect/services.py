@@ -364,6 +364,9 @@ async def async_service_start_selected_program(call: ServiceCall) -> None:
                 **get_dict_from_home_connect_error(err),
             },
         ) from err
+        
+    # Debug Log which Program settings are currently on the machine
+    # await client.get_active_program(ha_id)
 
 @callback
 def async_setup_services(hass: HomeAssistant) -> None:
