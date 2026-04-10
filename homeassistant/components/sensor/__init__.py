@@ -63,7 +63,8 @@ ENTITY_ID_FORMAT: Final = DOMAIN + ".{}"
 PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA
 PLATFORM_SCHEMA_BASE = cv.PLATFORM_SCHEMA_BASE
 SCAN_INTERVAL: Final = timedelta(seconds=30)
-UPTIME_DRIFT_TOLERANCE: Final = 60  # seconds
+UPTIME_DEFAULT_DRIFT_TOLERANCE: Final = 60  # seconds
+UPTIME_MIN_DRIFT_TOLERANCE: Final = 5  # seconds
 
 __all__ = [
     "ATTR_LAST_RESET",
@@ -181,6 +182,9 @@ TEMPERATURE_UNITS = {UnitOfTemperature.CELSIUS, UnitOfTemperature.FAHRENHEIT}
 class SensorEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     """Base class for sensor entities."""
 
+    # Allow per-entity override of drift tolerance
+    _attr_uptime_drift_tolerance: int = UPTIME_DEFAULT_DRIFT_TOLERANCE
+
     _entity_component_unrecorded_attributes = frozenset({ATTR_OPTIONS})
 
     entity_description: SensorEntityDescription
@@ -206,10 +210,12 @@ class SensorEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
     def _normalize_uptime(self, current_uptime: datetime) -> datetime:
         """Normalize uptime to suppress small drift between updates."""
+        drift_tolerance = max(
+            self._attr_uptime_drift_tolerance, UPTIME_MIN_DRIFT_TOLERANCE
+        )
         if (
             not (previous_uptime := self._previous_uptime_value)
-            or abs((current_uptime - previous_uptime).total_seconds())
-            > UPTIME_DRIFT_TOLERANCE
+            or abs((current_uptime - previous_uptime).total_seconds()) > drift_tolerance
         ):
             self._previous_uptime_value = current_uptime
             return current_uptime

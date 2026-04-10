@@ -23,7 +23,7 @@ from homeassistant.components.sensor import (
     DEVICE_CLASS_UNITS,
     DOMAIN,
     NON_NUMERIC_DEVICE_CLASSES,
-    UPTIME_DRIFT_TOLERANCE,
+    UPTIME_DEFAULT_DRIFT_TOLERANCE,
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
@@ -284,8 +284,9 @@ async def test_datetime_conversion(
     assert state.state == test_timestamp.isoformat()
 
 
+@pytest.mark.parametrize("drift_tolerance", [UPTIME_DEFAULT_DRIFT_TOLERANCE, 10])
 async def test_uptime_device_class_auto_normalizes_drift(
-    hass: HomeAssistant,
+    hass: HomeAssistant, drift_tolerance
 ) -> None:
     """Test uptime device class suppresses small drift automatically."""
     initial_uptime = datetime(2026, 2, 14, 9, 30, tzinfo=UTC)
@@ -294,6 +295,7 @@ async def test_uptime_device_class_auto_normalizes_drift(
         native_value=initial_uptime,
         device_class=SensorDeviceClass.UPTIME,
     )
+    entity._attr_uptime_drift_tolerance = drift_tolerance
     setup_test_component_platform(hass, sensor.DOMAIN, [entity])
 
     assert await async_setup_component(hass, "sensor", {"sensor": {"platform": "test"}})
@@ -303,7 +305,7 @@ async def test_uptime_device_class_auto_normalizes_drift(
     assert state.state == initial_uptime.isoformat(timespec="seconds")
 
     entity._values["native_value"] = initial_uptime + timedelta(
-        seconds=UPTIME_DRIFT_TOLERANCE - 1
+        seconds=drift_tolerance - 1
     )
     entity.async_write_ha_state()
     await hass.async_block_till_done()
@@ -311,7 +313,7 @@ async def test_uptime_device_class_auto_normalizes_drift(
     assert (state := hass.states.get(entity.entity_id))
     assert state.state == initial_uptime.isoformat(timespec="seconds")
 
-    updated_uptime = initial_uptime + timedelta(seconds=UPTIME_DRIFT_TOLERANCE + 1)
+    updated_uptime = initial_uptime + timedelta(seconds=drift_tolerance + 1)
     entity._values["native_value"] = updated_uptime
     entity.async_write_ha_state()
     await hass.async_block_till_done()
