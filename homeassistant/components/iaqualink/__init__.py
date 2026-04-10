@@ -121,6 +121,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: AqualinkConfigEntry) -> 
         try:
             devices = await system.get_devices()
         except AqualinkServiceException as svc_exception:
+            await aqualink.close()
             raise ConfigEntryNotReady(
                 f"Error while attempting to retrieve devices list: {svc_exception}"
             ) from svc_exception
