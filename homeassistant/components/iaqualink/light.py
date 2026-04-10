@@ -17,6 +17,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import AqualinkConfigEntry, refresh_system
+from .coordinator import AqualinkDataUpdateCoordinator
 from .entity import AqualinkEntity
 from .utils import await_or_reraise
 
@@ -30,17 +31,21 @@ async def async_setup_entry(
 ) -> None:
     """Set up discovered lights."""
     async_add_entities(
-        (HassAqualinkLight(dev) for dev in config_entry.runtime_data.lights),
-        True,
+        HassAqualinkLight(
+            config_entry.runtime_data.coordinators[dev.system.serial], dev
+        )
+        for dev in config_entry.runtime_data.lights
     )
 
 
 class HassAqualinkLight(AqualinkEntity[AqualinkLight], LightEntity):
     """Representation of a light."""
 
-    def __init__(self, dev: AqualinkLight) -> None:
+    def __init__(
+        self, coordinator: AqualinkDataUpdateCoordinator, dev: AqualinkLight
+    ) -> None:
         """Initialize AquaLink light."""
-        super().__init__(dev)
+        super().__init__(coordinator, dev)
         self._attr_name = dev.label
         if dev.supports_effect:
             self._attr_effect_list = list(dev.supported_effects)

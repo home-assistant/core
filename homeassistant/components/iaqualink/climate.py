@@ -19,6 +19,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import AqualinkConfigEntry, refresh_system
+from .coordinator import AqualinkDataUpdateCoordinator
 from .entity import AqualinkEntity
 from .utils import await_or_reraise
 
@@ -34,8 +35,10 @@ async def async_setup_entry(
 ) -> None:
     """Set up discovered switches."""
     async_add_entities(
-        (HassAqualinkThermostat(dev) for dev in config_entry.runtime_data.thermostats),
-        True,
+        HassAqualinkThermostat(
+            config_entry.runtime_data.coordinators[dev.system.serial], dev
+        )
+        for dev in config_entry.runtime_data.thermostats
     )
 
 
@@ -49,9 +52,11 @@ class HassAqualinkThermostat(AqualinkEntity[AqualinkThermostat], ClimateEntity):
         | ClimateEntityFeature.TURN_ON
     )
 
-    def __init__(self, dev: AqualinkThermostat) -> None:
+    def __init__(
+        self, coordinator: AqualinkDataUpdateCoordinator, dev: AqualinkThermostat
+    ) -> None:
         """Initialize AquaLink thermostat."""
-        super().__init__(dev)
+        super().__init__(coordinator, dev)
         self._attr_name = dev.label.split(" ")[0]
         self._attr_temperature_unit = (
             UnitOfTemperature.FAHRENHEIT

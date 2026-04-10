@@ -11,6 +11,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import AqualinkConfigEntry, refresh_system
+from .coordinator import AqualinkDataUpdateCoordinator
 from .entity import AqualinkEntity
 from .utils import await_or_reraise
 
@@ -24,17 +25,21 @@ async def async_setup_entry(
 ) -> None:
     """Set up discovered switches."""
     async_add_entities(
-        (HassAqualinkSwitch(dev) for dev in config_entry.runtime_data.switches),
-        True,
+        HassAqualinkSwitch(
+            config_entry.runtime_data.coordinators[dev.system.serial], dev
+        )
+        for dev in config_entry.runtime_data.switches
     )
 
 
 class HassAqualinkSwitch(AqualinkEntity[AqualinkSwitch], SwitchEntity):
     """Representation of a switch."""
 
-    def __init__(self, dev: AqualinkSwitch) -> None:
+    def __init__(
+        self, coordinator: AqualinkDataUpdateCoordinator, dev: AqualinkSwitch
+    ) -> None:
         """Initialize AquaLink switch."""
-        super().__init__(dev)
+        super().__init__(coordinator, dev)
         name = self._attr_name = dev.label
         if name == "Cleaner":
             self._attr_icon = "mdi:robot-vacuum"
