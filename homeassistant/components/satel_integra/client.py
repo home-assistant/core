@@ -68,7 +68,7 @@ class SatelClient:
             zones,
             monitored_outputs,
             partitions,
-            integration_key=entry.data.get(CONF_ENCRYPTION_KEY),
+            integration_key=entry.data[CONF_ENCRYPTION_KEY],
         )
 
     async def async_connect(
