@@ -90,7 +90,7 @@
     'supported_features': 0,
     'translation_key': 'iaq_rh',
     'unique_id': 'aa:bb:cc:dd:ee:ff_113_iaq_rh',
-    'unit_of_measurement': None,
+    'unit_of_measurement': '%',
   })
 # ---
 # name: test_sensor_entities_state[sensor.bathroom_rh_humidity_air_quality_index-state]
@@ -98,6 +98,7 @@
     'attributes': ReadOnlyDict({
       'friendly_name': 'Bathroom RH Humidity air quality index',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': '%',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.bathroom_rh_humidity_air_quality_index',
@@ -288,7 +289,7 @@
     'supported_features': 0,
     'translation_key': 'iaq_rh',
     'unique_id': 'aa:bb:cc:dd:ee:ff_1_iaq_rh',
-    'unit_of_measurement': None,
+    'unit_of_measurement': '%',
   })
 # ---
 # name: test_sensor_entities_state[sensor.living_humidity_air_quality_index-state]
@@ -296,6 +297,7 @@
     'attributes': ReadOnlyDict({
       'friendly_name': 'Living Humidity air quality index',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': '%',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.living_humidity_air_quality_index',
@@ -486,7 +488,7 @@
     'supported_features': 0,
     'translation_key': 'iaq_co2',
     'unique_id': 'aa:bb:cc:dd:ee:ff_2_iaq_co2',
-    'unit_of_measurement': None,
+    'unit_of_measurement': '%',
   })
 # ---
 # name: test_sensor_entities_state[sensor.office_co2_co2_air_quality_index-state]
@@ -494,6 +496,7 @@
     'attributes': ReadOnlyDict({
       'friendly_name': 'Office CO2 CO2 air quality index',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': '%',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.office_co2_co2_air_quality_index',
