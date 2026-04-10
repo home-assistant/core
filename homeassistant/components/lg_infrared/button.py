@@ -26,6 +26,9 @@ class LgIrButtonEntityDescription(ButtonEntityDescription):
 
 TV_BUTTON_DESCRIPTIONS: tuple[LgIrButtonEntityDescription, ...] = (
     LgIrButtonEntityDescription(
+        key="power", translation_key="power", command_code=LGTVCode.POWER
+    ),
+    LgIrButtonEntityDescription(
         key="power_on", translation_key="power_on", command_code=LGTVCode.POWER_ON
     ),
     LgIrButtonEntityDescription(
@@ -44,6 +47,9 @@ TV_BUTTON_DESCRIPTIONS: tuple[LgIrButtonEntityDescription, ...] = (
         key="hdmi_4", translation_key="hdmi_4", command_code=LGTVCode.HDMI_4
     ),
     LgIrButtonEntityDescription(
+        key="aspect", translation_key="aspect", command_code=LGTVCode.ASPECT
+    ),
+    LgIrButtonEntityDescription(
         key="exit", translation_key="exit", command_code=LGTVCode.EXIT
     ),
     LgIrButtonEntityDescription(
@@ -51,6 +57,27 @@ TV_BUTTON_DESCRIPTIONS: tuple[LgIrButtonEntityDescription, ...] = (
     ),
     LgIrButtonEntityDescription(
         key="guide", translation_key="guide", command_code=LGTVCode.GUIDE
+    ),
+    LgIrButtonEntityDescription(
+        key="settings", translation_key="settings", command_code=LGTVCode.SETTINGS
+    ),
+    LgIrButtonEntityDescription(
+        key="list", translation_key="list", command_code=LGTVCode.LIST
+    ),
+    LgIrButtonEntityDescription(
+        key="text", translation_key="text", command_code=LGTVCode.TEXT
+    ),
+    LgIrButtonEntityDescription(
+        key="yellow", translation_key="yellow", command_code=LGTVCode.YELLOW
+    ),
+    LgIrButtonEntityDescription(
+        key="green", translation_key="green", command_code=LGTVCode.GREEN
+    ),
+    LgIrButtonEntityDescription(
+        key="red", translation_key="red", command_code=LGTVCode.RED
+    ),
+    LgIrButtonEntityDescription(
+        key="blue", translation_key="blue", command_code=LGTVCode.BLUE
     ),
     LgIrButtonEntityDescription(
         key="up", translation_key="up", command_code=LGTVCode.NAV_UP
@@ -108,6 +135,27 @@ TV_BUTTON_DESCRIPTIONS: tuple[LgIrButtonEntityDescription, ...] = (
     ),
     LgIrButtonEntityDescription(
         key="num_9", translation_key="num_9", command_code=LGTVCode.NUM_9
+    ),
+    LgIrButtonEntityDescription(
+        key="channel_up", translation_key="channel_up", command_code=LGTVCode.CHANNEL_UP
+    ),
+    LgIrButtonEntityDescription(
+        key="channel_down", translation_key="channel_down", command_code=LGTVCode.CHANNEL_DOWN
+    ),
+    LgIrButtonEntityDescription(
+        key="volume_up", translation_key="volume_up", command_code=LGTVCode.VOLUME_UP
+    ),
+    LgIrButtonEntityDescription(
+        key="volume_down", translation_key="volume_down", command_code=LGTVCode.VOLUME_DOWN
+    ),
+    LgIrButtonEntityDescription(
+        key="mute", translation_key="mute", command_code=LGTVCode.MUTE
+    ),
+    LgIrButtonEntityDescription(
+        key="sap", translation_key="sap", command_code=LGTVCode.SAP
+    ),
+    LgIrButtonEntityDescription(
+        key="subtitle", translation_key="subtitle", command_code=LGTVCode.SUBTITLE
     ),
 )
 
