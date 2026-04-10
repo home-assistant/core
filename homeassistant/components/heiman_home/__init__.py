@@ -48,7 +48,6 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(hass: HomeAssistant, entry: HeimanConfigEntry) -> bool:
     """Set up Heiman from a config entry."""
-    # Check if config contains token
     if CONF_TOKEN not in entry.data:
         raise ConfigEntryAuthFailed("Config entry missing token")
 
@@ -62,7 +61,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: HeimanConfigEntry) -> bo
 
     session = OAuth2Session(hass, entry, implementation)
 
-    # Validate token
     try:
         await session.async_ensure_token_valid()
     except OAuth2TokenRequestReauthError as err:
@@ -70,7 +68,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: HeimanConfigEntry) -> bo
     except OAuth2TokenRequestError as err:
         raise ConfigEntryNotReady from err
     except ValueError as err:
-        # Handle empty response or invalid token format
         _LOGGER.error(
             "OAuth2 token validation failed: %s. "
             "The refresh token may have expired. Please re-authenticate",
@@ -81,19 +78,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: HeimanConfigEntry) -> bo
             translation_key="token_expired",
         ) from err
 
-    # Create API client
     api_client = HeimanApiClient(hass=hass, session=session)
 
-    # Test API connection
-    try:
-        await api_client.async_get_user_info()
-    except Exception as err:
-        raise ConfigEntryNotReady(f"Failed to connect to Heiman API: {err}") from err
-
-    # Initialize device management
     device_management = DeviceManagement()
-
-    # Configure device filtering
     filter_config = {
         "filter_mode": entry.data.get(CONF_DEVICE_FILTER, "exclude"),
         "statistics_logic": entry.data.get(CONF_STATISTICS_LOGIC, "or"),
@@ -106,41 +93,32 @@ async def async_setup_entry(hass: HomeAssistant, entry: HeimanConfigEntry) -> bo
         "device_filter_mode": entry.data.get(CONF_DEVICE_FILTER_MODE, "exclude"),
         "device_list": entry.data.get(CONF_DEVICE_LIST, []),
     }
-
-    # Configure area sync
     area_sync_mode = entry.data.get(CONF_AREA_NAME_RULE, AREA_NAME_RULE_HOME_ROOM)
-
     device_management.configure(
         filter_config=filter_config,
         area_sync_mode=area_sync_mode,
     )
 
-    # Create data coordinator
     coordinator = HeimanDataUpdateCoordinator(
         hass=hass,
         logger=_LOGGER,
         api_client=api_client,
         config_entry=entry,
         device_management=device_management,
-        oauth_session=session,  # Pass OAuth2 session for MQTT token retrieval
+        oauth_session=session,
     )
 
-    # First data update
-    await coordinator.async_config_entry_first_refresh()
+    entry.runtime_data = coordinator
 
-    # Initialize MQTT client (for real-time device property updates)
+    await coordinator.async_config_entry_first_refresh()
     await coordinator.async_init_mqtt_client()
 
-    # Store coordinator in hass.data and runtime_data
     if DOMAIN not in hass.data:
         hass.data[DOMAIN] = {}
     hass.data[DOMAIN][entry.entry_id] = coordinator
-    entry.runtime_data = coordinator
 
-    # Load platforms
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    # Register service to read device properties
     async def handle_read_device_properties(call):
         """Handle read device properties service call."""
         device_id = call.data.get("device_id")

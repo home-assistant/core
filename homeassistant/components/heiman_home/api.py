@@ -18,6 +18,7 @@ from heimanconnect import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.config_entry_oauth2_flow import OAuth2Session
+from homeassistant.helpers.update_coordinator import UpdateFailed
 
 from .const import API_BASE_URL
 
@@ -107,8 +108,8 @@ class HeimanApiClient:
             user = await self._cloud_client.async_get_user_info()
         except HeimanAuthError as err:
             raise ConfigEntryAuthFailed(f"Authentication failed: {err}") from err
-        except HeimanConnectionError:
-            raise
+        except HeimanConnectionError as err:
+            raise UpdateFailed(f"Connection error getting user info: {err}") from err
         except Exception as err:
             _LOGGER.exception("Unexpected error getting user info")
             raise HeimanConnectionError(f"Failed to get user info: {err}") from err
@@ -135,8 +136,8 @@ class HeimanApiClient:
             homes = await self._cloud_client.async_get_homes()
         except HeimanAuthError as err:
             raise ConfigEntryAuthFailed(f"Authentication failed: {err}") from err
-        except HeimanConnectionError:
-            raise
+        except HeimanConnectionError as err:
+            raise UpdateFailed(f"Connection error getting homes: {err}") from err
         except Exception as err:
             _LOGGER.exception("Unexpected error getting homes")
             raise HeimanConnectionError(f"Failed to get homes: {err}") from err
@@ -168,8 +169,8 @@ class HeimanApiClient:
             devices = await self._cloud_client.async_get_devices(home_id=home_id)
         except HeimanAuthError as err:
             raise ConfigEntryAuthFailed(f"Authentication failed: {err}") from err
-        except HeimanConnectionError:
-            raise
+        except HeimanConnectionError as err:
+            raise UpdateFailed(f"Connection error getting devices: {err}") from err
         except Exception as err:
             _LOGGER.exception("Unexpected error getting devices")
             raise HeimanConnectionError(f"Failed to get devices: {err}") from err
@@ -199,8 +200,10 @@ class HeimanApiClient:
             properties = await self._cloud_client.async_get_device_properties(device_id)
         except HeimanAuthError as err:
             raise ConfigEntryAuthFailed(f"Authentication failed: {err}") from err
-        except HeimanConnectionError:
-            raise
+        except HeimanConnectionError as err:
+            raise UpdateFailed(
+                f"Connection error getting device properties: {err}"
+            ) from err
         except Exception as err:
             _LOGGER.exception("Unexpected error getting device properties")
             raise HeimanConnectionError(
@@ -245,8 +248,8 @@ class HeimanApiClient:
             )
         except HeimanAuthError as err:
             raise ConfigEntryAuthFailed(f"Authentication failed: {err}") from err
-        except HeimanConnectionError:
-            raise
+        except HeimanConnectionError as err:
+            raise UpdateFailed(f"Connection error controlling device: {err}") from err
         except Exception as err:
             _LOGGER.exception("Unexpected error controlling device")
             raise HeimanConnectionError(f"Failed to control device: {err}") from err

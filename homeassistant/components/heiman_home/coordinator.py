@@ -89,6 +89,10 @@ class HeimanDataUpdateCoordinator(DataUpdateCoordinator[HeimanData]):
             UpdateFailed: If data fetch fails
         """
         try:
+            # Validate API connection on first update
+            if self.data.user_info is None:
+                await self.api_client.async_get_user_info()
+
             # Get home ID
             home_id = self.config_entry.data.get(CONF_HOME_ID)
             if not home_id:
