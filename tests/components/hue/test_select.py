@@ -96,6 +96,7 @@ async def test_scene_select_activate_option(
     await setup_platform(hass, mock_bridge_v2, [Platform.SCENE, Platform.SELECT])
 
     # Select an option by calling the select_option service
+    mock_bridge_v2.mock_requests.clear()
     await hass.services.async_call(
         "select",
         "select_option",
@@ -106,9 +107,8 @@ async def test_scene_select_activate_option(
 
     # Bridge API should have been called with the correct scene id
     regular_scene_id = "cdbf3740-7977-4a11-8275-8c78636ad4bd"
-    assert len(mock_bridge_v2.mock_requests) > 0
-    last_request = mock_bridge_v2.mock_requests[-1]
-    assert regular_scene_id in last_request["path"]
+    assert len(mock_bridge_v2.mock_requests) == 1
+    assert regular_scene_id in mock_bridge_v2.mock_requests[0]["path"]
 
 
 async def test_scene_select_disambiguates_duplicate_names(
@@ -196,6 +196,7 @@ async def test_smart_scene_select_activate_option(
     await mock_bridge_v2.api.load_test_data(v2_resources_test_data)
     await setup_platform(hass, mock_bridge_v2, [Platform.SCENE, Platform.SELECT])
 
+    mock_bridge_v2.mock_requests.clear()
     await hass.services.async_call(
         "select",
         "select_option",
@@ -205,9 +206,8 @@ async def test_smart_scene_select_activate_option(
     await hass.async_block_till_done()
 
     smart_scene_id = "8abe5a3e-94c8-4058-908f-56241818509a"
-    assert len(mock_bridge_v2.mock_requests) > 0
-    last_request = mock_bridge_v2.mock_requests[-1]
-    assert smart_scene_id in last_request["path"]
+    assert len(mock_bridge_v2.mock_requests) == 1
+    assert smart_scene_id in mock_bridge_v2.mock_requests[0]["path"]
 
 
 async def test_smart_scene_select_disambiguates_duplicate_names(
