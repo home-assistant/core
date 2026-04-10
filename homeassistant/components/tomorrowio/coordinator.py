@@ -70,6 +70,8 @@ from .const import (
     TMRW_ATTR_WIND_SPEED,
 )
 
+type TomorrowioConfigEntry = ConfigEntry[TomorrowioDataUpdateCoordinator]
+
 
 @callback
 def async_get_entries_by_api_key(
@@ -116,10 +118,13 @@ def async_set_update_interval(
 class TomorrowioDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """Define an object to hold Tomorrow.io data."""
 
-    config_entry: ConfigEntry
+    config_entry: TomorrowioConfigEntry
 
     def __init__(
-        self, hass: HomeAssistant, config_entry: ConfigEntry, api: TomorrowioV4
+        self,
+        hass: HomeAssistant,
+        config_entry: TomorrowioConfigEntry,
+        api: TomorrowioV4,
     ) -> None:
         """Initialize."""
         self._api = api

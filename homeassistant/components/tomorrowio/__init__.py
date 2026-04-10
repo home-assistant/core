@@ -6,31 +6,38 @@ from pytomorrowio import TomorrowioV4
 
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.weather import DOMAIN as WEATHER_DOMAIN
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import DOMAIN
-from .coordinator import TomorrowioDataUpdateCoordinator
+from .coordinator import (
+    TomorrowioConfigEntry,
+    TomorrowioDataUpdateCoordinator,
+    async_get_entries_by_api_key,
+)
 
 PLATFORMS = [SENSOR_DOMAIN, WEATHER_DOMAIN]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: TomorrowioConfigEntry) -> bool:
     """Set up Tomorrow.io API from a config entry."""
-    hass.data.setdefault(DOMAIN, {})
-
     api_key = entry.data[CONF_API_KEY]
-    # If coordinator already exists for this API key, we'll use that, otherwise
-    # we have to create a new one
-    if not (coordinator := hass.data[DOMAIN].get(api_key)):
+    # If another entry already has a coordinator for this API key, reuse it.
+    # Otherwise create a new one.
+    coordinator: TomorrowioDataUpdateCoordinator | None = None
+    for other_entry in async_get_entries_by_api_key(hass, api_key, exclude_entry=entry):
+        if hasattr(other_entry, "runtime_data"):
+            coordinator = other_entry.runtime_data
+            break
+
+    if coordinator is None:
         session = async_get_clientsession(hass)
         # we will not use the class's lat and long so we can pass in garbage
         # lats and longs
         api = TomorrowioV4(api_key, 361.0, 361.0, unit_system="metric", session=session)
         coordinator = TomorrowioDataUpdateCoordinator(hass, entry, api)
-        hass.data[DOMAIN][api_key] = coordinator
+
+    entry.runtime_data = coordinator
 
     await coordinator.async_setup_entry(entry)
 
@@ -39,18 +46,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+async def async_unload_entry(
+    hass: HomeAssistant, config_entry: TomorrowioConfigEntry
+) -> bool:
     """Unload a config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(
         config_entry, PLATFORMS
     )
 
-    api_key = config_entry.data[CONF_API_KEY]
-    coordinator: TomorrowioDataUpdateCoordinator = hass.data[DOMAIN][api_key]
-    # If this is true, we can remove the coordinator
-    if await coordinator.async_unload_entry(config_entry):
-        hass.data[DOMAIN].pop(api_key)
-        if not hass.data[DOMAIN]:
-            hass.data.pop(DOMAIN)
+    await config_entry.runtime_data.async_unload_entry(config_entry)
 
     return unload_ok

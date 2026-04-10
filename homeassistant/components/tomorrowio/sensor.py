@@ -25,7 +25,6 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     CONCENTRATION_PARTS_PER_MILLION,
-    CONF_API_KEY,
     PERCENTAGE,
     UnitOfIrradiance,
     UnitOfLength,
@@ -39,7 +38,6 @@ from homeassistant.util.unit_conversion import DistanceConverter, SpeedConverter
 from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
 from .const import (
-    DOMAIN,
     TMRW_ATTR_CARBON_MONOXIDE,
     TMRW_ATTR_CHINA_AQI,
     TMRW_ATTR_CHINA_HEALTH_CONCERN,
@@ -68,7 +66,7 @@ from .const import (
     TMRW_ATTR_UV_INDEX,
     TMRW_ATTR_WIND_GUST,
 )
-from .coordinator import TomorrowioDataUpdateCoordinator
+from .coordinator import TomorrowioConfigEntry, TomorrowioDataUpdateCoordinator
 from .entity import TomorrowioEntity
 
 
@@ -327,11 +325,11 @@ SENSOR_TYPES = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: TomorrowioConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up a config entry."""
-    coordinator = hass.data[DOMAIN][config_entry.data[CONF_API_KEY]]
+    coordinator = config_entry.runtime_data
     entities = [
         TomorrowioSensorEntity(hass, config_entry, coordinator, 4, description)
         for description in SENSOR_TYPES

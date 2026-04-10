@@ -24,7 +24,6 @@ from homeassistant.components.weather import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    CONF_API_KEY,
     UnitOfLength,
     UnitOfPrecipitationDepth,
     UnitOfPressure,
@@ -59,17 +58,17 @@ from .const import (
     TMRW_ATTR_WIND_DIRECTION,
     TMRW_ATTR_WIND_SPEED,
 )
-from .coordinator import TomorrowioDataUpdateCoordinator
+from .coordinator import TomorrowioConfigEntry, TomorrowioDataUpdateCoordinator
 from .entity import TomorrowioEntity
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: TomorrowioConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up a config entry."""
-    coordinator = hass.data[DOMAIN][config_entry.data[CONF_API_KEY]]
+    coordinator = config_entry.runtime_data
     entity_registry = er.async_get(hass)
 
     entities = [TomorrowioWeatherEntity(config_entry, coordinator, 4, DAILY)]
