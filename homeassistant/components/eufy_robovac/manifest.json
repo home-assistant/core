@@ -1,0 +1,11 @@
+{
+  "domain": "eufy_robovac",
+  "name": "Eufy RoboVac",
+  "codeowners": ["@m17kea"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/eufy_robovac",
+  "integration_type": "device",
+  "iot_class": "local_polling",
+  "quality_scale": "bronze",
+  "requirements": ["tinytuya==1.17.6"]
+}
