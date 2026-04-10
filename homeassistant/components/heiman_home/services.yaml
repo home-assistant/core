@@ -1,0 +1,9 @@
+# Service definitions for Heiman Home integration
+
+read_device_properties:
+  fields:
+    device_id:
+      required: true
+      selector:
+        device:
+          integration: heiman_home
