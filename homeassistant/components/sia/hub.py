@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from copy import deepcopy
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from pysiaalarm.aio import CommunicationsProtocol, SIAAccount, SIAClient, SIAEvent
 
@@ -25,6 +25,9 @@ from .const import (
     SIA_EVENT,
 )
 from .utils import get_event_data_from_sia_event
+
+if TYPE_CHECKING:
+    from . import SIAConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -131,7 +134,7 @@ class SIAHub:
 
     @staticmethod
     async def async_config_entry_updated(
-        hass: HomeAssistant, config_entry: ConfigEntry
+        hass: HomeAssistant, config_entry: SIAConfigEntry
     ) -> None:
         """Handle signals of config entry being updated.
 
@@ -139,8 +142,6 @@ class SIAHub:
         Second, unload underlying platforms, and then setup platforms, this reflects any changes in number of zones.
 
         """
-        if not (hub := hass.data[DOMAIN].get(config_entry.entry_id)):
-            return
-        hub.update_accounts()
+        config_entry.runtime_data.update_accounts()
         await hass.config_entries.async_unload_platforms(config_entry, PLATFORMS)
         await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)

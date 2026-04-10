@@ -5,17 +5,18 @@ from homeassistant.const import CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 
-from .const import DOMAIN, PLATFORMS
+from .const import PLATFORMS
 from .hub import SIAHub
 
+type SIAConfigEntry = ConfigEntry[SIAHub]
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+
+async def async_setup_entry(hass: HomeAssistant, entry: SIAConfigEntry) -> bool:
     """Set up sia from a config entry."""
-    hub: SIAHub = SIAHub(hass, entry)
+    hub = SIAHub(hass, entry)
     hub.async_setup_hub()
 
-    hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN][entry.entry_id] = hub
+    entry.runtime_data = hub
     try:
         if hub.sia_client:
             await hub.sia_client.async_start(reuse_port=True)
@@ -27,10 +28,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: SIAConfigEntry) -> bool:
     """Unload a config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
-        hub: SIAHub = hass.data[DOMAIN].pop(entry.entry_id)
-        await hub.async_shutdown()
+        await entry.runtime_data.async_shutdown()
     return unload_ok
