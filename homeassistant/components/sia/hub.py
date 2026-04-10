@@ -39,11 +39,11 @@ class SIAHub:
     def __init__(
         self,
         hass: HomeAssistant,
-        entry: ConfigEntry,
+        entry: SIAConfigEntry,
     ) -> None:
         """Create the SIAHub."""
-        self._hass: HomeAssistant = hass
-        self._entry: ConfigEntry = entry
+        self._hass = hass
+        self._entry = entry
         self._port: int = entry.data[CONF_PORT]
         self._title: str = entry.title
         self._accounts: list[dict[str, Any]] = deepcopy(entry.data[CONF_ACCOUNTS])
