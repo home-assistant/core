@@ -29,7 +29,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import AIRPURIFIER_PM25_MODELS, DOMAIN
+from .const import DOMAIN
 from .coordinator import SwitchbotConfigEntry, SwitchbotDataUpdateCoordinator
 from .entity import SwitchbotEntity
 
@@ -151,24 +151,10 @@ async def async_setup_entry(
             if sensor in SENSOR_TYPES
         )
     else:
-        # Build sensor list from parsed_data (BLE advertisement keys).
-        # PM2.5 is not present in BLE broadcast frames; it is only available
-        # after an active BLE query (get_basic_info).  For PM2.5-capable models
-        # we register the entity based on device capability so it appears in HA
-        # from the start, and async_added_to_hass triggers an initial poll to
-        # populate the value promptly.
-        sensors: set[str] = {
-            sensor
+        sensor_entities.extend(
+            SwitchBotSensor(coordinator, sensor)
             for sensor in coordinator.device.parsed_data
             if sensor in SENSOR_TYPES
-        }
-        if (
-            isinstance(coordinator.device, switchbot.SwitchbotAirPurifier)
-            and coordinator.model in AIRPURIFIER_PM25_MODELS
-        ):
-            sensors.add("pm25")
-        sensor_entities.extend(
-            SwitchBotSensor(coordinator, sensor) for sensor in sensors
         )
     sensor_entities.append(SwitchbotRSSISensor(coordinator, "rssi"))
     async_add_entities(sensor_entities)
@@ -201,15 +187,6 @@ class SwitchBotSensor(SwitchbotEntity, SensorEntity):
             )
         else:
             self._attr_unique_id = f"{coordinator.base_unique_id}-{sensor}"
-
-    async def async_added_to_hass(self) -> None:
-        """Handle entity added to hass."""
-        await super().async_added_to_hass()
-        if self._sensor == "pm25":
-            # PM2.5 is absent from BLE broadcast frames and only becomes available
-            # after an active BLE query.  Schedule an immediate poll so the value
-            # appears quickly rather than waiting for the next scheduled poll cycle.
-            self.hass.async_create_task(self._device.update())
 
     @property
     def native_value(self) -> str | int | None:
