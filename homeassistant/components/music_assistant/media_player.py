@@ -60,7 +60,6 @@ from .const import (
     ATTR_REPEAT_MODE,
     ATTR_SHUFFLE_ENABLED,
     DOMAIN,
-    SOUND_MODES_TRANSLATION_KEY_PREFIX,
 )
 from .entity import MusicAssistantEntity
 from .helpers import catch_musicassistant_error
@@ -70,6 +69,8 @@ from .schemas import QUEUE_DETAILS_SCHEMA, queue_item_dict_from_mass_item
 if TYPE_CHECKING:
     from music_assistant_client.client import MusicAssistantClient
     from music_assistant_models.player import Player
+
+SOUND_MODES_TRANSLATION_KEY_PREFIX = "player_sound_mode."
 
 SUPPORTED_FEATURES_BASE = (
     MediaPlayerEntityFeature.STOP
@@ -132,7 +133,7 @@ class MusicAssistantPlayer(MusicAssistantEntity, MediaPlayerEntity):
     _attr_name = None
     _attr_media_image_remotely_accessible = True
     _attr_media_content_type = HAMediaType.MUSIC
-    _attr_translation_key = "ma_media_player"
+    _attr_translation_key = "media_player"
 
     def __init__(self, mass: MusicAssistantClient, player_id: str) -> None:
         """Initialize MediaPlayer entity."""
@@ -221,28 +222,38 @@ class MusicAssistantPlayer(MusicAssistantEntity, MediaPlayerEntity):
         self._source_list_mapping = source_mappings
         self._attr_source = active_source_name
 
-        # same for sound modes
+        # translation_key, sound_mode.id
         sound_mode_mappings: dict[str, str] = {}
+        sound_mode_unknown_count = 0
+        active_sound_mode_translation_key: str | None = None
         for sound_mode in player.sound_mode_list:
             if sound_mode.passive:
                 # ignore passive sound_mode because HA does not differentiate between
                 # active and passive sound mode
                 continue
-            if (
-                sound_mode.translation_key is None
-                or SOUND_MODES_TRANSLATION_KEY_PREFIX not in sound_mode.translation_key
+            if sound_mode.translation_key is None:
+                # map these too unknown, as we otherwise can't map all sound modes
+                # this branch is considered highly unlikely, as this needs a bug in the
+                # MA models, which are used during deserialization
+                translation_key = f"unknown_sound_mode_{sound_mode_unknown_count}"
+                sound_mode_unknown_count += 1
+            elif sound_mode.translation_key.startswith(
+                SOUND_MODES_TRANSLATION_KEY_PREFIX
             ):
-                # MA's data class initializes the translation_key to
-                # player_sound_mode.<id> automatically if it is not given, so we should
-                # always have a non None value
-                continue
-            translation_key = sound_mode.translation_key[
-                len(SOUND_MODES_TRANSLATION_KEY_PREFIX) :
-            ]
+                # this is preferred/ expectation and the default based on MA's dataclass post init
+                translation_key = sound_mode.translation_key[
+                    len(SOUND_MODES_TRANSLATION_KEY_PREFIX) :
+                ]
+            else:
+                # here, the key was actively set by the provider without the prefix
+                translation_key = sound_mode.translation_key
+            if player.active_sound_mode == sound_mode.id:
+                active_sound_mode_translation_key = translation_key
             sound_mode_mappings[translation_key] = sound_mode.id
+
         self._attr_sound_mode_list = list(sound_mode_mappings.keys())
         self._sound_mode_list_mapping = sound_mode_mappings
-        self._attr_sound_mode = player.active_sound_mode
+        self._attr_sound_mode = active_sound_mode_translation_key
 
         group_members: list[str] = []
         if player.group_members:

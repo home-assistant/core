@@ -82,4 +82,3 @@ ATTR_CONF_EXPOSE_PLAYER_TO_HA = "expose_player_to_ha"
 LOGGER = logging.getLogger(__package__)
 
 PLAYER_OPTIONS_TRANSLATION_KEY_PREFIX = "player_options."
-SOUND_MODES_TRANSLATION_KEY_PREFIX = "player_sound_mode."

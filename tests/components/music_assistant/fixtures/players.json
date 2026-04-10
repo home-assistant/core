@@ -153,6 +153,7 @@
         }
       ],
       "active_source": "00:00:00:00:00:01",
+      "active_sound_mode": "munich",
       "active_group": null,
       "current_media": null,
       "synced_to": null,
@@ -197,16 +198,22 @@
       ],
       "sound_mode_list": [
         {
-          "id": "munich",
+          "id": "munich_id",
           "name": "Munich",
           "passive": false,
-          "translation_key": "player_sound_mode.munich"
+          "translation_key": "player_sound_mode.munich_translation"
         },
         {
-          "id": "vienna",
+          "id": "vienna_id",
           "name": "Vienna",
           "passive": false,
-          "translation_key": "player_sound_mode.vienna"
+          "translation_key": null
+        },
+        {
+          "id": "stuttgart_id",
+          "name": "Stuttgart",
+          "passive": false,
+          "translation_key": "stuttgart_translation"
         }
       ]
     },

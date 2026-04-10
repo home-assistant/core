@@ -665,18 +665,22 @@ async def test_media_player_select_sound_mode_action(
     mass_player_id = "00:00:00:00:00:01"
     state = hass.states.get(entity_id)
     assert state
+
+    # test for sound mode with (normal) translation key and id
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
         SERVICE_SELECT_SOUND_MODE,
         {
             ATTR_ENTITY_ID: entity_id,
-            ATTR_SOUND_MODE: "munich",
+            ATTR_SOUND_MODE: "munich_translation",
         },
         blocking=True,
     )
     assert music_assistant_client.send_command.call_count == 1
     assert music_assistant_client.send_command.call_args == call(
-        "players/cmd/select_sound_mode", player_id=mass_player_id, sound_mode="munich"
+        "players/cmd/select_sound_mode",
+        player_id=mass_player_id,
+        sound_mode="munich_id",
     )
 
 

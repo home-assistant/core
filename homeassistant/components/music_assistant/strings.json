@@ -55,7 +55,7 @@
       }
     },
     "media_player": {
-      "ma_media_player": {
+      "media_player": {
         "state_attributes": {
           "sound_mode": {
             "state": {
