@@ -177,11 +177,7 @@ async def test_cover_state_mapping(
     motor.state = motor_state
 
     # Poke the coordinator so the entity re-reads motor state.
-    coordinator = init_integration.runtime_data
-    if isinstance(coordinator, dict):
-        # Pre-Stage-3 shape; drop once runtime_data is unwrapped.
-        coordinator = coordinator["coordinator"]
-    await coordinator.async_refresh()
+    await init_integration.runtime_data.async_refresh()
     await hass.async_block_till_done()
 
     assert hass.states.get(LIVING_ROOM_ENTITY).state == expected

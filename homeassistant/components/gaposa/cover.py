@@ -43,7 +43,7 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Add cover for passed config_entry in HA."""
-    coordinator: DataUpdateCoordinatorGaposa = config_entry.runtime_data["coordinator"]
+    coordinator: DataUpdateCoordinatorGaposa = config_entry.runtime_data
 
     # Create a set to store the IDs of added entities
     my_entities: dict[str, GaposaCover] = {}

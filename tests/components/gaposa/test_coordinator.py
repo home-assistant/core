@@ -15,16 +15,14 @@ from homeassistant.helpers.update_coordinator import UpdateFailed
 from tests.common import MockConfigEntry
 
 
-def _get_coordinator(entry: MockConfigEntry):
-    """Return the coordinator from runtime_data regardless of shape.
+def _get_coordinator(
+    entry: MockConfigEntry,
+) -> "DataUpdateCoordinatorGaposa":
+    """Return the coordinator stored on ``entry.runtime_data``."""
+    from homeassistant.components.gaposa.coordinator import DataUpdateCoordinatorGaposa
 
-    The current gaposa code wraps the coordinator in a dict; Stage 3
-    unwraps it. Handle both so these tests survive the refactor.
-    """
-    rd = entry.runtime_data
-    if isinstance(rd, dict):
-        return rd["coordinator"]
-    return rd
+    assert isinstance(entry.runtime_data, DataUpdateCoordinatorGaposa)
+    return entry.runtime_data
 
 
 async def test_coordinator_populates_data(
