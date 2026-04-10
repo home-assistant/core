@@ -587,6 +587,8 @@ async def test_get_lock_users_service(
                 "user_type": "unrestricted_user",
                 "credential_rule": "single",
                 "credentials": [],
+                "creator_fabric_index": None,
+                "last_modified_fabric_index": None,
                 "next_user_index": None,
             }
         ],
@@ -745,6 +747,8 @@ async def test_get_lock_users_iterates_with_next_index(
                 "user_type": "unrestricted_user",
                 "credential_rule": "single",
                 "credentials": [],
+                "creator_fabric_index": None,
+                "last_modified_fabric_index": None,
                 "next_user_index": 5,
             },
             {
@@ -755,6 +759,8 @@ async def test_get_lock_users_iterates_with_next_index(
                 "user_type": "unrestricted_user",
                 "credential_rule": "single",
                 "credentials": [],
+                "creator_fabric_index": None,
+                "last_modified_fabric_index": None,
                 "next_user_index": None,
             },
         ],
@@ -889,6 +895,8 @@ async def test_get_lock_users_with_credentials(
                     {"type": "pin", "index": 1},
                     {"type": "pin", "index": 2},
                 ],
+                "creator_fabric_index": None,
+                "last_modified_fabric_index": None,
                 "next_user_index": None,
             }
         ],
@@ -1524,6 +1532,8 @@ async def test_get_lock_credential_status(
     assert result["lock.mock_door_lock"] == {
         "credential_exists": True,
         "user_index": 2,
+        "creator_fabric_index": None,
+        "last_modified_fabric_index": None,
         "next_credential_index": 3,
     }
 
@@ -1571,6 +1581,8 @@ async def test_get_lock_credential_status_empty_slot(
     assert result["lock.mock_door_lock"] == {
         "credential_exists": False,
         "user_index": None,
+        "creator_fabric_index": None,
+        "last_modified_fabric_index": None,
         "next_credential_index": None,
     }
 

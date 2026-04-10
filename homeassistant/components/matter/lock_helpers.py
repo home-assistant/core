@@ -71,6 +71,8 @@ class LockUserData(TypedDict):
     user_type: str
     credential_rule: str
     credentials: list[LockUserCredentialData]
+    creator_fabric_index: int | None
+    last_modified_fabric_index: int | None
     next_user_index: int | None
 
 
@@ -115,6 +117,8 @@ class GetLockCredentialStatusResult(TypedDict):
 
     credential_exists: bool
     user_index: int | None
+    creator_fabric_index: int | None
+    last_modified_fabric_index: int | None
     next_credential_index: int | None
 
 
@@ -214,6 +218,8 @@ def _format_user_response(user_data: Any) -> LockUserData | None:
             _get_attr(user_data, "credentialRule"), "unknown"
         ),
         credentials=credentials,
+        creator_fabric_index=_get_attr(user_data, "creatorFabricIndex"),
+        last_modified_fabric_index=_get_attr(user_data, "lastModifiedFabricIndex"),
         next_user_index=_get_attr(user_data, "nextUserIndex"),
     )
 
@@ -839,5 +845,7 @@ async def get_lock_credential_status(
     return GetLockCredentialStatusResult(
         credential_exists=bool(_get_attr(response, "credentialExists")),
         user_index=_get_attr(response, "userIndex"),
+        creator_fabric_index=_get_attr(response, "creatorFabricIndex"),
+        last_modified_fabric_index=_get_attr(response, "lastModifiedFabricIndex"),
         next_credential_index=_get_attr(response, "nextCredentialIndex"),
     )
