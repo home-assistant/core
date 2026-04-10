@@ -8,6 +8,5 @@
   "loggers": ["homeassistant.components.xthings_cloud"],
   "quality_scale": "bronze",
   "requirements": ["ha-xthings-cloud==1.0.2"],
-  "single_config_entry": true,
-  "version": "1.0.0"
+  "single_config_entry": true
 }

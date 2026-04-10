@@ -13,7 +13,6 @@ from homeassistant.components.xthings_cloud.const import (
     CONF_TOKEN,
     DOMAIN,
 )
-from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
 

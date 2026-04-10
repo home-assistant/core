@@ -2,18 +2,16 @@
 
 from __future__ import annotations
 
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock
 
-import pytest
 
 from homeassistant.components.xthings_cloud.const import (
     CONF_EMAIL,
     CONF_PASSWORD,
-    CONF_REFRESH_TOKEN,
     CONF_TOKEN,
     DOMAIN,
 )
-from homeassistant.config_entries import SOURCE_REAUTH, SOURCE_USER
+from homeassistant.config_entries import SOURCE_USER
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -384,9 +382,7 @@ async def test_2fa_api_error(
         {CONF_EMAIL: MOCK_EMAIL, CONF_PASSWORD: MOCK_PASSWORD},
     )
 
-    mock_api_client.async_login.side_effect = XthingsCloudApiError(
-        "API error", code=0
-    )
+    mock_api_client.async_login.side_effect = XthingsCloudApiError("API error", code=0)
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {"verification_code": "123456"},
