@@ -1014,6 +1014,9 @@
       "power_freeze": {
         "name": "Power freeze"
       },
+      "purify": {
+        "name": "Purify"
+      },
       "rinse_plus": {
         "name": "Rinse plus"
       },
