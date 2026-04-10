@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from collections.abc import Generator
-from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -45,19 +44,6 @@ def mock_config_entry() -> MockConfigEntry:
 
 
 @pytest.fixture
-def mock_usb_device() -> dict[str, Any]:
-    """Return a mock USB device info dict."""
-    return {
-        "device": "/dev/ttyACM0",
-        "vid": 0x155A,
-        "pid": 0x1014,
-        "serial_number": "12345",
-        "manufacturer": "ELDAT",
-        "product": "RX11 USB Transceiver",
-    }
-
-
-@pytest.fixture
 def mock_usb_discovery_info() -> UsbServiceInfo:
     """Return a mock USB discovery info."""
     return UsbServiceInfo(
@@ -68,18 +54,6 @@ def mock_usb_discovery_info() -> UsbServiceInfo:
         manufacturer="ELDAT",
         description="RX11 USB Transceiver",
     )
-
-
-@pytest.fixture
-def mock_serial_port() -> MagicMock:
-    """Return a mock serial port."""
-    port = MagicMock()
-    port.device = "/dev/ttyACM0"
-    port.vid = 0x155A
-    port.pid = 0x1014
-    port.serial_number = "12345"
-    port.manufacturer = "ELDAT"
-    return port
 
 
 @pytest.fixture

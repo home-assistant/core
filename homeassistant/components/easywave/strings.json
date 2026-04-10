@@ -1,7 +1,7 @@
 {
   "config": {
     "abort": {
-      "no_devices_found": "No supported RX11 USB Transceiver was found. Make sure the RX11 is plugged in and recognized by the system.",
+      "no_devices_found": "No serial ports found. Make sure the RX11 USB Transceiver is plugged in and recognized by the system.",
       "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
     },
     "error": {
@@ -12,14 +12,14 @@
         "description": "Detected device:\n**{name} ({serial_number})**\n\nPort: {device}",
         "title": "Set up RX11 USB Transceiver"
       },
-      "detect": {
+      "user": {
         "data": {
-          "device_path": "USB device"
+          "device_path": "[%key:common::config_flow::data::usb_path%]"
         },
         "data_description": {
-          "device_path": "Select the RX11 USB Transceiver to use."
+          "device_path": "The serial port your RX11 USB Transceiver is connected to."
         },
-        "description": "{count} RX11 USB Transceivers found. Select the one to use.",
+        "description": "Select the serial port of the RX11 USB Transceiver.",
         "title": "Select Easywave device"
       }
     }
@@ -33,11 +33,6 @@
           "disconnected": "Not Connected"
         }
       }
-    }
-  },
-  "exceptions": {
-    "cannot_delete_gateway": {
-      "message": "The RX11 USB Transceiver cannot be removed via the device menu. To remove the RX11, please delete the entire Easywave integration via the three-dot menu of the integration entry."
     }
   },
   "issues": {

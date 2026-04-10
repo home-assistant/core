@@ -4,28 +4,19 @@ from __future__ import annotations
 
 from unittest.mock import AsyncMock, MagicMock, patch
 
-import pytest
-
-from homeassistant.components.easywave import (
-    async_remove_config_entry_device,
-    async_setup_entry,
-    async_unload_entry,
-)
+from homeassistant.components.easywave import async_setup_entry, async_unload_entry
 from homeassistant.components.easywave.const import DOMAIN
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
-from homeassistant.helpers import device_registry as dr, issue_registry as ir
+from homeassistant.helpers import issue_registry as ir
 
 from tests.common import MockConfigEntry
 
 
-def _patch_transceiver_and_coordinator(
-    coordinator_setup_return: bool = True,
-) -> tuple:
+def _patch_transceiver_and_coordinator() -> tuple:
     """Return context managers patching RX11Transceiver and EasywaveCoordinator."""
     mock_transceiver = MagicMock()
     mock_coordinator = AsyncMock()
-    mock_coordinator.async_setup = AsyncMock(return_value=coordinator_setup_return)
+    mock_coordinator.async_config_entry_first_refresh = AsyncMock()
     mock_coordinator.async_shutdown = AsyncMock()
 
     transceiver_patch = patch(
@@ -55,7 +46,7 @@ async def test_setup_entry_success(
         result = await async_setup_entry(hass, mock_config_entry)
 
     assert result is True
-    assert mock_coord.async_setup.called
+    assert mock_coord.async_config_entry_first_refresh.called
     assert mock_config_entry.runtime_data.coordinator is mock_coord
 
 
@@ -136,20 +127,6 @@ async def test_setup_entry_no_country(
     assert result is True
 
 
-async def test_setup_entry_coordinator_fails(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry
-) -> None:
-    """Test ConfigEntryNotReady raised when coordinator setup fails."""
-    mock_config_entry.add_to_hass(hass)
-    hass.config.country = "DE"
-
-    t_patch, c_patch, f_patch, _ = _patch_transceiver_and_coordinator(
-        coordinator_setup_return=False
-    )
-    with t_patch, c_patch, f_patch, pytest.raises(ConfigEntryNotReady):
-        await async_setup_entry(hass, mock_config_entry)
-
-
 async def test_unload_entry(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> None:
@@ -166,32 +143,3 @@ async def test_unload_entry(
 
     assert result is True
     assert mock_coord.async_shutdown.called
-
-
-async def test_remove_gateway_device_denied(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry
-) -> None:
-    """Test removing the RX11 gateway device raises error."""
-    gateway_id = (DOMAIN, f"{mock_config_entry.entry_id}_gateway")
-    device_entry = MagicMock(spec=dr.DeviceEntry)
-    device_entry.identifiers = {gateway_id}
-
-    with pytest.raises(HomeAssistantError) as exc_info:
-        await async_remove_config_entry_device(hass, mock_config_entry, device_entry)
-
-    assert exc_info.value.translation_domain == DOMAIN
-    assert exc_info.value.translation_key == "cannot_delete_gateway"
-
-
-async def test_remove_non_gateway_device_allowed(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry
-) -> None:
-    """Test removing a non-gateway device is allowed."""
-    device_entry = MagicMock(spec=dr.DeviceEntry)
-    device_entry.identifiers = {(DOMAIN, "some_other_device")}
-
-    result = await async_remove_config_entry_device(
-        hass, mock_config_entry, device_entry
-    )
-
-    assert result is True

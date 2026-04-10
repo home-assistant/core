@@ -9,12 +9,6 @@ import serial.tools.list_ports
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.helpers.selector import (
-    SelectOptionDict,
-    SelectSelector,
-    SelectSelectorConfig,
-    SelectSelectorMode,
-)
 from homeassistant.helpers.service_info.usb import UsbServiceInfo
 
 from .const import (
@@ -25,42 +19,10 @@ from .const import (
     CONF_USB_SERIAL_NUMBER,
     CONF_USB_VID,
     DOMAIN,
-    SUPPORTED_USB_IDS,
     USB_DEVICE_NAMES,
 )
 
 _LOGGER = logging.getLogger(__name__)
-
-
-def _find_easywave_devices() -> list[dict[str, Any]]:
-    """Scan serial ports and return info dicts for all supported Easywave sticks.
-
-    Runs in an executor (blocking I/O).
-    """
-    devices: list[dict[str, Any]] = []
-    try:
-        for port in serial.tools.list_ports.comports():
-            if (port.vid, port.pid) in SUPPORTED_USB_IDS:
-                device_entry = USB_DEVICE_NAMES.get((port.vid, port.pid))
-                mfr = device_entry["manufacturer"] if device_entry else "ELDAT EaS GmbH"
-                prod = (
-                    device_entry["product"]
-                    if device_entry
-                    else "Unknown Easywave Device"
-                )
-                devices.append(
-                    {
-                        "device": port.device,
-                        "vid": port.vid,
-                        "pid": port.pid,
-                        "serial_number": port.serial_number or "unknown",
-                        "manufacturer": port.manufacturer or mfr,
-                        "product": prod,
-                    }
-                )
-    except serial.SerialException, OSError:
-        _LOGGER.exception("Error scanning for Easywave USB devices")
-    return devices
 
 
 class EasywaveConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -73,80 +35,55 @@ class EasywaveConfigFlow(ConfigFlow, domain=DOMAIN):
         self._device: dict[str, Any] = {}
 
     # ------------------------------------------------------------------
-    # Entry point: start auto-detection immediately
+    # Manual setup: list all serial ports
     # ------------------------------------------------------------------
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Start auto-detection."""
-        return await self.async_step_detect()
-
-    # ------------------------------------------------------------------
-    # Auto-detection step
-    # ------------------------------------------------------------------
-
-    async def async_step_detect(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Scan for connected Easywave sticks and proceed to confirmation."""
-        devices = await self.hass.async_add_executor_job(_find_easywave_devices)
-
-        if not devices:
-            return self.async_abort(reason="no_devices_found")
-
-        # Auto-select when exactly one device is present.
-        if len(devices) == 1:
-            self._device = devices[0]
-            return await self.async_step_confirm()
-
-        # Multiple devices: let the user pick one.
-        options = [
-            SelectOptionDict(
-                value=d["device"],
-                label=f"{d['product']} — {d['device']} ({d['serial_number']})",
+        """Show available serial ports and let the user pick one."""
+        errors: dict[str, str] = {}
+        ports = await self.hass.async_add_executor_job(serial.tools.list_ports.comports)
+        port_list = {
+            p.device: (
+                f"{p.device}"
+                f"{f', s/n: {p.serial_number}' if p.serial_number else ''}"
+                f"{f' - {p.manufacturer}' if p.manufacturer else ''}"
             )
-            for d in devices
-        ]
+            for p in ports
+        }
+
+        if not port_list:
+            return self.async_abort(reason="no_devices_found")
 
         if user_input is not None:
             selected_path = user_input[CONF_DEVICE_PATH]
-            selected_device = next(
-                (d for d in devices if d["device"] == selected_path),
+            # Find the matching port to extract USB metadata
+            port = next(
+                (p for p in ports if p.device == selected_path),
                 None,
             )
-            if selected_device is None:
-                return self.async_show_form(
-                    step_id="detect",
-                    data_schema=vol.Schema(
-                        {
-                            vol.Required(CONF_DEVICE_PATH): SelectSelector(
-                                SelectSelectorConfig(
-                                    options=options,
-                                    mode=SelectSelectorMode.LIST,
-                                )
-                            )
-                        }
+            if port is None:
+                errors["base"] = "device_no_longer_available"
+            else:
+                self._device = {
+                    "device": port.device,
+                    "vid": port.vid,
+                    "pid": port.pid,
+                    "serial_number": port.serial_number or "unknown",
+                    "manufacturer": port.manufacturer or "unknown",
+                    "product": (
+                        USB_DEVICE_NAMES[(port.vid, port.pid)]["product"]
+                        if (port.vid, port.pid) in USB_DEVICE_NAMES
+                        else port.product or "Easywave Device"
                     ),
-                    description_placeholders={"count": str(len(devices))},
-                    errors={"base": "device_no_longer_available"},
-                )
-            self._device = selected_device
-            return await self.async_step_confirm()
+                }
+                return await self.async_step_confirm()
 
         return self.async_show_form(
-            step_id="detect",
-            data_schema=vol.Schema(
-                {
-                    vol.Required(CONF_DEVICE_PATH): SelectSelector(
-                        SelectSelectorConfig(
-                            options=options,
-                            mode=SelectSelectorMode.LIST,
-                        )
-                    )
-                }
-            ),
-            description_placeholders={"count": str(len(devices))},
+            step_id="user",
+            data_schema=vol.Schema({vol.Required(CONF_DEVICE_PATH): vol.In(port_list)}),
+            errors=errors,
         )
 
     # ------------------------------------------------------------------

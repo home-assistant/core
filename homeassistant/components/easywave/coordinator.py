@@ -5,7 +5,6 @@ from __future__ import annotations
 import logging
 from typing import TYPE_CHECKING, Any
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -27,7 +26,7 @@ class EasywaveCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self,
         hass: HomeAssistant,
         transceiver: RX11Transceiver,
-        config_entry: ConfigEntry,
+        config_entry: EasywaveConfigEntry,
     ) -> None:
         """Initialize coordinator."""
         super().__init__(
@@ -40,19 +39,17 @@ class EasywaveCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self.transceiver = transceiver
         self.is_offline = not transceiver.is_connected
 
-    async def async_setup(self) -> bool:
-        """Setup coordinator and attempt initial data load.
+    async def _async_setup(self) -> None:
+        """Set up coordinator and attempt initial connection.
 
-        Returns True if setup successful (even in offline mode),
-        False if initialization failed completely.
+        Called by DataUpdateCoordinator before the first update.
+        Raises UpdateFailed if initialization fails completely.
         """
         try:
-            # Try initial connection
             connected = await self.transceiver.connect()
             self.is_offline = not connected
 
             if connected:
-                # Register disconnect callback for immediate offline detection
                 self.transceiver.set_disconnect_callback(
                     self._on_transceiver_disconnect
                 )
@@ -62,11 +59,7 @@ class EasywaveCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                     "Entities will be unavailable until device connects"
                 )
         except (OSError, TimeoutError) as err:
-            _LOGGER.error("Setup failed: %s", err)
-            return False
-        else:
-            # Always return True — offline mode is OK for setup
-            return True
+            raise UpdateFailed(f"Setup failed: {err}") from err
 
     def _on_transceiver_disconnect(self) -> None:
         """Called from transceiver when connection is lost.

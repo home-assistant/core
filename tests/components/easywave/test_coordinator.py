@@ -77,7 +77,7 @@ def test_coordinator_init_offline(
     assert coord.is_offline is True
 
 
-# ── async_setup ─────────────────────────────────────────────────────────────
+# ── _async_setup ────────────────────────────────────────────────────────────
 
 
 async def test_async_setup_connected(
@@ -85,9 +85,8 @@ async def test_async_setup_connected(
     mock_transceiver: MagicMock,
 ) -> None:
     """Test successful setup when transceiver connects."""
-    result = await coordinator.async_setup()
+    await coordinator._async_setup()
 
-    assert result is True
     assert coordinator.is_offline is False
     mock_transceiver.connect.assert_awaited_once()
     mock_transceiver.set_disconnect_callback.assert_called_once()
@@ -100,9 +99,8 @@ async def test_async_setup_offline(
     """Test setup enters offline mode when transceiver cannot connect."""
     mock_transceiver.connect = AsyncMock(return_value=False)
 
-    result = await coordinator.async_setup()
+    await coordinator._async_setup()
 
-    assert result is True
     assert coordinator.is_offline is True
     mock_transceiver.set_disconnect_callback.assert_not_called()
 
@@ -111,12 +109,11 @@ async def test_async_setup_exception(
     coordinator: EasywaveCoordinator,
     mock_transceiver: MagicMock,
 ) -> None:
-    """Test setup returns False on exception."""
+    """Test setup raises UpdateFailed on exception."""
     mock_transceiver.connect = AsyncMock(side_effect=OSError("port error"))
 
-    result = await coordinator.async_setup()
-
-    assert result is False
+    with pytest.raises(UpdateFailed):
+        await coordinator._async_setup()
 
 
 # ── disconnect handling ─────────────────────────────────────────────────────

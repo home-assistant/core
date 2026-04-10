@@ -8,8 +8,7 @@ import logging
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
-from homeassistant.helpers import device_registry as dr, issue_registry as ir
+from homeassistant.helpers import issue_registry as ir
 
 from .const import (
     CONF_DEVICE_PATH,
@@ -29,8 +28,8 @@ class EasywaveRuntimeData:
     """Runtime data for the Easywave integration."""
 
     coordinator: EasywaveCoordinator
-    frequency: str
-    country: str
+    frequency: str | None
+    country: str | None
 
 
 type EasywaveConfigEntry = ConfigEntry[EasywaveRuntimeData]
@@ -84,19 +83,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: EasywaveConfigEntry) -> 
     # Create coordinator for managing connection lifecycle & offline mode
     coordinator = EasywaveCoordinator(hass, transceiver, entry)
 
-    # Attempt initial setup (may succeed in offline mode)
-    if not await coordinator.async_setup():
-        raise ConfigEntryNotReady("Failed to initialize coordinator")
-
-    # Perform initial refresh so coordinator.data is populated and
-    # reconnect polling starts before platforms are set up.
+    # _async_setup + first data refresh; raises ConfigEntryNotReady on failure
     await coordinator.async_config_entry_first_refresh()
 
     # Set runtime data for the integration
     entry.runtime_data = EasywaveRuntimeData(
         coordinator=coordinator,
-        frequency=frequency or "unknown",
-        country=country_code or "unknown",
+        frequency=frequency,
+        country=country_code,
     )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
@@ -110,20 +104,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: EasywaveConfigEntry) ->
     if not unload_ok:
         return False
 
-    if hasattr(entry, "runtime_data") and entry.runtime_data:
-        await entry.runtime_data.coordinator.async_shutdown()
+    await entry.runtime_data.coordinator.async_shutdown()
 
-    return True
-
-
-async def async_remove_config_entry_device(
-    hass: HomeAssistant, config_entry: ConfigEntry, device_entry: dr.DeviceEntry
-) -> bool:
-    """Allow removing devices except the RX11 gateway."""
-    gateway_identifier = (DOMAIN, f"{config_entry.entry_id}_gateway")
-    if gateway_identifier in device_entry.identifiers:
-        raise HomeAssistantError(
-            translation_domain=DOMAIN,
-            translation_key="cannot_delete_gateway",
-        )
     return True
