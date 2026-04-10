@@ -594,7 +594,7 @@ async def test_entity_assumed_and_available(
 
 
 async def test_stale_device_entries_removed(
-    hass: HomeAssistant, config_entry: MockConfigEntry, client: AsyncMock
+    hass: HomeAssistant, config_entry: MockConfigEntry, client: AqualinkClient
 ) -> None:
     """Test that old per-entity device registry entries are removed on setup."""
     config_entry.add_to_hass(hass)
