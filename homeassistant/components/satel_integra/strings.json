@@ -3,7 +3,7 @@
     "code": "Access code",
     "code_input_description": "Code to toggle switchable outputs",
     "encryption_key": "Integration encryption key",
-    "encryption_key_description": "If the alarm panel requires encryption, enter the integration encryption key here. If the alarm panel does not require encryption, this can be left blank."
+    "encryption_key_description": "If the alarm panel requires encryption, enter the integration encryption key here."
   },
   "config": {
     "abort": {
