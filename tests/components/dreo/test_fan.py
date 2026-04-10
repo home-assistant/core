@@ -142,7 +142,9 @@ async def test_fan_turn_on_service(hass: HomeAssistant) -> None:
             )
             await hass.async_block_till_done()
 
-    mock_client.update_status.assert_called_with("test-fan-456", **{FIELD_POWER_ON: True})
+    mock_client.update_status.assert_called_with(
+        "test-fan-456", **{FIELD_POWER_ON: True}
+    )
     state = hass.states.get("fan.bedroom_fan")
     assert state is not None
     assert state.state == STATE_ON
@@ -190,8 +192,77 @@ async def test_fan_turn_off_service(hass: HomeAssistant) -> None:
             )
             await hass.async_block_till_done()
 
-    mock_client.update_status.assert_called_with("test-fan-789", **{FIELD_POWER_ON: False})
+    mock_client.update_status.assert_called_with(
+        "test-fan-789", **{FIELD_POWER_ON: False}
+    )
     state = hass.states.get("fan.kitchen_fan")
+    assert state is not None
+    assert state.state == STATE_OFF
+
+
+async def test_fan_consecutive_power_commands_refresh_immediately(
+    hass: HomeAssistant,
+) -> None:
+    """Test consecutive power commands update the UI without debounce delay."""
+    with patch("homeassistant.components.dreo.DreoClient") as mock_client_class:
+        mock_client = mock_client_class.return_value
+        mock_client.login = MagicMock()
+        mock_client.get_devices.return_value = [
+            {
+                "deviceSn": "test-fan-immediate-refresh",
+                "model": "DR-HTF001S",
+                "deviceName": "Immediate Refresh Fan",
+                "deviceType": "fan",
+                "config": {
+                    "preset_modes": ["Sleep", "Auto", "Natural", "Normal"],
+                    "speed_range": [1, 6],
+                },
+            }
+        ]
+        mock_client.get_status.side_effect = [
+            {
+                FIELD_POWER_ON: False,
+                FIELD_CONNECTED: True,
+            },
+            {
+                FIELD_POWER_ON: True,
+                FIELD_CONNECTED: True,
+                FIELD_SPEED: 1,
+            },
+            {
+                FIELD_POWER_ON: False,
+                FIELD_CONNECTED: True,
+                FIELD_SPEED: 1,
+            },
+        ]
+        mock_client.update_status = MagicMock()
+
+        with patch("homeassistant.components.dreo.entity.AFTER_COMMAND_REFRESH", 0):
+            config_entry = await init_integration(hass)
+            await hass.config_entries.async_setup(config_entry.entry_id)
+            await hass.async_block_till_done()
+
+            await hass.services.async_call(
+                FAN_DOMAIN,
+                SERVICE_TURN_ON,
+                {ATTR_ENTITY_ID: "fan.immediate_refresh_fan"},
+                blocking=True,
+            )
+            await hass.async_block_till_done()
+
+            state = hass.states.get("fan.immediate_refresh_fan")
+            assert state is not None
+            assert state.state == STATE_ON
+
+            await hass.services.async_call(
+                FAN_DOMAIN,
+                SERVICE_TURN_OFF,
+                {ATTR_ENTITY_ID: "fan.immediate_refresh_fan"},
+                blocking=True,
+            )
+            await hass.async_block_till_done()
+
+    state = hass.states.get("fan.immediate_refresh_fan")
     assert state is not None
     assert state.state == STATE_OFF
 
@@ -292,7 +363,9 @@ async def test_fan_set_preset_mode_service(hass: HomeAssistant) -> None:
             )
             await hass.async_block_till_done()
 
-    mock_client.update_status.assert_called_with("test-fan-def", **{FIELD_MODE: "Sleep"})
+    mock_client.update_status.assert_called_with(
+        "test-fan-def", **{FIELD_MODE: "Sleep"}
+    )
     state = hass.states.get("fan.garage_fan")
     assert state is not None
     assert state.attributes[ATTR_PRESET_MODE] == "Sleep"
@@ -342,7 +415,9 @@ async def test_fan_oscillate_service(hass: HomeAssistant) -> None:
             )
             await hass.async_block_till_done()
 
-    mock_client.update_status.assert_called_with("test-fan-ghi", **{FIELD_OSCILLATE: True})
+    mock_client.update_status.assert_called_with(
+        "test-fan-ghi", **{FIELD_OSCILLATE: True}
+    )
     state = hass.states.get("fan.patio_fan")
     assert state is not None
     assert state.attributes[ATTR_OSCILLATING] is True
@@ -600,7 +675,9 @@ async def test_fan_setup_missing_coordinator(hass: HomeAssistant) -> None:
         await async_setup_entry(
             hass,
             config_entry,
-            lambda entities, update_before_add=False, *, config_subentry_id=None: added_entities.extend(entities),
+            lambda entities, update_before_add=False, *, config_subentry_id=None: (
+                added_entities.extend(entities)
+            ),
         )
 
         assert added_entities == []

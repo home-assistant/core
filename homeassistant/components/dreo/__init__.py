@@ -95,7 +95,9 @@ async def async_setup_device_coordinator(
     if device_id in coordinators:
         return
 
-    coordinator = DreoDataUpdateCoordinator(hass, config_entry, client, device, model_config)
+    coordinator = DreoDataUpdateCoordinator(
+        hass, config_entry, client, device, model_config
+    )
     await coordinator.async_refresh()
     coordinators[device_id] = coordinator
 

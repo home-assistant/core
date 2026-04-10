@@ -38,7 +38,8 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Fans from a config entry."""
     async_add_entities(
-        DreoFan(coordinator) for coordinator in config_entry.runtime_data.coordinators.values()
+        DreoFan(coordinator)
+        for coordinator in config_entry.runtime_data.coordinators.values()
     )
 
 
@@ -121,7 +122,9 @@ class DreoFan(DreoEntity, FanEntity):
 
         if percentage is not None and self._speed_values:
             speed = percentage_to_ordered_list_item(self._speed_values, percentage)
-            if speed != percentage_to_ordered_list_item(self._speed_values, self.percentage or 0):
+            if speed != percentage_to_ordered_list_item(
+                self._speed_values, self.percentage or 0
+            ):
                 command_params[FIELD_SPEED] = speed
 
         if preset_mode is not None and preset_mode != self.preset_mode:
@@ -164,7 +167,9 @@ class DreoFan(DreoEntity, FanEntity):
 
         if self._speed_values:
             speed = percentage_to_ordered_list_item(self._speed_values, percentage)
-            if speed != percentage_to_ordered_list_item(self._speed_values, self.percentage or 0):
+            if speed != percentage_to_ordered_list_item(
+                self._speed_values, self.percentage or 0
+            ):
                 command_params[FIELD_SPEED] = speed
 
         if not command_params:

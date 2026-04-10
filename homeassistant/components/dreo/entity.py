@@ -44,7 +44,9 @@ class DreoEntity(CoordinatorEntity[DreoDataUpdateCoordinator]):
             hw_version=device.get("mcuFirmwareVersion"),
         )
 
-    async def async_send_command(self, error_translation_key: str, **kwargs: Any) -> None:
+    async def async_send_command(
+        self, error_translation_key: str, **kwargs: Any
+    ) -> None:
         """Call a device command and handle errors."""
 
         try:
@@ -62,4 +64,4 @@ class DreoEntity(CoordinatorEntity[DreoDataUpdateCoordinator]):
             ) from ex
 
         await asyncio.sleep(AFTER_COMMAND_REFRESH)
-        await self.coordinator.async_request_refresh()
+        await self.coordinator.async_refresh()
