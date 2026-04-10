@@ -307,11 +307,45 @@ async def async_service_start_selected_program(call: ServiceCall) -> None:
             translation_domain=DOMAIN,
             translation_key="no_program_to_start",
         )
-
     program = program_obj.key
-    options_dict = {option.key: option for option in program_obj.options or []}
+
+    # Fetch the writable option schema for this program on this appliance.
+    # Only options present in this response are accepted by PUT /programs/active.
+    try:
+        available_program = await client.get_available_program(
+            ha_id, program_key=program
+        )
+    except HomeConnectError as err:
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="fetch_program_error",
+            translation_placeholders=get_dict_from_home_connect_error(err),
+        ) from err
+
+    writable_keys = {opt.key for opt in available_program.options or []}
+
+    # Start from the values reported by selected/active, but keep only those
+    # that are actually writable for this (appliance, program) pair.
+    options_dict = {
+        option.key: option
+        for option in program_obj.options or []
+        if option.key in writable_keys
+    }
+
+    # User-provided overrides from the service call. Validate against the
+    # writable schema so misconfigurations fail fast with a clear message
+    # instead of being rejected by the API.
     for option, value in data.items():
         option_key = PROGRAM_OPTIONS[option][0]
+        if option_key not in writable_keys:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="start_program",
+                translation_placeholders={
+                    "program": program,
+                    "error": f"Option {option_key} is not writable for this program",
+                },
+            )
         options_dict[option_key] = Option(option_key, value)
 
     try:
@@ -320,6 +354,7 @@ async def async_service_start_selected_program(call: ServiceCall) -> None:
             program_key=program,
             options=list(options_dict.values()) if options_dict else None,
         )
+        
     except HomeConnectError as err:
         raise HomeAssistantError(
             translation_domain=DOMAIN,
@@ -329,7 +364,6 @@ async def async_service_start_selected_program(call: ServiceCall) -> None:
                 **get_dict_from_home_connect_error(err),
             },
         ) from err
-
 
 @callback
 def async_setup_services(hass: HomeAssistant) -> None:
