@@ -57,6 +57,8 @@ async def async_setup_entry(
 class ZWaveMeRGB(ZWaveMeEntity, LightEntity):
     """Representation of a ZWaveMe light."""
 
+    _attr_supported_features = LightEntityFeature.TRANSITION
+
     def __init__(
         self,
         controller: ZWaveMeController,
@@ -69,7 +71,6 @@ class ZWaveMeRGB(ZWaveMeEntity, LightEntity):
         else:
             self._attr_color_mode = ColorMode.BRIGHTNESS
         self._attr_supported_color_modes: set[ColorMode] = {self._attr_color_mode}
-        self._attr_supported_features = LightEntityFeature.TRANSITION
 
     def turn_off(self, **kwargs: Any) -> None:
         """Turn the device on."""
@@ -81,33 +82,34 @@ class ZWaveMeRGB(ZWaveMeEntity, LightEntity):
         brightness = kwargs.get(ATTR_BRIGHTNESS)
         transition: float | None = kwargs.get(ATTR_TRANSITION)
 
-        commandId = "exact"
-        commandArgs: dict[str, str] = {}
+        command_id = "exact"
+        command_args: dict[str, str] = {}
 
         # set color levels
         if color is not None:
             if not any(color):
                 color = (255, 255, 255)
-            for colorId, colorVal in zip(("red", "green", "blue"), color, strict=True):
-                commandArgs[colorId] = str(colorVal)
+            command_args.update(
+                {"red": str(color[0]), "green": str(color[1]), "blue": str(color[2])}
+            )
         elif brightness is not None:
-            commandArgs["level"] = str(round(brightness / 2.55))
+            command_args["level"] = str(round(brightness / 2.55))
         elif transition is not None:
-            commandArgs["level"] = "100"
+            command_args["level"] = "100"
         else:
-            commandId = "on"
+            command_id = "on"
 
         if transition is not None:
-            commandId = "exactSmooth"
+            command_id = "exactSmooth"
             if transition < 127:
                 duration = round(transition)
             else:
                 duration = min(127, round((transition) / 60)) + 127
-            commandArgs["duration"] = str(duration)
+            command_args["duration"] = str(duration)
 
-        cmd = f"{commandId}"
-        if commandArgs:
-            cmd = f"{commandId}?{'&'.join(f'{argId}={argVal}' for argId, argVal in commandArgs.items())}"
+        cmd = command_id
+        if command_args:
+            cmd = f"{command_id}?{'&'.join(f'{argId}={argVal}' for argId, argVal in command_args.items())}"
         self.controller.zwave_api.send_command(self.device.id, cmd)
 
     @property
