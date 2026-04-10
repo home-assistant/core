@@ -1,5 +1,6 @@
 """Test the Anthropic config flow."""
 
+import datetime
 from unittest.mock import AsyncMock, patch
 
 from anthropic import (
@@ -12,6 +13,7 @@ from anthropic import (
     NotFoundError,
     types,
 )
+from anthropic.types import ModelInfo
 from httpx import URL, Request, Response
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -366,44 +368,10 @@ async def test_model_list(
     assert options["data_schema"].schema["chat_model"].config["options"] == snapshot
 
 
-async def test_model_list_error(
-    hass: HomeAssistant, mock_config_entry, mock_init_component
-) -> None:
-    """Test exception handling during fetching the list of models."""
-    subentry = next(iter(mock_config_entry.subentries.values()))
-    options_flow = await mock_config_entry.start_subentry_reconfigure_flow(
-        hass, subentry.subentry_id
-    )
-
-    # Configure initial step
-    with patch(
-        "homeassistant.components.anthropic.config_flow.anthropic.resources.models.AsyncModels.list",
-        new_callable=AsyncMock,
-        side_effect=InternalServerError(
-            message=None,
-            response=Response(
-                status_code=500,
-                request=Request(method="POST", url=URL()),
-            ),
-            body=None,
-        ),
-    ):
-        options = await hass.config_entries.subentries.async_configure(
-            options_flow["flow_id"],
-            {
-                "prompt": "You are a helpful assistant",
-                "recommended": False,
-            },
-        )
-    assert options["type"] is FlowResultType.FORM
-    assert options["step_id"] == "advanced"
-    assert options["data_schema"].schema["chat_model"].config["options"] == []
-
-
 async def test_invalid_model(
     hass: HomeAssistant, mock_config_entry, mock_init_component
 ) -> None:
-    """Test subentry error on invalid model."""
+    """Test exceptions during fetching model info."""
     options = await hass.config_entries.subentries.async_init(
         (mock_config_entry.entry_id, "conversation"),
         context={"source": config_entries.SOURCE_USER},
@@ -421,7 +389,30 @@ async def test_invalid_model(
     assert options["type"] is FlowResultType.FORM
     assert options["step_id"] == "advanced"
 
-    # Configure advanced step
+    # Configure advanced step but with api error
+    with patch(
+        "homeassistant.components.anthropic.config_flow.anthropic.resources.models.AsyncModels.retrieve",
+        new_callable=AsyncMock,
+        side_effect=InternalServerError(
+            message="Mock server error",
+            response=Response(
+                status_code=500,
+                request=Request(method="POST", url=URL()),
+            ),
+            body=None,
+        ),
+    ):
+        options = await hass.config_entries.subentries.async_configure(
+            options["flow_id"],
+            {
+                CONF_CHAT_MODEL: "invalid-model-2-0",
+            },
+        )
+    assert options["type"] is FlowResultType.FORM
+    assert options["errors"] == {"chat_model": "api_error"}
+    assert options["description_placeholders"] == {"message": "Mock server error"}
+
+    # Try again
     with patch(
         "homeassistant.components.anthropic.config_flow.anthropic.resources.models.AsyncModels.retrieve",
         new_callable=AsyncMock,
@@ -450,12 +441,22 @@ async def test_invalid_model(
     assert options["errors"] == {"chat_model": "model_not_found"}
 
     # Try again with a valid model
-    options = await hass.config_entries.subentries.async_configure(
-        options["flow_id"],
-        {
-            CONF_CHAT_MODEL: "claude-sonnet-4-5",
-        },
-    )
+    with patch(
+        "homeassistant.components.anthropic.config_flow.anthropic.resources.models.AsyncModels.retrieve",
+        new_callable=AsyncMock,
+        return_value=ModelInfo(
+            type="model",
+            id="valid-model-4-5",
+            created_at=datetime.datetime(1970, 1, 1, tzinfo=datetime.UTC),
+            display_name="Valid Model 4-5",
+        ),
+    ):
+        options = await hass.config_entries.subentries.async_configure(
+            options["flow_id"],
+            {
+                CONF_CHAT_MODEL: "valid-model-4-5",
+            },
+        )
 
     assert options["type"] is FlowResultType.FORM
     assert not options["errors"]
@@ -467,7 +468,7 @@ async def test_invalid_model(
     )
 
     assert options["type"] is FlowResultType.CREATE_ENTRY
-    assert options["data"][CONF_CHAT_MODEL] == "claude-sonnet-4-5"
+    assert options["data"][CONF_CHAT_MODEL] == "valid-model-4-5"
 
 
 @pytest.mark.parametrize(

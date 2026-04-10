@@ -105,22 +105,6 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> None:
     await client.models.list(timeout=10.0)
 
 
-async def get_model_list(client: anthropic.AsyncAnthropic) -> list[SelectOptionDict]:
-    """Get list of available models."""
-    try:
-        models = (await client.models.list()).data
-    except anthropic.AnthropicError:
-        models = []
-    _LOGGER.debug("Available models: %s", models)
-    return [
-        SelectOptionDict(
-            label=model_info.display_name,
-            value=model_alias(model_info.id),
-        )
-        for model_info in models
-    ]
-
-
 class AnthropicConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Anthropic."""
 
@@ -331,15 +315,14 @@ class ConversationSubentryFlowHandler(ConfigSubentryFlow):
     ) -> SubentryFlowResult:
         """Manage advanced options."""
         errors: dict[str, str] = {}
+        description_placeholders: dict[str, str] = {}
 
         step_schema: VolDictType = {
             vol.Optional(
                 CONF_CHAT_MODEL,
                 default=DEFAULT[CONF_CHAT_MODEL],
             ): SelectSelector(
-                SelectSelectorConfig(
-                    options=await self._get_model_list(), custom_value=True
-                )
+                SelectSelectorConfig(options=self._get_model_list(), custom_value=True)
             ),
             vol.Optional(
                 CONF_MAX_TOKENS,
@@ -373,8 +356,13 @@ class ConversationSubentryFlowHandler(ConfigSubentryFlow):
                     self.model_info = await client.models.retrieve(
                         self.options[CONF_CHAT_MODEL]
                     )
-                except anthropic.AnthropicError:
+                except anthropic.NotFoundError:
                     errors[CONF_CHAT_MODEL] = "model_not_found"
+                except anthropic.AnthropicError as err:
+                    errors[CONF_CHAT_MODEL] = "api_error"
+                    description_placeholders["message"] = (
+                        err.message if isinstance(err, anthropic.APIError) else str(err)
+                    )
 
             if not errors:
                 return await self.async_step_model()
@@ -385,6 +373,7 @@ class ConversationSubentryFlowHandler(ConfigSubentryFlow):
                 vol.Schema(step_schema), self.options
             ),
             errors=errors,
+            description_placeholders=description_placeholders,
         )
 
     async def async_step_model(
@@ -514,11 +503,16 @@ class ConversationSubentryFlowHandler(ConfigSubentryFlow):
             last_step=True,
         )
 
-    async def _get_model_list(self) -> list[SelectOptionDict]:
+    def _get_model_list(self) -> list[SelectOptionDict]:
         """Get list of available models."""
         coordinator = self._get_entry().runtime_data
-        client = coordinator.client
-        return await get_model_list(client)
+        return [
+            SelectOptionDict(
+                label=model_info.display_name,
+                value=model_alias(model_info.id),
+            )
+            for model_info in coordinator.data or []
+        ]
 
     async def _get_location_data(self) -> dict[str, str]:
         """Get approximate location data of the user."""
