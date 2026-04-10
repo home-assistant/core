@@ -129,23 +129,8 @@ async def make_device_data(
             hass, entry, api, device, coordinators_by_id
         )
         devices_data.climates.append((device, coordinator))
-
     if (
-        isinstance(device, Remote | Device)
-        and device.device_type == "Smart Radiator Thermostat"
-    ):
-        coordinator = await coordinator_for_device(
-            hass, entry, api, device, coordinators_by_id
-        )
-        devices_data.climates.append((device, coordinator))
-        devices_data.sensors.append((device, coordinator))
-
-    if (
-        isinstance(device, Device)
-        and (
-            device.device_type.startswith("Plug")
-            or device.device_type in ["Relay Switch 1PM", "Relay Switch 1"]
-        )
+        isinstance(device, Device) and device.device_type.startswith("Plug")
     ) or isinstance(device, Remote):
         coordinator = await coordinator_for_device(
             hass, entry, api, device, coordinators_by_id
@@ -155,14 +140,10 @@ async def make_device_data(
     if isinstance(device, Device) and device.device_type in [
         "Meter",
         "MeterPlus",
-        "WoIOSensor",
-        "Hub 2",
         "MeterPro",
         "MeterPro(CO2)",
         "Relay Switch 1PM",
-        "Plug Mini (US)",
         "Plug Mini (JP)",
-        "Plug Mini (EU)",
     ]:
         coordinator = await coordinator_for_device(
             hass, entry, api, device, coordinators_by_id
@@ -186,7 +167,6 @@ async def make_device_data(
         devices_data.vacuums.append((device, coordinator))
 
     if isinstance(device, Device) and device.device_type in [
-        "Smart Lock",
         "Smart Lock Lite",
         "Smart Lock Pro",
         "Smart Lock Ultra",
@@ -213,27 +193,12 @@ async def make_device_data(
                 devices_data.buttons.append((device, coordinator))
             else:
                 devices_data.switches.append((device, coordinator))
-    if isinstance(device, Device) and device.device_type == "Relay Switch 2PM":
-        coordinator = await coordinator_for_device(
-            hass, entry, api, device, coordinators_by_id
-        )
-        devices_data.sensors.append((device, coordinator))
-        devices_data.switches.append((device, coordinator))
 
     if isinstance(device, Device) and device.device_type.startswith("Air Purifier"):
         coordinator = await coordinator_for_device(
             hass, entry, api, device, coordinators_by_id
         )
         devices_data.fans.append((device, coordinator))
-    if isinstance(device, Device) and device.device_type in [
-        "Motion Sensor",
-        "Contact Sensor",
-    ]:
-        coordinator = await coordinator_for_device(
-            hass, entry, api, device, coordinators_by_id, True
-        )
-        devices_data.sensors.append((device, coordinator))
-        devices_data.binary_sensors.append((device, coordinator))
     if isinstance(device, Device) and device.device_type == "Hub 3":
         coordinator = await coordinator_for_device(
             hass, entry, api, device, coordinators_by_id, True
