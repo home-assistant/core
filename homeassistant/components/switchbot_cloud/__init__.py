@@ -9,12 +9,14 @@ from logging import getLogger
 from aiohttp import web
 from switchbot_api import (
     Device,
+    DeviceSupportMap,
     Remote,
     SwitchBotAPI,
     SwitchBotAuthenticationError,
     SwitchBotConnectionError,
     SwitchBotDeviceOfflineError,
 )
+from switchbot_api.utils import assert_device_is_supported
 
 from homeassistant.components import webhook
 from homeassistant.config_entries import ConfigEntry
@@ -247,20 +249,6 @@ async def make_device_data(
         devices_data.sensors.append((device, coordinator))
 
     if isinstance(device, Device) and device.device_type in [
-        "Battery Circulator Fan",
-        "Standing Fan",
-    ]:
-        coordinator = await coordinator_for_device(
-            hass, entry, api, device, coordinators_by_id
-        )
-        devices_data.fans.append((device, coordinator))
-        devices_data.sensors.append((device, coordinator))
-    if isinstance(device, Device) and device.device_type == "Circulator Fan":
-        coordinator = await coordinator_for_device(
-            hass, entry, api, device, coordinators_by_id
-        )
-        devices_data.fans.append((device, coordinator))
-    if isinstance(device, Device) and device.device_type in [
         "Curtain",
         "Curtain3",
         "Roller Shade",
@@ -316,18 +304,28 @@ async def make_device_data(
         )
         devices_data.binary_sensors.append((device, coordinator))
         devices_data.sensors.append((device, coordinator))
-    if isinstance(device, Device) and device.device_type == "AI Art Frame":
+
+    if assert_device_is_supported(device.device_type):
+        default_config = DeviceSupportMap.get(device.device_type)
+        default_entity_map = default_config["entity_list"]
+        default_webhook_status = default_config["webhook"]
         coordinator = await coordinator_for_device(
-            hass, entry, api, device, coordinators_by_id
+            hass,
+            entry,
+            api,
+            device,
+            coordinators_by_id,
+            manageable_by_webhook=default_webhook_status,
         )
-        devices_data.buttons.append((device, coordinator))
-        devices_data.sensors.append((device, coordinator))
-        devices_data.images.append((device, coordinator))
-    if isinstance(device, Device) and device.device_type == "WeatherStation":
-        coordinator = await coordinator_for_device(
-            hass, entry, api, device, coordinators_by_id
-        )
-        devices_data.sensors.append((device, coordinator))
+        for item in default_entity_map:
+            exist_device_list = getattr(devices_data, str(item.value))
+            # print(exist_device_list)
+            for existed_device in exist_device_list:
+                if device.device_id == existed_device[0].device_id:
+                    return
+            exist_device_list.append((device, coordinator))
+
+        # print("_"*100)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
