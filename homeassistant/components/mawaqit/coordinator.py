@@ -39,19 +39,14 @@ class MosqueCoordinator(DataUpdateCoordinator):
             mosque_data = await mawaqit_wrapper.fetch_mosque_by_id(
                 self.mosque_uuid, token=self.token
             )
-
         except BadCredentialsException as err:
-            _LOGGER.error("Bad credentials: %s", err)
-            # Handle re-authentication if needed
-        except NoMosqueAround as err:
-            _LOGGER.error("No mosque found in the area: %s", err)
-        except NoMosqueFound as err:
-            _LOGGER.error("No mosque found: %s", err)
+            raise UpdateFailed(f"Bad credentials: {err}") from err
+        except (NoMosqueAround, NoMosqueFound) as err:
+            raise UpdateFailed(f"No mosque found: {err}") from err
         except (ConnectionError, TimeoutError) as err:
-            _LOGGER.error("Network-related error: %s", err)
+            raise UpdateFailed(f"Network error: {err}") from err
 
         if not mosque_data:
-            _LOGGER.error("No mosque data found from the API")
             raise UpdateFailed("No mosque data found from the API")
 
         return mosque_data
@@ -98,14 +93,11 @@ class PrayerTimeCoordinator(DataUpdateCoordinator):
                 self.last_fetch = now
 
             except BadCredentialsException as err:
-                _LOGGER.error("Bad credentials: %s", err)
-                # Handle re-authentication if needed
-            except NoMosqueAround as err:
-                _LOGGER.error("No mosque found in the area: %s", err)
-            except NoMosqueFound as err:
-                _LOGGER.error("No mosque found: %s", err)
+                raise UpdateFailed(f"Bad credentials: {err}") from err
+            except (NoMosqueAround, NoMosqueFound) as err:
+                raise UpdateFailed(f"No mosque found: {err}") from err
             except (ConnectionError, TimeoutError) as err:
-                _LOGGER.error("Network-related error: %s", err)
+                raise UpdateFailed(f"Network error: {err}") from err
 
         if not self.prayer_times:
             _LOGGER.error("No prayer times received from API")

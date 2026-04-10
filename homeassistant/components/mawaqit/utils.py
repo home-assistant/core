@@ -48,7 +48,7 @@ def parse_mosque_data(dict_mosques):
     return name_servers, uuid_servers, CALC_METHODS
 
 
-def async_save_mosque(
+def save_mosque(
     UUID,
     mosques,
     mawaqit_token=None,
@@ -73,7 +73,7 @@ def async_save_mosque(
         _LOGGER.error("Token should not be None !")
         raise ValueError("Token should not be None !")
 
-    name_servers, uuid_servers, CALC_METHODS = parse_mosque_data(mosques)
+    name_servers, uuid_servers, _calc_methods = parse_mosque_data(mosques)
     raw_all_mosques_data = mosques
 
     mosque = UUID
@@ -251,7 +251,7 @@ def get_prayer_times_for_two_days(prayer_calendar, today, timezone):
 
     # Extracting times for today and tomorrow
     today_times = prayer_calendar[today.month - 1].get(str(today.day), [])
-    tomorrow_times = prayer_calendar[today.month - 1].get(str(tomorrow.day), [])
+    tomorrow_times = prayer_calendar[tomorrow.month - 1].get(str(tomorrow.day), [])
 
     return {
         "today": {"date": today.strftime("%Y-%m-%d"), "prayer_times": today_times},

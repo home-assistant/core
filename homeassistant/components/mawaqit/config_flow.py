@@ -46,6 +46,8 @@ class MawaqitPrayerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     ) -> config_entries.ConfigFlowResult:
         """Handle a flow initialized by the user."""
 
+        self._async_abort_entries_match()
+
         errors: dict[str, str] = {}
         schema = vol.Schema(
             {
@@ -80,6 +82,13 @@ class MawaqitPrayerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             mawaqit_token = await mawaqit_wrapper.get_mawaqit_api_token(
                 username, password
             )
+            if not mawaqit_token:
+                errors["base"] = CANNOT_CONNECT_TO_SERVER
+                return self.async_show_form(
+                    step_id="user",
+                    data_schema=self.add_suggested_values_to_schema(schema, user_input),
+                    errors=errors,
+                )
             self.token = mawaqit_token
 
             return await self.async_step_search_method()
@@ -103,7 +112,7 @@ class MawaqitPrayerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         longi = self.hass.config.longitude
 
         if user_input is not None:
-            title, data_entry = utils.async_save_mosque(
+            title, data_entry = utils.save_mosque(
                 user_input[CONF_UUID],
                 self.mosques,
                 self.token,
@@ -112,13 +121,22 @@ class MawaqitPrayerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             )
             return self.async_create_entry(title=title, data=data_entry)
 
-        neighborhood_mosques = await mawaqit_wrapper.all_mosques_neighborhood(
-            lat, longi, token=self.token
-        )
-        if neighborhood_mosques:
-            self.mosques = neighborhood_mosques
+        if not self.mosques:
+            try:
+                neighborhood_mosques = await mawaqit_wrapper.all_mosques_neighborhood(
+                    lat, longi, token=self.token
+                )
+                if neighborhood_mosques:
+                    self.mosques = neighborhood_mosques
+            except NoMosqueAround:
+                return self.async_abort(reason="no_mosque")
 
-        name_servers, uuid_servers, CALC_METHODS = utils.parse_mosque_data(self.mosques)
+        name_servers, _uuid_servers, _calc_methods = utils.parse_mosque_data(
+            self.mosques
+        )
+
+        if not name_servers:
+            return self.async_abort(reason="no_mosque")
 
         return self.async_show_form(
             step_id="mosques_coordinates",
@@ -175,14 +193,8 @@ class MawaqitPrayerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             except NoMosqueAround:
                 return self.async_abort(reason="no_mosque")
 
-            # creation of the list of mosques to be displayed in the options
-            name_servers, uuid_servers, CALC_METHODS = utils.parse_mosque_data(
-                self.mosques
-            )
-
             return await self.async_step_mosques_coordinates()
 
-            # or return _show_config_form2
         if search_method == CONF_TYPE_SEARCH_KEYWORD:
             return await self.async_step_keyword_search()
 
@@ -208,7 +220,7 @@ class MawaqitPrayerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 if keyword == self.previous_keyword_search:
                     # if the form is submitted with the same keyword as the previous one, we check if the user has selected a mosque
                     if CONF_UUID in user_input and (user_input[CONF_UUID] is not None):
-                        title, data_entry = utils.async_save_mosque(
+                        title, data_entry = utils.save_mosque(
                             user_input[CONF_UUID],
                             self.mosques,
                             mawaqit_token=self.token,
@@ -237,13 +249,20 @@ class MawaqitPrayerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                         errors=errors,
                     )
 
-                (
-                    name_servers,
-                    uuid_servers,
-                    CALC_METHODS,
-                ) = utils.parse_mosque_data(
+                name_servers, _uuid_servers, _calc_methods = utils.parse_mosque_data(
                     self.mosques
-                )  # would it be better to add the address of the mosque ?
+                )
+
+                if not name_servers:
+                    errors["base"] = NO_MOSQUE_FOUND_KEYWORD
+                    return self.async_show_form(
+                        step_id="keyword_search",
+                        data_schema=self.add_suggested_values_to_schema(
+                            vol.Schema(option),
+                            {CONF_SEARCH: user_input[CONF_SEARCH]},
+                        ),
+                        errors=errors,
+                    )
 
                 return self.async_show_form(
                     step_id="keyword_search",
@@ -292,7 +311,7 @@ class MawaqitPrayerOptionsFlowHandler(config_entries.OptionsFlow):
         mawaqit_token = self.config_entry.data.get(CONF_API_KEY)
 
         if user_input is not None:
-            title_entry, data_entry = utils.async_save_mosque(
+            title_entry, data_entry = utils.save_mosque(
                 user_input[CONF_CALC_METHOD],
                 self.mosques,
                 mawaqit_token,
@@ -313,7 +332,7 @@ class MawaqitPrayerOptionsFlowHandler(config_entries.OptionsFlow):
             if neighborhood_mosques:
                 self.mosques = neighborhood_mosques
 
-            name_servers, uuid_servers, CALC_METHODS = utils.parse_mosque_data(
+            name_servers, uuid_servers, _calc_methods = utils.parse_mosque_data(
                 self.mosques
             )
 
@@ -323,7 +342,7 @@ class MawaqitPrayerOptionsFlowHandler(config_entries.OptionsFlow):
                 index = uuid_servers.index(current_mosque)
                 default_name = name_servers[index]
             except ValueError:
-                default_name = "None"
+                default_name = name_servers[0] if name_servers else None
 
             options = {
                 vol.Required(

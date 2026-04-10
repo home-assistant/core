@@ -153,7 +153,7 @@ async def test_async_step_user_connection_error(hass: HomeAssistant) -> None:
     flow.hass = hass
     flow.async_set_unique_id = AsyncMock()
 
-    # Create an instance of ClientConnectorError with mock argum4ents
+    # Create an instance of ClientConnectorError with mock arguments
     mock_conn_key = MagicMock()
     mock_os_error = MagicMock()
     connection_error_instance = ClientConnectorError(mock_conn_key, mock_os_error)

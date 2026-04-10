@@ -331,7 +331,9 @@ class NextPrayerSensor(SensorEntity, CoordinatorEntity[PrayerTimeCoordinator]):
         """Initialize the sensor with a specific description."""
         super().__init__(coordinator)
         self.entity_description = description
-        self._attr_unique_id = f"next_prayer_{self.entity_description.key.lower()}"
+        self._attr_unique_id = (
+            f"mawaqit_next_prayer_{self.entity_description.key.lower()}"
+        )
         self.identifier = self._attr_unique_id
         self.next_prayer_index, self.time_next_prayer = self._get_next_prayer_info()
 
@@ -339,21 +341,24 @@ class NextPrayerSensor(SensorEntity, CoordinatorEntity[PrayerTimeCoordinator]):
     def native_value(self) -> str | datetime | None:
         """Return the appropriate value based on the sensor type."""
         self.next_prayer_index, self.time_next_prayer = self._get_next_prayer_info()
+        if self.next_prayer_index is None or self.time_next_prayer is None:
+            return None
         if self.entity_description.key == "next_salat_name":
             return PRAYER_NAMES[self.next_prayer_index]
         if self.entity_description.key == "next_salat_time":
             return self.time_next_prayer
         return None
 
-    def _get_next_prayer_info(self):
+    def _get_next_prayer_info(self) -> tuple[int | None, datetime | None]:
         """Extract the next prayer info from the coordinator data."""
+        if not self.coordinator.data:
+            return None, None
         prayer_calendar = self.coordinator.data.get("calendar")
         timezone = self.coordinator.data.get("timezone")
+        if not prayer_calendar or not timezone:
+            return None, None
         current_time = dt_util.now()
-        next_prayer_name, time_next_prayer = utils.find_next_prayer(
-            current_time, prayer_calendar, timezone
-        )
-        return next_prayer_name, time_next_prayer
+        return utils.find_next_prayer(current_time, prayer_calendar, timezone)
 
     @property
     def available(self) -> bool:
