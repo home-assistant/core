@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from unittest.mock import AsyncMock
 
+from ha_xthings_cloud import XthingsCloudApiError, XthingsCloudAuthError
 
 from homeassistant.components.xthings_cloud.const import (
     CONF_EMAIL,
@@ -14,8 +15,6 @@ from homeassistant.components.xthings_cloud.const import (
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-
-from ha_xthings_cloud import XthingsCloudApiError, XthingsCloudAuthError
 
 from tests.common import MockConfigEntry
 

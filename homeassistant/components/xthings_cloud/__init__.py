@@ -2,12 +2,13 @@
 
 from __future__ import annotations
 
+from ha_xthings_cloud import XthingsCloudApiClient, XthingsCloudAuthError
+
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from ha_xthings_cloud import XthingsCloudApiClient, XthingsCloudAuthError
 from .const import CONF_REFRESH_TOKEN, CONF_TOKEN, PLATFORMS
 from .coordinator import XthingsCloudCoordinator
 
