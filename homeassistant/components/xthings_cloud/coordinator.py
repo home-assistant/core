@@ -10,9 +10,9 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .api import XthingsCloudApiClient, XthingsCloudApiError, XthingsCloudAuthError
+from ha_xthings_cloud import XthingsCloudApiClient, XthingsCloudApiError, XthingsCloudAuthError
+from ha_xthings_cloud import XthingsCloudWebSocket
 from .const import CONF_REFRESH_TOKEN, CONF_TOKEN, DEFAULT_SCAN_INTERVAL, DOMAIN, LOGGER
-from .websocket import XthingsCloudWebSocket
 
 
 class XthingsCloudCoordinator(DataUpdateCoordinator[dict[str, Any]]):
@@ -125,7 +125,7 @@ class XthingsCloudCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         """Handle WebSocket auth expiry, refresh token."""
         if await self._async_refresh_token():
             new_token = self.entry.data.get(CONF_TOKEN, "")
-            self.client._token = new_token
+            self.client.token = new_token
             if self.websocket:
                 self.websocket.token = new_token
             LOGGER.info("WebSocket token refreshed successfully")

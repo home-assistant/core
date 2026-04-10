@@ -7,6 +7,10 @@
         "data": {
           "email": "Email",
           "password": "Password"
+        },
+        "data_description": {
+          "email": "The email address used to register your Xthings Cloud account.",
+          "password": "Your Xthings Cloud account password."
         }
       },
       "2fa_email": {
@@ -14,6 +18,9 @@
         "description": "A 6-digit verification code has been sent to {email}. Please enter the code.",
         "data": {
           "verification_code": "Verification Code"
+        },
+        "data_description": {
+          "verification_code": "Enter the 6-digit code sent to your email."
         }
       },
       "2fa_phone": {
@@ -21,6 +28,9 @@
         "description": "A 6-digit verification code has been sent to your phone. Please enter the code.",
         "data": {
           "verification_code": "Verification Code"
+        },
+        "data_description": {
+          "verification_code": "Enter the 6-digit code sent to your phone."
         }
       },
       "reauth_confirm": {
@@ -67,18 +77,6 @@
     "abort": {
       "already_configured": "This account is already configured.",
       "reauth_successful": "Re-authentication successful."
-    }
-  },
-  "options": {
-    "step": {
-      "init": {
-        "data": {
-          "remote_access": "Enable Remote Access"
-        },
-        "data_description": {
-          "remote_access": "Enabling this feature will assign a domain name and provide external network access."
-        }
-      }
     }
   }
 }

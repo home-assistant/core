@@ -7,17 +7,16 @@ from typing import Any
 from homeassistant.components.camera import (
     Camera,
     CameraEntityFeature,
-    StreamType,
     WebRTCAnswer,
+    WebRTCCandidate,
     WebRTCError,
     WebRTCSendMessage,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
-
-from homeassistant.config_entries import ConfigEntry
 
 from .const import DOMAIN, LOGGER
 from .coordinator import XthingsCloudCoordinator
@@ -29,7 +28,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up camera platform."""
-    coordinator: XthingsCloudCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator: XthingsCloudCoordinator = entry.runtime_data
     entities = [
         XthingsCloudCamera(coordinator, device_id, device_data)
         for device_id, device_data in coordinator.data.items()
@@ -39,11 +38,10 @@ async def async_setup_entry(
 
 
 class XthingsCloudCamera(CoordinatorEntity[XthingsCloudCoordinator], Camera):
-    """Xthings Cloud camera entity with WebRTC support."""
+    """Xthings Cloud camera entity."""
 
     _attr_has_entity_name = True
     _attr_name = None
-    _attr_supported_features = CameraEntityFeature.STREAM
 
     def __init__(
         self,
@@ -62,6 +60,7 @@ class XthingsCloudCamera(CoordinatorEntity[XthingsCloudCoordinator], Camera):
             model=device_data.get("model", "Unknown"),
             sw_version=device_data.get("version"),
         )
+        self._attr_supported_features = CameraEntityFeature.STREAM
         self._cached_image: bytes | None = None
         self._cached_snapshot_url: str | None = None
         self._kvs_sessions: dict[str, Any] = {}
@@ -111,21 +110,16 @@ class XthingsCloudCamera(CoordinatorEntity[XthingsCloudCoordinator], Camera):
             self.async_write_ha_state()
 
     async def _async_fetch_image(self, url: str) -> bytes | None:
-        try:
-            resp = await self.coordinator.client._session.get(url)
-            if resp.status == 200:
-                return await resp.read()
-        except Exception:  # noqa: BLE001
-            LOGGER.debug("Failed to get camera snapshot: %s", self._device_id)
-        return None
+        return await self.coordinator.client.async_get_snapshot(url)
+
+    # --- WebRTC support (HA 2024.1+ only) ---
 
     async def async_handle_async_webrtc_offer(
-        self, offer_sdp: str, session_id: str, send_message: WebRTCSendMessage
+        self, offer_sdp: str, session_id: str, send_message: Any
     ) -> None:
-        """Handle WebRTC offer via KVS signaling for SDP exchange."""
+        """Handle WebRTC offer via KVS signaling."""
         from homeassistant.helpers.aiohttp_client import async_get_clientsession
-        from webrtc_models import RTCIceCandidateInit
-        from .kvs_signaling import KvsSignalingClient
+        from ha_xthings_cloud import KvsSignalingClient
 
         try:
             kvs_data = await self.coordinator.client.async_get_camera_webrtc(self._device_id)
@@ -144,9 +138,24 @@ class XthingsCloudCamera(CoordinatorEntity[XthingsCloudCoordinator], Camera):
             )
             self._kvs_sessions[session_id] = kvs_client
 
-            answer_sdp = await kvs_client.async_get_answer_sdp(offer_sdp, send_message)
+            # Bridge: convert dict ICE candidates to HA WebRTCCandidate objects
+            def _on_ice(cand: dict) -> None:
+                try:
+                    from webrtc_models import RTCIceCandidateInit
+                    send_message(WebRTCCandidate(
+                        candidate=RTCIceCandidateInit(
+                            candidate=cand.get("candidate", ""),
+                            sdp_mid=cand.get("sdpMid", ""),
+                            sdp_m_line_index=cand.get("sdpMLineIndex", 0),
+                        )
+                    ))
+                except Exception:  # noqa: BLE001
+                    pass
 
-            # Send cached ICE candidates
+            answer_sdp = await kvs_client.async_get_answer_sdp(
+                offer_sdp, on_ice_candidate=_on_ice,
+            )
+
             for cand in self._pending_candidates.pop(session_id, []):
                 await kvs_client.async_send_ice_candidate(*cand)
 
@@ -169,7 +178,6 @@ class XthingsCloudCamera(CoordinatorEntity[XthingsCloudCoordinator], Camera):
                 sdp_mline_index=candidate.sdp_m_line_index,
             )
         else:
-            # Cache candidate until signaling connection is established
             self._pending_candidates.setdefault(session_id, []).append(
                 (candidate.candidate, candidate.sdp_mid, candidate.sdp_m_line_index)
             )

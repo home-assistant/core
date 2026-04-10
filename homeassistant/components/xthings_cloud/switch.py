@@ -5,12 +5,10 @@ from __future__ import annotations
 from typing import Any
 
 from homeassistant.components.switch import SwitchEntity
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from homeassistant.config_entries import ConfigEntry
-
-from .const import DOMAIN
 from .coordinator import XthingsCloudCoordinator
 from .entity import XthingsCloudEntity
 
@@ -21,7 +19,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up switch platform."""
-    coordinator: XthingsCloudCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator: XthingsCloudCoordinator = entry.runtime_data
     entities = [
         XthingsCloudSwitch(coordinator, device_id, device_data)
         for device_id, device_data in coordinator.data.items()
