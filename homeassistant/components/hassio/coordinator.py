@@ -743,7 +743,9 @@ class HassioDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             DATA_CORE_INFO: client.homeassistant.info(),
             DATA_SUPERVISOR_INFO: client.supervisor.info(),
             DATA_OS_INFO: client.os.info(),
+            DATA_HOST_INFO: client.host.info(),
             DATA_STORE: client.store.info(),
+            DATA_NETWORK_INFO: client.network.info(),
         }
 
         api_results: list[ResponseData] = await asyncio.gather(*updates.values())

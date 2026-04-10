@@ -388,12 +388,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
             ]
             hass.data[DATA_SUPERVISOR_INFO]["addons"] = hass.data[DATA_ADDONS_LIST]
 
-        async_call_later(
-            hass,
-            HASSIO_UPDATE_INTERVAL,
-            HassJob(update_info_data, cancel_on_shutdown=True),
-        )
-
     # Fetch data
     update_info_task = hass.async_create_task(update_info_data(), eager_start=True)
 
