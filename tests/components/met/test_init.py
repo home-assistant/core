@@ -85,8 +85,8 @@ async def test_removing_incorrect_devices(
 
 
 async def test_api_failure(hass: HomeAssistant, mock_weather: MagicMock) -> None:
-    """Test that entry goes to SETUP_RETRY when fetching_data returns False."""
-    mock_weather.fetching_data.return_value = False
+    """Test that entry goes to SETUP_RETRY when fetching_data raises an exception."""
+    mock_weather.fetching_data.side_effect = Exception("API error")
     entry = MockConfigEntry(
         domain=DOMAIN,
         data={
