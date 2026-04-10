@@ -8,7 +8,7 @@ from typing import Any
 
 from pysiaalarm.aio import CommunicationsProtocol, SIAAccount, SIAClient, SIAEvent
 
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import CONF_PORT, CONF_PROTOCOL, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
@@ -141,6 +141,8 @@ class SIAHub:
         Second, unload underlying platforms, and then setup platforms, this reflects any changes in number of zones.
 
         """
+        if config_entry.state != ConfigEntryState.LOADED:
+            return
         config_entry.runtime_data.update_accounts()
         await hass.config_entries.async_unload_platforms(config_entry, PLATFORMS)
         await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
