@@ -66,12 +66,12 @@ async def test_sensor_value_none_when_key_missing(
 async def test_wifi_rssi_disabled_by_default(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test that Wi-Fi RSSI sensor is disabled by default."""
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    entity_registry = er.async_get(hass)
     entry = entity_registry.async_get("sensor.earn_e_p1_meter_wi_fi_rssi")
     assert entry is not None
     assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION

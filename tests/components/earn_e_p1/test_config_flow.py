@@ -106,10 +106,28 @@ async def test_user_flow_discovery_no_serial_oserror(
     assert result["reason"] == "cannot_connect"
 
 
+async def test_user_flow_discovery_no_serial_unexpected_error(
+    hass: HomeAssistant, mock_setup_entry: AsyncMock
+) -> None:
+    """Test discovery without serial aborts on unexpected error during validation."""
+    with patch(DISCOVER_PATH, return_value=[_mock_device(serial=None)]):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+
+    with patch(VALIDATE_PATH, side_effect=RuntimeError("boom")):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={}
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "unknown"
+
+
 async def test_user_flow_discovery_timeout_shows_manual_form(
     hass: HomeAssistant, mock_setup_entry: AsyncMock
 ) -> None:
-    """Test user flow falls back to manual form when discovery times out."""
+    """Test user flow falls back to manual form when discovery times out, then recovers."""
     with patch(DISCOVER_PATH, return_value=[]):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -117,6 +135,15 @@ async def test_user_flow_discovery_timeout_shows_manual_form(
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
+
+    with patch(VALIDATE_PATH, return_value=_mock_device()):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={CONF_HOST: MOCK_HOST}
+        )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == f"EARN-E P1 ({MOCK_HOST})"
+    assert result["data"] == {CONF_HOST: MOCK_HOST, CONF_SERIAL: MOCK_SERIAL}
 
 
 async def test_manual_entry_validation_timeout_then_retry(

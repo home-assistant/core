@@ -134,6 +134,9 @@ class EarnEP1ConfigFlow(ConfigFlow, domain=DOMAIN):
                 validated = await self._async_validate_host(device.host)
             except OSError:
                 validated = None
+            except Exception:
+                _LOGGER.exception("Unexpected error validating device")
+                return self.async_abort(reason="unknown")
 
             if validated is None:
                 return self.async_abort(reason="cannot_connect")

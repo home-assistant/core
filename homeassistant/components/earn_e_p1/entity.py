@@ -22,5 +22,6 @@ class EarnEP1Entity(CoordinatorEntity[EarnEP1Coordinator]):
             name="EARN-E P1 Meter",
             manufacturer="EARN-E",
             model=coordinator.model,
+            serial_number=coordinator.serial,
             sw_version=coordinator.sw_version,
         )

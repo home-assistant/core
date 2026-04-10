@@ -25,7 +25,7 @@
     'name': 'EARN-E P1 Meter',
     'name_by_user': None,
     'primary_config_entry': <ANY>,
-    'serial_number': None,
+    'serial_number': 'E0012345678901234',
     'sw_version': '1.0.0',
     'via_device_id': None,
   })
