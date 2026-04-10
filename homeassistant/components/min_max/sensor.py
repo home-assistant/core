@@ -35,6 +35,7 @@ from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.reload import async_setup_reload_service
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, StateType
+from homeassistant.util import ulid as ulid_util
 
 from . import PLATFORMS
 from .const import CONF_ENTITY_IDS, CONF_ROUND_DIGITS, DOMAIN
@@ -94,7 +95,7 @@ async def yaml_deprecation_notice(hass: HomeAssistant, config: ConfigType) -> No
     async_create_issue(
         hass,
         DOMAIN,
-        "yaml_deprecated",
+        ulid_util.ulid(),
         breaks_in_ha_version="2026.12.0",
         is_fixable=False,
         severity=IssueSeverity.WARNING,
@@ -119,6 +120,7 @@ async def async_setup_platform(
 
     await async_setup_reload_service(hass, DOMAIN, PLATFORMS)
     await yaml_deprecation_notice(hass, config)
+    print("hej", config)
 
     async_add_entities(
         [MinMaxSensor(entity_ids, name, sensor_type, round_digits, unique_id)]
