@@ -1,201 +1,230 @@
-"""Tests for the Gaposa cover component."""
+"""Tests for the Gaposa cover platform."""
 
-from datetime import datetime, timedelta
-from unittest.mock import AsyncMock, patch
+from __future__ import annotations
+
+from datetime import timedelta
+from unittest.mock import MagicMock
 
 from freezegun import freeze_time
 import pytest
 
-from homeassistant.components.cover import CoverEntityFeature
+from homeassistant.components.cover import (
+    ATTR_CURRENT_POSITION,
+    DOMAIN as COVER_DOMAIN,
+    SERVICE_CLOSE_COVER,
+    SERVICE_OPEN_COVER,
+    SERVICE_STOP_COVER,
+    CoverEntityFeature,
+)
 from homeassistant.components.gaposa.const import MOTION_DELAY
-from homeassistant.components.gaposa.cover import GaposaCover
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    ATTR_SUPPORTED_FEATURES,
+    STATE_CLOSED,
+    STATE_CLOSING,
+    STATE_OPEN,
+    STATE_OPENING,
+    STATE_UNKNOWN,
+)
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import EntityPlatform
-from homeassistant.util.dt import utcnow
+from homeassistant.util import dt as dt_util
 
-# Constants used in the tests
-COVER_ID = "12345"
-MOTOR_NAME = "Test Motor"
+from tests.common import MockConfigEntry, async_fire_time_changed
 
-
-@pytest.fixture
-def mock_motor():
-    """Return a mock motor object."""
-    motor = AsyncMock()
-    motor.name = MOTOR_NAME
-    motor.state = "UP"
-    return motor
+LIVING_ROOM_ENTITY = "cover.living_room"
+BEDROOM_ENTITY = "cover.bedroom"
 
 
-@pytest.fixture
-def mock_coordinator(mock_motor):
-    """Return a mock coordinator object."""
-    coordinator = AsyncMock()
-    coordinator.data = {COVER_ID: mock_motor}
-    return coordinator
+async def test_cover_entities_created(
+    hass: HomeAssistant, init_integration: MockConfigEntry
+) -> None:
+    """Both mock motors should produce cover entities at setup."""
+    living_room = hass.states.get(LIVING_ROOM_ENTITY)
+    bedroom = hass.states.get(BEDROOM_ENTITY)
+
+    assert living_room is not None
+    assert bedroom is not None
 
 
-@pytest.fixture
-def mock_platform():
-    """Return a mock platform object."""
-    mock_platform = AsyncMock(spec=EntityPlatform)
-    mock_platform.platform_name = "test_platform"
-    return mock_platform
+async def test_cover_initial_state_from_motor(
+    hass: HomeAssistant, init_integration: MockConfigEntry
+) -> None:
+    """The Living Room motor is UP, the Bedroom motor is DOWN."""
+    assert hass.states.get(LIVING_ROOM_ENTITY).state == STATE_OPEN
+    assert hass.states.get(BEDROOM_ENTITY).state == STATE_CLOSED
 
 
-@pytest.fixture
-def cover(hass: HomeAssistant, mock_platform, mock_coordinator, mock_motor):
-    """Return a GaposaCover instance."""
-    cover = GaposaCover(mock_coordinator, COVER_ID, mock_motor)
-    cover.add_to_platform_start(hass, mock_platform, None)
-    return cover
-
-
-async def test_init(hass: HomeAssistant, cover, mock_motor) -> None:
-    """Test the initialization of the cover."""
-    assert cover.id == COVER_ID
-    assert cover.motor == mock_motor
-    assert cover._attr_name == MOTOR_NAME
-    assert cover.supported_features == (
+async def test_cover_supported_features(
+    hass: HomeAssistant, init_integration: MockConfigEntry
+) -> None:
+    """Open, close and stop are all supported; no position control."""
+    state = hass.states.get(LIVING_ROOM_ENTITY)
+    expected = (
         CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE | CoverEntityFeature.STOP
     )
+    assert state.attributes[ATTR_SUPPORTED_FEATURES] == expected
+    # Covers without position support should not expose current_position.
+    assert ATTR_CURRENT_POSITION not in state.attributes
 
 
-async def test_is_closed(hass: HomeAssistant, cover) -> None:
-    """Test the is_closed property."""
-    cover.motor.state = "DOWN"
-    assert cover.is_closed is True
-    cover.motor.state = "UP"
-    assert cover.is_closed is False
+async def test_open_cover_calls_motor_up(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    mock_motors: list[MagicMock],
+) -> None:
+    """Calling open_cover invokes the mocked Motor.up()."""
+    living_room_motor = mock_motors[0]  # id="motor-1", "Living Room"
+
+    await hass.services.async_call(
+        COVER_DOMAIN,
+        SERVICE_OPEN_COVER,
+        {ATTR_ENTITY_ID: LIVING_ROOM_ENTITY},
+        blocking=True,
+    )
+    living_room_motor.up.assert_called_once()
 
 
-async def test_is_moving(hass: HomeAssistant, cover) -> None:
-    """Test the is_moving property."""
-    now = utcnow()
+async def test_close_cover_calls_motor_down(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    mock_motors: list[MagicMock],
+) -> None:
+    """Calling close_cover invokes the mocked Motor.down()."""
+    bedroom_motor = mock_motors[1]  # id="motor-2", "Bedroom"
+
+    await hass.services.async_call(
+        COVER_DOMAIN,
+        SERVICE_CLOSE_COVER,
+        {ATTR_ENTITY_ID: BEDROOM_ENTITY},
+        blocking=True,
+    )
+    bedroom_motor.down.assert_called_once()
+
+
+async def test_stop_cover_calls_motor_stop(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    mock_motors: list[MagicMock],
+) -> None:
+    """Calling stop_cover invokes the mocked Motor.stop()."""
+    living_room_motor = mock_motors[0]
+
+    await hass.services.async_call(
+        COVER_DOMAIN,
+        SERVICE_STOP_COVER,
+        {ATTR_ENTITY_ID: LIVING_ROOM_ENTITY},
+        blocking=True,
+    )
+    living_room_motor.stop.assert_called_once()
+
+
+async def test_cover_reports_opening_during_motion_window(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    mock_motors: list[MagicMock],
+) -> None:
+    """After an open command the cover state is `opening` until MOTION_DELAY elapses."""
+    now = dt_util.utcnow()
+
     with freeze_time(now):
-        cover.lastCommand = "UP"
-        cover.lastCommandTime = now
-        assert cover.is_moving is True
+        await hass.services.async_call(
+            COVER_DOMAIN,
+            SERVICE_OPEN_COVER,
+            {ATTR_ENTITY_ID: BEDROOM_ENTITY},
+            blocking=True,
+        )
 
-    with freeze_time(now + timedelta(seconds=MOTION_DELAY - 1)):
-        assert cover.is_moving is True
-
-    with freeze_time(now + timedelta(seconds=MOTION_DELAY + 1)):
-        assert cover.is_moving is False
-
-
-async def test_open_cover(hass: HomeAssistant, cover, mock_motor) -> None:
-    """Test opening the cover."""
-    with (
-        patch("homeassistant.components.gaposa.cover.dt_util") as mock_dt,
-        patch.object(cover, "schedule_refresh_ha_after_motion") as mock_schedule,
-    ):
-        mock_dt.utcnow.return_value = datetime(2021, 1, 1, 12, 0, 0)
-        await cover.async_open_cover()
-        mock_motor.up.assert_called_once_with(False)
-        assert cover.lastCommand == "UP"
-        assert cover.lastCommandTime == mock_dt.utcnow()
-        # Verify that refresh is scheduled
-        mock_schedule.assert_called_once()
+    assert hass.states.get(BEDROOM_ENTITY).state == STATE_OPENING
 
 
-async def test_close_cover(hass: HomeAssistant, cover, mock_motor) -> None:
-    """Test closing the cover."""
-    with (
-        patch("homeassistant.components.gaposa.cover.dt_util") as mock_dt,
-        patch.object(cover, "schedule_refresh_ha_after_motion") as mock_schedule,
-    ):
-        mock_dt.utcnow.return_value = datetime(2021, 1, 1, 12, 0, 0)
-        await cover.async_close_cover()
-        mock_motor.down.assert_called_once_with(False)
-        assert cover.lastCommand == "DOWN"
-        assert cover.lastCommandTime == mock_dt.utcnow()
-        # Verify that refresh is scheduled
-        mock_schedule.assert_called_once()
+async def test_cover_reports_closing_during_motion_window(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    mock_motors: list[MagicMock],
+) -> None:
+    """After a close command the cover state is `closing` until MOTION_DELAY elapses."""
+    now = dt_util.utcnow()
 
+    with freeze_time(now):
+        await hass.services.async_call(
+            COVER_DOMAIN,
+            SERVICE_CLOSE_COVER,
+            {ATTR_ENTITY_ID: LIVING_ROOM_ENTITY},
+            blocking=True,
+        )
 
-async def test_stop_cover(hass: HomeAssistant, cover, mock_motor) -> None:
-    """Test stopping the cover."""
-    with (
-        patch("homeassistant.components.gaposa.cover.dt_util") as mock_dt,
-        patch.object(cover.coordinator, "async_request_refresh") as mock_refresh,
-        patch.object(cover, "async_write_ha_state") as mock_write_state,
-    ):
-        mock_dt.utcnow.return_value = datetime(2021, 1, 1, 12, 0, 0)
-        await cover.async_stop_cover()
-        mock_motor.stop.assert_called_once_with(False)
-        assert cover.lastCommand == "STOP"
-        assert cover.lastCommandTime == mock_dt.utcnow()
-
-        # Verify that coordinator refresh is called and state is updated immediately
-        mock_refresh.assert_called_once()
-        mock_write_state.assert_called_once()
-
-
-# Add these new test functions
-
-
-async def test_refresh_ha_after_motion(hass: HomeAssistant, cover) -> None:
-    """Test that refresh_ha_after_motion updates the state correctly."""
-    with (
-        patch("asyncio.sleep") as mock_sleep,
-        patch.object(cover.coordinator, "async_request_refresh") as mock_refresh,
-        patch.object(cover, "async_write_ha_state") as mock_write_state,
-    ):
-        await cover.refresh_ha_after_motion()
-        # Verify sleep was called with the expected delay
-        mock_sleep.assert_called_once_with(MOTION_DELAY)
-        # Verify coordinator refresh is called
-        mock_refresh.assert_called_once()
-        # Verify state is written
-        mock_write_state.assert_called_once()
-
-
-async def test_schedule_refresh_ha_after_motion(hass: HomeAssistant, cover) -> None:
-    """Test that schedule_refresh_ha_after_motion creates a task."""
-
-    # Mock the refresh_ha_after_motion method to avoid actual delays
-    with (
-        patch.object(cover, "refresh_ha_after_motion", AsyncMock()) as mock_refresh,
-        patch.object(hass, "async_create_task") as mock_create_task,
-    ):
-        # Make async_create_task actually run the coroutine to avoid warnings
-        mock_create_task.side_effect = hass.loop.create_task
-
-        # Call the method
-        cover.schedule_refresh_ha_after_motion()
-
-        # Verify the refresh method was called
-        await hass.async_block_till_done()
-        mock_refresh.assert_called_once()
-
-
-def test_cover_unique_id(hass: HomeAssistant, cover) -> None:
-    """Test cover unique ID generation."""
-    assert cover.unique_id == COVER_ID
-
-
-async def test_cover_device_info(hass: HomeAssistant, cover, mock_motor) -> None:
-    """Test cover device info."""
-    device_info = cover.device_info
-    assert device_info is not None
-    assert device_info["identifiers"] == {("gaposa", COVER_ID)}
-    assert device_info["name"] == MOTOR_NAME
-    assert device_info["manufacturer"] == "Gaposa"
+    assert hass.states.get(LIVING_ROOM_ENTITY).state == STATE_CLOSING
 
 
 @pytest.mark.parametrize(
-    ("motor_state", "expected_state"),
+    ("motor_state", "expected"),
     [
-        ("UP", False),
-        ("DOWN", True),
-        ("STOP", None),
-        ("UNKNOWN", None),
+        ("UP", STATE_OPEN),
+        ("DOWN", STATE_CLOSED),
+        ("STOP", STATE_UNKNOWN),
+        ("UNKNOWN", STATE_UNKNOWN),
     ],
 )
-async def test_cover_states(
-    hass: HomeAssistant, cover, motor_state, expected_state
+async def test_cover_state_mapping(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    mock_motors: list[MagicMock],
+    motor_state: str,
+    expected: str,
 ) -> None:
-    """Test different cover states."""
-    cover.motor.state = motor_state
-    assert cover.is_closed is expected_state
+    """Verify the motor.state → HA state mapping across known + unknown values."""
+    motor = mock_motors[0]
+    motor.state = motor_state
+
+    # Poke the coordinator so the entity re-reads motor state.
+    coordinator = init_integration.runtime_data
+    if isinstance(coordinator, dict):
+        # Pre-Stage-3 shape; drop once runtime_data is unwrapped.
+        coordinator = coordinator["coordinator"]
+    await coordinator.async_refresh()
+    await hass.async_block_till_done()
+
+    assert hass.states.get(LIVING_ROOM_ENTITY).state == expected
+
+
+async def test_cover_device_registry_entry(
+    hass: HomeAssistant, init_integration: MockConfigEntry
+) -> None:
+    """Each motor ends up as a distinct device in the registry."""
+    from homeassistant.helpers import device_registry as dr
+
+    device_registry = dr.async_get(hass)
+    # Two motors → two devices.
+    gaposa_devices = [
+        d
+        for d in device_registry.devices.values()
+        if any(i[0] == "gaposa" for i in d.identifiers)
+    ]
+    assert len(gaposa_devices) == 2
+    names = {d.name for d in gaposa_devices}
+    assert names == {"Living Room", "Bedroom"}
+
+
+async def test_motion_window_collapses_after_delay(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    mock_motors: list[MagicMock],
+) -> None:
+    """Past MOTION_DELAY, the cover should return to a steady state (not opening/closing)."""
+    now = dt_util.utcnow()
+
+    with freeze_time(now):
+        await hass.services.async_call(
+            COVER_DOMAIN,
+            SERVICE_OPEN_COVER,
+            {ATTR_ENTITY_ID: BEDROOM_ENTITY},
+            blocking=True,
+        )
+
+    later = now + timedelta(seconds=MOTION_DELAY + 5)
+    with freeze_time(later):
+        async_fire_time_changed(hass, later)
+        await hass.async_block_till_done()
+
+        state = hass.states.get(BEDROOM_ENTITY).state
+        assert state not in (STATE_OPENING, STATE_CLOSING)

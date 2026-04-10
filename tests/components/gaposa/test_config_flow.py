@@ -1,12 +1,15 @@
-"""HERE Test the Gaposa config flow."""
+"""Test the Gaposa config flow."""
 
-from unittest.mock import AsyncMock, patch
+from __future__ import annotations
 
+from unittest.mock import AsyncMock, MagicMock
+
+from pygaposa import FirebaseAuthException, GaposaAuthException
 import pytest
 
 from homeassistant import config_entries
-from homeassistant.components.gaposa.config_flow import CannotConnect, InvalidAuth
 from homeassistant.components.gaposa.const import DOMAIN
+from homeassistant.const import CONF_API_KEY, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -14,117 +17,113 @@ from tests.common import MockConfigEntry
 
 pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 
+USER_INPUT = {
+    CONF_API_KEY: "test-apikey",
+    CONF_USERNAME: "test@example.com",
+    CONF_PASSWORD: "test-password",
+}
 
-async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
-    """Test we get the form."""
+
+async def test_form_creates_entry(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_gaposa: MagicMock,
+) -> None:
+    """Happy path: the form creates a config entry with the submitted data."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     assert result["type"] == FlowResultType.FORM
     assert result["errors"] == {}
 
-    with patch(
-        "pygaposa.Gaposa.login",
-        return_value=True,
-    ):
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                "api_key": "test-apikey",
-                "username": "test-username",
-                "password": "test-password",
-            },
-        )
-        await hass.async_block_till_done()
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"], USER_INPUT
+    )
+    await hass.async_block_till_done()
 
     assert result2["type"] == FlowResultType.CREATE_ENTRY
     assert result2["title"] == "Gaposa Gateway"
-    assert result2["data"] == {
-        "api_key": "test-apikey",
-        "username": "test-username",
-        "password": "test-password",
-    }
+    assert result2["data"] == USER_INPUT
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_form_invalid_auth(hass: HomeAssistant) -> None:
-    """Test we handle invalid auth."""
+@pytest.mark.parametrize(
+    ("exc", "expected_error"),
+    [
+        (GaposaAuthException("bad creds"), "invalid_auth"),
+        (FirebaseAuthException("bad firebase token"), "invalid_auth"),
+        (ConnectionError(), "cannot_connect"),
+        (Exception("boom"), "unknown"),
+    ],
+)
+async def test_form_validation_errors(
+    hass: HomeAssistant,
+    mock_gaposa_instance: MagicMock,
+    mock_gaposa: MagicMock,
+    exc: Exception,
+    expected_error: str,
+) -> None:
+    """Each login failure mode surfaces as the right form error."""
+    from aiohttp import ClientConnectionError
+
+    # validate_input catches ClientConnectionError; use it for the
+    # "cannot connect" case so the right except arm fires.
+    if isinstance(exc, ConnectionError):
+        exc = ClientConnectionError("boom")
+
+    mock_gaposa_instance.login.side_effect = exc
+
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-
-    with patch(
-        "pygaposa.Gaposa.login",
-        side_effect=InvalidAuth,
-    ):
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                "api_key": "test-apikey",
-                "username": "test-username",
-                "password": "test-password",
-            },
-        )
-
-    assert result2["type"] == FlowResultType.FORM
-    assert result2["errors"] == {"base": "invalid_auth"}
-
-
-async def test_form_cannot_connect(hass: HomeAssistant) -> None:
-    """Test we handle cannot connect error."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"], USER_INPUT
     )
 
-    with patch(
-        "pygaposa.Gaposa.login",
-        side_effect=CannotConnect,
-    ):
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                "api_key": "test-apikey",
-                "username": "test-username",
-                "password": "test-password",
-            },
-        )
-
     assert result2["type"] == FlowResultType.FORM
-    assert result2["errors"] == {"base": "cannot_connect"}
+    assert result2["errors"] == {"base": expected_error}
 
 
-async def test_form_unknown_error(hass: HomeAssistant) -> None:
-    """Test we handle unknown errors."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-
-    with patch(
-        "pygaposa.Gaposa.login",
-        side_effect=Exception,
-    ):
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                "api_key": "test-apikey",
-                "username": "test-username",
-                "password": "test-password",
-            },
-        )
-
-    assert result2["type"] == FlowResultType.FORM
-    assert result2["errors"] == {"base": "unknown"}
-
-
-async def test_reauth_flow(hass: HomeAssistant) -> None:
-    """Test the reauthentication flow."""
+async def test_reauth_flow_success(
+    hass: HomeAssistant,
+    mock_gaposa: MagicMock,
+) -> None:
+    """A reauth flow updates the stored credentials when login succeeds."""
     mock_config = MockConfigEntry(
         domain=DOMAIN,
-        data={
-            "api_key": "test-apikey",
-            "username": "test-username",
-            "password": "test-password",
+        data=USER_INPUT,
+    )
+    mock_config.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={
+            "source": config_entries.SOURCE_REAUTH,
+            "entry_id": mock_config.entry_id,
         },
+    )
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_PASSWORD: "new-password"}
+    )
+    await hass.async_block_till_done()
+
+    assert result2["type"] == FlowResultType.ABORT
+    assert result2["reason"] == "reauth_successful"
+    assert mock_config.data[CONF_PASSWORD] == "new-password"
+
+
+async def test_reauth_flow_invalid_auth_shows_form_error(
+    hass: HomeAssistant,
+    mock_gaposa_instance: MagicMock,
+    mock_gaposa: MagicMock,
+) -> None:
+    """If the replacement password still fails auth, the form shows the error."""
+    mock_config = MockConfigEntry(
+        domain=DOMAIN,
+        data=USER_INPUT,
     )
     mock_config.add_to_hass(hass)
 
@@ -136,20 +135,11 @@ async def test_reauth_flow(hass: HomeAssistant) -> None:
         },
     )
 
-    assert result["type"] == FlowResultType.FORM
-    assert result["step_id"] == "reauth_confirm"
+    mock_gaposa_instance.login.side_effect = GaposaAuthException("still bad")
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_PASSWORD: "still-bad"}
+    )
 
-    with patch(
-        "pygaposa.Gaposa.login",
-        return_value=True,
-    ):
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                "password": "new-password",
-            },
-        )
-        await hass.async_block_till_done()
-
-    assert result2["type"] == FlowResultType.ABORT
-    assert result2["reason"] == "reauth_successful"
+    assert result2["type"] == FlowResultType.FORM
+    assert result2["step_id"] == "reauth_confirm"
+    assert result2["errors"] == {"base": "invalid_auth"}
