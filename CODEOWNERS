@@ -345,6 +345,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/cync/ @Kinachi249
 /homeassistant/components/daikin/ @fredrike
 /tests/components/daikin/ @fredrike
+/homeassistant/components/data_grandlyon/ @Crocmagnon
+/tests/components/data_grandlyon/ @Crocmagnon
 /homeassistant/components/date/ @home-assistant/core
 /tests/components/date/ @home-assistant/core
 /homeassistant/components/datetime/ @home-assistant/core

@@ -1249,6 +1249,12 @@
       "config_flow": false,
       "iot_class": "local_polling"
     },
+    "data_grandlyon": {
+      "name": "Data Grand Lyon",
+      "integration_type": "service",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
     "datadog": {
       "name": "Datadog",
       "integration_type": "service",

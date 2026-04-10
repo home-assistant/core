@@ -1,0 +1,143 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "step": {
+      "reauth_confirm": {
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]",
+          "username": "[%key:common::config_flow::data::username%]"
+        },
+        "data_description": {
+          "password": "Your password on data.grandlyon.com.",
+          "username": "Your username on data.grandlyon.com."
+        }
+      },
+      "reconfigure": {
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]",
+          "username": "[%key:common::config_flow::data::username%]"
+        },
+        "data_description": {
+          "password": "Your password on data.grandlyon.com.",
+          "username": "Your username on data.grandlyon.com."
+        }
+      },
+      "user": {
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]",
+          "username": "[%key:common::config_flow::data::username%]"
+        },
+        "data_description": {
+          "password": "Your password on data.grandlyon.com.",
+          "username": "Your username on data.grandlyon.com."
+        }
+      }
+    }
+  },
+  "config_subentries": {
+    "stop": {
+      "abort": {
+        "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
+        "auth_required": "Authentication is required to add a stop.",
+        "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
+      },
+      "entry_type": "Transit stop",
+      "initiate_flow": {
+        "user": "Add transit stop"
+      },
+      "step": {
+        "reconfigure": {
+          "data": {
+            "line": "Line",
+            "name": "[%key:common::config_flow::data::name%]",
+            "stop_id": "Stop ID"
+          }
+        },
+        "user": {
+          "data": {
+            "line": "Line",
+            "name": "[%key:common::config_flow::data::name%]",
+            "stop_id": "Stop ID"
+          }
+        }
+      }
+    },
+    "velov": {
+      "abort": {
+        "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
+        "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
+      },
+      "entry_type": "Vélo'v station",
+      "error": {
+        "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+        "station_not_found": "Station not found. Please check the station ID.",
+        "unknown": "[%key:common::config_flow::error::unknown%]"
+      },
+      "initiate_flow": {
+        "user": "Add Vélo'v station"
+      },
+      "step": {
+        "reconfigure": {
+          "data": {
+            "station_id": "Station ID"
+          }
+        },
+        "user": {
+          "data": {
+            "station_id": "Station ID"
+          }
+        }
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "available_bike_stands": { "name": "Available bike stands" },
+      "available_bikes": { "name": "Available bikes" },
+      "available_electrical_bikes": { "name": "Available electrical bikes" },
+      "available_mechanical_bikes": { "name": "Available mechanical bikes" },
+      "next_passage_1": {
+        "name": "Next passage 1",
+        "state_attributes": {
+          "type": {
+            "state": {
+              "estimated": "Estimated",
+              "theoretical": "Theoretical"
+            }
+          }
+        }
+      },
+      "next_passage_2": {
+        "name": "Next passage 2",
+        "state_attributes": {
+          "type": {
+            "state": {
+              "estimated": "Estimated",
+              "theoretical": "Theoretical"
+            }
+          }
+        }
+      },
+      "next_passage_3": {
+        "name": "Next passage 3",
+        "state_attributes": {
+          "type": {
+            "state": {
+              "estimated": "Estimated",
+              "theoretical": "Theoretical"
+            }
+          }
+        }
+      }
+    }
+  }
+}
