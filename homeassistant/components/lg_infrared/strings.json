@@ -35,6 +35,12 @@
       "bs": {
         "name": "BS"
       },
+      "channel_down": {
+        "name": "Channel down"
+      },
+      "channel_up": {
+        "name": "Channel up"
+      },
       "cs": {
         "name": "CS"
       },
@@ -86,6 +92,9 @@
       "menu": {
         "name": "Menu"
       },
+      "mute": {
+        "name": "Mute"
+      },
       "num_0": {
         "name": "Number 0"
       },
@@ -128,6 +137,9 @@
       "ok": {
         "name": "OK"
       },
+      "power": {
+        "name": "Power toggle"
+      },
       "power_off": {
         "name": "Power off"
       },
@@ -163,6 +175,12 @@
       },
       "up": {
         "name": "Up"
+      },
+      "volume_down": {
+        "name": "Volume down"
+      },
+      "volume_up": {
+        "name": "Volume up"
       },
       "yellow": {
         "name": "Yellow"
