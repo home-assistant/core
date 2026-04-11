@@ -93,6 +93,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: AqualinkConfigEntry) -> 
 
     try:
         systems = await aqualink.get_systems()
+    except AqualinkServiceUnauthorizedException as auth_exception:
+        await aqualink.close()
+        raise ConfigEntryAuthFailed(
+            "Invalid credentials for iAqualink"
+        ) from auth_exception
     except AqualinkServiceException as svc_exception:
         await aqualink.close()
         raise ConfigEntryNotReady(
@@ -116,10 +121,19 @@ async def async_setup_entry(hass: HomeAssistant, entry: AqualinkConfigEntry) -> 
     for system in systems_list:
         coordinator = AqualinkDataUpdateCoordinator(hass, entry, system)
         runtime_data.coordinators[system.serial] = coordinator
-        await coordinator.async_config_entry_first_refresh()
+        try:
+            await coordinator.async_config_entry_first_refresh()
+        except ConfigEntryAuthFailed:
+            await aqualink.close()
+            raise
 
         try:
             devices = await system.get_devices()
+        except AqualinkServiceUnauthorizedException as auth_exception:
+            await aqualink.close()
+            raise ConfigEntryAuthFailed(
+                "Invalid credentials for iAqualink"
+            ) from auth_exception
         except AqualinkServiceException as svc_exception:
             await aqualink.close()
             raise ConfigEntryNotReady(
