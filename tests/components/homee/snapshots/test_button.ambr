@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_button_snapshot[button.homeegrams_test_20hg_201-entry]
+# name: test_button_snapshot[button.homeegrams_test_hg_1-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -13,7 +13,7 @@
     'disabled_by': None,
     'domain': 'button',
     'entity_category': None,
-    'entity_id': 'button.homeegrams_test_20hg_201',
+    'entity_id': 'button.homeegrams_test_hg_1',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -21,12 +21,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Test%20HG%201',
+    'object_id_base': 'Test HG 1',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Test%20HG%201',
+    'original_name': 'Test HG 1',
     'platform': 'homee',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -36,20 +36,20 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_button_snapshot[button.homeegrams_test_20hg_201-state]
+# name: test_button_snapshot[button.homeegrams_test_hg_1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Homeegrams Test%20HG%201',
+      'friendly_name': 'Homeegrams Test HG 1',
     }),
     'context': <ANY>,
-    'entity_id': 'button.homeegrams_test_20hg_201',
+    'entity_id': 'button.homeegrams_test_hg_1',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_button_snapshot[button.homeegrams_test_20hg_20_202-entry]
+# name: test_button_snapshot[button.homeegrams_test_hg_2-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -63,7 +63,7 @@
     'disabled_by': None,
     'domain': 'button',
     'entity_category': None,
-    'entity_id': 'button.homeegrams_test_20hg_20_202',
+    'entity_id': 'button.homeegrams_test_hg_2',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -71,12 +71,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Test%20HG%20%202',
+    'object_id_base': 'Test HG 2',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Test%20HG%20%202',
+    'original_name': 'Test HG 2',
     'platform': 'homee',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -86,13 +86,13 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_button_snapshot[button.homeegrams_test_20hg_20_202-state]
+# name: test_button_snapshot[button.homeegrams_test_hg_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Homeegrams Test%20HG%20%202',
+      'friendly_name': 'Homeegrams Test HG 2',
     }),
     'context': <ANY>,
-    'entity_id': 'button.homeegrams_test_20hg_20_202',
+    'entity_id': 'button.homeegrams_test_hg_2',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

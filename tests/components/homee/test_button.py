@@ -29,15 +29,23 @@ def enable_all_entities(entity_registry_enabled_by_default: None) -> None:
     """Make sure all entities are enabled."""
 
 
+async def setup_mock_button(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_homee: MagicMock
+) -> None:
+    """Setups a node with buttons for the tests."""
+    mock_homee.nodes = [build_mock_node("buttons.json")]
+    mock_homee.get_node_by_id.return_value = mock_homee.nodes[0]
+    mock_homee.homeegrams = build_homeegrams()
+    await setup_integration(hass, mock_config_entry)
+
+
 async def test_button_press(
     hass: HomeAssistant,
     mock_homee: MagicMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test press button service."""
-    mock_homee.nodes = [build_mock_node("buttons.json")]
-    mock_homee.get_node_by_id.return_value = mock_homee.nodes[0]
-    await setup_integration(hass, mock_config_entry)
+    await setup_mock_button(hass, mock_config_entry, mock_homee)
 
     await hass.services.async_call(
         BUTTON_DOMAIN,
@@ -50,6 +58,52 @@ async def test_button_press(
 
 
 # Homeegram buttons
+async def test_homeegram_button_press(
+    hass: HomeAssistant,
+    mock_homee: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test press homeegram button."""
+    await setup_mock_button(hass, mock_config_entry, mock_homee)
+
+    await hass.services.async_call(
+        BUTTON_DOMAIN,
+        SERVICE_PRESS,
+        {ATTR_ENTITY_ID: "button.homeegrams_test_hg_2"},
+        blocking=True,
+    )
+
+    mock_homee.play_homeegram.assert_called_once_with(3)
+
+
+async def test_homeegram_button_disabled_by_default(
+    hass: HomeAssistant,
+    mock_homee: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test that homeegram button is disabled by default if it has only one action."""
+    await setup_mock_button(hass, mock_config_entry, mock_homee)
+
+    entry = entity_registry.async_get("button.homeegrams_test_hg_1")
+    assert entry is not None
+    assert entry.disabled_by == "integration"
+
+
+@pytest.mark.usefixtures("enable_all_entities")
+async def test_button_snapshot(
+    hass: HomeAssistant,
+    mock_homee: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test the multisensor snapshot."""
+    await setup_mock_button(hass, mock_config_entry, mock_homee)
+
+    await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
+
+
 def build_homeegrams() -> list[AsyncMock]:
     """Build a list of AsyncMock instances for homeegrams from fixtures."""
     homeegrams_data = load_json_array_fixture("homeegrams.json", "homee")
@@ -64,22 +118,12 @@ def build_homeegrams() -> list[AsyncMock]:
         for trigger_type, trigger_list in hg_data["triggers"].items():
             setattr(triggers_mock, trigger_type, [AsyncMock() for _ in trigger_list])
         hg_mock.triggers = triggers_mock
+        # Mock actions with AsyncMock for subclasses
+        actions_mock = MagicMock()
+        actions_mock.data = {
+            action_type: [AsyncMock() for _ in action_list]
+            for action_type, action_list in hg_data["actions"].items()
+        }
+        hg_mock.actions = actions_mock
         homeegrams.append(hg_mock)
     return homeegrams
-
-
-@pytest.mark.usefixtures("enable_all_entities")
-async def test_button_snapshot(
-    hass: HomeAssistant,
-    mock_homee: MagicMock,
-    mock_config_entry: MockConfigEntry,
-    entity_registry: er.EntityRegistry,
-    snapshot: SnapshotAssertion,
-) -> None:
-    """Test the multisensor snapshot."""
-    mock_homee.nodes = [build_mock_node("buttons.json")]
-    mock_homee.get_node_by_id.return_value = mock_homee.nodes[0]
-    mock_homee.homeegrams = build_homeegrams()
-    await setup_integration(hass, mock_config_entry)
-
-    await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)

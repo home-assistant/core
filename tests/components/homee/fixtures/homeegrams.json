@@ -1,7 +1,7 @@
 [
   {
     "id": 2,
-    "name": "Test%20HG%201",
+    "name": "Test HG 1",
     "image": "homeegramicon_dimmablebulb_value_0",
     "state": 1,
     "visible": 1,
@@ -79,7 +79,7 @@
   },
   {
     "id": 3,
-    "name": "Test%20HG%20%202",
+    "name": "Test HG 2",
     "image": "homeegramicon_dimmablebulb_value_0",
     "state": 1,
     "visible": 1,
