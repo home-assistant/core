@@ -194,6 +194,35 @@ async def test_timeout_during_system_fetch(
     assert result["errors"] == {"base": "cannot_connect"}
 
 
+async def test_async_get_systems_success(
+    hass: HomeAssistant,
+    config_data: dict[str, str],
+) -> None:
+    """Test async_get_systems returns systems on success."""
+    mock_system = MagicMock()
+    mock_system.serial = "SN001"
+    mock_system.name = "Pool System 1"
+
+    with (
+        patch(
+            "homeassistant.components.iaqualink.utils.AqualinkClient.login",
+            return_value=None,
+        ),
+        patch(
+            "homeassistant.components.iaqualink.utils.AqualinkClient.get_systems",
+            return_value={"SN001": mock_system},
+        ),
+    ):
+        systems, error_reason = await config_flow.async_get_systems(
+            hass,
+            config_data[CONF_USERNAME],
+            config_data[CONF_PASSWORD],
+        )
+
+    assert systems == {"SN001": mock_system}
+    assert error_reason is None
+
+
 async def test_systems_step_without_pending_user_input(
     hass: HomeAssistant,
 ) -> None:
@@ -370,6 +399,31 @@ async def test_options_flow_submit_systems(
         )
 
     assert entry.options[CONF_SYSTEMS] == ["SN001"]
+
+
+async def test_options_flow_submit_systems_direct_init_call(
+    hass: HomeAssistant, config_data: dict[str, str]
+) -> None:
+    """Test options flow can submit directly when started with user input."""
+    entry = MockConfigEntry(domain=DOMAIN, data=config_data)
+    entry.add_to_hass(hass)
+
+    flow = config_flow.AqualinkOptionsFlowHandler()
+    flow.hass = hass
+    flow.handler = entry.entry_id
+
+    mock_system = MagicMock()
+    mock_system.serial = "SN001"
+    mock_system.name = "Pool System 1"
+
+    with patch(
+        "homeassistant.components.iaqualink.config_flow.async_get_systems",
+        return_value=({"SN001": mock_system}, None),
+    ):
+        result = await flow.async_step_init({CONF_SYSTEMS: ["SN001"]})
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"] == {CONF_SYSTEMS: ["SN001"]}
 
 
 @pytest.mark.parametrize(

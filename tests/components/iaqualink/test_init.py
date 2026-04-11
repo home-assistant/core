@@ -382,6 +382,46 @@ async def test_setup_no_systems_selected_supports_reload_and_unload(
     assert config_entry.state is ConfigEntryState.NOT_LOADED
 
 
+async def test_setup_selected_systems_not_found_supports_reload_and_unload(
+    hass: HomeAssistant,
+    client: AqualinkClient,
+    config_data: dict[str, str],
+) -> None:
+    """Test setup supports options containing systems no longer returned by the API."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=config_data,
+        options={CONF_SYSTEMS: ["MISSING"]},
+    )
+    config_entry.add_to_hass(hass)
+
+    system = get_aqualink_system(client, cls=IaquaSystem)
+    systems = {system.serial: system}
+
+    with (
+        patch(
+            "homeassistant.components.iaqualink.AqualinkClient.login",
+            return_value=None,
+        ),
+        patch(
+            "homeassistant.components.iaqualink.AqualinkClient.get_systems",
+            return_value=systems,
+        ),
+    ):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+        assert config_entry.runtime_data.platforms_loaded is False
+
+        assert await hass.config_entries.async_reload(config_entry.entry_id)
+        await hass.async_block_till_done()
+        assert config_entry.runtime_data.platforms_loaded is False
+
+        assert await hass.config_entries.async_unload(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.NOT_LOADED
+
+
 async def test_setup_with_systems_marks_platforms_loaded(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
@@ -439,6 +479,72 @@ async def test_setup_devices_exception(
         ) as mock_get_devices,
     ):
         mock_get_devices.side_effect = AqualinkServiceException
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+async def test_setup_devices_unauthorized(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    client: AqualinkClient,
+) -> None:
+    """Test setup handles unauthorized errors while retrieving devices."""
+    config_entry.add_to_hass(hass)
+
+    system = get_aqualink_system(client, cls=IaquaSystem)
+    system.online = True
+    system.update = AsyncMock()
+    systems = {system.serial: system}
+
+    with (
+        patch(
+            "homeassistant.components.iaqualink.AqualinkClient.login",
+            return_value=None,
+        ),
+        patch(
+            "homeassistant.components.iaqualink.AqualinkClient.get_systems",
+            return_value=systems,
+        ),
+        patch.object(
+            system, "get_devices", side_effect=AqualinkServiceUnauthorizedException
+        ),
+    ):
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.SETUP_ERROR
+
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+    assert flows[0]["context"]["source"] == SOURCE_REAUTH
+
+
+async def test_setup_devices_service_exception_with_online_system(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    client: AqualinkClient,
+) -> None:
+    """Test setup retries when device retrieval fails for an online system."""
+    config_entry.add_to_hass(hass)
+
+    system = get_aqualink_system(client, cls=IaquaSystem)
+    system.online = True
+    system.update = AsyncMock()
+    systems = {system.serial: system}
+
+    with (
+        patch(
+            "homeassistant.components.iaqualink.AqualinkClient.login",
+            return_value=None,
+        ),
+        patch(
+            "homeassistant.components.iaqualink.AqualinkClient.get_systems",
+            return_value=systems,
+        ),
+        patch.object(system, "get_devices", side_effect=AqualinkServiceException),
+    ):
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 

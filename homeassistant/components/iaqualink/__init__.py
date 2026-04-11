@@ -69,7 +69,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: AqualinkConfigEntry) -> 
     username = entry.data[CONF_USERNAME]
     password = entry.data[CONF_PASSWORD]
 
-    aqualink = await async_get_aqualink_client(hass, username, password)
+    aqualink = async_get_aqualink_client(hass, username, password)
     try:
         await aqualink.login()
     except AqualinkServiceUnauthorizedException as auth_exception:

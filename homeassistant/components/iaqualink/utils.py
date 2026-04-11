@@ -14,7 +14,7 @@ from homeassistant.helpers.httpx_client import get_async_client
 from homeassistant.util.ssl import SSL_ALPN_HTTP11_HTTP2
 
 
-async def async_get_aqualink_client(
+def async_get_aqualink_client(
     hass: HomeAssistant, username: str, password: str
 ) -> AqualinkClient:
     """Create an Aqualink client configured with Home Assistant's HTTP client."""

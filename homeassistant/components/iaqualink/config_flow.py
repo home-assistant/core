@@ -19,7 +19,7 @@ from homeassistant.config_entries import (
     OptionsFlowWithReload,
 )
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 
 from .const import CONF_SYSTEMS, DOMAIN
@@ -38,9 +38,7 @@ async def async_get_systems(
 ) -> tuple[dict[str, Any] | None, str | None]:
     """Fetch systems from iAqualink and map failures to flow error reasons."""
     try:
-        async with await async_get_aqualink_client(
-            hass, username, password
-        ) as aqualink:
+        async with async_get_aqualink_client(hass, username, password) as aqualink:
             systems = await aqualink.get_systems()
     except AqualinkServiceUnauthorizedException:
         return None, "invalid_auth"
@@ -82,7 +80,7 @@ class AqualinkFlowHandler(ConfigFlow, domain=DOMAIN):
     ) -> dict[str, str]:
         """Validate credentials against iAqualink."""
         try:
-            async with await async_get_aqualink_client(
+            async with async_get_aqualink_client(
                 self.hass, user_input[CONF_USERNAME], user_input[CONF_PASSWORD]
             ):
                 pass
@@ -176,6 +174,7 @@ class AqualinkFlowHandler(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
+    @callback
     @staticmethod
     def async_get_options_flow(config_entry: ConfigEntry) -> AqualinkOptionsFlowHandler:
         """Create the options flow."""
