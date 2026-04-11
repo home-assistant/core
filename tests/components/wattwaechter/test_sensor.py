@@ -84,13 +84,3 @@ async def test_minimal_meter_data(
     assert hass.states.get("sensor.haushalt_test_total_feed_in") is None
     assert hass.states.get("sensor.haushalt_test_voltage_l1") is None
     assert hass.states.get("sensor.haushalt_test_current_l1") is None
-
-
-async def test_no_meter_data(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry
-) -> None:
-    """Test setup when device returns no meter data (HTTP 204)."""
-    await _setup_integration(hass, mock_config_entry, None)
-
-    # No OBIS sensors should be created
-    assert hass.states.get("sensor.haushalt_test_total_consumption") is None

@@ -57,6 +57,9 @@
     "cannot_connect": {
       "message": "Cannot connect to {host}"
     },
+    "no_meter_data": {
+      "message": "No meter data available from {host} yet"
+    },
     "update_failed": {
       "message": "Failed to fetch data: {error}"
     }

@@ -225,9 +225,6 @@ async def async_setup_entry(
     """Set up WattWächter sensors from a config entry."""
     coordinator = entry.runtime_data
 
-    if not coordinator.data:
-        return
-
     async_add_entities(
         WattwaechterObisSensor(
             coordinator=coordinator,

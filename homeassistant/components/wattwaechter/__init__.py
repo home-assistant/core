@@ -37,6 +37,13 @@ async def async_setup_entry(
     coordinator = WattwaechterCoordinator(hass, entry, client)
     await coordinator.async_config_entry_first_refresh()
 
+    if not coordinator.data:
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="no_meter_data",
+            translation_placeholders={"host": host},
+        )
+
     entry.runtime_data = coordinator
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)

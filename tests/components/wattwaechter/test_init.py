@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from unittest.mock import AsyncMock, patch
 
-from aio_wattwaechter import WattwaechterConnectionError
+from aio_wattwaechter import WattwaechterConnectionError, WattwaechterNoDataError
 
 from homeassistant.components.wattwaechter.coordinator import WattwaechterCoordinator
 from homeassistant.config_entries import ConfigEntryState
@@ -67,3 +67,19 @@ async def test_unload_entry(
         await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
+
+
+async def test_setup_entry_no_meter_data(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test setup retries when device returns no meter data."""
+    with patch("homeassistant.components.wattwaechter.Wattwaechter") as mock_cls:
+        client = mock_cls.return_value
+        client.alive = AsyncMock(return_value=MOCK_ALIVE_RESPONSE)
+        client.meter_data = AsyncMock(side_effect=WattwaechterNoDataError("No data"))
+        client.host = "192.168.1.100"
+
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
