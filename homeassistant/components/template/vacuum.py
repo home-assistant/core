@@ -330,13 +330,10 @@ class AbstractTemplateVacuum(AbstractTemplateEntity, StateVacuumEntity):
     def _update_segments(self, result: list[Segment] | None) -> None:
         """Save segment templates and create issue when segments changed."""
 
-        if result is None:
-            return
+        self._segments = result or []
 
         if self.registry_entry is None:
             return
-
-        self._segments = result
 
         if (last_seen := self.last_seen_segments) is not None and {
             s.id: s for s in last_seen
