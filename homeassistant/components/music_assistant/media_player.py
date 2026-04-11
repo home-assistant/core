@@ -224,6 +224,10 @@ class MusicAssistantPlayer(MusicAssistantEntity, MediaPlayerEntity):
         sound_mode_mappings: dict[str, str] = {}
         active_sound_mode_translation_key: str | None = None
         for sound_mode in player.sound_mode_list:
+            if sound_mode.passive:
+                # ignore passive sound_mode because HA does not differentiate between
+                # active and passive sound mode
+                continue
             translation_key = sound_mode.translation_key
             if player.active_sound_mode == sound_mode.id:
                 active_sound_mode_translation_key = translation_key
