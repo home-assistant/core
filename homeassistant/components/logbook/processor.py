@@ -219,7 +219,14 @@ class EventProcessor:
         rows: list[Row],
         max_bind_vars: int,
     ) -> dict[bytes, bytes] | None:
-        """Resolve parent-context user_ids for rows in a filtered query."""
+        """Resolve parent-context user_ids for rows in a filtered query.
+
+        Done in Python rather than as a SQL union branch because the
+        context_parent_id_bin column is sparsely populated — scanning the
+        States table for non-null parents costs ~40% of the overall query
+        on real datasets. Here we collect only the parent ids we actually
+        need and fetch them via an indexed point-lookup on context_id_bin.
+        """
         cache = self.logbook_run.context_user_ids
         pending: set[bytes] = {
             parent_id
