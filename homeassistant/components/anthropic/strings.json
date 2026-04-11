@@ -205,7 +205,7 @@
       "message": "`{file_path}` does not exist."
     },
     "wrong_file_type": {
-      "message": "Only images and PDF are supported by the Anthropic API, `{file_path}` ({mime_type}) is not an image file or PDF."
+      "message": "The {model} model does not support {mime_type} file types (for `{file_path}`)."
     }
   },
   "issues": {

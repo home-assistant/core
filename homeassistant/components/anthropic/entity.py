@@ -30,6 +30,7 @@ from anthropic.types import (
     MessageDeltaUsage,
     MessageParam,
     MessageStreamEvent,
+    ModelInfo,
     OutputConfigParam,
     RawContentBlockDeltaEvent,
     RawContentBlockStartEvent,
@@ -850,7 +851,9 @@ class AnthropicBaseLLMEntity(CoordinatorEntity[AnthropicCoordinator]):
                 ]
             last_message["content"].extend(  # type: ignore[union-attr]
                 await async_prepare_files_for_prompt(
-                    self.hass, [(a.path, a.mime_type) for a in last_content.attachments]
+                    self.hass,
+                    self.model_info,
+                    [(a.path, a.mime_type) for a in last_content.attachments],
                 )
             )
 
@@ -999,7 +1002,7 @@ class AnthropicBaseLLMEntity(CoordinatorEntity[AnthropicCoordinator]):
 
 
 async def async_prepare_files_for_prompt(
-    hass: HomeAssistant, files: list[tuple[Path, str | None]]
+    hass: HomeAssistant, model_info: ModelInfo, files: list[tuple[Path, str | None]]
 ) -> Iterable[ImageBlockParam | DocumentBlockParam]:
     """Append files to a prompt.
 
@@ -1020,13 +1023,26 @@ async def async_prepare_files_for_prompt(
             if mime_type is None:
                 mime_type = guess_file_type(file_path)[0]
 
-            if not mime_type or not mime_type.startswith(("image/", "application/pdf")):
+            if (
+                not mime_type
+                or not mime_type.startswith(("image/", "application/pdf"))
+                or not model_info.capabilities
+                or (
+                    mime_type.startswith("image/")
+                    and not model_info.capabilities.image_input.supported
+                )
+                or (
+                    mime_type.startswith("application/pdf")
+                    and not model_info.capabilities.pdf_input.supported
+                )
+            ):
                 raise HomeAssistantError(
                     translation_domain=DOMAIN,
                     translation_key="wrong_file_type",
                     translation_placeholders={
                         "file_path": file_path.as_posix(),
                         "mime_type": mime_type or "unknown",
+                        "model": model_info.display_name,
                     },
                 )
             if mime_type == "image/jpg":
