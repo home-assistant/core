@@ -290,10 +290,7 @@ async def ws_event_stream(
             return
 
     event_types = async_determine_event_types(hass, entity_ids, device_ids)
-    # If end_time is in the past this is a one-shot historical fetch that
-    # never switches to a live stream, so the persistent parent-context
-    # cache populated by the historical pre-pass is wasted work in that
-    # case.
+    # A past end_time makes this a one-shot fetch that never goes live.
     will_go_live = not (end_time and end_time <= utc_now)
     event_processor = EventProcessor(
         hass,
@@ -364,14 +361,9 @@ async def ws_event_stream(
         logbook_config: LogbookConfig = hass.data[DOMAIN]
         entities_filter = logbook_config.entity_filter
 
-    # The live subscription needs EVENT_CALL_SERVICE so the live consumer
-    # can populate the persistent context_user_ids cache from new service
-    # calls as they fire — this is what gives child contexts their parent's
-    # user attribution. Historical SQL queries do NOT need it: the
-    # context_only join in entities_stmt fetches call_service rows by
-    # context_id_bin regardless of event_type, and including it in the SQL
-    # event_types tuple just adds a wasted index range scan over
-    # call_service rows in the query window.
+    # Live subscription needs call_service events so the live consumer can
+    # cache parent user_ids as they fire. Historical queries don't — the
+    # context_only join fetches them by context_id regardless of type.
     live_event_types = (*event_types, EVENT_CALL_SERVICE)
     async_subscribe_events(
         hass,

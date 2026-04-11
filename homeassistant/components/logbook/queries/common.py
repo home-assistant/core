@@ -127,12 +127,7 @@ def select_events_context_id_subquery(
 def select_context_user_ids_for_context_ids(
     context_ids: Collection[bytes],
 ) -> StatementLambdaElement:
-    """Select context_id_bin and context_user_id_bin from events for the given context ids.
-
-    Used by the logbook processor to resolve parent-context user attribution
-    for child contexts whose parent service_call event isn't in the filtered
-    row stream. Hits the existing ix_events_context_id_bin index.
-    """
+    """Select (context_id_bin, context_user_id_bin) for the given context ids."""
     return lambda_stmt(
         lambda: (
             select(Events.context_id_bin, Events.context_user_id_bin)
