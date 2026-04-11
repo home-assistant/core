@@ -10,16 +10,19 @@ from homeassistant.components.wattwaechter.coordinator import WattwaechterCoordi
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
-from .conftest import MOCK_ALIVE_RESPONSE, MOCK_METER_DATA, MOCK_SYSTEM_INFO
+from .conftest import MOCK_ALIVE_RESPONSE, MOCK_METER_DATA
+
+from tests.common import MockConfigEntry
 
 
-async def test_setup_entry(hass: HomeAssistant, mock_config_entry) -> None:
+async def test_setup_entry(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
     """Test successful integration setup."""
     with patch("homeassistant.components.wattwaechter.Wattwaechter") as mock_cls:
         client = mock_cls.return_value
         client.alive = AsyncMock(return_value=MOCK_ALIVE_RESPONSE)
         client.meter_data = AsyncMock(return_value=MOCK_METER_DATA)
-        client.system_info = AsyncMock(return_value=MOCK_SYSTEM_INFO)
         client.host = "192.168.1.100"
 
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
@@ -30,7 +33,7 @@ async def test_setup_entry(hass: HomeAssistant, mock_config_entry) -> None:
 
 
 async def test_setup_entry_connection_error(
-    hass: HomeAssistant, mock_config_entry
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> None:
     """Test setup when device is unreachable."""
     with patch("homeassistant.components.wattwaechter.Wattwaechter") as mock_cls:
@@ -45,13 +48,14 @@ async def test_setup_entry_connection_error(
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
-async def test_unload_entry(hass: HomeAssistant, mock_config_entry) -> None:
+async def test_unload_entry(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
     """Test successful integration unload."""
     with patch("homeassistant.components.wattwaechter.Wattwaechter") as mock_cls:
         client = mock_cls.return_value
         client.alive = AsyncMock(return_value=MOCK_ALIVE_RESPONSE)
         client.meter_data = AsyncMock(return_value=MOCK_METER_DATA)
-        client.system_info = AsyncMock(return_value=MOCK_SYSTEM_INFO)
         client.host = "192.168.1.100"
 
         await hass.config_entries.async_setup(mock_config_entry.entry_id)

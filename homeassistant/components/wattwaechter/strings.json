@@ -15,14 +15,20 @@
           "host": "[%key:common::config_flow::data::host%]",
           "token": "[%key:common::config_flow::data::api_token%]"
         },
-        "description": "Enter the IP address or hostname of your WattWächter device. The API token is optional if authentication is disabled on the device.",
+        "data_description": {
+          "host": "The hostname or IP address of your WattWächter Plus device.",
+          "token": "Optional API token for authenticated access."
+        },
         "title": "Add WattWächter Plus"
       },
       "zeroconf_confirm": {
         "data": {
           "token": "[%key:common::config_flow::data::api_token%]"
         },
-        "description": "A WattWächter device was found on your network.\n\nModel: {model}\nFirmware: {firmware}\nHost: {host}\nDevice ID: {device_id}\n\nOptionally enter the API token for authenticated access.",
+        "data_description": {
+          "token": "The API token for your WattWächter Plus device."
+        },
+        "description": "A WattWächter device was found on your network.\n\nModel: {model}\nFirmware: {firmware}\nHost: {host}\nDevice ID: {device_id}",
         "title": "WattWächter Plus discovered"
       }
     }
@@ -41,9 +47,7 @@
       "import_total": { "name": "Total consumption" },
       "power_factor": { "name": "Power factor" },
       "power_factor_phase": { "name": "Power factor {phase}" },
-      "voltage_phase": { "name": "Voltage {phase}" },
-      "wifi_signal": { "name": "Wi-Fi signal" },
-      "wifi_ssid": { "name": "Wi-Fi SSID" }
+      "voltage_phase": { "name": "Voltage {phase}" }
     }
   },
   "exceptions": {

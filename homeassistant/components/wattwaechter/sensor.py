@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
 import logging
 
 from homeassistant.components.sensor import (
@@ -12,8 +11,6 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.const import (
-    SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
-    EntityCategory,
     UnitOfElectricCurrent,
     UnitOfElectricPotential,
     UnitOfEnergy,
@@ -30,15 +27,6 @@ from .entity import WattwaechterEntity
 _LOGGER = logging.getLogger(__name__)
 
 PARALLEL_UPDATES = 0
-
-
-@dataclass(frozen=True, kw_only=True)
-class DiagnosticSensorDescription(SensorEntityDescription):
-    """Describes a WattWächter diagnostic sensor."""
-
-    system_section: str
-    system_key: str
-
 
 KNOWN_OBIS_CODES: dict[str, SensorEntityDescription] = {
     # Energy meters (kWh) - total_increasing
@@ -228,28 +216,6 @@ OBIS_PHASE: dict[str, str] = {
     "73.7.0": "L3",
 }
 
-DIAGNOSTIC_SENSORS: tuple[DiagnosticSensorDescription, ...] = (
-    DiagnosticSensorDescription(
-        key="wifi_signal",
-        translation_key="wifi_signal",
-        system_section="wifi",
-        system_key="signal_strength",
-        native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
-        device_class=SensorDeviceClass.SIGNAL_STRENGTH,
-        state_class=SensorStateClass.MEASUREMENT,
-        entity_category=EntityCategory.DIAGNOSTIC,
-        entity_registry_enabled_default=False,
-    ),
-    DiagnosticSensorDescription(
-        key="wifi_ssid",
-        translation_key="wifi_ssid",
-        system_section="wifi",
-        system_key="ssid",
-        entity_category=EntityCategory.DIAGNOSTIC,
-        entity_registry_enabled_default=False,
-    ),
-)
-
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -258,27 +224,19 @@ async def async_setup_entry(
 ) -> None:
     """Set up WattWächter sensors from a config entry."""
     coordinator = entry.runtime_data
-    entities: list[SensorEntity] = [
-        WattwaechterDiagnosticSensor(
+
+    if not coordinator.data:
+        return
+
+    async_add_entities(
+        WattwaechterObisSensor(
             coordinator=coordinator,
-            description=diag_description,
+            description=KNOWN_OBIS_CODES[obis_code],
+            obis_code=obis_code,
         )
-        for diag_description in DIAGNOSTIC_SENSORS
-    ]
-
-    # Dynamic OBIS sensors from meter data
-    if coordinator.data.meter:
-        entities.extend(
-            WattwaechterObisSensor(
-                coordinator=coordinator,
-                description=KNOWN_OBIS_CODES[obis_code],
-                obis_code=obis_code,
-            )
-            for obis_code in coordinator.data.meter.values
-            if obis_code in KNOWN_OBIS_CODES
-        )
-
-    async_add_entities(entities)
+        for obis_code in coordinator.data.values
+        if obis_code in KNOWN_OBIS_CODES
+    )
 
 
 class WattwaechterObisSensor(WattwaechterEntity, SensorEntity):
@@ -303,33 +261,9 @@ class WattwaechterObisSensor(WattwaechterEntity, SensorEntity):
     @property
     def native_value(self) -> float | str | None:
         """Return the current sensor value."""
-        if self.coordinator.data.meter is None:
+        if self.coordinator.data is None:
             return None
-        obis = self.coordinator.data.meter.values.get(self._obis_code)
+        obis = self.coordinator.data.values.get(self._obis_code)
         if obis is None:
             return None
         return obis.value
-
-
-class WattwaechterDiagnosticSensor(WattwaechterEntity, SensorEntity):
-    """Sensor for diagnostic system information."""
-
-    entity_description: DiagnosticSensorDescription
-
-    def __init__(
-        self,
-        coordinator: WattwaechterCoordinator,
-        description: DiagnosticSensorDescription,
-    ) -> None:
-        """Initialize the diagnostic sensor."""
-        super().__init__(coordinator)
-        self.entity_description = description
-        self._attr_unique_id = f"{coordinator.device_id}_{description.key}"
-
-    @property
-    def native_value(self) -> str | float | None:
-        """Return the current sensor value."""
-        return self.coordinator.data.system.get_value(
-            self.entity_description.system_section,
-            self.entity_description.system_key,
-        )

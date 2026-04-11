@@ -107,8 +107,6 @@ def mock_client() -> Generator[Wattwaechter]:
         client = mock_cls.return_value
         client.host = MOCK_HOST
         client.alive = AsyncMock(return_value=MOCK_ALIVE_RESPONSE)
-        client.system_info = AsyncMock(return_value=MOCK_SYSTEM_INFO)
-        client.settings = AsyncMock(return_value=MOCK_SETTINGS)
         client.meter_data = AsyncMock(return_value=MOCK_METER_DATA)
         yield client
 

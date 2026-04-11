@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
 from datetime import timedelta
 import logging
 
@@ -12,7 +11,7 @@ from aio_wattwaechter import (
     WattwaechterConnectionError,
     WattwaechterNoDataError,
 )
-from aio_wattwaechter.models import MeterData, SystemInfo
+from aio_wattwaechter.models import MeterData
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST
@@ -36,15 +35,7 @@ _LOGGER = logging.getLogger(__name__)
 type WattwaechterConfigEntry = ConfigEntry[WattwaechterCoordinator]
 
 
-@dataclass
-class WattwaechterData:
-    """Data class for coordinator data."""
-
-    meter: MeterData | None
-    system: SystemInfo
-
-
-class WattwaechterCoordinator(DataUpdateCoordinator[WattwaechterData]):
+class WattwaechterCoordinator(DataUpdateCoordinator[MeterData | None]):
     """Coordinator for WattWächter Plus data updates."""
 
     config_entry: WattwaechterConfigEntry
@@ -74,15 +65,12 @@ class WattwaechterCoordinator(DataUpdateCoordinator[WattwaechterData]):
             update_interval=timedelta(seconds=DEFAULT_SCAN_INTERVAL),
         )
 
-    async def _async_update_data(self) -> WattwaechterData:
+    async def _async_update_data(self) -> MeterData | None:
         """Fetch data from the WattWächter device."""
         try:
-            try:
-                meter_data = await self.client.meter_data()
-            except WattwaechterNoDataError:
-                meter_data = None
-
-            system_info = await self.client.system_info()
+            return await self.client.meter_data()
+        except WattwaechterNoDataError:
+            return None
         except WattwaechterAuthenticationError as err:
             raise ConfigEntryAuthFailed(
                 translation_domain=DOMAIN,
@@ -95,7 +83,3 @@ class WattwaechterCoordinator(DataUpdateCoordinator[WattwaechterData]):
                 translation_key="update_failed",
                 translation_placeholders={"error": str(err)},
             ) from err
-
-        self.fw_version = system_info.get_value("esp", "os_version") or self.fw_version
-
-        return WattwaechterData(meter=meter_data, system=system_info)

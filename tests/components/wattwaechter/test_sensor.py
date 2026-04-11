@@ -4,31 +4,35 @@ from __future__ import annotations
 
 from unittest.mock import AsyncMock, patch
 
+from aio_wattwaechter.models import MeterData
+
 from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
 from homeassistant.core import HomeAssistant
 
-from .conftest import (
-    MOCK_ALIVE_RESPONSE,
-    MOCK_METER_DATA,
-    MOCK_METER_DATA_MINIMAL,
-    MOCK_SYSTEM_INFO,
-)
+from .conftest import MOCK_ALIVE_RESPONSE, MOCK_METER_DATA, MOCK_METER_DATA_MINIMAL
+
+from tests.common import MockConfigEntry
 
 
-async def _setup_integration(hass: HomeAssistant, mock_config_entry, meter_data):
+async def _setup_integration(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    meter_data: MeterData | None,
+) -> None:
     """Set up the integration with given meter data."""
     with patch("homeassistant.components.wattwaechter.Wattwaechter") as mock_cls:
         client = mock_cls.return_value
         client.alive = AsyncMock(return_value=MOCK_ALIVE_RESPONSE)
         client.meter_data = AsyncMock(return_value=meter_data)
-        client.system_info = AsyncMock(return_value=MOCK_SYSTEM_INFO)
         client.host = "192.168.1.100"
 
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
 
 
-async def test_known_obis_sensors(hass: HomeAssistant, mock_config_entry) -> None:
+async def test_known_obis_sensors(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
     """Test that known OBIS codes create sensors with correct attributes."""
     await _setup_integration(hass, mock_config_entry, MOCK_METER_DATA)
 
@@ -66,7 +70,9 @@ async def test_known_obis_sensors(hass: HomeAssistant, mock_config_entry) -> Non
     assert state.attributes["device_class"] == SensorDeviceClass.FREQUENCY
 
 
-async def test_minimal_meter_data(hass: HomeAssistant, mock_config_entry) -> None:
+async def test_minimal_meter_data(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
     """Test that only reported OBIS codes create sensors (dynamic)."""
     await _setup_integration(hass, mock_config_entry, MOCK_METER_DATA_MINIMAL)
 
@@ -80,7 +86,9 @@ async def test_minimal_meter_data(hass: HomeAssistant, mock_config_entry) -> Non
     assert hass.states.get("sensor.haushalt_test_current_l1") is None
 
 
-async def test_no_meter_data(hass: HomeAssistant, mock_config_entry) -> None:
+async def test_no_meter_data(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
     """Test setup when device returns no meter data (HTTP 204)."""
     await _setup_integration(hass, mock_config_entry, None)
 
