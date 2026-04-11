@@ -44,6 +44,10 @@
       "description": "[%key:component::energy::issues::entity_unexpected_unit_energy_price::description%]",
       "title": "[%key:component::energy::issues::entity_unexpected_unit_energy::title%]"
     },
+    "entity_unexpected_unit_volume_flow_rate": {
+      "description": "The following entities do not have an expected unit of measurement (either of {flow_rate_units}):",
+      "title": "[%key:component::energy::issues::entity_unexpected_unit_energy::title%]"
+    },
     "entity_unexpected_unit_water": {
       "description": "The following entities do not have the expected unit of measurement (either of {water_units}):",
       "title": "[%key:component::energy::issues::entity_unexpected_unit_energy::title%]"

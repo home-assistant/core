@@ -1,0 +1,97 @@
+{
+  "common": {
+    "condition_behavior_name": "Condition passes if",
+    "condition_threshold_name": "Threshold type",
+    "trigger_behavior_name": "Trigger when",
+    "trigger_threshold_name": "Threshold type"
+  },
+  "conditions": {
+    "is_detected": {
+      "description": "Tests if one or more moisture sensors are detecting moisture.",
+      "fields": {
+        "behavior": {
+          "name": "[%key:component::moisture::common::condition_behavior_name%]"
+        }
+      },
+      "name": "Moisture is detected"
+    },
+    "is_not_detected": {
+      "description": "Tests if one or more moisture sensors are not detecting moisture.",
+      "fields": {
+        "behavior": {
+          "name": "[%key:component::moisture::common::condition_behavior_name%]"
+        }
+      },
+      "name": "Moisture is not detected"
+    },
+    "is_value": {
+      "description": "Tests the moisture level of one or more entities.",
+      "fields": {
+        "behavior": {
+          "name": "[%key:component::moisture::common::condition_behavior_name%]"
+        },
+        "threshold": {
+          "name": "[%key:component::moisture::common::condition_threshold_name%]"
+        }
+      },
+      "name": "Moisture level"
+    }
+  },
+  "selector": {
+    "condition_behavior": {
+      "options": {
+        "all": "All",
+        "any": "Any"
+      }
+    },
+    "trigger_behavior": {
+      "options": {
+        "any": "Any",
+        "first": "First",
+        "last": "Last"
+      }
+    }
+  },
+  "title": "Moisture",
+  "triggers": {
+    "changed": {
+      "description": "Triggers after one or more moisture content values change.",
+      "fields": {
+        "threshold": {
+          "name": "[%key:component::moisture::common::trigger_threshold_name%]"
+        }
+      },
+      "name": "Moisture content changed"
+    },
+    "cleared": {
+      "description": "Triggers after one or more moisture sensors stop detecting moisture.",
+      "fields": {
+        "behavior": {
+          "name": "[%key:component::moisture::common::trigger_behavior_name%]"
+        }
+      },
+      "name": "Moisture cleared"
+    },
+    "crossed_threshold": {
+      "description": "Triggers after one or more moisture content values cross a threshold.",
+      "fields": {
+        "behavior": {
+          "name": "[%key:component::moisture::common::trigger_behavior_name%]"
+        },
+        "threshold": {
+          "name": "[%key:component::moisture::common::trigger_threshold_name%]"
+        }
+      },
+      "name": "Moisture content crossed threshold"
+    },
+    "detected": {
+      "description": "Triggers after one or more moisture sensors start detecting moisture.",
+      "fields": {
+        "behavior": {
+          "name": "[%key:component::moisture::common::trigger_behavior_name%]"
+        }
+      },
+      "name": "Moisture detected"
+    }
+  }
+}

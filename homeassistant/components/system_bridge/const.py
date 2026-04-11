@@ -2,7 +2,7 @@
 
 from typing import Final
 
-from systembridgemodels.modules import Module
+from systembridgeconnector.models.modules import Module
 
 DOMAIN = "system_bridge"
 

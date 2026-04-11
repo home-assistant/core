@@ -49,18 +49,6 @@ SCAN_INTERVAL = timedelta(seconds=15)
 
 STREAM_SOURCE_LIST = ["snapshot", "mjpeg", "rtsp"]
 
-_SRV_EN_REC = "enable_recording"
-_SRV_DS_REC = "disable_recording"
-_SRV_EN_AUD = "enable_audio"
-_SRV_DS_AUD = "disable_audio"
-_SRV_EN_MOT_REC = "enable_motion_recording"
-_SRV_DS_MOT_REC = "disable_motion_recording"
-_SRV_GOTO = "goto_preset"
-_SRV_CBW = "set_color_bw"
-_SRV_TOUR_ON = "start_tour"
-_SRV_TOUR_OFF = "stop_tour"
-
-_SRV_PTZ_CTRL = "ptz_control"
 _ATTR_PTZ_TT = "travel_time"
 _ATTR_PTZ_MOV = "movement"
 _MOV = [
@@ -103,17 +91,17 @@ _SRV_PTZ_SCHEMA = _SRV_SCHEMA.extend(
 )
 
 CAMERA_SERVICES = {
-    _SRV_EN_REC: (_SRV_SCHEMA, "async_enable_recording", ()),
-    _SRV_DS_REC: (_SRV_SCHEMA, "async_disable_recording", ()),
-    _SRV_EN_AUD: (_SRV_SCHEMA, "async_enable_audio", ()),
-    _SRV_DS_AUD: (_SRV_SCHEMA, "async_disable_audio", ()),
-    _SRV_EN_MOT_REC: (_SRV_SCHEMA, "async_enable_motion_recording", ()),
-    _SRV_DS_MOT_REC: (_SRV_SCHEMA, "async_disable_motion_recording", ()),
-    _SRV_GOTO: (_SRV_GOTO_SCHEMA, "async_goto_preset", (_ATTR_PRESET,)),
-    _SRV_CBW: (_SRV_CBW_SCHEMA, "async_set_color_bw", (_ATTR_COLOR_BW,)),
-    _SRV_TOUR_ON: (_SRV_SCHEMA, "async_start_tour", ()),
-    _SRV_TOUR_OFF: (_SRV_SCHEMA, "async_stop_tour", ()),
-    _SRV_PTZ_CTRL: (
+    "enable_recording": (_SRV_SCHEMA, "async_enable_recording", ()),
+    "disable_recording": (_SRV_SCHEMA, "async_disable_recording", ()),
+    "enable_audio": (_SRV_SCHEMA, "async_enable_audio", ()),
+    "disable_audio": (_SRV_SCHEMA, "async_disable_audio", ()),
+    "enable_motion_recording": (_SRV_SCHEMA, "async_enable_motion_recording", ()),
+    "disable_motion_recording": (_SRV_SCHEMA, "async_disable_motion_recording", ()),
+    "goto_preset": (_SRV_GOTO_SCHEMA, "async_goto_preset", (_ATTR_PRESET,)),
+    "set_color_bw": (_SRV_CBW_SCHEMA, "async_set_color_bw", (_ATTR_COLOR_BW,)),
+    "start_tour": (_SRV_SCHEMA, "async_start_tour", ()),
+    "stop_tour": (_SRV_SCHEMA, "async_stop_tour", ()),
+    "ptz_control": (
         _SRV_PTZ_SCHEMA,
         "async_ptz_control",
         (_ATTR_PTZ_MOV, _ATTR_PTZ_TT),

@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import AsyncIterator, Callable, Coroutine
+from collections.abc import AsyncGenerator, Callable, Coroutine
 from contextlib import asynccontextmanager
 from dataclasses import dataclass
 import logging
@@ -261,7 +261,8 @@ class ImprovBLEConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if self._can_identify is None:
             try:
-                self._can_identify = await self._try_call(device.can_identify())
+                await self._try_call(device.ensure_connected())
+                self._can_identify = device.can_identify
             except AbortFlow as err:
                 return self.async_abort(reason=err.reason)
         if self._can_identify:
@@ -296,7 +297,7 @@ class ImprovBLEConfigFlow(ConfigFlow, domain=DOMAIN):
     @asynccontextmanager
     async def _async_provision_context(
         self, ble_mac: str
-    ) -> AsyncIterator[asyncio.Future[str]]:
+    ) -> AsyncGenerator[asyncio.Future[str]]:
         """Context manager to register and cleanup provisioning future."""
         future = self.hass.loop.create_future()
         provisioning_futures = async_get_provisioning_futures(self.hass)

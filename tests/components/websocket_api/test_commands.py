@@ -1,7 +1,6 @@
 """Tests for WebSocket API commands."""
 
 import asyncio
-from collections.abc import Generator
 from copy import deepcopy
 import io
 import logging
@@ -15,14 +14,18 @@ import voluptuous as vol
 
 from homeassistant import loader
 from homeassistant.components.device_automation import toggle_entity
-from homeassistant.components.group import DOMAIN as DOMAIN_GROUP
+from homeassistant.components.group import DOMAIN as GROUP_DOMAIN
 from homeassistant.components.light import LightEntityFeature
-from homeassistant.components.logger import DOMAIN as DOMAIN_LOGGER
+from homeassistant.components.logger import DOMAIN as LOGGER_DOMAIN
 from homeassistant.components.websocket_api import const
 from homeassistant.components.websocket_api.auth import (
     TYPE_AUTH,
     TYPE_AUTH_OK,
     TYPE_AUTH_REQUIRED,
+)
+from homeassistant.components.websocket_api.automation import (
+    AUTOMATION_COMPONENT_LOOKUP_CACHE,
+    _get_automation_component_lookup_table,
 )
 from homeassistant.components.websocket_api.commands import (
     ALL_CONDITION_DESCRIPTIONS_JSON_CACHE,
@@ -31,7 +34,7 @@ from homeassistant.components.websocket_api.commands import (
 )
 from homeassistant.components.websocket_api.const import FEATURE_COALESCE_MESSAGES, URL
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import SIGNAL_BOOTSTRAP_INTEGRATIONS
+from homeassistant.const import CONF_EXTERNAL_URL, SIGNAL_BOOTSTRAP_INTEGRATIONS
 from homeassistant.core import Context, HomeAssistant, State, SupportsResponse, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import (
@@ -73,16 +76,6 @@ STATE_KEY_SHORT_NAMES = {
     "attributes": "a",
 }
 STATE_KEY_LONG_NAMES = {v: k for k, v in STATE_KEY_SHORT_NAMES.items()}
-
-
-@pytest.fixture(name="enable_experimental_triggers_conditions")
-def enable_experimental_triggers_conditions() -> Generator[None]:
-    """Enable experimental triggers and conditions."""
-    with patch(
-        "homeassistant.components.labs.async_is_preview_feature_enabled",
-        return_value=True,
-    ):
-        yield
 
 
 @pytest.fixture
@@ -896,16 +889,16 @@ async def test_get_services(
     assert hass.data[ALL_SERVICE_DESCRIPTIONS_JSON_CACHE] is old_cache
 
     # Set up an integration that has services and check cache is updated
-    assert await async_setup_component(hass, DOMAIN_GROUP, {DOMAIN_GROUP: {}})
+    assert await async_setup_component(hass, GROUP_DOMAIN, {GROUP_DOMAIN: {}})
     await websocket_client.send_json_auto_id({"type": "get_services"})
     msg = await websocket_client.receive_json()
     assert msg == {
         "id": 3,
-        "result": {DOMAIN_GROUP: ANY},
+        "result": {GROUP_DOMAIN: ANY},
         "success": True,
         "type": "result",
     }
-    group_services = msg["result"][DOMAIN_GROUP]
+    group_services = msg["result"][GROUP_DOMAIN]
     assert group_services == snapshot
     assert hass.data[ALL_SERVICE_DESCRIPTIONS_JSON_CACHE] is not old_cache
 
@@ -915,7 +908,7 @@ async def test_get_services(
     msg = await websocket_client.receive_json()
     assert msg == {
         "id": 4,
-        "result": {DOMAIN_GROUP: group_services},
+        "result": {GROUP_DOMAIN: group_services},
         "success": True,
         "type": "result",
     }
@@ -951,7 +944,7 @@ async def test_get_services(
             "set_level": None,
         }
 
-    await async_setup_component(hass, DOMAIN_LOGGER, {DOMAIN_LOGGER: {}})
+    await async_setup_component(hass, LOGGER_DOMAIN, {LOGGER_DOMAIN: {}})
     await hass.async_block_till_done()
 
     with (
@@ -966,13 +959,13 @@ async def test_get_services(
     assert msg == {
         "id": 5,
         "result": {
-            DOMAIN_LOGGER: ANY,
-            DOMAIN_GROUP: group_services,
+            LOGGER_DOMAIN: ANY,
+            GROUP_DOMAIN: group_services,
         },
         "success": True,
         "type": "result",
     }
-    logger_services = msg["result"][DOMAIN_LOGGER]
+    logger_services = msg["result"][LOGGER_DOMAIN]
     assert logger_services == snapshot
 
 
@@ -1146,10 +1139,18 @@ async def test_subscribe_triggers(
     assert hass.data[ALL_TRIGGER_DESCRIPTIONS_JSON_CACHE] is old_cache
 
 
+@pytest.mark.parametrize(
+    ("local_only_user", "forbidden_keys"), [(False, []), (True, [CONF_EXTERNAL_URL])]
+)
 async def test_get_config(
-    hass: HomeAssistant, websocket_client: MockHAClientWebSocket
+    hass: HomeAssistant,
+    websocket_client: MockHAClientWebSocket,
+    hass_admin_user: MockUser,
+    local_only_user: bool,
+    forbidden_keys: list[str],
 ) -> None:
     """Test get_config command."""
+    hass_admin_user.local_only = local_only_user
     await websocket_client.send_json_auto_id({"type": "get_config"})
 
     msg = await websocket_client.receive_json()
@@ -1169,6 +1170,10 @@ async def test_get_config(
         if key in result:
             result[key] = set(result[key])
             config[key] = set(config[key])
+
+    for key in forbidden_keys:
+        assert key in config
+        config.pop(key)
 
     assert result == config
 
@@ -3657,7 +3662,7 @@ async def test_extract_from_target_validation_error(
     assert "error" in msg
 
 
-@pytest.mark.usefixtures("enable_experimental_triggers_conditions", "target_entities")
+@pytest.mark.usefixtures("enable_labs_preview_features", "target_entities")
 @patch("annotatedyaml.loader.load_yaml")
 @pytest.mark.parametrize("automation_component", ["trigger", "condition"])
 async def test_get_triggers_conditions_for_target(
@@ -3665,6 +3670,7 @@ async def test_get_triggers_conditions_for_target(
     hass: HomeAssistant,
     websocket_client: MockHAClientWebSocket,
     automation_component: str,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test get_triggers_for_target/get_conditions_for_target command with mixed target types."""
 
@@ -3803,7 +3809,9 @@ async def test_get_triggers_conditions_for_target(
         await hass.async_block_till_done()
 
         async def assert_command(
-            target: dict[str, list[str]], expected: list[str]
+            target: dict[str, list[str]],
+            expected: list[str],
+            expect_lookup_cache: bool = True,
         ) -> Any:
             """Call the command and assert expected triggers/conditions."""
             await websocket_client.send_json_auto_id(
@@ -3815,8 +3823,13 @@ async def test_get_triggers_conditions_for_target(
             assert msg["success"]
             assert sorted(msg["result"]) == sorted(expected)
 
+            assert ("has no cache yet" not in caplog.text) == expect_lookup_cache
+            caplog.clear()
+
         # Test entity target - unknown entity
-        await assert_command({"entity_id": ["light.unknown_entity"]}, [])
+        await assert_command(
+            {"entity_id": ["light.unknown_entity"]}, [], expect_lookup_cache=False
+        )
 
         # Test entity target - entity not in registry
         await assert_command(
@@ -3936,6 +3949,7 @@ async def test_get_services_for_target(
     mock_load_yaml: Mock,
     hass: HomeAssistant,
     websocket_client: MockHAClientWebSocket,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test get_services_for_target command with mixed target types."""
 
@@ -4047,7 +4061,11 @@ async def test_get_services_for_target(
     )
     await hass.async_block_till_done()
 
-    async def assert_services(target: dict[str, list[str]], expected: list[str]) -> Any:
+    async def assert_services(
+        target: dict[str, list[str]],
+        expected: list[str],
+        expect_lookup_cache: bool = True,
+    ) -> Any:
         """Call the command and assert expected services."""
         await websocket_client.send_json_auto_id(
             {"type": "get_services_for_target", "target": target}
@@ -4058,8 +4076,13 @@ async def test_get_services_for_target(
         assert msg["success"]
         assert sorted(msg["result"]) == sorted(expected)
 
+        assert ("has no cache yet" not in caplog.text) == expect_lookup_cache
+        caplog.clear()
+
     # Test entity target - unknown entity
-    await assert_services({"entity_id": ["light.unknown_entity"]}, [])
+    await assert_services(
+        {"entity_id": ["light.unknown_entity"]}, [], expect_lookup_cache=False
+    )
 
     # Test entity target - entity not in registry
     await assert_services(
@@ -4212,7 +4235,7 @@ async def test_get_services_for_target_caching(
         await call_command()
 
         assert mock_get_components.call_count == 1
-        first_flat_descriptions = mock_get_components.call_args_list[0][0][3]
+        first_flat_descriptions = mock_get_components.call_args_list[0][0][4]
         assert first_flat_descriptions == {
             "light.turn_on": {
                 "fields": {},
@@ -4227,7 +4250,7 @@ async def test_get_services_for_target_caching(
         # Second call: should reuse cached flat descriptions
         await call_command()
         assert mock_get_components.call_count == 2
-        second_flat_descriptions = mock_get_components.call_args_list[1][0][3]
+        second_flat_descriptions = mock_get_components.call_args_list[1][0][4]
         assert first_flat_descriptions is second_flat_descriptions
 
         # Register a new service to invalidate cache
@@ -4237,6 +4260,89 @@ async def test_get_services_for_target_caching(
         # Third call: cache should be rebuilt
         await call_command()
         assert mock_get_components.call_count == 3
-        third_flat_descriptions = mock_get_components.call_args_list[2][0][3]
+        third_flat_descriptions = mock_get_components.call_args_list[2][0][4]
         assert "new_domain.new_service" in third_flat_descriptions
         assert third_flat_descriptions is not first_flat_descriptions
+
+
+async def test_get_automation_component_lookup_table_cache(
+    hass: HomeAssistant,
+) -> None:
+    """Test that _get_automation_component_lookup_table caches and rotates properly."""
+    triggers: dict[str, dict[str, Any] | None] = {
+        "light.turned_on": {"target": {"entity": [{"domain": ["light"]}]}},
+        "switch.turned_on": {"target": {"entity": [{"domain": ["switch"]}]}},
+    }
+    conditions: dict[str, dict[str, Any] | None] = {
+        "light.is_on": {"target": {"entity": [{"domain": ["light"]}]}},
+        "sensor.is_above": {"target": {"entity": [{"domain": ["sensor"]}]}},
+    }
+    services: dict[str, dict[str, Any] | None] = {
+        "light.turn_on": {"target": {"entity": [{"domain": ["light"]}]}},
+        "climate.set_temperature": {"target": {"entity": [{"domain": ["climate"]}]}},
+    }
+
+    # First call with triggers - cache should be created with 1 entry
+    trigger_result1 = _get_automation_component_lookup_table(hass, "triggers", triggers)
+    assert AUTOMATION_COMPONENT_LOOKUP_CACHE in hass.data
+    cache = hass.data[AUTOMATION_COMPONENT_LOOKUP_CACHE]
+    assert len(cache) == 1
+
+    # Second call with same triggers - should return cached result
+    trigger_result2 = _get_automation_component_lookup_table(hass, "triggers", triggers)
+    assert trigger_result1 is trigger_result2
+    assert len(cache) == 1
+
+    # Call with conditions
+    condition_result1 = _get_automation_component_lookup_table(
+        hass, "conditions", conditions
+    )
+    assert condition_result1 is not trigger_result1
+    assert len(cache) == 2
+
+    # Call with services
+    service_result1 = _get_automation_component_lookup_table(hass, "services", services)
+    assert service_result1 is not trigger_result1
+    assert service_result1 is not condition_result1
+    assert len(cache) == 3
+
+    # Verify all 3 return cached results
+    assert (
+        _get_automation_component_lookup_table(hass, "triggers", triggers)
+        is trigger_result1
+    )
+    assert (
+        _get_automation_component_lookup_table(hass, "conditions", conditions)
+        is condition_result1
+    )
+    assert (
+        _get_automation_component_lookup_table(hass, "services", services)
+        is service_result1
+    )
+    assert len(cache) == 3
+
+    # Add a new triggers description dict - replaces previous triggers cache
+    new_triggers: dict[str, dict[str, Any] | None] = {
+        "fan.turned_on": {"target": {"entity": [{"domain": ["fan"]}]}},
+    }
+    _get_automation_component_lookup_table(hass, "triggers", new_triggers)
+    assert len(cache) == 3
+
+    # Initial trigger cache entry should have been replaced
+    trigger_result3 = _get_automation_component_lookup_table(hass, "triggers", triggers)
+    assert trigger_result3 is not trigger_result1
+    assert len(cache) == 3
+
+    # Verify all 3 return cached results again
+    assert (
+        _get_automation_component_lookup_table(hass, "triggers", triggers)
+        is trigger_result3
+    )
+    assert (
+        _get_automation_component_lookup_table(hass, "conditions", conditions)
+        is condition_result1
+    )
+    assert (
+        _get_automation_component_lookup_table(hass, "services", services)
+        is service_result1
+    )

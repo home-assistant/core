@@ -7,7 +7,6 @@ import PyTado
 import PyTado.exceptions
 from PyTado.interface import Tado
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     APPLICATION_NAME,
     CONF_PASSWORD,
@@ -35,8 +34,8 @@ from .const import (
     TADO_BRIDGE_MODELS,
 )
 from .coordinator import (
+    TadoConfigEntry,
     TadoDataUpdateCoordinator,
-    TadoMobileDeviceUpdateCoordinator,
     TadoZoneControlUpdateCoordinator,
 )
 from .models import TadoData
@@ -45,7 +44,6 @@ from .services import async_setup_services
 PLATFORMS = [
     Platform.BINARY_SENSOR,
     Platform.CLIMATE,
-    Platform.DEVICE_TRACKER,
     Platform.SELECT,
     Platform.SENSOR,
     Platform.SWITCH,
@@ -66,9 +64,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     async_setup_services(hass)
     return True
-
-
-type TadoConfigEntry = ConfigEntry[TadoData]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: TadoConfigEntry) -> bool:
@@ -113,9 +108,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: TadoConfigEntry) -> bool
     )
     await zone_control_coordinator.async_config_entry_first_refresh()
 
-    mobile_coordinator = TadoMobileDeviceUpdateCoordinator(hass, entry, tado)
-    await mobile_coordinator.async_config_entry_first_refresh()
-
     # Pre-register the bridge device to ensure it exists before other devices reference it
     device_registry = dr.async_get(hass)
     for device in coordinator.data["device"].values():
@@ -131,9 +123,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: TadoConfigEntry) -> bool
                 configuration_url=f"https://app.tado.com/en/main/settings/rooms-and-devices/device/{device['serialNo']}",
             )
 
-    entry.runtime_data = TadoData(
-        coordinator, mobile_coordinator, zone_control_coordinator
-    )
+    entry.runtime_data = TadoData(coordinator, zone_control_coordinator)
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True

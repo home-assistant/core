@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_sensors[load_platforms0][sensor.mock_file_test_filesize_txt_created-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -20,6 +21,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Created',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -50,8 +52,9 @@
 # ---
 # name: test_sensors[load_platforms0][sensor.mock_file_test_filesize_txt_last_updated-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -69,6 +72,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Last updated',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -99,8 +103,9 @@
 # ---
 # name: test_sensors[load_platforms0][sensor.mock_file_test_filesize_txt_size-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -120,6 +125,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Size',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -155,8 +161,9 @@
 # ---
 # name: test_sensors[load_platforms0][sensor.mock_file_test_filesize_txt_size_in_bytes-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -176,6 +183,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Size in bytes',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,

@@ -41,8 +41,12 @@ async def async_setup_entry(
         )
         for device in entry_data.devices.values()
         for component in device.status
-        if component in ("cooler", "freezer")
+        if component in ("cooler", "freezer", "onedoor")
         and Capability.THERMOSTAT_COOLING_SETPOINT in device.status[component]
+        and device.status[component][Capability.THERMOSTAT_COOLING_SETPOINT][
+            Attribute.COOLING_SETPOINT_RANGE
+        ].value
+        is not None
     )
     async_add_entities(entities)
 
@@ -176,7 +180,8 @@ class SmartThingsRefrigeratorTemperatureNumberEntity(SmartThingsEntity, NumberEn
         self._attr_translation_key = {
             "cooler": "cooler_temperature",
             "freezer": "freezer_temperature",
-        }[component]
+            "onedoor": "target_temperature",
+        }.get(component)
 
     @property
     def range(self) -> dict[str, int]:

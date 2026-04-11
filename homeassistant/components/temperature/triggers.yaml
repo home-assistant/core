@@ -1,0 +1,58 @@
+.trigger_common_fields:
+  behavior: &trigger_behavior
+    required: true
+    default: any
+    selector:
+      select:
+        translation_key: trigger_behavior
+        options:
+          - first
+          - last
+          - any
+
+.temperature_units: &temperature_units
+  - "°C"
+  - "°F"
+
+.temperature_threshold_entity: &temperature_threshold_entity
+  - domain: input_number
+    unit_of_measurement: *temperature_units
+  - domain: sensor
+    device_class: temperature
+  - domain: number
+    device_class: temperature
+
+.trigger_target: &trigger_target
+  entity:
+    - domain: sensor
+      device_class: temperature
+    - domain: climate
+    - domain: water_heater
+    - domain: weather
+
+changed:
+  target: *trigger_target
+  fields:
+    threshold:
+      required: true
+      selector:
+        numeric_threshold:
+          entity: *temperature_threshold_entity
+          mode: changed
+          number:
+            mode: box
+          unit_of_measurement: *temperature_units
+
+crossed_threshold:
+  target: *trigger_target
+  fields:
+    behavior: *trigger_behavior
+    threshold:
+      required: true
+      selector:
+        numeric_threshold:
+          entity: *temperature_threshold_entity
+          mode: crossed
+          number:
+            mode: box
+          unit_of_measurement: *temperature_units

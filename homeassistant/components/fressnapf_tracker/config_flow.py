@@ -1,5 +1,6 @@
 """Config flow for the Fressnapf Tracker integration."""
 
+from collections.abc import Mapping
 import logging
 from typing import Any
 
@@ -10,7 +11,12 @@ from fressnapftracker import (
 )
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import (
+    SOURCE_REAUTH,
+    SOURCE_RECONFIGURE,
+    ConfigFlow,
+    ConfigFlowResult,
+)
 from homeassistant.const import CONF_ACCESS_TOKEN
 from homeassistant.helpers.httpx_client import get_async_client
 
@@ -25,7 +31,7 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 )
 STEP_SMS_CODE_DATA_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_SMS_CODE): int,
+        vol.Required(CONF_SMS_CODE): str,
     }
 )
 
@@ -69,7 +75,7 @@ class FressnapfTrackerConfigFlow(ConfigFlow, domain=DOMAIN):
         return errors, False
 
     async def _async_verify_sms_code(
-        self, sms_code: int
+        self, sms_code: str
     ) -> tuple[dict[str, str], str | None]:
         """Verify SMS code and return errors and access_token."""
         errors: dict[str, str] = {}
@@ -136,40 +142,43 @@ class FressnapfTrackerConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def async_step_reconfigure(
-        self, user_input: dict[str, Any] | None = None
+    async def _async_reauth_reconfigure(
+        self,
+        user_input: dict[str, Any] | None,
+        entry: Any,
+        step_id: str,
     ) -> ConfigFlowResult:
-        """Handle reconfiguration of the integration."""
+        """Request a new sms code for reauth or reconfigure flows."""
         errors: dict[str, str] = {}
-        reconfigure_entry = self._get_reconfigure_entry()
 
         if user_input is not None:
             errors, success = await self._async_request_sms_code(
                 user_input[CONF_PHONE_NUMBER]
             )
             if success:
-                if reconfigure_entry.data[CONF_USER_ID] != self._context[CONF_USER_ID]:
+                if entry.data[CONF_USER_ID] != self._context[CONF_USER_ID]:
                     errors["base"] = "account_change_not_allowed"
-                else:
+                elif self.source == SOURCE_REAUTH:
+                    return await self.async_step_reauth_sms_code()
+                elif self.source == SOURCE_RECONFIGURE:
                     return await self.async_step_reconfigure_sms_code()
 
         return self.async_show_form(
-            step_id="reconfigure",
-            data_schema=vol.Schema(
-                {
-                    vol.Required(
-                        CONF_PHONE_NUMBER,
-                        default=reconfigure_entry.data.get(CONF_PHONE_NUMBER),
-                    ): str,
-                }
+            step_id=step_id,
+            data_schema=self.add_suggested_values_to_schema(
+                STEP_USER_DATA_SCHEMA,
+                {CONF_PHONE_NUMBER: entry.data.get(CONF_PHONE_NUMBER)},
             ),
             errors=errors,
         )
 
-    async def async_step_reconfigure_sms_code(
-        self, user_input: dict[str, Any] | None = None
+    async def _async_reauth_reconfigure_sms_code(
+        self,
+        user_input: dict[str, Any] | None,
+        entry: Any,
+        step_id: str,
     ) -> ConfigFlowResult:
-        """Handle the SMS code step during reconfiguration."""
+        """Verify SMS code for reauth or reconfigure flows."""
         errors: dict[str, str] = {}
 
         if user_input is not None:
@@ -178,16 +187,61 @@ class FressnapfTrackerConfigFlow(ConfigFlow, domain=DOMAIN):
             )
             if access_token:
                 return self.async_update_reload_and_abort(
-                    self._get_reconfigure_entry(),
-                    data={
+                    entry,
+                    data_updates={
                         CONF_PHONE_NUMBER: self._context[CONF_PHONE_NUMBER],
-                        CONF_USER_ID: self._context[CONF_USER_ID],
                         CONF_ACCESS_TOKEN: access_token,
                     },
                 )
 
         return self.async_show_form(
-            step_id="reconfigure_sms_code",
+            step_id=step_id,
             data_schema=STEP_SMS_CODE_DATA_SCHEMA,
             errors=errors,
+        )
+
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
+        """Handle configuration by re-auth."""
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reauth confirmation step."""
+        return await self._async_reauth_reconfigure(
+            user_input,
+            self._get_reauth_entry(),
+            "reauth_confirm",
+        )
+
+    async def async_step_reauth_sms_code(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle the SMS code step during reauth."""
+        return await self._async_reauth_reconfigure_sms_code(
+            user_input,
+            self._get_reauth_entry(),
+            "reauth_sms_code",
+        )
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration of the integration."""
+        return await self._async_reauth_reconfigure(
+            user_input,
+            self._get_reconfigure_entry(),
+            "reconfigure",
+        )
+
+    async def async_step_reconfigure_sms_code(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle the SMS code step during reconfiguration."""
+        return await self._async_reauth_reconfigure_sms_code(
+            user_input,
+            self._get_reconfigure_entry(),
+            "reconfigure_sms_code",
         )

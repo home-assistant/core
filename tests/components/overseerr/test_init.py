@@ -72,7 +72,7 @@ async def test_proper_webhook_configuration(
     """Test the webhook configuration."""
     await setup_integration(hass, mock_config_entry)
 
-    assert REGISTERED_NOTIFICATIONS == 222
+    assert REGISTERED_NOTIFICATIONS == 4062
 
     mock_overseerr_client.test_webhook_notification_config.assert_not_called()
     mock_overseerr_client.set_webhook_notification_config.assert_not_called()
@@ -83,7 +83,6 @@ async def test_proper_webhook_configuration(
     [
         {"return_value.enabled": False},
         {"return_value.types": 4},
-        {"return_value.types": 4062},
         {
             "return_value.options": WebhookNotificationOptions(
                 webhook_url="http://example.com", json_payload=JSON_PAYLOAD
@@ -99,7 +98,6 @@ async def test_proper_webhook_configuration(
     ids=[
         "Disabled",
         "Smaller scope",
-        "Bigger scope",
         "Webhook URL",
         "JSON Payload",
     ],
@@ -124,7 +122,6 @@ async def test_webhook_configuration_need_update(
     [
         {"return_value.enabled": False},
         {"return_value.types": 4},
-        {"return_value.types": 4062},
         {
             "return_value.options": WebhookNotificationOptions(
                 webhook_url="http://example.com", json_payload=JSON_PAYLOAD
@@ -140,7 +137,6 @@ async def test_webhook_configuration_need_update(
     ids=[
         "Disabled",
         "Smaller scope",
-        "Bigger scope",
         "Webhook URL",
         "JSON Payload",
     ],

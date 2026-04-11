@@ -1,10 +1,14 @@
 """Support for Wireless Sensor Tags."""
 
+from __future__ import annotations
+
 import logging
+from typing import TYPE_CHECKING
 
 from requests.exceptions import ConnectTimeout, HTTPError
 import voluptuous as vol
-from wirelesstagpy import WirelessTags
+from wirelesstagpy import SensorTag, WirelessTags
+from wirelesstagpy.binaryevent import BinaryEvent
 from wirelesstagpy.exceptions import WirelessTagsException
 
 from homeassistant.components import persistent_notification
@@ -14,7 +18,15 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.dispatcher import dispatcher_send
 from homeassistant.helpers.typing import ConfigType
 
-from .const import DOMAIN, SIGNAL_BINARY_EVENT_UPDATE, SIGNAL_TAG_UPDATE
+from .const import (
+    DOMAIN,
+    SIGNAL_BINARY_EVENT_UPDATE,
+    SIGNAL_TAG_UPDATE,
+    WIRELESSTAG_DATA,
+)
+
+if TYPE_CHECKING:
+    from .switch import WirelessTagSwitch
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -39,34 +51,36 @@ CONFIG_SCHEMA = vol.Schema(
 class WirelessTagPlatform:
     """Principal object to manage all registered in HA tags."""
 
-    def __init__(self, hass, api):
+    def __init__(self, hass: HomeAssistant, api: WirelessTags) -> None:
         """Designated initializer for wirelesstags platform."""
         self.hass = hass
         self.api = api
-        self.tags = {}
+        self.tags: dict[str, SensorTag] = {}
         self._local_base_url = None
 
-    def load_tags(self):
+    def load_tags(self) -> dict[str, SensorTag]:
         """Load tags from remote server."""
         self.tags = self.api.load_tags()
         return self.tags
 
-    def arm(self, switch):
+    def arm(self, switch: WirelessTagSwitch) -> None:
         """Arm entity sensor monitoring."""
         func_name = f"arm_{switch.entity_description.key}"
         if (arm_func := getattr(self.api, func_name)) is not None:
             arm_func(switch.tag_id, switch.tag_manager_mac)
 
-    def disarm(self, switch):
+    def disarm(self, switch: WirelessTagSwitch) -> None:
         """Disarm entity sensor monitoring."""
         func_name = f"disarm_{switch.entity_description.key}"
         if (disarm_func := getattr(self.api, func_name)) is not None:
             disarm_func(switch.tag_id, switch.tag_manager_mac)
 
-    def start_monitoring(self):
+    def start_monitoring(self) -> None:
         """Start monitoring push events."""
 
-        def push_callback(tags_spec, event_spec):
+        def push_callback(
+            tags_spec: dict[str, SensorTag], event_spec: dict[str, list[BinaryEvent]]
+        ) -> None:
             """Handle push update."""
             _LOGGER.debug(
                 "Push notification arrived: %s, events: %s", tags_spec, event_spec
@@ -104,9 +118,9 @@ class WirelessTagPlatform:
 
 def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Wireless Sensor Tag component."""
-    conf = config[DOMAIN]
-    username = conf.get(CONF_USERNAME)
-    password = conf.get(CONF_PASSWORD)
+    conf: ConfigType = config[DOMAIN]
+    username: str = conf[CONF_USERNAME]
+    password: str = conf[CONF_PASSWORD]
 
     try:
         wirelesstags = WirelessTags(username=username, password=password)
@@ -114,7 +128,7 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
         platform = WirelessTagPlatform(hass, wirelesstags)
         platform.load_tags()
         platform.start_monitoring()
-        hass.data[DOMAIN] = platform
+        hass.data[WIRELESSTAG_DATA] = platform
     except (ConnectTimeout, HTTPError, WirelessTagsException) as ex:
         _LOGGER.error("Unable to connect to wirelesstag.net service: %s", str(ex))
         persistent_notification.create(

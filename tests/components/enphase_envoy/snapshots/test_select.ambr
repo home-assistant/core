@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_select[envoy_eu_batt][select.envoy_1234_storage_mode-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -26,6 +27,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Storage mode',
     'options': dict({
     }),
     'original_device_class': None,
@@ -60,8 +62,9 @@
 # ---
 # name: test_select[envoy_metered_batt_relay][select.enpower_654321_storage_mode-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -85,6 +88,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Storage mode',
     'options': dict({
     }),
     'original_device_class': None,
@@ -119,8 +123,9 @@
 # ---
 # name: test_select[envoy_metered_batt_relay][select.nc1_fixture_generator_action-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -145,6 +150,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Generator action',
     'options': dict({
     }),
     'original_device_class': None,
@@ -180,8 +186,9 @@
 # ---
 # name: test_select[envoy_metered_batt_relay][select.nc1_fixture_grid_action-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -206,6 +213,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Grid action',
     'options': dict({
     }),
     'original_device_class': None,
@@ -241,8 +249,9 @@
 # ---
 # name: test_select[envoy_metered_batt_relay][select.nc1_fixture_microgrid_action-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -267,6 +276,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Microgrid action',
     'options': dict({
     }),
     'original_device_class': None,
@@ -302,8 +312,9 @@
 # ---
 # name: test_select[envoy_metered_batt_relay][select.nc1_fixture_mode-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -326,6 +337,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Mode',
     'options': dict({
     }),
     'original_device_class': None,
@@ -359,8 +371,9 @@
 # ---
 # name: test_select[envoy_metered_batt_relay][select.nc2_fixture_generator_action-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -385,6 +398,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Generator action',
     'options': dict({
     }),
     'original_device_class': None,
@@ -420,8 +434,9 @@
 # ---
 # name: test_select[envoy_metered_batt_relay][select.nc2_fixture_grid_action-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -446,6 +461,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Grid action',
     'options': dict({
     }),
     'original_device_class': None,
@@ -481,8 +497,9 @@
 # ---
 # name: test_select[envoy_metered_batt_relay][select.nc2_fixture_microgrid_action-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -507,6 +524,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Microgrid action',
     'options': dict({
     }),
     'original_device_class': None,
@@ -542,8 +560,9 @@
 # ---
 # name: test_select[envoy_metered_batt_relay][select.nc2_fixture_mode-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -566,6 +585,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Mode',
     'options': dict({
     }),
     'original_device_class': None,
@@ -599,8 +619,9 @@
 # ---
 # name: test_select[envoy_metered_batt_relay][select.nc3_fixture_generator_action-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -625,6 +646,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Generator action',
     'options': dict({
     }),
     'original_device_class': None,
@@ -660,8 +682,9 @@
 # ---
 # name: test_select[envoy_metered_batt_relay][select.nc3_fixture_grid_action-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -686,6 +709,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Grid action',
     'options': dict({
     }),
     'original_device_class': None,
@@ -721,8 +745,9 @@
 # ---
 # name: test_select[envoy_metered_batt_relay][select.nc3_fixture_microgrid_action-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -747,6 +772,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Microgrid action',
     'options': dict({
     }),
     'original_device_class': None,
@@ -782,8 +808,9 @@
 # ---
 # name: test_select[envoy_metered_batt_relay][select.nc3_fixture_mode-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -806,6 +833,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Mode',
     'options': dict({
     }),
     'original_device_class': None,

@@ -108,6 +108,9 @@
       },
       "reconnect": {
         "name": "Reconnect"
+      },
+      "wake_on_lan": {
+        "name": "Wake on LAN"
       }
     },
     "sensor": {
@@ -162,6 +165,23 @@
       "max_kb_s_sent": {
         "name": "Max connection upload throughput"
       }
+    },
+    "switch": {
+      "internet_access": {
+        "name": "Internet access"
+      },
+      "wi_fi_guest": {
+        "name": "Guest"
+      },
+      "wi_fi_main_2_4ghz": {
+        "name": "Main 2.4 GHz"
+      },
+      "wi_fi_main_5ghz": {
+        "name": "Main 5 GHz"
+      },
+      "wi_fi_main_5ghz_high_6ghz": {
+        "name": "Main 5 GHz High / 6 GHz"
+      }
     }
   },
   "exceptions": {
@@ -185,6 +205,12 @@
     },
     "update_failed": {
       "message": "Error while updating the data: {error}"
+    }
+  },
+  "issues": {
+    "deprecated_cleanup_button": {
+      "description": "The 'Cleanup' button is deprecated and will be removed in Home Assistant Core {removal_version}. Please update your automations and dashboards to remove any usage of this button. The action is now performed automatically at each data refresh.",
+      "title": "'Cleanup' button is deprecated"
     }
   },
   "options": {

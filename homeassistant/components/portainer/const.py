@@ -3,4 +3,4 @@
 DOMAIN = "portainer"
 DEFAULT_NAME = "Portainer"
 
-ENDPOINT_STATUS_DOWN = 2
+API_MAX_RETRIES = 3

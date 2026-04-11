@@ -7,7 +7,7 @@ from homeassistant.components.switch import SwitchEntity
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import TadoConfigEntry
+from .coordinator import TadoConfigEntry
 from .entity import TadoDataUpdateCoordinator, TadoZoneEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -23,11 +23,11 @@ async def async_setup_entry(
     tado = entry.runtime_data.coordinator
     entities: list[TadoChildLockSwitchEntity] = []
     for zone in tado.zones:
-        zoneChildLockSupported = (
+        zone_child_lock_supported = (
             len(zone["devices"]) > 0 and "childLockEnabled" in zone["devices"][0]
         )
 
-        if not zoneChildLockSupported:
+        if not zone_child_lock_supported:
             continue
 
         entities.append(

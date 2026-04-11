@@ -26,7 +26,7 @@ rules:
   unique-config-entry: done
 
   # Silver
-  action-exceptions: todo
+  action-exceptions: done
   config-entry-unloading: done
   docs-configuration-parameters:
     status: exempt
@@ -36,12 +36,12 @@ rules:
   integration-owner: done
   log-when-unavailable: done
   parallel-updates: done
-  reauthentication-flow: todo
-  test-coverage: todo
+  reauthentication-flow: done
+  test-coverage: done
 
   # Gold
   devices: done
-  diagnostics: todo
+  diagnostics: done
   discovery-update-info:
     status: exempt
     comment: This integration uses DHCP discovery, however is cloud polling. Therefore there is no information to update.
@@ -54,17 +54,11 @@ rules:
   docs-troubleshooting: done
   docs-use-cases: done
   dynamic-devices: todo
-  entity-category:
-    status: exempt
-    comment: This integration does not use entity categories.
-  entity-device-class:
-    status: exempt
-    comment: This integration does not use entity device classes.
-  entity-disabled-by-default:
-    status: exempt
-    comment: Not required for this integration at this stage.
+  entity-category: done
+  entity-device-class: todo
+  entity-disabled-by-default: todo
   entity-translations: todo
-  exception-translations: todo
+  exception-translations: done
   icon-translations: todo
   reconfiguration-flow: todo
   repair-issues:

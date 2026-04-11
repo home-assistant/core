@@ -6,7 +6,7 @@ from typing import Any
 
 from homeassistant.core import HomeAssistant
 
-from . import TadoConfigEntry
+from .coordinator import TadoConfigEntry
 
 
 async def async_get_config_entry_diagnostics(
@@ -14,8 +14,9 @@ async def async_get_config_entry_diagnostics(
 ) -> dict[str, Any]:
     """Return diagnostics for a Tado config entry."""
 
+    rate_limit = config_entry.runtime_data.coordinator.get_rate_limit()
     return {
         "data": config_entry.runtime_data.coordinator.data,
-        "mobile_devices": config_entry.runtime_data.mobile_coordinator.data,
         "zone_control": config_entry.runtime_data.zone_control_coordinator.data,
+        "rate_limit": rate_limit,
     }

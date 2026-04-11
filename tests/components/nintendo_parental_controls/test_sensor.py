@@ -13,14 +13,14 @@ from . import setup_integration
 from tests.common import MockConfigEntry, snapshot_platform
 
 
-async def test_number(
+async def test_sensor(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_nintendo_client: AsyncMock,
     entity_registry: er.EntityRegistry,
     snapshot: SnapshotAssertion,
 ) -> None:
-    """Test number platform."""
+    """Test sensor platform."""
     with patch(
         "homeassistant.components.nintendo_parental_controls._PLATFORMS",
         [Platform.SENSOR],

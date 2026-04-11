@@ -35,7 +35,23 @@ from tests.typing import ClientSessionGenerator
 
 MCP_SERVER_BASE_URL = "http://1.1.1.1:8080"
 OAUTH_DISCOVERY_ENDPOINT = (
-    f"{MCP_SERVER_BASE_URL}/.well-known/oauth-authorization-server"
+    f"{MCP_SERVER_BASE_URL}/.well-known/oauth-authorization-server/mcp"
+)
+AUTHORIZATION_SERVER = "https://example-auth-server.com"
+OAUTH_AUTHORIZATION_SERVER_DISCOVERY_ENDPOINT = (
+    f"{AUTHORIZATION_SERVER}/.well-known/oauth-authorization-server"
+)
+SCOPES_SUPPORTED = ["profile", "email", "phone"]
+OAUTH_PROTECTED_RESOURCE_METADATA_RESPONSE = httpx.Response(
+    status_code=200,
+    json={
+        "resource": MCP_SERVER_URL,
+        "authorization_servers": [
+            AUTHORIZATION_SERVER,
+        ],
+        "scopes_supported": SCOPES_SUPPORTED,
+        "bearer_methods_supported": ["header"],
+    },
 )
 OAUTH_SERVER_METADATA_RESPONSE = httpx.Response(
     status_code=200,
@@ -447,6 +463,205 @@ async def test_authentication_flow(
     assert token == OAUTH_TOKEN_PAYLOAD
 
     assert len(mock_setup_entry.mock_calls) == 1
+
+
+@pytest.mark.usefixtures("current_request_with_host")
+@respx.mock
+@pytest.mark.parametrize(
+    ("authenticate_header", "resource_metadata_url", "expected_scopes"),
+    [
+        (
+            'Bearer error="invalid_token", resource_metadata="https://example.com/custom-discovery"',
+            "https://example.com/custom-discovery",
+            SCOPES_SUPPORTED,
+        ),
+        (
+            'Bearer error="invalid_token", resource_metadata="/custom-discovery"',
+            f"{MCP_SERVER_BASE_URL}/custom-discovery",
+            SCOPES_SUPPORTED,
+        ),
+        (
+            'Bearer error="invalid_token", resource_metadata="https://example.com/custom-discovery" scope="read write"',
+            "https://example.com/custom-discovery",
+            ["read", "write"],
+        ),
+    ],
+    ids=[
+        "absolute_url",
+        "relative_url",
+        "with_scopes",
+    ],
+)
+async def test_authentication_discovery_via_header(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_mcp_client: Mock,
+    credential: None,
+    aioclient_mock: AiohttpClientMocker,
+    hass_client_no_auth: ClientSessionGenerator,
+    authenticate_header: str,
+    resource_metadata_url: str,
+    expected_scopes: list[str],
+) -> None:
+    """Test for an OAuth discovery flow using the WWW-Authenticate header."""
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    # MCP Server returns 401 when first trying to connect via config flow validate_input. The response
+    # value has a WWW-Authenticate header with a full URL for the resource metadata.
+    mock_mcp_client.side_effect = httpx.HTTPStatusError(
+        "Authentication required",
+        request=None,
+        response=httpx.Response(
+            401,
+            headers={
+                "WWW-Authenticate": authenticate_header,
+            },
+        ),
+    )
+
+    # Discovery process starts. It hits the custom discovery URL directly.
+    respx.get(resource_metadata_url).mock(
+        return_value=OAUTH_PROTECTED_RESOURCE_METADATA_RESPONSE
+    )
+    respx.get(OAUTH_AUTHORIZATION_SERVER_DISCOVERY_ENDPOINT).mock(
+        return_value=OAUTH_SERVER_METADATA_RESPONSE
+    )
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_URL: MCP_SERVER_URL,
+        },
+    )
+
+    # Should proceed to credentials choice
+    assert result["type"] is FlowResultType.MENU
+    assert result["step_id"] == "credentials_choice"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            "next_step_id": "pick_implementation",
+        },
+    )
+    assert result["type"] is FlowResultType.EXTERNAL_STEP
+    result = await perform_oauth_flow(
+        hass,
+        aioclient_mock,
+        hass_client_no_auth,
+        result,
+        authorize_url=OAUTH_AUTHORIZE_URL,
+        token_url=OAUTH_TOKEN_URL,
+        scopes=expected_scopes,
+    )
+
+    # Client now accepts credentials
+    mock_mcp_client.side_effect = None
+    response = Mock()
+    response.serverInfo.name = TEST_API_NAME
+    mock_mcp_client.return_value.initialize.return_value = response
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == TEST_API_NAME
+    data = result["data"]
+    token = data.pop(CONF_TOKEN)
+    assert data == {
+        "auth_implementation": AUTH_DOMAIN,
+        CONF_URL: MCP_SERVER_URL,
+        CONF_AUTHORIZATION_URL: OAUTH_AUTHORIZE_URL,
+        CONF_TOKEN_URL: OAUTH_TOKEN_URL,
+        CONF_SCOPE: expected_scopes,
+    }
+    assert token
+    token.pop("expires_at")
+    assert token == OAUTH_TOKEN_PAYLOAD
+
+    assert len(mock_setup_entry.mock_calls) == 1
+
+
+@pytest.mark.usefixtures("current_request_with_host")
+@respx.mock
+@pytest.mark.parametrize(
+    ("resource_metadata"),
+    [
+        {
+            "authorization_servers": [
+                AUTHORIZATION_SERVER,
+            ],
+            "scopes_supported": SCOPES_SUPPORTED,
+            "bearer_methods_supported": ["header"],
+        },
+        {
+            "resource": "https://different-resource.com",
+            "authorization_servers": [
+                AUTHORIZATION_SERVER,
+            ],
+            "scopes_supported": SCOPES_SUPPORTED,
+            "bearer_methods_supported": ["header"],
+        },
+        {
+            "resource": MCP_SERVER_URL,
+            "scopes_supported": SCOPES_SUPPORTED,
+            "bearer_methods_supported": ["header"],
+        },
+    ],
+    ids=[
+        "missing_resource",
+        "mismatched_resource",
+        "no_authorization_servers",
+    ],
+)
+async def test_invalid_protected_resource_metadata(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_mcp_client: Mock,
+    credential: None,
+    aioclient_mock: AiohttpClientMocker,
+    hass_client_no_auth: ClientSessionGenerator,
+    resource_metadata: dict[str, Any],
+) -> None:
+    """Test for an OAuth discovery flow using the WWW-Authenticate header."""
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    # MCP Server returns 401 when first trying to connect via config flow validate_input. The response
+    # value has a WWW-Authenticate header with a full URL for the resource metadata.
+    resource_metadata_url = "https://example.com/custom-discovery"
+    mock_mcp_client.side_effect = httpx.HTTPStatusError(
+        "Authentication required",
+        request=None,
+        response=httpx.Response(
+            401,
+            headers={
+                "WWW-Authenticate": f'Bearer error="invalid_token", resource_metadata="{resource_metadata_url}"',
+            },
+        ),
+    )
+
+    # Discovery process starts. It hits the custom discovery URL directly.
+    respx.get(resource_metadata_url).mock(
+        return_value=httpx.Response(
+            status_code=200,
+            json=resource_metadata,
+        )
+    )
+    respx.get(OAUTH_AUTHORIZATION_SERVER_DISCOVERY_ENDPOINT).mock(
+        return_value=OAUTH_SERVER_METADATA_RESPONSE
+    )
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_URL: MCP_SERVER_URL,
+        },
+    )
+
+    assert result.get("type") is FlowResultType.ABORT
+    assert result.get("reason") == "cannot_connect"
 
 
 @pytest.mark.parametrize(

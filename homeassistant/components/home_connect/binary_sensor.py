@@ -16,7 +16,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .common import setup_home_connect_entry
 from .const import REFRIGERATION_STATUS_DOOR_CLOSED, REFRIGERATION_STATUS_DOOR_OPEN
-from .coordinator import HomeConnectApplianceData, HomeConnectConfigEntry
+from .coordinator import HomeConnectApplianceCoordinator, HomeConnectConfigEntry
 from .entity import HomeConnectEntity
 
 PARALLEL_UPDATES = 0
@@ -64,6 +64,11 @@ BINARY_SENSORS = (
             "BSH.Common.EnumType.ChargingConnection.Disconnected": False,
         },
         translation_key="charging_connection",
+    ),
+    HomeConnectBinarySensorEntityDescription(
+        key=StatusKey.BSH_COMMON_INTERIOR_ILLUMINATION_ACTIVE,
+        translation_key="interior_illumination_active",
+        device_class=BinarySensorDeviceClass.LIGHT,
     ),
     HomeConnectBinarySensorEntityDescription(
         key=StatusKey.CONSUMER_PRODUCTS_CLEANING_ROBOT_DUST_BOX_INSERTED,
@@ -140,19 +145,18 @@ CONNECTED_BINARY_ENTITY_DESCRIPTION = BinarySensorEntityDescription(
 
 
 def _get_entities_for_appliance(
-    entry: HomeConnectConfigEntry,
-    appliance: HomeConnectApplianceData,
+    appliance_coordinator: HomeConnectApplianceCoordinator,
 ) -> list[HomeConnectEntity]:
     """Get a list of entities."""
     entities: list[HomeConnectEntity] = [
         HomeConnectConnectivityBinarySensor(
-            entry.runtime_data, appliance, CONNECTED_BINARY_ENTITY_DESCRIPTION
+            appliance_coordinator, CONNECTED_BINARY_ENTITY_DESCRIPTION
         )
     ]
     entities.extend(
-        HomeConnectBinarySensor(entry.runtime_data, appliance, description)
+        HomeConnectBinarySensor(appliance_coordinator, description)
         for description in BINARY_SENSORS
-        if description.key in appliance.status
+        if description.key in appliance_coordinator.data.status
     )
     return entities
 
@@ -164,6 +168,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Home Connect binary sensor."""
     setup_home_connect_entry(
+        hass,
         entry,
         _get_entities_for_appliance,
         async_add_entities,

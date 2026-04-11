@@ -4,8 +4,8 @@ from http import HTTPStatus
 import time
 from unittest.mock import MagicMock, Mock, patch
 
-from aiosenz import TOKEN_ENDPOINT
 from httpx import HTTPStatusError, RequestError
+from pysenz import TOKEN_ENDPOINT
 import pytest
 
 from homeassistant.components.senz.const import DOMAIN
@@ -98,7 +98,7 @@ async def test_migrate_config_entry(
         (
             time.time() - 3600,
             HTTPStatus.INTERNAL_SERVER_ERROR,
-            ConfigEntryState.SETUP_ERROR,
+            ConfigEntryState.SETUP_RETRY,
         ),
     ],
     ids=["unauthorized", "internal_server_error"],

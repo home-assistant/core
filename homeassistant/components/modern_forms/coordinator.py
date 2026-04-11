@@ -20,6 +20,9 @@ SCAN_INTERVAL = timedelta(seconds=5)
 _LOGGER = logging.getLogger(__name__)
 
 
+type ModernFormsConfigEntry = ConfigEntry[ModernFormsDataUpdateCoordinator]
+
+
 class ModernFormsDataUpdateCoordinator(DataUpdateCoordinator[ModernFormsDeviceState]):
     """Class to manage fetching Modern Forms data from single endpoint."""
 

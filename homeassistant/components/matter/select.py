@@ -456,8 +456,10 @@ DISCOVERY_SCHEMAS = [
         entity_description=MatterListSelectEntityDescription(
             key="TemperatureControlSelectedTemperatureLevel",
             translation_key="temperature_level",
-            command=lambda selected_index: clusters.TemperatureControl.Commands.SetTemperature(
-                targetTemperatureLevel=selected_index
+            command=lambda selected_index: (
+                clusters.TemperatureControl.Commands.SetTemperature(
+                    targetTemperatureLevel=selected_index
+                )
             ),
             list_attribute=clusters.TemperatureControl.Attributes.SupportedTemperatureLevels,
         ),
@@ -506,8 +508,10 @@ DISCOVERY_SCHEMAS = [
         entity_description=MatterListSelectEntityDescription(
             key="MicrowaveOvenControlSelectedWattIndex",
             translation_key="power_level",
-            command=lambda selected_index: clusters.MicrowaveOvenControl.Commands.SetCookingParameters(
-                wattSettingIndex=selected_index
+            command=lambda selected_index: (
+                clusters.MicrowaveOvenControl.Commands.SetCookingParameters(
+                    wattSettingIndex=selected_index
+                )
             ),
             list_attribute=clusters.MicrowaveOvenControl.Attributes.SupportedWatts,
         ),
@@ -638,11 +642,11 @@ DISCOVERY_SCHEMAS = [
         platform=Platform.SELECT,
         entity_description=MatterMapSelectEntityDescription(
             key="DoorLockOperatingMode",
-            entity_category=EntityCategory.CONFIG,
             translation_key="door_lock_operating_mode",
             list_attribute=clusters.DoorLock.Attributes.SupportedOperatingModes,
             device_to_ha=DOOR_LOCK_OPERATING_MODE_MAP.get,
             ha_to_device=DOOR_LOCK_OPERATING_MODE_MAP_REVERSE.get,
+            entity_category=EntityCategory.CONFIG,
         ),
         entity_class=MatterDoorLockOperatingModeSelectEntity,
         required_attributes=(

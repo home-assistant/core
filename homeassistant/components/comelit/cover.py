@@ -72,7 +72,7 @@ class ComelitCoverEntity(ComelitBridgeBaseEntity, RestoreEntity, CoverEntity):
     @property
     def device_status(self) -> int:
         """Return current device status."""
-        return self.coordinator.data[COVER][self._device.index].status
+        return cast("int", self.coordinator.data[COVER][self._device.index].status)
 
     @property
     def is_closed(self) -> bool | None:
@@ -86,7 +86,7 @@ class ComelitCoverEntity(ComelitBridgeBaseEntity, RestoreEntity, CoverEntity):
     @property
     def is_closing(self) -> bool:
         """Return if the cover is closing."""
-        return self._current_action("closing")
+        return bool(self._current_action("closing"))
 
     @property
     def is_opening(self) -> bool:

@@ -7,19 +7,19 @@ from contextlib import suppress
 from dataclasses import dataclass
 from typing import Any
 
-from transmission_rpc.torrent import Torrent
-
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
+    SensorStateClass,
 )
-from homeassistant.const import STATE_IDLE, UnitOfDataRate
+from homeassistant.const import STATE_IDLE, UnitOfDataRate, UnitOfInformation
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
 from .const import (
+    FILTER_MODES,
     STATE_ATTR_TORRENT_INFO,
     STATE_DOWNLOADING,
     STATE_SEEDING,
@@ -28,19 +28,9 @@ from .const import (
 )
 from .coordinator import TransmissionConfigEntry, TransmissionDataUpdateCoordinator
 from .entity import TransmissionEntity
+from .helpers import filter_torrents
 
 PARALLEL_UPDATES = 0
-
-MODES: dict[str, list[str] | None] = {
-    "started_torrents": ["downloading"],
-    "completed_torrents": ["seeding"],
-    "paused_torrents": ["stopped"],
-    "active_torrents": [
-        "seeding",
-        "downloading",
-    ],
-    "total_torrents": None,
-}
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -49,6 +39,18 @@ class TransmissionSensorEntityDescription(SensorEntityDescription):
 
     val_func: Callable[[TransmissionDataUpdateCoordinator], StateType]
     extra_state_attr_func: Callable[[Any], dict[str, str]] | None = None
+
+
+def _compute_ratio(uploaded: int | None, downloaded: int | None) -> float | None:
+    """Compute upload/download ratio.
+
+    Returns None when data is unavailable or downloaded == 0.
+    """
+    if uploaded is None or downloaded is None:
+        return None
+    if downloaded == 0:
+        return None
+    return uploaded / downloaded
 
 
 SENSOR_TYPES: tuple[TransmissionSensorEntityDescription, ...] = (
@@ -84,7 +86,7 @@ SENSOR_TYPES: tuple[TransmissionSensorEntityDescription, ...] = (
         translation_key="active_torrents",
         val_func=lambda coordinator: coordinator.data.active_torrent_count,
         extra_state_attr_func=lambda coordinator: _torrents_info_attr(
-            coordinator=coordinator, key="active_torrents"
+            coordinator=coordinator, key="active"
         ),
     ),
     TransmissionSensorEntityDescription(
@@ -92,7 +94,7 @@ SENSOR_TYPES: tuple[TransmissionSensorEntityDescription, ...] = (
         translation_key="paused_torrents",
         val_func=lambda coordinator: coordinator.data.paused_torrent_count,
         extra_state_attr_func=lambda coordinator: _torrents_info_attr(
-            coordinator=coordinator, key="paused_torrents"
+            coordinator=coordinator, key="paused"
         ),
     ),
     TransmissionSensorEntityDescription(
@@ -100,27 +102,87 @@ SENSOR_TYPES: tuple[TransmissionSensorEntityDescription, ...] = (
         translation_key="total_torrents",
         val_func=lambda coordinator: coordinator.data.torrent_count,
         extra_state_attr_func=lambda coordinator: _torrents_info_attr(
-            coordinator=coordinator, key="total_torrents"
+            coordinator=coordinator, key="total"
         ),
     ),
     TransmissionSensorEntityDescription(
         key="completed_torrents",
         translation_key="completed_torrents",
         val_func=lambda coordinator: len(
-            _filter_torrents(coordinator.torrents, MODES["completed_torrents"])
+            filter_torrents(coordinator.torrents, FILTER_MODES["completed"])
         ),
         extra_state_attr_func=lambda coordinator: _torrents_info_attr(
-            coordinator=coordinator, key="completed_torrents"
+            coordinator=coordinator, key="completed"
         ),
     ),
     TransmissionSensorEntityDescription(
         key="started_torrents",
         translation_key="started_torrents",
         val_func=lambda coordinator: len(
-            _filter_torrents(coordinator.torrents, MODES["started_torrents"])
+            filter_torrents(coordinator.torrents, FILTER_MODES["started"])
         ),
         extra_state_attr_func=lambda coordinator: _torrents_info_attr(
-            coordinator=coordinator, key="started_torrents"
+            coordinator=coordinator, key="started"
+        ),
+    ),
+    TransmissionSensorEntityDescription(
+        key="session_download",
+        translation_key="session_download",
+        device_class=SensorDeviceClass.DATA_SIZE,
+        native_unit_of_measurement=UnitOfInformation.BYTES,
+        suggested_unit_of_measurement=UnitOfInformation.GIBIBYTES,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        suggested_display_precision=3,
+        val_func=lambda coordinator: coordinator.data.current_stats.downloaded_bytes,
+    ),
+    TransmissionSensorEntityDescription(
+        key="session_upload",
+        translation_key="session_upload",
+        device_class=SensorDeviceClass.DATA_SIZE,
+        native_unit_of_measurement=UnitOfInformation.BYTES,
+        suggested_unit_of_measurement=UnitOfInformation.GIBIBYTES,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        suggested_display_precision=3,
+        val_func=lambda coordinator: coordinator.data.current_stats.uploaded_bytes,
+    ),
+    TransmissionSensorEntityDescription(
+        key="total_download",
+        translation_key="total_download",
+        device_class=SensorDeviceClass.DATA_SIZE,
+        native_unit_of_measurement=UnitOfInformation.BYTES,
+        suggested_unit_of_measurement=UnitOfInformation.GIBIBYTES,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        suggested_display_precision=3,
+        val_func=lambda coordinator: coordinator.data.cumulative_stats.downloaded_bytes,
+    ),
+    TransmissionSensorEntityDescription(
+        key="total_upload",
+        translation_key="total_upload",
+        device_class=SensorDeviceClass.DATA_SIZE,
+        native_unit_of_measurement=UnitOfInformation.BYTES,
+        suggested_unit_of_measurement=UnitOfInformation.GIBIBYTES,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        suggested_display_precision=3,
+        val_func=lambda coordinator: coordinator.data.cumulative_stats.uploaded_bytes,
+    ),
+    TransmissionSensorEntityDescription(
+        key="session_ratio",
+        translation_key="session_ratio",
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=3,
+        val_func=lambda coordinator: _compute_ratio(
+            coordinator.data.current_stats.uploaded_bytes,
+            coordinator.data.current_stats.downloaded_bytes,
+        ),
+    ),
+    TransmissionSensorEntityDescription(
+        key="total_ratio",
+        translation_key="total_ratio",
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=3,
+        val_func=lambda coordinator: _compute_ratio(
+            coordinator.data.cumulative_stats.uploaded_bytes,
+            coordinator.data.cumulative_stats.downloaded_bytes,
         ),
     ),
 )
@@ -132,7 +194,6 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Transmission sensors."""
-
     coordinator = config_entry.runtime_data
 
     async_add_entities(
@@ -169,21 +230,11 @@ def get_state(upload: int, download: int) -> str:
     return STATE_IDLE
 
 
-def _filter_torrents(
-    torrents: list[Torrent], statuses: list[str] | None = None
-) -> list[Torrent]:
-    return [
-        torrent
-        for torrent in torrents
-        if statuses is None or torrent.status in statuses
-    ]
-
-
 def _torrents_info_attr(
     coordinator: TransmissionDataUpdateCoordinator, key: str
 ) -> dict[str, Any]:
     infos = {}
-    torrents = _filter_torrents(coordinator.torrents, MODES[key])
+    torrents = filter_torrents(coordinator.torrents, FILTER_MODES.get(key))
     torrents = SUPPORTED_ORDER_MODES[coordinator.order](torrents)
     for torrent in torrents[: coordinator.limit]:
         info = infos[torrent.name] = {

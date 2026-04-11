@@ -1,0 +1,40 @@
+---
+name: Home Assistant Integration knowledge
+description: Everything you need to know to build, test and review Home Assistant Integrations. If you're looking at an integration, you must use this as your primary reference.
+---
+
+## File Locations
+- **Integration code**: `./homeassistant/components/<integration_domain>/`
+- **Integration tests**: `./tests/components/<integration_domain>/`
+
+## General guidelines
+
+- When looking for examples, prefer integrations with the platinum or gold quality scale level first.
+- Polling intervals are NOT user-configurable. Never add scan_interval, update_interval, or polling frequency options to config flows or config entries.
+- Do NOT allow users to set config entry names in config flows. Names are automatically generated or can be customized later in UI. Exception: helper integrations may allow custom names.
+
+The following platforms have extra guidelines:
+- **Diagnostics**: [`platform-diagnostics.md`](platform-diagnostics.md) for diagnostic data collection
+- **Repairs**: [`platform-repairs.md`](platform-repairs.md) for user-actionable repair issues
+
+
+## Integration Quality Scale
+
+- When validating the quality scale rules, check them at https://developers.home-assistant.io/docs/core/integration-quality-scale/rules
+- When implementing or reviewing an integration, always consider the quality scale rules, since they promote best practices.
+
+Template scale file: `./script/scaffold/templates/integration/integration/quality_scale.yaml`
+
+### How Rules Apply
+1. **Check `manifest.json`**: Look for `"quality_scale"` key to determine integration level
+2. **Bronze Rules**: Always required for any integration with quality scale
+3. **Higher Tier Rules**: Only apply if integration targets that tier or higher
+4. **Rule Status**: Check `quality_scale.yaml` in integration folder for:
+   - `done`: Rule implemented
+   - `exempt`: Rule doesn't apply (with reason in comment)
+   - `todo`: Rule needs implementation
+
+
+## Testing Requirements
+
+- Tests should avoid interacting or mocking internal integration details. For more info, see https://developers.home-assistant.io/docs/development_testing/#writing-tests-for-integrations

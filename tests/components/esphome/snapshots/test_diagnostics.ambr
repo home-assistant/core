@@ -105,6 +105,8 @@
         'name': 'test',
         'project_name': '',
         'project_version': '',
+        'serial_proxies': list([
+        ]),
         'suggested_area': '',
         'uses_password': False,
         'voice_assistant_feature_flags': 0,

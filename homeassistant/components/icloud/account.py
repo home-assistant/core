@@ -108,7 +108,7 @@ class IcloudAccount:
 
             if self.api.requires_2fa:
                 # Trigger a new log in to ensure the user enters the 2FA code again.
-                raise PyiCloudFailedLoginException  # noqa: TRY301
+                raise PyiCloudFailedLoginException("2FA Required")  # noqa: TRY301
 
         except PyiCloudFailedLoginException:
             self.api = None

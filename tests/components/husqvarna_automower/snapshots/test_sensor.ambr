@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_sensor_snapshot[sensor.test_mower_1_battery-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -22,6 +23,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
@@ -54,8 +56,9 @@
 # ---
 # name: test_sensor_snapshot[sensor.test_mower_1_cutting_blade_usage_time-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -75,6 +78,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Cutting blade usage time',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -113,8 +117,9 @@
 # ---
 # name: test_sensor_snapshot[sensor.test_mower_1_downtime-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -134,6 +139,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Downtime',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -172,8 +178,9 @@
 # ---
 # name: test_sensor_snapshot[sensor.test_mower_1_error-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -324,6 +331,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Error',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -486,8 +494,9 @@
 # ---
 # name: test_sensor_snapshot[sensor.test_mower_1_front_lawn_last_time_completed-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -505,6 +514,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Front lawn last time completed',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -535,8 +545,9 @@
 # ---
 # name: test_sensor_snapshot[sensor.test_mower_1_front_lawn_progress-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -556,6 +567,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Front lawn progress',
     'options': dict({
     }),
     'original_device_class': None,
@@ -587,8 +599,9 @@
 # ---
 # name: test_sensor_snapshot[sensor.test_mower_1_inactive_reason-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -612,6 +625,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Inactive reason',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -647,8 +661,9 @@
 # ---
 # name: test_sensor_snapshot[sensor.test_mower_1_mode-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -675,6 +690,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Mode',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -713,8 +729,9 @@
 # ---
 # name: test_sensor_snapshot[sensor.test_mower_1_my_lawn_last_time_completed-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -732,6 +749,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'My lawn last time completed',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -762,8 +780,9 @@
 # ---
 # name: test_sensor_snapshot[sensor.test_mower_1_my_lawn_progress-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -783,6 +802,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'My lawn progress',
     'options': dict({
     }),
     'original_device_class': None,
@@ -814,8 +834,9 @@
 # ---
 # name: test_sensor_snapshot[sensor.test_mower_1_next_start-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -833,6 +854,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Next start',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -863,8 +885,9 @@
 # ---
 # name: test_sensor_snapshot[sensor.test_mower_1_number_of_charging_cycles-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -884,6 +907,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Number of charging cycles',
     'options': dict({
     }),
     'original_device_class': None,
@@ -914,8 +938,9 @@
 # ---
 # name: test_sensor_snapshot[sensor.test_mower_1_number_of_collisions-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -935,6 +960,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Number of collisions',
     'options': dict({
     }),
     'original_device_class': None,
@@ -965,8 +991,9 @@
 # ---
 # name: test_sensor_snapshot[sensor.test_mower_1_remaining_charging_time-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -984,6 +1011,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Remaining charging time',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -1021,8 +1049,9 @@
 # ---
 # name: test_sensor_snapshot[sensor.test_mower_1_restricted_reason-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -1065,6 +1094,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Restricted reason',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -1119,8 +1149,9 @@
 # ---
 # name: test_sensor_snapshot[sensor.test_mower_1_total_charging_time-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -1140,6 +1171,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Total charging time',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1178,8 +1210,9 @@
 # ---
 # name: test_sensor_snapshot[sensor.test_mower_1_total_cutting_time-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -1199,6 +1232,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Total cutting time',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1237,8 +1271,9 @@
 # ---
 # name: test_sensor_snapshot[sensor.test_mower_1_total_drive_distance-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -1258,6 +1293,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Total drive distance',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1296,8 +1332,9 @@
 # ---
 # name: test_sensor_snapshot[sensor.test_mower_1_total_running_time-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -1317,6 +1354,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Total running time',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1355,8 +1393,9 @@
 # ---
 # name: test_sensor_snapshot[sensor.test_mower_1_total_searching_time-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -1376,6 +1415,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Total searching time',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1414,8 +1454,9 @@
 # ---
 # name: test_sensor_snapshot[sensor.test_mower_1_uptime-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -1435,6 +1476,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Uptime',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -1473,8 +1515,9 @@
 # ---
 # name: test_sensor_snapshot[sensor.test_mower_1_work_area-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -1499,6 +1542,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Work area',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -1540,8 +1584,9 @@
 # ---
 # name: test_sensor_snapshot[sensor.test_mower_2_battery-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1561,6 +1606,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
@@ -1593,8 +1639,9 @@
 # ---
 # name: test_sensor_snapshot[sensor.test_mower_2_error-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -1745,6 +1792,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Error',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -1907,8 +1955,9 @@
 # ---
 # name: test_sensor_snapshot[sensor.test_mower_2_mode-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -1935,6 +1984,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Mode',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -1973,8 +2023,9 @@
 # ---
 # name: test_sensor_snapshot[sensor.test_mower_2_next_start-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1992,6 +2043,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Next start',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -2022,8 +2074,9 @@
 # ---
 # name: test_sensor_snapshot[sensor.test_mower_2_remaining_charging_time-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2041,6 +2094,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Remaining charging time',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -2078,8 +2132,9 @@
 # ---
 # name: test_sensor_snapshot[sensor.test_mower_2_restricted_reason-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -2122,6 +2177,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Restricted reason',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,

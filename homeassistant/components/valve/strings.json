@@ -1,4 +1,28 @@
 {
+  "common": {
+    "condition_behavior_name": "Condition passes if",
+    "trigger_behavior_name": "Trigger when"
+  },
+  "conditions": {
+    "is_closed": {
+      "description": "Tests if one or more valves are closed.",
+      "fields": {
+        "behavior": {
+          "name": "[%key:component::valve::common::condition_behavior_name%]"
+        }
+      },
+      "name": "Valve is closed"
+    },
+    "is_open": {
+      "description": "Tests if one or more valves are open.",
+      "fields": {
+        "behavior": {
+          "name": "[%key:component::valve::common::condition_behavior_name%]"
+        }
+      },
+      "name": "Valve is open"
+    }
+  },
   "entity_component": {
     "_": {
       "name": "[%key:component::valve::title%]",
@@ -22,14 +46,29 @@
       "name": "Water"
     }
   },
+  "selector": {
+    "condition_behavior": {
+      "options": {
+        "all": "All",
+        "any": "Any"
+      }
+    },
+    "trigger_behavior": {
+      "options": {
+        "any": "Any",
+        "first": "First",
+        "last": "Last"
+      }
+    }
+  },
   "services": {
     "close_valve": {
       "description": "Closes a valve.",
-      "name": "[%key:common::action::close%]"
+      "name": "Close valve"
     },
     "open_valve": {
       "description": "Opens a valve.",
-      "name": "[%key:common::action::open%]"
+      "name": "Open valve"
     },
     "set_valve_position": {
       "description": "Moves a valve to a specific position.",
@@ -39,16 +78,36 @@
           "name": "Position"
         }
       },
-      "name": "Set position"
+      "name": "Set valve position"
     },
     "stop_valve": {
-      "description": "Stops the valve movement.",
-      "name": "[%key:common::action::stop%]"
+      "description": "Stops a valve.",
+      "name": "Stop valve"
     },
     "toggle": {
       "description": "Toggles a valve open/closed.",
-      "name": "[%key:common::action::toggle%]"
+      "name": "Toggle valve"
     }
   },
-  "title": "Valve"
+  "title": "Valve",
+  "triggers": {
+    "closed": {
+      "description": "Triggers after one or more valves close.",
+      "fields": {
+        "behavior": {
+          "name": "[%key:component::valve::common::trigger_behavior_name%]"
+        }
+      },
+      "name": "Valve closed"
+    },
+    "opened": {
+      "description": "Triggers after one or more valves open.",
+      "fields": {
+        "behavior": {
+          "name": "[%key:component::valve::common::trigger_behavior_name%]"
+        }
+      },
+      "name": "Valve opened"
+    }
+  }
 }

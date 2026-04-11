@@ -9,6 +9,7 @@ from librehardwaremonitor_api import (
     LibreHardwareMonitorClient,
     LibreHardwareMonitorConnectionError,
     LibreHardwareMonitorNoDevicesError,
+    LibreHardwareMonitorUnauthorizedError,
 )
 from librehardwaremonitor_api.model import (
     DeviceId,
@@ -17,9 +18,11 @@ from librehardwaremonitor_api.model import (
 )
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_PORT
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr
+from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.helpers import device_registry as dr, issue_registry as ir
+from homeassistant.helpers.aiohttp_client import async_create_clientsession
 from homeassistant.helpers.device_registry import DeviceEntry
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -47,28 +50,44 @@ class LibreHardwareMonitorCoordinator(DataUpdateCoordinator[LibreHardwareMonitor
             config_entry=config_entry,
             update_interval=timedelta(seconds=DEFAULT_SCAN_INTERVAL),
         )
-
-        host = config_entry.data[CONF_HOST]
-        port = config_entry.data[CONF_PORT]
-        self._api = LibreHardwareMonitorClient(host, port)
+        self._entry_id = config_entry.entry_id
+        self._api = LibreHardwareMonitorClient(
+            host=config_entry.data[CONF_HOST],
+            port=config_entry.data[CONF_PORT],
+            username=config_entry.data.get(CONF_USERNAME),
+            password=config_entry.data.get(CONF_PASSWORD),
+            session=async_create_clientsession(hass),
+        )
         device_entries: list[DeviceEntry] = dr.async_entries_for_config_entry(
-            registry=dr.async_get(self.hass), config_entry_id=config_entry.entry_id
+            registry=dr.async_get(self.hass), config_entry_id=self._entry_id
         )
         self._previous_devices: dict[DeviceId, DeviceName] = {
-            DeviceId(next(iter(device.identifiers))[1]): DeviceName(device.name)
+            DeviceId(
+                next(iter(device.identifiers))[1].removeprefix(f"{self._entry_id}_")
+            ): DeviceName(device.name)
             for device in device_entries
             if device.identifiers and device.name
         }
+        self._is_deprecated_version: bool | None = None
 
     async def _async_update_data(self) -> LibreHardwareMonitorData:
         try:
             lhm_data = await self._api.get_data()
         except LibreHardwareMonitorConnectionError as err:
             raise UpdateFailed(
-                "LibreHardwareMonitor connection failed, will retry"
+                "LibreHardwareMonitor connection failed, will retry", retry_after=25
             ) from err
+        except LibreHardwareMonitorUnauthorizedError as err:
+            _LOGGER.error("Authentication against LibreHardwareMonitor instance failed")
+            raise ConfigEntryAuthFailed("Authentication failed") from err
         except LibreHardwareMonitorNoDevicesError as err:
             raise UpdateFailed("No sensor data available, will retry") from err
+
+        # Check whether user has upgraded LHM from a deprecated version while the integration is running
+        if self._is_deprecated_version and not lhm_data.is_deprecated_version:
+            # Clear deprecation issue
+            ir.async_delete_issue(self.hass, DOMAIN, f"deprecated_api_{self._entry_id}")
+        self._is_deprecated_version = lhm_data.is_deprecated_version
 
         await self._async_handle_changes_in_devices(
             dict(lhm_data.main_device_ids_and_names)
@@ -92,11 +111,6 @@ class LibreHardwareMonitorCoordinator(DataUpdateCoordinator[LibreHardwareMonitor
         self, detected_devices: dict[DeviceId, DeviceName]
     ) -> None:
         """Handle device changes by deleting devices from / adding devices to Home Assistant."""
-        detected_devices = {
-            DeviceId(f"{self.config_entry.entry_id}_{detected_id}"): device_name
-            for detected_id, device_name in detected_devices.items()
-        }
-
         previous_device_ids = set(self._previous_devices.keys())
         detected_device_ids = set(detected_devices.keys())
 
@@ -114,25 +128,14 @@ class LibreHardwareMonitorCoordinator(DataUpdateCoordinator[LibreHardwareMonitor
             device_registry = dr.async_get(self.hass)
             for device_id in orphaned_devices:
                 if device := device_registry.async_get_device(
-                    identifiers={(DOMAIN, device_id)}
+                    identifiers={(DOMAIN, f"{self._entry_id}_{device_id}")}
                 ):
                     _LOGGER.debug(
                         "Removing device: %s", self._previous_devices[device_id]
                     )
                     device_registry.async_update_device(
                         device_id=device.id,
-                        remove_config_entry_id=self.config_entry.entry_id,
+                        remove_config_entry_id=self._entry_id,
                     )
-
-        if self.data is None:
-            # initial update during integration startup
-            self._previous_devices = detected_devices  # type: ignore[unreachable]
-            return
-
-        if new_devices := detected_device_ids - previous_device_ids:
-            _LOGGER.warning(
-                "New Device(s) detected, reload integration to add them to Home Assistant: %s",
-                [detected_devices[DeviceId(device_id)] for device_id in new_devices],
-            )
 
         self._previous_devices = detected_devices

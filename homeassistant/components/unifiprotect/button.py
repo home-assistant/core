@@ -6,7 +6,7 @@ from collections.abc import Sequence
 from dataclasses import dataclass
 from functools import partial
 import logging
-from typing import TYPE_CHECKING, Final
+from typing import TYPE_CHECKING
 
 from uiprotect.data import ModelType, ProtectAdoptableDeviceModel
 
@@ -31,6 +31,7 @@ from .entity import (
     T,
     async_all_device_entities,
 )
+from .utils import async_ufp_instance_command
 
 _LOGGER = logging.getLogger(__name__)
 PARALLEL_UPDATES = 0
@@ -43,9 +44,6 @@ class ProtectButtonEntityDescription(
     """Describes UniFi Protect Button entity."""
 
     ufp_press: str | None = None
-
-
-DEVICE_CLASS_CHIME_BUTTON: Final = "unifiprotect__chime_button"
 
 
 ALL_DEVICE_BUTTONS: tuple[ProtectButtonEntityDescription, ...] = (
@@ -84,7 +82,6 @@ CHIME_BUTTONS: tuple[ProtectButtonEntityDescription, ...] = (
     ProtectButtonEntityDescription(
         key="play",
         translation_key="play_chime",
-        device_class=DEVICE_CLASS_CHIME_BUTTON,
         ufp_press="play",
     ),
     ProtectButtonEntityDescription(
@@ -163,6 +160,7 @@ class ProtectButton(ProtectDeviceEntity, ButtonEntity):
 
     entity_description: ProtectButtonEntityDescription
 
+    @async_ufp_instance_command
     async def async_press(self) -> None:
         """Press the button."""
         if self.entity_description.ufp_press is not None:

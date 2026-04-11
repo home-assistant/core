@@ -55,6 +55,14 @@ def mock_transmission_client() -> Generator[AsyncMock]:
             "activeTorrentCount": 0,
             "pausedTorrentCount": 0,
             "torrentCount": 0,
+            "current-stats": {
+                "uploadedBytes": 5368709120,
+                "downloadedBytes": 10737418240,
+            },
+            "cumulative-stats": {
+                "uploadedBytes": 85899345920,
+                "downloadedBytes": 107374182400,
+            },
         }
         client.session_stats.return_value = SessionStats(fields=session_stats_data)
 
@@ -87,17 +95,23 @@ def mock_torrent():
         torrent_data = {
             "id": torrent_id,
             "name": name,
-            "percentDone": percent_done,
             "status": status,
-            "rateDownload": 0,
-            "rateUpload": 0,
-            "downloadDir": download_dir,
+            "percentDone": percent_done,
+            "uploadRatio": ratio,
+            "ratio": ratio,
             "eta": eta,
             "addedDate": int(added_date.timestamp()),
-            "uploadRatio": ratio,
-            "error": 0,
-            "errorString": "",
+            "doneDate": int(added_date.timestamp()) if percent_done >= 1.0 else 0,
+            "downloadDir": download_dir,
+            "labels": [],
         }
         return Torrent(fields=torrent_data)
 
     return _create_mock_torrent
+
+
+@pytest.fixture(autouse=True)
+def patch_sleep() -> Generator[None]:
+    """Fixture to remove sleep in tests."""
+    with patch("homeassistant.components.transmission.switch.AFTER_WRITE_SLEEP", 0):
+        yield

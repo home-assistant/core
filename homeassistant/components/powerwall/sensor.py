@@ -7,7 +7,7 @@ from dataclasses import dataclass
 from operator import attrgetter, methodcaller
 from typing import TYPE_CHECKING
 
-from tesla_powerwall import GridState, MeterResponse, MeterType
+from tesla_powerwall import BatteryResponse, GridState, MeterResponse, MeterType
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -29,8 +29,8 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import POWERWALL_COORDINATOR
+from .coordinator import PowerwallConfigEntry, PowerwallRuntimeData
 from .entity import BatteryEntity, PowerWallEntity
-from .models import BatteryResponse, PowerwallConfigEntry, PowerwallRuntimeData
 
 _METER_DIRECTION_EXPORT = "export"
 _METER_DIRECTION_IMPORT = "import"

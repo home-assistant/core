@@ -18,12 +18,15 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.dispatcher import dispatcher_send
 from homeassistant.helpers.event import async_call_later
+from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     CONF_DEVICE_BAUD,
     CONF_DEVICE_PATH,
+    DOMAIN,
     PROTOCOL_SERIAL,
     PROTOCOL_SOCKET,
     SIGNAL_PANEL_MESSAGE,
@@ -32,9 +35,11 @@ from .const import (
     SIGNAL_ZONE_FAULT,
     SIGNAL_ZONE_RESTORE,
 )
+from .services import async_setup_services
 
 _LOGGER = logging.getLogger(__name__)
 
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 PLATFORMS = [
     Platform.ALARM_CONTROL_PANEL,
     Platform.BINARY_SENSOR,
@@ -52,6 +57,12 @@ class AlarmDecoderData:
     remove_update_listener: Callable[[], None]
     remove_stop_listener: Callable[[], None]
     restart: bool
+
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up the component."""
+    async_setup_services(hass)
+    return True
 
 
 async def async_setup_entry(

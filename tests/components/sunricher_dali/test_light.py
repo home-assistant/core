@@ -1,7 +1,7 @@
 """Test the Sunricher DALI light platform."""
 
 from typing import Any
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
 from PySrDaliGateway import CallbackEventType
 import pytest
@@ -16,7 +16,7 @@ from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
-from . import find_device_listener
+from . import find_device_listener, trigger_availability_callback
 
 from tests.common import MockConfigEntry, SnapshotAssertion, snapshot_platform
 
@@ -35,36 +35,10 @@ def _trigger_light_status_callback(
     callback(status)
 
 
-def _trigger_availability_callback(
-    device: MagicMock, device_id: str, available: bool
-) -> None:
-    """Trigger the availability callbacks registered on the device mock."""
-    callback = find_device_listener(device, CallbackEventType.ONLINE_STATUS)
-    callback(available)
-
-
 @pytest.fixture
 def platforms() -> list[Platform]:
     """Fixture to specify which platforms to test."""
     return [Platform.LIGHT]
-
-
-@pytest.fixture
-async def init_integration(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_gateway: MagicMock,
-    mock_devices: list[MagicMock],
-    platforms: list[Platform],
-) -> MockConfigEntry:
-    """Set up the integration for testing."""
-    mock_config_entry.add_to_hass(hass)
-
-    with patch("homeassistant.components.sunricher_dali._PLATFORMS", platforms):
-        await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
-
-    return mock_config_entry
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default", "init_integration")
@@ -192,13 +166,13 @@ async def test_device_availability(
     init_integration: MockConfigEntry,
     mock_devices: list[MagicMock],
 ) -> None:
-    """Test device availability changes."""
-    _trigger_availability_callback(mock_devices[0], TEST_DIMMER_DEVICE_ID, False)
+    """Test availability changes are reflected in entity state."""
+    trigger_availability_callback(mock_devices[0], False)
     await hass.async_block_till_done()
     assert (state := hass.states.get(TEST_DIMMER_ENTITY_ID))
     assert state.state == "unavailable"
 
-    _trigger_availability_callback(mock_devices[0], TEST_DIMMER_DEVICE_ID, True)
+    trigger_availability_callback(mock_devices[0], True)
     await hass.async_block_till_done()
     assert (state := hass.states.get(TEST_DIMMER_ENTITY_ID))
     assert state.state != "unavailable"

@@ -21,6 +21,7 @@ from homeassistant.helpers.typing import VolDictType
 
 from .const import (
     _LOGGER,
+    ALL_MATCH_REGEX,
     CONF_AREA_FILTER,
     CONF_FILTERS,
     CONF_HEADLINE_FILTER,
@@ -30,6 +31,7 @@ from .const import (
     CONST_REGIONS,
     DOMAIN,
     NO_MATCH_REGEX,
+    SENSOR_SUFFIXES,
 )
 
 
@@ -140,7 +142,7 @@ class NinaConfigFlow(ConfigFlow, domain=DOMAIN):
 
             try:
                 self._all_region_codes_sorted = swap_key_value(
-                    await nina.getAllRegionalCodes()
+                    await nina.get_all_regional_codes()
                 )
             except ApiError:
                 return self.async_abort(reason="no_fetch")
@@ -168,9 +170,20 @@ class NinaConfigFlow(ConfigFlow, domain=DOMAIN):
 
             errors["base"] = "no_selection"
 
+        default_filters = {
+            CONF_FILTERS: {
+                CONF_HEADLINE_FILTER: NO_MATCH_REGEX,
+                CONF_AREA_FILTER: ALL_MATCH_REGEX,
+            }
+        }
+
+        schema_with_suggested = self.add_suggested_values_to_schema(
+            create_schema(self.regions), default_filters
+        )
+
         return self.async_show_form(
             step_id="user",
-            data_schema=create_schema(self.regions),
+            data_schema=schema_with_suggested,
             errors=errors,
         )
 
@@ -209,7 +222,7 @@ class OptionsFlowHandler(OptionsFlowWithReload):
 
             try:
                 self._all_region_codes_sorted = swap_key_value(
-                    await nina.getAllRegionalCodes()
+                    await nina.get_all_regional_codes()
                 )
             except ApiError:
                 return self.async_abort(reason="no_fetch")
@@ -231,32 +244,7 @@ class OptionsFlowHandler(OptionsFlowWithReload):
                     user_input, self._all_region_codes_sorted
                 )
 
-                entity_registry = er.async_get(self.hass)
-
-                entries = er.async_entries_for_config_entry(
-                    entity_registry, self.config_entry.entry_id
-                )
-
-                removed_entities_slots = [
-                    f"{region}-{slot_id}"
-                    for region in self.data[CONF_REGIONS]
-                    for slot_id in range(self.data[CONF_MESSAGE_SLOTS] + 1)
-                    if slot_id > user_input[CONF_MESSAGE_SLOTS]
-                ]
-
-                removed_entites_area = [
-                    f"{cfg_region}-{slot_id}"
-                    for slot_id in range(1, self.data[CONF_MESSAGE_SLOTS] + 1)
-                    for cfg_region in self.data[CONF_REGIONS]
-                    if cfg_region not in user_input[CONF_REGIONS]
-                ]
-
-                for entry in entries:
-                    for entity_uid in list(
-                        set(removed_entities_slots + removed_entites_area)
-                    ):
-                        if entry.unique_id == entity_uid:
-                            entity_registry.async_remove(entry.entity_id)
+                await self.remove_unused_entities(user_input)
 
                 self.hass.config_entries.async_update_entry(
                     self.config_entry, data=user_input
@@ -275,3 +263,35 @@ class OptionsFlowHandler(OptionsFlowWithReload):
             data_schema=schema_with_suggested,
             errors=errors,
         )
+
+    async def remove_unused_entities(self, user_input: dict[str, Any]) -> None:
+        """Remove entities which are not used anymore."""
+        entity_registry = er.async_get(self.hass)
+
+        entries = er.async_entries_for_config_entry(
+            entity_registry, self.config_entry.entry_id
+        )
+
+        id_type_suffix = [f"-{sensor_id}" for sensor_id in SENSOR_SUFFIXES] + [""]
+
+        removed_entities_slots = [
+            f"{region}-{slot_id}{suffix}"
+            for region in self.data[CONF_REGIONS]
+            for slot_id in range(self.data[CONF_MESSAGE_SLOTS] + 1)
+            for suffix in id_type_suffix
+            if slot_id > user_input[CONF_MESSAGE_SLOTS]
+        ]
+
+        removed_entities_area = [
+            f"{cfg_region}-{slot_id}{suffix}"
+            for slot_id in range(1, self.data[CONF_MESSAGE_SLOTS] + 1)
+            for cfg_region in self.data[CONF_REGIONS]
+            for suffix in id_type_suffix
+            if cfg_region not in user_input[CONF_REGIONS]
+        ]
+
+        removed_uids = set(removed_entities_slots + removed_entities_area)
+
+        for entry in entries:
+            if entry.unique_id in removed_uids:
+                entity_registry.async_remove(entry.entity_id)

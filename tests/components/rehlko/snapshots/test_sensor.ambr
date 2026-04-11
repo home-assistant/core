@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_sensors[sensor.generator_1_battery_voltage-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -22,6 +23,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery voltage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -57,8 +59,9 @@
 # ---
 # name: test_sensors[sensor.generator_1_controller_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -78,6 +81,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Controller temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -113,8 +117,9 @@
 # ---
 # name: test_sensors[sensor.generator_1_device_ip_address-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -132,6 +137,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Device IP address',
     'options': dict({
     }),
     'original_device_class': None,
@@ -161,8 +167,9 @@
 # ---
 # name: test_sensors[sensor.generator_1_engine_compartment_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -182,6 +189,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Engine compartment temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -217,8 +225,9 @@
 # ---
 # name: test_sensors[sensor.generator_1_engine_coolant_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -238,6 +247,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Engine coolant temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -273,8 +283,9 @@
 # ---
 # name: test_sensors[sensor.generator_1_engine_frequency-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -294,6 +305,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Engine frequency',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -329,8 +341,9 @@
 # ---
 # name: test_sensors[sensor.generator_1_engine_oil_pressure-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -350,6 +363,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Engine oil pressure',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -388,8 +402,9 @@
 # ---
 # name: test_sensors[sensor.generator_1_engine_speed-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -409,6 +424,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Engine speed',
     'options': dict({
     }),
     'original_device_class': None,
@@ -440,8 +456,9 @@
 # ---
 # name: test_sensors[sensor.generator_1_engine_state-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -459,6 +476,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Engine state',
     'options': dict({
     }),
     'original_device_class': None,
@@ -488,8 +506,9 @@
 # ---
 # name: test_sensors[sensor.generator_1_generator_load-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -509,6 +528,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Generator load',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -544,8 +564,9 @@
 # ---
 # name: test_sensors[sensor.generator_1_generator_load_percentage-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -565,6 +586,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Generator load percentage',
     'options': dict({
     }),
     'original_device_class': None,
@@ -596,8 +618,9 @@
 # ---
 # name: test_sensors[sensor.generator_1_generator_status-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -615,6 +638,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Generator status',
     'options': dict({
     }),
     'original_device_class': None,
@@ -644,8 +668,9 @@
 # ---
 # name: test_sensors[sensor.generator_1_last_exercise-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -663,6 +688,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Last exercise',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -693,8 +719,9 @@
 # ---
 # name: test_sensors[sensor.generator_1_last_maintainance-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -712,6 +739,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Last maintainance',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -742,8 +770,9 @@
 # ---
 # name: test_sensors[sensor.generator_1_last_run-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -761,6 +790,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Last run',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -791,8 +821,9 @@
 # ---
 # name: test_sensors[sensor.generator_1_lube_oil_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -812,6 +843,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Lube oil temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -847,8 +879,9 @@
 # ---
 # name: test_sensors[sensor.generator_1_next_exercise-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -866,6 +899,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Next exercise',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -896,8 +930,9 @@
 # ---
 # name: test_sensors[sensor.generator_1_next_maintainance-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -915,6 +950,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Next maintainance',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -945,8 +981,9 @@
 # ---
 # name: test_sensors[sensor.generator_1_power_source-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -964,6 +1001,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power source',
     'options': dict({
     }),
     'original_device_class': None,
@@ -993,8 +1031,9 @@
 # ---
 # name: test_sensors[sensor.generator_1_runtime_since_last_maintenance-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1014,6 +1053,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Runtime since last maintenance',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1049,8 +1089,9 @@
 # ---
 # name: test_sensors[sensor.generator_1_server_ip_address-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1068,6 +1109,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Server IP address',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1097,8 +1139,9 @@
 # ---
 # name: test_sensors[sensor.generator_1_total_operation-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1118,6 +1161,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Total operation',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1153,8 +1197,9 @@
 # ---
 # name: test_sensors[sensor.generator_1_total_runtime-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1174,6 +1219,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Total runtime',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1209,8 +1255,9 @@
 # ---
 # name: test_sensors[sensor.generator_1_utility_voltage-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1230,6 +1277,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Utility voltage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -1265,8 +1313,9 @@
 # ---
 # name: test_sensors[sensor.generator_1_voltage-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1286,6 +1335,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Voltage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,

@@ -441,7 +441,7 @@ async def test_options_flow(
 
     assert config_entry.options == {}
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "init"
 
     # Audio Codec
@@ -449,7 +449,7 @@ async def test_options_flow(
     result = await hass.config_entries.options.async_configure(
         result["flow_id"], user_input={}
     )
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert CONF_AUDIO_CODEC not in config_entry.options
 
     # Bad
@@ -479,5 +479,5 @@ async def test_setting_codec(
     result = await hass.config_entries.options.async_configure(
         result["flow_id"], user_input={CONF_AUDIO_CODEC: codec}
     )
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert config_entry.options[CONF_AUDIO_CODEC] == codec

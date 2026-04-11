@@ -2,13 +2,13 @@
 
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.trigger import Trigger, make_entity_state_trigger
+from homeassistant.helpers.trigger import Trigger, make_entity_target_state_trigger
 
 from . import DOMAIN
 
 TRIGGERS: dict[str, type[Trigger]] = {
-    "turned_off": make_entity_state_trigger(DOMAIN, STATE_OFF),
-    "turned_on": make_entity_state_trigger(DOMAIN, STATE_ON),
+    "turned_off": make_entity_target_state_trigger(DOMAIN, STATE_OFF),
+    "turned_on": make_entity_target_state_trigger(DOMAIN, STATE_ON),
 }
 
 

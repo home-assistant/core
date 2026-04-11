@@ -27,6 +27,7 @@ SPOTIFY_SCOPES = [
 
 MEDIA_PLAYER_PREFIX = "spotify://"
 MEDIA_TYPE_SHOW = "show"
+MEDIA_TYPE_USER_SAVED_TRACKS = "current_user_saved_tracks"
 
 PLAYABLE_MEDIA_TYPES = [
     MediaType.PLAYLIST,
@@ -35,4 +36,5 @@ PLAYABLE_MEDIA_TYPES = [
     MediaType.EPISODE,
     MEDIA_TYPE_SHOW,
     MediaType.TRACK,
+    MEDIA_TYPE_USER_SAVED_TRACKS,
 ]

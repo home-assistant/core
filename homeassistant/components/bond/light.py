@@ -7,36 +7,19 @@ from typing import Any
 
 from aiohttp.client_exceptions import ClientResponseError
 from bond_async import Action, DeviceType
-import voluptuous as vol
 
 from homeassistant.components.light import ATTR_BRIGHTNESS, ColorMode, LightEntity
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import BondConfigEntry
-from .const import (
-    ATTR_POWER_STATE,
-    SERVICE_SET_LIGHT_BRIGHTNESS_TRACKED_STATE,
-    SERVICE_SET_LIGHT_POWER_TRACKED_STATE,
-)
 from .entity import BondEntity
 from .models import BondData
 from .utils import BondDevice
 
 _LOGGER = logging.getLogger(__name__)
-
-SERVICE_START_INCREASING_BRIGHTNESS = "start_increasing_brightness"
-SERVICE_START_DECREASING_BRIGHTNESS = "start_decreasing_brightness"
-SERVICE_STOP = "stop"
-
-ENTITY_SERVICES = [
-    SERVICE_START_INCREASING_BRIGHTNESS,
-    SERVICE_START_DECREASING_BRIGHTNESS,
-    SERVICE_STOP,
-]
 
 
 async def async_setup_entry(
@@ -47,14 +30,6 @@ async def async_setup_entry(
     """Set up Bond light devices."""
     data = entry.runtime_data
     hub = data.hub
-
-    platform = entity_platform.async_get_current_platform()
-    for service in ENTITY_SERVICES:
-        platform.async_register_entity_service(
-            service,
-            None,
-            f"async_{service}",
-        )
 
     fan_lights: list[Entity] = [
         BondLight(data, device)
@@ -93,22 +68,6 @@ async def async_setup_entry(
         for device in hub.devices
         if DeviceType.is_light(device.type)
     ]
-
-    platform.async_register_entity_service(
-        SERVICE_SET_LIGHT_BRIGHTNESS_TRACKED_STATE,
-        {
-            vol.Required(ATTR_BRIGHTNESS): vol.All(
-                vol.Number(scale=0), vol.Range(0, 255)
-            )
-        },
-        "async_set_brightness_belief",
-    )
-
-    platform.async_register_entity_service(
-        SERVICE_SET_LIGHT_POWER_TRACKED_STATE,
-        {vol.Required(ATTR_POWER_STATE): vol.All(cv.boolean)},
-        "async_set_power_belief",
-    )
 
     async_add_entities(
         fan_lights + fan_up_lights + fan_down_lights + fireplaces + fp_lights + lights,

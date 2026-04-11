@@ -5,7 +5,7 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from systembridgemodels.notification import Notification
+from systembridgeconnector.models.notification import Notification
 
 from homeassistant.components.notify import (
     ATTR_DATA,
@@ -17,8 +17,7 @@ from homeassistant.const import ATTR_ICON, CONF_ENTITY_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from .const import DOMAIN
-from .coordinator import SystemBridgeDataUpdateCoordinator
+from .coordinator import SystemBridgeConfigEntry, SystemBridgeDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -37,11 +36,13 @@ async def async_get_service(
     if discovery_info is None:
         return None
 
-    coordinator: SystemBridgeDataUpdateCoordinator = hass.data[DOMAIN][
+    entry: SystemBridgeConfigEntry | None = hass.config_entries.async_get_entry(
         discovery_info[CONF_ENTITY_ID]
-    ]
+    )
+    if entry is None:
+        return None
 
-    return SystemBridgeNotificationService(coordinator)
+    return SystemBridgeNotificationService(entry.runtime_data)
 
 
 class SystemBridgeNotificationService(BaseNotificationService):

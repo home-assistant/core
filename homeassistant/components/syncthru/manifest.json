@@ -4,6 +4,7 @@
   "codeowners": ["@nielstron"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/syncthru",
+  "integration_type": "device",
   "iot_class": "local_polling",
   "loggers": ["pysyncthru"],
   "requirements": ["PySyncThru==0.8.0", "url-normalize==2.2.1"],

@@ -35,6 +35,14 @@ MOCK_USER_REAUTH = {
     CONF_PASSWORD: "new_password",
 }
 
+MOCK_USER_RECONFIGURE = {
+    CONF_HOST: "1.1.1.2",
+    CONF_SSL: True,
+    CONF_VERIFY_SSL: False,
+    CONF_GROUP: "user",
+}
+
+
 MOCK_DHCP_DISCOVERY_INPUT = {
     CONF_SSL: True,
     CONF_VERIFY_SSL: False,

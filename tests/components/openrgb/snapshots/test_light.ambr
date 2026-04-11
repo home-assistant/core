@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_entities[light.ene_dram-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'effect_list': list([
@@ -34,6 +35,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,

@@ -21,7 +21,6 @@ START_DATE = date(2025, 10, 4)
 END_DATE = date(2025, 10, 5)
 
 
-@pytest.mark.asyncio
 @pytest.mark.parametrize(
     (
         "pickup_name",

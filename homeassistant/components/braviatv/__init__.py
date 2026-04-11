@@ -11,6 +11,7 @@ from homeassistant.const import CONF_HOST, CONF_MAC, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
 
+from .const import CONF_USE_SSL
 from .coordinator import BraviaTVConfigEntry, BraviaTVCoordinator
 
 PLATFORMS: Final[list[Platform]] = [
@@ -26,11 +27,12 @@ async def async_setup_entry(
     """Set up a config entry."""
     host = config_entry.data[CONF_HOST]
     mac = config_entry.data[CONF_MAC]
+    ssl = config_entry.data.get(CONF_USE_SSL, False)
 
     session = async_create_clientsession(
         hass, cookie_jar=CookieJar(unsafe=True, quote_cookie=False)
     )
-    client = BraviaClient(host, mac, session=session)
+    client = BraviaClient(host, mac, session=session, ssl=ssl)
     coordinator = BraviaTVCoordinator(
         hass=hass,
         config_entry=config_entry,

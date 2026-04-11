@@ -2,6 +2,10 @@
 
 from __future__ import annotations
 
+from tuya_device_handlers.definition.valve import (
+    TuyaValveDefinition,
+    get_default_definition,
+)
 from tuya_sharing import CustomerDevice, Manager
 
 from homeassistant.components.valve import (
@@ -17,7 +21,6 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from . import TuyaConfigEntry
 from .const import TUYA_DISCOVERY_NEW, DeviceCategory, DPCode
 from .entity import TuyaEntity
-from .models import DPCodeBooleanWrapper
 
 VALVES: dict[DeviceCategory, tuple[ValveEntityDescription, ...]] = {
     DeviceCategory.SFKZQ: (
@@ -94,13 +97,9 @@ async def async_setup_entry(
             device = manager.device_map[device_id]
             if descriptions := VALVES.get(device.category):
                 entities.extend(
-                    TuyaValveEntity(device, manager, description, dpcode_wrapper)
+                    TuyaValveEntity(device, manager, description, definition)
                     for description in descriptions
-                    if (
-                        dpcode_wrapper := DPCodeBooleanWrapper.find_dpcode(
-                            device, description.key, prefer_function=True
-                        )
-                    )
+                    if (definition := get_default_definition(device, description.key))
                 )
 
         async_add_entities(entities)
@@ -122,13 +121,11 @@ class TuyaValveEntity(TuyaEntity, ValveEntity):
         device: CustomerDevice,
         device_manager: Manager,
         description: ValveEntityDescription,
-        dpcode_wrapper: DPCodeBooleanWrapper,
+        definition: TuyaValveDefinition,
     ) -> None:
         """Init TuyaValveEntity."""
-        super().__init__(device, device_manager)
-        self.entity_description = description
-        self._attr_unique_id = f"{super().unique_id}{description.key}"
-        self._dpcode_wrapper = dpcode_wrapper
+        super().__init__(device, device_manager, description)
+        self._dpcode_wrapper = definition.control_wrapper
 
     @property
     def is_closed(self) -> bool | None:
@@ -136,6 +133,20 @@ class TuyaValveEntity(TuyaEntity, ValveEntity):
         if (is_open := self._read_wrapper(self._dpcode_wrapper)) is None:
             return None
         return not is_open
+
+    async def _process_device_update(
+        self,
+        updated_status_properties: list[str],
+        dp_timestamps: dict[str, int] | None,
+    ) -> bool:
+        """Called when Tuya device sends an update with updated properties.
+
+        Returns True if the Home Assistant state should be written,
+        or False if the state write should be skipped.
+        """
+        return not self._dpcode_wrapper.skip_update(
+            self.device, updated_status_properties, dp_timestamps
+        )
 
     async def async_open_valve(self) -> None:
         """Open the valve."""

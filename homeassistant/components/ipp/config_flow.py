@@ -74,7 +74,7 @@ class IPPFlowHandler(ConfigFlow, domain=DOMAIN):
             info = await validate_input(self.hass, user_input)
         except IPPConnectionUpgradeRequired:
             return self._show_setup_form({"base": "connection_upgrade"})
-        except (IPPConnectionError, IPPResponseError):
+        except IPPConnectionError, IPPResponseError:
             _LOGGER.debug("IPP Connection/Response Error", exc_info=True)
             return self._show_setup_form({"base": "cannot_connect"})
         except IPPParseError:
@@ -142,7 +142,7 @@ class IPPFlowHandler(ConfigFlow, domain=DOMAIN):
             info = await validate_input(self.hass, self.discovery_info)
         except IPPConnectionUpgradeRequired:
             return self.async_abort(reason="connection_upgrade")
-        except (IPPConnectionError, IPPResponseError):
+        except IPPConnectionError, IPPResponseError:
             _LOGGER.debug("IPP Connection/Response Error", exc_info=True)
             return self.async_abort(reason="cannot_connect")
         except IPPParseError:

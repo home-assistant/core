@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 from dataclasses import dataclass
+from datetime import datetime
 import re
 from typing import Any
 
@@ -35,13 +36,14 @@ class NinaWarningData:
     headline: str
     description: str
     sender: str
-    severity: str
+    severity: str | None
     recommended_actions: str
+    affected_areas_short: str
     affected_areas: str
-    web: str
-    sent: str
-    start: str
-    expires: str
+    more_info_url: str
+    sent: datetime
+    start: datetime | None
+    expires: datetime | None
     is_valid: bool
 
 
@@ -66,7 +68,7 @@ class NINADataUpdateCoordinator(
 
         regions: dict[str, str] = config_entry.data[CONF_REGIONS]
         for region in regions:
-            self._nina.addRegion(region)
+            self._nina.add_region(region)
 
         super().__init__(
             hass,
@@ -139,19 +141,34 @@ class NINADataUpdateCoordinator(
                     )
                     continue
 
+                shortened_affected_areas: str = (
+                    affected_areas_string[0:250] + "..."
+                    if len(affected_areas_string) > 250
+                    else affected_areas_string
+                )
+
+                severity = (
+                    None
+                    if raw_warn.severity.lower() == "unknown"
+                    else raw_warn.severity
+                )
+
                 warning_data: NinaWarningData = NinaWarningData(
                     raw_warn.id,
                     raw_warn.headline,
                     raw_warn.description,
-                    raw_warn.sender,
-                    raw_warn.severity,
+                    raw_warn.sender or "",
+                    severity,
                     " ".join([str(action) for action in raw_warn.recommended_actions]),
+                    shortened_affected_areas,
                     affected_areas_string,
                     raw_warn.web or "",
-                    raw_warn.sent or "",
-                    raw_warn.start or "",
-                    raw_warn.expires or "",
-                    raw_warn.isValid(),
+                    datetime.fromisoformat(raw_warn.sent),
+                    datetime.fromisoformat(raw_warn.start) if raw_warn.start else None,
+                    datetime.fromisoformat(raw_warn.expires)
+                    if raw_warn.expires
+                    else None,
+                    raw_warn.is_valid,
                 )
                 warnings_for_regions.append(warning_data)
 

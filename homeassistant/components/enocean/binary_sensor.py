@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from enocean.utils import combine_hex
+from enocean_async import ERP1Telegram
 import voluptuous as vol
 
 from homeassistant.components.binary_sensor import (
@@ -17,7 +17,7 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from .entity import EnOceanEntity
+from .entity import EnOceanEntity, combine_hex
 
 DEFAULT_NAME = "EnOcean binary sensor"
 DEPENDENCIES = ["enocean"]
@@ -68,29 +68,25 @@ class EnOceanBinarySensor(EnOceanEntity, BinarySensorEntity):
         self._attr_unique_id = f"{combine_hex(dev_id)}-{device_class}"
         self._attr_name = dev_name
 
-    def value_changed(self, packet):
+    def value_changed(self, telegram: ERP1Telegram) -> None:
         """Fire an event with the data that have changed.
 
         This method is called when there is an incoming packet associated
         with this platform.
-
-        Example packet data:
-        - 2nd button pressed
-            ['0xf6', '0x10', '0x00', '0x2d', '0xcf', '0x45', '0x30']
-        - button released
-            ['0xf6', '0x00', '0x00', '0x2d', '0xcf', '0x45', '0x20']
         """
+        if not self.address:
+            return
         # Energy Bow
         pushed = None
 
-        if packet.data[6] == 0x30:
+        if telegram.status == 0x30:
             pushed = 1
-        elif packet.data[6] == 0x20:
+        elif telegram.status == 0x20:
             pushed = 0
 
         self.schedule_update_ha_state()
 
-        action = packet.data[1]
+        action = telegram.telegram_data[0]
         if action == 0x70:
             self.which = 0
             self.onoff = 0
@@ -112,7 +108,7 @@ class EnOceanBinarySensor(EnOceanEntity, BinarySensorEntity):
         self.hass.bus.fire(
             EVENT_BUTTON_PRESSED,
             {
-                "id": self.dev_id,
+                "id": self.address.to_bytelist(),
                 "pushed": pushed,
                 "which": self.which,
                 "onoff": self.onoff,

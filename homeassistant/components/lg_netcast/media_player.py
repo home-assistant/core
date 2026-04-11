@@ -108,7 +108,7 @@ class LgTVDevice(MediaPlayerEntity):
         try:
             with self._client as client:
                 client.send_command(command)
-        except (LgNetCastError, RequestException):
+        except LgNetCastError, RequestException:
             self._attr_state = MediaPlayerState.OFF
 
     def update(self) -> None:
@@ -150,7 +150,7 @@ class LgTVDevice(MediaPlayerEntity):
                         source_tuples, key=lambda channel: int(channel[1])
                     )
                     self._source_names = [n for n, k in sorted_sources]
-        except (LgNetCastError, RequestException):
+        except LgNetCastError, RequestException:
             self._attr_state = MediaPlayerState.OFF
 
     def __update_volume(self):

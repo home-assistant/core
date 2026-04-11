@@ -2,46 +2,57 @@
 
 from __future__ import annotations
 
-from homeassistant.components.binary_sensor import BinarySensorEntity
+from homeassistant.components.binary_sensor import (
+    BinarySensorDeviceClass,
+    BinarySensorEntity,
+)
+from homeassistant.const import CONF_TYPE
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import (
-    CONF_ZONE_ID,
+from . import SIGNAL_ZONE_CHANGED, NessAlarmConfigEntry, ZoneChangedData
+from .const import (
     CONF_ZONE_NAME,
-    CONF_ZONE_TYPE,
-    CONF_ZONES,
-    SIGNAL_ZONE_CHANGED,
-    ZoneChangedData,
+    CONF_ZONE_NUMBER,
+    DEFAULT_ZONE_TYPE,
+    DOMAIN,
+    SUBENTRY_TYPE_ZONE,
 )
 
 
-async def async_setup_platform(
+async def async_setup_entry(
     hass: HomeAssistant,
-    config: ConfigType,
-    async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
+    entry: NessAlarmConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up the Ness Alarm binary sensor devices."""
-    if not discovery_info:
-        return
+    """Set up the Ness Alarm binary sensor from config entry."""
+    # Get zone subentries
+    zone_subentries = filter(
+        lambda subentry: subentry.subentry_type == SUBENTRY_TYPE_ZONE,
+        entry.subentries.values(),
+    )
 
-    configured_zones = discovery_info[CONF_ZONES]
-
-    devices = []
-
-    for zone_config in configured_zones:
-        zone_type = zone_config[CONF_ZONE_TYPE]
-        zone_name = zone_config[CONF_ZONE_NAME]
-        zone_id = zone_config[CONF_ZONE_ID]
-        device = NessZoneBinarySensor(
-            zone_id=zone_id, name=zone_name, zone_type=zone_type
+    # Create entities from zone subentries
+    for subentry in zone_subentries:
+        zone_num: int = subentry.data[CONF_ZONE_NUMBER]
+        zone_type: BinarySensorDeviceClass = subentry.data.get(
+            CONF_TYPE, DEFAULT_ZONE_TYPE
         )
-        devices.append(device)
+        zone_name: str | None = subentry.data.get(CONF_ZONE_NAME)
 
-    async_add_entities(devices)
+        async_add_entities(
+            [
+                NessZoneBinarySensor(
+                    zone_id=zone_num,
+                    zone_type=zone_type,
+                    entry_id=entry.entry_id,
+                    zone_name=zone_name,
+                )
+            ],
+            config_subentry_id=subentry.subentry_id,
+        )
 
 
 class NessZoneBinarySensor(BinarySensorEntity):
@@ -49,12 +60,23 @@ class NessZoneBinarySensor(BinarySensorEntity):
 
     _attr_should_poll = False
 
-    def __init__(self, zone_id, name, zone_type):
+    def __init__(
+        self,
+        zone_id: int,
+        zone_type: BinarySensorDeviceClass,
+        entry_id: str,
+        zone_name: str | None = None,
+    ) -> None:
         """Initialize the binary_sensor."""
         self._zone_id = zone_id
-        self._name = name
-        self._type = zone_type
-        self._state = 0
+        self._attr_device_class = zone_type
+        self._attr_is_on = False
+        self._attr_unique_id = f"{entry_id}_zone_{zone_id}"
+        self._attr_name = f"Zone {zone_id}"
+        self._attr_device_info = DeviceInfo(
+            name=zone_name or f"Zone {zone_id}",
+            identifiers={(DOMAIN, self._attr_unique_id)},
+        )
 
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
@@ -64,24 +86,9 @@ class NessZoneBinarySensor(BinarySensorEntity):
             )
         )
 
-    @property
-    def name(self):
-        """Return the name of the entity."""
-        return self._name
-
-    @property
-    def is_on(self):
-        """Return true if sensor is on."""
-        return self._state == 1
-
-    @property
-    def device_class(self):
-        """Return the class of this sensor, from DEVICE_CLASSES."""
-        return self._type
-
     @callback
-    def _handle_zone_change(self, data: ZoneChangedData):
+    def _handle_zone_change(self, data: ZoneChangedData) -> None:
         """Handle zone state update."""
         if self._zone_id == data.zone_id:
-            self._state = data.state
+            self._attr_is_on = data.state
             self.async_write_ha_state()

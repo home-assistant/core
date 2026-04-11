@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+from dataclasses import dataclass
 import datetime
 import logging
 
@@ -22,22 +23,24 @@ _LOGGER = logging.getLogger(__name__)
 SCAN_INTERVAL = datetime.timedelta(seconds=30)
 
 
-class YardianCombinedState:
+@dataclass(slots=True)
+class YardianZone:
+    """Normalized metadata for a Yardian irrigation zone."""
+
+    name: str
+    is_enabled: bool
+
+
+@dataclass
+class YardianCoordinatorData:
     """Combined device state for Yardian."""
 
-    def __init__(
-        self,
-        zones: list[list],
-        active_zones: set[int],
-        oper_info: OperationInfo,
-    ) -> None:
-        """Initialize combined state with zones, active_zones and oper_info."""
-        self.zones = zones
-        self.active_zones = active_zones
-        self.oper_info = oper_info
+    zones: list[YardianZone]
+    active_zones: set[int]
+    oper_info: OperationInfo
 
 
-class YardianUpdateCoordinator(DataUpdateCoordinator[YardianCombinedState]):
+class YardianUpdateCoordinator(DataUpdateCoordinator[YardianCoordinatorData]):
     """Coordinator for Yardian API calls."""
 
     config_entry: ConfigEntry
@@ -75,31 +78,19 @@ class YardianUpdateCoordinator(DataUpdateCoordinator[YardianCombinedState]):
             serial_number=self._serial,
         )
 
-    async def _async_update_data(self) -> YardianCombinedState:
+    async def _async_update_data(self) -> YardianCoordinatorData:
         """Fetch data from Yardian device."""
+        _LOGGER.debug(
+            "Fetching Yardian device state for %s (controller=%s)",
+            self._name,
+            type(self.controller).__name__,
+        )
         try:
             async with asyncio.timeout(10):
-                _LOGGER.debug(
-                    "Fetching Yardian device state for %s (controller=%s)",
-                    self._name,
-                    type(self.controller).__name__,
-                )
                 # Fetch device state and operation info; specific exceptions are
                 # handled by the outer block to avoid double-logging.
                 dev_state = await self.controller.fetch_device_state()
                 oper_info = await self.controller.fetch_oper_info()
-                oper_keys = list(oper_info.keys()) if hasattr(oper_info, "keys") else []
-                _LOGGER.debug(
-                    "Fetched Yardian data: zones=%s active=%s oper_keys=%s",
-                    len(getattr(dev_state, "zones", [])),
-                    len(getattr(dev_state, "active_zones", [])),
-                    oper_keys,
-                )
-                return YardianCombinedState(
-                    zones=dev_state.zones,
-                    active_zones=dev_state.active_zones,
-                    oper_info=oper_info,
-                )
 
         except TimeoutError as e:
             raise UpdateFailed("Timeout communicating with device") from e
@@ -110,3 +101,22 @@ class YardianUpdateCoordinator(DataUpdateCoordinator[YardianCombinedState]):
         except Exception as e:  # safety net for tests to surface failure reason
             _LOGGER.exception("Unexpected error while fetching Yardian data")
             raise UpdateFailed(f"Unexpected error: {type(e).__name__}: {e}") from e
+
+        _LOGGER.debug(
+            "Fetched Yardian data: zones=%s active=%s oper_keys=%s",
+            len(dev_state.zones),
+            len(dev_state.active_zones),
+            list(oper_info.keys()),
+        )
+
+        return YardianCoordinatorData(
+            zones=[
+                YardianZone(
+                    name=str(zone_info[0]),
+                    is_enabled=zone_info[1] == 1,
+                )
+                for zone_info in dev_state.zones
+            ],
+            active_zones=set(dev_state.active_zones),
+            oper_info=oper_info,
+        )

@@ -30,6 +30,7 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
     Platform,
 )
 from homeassistant.core import HomeAssistant, State
@@ -451,3 +452,193 @@ async def test_availability_at_start(
     """Test unavailable at boot."""
     await setup_integration(hass, mock_config_entry)
     assert hass.states.get("light.standing_light").state == STATE_UNAVAILABLE
+
+
+@pytest.mark.parametrize("device_fixture", ["da_ks_hood_01001"])
+@pytest.mark.parametrize(
+    ("service", "command"),
+    [
+        (SERVICE_TURN_ON, Command.ON),
+        (SERVICE_TURN_OFF, Command.OFF),
+    ],
+)
+async def test_lamp_with_switch(
+    hass: HomeAssistant,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    service: str,
+    command: Command,
+) -> None:
+    """Test samsungce.lamp on/off with switch capability."""
+    await setup_integration(hass, mock_config_entry)
+
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        service,
+        {ATTR_ENTITY_ID: "light.range_hood_light"},
+        blocking=True,
+    )
+    devices.execute_device_command.assert_called_once_with(
+        "fa5fca25-fa7a-1807-030a-2f72ee0f7bff",
+        Capability.SWITCH,
+        command,
+        "lamp",
+    )
+
+
+@pytest.mark.parametrize(
+    ("brightness", "brightness_level"),
+    [(128, "low"), (129, "high"), (240, "high")],
+)
+@pytest.mark.parametrize(
+    ("device_fixture", "entity_id", "device_id", "component"),
+    [
+        (
+            "da_ks_hood_01001",
+            "light.range_hood_light",
+            "fa5fca25-fa7a-1807-030a-2f72ee0f7bff",
+            "lamp",
+        ),
+        (
+            "da_ks_microwave_0101x",
+            "light.microwave_light",
+            "2bad3237-4886-e699-1b90-4a51a3d55c8a",
+            "hood",
+        ),
+    ],
+)
+async def test_lamp_component_with_brightness(
+    hass: HomeAssistant,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    entity_id: str,
+    device_id: str,
+    component: str,
+    brightness: int,
+    brightness_level: str,
+) -> None:
+    """Test samsungce.lamp on/off with switch capability."""
+    await setup_integration(hass, mock_config_entry)
+
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: entity_id, ATTR_BRIGHTNESS: brightness},
+        blocking=True,
+    )
+    devices.execute_device_command.assert_called_once_with(
+        device_id,
+        Capability.SAMSUNG_CE_LAMP,
+        Command.SET_BRIGHTNESS_LEVEL,
+        component,
+        argument=brightness_level,
+    )
+
+
+@pytest.mark.parametrize("device_fixture", ["da_ks_range_0101x"])
+@pytest.mark.parametrize(
+    ("service", "argument"),
+    [(SERVICE_TURN_ON, "extraHigh"), (SERVICE_TURN_OFF, "off")],
+)
+async def test_lamp_without_switch(
+    hass: HomeAssistant,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    service: str,
+    argument: str,
+) -> None:
+    """Test samsungce.lamp on/off without switch capability."""
+    await setup_integration(hass, mock_config_entry)
+
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        service,
+        {ATTR_ENTITY_ID: "light.vulcan_light"},
+        blocking=True,
+    )
+    devices.execute_device_command.assert_called_once_with(
+        "2c3cbaa0-1899-5ddc-7b58-9d657bd48f18",
+        Capability.SAMSUNG_CE_LAMP,
+        Command.SET_BRIGHTNESS_LEVEL,
+        MAIN,
+        argument=argument,
+    )
+
+
+@pytest.mark.parametrize("device_fixture", ["da_ks_hood_01001"])
+async def test_lamp_from_off(
+    hass: HomeAssistant, devices: AsyncMock, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test samsungce.lamp on with brightness level from off state."""
+    set_attribute_value(
+        devices, Capability.SWITCH, Attribute.SWITCH, "off", component="lamp"
+    )
+    await setup_integration(hass, mock_config_entry)
+
+    assert hass.states.get("light.range_hood_light").state == STATE_OFF
+
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: "light.range_hood_light", ATTR_BRIGHTNESS: 255},
+        blocking=True,
+    )
+    assert devices.execute_device_command.mock_calls == [
+        call(
+            "fa5fca25-fa7a-1807-030a-2f72ee0f7bff",
+            Capability.SAMSUNG_CE_LAMP,
+            Command.SET_BRIGHTNESS_LEVEL,
+            "lamp",
+            argument="high",
+        ),
+        call(
+            "fa5fca25-fa7a-1807-030a-2f72ee0f7bff",
+            Capability.SWITCH,
+            Command.ON,
+            "lamp",
+        ),
+    ]
+
+
+@pytest.mark.parametrize("device_fixture", ["da_ks_hood_01001"])
+async def test_lamp_unknown_switch(
+    hass: HomeAssistant, devices: AsyncMock, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test lamp state becomes unknown when switch state is unknown."""
+    await setup_integration(hass, mock_config_entry)
+
+    assert hass.states.get("light.range_hood_light").state == STATE_ON
+
+    await trigger_update(
+        hass,
+        devices,
+        "fa5fca25-fa7a-1807-030a-2f72ee0f7bff",
+        Capability.SWITCH,
+        Attribute.SWITCH,
+        None,
+        component="lamp",
+    )
+
+    assert hass.states.get("light.range_hood_light").state == STATE_UNKNOWN
+
+
+@pytest.mark.parametrize("device_fixture", ["da_ks_range_0101x"])
+async def test_lamp_unknown_brightness(
+    hass: HomeAssistant, devices: AsyncMock, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test lamp state becomes unknown when brightness level is unknown."""
+
+    await setup_integration(hass, mock_config_entry)
+
+    assert hass.states.get("light.vulcan_light").state == STATE_ON
+
+    await trigger_update(
+        hass,
+        devices,
+        "2c3cbaa0-1899-5ddc-7b58-9d657bd48f18",
+        Capability.SAMSUNG_CE_LAMP,
+        Attribute.BRIGHTNESS_LEVEL,
+        None,
+    )
+
+    assert hass.states.get("light.vulcan_light").state == STATE_UNKNOWN

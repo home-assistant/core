@@ -1,11 +1,12 @@
 """Setup config flow for Actron Air integration."""
 
 import asyncio
+from collections.abc import Mapping
 from typing import Any
 
 from actron_neo_api import ActronAirAPI, ActronAirAuthError
 
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_API_TOKEN
 from homeassistant.exceptions import HomeAssistantError
 
@@ -37,10 +38,10 @@ class ActronAirConfigFlow(ConfigFlow, domain=DOMAIN):
                 _LOGGER.error("OAuth2 flow failed: %s", err)
                 return self.async_abort(reason="oauth2_error")
 
-            self._device_code = device_code_response["device_code"]
-            self._user_code = device_code_response["user_code"]
-            self._verification_uri = device_code_response["verification_uri_complete"]
-            self._expires_minutes = str(device_code_response["expires_in"] // 60)
+            self._device_code = device_code_response.device_code
+            self._user_code = device_code_response.user_code
+            self._verification_uri = device_code_response.verification_uri_complete
+            self._expires_minutes = str(device_code_response.expires_in // 60)
 
         async def _wait_for_authorization() -> None:
             """Wait for the user to authorize the device."""
@@ -95,8 +96,16 @@ class ActronAirConfigFlow(ConfigFlow, domain=DOMAIN):
 
         unique_id = str(user_data["id"])
         await self.async_set_unique_id(unique_id)
-        self._abort_if_unique_id_configured()
 
+        # Check if this is a reauth flow
+        if self.source == SOURCE_REAUTH:
+            self._abort_if_unique_id_mismatch(reason="wrong_account")
+            return self.async_update_reload_and_abort(
+                self._get_reauth_entry(),
+                data_updates={CONF_API_TOKEN: self._api.refresh_token_value},
+            )
+
+        self._abort_if_unique_id_configured()
         return self.async_create_entry(
             title=user_data["email"],
             data={CONF_API_TOKEN: self._api.refresh_token_value},
@@ -111,8 +120,23 @@ class ActronAirConfigFlow(ConfigFlow, domain=DOMAIN):
             return self.async_show_form(
                 step_id="timeout",
             )
-        del self.login_task
+        self.login_task = None
         return await self.async_step_user()
+
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
+        """Handle reauthentication request."""
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Confirm reauth dialog."""
+        if user_input is not None:
+            return await self.async_step_user()
+
+        return self.async_show_form(step_id="reauth_confirm")
 
     async def async_step_connection_error(
         self, user_input: dict[str, Any] | None = None

@@ -13,6 +13,9 @@
     "delete_message": {
       "service": "mdi:delete"
     },
+    "download_file": {
+      "service": "mdi:paperclip"
+    },
     "edit_caption": {
       "service": "mdi:pencil"
     },
@@ -39,6 +42,9 @@
     },
     "send_location": {
       "service": "mdi:map-marker"
+    },
+    "send_media_group": {
+      "service": "mdi:image-album"
     },
     "send_message": {
       "service": "mdi:send"

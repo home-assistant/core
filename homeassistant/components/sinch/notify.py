@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+from typing import Any
 
 from clx.xms.api import MtBatchTextSmsResult
 from clx.xms.client import Client
@@ -67,7 +68,7 @@ class SinchNotificationService(BaseNotificationService):
         self.sender = config[CONF_SENDER]
         self.client = Client(config[CONF_SERVICE_PLAN_ID], config[CONF_API_KEY])
 
-    def send_message(self, message="", **kwargs):
+    def send_message(self, message: str = "", **kwargs: Any) -> None:
         """Send a message to a user."""
         targets = kwargs.get(ATTR_TARGET, self.default_recipients)
         data = kwargs.get(ATTR_DATA) or {}

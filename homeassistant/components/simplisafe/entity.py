@@ -13,16 +13,14 @@ from simplipy.websocket import (
     EVENT_LOCK_UNLOCKED,
     EVENT_POWER_OUTAGE,
     EVENT_POWER_RESTORED,
+    EVENT_SECRET_ALERT_TRIGGERED,
     WebsocketEvent,
 )
 
 from homeassistant.core import callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-    DataUpdateCoordinator,
-)
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import SimpliSafe
 from .const import (
@@ -35,16 +33,21 @@ from .const import (
     DOMAIN,
     LOGGER,
 )
+from .coordinator import SimpliSafeDataUpdateCoordinator
 from .typing import SystemType
 
 DEFAULT_CONFIG_URL = "https://webapp.simplisafe.com/new/#/dashboard"
 DEFAULT_ENTITY_MODEL = "Alarm control panel"
 DEFAULT_ERROR_THRESHOLD = 2
 
-WEBSOCKET_EVENTS_REQUIRING_SERIAL = [EVENT_LOCK_LOCKED, EVENT_LOCK_UNLOCKED]
+WEBSOCKET_EVENTS_REQUIRING_SERIAL = [
+    EVENT_LOCK_LOCKED,
+    EVENT_LOCK_UNLOCKED,
+    EVENT_SECRET_ALERT_TRIGGERED,
+]
 
 
-class SimpliSafeEntity(CoordinatorEntity[DataUpdateCoordinator[None]]):
+class SimpliSafeEntity(CoordinatorEntity[SimpliSafeDataUpdateCoordinator]):
     """Define a base SimpliSafe entity."""
 
     _attr_has_entity_name = True
