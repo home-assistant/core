@@ -90,5 +90,17 @@
         }
       }
     }
+  },
+  "services": {
+    "onkyo_set_channel_muting": {
+      "description": "Mutes or unmutes specific audio channels independently.",
+      "fields": {
+        "channels": {
+          "description": "Dictionary of channels and their muting state (true to mute, false to unmute).",
+          "name": "Channels"
+        }
+      },
+      "name": "Set channel muting"
+    }
   }
 }

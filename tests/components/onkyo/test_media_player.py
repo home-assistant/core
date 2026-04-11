@@ -22,7 +22,9 @@ from homeassistant.components.media_player import (
 )
 from homeassistant.components.onkyo.services import (
     ATTR_HDMI_OUTPUT,
+    ATTR_MUTING_CHANNELS,
     SERVICE_SELECT_HDMI_OUTPUT,
+    SERVICE_SET_CHANNEL_MUTING,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -258,6 +260,28 @@ async def test_select_hdmi_output(
         blocking=True,
     )
     assert writes[0] == command.HDMIOutput(command.HDMIOutput.Param.BOTH)
+
+
+async def test_set_channel_muting(
+    hass: HomeAssistant, writes: list[Instruction]
+) -> None:
+    """Test the onkyo_set_channel_muting service triggers aioonkyo command."""
+    await hass.services.async_call(
+        MEDIA_PLAYER_DOMAIN,
+        SERVICE_SET_CHANNEL_MUTING,
+        {
+            ATTR_ENTITY_ID: ENTITY_ID,
+            ATTR_MUTING_CHANNELS: {
+                "front_left": True,
+                "center": False,
+            },
+        },
+        blocking=True,
+    )
+    assert writes[0] == command.ChannelMuting(
+        front_left=command.ChannelMuting.Param.ON,
+        center=command.ChannelMuting.Param.OFF,
+    )
 
 
 async def test_query_state_task(

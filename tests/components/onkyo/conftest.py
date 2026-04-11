@@ -20,7 +20,10 @@ def ignore_missing_translations() -> str | list[str]:
 
     Legacy onkyo service uses media_player domain
     """
-    return ["component.media_player.services.onkyo_select_hdmi_output."]
+    return [
+        "component.media_player.services.onkyo_select_hdmi_output.",
+        "component.media_player.services.onkyo_set_channel_muting.",
+    ]
 
 
 @pytest.fixture(autouse=True)
@@ -103,6 +106,23 @@ INITIAL_MESSAGES = [
         Code.from_kind_zone(Kind.HDMI_OUTPUT, Zone.MAIN),
         None,
         status.HDMIOutput.Param.MAIN,
+    ),
+    status.ChannelMuting(
+        Code.from_kind_zone(Kind.CHANNEL_MUTING, Zone.MAIN),
+        None,
+        status.ChannelMuting.Param.OFF,  # front_left
+        status.ChannelMuting.Param.OFF,  # front_right
+        status.ChannelMuting.Param.OFF,  # center
+        status.ChannelMuting.Param.OFF,  # surround_left
+        status.ChannelMuting.Param.OFF,  # surround_right
+        status.ChannelMuting.Param.OFF,  # surround_back_left
+        status.ChannelMuting.Param.OFF,  # surround_back_right
+        status.ChannelMuting.Param.OFF,  # subwoofer
+        status.ChannelMuting.Param.OFF,  # height_1_left
+        status.ChannelMuting.Param.OFF,  # height_1_right
+        status.ChannelMuting.Param.OFF,  # height_2_left
+        status.ChannelMuting.Param.OFF,  # height_2_right
+        status.ChannelMuting.Param.OFF,  # subwoofer_2
     ),
     status.TunerPreset(Code.from_kind_zone(Kind.TUNER_PRESET, Zone.MAIN), None, 1),
     status.AudioInformation(

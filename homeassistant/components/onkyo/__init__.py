@@ -17,13 +17,12 @@ from .const import (
     InputSource,
     ListeningMode,
 )
-from .coordinator import ChannelMutingCoordinator
 from .receiver import ReceiverManager, async_interview
 from .services import async_setup_services
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS = [Platform.MEDIA_PLAYER, Platform.SWITCH]
+PLATFORMS = [Platform.MEDIA_PLAYER]
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
@@ -67,8 +66,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: OnkyoConfigEntry) -> boo
 
     entry.runtime_data = OnkyoData(manager, sources, sound_modes)
 
-    ChannelMutingCoordinator(hass, entry, manager)
-
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     if error := await manager.start():
@@ -82,6 +79,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: OnkyoConfigEntry) -> boo
 
 async def async_unload_entry(hass: HomeAssistant, entry: OnkyoConfigEntry) -> bool:
     """Unload Onkyo config entry."""
-    entry.runtime_data.manager.start_unloading()
+    if hasattr(entry, "runtime_data"):
+        entry.runtime_data.manager.start_unloading()
 
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)

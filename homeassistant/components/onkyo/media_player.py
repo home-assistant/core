@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+from enum import StrEnum
 import logging
 from typing import TYPE_CHECKING, Any
 
@@ -15,7 +16,7 @@ from homeassistant.components.media_player import (
     MediaType,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import ServiceValidationError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util.hass_dict import HassKey
 
@@ -64,6 +65,7 @@ ATTR_PRESET = "preset"
 ATTR_AUDIO_INFORMATION = "audio_information"
 ATTR_VIDEO_INFORMATION = "video_information"
 ATTR_VIDEO_OUT = "video_out"
+ATTR_MUTED_CHANNELS = "muted_channels"
 
 QUERY_STATE_DELAY = 4
 QUERY_AV_INFO_DELAY = 8
@@ -93,6 +95,24 @@ VIDEO_INFORMATION_MAPPING = [
     "picture_mode",
     "input_hdr",
 ]
+
+
+class Channel(StrEnum):
+    """Audio channel."""
+
+    FRONT_LEFT = "front_left"
+    FRONT_RIGHT = "front_right"
+    CENTER = "center"
+    SURROUND_LEFT = "surround_left"
+    SURROUND_RIGHT = "surround_right"
+    SURROUND_BACK_LEFT = "surround_back_left"
+    SURROUND_BACK_RIGHT = "surround_back_right"
+    SUBWOOFER = "subwoofer"
+    HEIGHT_1_LEFT = "height_1_left"
+    HEIGHT_1_RIGHT = "height_1_right"
+    HEIGHT_2_LEFT = "height_2_left"
+    HEIGHT_2_RIGHT = "height_2_right"
+    SUBWOOFER_2 = "subwoofer_2"
 
 
 async def async_setup_entry(
@@ -178,6 +198,7 @@ class OnkyoMediaPlayer(MediaPlayerEntity):
     _supports_sound_mode: bool | None = None
     _supports_audio_info: bool = False
     _supports_video_info: bool = False
+    _supports_channel_muting: bool = False
 
     _query_state_task: asyncio.Task | None = None
     _query_av_info_task: asyncio.Task | None = None
@@ -264,6 +285,7 @@ class OnkyoMediaPlayer(MediaPlayerEntity):
             await self._manager.write(query.HDMIOutput())
             await self._manager.write(query.AudioInformation())
             await self._manager.write(query.VideoInformation())
+            await self._manager.write(query.ChannelMuting())
 
     def cancel_tasks(self) -> None:
         """Cancel the tasks."""
@@ -351,6 +373,14 @@ class OnkyoMediaPlayer(MediaPlayerEntity):
         """Set hdmi-out."""
         message = command.HDMIOutput(self._rev_hdmi_output_mapping[hdmi_output])
         await self._manager.write(message)
+
+    async def async_set_channel_muting(self, muting_channels: dict) -> None:
+        """Set channel muting."""
+        try:
+            message = command.ChannelMuting(**muting_channels)
+            await self._manager.write(message)
+        except (ConnectionError, TimeoutError, ValueError) as err:
+            raise HomeAssistantError(f"Failed to set channel muting: {err}") from err
 
     async def async_play_media(
         self, media_type: MediaType | str, media_id: str, **kwargs: Any
@@ -454,6 +484,14 @@ class OnkyoMediaPlayer(MediaPlayerEntity):
                     video_information
                 )
 
+            case status.ChannelMuting():
+                self._supports_channel_muting = True
+                self._attr_extra_state_attributes[ATTR_MUTED_CHANNELS] = [
+                    channel.value
+                    for channel in Channel
+                    if getattr(message, channel, None) == status.ChannelMuting.Param.ON
+                ]
+
             case status.FLDisplay():
                 self._query_av_info_delayed()
 
@@ -464,6 +502,10 @@ class OnkyoMediaPlayer(MediaPlayerEntity):
             case status.NotAvailable(kind=Kind.VIDEO_INFORMATION):
                 # Not available right now, but still supported
                 self._supports_video_info = True
+
+            case status.NotAvailable(kind=Kind.CHANNEL_MUTING):
+                # Not available right now, but still supported
+                self._supports_channel_muting = True
 
         self.async_write_ha_state()
 
