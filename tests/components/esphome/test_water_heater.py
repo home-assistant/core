@@ -23,7 +23,11 @@ from homeassistant.components.water_heater import (
     SERVICE_TURN_ON,
     WaterHeaterEntityFeature,
 )
-from homeassistant.const import ATTR_ENTITY_ID, ATTR_TEMPERATURE
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    ATTR_SUPPORTED_FEATURES,
+    ATTR_TEMPERATURE,
+)
 from homeassistant.core import HomeAssistant
 
 from .conftest import MockGenericDeviceEntryType
@@ -362,7 +366,8 @@ async def test_water_heater_away_mode_feature_flag(
     assert state is not None
     assert (
         bool(
-            state.attributes[ATTR_SUPPORTED_FEATURES] & WaterHeaterEntityFeature.AWAY_MODE
+            state.attributes[ATTR_SUPPORTED_FEATURES]
+            & WaterHeaterEntityFeature.AWAY_MODE
         )
         is has_away_mode
     )
