@@ -70,10 +70,7 @@ rules:
     comment: |
       This integration has a fixed single device which represents the service.
   diagnostics: done
-  exception-translations:
-    status: todo
-    comment: |
-      The coordinator raises, and currently, doesn't provide a translation for it.
+  exception-translations: done
   icon-translations: done
   reconfiguration-flow: todo
   dynamic-devices:
