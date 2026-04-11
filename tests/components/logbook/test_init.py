@@ -4,7 +4,6 @@ import asyncio
 from collections.abc import Callable
 from datetime import datetime, timedelta
 from http import HTTPStatus
-import time
 from unittest.mock import Mock
 
 from freezegun import freeze_time
@@ -21,6 +20,7 @@ from homeassistant.components.logbook.models import EventAsRow, LazyEventPartial
 from homeassistant.components.logbook.processor import EventProcessor
 from homeassistant.components.logbook.queries.common import PSEUDO_EVENT_STATE_CHANGED
 from homeassistant.components.recorder import Recorder
+from homeassistant.components.recorder.models import ulid_to_bytes_or_none
 from homeassistant.components.script import EVENT_SCRIPT_STARTED
 from homeassistant.components.sensor import SensorStateClass
 from homeassistant.const import (
@@ -3158,23 +3158,24 @@ async def test_logbook_user_id_from_parent_context_state_changes_only(
     assert heater_entry["context_user_id"] == "b400facee45711eaa9308bfd3d19e474"
 
 
-async def test_context_user_ids_pruned_after_10_minutes(
+async def test_context_user_ids_lru_eviction(
     hass: HomeAssistant,
 ) -> None:
-    """Test that parent context user attribution is lost after pruning.
+    """Test that the parent context user-id cache is bounded by LRU eviction.
 
-    When the parent context's SERVICE_CALL event is older than 10 minutes,
-    it should be pruned from context_user_ids. A child state change arriving
-    after pruning should not inherit the parent's user_id.
+    The cache must keep memory bounded under sustained load. New entries
+    arriving after the cap displace the oldest entries (FIFO order). An
+    early parent context whose entry has been evicted should no longer
+    contribute its user_id to a later child state change.
     """
     user_id = "b400facee45711eaa9308bfd3d19e474"
-    parent_context = ha.Context(
+    early_parent_context = ha.Context(
         id="01GTDGKBCH00GW0X476W5TVAAA",
         user_id=user_id,
     )
     child_context = ha.Context(
         id="01GTDGKBCH00GW0X476W5TVDDD",
-        parent_id=parent_context.id,
+        parent_id=early_parent_context.id,
     )
 
     logbook_run = logbook.processor.LogbookRun(
@@ -3189,8 +3190,6 @@ async def test_context_user_ids_pruned_after_10_minutes(
     context_augmenter = logbook.processor.ContextAugmenter(logbook_run)
     ent_reg = er.async_get(hass)
 
-    # Build a minimal object that exposes .humanify() using the real
-    # EventProcessor implementation, without needing recorder/logbook setup.
     processor = logbook.processor.EventProcessor.__new__(
         logbook.processor.EventProcessor
     )
@@ -3202,53 +3201,64 @@ async def test_context_user_ids_pruned_after_10_minutes(
     hass.states.async_set("switch.heater", STATE_OFF)
     await hass.async_block_till_done()
 
-    # Batch 1: parent SERVICE_CALL event arrives now
-    with freeze_time("2025-01-01 12:00:00"):
-        logbook_run.context_user_ids_last_pruned = time.time()
-        parent_row = MockRow(
+    # Seed: the early parent SERVICE_CALL event populates the cache.
+    parent_row = MockRow(
+        EVENT_CALL_SERVICE,
+        {
+            ATTR_DOMAIN: "climate",
+            ATTR_SERVICE: "set_hvac_mode",
+            "service_data": {ATTR_ENTITY_ID: "climate.living_room"},
+        },
+        context=early_parent_context,
+    )
+    parent_row.context_only = True
+    parent_row.icon = None
+    processor.humanify([parent_row])
+    assert (
+        ulid_to_bytes_or_none(early_parent_context.id) in logbook_run.context_user_ids
+    )
+
+    # Flood the cache with MAX+1 unrelated parent contexts so the early
+    # parent is evicted from the front of the LRU.
+    filler_rows = []
+    for index in range(logbook.processor.MAX_CONTEXT_USER_IDS_CACHE + 1):
+        filler_context = ha.Context(
+            user_id=f"ffffffff{index:024x}"[:32],
+        )
+        filler_row = MockRow(
             EVENT_CALL_SERVICE,
             {
-                ATTR_DOMAIN: "climate",
-                ATTR_SERVICE: "set_hvac_mode",
-                "service_data": {ATTR_ENTITY_ID: "climate.living_room"},
+                ATTR_DOMAIN: "test",
+                ATTR_SERVICE: "noop",
+                "service_data": {},
             },
-            context=parent_context,
+            context=filler_context,
         )
-        parent_row.context_only = True
-        parent_row.icon = None
-        processor.humanify([parent_row])
+        filler_row.context_only = True
+        filler_row.icon = None
+        filler_rows.append(filler_row)
+    processor.humanify(filler_rows)
 
-    # Verify the parent user_id was cached
-    assert len(logbook_run.context_user_ids) == 1
+    assert (
+        len(logbook_run.context_user_ids)
+        == logbook.processor.MAX_CONTEXT_USER_IDS_CACHE
+    )
+    assert (
+        ulid_to_bytes_or_none(early_parent_context.id)
+        not in logbook_run.context_user_ids
+    )
 
-    # Batch 2a: child state change arrives 5 minutes later (within window)
-    with freeze_time("2025-01-01 12:05:00"):
-        child_row = MockRow(
-            PSEUDO_EVENT_STATE_CHANGED,
-            context=child_context,
-        )
-        child_row.state = STATE_ON
-        child_row.entity_id = "switch.heater"
-        child_row.icon = None
-        results = processor.humanify([child_row])
+    # The child state change can no longer inherit the early parent's user_id
+    # because that entry was evicted.
+    child_row = MockRow(
+        PSEUDO_EVENT_STATE_CHANGED,
+        context=child_context,
+    )
+    child_row.state = STATE_ON
+    child_row.entity_id = "switch.heater"
+    child_row.icon = None
+    results = processor.humanify([child_row])
 
-    heater_entries = [e for e in results if e.get("entity_id") == "switch.heater"]
-    assert len(heater_entries) == 1
-    assert heater_entries[0]["context_user_id"] == user_id
-
-    # Batch 2b: same child state change but 11 minutes after the parent
-    # (beyond the 10-minute pruning window) — user_id should be gone
-    with freeze_time("2025-01-01 12:11:00"):
-        child_row = MockRow(
-            PSEUDO_EVENT_STATE_CHANGED,
-            context=child_context,
-        )
-        child_row.state = STATE_ON
-        child_row.entity_id = "switch.heater"
-        child_row.icon = None
-        results = processor.humanify([child_row])
-
-    assert len(logbook_run.context_user_ids) == 0
     heater_entries = [e for e in results if e.get("entity_id") == "switch.heater"]
     assert len(heater_entries) == 1
     assert "context_user_id" not in heater_entries[0]

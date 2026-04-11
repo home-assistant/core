@@ -189,5 +189,6 @@ def mock_humanify(hass_, rows):
             ent_reg,
             logbook_run,
             context_augmenter,
+            None,
         ),
     )

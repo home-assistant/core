@@ -9,6 +9,7 @@ import logging
 import time
 from typing import TYPE_CHECKING, Any
 
+from lru import LRU
 from sqlalchemy import select
 from sqlalchemy.engine import Result
 from sqlalchemy.engine.row import Row
@@ -87,6 +88,13 @@ from .queries.common import PSEUDO_EVENT_STATE_CHANGED
 
 _LOGGER = logging.getLogger(__name__)
 
+# Bound for the parent-context user-id cache. The cache only needs to bridge
+# the microsecond gap between the historical backfill and the live event
+# stream, so the in-flight set is whatever fired in the last few seconds —
+# realistically tens, peak bursts of ~100. The ceiling exists purely to bound
+# memory in pathological cases.
+MAX_CONTEXT_USER_IDS_CACHE = 256
+
 
 @dataclass(slots=True)
 class LogbookRun:
@@ -104,9 +112,12 @@ class LogbookRun:
     memoize_new_contexts: bool = True
     # Track context_id -> user_id for parent context user attribution.
     # Persisted across batches so child context events can inherit user_id
-    # from a parent context whose SERVICE_CALL event arrived in an earlier batch.
-    context_user_ids: dict[bytes, tuple[bytes, float]] = field(default_factory=dict)
-    context_user_ids_last_pruned: float = field(default_factory=time.time)
+    # from a parent context whose SERVICE_CALL event arrived in an earlier
+    # batch. Bounded LRU via lru-dict so memory stays capped without any
+    # per-call iteration; eviction happens automatically at insertion time.
+    context_user_ids: LRU[bytes, bytes] = field(
+        default_factory=lambda: LRU(MAX_CONTEXT_USER_IDS_CACHE)
+    )
 
 
 class EventProcessor:
@@ -189,70 +200,48 @@ class EventProcessor:
                 self.context_id,
             )
             rows = execute_stmt_lambda_element(session, stmt, orm_rows=False)
+            query_parent_user_ids: dict[bytes, bytes] | None = None
             if self.entity_ids:
                 # Parent contexts for entity/entity+device queries are resolved
                 # in Python rather than via a SQL union branch because the
                 # parent-context column is sparsely populated and a full scan
                 # to find it costs ~40% of the query on real datasets.
+                # Results go into a per-query map (not the persistent LRU
+                # cache) so a long historical window with thousands of
+                # distinct parents cannot evict its own entries before
+                # humanify reads them. The map is GC'd at end of call.
                 rows = list(rows)
+                cache = self.logbook_run.context_user_ids
                 pending: set[bytes] = set()
                 for row in rows:
                     if (
                         parent_id := row[CONTEXT_PARENT_ID_BIN_POS]
-                    ) and parent_id not in self.logbook_run.context_user_ids:
+                    ) and parent_id not in cache:
                         pending.add(parent_id)
                 if pending:
-                    now = time.time()
+                    query_parent_user_ids = {}
                     for pending_chunk in chunked_or_all(
                         pending, instance.max_bind_vars
                     ):
                         for (
                             parent_context_id_bin,
                             parent_user_id_bin,
-                            parent_time_fired_ts,
                         ) in session.execute(
-                            select(
-                                Events.context_id_bin,
-                                Events.context_user_id_bin,
-                                Events.time_fired_ts,
-                            )
+                            select(Events.context_id_bin, Events.context_user_id_bin)
                             .where(Events.context_id_bin.in_(pending_chunk))
                             .where(Events.context_user_id_bin.is_not(None))
                         ):
-                            # Use the parent event's actual fired time as the
-                            # cache timestamp so pruning is anchored to the
-                            # event's age, not the query time. Fall back to
-                            # now if the column is unexpectedly null.
-                            self.logbook_run.context_user_ids[parent_context_id_bin] = (
-                                parent_user_id_bin,
-                                parent_time_fired_ts or now,
+                            query_parent_user_ids[parent_context_id_bin] = (
+                                parent_user_id_bin
                             )
-            return self.humanify(rows)
+            return self.humanify(rows, query_parent_user_ids)
 
     def humanify(
-        self, rows: Generator[EventAsRow] | Sequence[Row] | Result
+        self,
+        rows: Generator[EventAsRow] | Sequence[Row] | Result,
+        query_parent_user_ids: dict[bytes, bytes] | None = None,
     ) -> list[dict[str, str]]:
         """Humanify rows."""
-        cutoff = time.time() - 600
-        if self.logbook_run.context_user_ids_last_pruned < cutoff:
-            # Prune context_user_ids of entries not seen in the last 10
-            # minutes to prevent unbounded growth. dict.copy() is GIL-atomic
-            # in CPython, so the snapshot can't race with concurrent writes
-            # from other threads (the historical backfill runs in an
-            # executor while the live consumer runs on the event loop and
-            # both share this dict). We iterate the snapshot and pop
-            # expired keys from the live dict in place — never rebinding
-            # the dict — so concurrent writes are not lost.
-            live = self.logbook_run.context_user_ids
-            for context_id, (_, timestamp) in live.copy().items():
-                if timestamp <= cutoff:
-                    # Re-check the live entry: another thread may have
-                    # refreshed it between the snapshot and the pop, in
-                    # which case we must not delete the fresh value.
-                    current = live.get(context_id)
-                    if current is not None and current[1] <= cutoff:
-                        live.pop(context_id, None)
-            self.logbook_run.context_user_ids_last_pruned = time.time()
         return list(
             _humanify(
                 self.hass,
@@ -260,6 +249,7 @@ class EventProcessor:
                 self.ent_reg,
                 self.logbook_run,
                 self.context_augmenter,
+                query_parent_user_ids,
             )
         )
 
@@ -270,6 +260,7 @@ def _humanify(
     ent_reg: er.EntityRegistry,
     logbook_run: LogbookRun,
     context_augmenter: ContextAugmenter,
+    query_parent_user_ids: dict[bytes, bytes] | None,
 ) -> Generator[dict[str, Any]]:
     """Generate a converted list of events into entries."""
     # Continuous sensors, will be excluded from the logbook
@@ -293,10 +284,10 @@ def _humanify(
         if memoize_new_contexts and context_id_bin not in context_lookup:
             context_lookup[context_id_bin] = row
         time_fired_ts: float = row[TIME_FIRED_TS_POS] or time.time()
-        if context_user_id_bin := row[CONTEXT_USER_ID_BIN_POS]:
-            context_user_ids.setdefault(
-                context_id_bin, (context_user_id_bin, time_fired_ts)
-            )
+        if (
+            context_user_id_bin := row[CONTEXT_USER_ID_BIN_POS]
+        ) and context_id_bin not in context_user_ids:
+            context_user_ids[context_id_bin] = context_user_id_bin
         if row[CONTEXT_ONLY_POS]:
             continue
         event_type = row[EVENT_TYPE_POS]
@@ -384,10 +375,14 @@ def _humanify(
         if CONTEXT_USER_ID not in data and (
             context_parent_id_bin := row[CONTEXT_PARENT_ID_BIN_POS]
         ):
-            parent_user_id_bin: bytes | None = None
-            if parent_entry := context_user_ids.get(context_parent_id_bin):
-                parent_user_id_bin = parent_entry[0]
-            elif parent_row := get_context(context_parent_id_bin, row):
+            parent_user_id_bin: bytes | None = context_user_ids.get(
+                context_parent_id_bin
+            )
+            if parent_user_id_bin is None and query_parent_user_ids is not None:
+                parent_user_id_bin = query_parent_user_ids.get(context_parent_id_bin)
+            if parent_user_id_bin is None and (
+                parent_row := get_context(context_parent_id_bin, row)
+            ):
                 parent_user_id_bin = parent_row[CONTEXT_USER_ID_BIN_POS]
             if parent_user_id_bin:
                 data[CONTEXT_USER_ID] = bytes_to_uuid_hex_or_none(parent_user_id_bin)
