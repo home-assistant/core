@@ -68,7 +68,7 @@ class WattwaechterCoordinator(DataUpdateCoordinator[MeterData]):
     async def _async_update_data(self) -> MeterData:
         """Fetch data from the WattWächter device."""
         try:
-            return await self.client.meter_data()
+            data = await self.client.meter_data()
         except WattwaechterNoDataError as err:
             raise UpdateFailed(
                 translation_domain=DOMAIN,
@@ -87,3 +87,12 @@ class WattwaechterCoordinator(DataUpdateCoordinator[MeterData]):
                 translation_key="update_failed",
                 translation_placeholders={"error": str(err)},
             ) from err
+
+        if data is None:
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="no_meter_data",
+                translation_placeholders={"host": self.host},
+            )
+
+        return data

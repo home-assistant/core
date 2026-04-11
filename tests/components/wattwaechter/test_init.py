@@ -4,7 +4,11 @@ from __future__ import annotations
 
 from unittest.mock import AsyncMock, patch
 
-from aio_wattwaechter import WattwaechterConnectionError, WattwaechterNoDataError
+from aio_wattwaechter import (
+    WattwaechterAuthenticationError,
+    WattwaechterConnectionError,
+    WattwaechterNoDataError,
+)
 
 from homeassistant.components.wattwaechter.coordinator import WattwaechterCoordinator
 from homeassistant.config_entries import ConfigEntryState
@@ -83,3 +87,21 @@ async def test_setup_entry_no_meter_data(
         await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+async def test_setup_entry_auth_error(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test setup marks entry as auth failed when token is invalid."""
+    with patch("homeassistant.components.wattwaechter.Wattwaechter") as mock_cls:
+        client = mock_cls.return_value
+        client.alive = AsyncMock(return_value=MOCK_ALIVE_RESPONSE)
+        client.meter_data = AsyncMock(
+            side_effect=WattwaechterAuthenticationError("Invalid token")
+        )
+        client.host = "192.168.1.100"
+
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
