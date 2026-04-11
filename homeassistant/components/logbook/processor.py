@@ -223,12 +223,12 @@ class EventProcessor:
                 # humanify reads them. The map is GC'd at end of call.
                 rows = list(rows)
                 cache = self.logbook_run.context_user_ids
-                pending: set[bytes] = set()
-                for row in rows:
-                    if (
-                        parent_id := row[CONTEXT_PARENT_ID_BIN_POS]
-                    ) and parent_id not in cache:
-                        pending.add(parent_id)
+                pending: set[bytes] = {
+                    parent_id
+                    for row in rows
+                    if (parent_id := row[CONTEXT_PARENT_ID_BIN_POS])
+                    and parent_id not in cache
+                }
                 if pending:
                     query_parent_user_ids = {}
                     # Only also populate the persistent LRU when this
