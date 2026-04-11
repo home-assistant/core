@@ -34,7 +34,7 @@ SERVICE_SET_LOCK_RULE_SCHEMA = vol.Schema(
         vol.Required(ATTR_DEVICE_ID): cv.string,
         vol.Required(ATTR_RULE): vol.In(LOCK_RULE_OPTIONS),
         vol.Optional(ATTR_INTERVAL, default=DEFAULT_LOCK_RULE_INTERVAL): vol.All(
-            vol.Coerce(int),
+            vol.Coerce(float),
             vol.Range(min=MIN_LOCK_RULE_INTERVAL, max=MAX_LOCK_RULE_INTERVAL),
         ),
     }
