@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
 from datetime import datetime, time, timedelta
 import logging
 from typing import Any
@@ -33,14 +32,6 @@ MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=4)
 SCAN_INTERVAL = timedelta(minutes=5)
 
 type TadoConfigEntry = ConfigEntry[TadoDataUpdateCoordinator]
-
-
-@dataclass
-class TadoRateLimit:
-    """Class to hold Tado rate limit information."""
-
-    limit: int
-    remaining: int
 
 
 class TadoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
@@ -82,7 +73,6 @@ class TadoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             "weather": {},
             "geofence": {},
             "zone": {},
-            "rate_limit": TadoRateLimit(limit=0, remaining=0),
         }
 
         self._current_interval: float = 0
@@ -97,14 +87,15 @@ class TadoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     async def _async_update_data(self) -> dict[str, Any]:
         """Fetch the (initial) latest data from Tado."""
 
-        def _load_tado_data() -> tuple[dict, list, list, dict[str, str]]:
+        def _load_tado_data() -> tuple[dict, list, list]:
             """Load Tado data in one call."""
             _LOGGER.debug("Preloading Tado data")
             return (
                 self._tado.get_me(),
                 self._tado.get_zones(),
                 self._tado.get_devices(),
-                self._tado.rate_limit_info(),
+            )
+
         try:
             _LOGGER.debug("Preloading home data")
             tado_home_call = await self.hass.async_add_executor_job(self._tado.get_me)
@@ -113,13 +104,10 @@ class TadoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             self.devices = await self.hass.async_add_executor_job(
                 self._tado.get_devices
             )
-
-        try:
             (
                 tado_home_call,
                 self.zones,
                 self.devices,
-                rate_limit_info,
             ) = await self.hass.async_add_executor_job(_load_tado_data)
         except RequestException as err:
             _LOGGER.debug("Checking rate limit")
@@ -140,10 +128,7 @@ class TadoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self.data["zone"] = zones
         self.data["weather"] = home["weather"]
         self.data["geofence"] = home["geofence"]
-        self.data["rate_limit"] = TadoRateLimit(
-            limit=int(rate_limit_info["per-day"]),
-            remaining=int(rate_limit_info["remaining"]),
-        )
+        self.data["rate_limit"] = self.get_rate_limit()
 
         refresh_token = await self.hass.async_add_executor_job(
             self._tado.get_refresh_token
@@ -198,12 +183,23 @@ class TadoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         # Accept five minutes to "overshoot", else reset back to 30 minutes
         min_interval = 300 if self._is_any_zone_active else 1800
 
+        remaining_calls = self.data.get("rate_limit", {}).get("remaining")
+        if remaining_calls is None or remaining_calls <= 0:
+            # If rate limit info is unavailable, fall back to the static interval.
+            self._current_interval = SCAN_INTERVAL.total_seconds()
+            self.update_interval = SCAN_INTERVAL
+            self._next_update = reset_time + timedelta(seconds=self._current_interval)
+            _LOGGER.debug(
+                "Rate limit info unavailable; using default update interval: %s seconds",
+                self._current_interval,
+            )
+            return
+
         # Each refresh cycle costs 9 + len(zones) calls
         # Also take 10% of the remaining calls as buffer
         self._current_interval = max(
             min_interval,
-            (self._time_until_reset * (9 + len(self.zones)))
-            / (self.data["rate_limit"].remaining * 0.9),
+            (self._time_until_reset * (9 + len(self.zones))) / (remaining_calls * 0.9),
         )
 
         self._next_update = reset_time + timedelta(seconds=self._current_interval)
@@ -212,7 +208,7 @@ class TadoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         _LOGGER.debug(
             "Calculated new update interval: %s seconds, for remaining calls: %s",
             self._current_interval,
-            self.data["rate_limit"].remaining,
+            remaining_calls,
         )
 
     async def _async_update_devices(self) -> dict[str, dict]:
