@@ -90,7 +90,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: AqualinkConfigEntry) -> 
         raise ConfigEntryAuthFailed(
             "Invalid credentials for iAqualink"
         ) from auth_exception
-    except AqualinkServiceException as svc_exception:
+    except (
+        AqualinkServiceException,
+        TimeoutError,
+        httpx.HTTPError,
+    ) as svc_exception:
         await aqualink.close()
         raise ConfigEntryNotReady(
             f"Error while attempting to retrieve systems list: {svc_exception}"

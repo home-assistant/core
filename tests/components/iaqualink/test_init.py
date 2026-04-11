@@ -3,6 +3,7 @@
 from unittest.mock import AsyncMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
+import httpx
 from iaqualink.client import AqualinkClient
 from iaqualink.exception import (
     AqualinkServiceException,
@@ -243,6 +244,50 @@ async def test_setup_systems_exception(
         patch(
             "homeassistant.components.iaqualink.AqualinkClient.get_systems",
             side_effect=AqualinkServiceException,
+        ),
+    ):
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+async def test_setup_systems_timeout(
+    hass: HomeAssistant, config_entry: MockConfigEntry
+) -> None:
+    """Test setup encountering a timeout while retrieving systems."""
+    config_entry.add_to_hass(hass)
+
+    with (
+        patch(
+            "homeassistant.components.iaqualink.AqualinkClient.login",
+            return_value=None,
+        ),
+        patch(
+            "homeassistant.components.iaqualink.AqualinkClient.get_systems",
+            side_effect=TimeoutError,
+        ),
+    ):
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+async def test_setup_systems_http_error(
+    hass: HomeAssistant, config_entry: MockConfigEntry
+) -> None:
+    """Test setup encountering an HTTP error while retrieving systems."""
+    config_entry.add_to_hass(hass)
+
+    with (
+        patch(
+            "homeassistant.components.iaqualink.AqualinkClient.login",
+            return_value=None,
+        ),
+        patch(
+            "homeassistant.components.iaqualink.AqualinkClient.get_systems",
+            side_effect=httpx.HTTPError("boom"),
         ),
     ):
         await hass.config_entries.async_setup(config_entry.entry_id)
