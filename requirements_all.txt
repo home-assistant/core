@@ -3184,7 +3184,7 @@ uiprotect==10.2.3
 ultraheat-api==0.5.7
 
 # homeassistant.components.unifiprotect
-unifi-discovery==1.3.0
+unifi-discovery==1.4.0
 
 # homeassistant.components.unifi_direct
 unifi_ap==0.0.2
