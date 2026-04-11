@@ -15,7 +15,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import BUTTON_PRESS_ID
+from .const import BINARY_SENSOR_ON_ID
 from .entity import VictronBaseEntity
 from .hub import VictronGxConfigEntry
 
@@ -61,4 +61,4 @@ class VictronButton(VictronBaseEntity, ButtonEntity):
         if TYPE_CHECKING:
             assert isinstance(self._metric, VictronVenusWritableMetric)
         _LOGGER.debug("Pressing button: %s", self._attr_unique_id)
-        self._metric.set(BUTTON_PRESS_ID)
+        self._metric.set(BINARY_SENSOR_ON_ID)
