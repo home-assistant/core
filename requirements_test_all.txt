@@ -242,7 +242,7 @@ aioelectricitymaps==1.1.1
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==44.13.1
+aioesphomeapi==44.13.2
 
 # homeassistant.components.matrix
 # homeassistant.components.slack
@@ -377,7 +377,7 @@ aioridwell==2025.09.0
 aioruckus==0.42
 
 # homeassistant.components.russound_rio
-aiorussound==4.10.0
+aiorussound==5.0.0
 
 # homeassistant.components.ruuvi_gateway
 aioruuvigateway==0.1.0
@@ -581,7 +581,7 @@ base36==0.1.1
 beautifulsoup4==4.13.3
 
 # homeassistant.components.esphome
-bleak-esphome==3.7.1
+bleak-esphome==3.7.3
 
 # homeassistant.components.bluetooth
 bleak-retry-connector==4.6.0
@@ -884,7 +884,7 @@ flexit_bacnet==2.2.3
 flipr-api==1.6.1
 
 # homeassistant.components.fluss
-fluss-api==0.1.9.20
+fluss-api==0.2.4
 
 # homeassistant.components.flux_led
 flux-led==1.2.0
@@ -1096,7 +1096,7 @@ hole==0.9.0
 holidays==0.94
 
 # homeassistant.components.frontend
-home-assistant-frontend==20260325.6
+home-assistant-frontend==20260325.7
 
 # homeassistant.components.conversation
 home-assistant-intents==2026.3.24
@@ -1380,7 +1380,7 @@ mozart-api==5.3.1.108.2
 mullvad-api==1.0.0
 
 # homeassistant.components.music_assistant
-music-assistant-client==1.3.4
+music-assistant-client==1.3.5
 
 # homeassistant.components.tts
 mutagen==1.47.0
@@ -1937,7 +1937,7 @@ pyliebherrhomeapi==0.4.1
 pylitejet==0.6.3
 
 # homeassistant.components.litterrobot
-pylitterbot==2025.2.0
+pylitterbot==2025.2.1
 
 # homeassistant.components.lutron_caseta
 pylutron-caseta==0.28.0
@@ -2083,7 +2083,7 @@ pyrainbird==6.3.0
 pyrate-limiter==4.1.0
 
 # homeassistant.components.risco
-pyrisco==0.6.7
+pyrisco==0.6.8
 
 # homeassistant.components.rituals_perfume_genie
 pyrituals==0.0.7
@@ -2189,7 +2189,7 @@ python-bsblan==5.1.3
 python-dropbox-api==0.1.3
 
 # homeassistant.components.duco
-python-duco-client==0.2.0
+python-duco-client==0.3.0
 
 # homeassistant.components.ecobee
 python-ecobee-api==0.3.2
@@ -2371,7 +2371,7 @@ pyzerproc==0.4.8
 qbittorrent-api==2024.9.67
 
 # homeassistant.components.qbus
-qbusmqttapi==1.4.2
+qbusmqttapi==1.4.3
 
 # homeassistant.components.qingping
 qingping-ble==1.1.0
@@ -2669,7 +2669,7 @@ ttls==1.8.3
 ttn_client==1.3.0
 
 # homeassistant.components.tuya
-tuya-device-handlers==0.0.16
+tuya-device-handlers==0.0.17
 
 # homeassistant.components.tuya
 tuya-device-sharing-sdk==0.2.8
@@ -2699,7 +2699,7 @@ uiprotect==10.2.3
 ultraheat-api==0.5.7
 
 # homeassistant.components.unifiprotect
-unifi-discovery==1.3.0
+unifi-discovery==1.4.0
 
 # homeassistant.components.homeassistant_hardware
 universal-silabs-flasher==1.0.3
@@ -2874,7 +2874,7 @@ zeversolar==0.3.2
 zha==1.1.2
 
 # homeassistant.components.zinvolt
-zinvolt==0.4.1
+zinvolt==0.4.3
 
 # homeassistant.components.zoneminder
 zm-py==0.5.4
