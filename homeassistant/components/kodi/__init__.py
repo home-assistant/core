@@ -3,6 +3,7 @@
 from dataclasses import dataclass
 import logging
 
+from jsonrpc_base.jsonrpc import ProtocolError, TransportError
 from pykodi import CannotConnectError, InvalidAuthError, Kodi, get_kodi_connection
 from pykodi.kodi import KodiHTTPConnection, KodiWSConnection
 
@@ -27,7 +28,7 @@ from .services import async_setup_services
 _LOGGER = logging.getLogger(__name__)
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
-PLATFORMS = [Platform.MEDIA_PLAYER]
+PLATFORMS = [Platform.MEDIA_PLAYER, Platform.BINARY_SENSOR]
 
 type KodiConfigEntry = ConfigEntry[KodiRuntimeData]
 
@@ -38,6 +39,30 @@ class KodiRuntimeData:
 
     connection: KodiHTTPConnection | KodiWSConnection
     kodi: Kodi
+    screensaver_active: bool | None = None
+
+    def set_screensaver_state(self, screensaver_active: bool | None) -> bool:
+        """Set the current screensaver state."""
+        changed = self.screensaver_active != screensaver_active
+        self.screensaver_active = screensaver_active
+        return changed
+
+    async def async_update_screensaver_state(self) -> bool:
+        """Refresh the Kodi screensaver state."""
+        if not self.connection.connected:
+            return self.set_screensaver_state(None)
+
+        try:
+            display_status = await self.kodi.call_method(
+                "XBMC.GetInfoBooleans",
+                booleans=["System.ScreenSaverActive"],
+            )
+        except (ProtocolError, TransportError):
+            return self.set_screensaver_state(None)
+
+        return self.set_screensaver_state(
+            display_status.get("System.ScreenSaverActive")
+        )
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:

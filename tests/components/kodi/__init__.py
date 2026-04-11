@@ -18,7 +18,11 @@ from .util import MockConnection
 from tests.common import MockConfigEntry
 
 
-async def init_integration(hass: HomeAssistant) -> MockConfigEntry:
+async def init_integration(
+    hass: HomeAssistant,
+    *,
+    call_method_return_value: dict[str, bool] | None = None,
+) -> MockConfigEntry:
     """Set up the Kodi integration in Home Assistant."""
     entry_data = {
         CONF_NAME: "name",
@@ -31,9 +35,15 @@ async def init_integration(hass: HomeAssistant) -> MockConfigEntry:
     }
     entry = MockConfigEntry(domain=DOMAIN, data=entry_data, title="name")
     entry.add_to_hass(hass)
+    if call_method_return_value is None:
+        call_method_return_value = {"System.ScreenSaverActive": False}
 
     with (
         patch("homeassistant.components.kodi.Kodi.ping", return_value=True),
+        patch(
+            "homeassistant.components.kodi.Kodi.call_method",
+            return_value=call_method_return_value,
+        ),
         patch(
             "homeassistant.components.kodi.Kodi.get_application_properties",
             return_value={"version": {"major": 1, "minor": 1}},
