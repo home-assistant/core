@@ -29,6 +29,7 @@ from homeassistant.helpers.service import verify_domain_control
 from .const import ATTR_DURATION, ATTR_PERIOD, ATTR_SETPOINT, DOMAIN, EvoService
 from .coordinator import EvoDataUpdateCoordinator
 
+# Support for untargeted service calls to controllers is being deprecated
 BREAKS_IN_HA_VERSION: Final = "2026.7.0"
 
 # System service schemas (registered as domain services)
