@@ -193,7 +193,7 @@ class WattwaechterConfigFlow(ConfigFlow, domain=DOMAIN):
                 device_name = settings.device_name or ""
 
                 if not device_id:
-                    errors["base"] = "cannot_connect"
+                    errors["base"] = "unknown"
 
             if not errors:
                 await self.async_set_unique_id(device_id)
