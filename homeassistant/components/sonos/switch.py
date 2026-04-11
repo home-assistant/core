@@ -52,6 +52,7 @@ ATTR_SUB_ENABLED = "sub_enabled"
 ATTR_SURROUND_ENABLED = "surround_enabled"
 ATTR_TOUCH_CONTROLS = "buttons_enabled"
 ATTR_TV_AUTOPLAY = "tv_autoplay"
+ATTR_TV_UNGROUP_AUTOPLAY = "tv_ungroup_autoplay"
 
 ALL_FEATURES = (
     ATTR_TOUCH_CONTROLS,
@@ -132,6 +133,17 @@ async def async_setup_entry(
         except SoCoUPnPException:
             return None
 
+    def _get_tv_ungroup_autoplay_state(speaker: SonosSpeaker) -> bool | None:
+        """Return initial TV ungroup-on-autoplay state, or None if not supported."""
+        try:
+            result = speaker.soco.deviceProperties.GetAutoplayLinkedZones(
+                [("Source", "TV")]
+            )
+            # IncludeLinkedZones=0 means "don't include linked zones" = ungroup = ON
+            return result.get("IncludeLinkedZones") == "0"
+        except SoCoUPnPException:
+            return None
+
     async def _async_create_switches(speaker: SonosSpeaker) -> None:
         entities: list[SonosPollingEntity] = []
         available_features = await hass.async_add_executor_job(
@@ -158,11 +170,14 @@ async def async_setup_entry(
 
         model = speaker.model_name.split()[-1].upper()
         if model in (*MODELS_TV_ONLY, *MODELS_LINEIN_AND_TV):
-            initial_state = await hass.async_add_executor_job(
-                _get_tv_autoplay_state, speaker
+            initial_autoplay, initial_ungroup = await hass.async_add_executor_job(
+                lambda: (
+                    _get_tv_autoplay_state(speaker),
+                    _get_tv_ungroup_autoplay_state(speaker),
+                )
             )
-            if initial_state is not None:
-                speaker.tv_autoplay = initial_state
+            if initial_autoplay is not None:
+                speaker.tv_autoplay = initial_autoplay
                 _LOGGER.debug(
                     "Creating %s switch on %s",
                     ATTR_TV_AUTOPLAY,
@@ -170,6 +185,18 @@ async def async_setup_entry(
                 )
                 entities.append(
                     SonosTVAutoplaySwitchEntity(
+                        speaker=speaker, config_entry=config_entry
+                    )
+                )
+            if initial_ungroup is not None:
+                speaker.tv_ungroup_autoplay = initial_ungroup
+                _LOGGER.debug(
+                    "Creating %s switch on %s",
+                    ATTR_TV_UNGROUP_AUTOPLAY,
+                    speaker.zone_name,
+                )
+                entities.append(
+                    SonosTVUngroupAutoplaySwitchEntity(
                         speaker=speaker, config_entry=config_entry
                     )
                 )
@@ -289,6 +316,60 @@ class SonosTVAutoplaySwitchEntity(SonosPollingEntity, SwitchEntity):
                 [("RoomUUID", room_uuid), ("Source", "TV")]
             )
             self.speaker.tv_autoplay = enable
+        except SoCoUPnPException as exc:
+            _LOGGER.warning("Could not toggle %s: %s", self.entity_id, exc)
+
+
+class SonosTVUngroupAutoplaySwitchEntity(SonosPollingEntity, SwitchEntity):
+    """Representation of a Sonos TV ungroup-on-autoplay switch.
+
+    When enabled, the speaker leaves its group when it detects TV audio and
+    takes over playback alone. The device manages the dependency with TV autoplay
+    and will reflect the correct state via polling.
+    """
+
+    _attr_entity_category = EntityCategory.CONFIG
+    _attr_translation_key = ATTR_TV_UNGROUP_AUTOPLAY
+    _attr_should_poll = True
+
+    def __init__(self, speaker: SonosSpeaker, config_entry: SonosConfigEntry) -> None:
+        """Initialize the switch."""
+        super().__init__(speaker, config_entry)
+        self._attr_unique_id = f"{speaker.soco.uid}-{ATTR_TV_UNGROUP_AUTOPLAY}"
+
+    async def _async_fallback_poll(self) -> None:
+        """Handle polling for ungroup-on-autoplay state when subscriptions fail."""
+        await self.hass.async_add_executor_job(self.poll_state)
+
+    @soco_error()
+    def poll_state(self) -> None:
+        """Poll the current ungroup-on-autoplay state from the device."""
+        result = self.soco.deviceProperties.GetAutoplayLinkedZones([("Source", "TV")])
+        # IncludeLinkedZones=0 means "don't include linked zones" = ungroup = ON
+        self.speaker.tv_ungroup_autoplay = result.get("IncludeLinkedZones") == "0"
+
+    @property
+    def is_on(self) -> bool:
+        """Return True if ungroup on autoplay is enabled."""
+        return bool(self.speaker.tv_ungroup_autoplay)
+
+    def turn_on(self, **kwargs: Any) -> None:
+        """Enable ungroup on autoplay."""
+        self._send_command(True)
+
+    def turn_off(self, **kwargs: Any) -> None:
+        """Disable ungroup on autoplay."""
+        self._send_command(False)
+
+    @soco_error()
+    def _send_command(self, enable: bool) -> None:
+        """Enable or disable ungroup on autoplay on the device."""
+        try:
+            self.soco.deviceProperties.SetAutoplayLinkedZones(
+                # enable=True (ungroup) → IncludeLinkedZones=0 (don't include linked zones)
+                [("IncludeLinkedZones", "0" if enable else "1"), ("Source", "TV")]
+            )
+            self.speaker.tv_ungroup_autoplay = enable
         except SoCoUPnPException as exc:
             _LOGGER.warning("Could not toggle %s: %s", self.entity_id, exc)
 
