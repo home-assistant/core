@@ -4,7 +4,13 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
-from gardena_bluetooth.const import DeviceConfiguration, Sensor, Spray, Valve
+from gardena_bluetooth.const import (
+    AquaContourWatering,
+    DeviceConfiguration,
+    Sensor,
+    Spray,
+    Valve,
+)
 from gardena_bluetooth.parse import (
     Characteristic,
     CharacteristicInt,
@@ -59,6 +65,18 @@ DESCRIPTIONS = (
         device_class=NumberDeviceClass.DURATION,
     ),
     GardenaBluetoothNumberEntityDescription(
+        key=AquaContourWatering.manual_watering_time.unique_id,
+        translation_key="manual_watering_time",
+        native_unit_of_measurement=UnitOfTime.SECONDS,
+        mode=NumberMode.BOX,
+        native_min_value=0.0,
+        native_max_value=24 * 60 * 60,
+        native_step=60,
+        entity_category=EntityCategory.CONFIG,
+        char=AquaContourWatering.manual_watering_time,
+        device_class=NumberDeviceClass.DURATION,
+    ),
+    GardenaBluetoothNumberEntityDescription(
         key=Valve.remaining_open_time.unique_id,
         translation_key="remaining_open_time",
         native_unit_of_measurement=UnitOfTime.SECONDS,
@@ -67,6 +85,17 @@ DESCRIPTIONS = (
         native_step=60.0,
         entity_category=EntityCategory.DIAGNOSTIC,
         char=Valve.remaining_open_time,
+        device_class=NumberDeviceClass.DURATION,
+    ),
+    GardenaBluetoothNumberEntityDescription(
+        key=AquaContourWatering.remaining_watering_time.unique_id,
+        translation_key="remaining_watering_time",
+        native_unit_of_measurement=UnitOfTime.SECONDS,
+        native_min_value=0.0,
+        native_max_value=24 * 60 * 60,
+        native_step=60.0,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        char=AquaContourWatering.remaining_watering_time,
         device_class=NumberDeviceClass.DURATION,
     ),
     GardenaBluetoothNumberEntityDescription(
@@ -113,6 +142,7 @@ DESCRIPTIONS = (
         native_min_value=0.0,
         native_max_value=359.0,
         native_step=1.0,
+        entity_category=EntityCategory.CONFIG,
         char=Spray.sector,
     ),
     GardenaBluetoothNumberEntityDescription(
@@ -124,6 +154,7 @@ DESCRIPTIONS = (
         native_max_value=100.0,
         native_step=0.1,
         char=Spray.distance,
+        entity_category=EntityCategory.CONFIG,
         scale=10.0,
     ),
 )

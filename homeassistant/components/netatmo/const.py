@@ -215,5 +215,15 @@ WEBHOOK_ACTIVATION = "webhook_activation"
 WEBHOOK_DEACTIVATION = "webhook_deactivation"
 WEBHOOK_NACAMERA_CONNECTION = "NACamera-connection"
 WEBHOOK_NOCAMERA_CONNECTION = "NOC-connection"
+WEBHOOK_NDB_CONNECTION = "NDB-connection"
 WEBHOOK_PUSH_TYPE = "push_type"
-CAMERA_CONNECTION_WEBHOOKS = [WEBHOOK_NACAMERA_CONNECTION, WEBHOOK_NOCAMERA_CONNECTION]
+CAMERA_CONNECTION_WEBHOOKS = [
+    WEBHOOK_NACAMERA_CONNECTION,
+    WEBHOOK_NOCAMERA_CONNECTION,
+    WEBHOOK_NDB_CONNECTION,
+]
+
+# Alimentation status (alim_status) for cameras and door bells (NDB).
+# For NDB there is no monitoring attribute in status but only alim_status.
+# 2 = Full power/online for NDB (and also Correct power adapter for NACamera).
+NETATMO_ALIM_STATUS_ONLINE = 2

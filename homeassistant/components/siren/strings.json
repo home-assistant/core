@@ -1,16 +1,13 @@
 {
   "common": {
-    "condition_behavior_description": "How the state should match on the targeted sirens.",
-    "condition_behavior_name": "Behavior",
-    "trigger_behavior_description": "The behavior of the targeted sirens to trigger on.",
-    "trigger_behavior_name": "Behavior"
+    "condition_behavior_name": "Condition passes if",
+    "trigger_behavior_name": "Trigger when"
   },
   "conditions": {
     "is_off": {
       "description": "Tests if one or more sirens are off.",
       "fields": {
         "behavior": {
-          "description": "[%key:component::siren::common::condition_behavior_description%]",
           "name": "[%key:component::siren::common::condition_behavior_name%]"
         }
       },
@@ -20,7 +17,6 @@
       "description": "Tests if one or more sirens are on.",
       "fields": {
         "behavior": {
-          "description": "[%key:component::siren::common::condition_behavior_description%]",
           "name": "[%key:component::siren::common::condition_behavior_name%]"
         }
       },
@@ -90,7 +86,6 @@
       "description": "Triggers after one or more sirens turn off.",
       "fields": {
         "behavior": {
-          "description": "[%key:component::siren::common::trigger_behavior_description%]",
           "name": "[%key:component::siren::common::trigger_behavior_name%]"
         }
       },
@@ -100,7 +95,6 @@
       "description": "Triggers after one or more sirens turn on.",
       "fields": {
         "behavior": {
-          "description": "[%key:component::siren::common::trigger_behavior_description%]",
           "name": "[%key:component::siren::common::trigger_behavior_name%]"
         }
       },

@@ -1,16 +1,21 @@
 """Test updating sensors in the victron_ble integration."""
 
+import json
 import time
 
 from home_assistant_bluetooth import BluetoothServiceInfo
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.components.bluetooth.passive_update_processor import (
+    serialize_entity_description,
+)
 from homeassistant.components.victron_ble.const import (
     DOMAIN,
     REAUTH_AFTER_FAILURES,
     VICTRON_IDENTIFIER,
 )
+from homeassistant.components.victron_ble.sensor import SENSOR_DESCRIPTIONS
 from homeassistant.const import CONF_ACCESS_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -24,6 +29,7 @@ from .fixtures import (
     VICTRON_BATTERY_SENSE_TOKEN,
     VICTRON_DC_DC_CONVERTER_SERVICE_INFO,
     VICTRON_DC_DC_CONVERTER_TOKEN,
+    VICTRON_DC_DC_CONVERTER_UNKNOWN_OFF_REASON_SERVICE_INFO,
     VICTRON_DC_ENERGY_METER_SERVICE_INFO,
     VICTRON_DC_ENERGY_METER_TOKEN,
     VICTRON_SMART_BATTERY_PROTECT_SERVICE_INFO,
@@ -57,6 +63,26 @@ SOLAR_CHARGER_ERROR_PAYLOADS = {
     # ChargerError.NETWORK_A -> mapped to state "network"
     "network": "100242a0016207adcef77b605d7e0ee21b24df5c0404040410951e81ea42b0492e356ad5ed8f7eb7",
 }
+
+
+def test_sensor_descriptions_are_json_serializable() -> None:
+    """Ensure entity descriptions contain no non-JSON-serializable fields.
+
+    The passive Bluetooth processor persists entity descriptions to storage
+    between HA restarts via serialize_entity_description(). Fields that are
+    Python callables (e.g. a value_fn lambda) cannot be serialized and cause
+    repeated 'Bad data' errors in the homeassistant.helpers.storage logger.
+
+    Regression test for https://github.com/home-assistant/core/issues/167224
+    """
+    for key, description in SENSOR_DESCRIPTIONS.items():
+        serialized = serialize_entity_description(description)
+        try:
+            json.dumps(serialized)
+        except TypeError as err:
+            raise AssertionError(
+                f"SENSOR_DESCRIPTIONS[{key!r}] produced a non-serializable value: {err}"
+            ) from err
 
 
 @pytest.mark.usefixtures("enable_bluetooth")
@@ -206,6 +232,52 @@ async def test_reauth_triggered_only_once(
     # Still only one reauth flow
     flows = hass.config_entries.flow.async_progress_by_handler("victron_ble")
     assert len(flows) == 1
+
+
+@pytest.mark.usefixtures("enable_bluetooth")
+async def test_reauth_not_triggered_on_unknown_enum_value(
+    hass: HomeAssistant,
+) -> None:
+    """Test reauth is NOT triggered when a valid key yields a sparse update.
+
+    Some devices report bitmask combinations for OffReason or AlarmReason that
+    are not in the enum (e.g. NO_INPUT_POWER|ENGINE_SHUTDOWN = 0x81 on a DC-DC
+    converter that stopped due to both conditions simultaneously). The parser
+    raises ValueError, producing a sparse update (signal strength only).
+    This must not be mistaken for a wrong encryption key.
+
+    Regression test for https://github.com/home-assistant/core/issues/167105
+    """
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            "address": VICTRON_DC_DC_CONVERTER_UNKNOWN_OFF_REASON_SERVICE_INFO.address,
+            CONF_ACCESS_TOKEN: VICTRON_DC_DC_CONVERTER_TOKEN,
+        },
+        unique_id=VICTRON_DC_DC_CONVERTER_UNKNOWN_OFF_REASON_SERVICE_INFO.address,
+    )
+    entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    service_info = VICTRON_DC_DC_CONVERTER_UNKNOWN_OFF_REASON_SERVICE_INFO
+    for idx in range(REAUTH_AFTER_FAILURES + 1):
+        inject_bluetooth_service_info(
+            hass,
+            BluetoothServiceInfo(
+                name=service_info.name,
+                address=service_info.address,
+                rssi=service_info.rssi - idx,
+                manufacturer_data=service_info.manufacturer_data,
+                service_data=service_info.service_data,
+                service_uuids=service_info.service_uuids,
+                source=service_info.source,
+            ),
+        )
+        await hass.async_block_till_done()
+
+    flows = hass.config_entries.flow.async_progress_by_handler(DOMAIN)
+    assert len(flows) == 0
 
 
 @pytest.mark.usefixtures("enable_bluetooth")
