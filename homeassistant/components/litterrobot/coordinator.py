@@ -56,14 +56,83 @@ class LitterRobotDataUpdateCoordinator(DataUpdateCoordinator[None]):
                 if domain == DOMAIN:
                     self.previous_members.add(identifier)
 
+    def _account_session_is_usable(self) -> bool:
+        """Check whether the underlying aiohttp session is still usable."""
+        session = getattr(self.account, "session", None)
+        websession = getattr(session, "websession", None)
+
+        if websession is None:
+            return True
+
+        if websession.closed:
+            return False
+
+        loop = getattr(websession, "loop", None)
+        if loop is not None and loop.is_closed():
+            return False
+
+        return True
+
+    async def _reconnect_account(self, reason: str) -> None:
+        """Reconnect account after session/loop issues."""
+        _LOGGER.warning("Resetting Litter-Robot account connection: %s", reason)
+
+        try:
+            await self.account.disconnect()
+        except (LitterRobotException, RuntimeError):
+            _LOGGER.debug(
+                "Ignoring disconnect failure during account reset", exc_info=True
+            )
+
+        self.account = Account(websession=async_get_clientsession(self.hass))
+        await self.account.connect(
+            username=self.config_entry.data[CONF_USERNAME],
+            password=self.config_entry.data[CONF_PASSWORD],
+            load_robots=True,
+            subscribe_for_updates=True,
+            load_pets=True,
+        )
+
     async def _async_update_data(self) -> None:
         """Update all device states from the Litter-Robot API."""
+        if not self._account_session_is_usable():
+            try:
+                await self._reconnect_account(
+                    "detected closed session/loop before refresh"
+                )
+            except LitterRobotLoginException as ex:
+                raise ConfigEntryAuthFailed(
+                    translation_domain=DOMAIN, translation_key="invalid_credentials"
+                ) from ex
+            except LitterRobotException as ex:
+                raise UpdateFailed(
+                    translation_domain=DOMAIN,
+                    translation_key="cannot_connect",
+                    translation_placeholders={"error": str(ex)},
+                ) from ex
+
         try:
             await self.account.load_robots(subscribe_for_updates=True)
             await self.account.load_pets()
             for pet in self.account.pets:
                 # Need to fetch weight history for `get_visits_since`
                 await pet.fetch_weight_history()
+        except RuntimeError as ex:
+            if "event loop is closed" not in str(ex).lower():
+                raise
+
+            try:
+                await self._reconnect_account("runtime error from closed event loop")
+            except LitterRobotLoginException as reconnect_ex:
+                raise ConfigEntryAuthFailed(
+                    translation_domain=DOMAIN, translation_key="invalid_credentials"
+                ) from reconnect_ex
+            except LitterRobotException as reconnect_ex:
+                raise UpdateFailed(
+                    translation_domain=DOMAIN,
+                    translation_key="cannot_connect",
+                    translation_placeholders={"error": str(reconnect_ex)},
+                ) from reconnect_ex
         except LitterRobotLoginException as ex:
             raise ConfigEntryAuthFailed(
                 translation_domain=DOMAIN, translation_key="invalid_credentials"
@@ -93,6 +162,9 @@ class LitterRobotDataUpdateCoordinator(DataUpdateCoordinator[None]):
 
     async def _async_setup(self) -> None:
         """Set up the coordinator."""
+        if not self._account_session_is_usable():
+            self.account = Account(websession=async_get_clientsession(self.hass))
+
         try:
             await self.account.connect(
                 username=self.config_entry.data[CONF_USERNAME],
@@ -101,6 +173,11 @@ class LitterRobotDataUpdateCoordinator(DataUpdateCoordinator[None]):
                 subscribe_for_updates=True,
                 load_pets=True,
             )
+        except RuntimeError as ex:
+            if "event loop is closed" not in str(ex).lower():
+                raise
+
+            await self._reconnect_account("setup hit closed event loop")
         except LitterRobotLoginException as ex:
             raise ConfigEntryAuthFailed(
                 translation_domain=DOMAIN, translation_key="invalid_credentials"

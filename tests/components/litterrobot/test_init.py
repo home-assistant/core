@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from datetime import timedelta
-from unittest.mock import MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 from pylitterbot import LitterRobot4
@@ -293,3 +293,41 @@ async def test_dynamic_devices(
 
     # Fourth check -> removed 1 device after reload
     assert len(dr.async_entries_for_config_entry(device_registry, entry.entry_id)) == 0
+
+
+async def test_update_reconnects_if_account_session_unusable(
+    hass: HomeAssistant,
+    mock_account: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test update reconnect when account session/loop is stale."""
+    entry = await setup_integration(hass, mock_account, VACUUM_DOMAIN)
+    coordinator = entry.runtime_data
+
+    with (
+        patch.object(coordinator, "_account_session_is_usable", return_value=False),
+        patch.object(coordinator, "_reconnect_account", new_callable=AsyncMock) as reconnect,
+    ):
+        freezer.tick(UPDATE_INTERVAL)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+
+    reconnect.assert_awaited_once()
+
+
+async def test_update_reconnects_on_event_loop_closed_runtime_error(
+    hass: HomeAssistant,
+    mock_account: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test update recovery when load_robots raises event loop closed."""
+    entry = await setup_integration(hass, mock_account, VACUUM_DOMAIN)
+    coordinator = entry.runtime_data
+    mock_account.load_robots.side_effect = RuntimeError("Event loop is closed")
+
+    with patch.object(coordinator, "_reconnect_account", new_callable=AsyncMock) as reconnect:
+        freezer.tick(UPDATE_INTERVAL)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+
+    reconnect.assert_awaited_once()
