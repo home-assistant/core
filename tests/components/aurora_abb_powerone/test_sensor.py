@@ -10,14 +10,15 @@ from homeassistant.components.aurora_abb_powerone.aurora_client import (
     AuroraClientTimeoutError,
     AuroraInverterData,
 )
-from homeassistant.components.aurora_abb_powerone.const import SCAN_INTERVAL
+from homeassistant.components.aurora_abb_powerone.const import (
+    DEFAULT_DEVICE_NAME,
+    SCAN_INTERVAL,
+)
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_registry import EntityRegistry, RegistryEntryDisabler
 
 from tests.common import MockConfigEntry, async_fire_time_changed
-
-DEVICE_NAME = "Solar Inverter"
 
 
 def _make_inverter_data(**overrides: object) -> AuroraInverterData:
@@ -64,37 +65,37 @@ async def test_sensors(
     assert mock_config_entry.state is ConfigEntryState.LOADED
 
     power = hass.states.get(
-        f"sensor.{DEVICE_NAME.lower().replace(' ', '_')}_power_output"
+        f"sensor.{DEFAULT_DEVICE_NAME.lower().replace(' ', '_')}_power_output"
     )
     assert power is not None
     assert power.state == "45.7"
 
     temperature = hass.states.get(
-        f"sensor.{DEVICE_NAME.lower().replace(' ', '_')}_temperature"
+        f"sensor.{DEFAULT_DEVICE_NAME.lower().replace(' ', '_')}_temperature"
     )
     assert temperature is not None
     assert temperature.state == "9.9"
 
     energy = hass.states.get(
-        f"sensor.{DEVICE_NAME.lower().replace(' ', '_')}_total_energy"
+        f"sensor.{DEFAULT_DEVICE_NAME.lower().replace(' ', '_')}_total_energy"
     )
     assert energy is not None
     assert energy.state == "12.35"
 
     # Test disabled-by-default sensors exist in registry but not in state machine
     disabled_sensors = [
-        f"sensor.{DEVICE_NAME.lower().replace(' ', '_')}_grid_voltage",
-        f"sensor.{DEVICE_NAME.lower().replace(' ', '_')}_grid_current",
-        f"sensor.{DEVICE_NAME.lower().replace(' ', '_')}_grid_frequency",
-        f"sensor.{DEVICE_NAME.lower().replace(' ', '_')}_dc_dc_leak_current",
-        f"sensor.{DEVICE_NAME.lower().replace(' ', '_')}_inverter_leak_current",
-        f"sensor.{DEVICE_NAME.lower().replace(' ', '_')}_string_1_power",
-        f"sensor.{DEVICE_NAME.lower().replace(' ', '_')}_string_2_power",
-        f"sensor.{DEVICE_NAME.lower().replace(' ', '_')}_string_1_voltage",
-        f"sensor.{DEVICE_NAME.lower().replace(' ', '_')}_string_1_current",
-        f"sensor.{DEVICE_NAME.lower().replace(' ', '_')}_string_2_voltage",
-        f"sensor.{DEVICE_NAME.lower().replace(' ', '_')}_string_2_current",
-        f"sensor.{DEVICE_NAME.lower().replace(' ', '_')}_isolation_resistance",
+        f"sensor.{DEFAULT_DEVICE_NAME.lower().replace(' ', '_')}_grid_voltage",
+        f"sensor.{DEFAULT_DEVICE_NAME.lower().replace(' ', '_')}_grid_current",
+        f"sensor.{DEFAULT_DEVICE_NAME.lower().replace(' ', '_')}_grid_frequency",
+        f"sensor.{DEFAULT_DEVICE_NAME.lower().replace(' ', '_')}_dc_dc_leak_current",
+        f"sensor.{DEFAULT_DEVICE_NAME.lower().replace(' ', '_')}_inverter_leak_current",
+        f"sensor.{DEFAULT_DEVICE_NAME.lower().replace(' ', '_')}_string_1_power",
+        f"sensor.{DEFAULT_DEVICE_NAME.lower().replace(' ', '_')}_string_2_power",
+        f"sensor.{DEFAULT_DEVICE_NAME.lower().replace(' ', '_')}_string_1_voltage",
+        f"sensor.{DEFAULT_DEVICE_NAME.lower().replace(' ', '_')}_string_1_current",
+        f"sensor.{DEFAULT_DEVICE_NAME.lower().replace(' ', '_')}_string_2_voltage",
+        f"sensor.{DEFAULT_DEVICE_NAME.lower().replace(' ', '_')}_string_2_current",
+        f"sensor.{DEFAULT_DEVICE_NAME.lower().replace(' ', '_')}_isolation_resistance",
     ]
     for entity_id in disabled_sensors:
         assert not hass.states.get(entity_id), f"Expected {entity_id} to be disabled"
@@ -120,25 +121,49 @@ async def test_sensors(
         await hass.async_block_till_done()
 
     expected_values = [
-        (f"sensor.{DEVICE_NAME.lower().replace(' ', '_')}_grid_voltage", "235.9"),
-        (f"sensor.{DEVICE_NAME.lower().replace(' ', '_')}_grid_current", "2.8"),
-        (f"sensor.{DEVICE_NAME.lower().replace(' ', '_')}_grid_frequency", "50.8"),
         (
-            f"sensor.{DEVICE_NAME.lower().replace(' ', '_')}_dc_dc_leak_current",
+            f"sensor.{DEFAULT_DEVICE_NAME.lower().replace(' ', '_')}_grid_voltage",
+            "235.9",
+        ),
+        (f"sensor.{DEFAULT_DEVICE_NAME.lower().replace(' ', '_')}_grid_current", "2.8"),
+        (
+            f"sensor.{DEFAULT_DEVICE_NAME.lower().replace(' ', '_')}_grid_frequency",
+            "50.8",
+        ),
+        (
+            f"sensor.{DEFAULT_DEVICE_NAME.lower().replace(' ', '_')}_dc_dc_leak_current",
             "1.2345",
         ),
         (
-            f"sensor.{DEVICE_NAME.lower().replace(' ', '_')}_inverter_leak_current",
+            f"sensor.{DEFAULT_DEVICE_NAME.lower().replace(' ', '_')}_inverter_leak_current",
             "2.3456",
         ),
-        (f"sensor.{DEVICE_NAME.lower().replace(' ', '_')}_string_1_power", "12.3"),
-        (f"sensor.{DEVICE_NAME.lower().replace(' ', '_')}_string_2_power", "23.5"),
-        (f"sensor.{DEVICE_NAME.lower().replace(' ', '_')}_string_1_voltage", "123.5"),
-        (f"sensor.{DEVICE_NAME.lower().replace(' ', '_')}_string_1_current", "1.0"),
-        (f"sensor.{DEVICE_NAME.lower().replace(' ', '_')}_string_2_voltage", "234.6"),
-        (f"sensor.{DEVICE_NAME.lower().replace(' ', '_')}_string_2_current", "1.2"),
         (
-            f"sensor.{DEVICE_NAME.lower().replace(' ', '_')}_isolation_resistance",
+            f"sensor.{DEFAULT_DEVICE_NAME.lower().replace(' ', '_')}_string_1_power",
+            "12.3",
+        ),
+        (
+            f"sensor.{DEFAULT_DEVICE_NAME.lower().replace(' ', '_')}_string_2_power",
+            "23.5",
+        ),
+        (
+            f"sensor.{DEFAULT_DEVICE_NAME.lower().replace(' ', '_')}_string_1_voltage",
+            "123.5",
+        ),
+        (
+            f"sensor.{DEFAULT_DEVICE_NAME.lower().replace(' ', '_')}_string_1_current",
+            "1.0",
+        ),
+        (
+            f"sensor.{DEFAULT_DEVICE_NAME.lower().replace(' ', '_')}_string_2_voltage",
+            "234.6",
+        ),
+        (
+            f"sensor.{DEFAULT_DEVICE_NAME.lower().replace(' ', '_')}_string_2_current",
+            "1.2",
+        ),
+        (
+            f"sensor.{DEFAULT_DEVICE_NAME.lower().replace(' ', '_')}_isolation_resistance",
             "0.1234",
         ),
     ]
@@ -166,7 +191,7 @@ async def test_sensor_dark(
         await hass.async_block_till_done()
 
     power = hass.states.get(
-        f"sensor.{DEVICE_NAME.lower().replace(' ', '_')}_power_output"
+        f"sensor.{DEFAULT_DEVICE_NAME.lower().replace(' ', '_')}_power_output"
     )
     assert power is not None
     assert power.state == "45.7"
@@ -178,7 +203,7 @@ async def test_sensor_dark(
     await hass.async_block_till_done(wait_background_tasks=True)
 
     energy = hass.states.get(
-        f"sensor.{DEVICE_NAME.lower().replace(' ', '_')}_total_energy"
+        f"sensor.{DEFAULT_DEVICE_NAME.lower().replace(' ', '_')}_total_energy"
     )
     assert energy is not None
     assert energy.state == "unknown"
@@ -191,7 +216,7 @@ async def test_sensor_dark(
     await hass.async_block_till_done(wait_background_tasks=True)
 
     power = hass.states.get(
-        f"sensor.{DEVICE_NAME.lower().replace(' ', '_')}_power_output"
+        f"sensor.{DEFAULT_DEVICE_NAME.lower().replace(' ', '_')}_power_output"
     )
     assert power is not None
     assert power.state == "45.7"
@@ -223,7 +248,7 @@ async def test_sensor_unknown_error(
     await hass.async_block_till_done(wait_background_tasks=True)
 
     power = hass.states.get(
-        f"sensor.{DEVICE_NAME.lower().replace(' ', '_')}_power_output"
+        f"sensor.{DEFAULT_DEVICE_NAME.lower().replace(' ', '_')}_power_output"
     )
     assert power is not None
     assert power.state == "unavailable"
