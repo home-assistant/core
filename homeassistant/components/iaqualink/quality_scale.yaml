@@ -31,12 +31,12 @@ rules:
   docs-configuration-parameters:
     status: exempt
     comment: This integration does not provide an options flow.
-  docs-installation-parameters: todo
+  docs-installation-parameters: done
   entity-unavailable: done
   integration-owner: done
   log-when-unavailable: todo
   parallel-updates: done
-  reauthentication-flow: todo
+  reauthentication-flow: done
   test-coverage: todo
 
   # Gold
@@ -48,7 +48,7 @@ rules:
   discovery:
     status: exempt
     comment: This integration has no supported discovery mechanism.
-  docs-data-update: todo
+  docs-data-update: done
   docs-examples: todo
   docs-known-limitations: done
   docs-supported-devices: todo
