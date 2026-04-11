@@ -174,8 +174,8 @@ class AqualinkFlowHandler(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    @callback
     @staticmethod
+    @callback
     def async_get_options_flow(config_entry: ConfigEntry) -> AqualinkOptionsFlowHandler:
         """Create the options flow."""
         return AqualinkOptionsFlowHandler()
@@ -196,10 +196,7 @@ class AqualinkOptionsFlowHandler(OptionsFlowWithReload):
             return self.async_create_entry(title="", data=user_input)
 
         # Fetch systems from API
-        username = self.config_entry.data[CONF_USERNAME]
-        password = self.config_entry.data[CONF_PASSWORD]
-
-        systems, error_reason = await async_get_systems(self.hass, username, password)
+        systems, error_reason = await async_get_systems(self.hass, self.config_entry.data[CONF_USERNAME], self.config_entry.data[CONF_PASSWORD])
 
         if systems is None:
             assert error_reason is not None
