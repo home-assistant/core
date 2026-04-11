@@ -5,22 +5,25 @@ from typing import Any, cast
 
 from aiohomeconnect.model import EventKey, OptionKey, ProgramKey, SettingKey
 from aiohomeconnect.model.error import HomeConnectError
-from aiohomeconnect.model.program import Execution
+from aiohomeconnect.model.program import Execution, ProgramDefinitionConstraints
 
 from homeassistant.components.climate import (
+    DEFAULT_MAX_TEMP,
+    DEFAULT_MIN_TEMP,
     FAN_AUTO,
     ClimateEntity,
     ClimateEntityDescription,
     ClimateEntityFeature,
     HVACMode,
 )
-from homeassistant.const import UnitOfTemperature
+from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.util.unit_conversion import TemperatureConverter
 
 from .common import setup_home_connect_entry
-from .const import BSH_POWER_ON, BSH_POWER_STANDBY, DOMAIN
+from .const import BSH_POWER_ON, BSH_POWER_STANDBY, DOMAIN, UNIT_MAP
 from .coordinator import HomeConnectApplianceCoordinator, HomeConnectConfigEntry
 from .entity import HomeConnectEntity
 from .utils import get_dict_from_home_connect_error
@@ -96,10 +99,6 @@ async def async_setup_entry(
 class HomeConnectAirConditioningEntity(HomeConnectEntity, ClimateEntity):
     """Representation of a Home Connect climate entity."""
 
-    # Note: The base class requires this to be set even though this
-    # class doesn't support any temperature related functionality.
-    _attr_temperature_unit = UnitOfTemperature.CELSIUS
-
     def __init__(
         self,
         coordinator: HomeConnectApplianceCoordinator,
@@ -146,6 +145,69 @@ class HomeConnectAirConditioningEntity(HomeConnectEntity, ClimateEntity):
         )
 
     @property
+    def target_temperature(self) -> float | None:
+        """Return the temperature we try to reach."""
+        if event := self.appliance.events.get(
+            EventKey.HEATING_VENTILATION_AIR_CONDITIONING_AIR_CONDITIONER_OPTION_SETPOINT_TEMPERATURE
+        ):
+            return cast(float, event.value)
+        return None
+
+    @property
+    def temperature_unit(self) -> str:
+        """Return the unit of measurement."""
+        if (
+            (
+                option_definition := self.appliance.options.get(
+                    OptionKey.HEATING_VENTILATION_AIR_CONDITIONING_AIR_CONDITIONER_SETPOINT_TEMPERATURE
+                )
+            )
+            and (proto_unit := option_definition.unit) is not None
+            and (unit := UNIT_MAP.get(proto_unit)) is not None
+        ):
+            return unit
+        return UnitOfTemperature.CELSIUS
+
+    def _get_temperature_constraints(self) -> ProgramDefinitionConstraints | None:
+        """Get the temperature constraints for the appliance."""
+        if option_definition := self.appliance.options.get(
+            OptionKey.HEATING_VENTILATION_AIR_CONDITIONING_AIR_CONDITIONER_SETPOINT_TEMPERATURE
+        ):
+            return option_definition.constraints
+        return None
+
+    @property
+    def min_temp(self) -> float:
+        """Return the minimum temperature."""
+        if (
+            option_constraints := self._get_temperature_constraints()
+        ) and option_constraints.min is not None:
+            return option_constraints.min
+        return TemperatureConverter.convert(
+            DEFAULT_MIN_TEMP, UnitOfTemperature.CELSIUS, self.temperature_unit
+        )
+
+    @property
+    def max_temp(self) -> float:
+        """Return the maximum temperature."""
+        if (
+            option_constraints := self._get_temperature_constraints()
+        ) and option_constraints.max is not None:
+            return option_constraints.max
+        return TemperatureConverter.convert(
+            DEFAULT_MAX_TEMP, UnitOfTemperature.CELSIUS, self.temperature_unit
+        )
+
+    @property
+    def target_temperature_step(self) -> float | None:
+        """Return the temperature step."""
+        if (
+            option_constraints := self._get_temperature_constraints()
+        ) and option_constraints.step_size is not None:
+            return option_constraints.step_size
+        return None
+
+    @property
     def supported_features(self) -> ClimateEntityFeature:
         """Return the list of supported features."""
         features = ClimateEntityFeature(0)
@@ -153,6 +215,10 @@ class HomeConnectAirConditioningEntity(HomeConnectEntity, ClimateEntity):
             features |= ClimateEntityFeature.TURN_ON | ClimateEntityFeature.TURN_OFF
         if self.preset_modes:
             features |= ClimateEntityFeature.PRESET_MODE
+        if self.appliance.options.get(
+            OptionKey.HEATING_VENTILATION_AIR_CONDITIONING_AIR_CONDITIONER_SETPOINT_TEMPERATURE
+        ):
+            features |= ClimateEntityFeature.TARGET_TEMPERATURE
         if self.appliance.options.get(
             OptionKey.HEATING_VENTILATION_AIR_CONDITIONING_AIR_CONDITIONER_FAN_SPEED_MODE
         ):
@@ -186,6 +252,12 @@ class HomeConnectAirConditioningEntity(HomeConnectEntity, ClimateEntity):
             self.coordinator.async_add_listener(
                 self._handle_coordinator_update,
                 EventKey.BSH_COMMON_SETTING_POWER_STATE,
+            )
+        )
+        self.async_on_remove(
+            self.coordinator.async_add_listener(
+                self._handle_coordinator_update,
+                EventKey.HEATING_VENTILATION_AIR_CONDITIONING_AIR_CONDITIONER_OPTION_SETPOINT_TEMPERATURE,
             )
         )
 
@@ -311,6 +383,14 @@ class HomeConnectAirConditioningEntity(HomeConnectEntity, ClimateEntity):
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set new preset mode."""
         await self._set_program(PRESET_MODES_PROGRAMS_MAP[preset_mode])
+
+    async def async_set_temperature(self, **kwargs: Any) -> None:
+        """Set new target temperature."""
+        if (temp := kwargs.get(ATTR_TEMPERATURE)) is not None:
+            await self.async_set_option_with_key(
+                OptionKey.HEATING_VENTILATION_AIR_CONDITIONING_AIR_CONDITIONER_SETPOINT_TEMPERATURE,
+                temp,
+            )
 
     async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set new target fan mode."""

@@ -199,6 +199,14 @@ set_program_and_options:
     air_conditioner_options:
       collapsed: true
       fields:
+        heating_ventilation_air_conditioning_air_conditioner_option_setpoint_temperature:
+          example: 22
+          required: false
+          selector:
+            number:
+              step: 1
+              mode: box
+              unit_of_measurement: °C/°F
         heating_ventilation_air_conditioning_air_conditioner_option_fan_speed_percentage:
           example: 50
           required: false

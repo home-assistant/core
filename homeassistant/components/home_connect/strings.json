@@ -1988,6 +1988,10 @@
           "description": "Setting to adjust the venting level of the air conditioner as a percentage.",
           "name": "Fan speed percentage"
         },
+        "heating_ventilation_air_conditioning_air_conditioner_option_setpoint_temperature": {
+          "description": "Defines the target temperature, which will be held by the air conditioner.",
+          "name": "[%key:component::home_connect::services::set_program_and_options::fields::cooking_oven_option_setpoint_temperature::name%]"
+        },
         "laundry_care_common_option_silent_mode": {
           "description": "Defines if the silent mode is activated.",
           "name": "Silent mode"
