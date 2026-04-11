@@ -25,7 +25,7 @@ from tests.common import MockConfigEntry
 DISCOVERY_INFO = ZeroconfServiceInfo(
     ip_address=ip_address("192.168.1.39"),
     ip_addresses=[ip_address("192.168.1.39")],
-    hostname="kiosker-device.local.",
+    hostname="python-test-device.local.",
     name="Kiosker Device._kiosker._tcp.local.",
     port=8081,
     properties={
@@ -146,7 +146,7 @@ async def test_zeroconf(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "zeroconf_confirm"
     assert result["description_placeholders"] == {
-        "name": "Kiosker (A98BE1CE)",
+        "name": "python-test-device (A98BE1CE)",
         "host": "192.168.1.39",
     }
     schema_keys = list(result["data_schema"].schema.keys())
