@@ -17,12 +17,13 @@ from homeassistant.components.media_source import (
     PlayMedia,
     Unresolvable,
 )
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
 
 from . import get_media_url, split_motioneye_device_identifier
 from .const import DOMAIN
+from .coordinator import MotionEyeConfigEntry
 
 MIME_TYPE_MAP = {
     "movies": "video/mp4",
@@ -74,7 +75,7 @@ class MotionEyeMediaSource(MediaSource):
         self._verify_kind_or_raise(kind)
 
         url = get_media_url(
-            self.hass.data[DOMAIN][config.entry_id].client,
+            config.runtime_data.client,
             self._get_camera_id_or_raise(config, device),
             self._get_path_or_raise(path),
             kind == "images",
@@ -120,10 +121,10 @@ class MotionEyeMediaSource(MediaSource):
                 return self._build_media_devices(config)
         return self._build_media_configs()
 
-    def _get_config_or_raise(self, config_id: str) -> ConfigEntry:
+    def _get_config_or_raise(self, config_id: str) -> MotionEyeConfigEntry:
         """Get a config entry from a URL."""
         entry = self.hass.config_entries.async_get_entry(config_id)
-        if not entry:
+        if not entry or entry.state != ConfigEntryState.LOADED:
             raise MediaSourceError(f"Unable to find config entry with id: {config_id}")
         return entry
 
@@ -154,7 +155,7 @@ class MotionEyeMediaSource(MediaSource):
 
     @classmethod
     def _get_camera_id_or_raise(
-        cls, config: ConfigEntry, device: dr.DeviceEntry
+        cls, config: MotionEyeConfigEntry, device: dr.DeviceEntry
     ) -> int:
         """Get a config entry from a URL."""
         for identifier in device.identifiers:
@@ -164,7 +165,7 @@ class MotionEyeMediaSource(MediaSource):
         raise MediaSourceError(f"Could not find camera id for device id: {device.id}")
 
     @classmethod
-    def _build_media_config(cls, config: ConfigEntry) -> BrowseMediaSource:
+    def _build_media_config(cls, config: MotionEyeConfigEntry) -> BrowseMediaSource:
         return BrowseMediaSource(
             domain=DOMAIN,
             identifier=config.entry_id,
@@ -196,7 +197,7 @@ class MotionEyeMediaSource(MediaSource):
     @classmethod
     def _build_media_device(
         cls,
-        config: ConfigEntry,
+        config: MotionEyeConfigEntry,
         device: dr.DeviceEntry,
         full_title: bool = True,
     ) -> BrowseMediaSource:
@@ -211,7 +212,7 @@ class MotionEyeMediaSource(MediaSource):
             children_media_class=MediaClass.DIRECTORY,
         )
 
-    def _build_media_devices(self, config: ConfigEntry) -> BrowseMediaSource:
+    def _build_media_devices(self, config: MotionEyeConfigEntry) -> BrowseMediaSource:
         """Build the media sources for device entries."""
         device_registry = dr.async_get(self.hass)
         devices = dr.async_entries_for_config_entry(device_registry, config.entry_id)
@@ -226,7 +227,7 @@ class MotionEyeMediaSource(MediaSource):
     @classmethod
     def _build_media_kind(
         cls,
-        config: ConfigEntry,
+        config: MotionEyeConfigEntry,
         device: dr.DeviceEntry,
         kind: str,
         full_title: bool = True,
@@ -251,7 +252,7 @@ class MotionEyeMediaSource(MediaSource):
         )
 
     def _build_media_kinds(
-        self, config: ConfigEntry, device: dr.DeviceEntry
+        self, config: MotionEyeConfigEntry, device: dr.DeviceEntry
     ) -> BrowseMediaSource:
         base = self._build_media_device(config, device)
         base.children = [
@@ -262,7 +263,7 @@ class MotionEyeMediaSource(MediaSource):
 
     async def _build_media_path(
         self,
-        config: ConfigEntry,
+        config: MotionEyeConfigEntry,
         device: dr.DeviceEntry,
         kind: str,
         path: str,
@@ -276,7 +277,7 @@ class MotionEyeMediaSource(MediaSource):
 
         base.children = []
 
-        client = self.hass.data[DOMAIN][config.entry_id].client
+        client = config.runtime_data.client
         camera_id = self._get_camera_id_or_raise(config, device)
 
         if kind == "movies":
@@ -286,7 +287,7 @@ class MotionEyeMediaSource(MediaSource):
 
         sub_dirs: set[str] = set()
         parts = parsed_path.parts
-        media_list = resp.get(KEY_MEDIA_LIST, [])
+        media_list = resp.get(KEY_MEDIA_LIST, []) if resp else []
 
         def get_media_sort_key(media: dict) -> str:
             """Get media sort key."""

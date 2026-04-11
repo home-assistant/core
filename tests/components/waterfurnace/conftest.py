@@ -4,8 +4,9 @@ from collections.abc import Generator
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
-from waterfurnace.waterfurnace import WaterFurnace, WFGateway, WFReading
+from waterfurnace.waterfurnace import WaterFurnace, WFGateway, WFNoDataError, WFReading
 
+from homeassistant.components.recorder import Recorder
 from homeassistant.components.waterfurnace.const import DOMAIN
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
@@ -49,6 +50,7 @@ def mock_waterfurnace_client() -> Generator[Mock]:
         device_data = WFReading(load_json_object_fixture("device_data.json", DOMAIN))
         client.read.return_value = device_data
         client.read_with_retry.return_value = device_data
+        client.get_energy_data.side_effect = WFNoDataError("No data")
 
         yield client
 
@@ -87,6 +89,7 @@ def mock_waterfurnace_client_multi_device() -> Generator[Mock]:
             client.devices = [WFGateway(gateway_data_1), WFGateway(gateway_data_2)]
             client.read.return_value = device_data
             client.read_with_retry.return_value = device_data
+            client.get_energy_data.side_effect = WFNoDataError("No data")
             instances.append(client)
 
         mock_client.side_effect = lambda username, password, device=0: instances[device]
@@ -111,6 +114,7 @@ def mock_config_entry() -> MockConfigEntry:
 
 @pytest.fixture
 async def init_integration(
+    recorder_mock: Recorder,
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_waterfurnace_client: Mock,

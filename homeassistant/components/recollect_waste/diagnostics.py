@@ -6,12 +6,11 @@ import dataclasses
 from typing import Any
 
 from homeassistant.components.diagnostics import async_redact_data
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_UNIQUE_ID
 from homeassistant.core import HomeAssistant
 
-from .const import CONF_PLACE_ID, DOMAIN
-from .coordinator import ReCollectWasteDataUpdateCoordinator
+from .const import CONF_PLACE_ID
+from .coordinator import RecollectWasteConfigEntry
 
 CONF_AREA_NAME = "area_name"
 CONF_TITLE = "title"
@@ -26,15 +25,13 @@ TO_REDACT = {
 
 
 async def async_get_config_entry_diagnostics(
-    hass: HomeAssistant, entry: ConfigEntry
+    hass: HomeAssistant, entry: RecollectWasteConfigEntry
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
-    coordinator: ReCollectWasteDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
-
     return async_redact_data(
         {
             "entry": entry.as_dict(),
-            "data": [dataclasses.asdict(event) for event in coordinator.data],
+            "data": [dataclasses.asdict(event) for event in entry.runtime_data.data],
         },
         TO_REDACT,
     )

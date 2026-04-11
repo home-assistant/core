@@ -189,11 +189,6 @@ FORBIDDEN_PACKAGE_EXCEPTIONS: dict[str, dict[str, set[str]]] = {
     "norway_air": {"pymetno": {"async-timeout"}},
     "opengarage": {"open-garage": {"async-timeout"}},
     "opensensemap": {"opensensemap-api": {"async-timeout"}},
-    "opnsense": {
-        # https://github.com/mtreinish/pyopnsense/issues/27
-        # pyopnsense > pbr > setuptools
-        "pbr": {"setuptools"}
-    },
     "pvpc_hourly_pricing": {"aiopvpc": {"async-timeout"}},
     "remote_rpi_gpio": {
         # https://github.com/waveform80/colorzero/issues/9
@@ -298,10 +293,6 @@ FORBIDDEN_PACKAGE_FILES_EXCEPTIONS = {
     },
     # https://github.com/ejpenney/pyobihai
     "obihai": {"homeassistant": {"pyobihai"}},
-    "opnsense": {
-        # Setuptools - distutils-precedence.pth
-        "pbr": {"setuptools"}
-    },
     # https://github.com/iamkubi/pydactyl
     "pterodactyl": {"homeassistant": {"py-dactyl"}},
     "remote_rpi_gpio": {
@@ -502,6 +493,12 @@ def get_pipdeptree() -> dict[str, dict[str, Any]]:
     return deptree
 
 
+@cache
+def metadata_cache(package: str) -> dict:
+    """Return package metadata, cached."""
+    return metadata(package)
+
+
 def get_requirements(integration: Integration, packages: set[str]) -> set[str]:
     """Return all (recursively) requirements for an integration."""
     deptree = get_pipdeptree()
@@ -550,7 +547,7 @@ def get_requirements(integration: Integration, packages: set[str]) -> set[str]:
             continue
 
         # Check for restrictive version limits on Python
-        if (requires_python := metadata(package)["Requires-Python"]) and not all(
+        if (requires_python := metadata_cache(package)["Requires-Python"]) and not all(
             _is_dependency_version_range_valid(version_part, "SemVer")
             for version_part in requires_python.split(",")
         ):

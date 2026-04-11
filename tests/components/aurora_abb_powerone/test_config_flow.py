@@ -2,8 +2,6 @@
 
 from unittest.mock import MagicMock, patch
 
-from serial.tools import list_ports_common
-
 from homeassistant import config_entries
 from homeassistant.components.aurora_abb_powerone.aurora_client import (
     AuroraClientError,
@@ -20,6 +18,7 @@ from homeassistant.components.aurora_abb_powerone.const import (
     TRANSPORT_SERIAL,
     TRANSPORT_TCP,
 )
+from homeassistant.components.usb import SerialDevice
 from homeassistant.const import ATTR_SERIAL_NUMBER
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -35,7 +34,16 @@ MOCK_IDENTIFIER = AuroraInverterIdentifier(
     firmware=MOCK_FIRMWARE,
 )
 
-FAKE_COMPORTS = [list_ports_common.ListPortInfo("/dev/ttyUSB7")]
+FAKE_COMPORTS = [
+    SerialDevice(
+        device="/dev/ttyUSB7",
+        serial_number=None,
+        manufacturer=None,
+        description=None,
+    )
+]
+
+USB_SCAN_PATCH = "homeassistant.components.aurora_abb_powerone.config_flow.usb.async_scan_serial_ports"
 
 
 def _mock_aurora_client_setup() -> MagicMock:
@@ -49,10 +57,7 @@ async def test_serial_flow_success(hass: HomeAssistant) -> None:
     """Test a complete successful serial setup flow."""
     mock_setup_client = _mock_aurora_client_setup()
     with (
-        patch(
-            "serial.tools.list_ports.comports",
-            return_value=FAKE_COMPORTS,
-        ),
+        patch(USB_SCAN_PATCH, return_value=FAKE_COMPORTS),
         patch(
             "homeassistant.components.aurora_abb_powerone.config_flow.validate_and_connect_serial",
             return_value=MOCK_IDENTIFIER,
@@ -141,10 +146,7 @@ async def test_tcp_flow_success(hass: HomeAssistant) -> None:
 
 async def test_serial_flow_no_comports(hass: HomeAssistant) -> None:
     """Test that flow aborts when no serial ports are available."""
-    with patch(
-        "serial.tools.list_ports.comports",
-        return_value=[],
-    ):
+    with patch(USB_SCAN_PATCH, return_value=[]):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
@@ -161,10 +163,7 @@ async def test_serial_flow_no_comports(hass: HomeAssistant) -> None:
 
 async def test_serial_flow_invalid_serial_port(hass: HomeAssistant) -> None:
     """Test serial flow handles invalid serial port error."""
-    with patch(
-        "serial.tools.list_ports.comports",
-        return_value=FAKE_COMPORTS,
-    ):
+    with patch(USB_SCAN_PATCH, return_value=FAKE_COMPORTS):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
@@ -188,10 +187,7 @@ async def test_serial_flow_invalid_serial_port(hass: HomeAssistant) -> None:
 
 async def test_serial_flow_cannot_open_port(hass: HomeAssistant) -> None:
     """Test serial flow handles cannot open port error."""
-    with patch(
-        "serial.tools.list_ports.comports",
-        return_value=FAKE_COMPORTS,
-    ):
+    with patch(USB_SCAN_PATCH, return_value=FAKE_COMPORTS):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
@@ -216,10 +212,7 @@ async def test_serial_flow_cannot_open_port(hass: HomeAssistant) -> None:
 async def test_serial_flow_cannot_connect(hass: HomeAssistant) -> None:
     """Test serial flow handles generic connection error and can recover."""
     mock_setup_client = _mock_aurora_client_setup()
-    with patch(
-        "serial.tools.list_ports.comports",
-        return_value=FAKE_COMPORTS,
-    ):
+    with patch(USB_SCAN_PATCH, return_value=FAKE_COMPORTS):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
@@ -343,10 +336,7 @@ async def test_flow_already_configured(hass: HomeAssistant) -> None:
 
 async def test_serial_flow_other_os_error(hass: HomeAssistant) -> None:
     """Test serial flow handles non-errno-19 OS errors as cannot_connect."""
-    with patch(
-        "serial.tools.list_ports.comports",
-        return_value=FAKE_COMPORTS,
-    ):
+    with patch(USB_SCAN_PATCH, return_value=FAKE_COMPORTS):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
@@ -374,10 +364,7 @@ async def test_serial_flow_end_to_end_via_aurora_client(hass: HomeAssistant) -> 
     mock_setup_client.try_connect_and_fetch_identifier.return_value = MOCK_IDENTIFIER
 
     with (
-        patch(
-            "serial.tools.list_ports.comports",
-            return_value=FAKE_COMPORTS,
-        ),
+        patch(USB_SCAN_PATCH, return_value=FAKE_COMPORTS),
         patch(
             "homeassistant.components.aurora_abb_powerone.aurora_client.AuroraClient.from_serial",
             return_value=mock_setup_client,

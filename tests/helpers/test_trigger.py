@@ -42,6 +42,7 @@ from homeassistant.helpers.automation import (
 )
 from homeassistant.helpers.trigger import (
     DATA_PLUGGABLE_ACTIONS,
+    TRIGGERS,
     EntityNumericalStateChangedTriggerWithUnitBase,
     EntityNumericalStateCrossedThresholdTriggerWithUnitBase,
     EntityTriggerBase,
@@ -669,6 +670,51 @@ async def test_platform_backwards_compatibility_for_new_style_configs(
     assert result == config_old_style
 
 
+async def test_get_trigger_platform_registers_triggers(
+    hass: HomeAssistant,
+) -> None:
+    """Test _async_get_trigger_platform registers triggers and notifies subscribers."""
+
+    class MockTrigger(Trigger):
+        """Mock trigger."""
+
+        async def async_attach_runner(
+            self, run_action: TriggerActionRunner
+        ) -> CALLBACK_TYPE:
+            return lambda: None
+
+    async def async_get_triggers(
+        hass: HomeAssistant,
+    ) -> dict[str, type[Trigger]]:
+        return {"trig_a": MockTrigger, "trig_b": MockTrigger}
+
+    mock_integration(hass, MockModule("test"))
+    mock_platform(hass, "test.trigger", Mock(async_get_triggers=async_get_triggers))
+
+    subscriber_events: list[set[str]] = []
+
+    async def subscriber(new_triggers: set[str]) -> None:
+        subscriber_events.append(new_triggers)
+
+    trigger.async_subscribe_platform_events(hass, subscriber)
+
+    assert "test.trig_a" not in hass.data[TRIGGERS]
+    assert "test.trig_b" not in hass.data[TRIGGERS]
+
+    # First call registers all triggers from the platform and notifies subscribers
+    await _async_get_trigger_platform(hass, "test.trig_a")
+
+    assert hass.data[TRIGGERS]["test.trig_a"] == "test"
+    assert hass.data[TRIGGERS]["test.trig_b"] == "test"
+    assert len(subscriber_events) == 1
+    assert subscriber_events[0] == {"test.trig_a", "test.trig_b"}
+
+    # Subsequent calls are idempotent — no re-registration or re-notification
+    await _async_get_trigger_platform(hass, "test.trig_a")
+    await _async_get_trigger_platform(hass, "test.trig_b")
+    assert len(subscriber_events) == 1
+
+
 @pytest.mark.parametrize(
     "sun_trigger_descriptions",
     [
@@ -910,6 +956,8 @@ async def test_async_get_all_descriptions(
     # Verify the cache returns the same object
     assert await trigger.async_get_all_descriptions(hass) is new_descriptions
 
+    await hass.data["entity_components"][SUN_DOMAIN]._async_reset()
+
 
 @pytest.mark.parametrize(
     ("yaml_error", "expected_message"),
@@ -950,6 +998,8 @@ async def test_async_get_all_descriptions_with_yaml_error(
 
     assert expected_message in caplog.text
 
+    await hass.data["entity_components"][SUN_DOMAIN]._async_reset()
+
 
 async def test_async_get_all_descriptions_with_bad_description(
     hass: HomeAssistant,
@@ -983,6 +1033,8 @@ async def test_async_get_all_descriptions_with_bad_description(
         "Unable to parse triggers.yaml for the sun integration: "
         "expected a dictionary for dictionary value @ data['_']['fields']"
     ) in caplog.text
+
+    await hass.data["entity_components"][SUN_DOMAIN]._async_reset()
 
 
 async def test_invalid_trigger_platform(
@@ -1037,6 +1089,8 @@ async def test_subscribe_triggers(
     assert await async_setup_component(hass, "sun", {})
     assert trigger_events == [{"sun"}]
     assert "Error while notifying trigger platform listener" in caplog.text
+
+    await hass.data["entity_components"][SUN_DOMAIN]._async_reset()
 
 
 @patch("annotatedyaml.loader.load_yaml")
