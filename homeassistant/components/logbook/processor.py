@@ -9,10 +9,12 @@ import logging
 import time
 from typing import TYPE_CHECKING, Any
 
+from sqlalchemy import select
 from sqlalchemy.engine import Result
 from sqlalchemy.engine.row import Row
 
 from homeassistant.components.recorder import get_instance
+from homeassistant.components.recorder.db_schema import Events
 from homeassistant.components.recorder.filters import Filters
 from homeassistant.components.recorder.models import (
     bytes_to_uuid_hex_or_none,
@@ -37,6 +39,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, split_entity_id
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
+from homeassistant.util.collection import chunked_or_all
 from homeassistant.util.event_type import EventType
 
 from .const import (
@@ -185,9 +188,38 @@ class EventProcessor:
                 self.filters,
                 self.context_id,
             )
-            return self.humanify(
-                execute_stmt_lambda_element(session, stmt, orm_rows=False)
-            )
+            rows = execute_stmt_lambda_element(session, stmt, orm_rows=False)
+            if self.entity_ids:
+                # Parent contexts for entity/entity+device queries are resolved
+                # in Python rather than via a SQL union branch because the
+                # parent-context column is sparsely populated and a full scan
+                # to find it costs ~40% of the query on real datasets.
+                rows = list(rows)
+                context_user_ids = self.logbook_run.context_user_ids
+                pending: set[bytes] = set()
+                for row in rows:
+                    if (
+                        parent_id := row[CONTEXT_PARENT_ID_BIN_POS]
+                    ) and parent_id not in context_user_ids:
+                        pending.add(parent_id)
+                if pending:
+                    now = time.time()
+                    for pending_chunk in chunked_or_all(
+                        pending, instance.max_bind_vars
+                    ):
+                        for (
+                            parent_context_id_bin,
+                            parent_user_id_bin,
+                        ) in session.execute(
+                            select(Events.context_id_bin, Events.context_user_id_bin)
+                            .where(Events.context_id_bin.in_(pending_chunk))
+                            .where(Events.context_user_id_bin.is_not(None))
+                        ):
+                            context_user_ids[parent_context_id_bin] = (
+                                parent_user_id_bin,
+                                now,
+                            )
+            return self.humanify(rows)
 
     def humanify(
         self, rows: Generator[EventAsRow] | Sequence[Row] | Result
