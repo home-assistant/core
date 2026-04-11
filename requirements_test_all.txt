@@ -581,7 +581,7 @@ base36==0.1.1
 beautifulsoup4==4.13.3
 
 # homeassistant.components.esphome
-bleak-esphome==3.7.1
+bleak-esphome==3.7.3
 
 # homeassistant.components.bluetooth
 bleak-retry-connector==4.6.0
