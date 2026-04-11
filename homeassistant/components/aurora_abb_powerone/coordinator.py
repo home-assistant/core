@@ -1,15 +1,18 @@
 """DataUpdateCoordinator for the aurora_abb_powerone integration."""
 
-from dataclasses import asdict
 import logging
 from time import sleep
-from typing import Any
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .aurora_client import AuroraClient, AuroraClientError, AuroraClientTimeoutError
+from .aurora_client import (
+    AuroraClient,
+    AuroraClientError,
+    AuroraClientTimeoutError,
+    AuroraInverterData,
+)
 from .const import DOMAIN, SCAN_INTERVAL
 
 _LOGGER = logging.getLogger(__name__)
@@ -18,7 +21,7 @@ _LOGGER = logging.getLogger(__name__)
 type AuroraAbbConfigEntry = ConfigEntry[AuroraAbbDataUpdateCoordinator]
 
 
-class AuroraAbbDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
+class AuroraAbbDataUpdateCoordinator(DataUpdateCoordinator[AuroraInverterData | None]):
     """Class to manage fetching AuroraAbbPowerone data."""
 
     config_entry: AuroraAbbConfigEntry
@@ -41,13 +44,13 @@ class AuroraAbbDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             update_interval=SCAN_INTERVAL,
         )
 
-    def _update_data(self) -> dict[str, Any]:
+    def _update_data(self) -> AuroraInverterData | None:
         """Fetch new state data for the sensors.
 
         This is the only function that should fetch new data for Home Assistant.
         """
         self.available_prev = self.available
-        result = None
+        result: AuroraInverterData | None = None
         retries: int = 3
         while retries > 0:
             try:
@@ -74,8 +77,8 @@ class AuroraAbbDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
         self._log_availability_change()
         if self.available and result is not None:
-            return asdict(result)
-        return {}
+            return result
+        return None
 
     def _log_availability_change(self) -> None:
         """Log a warning when availability changes."""
@@ -85,6 +88,6 @@ class AuroraAbbDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             else:
                 _LOGGER.warning("Communication with %s lost", self.name)
 
-    async def _async_update_data(self) -> dict[str, Any]:
+    async def _async_update_data(self) -> AuroraInverterData | None:
         """Update inverter data in the executor."""
         return await self.hass.async_add_executor_job(self._update_data)

@@ -224,4 +224,6 @@ class AuroraSensor(CoordinatorEntity[AuroraAbbDataUpdateCoordinator], SensorEnti
     @property
     def native_value(self) -> StateType:
         """Get the value of the sensor from previously collected data."""
-        return self.coordinator.data.get(self.entity_description.key)
+        if self.coordinator.data is None:
+            return None
+        return getattr(self.coordinator.data, self.entity_description.key)
