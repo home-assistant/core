@@ -260,8 +260,6 @@ class WattwaechterObisSensor(WattwaechterEntity, SensorEntity):
     @property
     def native_value(self) -> float | str | None:
         """Return the current sensor value."""
-        if self.coordinator.data is None:
-            return None
         obis = self.coordinator.data.values.get(self._obis_code)
         if obis is None:
             return None

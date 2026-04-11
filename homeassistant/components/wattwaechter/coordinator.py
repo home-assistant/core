@@ -35,7 +35,7 @@ _LOGGER = logging.getLogger(__name__)
 type WattwaechterConfigEntry = ConfigEntry[WattwaechterCoordinator]
 
 
-class WattwaechterCoordinator(DataUpdateCoordinator[MeterData | None]):
+class WattwaechterCoordinator(DataUpdateCoordinator[MeterData]):
     """Coordinator for WattWächter Plus data updates."""
 
     config_entry: WattwaechterConfigEntry
@@ -65,12 +65,16 @@ class WattwaechterCoordinator(DataUpdateCoordinator[MeterData | None]):
             update_interval=timedelta(seconds=DEFAULT_SCAN_INTERVAL),
         )
 
-    async def _async_update_data(self) -> MeterData | None:
+    async def _async_update_data(self) -> MeterData:
         """Fetch data from the WattWächter device."""
         try:
             return await self.client.meter_data()
-        except WattwaechterNoDataError:
-            return None
+        except WattwaechterNoDataError as err:
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="no_meter_data",
+                translation_placeholders={"host": self.host},
+            ) from err
         except WattwaechterAuthenticationError as err:
             raise ConfigEntryAuthFailed(
                 translation_domain=DOMAIN,
