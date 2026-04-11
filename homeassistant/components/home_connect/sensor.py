@@ -707,7 +707,7 @@ class HomeConnectProgramDurationSensor(HomeConnectProgramSensor):
     def available(self) -> bool:
         """Return true if the sensor is available."""
         # We need to override the available property for the duration sensor,
-        # because it should only be available when a program is running, paused or finished,
+        # because it should only be available when a program is not running,
         # unlike the HomeConnectProgramSensor.
         return HomeConnectEntity.available.__get__(self) and not self.program_running
 
