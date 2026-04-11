@@ -231,7 +231,10 @@ class WattwaechterConfigFlow(ConfigFlow, domain=DOMAIN):
         client = Wattwaechter(self._host, token=token, session=session)
         try:
             settings = await client.settings()
-        except WattwaechterConnectionError, WattwaechterAuthenticationError:
+        except (
+            WattwaechterConnectionError,
+            WattwaechterAuthenticationError,
+        ):
             return None
         else:
             return settings.device_name
