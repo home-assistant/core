@@ -362,7 +362,7 @@ async def test_water_heater_away_mode_feature_flag(
     assert state is not None
     assert (
         bool(
-            state.attributes["supported_features"] & WaterHeaterEntityFeature.AWAY_MODE
+            state.attributes[ATTR_SUPPORTED_FEATURES] & WaterHeaterEntityFeature.AWAY_MODE
         )
         is has_away_mode
     )
