@@ -787,6 +787,16 @@ class AnthropicBaseLLMEntity(CoordinatorEntity[AnthropicCoordinator]):
                     CONF_TEMPERATURE, DEFAULT[CONF_TEMPERATURE]
                 )
 
+            if (
+                self.model_info.capabilities
+                and self.model_info.capabilities.effort.supported
+            ):
+                model_args["output_config"] = OutputConfigParam(
+                    effort=options.get(
+                        CONF_THINKING_EFFORT, DEFAULT[CONF_THINKING_EFFORT]
+                    )
+                )
+
         tools: list[ToolUnionParam] = []
         if chat_log.llm_api:
             tools = [
