@@ -9,22 +9,18 @@ from typing import Any
 from subarulink import Controller as SubaruAPI
 
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import DOMAIN, get_device_info
+from . import get_device_info
 from .const import (
-    ENTRY_CONTROLLER,
-    ENTRY_COORDINATOR,
-    ENTRY_VEHICLES,
     SERVICE_REMOTE_START,
     SERVICE_REMOTE_STOP,
     VEHICLE_HAS_EV,
     VEHICLE_HAS_REMOTE_START,
     VEHICLE_VIN,
 )
-from .coordinator import SubaruDataUpdateCoordinator
+from .coordinator import SubaruConfigEntry, SubaruDataUpdateCoordinator
 from .remote_service import async_call_remote_service
 
 
@@ -50,14 +46,13 @@ REMOTE_BUTTONS = [
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: SubaruConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Subaru remote service buttons by config_entry."""
-    entry = hass.data[DOMAIN][config_entry.entry_id]
-    coordinator = entry[ENTRY_COORDINATOR]
-    controller = entry[ENTRY_CONTROLLER]
-    vehicle_info = entry[ENTRY_VEHICLES]
+    coordinator = config_entry.runtime_data.coordinator
+    controller = config_entry.runtime_data.controller
+    vehicle_info = config_entry.runtime_data.vehicles
     async_add_entities(
         SubaruButton(vehicle, controller, coordinator, description)
         for vehicle in vehicle_info.values()
