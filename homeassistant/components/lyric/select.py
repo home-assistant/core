@@ -82,7 +82,7 @@ class LyricRoomPrioritySelect(LyricDeviceEntity, SelectEntity):
     @property
     def current_option(self) -> str | None:
         """Return the currently selected room priority."""
-        priority = self.coordinator.data.priorities_dict.get(self._mac_id)
+        priority = self.coordinator.priorities_dict.get(self._mac_id)
         if priority is None:
             return None
 

@@ -16,6 +16,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
+from aiolyric.objects.priority import LyricPriority
+
 from .api import OAuth2SessionLyric
 
 _LOGGER = logging.getLogger(__name__)
@@ -45,6 +47,20 @@ class LyricDataUpdateCoordinator(DataUpdateCoordinator[Lyric]):
         )
         self.oauth_session = oauth_session
         self.lyric = lyric
+        self.priorities_dict: dict[str, LyricPriority] = {}
+
+    async def _fetch_priorities(
+        self, lcc_devices: list[tuple]
+    ) -> None:
+        """Fetch priority data for LCC devices."""
+        from aiolyric.const import BASE_URL
+
+        for location, device in lcc_devices:
+            url = f"{BASE_URL}/devices/thermostats/{device.device_id}/priority?apikey={self.lyric.client_id}&locationId={location.location_id}"
+            response = await self.lyric._client.get(url)
+            json_data = await response.json()
+            priority = LyricPriority(json_data)
+            self.priorities_dict[priority.device_id] = priority
 
     async def _async_update_data(self) -> Lyric:
         """Fetch data from Lyric."""
@@ -65,17 +81,27 @@ class LyricDataUpdateCoordinator(DataUpdateCoordinator[Lyric]):
         try:
             async with asyncio.timeout(60):
                 await self.lyric.get_locations()
+                lcc_devices = [
+                    (location, device)
+                    for location in self.lyric.locations
+                    for device in location.devices
+                    if device.device_class == "Thermostat"
+                    and device.device_id.startswith("LCC")
+                ]
                 await asyncio.gather(
                     *(
                         self.lyric.get_thermostat_rooms(
                             location.location_id, device.device_id
                         )
-                        for location in self.lyric.locations
-                        for device in location.devices
-                        if device.device_class == "Thermostat"
-                        and device.device_id.startswith("LCC")
+                        for location, device in lcc_devices
                     )
                 )
+                # Store priority data from the library if available,
+                # otherwise fetch it directly
+                if hasattr(self.lyric, "priorities_dict"):
+                    self.priorities_dict = self.lyric.priorities_dict
+                else:
+                    await self._fetch_priorities(lcc_devices)
 
         except LyricAuthenticationException as exception:
             # Attempt to refresh the token before failing.
