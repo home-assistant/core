@@ -124,3 +124,50 @@ async def test_screensaver_binary_sensor_updates_via_media_player_polling(
 
         assert state is not None
         assert state.state == "on"
+
+
+async def test_screensaver_binary_sensor_skips_extra_ws_refresh(
+    hass: HomeAssistant,
+) -> None:
+    """Test websocket setups do not re-query a known screensaver state."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_NAME: "name",
+            CONF_HOST: "1.1.1.1",
+            CONF_PORT: 8080,
+            CONF_WS_PORT: 9090,
+            CONF_USERNAME: "user",
+            CONF_PASSWORD: "pass",
+            CONF_SSL: False,
+        },
+        title="name",
+    )
+    entry.add_to_hass(hass)
+    connection = MockWSConnection()
+
+    with (
+        patch("homeassistant.components.kodi.Kodi.ping", return_value=True),
+        patch(
+            "homeassistant.components.kodi.Kodi.call_method",
+            return_value={"System.ScreenSaverActive": False},
+        ) as call_method,
+        patch("homeassistant.components.kodi.Kodi.get_players", return_value=[]),
+        patch(
+            "homeassistant.components.kodi.Kodi.get_application_properties",
+            return_value={"version": {"major": 1, "minor": 1}},
+        ),
+        patch(
+            "homeassistant.components.kodi.get_kodi_connection",
+            return_value=connection,
+        ),
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+        assert call_method.call_count == 1
+
+        await async_update_entity(hass, "media_player.name")
+        await hass.async_block_till_done()
+
+        assert call_method.call_count == 1

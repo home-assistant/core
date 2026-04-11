@@ -11,6 +11,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import KodiConfigEntry
 from .const import DOMAIN
+from .screensaver import KodiScreensaver
 
 
 async def async_setup_entry(
@@ -44,7 +45,7 @@ class KodiScreensaverBinarySensor(BinarySensorEntity):
     _attr_should_poll = False
     _attr_translation_key = "screensaver"
 
-    def __init__(self, screensaver, name: str, uid: str) -> None:
+    def __init__(self, screensaver: KodiScreensaver, name: str, uid: str) -> None:
         """Initialize the binary sensor."""
         self._screensaver = screensaver
         self._attr_unique_id = f"{uid}_screensaver"

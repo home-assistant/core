@@ -59,6 +59,9 @@ class KodiScreensaver:
             self._set_state(None)
             return
 
+        if self._connection.can_subscribe and self.is_on is not None:
+            return
+
         try:
             display_status = await self._kodi.call_method(
                 "XBMC.GetInfoBooleans",

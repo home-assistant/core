@@ -152,9 +152,9 @@ class KodiEntity(MediaPlayerEntity):
         self._attr_unique_id = uid
         self._device_id = None
         self._players = None
-        self._properties = {}
-        self._item = {}
-        self._app_properties = {}
+        self._properties: dict[str, Any] = {}
+        self._item: dict[str, Any] = {}
+        self._app_properties: dict[str, Any] = {}
         self._media_position_updated_at = None
         self._media_position = None
         self._connect_error = False
