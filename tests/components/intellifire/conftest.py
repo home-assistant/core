@@ -257,6 +257,8 @@ def mock_fp(mock_common_data_local) -> Generator[AsyncMock]:
         mock_instance.set_read_mode = AsyncMock()
         mock_instance.set_control_mode = AsyncMock()
 
+        mock_instance.perform_poll = AsyncMock()
+
         mock_instance.async_validate_connectivity = AsyncMock(
             return_value=(True, False)
         )

@@ -235,6 +235,15 @@
     "data_api_reauth_required": {
       "message": "Reconnect Tibber so Home Assistant can enable the new Tibber Data API features."
     },
+    "get_prices_communication_failed": {
+      "message": "Could not fetch energy prices from Tibber ({detail})"
+    },
+    "get_prices_invalid_login": {
+      "message": "Could not authenticate with Tibber while fetching prices"
+    },
+    "get_prices_timeout": {
+      "message": "Timeout fetching energy prices from Tibber"
+    },
     "invalid_date": {
       "message": "Invalid datetime provided {date}"
     },

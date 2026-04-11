@@ -521,6 +521,58 @@ async def test_brightness_only(
                 light.DOMAIN: {
                     "schema": "json",
                     "name": "test",
+                    "state_topic": "test_light",
+                    "command_topic": "test_light/set",
+                    "supported_color_modes": ["brightness"],
+                }
+            }
+        },
+        {
+            mqtt.DOMAIN: {
+                light.DOMAIN: {
+                    "schema": "json",
+                    "name": "test",
+                    "state_topic": "test_light",
+                    "command_topic": "test_light/set",
+                    "supported_color_modes": ["color_temp"],
+                }
+            }
+        },
+    ],
+)
+async def test_single_color_mode_turn_on(
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
+) -> None:
+    """Test turning on a single color mode light does not raise.
+
+    Regression test: PR #162715 changed _attr_color_mode default to None
+    and added a strict check. The JSON schema must initialize color_mode
+    during setup so that turn_on does not raise "does not report a color mode".
+    """
+    mqtt_mock = await mqtt_mock_entry()
+
+    state = hass.states.get("light.test")
+    assert state.state == STATE_UNKNOWN
+
+    # This should not raise "does not report a color mode"
+    await common.async_turn_on(hass, "light.test")
+    mqtt_mock.async_publish.assert_called_once_with(
+        "test_light/set", '{"state":"ON"}', 0, False
+    )
+
+    async_fire_mqtt_message(hass, "test_light", '{"state":"ON", "brightness": 50}')
+    state = hass.states.get("light.test")
+    assert state.state == STATE_ON
+
+
+@pytest.mark.parametrize(
+    "hass_config",
+    [
+        {
+            mqtt.DOMAIN: {
+                light.DOMAIN: {
+                    "schema": "json",
+                    "name": "test",
                     "state_topic": "test_light_rgb",
                     "command_topic": "test_light_rgb/set",
                     "supported_color_modes": ["color_temp"],

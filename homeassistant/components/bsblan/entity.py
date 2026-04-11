@@ -2,6 +2,9 @@
 
 from __future__ import annotations
 
+from yarl import URL
+
+from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.helpers.device_registry import (
     CONNECTION_NETWORK_MAC,
     DeviceInfo,
@@ -10,7 +13,7 @@ from homeassistant.helpers.device_registry import (
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import BSBLanData
-from .const import DOMAIN
+from .const import DEFAULT_PORT, DOMAIN
 from .coordinator import BSBLanCoordinator, BSBLanFastCoordinator, BSBLanSlowCoordinator
 
 
@@ -22,7 +25,8 @@ class BSBLanEntityBase[_T: BSBLanCoordinator](CoordinatorEntity[_T]):
     def __init__(self, coordinator: _T, data: BSBLanData) -> None:
         """Initialize BSBLan entity with device info."""
         super().__init__(coordinator)
-        host = coordinator.config_entry.data["host"]
+        host = coordinator.config_entry.data[CONF_HOST]
+        port = coordinator.config_entry.data.get(CONF_PORT, DEFAULT_PORT)
         mac = data.device.MAC
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, mac)},
@@ -44,7 +48,7 @@ class BSBLanEntityBase[_T: BSBLanCoordinator](CoordinatorEntity[_T]):
                 else None
             ),
             sw_version=data.device.version,
-            configuration_url=f"http://{host}",
+            configuration_url=str(URL.build(scheme="http", host=host, port=port)),
         )
 
 

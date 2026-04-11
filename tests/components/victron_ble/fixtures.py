@@ -187,6 +187,20 @@ VICTRON_VEBUS_BAD_KEY_SERVICE_INFO = BluetoothServiceInfo(
     source="local",
 )
 
+# Same DC/DC converter but with OffReason=0x81 (NO_INPUT_POWER|ENGINE_SHUTDOWN),
+# a real bitmask combination that the current OffReason enum doesn't handle.
+# The key check byte is valid so validate_advertisement_key passes, but
+# parsing raises ValueError → sparse update (signal strength only).
+VICTRON_DC_DC_CONVERTER_UNKNOWN_OFF_REASON_SERVICE_INFO = BluetoothServiceInfo(
+    name="DC/DC Converter",
+    address="01:02:03:04:05:08",
+    rssi=-60,
+    manufacturer_data={0x02E1: bytes.fromhex("1000c0a304121d64ca8d442b90bbde6a8cba")},
+    service_data={},
+    service_uuids=[],
+    source="local",
+)
+
 VICTRON_VEBUS_SENSORS = {
     "inverter_charger_device_state": "float",
     "inverter_charger_battery_voltage": "14.45",

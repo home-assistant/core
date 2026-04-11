@@ -25,8 +25,14 @@ AUDIT_PERMISSIONS = {
 }
 
 POWER_PERMISSIONS = {
-    "/": {"VM.PowerMgmt": 1},
-    "/nodes": {"VM.PowerMgmt": 1},
+    "/": {
+        "Sys.PowerMgmt": 1,
+        "VM.PowerMgmt": 1,
+    },
+    "/nodes": {
+        "Sys.PowerMgmt": 1,
+        "VM.PowerMgmt": 1,
+    },
     "/vms": {"VM.PowerMgmt": 1},
     "/vms/101": {"VM.PowerMgmt": 0},
 }
