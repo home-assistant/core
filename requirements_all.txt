@@ -251,7 +251,7 @@ aioelectricitymaps==1.1.1
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==44.13.1
+aioesphomeapi==44.13.2
 
 # homeassistant.components.matrix
 # homeassistant.components.slack
@@ -279,7 +279,7 @@ aioharmony==0.5.3
 aiohasupervisor==0.4.3
 
 # homeassistant.components.home_connect
-aiohomeconnect==0.34.0
+aiohomeconnect==0.36.0
 
 # homeassistant.components.homekit_controller
 aiohomekit==3.2.20
@@ -644,7 +644,7 @@ beautifulsoup4==4.13.3
 bizkaibus==0.1.1
 
 # homeassistant.components.esphome
-bleak-esphome==3.7.1
+bleak-esphome==3.7.3
 
 # homeassistant.components.bluetooth
 bleak-retry-connector==4.6.0
@@ -1732,7 +1732,7 @@ openwrt-luci-rpc==1.1.17
 openwrt-ubus-rpc==0.0.2
 
 # homeassistant.components.opower
-opower==0.18.0
+opower==0.18.1
 
 # homeassistant.components.oralb
 oralb-ble==1.1.0
@@ -3184,7 +3184,7 @@ uiprotect==10.2.3
 ultraheat-api==0.5.7
 
 # homeassistant.components.unifiprotect
-unifi-discovery==1.3.0
+unifi-discovery==1.4.0
 
 # homeassistant.components.unifi_direct
 unifi_ap==0.0.2
