@@ -682,6 +682,22 @@ async def test_media_player_select_sound_mode_action(
     )
 
 
+async def test_passive_sound_mode_ignored(
+    hass: HomeAssistant,
+    music_assistant_client: MagicMock,
+) -> None:
+    """Verify, that a passive sound mode is ignored."""
+    await setup_integration_from_fixtures(hass, music_assistant_client)
+    entity_id = "media_player.test_player_1"
+    passive_sound_mode_translation_key = "passive_sound_mode_translation"
+    active_sound_mode_translation_key = "munich_translation"
+    state = hass.states.get(entity_id)
+    assert state
+    sound_modes = state.attributes["sound_mode_list"]
+    assert active_sound_mode_translation_key in sound_modes
+    assert passive_sound_mode_translation_key not in sound_modes
+
+
 async def test_media_player_supported_features(
     hass: HomeAssistant,
     music_assistant_client: MagicMock,

@@ -208,6 +208,12 @@
           "name": "Stuttgart",
           "passive": false,
           "translation_key": "stuttgart_translation"
+        },
+        {
+          "id": "passive_sound_mode_id",
+          "name": "Passive",
+          "passive": true,
+          "translation_key": "passive_sound_mode_translation"
         }
       ]
     },
