@@ -45,9 +45,6 @@ async def async_get_systems(
     except AqualinkServiceException, TimeoutError, httpx.HTTPError:
         return None, "cannot_connect"
 
-    if not systems:
-        return None, "no_systems"
-
     return systems, None
 
 
@@ -196,7 +193,11 @@ class AqualinkOptionsFlowHandler(OptionsFlowWithReload):
             return self.async_create_entry(title="", data=user_input)
 
         # Fetch systems from API
-        systems, error_reason = await async_get_systems(self.hass, self.config_entry.data[CONF_USERNAME], self.config_entry.data[CONF_PASSWORD])
+        systems, error_reason = await async_get_systems(
+            self.hass,
+            self.config_entry.data[CONF_USERNAME],
+            self.config_entry.data[CONF_PASSWORD],
+        )
 
         if systems is None:
             assert error_reason is not None

@@ -149,7 +149,7 @@ async def test_with_existing_config(
 async def test_with_no_systems(
     hass: HomeAssistant, config_data: dict[str, str]
 ) -> None:
-    """Test config flow when the account returns no systems."""
+    """Test config flow shows the systems step when the account returns no systems."""
     flow = config_flow.AqualinkFlowHandler()
     flow.hass = hass
 
@@ -166,8 +166,14 @@ async def test_with_no_systems(
         result = await flow.async_step_user(config_data)
 
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "user"
-    assert result["errors"] == {"base": "no_systems"}
+    assert result["step_id"] == "systems"
+
+    result = await flow.async_step_systems({CONF_SYSTEMS: []})
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == config_data[CONF_USERNAME]
+    assert result["data"] == config_data
+    assert result["options"] == {CONF_SYSTEMS: []}
 
 
 async def test_timeout_during_system_fetch(
@@ -220,6 +226,31 @@ async def test_async_get_systems_success(
         )
 
     assert systems == {"SN001": mock_system}
+    assert error_reason is None
+
+
+async def test_async_get_systems_no_systems(
+    hass: HomeAssistant,
+    config_data: dict[str, str],
+) -> None:
+    """Test async_get_systems treats no systems as a valid result."""
+    with (
+        patch(
+            "homeassistant.components.iaqualink.utils.AqualinkClient.login",
+            return_value=None,
+        ),
+        patch(
+            "homeassistant.components.iaqualink.utils.AqualinkClient.get_systems",
+            return_value={},
+        ),
+    ):
+        systems, error_reason = await config_flow.async_get_systems(
+            hass,
+            config_data[CONF_USERNAME],
+            config_data[CONF_PASSWORD],
+        )
+
+    assert systems == {}
     assert error_reason is None
 
 
@@ -431,7 +462,6 @@ async def test_options_flow_submit_systems_direct_init_call(
     [
         (AqualinkServiceUnauthorizedException, "invalid_auth"),
         (AqualinkServiceException, "cannot_connect"),
-        ({}, "no_systems"),
     ],
 )
 async def test_options_flow_init_abort_reasons(
@@ -466,3 +496,27 @@ async def test_options_flow_init_abort_reasons(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "init"
     assert result["errors"] == {"base": reason}
+
+
+async def test_options_flow_init_no_systems(
+    hass: HomeAssistant, config_data: dict[str, str]
+) -> None:
+    """Test options flow shows an empty systems form when no systems are detected."""
+    entry = MockConfigEntry(domain=DOMAIN, data=config_data)
+    entry.add_to_hass(hass)
+
+    with (
+        patch(
+            "homeassistant.components.iaqualink.utils.AqualinkClient.login",
+            return_value=None,
+        ),
+        patch(
+            "homeassistant.components.iaqualink.utils.AqualinkClient.get_systems",
+            return_value={},
+        ),
+    ):
+        result = await hass.config_entries.options.async_init(entry.entry_id)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "init"
+    assert result.get("errors") in (None, {})
