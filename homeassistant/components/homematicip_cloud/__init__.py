@@ -2,12 +2,18 @@
 
 from __future__ import annotations
 
+import logging
+
 import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_NAME, EVENT_HOMEASSISTANT_STOP
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv, device_registry as dr
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import (
+    config_validation as cv,
+    device_registry as dr,
+    entity_registry as er,
+)
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
@@ -19,8 +25,10 @@ from .const import (
     HMIPC_NAME,
 )
 from .hap import HomematicIPConfigEntry, HomematicipHAP
-from .migration import async_migrate_entry  # noqa: F401
+from .migration import _SORTED_CLASS_NAMES, _migrate_unique_id
 from .services import async_setup_services
+
+_LOGGER = logging.getLogger(__name__)
 
 CONFIG_SCHEMA = vol.Schema(
     {
@@ -114,3 +122,76 @@ async def async_unload_entry(
     hap.reset_connection_listener()
 
     return await hap.async_reset()
+
+
+async def async_migrate_entry(
+    hass: HomeAssistant, config_entry: config_entries.ConfigEntry
+) -> bool:
+    """Migrate the config entry from version 1 to version 2."""
+    if config_entry.version > 2:
+        return False
+
+    if config_entry.version == 1:
+        _LOGGER.debug("Migrating HomematicIP Cloud config entry to version 2")
+
+        # Remove obsolete entities before the bulk unique_id rewrite.
+        # After rewrite, old-format patterns would no longer be matchable.
+        # HomematicipAccesspointStatus* entities are always obsolete (removed
+        # in firmware 2.2.12+). HomematicipBatterySensor_{hapid} entities for
+        # access points are also obsolete. Those legacy access point battery
+        # entities do not belong to a device registry device, unlike real
+        # device battery sensors, so we can safely remove them before rewrite.
+        entity_registry = er.async_get(hass)
+        entries = er.async_entries_for_config_entry(
+            entity_registry, config_entry.entry_id
+        )
+        for entry in entries:
+            if entry.unique_id.startswith("HomematicipAccesspointStatus") or (
+                entry.unique_id.startswith("HomematicipBatterySensor_")
+                and entry.device_id is None
+            ):
+                _LOGGER.debug(
+                    "Removing obsolete entity: %s (%s)",
+                    entry.entity_id,
+                    entry.unique_id,
+                )
+                entity_registry.async_remove(entry.entity_id)
+
+        @callback
+        def _update_unique_id(
+            entity_entry: er.RegistryEntry,
+        ) -> dict[str, str] | None:
+            new_unique_id = _migrate_unique_id(entity_entry.unique_id)
+            if new_unique_id is None:
+                # Some entities (e.g. HmipSmokeDetectorSensor) already use
+                # stable non-class-name unique_ids and don't need migration.
+                # Only warn if the ID looks like an old class-name format.
+                if any(
+                    entity_entry.unique_id.startswith(cls + "_")
+                    for cls in _SORTED_CLASS_NAMES
+                ):
+                    _LOGGER.warning(
+                        "Could not migrate unique_id for %s: %s",
+                        entity_entry.entity_id,
+                        entity_entry.unique_id,
+                    )
+                else:
+                    _LOGGER.debug(
+                        "Skipping unique_id %s (already stable format)",
+                        entity_entry.unique_id,
+                    )
+                return None
+            _LOGGER.debug(
+                "Migrating %s: %s -> %s",
+                entity_entry.entity_id,
+                entity_entry.unique_id,
+                new_unique_id,
+            )
+            return {"new_unique_id": new_unique_id}
+
+        await er.async_migrate_entries(hass, config_entry.entry_id, _update_unique_id)
+
+        hass.config_entries.async_update_entry(config_entry, version=2)
+        _LOGGER.info("Migration to version 2 successful")
+
+    return True

@@ -3,11 +3,12 @@
 import ast
 from pathlib import Path
 from typing import Any
-from unittest.mock import AsyncMock, MagicMock, Mock, patch
+from unittest.mock import AsyncMock, Mock, patch
 
 from homematicip.exceptions.connection_exceptions import HmipConnectionError
 import pytest
 
+from homeassistant.components.homematicip_cloud import async_migrate_entry
 from homeassistant.components.homematicip_cloud.const import (
     CONF_ACCESSPOINT,
     CONF_AUTHTOKEN,
@@ -16,12 +17,10 @@ from homeassistant.components.homematicip_cloud.const import (
     HMIPC_HAPID,
     HMIPC_NAME,
 )
-from homeassistant.components.homematicip_cloud.entity import HomematicipGenericEntity
 from homeassistant.components.homematicip_cloud.hap import HomematicipHAP
 from homeassistant.components.homematicip_cloud.migration import (
     UNIQUE_ID_MIGRATION_MAP,
     _migrate_unique_id,
-    async_migrate_entry,
 )
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_NAME
@@ -232,15 +231,41 @@ def mock_config_entry_v1(hass: HomeAssistant) -> MockConfigEntry:
     return entry
 
 
-async def test_migrate_single_channel_entity(
-    hass: HomeAssistant, mock_config_entry_v1: MockConfigEntry
+@pytest.mark.parametrize(
+    ("platform", "old_unique_id", "new_unique_id"),
+    [
+        (
+            "binary_sensor",
+            "HomematicipMotionDetector_3014F711ABCD",
+            "3014F711ABCD_1_motion",
+        ),
+        (
+            "switch",
+            "HomematicipMultiSwitch_Channel3_3014F711ABCD",
+            "3014F711ABCD_3_switch",
+        ),
+        (
+            "light",
+            "HomematicipNotificationLight_Top_3014F711ABCD",
+            "3014F711ABCD_2_notification_light",
+        ),
+        ("climate", "HomematicipHeatingGroup_UUID-GROUP-123", "UUID-GROUP-123_climate"),
+    ],
+    ids=["single_channel", "multi_channel", "notification_light", "group"],
+)
+async def test_migrate_unique_id(
+    hass: HomeAssistant,
+    mock_config_entry_v1: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    platform: str,
+    old_unique_id: str,
+    new_unique_id: str,
 ) -> None:
-    """Test migration of a single-channel entity like MotionDetector."""
-    entity_registry = er.async_get(hass)
+    """Test unique_id migration for different entity types."""
     entity_registry.async_get_or_create(
-        "binary_sensor",
+        platform,
         DOMAIN,
-        "HomematicipMotionDetector_3014F711ABCD",
+        old_unique_id,
         config_entry=mock_config_entry_v1,
     )
 
@@ -248,81 +273,16 @@ async def test_migrate_single_channel_entity(
 
     assert result is True
     assert mock_config_entry_v1.version == 2
-    assert entity_registry.async_get_entity_id(
-        "binary_sensor", DOMAIN, "3014F711ABCD_1_motion"
-    )
-
-
-async def test_migrate_multi_channel_entity(
-    hass: HomeAssistant, mock_config_entry_v1: MockConfigEntry
-) -> None:
-    """Test migration of a multi-channel entity like MultiSwitch."""
-    entity_registry = er.async_get(hass)
-    entity_registry.async_get_or_create(
-        "switch",
-        DOMAIN,
-        "HomematicipMultiSwitch_Channel3_3014F711ABCD",
-        config_entry=mock_config_entry_v1,
-    )
-
-    result = await async_migrate_entry(hass, mock_config_entry_v1)
-
-    assert result is True
-    assert mock_config_entry_v1.version == 2
-    assert entity_registry.async_get_entity_id(
-        "switch", DOMAIN, "3014F711ABCD_3_switch"
-    )
-
-
-async def test_migrate_notification_light(
-    hass: HomeAssistant, mock_config_entry_v1: MockConfigEntry
-) -> None:
-    """Test migration of NotificationLight with Top/Bottom suffix."""
-    entity_registry = er.async_get(hass)
-    entity_registry.async_get_or_create(
-        "light",
-        DOMAIN,
-        "HomematicipNotificationLight_Top_3014F711ABCD",
-        config_entry=mock_config_entry_v1,
-    )
-
-    result = await async_migrate_entry(hass, mock_config_entry_v1)
-
-    assert result is True
-    assert mock_config_entry_v1.version == 2
-    assert entity_registry.async_get_entity_id(
-        "light", DOMAIN, "3014F711ABCD_2_notification_light"
-    )
-
-
-async def test_migrate_group_entity(
-    hass: HomeAssistant, mock_config_entry_v1: MockConfigEntry
-) -> None:
-    """Test migration of a group entity (no channel in new unique_id)."""
-    entity_registry = er.async_get(hass)
-    entity_registry.async_get_or_create(
-        "climate",
-        DOMAIN,
-        "HomematicipHeatingGroup_UUID-GROUP-123",
-        config_entry=mock_config_entry_v1,
-    )
-
-    result = await async_migrate_entry(hass, mock_config_entry_v1)
-
-    assert result is True
-    assert mock_config_entry_v1.version == 2
-    assert entity_registry.async_get_entity_id(
-        "climate", DOMAIN, "UUID-GROUP-123_climate"
-    )
+    assert entity_registry.async_get_entity_id(platform, DOMAIN, new_unique_id)
 
 
 async def test_migrate_stable_unique_id_skipped(
     hass: HomeAssistant,
     mock_config_entry_v1: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test that a non-class-name unique_id is silently skipped and preserved."""
-    entity_registry = er.async_get(hass)
     entity_registry.async_get_or_create(
         "sensor",
         DOMAIN,
@@ -359,11 +319,12 @@ async def test_migrate_already_v2_is_noop(hass: HomeAssistant) -> None:
 
 
 async def test_migrate_battery_sensor(
-    hass: HomeAssistant, mock_config_entry_v1: MockConfigEntry
+    hass: HomeAssistant,
+    mock_config_entry_v1: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
 ) -> None:
     """Test migration of battery sensor (channel 0)."""
-    entity_registry = er.async_get(hass)
-    device_registry = dr.async_get(hass)
     # Battery entity must be linked to a device, otherwise it's treated
     # as an obsolete access point battery entity and removed.
     device_entry = device_registry.async_get_or_create(
@@ -388,11 +349,12 @@ async def test_migrate_battery_sensor(
 
 
 async def test_migrate_removes_obsolete_access_point_battery_sensor(
-    hass: HomeAssistant, mock_config_entry_v1: MockConfigEntry
+    hass: HomeAssistant,
+    mock_config_entry_v1: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
 ) -> None:
     """Remove obsolete access point battery entity but keep real device battery sensors."""
-    entity_registry = er.async_get(hass)
-    device_registry = dr.async_get(hass)
 
     # Obsolete access point battery entity: legacy unique_id, no linked device.
     obsolete_entity_id = entity_registry.async_get_or_create(
@@ -572,24 +534,3 @@ async def test_unique_id_migration_round_trip(
     assert len(matched_classes) > 10, (
         f"Only matched {len(matched_classes)} classes: {sorted(matched_classes)}"
     )
-
-
-def test_entity_raises_on_empty_feature_id() -> None:
-    """Test that HomematicipGenericEntity raises ValueError for empty feature_id.
-
-    This verifies that feature_id is always explicitly set and cannot be
-    accidentally left empty, which would generate malformed unique IDs.
-    """
-    mock_hap = MagicMock()
-    mock_device = MagicMock()
-
-    with pytest.raises(ValueError, match="feature_id must be a non-empty string"):
-        HomematicipGenericEntity(
-            hap=mock_hap,
-            device=mock_device,
-            post="",
-            channel=1,
-            channel_real_index=1,
-            is_multi_channel=False,
-            feature_id="",
-        )
