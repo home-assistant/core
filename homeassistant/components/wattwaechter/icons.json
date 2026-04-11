@@ -18,12 +18,6 @@
       },
       "import_total": {
         "default": "mdi:meter-electric"
-      },
-      "wifi_signal": {
-        "default": "mdi:wifi"
-      },
-      "wifi_ssid": {
-        "default": "mdi:wifi-settings"
       }
     }
   }
