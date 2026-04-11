@@ -4,8 +4,11 @@ from __future__ import annotations
 
 import asyncio
 from dataclasses import dataclass
+import importlib.resources
+import json
 import logging
 import os
+from pathlib import Path
 import shutil
 
 from velbusaio.controller import Velbus
@@ -15,7 +18,11 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PORT, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady, PlatformNotReady
-from homeassistant.helpers import config_validation as cv, device_registry as dr
+from homeassistant.helpers import (
+    config_validation as cv,
+    device_registry as dr,
+    entity_registry as er,
+)
 from homeassistant.helpers.storage import STORAGE_DIR
 from homeassistant.helpers.typing import ConfigType
 
@@ -89,6 +96,61 @@ def _migrate_device_identifiers(hass: HomeAssistant, entry_id: str) -> None:
             dev_reg.async_update_device(device.id, new_identifiers=new_identifier)
 
 
+def _build_property_key_map() -> dict[str, str]:
+    """Build spec_key → class name mapping from velbusaio module_spec files."""
+    spec_path = Path(
+        str(importlib.resources.files("velbusaio").joinpath("module_spec"))
+    )
+    mapping: dict[str, str] = {}
+    for spec_file in spec_path.glob("*.json"):
+        data = json.loads(spec_file.read_text())
+        for key, prop_data in data.get("Properties", {}).items():
+            type_ = prop_data.get("Type")
+            if type_ and key not in mapping:
+                mapping[key] = type_
+    return mapping
+
+
+async def _migrate_property_unique_ids(hass: HomeAssistant, entry_id: str) -> None:
+    """Ensure property entity unique_ids use {serial}-{property_key} format."""
+    ent_reg = er.async_get(hass)
+    dev_reg = dr.async_get(hass)
+
+    property_key_map = await hass.async_add_executor_job(_build_property_key_map)
+    for entry in er.async_entries_for_config_entry(ent_reg, entry_id):
+        if not entry.original_name or not entry.device_id:
+            continue
+        property_key = property_key_map.get(entry.original_name)
+        if property_key is None:
+            continue
+        device = dev_reg.async_get(entry.device_id)
+        if device is None:
+            continue
+        serial = device.serial_number or next(iter(device.identifiers))[1]
+
+        expected_unique_id = f"{serial}-{property_key}"
+        if entry.unique_id != expected_unique_id:
+            if ent_reg.async_get_entity_id(entry.domain, DOMAIN, expected_unique_id):
+                # Target unique_id already exists (created by new code) — remove stale entry
+                _LOGGER.debug(
+                    "Removing stale entity %s with outdated unique_id %s",
+                    entry.entity_id,
+                    entry.unique_id,
+                )
+                ent_reg.async_remove(entry.entity_id)
+            else:
+                _LOGGER.debug(
+                    "Migrating unique_id %s → %s", entry.unique_id, expected_unique_id
+                )
+                ent_reg.async_update_entity(
+                    entry.entity_id, new_unique_id=expected_unique_id
+                )
+        else:
+            _LOGGER.debug(
+                "Unique_id is ok: %s = %s", entry.unique_id, expected_unique_id
+            )
+
+
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the actions for the Velbus component."""
     async_setup_services(hass)
@@ -110,10 +172,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: VelbusConfigEntry) -> bo
             translation_key="connection_failed",
         ) from error
 
+    _migrate_device_identifiers(hass, entry.entry_id)
+    # Migrate unique ids before the bus scan to preserve entity history
+    await _migrate_property_unique_ids(hass, entry.entry_id)
+
     task = hass.async_create_task(velbus_scan_task(controller, hass, entry.entry_id))
     entry.runtime_data = VelbusData(controller=controller, scan_task=task)
-
-    _migrate_device_identifiers(hass, entry.entry_id)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
