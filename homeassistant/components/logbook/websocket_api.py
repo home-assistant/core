@@ -20,6 +20,7 @@ from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.helpers.json import json_bytes
 from homeassistant.util import dt as dt_util
 from homeassistant.util.async_ import create_eager_task
+from homeassistant.util.event_type import EventType
 
 from .const import DOMAIN
 from .helpers import (
@@ -364,7 +365,12 @@ async def ws_event_stream(
     # Live subscription needs call_service events so the live consumer can
     # cache parent user_ids as they fire. Historical queries don't — the
     # context_only join fetches them by context_id regardless of type.
-    live_event_types = (*event_types, EVENT_CALL_SERVICE)
+    # Unfiltered streams already include it via BUILT_IN_EVENTS.
+    live_event_types: tuple[EventType[Any] | str, ...] = (
+        event_types
+        if EVENT_CALL_SERVICE in event_types
+        else (*event_types, EVENT_CALL_SERVICE)
+    )
     async_subscribe_events(
         hass,
         subscriptions,

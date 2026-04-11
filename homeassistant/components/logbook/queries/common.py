@@ -6,7 +6,7 @@ from collections.abc import Collection
 from typing import Final
 
 import sqlalchemy
-from sqlalchemy import lambda_stmt, select
+from sqlalchemy import lambda_stmt, select, union_all
 from sqlalchemy.sql.elements import BooleanClauseList, ColumnElement
 from sqlalchemy.sql.expression import literal
 from sqlalchemy.sql.lambdas import StatementLambdaElement
@@ -127,12 +127,19 @@ def select_events_context_id_subquery(
 def select_context_user_ids_for_context_ids(
     context_ids: Collection[bytes],
 ) -> StatementLambdaElement:
-    """Select (context_id_bin, context_user_id_bin) for the given context ids."""
+    """Select (context_id_bin, context_user_id_bin) for the given context ids.
+
+    Union of events and states since a parent context can originate from
+    either table (e.g., a state set directly via the API).
+    """
     return lambda_stmt(
-        lambda: (
+        lambda: union_all(
             select(Events.context_id_bin, Events.context_user_id_bin)
             .where(Events.context_id_bin.in_(context_ids))
-            .where(Events.context_user_id_bin.is_not(None))
+            .where(Events.context_user_id_bin.is_not(None)),
+            select(States.context_id_bin, States.context_user_id_bin)
+            .where(States.context_id_bin.in_(context_ids))
+            .where(States.context_user_id_bin.is_not(None)),
         )
     )
 
