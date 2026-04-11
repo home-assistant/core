@@ -21,6 +21,7 @@ from homeassistant.helpers.selector import (
     BooleanSelector,
     DurationSelector,
     DurationSelectorConfig,
+    LocationSelector,
     SelectSelector,
     SelectSelectorConfig,
     SelectSelectorMode,
@@ -33,6 +34,7 @@ from .const import (
     CONF_AVOID_FERRIES,
     CONF_AVOID_SUBSCRIPTION_ROADS,
     CONF_AVOID_TOLL_ROADS,
+    CONF_BASE_COORDINATES,
     CONF_DESTINATION,
     CONF_EXCL_FILTER,
     CONF_INCL_FILTER,
@@ -52,6 +54,7 @@ from .const import (
     VEHICLE_TYPES,
 )
 from .coordinator import WazeTravelTimeCoordinator, async_get_travel_times
+from .helpers import base_coordinates_to_tuple, default_base_coordinates_for_region
 
 PLATFORMS = [Platform.SENSOR]
 
@@ -103,6 +106,7 @@ SERVICE_GET_TRAVEL_TIMES_SCHEMA = vol.Schema(
         vol.Optional(CONF_TIME_DELTA): DurationSelector(
             DurationSelectorConfig(allow_negative=True, enable_second=False)
         ),
+        vol.Optional(CONF_BASE_COORDINATES): LocationSelector(),
     }
 )
 
@@ -137,6 +141,9 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
 
         origin = origin_coordinates or service.data[CONF_ORIGIN]
         destination = destination_coordinates or service.data[CONF_DESTINATION]
+        base_coordinates = base_coordinates_to_tuple(
+            service.data.get(CONF_BASE_COORDINATES)
+        )
 
         time_delta = int(
             timedelta(
@@ -158,6 +165,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
             incl_filters=service.data.get(CONF_INCL_FILTER, DEFAULT_FILTER),
             excl_filters=service.data.get(CONF_EXCL_FILTER, DEFAULT_FILTER),
             time_delta=time_delta,
+            base_coordinates=base_coordinates,
         )
         return {"routes": [vars(route) for route in response]}
 
@@ -211,6 +219,26 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
         options[CONF_TIME_DELTA] = DEFAULT_TIME_DELTA
         hass.config_entries.async_update_entry(
             config_entry, options=options, minor_version=2
+        )
+        _LOGGER.debug(
+            "Migration to version %s.%s successful",
+            config_entry.version,
+            config_entry.minor_version,
+        )
+
+    if config_entry.version == 2 and config_entry.minor_version == 2:
+        _LOGGER.debug(
+            "Migrating from version %s.%s",
+            config_entry.version,
+            config_entry.minor_version,
+        )
+        options = dict(config_entry.options)
+        options.setdefault(
+            CONF_BASE_COORDINATES,
+            default_base_coordinates_for_region(config_entry.data[CONF_REGION]),
+        )
+        hass.config_entries.async_update_entry(
+            config_entry, options=options, minor_version=3
         )
         _LOGGER.debug(
             "Migration to version %s.%s successful",
