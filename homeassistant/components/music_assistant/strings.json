@@ -55,7 +55,7 @@
       }
     },
     "media_player": {
-      "ma_media_player": {
+      "media_player": {
         "state_attributes": {
           "sound_mode": {
             "state": {
@@ -69,6 +69,7 @@
               "all_ch_stereo": "All ch stereo",
               "amsterdam": "Hall in Amsterdam",
               "arena": "Arena",
+              "bass_booster": "Bass booster",
               "bottom_line": "The Bottom Line",
               "cellar_club": "Cellar club",
               "chamber": "Chamber",
