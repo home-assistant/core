@@ -313,7 +313,7 @@ class WaterFurnaceEnergyCoordinator(DataUpdateCoordinator[None]):
         if task.cancelled():
             return
         if exc := task.exception():
-            _LOGGER.error("Backfill task failed: %s", exc)
+            _LOGGER.error("Backfill task failed", exc_info=exc)
 
     async def async_wait_backfill(self) -> None:
         """Wait for any in-progress backfill task to complete."""
