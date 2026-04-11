@@ -181,12 +181,17 @@ class WaterFurnaceEnergyCoordinator(DataUpdateCoordinator[None]):
                 raise UpdateFailed(
                     "Authentication failed during energy data fetch"
                 ) from err
-            data = self.client.get_energy_data(
-                start_date,
-                end_date,
-                frequency="1H",
-                timezone_str=self.hass.config.time_zone,
-            )
+            try:
+                data = self.client.get_energy_data(
+                    start_date,
+                    end_date,
+                    frequency="1H",
+                    timezone_str=self.hass.config.time_zone,
+                )
+            except WFCredentialError as err:
+                raise UpdateFailed(
+                    "Authentication failed during energy data fetch"
+                ) from err
         return [
             (reading.timestamp, reading.total_power)
             for reading in data
