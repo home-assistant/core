@@ -19,6 +19,7 @@ from homeassistant.components.sonos.switch import (
     ATTR_RECURRENCE,
     ATTR_SPEECH_ENHANCEMENT,
     ATTR_SPEECH_ENHANCEMENT_ENABLED,
+    ATTR_TV_AUTOPLAY,
     ATTR_VOLUME,
 )
 from homeassistant.components.ssdp import SsdpChange
@@ -339,6 +340,104 @@ async def test_alarm_change_device(
     alarm_14 = entity_registry.async_get(entity_id)
     device = device_registry.async_get(alarm_14.device_id)
     assert device.name == soco_br.get_speaker_info()["zone_name"]
+
+
+async def test_tv_autoplay_switch(
+    hass: HomeAssistant,
+    async_setup_sonos,
+    soco: MockSoCo,
+    speaker_info: dict[str, str],
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test TV autoplay switch creation, state and turn on/off for HT devices."""
+    entity_id = f"switch.zone_a_{ATTR_TV_AUTOPLAY}"
+
+    speaker_info["model_name"] = "Sonos Beam"
+    soco.get_speaker_info.return_value = speaker_info
+    soco.deviceProperties.GetAutoplayRoomUUID.return_value = {
+        "RoomUUID": soco.uid,
+        "Source": "TV",
+    }
+    await async_setup_sonos()
+
+    switch = entity_registry.entities.get(entity_id)
+    assert switch is not None
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == STATE_ON
+
+    # Turn off: should call SetAutoplayRoomUUID with empty RoomUUID
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        SERVICE_TURN_OFF,
+        {ATTR_ENTITY_ID: entity_id},
+        blocking=True,
+    )
+    soco.deviceProperties.SetAutoplayRoomUUID.assert_called_once_with(
+        [("RoomUUID", ""), ("Source", "TV")]
+    )
+    soco.deviceProperties.SetAutoplayRoomUUID.reset_mock()
+
+    # Turn on: should call SetAutoplayRoomUUID with speaker's own UID
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: entity_id},
+        blocking=True,
+    )
+    soco.deviceProperties.SetAutoplayRoomUUID.assert_called_once_with(
+        [("RoomUUID", soco.uid), ("Source", "TV")]
+    )
+
+
+async def test_tv_autoplay_poll_state(
+    hass: HomeAssistant,
+    async_setup_sonos,
+    soco: MockSoCo,
+    speaker_info: dict[str, str],
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test that TV autoplay switch polls state from device."""
+    entity_id = f"switch.zone_a_{ATTR_TV_AUTOPLAY}"
+
+    speaker_info["model_name"] = "Sonos Beam"
+    soco.get_speaker_info.return_value = speaker_info
+    soco.deviceProperties.GetAutoplayRoomUUID.return_value = {
+        "RoomUUID": "",
+        "Source": "TV",
+    }
+    await async_setup_sonos()
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == STATE_OFF
+
+    # Simulate poll returning enabled
+    soco.deviceProperties.GetAutoplayRoomUUID.return_value = {
+        "RoomUUID": soco.uid,
+        "Source": "TV",
+    }
+    switch_entry = entity_registry.entities[entity_id]
+    platform = hass.data["entity_components"]["switch"]
+    entity = platform.get_entity(switch_entry.entity_id)
+    assert entity is not None
+    await hass.async_add_executor_job(entity.poll_state)
+    entity.async_write_ha_state()
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state.state == STATE_ON
+
+
+async def test_tv_autoplay_not_created_for_non_ht(
+    hass: HomeAssistant,
+    async_autosetup_sonos,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test that TV autoplay switch is not created for non-HT devices."""
+    entity_id = f"switch.zone_a_{ATTR_TV_AUTOPLAY}"
+    assert entity_id not in entity_registry.entities
 
 
 async def test_alarm_setup_for_undiscovered_speaker(

@@ -309,6 +309,10 @@ class SoCoMockFactory:
         mock_soco.zoneGroupTopology = SonosMockService("ZoneGroupTopology", ip_address)
         mock_soco.contentDirectory = SonosMockService("ContentDirectory", ip_address)
         mock_soco.deviceProperties = SonosMockService("DeviceProperties", ip_address)
+        mock_soco.deviceProperties.GetAutoplayRoomUUID = Mock(
+            return_value={"RoomUUID": ""}
+        )
+        mock_soco.deviceProperties.SetAutoplayRoomUUID = Mock()
         mock_soco.zone_group_state = Mock()
         mock_soco.zone_group_state.processed_count = 10
         mock_soco.zone_group_state.total_requests = 12
