@@ -3,7 +3,6 @@
 from dataclasses import dataclass
 import logging
 
-from jsonrpc_base.jsonrpc import ProtocolError, TransportError
 from pykodi import CannotConnectError, InvalidAuthError, Kodi, get_kodi_connection
 from pykodi.kodi import KodiHTTPConnection, KodiWSConnection
 
@@ -23,6 +22,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.typing import ConfigType
 
 from .const import CONF_WS_PORT, DOMAIN
+from .screensaver import KodiScreensaver
 from .services import async_setup_services
 
 _LOGGER = logging.getLogger(__name__)
@@ -39,30 +39,7 @@ class KodiRuntimeData:
 
     connection: KodiHTTPConnection | KodiWSConnection
     kodi: Kodi
-    screensaver_active: bool | None = None
-
-    def set_screensaver_state(self, screensaver_active: bool | None) -> bool:
-        """Set the current screensaver state."""
-        changed = self.screensaver_active != screensaver_active
-        self.screensaver_active = screensaver_active
-        return changed
-
-    async def async_update_screensaver_state(self) -> bool:
-        """Refresh the Kodi screensaver state."""
-        if not self.connection.connected:
-            return self.set_screensaver_state(None)
-
-        try:
-            display_status = await self.kodi.call_method(
-                "XBMC.GetInfoBooleans",
-                booleans=["System.ScreenSaverActive"],
-            )
-        except (ProtocolError, TransportError):
-            return self.set_screensaver_state(None)
-
-        return self.set_screensaver_state(
-            display_status.get("System.ScreenSaverActive")
-        )
+    screensaver: KodiScreensaver
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -102,7 +79,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: KodiConfigEntry) -> bool
 
     entry.async_on_unload(hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _close))
 
-    entry.runtime_data = KodiRuntimeData(connection=conn, kodi=kodi)
+    entry.runtime_data = KodiRuntimeData(
+        connection=conn,
+        kodi=kodi,
+        screensaver=KodiScreensaver(entry.entry_id, conn, kodi),
+    )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 

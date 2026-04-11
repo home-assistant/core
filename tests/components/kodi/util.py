@@ -1,6 +1,7 @@
 """Test the Kodi config flow."""
 
 from ipaddress import ip_address
+from types import SimpleNamespace
 
 from homeassistant.components.kodi.const import DEFAULT_SSL
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
@@ -69,6 +70,7 @@ class MockConnection:
 
     async def connect(self):
         """Mock connect."""
+        self._connected = True
 
     @property
     def connected(self):
@@ -82,6 +84,7 @@ class MockConnection:
 
     async def close(self):
         """Mock close."""
+        self._connected = False
 
     @property
     def server(self):
@@ -95,9 +98,17 @@ class MockWSConnection:
     def __init__(self, connected=True) -> None:
         """Mock the websocket connection."""
         self._connected = connected
+        self._server = SimpleNamespace(
+            Application=SimpleNamespace(),
+            GUI=SimpleNamespace(),
+            Other=SimpleNamespace(),
+            Player=SimpleNamespace(),
+            System=SimpleNamespace(),
+        )
 
     async def connect(self):
         """Mock connect."""
+        self._connected = True
 
     @property
     def connected(self):
@@ -107,12 +118,13 @@ class MockWSConnection:
     @property
     def can_subscribe(self):
         """Mock can_subscribe."""
-        return False
+        return True
 
     async def close(self):
         """Mock close."""
+        self._connected = False
 
     @property
     def server(self):
         """Mock server."""
-        return None
+        return self._server

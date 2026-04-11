@@ -32,7 +32,6 @@ from homeassistant.const import (
 from homeassistant.core import CoreState, HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.network import is_internal_request
@@ -45,12 +44,7 @@ from .browse_media import (
     library_payload,
     media_source_content_filter,
 )
-from .const import (
-    DOMAIN,
-    EVENT_TURN_OFF,
-    EVENT_TURN_ON,
-    async_signal_screensaver_update,
-)
+from .const import DOMAIN, EVENT_TURN_OFF, EVENT_TURN_ON
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -96,7 +90,7 @@ async def async_setup_entry(
     if (uid := config_entry.unique_id) is None:
         uid = config_entry.entry_id
 
-    entity = KodiEntity(data, name, uid, config_entry.entry_id)
+    entity = KodiEntity(data, name, uid)
     async_add_entities([entity])
 
 
@@ -149,14 +143,12 @@ class KodiEntity(MediaPlayerEntity):
         | MediaPlayerEntityFeature.VOLUME_STEP
     )
 
-    def __init__(
-        self, runtime_data: KodiRuntimeData, name: str, uid: str, entry_id: str
-    ) -> None:
+    def __init__(self, runtime_data: KodiRuntimeData, name: str, uid: str) -> None:
         """Initialize the Kodi entity."""
         self._runtime_data = runtime_data
         self._connection = runtime_data.connection
         self._kodi = runtime_data.kodi
-        self._screensaver_signal = async_signal_screensaver_update(entry_id)
+        self._screensaver = runtime_data.screensaver
         self._attr_unique_id = uid
         self._device_id = None
         self._players = None
@@ -234,37 +226,16 @@ class KodiEntity(MediaPlayerEntity):
             },
         )
 
-    @callback
-    def _set_screensaver_state(self, is_on: bool | None) -> None:
-        """Update shared screensaver state."""
-        if self._runtime_data.set_screensaver_state(is_on):
-            async_dispatcher_send(self.hass, self._screensaver_signal)
-
-    @callback
-    def _clear_screensaver_state(self) -> None:
-        """Clear shared screensaver state."""
-        self._set_screensaver_state(None)
-
-    @callback
-    def async_on_screensaver_on(self, sender, data) -> None:
-        """Handle screensaver activation."""
-        self._set_screensaver_state(True)
-
-    @callback
-    def async_on_screensaver_off(self, sender, data) -> None:
-        """Handle screensaver deactivation."""
-        self._set_screensaver_state(False)
-
     async def async_on_quit(self, sender, data):
         """Reset the player state on quit action."""
         await self._clear_connection()
 
     async def _clear_connection(self, close=True):
         self._reset_state()
-        self._clear_screensaver_state()
-        self.async_write_ha_state()
         if close:
             await self._connection.close()
+        self._screensaver.async_clear()
+        self.async_write_ha_state()
 
     @property
     def state(self) -> MediaPlayerState:
@@ -282,6 +253,8 @@ class KodiEntity(MediaPlayerEntity):
 
     async def async_added_to_hass(self) -> None:
         """Connect the websocket if needed."""
+        self._screensaver.set_hass(self.hass)
+
         if not self._connection.can_subscribe:
             return
 
@@ -310,6 +283,7 @@ class KodiEntity(MediaPlayerEntity):
         """Call after ws is connected."""
         self._connect_error = False
         self._register_ws_callbacks()
+        await self._screensaver.async_update()
 
         version = (await self._kodi.get_application_properties(["version"]))["version"]
         sw_version = f"{version['major']}.{version['minor']}"
@@ -364,10 +338,7 @@ class KodiEntity(MediaPlayerEntity):
         self._connection.server.Application.OnVolumeChanged = (
             self.async_on_volume_changed
         )
-        self._connection.server.GUI.OnScreensaverActivated = self.async_on_screensaver_on
-        self._connection.server.GUI.OnScreensaverDeactivated = (
-            self.async_on_screensaver_off
-        )
+        self._screensaver.async_register_ws_callbacks()
         self._connection.server.Other.OnKeyPress = self.async_on_key_press
         self._connection.server.System.OnQuit = self.async_on_quit
         self._connection.server.System.OnRestart = self.async_on_quit
@@ -378,24 +349,23 @@ class KodiEntity(MediaPlayerEntity):
         """Retrieve latest state."""
         if not self._connection.connected:
             self._reset_state()
-            self._clear_screensaver_state()
+            self._screensaver.async_clear()
             return
 
-        if await self._runtime_data.async_update_screensaver_state():
-            async_dispatcher_send(self.hass, self._screensaver_signal)
+        await self._screensaver.async_update()
 
         try:
             self._players = await self._kodi.get_players()
         except TransportError, ProtocolError:
             if not self._connection.can_subscribe:
                 self._reset_state()
-                self._clear_screensaver_state()
+                self._screensaver.async_clear()
                 return
             raise
 
         if self._kodi_is_off:
             self._reset_state()
-            self._clear_screensaver_state()
+            self._screensaver.async_clear()
             return
 
         if self._players:

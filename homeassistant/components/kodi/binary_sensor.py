@@ -9,8 +9,8 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import KodiConfigEntry, KodiRuntimeData
-from .const import DOMAIN, async_signal_screensaver_update
+from . import KodiConfigEntry
+from .const import DOMAIN
 
 
 async def async_setup_entry(
@@ -23,15 +23,15 @@ async def async_setup_entry(
     if (uid := config_entry.unique_id) is None:
         uid = config_entry.entry_id
 
-    await data.async_update_screensaver_state()
+    data.screensaver.set_hass(hass)
+    await data.screensaver.async_update()
 
     async_add_entities(
         [
             KodiScreensaverBinarySensor(
-                data,
+                data.screensaver,
                 config_entry.data[CONF_NAME],
                 uid,
-                config_entry.entry_id,
             )
         ]
     )
@@ -45,13 +45,10 @@ class KodiScreensaverBinarySensor(BinarySensorEntity):
     _attr_should_poll = False
     _attr_translation_key = "screensaver"
 
-    def __init__(
-        self, runtime_data: KodiRuntimeData, name: str, uid: str, entry_id: str
-    ) -> None:
+    def __init__(self, screensaver, name: str, uid: str) -> None:
         """Initialize the binary sensor."""
-        self._runtime_data = runtime_data
+        self._screensaver = screensaver
         self._attr_unique_id = f"{uid}_screensaver"
-        self._signal = async_signal_screensaver_update(entry_id)
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, uid)},
             manufacturer="Kodi",
@@ -60,21 +57,22 @@ class KodiScreensaverBinarySensor(BinarySensorEntity):
 
     async def async_added_to_hass(self) -> None:
         """Subscribe to screensaver state updates."""
+        self._screensaver.set_hass(self.hass)
         self.async_on_remove(
             async_dispatcher_connect(
-                self.hass, self._signal, self._handle_screensaver_update
+                self.hass, self._screensaver.signal, self._handle_screensaver_update
             )
         )
 
     @property
     def available(self) -> bool:
         """Return if the entity is available."""
-        return self._runtime_data.connection.connected
+        return self._screensaver.available
 
     @property
     def is_on(self) -> bool | None:
         """Return the Kodi screensaver state."""
-        return self._runtime_data.screensaver_active
+        return self._screensaver.is_on
 
     @callback
     def _handle_screensaver_update(self) -> None:
