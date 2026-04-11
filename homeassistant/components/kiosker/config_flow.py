@@ -126,6 +126,8 @@ class KioskerConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle zeroconf discovery."""
         host = discovery_info.host
+        hostname = discovery_info.hostname
+        name = hostname.rstrip(".").removesuffix(".local")
 
         # Extract device information from zeroconf properties
         properties = discovery_info.properties
@@ -136,7 +138,7 @@ class KioskerConfigFlow(ConfigFlow, domain=DOMAIN):
 
         # Use device_id from zeroconf
         if device_id:
-            device_name = f"{app_name} ({device_id[:8].upper()})"
+            device_name = f"{name or host or app_name} ({device_id[:8].upper()})"
             unique_id = device_id
         else:
             _LOGGER.debug("Zeroconf properties did not include a valid device_id")
