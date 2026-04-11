@@ -44,7 +44,7 @@ async def async_get_systems(
             systems = await aqualink.get_systems()
     except AqualinkServiceUnauthorizedException:
         return None, "invalid_auth"
-    except AqualinkServiceException, httpx.HTTPError:
+    except AqualinkServiceException, TimeoutError, httpx.HTTPError:
         return None, "cannot_connect"
 
     if not systems:
@@ -88,7 +88,7 @@ class AqualinkFlowHandler(ConfigFlow, domain=DOMAIN):
                 pass
         except AqualinkServiceUnauthorizedException:
             return {"base": "invalid_auth"}
-        except AqualinkServiceException, httpx.HTTPError:
+        except AqualinkServiceException, TimeoutError, httpx.HTTPError:
             return {"base": "cannot_connect"}
 
         return {}

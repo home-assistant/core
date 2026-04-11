@@ -83,6 +83,24 @@ async def test_service_exception(
     assert result["errors"] == {"base": "cannot_connect"}
 
 
+async def test_timeout_during_credential_check(
+    hass: HomeAssistant, config_data: dict[str, str]
+) -> None:
+    """Test config flow maps login timeout to cannot_connect."""
+    flow = config_flow.AqualinkFlowHandler()
+    flow.hass = hass
+
+    with patch(
+        "homeassistant.components.iaqualink.utils.AqualinkClient.login",
+        side_effect=TimeoutError,
+    ):
+        result = await flow.async_step_user(config_data)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {"base": "cannot_connect"}
+
+
 async def test_with_existing_config(
     hass: HomeAssistant, config_data: dict[str, str]
 ) -> None:
@@ -150,6 +168,30 @@ async def test_with_no_systems(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {"base": "no_systems"}
+
+
+async def test_timeout_during_system_fetch(
+    hass: HomeAssistant, config_data: dict[str, str]
+) -> None:
+    """Test config flow maps system fetch timeout to cannot_connect."""
+    flow = config_flow.AqualinkFlowHandler()
+    flow.hass = hass
+
+    with (
+        patch(
+            "homeassistant.components.iaqualink.utils.AqualinkClient.login",
+            return_value=None,
+        ),
+        patch(
+            "homeassistant.components.iaqualink.utils.AqualinkClient.get_systems",
+            side_effect=TimeoutError,
+        ),
+    ):
+        result = await flow.async_step_user(config_data)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {"base": "cannot_connect"}
 
 
 async def test_systems_step_without_pending_user_input(
