@@ -2,12 +2,14 @@
 
 from __future__ import annotations
 
+from collections.abc import Collection
 from typing import Final
 
 import sqlalchemy
-from sqlalchemy import select
+from sqlalchemy import lambda_stmt, select
 from sqlalchemy.sql.elements import BooleanClauseList, ColumnElement
 from sqlalchemy.sql.expression import literal
+from sqlalchemy.sql.lambdas import StatementLambdaElement
 from sqlalchemy.sql.selectable import Select
 
 from homeassistant.components.recorder.db_schema import (
@@ -119,6 +121,24 @@ def select_events_context_id_subquery(
         .where(Events.event_type_id.in_(event_type_ids))
         .outerjoin(EventTypes, (Events.event_type_id == EventTypes.event_type_id))
         .outerjoin(EventData, (Events.data_id == EventData.data_id))
+    )
+
+
+def select_context_user_ids_for_context_ids(
+    context_ids: Collection[bytes],
+) -> StatementLambdaElement:
+    """Select context_id_bin and context_user_id_bin from events for the given context ids.
+
+    Used by the logbook processor to resolve parent-context user attribution
+    for child contexts whose parent service_call event isn't in the filtered
+    row stream. Hits the existing ix_events_context_id_bin index.
+    """
+    return lambda_stmt(
+        lambda: (
+            select(Events.context_id_bin, Events.context_user_id_bin)
+            .where(Events.context_id_bin.in_(context_ids))
+            .where(Events.context_user_id_bin.is_not(None))
+        )
     )
 
 

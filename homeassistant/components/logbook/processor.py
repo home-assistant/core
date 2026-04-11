@@ -10,13 +10,11 @@ import time
 from typing import TYPE_CHECKING, Any
 
 from lru import LRU
-from sqlalchemy import select
 from sqlalchemy.engine import Result
 from sqlalchemy.engine.row import Row
 from sqlalchemy.orm import Session
 
 from homeassistant.components.recorder import get_instance
-from homeassistant.components.recorder.db_schema import Events
 from homeassistant.components.recorder.filters import Filters
 from homeassistant.components.recorder.models import (
     bytes_to_uuid_hex_or_none,
@@ -85,7 +83,10 @@ from .models import (
     async_event_to_row,
 )
 from .queries import statement_for_request
-from .queries.common import PSEUDO_EVENT_STATE_CHANGED
+from .queries.common import (
+    PSEUDO_EVENT_STATE_CHANGED,
+    select_context_user_ids_for_context_ids,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -253,16 +254,16 @@ class EventProcessor:
         query_parent_user_ids: dict[bytes, bytes] = {}
         for pending_chunk in chunked_or_all(pending, max_bind_vars):
             # Both columns are nullable in the schema but the WHERE clauses
-            # guarantee non-null at runtime; the explicit checks satisfy
-            # the type checker.
+            # in the lambda statement guarantee non-null at runtime; the
+            # explicit checks satisfy the type checker.
             query_parent_user_ids.update(
                 {
                     parent_id: user_id
-                    for parent_id, user_id in session.execute(
-                        select(Events.context_id_bin, Events.context_user_id_bin)
-                        .where(Events.context_id_bin.in_(pending_chunk))
-                        .where(Events.context_user_id_bin.is_not(None))
-                    ).all()
+                    for parent_id, user_id in execute_stmt_lambda_element(
+                        session,
+                        select_context_user_ids_for_context_ids(pending_chunk),
+                        orm_rows=False,
+                    )
                     if parent_id is not None and user_id is not None
                 }
             )
