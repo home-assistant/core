@@ -8,6 +8,7 @@ from unittest.mock import patch
 from freezegun.api import FrozenDateTimeFactory
 from fritzconnection.core.exceptions import FritzConnectionException
 import pytest
+from requests.exceptions import RequestException
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.fritz.const import DOMAIN, SCAN_INTERVAL, UPTIME_DEVIATION
@@ -112,3 +113,41 @@ async def test_sensor_uptime_spike(
 
     assert (new_state := hass.states.get(entity_id))
     assert new_state.state == "2026-01-16T06:00:21+00:00"
+
+
+@pytest.mark.freeze_time(datetime(2024, 9, 1, 20, tzinfo=UTC))
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+@pytest.mark.parametrize(
+    ("side_effect", "return_values"),
+    [(RequestException("boom"), None), (None, [0, 0, 0]), (None, [])],
+)
+async def test_sensor_cpu_temp_not_supported(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    side_effect,
+    return_values,
+    fc_class_mock,
+    fh_class_mock,
+    fs_class_mock,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test setup of Fritz!Tools sensors."""
+
+    entry = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_DATA)
+    entry.add_to_hass(hass)
+
+    with (
+        patch("homeassistant.components.fritz.PLATFORMS", [Platform.SENSOR]),
+        patch(
+            "homeassistant.components.fritz.coordinator.FritzStatus", fs_class_mock
+        ) as mock_status,
+    ):
+        mock_status.get_cpu_temperatures.side_effect = side_effect
+        mock_status.get_cpu_temperatures.return_value = return_values
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+        await snapshot_platform(hass, entity_registry, snapshot, entry.entry_id)
+        assert not entity_registry.async_is_registered(
+            "sensor.mock_title_cpu_temperature"
+        )
