@@ -14,6 +14,7 @@ import logging
 
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryError
 
 from .aurora_client import AuroraClient
 from .const import (
@@ -49,7 +50,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: AuroraAbbConfigEntry) ->
             tcp_port=entry.data[CONF_TCP_PORT],
         )
     else:
-        raise ValueError(f"Unsupported transport type: {transport}")
+        raise ConfigEntryError(f"Unsupported transport type: {transport}")
 
     coordinator = AuroraAbbDataUpdateCoordinator(hass, entry, client)
     await coordinator.async_config_entry_first_refresh()
