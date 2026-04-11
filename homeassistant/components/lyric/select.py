@@ -107,11 +107,7 @@ class LyricRoomPrioritySelect(LyricDeviceEntity, SelectEntity):
         else:
             priority_type = PRIORITY_TYPE_PICK_A_ROOM
             room_id = next(
-                (
-                    rid
-                    for rid, room in self._rooms.items()
-                    if room.room_name == option
-                ),
+                (rid for rid, room in self._rooms.items() if room.room_name == option),
                 None,
             )
             if room_id is None:
@@ -119,9 +115,7 @@ class LyricRoomPrioritySelect(LyricDeviceEntity, SelectEntity):
                 return
             rooms = [room_id]
 
-        _LOGGER.debug(
-            "Set room priority: type=%s, rooms=%s", priority_type, rooms
-        )
+        _LOGGER.debug("Set room priority: type=%s, rooms=%s", priority_type, rooms)
         try:
             await self.coordinator.data.update_priority(
                 self.location,
