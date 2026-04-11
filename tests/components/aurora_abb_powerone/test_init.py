@@ -137,27 +137,7 @@ async def test_migrate_entry_v1_to_v1_2(hass: HomeAssistant) -> None:
     assert entry.data[CONF_TRANSPORT] == TRANSPORT_SERIAL
     assert entry.data[CONF_INVERTER_SERIAL_ADDRESS] == 3
     assert entry.data[CONF_SERIAL_COMPORT] == "/dev/ttyUSB7"
-    # Old keys preserved
-    assert entry.data["port"] == "/dev/ttyUSB7"
-    assert entry.data["address"] == 3
     assert entry.state is ConfigEntryState.LOADED
-
-
-async def test_migrate_entry_v1_to_v1_2_missing_legacy_keys(
-    hass: HomeAssistant,
-) -> None:
-    """Test that migration fails gracefully when legacy keys are missing."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={ATTR_SERIAL_NUMBER: MOCK_SERIAL_NUMBER},
-        unique_id=MOCK_SERIAL_NUMBER,
-        version=1,
-        minor_version=1,
-    )
-    entry.add_to_hass(hass)
-
-    assert not await hass.config_entries.async_setup(entry.entry_id)
-    assert entry.state is ConfigEntryState.MIGRATION_ERROR
 
 
 async def test_migrate_entry_future_version(hass: HomeAssistant) -> None:

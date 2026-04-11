@@ -12,14 +12,14 @@
     "step": {
       "configure_serial": {
         "data": {
-          "inverter_serial_address": "Inverter address",
-          "serial_comport": "RS485 or USB-RS485 adaptor port"
+          "address": "Inverter address",
+          "port": "RS485 or USB-RS485 adaptor port"
         },
         "description": "The inverter must be connected via an RS485 adaptor, please select the serial port and the inverter's address as configured on the LCD panel"
       },
       "configure_tcp": {
         "data": {
-          "inverter_serial_address": "Inverter address",
+          "address": "Inverter address",
           "tcp_host": "Gateway IP address or hostname",
           "tcp_port": "Gateway TCP port"
         },

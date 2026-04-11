@@ -24,8 +24,8 @@ ATTR_MODEL = "model"
 ATTR_FIRMWARE = "firmware"
 
 CONF_TRANSPORT = "transport"
-CONF_INVERTER_SERIAL_ADDRESS = "inverter_serial_address"
-CONF_SERIAL_COMPORT = "serial_comport"
+CONF_INVERTER_SERIAL_ADDRESS = "address"
+CONF_SERIAL_COMPORT = "port"
 CONF_TCP_HOST = "tcp_host"
 CONF_TCP_PORT = "tcp_port"
 

@@ -76,13 +76,8 @@ async def async_migrate_entry(hass: HomeAssistant, entry: AuroraAbbConfigEntry) 
         return False
 
     if entry.version == 1 and entry.minor_version < 2:
-        # Migrate from v1.1 to v1.2: add transport fields while keeping old keys
-        new_data = {
-            **entry.data,
-            CONF_TRANSPORT: TRANSPORT_SERIAL,
-            CONF_INVERTER_SERIAL_ADDRESS: entry.data["address"],
-            CONF_SERIAL_COMPORT: entry.data["port"],
-        }
+        # Migrate from v1.1 to v1.2: add transport type to existing serial entries
+        new_data = {**entry.data, CONF_TRANSPORT: TRANSPORT_SERIAL}
         hass.config_entries.async_update_entry(
             entry, data=new_data, minor_version=2, version=1
         )
