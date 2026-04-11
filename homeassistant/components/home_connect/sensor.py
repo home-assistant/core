@@ -675,7 +675,7 @@ class HomeConnectProgramSensor(HomeConnectSensor):
 
 
 class HomeConnectProgramDurationSensor(HomeConnectProgramSensor):
-    """Sensor class for Home Connect sensors that reports the duration program."""
+    """Sensor class for Home Connect sensors that reports the program duration."""
 
     def __init__(
         self,
