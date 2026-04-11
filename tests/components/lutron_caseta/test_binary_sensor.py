@@ -1,11 +1,11 @@
-"""Tests for the Lutron Caseta battery sensor."""
+"""Tests for the Lutron Caseta binary sensors."""
 
 from typing import Any
 from unittest.mock import AsyncMock
 
-from homeassistant.components.lutron_caseta.sensor import SCAN_INTERVAL
-from homeassistant.components.sensor import ATTR_OPTIONS, SensorDeviceClass
-from homeassistant.const import ATTR_DEVICE_CLASS
+from homeassistant.components.binary_sensor import BinarySensorDeviceClass
+from homeassistant.components.lutron_caseta.binary_sensor import SCAN_INTERVAL
+from homeassistant.const import ATTR_DEVICE_CLASS, STATE_OFF, STATE_ON, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_component import async_update_entity
@@ -36,13 +36,13 @@ async def test_battery_sensor_is_attached_to_shade_device(
     await async_setup_integration(hass, MockBridge)
 
     cover_entry = entity_registry.async_get("cover.basement_bedroom_left_shade")
-    sensor_entry = entity_registry.async_get(
-        "sensor.basement_bedroom_left_shade_battery"
+    binary_sensor_entry = entity_registry.async_get(
+        "binary_sensor.basement_bedroom_left_shade_battery"
     )
 
     assert cover_entry is not None
-    assert sensor_entry is not None
-    assert sensor_entry.device_id == cover_entry.device_id
+    assert binary_sensor_entry is not None
+    assert binary_sensor_entry.device_id == cover_entry.device_id
 
 
 async def test_battery_sensor_does_not_replace_shade_subscriber(
@@ -83,31 +83,32 @@ async def test_battery_sensor_updates_on_demand(hass: HomeAssistant) -> None:
     await async_setup_integration(hass, factory)
     await hass.async_block_till_done()
 
-    sensor_entity_id = "sensor.basement_bedroom_left_shade_battery"
-    initial_state = hass.states.get(sensor_entity_id)
+    binary_sensor_entity_id = "binary_sensor.basement_bedroom_left_shade_battery"
+    initial_state = hass.states.get(binary_sensor_entity_id)
     assert initial_state is not None
-    assert initial_state.state == "good"
+    assert initial_state.state == STATE_OFF
     assert initial_state.name == "Basement Bedroom Left Shade Battery"
-    assert initial_state.attributes[ATTR_DEVICE_CLASS] == SensorDeviceClass.ENUM
-    assert initial_state.attributes[ATTR_OPTIONS] == ["good", "low"]
+    assert (
+        initial_state.attributes[ATTR_DEVICE_CLASS] == BinarySensorDeviceClass.BATTERY
+    )
 
     instance.battery_statuses["802"] = " Low "
-    await async_update_entity(hass, sensor_entity_id)
+    await async_update_entity(hass, binary_sensor_entity_id)
     await hass.async_block_till_done()
 
-    updated_state = hass.states.get(sensor_entity_id)
+    updated_state = hass.states.get(binary_sensor_entity_id)
     assert updated_state is not None
-    assert updated_state.state == "low"
+    assert updated_state.state == STATE_ON
     assert instance.get_battery_status.await_count == 2
     instance.get_battery_status.assert_awaited_with("802")
 
     instance.battery_statuses["802"] = "Unknown"
-    await async_update_entity(hass, sensor_entity_id)
+    await async_update_entity(hass, binary_sensor_entity_id)
     await hass.async_block_till_done()
 
-    unknown_state = hass.states.get(sensor_entity_id)
+    unknown_state = hass.states.get(binary_sensor_entity_id)
     assert unknown_state is not None
-    assert unknown_state.state == "unknown"
+    assert unknown_state.state == STATE_UNKNOWN
 
 
 async def test_battery_sensor_refreshes_on_schedule(hass: HomeAssistant) -> None:
@@ -124,12 +125,12 @@ async def test_battery_sensor_refreshes_on_schedule(hass: HomeAssistant) -> None
     await async_setup_integration(hass, factory)
     await hass.async_block_till_done()
 
-    sensor_entity_id = "sensor.basement_bedroom_left_shade_battery"
+    binary_sensor_entity_id = "binary_sensor.basement_bedroom_left_shade_battery"
     instance.battery_statuses["802"] = "Low"
     async_fire_time_changed(hass, dt_util.utcnow() + SCAN_INTERVAL)
     await hass.async_block_till_done()
 
-    updated_state = hass.states.get(sensor_entity_id)
+    updated_state = hass.states.get(binary_sensor_entity_id)
     assert updated_state is not None
-    assert updated_state.state == "low"
+    assert updated_state.state == STATE_ON
     assert instance.get_battery_status.await_count == 2

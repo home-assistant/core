@@ -80,13 +80,9 @@
     }
   },
   "entity": {
-    "sensor": {
+    "binary_sensor": {
       "battery": {
-        "name": "[%key:component::sensor::entity_component::battery::name%]",
-        "state": {
-          "good": "Good",
-          "low": "[%key:common::state::low%]"
-        }
+        "name": "[%key:component::binary_sensor::entity_component::battery::name%]"
       }
     }
   }
