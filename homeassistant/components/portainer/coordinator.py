@@ -263,12 +263,6 @@ class PortainerCoordinator(DataUpdateCoordinator[dict[int, PortainerCoordinatorD
                     # Now assign stats to the containers
                     for container_name, stats in container_stats.items():
                         container_map[container_name].stats = stats
-            except PortainerTimeoutError as err:
-                raise UpdateFailed(
-                    translation_domain=DOMAIN,
-                    translation_key="timeout_connect",
-                    translation_placeholders={"error": repr(err)},
-                ) from err
             except PortainerConnectionError as err:
                 _LOGGER.exception("Connection error")
                 raise UpdateFailed(
