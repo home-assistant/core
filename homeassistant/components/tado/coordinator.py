@@ -105,6 +105,13 @@ class TadoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 self._tado.get_zones(),
                 self._tado.get_devices(),
                 self._tado.rate_limit_info(),
+        try:
+            _LOGGER.debug("Preloading home data")
+            tado_home_call = await self.hass.async_add_executor_job(self._tado.get_me)
+            _LOGGER.debug("Preloading zones and devices")
+            self.zones = await self.hass.async_add_executor_job(self._tado.get_zones)
+            self.devices = await self.hass.async_add_executor_job(
+                self._tado.get_devices
             )
 
         try:
@@ -115,6 +122,10 @@ class TadoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 rate_limit_info,
             ) = await self.hass.async_add_executor_job(_load_tado_data)
         except RequestException as err:
+            _LOGGER.debug("Checking rate limit")
+            ratelimit = self.get_rate_limit()
+            if ratelimit.get("remaining") == "0":
+                raise UpdateFailed(f"Tado API rate limit reached: {err}") from err
             raise UpdateFailed(f"Error during Tado setup: {err}") from err
 
         tado_home = tado_home_call["homes"][0]
@@ -446,3 +457,7 @@ class TadoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             )
         except RequestException as exc:
             raise HomeAssistantError(f"Error setting Tado child lock: {exc}") from exc
+
+    def get_rate_limit(self) -> dict[str, str]:
+        """Get the current rate limit status from Tado."""
+        return self._tado.rate_limit_info()

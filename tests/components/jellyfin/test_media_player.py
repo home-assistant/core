@@ -126,10 +126,12 @@ async def test_media_player_music(
     assert state.attributes.get(ATTR_MEDIA_SERIES_TITLE) is None
     assert state.attributes.get(ATTR_MEDIA_SEASON) is None
     assert state.attributes.get(ATTR_MEDIA_EPISODE) is None
-    assert (
-        state.attributes.get(ATTR_ENTITY_PICTURE)
-        == "http://localhost/Items/ALBUM-UUID/Images/Primary.jpg"
+    entity_picture = state.attributes.get(ATTR_ENTITY_PICTURE)
+    assert entity_picture is not None
+    assert entity_picture.startswith(
+        "/api/media_player_proxy/media_player.jellyfin_device_four?token="
     )
+    assert "cache=7f15194cd71877c7" in entity_picture
 
     entry = entity_registry.async_get(state.entity_id)
     assert entry
@@ -461,10 +463,7 @@ async def test_browse_media(
     response = await client.receive_json()
     assert response["success"] is False
     assert response["error"]
-    assert (
-        response["error"]["message"]
-        == "Media not found: collection / COLLECTION-FOLDER-UUID"
-    )
+    assert response["error"]["message"] == "Media not found: COLLECTION-FOLDER-UUID"
 
     # browse for non-existent item
     mock_api.get_item.side_effect = None
@@ -483,10 +482,7 @@ async def test_browse_media(
     response = await client.receive_json()
     assert response["success"] is False
     assert response["error"]
-    assert (
-        response["error"]["message"]
-        == "Media not found: collection / COLLECTION-UUID-404"
-    )
+    assert response["error"]["message"] == "Media not found: COLLECTION-UUID-404"
 
 
 async def test_search_media(

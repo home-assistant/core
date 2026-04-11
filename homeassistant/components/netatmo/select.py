@@ -5,7 +5,6 @@ from __future__ import annotations
 import logging
 
 from homeassistant.components.select import SelectEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -19,7 +18,7 @@ from .const import (
     MANUFACTURER,
     NETATMO_CREATE_SELECT,
 )
-from .data_handler import HOME, SIGNAL_NAME, NetatmoHome
+from .data_handler import HOME, SIGNAL_NAME, NetatmoConfigEntry, NetatmoHome
 from .entity import NetatmoBaseEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -27,7 +26,7 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: NetatmoConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Netatmo energy platform schedule selector."""

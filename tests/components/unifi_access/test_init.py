@@ -3,7 +3,8 @@
 from __future__ import annotations
 
 from collections.abc import Awaitable, Callable
-from unittest.mock import MagicMock
+import ssl
+from unittest.mock import MagicMock, patch
 
 import pytest
 from unifi_access_api import (
@@ -23,8 +24,13 @@ from unifi_access_api.models.websocket import (
     WebsocketMessage,
 )
 
+from homeassistant.components.unifi_access.const import DOMAIN
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
+from homeassistant.const import CONF_VERIFY_SSL
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
+
+from .conftest import _make_door
 
 from tests.common import MockConfigEntry
 
@@ -54,6 +60,44 @@ async def test_setup_entry(
     assert mock_config_entry.state is ConfigEntryState.LOADED
     mock_client.authenticate.assert_awaited_once()
     mock_client.get_doors.assert_awaited_once()
+
+
+@pytest.mark.parametrize(
+    ("verify_ssl", "expected_ssl_context_type"),
+    [
+        (False, ssl.SSLContext),
+        (True, type(None)),
+    ],
+)
+async def test_setup_entry_ssl_context(
+    hass: HomeAssistant,
+    mock_client: MagicMock,
+    verify_ssl: bool,
+    expected_ssl_context_type: type,
+) -> None:
+    """Test that a pre-warmed no-verify SSL context is passed when verify_ssl is False."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="UniFi Access",
+        data={
+            "host": "192.168.1.1",
+            "api_token": "test-token",
+            CONF_VERIFY_SSL: verify_ssl,
+        },
+        version=1,
+        minor_version=1,
+    )
+    entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.unifi_access.UnifiAccessApiClient",
+        wraps=lambda **kwargs: mock_client,
+    ) as patched_client:
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    _, call_kwargs = patched_client.call_args
+    assert isinstance(call_kwargs["ssl_context"], expected_ssl_context_type)
 
 
 @pytest.mark.parametrize(
@@ -353,3 +397,92 @@ async def test_ws_location_update_thumbnail_only_no_state(
     # Door state unchanged, thumbnail updated
     assert hass.states.get(FRONT_DOOR_BINARY_SENSOR).state == state_before
     assert hass.states.get(FRONT_DOOR_IMAGE).state != image_state_before
+
+
+async def test_new_door_entities_created_on_refresh(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    mock_client: MagicMock,
+) -> None:
+    """Test that new door entities are added dynamically via coordinator listener."""
+    # Verify new door entities do not exist yet
+    assert not hass.states.get("binary_sensor.garage_door")
+    assert not hass.states.get("button.garage_door_unlock")
+    assert not hass.states.get("event.garage_door_doorbell")
+    assert not hass.states.get("event.garage_door_access")
+    assert not hass.states.get("image.garage_door_thumbnail")
+
+    # Add a new door to the API response
+    mock_client.get_doors.return_value = [
+        *mock_client.get_doors.return_value,
+        _make_door("door-003", "Garage Door"),
+    ]
+
+    # Trigger natural refresh via WebSocket reconnect
+    on_disconnect = mock_client.start_websocket.call_args[1]["on_disconnect"]
+    on_connect = mock_client.start_websocket.call_args[1]["on_connect"]
+    on_disconnect()
+    await hass.async_block_till_done()
+    on_connect()
+    await hass.async_block_till_done()
+
+    # Entities for the new door should now exist
+    assert hass.states.get("binary_sensor.garage_door")
+    assert hass.states.get("button.garage_door_unlock")
+    assert hass.states.get("event.garage_door_doorbell")
+    assert hass.states.get("event.garage_door_access")
+    assert hass.states.get("image.garage_door_thumbnail")
+
+
+async def test_stale_device_removed_on_refresh(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    init_integration: MockConfigEntry,
+    mock_client: MagicMock,
+) -> None:
+    """Test that stale devices are automatically removed on data refresh."""
+    # Verify both doors exist after initial setup
+    assert device_registry.async_get_device(identifiers={(DOMAIN, "door-001")})
+    assert device_registry.async_get_device(identifiers={(DOMAIN, "door-002")})
+
+    # Simulate door-002 being removed from the hub
+    mock_client.get_doors.return_value = [
+        door for door in mock_client.get_doors.return_value if door.id != "door-002"
+    ]
+
+    # Trigger natural refresh via WebSocket reconnect
+    on_disconnect = mock_client.start_websocket.call_args[1]["on_disconnect"]
+    on_connect = mock_client.start_websocket.call_args[1]["on_connect"]
+    on_disconnect()
+    await hass.async_block_till_done()
+    on_connect()
+    await hass.async_block_till_done()
+
+    # door-001 still exists, door-002 was removed
+    assert device_registry.async_get_device(identifiers={(DOMAIN, "door-001")})
+    assert not device_registry.async_get_device(identifiers={(DOMAIN, "door-002")})
+
+
+async def test_stale_device_removed_on_startup(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    mock_config_entry: MockConfigEntry,
+    mock_client: MagicMock,
+) -> None:
+    """Test stale devices present before setup are removed on initial refresh."""
+    mock_config_entry.add_to_hass(hass)
+
+    # Create a stale door device that no longer exists on the hub
+    device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id,
+        identifiers={(DOMAIN, "door-003")},
+    )
+    assert device_registry.async_get_device(identifiers={(DOMAIN, "door-003")})
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    # Valid doors from the hub should exist, stale device should be removed
+    assert device_registry.async_get_device(identifiers={(DOMAIN, "door-001")})
+    assert device_registry.async_get_device(identifiers={(DOMAIN, "door-002")})
+    assert not device_registry.async_get_device(identifiers={(DOMAIN, "door-003")})

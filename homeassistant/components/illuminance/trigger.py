@@ -6,11 +6,10 @@ from homeassistant.components.binary_sensor import (
     DOMAIN as BINARY_SENSOR_DOMAIN,
     BinarySensorDeviceClass,
 )
-from homeassistant.components.number import DOMAIN as NUMBER_DOMAIN, NumberDeviceClass
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN, SensorDeviceClass
 from homeassistant.const import LIGHT_LUX, STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.automation import DomainSpec, NumericalDomainSpec
+from homeassistant.helpers.automation import DomainSpec
 from homeassistant.helpers.trigger import (
     Trigger,
     make_entity_numerical_state_changed_trigger,
@@ -18,9 +17,8 @@ from homeassistant.helpers.trigger import (
     make_entity_target_state_trigger,
 )
 
-ILLUMINANCE_DOMAIN_SPECS: dict[str, NumericalDomainSpec] = {
-    NUMBER_DOMAIN: NumericalDomainSpec(device_class=NumberDeviceClass.ILLUMINANCE),
-    SENSOR_DOMAIN: NumericalDomainSpec(device_class=SensorDeviceClass.ILLUMINANCE),
+ILLUMINANCE_DOMAIN_SPECS: dict[str, DomainSpec] = {
+    SENSOR_DOMAIN: DomainSpec(device_class=SensorDeviceClass.ILLUMINANCE),
 }
 
 TRIGGERS: dict[str, type[Trigger]] = {

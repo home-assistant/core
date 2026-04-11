@@ -6,7 +6,6 @@ from homeassistant.components.binary_sensor import (
     DOMAIN as BINARY_SENSOR_DOMAIN,
     BinarySensorDeviceClass,
 )
-from homeassistant.components.number import DOMAIN as NUMBER_DOMAIN, NumberDeviceClass
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN, SensorDeviceClass
 from homeassistant.const import PERCENTAGE, STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
@@ -25,7 +24,6 @@ _MOISTURE_BINARY_DOMAIN_SPECS = {
 
 _MOISTURE_NUMERICAL_DOMAIN_SPECS = {
     SENSOR_DOMAIN: DomainSpec(device_class=SensorDeviceClass.MOISTURE),
-    NUMBER_DOMAIN: DomainSpec(device_class=NumberDeviceClass.MOISTURE),
 }
 
 CONDITIONS: dict[str, type[Condition]] = {
