@@ -195,12 +195,11 @@ class EventProcessor:
                 # parent-context column is sparsely populated and a full scan
                 # to find it costs ~40% of the query on real datasets.
                 rows = list(rows)
-                context_user_ids = self.logbook_run.context_user_ids
                 pending: set[bytes] = set()
                 for row in rows:
                     if (
                         parent_id := row[CONTEXT_PARENT_ID_BIN_POS]
-                    ) and parent_id not in context_user_ids:
+                    ) and parent_id not in self.logbook_run.context_user_ids:
                         pending.add(parent_id)
                 if pending:
                     now = time.time()
@@ -224,7 +223,7 @@ class EventProcessor:
                             # cache timestamp so pruning is anchored to the
                             # event's age, not the query time. Fall back to
                             # now if the column is unexpectedly null.
-                            context_user_ids[parent_context_id_bin] = (
+                            self.logbook_run.context_user_ids[parent_context_id_bin] = (
                                 parent_user_id_bin,
                                 parent_time_fired_ts or now,
                             )
@@ -236,15 +235,23 @@ class EventProcessor:
         """Humanify rows."""
         cutoff = time.time() - 600
         if self.logbook_run.context_user_ids_last_pruned < cutoff:
-            # Prune context_user_ids of entries not seen in the last 10 minutes to prevent unbounded growth
-            self.logbook_run.context_user_ids = {
-                context_id: (user_id, timestamp)
-                for context_id, (
-                    user_id,
-                    timestamp,
-                ) in self.logbook_run.context_user_ids.items()
-                if timestamp > cutoff
-            }
+            # Prune context_user_ids of entries not seen in the last 10
+            # minutes to prevent unbounded growth. dict.copy() is GIL-atomic
+            # in CPython, so the snapshot can't race with concurrent writes
+            # from other threads (the historical backfill runs in an
+            # executor while the live consumer runs on the event loop and
+            # both share this dict). We iterate the snapshot and pop
+            # expired keys from the live dict in place — never rebinding
+            # the dict — so concurrent writes are not lost.
+            live = self.logbook_run.context_user_ids
+            for context_id, (_, timestamp) in live.copy().items():
+                if timestamp <= cutoff:
+                    # Re-check the live entry: another thread may have
+                    # refreshed it between the snapshot and the pop, in
+                    # which case we must not delete the fresh value.
+                    current = live.get(context_id)
+                    if current is not None and current[1] <= cutoff:
+                        live.pop(context_id, None)
             self.logbook_run.context_user_ids_last_pruned = time.time()
         return list(
             _humanify(
