@@ -963,7 +963,7 @@ async def test_get_all_entity_aliases(
 
 
 async def test_intent_response_dict() -> None:
-    """Test that IntentResponse.to_dict copies mutable objects."""
+    """Test that IntentResponse.as_dict() copies mutable objects."""
     response = intent.IntentResponse(
         language="en",
         intent=None,
