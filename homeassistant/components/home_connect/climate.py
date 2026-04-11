@@ -179,13 +179,13 @@ class HomeConnectAirConditioningEntity(HomeConnectEntity, ClimateEntity):
         self.async_on_remove(
             self.coordinator.async_add_listener(
                 self._handle_coordinator_update_fan_mode,
-                EventKey.HEATING_VENTILATION_AIR_CONDITIONING_AIR_CONDITIONER_FAN_SPEED_MODE,
+                EventKey.HEATING_VENTILATION_AIR_CONDITIONING_AIR_CONDITIONER_OPTION_FAN_SPEED_MODE,
             )
         )
         self.async_on_remove(
             self.coordinator.async_add_listener(
                 self._handle_coordinator_update,
-                EventKey(SettingKey.BSH_COMMON_POWER_STATE),
+                EventKey.BSH_COMMON_SETTING_POWER_STATE,
             )
         )
 
@@ -215,9 +215,7 @@ class HomeConnectAirConditioningEntity(HomeConnectEntity, ClimateEntity):
         """Return the fan setting."""
         option_value = None
         if event := self.appliance.events.get(
-            EventKey(
-                OptionKey.HEATING_VENTILATION_AIR_CONDITIONING_AIR_CONDITIONER_FAN_SPEED_MODE
-            )
+            EventKey.HEATING_VENTILATION_AIR_CONDITIONING_AIR_CONDITIONER_OPTION_FAN_SPEED_MODE
         ):
             option_value = event.value
         return (
