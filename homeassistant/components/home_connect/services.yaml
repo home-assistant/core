@@ -204,7 +204,7 @@ set_program_and_options:
           required: false
           selector:
             number:
-              step: 1
+              step: 0.1
               mode: box
               unit_of_measurement: °C/°F
         heating_ventilation_air_conditioning_air_conditioner_option_fan_speed_percentage:

@@ -66,8 +66,8 @@ PROGRAM_OPTIONS = {
         OptionKey.HEATING_VENTILATION_AIR_CONDITIONING_AIR_CONDITIONER_FAN_SPEED_PERCENTAGE: vol.All(
             int, vol.Range(min=1, max=100)
         ),
-        OptionKey.HEATING_VENTILATION_AIR_CONDITIONING_AIR_CONDITIONER_SETPOINT_TEMPERATURE: vol.All(
-            int
+        OptionKey.HEATING_VENTILATION_AIR_CONDITIONING_AIR_CONDITIONER_SETPOINT_TEMPERATURE: vol.Coerce(
+            float
         ),
         OptionKey.COOKING_OVEN_SETPOINT_TEMPERATURE: vol.All(int, vol.Range(min=0)),
         OptionKey.COOKING_OVEN_FAST_PRE_HEAT: bool,
