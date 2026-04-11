@@ -5,7 +5,8 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from aiorussound import RussoundClient, RussoundTcpConnectionHandler
+from aiorussound import RussoundTcpConnectionHandler
+from aiorussound.rio import RussoundRIOClient
 import voluptuous as vol
 
 from homeassistant.config_entries import (
@@ -45,7 +46,7 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
         self.data[CONF_HOST] = host = discovery_info.host
         self.data[CONF_PORT] = port = discovery_info.port or 9621
 
-        client = RussoundClient(RussoundTcpConnectionHandler(host, port))
+        client = RussoundRIOClient(RussoundTcpConnectionHandler(host, port))
         try:
             await client.connect()
             controller = client.controllers[1]
@@ -90,7 +91,7 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
             host = user_input[CONF_HOST]
             port = user_input[CONF_PORT]
 
-            client = RussoundClient(RussoundTcpConnectionHandler(host, port))
+            client = RussoundRIOClient(RussoundTcpConnectionHandler(host, port))
             try:
                 await client.connect()
                 controller = client.controllers[1]
