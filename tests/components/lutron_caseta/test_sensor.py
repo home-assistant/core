@@ -1,9 +1,11 @@
 """Tests for the Lutron Caseta battery sensor."""
 
-from datetime import timedelta
 from typing import Any
 from unittest.mock import AsyncMock
 
+from homeassistant.components.lutron_caseta.sensor import SCAN_INTERVAL
+from homeassistant.components.sensor import ATTR_OPTIONS, SensorDeviceClass
+from homeassistant.const import ATTR_DEVICE_CLASS
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_component import async_update_entity
@@ -12,6 +14,19 @@ from homeassistant.util import dt as dt_util
 from . import MockBridge, async_setup_integration
 
 from tests.common import async_fire_time_changed
+
+
+class SingleSubscriberMockBridge(MockBridge):
+    """Mock bridge that matches pylutron-caseta's device subscriber behavior."""
+
+    def add_subscriber(self, device_id: str, callback_: Any) -> None:
+        """Mock a listener to be notified of state changes."""
+        self._subscribers[device_id] = callback_
+
+    def call_subscribers(self, device_id: str) -> None:
+        """Notify subscribers of a device state change."""
+        if callback := self._subscribers.get(device_id):
+            callback()
 
 
 async def test_battery_sensor_is_attached_to_shade_device(
@@ -28,6 +43,30 @@ async def test_battery_sensor_is_attached_to_shade_device(
     assert cover_entry is not None
     assert sensor_entry is not None
     assert sensor_entry.device_id == cover_entry.device_id
+
+
+async def test_battery_sensor_does_not_replace_shade_subscriber(
+    hass: HomeAssistant,
+) -> None:
+    """Test the battery sensor does not replace the cover subscriber."""
+    instance = SingleSubscriberMockBridge()
+
+    def factory(*args: Any, **kwargs: Any) -> MockBridge:
+        """Return the mock bridge instance."""
+        return instance
+
+    await async_setup_integration(hass, factory)
+    await hass.async_block_till_done()
+
+    cover_entity_id = "cover.basement_bedroom_left_shade"
+    instance.devices["802"]["current_state"] = 50
+    instance.call_subscribers("802")
+    await hass.async_block_till_done()
+
+    state = hass.states.get(cover_entity_id)
+    assert state is not None
+    assert state.state == "open"
+    assert state.attributes["current_position"] == 50
 
 
 async def test_battery_sensor_updates_on_demand(hass: HomeAssistant) -> None:
@@ -47,7 +86,9 @@ async def test_battery_sensor_updates_on_demand(hass: HomeAssistant) -> None:
     sensor_entity_id = "sensor.basement_bedroom_left_shade_battery"
     initial_state = hass.states.get(sensor_entity_id)
     assert initial_state is not None
-    assert initial_state.state == "Good"
+    assert initial_state.state == "good"
+    assert initial_state.attributes[ATTR_DEVICE_CLASS] == SensorDeviceClass.ENUM
+    assert initial_state.attributes[ATTR_OPTIONS] == ["good", "low"]
 
     instance.battery_statuses["802"] = "Low"
     await async_update_entity(hass, sensor_entity_id)
@@ -55,7 +96,7 @@ async def test_battery_sensor_updates_on_demand(hass: HomeAssistant) -> None:
 
     updated_state = hass.states.get(sensor_entity_id)
     assert updated_state is not None
-    assert updated_state.state == "Low"
+    assert updated_state.state == "low"
     assert instance.get_battery_status.await_count == 2
     instance.get_battery_status.assert_awaited_with("802")
 
@@ -76,10 +117,10 @@ async def test_battery_sensor_refreshes_on_schedule(hass: HomeAssistant) -> None
 
     sensor_entity_id = "sensor.basement_bedroom_left_shade_battery"
     instance.battery_statuses["802"] = "Low"
-    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(days=1))
+    async_fire_time_changed(hass, dt_util.utcnow() + SCAN_INTERVAL)
     await hass.async_block_till_done()
 
     updated_state = hass.states.get(sensor_entity_id)
     assert updated_state is not None
-    assert updated_state.state == "Low"
+    assert updated_state.state == "low"
     assert instance.get_battery_status.await_count == 2

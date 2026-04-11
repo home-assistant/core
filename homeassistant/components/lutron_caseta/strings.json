@@ -30,6 +30,17 @@
       }
     }
   },
+  "entity": {
+    "sensor": {
+      "battery": {
+        "name": "[%key:component::sensor::entity_component::battery::name%]",
+        "state": {
+          "good": "Good",
+          "low": "[%key:common::state::low%]"
+        }
+      }
+    }
+  },
   "device_automation": {
     "trigger_subtype": {
       "button_1": "First button",
