@@ -20,8 +20,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import WattwaechterConfigEntry
-from .coordinator import WattwaechterCoordinator
+from .coordinator import WattwaechterConfigEntry, WattwaechterCoordinator
 from .entity import WattwaechterEntity
 
 _LOGGER = logging.getLogger(__name__)
