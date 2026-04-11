@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import copy
 import logging
 from typing import Any
 from unittest.mock import MagicMock
@@ -1678,128 +1679,49 @@ async def test_multilevel_switch_cover_moving_state_none_result(
     assert state.state == CoverState.CLOSED
 
 
-async def test_multilevel_switch_cover_unsupervised_no_target_value_update(
+async def test_multilevel_switch_cover_v3_no_moving_state_supervised(
     hass: HomeAssistant,
     client: MagicMock,
-    chain_actuator_zws12: Node,
+    chain_actuator_zws12_state: dict[str, Any],
     integration: MockConfigEntry,
 ) -> None:
-    """Test cover transitions to CLOSED/OPEN without targetValue updates.
+    """Test v3 Multilevel Switch cover never sets OPENING/CLOSING even with Supervision."""
+    node_state = copy.deepcopy(chain_actuator_zws12_state)
+    for value in node_state["values"]:
+        if value["commandClass"] == CommandClass.SWITCH_MULTILEVEL:
+            value["ccVersion"] = 3
+    client.driver.controller.receive_event(
+        Event(
+            type="node added",
+            data={
+                "source": "controller",
+                "event": "node added",
+                "node": node_state,
+                "result": {},
+            },
+        )
+    )
+    await hass.async_block_till_done()
+    node = client.driver.controller.nodes[node_state["nodeId"]]
 
-    Regression test for issue #164915: covers with no supervision where the
-    device only sends currentValue updates (no targetValue updates) should
-    still properly transition from CLOSING/OPENING to CLOSED/OPEN once the
-    current position reaches the fully closed or fully open position.
-    """
-    node = chain_actuator_zws12
     state = hass.states.get(WINDOW_COVER_ENTITY)
     assert state
     assert state.state == CoverState.CLOSED
 
-    # Set cover to fully open position via an unsolicited device report.
-    # This mirrors the log sequence: currentValue 0 => 99
-    node.receive_event(
-        Event(
-            type="value updated",
-            data={
-                "source": "node",
-                "event": "value updated",
-                "nodeId": node.node_id,
-                "args": {
-                    "commandClassName": "Multilevel Switch",
-                    "commandClass": 38,
-                    "endpoint": 0,
-                    "property": "currentValue",
-                    "newValue": 99,
-                    "prevValue": 0,
-                    "propertyName": "currentValue",
-                },
-            },
-        )
-    )
-
-    state = hass.states.get(WINDOW_COVER_ENTITY)
-    assert state.state == CoverState.OPEN
-
-    # Simulate SUCCESS_UNSUPERVISED (no Supervision CC on device).
+    # WORKING result (Supervision CC) must NOT optimistically set OPENING
     client.async_send_command.return_value = {
-        "result": {"status": SetValueStatus.SUCCESS_UNSUPERVISED}
+        "result": {"status": SetValueStatus.WORKING}
     }
-
-    # Close cover – should optimistically enter CLOSING.
-    await hass.services.async_call(
-        COVER_DOMAIN,
-        SERVICE_CLOSE_COVER,
-        {ATTR_ENTITY_ID: WINDOW_COVER_ENTITY},
-        blocking=True,
-    )
-
-    state = hass.states.get(WINDOW_COVER_ENTITY)
-    assert state.state == CoverState.CLOSING
-
-    # Simulate intermediate report from device (currentValue only, no targetValue).
-    # Log sequence: currentValue 99 => 78
-    node.receive_event(
-        Event(
-            type="value updated",
-            data={
-                "source": "node",
-                "event": "value updated",
-                "nodeId": node.node_id,
-                "args": {
-                    "commandClassName": "Multilevel Switch",
-                    "commandClass": 38,
-                    "endpoint": 0,
-                    "property": "currentValue",
-                    "newValue": 78,
-                    "prevValue": 99,
-                    "propertyName": "currentValue",
-                },
-            },
-        )
-    )
-
-    state = hass.states.get(WINDOW_COVER_ENTITY)
-    assert state.state == CoverState.CLOSING
-
-    # Simulate device reaching the fully closed position.
-    # Log sequence: currentValue 78 => 0
-    node.receive_event(
-        Event(
-            type="value updated",
-            data={
-                "source": "node",
-                "event": "value updated",
-                "nodeId": node.node_id,
-                "args": {
-                    "commandClassName": "Multilevel Switch",
-                    "commandClass": 38,
-                    "endpoint": 0,
-                    "property": "currentValue",
-                    "newValue": 0,
-                    "prevValue": 78,
-                    "propertyName": "currentValue",
-                },
-            },
-        )
-    )
-
-    # Cover must leave CLOSING and report CLOSED.
-    state = hass.states.get(WINDOW_COVER_ENTITY)
-    assert state.state == CoverState.CLOSED
-
-    # Now test the opening direction with the same conditions.
-    # Log sequence: currentValue 0 => 18 => 99
     await hass.services.async_call(
         COVER_DOMAIN,
         SERVICE_OPEN_COVER,
         {ATTR_ENTITY_ID: WINDOW_COVER_ENTITY},
         blocking=True,
     )
-
     state = hass.states.get(WINDOW_COVER_ENTITY)
-    assert state.state == CoverState.OPENING
+    assert state.state == CoverState.CLOSED
 
+    # Position updates still work correctly.
     node.receive_event(
         Event(
             type="value updated",
@@ -1809,19 +1731,28 @@ async def test_multilevel_switch_cover_unsupervised_no_target_value_update(
                 "nodeId": node.node_id,
                 "args": {
                     "commandClassName": "Multilevel Switch",
-                    "commandClass": 38,
+                    "commandClass": CommandClass.SWITCH_MULTILEVEL,
                     "endpoint": 0,
                     "property": "currentValue",
-                    "newValue": 18,
+                    "newValue": 99,
                     "prevValue": 0,
                     "propertyName": "currentValue",
                 },
             },
         )
     )
-
     state = hass.states.get(WINDOW_COVER_ENTITY)
-    assert state.state == CoverState.OPENING
+    assert state.state == CoverState.OPEN
+
+    # WORKING result must NOT optimistically set CLOSING
+    await hass.services.async_call(
+        COVER_DOMAIN,
+        SERVICE_CLOSE_COVER,
+        {ATTR_ENTITY_ID: WINDOW_COVER_ENTITY},
+        blocking=True,
+    )
+    state = hass.states.get(WINDOW_COVER_ENTITY)
+    assert state.state == CoverState.OPEN
 
     node.receive_event(
         Event(
@@ -1832,17 +1763,136 @@ async def test_multilevel_switch_cover_unsupervised_no_target_value_update(
                 "nodeId": node.node_id,
                 "args": {
                     "commandClassName": "Multilevel Switch",
-                    "commandClass": 38,
+                    "commandClass": CommandClass.SWITCH_MULTILEVEL,
                     "endpoint": 0,
                     "property": "currentValue",
-                    "newValue": 99,
-                    "prevValue": 18,
+                    "newValue": 0,
+                    "prevValue": 99,
                     "propertyName": "currentValue",
                 },
             },
         )
     )
+    state = hass.states.get(WINDOW_COVER_ENTITY)
+    assert state.state == CoverState.CLOSED
 
-    # Cover must leave OPENING and report OPEN.
+    # SUCCESS result must NOT set OPENING
+    client.async_send_command.return_value = {
+        "result": {"status": SetValueStatus.SUCCESS}
+    }
+    await hass.services.async_call(
+        COVER_DOMAIN,
+        SERVICE_OPEN_COVER,
+        {ATTR_ENTITY_ID: WINDOW_COVER_ENTITY},
+        blocking=True,
+    )
+    state = hass.states.get(WINDOW_COVER_ENTITY)
+    assert state.state == CoverState.CLOSED
+
+
+async def test_multilevel_switch_cover_v3_no_moving_state_unsupervised(
+    hass: HomeAssistant,
+    client: MagicMock,
+    chain_actuator_zws12_state: dict[str, Any],
+    integration: MockConfigEntry,
+) -> None:
+    """Test v3 Multilevel Switch cover never sets OPENING/CLOSING without Supervision."""
+    node_state = copy.deepcopy(chain_actuator_zws12_state)
+    for value in node_state["values"]:
+        if value["commandClass"] == CommandClass.SWITCH_MULTILEVEL:
+            value["ccVersion"] = 3
+    client.driver.controller.receive_event(
+        Event(
+            type="node added",
+            data={
+                "source": "controller",
+                "event": "node added",
+                "node": node_state,
+                "result": {},
+            },
+        )
+    )
+    await hass.async_block_till_done()
+    node = client.driver.controller.nodes[node_state["nodeId"]]
+
+    state = hass.states.get(WINDOW_COVER_ENTITY)
+    assert state
+    assert state.state == CoverState.CLOSED
+
+    # SUCCESS_UNSUPERVISED must NOT set OPENING
+    client.async_send_command.return_value = {
+        "result": {"status": SetValueStatus.SUCCESS_UNSUPERVISED}
+    }
+    await hass.services.async_call(
+        COVER_DOMAIN,
+        SERVICE_OPEN_COVER,
+        {ATTR_ENTITY_ID: WINDOW_COVER_ENTITY},
+        blocking=True,
+    )
+    state = hass.states.get(WINDOW_COVER_ENTITY)
+    assert state.state == CoverState.CLOSED
+
+    # Position updates still work correctly.
+    node.receive_event(
+        Event(
+            type="value updated",
+            data={
+                "source": "node",
+                "event": "value updated",
+                "nodeId": node.node_id,
+                "args": {
+                    "commandClassName": "Multilevel Switch",
+                    "commandClass": CommandClass.SWITCH_MULTILEVEL,
+                    "endpoint": 0,
+                    "property": "currentValue",
+                    "newValue": 99,
+                    "prevValue": 0,
+                    "propertyName": "currentValue",
+                },
+            },
+        )
+    )
     state = hass.states.get(WINDOW_COVER_ENTITY)
     assert state.state == CoverState.OPEN
+
+    # SUCCESS_UNSUPERVISED must NOT set CLOSING
+    await hass.services.async_call(
+        COVER_DOMAIN,
+        SERVICE_CLOSE_COVER,
+        {ATTR_ENTITY_ID: WINDOW_COVER_ENTITY},
+        blocking=True,
+    )
+    state = hass.states.get(WINDOW_COVER_ENTITY)
+    assert state.state == CoverState.OPEN
+
+    node.receive_event(
+        Event(
+            type="value updated",
+            data={
+                "source": "node",
+                "event": "value updated",
+                "nodeId": node.node_id,
+                "args": {
+                    "commandClassName": "Multilevel Switch",
+                    "commandClass": CommandClass.SWITCH_MULTILEVEL,
+                    "endpoint": 0,
+                    "property": "currentValue",
+                    "newValue": 0,
+                    "prevValue": 99,
+                    "propertyName": "currentValue",
+                },
+            },
+        )
+    )
+    state = hass.states.get(WINDOW_COVER_ENTITY)
+    assert state.state == CoverState.CLOSED
+
+    # SUCCESS_UNSUPERVISED set_position must NOT set OPENING
+    await hass.services.async_call(
+        COVER_DOMAIN,
+        SERVICE_SET_COVER_POSITION,
+        {ATTR_ENTITY_ID: WINDOW_COVER_ENTITY, ATTR_POSITION: 50},
+        blocking=True,
+    )
+    state = hass.states.get(WINDOW_COVER_ENTITY)
+    assert state.state == CoverState.CLOSED

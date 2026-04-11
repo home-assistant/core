@@ -1,6 +1,6 @@
 """Support to use FortiOS device like FortiGate as device tracker.
 
-This component is part of the device_tracker platform.
+This FortiOS integration provides a device_tracker platform.
 """
 
 from __future__ import annotations

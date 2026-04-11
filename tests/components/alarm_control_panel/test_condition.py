@@ -78,7 +78,7 @@ async def test_alarm_control_panel_conditions_gated_by_labs_flag(
             condition="alarm_control_panel.is_armed_away",
             target_states=[AlarmControlPanelState.ARMED_AWAY],
             other_states=other_states(AlarmControlPanelState.ARMED_AWAY),
-            additional_attributes={
+            required_filter_attributes={
                 ATTR_SUPPORTED_FEATURES: AlarmControlPanelEntityFeature.ARM_AWAY
             },
         ),
@@ -86,7 +86,7 @@ async def test_alarm_control_panel_conditions_gated_by_labs_flag(
             condition="alarm_control_panel.is_armed_home",
             target_states=[AlarmControlPanelState.ARMED_HOME],
             other_states=other_states(AlarmControlPanelState.ARMED_HOME),
-            additional_attributes={
+            required_filter_attributes={
                 ATTR_SUPPORTED_FEATURES: AlarmControlPanelEntityFeature.ARM_HOME
             },
         ),
@@ -94,7 +94,7 @@ async def test_alarm_control_panel_conditions_gated_by_labs_flag(
             condition="alarm_control_panel.is_armed_night",
             target_states=[AlarmControlPanelState.ARMED_NIGHT],
             other_states=other_states(AlarmControlPanelState.ARMED_NIGHT),
-            additional_attributes={
+            required_filter_attributes={
                 ATTR_SUPPORTED_FEATURES: AlarmControlPanelEntityFeature.ARM_NIGHT
             },
         ),
@@ -102,7 +102,7 @@ async def test_alarm_control_panel_conditions_gated_by_labs_flag(
             condition="alarm_control_panel.is_armed_vacation",
             target_states=[AlarmControlPanelState.ARMED_VACATION],
             other_states=other_states(AlarmControlPanelState.ARMED_VACATION),
-            additional_attributes={
+            required_filter_attributes={
                 ATTR_SUPPORTED_FEATURES: AlarmControlPanelEntityFeature.ARM_VACATION
             },
         ),
@@ -170,7 +170,7 @@ async def test_alarm_control_panel_state_condition_behavior_any(
             condition="alarm_control_panel.is_armed_away",
             target_states=[AlarmControlPanelState.ARMED_AWAY],
             other_states=other_states(AlarmControlPanelState.ARMED_AWAY),
-            additional_attributes={
+            required_filter_attributes={
                 ATTR_SUPPORTED_FEATURES: AlarmControlPanelEntityFeature.ARM_AWAY
             },
         ),
@@ -178,7 +178,7 @@ async def test_alarm_control_panel_state_condition_behavior_any(
             condition="alarm_control_panel.is_armed_home",
             target_states=[AlarmControlPanelState.ARMED_HOME],
             other_states=other_states(AlarmControlPanelState.ARMED_HOME),
-            additional_attributes={
+            required_filter_attributes={
                 ATTR_SUPPORTED_FEATURES: AlarmControlPanelEntityFeature.ARM_HOME
             },
         ),
@@ -186,7 +186,7 @@ async def test_alarm_control_panel_state_condition_behavior_any(
             condition="alarm_control_panel.is_armed_night",
             target_states=[AlarmControlPanelState.ARMED_NIGHT],
             other_states=other_states(AlarmControlPanelState.ARMED_NIGHT),
-            additional_attributes={
+            required_filter_attributes={
                 ATTR_SUPPORTED_FEATURES: AlarmControlPanelEntityFeature.ARM_NIGHT
             },
         ),
@@ -194,7 +194,7 @@ async def test_alarm_control_panel_state_condition_behavior_any(
             condition="alarm_control_panel.is_armed_vacation",
             target_states=[AlarmControlPanelState.ARMED_VACATION],
             other_states=other_states(AlarmControlPanelState.ARMED_VACATION),
-            additional_attributes={
+            required_filter_attributes={
                 ATTR_SUPPORTED_FEATURES: AlarmControlPanelEntityFeature.ARM_VACATION
             },
         ),

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import AsyncGenerator, AsyncIterator
+from copy import deepcopy
 from io import StringIO
 from unittest.mock import Mock, patch
 
@@ -440,3 +441,62 @@ async def test_agents_list_backups_with_multi_chunk_metadata(
     assert len(backups) == 1
     assert backups[0]["backup_id"] == BACKUP_METADATA["backup_id"]
     assert backups[0]["name"] == BACKUP_METADATA["name"]
+
+
+async def test_agents_list_backups_skips_invalid_metadata_file(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    webdav_client: AsyncMock,
+) -> None:
+    """Test listing backups skips unreadable metadata files."""
+    broken_metadata_path = "/broken.metadata.json"
+    valid_metadata_path = "/valid.metadata.json"
+    valid_backup = deepcopy(BACKUP_METADATA)
+    valid_backup["backup_id"] = "valid-backup"
+    valid_backup["name"] = "Valid backup"
+
+    webdav_client.list_files.return_value = [broken_metadata_path, valid_metadata_path]
+
+    async def _download_metadata(path: str, timeout=None) -> AsyncIterator[bytes]:
+        """Mock metadata downloads with one broken and one valid file."""
+        if path == broken_metadata_path:
+            yield b""
+            return
+
+        if path == valid_metadata_path:
+            yield json_dumps(valid_backup).encode()
+            return
+
+        yield b"backup data"
+
+    webdav_client.download_iter.side_effect = _download_metadata
+
+    client = await hass_ws_client(hass)
+    await client.send_json_auto_id({"type": "backup/info"})
+    response = await client.receive_json()
+
+    assert response["success"]
+    assert response["result"]["agent_errors"] == {}
+    assert response["result"]["backups"] == [
+        {
+            "addons": [],
+            "agents": {
+                "webdav.01JKXV07ASC62D620DGYNG2R8H": {
+                    "protected": False,
+                    "size": 34519040,
+                }
+            },
+            "backup_id": "valid-backup",
+            "database_included": True,
+            "date": "2025-02-10T17:47:22.727189+01:00",
+            "extra_metadata": {},
+            "failed_addons": [],
+            "failed_agent_ids": [],
+            "failed_folders": [],
+            "folders": [],
+            "homeassistant_included": True,
+            "homeassistant_version": "2025.2.1",
+            "name": "Valid backup",
+            "with_automatic_settings": None,
+        }
+    ]

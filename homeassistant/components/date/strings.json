@@ -6,7 +6,7 @@
   },
   "services": {
     "set_value": {
-      "description": "Sets the date.",
+      "description": "Sets the value of a date.",
       "fields": {
         "date": {
           "description": "The date to set.",

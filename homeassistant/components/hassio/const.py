@@ -132,6 +132,7 @@ ISSUE_KEY_ADDON_DETACHED_ADDON_REMOVED = "issue_addon_detached_addon_removed"
 ISSUE_KEY_ADDON_PWNED = "issue_addon_pwned"
 ISSUE_KEY_SYSTEM_FREE_SPACE = "issue_system_free_space"
 ISSUE_KEY_ADDON_DEPRECATED = "issue_addon_deprecated_addon"
+ISSUE_KEY_ADDON_DEPRECATED_ARCH = "issue_addon_deprecated_arch_addon"
 
 ISSUE_MOUNT_MOUNT_FAILED = "issue_mount_mount_failed"
 
@@ -172,6 +173,7 @@ EXTRA_PLACEHOLDERS = {
         "more_info_pwned": "https://www.home-assistant.io/more-info/pwned-passwords",
     },
     ISSUE_KEY_ADDON_DEPRECATED: HELP_URLS,
+    ISSUE_KEY_ADDON_DEPRECATED_ARCH: HELP_URLS,
 }
 
 

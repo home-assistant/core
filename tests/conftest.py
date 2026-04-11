@@ -123,7 +123,6 @@ from .typing import (
 if TYPE_CHECKING:
     # Local import to avoid processing recorder and SQLite modules when running a
     # testcase which does not use the recorder.
-    from homeassistant.auth.models import RefreshToken
     from homeassistant.components import recorder
 
 
@@ -350,17 +349,24 @@ def long_repr_strings() -> Generator[None]:
 
 
 @pytest.fixture(autouse=True)
-def enable_event_loop_debug() -> None:
+async def enable_event_loop_debug() -> None:
     """Enable event loop debug mode."""
-    asyncio.get_event_loop().set_debug(True)
+    asyncio.get_running_loop().set_debug(True)
 
 
-@pytest.fixture(autouse=True)
+@pytest_asyncio.fixture(autouse=True)
 def verify_cleanup(
     expected_lingering_tasks: bool,
     expected_lingering_timers: bool,
 ) -> Generator[None]:
-    """Verify that the test has cleaned up resources correctly."""
+    """Verify that the test has cleaned up resources correctly.
+
+    This fixture requires the event loop to be stopped.
+    It therefore cannot be an async fixture.
+
+    Use @pytest_asyncio.fixture to make sure the correct event loop is set
+    regardless before calling the fixture.
+    """
     event_loop = asyncio.get_event_loop()
     threads_before = frozenset(threading.enumerate())
     tasks_before = asyncio.all_tasks(event_loop)
@@ -2009,28 +2015,13 @@ async def hassio_stubs(
     hass_client: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
     supervisor_client: AsyncMock,
-) -> RefreshToken:
+    ingress_panels: AsyncMock,
+) -> None:
     """Create mock hassio http client."""
-    with (
-        patch(
-            "homeassistant.components.hassio.HassIO.update_hass_api",
-            return_value={"result": "ok"},
-        ) as hass_api,
-        patch(
-            "homeassistant.components.hassio.HassIO.update_hass_config",
-            return_value={"result": "ok"},
-        ),
-        patch(
-            "homeassistant.components.hassio.HassIO.get_ingress_panels",
-            return_value={"panels": []},
-        ),
-        patch(
-            "homeassistant.components.hassio.issues.SupervisorIssues.setup",
-        ),
+    with patch(
+        "homeassistant.components.hassio.issues.SupervisorIssues.setup",
     ):
         await async_setup_component(hass, "hassio", {})
-
-    return hass_api.call_args[0][1]
 
 
 @pytest.fixture

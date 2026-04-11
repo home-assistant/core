@@ -72,7 +72,7 @@ async def test_cover_conditions_gated_by_labs_flag(
                     (CoverState.CLOSED, {ATTR_IS_CLOSED: True}),
                     (CoverState.CLOSING, {ATTR_IS_CLOSED: True}),
                 ],
-                additional_attributes={ATTR_DEVICE_CLASS: device_class},
+                required_filter_attributes={ATTR_DEVICE_CLASS: device_class},
             ),
             *parametrize_condition_states_any(
                 condition=is_closed_key,
@@ -85,7 +85,7 @@ async def test_cover_conditions_gated_by_labs_flag(
                     (CoverState.OPENING, {ATTR_IS_CLOSED: False}),
                     (CoverState.CLOSING, {ATTR_IS_CLOSED: False}),
                 ],
-                additional_attributes={ATTR_DEVICE_CLASS: device_class},
+                required_filter_attributes={ATTR_DEVICE_CLASS: device_class},
             ),
         )
     ],
@@ -135,7 +135,7 @@ async def test_cover_condition_behavior_any(
                     (CoverState.CLOSED, {ATTR_IS_CLOSED: True}),
                     (CoverState.CLOSING, {ATTR_IS_CLOSED: True}),
                 ],
-                additional_attributes={ATTR_DEVICE_CLASS: device_class},
+                required_filter_attributes={ATTR_DEVICE_CLASS: device_class},
             ),
             *parametrize_condition_states_all(
                 condition=is_closed_key,
@@ -148,7 +148,7 @@ async def test_cover_condition_behavior_any(
                     (CoverState.OPENING, {ATTR_IS_CLOSED: False}),
                     (CoverState.CLOSING, {ATTR_IS_CLOSED: False}),
                 ],
-                additional_attributes={ATTR_DEVICE_CLASS: device_class},
+                required_filter_attributes={ATTR_DEVICE_CLASS: device_class},
             ),
         )
     ],

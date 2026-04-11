@@ -1,0 +1,39 @@
+.humidity_threshold_entity: &humidity_threshold_entity
+  - domain: input_number
+    unit_of_measurement: "%"
+  - domain: sensor
+    device_class: humidity
+  - domain: number
+    device_class: humidity
+
+.humidity_threshold_number: &humidity_threshold_number
+  min: 0
+  max: 100
+  mode: box
+  unit_of_measurement: "%"
+
+is_value:
+  target:
+    entity:
+      - domain: sensor
+        device_class: humidity
+      - domain: climate
+      - domain: humidifier
+      - domain: weather
+  fields:
+    behavior:
+      required: true
+      default: any
+      selector:
+        select:
+          translation_key: condition_behavior
+          options:
+            - all
+            - any
+    threshold:
+      required: true
+      selector:
+        numeric_threshold:
+          entity: *humidity_threshold_entity
+          mode: is
+          number: *humidity_threshold_number

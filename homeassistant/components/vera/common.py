@@ -46,7 +46,7 @@ def set_controller_data(
     hass: HomeAssistant, config_entry: ConfigEntry, data: ControllerData
 ) -> None:
     """Set controller data in hass data."""
-    hass.data[DOMAIN][config_entry.entry_id] = data
+    hass.data.setdefault(DOMAIN, {})[config_entry.entry_id] = data
 
 
 class SubscriptionRegistry(pv.AbstractSubscriptionRegistry):
