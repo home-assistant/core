@@ -15,6 +15,7 @@ from .entity import LutronCasetaEntity
 from .models import LutronCasetaConfigEntry, LutronCasetaData
 
 SCAN_INTERVAL = timedelta(days=1)
+BATTERY_STATUS_OPTIONS = ["good", "low"]
 
 
 async def async_setup_entry(
@@ -40,14 +41,16 @@ class LutronCasetaBatterySensor(LutronCasetaEntity, SensorEntity):
     _attr_device_class = SensorDeviceClass.ENUM
     _attr_entity_category = EntityCategory.DIAGNOSTIC
     _attr_has_entity_name = True
-    _attr_options = ["good", "low"]
+    _attr_options = BATTERY_STATUS_OPTIONS
     _attr_should_poll = True
     _attr_translation_key = "battery"
 
     def __init__(self, device: dict[str, Any], data: LutronCasetaData) -> None:
         """Initialize the battery sensor."""
         super().__init__(device, data)
-        self._attr_name = "Battery"
+        # The base entity sets the shade name; remove it so translation_key provides
+        # the sensor name.
+        del self._attr_name
         self._attr_native_value: str | None = None
 
     @property
@@ -62,4 +65,7 @@ class LutronCasetaBatterySensor(LutronCasetaEntity, SensorEntity):
     async def async_update(self) -> None:
         """Fetch the latest battery status from the bridge."""
         status = await self._smartbridge.get_battery_status(self.device_id)
-        self._attr_native_value = status.lower() if status else None
+        normalized_status = status.strip().casefold() if status else None
+        self._attr_native_value = (
+            normalized_status if normalized_status in BATTERY_STATUS_OPTIONS else None
+        )

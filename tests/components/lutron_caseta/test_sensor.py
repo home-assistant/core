@@ -87,10 +87,11 @@ async def test_battery_sensor_updates_on_demand(hass: HomeAssistant) -> None:
     initial_state = hass.states.get(sensor_entity_id)
     assert initial_state is not None
     assert initial_state.state == "good"
+    assert initial_state.name == "Basement Bedroom Left Shade Battery"
     assert initial_state.attributes[ATTR_DEVICE_CLASS] == SensorDeviceClass.ENUM
     assert initial_state.attributes[ATTR_OPTIONS] == ["good", "low"]
 
-    instance.battery_statuses["802"] = "Low"
+    instance.battery_statuses["802"] = " Low "
     await async_update_entity(hass, sensor_entity_id)
     await hass.async_block_till_done()
 
@@ -99,6 +100,14 @@ async def test_battery_sensor_updates_on_demand(hass: HomeAssistant) -> None:
     assert updated_state.state == "low"
     assert instance.get_battery_status.await_count == 2
     instance.get_battery_status.assert_awaited_with("802")
+
+    instance.battery_statuses["802"] = "Unknown"
+    await async_update_entity(hass, sensor_entity_id)
+    await hass.async_block_till_done()
+
+    unknown_state = hass.states.get(sensor_entity_id)
+    assert unknown_state is not None
+    assert unknown_state.state == "unknown"
 
 
 async def test_battery_sensor_refreshes_on_schedule(hass: HomeAssistant) -> None:
