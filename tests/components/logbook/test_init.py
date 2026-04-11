@@ -3023,10 +3023,9 @@ async def test_logbook_user_id_from_parent_context(
     2. Thermostat calls homeassistant.turn_on → child context (no user_id)
        - SERVICE_CALL event fired (child context)
     3. Switch state changes off → on (child context)
-    4. Climate state updates again in response (child context)
 
     All entries should have user_id attributed, either directly (step 1)
-    or inherited from the parent context (steps 2-4).
+    or inherited from the parent context (steps 2-3).
     """
     await asyncio.gather(
         *[
