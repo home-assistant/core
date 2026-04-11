@@ -123,7 +123,7 @@ class DiscordNotifyEntity(DiscordEntity, NotifyEntity):
     ) -> bytearray | None:
         """Retrieve file bytes from a URL."""
         if not self.hass.config.is_allowed_external_url(url):
-            _LOGGER.error("URL not allowed: %s", url)
+            _LOGGER.warning("URL not allowed: %s", url)
             return None
 
         session = async_get_clientsession(self.hass)
