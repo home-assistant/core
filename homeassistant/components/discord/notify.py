@@ -137,13 +137,19 @@ class DiscordNotifyEntity(DiscordEntity, NotifyEntity):
             ) as resp:
                 content_length = resp.headers.get("Content-Length")
 
-                if content_length is not None and int(content_length) > max_file_size:
-                    _LOGGER.error(
-                        "Attachment too large (Content-Length reports %s). Max size: %s bytes",
-                        int(content_length),
-                        max_file_size,
-                    )
-                    return None
+                try:
+                    if (
+                        content_length is not None
+                        and int(content_length) > max_file_size
+                    ):
+                        _LOGGER.error(
+                            "Attachment too large (Content-Length reports %s). Max size: %s bytes",
+                            content_length,
+                            max_file_size,
+                        )
+                        return None
+                except ValueError:
+                    pass  # Malformed Content-Length; fall through to streaming size check
 
                 file_size = 0
                 byte_chunks = bytearray()
