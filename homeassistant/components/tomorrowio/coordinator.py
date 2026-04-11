@@ -24,6 +24,7 @@ from homeassistant.const import (
     CONF_LONGITUDE,
 )
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import (
@@ -116,11 +117,9 @@ def async_set_update_interval(
 class TomorrowioDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """Define an object to hold Tomorrow.io data."""
 
-    config_entry: ConfigEntry
+    config_entry: None
 
-    def __init__(
-        self, hass: HomeAssistant, config_entry: ConfigEntry, api: TomorrowioV4
-    ) -> None:
+    def __init__(self, hass: HomeAssistant, api: TomorrowioV4) -> None:
         """Initialize."""
         self._api = api
         self.data = {CURRENT: {}, FORECASTS: {}}
@@ -130,7 +129,7 @@ class TomorrowioDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         super().__init__(
             hass,
             LOGGER,
-            config_entry=config_entry,
+            config_entry=None,
             name=f"{DOMAIN}_{self._api.api_key_masked}",
         )
 
@@ -158,7 +157,15 @@ class TomorrowioDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 "Loaded %s entries, initiating first refresh",
                 len(self.entry_id_to_location_dict),
             )
-            await self.async_config_entry_first_refresh()
+            await self._async_refresh(
+                log_failures=False,
+                raise_on_auth_failed=True,
+                raise_on_entry_error=True,
+            )
+            if not self.last_update_success:
+                ex = ConfigEntryNotReady()
+                ex.__cause__ = self.last_exception
+                raise ex
             self._coordinator_ready.set()
         else:
             # If we have an event, we need to wait for it to be set before we proceed
@@ -184,7 +191,7 @@ class TomorrowioDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         if self._listeners:
             self._schedule_refresh()
 
-    async def async_unload_entry(self, entry: ConfigEntry) -> bool | None:
+    async def async_unload_entry(self, entry: ConfigEntry) -> bool:
         """Unload a config entry from coordinator.
 
         Returns whether coordinator can be removed as well because there are no

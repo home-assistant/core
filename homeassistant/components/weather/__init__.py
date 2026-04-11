@@ -1223,7 +1223,9 @@ class SingleCoordinatorWeatherEntity(
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         super()._handle_coordinator_update()
-        assert self.coordinator.config_entry
-        self.coordinator.config_entry.async_create_task(
-            self.hass, self.async_update_listeners(None)
+        if entry := self.coordinator.config_entry:
+            entry.async_create_task(self.hass, self.async_update_listeners(None))
+            return
+        self.hass.async_create_task(
+            self.async_update_listeners(None), f"{self.coordinator.name}"
         )
