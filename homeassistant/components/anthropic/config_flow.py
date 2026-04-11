@@ -66,7 +66,6 @@ from .const import (
     DEFAULT_CONVERSATION_NAME,
     DOMAIN,
     MIN_THINKING_BUDGET,
-    NON_ADAPTIVE_THINKING_MODELS,
     TOOL_SEARCH_UNSUPPORTED_MODELS,
     WEB_SEARCH_UNSUPPORTED_MODELS,
     PromptCaching,
@@ -400,7 +399,7 @@ class ConversationSubentryFlowHandler(ConfigSubentryFlow):
         if (
             self.model_info.capabilities
             and self.model_info.capabilities.thinking.supported
-            and model.startswith(tuple(NON_ADAPTIVE_THINKING_MODELS))
+            and not self.model_info.capabilities.thinking.types.adaptive.supported
         ):
             step_schema[
                 vol.Optional(
@@ -419,7 +418,10 @@ class ConversationSubentryFlowHandler(ConfigSubentryFlow):
         else:
             self.options.pop(CONF_THINKING_BUDGET, None)
 
-        if not model.startswith(tuple(NON_ADAPTIVE_THINKING_MODELS)):
+        if (
+            self.model_info.capabilities
+            and self.model_info.capabilities.thinking.types.adaptive.supported
+        ):
             step_schema[
                 vol.Optional(
                     CONF_THINKING_EFFORT,

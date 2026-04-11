@@ -112,7 +112,6 @@ from .const import (
     DOMAIN,
     LOGGER,
     MIN_THINKING_BUDGET,
-    NON_ADAPTIVE_THINKING_MODELS,
     PromptCaching,
 )
 from .coordinator import AnthropicConfigEntry, AnthropicCoordinator
@@ -754,7 +753,10 @@ class AnthropicBaseLLMEntity(CoordinatorEntity[AnthropicCoordinator]):
         ):
             model_args["cache_control"] = {"type": "ephemeral"}
 
-        if not model.startswith(tuple(NON_ADAPTIVE_THINKING_MODELS)):
+        if (
+            self.model_info.capabilities
+            and self.model_info.capabilities.thinking.types.adaptive.supported
+        ):
             thinking_effort = options.get(
                 CONF_THINKING_EFFORT, DEFAULT[CONF_THINKING_EFFORT]
             )
@@ -772,7 +774,7 @@ class AnthropicBaseLLMEntity(CoordinatorEntity[AnthropicCoordinator]):
             )
             if (
                 self.model_info.capabilities
-                and self.model_info.capabilities.thinking.supported
+                and self.model_info.capabilities.thinking.types.enabled.supported
                 and thinking_budget >= MIN_THINKING_BUDGET
             ):
                 model_args["thinking"] = ThinkingConfigEnabledParam(
