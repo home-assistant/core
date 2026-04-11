@@ -245,6 +245,18 @@ class NetatmoDataHandler:
                 **self.publisher[signal_name].kwargs
             )
 
+        except pyatmo.ApiThrottlingError as err:
+            _LOGGER.warning(
+                "Netatmo rate limit hit, forcing token refresh: %s", err
+            )
+            try:
+                self.auth._oauth_session.token["expires_at"] = 0
+                await self.auth._oauth_session.async_ensure_token_valid()
+                _LOGGER.info("Token refreshed successfully after rate limit")
+            except Exception:
+                _LOGGER.exception("Failed to refresh token after rate limit")
+            has_error = True
+
         except (pyatmo.NoDeviceError, pyatmo.ApiError) as err:
             _LOGGER.debug(err)
             has_error = True
