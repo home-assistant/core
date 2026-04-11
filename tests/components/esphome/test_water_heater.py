@@ -10,6 +10,7 @@ from aioesphomeapi import (
     WaterHeaterState,
     WaterHeaterStateFlag,
 )
+import pytest
 
 from homeassistant.components.water_heater import (
     ATTR_AWAY_MODE,
@@ -324,12 +325,64 @@ async def test_water_heater_no_on_off_without_feature(
     )
 
 
+@pytest.mark.parametrize(
+    ("supported_features", "has_away_mode"),
+    [
+        (WaterHeaterFeature.SUPPORTS_AWAY_MODE, True),
+        (WaterHeaterFeature(0), False),
+    ],
+)
 async def test_water_heater_away_mode_feature_flag(
     hass: HomeAssistant,
     mock_client: APIClient,
     mock_generic_device_entry: MockGenericDeviceEntryType,
+    supported_features: WaterHeaterFeature,
+    has_away_mode: bool,
 ) -> None:
-    """Test AWAY_MODE feature flag is advertised when ESPHome reports SUPPORTS_AWAY_MODE."""
+    """Test AWAY_MODE feature flag tracks the ESPHome SUPPORTS_AWAY_MODE flag."""
+    entity_info = [
+        WaterHeaterInfo(
+            object_id="my_boiler",
+            key=1,
+            name="My Boiler",
+            min_temperature=10.0,
+            max_temperature=85.0,
+            supported_features=supported_features,
+        )
+    ]
+    states = [WaterHeaterState(key=1, target_temperature=50.0)]
+
+    await mock_generic_device_entry(
+        mock_client=mock_client,
+        entity_info=entity_info,
+        states=states,
+    )
+
+    state = hass.states.get("water_heater.test_my_boiler")
+    assert state is not None
+    assert (
+        bool(
+            state.attributes["supported_features"] & WaterHeaterEntityFeature.AWAY_MODE
+        )
+        is has_away_mode
+    )
+
+
+@pytest.mark.parametrize(
+    ("state_flag", "expected_away_mode"),
+    [
+        (WaterHeaterStateFlag(0), "off"),
+        (WaterHeaterStateFlag.AWAY, "on"),
+    ],
+)
+async def test_water_heater_away_mode_state(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_generic_device_entry: MockGenericDeviceEntryType,
+    state_flag: WaterHeaterStateFlag,
+    expected_away_mode: str,
+) -> None:
+    """Test is_away_mode_on reflects the AWAY state flag."""
     entity_info = [
         WaterHeaterInfo(
             object_id="my_boiler",
@@ -344,6 +397,7 @@ async def test_water_heater_away_mode_feature_flag(
         WaterHeaterState(
             key=1,
             target_temperature=50.0,
+            state=state_flag,
         )
     ]
 
@@ -355,50 +409,17 @@ async def test_water_heater_away_mode_feature_flag(
 
     state = hass.states.get("water_heater.test_my_boiler")
     assert state is not None
-    assert state.attributes["supported_features"] & WaterHeaterEntityFeature.AWAY_MODE
+    assert state.attributes.get("away_mode") == expected_away_mode
 
 
-async def test_water_heater_no_away_mode_without_feature(
+@pytest.mark.parametrize("away_mode", [True, False])
+async def test_water_heater_set_away_mode(
     hass: HomeAssistant,
     mock_client: APIClient,
     mock_generic_device_entry: MockGenericDeviceEntryType,
+    away_mode: bool,
 ) -> None:
-    """Test AWAY_MODE feature is not set when not supported by ESPHome device."""
-    entity_info = [
-        WaterHeaterInfo(
-            object_id="my_boiler",
-            key=1,
-            name="My Boiler",
-            min_temperature=10.0,
-            max_temperature=85.0,
-        )
-    ]
-    states = [
-        WaterHeaterState(
-            key=1,
-            target_temperature=50.0,
-        )
-    ]
-
-    await mock_generic_device_entry(
-        mock_client=mock_client,
-        entity_info=entity_info,
-        states=states,
-    )
-
-    state = hass.states.get("water_heater.test_my_boiler")
-    assert state is not None
-    assert not (
-        state.attributes["supported_features"] & WaterHeaterEntityFeature.AWAY_MODE
-    )
-
-
-async def test_water_heater_away_mode_state_off(
-    hass: HomeAssistant,
-    mock_client: APIClient,
-    mock_generic_device_entry: MockGenericDeviceEntryType,
-) -> None:
-    """Test is_away_mode_on is off when AWAY bit is clear."""
+    """Test the set_away_mode service forwards the value to ESPHome."""
     entity_info = [
         WaterHeaterInfo(
             object_id="my_boiler",
@@ -413,77 +434,7 @@ async def test_water_heater_away_mode_state_off(
         WaterHeaterState(
             key=1,
             target_temperature=50.0,
-            state=0,
-        )
-    ]
-
-    await mock_generic_device_entry(
-        mock_client=mock_client,
-        entity_info=entity_info,
-        states=states,
-    )
-
-    state = hass.states.get("water_heater.test_my_boiler")
-    assert state is not None
-    assert state.attributes.get("away_mode") == "off"
-
-
-async def test_water_heater_away_mode_state_on(
-    hass: HomeAssistant,
-    mock_client: APIClient,
-    mock_generic_device_entry: MockGenericDeviceEntryType,
-) -> None:
-    """Test is_away_mode_on is on when AWAY bit is set."""
-    entity_info = [
-        WaterHeaterInfo(
-            object_id="my_boiler",
-            key=1,
-            name="My Boiler",
-            min_temperature=10.0,
-            max_temperature=85.0,
-            supported_features=WaterHeaterFeature.SUPPORTS_AWAY_MODE,
-        )
-    ]
-    states = [
-        WaterHeaterState(
-            key=1,
-            target_temperature=50.0,
-            state=WaterHeaterStateFlag.AWAY,
-        )
-    ]
-
-    await mock_generic_device_entry(
-        mock_client=mock_client,
-        entity_info=entity_info,
-        states=states,
-    )
-
-    state = hass.states.get("water_heater.test_my_boiler")
-    assert state is not None
-    assert state.attributes.get("away_mode") == "on"
-
-
-async def test_water_heater_turn_away_mode_on(
-    hass: HomeAssistant,
-    mock_client: APIClient,
-    mock_generic_device_entry: MockGenericDeviceEntryType,
-) -> None:
-    """Test turning away mode on sends away=True to ESPHome."""
-    entity_info = [
-        WaterHeaterInfo(
-            object_id="my_boiler",
-            key=1,
-            name="My Boiler",
-            min_temperature=10.0,
-            max_temperature=85.0,
-            supported_features=WaterHeaterFeature.SUPPORTS_AWAY_MODE,
-        )
-    ]
-    states = [
-        WaterHeaterState(
-            key=1,
-            target_temperature=50.0,
-            state=0,
+            state=WaterHeaterStateFlag(0),
         )
     ]
 
@@ -498,56 +449,11 @@ async def test_water_heater_turn_away_mode_on(
         SERVICE_SET_AWAY_MODE,
         {
             ATTR_ENTITY_ID: "water_heater.test_my_boiler",
-            ATTR_AWAY_MODE: True,
+            ATTR_AWAY_MODE: away_mode,
         },
         blocking=True,
     )
 
     mock_client.water_heater_command.assert_has_calls(
-        [call(key=1, away=True, device_id=0)]
-    )
-
-
-async def test_water_heater_turn_away_mode_off(
-    hass: HomeAssistant,
-    mock_client: APIClient,
-    mock_generic_device_entry: MockGenericDeviceEntryType,
-) -> None:
-    """Test turning away mode off sends away=False to ESPHome."""
-    entity_info = [
-        WaterHeaterInfo(
-            object_id="my_boiler",
-            key=1,
-            name="My Boiler",
-            min_temperature=10.0,
-            max_temperature=85.0,
-            supported_features=WaterHeaterFeature.SUPPORTS_AWAY_MODE,
-        )
-    ]
-    states = [
-        WaterHeaterState(
-            key=1,
-            target_temperature=50.0,
-            state=WaterHeaterStateFlag.AWAY,
-        )
-    ]
-
-    await mock_generic_device_entry(
-        mock_client=mock_client,
-        entity_info=entity_info,
-        states=states,
-    )
-
-    await hass.services.async_call(
-        WATER_HEATER_DOMAIN,
-        SERVICE_SET_AWAY_MODE,
-        {
-            ATTR_ENTITY_ID: "water_heater.test_my_boiler",
-            ATTR_AWAY_MODE: False,
-        },
-        blocking=True,
-    )
-
-    mock_client.water_heater_command.assert_has_calls(
-        [call(key=1, away=False, device_id=0)]
+        [call(key=1, away=away_mode, device_id=0)]
     )

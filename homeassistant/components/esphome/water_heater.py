@@ -95,6 +95,12 @@ class EsphomeWaterHeater(
         """Return current operation mode."""
         return _WATER_HEATER_MODES.from_esphome(self._state.mode)
 
+    @property
+    @esphome_state_property
+    def is_away_mode_on(self) -> bool:
+        """Return true if away mode is on."""
+        return bool(self._state.state & WaterHeaterStateFlag.AWAY)
+
     @convert_api_error_ha_error
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
@@ -130,12 +136,6 @@ class EsphomeWaterHeater(
             on=False,
             device_id=self._static_info.device_id,
         )
-
-    @property
-    @esphome_state_property
-    def is_away_mode_on(self) -> bool | None:
-        """Return true if away mode is on."""
-        return bool(self._state.state & WaterHeaterStateFlag.AWAY)
 
     @convert_api_error_ha_error
     async def async_turn_away_mode_on(self) -> None:
