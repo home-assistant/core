@@ -313,6 +313,10 @@ class SoCoMockFactory:
             return_value={"RoomUUID": ""}
         )
         mock_soco.deviceProperties.SetAutoplayRoomUUID = Mock()
+        mock_soco.deviceProperties.GetAutoplayLinkedZones = Mock(
+            return_value={"IncludeLinkedZones": "0"}
+        )
+        mock_soco.deviceProperties.SetAutoplayLinkedZones = Mock()
         mock_soco.zone_group_state = Mock()
         mock_soco.zone_group_state.processed_count = 10
         mock_soco.zone_group_state.total_requests = 12

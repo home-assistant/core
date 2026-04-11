@@ -440,6 +440,117 @@ async def test_tv_autoplay_not_created_for_non_ht(
     assert entity_id not in entity_registry.entities
 
 
+async def test_tv_ungroup_autoplay_switch(
+    hass: HomeAssistant,
+    async_setup_sonos,
+    soco: MockSoCo,
+    speaker_info: dict[str, str],
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test ungroup-on-autoplay switch creation, state and turn on/off."""
+    entity_id = "switch.zone_a_ungroup_on_autoplay"
+
+    speaker_info["model_name"] = "Sonos Beam"
+    soco.get_speaker_info.return_value = speaker_info
+    soco.deviceProperties.GetAutoplayRoomUUID.return_value = {
+        "RoomUUID": soco.uid,
+        "Source": "TV",
+    }
+    # IncludeLinkedZones=0 means "don't include linked zones" = ungroup = ON
+    soco.deviceProperties.GetAutoplayLinkedZones.return_value = {
+        "IncludeLinkedZones": "0",
+        "Source": "TV",
+    }
+    await async_setup_sonos()
+
+    switch = entity_registry.entities.get(entity_id)
+    assert switch is not None
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == STATE_ON
+
+    # Turn off: should send IncludeLinkedZones=1 (include group = stop ungrouping)
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        SERVICE_TURN_OFF,
+        {ATTR_ENTITY_ID: entity_id},
+        blocking=True,
+    )
+    soco.deviceProperties.SetAutoplayLinkedZones.assert_called_once_with(
+        [("IncludeLinkedZones", "1"), ("Source", "TV")]
+    )
+    soco.deviceProperties.SetAutoplayLinkedZones.reset_mock()
+
+    # Turn on: should send IncludeLinkedZones=0 (don't include group = ungroup)
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: entity_id},
+        blocking=True,
+    )
+    soco.deviceProperties.SetAutoplayLinkedZones.assert_called_once_with(
+        [("IncludeLinkedZones", "0"), ("Source", "TV")]
+    )
+
+
+async def test_tv_ungroup_autoplay_available_independently_of_tv_autoplay(
+    hass: HomeAssistant,
+    async_setup_sonos,
+    soco: MockSoCo,
+    speaker_info: dict[str, str],
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test ungroup-on-autoplay reflects device state regardless of TV autoplay state.
+
+    The device manages the dependency between the two settings. HA should poll
+    the actual device value and not force the switch unavailable or off.
+    """
+    ungroup_id = "switch.zone_a_ungroup_on_autoplay"
+
+    speaker_info["model_name"] = "Sonos Beam"
+    soco.get_speaker_info.return_value = speaker_info
+    soco.deviceProperties.GetAutoplayRoomUUID.return_value = {
+        "RoomUUID": soco.uid,
+        "Source": "TV",
+    }
+    # IncludeLinkedZones=0 means ungroup = ON
+    soco.deviceProperties.GetAutoplayLinkedZones.return_value = {
+        "IncludeLinkedZones": "0",
+        "Source": "TV",
+    }
+    await async_setup_sonos()
+
+    assert hass.states.get(ungroup_id).state == STATE_ON
+
+    # Simulate the device reporting ungroup as off (e.g. after TV autoplay is
+    # disabled on the device side). The switch should show OFF, not unavailable.
+    ungroup_platform = hass.data["entity_components"]["switch"]
+    ungroup_entry = entity_registry.entities[ungroup_id]
+    ungroup_entity = ungroup_platform.get_entity(ungroup_entry.entity_id)
+    assert ungroup_entity is not None
+
+    soco.deviceProperties.GetAutoplayLinkedZones.return_value = {
+        "IncludeLinkedZones": "1",
+        "Source": "TV",
+    }
+    await hass.async_add_executor_job(ungroup_entity.poll_state)
+    ungroup_entity.async_write_ha_state()
+    await hass.async_block_till_done()
+
+    assert hass.states.get(ungroup_id).state == STATE_OFF
+
+
+async def test_tv_ungroup_autoplay_not_created_for_non_ht(
+    hass: HomeAssistant,
+    async_autosetup_sonos,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test that ungroup-on-autoplay switch is not created for non-HT devices."""
+    entity_id = "switch.zone_a_ungroup_on_autoplay"
+    assert entity_id not in entity_registry.entities
+
+
 async def test_alarm_setup_for_undiscovered_speaker(
     hass: HomeAssistant,
     async_setup_sonos,
