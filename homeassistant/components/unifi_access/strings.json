@@ -82,6 +82,19 @@
         "name": "Thumbnail"
       }
     },
+    "select": {
+      "door_lock_rule": {
+        "name": "Lock rule",
+        "state": {
+          "custom": "Custom",
+          "keep_lock": "Keep locked",
+          "keep_unlock": "Keep unlocked",
+          "lock_early": "Lock early",
+          "reset": "Reset",
+          "schedule": "Schedule"
+        }
+      }
+    },
     "sensor": {
       "door_lock_rule": {
         "name": "Lock rule",

@@ -1,0 +1,136 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Il dispositivo è già configurato",
+            "reauth_successful": "La ri-autenticazione è avvenuta con successo",
+            "reconfigure_successful": "La ri-configurazione è avvenuta con successo"
+        },
+        "error": {
+            "cannot_connect": "Connessione fallita",
+            "invalid_api_key": "Chiave API non valida",
+            "ssl_error": "Errore nella convalida del certificato SSL",
+            "unknown": "Errore imprevisto"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "api_token": "Token API",
+                    "host": "Host",
+                    "use_polling": "Interrogazione basata sul tempo (polling)",
+                    "verify_ssl": "Verifica del certificato SSL"
+                },
+                "data_description": {
+                    "host": "Nome host o indirizzo IP del controller UniFi Access",
+                    "api_token": "Token API generato nelle impostazioni di UniFi Access",
+                    "verify_ssl": "Verifica il certificato SSL del controller",
+                    "use_polling": "Usa il polling invece degli aggiornamenti push via websocket"
+                }
+            },
+            "reauth_confirm": {
+                "title": "Ri-autenticazione UniFi Access",
+                "description": "Il token API per {host} non è più valido. Inserisci un nuovo token API.",
+                "data": {
+                    "api_token": "Token API"
+                }
+            },
+            "reconfigure": {
+                "data": {
+                    "api_token": "Token API",
+                    "host": "Host",
+                    "use_polling": "Interrogazione basata sul tempo (polling)",
+                    "verify_ssl": "Verifica del certificato SSL"
+                },
+                "data_description": {
+                    "host": "Nome host o indirizzo IP del controller UniFi Access",
+                    "api_token": "Token API generato nelle impostazioni di UniFi Access",
+                    "verify_ssl": "Verifica il certificato SSL del controller",
+                    "use_polling": "Usa il polling invece degli aggiornamenti push via websocket"
+                }
+            }
+        }
+    },
+    "entity": {
+        "binary_sensor": {
+            "access_door_dps": {
+                "name": "Sensore di posizione della porta"
+            },
+            "doorbell_status": {
+                "name": "Campanello"
+            }
+        },
+        "event": {
+            "access_event": {
+                "name": "Evento Porta",
+                "state_attributes": {
+                    "event_type": {
+                        "state": {
+                            "unifi_access_entry": "Ingresso",
+                            "unifi_access_exit": "Uscita",
+                            "unifi_access_access": "Accesso"
+                        }
+                    }
+                }
+            },
+            "doorbell_event": {
+                "name": "Campanello",
+                "state_attributes": {
+                    "event_type": {
+                        "state": {
+                            "unifi_access_doorbell_start": "Campanello Inizio",
+                            "unifi_access_doorbell_stop": "Campanello Fine"
+                        }
+                    }
+                }
+            }
+        },
+        "image": {
+            "door_thumbnail": {
+                "name": "Miniatura"
+            }
+        },
+        "lock": {
+            "access_door": {
+                "name": "{door_name}"
+            }
+        },
+        "number": {
+            "door_lock_rule_interval": {
+                "name": "Intervallo della regola (min)"
+            }
+        },
+        "select": {
+            "door_lock_rules": {
+                "name": "Regola serratura porta",
+                "state": {
+                    "custom": "Personalizzato (intervallo impostato)",
+                    "keep_lock": "Tenerlo chiuso",
+                    "keep_unlock": "Tenerlo aperto",
+                    "lock_early": "Blocco anticipato",
+                    "lock_now": "Blocca ora",
+                    "reset": "Azzeramento della regola"
+                }
+            }
+        },
+        "sensor": {
+            "door_lock_rule": {
+                "name": "Regola serratura porta",
+                "state": {
+                    "custom": "Personalizzato",
+                    "keep_lock": "Bloccato",
+                    "keep_unlock": "Sbloccato"
+                }
+            },
+            "door_lock_rule_ended_time": {
+                "name": "Fine della regola"
+            }
+        },
+        "switch": {
+            "evacuation": {
+                "name": "Evacuazione"
+            },
+            "lockdown": {
+                "name": "Blocco"
+            }
+        }
+    }
+}
