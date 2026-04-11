@@ -87,11 +87,14 @@ class MusicAssistantPlayerConfigSelect(MusicAssistantPlayerOptionEntity, SelectE
         player_option: PlayerOption,
         entity_description: SelectEntityDescription,
     ) -> None:
-        """Initialize MusicAssistantPlayerConfigselect."""
+        """Initialize MusicAssistantPlayerConfigSelect."""
         # this was verified already in the entry callback
         assert player_option.options is not None
         self._option_translation_key_to_key_mapping = {
             option.translation_key: option.key for option in player_option.options
+        }
+        self._option_key_to_translation_key_mapping = {
+            option.key: option.translation_key for option in player_option.options
         }
         self._attr_options = list(self._option_translation_key_to_key_mapping.keys())
 
@@ -109,11 +112,9 @@ class MusicAssistantPlayerConfigSelect(MusicAssistantPlayerOptionEntity, SelectE
 
     def on_player_option_update(self, player_option: PlayerOption) -> None:
         """Update on player option update."""
-        current_option: str | None = None
-        for (
-            translation_key,
-            option_key,
-        ) in self._option_translation_key_to_key_mapping.items():
-            if player_option.value == option_key:
-                current_option = translation_key
-        self._attr_current_option = current_option
+        self._attr_current_option = None
+        # the value in that case is the key, which is always a string
+        if isinstance(player_option.value, str):
+            self._attr_current_option = self._option_key_to_translation_key_mapping.get(
+                player_option.value
+            )
