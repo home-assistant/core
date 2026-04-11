@@ -170,14 +170,33 @@ class PortainerCoordinator(DataUpdateCoordinator[dict[int, PortainerCoordinatorD
                     docker_version,
                     docker_info,
                     docker_system_df,
-                    stacks,
                 ) = await asyncio.gather(
                     self.portainer.get_containers(endpoint.id),
                     self.portainer.docker_version(endpoint.id),
                     self.portainer.docker_info(endpoint.id),
                     self.portainer.docker_system_df(endpoint.id),
-                    self.portainer.get_stacks(endpoint.id),
                 )
+
+                stack_requests = [self.portainer.get_stacks(endpoint_id=endpoint.id)]
+                swarm_id = (
+                    docker_info.swarm.cluster.get("ID")
+                    if docker_info.swarm
+                    and docker_info.swarm.control_available
+                    and docker_info.swarm.cluster
+                    else None
+                )
+                if swarm_id:
+                    stack_requests.append(
+                        self.portainer.get_stacks(
+                            endpoint_id=endpoint.id, swarm_id=swarm_id
+                        )
+                    )
+
+                stacks = [
+                    stack
+                    for result in await asyncio.gather(*stack_requests)
+                    for stack in result
+                ]
 
                 prev_endpoint = self.data.get(endpoint.id) if self.data else None
                 container_map: dict[str, PortainerContainerData] = {}
@@ -244,6 +263,12 @@ class PortainerCoordinator(DataUpdateCoordinator[dict[int, PortainerCoordinatorD
                     # Now assign stats to the containers
                     for container_name, stats in container_stats.items():
                         container_map[container_name].stats = stats
+            except PortainerTimeoutError as err:
+                raise UpdateFailed(
+                    translation_domain=DOMAIN,
+                    translation_key="timeout_connect",
+                    translation_placeholders={"error": repr(err)},
+                ) from err
             except PortainerConnectionError as err:
                 _LOGGER.exception("Connection error")
                 raise UpdateFailed(
