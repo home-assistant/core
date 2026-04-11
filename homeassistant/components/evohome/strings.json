@@ -24,7 +24,7 @@
   },
   "issues": {
     "deprecated_controller_service_call": {
-      "description": "Calling the `{service}` service without `entity_id` is deprecated and will stop working in Home Assistant 2026.7. Update any automation or script to include the Evohome controller climate entity_id.",
+      "description": "Calling the `{service}` service without `entity_id` is deprecated and will stop working in Home Assistant 2026.7. Update any automation or script to include the Evohome controller climate `entity_id`.",
       "title": "Untargeted Evohome controller service call deprecated"
     }
   },
