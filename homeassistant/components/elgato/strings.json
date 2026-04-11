@@ -49,6 +49,14 @@
       }
     }
   },
+  "exceptions": {
+    "communication_error": {
+      "message": "An error occurred while communicating with the Elgato device."
+    },
+    "unknown_error": {
+      "message": "An unknown error occurred while communicating with the Elgato device."
+    }
+  },
   "services": {
     "identify": {
       "description": "Identifies an Elgato Light. Blinks the light, which can be useful for, e.g., a visual notification.",
