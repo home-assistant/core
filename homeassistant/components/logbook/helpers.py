@@ -101,8 +101,10 @@ def async_determine_event_types(
     if entity_ids:
         # We also allow entity_ids to be recorded via manual logbook entries.
         intrested_event_types.add(EVENT_LOGBOOK_ENTRY)
-    # Include EVENT_CALL_SERVICE so that service call context (including
-    # user attribution) is available for entity-specific streams.
+    # Filtered streams (entity_ids and/or device_ids) need EVENT_CALL_SERVICE
+    # so service call context — including user attribution for child contexts
+    # whose parent is a service call — is available. The unfiltered path
+    # already gets this via BUILT_IN_EVENTS in the early return above.
     intrested_event_types.add(EVENT_CALL_SERVICE)
 
     return tuple(intrested_event_types)

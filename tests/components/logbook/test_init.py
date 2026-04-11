@@ -3186,6 +3186,7 @@ async def test_context_user_ids_lru_eviction(
         include_entity_name=True,
         timestamp=False,
         memoize_new_contexts=False,
+        for_live_stream=True,
     )
     context_augmenter = logbook.processor.ContextAugmenter(logbook_run)
     ent_reg = er.async_get(hass)

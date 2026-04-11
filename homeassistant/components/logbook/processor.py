@@ -110,6 +110,12 @@ class LogbookRun:
     include_entity_name: bool
     timestamp: bool
     memoize_new_contexts: bool = True
+    # When True the parent-context user-id LRU is populated during row
+    # processing so a live event arriving after the historical→live switch
+    # can resolve a parent that fired during the backfill. False for
+    # one-shot REST / websocket get_events callers since their LogbookRun
+    # is discarded at end of call and the writes would be wasted.
+    for_live_stream: bool = False
     # Track context_id -> user_id for parent context user attribution.
     # Persisted across batches so child context events can inherit user_id
     # from a parent context whose SERVICE_CALL event arrived in an earlier
@@ -144,12 +150,6 @@ class EventProcessor:
         self.entity_ids = entity_ids
         self.device_ids = device_ids
         self.context_id = context_id
-        # When True the historical pre-pass also populates the persistent
-        # parent-context user-id LRU so a live event arriving after the
-        # historical→live switch can resolve a parent that fired during the
-        # backfill. One-shot REST and websocket get_events callers leave
-        # this False since their EventProcessor is discarded after the call.
-        self.for_live_stream = for_live_stream
         logbook_config: LogbookConfig = hass.data[DOMAIN]
         self.filters: Filters | None = logbook_config.sqlalchemy_filter
         self.logbook_run = LogbookRun(
@@ -159,6 +159,7 @@ class EventProcessor:
             entity_name_cache=EntityNameCache(self.hass),
             include_entity_name=include_entity_name,
             timestamp=timestamp,
+            for_live_stream=for_live_stream,
         )
         self.context_augmenter = ContextAugmenter(self.logbook_run)
 
@@ -237,7 +238,7 @@ class EventProcessor:
                     # the call.
                     persistent_cache = (
                         self.logbook_run.context_user_ids
-                        if self.for_live_stream
+                        if self.logbook_run.for_live_stream
                         else None
                     )
                     for pending_chunk in chunked_or_all(
@@ -301,6 +302,10 @@ def _humanify(
     data: dict[str, Any]
 
     context_user_ids = logbook_run.context_user_ids
+    # Only write to the persistent LRU when this LogbookRun will switch to
+    # a live stream (or already is one) — otherwise the writes are wasted
+    # because the LogbookRun is discarded at end of call.
+    populate_context_user_ids = logbook_run.for_live_stream
 
     # Process rows
     for row in rows:
@@ -314,8 +319,10 @@ def _humanify(
             row_time_fired_ts if row_time_fired_ts is not None else time.time()
         )
         if (
-            context_user_id_bin := row[CONTEXT_USER_ID_BIN_POS]
-        ) and context_id_bin not in context_user_ids:
+            populate_context_user_ids
+            and (context_user_id_bin := row[CONTEXT_USER_ID_BIN_POS])
+            and context_id_bin not in context_user_ids
+        ):
             context_user_ids[context_id_bin] = context_user_id_bin
         if row[CONTEXT_ONLY_POS]:
             continue
