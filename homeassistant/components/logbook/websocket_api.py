@@ -289,6 +289,11 @@ async def ws_event_stream(
             return
 
     event_types = async_determine_event_types(hass, entity_ids, device_ids)
+    # If end_time is in the past this is a one-shot historical fetch that
+    # never switches to a live stream, so the persistent parent-context
+    # cache populated by the historical pre-pass is wasted work in that
+    # case.
+    will_go_live = not (end_time and end_time <= utc_now)
     event_processor = EventProcessor(
         hass,
         event_types,
@@ -297,6 +302,7 @@ async def ws_event_stream(
         None,
         timestamp=True,
         include_entity_name=False,
+        for_live_stream=will_go_live,
     )
 
     if end_time and end_time <= utc_now:

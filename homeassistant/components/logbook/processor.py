@@ -132,6 +132,7 @@ class EventProcessor:
         context_id: str | None = None,
         timestamp: bool = False,
         include_entity_name: bool = True,
+        for_live_stream: bool = False,
     ) -> None:
         """Init the event stream."""
         assert not (context_id and (entity_ids or device_ids)), (
@@ -143,6 +144,12 @@ class EventProcessor:
         self.entity_ids = entity_ids
         self.device_ids = device_ids
         self.context_id = context_id
+        # When True the historical pre-pass also populates the persistent
+        # parent-context user-id LRU so a live event arriving after the
+        # historical→live switch can resolve a parent that fired during the
+        # backfill. One-shot REST and websocket get_events callers leave
+        # this False since their EventProcessor is discarded after the call.
+        self.for_live_stream = for_live_stream
         logbook_config: LogbookConfig = hass.data[DOMAIN]
         self.filters: Filters | None = logbook_config.sqlalchemy_filter
         self.logbook_run = LogbookRun(
@@ -223,6 +230,16 @@ class EventProcessor:
                         pending.add(parent_id)
                 if pending:
                     query_parent_user_ids = {}
+                    # Only also populate the persistent LRU when this
+                    # processor will switch to a live stream after the
+                    # historical backfill — otherwise the writes are
+                    # wasted because the EventProcessor is discarded after
+                    # the call.
+                    persistent_cache = (
+                        self.logbook_run.context_user_ids
+                        if self.for_live_stream
+                        else None
+                    )
                     for pending_chunk in chunked_or_all(
                         pending, instance.max_bind_vars
                     ):
@@ -237,6 +254,10 @@ class EventProcessor:
                             query_parent_user_ids[parent_context_id_bin] = (
                                 parent_user_id_bin
                             )
+                            if persistent_cache is not None:
+                                persistent_cache[parent_context_id_bin] = (
+                                    parent_user_id_bin
+                                )
             return self.humanify(rows, query_parent_user_ids)
 
     def humanify(
