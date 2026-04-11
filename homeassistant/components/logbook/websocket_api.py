@@ -14,6 +14,7 @@ import voluptuous as vol
 from homeassistant.components import websocket_api
 from homeassistant.components.recorder import get_instance
 from homeassistant.components.websocket_api import ActiveConnection, messages
+from homeassistant.const import EVENT_CALL_SERVICE
 from homeassistant.core import CALLBACK_TYPE, Event, HomeAssistant, callback
 from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.helpers.json import json_bytes
@@ -363,11 +364,20 @@ async def ws_event_stream(
         logbook_config: LogbookConfig = hass.data[DOMAIN]
         entities_filter = logbook_config.entity_filter
 
+    # The live subscription needs EVENT_CALL_SERVICE so the live consumer
+    # can populate the persistent context_user_ids cache from new service
+    # calls as they fire — this is what gives child contexts their parent's
+    # user attribution. Historical SQL queries do NOT need it: the
+    # context_only join in entities_stmt fetches call_service rows by
+    # context_id_bin regardless of event_type, and including it in the SQL
+    # event_types tuple just adds a wasted index range scan over
+    # call_service rows in the query window.
+    live_event_types = (*event_types, EVENT_CALL_SERVICE)
     async_subscribe_events(
         hass,
         subscriptions,
         _queue_or_cancel,
-        event_types,
+        live_event_types,
         entities_filter,
         entity_ids,
         device_ids,

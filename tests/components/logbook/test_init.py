@@ -3164,7 +3164,7 @@ async def test_context_user_ids_lru_eviction(
     """Test that the parent context user-id cache is bounded by LRU eviction.
 
     The cache must keep memory bounded under sustained load. New entries
-    arriving after the cap displace the oldest entries (FIFO order). An
+    arriving after the cap evict the least recently used entries. An
     early parent context whose entry has been evicted should no longer
     contribute its user_id to a later child state change.
     """

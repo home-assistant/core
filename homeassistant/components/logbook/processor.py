@@ -265,7 +265,7 @@ class EventProcessor:
         self,
         rows: Generator[EventAsRow] | Sequence[Row] | Result,
         query_parent_user_ids: dict[bytes, bytes] | None = None,
-    ) -> list[dict[str, str]]:
+    ) -> list[dict[str, Any]]:
         """Humanify rows."""
         return list(
             _humanify(
