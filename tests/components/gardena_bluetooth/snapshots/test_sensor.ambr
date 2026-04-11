@@ -134,7 +134,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.333',
+    'state': '33.3',
   })
 # ---
 # name: test_sensors[aqua_contour][sensor.mock_title_current_flow-entry]

@@ -4,7 +4,7 @@ from collections.abc import Awaitable, Callable
 from typing import Any
 from unittest.mock import Mock, call
 
-from gardena_bluetooth.const import AquaContourWatering, Sensor, Valve
+from gardena_bluetooth.const import AquaContourWatering, Sensor, Spray, Valve
 from gardena_bluetooth.exceptions import (
     CharacteristicNoAccess,
     GardenaBluetoothException,
@@ -75,6 +75,24 @@ from tests.common import MockConfigEntry
                 GardenaBluetoothException("Test for errors on bluetooth"),
             ],
             "number.mock_title_remaining_watering_time",
+        ),
+        (
+            AQUA_CONTOUR_SERVICE_INFO,
+            Spray.sector.uuid,
+            [
+                Spray.sector.encode(359),
+                Spray.sector.encode(10),
+            ],
+            "number.mock_title_sector",
+        ),
+        (
+            AQUA_CONTOUR_SERVICE_INFO,
+            Spray.distance.uuid,
+            [
+                Spray.distance.encode(1000),
+                Spray.distance.encode(10),
+            ],
+            "number.mock_title_distance",
         ),
     ],
 )
