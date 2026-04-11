@@ -1320,6 +1320,9 @@
       "soaking": {
         "name": "[%key:component::home_connect::services::set_program_and_options::fields::laundry_care_washer_option_soak::name%]"
       },
+      "speed_perfect": {
+        "name": "[%key:component::home_connect::services::set_program_and_options::fields::laundry_care_washer_option_speed_perfect::name%]"
+      },
       "vacation_mode": {
         "name": "Vacation mode"
       },
@@ -2041,6 +2044,10 @@
         "laundry_care_washer_option_soak": {
           "description": "Defines if the soaking is activated.",
           "name": "Soaking"
+        },
+        "laundry_care_washer_option_speed_perfect": {
+          "description": "",
+          "name": "Speed perfect"
         },
         "laundry_care_washer_option_spin_speed": {
           "description": "Defines the spin speed of a washer program.",

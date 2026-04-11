@@ -121,8 +121,10 @@ def test_services_yaml_set_program_and_options_option_keys() -> None:
     groups.pop("device_id")
     groups.pop("affects_to")
     groups.pop("program")
+    options = set()
     for group in groups.values():
         for option, option_data in group["fields"].items():
+            options.add(option)
             assert option in PROGRAM_ENUM_OPTIONS or option in PROGRAM_OPTIONS, (
                 f"{option} is missing from both PROGRAM_ENUM_OPTIONS and PROGRAM_OPTIONS"
             )
@@ -139,6 +141,11 @@ def test_services_yaml_set_program_and_options_option_keys() -> None:
                 assert option_data["example"] in enum_values, (
                     f"Example value for {option} is not a valid option"
                 )
+
+    assert options == set(PROGRAM_ENUM_OPTIONS.keys()) | set(PROGRAM_OPTIONS.keys()), (
+        "Not all options in services.yaml are present in either"
+        " PROGRAM_ENUM_OPTIONS or PROGRAM_OPTIONS or vice versa"
+    )
 
 
 @pytest.mark.parametrize("appliance", ["Washer"], indirect=True)

@@ -163,6 +163,10 @@ SWITCH_OPTIONS = (
         translation_key="soaking",
     ),
     SwitchEntityDescription(
+        key=OptionKey.LAUNDRY_CARE_WASHER_SPEED_PERFECT,
+        translation_key="speed_perfect",
+    ),
+    SwitchEntityDescription(
         key=OptionKey.LAUNDRY_CARE_WASHER_WATER_PLUS,
         translation_key="water_plus",
     ),

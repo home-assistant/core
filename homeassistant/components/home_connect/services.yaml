@@ -654,6 +654,11 @@ set_program_and_options:
           required: false
           selector:
             boolean:
+        laundry_care_washer_option_speed_perfect:
+          example: false
+          required: false
+          selector:
+            boolean:
         laundry_care_washer_option_water_plus:
           example: false
           required: false
