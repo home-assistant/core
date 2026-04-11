@@ -19,9 +19,23 @@
       "message": "Only zones support the `{service}` action"
     }
   },
+  "issues": {
+    "deprecated_clear_zone_override_service": {
+      "description": "Using the `clear_zone_override` action is deprecated and will stop working in Home Assistant 2026.7. Use the zone's Reset button instead.",
+      "title": "Evohome clear zone override action is deprecated"
+    },
+    "deprecated_preset_reset": {
+      "description": "Using the `Reset` preset on an Evohome controller is deprecated and will stop working in Home Assistant 2026.7. Use the system's Reset button instead.",
+      "title": "Evohome Reset preset is deprecated"
+    },
+    "deprecated_reset_system_service": {
+      "description": "Using the `reset_system` action is deprecated and will stop working in Home Assistant 2026.7. Use the system's Reset button instead.",
+      "title": "Evohome reset system action is deprecated"
+    }
+  },
   "services": {
     "clear_zone_override": {
-      "description": "Sets a zone to follow its schedule.",
+      "description": "Sets a zone to follow its schedule (deprecated).",
       "name": "Clear zone override"
     },
     "refresh_system": {
@@ -29,7 +43,7 @@
       "name": "Refresh system"
     },
     "reset_system": {
-      "description": "Sets the system to `Auto` mode and resets all the zones to follow their schedules. Not all Evohome systems support this feature (i.e. `AutoWithReset` mode).",
+      "description": "Sets the system to `Auto` mode and resets all the zones to follow their schedules (deprecated). Not all Evohome systems support this feature (i.e. `AutoWithReset` mode).",
       "name": "Reset system"
     },
     "set_system_mode": {

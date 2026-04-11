@@ -19,6 +19,7 @@ from homeassistant.components.evohome.const import (
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_MODE
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
+from homeassistant.helpers import issue_registry as ir
 
 from .const import TEST_INSTALLS
 
@@ -57,6 +58,29 @@ async def test_reset_system(
         )
 
         mock_fcn.assert_awaited_once_with()
+
+
+@pytest.mark.parametrize("install", TEST_INSTALLS)
+@pytest.mark.usefixtures("evohome")
+async def test_reset_system_deprecated(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test deprecated warning for the reset_system service."""
+
+    with patch("evohomeasync2.control_system.ControlSystem.reset") as mock_fcn:
+        await hass.services.async_call(
+            DOMAIN,
+            EvoService.RESET_SYSTEM,
+            {},
+            blocking=True,
+        )
+
+        mock_fcn.assert_awaited_once_with()
+
+    issue = issue_registry.async_get_issue(DOMAIN, "deprecated_reset_system_service")
+    assert issue is not None
+    assert issue.translation_key == "deprecated_reset_system_service"
 
 
 @pytest.mark.parametrize("install", ["default"])
@@ -133,6 +157,32 @@ async def test_clear_zone_override(
         )
 
         mock_fcn.assert_awaited_once_with()
+
+
+@pytest.mark.parametrize("install", ["default"])
+async def test_clear_zone_override_deprecated(
+    hass: HomeAssistant,
+    zone_id: str,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test deprecated warning for the clear_zone_override service."""
+
+    with patch("evohomeasync2.zone.Zone.reset") as mock_fcn:
+        await hass.services.async_call(
+            DOMAIN,
+            EvoService.CLEAR_ZONE_OVERRIDE,
+            {},
+            target={ATTR_ENTITY_ID: zone_id},
+            blocking=True,
+        )
+
+        mock_fcn.assert_awaited_once_with()
+
+    issue = issue_registry.async_get_issue(
+        DOMAIN, "deprecated_clear_zone_override_service"
+    )
+    assert issue is not None
+    assert issue.translation_key == "deprecated_clear_zone_override_service"
 
 
 @pytest.mark.parametrize("install", ["default"])

@@ -17,10 +17,11 @@ from homeassistant.components.climate import DOMAIN as CLIMATE_DOMAIN
 from homeassistant.const import ATTR_MODE
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import ServiceValidationError
-from homeassistant.helpers import config_validation as cv, service
+from homeassistant.helpers import config_validation as cv, issue_registry as ir, service
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.service import verify_domain_control
 
+from .climate import BREAKS_IN_HA_VERSION
 from .const import ATTR_DURATION, ATTR_PERIOD, ATTR_SETPOINT, DOMAIN, EvoService
 from .coordinator import EvoDataUpdateCoordinator
 
@@ -134,6 +135,19 @@ def setup_service_functions(
         # No additional validation for RESET_SYSTEM here, as the library method invoked
         # via that service call may be able to emulate the reset even if the system
         # doesn't support AutoWithReset natively
+
+        if call.service == EvoService.RESET_SYSTEM:
+            ir.async_create_issue(
+                hass,
+                DOMAIN,
+                "deprecated_reset_system_service",
+                breaks_in_ha_version=BREAKS_IN_HA_VERSION,
+                is_fixable=False,
+                is_persistent=True,
+                issue_domain=DOMAIN,
+                severity=ir.IssueSeverity.WARNING,
+                translation_key="deprecated_reset_system_service",
+            )
 
         if call.service == EvoService.SET_SYSTEM_MODE:
             _validate_set_system_mode_params(coordinator.tcs, call.data)

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from datetime import datetime, timedelta
 import logging
-from typing import Any
+from typing import Any, Final
 
 import evohomeasync2 as evo
 from evohomeasync2.const import (
@@ -35,6 +35,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
+from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import dt as dt_util
@@ -44,6 +45,9 @@ from .coordinator import EvoDataUpdateCoordinator
 from .entity import EvoChild, EvoEntity, is_valid_zone
 
 _LOGGER = logging.getLogger(__name__)
+
+# Support for the reset service calls/presets is being deprecated
+BREAKS_IN_HA_VERSION: Final = "2026.7.0"
 
 PRESET_RESET = "Reset"  # reset all child zones to EvoZoneMode.FOLLOW_SCHEDULE
 PRESET_CUSTOM = "Custom"
@@ -185,6 +189,17 @@ class EvoZone(EvoChild, EvoClimateEntity):
 
     async def async_clear_zone_override(self) -> None:
         """Clear the zone override (if any) and return to following its schedule."""
+        ir.async_create_issue(
+            self.hass,
+            DOMAIN,
+            "deprecated_clear_zone_override_service",
+            breaks_in_ha_version=BREAKS_IN_HA_VERSION,
+            is_fixable=False,
+            is_persistent=True,
+            issue_domain=DOMAIN,
+            severity=ir.IssueSeverity.WARNING,
+            translation_key="deprecated_clear_zone_override_service",
+        )
         await self.coordinator.call_client_api(self._evo_device.reset())
 
     async def async_set_zone_override(
@@ -447,6 +462,19 @@ class EvoController(EvoClimateEntity):
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set the preset mode; if None, then revert to 'Auto' mode."""
+        if preset_mode == PRESET_RESET:
+            ir.async_create_issue(
+                self.hass,
+                DOMAIN,
+                "deprecated_preset_reset",
+                breaks_in_ha_version=BREAKS_IN_HA_VERSION,
+                is_fixable=False,
+                is_persistent=True,
+                issue_domain=DOMAIN,
+                severity=ir.IssueSeverity.WARNING,
+                translation_key="deprecated_preset_reset",
+            )
+
         await self._set_tcs_mode(HA_PRESET_TO_TCS.get(preset_mode, EvoSystemMode.AUTO))
 
     @callback
