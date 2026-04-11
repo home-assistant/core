@@ -297,5 +297,5 @@ async def test_no_buttons_without_remote_start(
     )
     entry = entity_registry.async_get(VEHICLE_BUTTONS[TEST_VIN_3_G3]["remote_start"])
     assert entry is None
-    entry = entity_registry.async_get(VEHICLE_BUTTONS[TEST_VIN_1_G1]["remote_stop"])
+    entry = entity_registry.async_get(VEHICLE_BUTTONS[TEST_VIN_3_G3]["remote_stop"])
     assert entry is None
