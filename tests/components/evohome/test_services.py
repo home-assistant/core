@@ -84,6 +84,17 @@ async def test_reset_system(
         await hass.services.async_call(
             DOMAIN,
             EvoService.RESET_SYSTEM,
+            target={ATTR_ENTITY_ID: ctl_id},
+            blocking=True,
+        )
+
+        mock_fcn.assert_awaited_once_with()
+
+    # can remove, once the domain-level service is removed
+    with patch("evohomeasync2.control_system.ControlSystem.reset") as mock_fcn:
+        await hass.services.async_call(
+            DOMAIN,
+            EvoService.RESET_SYSTEM,
             {ATTR_ENTITY_ID: ctl_id},
             blocking=True,
         )
@@ -169,6 +180,23 @@ async def test_set_system_mode(
 
     freezer.move_to("2024-07-10T12:00:00+00:00")
 
+    with patch("evohomeasync2.control_system.ControlSystem.set_mode") as mock_fcn:
+        await hass.services.async_call(
+            DOMAIN,
+            EvoService.SET_SYSTEM_MODE,
+            {
+                ATTR_MODE: "Away",
+                ATTR_PERIOD: {"days": 7},
+            },
+            target={ATTR_ENTITY_ID: ctl_id},
+            blocking=True,
+        )
+
+        mock_fcn.assert_awaited_once_with(
+            "Away", until=datetime(2024, 7, 16, 23, 0, tzinfo=UTC)
+        )
+
+    # can remove, once the domain-level service is removed
     with patch("evohomeasync2.control_system.ControlSystem.set_mode") as mock_fcn:
         await hass.services.async_call(
             DOMAIN,
