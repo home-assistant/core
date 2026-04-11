@@ -13,6 +13,7 @@ from lru import LRU
 from sqlalchemy import select
 from sqlalchemy.engine import Result
 from sqlalchemy.engine.row import Row
+from sqlalchemy.orm import Session
 
 from homeassistant.components.recorder import get_instance
 from homeassistant.components.recorder.db_schema import Events
@@ -217,49 +218,57 @@ class EventProcessor:
                 # child contexts lose their user attribution. The all_stmt
                 # path includes all call_service events in the window so
                 # this pre-pass is unnecessary there.
-                # Results go into a per-query map (not the persistent LRU
-                # cache) so a long historical window with thousands of
-                # distinct parents cannot evict its own entries before
-                # humanify reads them. The map is GC'd at end of call.
                 rows = list(rows)
-                cache = self.logbook_run.context_user_ids
-                pending: set[bytes] = {
-                    parent_id
-                    for row in rows
-                    if (parent_id := row[CONTEXT_PARENT_ID_BIN_POS])
-                    and parent_id not in cache
-                }
-                if pending:
-                    query_parent_user_ids = {}
-                    # Only also populate the persistent LRU when this
-                    # processor will switch to a live stream after the
-                    # historical backfill — otherwise the writes are
-                    # wasted because the EventProcessor is discarded after
-                    # the call.
-                    persistent_cache = (
-                        self.logbook_run.context_user_ids
-                        if self.logbook_run.for_live_stream
-                        else None
-                    )
-                    for pending_chunk in chunked_or_all(
-                        pending, instance.max_bind_vars
-                    ):
-                        for (
-                            parent_context_id_bin,
-                            parent_user_id_bin,
-                        ) in session.execute(
-                            select(Events.context_id_bin, Events.context_user_id_bin)
-                            .where(Events.context_id_bin.in_(pending_chunk))
-                            .where(Events.context_user_id_bin.is_not(None))
-                        ):
-                            query_parent_user_ids[parent_context_id_bin] = (
-                                parent_user_id_bin
-                            )
-                            if persistent_cache is not None:
-                                persistent_cache[parent_context_id_bin] = (
-                                    parent_user_id_bin
-                                )
+                query_parent_user_ids = self._fetch_parent_user_ids(
+                    session, rows, instance.max_bind_vars
+                )
             return self.humanify(rows, query_parent_user_ids)
+
+    def _fetch_parent_user_ids(
+        self,
+        session: Session,
+        rows: list[Row],
+        max_bind_vars: int,
+    ) -> dict[bytes, bytes] | None:
+        """Resolve parent context user_ids for rows in a filtered query.
+
+        Returns a per-query map (unbounded for the duration of the call,
+        GC'd at end) so a long historical window with thousands of distinct
+        parents cannot evict its own entries before humanify reads them.
+
+        When the processor will switch to a live stream after the
+        historical backfill, the persistent LRU cache is also populated so
+        a live event arriving after the switch can resolve a parent that
+        fired during the backfill. Otherwise the persistent writes are
+        skipped because the LogbookRun is discarded at end of call.
+        """
+        cache = self.logbook_run.context_user_ids
+        pending: set[bytes] = {
+            parent_id
+            for row in rows
+            if (parent_id := row[CONTEXT_PARENT_ID_BIN_POS]) and parent_id not in cache
+        }
+        if not pending:
+            return None
+        query_parent_user_ids: dict[bytes, bytes] = {}
+        for pending_chunk in chunked_or_all(pending, max_bind_vars):
+            # Both columns are nullable in the schema but the WHERE clauses
+            # guarantee non-null at runtime; the explicit checks satisfy
+            # the type checker.
+            query_parent_user_ids.update(
+                {
+                    parent_id: user_id
+                    for parent_id, user_id in session.execute(
+                        select(Events.context_id_bin, Events.context_user_id_bin)
+                        .where(Events.context_id_bin.in_(pending_chunk))
+                        .where(Events.context_user_id_bin.is_not(None))
+                    ).all()
+                    if parent_id is not None and user_id is not None
+                }
+            )
+        if self.logbook_run.for_live_stream:
+            cache.update(query_parent_user_ids)
+        return query_parent_user_ids
 
     def humanify(
         self,
