@@ -183,7 +183,7 @@ class TadoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         # Accept five minutes to "overshoot", else reset back to 30 minutes
         min_interval = 300 if self._is_any_zone_active else 1800
 
-        remaining_calls = self.data.get("rate_limit", {}).get("remaining")
+        remaining_calls = int(self.data.get("rate_limit", {}).get("remaining", 0))
         if remaining_calls is None or remaining_calls <= 0:
             # If rate limit info is unavailable, fall back to the static interval.
             self._current_interval = SCAN_INTERVAL.total_seconds()
