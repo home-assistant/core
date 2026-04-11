@@ -1157,6 +1157,9 @@
           "present": "[%key:component::home_connect::common::present%]"
         }
       },
+      "program_duration": {
+        "name": "Program duration"
+      },
       "program_finish_time": {
         "name": "Program finish time"
       },

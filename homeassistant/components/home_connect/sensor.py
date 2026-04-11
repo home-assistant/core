@@ -3,7 +3,7 @@
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
-from typing import cast
+from typing import Any, cast
 
 from aiohomeconnect.model import EventKey, StatusKey
 
@@ -13,7 +13,7 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.const import PERCENTAGE, EntityCategory, UnitOfVolume
+from homeassistant.const import PERCENTAGE, EntityCategory, UnitOfTime, UnitOfVolume
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util, slugify
@@ -70,6 +70,24 @@ BSH_PROGRAM_SENSORS = (
         native_unit_of_measurement=PERCENTAGE,
         translation_key="program_progress",
         appliance_types=APPLIANCES_WITH_PROGRAMS,
+    ),
+)
+
+PROGRAM_DURATION_SENSOR = HomeConnectSensorEntityDescription(
+    key=EventKey.BSH_COMMON_OPTION_REMAINING_PROGRAM_TIME,
+    device_class=SensorDeviceClass.DURATION,
+    native_unit_of_measurement=UnitOfTime.SECONDS,
+    translation_key="program_duration",
+    appliance_types=(
+        "CoffeeMaker",
+        "CookProcessor",
+        "Dishwasher",
+        "Dryer",
+        "Microwave",
+        "Hood",
+        "Oven",
+        "Washer",
+        "WasherDryer",
     ),
 )
 
@@ -527,6 +545,17 @@ def _get_entities_for_appliance(
             if desc.appliance_types
             and appliance_coordinator.data.info.type in desc.appliance_types
         ],
+        *(
+            [
+                HomeConnectProgramDurationSensor(
+                    appliance_coordinator, PROGRAM_DURATION_SENSOR
+                )
+            ]
+            if PROGRAM_DURATION_SENSOR.appliance_types
+            and appliance_coordinator.data.info.type
+            in PROGRAM_DURATION_SENSOR.appliance_types
+            else []
+        ),
         *[
             HomeConnectSensor(appliance_coordinator, description)
             for description in SENSORS
@@ -643,6 +672,44 @@ class HomeConnectProgramSensor(HomeConnectSensor):
         event = self.appliance.events.get(cast(EventKey, self.bsh_key))
         if event:
             self._update_native_value(event.value)
+
+
+class HomeConnectProgramDurationSensor(HomeConnectProgramSensor):
+    """Sensor class for Home Connect sensors that reports the duration program."""
+
+    def __init__(
+        self,
+        appliance_coordinator: HomeConnectApplianceCoordinator,
+        desc: HomeConnectSensorEntityDescription,
+        context_override: Any | None = None,
+    ) -> None:
+        """Initialize the sensor."""
+        super().__init__(appliance_coordinator, desc, context_override)
+        # Because this sensor uses `EventKey.BSH_COMMON_OPTION_REMAINING_PROGRAM_TIME`
+        # as its key the unique id will collide with the finish time sensor,
+        # so we append "_duration" to make it unique.
+        assert self._attr_unique_id
+        self._attr_unique_id += "_duration"
+
+    def _update_native_value(self, status: str | float | None) -> None:
+        """Set the value of the sensor based on the given value."""
+        self._attr_native_value = cast(float | None, status)
+
+    @callback
+    def _handle_operation_state_event(self) -> None:
+        """Update status when an event for the entity is received."""
+        if self.program_running:
+            # reset the value when the program is running, paused or finished
+            self._attr_native_value = None
+        self.async_write_ha_state()
+
+    @property
+    def available(self) -> bool:
+        """Return true if the sensor is available."""
+        # We need to override the available property for the duration sensor,
+        # because it should only be available when a program is running, paused or finished,
+        # unlike the HomeConnectProgramSensor.
+        return HomeConnectEntity.available.__get__(self) and not self.program_running
 
 
 class HomeConnectEventSensor(HomeConnectSensor):
