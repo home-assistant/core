@@ -66,8 +66,25 @@ async def async_setup_entry(
                         else None,
                     )
                 )
+        if gateway_eurid is not None:
+            for entity in spec.gateway_entities:
+                if entity.entity_type not in (EntityType.SENSOR, EntityType.METADATA):
+                    continue
+                (observable,) = entity.observables
+                entities.append(
+                    EnOceanSensor(
+                        eurid,
+                        entity.id,
+                        gateway,
+                        observable,
+                        entity_category=LIB_ENTITY_CATEGORY_MAP.get(entity.category),
+                        is_gateway_entity=True,
+                    )
+                )
 
     for entity in gateway.gateway_entities:
+        if entity.entity_type not in (EntityType.SENSOR, EntityType.METADATA):
+            continue
         (observable,) = entity.observables
         entities.append(
             EnOceanSensor(
@@ -92,9 +109,13 @@ class EnOceanSensor(EnOceanEntity, RestoreSensor):
         gateway: Gateway,
         observable: Observable,
         entity_category: EntityCategory | None = None,
+        is_gateway_entity: bool = False,
     ) -> None:
         """Initialize the EnOcean sensor."""
         super().__init__(address, entity_key, gateway)
+        self._is_gateway_entity = (
+            is_gateway_entity  # observation matched against gateway.eurid
+        )
         self._observable = observable
         # entity_key is the EEP entity id; unique_id needs the observable suffix
         # to be distinct when a device entity exposes multiple observables.

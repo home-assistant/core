@@ -25,6 +25,8 @@ class EnOceanEntity(Entity):
     _attr_has_entity_name = True
     _attr_should_poll = False
     _track_gateway_availability = True
+    _is_gateway_entity = False
+    """If True, this entity belongs to the gateway device and observations are matched against the gateway EURID instead of ``self.address``."""
 
     def __init__(
         self,
@@ -61,7 +63,13 @@ class EnOceanEntity(Entity):
             self._attr_available = (
                 observation.values[Observable.CONNECTION_STATUS] == "connected"
             )
-        if observation.device != self.address or observation.entity != self.entity_key:
+        observed_device = (
+            self.gateway.eurid if self._is_gateway_entity else self.address
+        )
+        if (
+            observation.device != observed_device
+            or observation.entity != self.entity_key
+        ):
             if is_connection_status and self._track_gateway_availability:
                 self.async_write_ha_state()
             return

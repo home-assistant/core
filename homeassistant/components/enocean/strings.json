@@ -64,6 +64,9 @@
       "day_night": {
         "name": "Day/Night"
       },
+      "learning_active": {
+        "name": "Learning mode"
+      },
       "motion": {
         "name": "Motion"
       },
@@ -72,6 +75,12 @@
       }
     },
     "button": {
+      "learn_telegram": {
+        "name": "Send teach-in query"
+      },
+      "learning_toggle": {
+        "name": "Toggle learning mode"
+      },
       "query_measurement": {
         "name": "Query measurement"
       },
@@ -80,9 +89,6 @@
       },
       "query_status": {
         "name": "Query status"
-      },
-      "teach_in": {
-        "name": "Send teach-in"
       }
     },
     "event": {
@@ -106,13 +112,13 @@
     },
     "number": {
       "max_brightness": {
-        "name": "Maximum brightness"
+        "name": "Max. brightness"
       },
       "max_travel_time": {
-        "name": "Maximum travel time"
+        "name": "Max. travel time"
       },
       "min_brightness": {
-        "name": "Minimum brightness"
+        "name": "Min. brightness"
       },
       "ramp_time": {
         "name": "Ramp time"
@@ -126,6 +132,18 @@
           "relative": "Relative"
         }
       },
+      "learning_sender": {
+        "name": "Learning sender slot"
+      },
+      "learning_timeout": {
+        "name": "Learning timeout",
+        "state": {
+          "30": "30 s",
+          "60": "60 s",
+          "120": "2 min",
+          "300": "5 min"
+        }
+      },
       "repositioning_mode": {
         "name": "Repositioning mode",
         "state": {
@@ -133,6 +151,9 @@
           "down_first": "Down first",
           "up_first": "Up first"
         }
+      },
+      "sender_slot": {
+        "name": "Sender slot"
       },
       "store": {
         "name": "Store value",
@@ -190,6 +211,9 @@
       },
       "last_seen": {
         "name": "Last seen"
+      },
+      "learning_remaining": {
+        "name": "Learning mode remaining"
       },
       "output_value": {
         "name": "Output value"

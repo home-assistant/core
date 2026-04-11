@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from enocean_async import Dim, EntityType, Gateway, Observable, Observation
+from enocean_async import CentralDim, EntityType, Gateway, Observable, Observation
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -60,7 +60,7 @@ class EnOceanLight(EnOceanEntity, LightEntity):
         transition: float = kwargs.get(ATTR_TRANSITION, 0)
         await self.gateway.send_command(
             self.address,
-            Dim(
+            CentralDim(
                 # Convert HA brightness 0–255 to 0–100 %.
                 dim_value=brightness * 100 / 255,
                 ramp_time=round(transition),
@@ -73,8 +73,8 @@ class EnOceanLight(EnOceanEntity, LightEntity):
         transition: float = kwargs.get(ATTR_TRANSITION, 0)
         await self.gateway.send_command(
             self.address,
-            # Use Dim(0) rather than Switch so the dimmer's ramp mechanism is used.
-            Dim(
+            # Use CentralDim(0) rather than Switch so the dimmer's ramp mechanism is used.
+            CentralDim(
                 dim_value=0,
                 switch_on=False,
                 ramp_time=round(transition),
