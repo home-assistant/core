@@ -409,7 +409,7 @@ async def test_water_heater_away_mode_state(
 
     state = hass.states.get("water_heater.test_my_boiler")
     assert state is not None
-    assert state.attributes.get(ATTR_AWAY_MODE) == expected_away_mode
+    assert state.attributes[ATTR_AWAY_MODE] == expected_away_mode
 
 
 @pytest.mark.parametrize("away_mode", [True, False])
