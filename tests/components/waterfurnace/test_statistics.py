@@ -64,9 +64,10 @@ async def _get_last_stat(hass: HomeAssistant) -> StatisticsRow | None:
     last = await hass.async_add_executor_job(
         get_last_statistics, hass, 1, STATISTIC_ID, True, {"sum"}
     )
-    if STATISTIC_ID not in last:
+    rows = last.get(STATISTIC_ID)
+    if not rows:
         return None
-    return last[STATISTIC_ID][0]
+    return rows[0]
 
 
 async def _trigger_energy_poll(
