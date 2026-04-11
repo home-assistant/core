@@ -3,9 +3,7 @@
 from unittest.mock import patch
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
-from homeassistant.components.homeassistant import DOMAIN as HOMEASSISTANT_DOMAIN
 from homeassistant.components.kodi.const import CONF_WS_PORT, DOMAIN
-from homeassistant.components.media_player import DOMAIN as MEDIA_PLAYER_DOMAIN
 from homeassistant.const import (
     CONF_HOST,
     CONF_NAME,
@@ -16,6 +14,7 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_component import async_update_entity
 
 from . import init_integration
 from .util import MockConnection, MockWSConnection
@@ -118,12 +117,7 @@ async def test_screensaver_binary_sensor_updates_via_media_player_polling(
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
-        await hass.services.async_call(
-            HOMEASSISTANT_DOMAIN,
-            "update_entity",
-            {"entity_id": f"{MEDIA_PLAYER_DOMAIN}.name"},
-            blocking=True,
-        )
+        await async_update_entity(hass, "media_player.name")
         await hass.async_block_till_done()
 
         state = hass.states.get(f"{BINARY_SENSOR_DOMAIN}.name_screensaver")

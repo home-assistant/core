@@ -41,7 +41,6 @@ class KodiScreensaverBinarySensor(BinarySensorEntity):
     """Representation of the Kodi screensaver state."""
 
     _attr_has_entity_name = True
-    _attr_name = None
     _attr_should_poll = False
     _attr_translation_key = "screensaver"
 
