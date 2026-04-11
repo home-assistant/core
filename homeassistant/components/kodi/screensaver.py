@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import asyncio
+
 from jsonrpc_base.jsonrpc import ProtocolError, TransportError
 from pykodi import Kodi
 from pykodi.kodi import KodiHTTPConnection, KodiWSConnection
@@ -27,6 +29,7 @@ class KodiScreensaver:
         self._signal = async_signal_screensaver_update(entry_id)
         self._hass: HomeAssistant | None = None
         self.is_on: bool | None = None
+        self._update_lock = asyncio.Lock()
 
     @property
     def available(self) -> bool:
@@ -59,19 +62,24 @@ class KodiScreensaver:
             self._set_state(None)
             return
 
-        if self._connection.can_subscribe and self.is_on is not None:
-            return
+        async with self._update_lock:
+            if not self._connection.connected:
+                self._set_state(None)
+                return
 
-        try:
-            display_status = await self._kodi.call_method(
-                "XBMC.GetInfoBooleans",
-                booleans=["System.ScreenSaverActive"],
-            )
-        except ProtocolError, TransportError:
-            self._set_state(None)
-            return
+            if self._connection.can_subscribe and self.is_on is not None:
+                return
 
-        self._set_state(display_status.get("System.ScreenSaverActive"))
+            try:
+                display_status = await self._kodi.call_method(
+                    "XBMC.GetInfoBooleans",
+                    booleans=["System.ScreenSaverActive"],
+                )
+            except ProtocolError, TransportError:
+                self._set_state(None)
+                return
+
+            self._set_state(display_status.get("System.ScreenSaverActive"))
 
     @callback
     def async_clear(self) -> None:
