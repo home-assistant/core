@@ -25,6 +25,8 @@ from .entity import WattwaechterEntity
 
 _LOGGER = logging.getLogger(__name__)
 
+PARALLEL_UPDATES = 0
+
 KNOWN_OBIS_CODES: dict[str, SensorEntityDescription] = {
     # Energy meters (kWh) - total_increasing
     "1.8.0": SensorEntityDescription(
@@ -221,6 +223,9 @@ async def async_setup_entry(
 ) -> None:
     """Set up WattWächter sensors from a config entry."""
     coordinator = entry.runtime_data
+
+    if not coordinator.data:
+        return
 
     async_add_entities(
         WattwaechterObisSensor(
