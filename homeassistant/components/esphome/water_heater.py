@@ -97,7 +97,7 @@ class EsphomeWaterHeater(
 
     @property
     @esphome_state_property
-    def is_away_mode_on(self) -> bool:
+    def is_away_mode_on(self) -> bool | None:
         """Return true if away mode is on."""
         return bool(self._state.state & WaterHeaterStateFlag.AWAY)
 
