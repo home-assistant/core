@@ -1,11 +1,12 @@
 """Access point for the HomematicIP Cloud component."""
-# Debug build: lackas/hmip-reconnect-fix v10 (2026-04-02)
+# Debug build: lackas/hmip-reconnect-fix v11 (2026-04-11)
 
 from __future__ import annotations
 
 import asyncio
 from collections.abc import Callable
 import logging
+import time
 from typing import Any
 
 from homematicip.async_home import AsyncHome
@@ -23,6 +24,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.httpx_client import get_async_client
+from homeassistant.util import dt as dt_util
 
 from .const import HMIPC_AUTHTOKEN, HMIPC_HAPID, HMIPC_NAME, HMIPC_PIN, PLATFORMS
 from .errors import HmipcConnectionError
@@ -118,12 +120,15 @@ class HomematicipHAP:
         self._ws_close_requested = False
         self._ws_connection_closed = asyncio.Event()
         self._get_state_task: asyncio.Task | None = None
+        self._silence_checker_task: asyncio.Task | None = None
+        self._last_ws_message_time: float = 0.0
+        self._ws_frame_count: int = 0
         self.hmip_device_by_entity_id: dict[str, Any] = {}
         self.reset_connection_listener: Callable | None = None
 
     async def async_setup(self, tries: int = 0) -> bool:
         """Initialize connection."""
-        _LOGGER.debug("HomematicIP Cloud HAP starting — debug build v10 (2026-04-02)")
+        _LOGGER.debug("HomematicIP Cloud HAP starting — debug build v11 (2026-04-11)")
         try:
             self.home = await self.get_hap(
                 self.hass,
@@ -156,27 +161,129 @@ class HomematicipHAP:
             listeners_total,
         )
 
-        # Start hourly entity state dump for debugging
-        self.hass.async_create_task(self._hourly_state_dump())
+        # Start periodic silence checker (replaces hourly dump + watchdog)
+        self._silence_checker_task = self.hass.async_create_task(
+            self._periodic_silence_checker()
+        )
 
         return True
 
-    async def _hourly_state_dump(self) -> None:
-        """Log hmip entity availability every hour for debugging."""
-        while True:
-            await asyncio.sleep(3600)
-            self._log_entity_state_snapshot("hourly")
+    # Silence detection thresholds
+    _SILENCE_CHECK_INTERVAL = 300   # check every 5 min
+    _SILENCE_REFRESH_THRESHOLD = 600  # 10 min silence → REST get_state
+    _SILENCE_RECONNECT_THRESHOLD = 1200  # 20 min silence → full WS reconnect
+    _HOURLY_DUMP_INTERVAL = 3600  # state snapshot every hour
+
+    async def _periodic_silence_checker(self) -> None:
+        """Periodic check: refresh state via REST if WS push events stop, reconnect if still silent."""
+        await asyncio.sleep(300)  # initial grace period after startup
+        last_hourly_dump = time.monotonic()
+        last_rest_refresh = 0.0
+
+        while not self._ws_close_requested:
+            await asyncio.sleep(self._SILENCE_CHECK_INTERVAL)
+            if self._ws_close_requested:
+                return
+
+            now = time.monotonic()
+
+            # Hourly state snapshot (replaces _hourly_state_dump)
+            if now - last_hourly_dump >= self._HOURLY_DUMP_INTERVAL:
+                self._log_entity_state_snapshot("hourly")
+                last_hourly_dump = now
+
+            # Check WS push silence
+            last_msg = getattr(self, "_last_ws_message_time", 0.0)
+            if last_msg <= 0:
+                continue  # no messages yet, still starting up
+
+            silence = now - last_msg
+            ws_client = getattr(self.home, "_websocket_client", None)
+            ws_connected = ws_client is not None and ws_client.is_connected()
+
+            if silence <= self._SILENCE_REFRESH_THRESHOLD:
+                _LOGGER.debug(
+                    "Silence checker: last push %.0fs ago — OK",
+                    silence,
+                )
+                continue
+
+            if not ws_connected:
+                # Library's _connect() loop may be stuck in ws_connect() with no timeout.
+                # If WS has been disconnected for too long, force a full reconnect.
+                if silence > self._SILENCE_RECONNECT_THRESHOLD:
+                    _LOGGER.warning(
+                        "Silence checker: WS not connected for %.0fs (library reconnect may be stuck) "
+                        "— forcing full WS reconnect",
+                        silence,
+                    )
+                    try:
+                        await self.home.disable_events_async()
+                        await self.async_connect(self.home)
+                        self._last_ws_message_time = time.monotonic() - self._SILENCE_REFRESH_THRESHOLD + 300
+                        _LOGGER.info("Silence checker: full WS reconnect completed (was disconnected, grace=5min)")
+                    except Exception:  # noqa: BLE001
+                        _LOGGER.exception("Silence checker: WS reconnect failed (was disconnected)")
+                else:
+                    _LOGGER.debug(
+                        "Silence checker: WS not connected (%.0fs silent), waiting for library reconnect",
+                        silence,
+                    )
+                continue
+
+            # Stage 2 first: silence > 20 min → full WS reconnect (takes priority)
+            # The REST refresh keeps entities current, but we need push events back
+            if silence > self._SILENCE_RECONNECT_THRESHOLD:
+                _LOGGER.warning(
+                    "Silence checker: still no push events after %.0fs "
+                    "— forcing full WS reconnect (disconnect + reconnect)",
+                    silence,
+                )
+                self._log_entity_state_snapshot("pre-silence-reconnect")
+                try:
+                    await self.home.disable_events_async()
+                    await self.async_connect(self.home)
+                    # Short grace: allow 5 min before next REST refresh, 15 min before next reconnect
+                    self._last_ws_message_time = time.monotonic() - self._SILENCE_REFRESH_THRESHOLD + 300
+                    _LOGGER.info("Silence checker: full WS reconnect completed (grace=5min)")
+                except Exception:  # noqa: BLE001
+                    _LOGGER.exception("Silence checker: WS reconnect failed")
+
+            # Stage 1: silence > 10 min, WS appears connected → REST get_state refresh
+            # This handles the case where WS is "alive" at TCP level but push events stopped
+            elif now - last_rest_refresh > self._SILENCE_REFRESH_THRESHOLD:
+                _LOGGER.warning(
+                    "Silence checker: no push events for %.0fs (WS connected=%s) "
+                    "— forcing REST get_state refresh",
+                    silence,
+                    ws_connected,
+                )
+                self._log_entity_state_snapshot("pre-silence-refresh")
+                try:
+                    await self.get_state()
+                    _LOGGER.info("Silence checker: REST get_state refresh succeeded")
+                    self._log_entity_state_snapshot("post-silence-refresh")
+                    last_rest_refresh = now
+                except Exception:  # noqa: BLE001
+                    _LOGGER.exception("Silence checker: REST get_state refresh failed")
 
     def _log_entity_state_snapshot(self, trigger: str, since_reconnect: bool = False) -> None:
         """Log current hmip entity states, orphaned devices, and state mismatches."""
         try:
             from homeassistant.const import STATE_UNAVAILABLE, STATE_ON, STATE_OFF
+            from homeassistant.helpers import entity_registry as er
+            entity_registry = er.async_get(self.hass)
+            hmip_entity_ids = {
+                entry.entity_id
+                for entry in entity_registry.entities.values()
+                if entry.config_entry_id == self.config_entry.entry_id
+            }
             all_states = self.hass.states.async_all()
-            hmip_states = [s for s in all_states if s.entity_id.startswith(f"{self.config_entry.domain}.")]
+            hmip_states = [s for s in all_states if s.entity_id in hmip_entity_ids]
             unavailable = [s.entity_id for s in hmip_states if s.state == STATE_UNAVAILABLE]
             devices = list(self.home.devices)
             orphaned = [d for d in devices if not getattr(d, "_on_update", [])]
-            now = self.hass.util.dt.utcnow()
+            now = dt_util.utcnow()
 
             # Stale: entities whose last_changed is older than 10 min (catches wrong-value stale)
             stale = [
@@ -221,38 +328,6 @@ class HomematicipHAP:
             )
         except Exception:  # noqa: BLE001
             _LOGGER.exception("_log_entity_state_snapshot(%s) failed", trigger)
-
-    async def _ws_push_watchdog(self) -> None:
-        """Watchdog: if WS is connected but no push events for 10min, force reconnect."""
-        import time
-        SILENCE_THRESHOLD = 600  # 10 minutes
-        CHECK_INTERVAL = 120     # check every 2 minutes
-        await asyncio.sleep(300)  # initial grace period after startup
-        while True:
-            await asyncio.sleep(CHECK_INTERVAL)
-            if self._ws_close_requested:
-                return
-            ws_client = getattr(self.home, "_websocket_client", None)
-            if ws_client is None or not ws_client.is_connected():
-                continue  # not connected, library will handle reconnect
-            last_msg = getattr(self, "_last_ws_message_time", 0.0)
-            silence = time.monotonic() - last_msg if last_msg > 0 else None
-            if silence is not None and silence > SILENCE_THRESHOLD:
-                _LOGGER.warning(
-                    "WS push watchdog: no push events for %.0fs while connected — forcing reconnect",
-                    silence,
-                )
-                # Force reconnect by stopping and restarting the WS client
-                await ws_client.stop()
-                self._last_ws_message_time = time.monotonic()  # reset to avoid loop
-                await self.home.enable_events()
-                _LOGGER.info("WS push watchdog: reconnect triggered")
-            elif silence is not None:
-                _LOGGER.debug(
-                    "WS push watchdog: last frame %.0fs ago (threshold=%ds)",
-                    silence,
-                    SILENCE_THRESHOLD,
-                )
 
     async def _post_reconnect_check(self) -> None:
         """60s after reconnect: log state snapshot and fire update_all as safety net."""
@@ -454,34 +529,40 @@ class HomematicipHAP:
         home.set_on_disconnected_handler(self.ws_disconnected_handler)
         home.set_on_reconnect_handler(self.ws_reconnected_handler)
 
-        # Monkey-patch: wrap the library's _listen() to log raw WS frames
-        # and update a last-received timestamp for the watchdog.
-        self._last_ws_message_time: float = 0.0
+        # TODO(upstream): propose last_message_time property on WebsocketHandler
+        # so we don't need this monkey-patch. Once confirmed working, submit PR
+        # to hahn-th/homematicip-rest-api adding a timestamp update in
+        # WebsocketHandler._handle_ws_message and exposing it as a property.
+        # Track last WS push event timestamp for silence detection.
         ws_client = getattr(home, "_websocket_client", None)
         if ws_client is not None:
             original_handle_ws_message = ws_client._handle_ws_message
+            self._ws_frame_count = 0
 
             async def _patched_handle_ws_message(message):
-                import time
                 self._last_ws_message_time = time.monotonic()
+                self._ws_frame_count += 1
+                msg_data = message.data if hasattr(message, "data") else message
                 _LOGGER.debug(
-                    "WS raw frame received (len=%d): %s",
-                    len(message),
-                    message[:120] if isinstance(message, str) else str(message)[:120],
+                    "WS frame #%d (len=%d): %s",
+                    self._ws_frame_count,
+                    len(msg_data) if isinstance(msg_data, (str, bytes)) else 0,
+                    msg_data[:120] if isinstance(msg_data, str) else str(msg_data)[:120],
                 )
                 await original_handle_ws_message(message)
 
             ws_client._handle_ws_message = _patched_handle_ws_message
-            _LOGGER.debug("WS frame logging monkey-patch applied")
-
-        # Start the push-event watchdog
-        self.hass.async_create_task(self._ws_push_watchdog())
+            _LOGGER.debug("WS frame logging monkey-patch applied (v11)")
+        else:
+            _LOGGER.warning("async_connect: _websocket_client is None — cannot apply monkey-patch")
 
     async def async_reset(self) -> bool:
         """Close the websocket connection."""
         self._ws_close_requested = True
         if self._get_state_task is not None:
             self._get_state_task.cancel()
+        if hasattr(self, "_silence_checker_task") and self._silence_checker_task is not None:
+            self._silence_checker_task.cancel()
         await self.home.disable_events_async()
         _LOGGER.debug("Closed connection to HomematicIP cloud server")
         await self.hass.config_entries.async_unload_platforms(
@@ -503,9 +584,12 @@ class HomematicipHAP:
 
     async def ws_connected_handler(self) -> None:
         """Handle websocket connected."""
+        last_msg_ago = time.monotonic() - self._last_ws_message_time if self._last_ws_message_time > 0 else None
         _LOGGER.info(
-            "Websocket connection to HomematicIP Cloud established (ws_closed_event=%s)",
+            "WS CONNECTED (ws_closed_event=%s, get_state_task_alive=%s, last_push=%.0fs ago)",
             self._ws_connection_closed.is_set(),
+            self._get_state_task is not None and not self._get_state_task.done(),
+            last_msg_ago if last_msg_ago is not None else -1,
         )
         if self._ws_connection_closed.is_set():
             _LOGGER.debug("ws_closed_event is set — starting get_state task")
@@ -515,19 +599,20 @@ class HomematicipHAP:
 
     async def ws_disconnected_handler(self) -> None:
         """Handle websocket disconnection."""
+        last_msg_ago = time.monotonic() - self._last_ws_message_time if self._last_ws_message_time > 0 else None
         _LOGGER.warning(
-            "Websocket connection to HomematicIP Cloud closed (get_state_task_alive=%s)",
+            "WS DISCONNECTED (get_state_task_alive=%s, ws_closed_event_before=%s, last_push=%.0fs ago)",
             self._get_state_task is not None and not self._get_state_task.done(),
+            self._ws_connection_closed.is_set(),
+            last_msg_ago if last_msg_ago is not None else -1,
         )
         self._ws_connection_closed.set()
-        # Log entity state snapshot at disconnect — for pre/post comparison
         self._log_entity_state_snapshot("pre-reconnect")
 
     async def ws_reconnected_handler(self, reason: str) -> None:
-        """Handle websocket reconnection. Is called when Websocket tries to reconnect."""
+        """Handle websocket reconnection attempt (library is retrying after failure)."""
         _LOGGER.info(
-            "Websocket connection to HomematicIP Cloud trying to reconnect due to reason: %s "
-            "(ws_closed_event=%s, get_state_task_alive=%s)",
+            "WS RECONNECTING reason=%s (ws_closed_event=%s, get_state_task_alive=%s)",
             reason,
             self._ws_connection_closed.is_set(),
             self._get_state_task is not None and not self._get_state_task.done(),
