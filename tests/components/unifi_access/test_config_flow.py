@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
-from dataclasses import asdict
 import ssl
 from types import SimpleNamespace
+from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -400,16 +400,20 @@ def _make_discovered_device(
     hw_addr: str = "b4:fb:e4:aa:bb:cc",
     hostname: str = "UniFi-Dream-Machine",
     platform: str = "UDMPRO",
-) -> UnifiDevice:
-    """Create a mock UnifiDevice with Access enabled."""
+) -> dict[str, Any]:
+    """Create discovery data dict matching production vars(UnifiDevice)."""
     device = UnifiDevice(
         source_ip=source_ip,
         hw_addr=hw_addr,
         hostname=hostname,
         platform=platform,
+        services={
+            UnifiService.Protect: False,
+            UnifiService.Network: False,
+            UnifiService.Access: True,
+        },
     )
-    device.services[UnifiService.Access] = True
-    return device
+    return {**vars(device)}
 
 
 async def test_dhcp_discovery(
@@ -454,7 +458,7 @@ async def test_integration_discovery_new_device(
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_INTEGRATION_DISCOVERY},
-        data=asdict(device),
+        data=device,
     )
 
     assert result["type"] is FlowResultType.FORM
@@ -486,7 +490,7 @@ async def test_integration_discovery_already_configured(
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_INTEGRATION_DISCOVERY},
-        data=asdict(device),
+        data=device,
     )
 
     assert result["type"] is FlowResultType.ABORT
@@ -511,7 +515,7 @@ async def test_integration_discovery_updates_host(
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": SOURCE_INTEGRATION_DISCOVERY},
-            data=asdict(device),
+            data=device,
         )
 
     assert result["type"] is FlowResultType.ABORT
@@ -538,7 +542,7 @@ async def test_integration_discovery_updates_host_when_runtime_data_is_unhealthy
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": SOURCE_INTEGRATION_DISCOVERY},
-            data=asdict(device),
+            data=device,
         )
 
     assert result["type"] is FlowResultType.ABORT
@@ -564,7 +568,7 @@ async def test_integration_discovery_does_not_update_host_when_console_alive(
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": SOURCE_INTEGRATION_DISCOVERY},
-            data=asdict(device),
+            data=device,
         )
 
     assert result["type"] is FlowResultType.ABORT
@@ -584,7 +588,7 @@ async def test_integration_discovery_no_update_when_same_ip(
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_INTEGRATION_DISCOVERY},
-        data=asdict(device),
+        data=device,
     )
 
     assert result["type"] is FlowResultType.ABORT
@@ -603,7 +607,7 @@ async def test_integration_discovery_no_update_when_online(
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_INTEGRATION_DISCOVERY},
-        data=asdict(device),
+        data=device,
     )
 
     assert result["type"] is FlowResultType.ABORT
@@ -631,7 +635,7 @@ async def test_integration_discovery_preserves_hostname(
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_INTEGRATION_DISCOVERY},
-        data=asdict(device),
+        data=device,
     )
 
     assert result["type"] is FlowResultType.ABORT
@@ -659,7 +663,7 @@ async def test_integration_discovery_adopts_manual_entry(
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_INTEGRATION_DISCOVERY},
-        data=asdict(device),
+        data=device,
     )
 
     assert result["type"] is FlowResultType.ABORT
@@ -699,7 +703,7 @@ async def test_integration_discovery_skips_non_matching_host(
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_INTEGRATION_DISCOVERY},
-        data=asdict(device),
+        data=device,
     )
 
     assert result["type"] is FlowResultType.ABORT
@@ -727,7 +731,7 @@ async def test_integration_discovery_aborts_existing_host_different_unique_id(
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_INTEGRATION_DISCOVERY},
-        data=asdict(device),
+        data=device,
     )
 
     assert result["type"] is FlowResultType.ABORT
@@ -745,7 +749,7 @@ async def test_integration_discovery_confirm_errors(
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_INTEGRATION_DISCOVERY},
-        data=asdict(device),
+        data=device,
     )
 
     assert result["type"] is FlowResultType.FORM

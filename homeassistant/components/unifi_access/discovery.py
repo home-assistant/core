@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from dataclasses import asdict
 from datetime import timedelta
 import logging
 from typing import Any
@@ -68,5 +67,5 @@ def async_trigger_discovery(
                 hass,
                 DOMAIN,
                 context={"source": config_entries.SOURCE_INTEGRATION_DISCOVERY},
-                data=asdict(device),
+                data={**vars(device)},
             )

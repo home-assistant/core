@@ -24,14 +24,17 @@ def _make_device(
     access: bool = True,
 ) -> UnifiDevice:
     """Create a UnifiDevice for testing."""
-    device = UnifiDevice(
+    return UnifiDevice(
         source_ip=source_ip,
         hw_addr=hw_addr,
         hostname="UDM-Pro",
         platform="UDMPRO",
+        services={
+            UnifiService.Protect: False,
+            UnifiService.Network: False,
+            UnifiService.Access: access,
+        },
     )
-    device.services[UnifiService.Access] = access
-    return device
 
 
 async def test_trigger_discovery_creates_flow(
