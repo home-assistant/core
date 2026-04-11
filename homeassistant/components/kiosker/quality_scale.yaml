@@ -30,9 +30,7 @@ rules:
     status: exempt
     comment: Integration does not provide custom actions
   config-entry-unloading: done
-  docs-configuration-parameters:
-    status: exempt
-    comment: Integration does not provide configuration options (no options flow)
+  docs-configuration-parameters: done
   docs-installation-parameters: done
   entity-unavailable: done
   integration-owner: done
