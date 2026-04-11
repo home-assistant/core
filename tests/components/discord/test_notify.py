@@ -3,6 +3,7 @@
 from pathlib import Path
 from unittest.mock import AsyncMock, MagicMock, patch
 
+import aiohttp
 import nextcord
 import pytest
 
@@ -482,3 +483,206 @@ async def test_service_send_embed_with_thumbnail_and_image(
         url="https://example.com/thumb.png"
     )
     mock_embed.set_image.assert_called_once_with(url="https://example.com/img.png")
+
+
+async def test_service_send_embed_invalid_field_skipped(
+    hass: HomeAssistant,
+    setup_discord: None,
+    mock_discord_bot: MagicMock,
+    mock_channel: MagicMock,
+) -> None:
+    """Test that an invalid embed field (causing TypeError) is skipped with a warning."""
+    with patch(
+        "homeassistant.components.discord.notify.nextcord.Embed"
+    ) as mock_embed_cls:
+        mock_embed = MagicMock()
+        mock_embed.add_field.side_effect = TypeError("unexpected keyword argument")
+        mock_embed_cls.return_value = mock_embed
+        await hass.services.async_call(
+            DOMAIN,
+            "send_message",
+            {
+                ATTR_ENTITY_ID: ENTITY_ID,
+                "message": "bad field",
+                "embed": {"fields": [{"invalid_key": "value"}]},
+            },
+            blocking=True,
+        )
+    # Message is still sent despite the bad field
+    mock_channel.send.assert_called_once()
+
+
+async def test_service_send_url_download_error(
+    hass: HomeAssistant,
+    setup_discord: None,
+    mock_discord_bot: MagicMock,
+    mock_channel: MagicMock,
+) -> None:
+    """Test that an aiohttp error during URL download skips the file gracefully."""
+    hass.config.allowlist_external_urls = {"https://example.com/"}
+
+    mock_session = MagicMock()
+    mock_session.get.side_effect = aiohttp.ClientError("connection failed")
+
+    with patch(
+        "homeassistant.components.discord.notify.async_get_clientsession",
+        return_value=mock_session,
+    ):
+        await hass.services.async_call(
+            DOMAIN,
+            "send_message",
+            {
+                ATTR_ENTITY_ID: ENTITY_ID,
+                "message": "url",
+                "urls": ["https://example.com/img.png"],
+            },
+            blocking=True,
+        )
+
+    # Message sent with no files — download error was swallowed
+    mock_channel.send.assert_called_once()
+    assert mock_channel.send.call_args[1]["files"] == []
+
+
+async def test_service_send_url_content_length_too_large(
+    hass: HomeAssistant,
+    setup_discord: None,
+    mock_discord_bot: MagicMock,
+    mock_channel: MagicMock,
+) -> None:
+    """Test that a URL with Content-Length exceeding the limit is skipped."""
+    hass.config.allowlist_external_urls = {"https://example.com/"}
+
+    mock_resp = MagicMock()
+    mock_resp.headers = {"Content-Length": "999999999"}
+
+    mock_cm = AsyncMock()
+    mock_cm.__aenter__ = AsyncMock(return_value=mock_resp)
+    mock_cm.__aexit__ = AsyncMock(return_value=False)
+
+    mock_session = MagicMock()
+    mock_session.get.return_value = mock_cm
+
+    with patch(
+        "homeassistant.components.discord.notify.async_get_clientsession",
+        return_value=mock_session,
+    ):
+        await hass.services.async_call(
+            DOMAIN,
+            "send_message",
+            {
+                ATTR_ENTITY_ID: ENTITY_ID,
+                "message": "url",
+                "urls": ["https://example.com/big.png"],
+            },
+            blocking=True,
+        )
+
+    mock_channel.send.assert_called_once()
+    assert mock_channel.send.call_args[1]["files"] == []
+
+
+def _make_mock_session(chunks: list[bytes], content_length: str | None = None):
+    """Build a mock aiohttp session that streams the given byte chunks."""
+
+    async def _iter_chunks():
+        for chunk in chunks:
+            yield chunk, True
+
+    mock_resp = MagicMock()
+    mock_resp.headers = (
+        {"Content-Length": content_length} if content_length is not None else {}
+    )
+    mock_resp.content.iter_chunks = _iter_chunks
+
+    mock_cm = AsyncMock()
+    mock_cm.__aenter__ = AsyncMock(return_value=mock_resp)
+    mock_cm.__aexit__ = AsyncMock(return_value=False)
+
+    mock_session = MagicMock()
+    mock_session.get.return_value = mock_cm
+    return mock_session
+
+
+async def test_service_send_url_streaming_success(
+    hass: HomeAssistant,
+    setup_discord: None,
+    mock_discord_bot: MagicMock,
+    mock_channel: MagicMock,
+) -> None:
+    """Test that a URL is downloaded via streaming and attached as a file."""
+    hass.config.allowlist_external_urls = {"https://example.com/"}
+
+    with patch(
+        "homeassistant.components.discord.notify.async_get_clientsession",
+        return_value=_make_mock_session([b"fake", b"data"]),
+    ):
+        await hass.services.async_call(
+            DOMAIN,
+            "send_message",
+            {
+                ATTR_ENTITY_ID: ENTITY_ID,
+                "message": "url",
+                "urls": ["https://example.com/img.png"],
+            },
+            blocking=True,
+        )
+
+    assert mock_channel.send.call_args[1]["files"]
+
+
+async def test_service_send_url_stream_too_large(
+    hass: HomeAssistant,
+    setup_discord: None,
+    mock_discord_bot: MagicMock,
+    mock_channel: MagicMock,
+) -> None:
+    """Test that a streaming download exceeding the size limit is skipped."""
+    hass.config.allowlist_external_urls = {"https://example.com/"}
+
+    big_chunk = b"x" * (8_000_001)
+
+    with patch(
+        "homeassistant.components.discord.notify.async_get_clientsession",
+        return_value=_make_mock_session([big_chunk]),
+    ):
+        await hass.services.async_call(
+            DOMAIN,
+            "send_message",
+            {
+                ATTR_ENTITY_ID: ENTITY_ID,
+                "message": "url",
+                "urls": ["https://example.com/big.png"],
+            },
+            blocking=True,
+        )
+
+    mock_channel.send.assert_called_once()
+    assert mock_channel.send.call_args[1]["files"] == []
+
+
+async def test_service_send_url_malformed_content_length(
+    hass: HomeAssistant,
+    setup_discord: None,
+    mock_discord_bot: MagicMock,
+    mock_channel: MagicMock,
+) -> None:
+    """Test that a malformed Content-Length header falls through to streaming."""
+    hass.config.allowlist_external_urls = {"https://example.com/"}
+
+    with patch(
+        "homeassistant.components.discord.notify.async_get_clientsession",
+        return_value=_make_mock_session([b"data"], content_length="not-a-number"),
+    ):
+        await hass.services.async_call(
+            DOMAIN,
+            "send_message",
+            {
+                ATTR_ENTITY_ID: ENTITY_ID,
+                "message": "url",
+                "urls": ["https://example.com/img.png"],
+            },
+            blocking=True,
+        )
+
+    assert mock_channel.send.call_args[1]["files"]
