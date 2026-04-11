@@ -19,7 +19,11 @@ from iaqualink.systems.iaqua.system import IaquaSystem
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.components.climate import DOMAIN as CLIMATE_DOMAIN
-from homeassistant.components.iaqualink.const import UPDATE_INTERVAL
+from homeassistant.components.iaqualink.const import (
+    CONF_SYSTEMS,
+    DOMAIN,
+    UPDATE_INTERVAL,
+)
 from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
@@ -308,10 +312,10 @@ async def test_setup_first_refresh_unauthorized_closes_client(
     assert flows[0]["context"]["source"] == SOURCE_REAUTH
 
 
-async def test_setup_no_systems_recognized(
+async def test_setup_no_systems_recognized_supports_reload_and_unload(
     hass: HomeAssistant, config_entry: MockConfigEntry
 ) -> None:
-    """Test setup ending in no systems recognized."""
+    """Test setup supports accounts with no detected systems."""
     config_entry.add_to_hass(hass)
 
     with (
@@ -324,10 +328,88 @@ async def test_setup_no_systems_recognized(
             return_value={},
         ),
     ):
-        await hass.config_entries.async_setup(config_entry.entry_id)
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+        assert config_entry.runtime_data.platforms_loaded is False
+
+        assert await hass.config_entries.async_reload(config_entry.entry_id)
+        await hass.async_block_till_done()
+        assert config_entry.runtime_data.platforms_loaded is False
+
+        assert await hass.config_entries.async_unload(config_entry.entry_id)
         await hass.async_block_till_done()
 
-    assert config_entry.state is ConfigEntryState.SETUP_ERROR
+    assert config_entry.state is ConfigEntryState.NOT_LOADED
+
+
+async def test_setup_no_systems_selected_supports_reload_and_unload(
+    hass: HomeAssistant,
+    client: AqualinkClient,
+    config_data: dict[str, str],
+) -> None:
+    """Test setup supports an empty selected-systems list."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=config_data,
+        options={CONF_SYSTEMS: []},
+    )
+    config_entry.add_to_hass(hass)
+
+    system = get_aqualink_system(client, cls=IaquaSystem)
+    systems = {system.serial: system}
+
+    with (
+        patch(
+            "homeassistant.components.iaqualink.AqualinkClient.login",
+            return_value=None,
+        ),
+        patch(
+            "homeassistant.components.iaqualink.AqualinkClient.get_systems",
+            return_value=systems,
+        ),
+    ):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+        assert config_entry.runtime_data.platforms_loaded is False
+
+        assert await hass.config_entries.async_reload(config_entry.entry_id)
+        await hass.async_block_till_done()
+        assert config_entry.runtime_data.platforms_loaded is False
+
+        assert await hass.config_entries.async_unload(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.NOT_LOADED
+
+
+async def test_setup_with_systems_marks_platforms_loaded(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    client: AqualinkClient,
+) -> None:
+    """Test setup marks platforms as loaded when entry setups are forwarded."""
+    config_entry.add_to_hass(hass)
+
+    system = get_aqualink_system(client, cls=IaquaSystem)
+    system.online = True
+    system.update = AsyncMock()
+    systems = {system.serial: system}
+    system.get_devices = AsyncMock(return_value={})
+
+    with (
+        patch(
+            "homeassistant.components.iaqualink.AqualinkClient.login",
+            return_value=None,
+        ),
+        patch(
+            "homeassistant.components.iaqualink.AqualinkClient.get_systems",
+            return_value=systems,
+        ),
+    ):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert config_entry.runtime_data.platforms_loaded is True
 
 
 async def test_setup_devices_exception(
