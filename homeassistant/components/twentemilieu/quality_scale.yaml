@@ -55,10 +55,7 @@ rules:
       This integration does not have an options flow.
 
   # Gold
-  entity-translations:
-    status: todo
-    comment: |
-      The calendar entity name isn't translated yet.
+  entity-translations: done
   entity-device-class: done
   devices: done
   entity-category: done
