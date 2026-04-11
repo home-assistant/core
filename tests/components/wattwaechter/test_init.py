@@ -105,3 +105,19 @@ async def test_setup_entry_auth_error(
         await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+
+
+async def test_setup_entry_meter_data_returns_none(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test setup retries when meter_data() returns None."""
+    with patch("homeassistant.components.wattwaechter.Wattwaechter") as mock_cls:
+        client = mock_cls.return_value
+        client.alive = AsyncMock(return_value=MOCK_ALIVE_RESPONSE)
+        client.meter_data = AsyncMock(return_value=None)
+        client.host = "192.168.1.100"
+
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
