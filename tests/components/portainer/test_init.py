@@ -363,6 +363,21 @@ async def test_new_container_callback(
     ) > len(entities)
 
 
+async def test_swarm_stacks_fetched_by_swarm_id(
+    hass: HomeAssistant,
+    mock_portainer_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test that on a Swarm manager get_stacks is called with both endpoint_id and swarm_id."""
+    await setup_integration(hass, mock_config_entry)
+
+    calls = mock_portainer_client.get_stacks.call_args_list
+    # Expect exactly two calls: one by endpoint_id, one by swarm_id
+    assert len(calls) == 2
+    assert calls[0].kwargs == {"endpoint_id": 1}
+    assert calls[1].kwargs == {"endpoint_id": 1, "swarm_id": "swarm-cluster-id"}
+
+
 async def test_new_stack_callback(
     hass: HomeAssistant,
     mock_portainer_client: AsyncMock,
