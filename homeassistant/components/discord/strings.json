@@ -2,7 +2,9 @@
   "config": {
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
+      "unique_id_mismatch": "The bot account does not match the currently configured account"
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
@@ -14,14 +16,111 @@
         "data": {
           "api_token": "[%key:common::config_flow::data::api_token%]"
         },
-        "description": "[%key:component::discord::config::step::user::description%]"
+        "data_description": {
+          "api_token": "[%key:component::discord::config::step::user::data_description::api_token%]"
+        },
+        "description": "Re-enter the bot token for {bot_name}."
+      },
+      "reconfigure": {
+        "data": {
+          "api_token": "[%key:common::config_flow::data::api_token%]"
+        },
+        "data_description": {
+          "api_token": "[%key:component::discord::config::step::user::data_description::api_token%]"
+        },
+        "description": "Update the bot token for {bot_name}."
       },
       "user": {
         "data": {
           "api_token": "[%key:common::config_flow::data::api_token%]"
         },
-        "description": "Refer to the documentation on getting your Discord bot key.\n\n{url}"
+        "data_description": {
+          "api_token": "The bot token from the Discord Developer Portal. See the documentation for instructions on creating a bot."
+        },
+        "description": "Enter your Discord bot token. You can find it in the [Discord Developer Portal]({portal_url}) under your application's Bot settings."
       }
+    }
+  },
+  "config_subentries": {
+    "channel": {
+      "abort": {
+        "already_configured": "Channel already added",
+        "entry_not_loaded": "Cannot add a channel while the Discord bot ({bot_name}) is not loaded."
+      },
+      "entry_type": "Channel",
+      "error": {
+        "cannot_access_channel": "The bot does not have permission to access this channel.",
+        "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+        "channel_not_found": "No channel or user found with that ID. If adding a server channel, make sure the bot has been invited to the server first.",
+        "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]"
+      },
+      "initiate_flow": {
+        "user": "Add channel"
+      },
+      "step": {
+        "user": {
+          "data": {
+            "channel_id": "Channel or user ID"
+          },
+          "data_description": {
+            "channel_id": "The numeric ID of the Discord channel or user to send messages to. Right-click a channel or user in Discord and choose \"Copy ID\" (requires Developer Mode)."
+          },
+          "description": "Enter the ID of a Discord channel or user. Enable Developer Mode in Discord settings, then right-click the channel or user and select **Copy ID**.",
+          "title": "Add Discord channel"
+        }
+      }
+    }
+  },
+  "exceptions": {
+    "cannot_connect": {
+      "message": "Could not connect to Discord."
+    },
+    "channel_not_found": {
+      "message": "Discord channel or user with ID {channel_id} was not found."
+    },
+    "file_not_found": {
+      "message": "File {path} does not exist or is not a file."
+    },
+    "invalid_auth": {
+      "message": "Invalid Discord bot token."
+    },
+    "path_not_allowed": {
+      "message": "Path {path} is not in the Home Assistant allowlist. Add it to homeassistant.allowlist_external_dirs in configuration.yaml."
+    },
+    "send_message_failed": {
+      "message": "Failed to send Discord message: {error}"
+    }
+  },
+  "services": {
+    "send_message": {
+      "description": "Send a message to a Discord channel, optionally with images or embeds.",
+      "fields": {
+        "embed": {
+          "description": "A Discord embed object. Supported keys: title, description, color, url, fields, footer, author, thumbnail, image.",
+          "name": "Embed"
+        },
+        "images": {
+          "description": "List of local file paths to attach as images. Paths must be in homeassistant.allowlist_external_dirs.",
+          "name": "Images"
+        },
+        "message": {
+          "description": "The message text to send.",
+          "name": "Message"
+        },
+        "title": {
+          "description": "Optional title, rendered in bold above the message.",
+          "name": "Title"
+        },
+        "urls": {
+          "description": "List of URLs to download and attach as files.",
+          "name": "URLs"
+        },
+        "verify_ssl": {
+          "description": "Whether to verify SSL certificates when downloading from URLs.",
+          "name": "Verify SSL"
+        }
+      },
+      "name": "Send message"
     }
   }
 }

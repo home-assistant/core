@@ -1,0 +1,30 @@
+send_message:
+  target:
+    entity:
+      domain: notify
+      integration: discord
+  fields:
+    message:
+      required: true
+      selector:
+        text:
+          multiline: true
+    title:
+      selector:
+        text:
+    images:
+      example: "- /media/snapshots/camera.jpg"
+      selector:
+        object:
+    urls:
+      example: "- https://example.com/image.png"
+      selector:
+        object:
+    verify_ssl:
+      default: true
+      selector:
+        boolean:
+    embed:
+      advanced: true
+      selector:
+        object:
