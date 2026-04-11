@@ -26,8 +26,6 @@ from .entity import WattwaechterEntity
 
 _LOGGER = logging.getLogger(__name__)
 
-PARALLEL_UPDATES = 0
-
 KNOWN_OBIS_CODES: dict[str, SensorEntityDescription] = {
     # Energy meters (kWh) - total_increasing
     "1.8.0": SensorEntityDescription(
