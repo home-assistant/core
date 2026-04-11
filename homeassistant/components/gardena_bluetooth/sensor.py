@@ -5,7 +5,6 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass, field
 from datetime import UTC, datetime, timedelta
-from decimal import Decimal
 
 from gardena_bluetooth.const import (
     AquaContourBattery,
@@ -39,7 +38,7 @@ from homeassistant.util import dt as dt_util
 from .coordinator import GardenaBluetoothConfigEntry, GardenaBluetoothCoordinator
 from .entity import GardenaBluetoothDescriptorEntity, GardenaBluetoothEntity
 
-type SensorRawType = StateType | datetime | Decimal
+type SensorRawType = StateType | datetime
 
 
 def _get_timestamp(value: datetime | None):
@@ -48,10 +47,10 @@ def _get_timestamp(value: datetime | None):
     return value.replace(tzinfo=dt_util.get_default_time_zone())
 
 
-def _get_distance_percentage(value: int | None) -> Decimal | None:
+def _get_distance_percentage(value: int | None) -> float | None:
     if value is None:
         return None
-    return Decimal(value) / 10
+    return value / 10
 
 
 @dataclass(frozen=True)
