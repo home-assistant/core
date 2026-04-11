@@ -12,6 +12,7 @@ from aioesphomeapi import (
 )
 
 from homeassistant.components.water_heater import (
+    ATTR_AWAY_MODE,
     ATTR_OPERATION_LIST,
     DOMAIN as WATER_HEATER_DOMAIN,
     SERVICE_SET_AWAY_MODE,
@@ -497,7 +498,7 @@ async def test_water_heater_turn_away_mode_on(
         SERVICE_SET_AWAY_MODE,
         {
             ATTR_ENTITY_ID: "water_heater.test_my_boiler",
-            "away_mode": True,
+            ATTR_AWAY_MODE: True,
         },
         blocking=True,
     )
@@ -542,7 +543,7 @@ async def test_water_heater_turn_away_mode_off(
         SERVICE_SET_AWAY_MODE,
         {
             ATTR_ENTITY_ID: "water_heater.test_my_boiler",
-            "away_mode": False,
+            ATTR_AWAY_MODE: False,
         },
         blocking=True,
     )
