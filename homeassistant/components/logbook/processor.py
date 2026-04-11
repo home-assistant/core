@@ -236,7 +236,10 @@ class EventProcessor:
         if not pending:
             return None
         query_parent_user_ids: dict[bytes, bytes] = {}
-        for pending_chunk in chunked_or_all(pending, max_bind_vars):
+        # The lambda statement unions events and states, so each id appears
+        # in two IN clauses — halve the chunk size to stay under the
+        # database's max bind variable count.
+        for pending_chunk in chunked_or_all(pending, max_bind_vars // 2):
             # Schema allows NULL but the query's WHERE clauses exclude it;
             # explicit checks satisfy the type checker.
             query_parent_user_ids.update(
