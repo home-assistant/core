@@ -22,6 +22,8 @@ from .const import (
     ATTR_SPEECH_ENHANCEMENT_ENABLED,
     DOMAIN,
     MODEL_SONOS_ARC_ULTRA,
+    MODELS_LINEIN_AND_TV,
+    MODELS_TV_ONLY,
     SONOS_ALARMS_UPDATED,
     SONOS_CREATE_ALARM,
     SONOS_CREATE_SWITCHES,
@@ -49,6 +51,7 @@ ATTR_STATUS_LIGHT = "status_light"
 ATTR_SUB_ENABLED = "sub_enabled"
 ATTR_SURROUND_ENABLED = "surround_enabled"
 ATTR_TOUCH_CONTROLS = "buttons_enabled"
+ATTR_TV_AUTOPLAY = "tv_autoplay"
 
 ALL_FEATURES = (
     ATTR_TOUCH_CONTROLS,
@@ -119,8 +122,18 @@ async def async_setup_entry(
                 features.append(feature_type)
         return features
 
+    def _get_tv_autoplay_state(speaker: SonosSpeaker) -> bool | None:
+        """Return initial TV autoplay state, or None if not supported."""
+        try:
+            result = speaker.soco.deviceProperties.GetAutoplayRoomUUID(
+                [("Source", "TV")]
+            )
+            return bool(result.get("RoomUUID", ""))
+        except SoCoUPnPException:
+            return None
+
     async def _async_create_switches(speaker: SonosSpeaker) -> None:
-        entities = []
+        entities: list[SonosPollingEntity] = []
         available_features = await hass.async_add_executor_job(
             available_soco_attributes, speaker
         )
@@ -142,6 +155,25 @@ async def async_setup_entry(
                     config_entry=config_entry,
                 )
             )
+
+        model = speaker.model_name.split()[-1].upper()
+        if model in (*MODELS_TV_ONLY, *MODELS_LINEIN_AND_TV):
+            initial_state = await hass.async_add_executor_job(
+                _get_tv_autoplay_state, speaker
+            )
+            if initial_state is not None:
+                speaker.tv_autoplay = initial_state
+                _LOGGER.debug(
+                    "Creating %s switch on %s",
+                    ATTR_TV_AUTOPLAY,
+                    speaker.zone_name,
+                )
+                entities.append(
+                    SonosTVAutoplaySwitchEntity(
+                        speaker=speaker, config_entry=config_entry
+                    )
+                )
+
         async_add_entities(entities)
 
     config_entry.async_on_unload(
@@ -209,6 +241,54 @@ class SonosSwitchEntity(SonosPollingEntity, SwitchEntity):
             soco = self.soco
         try:
             setattr(soco, self.attribute_key, enable)
+        except SoCoUPnPException as exc:
+            _LOGGER.warning("Could not toggle %s: %s", self.entity_id, exc)
+
+
+class SonosTVAutoplaySwitchEntity(SonosPollingEntity, SwitchEntity):
+    """Representation of a Sonos TV autoplay switch."""
+
+    _attr_entity_category = EntityCategory.CONFIG
+    _attr_translation_key = ATTR_TV_AUTOPLAY
+    _attr_should_poll = True
+
+    def __init__(self, speaker: SonosSpeaker, config_entry: SonosConfigEntry) -> None:
+        """Initialize the switch."""
+        super().__init__(speaker, config_entry)
+        self._attr_unique_id = f"{speaker.soco.uid}-{ATTR_TV_AUTOPLAY}"
+
+    async def _async_fallback_poll(self) -> None:
+        """Handle polling for TV autoplay state when subscriptions fail."""
+        await self.hass.async_add_executor_job(self.poll_state)
+
+    @soco_error()
+    def poll_state(self) -> None:
+        """Poll the current TV autoplay state from the device."""
+        result = self.soco.deviceProperties.GetAutoplayRoomUUID([("Source", "TV")])
+        self.speaker.tv_autoplay = bool(result.get("RoomUUID", ""))
+
+    @property
+    def is_on(self) -> bool:
+        """Return True if TV autoplay is enabled."""
+        return bool(self.speaker.tv_autoplay)
+
+    def turn_on(self, **kwargs: Any) -> None:
+        """Enable TV autoplay."""
+        self._send_command(True)
+
+    def turn_off(self, **kwargs: Any) -> None:
+        """Disable TV autoplay."""
+        self._send_command(False)
+
+    @soco_error()
+    def _send_command(self, enable: bool) -> None:
+        """Enable or disable TV autoplay on the device."""
+        room_uuid = self.soco.uid if enable else ""
+        try:
+            self.soco.deviceProperties.SetAutoplayRoomUUID(
+                [("RoomUUID", room_uuid), ("Source", "TV")]
+            )
+            self.speaker.tv_autoplay = enable
         except SoCoUPnPException as exc:
             _LOGGER.warning("Could not toggle %s: %s", self.entity_id, exc)
 
