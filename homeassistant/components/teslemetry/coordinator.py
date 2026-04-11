@@ -10,6 +10,7 @@ from tesla_fleet_api.exceptions import (
     GatewayTimeout,
     InvalidResponse,
     InvalidToken,
+    LoginRequired,
     RateLimited,
     ServiceUnavailable,
     SubscriptionRequired,
@@ -85,7 +86,7 @@ class TeslemetryMetadataCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         """Fetch latest metadata for subscription status."""
         try:
             data = await self.teslemetry.metadata()
-        except (InvalidToken, SubscriptionRequired) as e:
+        except (InvalidToken, SubscriptionRequired, LoginRequired) as e:
             raise ConfigEntryAuthFailed from e
         except RETRY_EXCEPTIONS as e:
             raise UpdateFailed(
