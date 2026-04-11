@@ -58,7 +58,7 @@ async def test_update_unavailabe_on_permission_change(
     mock_proxmox_client: MagicMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test that updates entities are unavailablewith only auditor permissions."""
+    """Test that updates entities are unavailable with only auditor permissions."""
     mock_proxmox_client.access.permissions.get.return_value = MERGED_PERMISSIONS
 
     with patch(
