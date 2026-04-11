@@ -197,6 +197,124 @@ async def test_api_call(
         )
 
 
+_PROPERTY_KEY_MAP = {"selected_program": "SelectedProgram"}
+
+
+async def test_migrate_property_unique_ids_rename(
+    hass: HomeAssistant,
+    config_entry: VelbusConfigEntry,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    controller: MagicMock,
+) -> None:
+    """Test that a property entity with an outdated unique_id gets renamed."""
+    device = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={(DOMAIN, "1")},
+        serial_number="test_serial",
+    )
+    entity_registry.async_get_or_create(
+        "select",
+        DOMAIN,
+        "test_serial-old_format",
+        config_entry=config_entry,
+        device_id=device.id,
+        original_name="selected_program",
+    )
+
+    with patch(
+        "homeassistant.components.velbus._build_property_key_map",
+        return_value=_PROPERTY_KEY_MAP,
+    ):
+        await init_integration(hass, config_entry)
+
+    assert not entity_registry.async_get_entity_id(
+        "select", DOMAIN, "test_serial-old_format"
+    )
+    assert entity_registry.async_get_entity_id(
+        "select", DOMAIN, "test_serial-SelectedProgram"
+    )
+
+
+async def test_migrate_property_unique_ids_remove_stale(
+    hass: HomeAssistant,
+    config_entry: VelbusConfigEntry,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    controller: MagicMock,
+) -> None:
+    """Test that a stale property entity is removed when the correct one already exists."""
+    device = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={(DOMAIN, "1")},
+        serial_number="test_serial",
+    )
+    # The correct entity already exists
+    entity_registry.async_get_or_create(
+        "select",
+        DOMAIN,
+        "test_serial-SelectedProgram",
+        config_entry=config_entry,
+        device_id=device.id,
+        original_name="selected_program",
+    )
+    # The stale entity with an old unique_id also exists
+    entity_registry.async_get_or_create(
+        "select",
+        DOMAIN,
+        "test_serial-old_format",
+        config_entry=config_entry,
+        device_id=device.id,
+        original_name="selected_program",
+    )
+
+    with patch(
+        "homeassistant.components.velbus._build_property_key_map",
+        return_value=_PROPERTY_KEY_MAP,
+    ):
+        await init_integration(hass, config_entry)
+
+    assert not entity_registry.async_get_entity_id(
+        "select", DOMAIN, "test_serial-old_format"
+    )
+    assert entity_registry.async_get_entity_id(
+        "select", DOMAIN, "test_serial-SelectedProgram"
+    )
+
+
+async def test_migrate_property_unique_ids_already_correct(
+    hass: HomeAssistant,
+    config_entry: VelbusConfigEntry,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    controller: MagicMock,
+) -> None:
+    """Test that a property entity with a correct unique_id is left unchanged."""
+    device = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={(DOMAIN, "1")},
+        serial_number="test_serial",
+    )
+    entity_registry.async_get_or_create(
+        "select",
+        DOMAIN,
+        "test_serial-SelectedProgram",
+        config_entry=config_entry,
+        device_id=device.id,
+        original_name="selected_program",
+    )
+
+    with patch(
+        "homeassistant.components.velbus._build_property_key_map",
+        return_value=_PROPERTY_KEY_MAP,
+    ):
+        await init_integration(hass, config_entry)
+
+    assert entity_registry.async_get_entity_id(
+        "select", DOMAIN, "test_serial-SelectedProgram"
+    )
+
+
 async def test_device_registry(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
