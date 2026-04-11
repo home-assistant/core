@@ -30,8 +30,8 @@ class AuroraAbbDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         client: AuroraClient,
     ) -> None:
         """Initialize the data update coordinator."""
-        self.available_prev: bool | None = None
-        self.available: bool | None = None
+        self.available_prev: bool = False
+        self.available: bool = False
         self.client = client
         super().__init__(
             hass,
@@ -79,7 +79,7 @@ class AuroraAbbDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
     def _log_availability_change(self) -> None:
         """Log a warning when availability changes."""
-        if self.available_prev is not None and self.available != self.available_prev:
+        if self.available != self.available_prev:
             if self.available:
                 _LOGGER.warning("Communication with %s back online", self.name)
             else:
