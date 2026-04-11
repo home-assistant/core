@@ -1,4 +1,104 @@
 # serializer version: 1
+# name: test_button_snapshot[button.homeegrams_test_20hg_201-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.homeegrams_test_20hg_201',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Test%20HG%201',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Test%20HG%201',
+    'platform': 'homee',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '00055511EECC-hg-2',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_button_snapshot[button.homeegrams_test_20hg_201-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Homeegrams Test%20HG%201',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.homeegrams_test_20hg_201',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_button_snapshot[button.homeegrams_test_20hg_20_202-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.homeegrams_test_20hg_20_202',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Test%20HG%20%202',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Test%20HG%20%202',
+    'platform': 'homee',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '00055511EECC-hg-3',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_button_snapshot[button.homeegrams_test_20hg_20_202-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Homeegrams Test%20HG%20%202',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.homeegrams_test_20hg_20_202',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
 # name: test_button_snapshot[button.test_button-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
