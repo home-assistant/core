@@ -210,14 +210,23 @@ class EventProcessor:
                         for (
                             parent_context_id_bin,
                             parent_user_id_bin,
+                            parent_time_fired_ts,
                         ) in session.execute(
-                            select(Events.context_id_bin, Events.context_user_id_bin)
+                            select(
+                                Events.context_id_bin,
+                                Events.context_user_id_bin,
+                                Events.time_fired_ts,
+                            )
                             .where(Events.context_id_bin.in_(pending_chunk))
                             .where(Events.context_user_id_bin.is_not(None))
                         ):
+                            # Use the parent event's actual fired time as the
+                            # cache timestamp so pruning is anchored to the
+                            # event's age, not the query time. Fall back to
+                            # now if the column is unexpectedly null.
                             context_user_ids[parent_context_id_bin] = (
                                 parent_user_id_bin,
-                                now,
+                                parent_time_fired_ts or now,
                             )
             return self.humanify(rows)
 
