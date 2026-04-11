@@ -795,7 +795,7 @@
   },
   "services": {
     "get_kvs_value": {
-      "description": "Get a value from the device's Key-Value Storage.",
+      "description": "Gets a value from a Shelly device's Key-Value Storage.",
       "fields": {
         "device_id": {
           "description": "The ID of the Shelly device to get the KVS value from.",
@@ -806,10 +806,10 @@
           "name": "Key"
         }
       },
-      "name": "Get KVS value"
+      "name": "Get Shelly KVS value"
     },
     "set_kvs_value": {
-      "description": "Set a value in the device's Key-Value Storage.",
+      "description": "Sets a value in a Shelly device's Key-Value Storage.",
       "fields": {
         "device_id": {
           "description": "The ID of the Shelly device to set the KVS value.",
@@ -824,7 +824,7 @@
           "name": "Value"
         }
       },
-      "name": "Set KVS value"
+      "name": "Set Shelly KVS value"
     }
   }
 }

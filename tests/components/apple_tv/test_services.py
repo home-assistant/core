@@ -20,7 +20,10 @@ from tests.common import MockConfigEntry
 def mock_atv() -> AsyncMock:
     """Create a mock Apple TV interface with keyboard support."""
     atv = AsyncMock()
+    atv.close = MagicMock()
+    atv.features = MagicMock()
     atv.keyboard = AsyncMock()
+    atv.push_updater = MagicMock()
     atv.keyboard.text_focus_state = KeyboardFocusState.Focused
     atv.device_info.model = DeviceModel.Gen4K
     atv.device_info.raw_model = "AppleTV6,2"
