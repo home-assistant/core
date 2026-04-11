@@ -36,12 +36,12 @@ async def test_all_entities(
         )
 
 
-async def test_update_unavailable(
+async def test_update_entities_ignored(
     hass: HomeAssistant,
     mock_proxmox_client: MagicMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test that updates are unavailable with only auditor permissions."""
+    """Test that updates entities are not created with only auditor permissions."""
     mock_proxmox_client.access.permissions.get.return_value = AUDIT_PERMISSIONS
 
     with patch(
@@ -49,6 +49,30 @@ async def test_update_unavailable(
         [Platform.UPDATE],
     ):
         await setup_integration(hass, mock_config_entry)
+
+    assert hass.states.get(ENTITY_ID) is None
+
+
+async def test_update_unavailabe_on_permission_change(
+    hass: HomeAssistant,
+    mock_proxmox_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test that updates entities are unavailablewith only auditor permissions."""
+    mock_proxmox_client.access.permissions.get.return_value = MERGED_PERMISSIONS
+
+    with patch(
+        "homeassistant.components.proxmoxve.PLATFORMS",
+        [Platform.UPDATE],
+    ):
+        await setup_integration(hass, mock_config_entry)
+
+    assert hass.states.get(ENTITY_ID).state is not None
+
+    mock_proxmox_client.access.permissions.get.return_value = AUDIT_PERMISSIONS
+
+    await hass.config_entries.async_reload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
 
     state = hass.states.get(ENTITY_ID)
     assert state.state == STATE_UNAVAILABLE

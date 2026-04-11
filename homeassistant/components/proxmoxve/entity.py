@@ -55,6 +55,7 @@ class ProxmoxNodeEntity(ProxmoxCoordinatorEntity):
             configuration_url=_proxmox_base_url(coordinator).with_fragment(
                 f"v1:0:=node/{node_data.node['node']}"
             ),
+            sw_version=node_data.version.get("version"),
         )
 
         self._attr_unique_id = f"{coordinator.config_entry.entry_id}_{node_data.node['id']}_{entity_description.key}"

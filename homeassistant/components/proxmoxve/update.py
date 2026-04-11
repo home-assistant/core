@@ -37,7 +37,7 @@ NODE_UPDATES: tuple[ProxmoxNodeUpdateEntityDescription, ...] = (
         installed_version=lambda node_data: node_data.version.get("version", "unknown"),
         update_info=lambda node_data: update_version(
             node_data.version.get("version", "unknown"),
-            node_data.update,
+            node_data.update if isinstance(node_data.update, list) else [],
         ),
     ),
 )
@@ -57,6 +57,8 @@ async def async_setup_entry(
             ProxmoxNodeUpdateEntity(coordinator, entity_description, node)
             for node in nodes
             for entity_description in NODE_UPDATES
+            if node.update
+            is not False  # Only create entities for nodes where update information is available
         )
 
     coordinator.new_nodes_callbacks.append(_async_add_new_nodes)

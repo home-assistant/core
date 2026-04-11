@@ -55,12 +55,9 @@ def latest_version(versions: list[str]) -> str:
 
 def update_version(
     current_version: str,
-    updates: list[dict[str, Any]] | bool,
-) -> ProxmoxUpdateInfo | bool:
+    updates: list[dict[str, Any]],
+) -> ProxmoxUpdateInfo:
     """Return the updated version based on the current version and updates."""
-
-    if isinstance(updates, bool):
-        return False
 
     count = len(updates)
     pve_count = sum(is_proxmox_package(u) for u in updates)
