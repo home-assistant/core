@@ -40,7 +40,6 @@ class VelbusSelect(VelbusEntity, SelectEntity):
         """Initialize a select Velbus entity."""
         super().__init__(channel)
         self._attr_options = self._channel.get_options()
-        self._attr_unique_id = f"{self._attr_unique_id}-program_select"
 
     @api_call
     async def async_select_option(self, option: str) -> None:
