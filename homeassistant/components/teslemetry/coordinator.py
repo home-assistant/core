@@ -137,7 +137,7 @@ class TeslemetryVehicleDataCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         """Update vehicle data using Teslemetry API."""
         try:
             data = (await self.api.vehicle_data(endpoints=ENDPOINTS))["response"]
-        except (InvalidToken, SubscriptionRequired) as e:
+        except (InvalidToken, SubscriptionRequired, LoginRequired) as e:
             raise ConfigEntryAuthFailed from e
         except RETRY_EXCEPTIONS as e:
             raise UpdateFailed(
@@ -187,7 +187,7 @@ class TeslemetryEnergySiteLiveCoordinator(DataUpdateCoordinator[dict[str, Any]])
         """Update energy site data using Teslemetry API."""
         try:
             data: dict[str, Any] = (await self.api.live_status())["response"]
-        except (InvalidToken, SubscriptionRequired) as e:
+        except (InvalidToken, SubscriptionRequired, LoginRequired) as e:
             raise ConfigEntryAuthFailed from e
         except RETRY_EXCEPTIONS as e:
             raise UpdateFailed(
@@ -234,7 +234,7 @@ class TeslemetryEnergySiteInfoCoordinator(DataUpdateCoordinator[dict[str, Any]])
         """Update energy site data using Teslemetry API."""
         try:
             data = (await self.api.site_info())["response"]
-        except (InvalidToken, SubscriptionRequired) as e:
+        except (InvalidToken, SubscriptionRequired, LoginRequired) as e:
             raise ConfigEntryAuthFailed from e
         except RETRY_EXCEPTIONS as e:
             raise UpdateFailed(
@@ -280,7 +280,7 @@ class TeslemetryEnergyHistoryCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         """Update energy site data using Teslemetry API."""
         try:
             data = (await self.api.energy_history(TeslaEnergyPeriod.DAY))["response"]
-        except (InvalidToken, SubscriptionRequired) as e:
+        except (InvalidToken, SubscriptionRequired, LoginRequired) as e:
             raise ConfigEntryAuthFailed from e
         except RETRY_EXCEPTIONS as e:
             raise UpdateFailed(
