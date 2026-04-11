@@ -31,7 +31,7 @@ def _make_inverter_data(**overrides: object) -> AuroraInverterData:
         "i_leak_inverter": 2.3456,
         "power_in_1": 12.3,
         "power_in_2": 23.5,
-        "temp": 9.9,
+        "temperature": 9.9,
         "voltage_in_1": 123.5,
         "current_in_1": 1.0,
         "voltage_in_2": 234.6,

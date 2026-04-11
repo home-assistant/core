@@ -137,7 +137,7 @@ def test_try_connect_and_fetch_data_success() -> None:
     assert result.i_leak_inverter == 2.3456
     assert result.power_in_1 == 12.3
     assert result.power_in_2 == 23.5
-    assert result.temp == 9.9
+    assert result.temperature == 9.9
     assert result.voltage_in_1 == 123.5
     assert result.current_in_1 == 1.0
     assert result.voltage_in_2 == 234.6

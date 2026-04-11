@@ -158,7 +158,7 @@ SENSOR_TYPES = [
         translation_key="power_output",
     ),
     SensorEntityDescription(
-        key="temp",
+        key="temperature",
         device_class=SensorDeviceClass.TEMPERATURE,
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,

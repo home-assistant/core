@@ -36,7 +36,7 @@ class AuroraInverterData:
     i_leak_inverter: float
     power_in_1: float
     power_in_2: float
-    temp: float
+    temperature: float
     voltage_in_1: float
     current_in_1: float
     voltage_in_2: float
@@ -149,7 +149,7 @@ class AuroraClient:
             i_leak_inverter=i_leak_inverter,
             power_in_1=round(power_in_1, 1),
             power_in_2=round(power_in_2, 1),
-            temp=round(temperature_c, 1),
+            temperature=round(temperature_c, 1),
             voltage_in_1=round(voltage_in_1, 1),
             current_in_1=round(current_in_1, 1),
             voltage_in_2=round(voltage_in_2, 1),
