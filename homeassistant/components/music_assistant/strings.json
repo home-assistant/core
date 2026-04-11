@@ -59,16 +59,17 @@
         "state_attributes": {
           "sound_mode": {
             "state": {
-              "2ch_stereo": "2ch stereo",
-              "5ch_stereo": "5ch stereo",
-              "7ch_stereo": "7ch stereo",
-              "9ch_stereo": "9ch stereo",
-              "11ch_stereo": "11ch stereo",
+              "2ch_stereo": "2 channels stereo",
+              "5ch_stereo": "5 channels stereo",
+              "7ch_stereo": "7 channels stereo",
+              "9ch_stereo": "9 channels stereo",
+              "11ch_stereo": "11 channels stereo",
               "action_game": "Action game",
               "adventure": "Adventure",
-              "all_ch_stereo": "All ch stereo",
+              "all_ch_stereo": "All channels stereo",
               "amsterdam": "Hall in Amsterdam",
               "arena": "Arena",
+              "bass_booster": "Bass booster",
               "bottom_line": "The Bottom Line",
               "cellar_club": "Cellar club",
               "chamber": "Chamber",

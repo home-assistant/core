@@ -154,7 +154,6 @@
     'capabilities': dict({
       'sound_mode_list': list([
         'munich_translation',
-        'vienna_id',
         'stuttgart_translation',
       ]),
       'source_list': list([
@@ -205,7 +204,6 @@
       'mass_player_type': 'player',
       'sound_mode_list': list([
         'munich_translation',
-        'vienna_id',
         'stuttgart_translation',
       ]),
       'source_list': list([

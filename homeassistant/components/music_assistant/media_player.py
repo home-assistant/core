@@ -70,8 +70,6 @@ if TYPE_CHECKING:
     from music_assistant_client.client import MusicAssistantClient
     from music_assistant_models.player import Player
 
-SOUND_MODES_TRANSLATION_KEY_PREFIX = "player_sound_mode."
-
 SUPPORTED_FEATURES_BASE = (
     MediaPlayerEntityFeature.STOP
     | MediaPlayerEntityFeature.PREVIOUS_TRACK
@@ -224,29 +222,9 @@ class MusicAssistantPlayer(MusicAssistantEntity, MediaPlayerEntity):
 
         # translation_key, sound_mode.id
         sound_mode_mappings: dict[str, str] = {}
-        sound_mode_unknown_count = 0
         active_sound_mode_translation_key: str | None = None
         for sound_mode in player.sound_mode_list:
-            if sound_mode.passive:
-                # ignore passive sound_mode because HA does not differentiate between
-                # active and passive sound mode
-                continue
-            if sound_mode.translation_key is None:
-                # map these too unknown, as we otherwise can't map all sound modes
-                # this branch is considered highly unlikely, as this needs a bug in the
-                # MA models, which are used during deserialization
-                translation_key = f"unknown_sound_mode_{sound_mode_unknown_count}"
-                sound_mode_unknown_count += 1
-            elif sound_mode.translation_key.startswith(
-                SOUND_MODES_TRANSLATION_KEY_PREFIX
-            ):
-                # this is preferred/ expectation and the default based on MA's dataclass post init
-                translation_key = sound_mode.translation_key[
-                    len(SOUND_MODES_TRANSLATION_KEY_PREFIX) :
-                ]
-            else:
-                # here, the key was actively set by the provider without the prefix
-                translation_key = sound_mode.translation_key
+            translation_key = sound_mode.translation_key
             if player.active_sound_mode == sound_mode.id:
                 active_sound_mode_translation_key = translation_key
             sound_mode_mappings[translation_key] = sound_mode.id
