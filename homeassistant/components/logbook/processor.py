@@ -201,11 +201,14 @@ class EventProcessor:
             )
             rows = execute_stmt_lambda_element(session, stmt, orm_rows=False)
             query_parent_user_ids: dict[bytes, bytes] | None = None
-            if self.entity_ids:
-                # Parent contexts for entity/entity+device queries are resolved
-                # in Python rather than via a SQL union branch because the
-                # parent-context column is sparsely populated and a full scan
-                # to find it costs ~40% of the query on real datasets.
+            if self.entity_ids or self.device_ids:
+                # Filtered query paths (entities/devices/entities_devices)
+                # only include call_service events whose event_data matches
+                # the queried entity or device, so parent service_call rows
+                # for unrelated targets are excluded from the stream and
+                # child contexts lose their user attribution. The all_stmt
+                # path includes all call_service events in the window so
+                # this pre-pass is unnecessary there.
                 # Results go into a per-query map (not the persistent LRU
                 # cache) so a long historical window with thousands of
                 # distinct parents cannot evict its own entries before
@@ -283,7 +286,12 @@ def _humanify(
         context_id_bin = row[CONTEXT_ID_BIN_POS]
         if memoize_new_contexts and context_id_bin not in context_lookup:
             context_lookup[context_id_bin] = row
-        time_fired_ts: float = row[TIME_FIRED_TS_POS] or time.time()
+        # Use an explicit None check so a legitimate 0.0 epoch isn't
+        # treated as missing.
+        row_time_fired_ts = row[TIME_FIRED_TS_POS]
+        time_fired_ts: float = (
+            row_time_fired_ts if row_time_fired_ts is not None else time.time()
+        )
         if (
             context_user_id_bin := row[CONTEXT_USER_ID_BIN_POS]
         ) and context_id_bin not in context_user_ids:
