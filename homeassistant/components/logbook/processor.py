@@ -296,11 +296,6 @@ def _humanify(
         context_id_bin = row[CONTEXT_ID_BIN_POS]
         if memoize_new_contexts and context_id_bin not in context_lookup:
             context_lookup[context_id_bin] = row
-        # Explicit None check: 0.0 is a valid epoch.
-        row_time_fired_ts = row[TIME_FIRED_TS_POS]
-        time_fired_ts: float = (
-            row_time_fired_ts if row_time_fired_ts is not None else time.time()
-        )
         if (
             populate_context_user_ids
             and (context_user_id_bin := row[CONTEXT_USER_ID_BIN_POS])
@@ -364,6 +359,11 @@ def _humanify(
         else:
             continue
 
+        # Explicit None check: 0.0 is a valid epoch.
+        row_time_fired_ts = row[TIME_FIRED_TS_POS]
+        time_fired_ts: float = (
+            row_time_fired_ts if row_time_fired_ts is not None else time.time()
+        )
         if timestamp:
             when: str | float = time_fired_ts
         else:
