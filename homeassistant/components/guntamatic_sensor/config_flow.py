@@ -52,14 +52,14 @@ class GuntamaticConfigFlow(ConfigFlow, domain=DOMAIN):
             self._async_abort_entries_match({CONF_HOST: user_input[CONF_HOST]})
             try:
                 heater = Heater(user_input[CONF_HOST])
-                data = await self.hass.async_add_executor_job(heater.get_data)
+                data = await self.hass.async_add_executor_job(heater.parse_data)
             except requests.exceptions.ConnectionError:
                 errors["base"] = "cannot_connect"
             except Exception:
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
-                if not data:
+                if not data or not data.get("Serial"):
                     errors["base"] = "cannot_connect"
                 else:
                     return self.async_create_entry(

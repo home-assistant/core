@@ -148,8 +148,18 @@ class GuntamaticSensor(CoordinatorEntity[GuntamaticCoordinator], SensorEntity):
     @property
     def native_value(self) -> StateType:
         """Return the current value of the sensor."""
-        return self.coordinator.data[self._name][0]
+        value = self.coordinator.data[self._name][0]
 
+        if value is None:
+            return None
+
+        if self.entity_description.state_class == SensorStateClass.MEASUREMENT:
+            try:
+                return float(value)
+            except (TypeError, ValueError):
+                return value
+
+        return value
     @property
     def available(self) -> bool:
         """Return True if entity is available."""
