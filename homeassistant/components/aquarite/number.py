@@ -4,7 +4,7 @@ from __future__ import annotations
 from typing import Final
 
 from homeassistant.components.number import NumberDeviceClass, NumberEntity
-from homeassistant.const import EntityCategory, UnitOfTemperature
+from homeassistant.const import EntityCategory, UnitOfElectricPotential, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -97,7 +97,7 @@ class AquariteNumberEntity(AquariteEntity, NumberEntity):
         "hidro.level": 10,
     }
     UNIT_MAP: Final[dict[str, str]] = {
-        "modules.rx.status.value": "mV",
+        "modules.rx.status.value": UnitOfElectricPotential.MILLIVOLT,
         "modules.ph.status.low_value": "pH",
         "modules.ph.status.high_value": "pH",
         "hidro.level": "gr/h",
