@@ -29,9 +29,8 @@ from homeassistant.components.cover import (
     CoverEntityFeature,
     CoverState,
 )
-from homeassistant.components.overkiz.const import DOMAIN
 from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, Platform
-from homeassistant.core import HomeAssistant, State
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from .conftest import MockOverkizClient, SetupOverkizIntegration
@@ -41,43 +40,64 @@ from tests.common import snapshot_platform
 
 
 class FixtureDevice(NamedTuple):
-    """Test device binding a fixture file to a device URL."""
+    """Test device binding a fixture file to a device URL and entity id."""
 
     fixture: str
     device_url: str
+    entity_id: str
 
 
 AWNING = FixtureDevice(
-    "setup/local_somfy_connexoon_europe.json", "io://1234-1234-1234/5928357"
+    "setup/local_somfy_connexoon_europe.json",
+    "io://1234-1234-1234/5928357",
+    "cover.terrace_awning",
 )
 LOW_SPEED = FixtureDevice(
-    "setup/cloud_nexity_rail_din_europe.json", "io://1234-5678-1698/141613"
+    "setup/cloud_nexity_rail_din_europe.json",
+    "io://1234-5678-1698/141613",
+    "cover.nursery_shutter",
 )
 PERGOLA = FixtureDevice(
-    "setup/local_somfy_tahoma_v2_europe.json", "io://1234-5678-3293/7614902"
+    "setup/local_somfy_tahoma_v2_europe.json",
+    "io://1234-5678-3293/7614902",
+    "cover.garden_pergola",
 )
 RTS = FixtureDevice(
-    "setup/cloud_somfy_connexoon_rts_asia.json", "rts://1234-1234-6362/16730022"
+    "setup/cloud_somfy_connexoon_rts_asia.json",
+    "rts://1234-1234-6362/16730022",
+    "cover.patio_shutter",
 )
 SHUTTER = FixtureDevice(
-    "setup/cloud_somfy_tahoma_v2_europe.json", "io://1234-1234-6233/12184029"
+    "setup/cloud_somfy_tahoma_v2_europe.json",
+    "io://1234-1234-6233/12184029",
+    "cover.garden_house_shutter",
 )
 GARAGE = FixtureDevice(
-    "setup/cloud_somfy_tahoma_v2_europe.json", "io://1234-1234-6233/1166863"
+    "setup/cloud_somfy_tahoma_v2_europe.json",
+    "io://1234-1234-6233/1166863",
+    "cover.main_garage_door",
 )
 TILTED_WINDOW = FixtureDevice(
-    "setup/local_somfy_tahoma_switch_europe_3.json", "io://1234-5678-9373/10202865"
+    "setup/local_somfy_tahoma_switch_europe_3.json",
+    "io://1234-5678-9373/10202865",
+    "cover.bedroom_blinds",
 )
 # Device with ClosureState=108
 DYNAMIC_EXTERIOR_VENETIAN_BLIND = FixtureDevice(
-    "setup/local_somfy_tahoma_switch_europe.json", "io://1234-5678-6508/4877511"
+    "setup/local_somfy_tahoma_switch_europe.json",
+    "io://1234-5678-6508/4877511",
+    "cover.dining_room_blinds",
 )
 # Device with ClosureState=124
 POSITIONABLE_ROLLER_SHUTTER_UNO = FixtureDevice(
-    "setup/local_somfy_tahoma_switch_europe_2.json", "io://1234-5678-1516/3656107"
+    "setup/local_somfy_tahoma_switch_europe_2.json",
+    "io://1234-5678-1516/3656107",
+    "cover.hallway_shutter",
 )
 POSITIONABLE_DUAL_ROLLER_SHUTTER = FixtureDevice(
-    "setup/cloud_somfy_tahoma_switch_sc_europe.json", "io://1234-5678-5010/12931361"
+    "setup/cloud_somfy_tahoma_switch_sc_europe.json",
+    "io://1234-5678-5010/12931361",
+    "cover.basement_roller_shutter",
 )
 
 SNAPSHOT_FIXTURES = [
@@ -98,22 +118,6 @@ def fixture_platforms() -> Generator[None]:
     """Limit platforms to cover only."""
     with patch("homeassistant.components.overkiz.PLATFORMS", [Platform.COVER]):
         yield
-
-
-def get_state(hass: HomeAssistant, entity_id: str) -> State:
-    """Return a state and fail clearly if it is missing."""
-    assert (state := hass.states.get(entity_id))
-    return state
-
-
-def get_entity_id(entity_registry: er.EntityRegistry, unique_id: str) -> str:
-    """Resolve the entity id from the stable Overkiz unique id."""
-    assert (
-        entity_id := entity_registry.async_get_entity_id(
-            COVER_DOMAIN, DOMAIN, unique_id
-        )
-    )
-    return entity_id
 
 
 @pytest.mark.parametrize(
@@ -165,7 +169,6 @@ async def test_cover_service_actions(
     hass: HomeAssistant,
     setup_overkiz_integration: SetupOverkizIntegration,
     mock_client: MockOverkizClient,
-    entity_registry: er.EntityRegistry,
     device: FixtureDevice,
     service: str,
     command_name: str,
@@ -174,17 +177,16 @@ async def test_cover_service_actions(
     """Test open, close, and stop cover services."""
     await setup_overkiz_integration(fixture=device.fixture)
 
-    entity_id = get_entity_id(entity_registry, device.device_url)
     await hass.services.async_call(
         COVER_DOMAIN,
         service,
-        {ATTR_ENTITY_ID: entity_id},
+        {ATTR_ENTITY_ID: device.entity_id},
         blocking=True,
     )
     await hass.async_block_till_done()
 
     if expected_state is not None:
-        assert get_state(hass, entity_id).state == expected_state
+        assert hass.states.get(device.entity_id).state == expected_state
     assert_command_call(
         mock_client,
         device_url=device.device_url,
@@ -195,18 +197,18 @@ async def test_cover_service_actions(
 @pytest.mark.parametrize(
     (
         "device",
+        "entity_id",
         "command_name",
-        "unique_id",
         "parameters",
         "position",
     ),
     [
-        (SHUTTER, "setClosure", SHUTTER.device_url, [75], 25),
-        (AWNING, "setDeployment", AWNING.device_url, [80], 80),
+        (SHUTTER, SHUTTER.entity_id, "setClosure", [75], 25),
+        (AWNING, AWNING.entity_id, "setDeployment", [80], 80),
         (
             LOW_SPEED,
+            "cover.nursery_shutter_low_speed",
             "setClosureAndLinearSpeed",
-            f"{LOW_SPEED.device_url}_low_speed",
             [65, OverkizCommandParam.LOWSPEED],
             35,
         ),
@@ -217,17 +219,15 @@ async def test_cover_set_position(
     hass: HomeAssistant,
     setup_overkiz_integration: SetupOverkizIntegration,
     mock_client: MockOverkizClient,
-    entity_registry: er.EntityRegistry,
     device: FixtureDevice,
+    entity_id: str,
     command_name: str,
-    unique_id: str,
     parameters: list[Any],
     position: int,
 ) -> None:
     """Test cover position services and mapping."""
     await setup_overkiz_integration(fixture=device.fixture)
 
-    entity_id = get_entity_id(entity_registry, unique_id)
     await hass.services.async_call(
         COVER_DOMAIN,
         SERVICE_SET_COVER_POSITION,
@@ -247,15 +247,13 @@ async def test_cover_tilt_services(
     hass: HomeAssistant,
     setup_overkiz_integration: SetupOverkizIntegration,
     mock_client: MockOverkizClient,
-    entity_registry: er.EntityRegistry,
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test tilt services for a pergola from a full user setup."""
     await setup_overkiz_integration(fixture=PERGOLA.fixture)
 
-    entity_id = get_entity_id(entity_registry, PERGOLA.device_url)
-    state = get_state(hass, entity_id)
-
+    state = hass.states.get(PERGOLA.entity_id)
+    assert state
     assert state.attributes[ATTR_CURRENT_TILT_POSITION] == 0
     assert ATTR_CURRENT_POSITION not in state.attributes
     assert state.attributes["supported_features"] == (
@@ -269,11 +267,11 @@ async def test_cover_tilt_services(
     await hass.services.async_call(
         COVER_DOMAIN,
         SERVICE_OPEN_COVER_TILT,
-        {ATTR_ENTITY_ID: entity_id},
+        {ATTR_ENTITY_ID: PERGOLA.entity_id},
         blocking=True,
     )
     await hass.async_block_till_done()
-    assert get_state(hass, entity_id).state == CoverState.OPENING
+    assert hass.states.get(PERGOLA.entity_id).state == CoverState.OPENING
     assert_command_call(
         mock_client,
         device_url=PERGOLA.device_url,
@@ -293,17 +291,17 @@ async def test_cover_tilt_services(
             )
         ],
     )
-    assert get_state(hass, entity_id).state == CoverState.CLOSED
+    assert hass.states.get(PERGOLA.entity_id).state == CoverState.CLOSED
 
     mock_client.execute_command.reset_mock()
     await hass.services.async_call(
         COVER_DOMAIN,
         SERVICE_CLOSE_COVER_TILT,
-        {ATTR_ENTITY_ID: entity_id},
+        {ATTR_ENTITY_ID: PERGOLA.entity_id},
         blocking=True,
     )
     await hass.async_block_till_done()
-    assert get_state(hass, entity_id).state == CoverState.CLOSING
+    assert hass.states.get(PERGOLA.entity_id).state == CoverState.CLOSING
     assert_command_call(
         mock_client,
         device_url=PERGOLA.device_url,
@@ -314,7 +312,7 @@ async def test_cover_tilt_services(
     await hass.services.async_call(
         COVER_DOMAIN,
         SERVICE_STOP_COVER_TILT,
-        {ATTR_ENTITY_ID: entity_id},
+        {ATTR_ENTITY_ID: PERGOLA.entity_id},
         blocking=True,
     )
     assert_command_call(
@@ -327,7 +325,7 @@ async def test_cover_tilt_services(
     await hass.services.async_call(
         COVER_DOMAIN,
         SERVICE_SET_COVER_TILT_POSITION,
-        {ATTR_ENTITY_ID: entity_id, ATTR_TILT_POSITION: 40},
+        {ATTR_ENTITY_ID: PERGOLA.entity_id, ATTR_TILT_POSITION: 40},
         blocking=True,
     )
     assert_command_call(
@@ -342,14 +340,12 @@ async def test_cover_state_updates(
     hass: HomeAssistant,
     setup_overkiz_integration: SetupOverkizIntegration,
     mock_client: MockOverkizClient,
-    entity_registry: er.EntityRegistry,
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test cover state updates via events and execution tracking."""
     await setup_overkiz_integration(fixture=SHUTTER.fixture)
 
-    entity_id = get_entity_id(entity_registry, SHUTTER.device_url)
-    assert get_state(hass, entity_id).attributes[ATTR_CURRENT_POSITION] == 0
+    assert hass.states.get(SHUTTER.entity_id).attributes[ATTR_CURRENT_POSITION] == 0
 
     # Position update via device state change event
     await async_deliver_events(
@@ -386,7 +382,7 @@ async def test_cover_state_updates(
         ],
     )
 
-    state = get_state(hass, entity_id)
+    state = hass.states.get(SHUTTER.entity_id)
     assert state.attributes[ATTR_CURRENT_POSITION] == 100
     assert state.state == CoverState.OPEN
 
@@ -425,7 +421,7 @@ async def test_cover_state_updates(
         ],
     )
 
-    state = get_state(hass, entity_id)
+    state = hass.states.get(SHUTTER.entity_id)
     assert state.attributes[ATTR_CURRENT_POSITION] == 0
     assert state.state == CoverState.CLOSED
 
@@ -433,11 +429,11 @@ async def test_cover_state_updates(
     await hass.services.async_call(
         COVER_DOMAIN,
         SERVICE_OPEN_COVER,
-        {ATTR_ENTITY_ID: entity_id},
+        {ATTR_ENTITY_ID: SHUTTER.entity_id},
         blocking=True,
     )
     await hass.async_block_till_done()
-    assert get_state(hass, entity_id).state == CoverState.OPENING
+    assert hass.states.get(SHUTTER.entity_id).state == CoverState.OPENING
 
     await async_deliver_events(
         hass,
@@ -472,7 +468,7 @@ async def test_cover_state_updates(
             )
         ],
     )
-    assert get_state(hass, entity_id).state == CoverState.OPENING
+    assert hass.states.get(SHUTTER.entity_id).state == CoverState.OPENING
 
     await async_deliver_events(
         hass,
@@ -487,7 +483,7 @@ async def test_cover_state_updates(
             )
         ],
     )
-    assert get_state(hass, entity_id).state == CoverState.OPEN
+    assert hass.states.get(SHUTTER.entity_id).state == CoverState.OPEN
 
     # Unavailability propagates to entity state
     await async_deliver_events(
@@ -500,7 +496,7 @@ async def test_cover_state_updates(
             )
         ],
     )
-    assert get_state(hass, entity_id).state == STATE_UNAVAILABLE
+    assert hass.states.get(SHUTTER.entity_id).state == STATE_UNAVAILABLE
 
 
 @pytest.mark.parametrize(
@@ -537,7 +533,6 @@ async def test_vertical_cover_moving_direction(
     hass: HomeAssistant,
     setup_overkiz_integration: SetupOverkizIntegration,
     mock_client: MockOverkizClient,
-    entity_registry: er.EntityRegistry,
     freezer: FrozenDateTimeFactory,
     device_states: list[dict[str, Any]],
     expected_state: CoverState,
@@ -545,7 +540,6 @@ async def test_vertical_cover_moving_direction(
     """Test moving direction detection for vertical covers based on current vs target position."""
     await setup_overkiz_integration(fixture=SHUTTER.fixture)
 
-    entity_id = get_entity_id(entity_registry, SHUTTER.device_url)
     await async_deliver_events(
         hass,
         freezer,
@@ -559,7 +553,7 @@ async def test_vertical_cover_moving_direction(
         ],
     )
 
-    assert get_state(hass, entity_id).state == expected_state
+    assert hass.states.get(SHUTTER.entity_id).state == expected_state
 
 
 @pytest.mark.parametrize(
@@ -604,7 +598,6 @@ async def test_awning_moving_direction(
     hass: HomeAssistant,
     setup_overkiz_integration: SetupOverkizIntegration,
     mock_client: MockOverkizClient,
-    entity_registry: er.EntityRegistry,
     freezer: FrozenDateTimeFactory,
     device_states: list[dict[str, Any]],
     expected_state: CoverState,
@@ -612,7 +605,6 @@ async def test_awning_moving_direction(
     """Test moving direction detection for awnings based on current vs target position."""
     await setup_overkiz_integration(fixture=AWNING.fixture)
 
-    entity_id = get_entity_id(entity_registry, AWNING.device_url)
     await async_deliver_events(
         hass,
         freezer,
@@ -626,27 +618,25 @@ async def test_awning_moving_direction(
         ],
     )
 
-    assert get_state(hass, entity_id).state == expected_state
+    assert hass.states.get(AWNING.entity_id).state == expected_state
 
 
 async def test_awning_direct_position_mapping(
     hass: HomeAssistant,
     setup_overkiz_integration: SetupOverkizIntegration,
     mock_client: MockOverkizClient,
-    entity_registry: er.EntityRegistry,
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test awning deployment uses direct mapping while vertical covers invert."""
     await setup_overkiz_integration(fixture=AWNING.fixture)
 
-    entity_id = get_entity_id(entity_registry, AWNING.device_url)
-    assert get_state(hass, entity_id).attributes[ATTR_CURRENT_POSITION] == 0
+    assert hass.states.get(AWNING.entity_id).attributes[ATTR_CURRENT_POSITION] == 0
 
     mock_client.execute_command.reset_mock()
     await hass.services.async_call(
         COVER_DOMAIN,
         SERVICE_SET_COVER_POSITION,
-        {ATTR_ENTITY_ID: entity_id, ATTR_POSITION: 35},
+        {ATTR_ENTITY_ID: AWNING.entity_id, ATTR_POSITION: 35},
         blocking=True,
     )
     assert_command_call(
@@ -674,4 +664,4 @@ async def test_awning_direct_position_mapping(
             )
         ],
     )
-    assert get_state(hass, entity_id).attributes[ATTR_CURRENT_POSITION] == 100
+    assert hass.states.get(AWNING.entity_id).attributes[ATTR_CURRENT_POSITION] == 100
