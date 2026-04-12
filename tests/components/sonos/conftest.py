@@ -19,6 +19,7 @@ from soco.data_structures import (
     SearchResult,
 )
 from soco.events_base import Event as SonosEvent
+from soco.exceptions import SoCoUPnPException
 
 from homeassistant.components import ssdp
 from homeassistant.components.media_player import DOMAIN as MP_DOMAIN
@@ -310,11 +311,11 @@ class SoCoMockFactory:
         mock_soco.contentDirectory = SonosMockService("ContentDirectory", ip_address)
         mock_soco.deviceProperties = SonosMockService("DeviceProperties", ip_address)
         mock_soco.deviceProperties.GetAutoplayRoomUUID = Mock(
-            return_value={"RoomUUID": ""}
+            side_effect=SoCoUPnPException("Not supported", "714", "")
         )
         mock_soco.deviceProperties.SetAutoplayRoomUUID = Mock()
         mock_soco.deviceProperties.GetAutoplayLinkedZones = Mock(
-            return_value={"IncludeLinkedZones": "0"}
+            side_effect=SoCoUPnPException("Not supported", "714", "")
         )
         mock_soco.deviceProperties.SetAutoplayLinkedZones = Mock()
         mock_soco.zone_group_state = Mock()

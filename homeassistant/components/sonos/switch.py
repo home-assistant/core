@@ -50,7 +50,7 @@ ATTR_SUB_ENABLED = "sub_enabled"
 ATTR_SURROUND_ENABLED = "surround_enabled"
 ATTR_TOUCH_CONTROLS = "buttons_enabled"
 ATTR_TV_AUTOPLAY = "tv_autoplay"
-ATTR_TV_UNGROUP_AUTOPLAY = "tv_ungroup_autoplay"
+ATTR_TV_UNGROUP_AUTOPLAY = "ungroup_on_autoplay"
 
 ALL_FEATURES = (
     ATTR_TOUCH_CONTROLS,

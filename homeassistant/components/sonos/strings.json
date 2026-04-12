@@ -100,7 +100,7 @@
       "tv_autoplay": {
         "name": "TV autoplay"
       },
-      "tv_ungroup_autoplay": {
+      "ungroup_on_autoplay": {
         "name": "Ungroup on autoplay"
       }
     }
