@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
+import logging
 from typing import Any
 
 import voluptuous as vol
@@ -19,6 +20,8 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 
 from .const import CONF_HEALTH_CHECK_INTERVAL, DEFAULT_HEALTH_CHECK_INTERVAL, DOMAIN
+
+_LOGGER = logging.getLogger(__name__)
 
 AUTH_SCHEMA = vol.Schema(
     {
@@ -115,6 +118,7 @@ class AquariteConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors={"base": "auth_error"},
             )
         except Exception:
+            _LOGGER.exception("Unexpected error during authentication")
             return self.async_show_form(
                 step_id="user",
                 data_schema=AUTH_SCHEMA,
