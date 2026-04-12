@@ -11,6 +11,7 @@ from homeassistant.const import (
     EntityCategory,
     UnitOfElectricPotential,
     UnitOfTemperature,
+    UnitOfTime,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -109,7 +110,7 @@ async def async_setup_entry(
             dataservice, pool_id, pool_name,
             "filtration_intel_time",
             "filtration.intel.time",
-            native_unit_of_measurement="h",
+            native_unit_of_measurement=UnitOfTime.HOURS,
         )
     )
 
