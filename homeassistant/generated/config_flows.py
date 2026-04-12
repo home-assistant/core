@@ -71,6 +71,7 @@ FLOWS = {
         "aprilaire",
         "apsystems",
         "aquacell",
+        "aquarite",
         "aranet",
         "arcam_fmj",
         "arve",
